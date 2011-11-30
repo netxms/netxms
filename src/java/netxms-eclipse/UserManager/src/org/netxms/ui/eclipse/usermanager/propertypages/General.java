@@ -19,22 +19,18 @@
 package org.netxms.ui.eclipse.usermanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -124,52 +120,46 @@ public class General extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		new Job("Update user database object") {
+		new ConsoleJob("Update user database object", null, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
+				initialName = newName;
+				initialFullName = newFullName;
+				initialDescription = newDescription;
 				
-				try
+				int fields = UserManager.USER_MODIFY_LOGIN_NAME | UserManager.USER_MODIFY_DESCRIPTION;
+				object.setName(newName);
+				object.setDescription(newDescription);
+				if (object instanceof User)
 				{
-					initialName = newName;
-					initialFullName = newFullName;
-					initialDescription = newDescription;
-					
-					int fields = UserManager.USER_MODIFY_LOGIN_NAME | UserManager.USER_MODIFY_DESCRIPTION;
-					object.setName(newName);
-					object.setDescription(newDescription);
-					if (object instanceof User)
-					{
-						((User)object).setFullName(newFullName);
-						fields |= UserManager.USER_MODIFY_FULL_NAME;
-					}
-					((UserManager)session).modifyUserDBObject(object, fields);
-					
-					status = Status.OK_STATUS;
+					((User)object).setFullName(newFullName);
+					fields |= UserManager.USER_MODIFY_FULL_NAME;
 				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
-					                    "Cannot change object name: " + e.getMessage(), e);
-				}
-
+				((UserManager)session).modifyUserDBObject(object, fields);
+			}
+			
+			@Override
+			protected void jobFinalize()
+			{
 				if (isApply)
 				{
-					new UIJob("Update \"General\" property page") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							General.this.setValid(true);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
-
-				return status;
 			}
-		}.schedule();
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot update user account";
+			}
+		}.start();
 	}
 
 	/* (non-Javadoc)

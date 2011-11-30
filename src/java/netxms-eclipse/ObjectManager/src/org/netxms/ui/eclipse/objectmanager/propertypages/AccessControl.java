@@ -22,10 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -43,14 +40,13 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.constants.UserAccessRights;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.AccessListElement;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AccessListComparator;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AccessListLabelProvider;
@@ -294,43 +290,39 @@ public class AccessControl extends PropertyPage
 			setValid(false);
 		
 		final boolean inheritAccessRights = checkInherit.getSelection();
-		
-		new Job("Update access control list for object " + object.getObjectName()) {
-			@Override
-			protected IStatus run(IProgressMonitor monitor)
-			{
-				IStatus status;
-				
-				try
-				{
-					NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-					md.setACL(acl.values().toArray(new AccessListElement[acl.size()]));
-					md.setInheritAccessRights(inheritAccessRights);
-					((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot change access control list: " + e.getMessage(), null);
-				}
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+		md.setACL(acl.values().toArray(new AccessListElement[acl.size()]));
+		md.setInheritAccessRights(inheritAccessRights);
 
+		new ConsoleJob("Update access control list for object " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				session.modifyObject(md);
+			}
+
+			@Override
+			protected void jobFinalize()
+			{
 				if (isApply)
 				{
-					new UIJob("Update \"Access Control\" property page") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							AccessControl.this.setValid(true);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
-
-				return status;
 			}
-		}.schedule();
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot change access control list";
+			}
+		}.start();
 	}
 
 	/* (non-Javadoc)

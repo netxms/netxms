@@ -25,9 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -49,11 +46,12 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
-import org.eclipse.ui.progress.UIJob;
+import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.GeoLocation;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.osm.Activator;
 import org.netxms.ui.eclipse.osm.GeoLocationCache;
 import org.netxms.ui.eclipse.osm.GeoLocationCacheListener;
 import org.netxms.ui.eclipse.osm.tools.Area;
@@ -89,7 +87,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private Area coverage = null;
 	private List<GenericObject> objects = new ArrayList<GenericObject>();
 	private MapAccessor accessor;
-	private IWorkbenchSiteProgressService siteService = null;
+	private ViewPart viewPart = null;
 	private AnimatedImage waitingImage = null;
 	private Point currentPoint;
 	private Point dragStartPoint = null;
@@ -244,17 +242,14 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 
 		final Point mapSize = new Point(accessor.getMapWidth(), accessor.getMapHeight());
 		final GeoLocation centerPoint = accessor.getCenterPoint();
-		Job job = new Job("Download map image")
-		{
+		ConsoleJob job = new ConsoleJob("Download map image", viewPart, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final TileSet tiles = MapLoader.getAllTiles(mapSize, centerPoint, MapLoader.CENTER, accessor.getZoom());
-
-				new UIJob("Redraw map")
-				{
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						if (tiles != null)
 						{
@@ -269,16 +264,18 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 						waitingImage.setVisible(false);
 						GeoMapViewer.this.redraw();
 						loading = false;
-						return Status.OK_STATUS;
 					}
-				}.schedule();
-				return Status.OK_STATUS;
+				});
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot download map image";
 			}
 		};
-		if (siteService != null)
-			siteService.schedule(job, 0, true);
-		else
-			job.schedule();
+		job.setUser(false);
+		job.start();
 	}
 
 	/**
@@ -318,23 +315,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		}
 
 		gc.dispose();
-	}
-
-	/**
-	 * @return the siteService
-	 */
-	public IWorkbenchSiteProgressService getSiteService()
-	{
-		return siteService;
-	}
-
-	/**
-	 * @param siteService
-	 *           the siteService to set
-	 */
-	public void setSiteService(IWorkbenchSiteProgressService siteService)
-	{
-		this.siteService = siteService;
 	}
 
 	/*
@@ -605,5 +585,21 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	{
 		Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(coverage.getxHigh(), coverage.getyLow()), accessor.getZoom());
 		return GeoLocationCache.displayToCoordinates(new Point(cp.x + p.x, cp.y + p.y), accessor.getZoom());
+	}
+
+	/**
+	 * @return the viewPart
+	 */
+	public ViewPart getViewPart()
+	{
+		return viewPart;
+	}
+
+	/**
+	 * @param viewPart the viewPart to set
+	 */
+	public void setViewPart(ViewPart viewPart)
+	{
+		this.viewPart = viewPart;
 	}
 }

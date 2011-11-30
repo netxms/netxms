@@ -31,7 +31,6 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.netxms.client.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
@@ -94,7 +93,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 	{
 		// Map control
 		map = new GeoMapViewer(parent, SWT.BORDER);
-		map.setSiteService((IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class));
+		map.setViewPart(this);
 		
 		createActions();
 		contributeToActionBars();

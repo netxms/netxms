@@ -19,9 +19,6 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -32,11 +29,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Template;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -141,47 +137,41 @@ public class AutoApply extends PropertyPage
 			setValid(false);
 		
 		final String newApplyFilter = new String(filterSource.getText());
-		new Job("Update auto-apply filter") {
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+		md.setAutoApplyEnabled(isAutoApplyEnabled);
+		md.setAutoApplyFilter(newApplyFilter);
+		
+		new ConsoleJob("Update auto-apply filter", null, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				
-				try
-				{
-					if (object != null)
-					{
-						NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-						md.setAutoApplyEnabled(isAutoApplyEnabled);
-						md.setAutoApplyFilter(newApplyFilter);
-						((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
-					}
-					initialApplyFlag = isAutoApplyEnabled;
-					initialApplyFilter = newApplyFilter;
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot change template automatic apply options: " + e.getMessage(), null);
-				}
+				session.modifyObject(md);
+				initialApplyFlag = isAutoApplyEnabled;
+				initialApplyFilter = newApplyFilter;
+			}
 
+			@Override
+			protected void jobFinalize()
+			{
 				if (isApply)
 				{
-					new UIJob("Update \"Automatic Apply Rules\" property page") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							AutoApply.this.setValid(true);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
-
-				return status;
 			}
-		}.schedule();
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot change template automatic apply options";
+			}
+		}.start();
 	}
 	
 	/* (non-Javadoc)

@@ -26,7 +26,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
@@ -172,11 +171,12 @@ public class NetworkServicePolling extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Update network service object", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
+				session.modifyObject(md);
 			}
 
 			@Override
@@ -190,7 +190,7 @@ public class NetworkServicePolling extends PropertyPage
 			{
 				if (isApply)
 				{
-					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{

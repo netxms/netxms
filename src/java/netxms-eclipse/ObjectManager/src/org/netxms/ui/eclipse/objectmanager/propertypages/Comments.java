@@ -19,8 +19,6 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -28,7 +26,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -94,18 +91,18 @@ public class Comments extends PropertyPage
 			setValid(false);
 		
 		final String newComments = new String(comments.getText());
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Update comments for object " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				((NXCSession)ConsoleSharedData.getSession()).updateObjectComments(object.getObjectId(), newComments);
+				session.updateObjectComments(object.getObjectId(), newComments);
 				initialComments = newComments;
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-				// TODO Auto-generated method stub
 				return "Cannot change comments";
 			}
 
@@ -114,14 +111,13 @@ public class Comments extends PropertyPage
 			{
 				if (isApply)
 				{
-					new UIJob("Update \"Comments\" property page") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							Comments.this.setValid(true);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 			}
 		}.start();

@@ -25,7 +25,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
@@ -38,7 +37,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Script" property page for condition object
- *
  */
 public class ConditionScript extends PropertyPage
 {
@@ -99,13 +97,14 @@ public class ConditionScript extends PropertyPage
 			setValid(false);
 		
 		final String newScript = filterSource.getText();
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+		md.setScript(newScript);
 		new ConsoleJob("Update condition script", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-				md.setScript(newScript);
-				((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
+				session.modifyObject(md);
 				initialScript = newScript;
 			}
 
@@ -120,7 +119,7 @@ public class ConditionScript extends PropertyPage
 			{
 				if (isApply)
 				{
-					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{

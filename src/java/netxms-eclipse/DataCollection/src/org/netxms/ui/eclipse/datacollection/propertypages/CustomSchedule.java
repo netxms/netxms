@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +22,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -45,11 +42,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditScheduleDialog;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.tools.StringComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -256,39 +252,26 @@ public class CustomSchedule extends PropertyPage
 			setValid(false);
 		
 		dci.setSchedules(schedules);
-		new Job("Update schedule for DCI " + dci.getId()) {
+		new ConsoleJob("Update schedule for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				
-				try
-				{
-					dci.getOwner().modifyItem(dci);
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot update schedule: " + e.getMessage(), null);
-				}
-
-				if (isApply)
-				{
-					new UIJob("Update \"Custom Schedule\" property page") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							CustomSchedule.this.setValid(true);
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-				}
-
-				return status;
+				dci.getOwner().modifyItem(dci);
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						CustomSchedule.this.setValid(true);
+					}
+				});
 			}
-		}.schedule();
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot update DCI schedule";
+			}
+		}.start();
 	}
 
 	/* (non-Javadoc)

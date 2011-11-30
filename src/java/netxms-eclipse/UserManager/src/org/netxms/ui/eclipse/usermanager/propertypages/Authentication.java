@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,6 @@
 package org.netxms.ui.eclipse.usermanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -33,12 +30,11 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserManager;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
@@ -172,39 +168,34 @@ public class Authentication extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		new Job("Update user database object") {
+		new ConsoleJob("Update user database object", null, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				
-				try
-				{
-					((UserManager)session).modifyUserDBObject(object, UserManager.USER_MODIFY_FLAGS | UserManager.USER_MODIFY_AUTH_METHOD | UserManager.USER_MODIFY_CERT_MAPPING);
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
-					                    "Cannot update user account: " + e.getMessage(), null);
-				}
+				((UserManager)session).modifyUserDBObject(object, UserManager.USER_MODIFY_FLAGS | UserManager.USER_MODIFY_AUTH_METHOD | UserManager.USER_MODIFY_CERT_MAPPING);
+			}
 
+			@Override
+			protected void jobFinalize()
+			{
 				if (isApply)
 				{
-					new UIJob("Update \"Authentication\" property page") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							Authentication.this.setValid(true);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
-
-				return status;
 			}
-		}.schedule();
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot update user account";
+			}
+		}.start();
 	}
 
 	/* (non-Javadoc)

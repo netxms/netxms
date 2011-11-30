@@ -19,9 +19,6 @@
 package org.netxms.ui.eclipse.policymanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -29,11 +26,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AgentPolicy;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.policymanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -94,45 +90,38 @@ public class Policy extends PropertyPage
 			setValid(false);
 		
 		final String newDescription = new String(textDescription.getText());
-		new Job("Change policy") {
+		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+		md.setDescription(newDescription);
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		new ConsoleJob("Change policy", null, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				
-				try
-				{
-					if (object != null)
-					{
-						NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-						md.setDescription(newDescription);
-						((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
-					}
-					initialDescription = newDescription;
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot change agent policy: " + e.getMessage(), e);
-				}
+				session.modifyObject(md);
+				initialDescription = newDescription;
+			}
 
+			@Override
+			protected void jobFinalize()
+			{
 				if (isApply)
 				{
-					new UIJob("Update \"Policy\" property page") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							Policy.this.setValid(true);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
-
-				return status;
 			}
-		}.schedule();
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot change agent policy";
+			}
+		}.start();
 	}
 	
 	/* (non-Javadoc)

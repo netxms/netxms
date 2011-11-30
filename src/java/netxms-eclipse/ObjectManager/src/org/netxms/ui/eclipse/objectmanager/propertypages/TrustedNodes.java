@@ -23,9 +23,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -42,12 +39,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -193,48 +189,41 @@ public class TrustedNodes extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		new Job("Update trusted nodes for object " + object.getObjectName()) {
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+		Set<Long> idList = trustedNodes.keySet();
+		long[] nodes = new long[idList.size()];
+		int i = 0;
+		for(long id : idList)
+			nodes[i++] = id;
+		md.setTrustedNodes(nodes);
+		
+		new ConsoleJob("Update trusted nodes for object " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				
-				try
-				{
-					if (object != null)
-					{
-						NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-						Set<Long> idList = trustedNodes.keySet();
-						long[] nodes = new long[idList.size()];
-						int i = 0;
-						for(long id : idList)
-							nodes[i++] = id;
-						md.setTrustedNodes(nodes);
-						((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
-					}
-					isModified = false;
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot update trusted nodes list: " + e.getMessage(), null);
-				}
+				session.modifyObject(md);
+			}
 
+			@Override
+			protected void jobFinalize()
+			{
 				if (isApply)
 				{
-					new UIJob("Update \"Trusted Nodes\" property page") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							TrustedNodes.this.setValid(true);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
+			}
 
-				return status;
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot update trusted nodes list";
 			}
 		}.schedule();
 	}

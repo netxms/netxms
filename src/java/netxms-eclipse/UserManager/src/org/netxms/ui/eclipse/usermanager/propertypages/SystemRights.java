@@ -23,15 +23,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.constants.UserAccessRights;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.UserManager;
@@ -140,14 +137,13 @@ public class SystemRights extends PropertyPage
 			{
 				if (isApply)
 				{
-					new UIJob("Update \"SystemRights\" property page") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							SystemRights.this.setValid(true);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 			}
 		}.start();

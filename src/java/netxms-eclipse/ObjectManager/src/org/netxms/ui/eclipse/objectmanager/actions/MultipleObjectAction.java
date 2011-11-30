@@ -102,12 +102,12 @@ public abstract class MultipleObjectAction implements IObjectActionDelegate
 		while(it.hasNext())
 		{
 			final GenericObject object = it.next();
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			new Job(jobDescription() + " " + object.getObjectName() + " [" + object.getObjectId() + "]") {
 				@Override
 				protected IStatus run(IProgressMonitor monitor)
 				{
 					IStatus status;
-					final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 					try
 					{
 						runObjectAction(session, object);

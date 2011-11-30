@@ -34,7 +34,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
@@ -49,7 +48,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * "Communication" property page for nodes
- *
  */
 public class Communication extends PropertyPage
 {
@@ -387,11 +385,12 @@ public class Communication extends PropertyPage
 		md.setSnmpAuthPassword(snmpAuthPassword.getText());
 		md.setSnmpPrivPassword(snmpPrivPassword.getText());
 
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Update communication settings for node " + node.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
+				session.modifyObject(md);
 			}
 
 			@Override
@@ -405,7 +404,7 @@ public class Communication extends PropertyPage
 			{
 				if (isApply)
 				{
-					Display.getDefault().asyncExec(new Runnable() {
+					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{

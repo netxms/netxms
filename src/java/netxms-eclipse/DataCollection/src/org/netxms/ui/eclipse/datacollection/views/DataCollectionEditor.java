@@ -23,7 +23,6 @@ import java.util.Iterator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -60,9 +59,7 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -239,46 +236,39 @@ public class DataCollectionEditor extends ViewPart
 		filterText.setCloseAction(actionShowFilter);
 
 		// Request server to open data collection configuration
-		Job job = new Job("Open data collection configuration for " + object.getObjectName())
-		{
+		new ConsoleJob("Open data collection configuration for " + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-
-				try
-				{
-					dciConfig = session.openDataCollectionConfiguration(object.getObjectId());
-					dciConfig.setUserData(viewer);
-					new UIJob("Update data collection configurator for " + object.getObjectName())
+				dciConfig = session.openDataCollectionConfiguration(object.getObjectId());
+				dciConfig.setUserData(viewer);
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
 					{
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							viewer.setInput(dciConfig.getItems());
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, (e instanceof NXCException) ? ((NXCException) e)
-							.getErrorCode() : 0, "Cannot open data collection configuration for " + object.getObjectName() + ": " + e.getMessage(), null);
-					new UIJob("Close data collection configurator for " + object.getObjectName())
-					{
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							DataCollectionEditor.this.getViewSite().getPage().hideView(DataCollectionEditor.this);
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-				}
-				return status;
+						viewer.setInput(dciConfig.getItems());
+					}
+				});
 			}
-		};
-		scheduleJob(job);
+
+			@Override
+			protected void jobFailureHandler()
+			{
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						DataCollectionEditor.this.getViewSite().getPage().hideView(DataCollectionEditor.this);
+					}
+				});
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot open data collection configuration for " + object.getObjectName();
+			}
+		}.start();
 		
 		// Set initial focus to filter input line
 		if (filterEnabled)
@@ -301,17 +291,6 @@ public class DataCollectionEditor extends ViewPart
 		}
 	}
 	
-	/**
-	 * Schedule job related to view
-	 * 
-	 * @param job Job to schedule
-	 */
-	private void scheduleJob(final Job job)
-	{
-		IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(IWorkbenchSiteProgressService.class);
-		siteService.schedule(job, 0, true);
-	}
-
 	/**
 	 * Contribute actions to action bar
 	 */
@@ -552,28 +531,20 @@ public class DataCollectionEditor extends ViewPart
 	{
 		if (dciConfig != null)
 		{
-			new Job("Unlock data collection configuration for " + object.getObjectName())
-			{
+			new ConsoleJob("Unlock data collection configuration for " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 				@Override
-				protected IStatus run(IProgressMonitor monitor)
+				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					IStatus status;
-
-					try
-					{
-						dciConfig.close();
-						dciConfig = null;
-						status = Status.OK_STATUS;
-					}
-					catch(Exception e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-								(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
-								"Cannot unlock data collection configuration for " + object.getObjectName() + ": " + e.getMessage(), null);
-					}
-					return status;
+					dciConfig.close();
+					dciConfig = null;
 				}
-			}.schedule();
+
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot unlock data collection configuration for " + object.getObjectName();
+				}
+			}.start();
 		}
 		super.dispose();
 	}
@@ -589,50 +560,36 @@ public class DataCollectionEditor extends ViewPart
 		if (selection.size() <= 0)
 			return;
 		
-		Job job = new Job("Change status of data collection items for " + object.getObjectName())
-		{
-			@SuppressWarnings("unchecked")
+		new ConsoleJob("Change status of data collection items for " + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final long[] itemList = new long[selection.size()];
-				Iterator<DataCollectionItem> it = selection.iterator();
-				for(int pos = 0; it.hasNext(); pos++)
+				int pos = 0;
+				for(Object dci : selection.toList())
 				{
-					final DataCollectionItem dci = it.next();
-					itemList[pos] = dci.getId();
+					itemList[pos++] = ((DataCollectionItem)dci).getId();
 				}
-				IStatus status;
-				try
-				{
-					dciConfig.setItemStatus(itemList, newStatus);
-					new UIJob("Update DCI list for " + object.getObjectName())
+				dciConfig.setItemStatus(itemList, newStatus);
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
 					{
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						for(Object dci : selection.toList())
 						{
-							Iterator<DataCollectionItem> it = selection.iterator();
-							while(it.hasNext())
-							{
-								final DataCollectionItem dci = it.next();
-								dci.setStatus(newStatus);
-								viewer.update(dci, null);
-							}
-							return Status.OK_STATUS;
+							((DataCollectionItem)dci).setStatus(newStatus);
+							viewer.update(dci, null);
 						}
-					}.schedule();
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-		                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-		                    "Cannot change status of data collection items for " + object.getObjectName() + ": " + e.getMessage(), null);
-				}
-				return status;
+					}
+				});
 			}
-		};
-		scheduleJob(job);
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot change status of data collection items for " + object.getObjectName();
+			}
+		}.start();
 	}
 
 	/**
@@ -648,42 +605,29 @@ public class DataCollectionEditor extends ViewPart
 		                               "Do you really want to delete selected data collection items?"))
 			return;
 		
-		Job job = new Job("Delete data collection items for " + object.getObjectName()) {
-			@SuppressWarnings("unchecked")
+		new ConsoleJob("Delete data collection items for " + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				try
+				for(Object dci : selection.toList())
 				{
-					Iterator<DataCollectionItem> it = selection.iterator();
-					while(it.hasNext())
-					{
-						final DataCollectionItem dci = it.next();
-						dciConfig.deleteItem(dci.getId());
-					}
-					status = Status.OK_STATUS;
+					dciConfig.deleteItem(((DataCollectionItem)dci).getId());
 				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-		                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-		                    "Cannot delete data collection items for " + object.getObjectName() + ": " + e.getMessage(), null);
-				}
-				
-				new UIJob("Update DCI list for " + object.getObjectName())
-				{
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						viewer.setInput(dciConfig.getItems());
-						return Status.OK_STATUS;
 					}
-				}.schedule();
-				return status;
+				});
 			}
-		};
-		scheduleJob(job);
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot delete data collection items for " + object.getObjectName();
+			}
+		}.start();
 	}
 	
 	/**

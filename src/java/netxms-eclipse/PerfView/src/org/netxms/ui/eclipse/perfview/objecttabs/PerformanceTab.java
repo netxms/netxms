@@ -123,7 +123,7 @@ public class PerformanceTab extends ObjectTab
 				try
 				{
 					final PerfTabDci[] items = session.getPerfTabItems(object.getObjectId());
-					new UIJob("Update performance tab") {
+					new UIJob(PerformanceTab.this.getClientArea().getDisplay(), "Update performance tab") {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{

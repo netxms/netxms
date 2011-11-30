@@ -19,15 +19,12 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
@@ -38,7 +35,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "General" property page for NetMS objects 
- *
  */
 public class General extends PropertyPage
 {
@@ -91,13 +87,14 @@ public class General extends PropertyPage
 			setValid(false);
 		
 		final String newName = new String(textName.getText());
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
+		data.setName(newName);
 		new ConsoleJob("Rename object", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
-				data.setName(newName);
-				((NXCSession)ConsoleSharedData.getSession()).modifyObject(data);
+				session.modifyObject(data);
 				initialName = newName;
 			}
 
@@ -112,17 +109,16 @@ public class General extends PropertyPage
 			{
 				if (isApply)
 				{
-					new UIJob("Update \"General\" property page") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							General.this.setValid(true);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 			}
-		}.schedule();
+		}.start();
 	}
 
 	/* (non-Javadoc)

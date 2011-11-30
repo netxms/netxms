@@ -41,7 +41,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
@@ -333,13 +332,14 @@ public class ConditionData extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
+		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+		md.setDciList(dciList);
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Update condition's DCI list", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-				md.setDciList(dciList);
-				((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
+				session.modifyObject(md);
 				isModified = false;
 			}
 
@@ -354,7 +354,7 @@ public class ConditionData extends PropertyPage
 			{
 				if (isApply)
 				{
-					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{

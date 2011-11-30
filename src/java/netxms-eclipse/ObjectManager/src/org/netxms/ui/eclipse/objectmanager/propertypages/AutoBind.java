@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,6 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -32,11 +29,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Container;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -141,47 +137,41 @@ public class AutoBind extends PropertyPage
 			setValid(false);
 		
 		final String newAutoBindFilter = new String(filterSource.getText());
-		new Job("Update auto-bind filter") {
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+		md.setAutoBindEnabled(isAutoBindEnabled);
+		md.setAutoBindFilter(newAutoBindFilter);
+		
+		new ConsoleJob("Update auto-bind filter", null, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				
-				try
-				{
-					if (object != null)
-					{
-						NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-						md.setAutoBindEnabled(isAutoBindEnabled);
-						md.setAutoBindFilter(newAutoBindFilter);
-						((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
-					}
-					initialAutoBindFlag = isAutoBindEnabled;
-					initialAutoBindFilter = newAutoBindFilter;
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot change container automatic bind options: " + e.getMessage(), e);
-				}
+				session.modifyObject(md);
+				initialAutoBindFlag = isAutoBindEnabled;
+				initialAutoBindFilter = newAutoBindFilter;
+			}
 
+			@Override
+			protected void jobFinalize()
+			{
 				if (isApply)
 				{
-					new UIJob("Update \"Automatic Bind Rules\" property page") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							AutoBind.this.setValid(true);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
-
-				return status;
 			}
-		}.schedule();
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot change container automatic bind options";
+			}
+		}.start();
 	}
 	
 	/* (non-Javadoc)

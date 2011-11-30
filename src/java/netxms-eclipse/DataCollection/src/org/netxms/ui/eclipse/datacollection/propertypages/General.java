@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,7 @@
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -45,8 +41,6 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
@@ -56,6 +50,7 @@ import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -471,47 +466,26 @@ public class General extends PropertyPage
 		else if (statusUnsupported.getSelection())
 			dci.setStatus(DataCollectionItem.NOT_SUPPORTED);
 
-		new Job("Update general settings for DCI " + dci.getId()) {
+		new ConsoleJob("Update general settings for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				
-				try
-				{
-					dci.getOwner().modifyItem(dci);
-					new UIJob("Update data collection item list") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							((TableViewer)dci.getOwner().getUserData()).update(dci, null);
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot update general DCI settings: " + e.getMessage(), null);
-				}
-
-				if (isApply)
-				{
-					new UIJob("Update \"General\" property page") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							General.this.setValid(true);
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-				}
-
-				return status;
+				dci.getOwner().modifyItem(dci);
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						General.this.setValid(true);
+					}
+				});
 			}
-		}.schedule();
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot update general DCI settings";
+			}
+		}.start();
 	}
 
 	/* (non-Javadoc)

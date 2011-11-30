@@ -1,25 +1,36 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.policymanager.actions;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.PolicyGroup;
 import org.netxms.client.objects.PolicyRoot;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.policymanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -30,7 +41,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class CreateAgentPolicyConfig implements IObjectActionDelegate
 {
-	private Shell shell;
+	private IWorkbenchPart targetPart;
 	private GenericObject currentObject;
 	
 	/* (non-Javadoc)
@@ -39,7 +50,7 @@ public class CreateAgentPolicyConfig implements IObjectActionDelegate
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
-		shell = targetPart.getSite().getShell();
+		this.targetPart = targetPart;
 	}
 
 	/* (non-Javadoc)
@@ -48,29 +59,24 @@ public class CreateAgentPolicyConfig implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(shell, "Agent Policy (Configuration File)");
+		final CreateObjectDialog dlg = new CreateObjectDialog(targetPart.getSite().getShell(), "Agent Policy (Configuration File)");
 		if (dlg.open() == Window.OK)
 		{
-			new Job("Create agent policy") {
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			new ConsoleJob("Create agent policy", targetPart, Activator.PLUGIN_ID, null) {
 				@Override
-				protected IStatus run(IProgressMonitor monitor)
+				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					IStatus status;
-					try
-					{
-						NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_AGENTPOLICY_CONFIG, dlg.getObjectName(), currentObject.getObjectId());
-						((NXCSession)ConsoleSharedData.getSession()).createObject(cd);
-						status = Status.OK_STATUS;
-					}
-					catch(Exception e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-			                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-			                    "Cannot create agent policy: " + e.getMessage(), e);
-					}
-					return status;
+					NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_AGENTPOLICY_CONFIG, dlg.getObjectName(), currentObject.getObjectId());
+					session.createObject(cd);
 				}
-			}.schedule();
+
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot create agent policy";
+				}
+			}.start();
 		}
 	}
 

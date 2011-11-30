@@ -18,12 +18,9 @@
  */
 package org.netxms.ui.eclipse.usermanager.views;
 
-import java.util.Iterator;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -49,17 +46,15 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
-import org.netxms.api.client.constants.CommonRCC;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.UserComparator;
@@ -165,49 +160,40 @@ public class UserManagementView extends ViewPart
 		};
 
 		// Request server to lock user database, and on success refresh view
-		Job job = new Job("Open user database")
-		{
+		new ConsoleJob("Open user database", this, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-
-				try
-				{
-					userManager.lockUserDatabase();
-					databaseLocked = true;
-					new UIJob("Update user list")
+				userManager.lockUserDatabase();
+				databaseLocked = true;
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
 					{
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							viewer.setInput(userManager.getUserDatabaseObjects());
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-					session.addListener(sessionListener);
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, (e instanceof NetXMSClientException) ? ((NetXMSClientException) e)
-							.getErrorCode() : 0, "Cannot lock user database: " + e.getMessage(), null);
-					new UIJob("Close user manager")
-					{
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							UserManagementView.this.getViewSite().getPage().hideView(UserManagementView.this);
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-				}
-				return status;
+						viewer.setInput(userManager.getUserDatabaseObjects());
+						session.addListener(sessionListener);
+					}
+				});
 			}
-		};
-		IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
-				IWorkbenchSiteProgressService.class);
-		siteService.schedule(job, 0, true);
+
+			@Override
+			protected void jobFailureHandler()
+			{
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						UserManagementView.this.getViewSite().getPage().hideView(UserManagementView.this);
+					}
+				});
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot lock user database";
+			}
+		}.start();
 	}
 
 	/**
@@ -415,27 +401,19 @@ public class UserManagementView extends ViewPart
 			session.removeListener(sessionListener);
 		if (databaseLocked)
 		{
-			new Job("Unlock user database")
-			{
+			new ConsoleJob("Unlock user database", null, Activator.PLUGIN_ID, null) {
 				@Override
-				protected IStatus run(IProgressMonitor monitor)
+				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					IStatus status;
-
-					try
-					{
-						userManager.unlockUserDatabase();
-						status = Status.OK_STATUS;
-					}
-					catch(Exception e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-								(e instanceof NetXMSClientException) ? ((NetXMSClientException) e).getErrorCode() : 0,
-								"Cannot unlock user database: " + e.getMessage(), null);
-					}
-					return status;
+					userManager.unlockUserDatabase();
 				}
-			}.schedule();
+
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot unlock user database";
+				}
+			}.start();
 		}
 		super.dispose();
 	}
@@ -448,40 +426,20 @@ public class UserManagementView extends ViewPart
 		final CreateObjectDialog dlg = new CreateObjectDialog(getViewSite().getShell(), true);
 		if (dlg.open() == Window.OK)
 		{
-			Job job = new Job("Create user")
-			{
+			new ConsoleJob("Create user", this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
 				@Override
-				protected IStatus run(IProgressMonitor monitor)
+				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					IStatus status;
-
-					try
-					{
-						editNewUser = dlg.isEditAfterCreate();
-						userManager.createUser(dlg.getLoginName());
-						status = Status.OK_STATUS;
-					}
-					catch(Exception e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-								(e instanceof NetXMSClientException) ? ((NetXMSClientException) e).getErrorCode() : 0,
-								"Cannot create user: " + e.getMessage(), null);
-					}
-					return status;
+					editNewUser = dlg.isEditAfterCreate();
+					userManager.createUser(dlg.getLoginName());
 				}
 
-				/* (non-Javadoc)
-				 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-				 */
 				@Override
-				public boolean belongsTo(Object family)
+				protected String getErrorMessage()
 				{
-					return family == UserManagementView.JOB_FAMILY;
+					return "Cannot create user";
 				}
-			};
-			IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
-					IWorkbenchSiteProgressService.class);
-			siteService.schedule(job, 0, true);
+			}.start();
 		}
 	}
 	
@@ -493,40 +451,20 @@ public class UserManagementView extends ViewPart
 		final CreateObjectDialog dlg = new CreateObjectDialog(getViewSite().getShell(), false);
 		if (dlg.open() == Window.OK)
 		{
-			Job job = new Job("Create group")
-			{
+			new ConsoleJob("Create group", this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
 				@Override
-				protected IStatus run(IProgressMonitor monitor)
+				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					IStatus status;
-
-					try
-					{
-						editNewUser = dlg.isEditAfterCreate();
-						userManager.createUserGroup(dlg.getLoginName());
-						status = Status.OK_STATUS;
-					}
-					catch(Exception e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-								(e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
-								"Cannot create group: " + e.getMessage(), null);
-					}
-					return status;
+					editNewUser = dlg.isEditAfterCreate();
+					userManager.createUserGroup(dlg.getLoginName());
 				}
 
-				/* (non-Javadoc)
-				 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-				 */
 				@Override
-				public boolean belongsTo(Object family)
+				protected String getErrorMessage()
 				{
-					return family == UserManagementView.JOB_FAMILY;
+					return "Cannot create group";
 				}
-			};
-			IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
-					IWorkbenchSiteProgressService.class);
-			siteService.schedule(job, 0, true);
+			}.start();
 		}
 	}
 
@@ -544,59 +482,21 @@ public class UserManagementView extends ViewPart
 			return;
 		}
 
-		Job job = new Job("Delete user database objects")
-		{
-			@SuppressWarnings("rawtypes")
+		new ConsoleJob("Delete user database objects", this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-
-				try
+				for(Object object : selection.toList())
 				{
-					Iterator it = selection.iterator();
-					while(it.hasNext())
-					{
-						Object object = it.next();
-						if (object instanceof AbstractUserObject)
-						{
-							userManager.deleteUserDBObject(((AbstractUserObject)object).getId());
-						}
-						else
-						{
-							throw new NetXMSClientException(CommonRCC.INTERNAL_ERROR) {
-								private static final long serialVersionUID = -5171658794925752611L;
-
-								@Override
-								protected String getErrorMessage(int code)
-								{
-									return (code == CommonRCC.INTERNAL_ERROR) ? "Internal error" : null;
-								}
-							};
-						}
-					}
-					status = Status.OK_STATUS;
+					userManager.deleteUserDBObject(((AbstractUserObject)object).getId());
 				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-							(e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
-							"Cannot delete user database object: " + e.getMessage(), null);
-				}
-				return status;
 			}
 
-			/* (non-Javadoc)
-			 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-			 */
 			@Override
-			public boolean belongsTo(Object family)
+			protected String getErrorMessage()
 			{
-				return family == UserManagementView.JOB_FAMILY;
+				return "Cannot delete user database object";
 			}
-		};
-		IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
-				IWorkbenchSiteProgressService.class);
-		siteService.schedule(job, 0, true);
+		}.start();
 	}
 }

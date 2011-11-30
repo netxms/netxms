@@ -24,7 +24,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
@@ -36,7 +35,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * "Communications" property page for zone objects
- *
  */
 public class ZoneCommunications extends PropertyPage
 {
@@ -101,11 +99,12 @@ public class ZoneCommunications extends PropertyPage
 		md.setSnmpProxy(snmpProxy.getObjectId());
 		md.setIcmpProxy(icmpProxy.getObjectId());
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Update communication settings for zone " + zone.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
+				session.modifyObject(md);
 			}
 
 			@Override
@@ -119,7 +118,7 @@ public class ZoneCommunications extends PropertyPage
 			{
 				if (isApply)
 				{
-					Display.getDefault().asyncExec(new Runnable() {
+					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{

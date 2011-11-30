@@ -19,18 +19,14 @@
 package org.netxms.ui.eclipse.serverconfig.actions;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
-import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.servermanager.ServerManager;
 import org.netxms.api.client.servermanager.ServerVariable;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -53,45 +49,25 @@ public class DeleteVariable implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		Job job = new Job("Delete configuration variable") {
+		final ServerManager session = (ServerManager)ConsoleSharedData.getSession();
+		new ConsoleJob("Delete configuration variable", wbPart, Activator.PLUGIN_ID, ServerConfigurationEditor.JOB_FAMILY) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				
-				try
+				for(int i = 0; i < currentSelection.length; i++)
 				{
-					ServerManager session = (ServerManager)ConsoleSharedData.getSession();
-					for(int i = 0; i < currentSelection.length; i++)
-					{
-						session.deleteServerVariable(((ServerVariable)currentSelection[i]).getName());
-					}
-					if (wbPart instanceof ServerConfigurationEditor)
-						((ServerConfigurationEditor)wbPart).refreshViewer();
-					status = Status.OK_STATUS;
+					session.deleteServerVariable(((ServerVariable)currentSelection[i]).getName());
 				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
-					                    "Cannot delete configuration variable: " + e.getMessage(), e);
-				}
-				return status;
+				if (wbPart instanceof ServerConfigurationEditor)
+					((ServerConfigurationEditor)wbPart).refreshViewer();
 			}
 
-			
-			/* (non-Javadoc)
-			 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-			 */
 			@Override
-			public boolean belongsTo(Object family)
+			protected String getErrorMessage()
 			{
-				return family == ServerConfigurationEditor.JOB_FAMILY;
+				return "Cannot delete configuration variable";
 			}
-		};
-		IWorkbenchSiteProgressService siteService =
-	      (IWorkbenchSiteProgressService)wbPart.getSite().getAdapter(IWorkbenchSiteProgressService.class);
-		siteService.schedule(job, 0, true);
+		}.start();
 	}
 
 	@Override

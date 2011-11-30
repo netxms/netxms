@@ -19,33 +19,28 @@
 package org.netxms.ui.eclipse.policymanager.actions;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.PolicyGroup;
 import org.netxms.client.objects.PolicyRoot;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.policymanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Create policy group
- *
  */
 public class CreatePolicyGroup implements IObjectActionDelegate
 {
-	private Shell shell;
+	private IWorkbenchPart targetPart;
 	private GenericObject currentObject;
 	
 	/* (non-Javadoc)
@@ -54,7 +49,7 @@ public class CreatePolicyGroup implements IObjectActionDelegate
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
-		shell = targetPart.getSite().getShell();
+		this.targetPart = targetPart;
 	}
 
 	/* (non-Javadoc)
@@ -63,29 +58,24 @@ public class CreatePolicyGroup implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(shell, "Policy Group");
+		final CreateObjectDialog dlg = new CreateObjectDialog(targetPart.getSite().getShell(), "Policy Group");
 		if (dlg.open() == Window.OK)
 		{
-			new Job("Create policy group") {
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			new ConsoleJob("Create policy group", targetPart, Activator.PLUGIN_ID, null) {
 				@Override
-				protected IStatus run(IProgressMonitor monitor)
+				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					IStatus status;
-					try
-					{
-						NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_POLICYGROUP, dlg.getObjectName(), currentObject.getObjectId());
-						((NXCSession)ConsoleSharedData.getSession()).createObject(cd);
-						status = Status.OK_STATUS;
-					}
-					catch(Exception e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-			                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-			                    "Cannot create policy group: " + e.getMessage(), e);
-					}
-					return status;
+					NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_POLICYGROUP, dlg.getObjectName(), currentObject.getObjectId());
+					session.createObject(cd);
 				}
-			}.schedule();
+
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot create policy group";
+				}
+			}.start();
 		}
 	}
 

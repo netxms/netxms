@@ -19,19 +19,15 @@
 package org.netxms.ui.eclipse.serverconfig.actions;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.netxms.api.client.servermanager.ServerManager;
 import org.netxms.api.client.servermanager.ServerVariable;
-import org.netxms.client.NXCException;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.dialogs.VariableEditDialog;
 import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
@@ -67,41 +63,22 @@ public class EditVariable implements IObjectActionDelegate
 			final VariableEditDialog dlg = new VariableEditDialog(wbPart.getSite().getShell(), var.getName(), var.getValue());
 			if (dlg.open() == Window.OK)
 			{
-				Job job = new Job("Modify configuration variable") {
+				final ServerManager sm = (ServerManager)ConsoleSharedData.getSession();
+				new ConsoleJob("Modify configuration variable", wbPart, Activator.PLUGIN_ID, ServerConfigurationEditor.JOB_FAMILY) {
 					@Override
-					protected IStatus run(IProgressMonitor monitor)
+					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
-						IStatus status;
-						
-						try
-						{
-							((ServerManager)ConsoleSharedData.getSession()).setServerVariable(dlg.getVarName(), dlg.getVarValue());
-							if (wbPart instanceof ServerConfigurationEditor)
-								((ServerConfigurationEditor)wbPart).refreshViewer();
-							status = Status.OK_STATUS;
-						}
-						catch(Exception e)
-						{
-							status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-							                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-							                    "Cannot modify configuration variable: " + e.getMessage(), e);
-						}
-						return status;
+						sm.setServerVariable(dlg.getVarName(), dlg.getVarValue());
+						if (wbPart instanceof ServerConfigurationEditor)
+							((ServerConfigurationEditor)wbPart).refreshViewer();
 					}
 
-					
-					/* (non-Javadoc)
-					 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-					 */
 					@Override
-					public boolean belongsTo(Object family)
+					protected String getErrorMessage()
 					{
-						return family == ServerConfigurationEditor.JOB_FAMILY;
+						return "Cannot modify configuration variable";
 					}
-				};
-				IWorkbenchSiteProgressService siteService =
-			      (IWorkbenchSiteProgressService)wbPart.getSite().getAdapter(IWorkbenchSiteProgressService.class);
-				siteService.schedule(job, 0, true);
+				}.start();
 			}
 		}
 	}
