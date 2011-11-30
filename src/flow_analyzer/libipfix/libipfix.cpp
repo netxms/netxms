@@ -12,17 +12,17 @@ LIBIPFIX_MUTEX mutex_create()
 
 void mutex_destroy(LIBIPFIX_MUTEX mutex)
 {
-	MutexDestroy(mutex);
+	MutexDestroy((MUTEX)mutex);
 }
 
 BOOL mutex_lock(LIBIPFIX_MUTEX mutex)
 {
-	return MutexLock(mutex, INFINITE);
+	return MutexLock((MUTEX)mutex);
 }
 
 void mutex_unlock(LIBIPFIX_MUTEX mutex)
 {
-	MutexUnlock(mutex);
+	MutexUnlock((MUTEX)mutex);
 }
 
 
