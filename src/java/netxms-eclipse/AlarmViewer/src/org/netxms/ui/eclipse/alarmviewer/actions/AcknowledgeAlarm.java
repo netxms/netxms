@@ -73,7 +73,7 @@ public class AcknowledgeAlarm implements IObjectActionDelegate
 			{
 				return Messages.AcknowledgeAlarm_ErrorMessage;
 			}
-		};
+		}.start();
 	}
 
 	/* (non-Javadoc)

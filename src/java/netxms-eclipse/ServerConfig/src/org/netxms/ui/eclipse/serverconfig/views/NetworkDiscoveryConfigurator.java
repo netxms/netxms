@@ -55,11 +55,15 @@ import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.IpAddressListElement;
 import org.netxms.client.constants.NetworkDiscovery;
+import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.dialogs.AddAddressListElementDialog;
+import org.netxms.ui.eclipse.serverconfig.dialogs.AddUsmCredDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListElementComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.SnmpUsmComparator;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.SnmpUsmLabelProvider;
 import org.netxms.ui.eclipse.serverconfig.widgets.ScriptSelector;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.StringComparator;
@@ -591,6 +595,9 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		gd.verticalSpan = 2;
 		gd.heightHint = 100;
 		snmpUsmCredList.getTable().setLayoutData(gd);
+		snmpUsmCredList.setContentProvider(new ArrayContentProvider());
+		snmpUsmCredList.setLabelProvider(new SnmpUsmLabelProvider());
+		snmpUsmCredList.setComparator(new SnmpUsmComparator());
 
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		linkAdd.setText("Add...");
@@ -602,6 +609,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
+				addUsmCredentials();
 			}
 		});
 		
@@ -615,6 +623,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
+				removeUsmCredentials();
 			}
 		});
 	}
@@ -660,6 +669,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		checkRangeOnly.setSelection((config.getFilterFlags() & NetworkDiscovery.FILTER_LIMIT_BY_RANGE) != 0);
 		
 		snmpCommunityList.setInput(config.getCommunities().toArray());
+		snmpUsmCredList.setInput(config.getUsmCredentials().toArray());
 		activeDiscoveryAddressList.setInput(config.getTargets().toArray());
 		filterAddressList.setInput(config.getAddressFilter().toArray());
 
@@ -770,7 +780,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				config.save();
-				getSite().getShell().getDisplay().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
@@ -896,6 +906,43 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 				list.remove(o);
 			}
 			filterAddressList.setInput(list.toArray());
+			setModified();
+		}
+	}
+
+	/**
+	 * Add SNMP USM credentials to the list
+	 */
+	private void addUsmCredentials()
+	{
+		AddUsmCredDialog dlg = new AddUsmCredDialog(getSite().getShell());
+		if (dlg.open() == Window.OK)
+		{
+			SnmpUsmCredential cred = dlg.getValue();
+			final List<SnmpUsmCredential> list = config.getUsmCredentials();
+			if (!list.contains(cred))
+			{
+				list.add(cred);
+				snmpUsmCredList.setInput(list.toArray());
+				setModified();
+			}
+		}
+	}
+	
+	/**
+	 * Remove selected SNMP USM credentials
+	 */
+	private void removeUsmCredentials()
+	{
+		final List<SnmpUsmCredential> list = config.getUsmCredentials();
+		IStructuredSelection selection = (IStructuredSelection)snmpUsmCredList.getSelection();
+		if (selection.size() > 0)
+		{
+			for(Object o : selection.toList())
+			{
+				list.remove(o);
+			}
+			snmpUsmCredList.setInput(list.toArray());
 			setModified();
 		}
 	}

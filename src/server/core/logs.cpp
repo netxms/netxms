@@ -50,6 +50,18 @@ static NXCORE_LOG s_logs[] =
 			{ NULL, NULL, 0 }
 		}
 	},
+	{ _T("syslog"), _T("syslog"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
+		{
+			{ _T("msg_timestamp"), _T("Time"), LC_TIMESTAMP },
+			{ _T("source_object_id"), _T("Source"), LC_OBJECT_ID },
+			{ _T("facility"), _T("Facility"), LC_INTEGER },
+			{ _T("severity"), _T("Severity"), LC_INTEGER },
+			{ _T("hostname"), _T("Host"), LC_TEXT },
+			{ _T("msg_tag"), _T("Tag"), LC_TEXT },
+			{ _T("msg_text"), _T("Text"), LC_TEXT },
+			{ NULL, NULL, 0 }
+		}
+	},
 	{ NULL, NULL, 0 }
 };
 

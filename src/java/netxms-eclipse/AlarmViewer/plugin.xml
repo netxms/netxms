@@ -50,7 +50,7 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.terminate_alarm"
+            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.Alarm"
             objectClass="org.netxms.client.events.Alarm">
          <action
                class="org.netxms.ui.eclipse.alarmviewer.actions.TerminateAlarm"
@@ -59,10 +59,6 @@
    		       icon="icons/terminated.png"
                menubarPath="additions">
          </action>
-      </objectContribution>
-      <objectContribution
-            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.acknowledge_alarm"
-            objectClass="org.netxms.client.events.Alarm">
          <action
                class="org.netxms.ui.eclipse.alarmviewer.actions.AcknowledgeAlarm"
                icon="icons/acknowledged.png"

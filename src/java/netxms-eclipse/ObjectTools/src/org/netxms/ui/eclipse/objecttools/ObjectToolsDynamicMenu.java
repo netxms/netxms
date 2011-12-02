@@ -216,6 +216,9 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			case ObjectTool.TYPE_LOCAL_COMMAND:
 				executeLocalCommand(node, tool);
 				break;
+			case ObjectTool.TYPE_SERVER_COMMAND:
+				executeServerCommand(node, tool);
+				break;
 			case ObjectTool.TYPE_ACTION:
 				executeAgentAction(node, tool);
 				break;
@@ -284,6 +287,39 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	}
 
 	/**
+	 * Execute server command
+	 * 
+	 * @param node
+	 * @param tool
+	 */
+	private void executeServerCommand(final Node node, final ObjectTool tool)
+	{
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		new ConsoleJob("Execute server command", null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				session.executeServerCommand(node.getObjectId(), tool.getData());
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						MessageDialog.openInformation(null, "Information", "Server command executed successfully");
+					}
+				});
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Canot execute command on server";
+			}
+		}.start();
+	}
+	
+	/**
+	 * Execute local command
+	 * 
 	 * @param node
 	 * @param tool
 	 */

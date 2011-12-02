@@ -153,4 +153,61 @@ public class SnmpUsmCredential
 	{
 		this.privPassword = privPassword;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode()
+	{
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + authMethod;
+		result = prime * result + ((authPassword == null) ? 0 : authPassword.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + privMethod;
+		result = prime * result + ((privPassword == null) ? 0 : privPassword.hashCode());
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SnmpUsmCredential other = (SnmpUsmCredential)obj;
+		if (authMethod != other.authMethod)
+			return false;
+		if (authPassword == null)
+		{
+			if (other.authPassword != null)
+				return false;
+		}
+		else if (!authPassword.equals(other.authPassword))
+			return false;
+		if (name == null)
+		{
+			if (other.name != null)
+				return false;
+		}
+		else if (!name.equals(other.name))
+			return false;
+		if (privMethod != other.privMethod)
+			return false;
+		if (privPassword == null)
+		{
+			if (other.privPassword != null)
+				return false;
+		}
+		else if (!privPassword.equals(other.privPassword))
+			return false;
+		return true;
+	}
 }

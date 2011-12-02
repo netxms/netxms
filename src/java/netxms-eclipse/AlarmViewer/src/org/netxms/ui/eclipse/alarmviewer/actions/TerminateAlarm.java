@@ -74,7 +74,7 @@ public class TerminateAlarm implements IObjectActionDelegate
 			{
 				return Messages.TerminateAlarm_ErrorMessage;
 			}
-		};
+		}.start();
 	}
 
 	/* (non-Javadoc)
