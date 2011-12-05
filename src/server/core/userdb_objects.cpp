@@ -63,7 +63,7 @@ UserDatabaseObject::UserDatabaseObject(DWORD id, const TCHAR *name)
 {
 	m_id = id;
 	uuid_generate(m_guid);
-	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
+	nx_strncpy(m_name, name, MAX_USER_NAME);
 	m_systemRights = 0;
 	m_description[0] = 0;
 	m_flags = UF_MODIFIED;
