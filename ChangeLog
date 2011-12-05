@@ -6,6 +6,7 @@
 - Implemented IP route visualization in management console
 - New MIBs added: JUNIPER-IVE-MIB
 - New NXSL functions: GetInterfaceObject
+- Many small improvements in management console
 - Fixed issues: #335, #336, #337
 
 

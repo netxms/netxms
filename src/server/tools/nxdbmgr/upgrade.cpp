@@ -5854,7 +5854,7 @@ static struct
 	{ 241, 242, H_UpgradeFromV241 },
 	{ 242, 243, H_UpgradeFromV242 },
 	{ 243, 244, H_UpgradeFromV243 },
-   { 0, NULL }
+   { 0, 0, NULL }
 };
 
 

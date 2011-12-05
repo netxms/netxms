@@ -104,7 +104,7 @@ static DWORD DeployConfig(DWORD session, uuid_t guid, CSCPMessage *msg)
 	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
 	if (fh != -1)
 	{
-		DWORD size = msg->GetVariableBinary(VID_CONFIG_FILE_DATA, 0, NULL);
+		DWORD size = msg->GetVariableBinary(VID_CONFIG_FILE_DATA, NULL, 0);
 		BYTE *data = (BYTE *)malloc(size);
 		if (data != NULL)
 		{
