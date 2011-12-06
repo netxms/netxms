@@ -60,6 +60,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolHandler;
+import org.netxms.ui.eclipse.objecttools.views.BrowserView;
 import org.netxms.ui.eclipse.objecttools.views.FileViewer;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -97,15 +98,6 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	public void initialize(IServiceLocator serviceLocator)
 	{
 		evalService = (IEvaluationService)serviceLocator.getService(IEvaluationService.class);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.action.ContributionItem#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-		super.dispose();
 	}
 
 	/* (non-Javadoc)
@@ -227,6 +219,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 				executeTableTool(node, tool);
 				break;
 			case ObjectTool.TYPE_URL:
+				openURL(node, tool);
 				break;
 			case ObjectTool.TYPE_FILE_DOWNLOAD:
 				executeFileDownload(node, tool);
@@ -427,6 +420,30 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		else
 		{
 			MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Cannot execute object tool: handler not defined");
+		}
+	}
+
+	/**
+	 * @param node
+	 * @param tool
+	 */
+	private void openURL(final Node node, final ObjectTool tool)
+	{
+		String temp = tool.getData();
+		temp = temp.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
+		temp = temp.replace("%OBJECT_NAME%", node.getObjectName());
+		final String url = temp.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
+		
+		final String sid = Long.toString(node.getObjectId()) + "&" + Long.toString(tool.getId());
+		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		try
+		{
+			BrowserView view = (BrowserView)window.getActivePage().showView(BrowserView.ID, sid, IWorkbenchPage.VIEW_ACTIVATE);
+			view.openUrl(url);
+		}
+		catch(PartInitException e)
+		{
+			MessageDialog.openError(window.getShell(), "Error", "Cannot open web browser: " + e.getLocalizedMessage());
 		}
 	}
 }

@@ -1170,6 +1170,7 @@ src/java/netxms-eclipse/ObjectTools/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/ObjectTools/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectTools/build.properties -text
 src/java/netxms-eclipse/ObjectTools/icons/agent_action.gif -text
+src/java/netxms-eclipse/ObjectTools/icons/browser.png -text
 src/java/netxms-eclipse/ObjectTools/icons/console.png -text
 src/java/netxms-eclipse/ObjectTools/icons/file_download.png -text
 src/java/netxms-eclipse/ObjectTools/icons/internal_tool.gif -text
@@ -1191,6 +1192,7 @@ src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/proper
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/Filter.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/General.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/helpers/ToolColumnLabelProvider.java -text
+src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/BrowserView.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/ObjectToolsEditor.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/TableToolResults.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/helpers/ObjectToolsComparator.java -text

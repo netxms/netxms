@@ -56,6 +56,14 @@
             name="File Viewer"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objecttools.views.BrowserView"
+            icon="icons/browser.png"
+            id="org.netxms.ui.eclipse.objecttools.views.BrowserView"
+            name="Web Browser"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

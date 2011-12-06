@@ -73,6 +73,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private static final Color LABEL_BACKGROUND = new Color(Display.getCurrent(), 240, 254, 192);
 	private static final Color LABEL_TEXT = new Color(Display.getCurrent(), 0, 0, 0);
 	private static final Color BORDER_COLOR = new Color(Display.getCurrent(), 128, 128, 128);
+	private static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 0, 0, 255);
 
 	private static final int LABEL_ARROW_HEIGHT = 20;
 	private static final int LABEL_ARROW_OFFSET = 10;
@@ -84,6 +85,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 
 	private ILabelProvider labelProvider;
 	private Image currentImage = null;
+	private Image bufferImage = null;
 	private Area coverage = null;
 	private List<GenericObject> objects = new ArrayList<GenericObject>();
 	private MapAccessor accessor;
@@ -91,6 +93,8 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private AnimatedImage waitingImage = null;
 	private Point currentPoint;
 	private Point dragStartPoint = null;
+	private Point selectionStartPoint = null;
+	private Point selectionEndPoint = null; 
 	private boolean loading = false;
 	private Set<GeoMapListener> mapListeners = new HashSet<GeoMapListener>(0);
 
@@ -103,7 +107,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 */
 	public GeoMapViewer(Composite parent, int style)
 	{
-		super(parent, style);
+		super(parent, style | SWT.NO_BACKGROUND);
 
 		labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 
@@ -131,6 +135,10 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 				Rectangle rect = getClientArea();
 				Point size = waitingImage.getSize();
 				waitingImage.setLocation(rect.x + rect.width / 2 - size.x, rect.y + rect.height / 2 - size.y);
+				
+				if (bufferImage != null)
+					bufferImage.dispose();
+				bufferImage = new Image(getDisplay(), rect.width, rect.height);
 			}
 		});
 
@@ -140,6 +148,10 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			{
 				labelProvider.dispose();
 				GeoLocationCache.getInstance().removeListener(GeoMapViewer.this);
+				if (bufferImage != null)
+					bufferImage.dispose();
+				if (currentImage != null)
+					currentImage.dispose();
 			}
 		});
 
@@ -324,7 +336,9 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	@Override
 	public void paintControl(PaintEvent e)
 	{
-		final GC gc = e.gc;
+		final GC gc = new GC(bufferImage);
+		
+		gc.fillRectangle(bufferImage.getBounds());
 
 		int imgW, imgH;
 		if (currentImage != null)
@@ -378,6 +392,25 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			gc.setForeground(INFO_BLOCK_TEXT);
 			gc.drawText(text, rect.x + 5, rect.y + 4, true);
 		}
+		
+		// Draw selection rectangle
+		if ((selectionStartPoint != null) && (selectionEndPoint != null))
+		{
+			int x = Math.min(selectionStartPoint.x, selectionEndPoint.x);
+			int y = Math.min(selectionStartPoint.y, selectionEndPoint.y);
+			int w = Math.abs(selectionStartPoint.x - selectionEndPoint.x);
+			int h = Math.abs(selectionStartPoint.y - selectionEndPoint.y);
+			gc.setBackground(SELECTION_COLOR);
+			gc.setForeground(SELECTION_COLOR);
+			gc.setAlpha(64);
+			gc.fillRectangle(x, y, w, h);
+			gc.setAlpha(255);
+			gc.setLineWidth(2);
+			gc.drawRectangle(x, y, w, h);
+		}
+		
+		gc.dispose();
+		e.gc.drawImage(bufferImage, 0, 0);
 	}
 
 	/**
@@ -409,7 +442,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		gc.setLineWidth(2);
 		gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
 		gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-
 		
 		final int[] arrow = new int[] { rect.x + LABEL_ARROW_OFFSET - 4, rect.y + rect.height, x, y, rect.x + LABEL_ARROW_OFFSET + 4,
 				rect.y + rect.height };
@@ -515,8 +547,16 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	{
 		if ((e.button == 1) && !loading) // left button, ignore if map is currently loading
 		{
-			dragStartPoint = new Point(e.x, e.y);
-			setCursor(getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL));
+			if ((e.stateMask & SWT.SHIFT) != 0)
+			{
+				if (accessor.getZoom() < 18)
+					selectionStartPoint = new Point(e.x, e.y);
+			}
+			else
+			{
+				dragStartPoint = new Point(e.x, e.y);
+				setCursor(getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL));
+			}
 		}
 
 		currentPoint = new Point(e.x, e.y);
@@ -546,6 +586,46 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			dragStartPoint = null;
 			setCursor(null);
 		}
+		if ((e.button == 1) && (selectionStartPoint != null))
+		{
+			if (selectionEndPoint != null)
+			{
+				int x1 = Math.min(selectionStartPoint.x, selectionEndPoint.x);
+				int x2 = Math.max(selectionStartPoint.x, selectionEndPoint.x);
+				int y1 = Math.min(selectionStartPoint.y, selectionEndPoint.y);
+				int y2 = Math.max(selectionStartPoint.y, selectionEndPoint.y);
+
+				final GeoLocation l1 = getLocationAtPoint(new Point(x1, y1));
+				final GeoLocation l2 = getLocationAtPoint(new Point(x2, y2));
+				final GeoLocation lc = getLocationAtPoint(new Point(x2 - (x2 - x1) / 2, y2 - (y2 - y1) / 2));
+
+				int zoom = accessor.getZoom();
+				while(zoom < 18)
+				{
+					zoom++;
+					final Area area = GeoLocationCache.calculateCoverage(getSize(), lc, GeoLocationCache.CENTER, zoom);
+					if (!area.contains(l1.getLatitude(), l1.getLongitude()) ||
+					    !area.contains(l2.getLatitude(), l2.getLongitude()))
+					{
+						zoom--;
+						break;
+					}
+				}
+
+				if (zoom != accessor.getZoom())
+				{
+					accessor.setZoom(zoom);
+					accessor.setLatitude(lc.getLatitude());
+					accessor.setLongitude(lc.getLongitude());
+					reloadMap();
+					notifyOnPositionChange();
+					notifyOnZoomChange();
+				}
+			}
+			selectionStartPoint = null;
+			selectionEndPoint = null;
+			redraw();
+		}
 	}
 
 	/* (non-Javadoc)
@@ -562,6 +642,16 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			{
 				offsetX = deltaX;
 				offsetY = deltaY;
+				redraw();
+			}
+		}
+		if (selectionStartPoint != null)
+		{
+			int deltaX = selectionStartPoint.x - e.x;
+			int deltaY = selectionStartPoint.y - e.y;
+			if (Math.abs(deltaX) > DRAG_JITTER || Math.abs(deltaY) > DRAG_JITTER)
+			{
+				selectionEndPoint = new Point(e.x, e.y);
 				redraw();
 			}
 		}
