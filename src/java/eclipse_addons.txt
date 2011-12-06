@@ -2,5 +2,4 @@ Eclipse addons required for NetXMS development:
 
 * Zest and Draw2D: http://download.eclipse.org/tools/gef/updates/releases
 * Properties Editor: http://propedit.sourceforge.jp/eclipse/updates
-* SWTCharts: http://www.swtchart.org/ (standalone download, extract into Eclipse plugin directory)
 * "Target Management Terminal" from "Target Management Project 3.3". Update site: http://download.eclipse.org/tm/updates/3.3milestones/

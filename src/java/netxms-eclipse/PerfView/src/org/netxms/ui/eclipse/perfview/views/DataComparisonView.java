@@ -664,4 +664,18 @@ public class DataComparisonView extends ViewPart
 			chart.updateParameter(i, values[i], false);
 		chart.refresh();
 	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		for(Image i : titleImages)
+		{
+			if (i != null)
+				i.dispose();
+		}
+		super.dispose();
+	}
 }
