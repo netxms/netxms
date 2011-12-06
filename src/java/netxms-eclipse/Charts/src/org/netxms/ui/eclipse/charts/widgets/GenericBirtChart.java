@@ -36,6 +36,8 @@ import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.GC;
@@ -86,6 +88,20 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		
 		addPaintListener(this);
 		addControlListener(this);
+		addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				if ((imgChart != null) && (!imgChart.isDisposed()))
+				{
+					imgChart.dispose();
+				}
+				if ((gcImage != null) && (!gcImage.isDisposed()))
+				{
+					gcImage.dispose();
+				}
+			}
+		});
 	}
 
 	/* (non-Javadoc)
@@ -142,23 +158,6 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 	public void controlResized(ControlEvent arg0)
 	{
 		fullRepaint = true;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Widget#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-		if ((imgChart != null) && (!imgChart.isDisposed()))
-		{
-			imgChart.dispose();
-		}
-		if ((gcImage != null) && (!gcImage.isDisposed()))
-		{
-			gcImage.dispose();
-		}
-		super.dispose();
 	}
 
 	/* (non-Javadoc)
