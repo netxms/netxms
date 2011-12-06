@@ -25,7 +25,8 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
+import org.netxms.ui.eclipse.shared.SharedColors;
+import org.netxms.ui.eclipse.tools.ColorCache;
 
 /**
  * Composite with lightweight border (Windows 7 style)
@@ -33,10 +34,11 @@ import org.eclipse.swt.widgets.Display;
  */
 public class DashboardComposite extends Composite implements PaintListener
 {
-	private static final Color BORDER_OUTER_COLOR = new Color(Display.getDefault(), 171, 173, 179);
-	private static final Color BORDER_INNER_COLOR = new Color(Display.getDefault(), 255, 255, 255);
-	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
+	protected ColorCache colors;
 	
+	private Color borderOuterColor;
+	private Color borderInnerColor;
+	private Color backgroundColor;
 	private boolean hasBorder = true;
 	
 	/**
@@ -46,9 +48,15 @@ public class DashboardComposite extends Composite implements PaintListener
 	public DashboardComposite(Composite parent, int style)
 	{
 		super(parent, style & ~SWT.BORDER);
+		
+		colors = new ColorCache(this);
+		borderOuterColor = colors.create(171, 173, 179);
+		borderInnerColor = SharedColors.WHITE;
+		backgroundColor = SharedColors.WHITE;
+		
 		hasBorder = ((style & SWT.BORDER) != 0);
 		addPaintListener(this);
-		setBackground(BACKGROUND_COLOR);
+		setBackground(backgroundColor);
 	}
 
 	/* (non-Javadoc)
@@ -107,14 +115,14 @@ public class DashboardComposite extends Composite implements PaintListener
 			
 			rect.width--;
 			rect.height--;
-			e.gc.setForeground(BORDER_OUTER_COLOR);
+			e.gc.setForeground(borderOuterColor);
 			e.gc.drawRectangle(rect);
 			
 			rect.x++;
 			rect.y++;
 			rect.width -= 2;
 			rect.height -= 2;
-			e.gc.setForeground(BORDER_INNER_COLOR);
+			e.gc.setForeground(borderInnerColor);
 			e.gc.drawRectangle(rect);
 		}
 	}

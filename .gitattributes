@@ -1531,8 +1531,10 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/messages.prope
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/messages_ru.properties -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/ConsoleSharedData.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/IActionConstants.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedColors.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedFonts.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedIcons.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ColorCache.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ColorConverter.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ObjectLabelComparator.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/StringComparator.java -text

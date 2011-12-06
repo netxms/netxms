@@ -28,13 +28,12 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.widgets.Display;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
+import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Map decoration figure
- *
  */
 public class DecorationFigure extends Figure
 {
@@ -47,6 +46,10 @@ public class DecorationFigure extends Figure
 	private MapLabelProvider labelProvider;
 	private Label label;
 	
+	/**
+	 * @param decoration
+	 * @param labelProvider
+	 */
 	public DecorationFigure(NetworkMapDecoration decoration, MapLabelProvider labelProvider)
 	{
 		this.decoration = decoration;
@@ -61,8 +64,8 @@ public class DecorationFigure extends Figure
 		Dimension d = label.getPreferredSize();
 		label.setSize(d.width + LABEL_MARGIN * 2, d.height + 2);
 		label.setLocation(new Point(TITLE_OFFSET, 0));
-		label.setBackgroundColor(ColorConverter.colorFromInt(decoration.getColor()));
-		label.setForegroundColor(new Color(Display.getDefault(), 255, 255, 255));
+		label.setBackgroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(decoration.getColor())));
+		label.setForegroundColor(SharedColors.WHITE);
 	}
 
 	/* (non-Javadoc)
@@ -98,17 +101,19 @@ public class DecorationFigure extends Figure
 		rect.width -= MARGIN_X * 2;
 		rect.height -= MARGIN_Y + topMargin + 1;
 		
-		gc.setBackgroundColor(ColorConverter.colorFromInt(decoration.getColor()));
+		final Color color = labelProvider.getColors().create(ColorConverter.rgbFromInt(decoration.getColor()));
+		
+		gc.setBackgroundColor(color);
 		gc.setAlpha(16);
 		gc.fillRoundRectangle(rect, 8, 8);
 		gc.setAlpha(255);
 		
-		gc.setForegroundColor(ColorConverter.colorFromInt(decoration.getColor()));
+		gc.setForegroundColor(color);
 		gc.setLineWidth(3);
 		gc.setLineStyle(labelProvider.isElementSelected(decoration) ? SWT.LINE_DOT : SWT.LINE_SOLID);
 		gc.drawRoundRectangle(rect, 8, 8);
 		
-		gc.setBackgroundColor(ColorConverter.colorFromInt(decoration.getColor()));
+		gc.setBackgroundColor(color);
 		gc.fillRoundRectangle(label.getBounds(), 8, 8);
 	}
 	

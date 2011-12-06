@@ -19,12 +19,11 @@
 package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.shared.SharedColors;
 
 /**
  * Show object's comments
@@ -32,8 +31,6 @@ import org.netxms.client.objects.GenericObject;
  */
 public class Comments extends OverviewPageElement
 {
-	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
-	
 	private Text comments;
 
 	/**
@@ -54,7 +51,7 @@ public class Comments extends OverviewPageElement
 	protected Control createClientArea(Composite parent)
 	{
 		comments = new Text(parent, SWT.MULTI | SWT.READ_ONLY | SWT.WRAP);
-		comments.setBackground(BACKGROUND_COLOR);
+		comments.setBackground(SharedColors.WHITE);
 		if (getObject() != null)
 			comments.setText(getObject().getComments());
 		return comments;

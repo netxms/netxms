@@ -24,7 +24,6 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -52,6 +51,7 @@ import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -309,7 +309,7 @@ public class General extends PropertyPage
 				catch(NumberFormatException e)
 				{
 					General.this.setErrorMessage("Invalid number entered in \"Polling interval\" field");
-					pollingInterval.getTextControl().setBackground(new Color(General.this.getShell().getDisplay(), 255, 0, 0));
+					pollingInterval.getTextControl().setBackground(SharedColors.RED);
 				}
 			}
       });
@@ -376,7 +376,7 @@ public class General extends PropertyPage
 				catch(NumberFormatException e)
 				{
 					General.this.setErrorMessage("Invalid number entered in \"Retention time\" field");
-					retentionTime.getTextControl().setBackground(new Color(General.this.getShell().getDisplay(), 255, 0, 0));
+					retentionTime.getTextControl().setBackground(SharedColors.RED);
 				}
 			}
       });

@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -34,6 +33,8 @@ import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
+import org.netxms.ui.eclipse.shared.SharedColors;
+import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
@@ -44,6 +45,7 @@ public class AvailabilityChart extends OverviewPageElement
 	DataComparisonBirtChart dayChart;
 	DataComparisonBirtChart weekChart;
 	DataComparisonBirtChart monthChart;
+	ColorCache colors;
 	
 	/**
 	 * @param parent
@@ -88,6 +90,7 @@ public class AvailabilityChart extends OverviewPageElement
 	protected Control createClientArea(Composite parent)
 	{
 		Composite clientArea = new Composite(parent, SWT.NONE);
+		colors = new ColorCache(clientArea);
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 4;
@@ -152,17 +155,17 @@ public class AvailabilityChart extends OverviewPageElement
 	{
 		int th = gc.textExtent("UptimeDowntime").y;
 		
-		gc.setBackground(new Color(getDisplay(), 127, 154, 72));
-		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), ColorConverter.BLACK, 0.2f));
+		gc.setBackground(colors.create(127, 154, 72));
+		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), SharedColors.BLACK, 0.2f, colors));
 		gc.fillRectangle(5, 10, th, th);
 		gc.drawRectangle(5, 10, th, th);
 
-		gc.setBackground(new Color(getDisplay(), 158, 65, 62));
-		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), ColorConverter.BLACK, 0.2f));
+		gc.setBackground(colors.create(158, 65, 62));
+		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), SharedColors.BLACK, 0.2f, colors));
 		gc.fillRectangle(5, 40, th, th);
 		gc.drawRectangle(5, 40, th, th);
 
-		gc.setForeground(ColorConverter.BLACK);
+		gc.setForeground(SharedColors.BLACK);
 		gc.drawText("Uptime", 10 + th, 10, true);
 		gc.drawText("Downtime", 10 + th, 40, true);
 	}

@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -38,6 +37,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
@@ -72,7 +72,7 @@ public class DeviceView extends DashboardComposite
 		layout.wrap = false;
 		setLayout(layout);
 		
-		setBackground(new Color(getDisplay(), 255, 255, 255));
+		setBackground(SharedColors.WHITE);
 		
 		listener = new PortSelectionListener() {
 			@Override

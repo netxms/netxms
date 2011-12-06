@@ -19,17 +19,15 @@
 package org.netxms.ui.eclipse.objectbrowser;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.viewers.DecorationOverlayIcon;
 import org.eclipse.jface.viewers.IDecoration;
-import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProviderListener;
-import org.eclipse.swt.graphics.Image;
+import org.eclipse.jface.viewers.ILightweightLabelDecorator;
 import org.netxms.client.objects.GenericObject;
 
 /**
  * Label decorator for NetXMS objects
  */
-public class ObjectDecorator implements ILabelDecorator
+public class ObjectDecorator implements ILightweightLabelDecorator
 {
 	// Status images
 	private ImageDescriptor[] statusImages;
@@ -48,28 +46,6 @@ public class ObjectDecorator implements ILabelDecorator
 		statusImages[6] = Activator.getImageDescriptor("icons/status/unmanaged.gif"); //$NON-NLS-1$
 		statusImages[7] = Activator.getImageDescriptor("icons/status/disabled.gif"); //$NON-NLS-1$
 		statusImages[8] = Activator.getImageDescriptor("icons/status/testing.png"); //$NON-NLS-1$
-	}
-	                           
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ILabelDecorator#decorateImage(org.eclipse.swt.graphics.Image, java.lang.Object)
-	 */
-	@Override
-	public Image decorateImage(Image image, Object element)
-	{
-		int status = ((GenericObject)element).getStatus();
-		if ((image == null) || (statusImages[status] == null))
-			return null;
-		DecorationOverlayIcon overlay = new DecorationOverlayIcon(image, statusImages[status], IDecoration.BOTTOM_RIGHT);
-		return overlay.createImage();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ILabelDecorator#decorateText(java.lang.String, java.lang.Object)
-	 */
-	@Override
-	public String decorateText(String text, Object element)
-	{
-		return null;
 	}
 
 	/* (non-Javadoc)
@@ -103,5 +79,15 @@ public class ObjectDecorator implements ILabelDecorator
 	@Override
 	public void removeListener(ILabelProviderListener listener)
 	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ILightweightLabelDecorator#decorate(java.lang.Object, org.eclipse.jface.viewers.IDecoration)
+	 */
+	@Override
+	public void decorate(Object element, IDecoration decoration)
+	{
+		int status = ((GenericObject)element).getStatus();
+		decoration.addOverlay(statusImages[status], IDecoration.BOTTOM_RIGHT);
 	}
 }

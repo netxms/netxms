@@ -62,6 +62,7 @@ public class LoginDialog extends Dialog
 	private Text textPassword;
 	private String password;
 	private boolean isOk = false;
+	private Color labelColor;
 	
 	public LoginDialog(Shell parentShell)
 	{
@@ -99,9 +100,18 @@ public class LoginDialog extends Dialog
       dialogLayout.horizontalSpacing = 0;
       dialogArea.setLayout(dialogLayout);
       
+      labelColor = new Color(dialogArea.getDisplay(), 36, 66, 90);
+      dialogArea.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				labelColor.dispose();
+			}
+		});
+      
       // Header image
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setBackground(new Color(dialogArea.getDisplay(), 36, 66, 90));
+      label.setBackground(labelColor);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;

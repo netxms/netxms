@@ -32,6 +32,10 @@ public class StatusIndicatorElement extends ElementWidget
 	private static final int MARGIN_Y = 16;
 	private static final int CIRCLE_SIZE = 36;
 
+	/**
+	 * @param parent
+	 * @param element
+	 */
 	protected StatusIndicatorElement(final DashboardControl parent, DashboardElement element)
 	{
 		super(parent, element);
@@ -50,13 +54,12 @@ public class StatusIndicatorElement extends ElementWidget
 		setLayout(layout);
 
 		canvas = new Canvas(this, SWT.NONE);
-		canvas.setBackground(new Color(getDisplay(), 240, 240, 240));
+		canvas.setBackground(colors.create(240, 240, 240));
 		font = new Font(getDisplay(), "Verdana", 12, SWT.NONE);
 
 		calcSize(parent);
 
-		addDisposeListener(new DisposeListener()
-		{
+		addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -64,8 +67,7 @@ public class StatusIndicatorElement extends ElementWidget
 			}
 		});
 
-		canvas.addPaintListener(new PaintListener()
-		{
+		canvas.addPaintListener(new PaintListener() {
 			@Override
 			public void paintControl(PaintEvent e)
 			{
@@ -104,6 +106,9 @@ public class StatusIndicatorElement extends ElementWidget
 		canvas.redraw();
 	}
 
+	/**
+	 * 
+	 */
 	protected void startRefreshTimer()
 	{
 		final Display display = getDisplay();
@@ -125,6 +130,9 @@ public class StatusIndicatorElement extends ElementWidget
 		refreshData();
 	}
 
+	/**
+	 * @param e
+	 */
 	public void drawContent(PaintEvent e)
 	{
 		e.gc.setAntialias(SWT.ON);
@@ -134,8 +142,8 @@ public class StatusIndicatorElement extends ElementWidget
 
 		final Color bgColor = canvas.getBackground();
 
-		final Color redColors[] = { new Color(getDisplay(), 134, 0, 0), new Color(getDisplay(), 192, 0, 0) };
-		final Color greenColors[] = { new Color(getDisplay(), 0, 134, 0), new Color(getDisplay(), 0, 192, 0) };
+		final Color redColors[] = { colors.create(134, 0, 0), colors.create(192, 0, 0) };
+		final Color greenColors[] = { colors.create(0, 134, 0), colors.create(0, 192, 0) };
 
 		if (greenState)
 		{
@@ -153,6 +161,15 @@ public class StatusIndicatorElement extends ElementWidget
 		bgColor.dispose();
 	}
 
+	/**
+	 * @param e
+	 * @param xMargin
+	 * @param yOffset
+	 * @param size
+	 * @param bgColor
+	 * @param circleColors
+	 * @param label
+	 */
 	private void drawElement(PaintEvent e, int xMargin, int yOffset, int size, final Color bgColor, final Color[] circleColors,
 			final String label)
 	{
@@ -168,6 +185,9 @@ public class StatusIndicatorElement extends ElementWidget
 		e.gc.drawText(label, (xMargin * 2) + size, yOffset + (size / 2) - (textExtent.y / 2));
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+	 */
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{

@@ -53,7 +53,7 @@
             class="org.netxms.ui.eclipse.actionmanager.ServerActionDecorator"
             id="org.netxms.ui.eclipse.decorators.ServerAction"
             label="%decorator.actions"
-            lightweight="false"
+            lightweight="true"
             state="true">
          <enablement>
             <objectClass

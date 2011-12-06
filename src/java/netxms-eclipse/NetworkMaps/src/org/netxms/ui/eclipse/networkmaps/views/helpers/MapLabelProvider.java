@@ -49,6 +49,7 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ColorCache;
 
 /**
  * Label provider for map
@@ -79,6 +80,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean showStatusFrame = false;
 	private ILabelProvider workbenchLabelProvider;
 	private ObjectFigureType objectFigureType = ObjectFigureType.ICON;
+	private ColorCache colors;
 
 	/**
 	 * Create map label provider
@@ -115,6 +117,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		showStatusIcons = store.getBoolean("NetMap.ShowStatusIcon");
 		showStatusFrame = store.getBoolean("NetMap.ShowStatusFrame");
 		showStatusBackground = store.getBoolean("NetMap.ShowStatusBackground");
+		
+		colors = new ColorCache();
 	}
 
 	/*
@@ -275,6 +279,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		fontLabel.dispose();
 		fontTitle.dispose();
 		
+		colors.dispose();
+		
 		workbenchLabelProvider.dispose();
 		super.dispose();
 	}
@@ -432,5 +438,13 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	public void setObjectFigureType(ObjectFigureType objectFigureType)
 	{
 		this.objectFigureType = objectFigureType;
+	}
+
+	/**
+	 * @return the colors
+	 */
+	protected ColorCache getColors()
+	{
+		return colors;
 	}
 }

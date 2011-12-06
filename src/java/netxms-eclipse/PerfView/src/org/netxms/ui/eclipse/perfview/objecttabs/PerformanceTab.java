@@ -31,12 +31,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.PerfTabDci;
@@ -46,6 +44,7 @@ import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.perfview.objecttabs.internal.PerfTabGraph;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
@@ -68,7 +67,7 @@ public class PerformanceTab extends ObjectTab
 		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 		
 		chartArea = new Composite(scroller, SWT.NONE);
-		chartArea.setBackground(new Color(Display.getCurrent(), 255, 255, 255));
+		chartArea.setBackground(SharedColors.WHITE);
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;

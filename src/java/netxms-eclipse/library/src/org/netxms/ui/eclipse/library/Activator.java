@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.library;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.shared.SharedFonts;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.osgi.framework.BundleContext;
@@ -52,6 +53,7 @@ public class Activator extends AbstractUIPlugin
 		plugin = this;
 		SharedIcons.init();
 		SharedFonts.init();
+		SharedColors.init();
 	}
 
 	/*

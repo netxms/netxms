@@ -18,16 +18,17 @@
  */
 package org.netxms.ui.eclipse.shared;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 
 /**
- * Shared console fonts
+ * Shared colors
  */
-public class SharedFonts
+public class SharedColors
 {
-	public static Font CONSOLE;
+	public static Color BLACK;
+	public static Color RED;
+	public static Color WHITE;
 	
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
@@ -36,6 +37,8 @@ public class SharedFonts
 	{
 		Display display = Display.getCurrent();
 		
-		CONSOLE = new Font(display, "Courier New", 10, SWT.NORMAL); //$NON-NLS-1$
+		BLACK = new Color(display, 0, 0, 0);
+		RED = new Color(display, 255, 0, 0);
+		WHITE = new Color(display, 255, 255, 255);
 	}
 }

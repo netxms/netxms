@@ -75,7 +75,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	public static final String ID = "org.netxms.ui.eclipse.epp.view.policy_editor";
 	public static final String JOB_FAMILY = "PolicyEditorJob";
 
-	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
+	private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
 	
 	private NXCSession session;
 	private boolean policyLocked = false;

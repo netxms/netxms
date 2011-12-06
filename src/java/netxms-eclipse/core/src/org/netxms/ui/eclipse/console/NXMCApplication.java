@@ -7,6 +7,8 @@ import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
+import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
  * This class controls all aspects of the application's execution
@@ -22,9 +24,12 @@ public class NXMCApplication implements IApplication
 		Locale.setDefault(new Locale(locale));
 		System.setProperty("osgi.nl", locale); //$NON-NLS-1$
 
-		Display display = PlatformUI.createDisplay();
+		final Display display = PlatformUI.createDisplay();
 		try
 		{
+			StatusDisplayInfo.init(display);
+			DataCollectionDisplayInfo.init();
+			
 			int returnCode = PlatformUI.createAndRunWorkbench(display, new NXMCWorkbenchAdvisor());
 			if (returnCode == PlatformUI.RETURN_RESTART)
 				return IApplication.EXIT_RESTART;

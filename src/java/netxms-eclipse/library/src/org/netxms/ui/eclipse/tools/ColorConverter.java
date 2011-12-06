@@ -22,8 +22,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PlatformUI;
 
 /**
  * Utility class for converting between different color representation formats
@@ -31,9 +29,6 @@ import org.eclipse.ui.PlatformUI;
  */
 public class ColorConverter
 {
-	public static final Color WHITE = new Color(Display.getDefault(), 255, 255, 255);
-	public static final Color BLACK = new Color(Display.getDefault(), 0, 0, 0);
-	
 	/**
 	 * Create integer value from Red/Green/Blue
 	 * 
@@ -62,12 +57,13 @@ public class ColorConverter
 	/**
 	 * Create Color object from integer RGB representation
 	 * @param rgb color's rgb representation
+	 * @param cache color cache where new color should be placed
 	 * @return color object
 	 */
-	public static Color colorFromInt(int rgb)
+	public static Color colorFromInt(int rgb, ColorCache cache)
 	{
 		// All colors on server stored as BGR: red in less significant byte and blue in most significant byte
-		return new Color(PlatformUI.getWorkbench().getDisplay(), rgb & 0xFF, (rgb >> 8) & 0xFF, rgb >> 16);
+		return cache.create(rgb & 0xFF, (rgb >> 8) & 0xFF, (rgb >> 16) & 0xFF);
 	}
 
 	/**
@@ -75,11 +71,12 @@ public class ColorConverter
 	 *  
 	 * @param store preference store
 	 * @param name preference name
+	 * @param cache color cache where new color should be placed
 	 * @return Color object
 	 */
-	public static Color getColorFromPreferences(IPreferenceStore store, final String name)
+	public static Color getColorFromPreferences(IPreferenceStore store, final String name, ColorCache cache)
 	{
-		return new Color(PlatformUI.getWorkbench().getDisplay(), PreferenceConverter.getColor(store, name));
+		return cache.create(PreferenceConverter.getColor(store, name));
 	}
 
 	/**
@@ -94,6 +91,12 @@ public class ColorConverter
 		return rgbToInt(PreferenceConverter.getColor(store, name));
 	}
 	
+	/**
+	 * @param start
+	 * @param end
+	 * @param amount
+	 * @return
+	 */
 	private static float lerp(float start, float end, float amount)
 	{
 		float difference = end - start;
@@ -109,12 +112,13 @@ public class ColorConverter
 	 * @param color
 	 * @param direction
 	 * @param amount
+	 * @param cache color cache where new color should be placed
 	 * @return
 	 */
-	public static Color adjustColor(Color color, Color direction, float amount)
+	public static Color adjustColor(Color color, Color direction, float amount, ColorCache cache)
 	{
 		float sr = color.getRed(), sg = color.getGreen(), sb = color.getBlue();
 		float dr = direction.getRed(), dg = direction.getGreen(), db = direction.getBlue();
-		return new Color(color.getDevice(), (int)lerp(sr, dr, amount), (int)lerp(sg, dg, amount), (int)lerp(sb, db, amount));
+		return cache.create((int)lerp(sr, dr, amount), (int)lerp(sg, dg, amount), (int)lerp(sb, db, amount));
 	}
 }

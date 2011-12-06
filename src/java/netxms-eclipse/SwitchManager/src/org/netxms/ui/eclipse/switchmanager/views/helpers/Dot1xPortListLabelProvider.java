@@ -35,11 +35,11 @@ import org.netxms.ui.eclipse.switchmanager.views.Dot1xStatusView;
  */
 public class Dot1xPortListLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider, ITableFontProvider
 {
-	private Color COLOR_UNKNOWN = new Color(Display.getDefault(), 127, 127, 127);
-	private Color COLOR_FAILURE = new Color(Display.getDefault(), 255, 0, 0);
-	private Color COLOR_POSSIBLE_FAILURE = new Color(Display.getDefault(), 255, 128, 0);
-	private Color COLOR_AUTH_AUTO = new Color(Display.getDefault(), 0, 192, 0);
-	private Color COLOR_AUTH_FORCED = new Color(Display.getDefault(), 0, 0, 128);
+	private Color COLOR_UNKNOWN = new Color(Display.getCurrent(), 127, 127, 127);
+	private Color COLOR_FAILURE = new Color(Display.getCurrent(), 255, 0, 0);
+	private Color COLOR_POSSIBLE_FAILURE = new Color(Display.getCurrent(), 255, 128, 0);
+	private Color COLOR_AUTH_AUTO = new Color(Display.getCurrent(), 0, 192, 0);
+	private Color COLOR_AUTH_FORCED = new Color(Display.getCurrent(), 0, 0, 128);
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -128,5 +128,19 @@ public class Dot1xPortListLabelProvider extends LabelProvider implements ITableL
 			return JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT);
 		
 		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		COLOR_AUTH_AUTO.dispose();
+		COLOR_AUTH_FORCED.dispose();
+		COLOR_FAILURE.dispose();
+		COLOR_POSSIBLE_FAILURE.dispose();
+		COLOR_UNKNOWN.dispose();
+		super.dispose();
 	}
 }

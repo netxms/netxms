@@ -24,12 +24,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Layout;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
@@ -43,14 +41,13 @@ import org.netxms.ui.eclipse.objectview.objecttabs.elements.Connection;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.GeneralInfo;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedColors;
 
 /**
  * Object overview tab
  */
 public class ObjectOverview extends ObjectTab
 {
-	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
-	
 	private NXCListener sessionListener = null;
 	private Set<OverviewPageElement> elements = new HashSet<OverviewPageElement>();
 	private ScrolledComposite scroller;
@@ -77,7 +74,7 @@ public class ObjectOverview extends ObjectTab
 		});
 		
 		viewArea = new Composite(scroller, SWT.NONE);
-		viewArea.setBackground(BACKGROUND_COLOR);
+		viewArea.setBackground(SharedColors.WHITE);
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		viewArea.setLayout(layout);
@@ -85,7 +82,7 @@ public class ObjectOverview extends ObjectTab
 		
 		leftColumn = new Composite(viewArea, SWT.NONE);
 		leftColumn.setLayout(createColumnLayout());
-		leftColumn.setBackground(BACKGROUND_COLOR);
+		leftColumn.setBackground(SharedColors.WHITE);
 		GridData gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.FILL;
@@ -94,7 +91,7 @@ public class ObjectOverview extends ObjectTab
 		
 		rightColumn = new Composite(viewArea, SWT.NONE);
 		rightColumn.setLayout(createColumnLayout());
-		rightColumn.setBackground(BACKGROUND_COLOR);
+		rightColumn.setBackground(SharedColors.WHITE);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.LEFT;

@@ -44,11 +44,11 @@ public class ServiceFigure extends Figure
 	private static final int VERTICAL_MARGIN = 4;
 	private static final int MAX_LABEL_WIDTH = 70;
 	
-	private static final Color BORDER_COLOR = new Color(Display.getDefault(), 0, 0, 0);
-	private static final Color NORMAL_COLOR_LEFT = new Color(Display.getDefault(), 164, 196, 212);
-	private static final Color NORMAL_COLOR_RIGHT = new Color(Display.getDefault(), 180, 208, 228);
-	private static final Color SELECTION_COLOR_LEFT = new Color(Display.getDefault(), 255, 242, 0);
-	private static final Color SELECTION_COLOR_RIGHT = new Color(Display.getDefault(), 225, 212, 0);
+	private static final Color BORDER_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
+	private static final Color NORMAL_COLOR_LEFT = new Color(Display.getCurrent(), 164, 196, 212);
+	private static final Color NORMAL_COLOR_RIGHT = new Color(Display.getCurrent(), 180, 208, 228);
+	private static final Color SELECTION_COLOR_LEFT = new Color(Display.getCurrent(), 255, 242, 0);
+	private static final Color SELECTION_COLOR_RIGHT = new Color(Display.getCurrent(), 225, 212, 0);
 	
 	private ServiceTreeElement service;
 	private ServiceTreeLabelProvider labelProvider;

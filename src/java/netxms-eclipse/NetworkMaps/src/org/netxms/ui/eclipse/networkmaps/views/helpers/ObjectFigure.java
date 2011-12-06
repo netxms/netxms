@@ -31,7 +31,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public abstract class ObjectFigure extends Figure
 {
-	protected static final Color SELECTION_COLOR = new Color(Display.getDefault(), 132, 0, 200);
+	protected static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 132, 0, 200);
 	
 	protected NetworkMapObject element;
 	protected GenericObject object;

@@ -24,7 +24,7 @@ public class ObjectFigureSmallLabel extends ObjectFigure
 	private static final int MARGIN_WIDTH = 4;
 	private static final int MARGIN_HEIGHT = 2;
 	
-	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
+	private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
 	
 	private Label label;
 	

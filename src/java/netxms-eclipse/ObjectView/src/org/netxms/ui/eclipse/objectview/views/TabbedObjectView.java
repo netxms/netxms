@@ -60,6 +60,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.shared.SharedColors;
 
 /**
  * Tabbed view of currently selected object
@@ -72,6 +73,7 @@ public class TabbedObjectView extends ViewPart
 	private CLabel header;
 	private CTabFolder tabFolder;
 	private Font headerFont;
+	private Color headerColor;
 	private List<ObjectTab> tabs;
 	private ISelectionService selectionService = null;
 	private ISelectionListener selectionListener = null;
@@ -91,12 +93,13 @@ public class TabbedObjectView extends ViewPart
 		parent.setLayout(layout);
 		
 		headerFont = new Font(parent.getDisplay(), "Verdana", 11, SWT.BOLD);
+		headerColor = new Color(parent.getDisplay(), 153, 180, 209);
 		
 		header = new CLabel(parent, SWT.BORDER);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		header.setFont(headerFont);
-		header.setBackground(new Color(parent.getDisplay(), 153, 180, 209));
-		header.setForeground(new Color(parent.getDisplay(), 255, 255, 255));
+		header.setBackground(headerColor);
+		header.setForeground(SharedColors.WHITE);
 		
 		tabFolder = new CTabFolder(parent, SWT.TOP | SWT.FLAT | SWT.MULTI);
 		tabFolder.setUnselectedImageVisible(true);
@@ -334,6 +337,7 @@ public class TabbedObjectView extends ViewPart
 			tab.dispose();
 		}
 		headerFont.dispose();
+		headerColor.dispose();
 		super.dispose();
 	}
 }

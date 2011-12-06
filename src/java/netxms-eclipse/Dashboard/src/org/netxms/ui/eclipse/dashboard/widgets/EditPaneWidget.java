@@ -41,7 +41,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class EditPaneWidget extends Canvas implements PaintListener
 {
-	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 0, 0, 127);
+	private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 0, 0, 127);
 	
 	private DashboardControl dbc;
 	private DashboardElement element;

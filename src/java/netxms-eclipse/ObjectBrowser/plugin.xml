@@ -77,7 +77,7 @@
           id="org.netxms.ui.eclipse.decorators.NXCObject"
           label="NetXMS Objects Decorator"
           state="true"
-          lightweight= "false"
+          lightweight= "true"
           class="org.netxms.ui.eclipse.objectbrowser.ObjectDecorator">
          <enablement>
            <objectClass name="org.netxms.client.objects.GenericObject"/>

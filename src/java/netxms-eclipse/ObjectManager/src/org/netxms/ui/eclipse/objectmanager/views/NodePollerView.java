@@ -61,10 +61,10 @@ public class NodePollerView extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.objectmanager.views.NodePollerView";
 	
 	private static final String[] POLL_NAME = { "", "Status Poll", "Configuration Poll", "Interface Poll", "Topology Poll" };
-	private static final Color COLOR_ERROR = new Color(Display.getDefault(), 192, 0, 0);
-	private static final Color COLOR_WARNING = new Color(Display.getDefault(), 255, 128, 0);
-	private static final Color COLOR_INFO = new Color(Display.getDefault(), 0, 128, 0);
-	private static final Color COLOR_LOCAL = new Color(Display.getDefault(), 0, 0, 192);
+	private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
+	private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);
+	private static final Color COLOR_INFO = new Color(Display.getCurrent(), 0, 128, 0);
+	private static final Color COLOR_LOCAL = new Color(Display.getCurrent(), 0, 0, 192);
 	
 	private NXCSession session;
 	private Node node;

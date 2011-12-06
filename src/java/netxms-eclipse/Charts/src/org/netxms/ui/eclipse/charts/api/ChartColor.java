@@ -22,7 +22,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.graphics.RGB;
 import org.netxms.ui.eclipse.charts.Activator;
-import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Color for chart element
@@ -133,6 +132,6 @@ public final class ChartColor
 	 */
 	public static ChartColor getDefaultColor(int index)
 	{
-		return new ChartColor(ColorConverter.getColorFromPreferences(Activator.getDefault().getPreferenceStore(), "Chart.Colors.Data." + index).getRGB());
+		return new ChartColor(PreferenceConverter.getColor(Activator.getDefault().getPreferenceStore(), "Chart.Colors.Data." + index));
 	}
 }

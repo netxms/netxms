@@ -47,6 +47,7 @@ import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.SelectionRectangle;
+import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.swtchart.Chart;
 import org.swtchart.IAxis;
@@ -86,6 +87,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private IPreferenceStore preferenceStore;
 	private MouseListener zoomMouseListener = null;
 	private PaintListener zoomPaintListener = null;
+	private ColorCache colors;
 	
 	/**
 	 * @param parent
@@ -94,6 +96,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 	public LineChart(Composite parent, int style)
 	{
 		super(parent, style);
+		
+		colors = new ColorCache(this);
 		
 		preferenceStore = Activator.getDefault().getPreferenceStore();
 		showToolTips = preferenceStore.getBoolean("Chart.ShowToolTips");
@@ -303,7 +307,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	 */
 	private Color getColorFromPreferences(final String name)
 	{
-		return new Color(getDisplay(), PreferenceConverter.getColor(preferenceStore, name));
+		return colors.create(PreferenceConverter.getColor(preferenceStore, name));
 	}
 	
 	/**
@@ -418,7 +422,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 			if (style.isShowThresholds())
 			{
 				int y = axis.getPixelCoordinate(10);
-				gc.setForeground(ColorConverter.colorFromInt(style.getColor()));
+				gc.setForeground(ColorConverter.colorFromInt(style.getColor(), colors));
 				gc.setLineStyle(SWT.LINE_DOT);
 				gc.setLineWidth(3);
 				gc.drawLine(0, y, clientArea.width, y);
@@ -664,7 +668,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 			return;
 
 		GraphItemStyle style = itemStyles.get(index);
-		series.setLineColor(ColorConverter.colorFromInt(style.getColor()));
+		series.setLineColor(ColorConverter.colorFromInt(style.getColor(), colors));
 	}
 
 	/**
@@ -748,5 +752,13 @@ public class LineChart extends Chart implements HistoricalDataChart
          }
 		}
       return adjustedUpper;
+	}
+
+	/**
+	 * @return the color cache
+	 */
+	public ColorCache getColorCache()
+	{
+		return colors;
 	}
 }

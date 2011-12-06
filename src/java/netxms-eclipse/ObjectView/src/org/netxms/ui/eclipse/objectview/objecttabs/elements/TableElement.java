@@ -5,11 +5,9 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
@@ -17,12 +15,11 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 public abstract class TableElement extends OverviewPageElement
 {
-	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
-	
 	private Table table;
 	private Action actionCopy;
 	private Action actionCopyName;
@@ -63,7 +60,7 @@ public abstract class TableElement extends OverviewPageElement
 		
 		table.setHeaderVisible(false);
 		table.setLinesVisible(false);
-		table.setBackground(BACKGROUND_COLOR);
+		table.setBackground(SharedColors.WHITE);
 
 		// On Windows Vista and Windows 7, Table widget draws
 		// vertical lines even when setLinesVisible set to false.
@@ -74,7 +71,7 @@ public abstract class TableElement extends OverviewPageElement
 			public void handleEvent(Event event)
 			{
 				GC gc = event.gc;
-				gc.setBackground(BACKGROUND_COLOR);
+				gc.setBackground(SharedColors.WHITE);
 				gc.fillRectangle(event.x, event.y, event.width, event.height);
 			}
 		});

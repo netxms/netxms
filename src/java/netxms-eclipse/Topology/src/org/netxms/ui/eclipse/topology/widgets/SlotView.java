@@ -27,15 +27,15 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
 
@@ -51,8 +51,8 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 	private static final int PORT_WIDTH = 40;
 	private static final int PORT_HEIGHT = 30;
 	
-	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 224, 224, 224);
-	private static final Color HIGHLIGHT_COLOR = new Color(Display.getDefault(), 64, 156, 224);
+	private static final RGB BACKGROUND_COLOR = new RGB(224, 224, 224);
+	private static final RGB HIGHLIGHT_COLOR = new RGB(64, 156, 224);
 	
 	private List<PortInfo> ports = new ArrayList<PortInfo>();
 	private int rowCount = 2;
@@ -61,6 +61,7 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 	private boolean portStatusVisible = true;
 	private PortInfo selection = null;
 	private Set<PortSelectionListener> selectionListeners = new HashSet<PortSelectionListener>();
+	private ColorCache colors;
 	
 	/**
 	 * @param parent
@@ -70,6 +71,8 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 	{
 		super(parent, style | SWT.BORDER);
 		this.slotName = slotName;
+		
+		colors = new ColorCache(this);
 		
 		GC gc = new GC(getDisplay());
 		nameSize = gc.textExtent(slotName);
@@ -160,7 +163,7 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		
 		if (p.isHighlighted())
 		{
-			gc.setBackground(HIGHLIGHT_COLOR);
+			gc.setBackground(colors.create(HIGHLIGHT_COLOR));
 			gc.fillRectangle(rect);
 		}
 		else if (portStatusVisible)
@@ -170,7 +173,7 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		}
 		else
 		{
-			gc.setBackground(BACKGROUND_COLOR);
+			gc.setBackground(colors.create(BACKGROUND_COLOR));
 			gc.fillRectangle(rect);
 		}
 		gc.drawRectangle(rect);

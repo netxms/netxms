@@ -22,7 +22,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -32,6 +31,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedColors;
 
 /**
  * "Connection" element - shows peer information for interface
@@ -70,7 +70,7 @@ public class Connection extends OverviewPageElement
 		Composite area = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		area.setLayout(layout);
-		area.setBackground(new Color(getDisplay(), 255, 255, 255));
+		area.setBackground(SharedColors.WHITE);
 		
 		nodeLabel = new CLabel(area, SWT.NONE);
 		nodeLabel.setBackground(area.getBackground());

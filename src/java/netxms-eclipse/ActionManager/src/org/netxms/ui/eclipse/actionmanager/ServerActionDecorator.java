@@ -19,18 +19,16 @@
 package org.netxms.ui.eclipse.actionmanager;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.viewers.DecorationOverlayIcon;
 import org.eclipse.jface.viewers.IDecoration;
-import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProviderListener;
-import org.eclipse.swt.graphics.Image;
+import org.eclipse.jface.viewers.ILightweightLabelDecorator;
 import org.netxms.client.ServerAction;
 
 /**
  * Label decorator for server actions
  *
  */
-public class ServerActionDecorator implements ILabelDecorator
+public class ServerActionDecorator implements ILightweightLabelDecorator
 {
 	private ImageDescriptor disabledMark;
 	
@@ -42,40 +40,45 @@ public class ServerActionDecorator implements ILabelDecorator
 		disabledMark = Activator.getImageDescriptor("icons/disabled_overlay.png"); //$NON-NLS-1$
 	}
 
-	@Override
-	public Image decorateImage(Image image, Object element)
-	{
-		if (!((ServerAction)element).isDisabled() || (image == null))
-			return null;
-		
-		DecorationOverlayIcon overlay = new DecorationOverlayIcon(image, disabledMark, IDecoration.TOP_RIGHT);
-		return overlay.createImage();
-	}
-
-	@Override
-	public String decorateText(String text, Object element)
-	{
-		return null;
-	}
-
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
+	 */
 	@Override
 	public void addListener(ILabelProviderListener listener)
 	{
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
+	 */
 	@Override
 	public void dispose()
 	{
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
+	 */
 	@Override
 	public boolean isLabelProperty(Object element, String property)
 	{
 		return false;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
+	 */
 	@Override
 	public void removeListener(ILabelProviderListener listener)
 	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ILightweightLabelDecorator#decorate(java.lang.Object, org.eclipse.jface.viewers.IDecoration)
+	 */
+	@Override
+	public void decorate(Object element, IDecoration decoration)
+	{
+		decoration.addOverlay(((ServerAction)element).isDisabled() ? disabledMark : null, IDecoration.TOP_RIGHT);
 	}
 }

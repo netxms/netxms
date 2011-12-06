@@ -66,6 +66,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpValueLabelProvider;
 import org.netxms.ui.eclipse.snmp.widgets.MibBrowser;
@@ -86,6 +87,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	
 	private CLabel header;
 	private Font headerFont;
+	private Color headerColor;
 	private MibBrowser mibBrowser;
 	private MibObjectDetails details;
 	private TableViewer viewer;
@@ -149,6 +151,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	public void createPartControl(Composite parent)
 	{
 		headerFont = new Font(parent.getDisplay(), "Verdana", 11, SWT.BOLD);
+		headerColor = new Color(parent.getDisplay(), 153, 180, 209);
 		
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = 0;
@@ -159,8 +162,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		header = new CLabel(parent, SWT.BORDER);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		header.setFont(headerFont);
-		header.setBackground(new Color(parent.getDisplay(), 153, 180, 209));
-		header.setForeground(new Color(parent.getDisplay(), 255, 255, 255));
+		header.setBackground(headerColor);
+		header.setForeground(SharedColors.WHITE);
 		header.setText((currentNode != null) ? currentNode.getObjectName() : "");
 		
 		SashForm splitter = new SashForm(parent, SWT.VERTICAL);
@@ -545,6 +548,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	public void dispose()
 	{
 		headerFont.dispose();
+		headerColor.dispose();
 		super.dispose();
 	}
 }

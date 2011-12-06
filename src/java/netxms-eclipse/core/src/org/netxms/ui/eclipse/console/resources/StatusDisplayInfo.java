@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ public final class StatusDisplayInfo
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
 	 */
-	public static void init()
+	public static void init(Display display)
 	{
 		statusText[Severity.NORMAL] = Messages.getString("StatusDisplayInfo.Normal"); //$NON-NLS-1$
 		statusText[Severity.WARNING] = Messages.getString("StatusDisplayInfo.Warning"); //$NON-NLS-1$
@@ -65,7 +65,6 @@ public final class StatusDisplayInfo
 		for(int i = 0; i < statusImageDesc.length; i++)
 			statusImage[i] = statusImageDesc[i].createImage();
 
-		Display display = Display.getDefault();
 		statusColor[Severity.NORMAL] = new Color(display, 0, 192, 0);
 		statusColor[Severity.WARNING] = new Color(display, 0, 255, 255);
 		statusColor[Severity.MINOR] = new Color(display, 231, 226, 0);

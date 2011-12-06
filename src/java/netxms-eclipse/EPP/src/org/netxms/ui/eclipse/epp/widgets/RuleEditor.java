@@ -60,14 +60,14 @@ import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 @SuppressWarnings("restriction")
 public class RuleEditor extends Composite
 {
-	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
-	private static final Color NORMAL_TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 225, 233, 241);
-	private static final Color DISABLED_TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 202, 227, 206);
-	private static final Color SELECTED_TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 245, 249, 104);
-	private static final Color RULE_BORDER_COLOR = new Color(Display.getDefault(), 153, 180, 209);
-	private static final Color CONDITION_BORDER_COLOR = new Color(Display.getDefault(), 198,214,172);
-	private static final Color ACTION_BORDER_COLOR = new Color(Display.getDefault(), 186,176,201);
-	private static final Color TITLE_COLOR = new Color(Display.getDefault(), 0, 0, 0);
+	private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
+	private static final Color NORMAL_TITLE_BACKGROUND_COLOR = new Color(Display.getCurrent(), 225, 233, 241);
+	private static final Color DISABLED_TITLE_BACKGROUND_COLOR = new Color(Display.getCurrent(), 202, 227, 206);
+	private static final Color SELECTED_TITLE_BACKGROUND_COLOR = new Color(Display.getCurrent(), 245, 249, 104);
+	private static final Color RULE_BORDER_COLOR = new Color(Display.getCurrent(), 153, 180, 209);
+	private static final Color CONDITION_BORDER_COLOR = new Color(Display.getCurrent(), 198,214,172);
+	private static final Color ACTION_BORDER_COLOR = new Color(Display.getCurrent(), 186,176,201);
+	private static final Color TITLE_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
 	private static final int INDENT = 20;
 	
 	private EventProcessingPolicyRule rule;

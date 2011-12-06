@@ -33,8 +33,8 @@ import org.eclipse.swt.widgets.Display;
  */
 public class ConnectorLabel extends Label
 {
-	private static final Color FOREGROUND_COLOR = new Color(Display.getDefault(), 0, 0, 0);
-	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 166, 205, 139);
+	private static final Color FOREGROUND_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
+	private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 166, 205, 139);
 		
 	/**
 	 * Create connector label with text

@@ -29,8 +29,6 @@ import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
-import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.osgi.framework.BundleContext;
 
@@ -56,8 +54,6 @@ public class Activator extends AbstractUIPlugin
 	{
 		super.start(context);
 		plugin = this;
-		StatusDisplayInfo.init();
-		DataCollectionDisplayInfo.init();
 	}
 
 	/*

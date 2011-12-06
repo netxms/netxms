@@ -48,7 +48,7 @@ public class ResourceFigure extends Figure
 	private static final int BACKGROUND_MARGIN_Y = 4;
 	
 	//private static final Color SELECTION_COLOR = new Color(Display.getDefault(), 255, 242, 0);
-	private static final Color SELECTION_COLOR = new Color(Display.getDefault(), 132, 0, 200);
+	private static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 132, 0, 200);
 	
 	private NetworkMapResource element;
 	private MapLabelProvider labelProvider;

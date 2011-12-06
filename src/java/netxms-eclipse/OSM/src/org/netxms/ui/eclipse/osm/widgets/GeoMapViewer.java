@@ -66,13 +66,13 @@ import org.netxms.ui.eclipse.widgets.AnimatedImage;
  */
 public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCacheListener, MouseWheelListener, MouseListener, MouseMoveListener
 {
-	private static final Color MAP_BACKGROUND = new Color(Display.getDefault(), 255, 255, 255);
-	private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getDefault(), 150, 240, 88);
-	private static final Color INFO_BLOCK_BORDER = new Color(Display.getDefault(), 0, 0, 0);
-	private static final Color INFO_BLOCK_TEXT = new Color(Display.getDefault(), 0, 0, 0);
-	private static final Color LABEL_BACKGROUND = new Color(Display.getDefault(), 240, 254, 192);
-	private static final Color LABEL_TEXT = new Color(Display.getDefault(), 0, 0, 0);
-	private static final Color BORDER_COLOR = new Color(Display.getDefault(), 128, 128, 128);
+	private static final Color MAP_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
+	private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 150, 240, 88);
+	private static final Color INFO_BLOCK_BORDER = new Color(Display.getCurrent(), 0, 0, 0);
+	private static final Color INFO_BLOCK_TEXT = new Color(Display.getCurrent(), 0, 0, 0);
+	private static final Color LABEL_BACKGROUND = new Color(Display.getCurrent(), 240, 254, 192);
+	private static final Color LABEL_TEXT = new Color(Display.getCurrent(), 0, 0, 0);
+	private static final Color BORDER_COLOR = new Color(Display.getCurrent(), 128, 128, 128);
 
 	private static final int LABEL_ARROW_HEIGHT = 20;
 	private static final int LABEL_ARROW_OFFSET = 10;

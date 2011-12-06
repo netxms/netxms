@@ -28,7 +28,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -47,6 +46,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedColors;
 
 /**
  * Dashboard rendering control
@@ -103,7 +103,7 @@ public class DashboardControl extends Composite
 	 */
 	private void createContent()
 	{
-		setBackground(new Color(getDisplay(), 255, 255, 255));
+		setBackground(SharedColors.WHITE);
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = dashboard.getNumColumns();

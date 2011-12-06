@@ -60,9 +60,9 @@ public class LabelElement extends ElementWidget
 		setLayout(layout);
 		label = new Label(this, SWT.CENTER);
 		label.setText(config.getTitle());
-		label.setBackground(ColorConverter.colorFromInt(config.getBackgroundColorAsInt()));
-		label.setForeground(ColorConverter.colorFromInt(config.getForegroundColorAsInt()));
-		setBackground(ColorConverter.colorFromInt(config.getBackgroundColorAsInt()));
+		label.setBackground(ColorConverter.colorFromInt(config.getBackgroundColorAsInt(), colors));
+		label.setForeground(ColorConverter.colorFromInt(config.getForegroundColorAsInt(), colors));
+		setBackground(ColorConverter.colorFromInt(config.getBackgroundColorAsInt(), colors));
 		
 		font = new Font(getDisplay(), "Verdana", 10, SWT.BOLD);
 		label.setFont(font);
@@ -75,5 +75,4 @@ public class LabelElement extends ElementWidget
 			}
 		});
 	}
-
 }
