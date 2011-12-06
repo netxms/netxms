@@ -28,7 +28,6 @@ import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -38,6 +37,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.netxms.ui.eclipse.shared.SharedFonts;
 import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 
 /**
@@ -46,15 +46,14 @@ import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
  */
 public abstract class DashboardElement extends Composite
 {
-	private static final Color DEFAULT_BORDER_COLOR = new Color(Display.getDefault(), 153, 180, 209);
-	private static final Color DEFAULT_TITLE_COLOR = new Color(Display.getDefault(), 0, 0, 0);
+	private static final Color DEFAULT_BORDER_COLOR = new Color(Display.getCurrent(), 153, 180, 209);
+	private static final Color DEFAULT_TITLE_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
 	private static final int BORDER_WIDTH = 3;
 	private static final int HEADER_HEIGHT = 22;
 	
 	private String text;
 	private Composite headerArea;
 	private Control clientArea;
-	private Font font;
 	private Color borderColor;
 	private Color titleColor;
 	private Action doubleClickAction = null;
@@ -81,8 +80,7 @@ public abstract class DashboardElement extends Composite
 		
 		clientArea = createClientAreaInternal();
 		
-		font = new Font(parent.getDisplay(), "Verdana", 8, SWT.BOLD); //$NON-NLS-1$
-		setFont(font);
+		setFont(SharedFonts.ELEMENT_TITLE);
 		
 		addPaintListener(new PaintListener() {
 			@Override
@@ -196,16 +194,6 @@ public abstract class DashboardElement extends Composite
 	public void setText(String text)
 	{
 		this.text = text;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Widget#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-		font.dispose();
-		super.dispose();
 	}
 
 	/**

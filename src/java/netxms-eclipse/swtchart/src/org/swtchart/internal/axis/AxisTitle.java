@@ -7,6 +7,8 @@
 package org.swtchart.internal.axis;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Display;
 import org.swtchart.Chart;
@@ -57,6 +59,13 @@ public class AxisTitle extends Title {
                 DEFAULT_FONT_SIZE, SWT.BOLD);
         setFont(defaultFont);
         setText(getDefaultText());
+        addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+            defaultFont.dispose();
+			}
+		});
     }
 
     /*
@@ -76,16 +85,5 @@ public class AxisTitle extends Title {
     @Override
     protected boolean isHorizontal() {
         return axis.isHorizontalAxis();
-    }
-
-    /*
-     * @see Title#dispose()
-     */
-    @Override
-    public void dispose() {
-        super.dispose();
-        if (!defaultFont.isDisposed()) {
-            defaultFont.dispose();
-        }
     }
 }

@@ -23,6 +23,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
@@ -43,6 +44,7 @@ public abstract class ObjectTab
 	private String name;
 	private int order;
 	private ImageDescriptor icon;
+	private Image tabImage;
 
 	/**
 	 * Read configuration before widget creation
@@ -155,7 +157,10 @@ public abstract class ObjectTab
 			tabItem = new CTabItem(tabFolder, SWT.NONE, index);
 			tabItem.setText(name);
 			if (icon != null)
-				tabItem.setImage(icon.createImage());
+			{
+				tabImage = icon.createImage();
+				tabItem.setImage(tabImage);
+			}
 			tabItem.setControl(clientArea);
 			tabItem.setData(this);
 			clientArea.setVisible(true);
@@ -180,6 +185,11 @@ public abstract class ObjectTab
 			tabItem.setControl(null);
 			tabItem.dispose();
 			tabItem = null;
+			if (tabImage != null)
+			{
+				tabImage.dispose();
+				tabImage = null;
+			}
 			clientArea.setVisible(false);
 		}
 	}
@@ -223,6 +233,11 @@ public abstract class ObjectTab
 	 */
 	public void dispose()
 	{
+		if (tabImage != null)
+		{
+			tabImage.dispose();
+			tabImage = null;
+		}
 	}
 
 	/**

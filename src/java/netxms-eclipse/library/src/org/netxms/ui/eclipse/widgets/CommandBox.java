@@ -27,6 +27,8 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Color;
@@ -42,7 +44,7 @@ import org.eclipse.swt.widgets.Display;
  * Implements command box - vertical list of hyperlinks to given actions
  *
  */
-public class CommandBox extends Composite
+public class CommandBox extends Composite implements DisposeListener
 {
 	private static final Color FOREGROUND_COLOR = new Color(Display.getDefault(), 0, 0, 96);
 	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
@@ -68,6 +70,8 @@ public class CommandBox extends Composite
 		RowLayout layout = new RowLayout();
 		layout.type = SWT.VERTICAL;
 		setLayout(layout);
+		
+		addDisposeListener(this);
 	}
 
 	/**
@@ -159,15 +163,14 @@ public class CommandBox extends Composite
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Widget#dispose()
+	 * @see org.eclipse.swt.events.DisposeListener#widgetDisposed(org.eclipse.swt.events.DisposeEvent)
 	 */
 	@Override
-	public void dispose()
+	public void widgetDisposed(DisposeEvent e)
 	{
 		for(Image i : imageCache.values())
 			i.dispose();
 		cursor.dispose();
 		font.dispose();
-		super.dispose();
 	}
 }

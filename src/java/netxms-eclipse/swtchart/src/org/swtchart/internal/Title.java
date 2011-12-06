@@ -73,8 +73,7 @@ public class Title extends Canvas implements ITitle, PaintListener {
         text = DEFAULT_TEXT;
         isVisible = true;
 
-        defaultFont = new Font(Display.getDefault(), "Tahoma",
-                DEFAULT_FONT_SIZE, SWT.BOLD);
+        defaultFont = new Font(Display.getDefault(), "Tahoma", DEFAULT_FONT_SIZE, SWT.BOLD);
         textLayout = new TextLayout(Display.getDefault());
 
         setFont(defaultFont);
@@ -143,8 +142,7 @@ public class Title extends Canvas implements ITitle, PaintListener {
     @Override
     public void setForeground(Color color) {
         if (color == null) {
-            super.setForeground(Display.getDefault().getSystemColor(
-                    DEFAULT_FOREGROUND));
+            super.setForeground(Display.getDefault().getSystemColor(DEFAULT_FOREGROUND));
         } else {
             super.setForeground(color);
         }
