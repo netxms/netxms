@@ -33,7 +33,7 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 {
 	private static final String[] ELEMENT_TYPES = { "Label", "Line Chart", "Bar Chart", "Pie Chart", 
 		"Tube Chart", "Status Chart", "Status Indicator", "Dashboard", "Network Map", "Custom Widget", 
-		"Geo Map", "Alarm Viewer", "Availability Chart", "Dial Chart" };
+		"Geo Map", "Alarm Viewer", "Availability Chart", "Dial Chart", "Web Page" };
 	private static final String[] H_ALIGH = { "FILL", "CENTER", "LEFT", "RIGHT" };
 	private static final String[] V_ALIGH = { "FILL", "CENTER", "TOP", "BOTTOM" };
 	

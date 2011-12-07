@@ -1,4 +1,13 @@
 *
+* 1.1.8
+*
+
+- Changes and improvements in Java console:
+	- Implemented embedded web page element type in dashboards
+	- Implemented alarm viewer element type in dashboards
+
+
+*
 * 1.1.7
 *
 

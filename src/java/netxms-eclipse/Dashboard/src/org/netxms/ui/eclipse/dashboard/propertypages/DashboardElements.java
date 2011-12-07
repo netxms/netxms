@@ -421,6 +421,9 @@ public class DashboardElements extends PropertyPage
 				case DashboardElement.GEO_MAP:
 					config = DashboardControl.DEFAULT_GEO_MAP_CONFIG;
 					break;
+				case DashboardElement.WEB_PAGE:
+					config = DashboardControl.DEFAULT_WEB_PAGE_CONFIG;
+					break;
 				default:
 					config = "<element>\n</element>";
 					break;

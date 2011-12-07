@@ -173,6 +173,26 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.WebPage"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.WebPage#0"
+            name="Web Page">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.WebPageConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.AlarmViewer"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.AlarmViewer#0"
+            name="Alarm Viewer">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">

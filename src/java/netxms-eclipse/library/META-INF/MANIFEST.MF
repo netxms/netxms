@@ -2,13 +2,13 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NetXMS Management Console Shared Library
 Bundle-SymbolicName: org.netxms.ui.eclipse.library;singleton:=true
-Bundle-Version: 1.1.7
+Bundle-Version: 1.1.8
 Bundle-Activator: org.netxms.ui.eclipse.library.Activator
 Bundle-Vendor: netxms.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
- jar/netxms-base-1.1.7.jar,
- jar/netxms-client-api-1.1.7.jar,
+ jar/netxms-base-1.1.8.jar,
+ jar/netxms-client-api-1.1.8.jar,
  jar/simple-xml-2.4.1.jar
 Export-Package: org.netxms.api.client,
  org.netxms.api.client.constants,

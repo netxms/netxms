@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.alarmviewer.widgets;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
@@ -75,7 +76,7 @@ public class AlarmList extends Composite
 	private NXCListener clientListener = null;
 	private SortableTableViewer alarmViewer;
 	private AlarmListFilter alarmFilter;
-	private HashMap<Long, Alarm> alarmList;
+	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
 	private Action actionCopy;
 	private Action actionCopyMessage;
 	
@@ -127,7 +128,7 @@ public class AlarmList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				alarmList = session.getAlarms(false);
+				final HashMap<Long, Alarm> list = session.getAlarms(false);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -136,6 +137,8 @@ public class AlarmList extends Composite
 						{
 							synchronized(alarmList)
 							{
+								alarmList.clear();
+								alarmList.putAll(list);
 								alarmViewer.setInput(alarmList.values());
 							}
 						}
@@ -179,6 +182,15 @@ public class AlarmList extends Composite
 			}
 		};
 		session.addListener(clientListener);
+		
+		addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				if ((session != null) && (clientListener != null))
+					session.removeListener(clientListener);
+			}
+		});
 	}
 		
 	/**
@@ -296,16 +308,5 @@ public class AlarmList extends Composite
 		{
 			alarmViewer.refresh();
 		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Widget#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-		if ((session != null) && (clientListener != null))
-			session.removeListener(clientListener);
-		super.dispose();
 	}
 }

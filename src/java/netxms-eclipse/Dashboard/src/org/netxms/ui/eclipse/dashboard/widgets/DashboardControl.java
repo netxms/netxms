@@ -62,6 +62,7 @@ public class DashboardControl extends Composite
 	public static final String DEFAULT_LABEL_CONFIG = "<element>\n\t<title>Label</title>\n</element>"; 
 	public static final String DEFAULT_NETWORK_MAP_CONFIG = "<element>\n\t<objectId>0</objectId>\n\t<title></title>\n</element>"; 
 	public static final String DEFAULT_GEO_MAP_CONFIG = "<element>\n\t<latitude>0</latitude>\n\t<longitude>0</longitude>\n\t<zoom>8</zoom>\t<title></title>\n</element>"; 
+	public static final String DEFAULT_WEB_PAGE_CONFIG = "<element>\n\t<url>http://</url>\n\t<title></title>\n</element>"; 
 			
 	private Dashboard dashboard;
 	private List<DashboardElement> elements;
@@ -212,6 +213,12 @@ public class DashboardControl extends Composite
 				break;
 			case DashboardElement.CUSTOM:
 				w = new CustomWidgetElement(this, e);
+				break;
+			case DashboardElement.WEB_PAGE:
+				w = new WebPageElement(this, e);
+				break;
+			case DashboardElement.ALARM_VIEWER:
+				w = new AlarmViewerElement(this, e);
 				break;
 			default:
 				w = new ElementWidget(this, e);
