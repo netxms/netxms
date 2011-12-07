@@ -1170,10 +1170,13 @@ src/java/netxms-eclipse/ObjectTools/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/ObjectTools/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectTools/build.properties -text
 src/java/netxms-eclipse/ObjectTools/icons/agent_action.gif -text
+src/java/netxms-eclipse/ObjectTools/icons/back.png -text
 src/java/netxms-eclipse/ObjectTools/icons/browser.png -text
 src/java/netxms-eclipse/ObjectTools/icons/console.png -text
 src/java/netxms-eclipse/ObjectTools/icons/file_download.png -text
+src/java/netxms-eclipse/ObjectTools/icons/forward.png -text
 src/java/netxms-eclipse/ObjectTools/icons/internal_tool.gif -text
+src/java/netxms-eclipse/ObjectTools/icons/stop.png -text
 src/java/netxms-eclipse/ObjectTools/icons/table.gif -text
 src/java/netxms-eclipse/ObjectTools/icons/tools.png -text
 src/java/netxms-eclipse/ObjectTools/icons/url.gif -text
