@@ -121,6 +121,8 @@ import org.netxms.client.objects.TemplateRoot;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.client.packages.PackageDeploymentListener;
+import org.netxms.client.packages.PackageInfo;
 import org.netxms.client.reports.ReportRenderFormat;
 import org.netxms.client.reports.ReportResult;
 import org.netxms.client.situations.Situation;
@@ -5282,5 +5284,99 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		return new NetworkPath(response);
+	}
+	
+	/**
+	 * Remove agent package from server
+	 * 
+	 * @param packageId
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void removePackage(long packageId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_REMOVE_PACKAGE);
+		msg.setVariableInt32(NXCPCodes.VID_PACKAGE_ID, (int)packageId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Install (upload) package on server
+	 * 
+	 * @param info package information
+	 * @param pkgFile package file
+	 * @param listener progress listener (may be null)
+	 * @return unique ID assigned to package
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long installPackage(PackageInfo info, File pkgFile, ProgressListener listener) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_INSTALL_PACKAGE);
+		info.fillMessage(msg);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		final long id = response.getVariableAsInt64(NXCPCodes.VID_PACKAGE_ID);
+		sendFile(msg.getMessageId(), pkgFile, listener);
+		waitForRCC(msg.getMessageId());
+		return id;
+	}
+	
+	/**
+	 * Get list of installed packages
+	 * 
+	 * @return
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<PackageInfo> getInstalledPackages() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PACKAGE_LIST);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+		
+		List<PackageInfo> list = new ArrayList<PackageInfo>();
+		while(true)
+		{
+			final NXCPMessage response = waitForMessage(NXCPCodes.CMD_PACKAGE_INFO, msg.getMessageId());
+			if (response.getVariableAsInt64(NXCPCodes.VID_PACKAGE_ID) == 0)
+				break;
+			list.add(new PackageInfo(response));
+		}
+		return list;
+	}
+	
+	/**
+	 * Deploy agent packages onto given nodes
+	 * 
+	 * @param packageId package ID
+	 * @param nodeList list of nodes
+	 * @param listener deployment progress listener (may be null)
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void deployPackage(long packageId, long[] nodeList, PackageDeploymentListener listener) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DEPLOY_PACKAGE);
+		msg.setVariableInt32(NXCPCodes.VID_PACKAGE_ID, (int)packageId);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_OBJECTS, nodeList.length);
+		msg.setVariable(NXCPCodes.VID_OBJECT_LIST, nodeList);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+		
+		while(true)
+		{
+			final NXCPMessage response = waitForMessage(NXCPCodes.CMD_INSTALLER_INFO, msg.getMessageId(), 600000);
+			final int status = response.getVariableAsInteger(NXCPCodes.VID_DEPLOYMENT_STATUS);
+			if (status == PackageDeploymentListener.FINISHED)
+				break;
+			
+			if (listener != null)
+				listener.statusUpdate(response.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID), status, response.getVariableAsString(NXCPCodes.VID_ERROR_MESSAGE));
+		}
+		
+		if (listener != null)
+			listener.deploymentComplete();
 	}
 }

@@ -554,6 +554,8 @@ src/java/netxms-client/src/main/java/org/netxms/client/objects/Zone.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectTool.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectToolDetails.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectToolTableColumn.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/packages/PackageDeploymentListener.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/packages/PackageInfo.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/reports/ReportRenderFormat.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/reports/ReportResult.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/situations/Situation.java -text
