@@ -2,14 +2,14 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Agent Management Plug-In for NXMC
 Bundle-SymbolicName: org.netxms.ui.eclipse.agentmanager;singleton:=true
-Bundle-Version: 1.1.4
+Bundle-Version: 1.1.8
 Bundle-Activator: org.netxms.ui.eclipse.agentmanager.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.jface.text;bundle-version="3.6.1",
- org.netxms.ui.eclipse.library;bundle-version="1.1.2",
- org.netxms.ui.eclipse.console;bundle-version="1.1.2",
+ org.netxms.ui.eclipse.library;bundle-version="1.1.8",
+ org.netxms.ui.eclipse.console;bundle-version="1.1.8",
  org.eclipse.ui.workbench.texteditor;bundle-version="3.6.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

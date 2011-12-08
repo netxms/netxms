@@ -12,6 +12,14 @@
             name="Agent Config"
             restorable="false">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.agentmanager.views.PackageManager"
+            icon="icons/package.gif"
+            id="org.netxms.ui.eclipse.agentmanager.views.PackageManager"
+            name="Package Manager"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">
@@ -29,6 +37,33 @@
                style="push">
          </action>
       </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.agent_management"
+            label="Agent Management"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.agentmanager.actions.OpenPackageManager"
+               definitionId="org.netxms.ui.eclipse.agentmanager.commands.open_package_manager"
+               icon="icons/package.gif"
+               id="org.netxms.ui.eclipse.agentmanager.actions.open_package_manager"
+               label="Package Manager"
+               menubarPath="config/additions"
+               toolbarPath="config/additions"
+               tooltip="Open package manager">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open package manager"
+            id="org.netxms.ui.eclipse.agentmanager.commands.open_package_manager"
+            name="Package Manager">
+      </command>
    </extension>
 
 </plugin>

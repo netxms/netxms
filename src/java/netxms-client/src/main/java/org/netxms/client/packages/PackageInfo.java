@@ -119,7 +119,7 @@ public class PackageInfo
 	/**
 	 * @return the id
 	 */
-	protected long getId()
+	public long getId()
 	{
 		return id;
 	}
@@ -127,7 +127,7 @@ public class PackageInfo
 	/**
 	 * @return the name
 	 */
-	protected String getName()
+	public String getName()
 	{
 		return name;
 	}
@@ -135,7 +135,7 @@ public class PackageInfo
 	/**
 	 * @return the description
 	 */
-	protected String getDescription()
+	public String getDescription()
 	{
 		return description;
 	}
@@ -143,7 +143,7 @@ public class PackageInfo
 	/**
 	 * @return the fileName
 	 */
-	protected String getFileName()
+	public String getFileName()
 	{
 		return fileName;
 	}
@@ -151,7 +151,7 @@ public class PackageInfo
 	/**
 	 * @return the platform
 	 */
-	protected String getPlatform()
+	public String getPlatform()
 	{
 		return platform;
 	}
@@ -159,7 +159,7 @@ public class PackageInfo
 	/**
 	 * @return the version
 	 */
-	protected String getVersion()
+	public String getVersion()
 	{
 		return version;
 	}
