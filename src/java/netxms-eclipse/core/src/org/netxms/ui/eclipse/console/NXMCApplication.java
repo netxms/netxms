@@ -15,8 +15,11 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
  */
 public class NXMCApplication implements IApplication
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.
+	 * IApplicationContext)
 	 */
 	public Object start(IApplicationContext context) throws Exception
 	{
@@ -25,35 +28,43 @@ public class NXMCApplication implements IApplication
 		System.setProperty("osgi.nl", locale); //$NON-NLS-1$
 
 		final Display display = PlatformUI.createDisplay();
+		if (System.getProperty("sleak") != null)
+		{
+			Sleak sleak = new Sleak();
+			sleak.open();
+		}
+
 		try
 		{
 			StatusDisplayInfo.init(display);
 			DataCollectionDisplayInfo.init();
-			
+
 			int returnCode = PlatformUI.createAndRunWorkbench(display, new NXMCWorkbenchAdvisor());
 			if (returnCode == PlatformUI.RETURN_RESTART)
 				return IApplication.EXIT_RESTART;
 			else
 				return IApplication.EXIT_OK;
-		} 
+		}
 		finally
 		{
 			display.dispose();
 		}
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.equinox.app.IApplication#stop()
 	 */
-	public void stop() 
+	public void stop()
 	{
 		final IWorkbench workbench = PlatformUI.getWorkbench();
 		if (workbench == null)
 			return;
 		final Display display = workbench.getDisplay();
-		display.syncExec(new Runnable() 
+		display.syncExec(new Runnable()
 		{
-			public void run() 
+			public void run()
 			{
 				if (!display.isDisposed())
 					workbench.close();
