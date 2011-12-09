@@ -86,6 +86,7 @@ doc/internal/netxms_architecture.gxml -text
 doc/internal/netxms_architecture.png -text
 doc/internal/netxms_architecture.svg -text
 doc/internal/report_definition.docx -text
+doc/internal/sleak_debug.options -text
 doc/manuals/client_library.doc -text
 doc/manuals/netxms_install_guide.odt -text
 doc/manuals/netxms_solution_guide.doc -text

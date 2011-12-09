@@ -1,0 +1,15 @@
+﻿Inside Eclipse:
+
+* Run Configuration → Tracing
+	On the left side select "org.eclipse.ui"
+	On the right side select: "debug", "trace/graphics"
+
+* Run Configuration → Arguments
+	Add to VM Arguments: -Dsleak=c:/trace/file/location
+	Location can be empty
+
+Standalone:
+	Change nxmc.ini, add after "-vmargs" line:
+		"-Dsleak=c:/trace/file/location"
+	Run:
+		nxmc.exe -debug ...\trunk\doc\internal\sleak_debug.options
