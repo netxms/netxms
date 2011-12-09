@@ -34,10 +34,13 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.packages.PackageInfo;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
+import org.netxms.ui.eclipse.agentmanager.views.helpers.PackageComparator;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.PackageLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -72,15 +75,45 @@ public class PackageManager extends ViewPart
 	{
 		final String[] names = { "ID", "Name", "Version", "Platform", "File", "Description" };
 		final int[] widths = { 70, 120, 90, 120, 150, 400 };
-		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+		viewer = new SortableTableViewer(parent, names, widths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new PackageLabelProvider());
+		viewer.setComparator(new PackageComparator());
 
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
 		
-		refresh();
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		new ConsoleJob("Open package database", this, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				try
+				{
+					session.lockPackageDatabase();
+				}
+				catch(NXCException e)
+				{
+					// New versions may not require package DB lock
+					if (e.getErrorCode() != RCC.NOT_IMPLEMENTED)
+						throw e;
+				}
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						refresh();
+					}
+				});
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot open package database";
+			}
+		}.start();
 	}
 
 	/* (non-Javadoc)
@@ -241,5 +274,37 @@ public class PackageManager extends ViewPart
 	private void deployPackage()
 	{
 		
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		new ConsoleJob("Unlock package database", null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				try
+				{
+					session.lockPackageDatabase();
+				}
+				catch(NXCException e)
+				{
+					// New versions may not require package DB lock
+					if (e.getErrorCode() != RCC.NOT_IMPLEMENTED)
+						throw e;
+				}
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot unlock package database";
+			}
+		}.start();
+		super.dispose();
 	}
 }
