@@ -1498,6 +1498,7 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCApplication.j
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCWorkbenchAdvisor.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCWorkbenchWindowAdvisor.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/PreferenceInitializer.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/Sleak.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/TweakletManager.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/actions/OpenServerConsole.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/api/ConsoleTweaklet.java -text
