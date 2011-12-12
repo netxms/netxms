@@ -18,7 +18,12 @@
  */
 package org.netxms.ui.eclipse.agentmanager.views;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -27,23 +32,35 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.api.client.ProgressListener;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.client.packages.PackageInfo;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.PackageComparator;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.PackageLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -138,7 +155,7 @@ public class PackageManager extends ViewPart
 			}
 		};
 		
-		actionInstall = new Action("&Install new package...") {
+		actionInstall = new Action("&Install new package...", SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -146,7 +163,7 @@ public class PackageManager extends ViewPart
 			}
 		};
 		
-		actionRemove = new Action("&Remove") {
+		actionRemove = new Action("&Remove", SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -154,7 +171,7 @@ public class PackageManager extends ViewPart
 			}
 		};
 		
-		actionDeploy = new Action("&Deploy to managed nodes...") {
+		actionDeploy = new Action("&Deploy to managed nodes...", Activator.getImageDescriptor("icons/package_deploy.gif")) {
 			@Override
 			public void run()
 			{
@@ -192,6 +209,7 @@ public class PackageManager extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionInstall);
 		manager.add(actionRefresh);
 	}
 
@@ -261,19 +279,177 @@ public class PackageManager extends ViewPart
 		}.start();
 	}
 	
+	/**
+	 * Install new package
+	 */
 	private void installPackage()
 	{
-		
+		FileDialog fd = new FileDialog(getSite().getShell(), SWT.OPEN);
+		fd.setText("Select Package File");
+		fd.setFilterExtensions(new String[] { "*.npi", "*.*" });
+		fd.setFilterNames(new String[] { "NetXMS Package Info", "All files" });
+		String npiName = fd.open();
+		if (npiName != null)
+		{
+			try
+			{
+				final File npiFile = new File(npiName);
+				final PackageInfo p = new PackageInfo(npiFile);
+				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+				new ConsoleJob("Install package", this, Activator.PLUGIN_ID, null) {
+					@Override
+					protected void runInternal(final IProgressMonitor monitor) throws Exception
+					{
+						final long id = session.installPackage(p, new File(npiFile.getParent(), p.getFileName()), new ProgressListener() {
+							long prevAmount = 0;
+							
+							@Override
+							public void setTotalWorkAmount(long amount)
+							{
+								monitor.beginTask("Upload package file", (int)amount);
+							}
+							
+							@Override
+							public void markProgress(long amount)
+							{
+								monitor.worked((int)(amount - prevAmount));
+								prevAmount = amount;
+							}
+						});
+						p.setId(id);
+						runInUIThread(new Runnable() {
+							@Override
+							public void run()
+							{
+								packageList.add(p);
+								viewer.setInput(packageList.toArray());
+							}
+						});
+					}
+					
+					@Override
+					protected String getErrorMessage()
+					{
+						return "Cannot install package";
+					}
+				}.start();
+			}
+			catch(IOException e)
+			{
+				MessageDialog.openError(getSite().getShell(), "Error", "Cannot open package information file: " + e.getLocalizedMessage());
+			}
+		}
 	}
 	
+	/**
+	 * Remove selected package(s)
+	 */
 	private void removePackage()
 	{
+		if (!MessageDialog.openConfirm(getSite().getShell(), "Confirm Package Delete", "Are you sure you wish to delete selected packages?"))
+			return;
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final Object[] packages = ((IStructuredSelection)viewer.getSelection()).toArray();
+		final List<Object> removedPackages = new ArrayList<Object>();
+		new ConsoleJob("Delete agent packages", this, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				for(Object p : packages)
+				{
+					session.removePackage(((PackageInfo)p).getId());
+					removedPackages.add(p);
+				}
+			}
+
+			@Override
+			protected void jobFinalize()
+			{
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						packageList.removeAll(removedPackages);
+						viewer.setInput(packageList.toArray());
+					}
+				});
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot delete package from server";
+			}
+		}.start();
 	}
 	
+	/**
+	 * Deploy package on managed nodes
+	 */
 	private void deployPackage()
 	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
+		final PackageInfo pkg = (PackageInfo)selection.getFirstElement();
 		
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
+		if (dlg.open() != Window.OK)
+			return;
+		
+		final Set<Long> objects = new HashSet<Long>();
+		for(GenericObject o : dlg.getSelectedObjects())
+		{
+			objects.add(o.getObjectId());
+		}
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		new ConsoleJob("Deploy agent package", null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				session.deployPackage(pkg.getId(), objects.toArray(new Long[objects.size()]), new PackageDeploymentListener() {
+					private PackageDeploymentMonitor monitor = null;
+					
+					@Override
+					public void statusUpdate(long nodeId, int status, String message)
+					{
+						if (monitor != null)
+							monitor.statusUpdate(nodeId, status, message);
+					}
+					
+					@Override
+					public void deploymentStarted()
+					{
+						runInUIThread(new Runnable() {
+							@Override
+							public void run()
+							{
+								try
+								{
+									monitor = (PackageDeploymentMonitor)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(PackageDeploymentMonitor.ID, toString(), IWorkbenchPage.VIEW_ACTIVATE);
+								}
+								catch(PartInitException e)
+								{
+									MessageDialog.openError(getSite().getShell(), "Error", "Cannot open deployment monitor view: " + e.getLocalizedMessage());
+								}
+							}
+						});
+					}
+					
+					@Override
+					public void deploymentComplete()
+					{
+					}
+				});
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot start package deployment";
+			}
+		}.start();
 	}
 
 	/* (non-Javadoc)
@@ -289,7 +465,7 @@ public class PackageManager extends ViewPart
 			{
 				try
 				{
-					session.lockPackageDatabase();
+					session.unlockPackageDatabase();
 				}
 				catch(NXCException e)
 				{

@@ -620,9 +620,13 @@ src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/vi
 src/java/netxms-eclipse/AgentManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/AgentManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/AgentManager/build.properties -text
+src/java/netxms-eclipse/AgentManager/icons/active.gif -text
 src/java/netxms-eclipse/AgentManager/icons/agent_config.gif -text
+src/java/netxms-eclipse/AgentManager/icons/complete.png -text
+src/java/netxms-eclipse/AgentManager/icons/failed.png -text
 src/java/netxms-eclipse/AgentManager/icons/package.gif -text
-src/java/netxms-eclipse/AgentManager/icons/package_install.gif -text
+src/java/netxms-eclipse/AgentManager/icons/package_deploy.gif -text
+src/java/netxms-eclipse/AgentManager/icons/pending.gif -text
 src/java/netxms-eclipse/AgentManager/icons/unsaved_config.png -text
 src/java/netxms-eclipse/AgentManager/plugin.xml -text
 src/java/netxms-eclipse/AgentManager/resource.properties -text
@@ -631,7 +635,11 @@ src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/acti
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/actions/OpenPackageManager.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/dialogs/SaveConfigDialog.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/views/AgentConfigEditorView.java -text
+src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/views/PackageDeploymentMonitor.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/views/PackageManager.java -text
+src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/views/helpers/DeploymentStatus.java -text
+src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/views/helpers/DeploymentStatusComparator.java -text
+src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/views/helpers/DeploymentStatusLabelProvider.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/views/helpers/PackageComparator.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/views/helpers/PackageLabelProvider.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widgets/AgentConfigEditor.java -text
@@ -1539,6 +1547,7 @@ src/java/netxms-eclipse/library/icons/paste.gif -text
 src/java/netxms-eclipse/library/icons/pause.png -text
 src/java/netxms-eclipse/library/icons/refresh.gif -text
 src/java/netxms-eclipse/library/icons/save.gif -text
+src/java/netxms-eclipse/library/icons/unknown_obj.gif -text
 src/java/netxms-eclipse/library/icons/zoom_in.png -text
 src/java/netxms-eclipse/library/icons/zoom_out.png -text
 src/java/netxms-eclipse/library/jar/simple-xml-2.4.1.jar -text

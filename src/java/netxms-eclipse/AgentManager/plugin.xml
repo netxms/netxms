@@ -20,6 +20,14 @@
             name="Package Manager"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.agentmanager.views.PackageDeploymentMonitor"
+            icon="icons/package_deploy.gif"
+            id="org.netxms.ui.eclipse.agentmanager.views.PackageDeploymentMonitor"
+            name="Package Deployment Monitor"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">

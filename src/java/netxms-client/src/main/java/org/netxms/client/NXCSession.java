@@ -5356,7 +5356,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @throws IOException if socket or file I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void deployPackage(long packageId, long[] nodeList, PackageDeploymentListener listener) throws IOException, NXCException
+	public void deployPackage(long packageId, Long[] nodeList, PackageDeploymentListener listener) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DEPLOY_PACKAGE);
 		msg.setVariableInt32(NXCPCodes.VID_PACKAGE_ID, (int)packageId);
@@ -5364,6 +5364,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariable(NXCPCodes.VID_OBJECT_LIST, nodeList);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+		
+		if (listener != null)
+			listener.deploymentStarted();
 		
 		while(true)
 		{

@@ -29,7 +29,6 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
@@ -70,7 +69,7 @@ public class OpenAgentConfig implements IObjectActionDelegate
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					final String config = session.getAgentConfig(nodeId);
-					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{
