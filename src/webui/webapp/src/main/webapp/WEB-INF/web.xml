@@ -19,7 +19,7 @@
 	</filter-mapping>
 	<filter-mapping>
 		<filter-name>SessionFilter</filter-name>
-		<url-pattern>/test</url-pattern>
+		<url-pattern>/secure/*</url-pattern>
 	</filter-mapping>
 
 	<listener>
@@ -40,13 +40,9 @@
 		<servlet-name>LoginServlet</servlet-name>
 		<url-pattern>/login</url-pattern>
 	</servlet-mapping>
-	<servlet-mapping>
-		<servlet-name>TestServlet</servlet-name>
-		<url-pattern>/test</url-pattern>
-	</servlet-mapping>
 
 	<!-- Default page to serve -->
 	<welcome-file-list>
-		<welcome-file>Launcher.html</welcome-file>
+		<welcome-file>login.html</welcome-file>
 	</welcome-file-list>
 </web-app>

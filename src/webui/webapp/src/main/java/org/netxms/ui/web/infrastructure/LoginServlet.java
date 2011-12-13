@@ -10,6 +10,8 @@ import org.netxms.api.client.NetXMSClientException;
 
 public class LoginServlet extends HttpServlet
 {
+	private static final String MAIN_PAGE = "/secure/Launcher.htm";
+	private static final String LOGIN_PAGE = "/login.html";
 	private static final long serialVersionUID = 3897816142195225812L;
 
 	@Override
@@ -28,7 +30,7 @@ public class LoginServlet extends HttpServlet
 				final HttpSession session = req.getSession(true);
 				session.setAttribute(SessionFilter.NXWEB_SESSION_ATTRIBUTE, sessionId);
 
-				((HttpServletResponse)resp).sendRedirect(req.getContextPath() + "/test");
+				((HttpServletResponse)resp).sendRedirect(req.getContextPath() + MAIN_PAGE);
 			}
 			catch(NetXMSClientException e)
 			{
@@ -37,7 +39,7 @@ public class LoginServlet extends HttpServlet
 		}
 		else
 		{
-			((HttpServletResponse)resp).sendRedirect(req.getContextPath() + "/login.html");
+			((HttpServletResponse)resp).sendRedirect(req.getContextPath() + LOGIN_PAGE);
 		}
 	}
 }
