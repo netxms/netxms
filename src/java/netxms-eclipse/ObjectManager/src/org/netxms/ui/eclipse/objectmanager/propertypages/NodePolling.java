@@ -113,6 +113,8 @@ public class NodePolling extends PropertyPage
 		addFlag(optionsGroup, Node.NF_DISABLE_STATUS_POLL, "Disable s&tatus polling");
 		addFlag(optionsGroup, Node.NF_DISABLE_CONF_POLL, "Disable &configuration polling");
 		addFlag(optionsGroup, Node.NF_DISABLE_ROUTE_POLL, "Disable &routing table polling");
+		addFlag(optionsGroup, Node.NF_DISABLE_TOPOLOGY_POLL, "Disable &topology polling");
+		addFlag(optionsGroup, Node.NF_DISABLE_DISCOVERY_POLL, "Disable network &discovery polling");
 		addFlag(optionsGroup, Node.NF_DISABLE_DATA_COLLECT, "Disable data c&ollection");
 		
 		/* use ifXTable */

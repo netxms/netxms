@@ -37,44 +37,46 @@ public class Node extends GenericObject
 	public static final int AGENT_AUTH_SHA1 = 3;
 
 	// Node flags (system)
-	public static final int NF_IS_SNMP              = 0x00000001;
-	public static final int NF_IS_NATIVE_AGENT      = 0x00000002;
-	public static final int NF_IS_BRIDGE            = 0x00000004;
-	public static final int NF_IS_ROUTER            = 0x00000008;
-	public static final int NF_IS_LOCAL_MGMT        = 0x00000010;
-	public static final int NF_IS_PRINTER           = 0x00000020;
-	public static final int NF_IS_OSPF              = 0x00000040;
-	public static final int NF_BEHIND_NAT           = 0x00000080;
-	public static final int NF_IS_CPSNMP            = 0x00000100;
-	public static final int NF_IS_CDP               = 0x00000200;
-	public static final int NF_IS_SONMP             = 0x00000400;
-	public static final int NF_IS_LLDP              = 0x00000800;
-	public static final int NF_IS_VRRP              = 0x00001000;
-	public static final int NF_HAS_VLANS            = 0x00002000;
-	public static final int NF_IS_8021X             = 0x00004000;
-	public static final int NF_IS_STP               = 0x00008000;
+	public static final int NF_IS_SNMP                = 0x00000001;
+	public static final int NF_IS_NATIVE_AGENT        = 0x00000002;
+	public static final int NF_IS_BRIDGE              = 0x00000004;
+	public static final int NF_IS_ROUTER              = 0x00000008;
+	public static final int NF_IS_LOCAL_MGMT          = 0x00000010;
+	public static final int NF_IS_PRINTER             = 0x00000020;
+	public static final int NF_IS_OSPF                = 0x00000040;
+	public static final int NF_BEHIND_NAT             = 0x00000080;
+	public static final int NF_IS_CPSNMP              = 0x00000100;
+	public static final int NF_IS_CDP                 = 0x00000200;
+	public static final int NF_IS_SONMP               = 0x00000400;
+	public static final int NF_IS_LLDP                = 0x00000800;
+	public static final int NF_IS_VRRP                = 0x00001000;
+	public static final int NF_HAS_VLANS              = 0x00002000;
+	public static final int NF_IS_8021X               = 0x00004000;
+	public static final int NF_IS_STP                 = 0x00008000;
 
 	// Node flags (user)
-	public static final int NF_DISABLE_SNMP         = 0x01000000;
-	public static final int NF_DISABLE_NXCP         = 0x02000000;
-	public static final int NF_DISABLE_ICMP         = 0x04000000;
-	public static final int NF_FORCE_ENCRYPTION     = 0x08000000;
-	public static final int NF_DISABLE_STATUS_POLL  = 0x10000000;
-	public static final int NF_DISABLE_CONF_POLL    = 0x20000000;
-	public static final int NF_DISABLE_ROUTE_POLL   = 0x40000000;
-	public static final int NF_DISABLE_DATA_COLLECT = 0x80000000;
+	public static final int NF_DISABLE_DISCOVERY_POLL = 0x00400000;
+	public static final int NF_DISABLE_TOPOLOGY_POLL  = 0x00800000;
+	public static final int NF_DISABLE_SNMP           = 0x01000000;
+	public static final int NF_DISABLE_NXCP           = 0x02000000;
+	public static final int NF_DISABLE_ICMP           = 0x04000000;
+	public static final int NF_FORCE_ENCRYPTION       = 0x08000000;
+	public static final int NF_DISABLE_STATUS_POLL    = 0x10000000;
+	public static final int NF_DISABLE_CONF_POLL      = 0x20000000;
+	public static final int NF_DISABLE_ROUTE_POLL     = 0x40000000;
+	public static final int NF_DISABLE_DATA_COLLECT   = 0x80000000;
 	
 	// Node flags (runtime)
-	public static final int NDF_UNREACHABLE         = 0x000000004;
-	public static final int NDF_AGENT_UNREACHABLE   = 0x000000008;
-	public static final int NDF_SNMP_UNREACHABLE    = 0x000000010;
-	public static final int NDF_CPSNMP_UNREACHABLE  = 0x000000200;
-	public static final int NDF_POLLING_DISABLED    = 0x000000800;
+	public static final int NDF_UNREACHABLE           = 0x000000004;
+	public static final int NDF_AGENT_UNREACHABLE     = 0x000000008;
+	public static final int NDF_SNMP_UNREACHABLE      = 0x000000010;
+	public static final int NDF_CPSNMP_UNREACHABLE    = 0x000000200;
+	public static final int NDF_POLLING_DISABLED      = 0x000000800;
 	
 	// ixXTable usage policy
-	public static final int IFXTABLE_DEFAULT        = 0;
-	public static final int IFXTABLE_ENABLED        = 1;
-	public static final int IFXTABLE_DISABLED       = 2;
+	public static final int IFXTABLE_DEFAULT          = 0;
+	public static final int IFXTABLE_ENABLED          = 1;
+	public static final int IFXTABLE_DISABLED         = 2;
 	
 	private String primaryName;
 	private int flags;

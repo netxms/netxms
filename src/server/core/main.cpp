@@ -470,7 +470,7 @@ static void DBEventHandler(DWORD dwEvent, const WCHAR *pszArg1, const WCHAR *psz
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, TRUE);
 			break;
 		case DBEVENT_QUERY_FAILED:
-			PostEvent(EVENT_DB_QUERY_FAILED, g_dwMgmtNode, "ss", pszArg1, pszArg2);
+			PostEvent(EVENT_DB_QUERY_FAILED, g_dwMgmtNode, "uu", pszArg1, pszArg2);
 			break;
 		default:
 			break;
