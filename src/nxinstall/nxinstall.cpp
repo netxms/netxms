@@ -41,14 +41,11 @@ int main(int argc, char *argv[])
    NXSL_Environment *pEnv;
    NXSL_Value **ppArgs;
    int i, ch;
-   bool dump = false, printResult = false;
-
-   _tprintf(_T("NetXMS Installer Tools  Version ") NETXMS_VERSION_STRING _T("\n")
-            _T("Copyright (c) 2005-2011 Victor Kirhenshtein\n\n"));
+   bool dump = false, printResult = false, quiet = false;
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "drt:")) != -1)
+	while((ch = getopt(argc, argv, "drt:q")) != -1)
    {
       switch(ch)
       {
@@ -71,12 +68,21 @@ int main(int argc, char *argv[])
 					g_traceLevel = 9;
 				}
 				break;
+			case 'q':
+				quiet = true;
+				break;
          case '?':
             return 127;
          default:
             break;
       }
    }
+
+	if (!quiet)
+	{
+		_tprintf(_T("NetXMS Installer Tools  Version ") NETXMS_VERSION_STRING _T("\n")
+					_T("Copyright (c) 2005-2011 Victor Kirhenshtein\n\n"));
+	}
 
    if (argc - optind < 1)
    {
@@ -85,6 +91,7 @@ int main(int argc, char *argv[])
              "   -d         Dump compiled script code\n"
              "   -r         Print script return value\n"
 				 "   -t <level> Set trace level (default is 0)\n"
+				 "   -q         Quiet mode - suppress version and banner\n"
              "\n");
       return 127;
    }
