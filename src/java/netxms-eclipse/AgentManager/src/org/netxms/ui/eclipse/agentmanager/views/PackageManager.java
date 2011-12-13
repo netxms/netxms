@@ -34,7 +34,9 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -100,6 +102,16 @@ public class PackageManager extends ViewPart
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
+		
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				actionDeploy.setEnabled(selection.size() == 1);
+				actionRemove.setEnabled(selection.size() > 0);
+			}
+		});
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Open package database", this, Activator.PLUGIN_ID, null) {
@@ -243,9 +255,8 @@ public class PackageManager extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(actionInstall);
-		manager.add(actionRemove);
 		manager.add(actionDeploy);
+		manager.add(actionRemove);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
@@ -395,6 +406,7 @@ public class PackageManager extends ViewPart
 		final PackageInfo pkg = (PackageInfo)selection.getFirstElement();
 		
 		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
+		dlg.enableMultiSelection(true);
 		if (dlg.open() != Window.OK)
 			return;
 		
@@ -404,7 +416,7 @@ public class PackageManager extends ViewPart
 			objects.add(o.getObjectId());
 		}
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Deploy agent package", null, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob("Deploy agent package", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -421,25 +433,48 @@ public class PackageManager extends ViewPart
 					@Override
 					public void deploymentStarted()
 					{
-						runInUIThread(new Runnable() {
-							@Override
-							public void run()
+						final Object sync = new Object();
+						synchronized(sync)
+						{
+							runInUIThread(new Runnable() {
+								@Override
+								public void run()
+								{
+									try
+									{
+										monitor = (PackageDeploymentMonitor)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(PackageDeploymentMonitor.ID, toString(), IWorkbenchPage.VIEW_ACTIVATE);
+									}
+									catch(PartInitException e)
+									{
+										MessageDialog.openError(getSite().getShell(), "Error", "Cannot open deployment monitor view: " + e.getLocalizedMessage());
+									}
+									synchronized(sync)
+									{
+										sync.notify();
+									}
+								}
+							});
+
+							try
 							{
-								try
-								{
-									monitor = (PackageDeploymentMonitor)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(PackageDeploymentMonitor.ID, toString(), IWorkbenchPage.VIEW_ACTIVATE);
-								}
-								catch(PartInitException e)
-								{
-									MessageDialog.openError(getSite().getShell(), "Error", "Cannot open deployment monitor view: " + e.getLocalizedMessage());
-								}
+								sync.wait();
 							}
-						});
+							catch(InterruptedException e)
+							{
+							}
+						}
 					}
 					
 					@Override
 					public void deploymentComplete()
 					{
+						runInUIThread(new Runnable() {
+							@Override
+							public void run()
+							{
+								MessageDialog.openInformation(getSite().getShell(), "Information", "Package deployment completed");
+							}
+						});
 					}
 				});
 			}
@@ -449,7 +484,9 @@ public class PackageManager extends ViewPart
 			{
 				return "Cannot start package deployment";
 			}
-		}.start();
+		};
+		job.setUser(false);
+		job.start();
 	}
 
 	/* (non-Javadoc)

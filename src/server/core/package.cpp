@@ -148,7 +148,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
    CSCPMessage msg;
    BOOL bSuccess;
    AgentConnection *pAgentConn;
-   const TCHAR *pszErrorMsg = _T("");
+   const TCHAR *pszErrorMsg;
    DWORD dwMaxWait;
 
    // Read configuration
@@ -166,7 +166,9 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
       pNode = (Node *)pStartup->pQueue->Get();
       if (pNode == NULL)
          break;   // Queue is empty, exit
+
       bSuccess = FALSE;
+		pszErrorMsg = _T("");
 
       // Preset node id in notification message
       msg.SetVariable(VID_OBJECT_ID, pNode->Id());

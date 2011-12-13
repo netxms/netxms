@@ -18,10 +18,13 @@
  */
 package org.netxms.ui.eclipse.agentmanager.views;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.ui.eclipse.agentmanager.views.helpers.DeploymentStatus;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.DeploymentStatusComparator;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.DeploymentStatusLabelProvider;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -37,7 +40,8 @@ public class PackageDeploymentMonitor extends ViewPart
 	public static final int COLUMN_STATUS = 1;
 	public static final int COLUMN_ERROR = 2;
 	
-	private SortableTableViewer viewer; 
+	private SortableTableViewer viewer;
+	private Map<Long, DeploymentStatus> statusList = new HashMap<Long, DeploymentStatus>();
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -46,8 +50,8 @@ public class PackageDeploymentMonitor extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		final String[] names = { "Node", "Status", "Message" };
-		final int[] widths = { 150, 110, 400 };
-		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NODE, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+		final int[] widths = { 200, 110, 400 };
+		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NODE, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new DeploymentStatusLabelProvider());
 		viewer.setComparator(new DeploymentStatusComparator());
@@ -67,8 +71,26 @@ public class PackageDeploymentMonitor extends ViewPart
 	 * @param status
 	 * @param message
 	 */
-	public void statusUpdate(long nodeId, int status, String message)
+	public void statusUpdate(final long nodeId, final int status, final String message)
 	{
-		
+		getSite().getShell().getDisplay().asyncExec(new Runnable() {
+			@Override
+			public void run()
+			{
+				DeploymentStatus s = statusList.get(nodeId);
+				if (s == null)
+				{
+					s = new DeploymentStatus(nodeId, status, message);
+					statusList.put(nodeId, s);
+					viewer.setInput(statusList.values().toArray());
+				}
+				else
+				{
+					s.setStatus(status);
+					s.setMessage(message);
+					viewer.update(s, null);
+				}
+			}
+		});
 	}
 }

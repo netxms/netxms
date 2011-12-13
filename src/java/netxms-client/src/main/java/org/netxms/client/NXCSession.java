@@ -5376,7 +5376,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				break;
 			
 			if (listener != null)
-				listener.statusUpdate(response.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID), status, response.getVariableAsString(NXCPCodes.VID_ERROR_MESSAGE));
+			{
+				// Workaround for server bug: versions prior to 1.1.8 can send
+				// irrelevant message texts for statuses other then FAILED
+				if (status == PackageDeploymentListener.FAILED)
+					listener.statusUpdate(response.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID), status, response.getVariableAsString(NXCPCodes.VID_ERROR_MESSAGE));
+				else
+					listener.statusUpdate(response.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID), status, "");
+			}
 		}
 		
 		if (listener != null)
