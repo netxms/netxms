@@ -2,6 +2,8 @@
 * 1.1.8
 *
 
+- New node properties: "disable topology polling" and
+  "disable discovery polling"
 - Changes and improvements in Java console:
 	- Implemented embedded web page element type in dashboards
 	- Implemented alarm viewer element type in dashboards

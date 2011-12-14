@@ -45,6 +45,7 @@ public class General extends PropertyPage
 	private LabeledText textData;
 	private LabeledText textParameter;
 	private LabeledText textRegexp;
+	private Button checkOutput;
 	private Button checkConfirmation;
 	private LabeledText textConfirmation;
 	private Button radioIndexOID;
@@ -71,7 +72,7 @@ public class General extends PropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
@@ -107,9 +108,11 @@ public class General extends PropertyPage
 			case ObjectTool.TYPE_LOCAL_COMMAND:
 			case ObjectTool.TYPE_SERVER_COMMAND:
 				textData.setLabel("Command");
+				createOutputGroup(dialogArea);
 				break;
 			case ObjectTool.TYPE_ACTION:
 				textData.setLabel("Agent's action");
+				createOutputGroup(dialogArea);
 				break;
 			case ObjectTool.TYPE_URL:
 				textData.setLabel("URL");
@@ -203,6 +206,24 @@ public class General extends PropertyPage
 		
 		return dialogArea;
 	}
+	
+	/**
+	 * @param parent
+	 */
+	private void createOutputGroup(Composite parent)
+	{
+		Group outputGroup = new Group(parent, SWT.NONE);
+		outputGroup.setText("Execution options");
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		outputGroup.setLayoutData(gd);
+		outputGroup.setLayout(new GridLayout());
+		
+		checkOutput = new Button(outputGroup, SWT.CHECK);
+		checkOutput.setText("Command generates output");
+		checkOutput.setSelection((objectTool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0);
+	}
 
 	/**
 	 * Apply changes
@@ -221,6 +242,7 @@ public class General extends PropertyPage
 		{
 			objectTool.setData(textData.getText());
 		}
+		
 		if (checkConfirmation.getSelection())
 		{
 			objectTool.setFlags(objectTool.getFlags() | ObjectTool.ASK_CONFIRMATION);
@@ -240,6 +262,20 @@ public class General extends PropertyPage
 			else
 			{
 				objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.SNMP_INDEXED_BY_VALUE);
+			}
+		}
+		
+		if ((objectTool.getType() == ObjectTool.TYPE_LOCAL_COMMAND) ||
+		    (objectTool.getType() == ObjectTool.TYPE_SERVER_COMMAND) ||
+		    (objectTool.getType() == ObjectTool.TYPE_ACTION))
+		{
+			if (checkOutput.getSelection())
+			{
+				objectTool.setFlags(objectTool.getFlags() | ObjectTool.GENERATES_OUTPUT);
+			}
+			else
+			{
+				objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.GENERATES_OUTPUT);
 			}
 		}
 	}
