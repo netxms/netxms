@@ -47,7 +47,8 @@ public class EventMonitor extends AbstractTraceView implements SessionListener
 	public static final int COLUMN_TIMESTAMP = 0;
 	public static final int COLUMN_SOURCE = 1;
 	public static final int COLUMN_SEVERITY = 2;
-	public static final int COLUMN_MESSAGE = 3;
+	public static final int COLUMN_EVENT = 3;
+	public static final int COLUMN_MESSAGE = 4;
 	
 	private NXCSession session;
 	private Action actionShowColor; 
@@ -69,7 +70,7 @@ public class EventMonitor extends AbstractTraceView implements SessionListener
 	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#setupViewer(org.eclipse.jface.viewers.TableViewer)
 	 */
 	@Override
-	protected void setupViewer(TableViewer viewer)
+	protected void setupViewer(final TableViewer viewer)
 	{
 		labelProvider = new EventLabelProvider();
 		viewer.setLabelProvider(labelProvider);
@@ -81,6 +82,7 @@ public class EventMonitor extends AbstractTraceView implements SessionListener
 		addColumn("Timestamp", 150);
 		addColumn("Source", 200);
 		addColumn("Severity", 90);
+		addColumn("Event", 200);
 		addColumn("Message", 600);
 		
 		setFilter(new EventMonitorFilter());

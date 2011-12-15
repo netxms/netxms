@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.eventmanager;
+package org.netxms.ui.eclipse.eventmanager.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;

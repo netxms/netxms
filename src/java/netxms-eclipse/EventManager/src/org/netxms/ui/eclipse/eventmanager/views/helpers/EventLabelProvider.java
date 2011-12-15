@@ -27,6 +27,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Event;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.eventmanager.views.EventMonitor;
@@ -93,6 +94,9 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 				return (object != null) ? object.getObjectName() : "<unknown>";
 			case EventMonitor.COLUMN_SEVERITY:
 				return StatusDisplayInfo.getStatusText(event.getSeverity());
+			case EventMonitor.COLUMN_EVENT:
+				EventTemplate tmpl = session.findEventTemplateByCode(event.getCode());
+				return (tmpl != null) ? tmpl.getName() : Integer.toString(event.getCode());
 			case EventMonitor.COLUMN_MESSAGE:
 				return event.getMessage();
 		}

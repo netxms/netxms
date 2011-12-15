@@ -856,8 +856,6 @@ src/java/netxms-eclipse/EventManager/icons/new.png -text
 src/java/netxms-eclipse/EventManager/plugin.xml -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/Activator.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/EventTemplateAdapterFactory.java -text
-src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/EventTemplateComparator.java -text
-src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/EventTemplateLabelProvider.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/PreferenceInitializer.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/actions/OpenEventConfigurator.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/actions/OpenEventMonitor.java -text
@@ -868,6 +866,8 @@ src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/view
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventMonitor.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventLabelProvider.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventMonitorFilter.java -text
+src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventTemplateComparator.java -text
+src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventTemplateLabelProvider.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/widgets/EventSelector.java -text
 src/java/netxms-eclipse/FileManager/.classpath -text
 src/java/netxms-eclipse/FileManager/.project -text
