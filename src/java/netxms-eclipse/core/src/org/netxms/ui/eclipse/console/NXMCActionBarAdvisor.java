@@ -53,8 +53,6 @@ import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
-import org.eclipse.ui.console.ConsolePlugin;
-import org.eclipse.ui.console.IConsoleConstants;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 
 /**
@@ -76,7 +74,6 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	private IWorkbenchAction actionNextView;
 	private IWorkbenchAction actionQuickAccess;
 	private IWorkbenchAction actionShowViewMenu;
-	private Action actionOpenConsole;
 	private Action actionOpenProgressView;
 	private Action actionFullScreen;
 	private Action actionLangEnglish;
@@ -143,48 +140,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		actionShowViewMenu = ActionFactory.SHOW_VIEW_MENU.create(window);
 		register(actionShowViewMenu);
 		
-		actionOpenConsole = new Action()
-		{
-			/*
-			 * (non-Javadoc)
-			 * 
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
-			@Override
-			public void run()
-			{
-				IWorkbench wb = PlatformUI.getWorkbench();
-				if (wb != null)
-				{
-					IWorkbenchWindow win = wb.getActiveWorkbenchWindow();
-					if (win != null)
-					{
-						IWorkbenchPage page = win.getActivePage();
-						if (page != null)
-						{
-							try
-							{
-								page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
-							}
-							catch(PartInitException e)
-							{
-								e.printStackTrace();
-							}
-						}
-					}
-				}
-			}
-		};
-		actionOpenConsole.setText(Messages.getString("NXMCActionBarAdvisor.menu_console")); //$NON-NLS-1$
-		actionOpenConsole.setImageDescriptor(ConsolePlugin.getImageDescriptor(IConsoleConstants.IMG_VIEW_CONSOLE));
-
-		actionOpenProgressView = new Action()
-		{
-			/*
-			 * (non-Javadoc)
-			 * 
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionOpenProgressView = new Action() {
 			@Override
 			public void run()
 			{
@@ -290,7 +246,6 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		viewMenu.add(new Separator());
 		viewMenu.add(new GroupMarker(IActionConstants.M_LOGS_VIEW));
 		viewMenu.add(new Separator());
-		viewMenu.add(actionOpenConsole);
 		viewMenu.add(actionOpenProgressView);
 		viewMenu.add(new GroupMarker(IActionConstants.M_TOOL_VIEW));
 		
