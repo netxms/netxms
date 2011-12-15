@@ -18,10 +18,8 @@
  */
 package org.netxms.ui.eclipse.objecttools;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -30,6 +28,7 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -41,16 +40,10 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.ISources;
-import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.console.ConsolePlugin;
-import org.eclipse.ui.console.IConsole;
-import org.eclipse.ui.console.IConsoleConstants;
-import org.eclipse.ui.console.IOConsole;
-import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.menus.IWorkbenchContribution;
 import org.eclipse.ui.progress.UIJob;
 import org.eclipse.ui.services.IEvaluationService;
@@ -62,12 +55,12 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolHandler;
 import org.netxms.ui.eclipse.objecttools.views.BrowserView;
 import org.netxms.ui.eclipse.objecttools.views.FileViewer;
+import org.netxms.ui.eclipse.objecttools.views.LocalCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Dynamic object tools menu creator
- *
  */
 public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkbenchContribution
 {
@@ -321,11 +314,20 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		String temp = tool.getData();
 		temp = temp.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
 		temp = temp.replace("%OBJECT_NAME%", node.getObjectName());
-		final String command = temp.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
+		String command = temp.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
 		
 		if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
 		{
-			/* TODO: implement correct launch of independent process */
+			final String os = Platform.getOS();
+			if (os.equals(Platform.OS_WIN32))
+			{
+				command = "CMD.EXE /C START " + command;
+			}
+			else
+			{
+				command = "/bin/sh -c \"" + command.replaceAll("\"", "\\\"") + "\""; 
+			}
+			
 			try
 			{
 				Runtime.getRuntime().exec(command);
@@ -338,47 +340,17 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		}
 		else
 		{
-			final IOConsole console = new IOConsole(command, Activator.getImageDescriptor("icons/console.png"));
-			IViewPart consoleView = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(IConsoleConstants.ID_CONSOLE_VIEW);
-			System.out.println("Console view is " + consoleView);
-			ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { console });
-			ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
-			//console.createPage((IConsoleView)consoleView);
-			//console.activate();
-			final IOConsoleOutputStream out = console.newOutputStream();
-			
-			ConsoleJob job = new ConsoleJob("Execute external command", null, Activator.PLUGIN_ID, null) {
-				@Override
-				protected String getErrorMessage()
-				{
-					return "Cannot execute external command";
-				}
-	
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					Process proc = Runtime.getRuntime().exec(command);
-					BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-					try
-					{
-						while(true)
-						{
-							String line = in.readLine();
-							if (line == null)
-								break;
-							out.write(line);
-							out.write("\n");
-						}
-					}
-					catch(IOException e)
-					{
-						e.printStackTrace();
-					}
-					//console.setName("FINISHED: " + console.getName());
-				}
-			};
-			job.setUser(false);
-			job.start();
+			final String secondaryId = Long.toString(node.getObjectId()) + "&" + Long.toString(tool.getId());
+			final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+			try
+			{
+				LocalCommandResults view = (LocalCommandResults)window.getActivePage().showView(LocalCommandResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
+				view.runCommand(command);
+			}
+			catch(Exception e)
+			{
+				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+			}
 		}
 	}
 

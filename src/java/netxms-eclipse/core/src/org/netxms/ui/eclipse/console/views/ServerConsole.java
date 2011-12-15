@@ -275,7 +275,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 	}
 
 	/**
-	 * Create pop-up menu for user list
+	 * Create pop-up menu
 	 */
 	private void createPopupMenu()
 	{

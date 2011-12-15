@@ -1131,7 +1131,6 @@ src/java/netxms-eclipse/ObjectManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectManager/build.properties -text
 src/java/netxms-eclipse/ObjectManager/icons/delete.png -text
 src/java/netxms-eclipse/ObjectManager/icons/poller_view.png -text
-src/java/netxms-eclipse/ObjectManager/icons/restart.gif -text
 src/java/netxms-eclipse/ObjectManager/plugin.xml -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/Activator.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/AbstractNodePoll.java -text
@@ -1198,6 +1197,7 @@ src/java/netxms-eclipse/ObjectTools/icons/console.png -text
 src/java/netxms-eclipse/ObjectTools/icons/file_download.png -text
 src/java/netxms-eclipse/ObjectTools/icons/forward.png -text
 src/java/netxms-eclipse/ObjectTools/icons/internal_tool.gif -text
+src/java/netxms-eclipse/ObjectTools/icons/scroll_lock.gif -text
 src/java/netxms-eclipse/ObjectTools/icons/stop.png -text
 src/java/netxms-eclipse/ObjectTools/icons/table.gif -text
 src/java/netxms-eclipse/ObjectTools/icons/tools.png -text
@@ -1218,6 +1218,7 @@ src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/proper
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/General.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/helpers/ToolColumnLabelProvider.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/BrowserView.java -text
+src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/LocalCommandResults.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/ObjectToolsEditor.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/TableToolResults.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/helpers/ObjectToolsComparator.java -text
@@ -1546,7 +1547,9 @@ src/java/netxms-eclipse/library/icons/loading.gif -text
 src/java/netxms-eclipse/library/icons/paste.gif -text
 src/java/netxms-eclipse/library/icons/pause.png -text
 src/java/netxms-eclipse/library/icons/refresh.gif -text
+src/java/netxms-eclipse/library/icons/restart.gif -text
 src/java/netxms-eclipse/library/icons/save.gif -text
+src/java/netxms-eclipse/library/icons/terminate.gif -text
 src/java/netxms-eclipse/library/icons/unknown_obj.gif -text
 src/java/netxms-eclipse/library/icons/zoom_in.png -text
 src/java/netxms-eclipse/library/icons/zoom_out.png -text

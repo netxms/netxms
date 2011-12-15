@@ -45,7 +45,9 @@ public class SharedIcons
 	public static ImageDescriptor FIND;
 	public static ImageDescriptor PASTE;
 	public static ImageDescriptor REFRESH;
+	public static ImageDescriptor RESTART;
 	public static ImageDescriptor SAVE;
+	public static ImageDescriptor TERMINATE;
 	public static ImageDescriptor UNKNOWN_OBJECT;
 	public static ImageDescriptor ZOOM_IN;
 	public static ImageDescriptor ZOOM_OUT;
@@ -67,7 +69,9 @@ public class SharedIcons
 	public static Image IMG_FIND;
 	public static Image IMG_PASTE;
 	public static Image IMG_REFRESH;
+	public static Image IMG_RESTART;
 	public static Image IMG_SAVE;
+	public static Image IMG_TERMINATE;
 	public static Image IMG_UNKNOWN_OBJECT;
 	public static Image IMG_ZOOM_IN;
 	public static Image IMG_ZOOM_OUT;
@@ -94,7 +98,9 @@ public class SharedIcons
 		FIND = Activator.getImageDescriptor("icons/find.gif"); //$NON-NLS-1$
 		PASTE = Activator.getImageDescriptor("icons/paste.gif"); //$NON-NLS-1$
 		REFRESH = Activator.getImageDescriptor("icons/refresh.gif"); //$NON-NLS-1$
+		RESTART = Activator.getImageDescriptor("icons/restart.gif"); //$NON-NLS-1$
 		SAVE = Activator.getImageDescriptor("icons/save.gif"); //$NON-NLS-1$
+		TERMINATE = Activator.getImageDescriptor("icons/terminate.gif"); //$NON-NLS-1$
 		UNKNOWN_OBJECT = Activator.getImageDescriptor("icons/unknown_obj.gif"); //$NON-NLS-1$
 		ZOOM_IN = Activator.getImageDescriptor("icons/zoom_in.png"); //$NON-NLS-1$
 		ZOOM_OUT = Activator.getImageDescriptor("icons/zoom_out.png"); //$NON-NLS-1$
@@ -116,7 +122,9 @@ public class SharedIcons
 		IMG_FIND = FIND.createImage();
 		IMG_PASTE = PASTE.createImage();
 		IMG_REFRESH = REFRESH.createImage();
+		IMG_RESTART = RESTART.createImage();
 		IMG_SAVE = SAVE.createImage();
+		IMG_TERMINATE = TERMINATE.createImage();
 		IMG_UNKNOWN_OBJECT = UNKNOWN_OBJECT.createImage();
 		IMG_ZOOM_IN = ZOOM_IN.createImage();
 		IMG_ZOOM_OUT = ZOOM_OUT.createImage();

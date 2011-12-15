@@ -64,6 +64,14 @@
             name="Web Browser"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objecttools.views.LocalCommandResults"
+            icon="icons/console.png"
+            id="org.netxms.ui.eclipse.objecttools.views.LocalCommandResults"
+            name="Local Command"
+            restorable="false">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -71,6 +79,21 @@
             description="Open object tools editor"
             id="org.netxms.ui.eclipse.objecttools.commands.open_objecttools_editor"
             name="Object Tools">
+      </command>
+      <command
+            description="Terminate running external command"
+            id="org.netxms.ui.eclipse.objecttools.commands.terminate_process"
+            name="Terminate">
+      </command>
+      <command
+            description="Select all"
+            id="org.netxms.ui.eclipse.objecttools.commands.select_all"
+            name="Select all">
+      </command>
+      <command
+            description="Copy"
+            id="org.netxms.ui.eclipse.objecttools.commands.copy"
+            name="Copy">
       </command>
    </extension>
    <extension
@@ -144,6 +167,35 @@
             </instanceof>
          </enabledWhen>
       </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            name="LocalCommandResults"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.objecttools.commands.copy"
+            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="CTRL+C">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objecttools.commands.select_all"
+            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="CTRL+A">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objecttools.commands.terminate_process"
+            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="CTRL+BREAK">
+      </key>
    </extension>
 
 </plugin>

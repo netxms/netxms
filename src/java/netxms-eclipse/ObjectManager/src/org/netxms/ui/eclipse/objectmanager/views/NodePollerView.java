@@ -46,7 +46,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.NodePollListener;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedFonts;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -118,23 +117,21 @@ public class NodePollerView extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionRestart = new Action("&Restart poll") {
+		actionRestart = new Action("&Restart poll", SharedIcons.RESTART) {
 			@Override
 			public void run()
 			{
 				startPoll();
 			}
 		};
-		actionRestart.setImageDescriptor(Activator.getImageDescriptor("icons/restart.gif"));
 
-		actionClearOutput = new Action("&Clear output") {
+		actionClearOutput = new Action("&Clear output", SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
 			{
 				textArea.setText("");
 			}
 		};
-		actionClearOutput.setImageDescriptor(SharedIcons.CLEAR_LOG);
 	}
 
 	/**

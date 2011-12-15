@@ -310,7 +310,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
       delete_and_null(pIfList);
    }
 
-	DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): completed, ifLIst=%p"), snmp, pIfList);
+	DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): completed, ifList=%p"), snmp, pIfList);
    return pIfList;
 }
 
