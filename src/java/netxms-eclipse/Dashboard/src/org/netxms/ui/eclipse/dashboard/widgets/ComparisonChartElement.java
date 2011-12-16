@@ -23,11 +23,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciData;
-import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
+import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -38,7 +39,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public abstract class ComparisonChartElement extends ElementWidget
 {
-	protected DataComparisonBirtChart chart;
+	protected DataComparisonChart chart;
 	protected NXCSession session;
 
 	private Runnable refreshTimer;
@@ -100,7 +101,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 						@Override
 						public void run()
 						{
-							if (!chart.isDisposed())
+							if (!((Widget)chart).isDisposed())
 							{
 								chart.updateParameter(index, data.getLastValue().getValueAsDouble(), false);
 							}
@@ -111,7 +112,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 					@Override
 					public void run()
 					{
-						if (!chart.isDisposed())
+						if (!((Widget)chart).isDisposed())
 							chart.refresh();
 						updateInProgress = false;
 					}

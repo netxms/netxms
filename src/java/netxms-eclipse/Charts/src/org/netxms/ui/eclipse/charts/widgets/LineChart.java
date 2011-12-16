@@ -67,7 +67,6 @@ import org.swtchart.ISeries.SeriesType;
 
 /**
  * Line chart widget
- *
  */
 public class LineChart extends Chart implements HistoricalDataChart
 {

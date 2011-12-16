@@ -22,8 +22,7 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
-import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
+import org.netxms.ui.eclipse.charts.widgets.DialChart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DialChartConfig;
 
@@ -52,13 +51,16 @@ public class DialChartElement extends ComparisonChartElement
 			config = new DialChartConfig();
 		}
 
-		chart = new DataComparisonBirtChart(this, SWT.NONE, DataComparisonChart.DIAL_CHART);
-		chart.setTitleVisible(true);
+		chart = new DialChart(this, SWT.NONE);
 		chart.setChartTitle(config.getTitle());
-		chart.setLegendVisible(false);
-		chart.setDialMaxValue(config.getMaxValue());
-		chart.setDialRedZone(config.getRedZone());
-		chart.setDialYellowZone(config.getYellowZone());
+		chart.setTitleVisible(config.isShowTitle());
+		chart.setLegendVisible(config.isShowLegend());
+		((DialChart)chart).setMinValue(config.getMinValue());
+		((DialChart)chart).setMaxValue(config.getMaxValue());
+		((DialChart)chart).setLeftYellowZone(config.getLeftYellowZone());
+		((DialChart)chart).setLeftRedZone(config.getLeftRedZone());
+		((DialChart)chart).setRightYellowZone(config.getRightYellowZone());
+		((DialChart)chart).setRightRedZone(config.getRightRedZone());
 		
 		int index = 0;
 		for(DashboardDciInfo dci : config.getDciList())

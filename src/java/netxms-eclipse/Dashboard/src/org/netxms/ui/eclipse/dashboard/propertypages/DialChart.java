@@ -22,9 +22,9 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DialChartConfig;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -36,9 +36,14 @@ public class DialChart extends PropertyPage
 {
 	private DialChartConfig config;
 	private LabeledText title;
+	private Button checkShowTitle;
+	private Button checkShowLegend;
+	private LabeledText minValue;
 	private LabeledText maxValue;
-	private LabeledText yellowZone;
-	private LabeledText redZone;
+	private LabeledText leftYellowZone;
+	private LabeledText leftRedZone;
+	private LabeledText rightYellowZone;
+	private LabeledText rightRedZone;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -64,6 +69,14 @@ public class DialChart extends PropertyPage
 		gd.horizontalSpan = 2;
 		title.setLayoutData(gd);
 		
+		minValue = new LabeledText(dialogArea, SWT.NONE);
+		minValue.setLabel("Minimum value");
+		minValue.setText(Double.toString(config.getMinValue()));
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		minValue.setLayoutData(gd);
+		
 		maxValue = new LabeledText(dialogArea, SWT.NONE);
 		maxValue.setLabel("Maximum value");
 		maxValue.setText(Double.toString(config.getMaxValue()));
@@ -72,23 +85,55 @@ public class DialChart extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		maxValue.setLayoutData(gd);
 		
-		yellowZone = new LabeledText(dialogArea, SWT.NONE);
-		yellowZone.setLabel("Yellow zone start");
-		yellowZone.setText(Double.toString(config.getYellowZone()));
+		leftRedZone = new LabeledText(dialogArea, SWT.NONE);
+		leftRedZone.setLabel("Left red zone end");
+		leftRedZone.setText(Double.toString(config.getLeftRedZone()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		yellowZone.setLayoutData(gd);
+		leftRedZone.setLayoutData(gd);
 		
-		new Label(dialogArea, SWT.NONE).setText("");	// placeholder
-		
-		redZone = new LabeledText(dialogArea, SWT.NONE);
-		redZone.setLabel("Red zone start");
-		redZone.setText(Double.toString(config.getRedZone()));
+		leftYellowZone = new LabeledText(dialogArea, SWT.NONE);
+		leftYellowZone.setLabel("Left yellow zone end");
+		leftYellowZone.setText(Double.toString(config.getLeftYellowZone()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		redZone.setLayoutData(gd);
+		leftYellowZone.setLayoutData(gd);
+		
+		rightYellowZone = new LabeledText(dialogArea, SWT.NONE);
+		rightYellowZone.setLabel("Right yellow zone start");
+		rightYellowZone.setText(Double.toString(config.getRightYellowZone()));
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		rightYellowZone.setLayoutData(gd);
+		
+		rightRedZone = new LabeledText(dialogArea, SWT.NONE);
+		rightRedZone.setLabel("Right red zone start");
+		rightRedZone.setText(Double.toString(config.getRightRedZone()));
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		rightRedZone.setLayoutData(gd);
+		
+		checkShowTitle = new Button(dialogArea, SWT.CHECK);
+		checkShowTitle.setText("Show &title");
+		checkShowTitle.setSelection(config.isShowTitle());
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
+		checkShowTitle.setLayoutData(gd);
+		
+		checkShowLegend = new Button(dialogArea, SWT.CHECK);
+		checkShowLegend.setText("Show &legend");
+		checkShowLegend.setSelection(config.isShowLegend());
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
+		checkShowLegend.setLayoutData(gd);
 		
 		return dialogArea;
 	}
@@ -99,12 +144,15 @@ public class DialChart extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
-		double m, y, r;
+		double min, max, ly, lr, ry, rr;
 		try
 		{
-			m = Double.parseDouble(maxValue.getText().trim());
-			y = Double.parseDouble(yellowZone.getText().trim());
-			r = Double.parseDouble(redZone.getText().trim());
+			min = Double.parseDouble(minValue.getText().trim());
+			max = Double.parseDouble(maxValue.getText().trim());
+			ly = Double.parseDouble(leftYellowZone.getText().trim());
+			lr = Double.parseDouble(leftRedZone.getText().trim());
+			ry = Double.parseDouble(rightYellowZone.getText().trim());
+			rr = Double.parseDouble(rightRedZone.getText().trim());
 		}
 		catch(NumberFormatException e)
 		{
@@ -113,9 +161,14 @@ public class DialChart extends PropertyPage
 		}
 		
 		config.setTitle(title.getText());
-		config.setMaxValue(m);
-		config.setYellowZone(y);
-		config.setRedZone(r);
+		config.setMinValue(min);
+		config.setMaxValue(max);
+		config.setLeftYellowZone(ly);
+		config.setLeftRedZone(lr);
+		config.setRightYellowZone(ry);
+		config.setRightRedZone(rr);
+		config.setShowTitle(checkShowTitle.getSelection());
+		config.setShowLegend(checkShowLegend.getSelection());
 		return true;
 	}
 }

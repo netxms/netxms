@@ -684,6 +684,7 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/HistoricalDa
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/ChartColors.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/GeneralChartPrefs.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/DataComparisonBirtChart.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/DialChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/GenericBirtChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/GenericChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/LineChart.java -text
