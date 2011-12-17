@@ -16,9 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.logviewer.dialogs.helpers;
+package org.netxms.ui.eclipse.logviewer.widgets.helpers;
 
 import java.util.ArrayList;
+import org.netxms.ui.eclipse.logviewer.widgets.ColumnFilterEditor;
 
 /**
  * @author Victor
@@ -34,7 +35,13 @@ public class FilterTreeElement
 	private Object object;
 	private FilterTreeElement parent;
 	private ArrayList<FilterTreeElement> childs;
+	private ColumnFilterEditor editor;
 	
+	/**
+	 * @param type
+	 * @param object
+	 * @param parent
+	 */
 	public FilterTreeElement(int type, Object object, FilterTreeElement parent)
 	{
 		this.type = type;
@@ -129,5 +136,21 @@ public class FilterTreeElement
 		parent = newParent;
 		if (parent != null)
 			parent.addChild(this);
+	}
+
+	/**
+	 * @return the editor
+	 */
+	public ColumnFilterEditor getEditor()
+	{
+		return editor;
+	}
+
+	/**
+	 * @param editor the editor to set
+	 */
+	public void setEditor(ColumnFilterEditor editor)
+	{
+		this.editor = editor;
 	}
 }

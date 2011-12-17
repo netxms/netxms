@@ -917,7 +917,6 @@ src/java/netxms-eclipse/LogViewer/build.properties -text
 src/java/netxms-eclipse/LogViewer/icons/AuditLog.png -text
 src/java/netxms-eclipse/LogViewer/icons/EventLog.png -text
 src/java/netxms-eclipse/LogViewer/icons/TrapLog.png -text
-src/java/netxms-eclipse/LogViewer/icons/do_query.png -text
 src/java/netxms-eclipse/LogViewer/icons/first_page.png -text
 src/java/netxms-eclipse/LogViewer/icons/last_page.png -text
 src/java/netxms-eclipse/LogViewer/icons/log_viewer_job.png -text
@@ -935,15 +934,17 @@ src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/Ad
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/ColumnSelectionDialog.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/QueryBuilder.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/helpers/FilterTreeContentProvider.java -text
-src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/helpers/FilterTreeElement.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/helpers/FilterTreeLabelProvider.java -text
-src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/helpers/OrderingColumnEditingSupport.java -text
-src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/helpers/OrderingListLabelProvider.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages.properties -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages_ru.properties -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/views/LogViewer.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/views/helpers/LogLabelProvider.java -text
+src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/widgets/ColumnFilterEditor.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/widgets/FilterBuilder.java -text
+src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/widgets/helpers/ColumnSelectionHandler.java -text
+src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/widgets/helpers/FilterTreeElement.java -text
+src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/widgets/helpers/OrderingColumnEditingSupport.java -text
+src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/widgets/helpers/OrderingListLabelProvider.java -text
 src/java/netxms-eclipse/NXSL/.classpath -text
 src/java/netxms-eclipse/NXSL/.project -text
 src/java/netxms-eclipse/NXSL/.settings/org.eclipse.jdt.core.prefs -text
@@ -1291,7 +1292,6 @@ src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/pr
 src/java/netxms-eclipse/Reporter/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/Reporter/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/Reporter/build.properties -text
-src/java/netxms-eclipse/Reporter/icons/execute.gif -text
 src/java/netxms-eclipse/Reporter/icons/pdf.png -text
 src/java/netxms-eclipse/Reporter/icons/report.png -text
 src/java/netxms-eclipse/Reporter/icons/schedule.png -text
@@ -1541,6 +1541,7 @@ src/java/netxms-eclipse/library/icons/copy.gif -text
 src/java/netxms-eclipse/library/icons/cut.gif -text
 src/java/netxms-eclipse/library/icons/delete_obj.gif -text
 src/java/netxms-eclipse/library/icons/edit.png -text
+src/java/netxms-eclipse/library/icons/execute.gif -text
 src/java/netxms-eclipse/library/icons/expand.png -text
 src/java/netxms-eclipse/library/icons/expandall.png -text
 src/java/netxms-eclipse/library/icons/find.gif -text

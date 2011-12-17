@@ -2,13 +2,13 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Server Configuration Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.serverconfig;singleton:=true
-Bundle-Version: 1.1.6
+Bundle-Version: 1.1.8
 Bundle-Activator: org.netxms.ui.eclipse.serverconfig.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- org.netxms.ui.eclipse.library;bundle-version="1.1.6",
- org.netxms.ui.eclipse.console;bundle-version="1.1.6",
+ org.netxms.ui.eclipse.library;bundle-version="1.1.8",
+ org.netxms.ui.eclipse.console;bundle-version="1.1.8",
  org.eclipse.ui.forms;bundle-version="3.5.100"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

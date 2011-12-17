@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.LogColumn;
+import org.netxms.ui.eclipse.logviewer.widgets.helpers.FilterTreeElement;
 
 /**
  * @author Victor

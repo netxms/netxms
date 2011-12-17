@@ -131,7 +131,7 @@ public class ReportExecutionForm extends Composite
 		section.setClient(actionArea);
 
 		ImageHyperlink link = toolkit.createImageHyperlink(actionArea, SWT.WRAP);
-		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/execute.gif")));
+		link.setImage(SharedIcons.IMG_EXECUTE);
 		link.setText("Execute report");
 		link.addHyperlinkListener(new HyperlinkAdapter()
 		{

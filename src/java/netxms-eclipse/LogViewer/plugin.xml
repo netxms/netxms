@@ -32,6 +32,11 @@
             id="org.netxms.ui.eclipse.logviewer.commands.openSyslog"
             name="Syslog">
       </command>
+      <command
+            description="Show Log Filter"
+            id="org.netxms.ui.eclipse.logviewer.commands.show_filter"
+            name="Show Filter">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -81,6 +86,20 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="Ctrl+Alt+F8">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.logviewer.commands.show_filter"
+            contextId="org.netxms.ui.eclipse.logviewer.context.LogViewer"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+F2">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.logviewer.context.LogViewer"
+            name="Log Viewer"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
 
 </plugin>

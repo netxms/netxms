@@ -28,12 +28,16 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -41,6 +45,8 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.AccessListElement;
@@ -57,6 +63,7 @@ import org.netxms.ui.eclipse.logviewer.dialogs.QueryBuilder;
 import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
 import org.netxms.ui.eclipse.logviewer.widgets.FilterBuilder;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Universal log viewer
@@ -81,7 +88,9 @@ public class LogViewer extends ViewPart
 	private LogFilter filter;
 	private Image titleImage = null;
 	private RefreshAction actionRefresh;
-	private Action actionDoQuery;
+	private Action actionExecute;
+	private Action actionClearFilter;
+	private Action actionShowFilter;
 	private Action actionGoFirstPage;
 	private Action actionGoLastPage;
 	private Action actionGoNextPage;
@@ -118,9 +127,7 @@ public class LogViewer extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		GridLayout layout = new GridLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
+      FormLayout layout = new FormLayout();
 		parent.setLayout(layout);
 
 		/* create filter builder */
@@ -142,6 +149,20 @@ public class LogViewer extends ViewPart
 		gd.grabExcessVerticalSpace = true;
 		viewer.getControl().setLayoutData(gd);
 
+		/* setup layout */
+		FormData fd = new FormData();
+		fd.left = new FormAttachment(0, 0);
+		fd.top = new FormAttachment(filterBuilder);
+		fd.right = new FormAttachment(100, 0);
+		fd.bottom = new FormAttachment(100, 0);
+		table.setLayoutData(fd);
+		
+		fd = new FormData();
+		fd.left = new FormAttachment(0, 0);
+		fd.top = new FormAttachment(0, 0);
+		fd.right = new FormAttachment(100, 0);
+		filterBuilder.setLayoutData(fd);
+		
 		makeActions();
 		contributeToActionBars();
 		
@@ -156,19 +177,41 @@ public class LogViewer extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				logHandle = session.openServerLog(logName);
-				new UIJob("Setup log viewer for \"" + logName + "\" log")
-				{
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						setupLogViewer();
-						return Status.OK_STATUS;
-					}		
-				}.schedule();
+					}
+				});
 			}
 		}.start();
+		
+		activateContext();
+		
+		filterBuilder.setExecuteAction(actionExecute);
+		filterBuilder.setCloseAction(new Action() {
+			@Override
+			public void run()
+			{
+				actionShowFilter.setChecked(false);
+				showFilter(false);
+			}
+		});
 	}
 	
+	/**
+	 * Activate context
+	 */
+	private void activateContext()
+	{
+		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+		if (contextService != null)
+		{
+			contextService.activateContext("org.netxms.ui.eclipse.logviewer.context.LogViewer");
+		}
+	}
+
 	/**
 	 * Estimate required column width
 	 */
@@ -206,6 +249,7 @@ public class LogViewer extends ViewPart
 			column.setWidth(estimateColumnWidth(lc));
 		}
 		viewer.setLabelProvider(new LogLabelProvider(logHandle));
+		filterBuilder.setLogHandle(logHandle);
 	}
 
 	/**
@@ -226,7 +270,9 @@ public class LogViewer extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
-		manager.add(actionDoQuery);
+		manager.add(actionExecute);
+		manager.add(actionClearFilter);
+		manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionGoFirstPage);
 		manager.add(actionGoPrevPage);
@@ -249,7 +295,8 @@ public class LogViewer extends ViewPart
 		manager.add(actionGoNextPage);
 		manager.add(actionGoLastPage);
 		manager.add(new Separator());
-		manager.add(actionDoQuery);
+		manager.add(actionExecute);
+		manager.add(actionClearFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -259,86 +306,73 @@ public class LogViewer extends ViewPart
 	 */
 	private void makeActions()
 	{
-		actionRefresh = new RefreshAction()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+		
+		actionRefresh = new RefreshAction() {
 			@Override
 			public void run()
 			{
 			}
 		};
 
-		actionDoQuery = new Action()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionExecute = new Action("&Execute query", SharedIcons.EXECUTE) {
 			@Override
 			public void run()
 			{
 				doQuery();
 			}
 		};
-		actionDoQuery.setText("New &query");
-		actionDoQuery.setImageDescriptor(Activator.getImageDescriptor("icons/do_query.png"));
 
-		actionGoFirstPage = new Action()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionClearFilter = new Action("&Clear filter", SharedIcons.CLEAR_LOG) {
+			@Override
+			public void run()
+			{
+				filterBuilder.clearFilter();
+			}
+		};
+
+		actionGoFirstPage = new Action("&First page", Activator.getImageDescriptor("icons/first_page.png")) {
 			@Override
 			public void run()
 			{
 				goToPage(FIRST_PAGE);
 			}
 		};
-		actionGoFirstPage.setText("&First page");
-		actionGoFirstPage.setImageDescriptor(Activator.getImageDescriptor("icons/first_page.png"));
 
-		actionGoLastPage = new Action()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionGoLastPage = new Action("&Last page", Activator.getImageDescriptor("icons/last_page.png")) {
 			@Override
 			public void run()
 			{
 				goToPage(LAST_PAGE);
 			}
 		};
-		actionGoLastPage.setText("&Last page");
-		actionGoLastPage.setImageDescriptor(Activator.getImageDescriptor("icons/last_page.png"));
 
-		actionGoNextPage = new Action()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionGoNextPage = new Action("&Next page", Activator.getImageDescriptor("icons/next_page.png")) {
 			@Override
 			public void run()
 			{
 				goToPage(NEXT_PAGE);
 			}
 		};
-		actionGoNextPage.setText("&Next page");
-		actionGoNextPage.setImageDescriptor(Activator.getImageDescriptor("icons/next_page.png"));
 
-		actionGoPrevPage = new Action()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionGoPrevPage = new Action("&Previous page", Activator.getImageDescriptor("icons/prev_page.png")) {
 			@Override
 			public void run()
 			{
 				goToPage(PREV_PAGE);
 			}
 		};
-		actionGoPrevPage.setText("&Previous page");
-		actionGoPrevPage.setImageDescriptor(Activator.getImageDescriptor("icons/prev_page.png"));
+
+		actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				showFilter(actionShowFilter.isChecked());
+			}
+		};
+		actionShowFilter.setChecked(true);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.show_filter");
+		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 	}
 	
 	/**
@@ -445,5 +479,18 @@ public class LogViewer extends ViewPart
 		if (titleImage != null)
 			titleImage.dispose();
 		super.dispose();
+	}
+	
+	/**
+	 * @param show
+	 */
+	private void showFilter(boolean show)
+	{
+		filterBuilder.setVisible(show);
+		FormData fd = (FormData)viewer.getTable().getLayoutData();
+		fd.top = show ? new FormAttachment(filterBuilder) : new FormAttachment(0, 0);
+		viewer.getTable().getParent().layout();
+		if (show)
+			filterBuilder.setFocus();
 	}
 }

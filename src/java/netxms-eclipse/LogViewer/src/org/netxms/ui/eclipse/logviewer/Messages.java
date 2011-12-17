@@ -10,6 +10,8 @@ public class Messages extends NLS
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.logviewer.messages"; //$NON-NLS-1$
 	private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME);
 	public static String LogViewer_AuditLog;
+	public static String LogViewer_EventLog;
+	public static String LogViewer_syslog;
 	static
 	{
 		// initialize resource bundle

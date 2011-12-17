@@ -132,7 +132,10 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
 	switch(g_nDBSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
-			query.addFormattedString(_T("SELECT %s INTO %s from %s "), (const TCHAR *)m_queryColumns, m_tempTable, m_log->table);
+			query.addFormattedString(_T("SELECT TOP 10000 %s INTO %s FROM %s "), (const TCHAR *)m_queryColumns, m_tempTable, m_log->table);
+			break;
+		case DB_SYNTAX_INFORMIX:
+			query.addFormattedString(_T("SELECT FIRST 10000 %s INTO %s FROM %s "), (const TCHAR *)m_queryColumns, m_tempTable, m_log->table);
 			break;
 		case DB_SYNTAX_ORACLE:
 		case DB_SYNTAX_SQLITE:
@@ -163,6 +166,20 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
 	}
 
 	query += filter->buildOrderClause();
+	
+	// Limit record count
+	switch(g_nDBSyntax)
+	{
+		case DB_SYNTAX_MYSQL:
+		case DB_SYNTAX_PGSQL:
+		case DB_SYNTAX_SQLITE:
+			query += _T(" LIMIT 10000");
+			break;
+		case DB_SYNTAX_DB2:
+			query += _T(" FETCH FIRST 10000 ROWS ONLY");
+			break;
+	}
+
 	DbgPrintf(4, _T("LOG QUERY: %s"), (const TCHAR *)query);
 
 	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();

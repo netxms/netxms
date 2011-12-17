@@ -61,10 +61,10 @@ import org.netxms.client.log.LogFilter;
 import org.netxms.client.log.OrderingColumn;
 import org.netxms.ui.eclipse.logviewer.Activator;
 import org.netxms.ui.eclipse.logviewer.dialogs.helpers.FilterTreeContentProvider;
-import org.netxms.ui.eclipse.logviewer.dialogs.helpers.FilterTreeElement;
 import org.netxms.ui.eclipse.logviewer.dialogs.helpers.FilterTreeLabelProvider;
-import org.netxms.ui.eclipse.logviewer.dialogs.helpers.OrderingColumnEditingSupport;
-import org.netxms.ui.eclipse.logviewer.dialogs.helpers.OrderingListLabelProvider;
+import org.netxms.ui.eclipse.logviewer.widgets.helpers.FilterTreeElement;
+import org.netxms.ui.eclipse.logviewer.widgets.helpers.OrderingColumnEditingSupport;
+import org.netxms.ui.eclipse.logviewer.widgets.helpers.OrderingListLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**

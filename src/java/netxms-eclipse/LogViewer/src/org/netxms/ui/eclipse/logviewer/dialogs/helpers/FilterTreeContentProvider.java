@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
+import org.netxms.ui.eclipse.logviewer.widgets.helpers.FilterTreeElement;
 
 /**
  * @author Victor
