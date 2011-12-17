@@ -76,8 +76,10 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	private IWorkbenchAction actionShowViewMenu;
 	private Action actionOpenProgressView;
 	private Action actionFullScreen;
+	private Action actionLangChinese;
 	private Action actionLangEnglish;
 	private Action actionLangRussian;
+	private Action actionLangSpanish;
 	private IContributionItem contribItemShowView;
 	private IContributionItem contribItemOpenPerspective;
 
@@ -183,20 +185,30 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		actionFullScreen.setActionDefinitionId("org.netxms.ui.eclipse.console.commands.full_screen"); //$NON-NLS-1$
 		getActionBarConfigurer().registerGlobalAction(actionFullScreen);
 		
-		actionLangEnglish = new Action(Messages.getString("NXMCActionBarAdvisor.LangEnglish")) { //$NON-NLS-1$
+		actionLangChinese = new Action("Chinese", Activator.getImageDescriptor("icons/lang/zh.png")) {
+			public void run()
+			{
+				setLanguage("zh"); //$NON-NLS-1$
+			}
+		};
+		actionLangEnglish = new Action(Messages.getString("NXMCActionBarAdvisor.LangEnglish"), Activator.getImageDescriptor("icons/lang/gb.png")) { //$NON-NLS-1$
 			public void run()
 			{
 				setLanguage("en"); //$NON-NLS-1$
 			}
 		};
-		actionLangEnglish.setImageDescriptor(Activator.getImageDescriptor("icons/lang/gb.png")); //$NON-NLS-1$
-		actionLangRussian = new Action(Messages.getString("NXMCActionBarAdvisor.LangRussian")) { //$NON-NLS-1$
+		actionLangRussian = new Action(Messages.getString("NXMCActionBarAdvisor.LangRussian"), Activator.getImageDescriptor("icons/lang/ru.png")) { //$NON-NLS-1$
 			public void run()
 			{
 				setLanguage("ru"); //$NON-NLS-1$
 			}
 		};
-		actionLangRussian.setImageDescriptor(Activator.getImageDescriptor("icons/lang/ru.png")); //$NON-NLS-1$
+		actionLangSpanish = new Action(Messages.getString("NXMCActionBarAdvisor.LangSpanish"), Activator.getImageDescriptor("icons/lang/es.png")) { //$NON-NLS-1$
+			public void run()
+			{
+				setLanguage("es"); //$NON-NLS-1$
+			}
+		};
 	}
 
 	/* (non-Javadoc)
@@ -229,8 +241,10 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		
 		// Language selection
 		final MenuManager langMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.Language")); //$NON-NLS-1$
+		langMenu.add(actionLangChinese);
 		langMenu.add(actionLangEnglish);
 		langMenu.add(actionLangRussian);
+		langMenu.add(actionLangSpanish);
 
 		// File
 		fileMenu.add(actionShowPreferences);

@@ -614,6 +614,7 @@ src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/Se
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/actions/OpenActionManager.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/dialogs/EditActionDlg.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/messages.properties -text
+src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/messages_es.properties -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/ActionManager.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers/ActionComparator.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers/ActionLabelProvider.java -text
@@ -669,6 +670,7 @@ src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/action
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/OpenAlarmBrowser.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/TerminateAlarm.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages.properties -text
+src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages_es.properties -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/objecttabs/AlarmTab.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmBrowser.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmList.java -text
@@ -1479,8 +1481,10 @@ src/java/netxms-eclipse/core/icons/alt_launcher.ico -text
 src/java/netxms-eclipse/core/icons/alt_window_16.gif -text
 src/java/netxms-eclipse/core/icons/alt_window_32.gif -text
 src/java/netxms-eclipse/core/icons/information.png -text
+src/java/netxms-eclipse/core/icons/lang/es.png -text
 src/java/netxms-eclipse/core/icons/lang/gb.png -text
 src/java/netxms-eclipse/core/icons/lang/ru.png -text
+src/java/netxms-eclipse/core/icons/lang/zh.png -text
 src/java/netxms-eclipse/core/icons/login.png -text
 src/java/netxms-eclipse/core/icons/password.png -text
 src/java/netxms-eclipse/core/icons/pview.gif -text
@@ -1515,6 +1519,7 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/api/ConsoleTweakl
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/dialogs/LoginDialog.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/dialogs/PasswordExpiredDialog.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages.properties -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages_es.properties -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages_ru.properties -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/perspectives/DefaultPerspective.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/preferencepages/HttpProxyPrefs.java -text
@@ -1562,6 +1567,7 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/Activator.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/Messages.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/messages.properties -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/messages_es.properties -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/messages_ru.properties -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/ConsoleSharedData.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/IActionConstants.java -text
