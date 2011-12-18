@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.objecttabs;
 
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.Cluster;
@@ -32,7 +33,6 @@ import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
 /**
  * Alarm tab
- *
  */
 public class AlarmTab extends ObjectTab
 {
@@ -54,6 +54,15 @@ public class AlarmTab extends ObjectTab
 	public void objectChanged(GenericObject object)
 	{
 		alarmList.setRootObject(object.getObjectId());
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#getSelectionProvider()
+	 */
+	@Override
+	public ISelectionProvider getSelectionProvider()
+	{
+		return alarmList.getSelectionProvider();
 	}
 
 	/* (non-Javadoc)

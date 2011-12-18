@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.objectview.objecttabs;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -254,5 +255,16 @@ public abstract class ObjectTab
 	 */
 	public void refresh()
 	{
+	}
+	
+	/**
+	 * Get selection provider on tab, if any. If there are no selection provider
+	 * on tab, must return null. Default implementation returns null.
+	 * 
+	 * @return selection provider on tab
+	 */
+	public ISelectionProvider getSelectionProvider()
+	{
+		return null;
 	}
 }

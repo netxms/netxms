@@ -188,28 +188,22 @@
       </tab>
    </extension>
    <extension
-         point="org.eclipse.ui.viewActions">
-      <viewContribution
-            id="org.netxms.ui.eclipse.datacollection.viewContribution.ShowFilter#TabbedObjectView.LastValues"
-            targetID="org.netxms.ui.eclipse.objectview.view.tabbed_object_view">
-         <action
-               class="org.netxms.ui.eclipse.datacollection.actions.ShowLastValuesFilter"
-               definitionId="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.datacollection.actions.ShowLastValuesFilter"
-               label="Show DCI &amp;filter"
-               menubarPath="additions"
-               style="toggle"
-               tooltip="Show/hide DCI filter">
-         </action>
-      </viewContribution>
-   </extension>
-   <extension
          point="org.eclipse.ui.commands">
       <command
             description="Toggle DCI Filter"
             id="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
             name="Toggle DCI Filter">
+         <defaultHandler
+               class="org.netxms.ui.eclipse.datacollection.actions.ToggleDCIFilterHandler">
+            <parameter
+                  name="default"
+                  value="default">
+            </parameter>
+         </defaultHandler>
+         <state
+               class="org.eclipse.jface.commands.ToggleState"
+               id="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter.state">
+         </state>
       </command>
    </extension>
    <extension
@@ -228,6 +222,38 @@
             name="Last Values List"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:org.netxms.ui.eclipse.objectview.view.tabbed_object_view?after=additions">
+         <command
+               commandId="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
+               label="Show DCI &amp;filter"
+               style="toggle"
+               tooltip="Show/hide DCI filter">
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="nxmcObjectViewActiveTab">
+                  <instanceof
+                        value="org.netxms.ui.eclipse.datacollection.objecttabs.LastValues">
+                  </instanceof>
+               </with>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.services">
+      <sourceProvider
+            provider="org.netxms.ui.eclipse.objectview.services.SourceProvider">
+         <variable
+               name="nxmcObjectViewActiveTab"
+               priorityLevel="workbench">
+         </variable>
+      </sourceProvider>
    </extension>
 
 </plugin>

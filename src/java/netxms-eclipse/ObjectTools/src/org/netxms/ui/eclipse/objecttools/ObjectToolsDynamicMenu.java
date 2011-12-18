@@ -49,6 +49,7 @@ import org.eclipse.ui.progress.UIJob;
 import org.eclipse.ui.services.IEvaluationService;
 import org.eclipse.ui.services.IServiceLocator;
 import org.netxms.client.NXCSession;
+import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -102,10 +103,22 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		Object selection = evalService.getCurrentState().getVariable(ISources.ACTIVE_MENU_SELECTION_NAME);
 		if ((selection == null) || !(selection instanceof IStructuredSelection))
 			return;
-		if ((((IStructuredSelection)selection).size() != 1) ||
-				!(((IStructuredSelection)selection).getFirstElement() instanceof Node))
+		if (((IStructuredSelection)selection).size() != 1)
 			return;
-		final Node node = (Node)((IStructuredSelection)selection).getFirstElement();
+
+		Object element = ((IStructuredSelection)selection).getFirstElement();
+		if (element instanceof Alarm)
+		{
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			element = session.findObjectById(((Alarm)element).getSourceObjectId(), Node.class);
+			if (element == null)
+				return;
+		}
+		else if (!(element instanceof Node))
+		{
+			return;
+		}
+		final Node node = (Node)element;
 		
 		Menu toolsMenu = new Menu(menu);
 		
@@ -248,6 +261,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 */
 	private void executeAgentAction(final Node node, final ObjectTool tool)
 	{
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Execute action on node " + node.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
@@ -258,7 +272,6 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				session.executeAction(node.getObjectId(), tool.getData());
 				new UIJob("Notify user about action execution") {
 					@Override

@@ -33,8 +33,7 @@ import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 
 /**
- * @author Victor
- *
+ * Open data collection editor
  */
 public class OpenEditor implements IObjectActionDelegate
 {

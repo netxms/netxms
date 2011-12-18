@@ -30,6 +30,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -52,6 +53,7 @@ import org.netxms.ui.eclipse.alarmviewer.AlarmListLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -192,6 +194,16 @@ public class AlarmList extends Composite
 			}
 		});
 	}
+	
+	/**
+	 * Get selection provider of alarm list
+	 * 
+	 * @return
+	 */
+	public ISelectionProvider getSelectionProvider()
+	{
+		return alarmViewer;
+	}
 		
 	/**
 	 * Schedule alarm viewer update
@@ -291,6 +303,8 @@ public class AlarmList extends Composite
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
 		manager.add(new Separator());
 		manager.add(actionCopy);
 		manager.add(actionCopyMessage);

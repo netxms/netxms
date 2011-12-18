@@ -52,6 +52,8 @@ public class AlarmBrowser extends ViewPart
 		fd.right = new FormAttachment(100, 0);
 		fd.bottom = new FormAttachment(100, 0);
 		alarmView.setLayoutData(fd);
+		
+		getSite().setSelectionProvider(alarmView.getSelectionProvider());
 	}
 
 	/* (non-Javadoc)

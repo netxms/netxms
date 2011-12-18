@@ -18,8 +18,13 @@
  */
 package org.netxms.ui.eclipse.datacollection.objecttabs;
 
+import org.eclipse.core.commands.Command;
+import org.eclipse.core.commands.State;
+import org.eclipse.jface.action.Action;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.contexts.IContextService;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
@@ -42,6 +47,18 @@ public class LastValues extends ObjectTab
 	{
 		dataView = new LastValuesWidget(getViewPart(), parent, SWT.NONE, (Node)getObject(), "LastValuesTab");
 		dataView.setAutoRefreshEnabled(true);
+		dataView.setFilterCloseAction(new Action() {
+			@Override
+			public void run()
+			{
+				dataView.enableFilter(false);
+				ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
+				Command command = service.getCommand("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter");
+				State state = command.getState("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter.state");
+				state.setValue(false);
+				service.refreshElements(command.getId(), null);
+			}
+		});
 	}
 
 	/* (non-Javadoc)

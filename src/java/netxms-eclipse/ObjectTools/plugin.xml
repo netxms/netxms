@@ -8,7 +8,7 @@
             locationURI="popup:org.eclipse.ui.popup.any?after=objectmgmt">
          <dynamic
                class="org.netxms.ui.eclipse.objecttools.ObjectToolsDynamicMenu"
-               id="org.netxms.ui.eclipse.objecttools.objectToolsDynamicMenu">
+               id="org.netxms.ui.eclipse.objecttools.objectToolsDynamicMenu_Node">
             <visibleWhen
                   checkEnabled="false">
                <iterate
@@ -16,6 +16,20 @@
                      operator="and">
                   <instanceof
                         value="org.netxms.client.objects.Node">
+                  </instanceof>
+               </iterate>
+            </visibleWhen>
+         </dynamic>
+         <dynamic
+               class="org.netxms.ui.eclipse.objecttools.ObjectToolsDynamicMenu"
+               id="org.netxms.ui.eclipse.objecttools.objectToolsDynamicMenu_Alarm">
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate
+                     ifEmpty="false"
+                     operator="and">
+                  <instanceof
+                        value="org.netxms.client.events.Alarm">
                   </instanceof>
                </iterate>
             </visibleWhen>
