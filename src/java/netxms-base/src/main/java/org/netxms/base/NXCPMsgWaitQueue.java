@@ -187,6 +187,7 @@ public class NXCPMsgWaitQueue
 		isActive = false;
 		if (housekeeperThread != null)
 		{
+			housekeeperThread.interrupt();
 			while(housekeeperThread.isAlive())
 			{
 				try
