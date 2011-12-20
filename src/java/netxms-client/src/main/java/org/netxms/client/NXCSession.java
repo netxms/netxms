@@ -83,6 +83,7 @@ import org.netxms.client.events.Event;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.client.events.SyslogRecord;
 import org.netxms.client.log.Log;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
@@ -437,6 +438,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 						case NXCPCodes.CMD_EVENTLOG_RECORDS:
 							processNewEvents(msg);
 							break;
+						case NXCPCodes.CMD_SYSLOG_RECORDS:
+							processSyslogRecords(msg);
+							break;
 						case NXCPCodes.CMD_ACTION_DB_UPDATE:
 							processActionConfigChange(msg);
 							break;
@@ -493,8 +497,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		/**
 		 * Process event notification messages.
 		 * 
-		 * @param msg
-		 *           NXCP message
+		 * @param msg NXCP message
 		 */
 		private void processNewEvents(final NXCPMessage msg)
 		{
@@ -505,6 +508,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			{
 				Event event = new Event(msg, varId);
 				sendNotification(new NXCNotification(NXCNotification.NEW_EVENTLOG_RECORD, order, event));
+			}
+		}
+
+		/**
+		 * Process syslog messages.
+		 * 
+		 * @param msg NXCP message
+		 */
+		private void processSyslogRecords(final NXCPMessage msg)
+		{
+			int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_RECORDS);
+			int order = msg.getVariableAsInteger(NXCPCodes.VID_RECORDS_ORDER);
+			long varId = NXCPCodes.VID_SYSLOG_MSG_BASE;
+			for(int i = 0; i < count; i++)
+			{
+				SyslogRecord record = new SyslogRecord(msg, varId);
+				sendNotification(new NXCNotification(NXCNotification.NEW_SYSLOG_RECORD, order, record));
 			}
 		}
 

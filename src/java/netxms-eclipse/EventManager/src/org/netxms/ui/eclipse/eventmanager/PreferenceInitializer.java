@@ -35,5 +35,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		ps.setDefault("EventMonitor.showColor", true);
 		ps.setDefault("EventMonitor.showIcons", false);
+		ps.setDefault("SyslogMonitor.showColor", true);
+		ps.setDefault("SyslogMonitor.showIcons", false);
 	}
 }

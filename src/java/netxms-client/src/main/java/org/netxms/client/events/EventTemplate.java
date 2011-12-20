@@ -23,8 +23,7 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.Severity;
 
 /**
- * @author Victor Kirhenshtein
- *
+ * Event template
  */
 public class EventTemplate
 {

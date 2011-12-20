@@ -508,6 +508,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/events/Event.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/EventProcessingPolicy.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/EventProcessingPolicyRule.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/EventTemplate.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/events/SyslogRecord.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/ColumnFilter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/Log.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/LogColumn.java -text
@@ -865,15 +866,19 @@ src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/Even
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/PreferenceInitializer.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/actions/OpenEventConfigurator.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/actions/OpenEventMonitor.java -text
+src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/actions/OpenSyslogMonitor.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/EditEventTemplateDialog.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/EventSelectionDialog.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/helpers/EventListFilter.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventConfigurator.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventMonitor.java -text
+src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/SyslogMonitor.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventLabelProvider.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventMonitorFilter.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventTemplateComparator.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventTemplateLabelProvider.java -text
+src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/SyslogLabelProvider.java -text
+src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/SyslogMonitorFilter.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/widgets/EventSelector.java -text
 src/java/netxms-eclipse/FileManager/.classpath -text
 src/java/netxms-eclipse/FileManager/.project -text
