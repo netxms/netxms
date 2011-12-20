@@ -824,7 +824,6 @@ typedef struct tagICMPHDR
 	WORD m_wChecksum;		// Checksum
 	WORD m_wId;				// Identification
 	WORD m_wSeq;			// Sequence
-	char m_cData[4];		// Data
 } ICMPHDR;
 
 
