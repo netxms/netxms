@@ -398,6 +398,18 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		gc.drawArc(rect.x, rect.y, rect.width, rect.height, -45, 270);
 		gc.drawLine(p1.x, p1.y, p2.x, p2.y);
 		
+		// Draw scale
+		double arcLength = outerRadius * 4.7123889803846898576939650749193;	// r * (270 degrees angle in radians)
+		int step = (int)(270 / (arcLength / 20));		// step in degrees
+		int markRadius = outerRadius - ((rect.width / 2) * (SCALE_WIDTH / 5) / 100);
+System.out.println("step="+step+" radius=" +markRadius);		
+		for(int i = 224; i >= -45; i -= step)
+		{
+			Point l1 = positionOnArc(cx, cy, outerRadius, i);
+			Point l2 = positionOnArc(cx, cy, markRadius, i);
+			gc.drawLine(l1.x, l1.y, l2.x, l2.y);
+		}
+		
 		// Draw needle
 		gc.setBackground(colors.create(NEEDLE_COLOR));
 		int angle = (int)(225 - (dci.getValue() - minValue) / angleValue);
@@ -436,6 +448,9 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 	 */
 	private int drawZone(GC gc, Rectangle rect, int startAngle, double minValue, double maxValue, double angleValue, RGB color)
 	{
+		if (minValue >= maxValue)
+			return startAngle;	// Ignore incorrect zone settings
+		
 		int angle = (int)((maxValue - minValue) / angleValue);
 		if (angle <= 0)
 			return startAngle;
