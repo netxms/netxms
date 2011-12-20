@@ -67,11 +67,11 @@ struct ECHOREPLY
 // *	December, 1983
 //
 
-static WORD IPChecksum(WORD *addr, int len)
+static WORD IPChecksum(BYTE *addr, int len)
 {
-	int nleft = len, sum = 0;
-	WORD *w = addr;
-	WORD answer;
+	int nleft = len;
+	DWORD sum = 0;
+	BYTE *curr = addr;
 
 	/*
 	 *  Our algorithm is simple, using a 32 bit accumulator (sum),
@@ -81,26 +81,21 @@ static WORD IPChecksum(WORD *addr, int len)
 	 */
 	while(nleft > 1)
    {
-		sum += *w++;
+		sum += ((WORD)(*curr << 8) | (WORD)(*(curr + 1)));
+		curr += 2;
 		nleft -= 2;
 	}
 
 	/* mop up an odd byte, if necessary */
 	if (nleft == 1) 
-   {
-		WORD u = 0;
-
-		*(BYTE *)(&u) = *(BYTE *)w ;
-		sum += u;
-	}
+		sum += (WORD)(*curr);
 
 	/*
 	 * add back carry outs from top 16 bits to low 16 bits
 	 */
-	sum = (sum >> 16) + (sum & 0xffff);	/* add hi 16 to low 16 */
-	sum += (sum >> 16);			/* add carry */
-	answer = ~sum;				/* truncate to 16 bits */
-	return answer;
+	while(sum >> 16)
+		sum = (sum >> 16) + (sum & 0xffff);	/* add hi 16 to low 16 */
+	return htons((WORD)(~sum));
 }
 
 
@@ -166,7 +161,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
       request.m_icmpHdr.m_wId = ICMP_REQUEST_ID;
       request.m_icmpHdr.m_wSeq++;
       request.m_icmpHdr.m_wChecksum = 0;
-      request.m_icmpHdr.m_wChecksum = IPChecksum((WORD *)&request, nBytes);
+      request.m_icmpHdr.m_wChecksum = IPChecksum((BYTE *)&request, nBytes);
       if (sendto(sock, (char *)&request, nBytes, 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == nBytes)
       {
 #ifdef USE_KQUEUE
@@ -276,7 +271,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
                   if ((reply.m_icmpHdr.m_cType == 3) &&
                       (reply.m_icmpHdr.m_cCode == 1))    // code 1 is "host unreacheable"
                   {
-                     if (((IPHDR *)reply.m_icmpHdr.m_cData)->m_iaDst.s_addr == dwAddr)
+                     if (((IPHDR *)reply.m_cData)->m_iaDst.s_addr == dwAddr)
                      {
 #ifdef USE_KQUEUE
 			               close(kq);
