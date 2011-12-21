@@ -55,7 +55,7 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 	private static final int INNER_MARGIN_HEIGHT = 5;
 	private static final int NEEDLE_PIN_RADIUS = 8;
 	private static final int SCALE_OFFSET = 30;	// In percents
-	private static final int SCALE_WIDTH = 40;	// In percents
+	private static final int SCALE_WIDTH = 10;	// In percents
 	
 	private static final RGB GREEN_ZONE_COLOR = new RGB(0, 224, 0);
 	private static final RGB YELLOW_ZONE_COLOR = new RGB(255, 242, 0);
@@ -344,7 +344,7 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		
 		int w = (size.x - OUTER_MARGIN_WIDTH * 2) / parameters.size();
 		int h = size.y - OUTER_MARGIN_HEIGHT - top;
-		if ((w > 30) && (h > 30))
+		if ((w > 40 * parameters.size()) && (h > 40))
 		{
 			for(int i = 0; i < parameters.size(); i++)
 			{
@@ -380,15 +380,13 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		
 		double angleValue = (maxValue - minValue) / 270;
 		int outerRadius = (rect.width + 1) / 2;
-		int scaleWidth = (rect.width / 2) * SCALE_WIDTH / 100;
+		int scaleOuterOffset = ((rect.width / 2) * SCALE_OFFSET / 100);
+		int scaleInnerOffset = ((rect.width / 2) * (SCALE_OFFSET + SCALE_WIDTH) / 100);
 		
 		int cx = rect.x + rect.width / 2 + 1;
 		int cy = rect.y + rect.height / 2 + 1;
-		Point p1 = positionOnArc(cx, cy, outerRadius, 225);
-		Point p2 = positionOnArc(cx, cy, outerRadius, -45);
 		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
 		gc.fillArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
-//		gc.fillRectangle(p1.x, cy, p2.x - p1.x, p2.y - cy);
 		
 		// Draw zones
 		int startAngle = 225;
@@ -401,23 +399,20 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		// Draw center part and border
 		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
 		gc.setForeground(SharedColors.BLACK);
-//		gc.fillArc(rect.x + scaleWidth, rect.y + scaleWidth, rect.width - scaleWidth * 2, rect.height - scaleWidth * 2, -50, 290);
-//		gc.drawArc(rect.x, rect.y, rect.width, rect.height, -45, 270);
-//		gc.drawLine(p1.x, p1.y, p2.x, p2.y);
-		gc.fillArc(rect.x + scaleWidth, rect.y + scaleWidth, rect.width - scaleWidth * 2, rect.height - scaleWidth * 2, 0, 360);
+		gc.fillArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, 0, 360);
+		gc.setLineWidth(2);
 		gc.drawArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
+		gc.setLineWidth(1);
 		
 		// Draw scale
-		int offset = ((rect.width / 2) * SCALE_OFFSET / 100);
+		gc.setForeground(getColorFromPreferences("Chart.Axis.X.Color"));
 		int textOffset = ((rect.width / 2) * SCALE_OFFSET / 200);
-		//double arcLength = (outerRadius - offset) * 4.7123889803846898576939650749193;	// r * (270 degrees angle in radians)
-		//int step = (int)(270 / (arcLength / 50));		// step in degrees
-		//int markRadius = outerRadius - ((rect.width / 2) * (SCALE_WIDTH / 5) / 100);
-		int step = 27;
+		double arcLength = (outerRadius - scaleOuterOffset) * 4.7123889803846898576939650749193;	// r * (270 degrees angle in radians)
+		int step = (arcLength >= 200) ? 27 : 54;
 		for(int i = 225; i >= -45; i -= step)
 		{
-			Point l1 = positionOnArc(cx, cy, outerRadius - offset, i);
-			Point l2 = positionOnArc(cx, cy, outerRadius - scaleWidth, i);
+			Point l1 = positionOnArc(cx, cy, outerRadius - scaleOuterOffset, i);
+			Point l2 = positionOnArc(cx, cy, outerRadius - scaleInnerOffset, i);
 			gc.drawLine(l1.x, l1.y, l2.x, l2.y);
 
 			String value = roundedMarkValue(i, angleValue);
@@ -425,12 +420,17 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 			Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
 			gc.drawText(value, t.x - ext.x / 2, t.y - ext.y / 2, SWT.DRAW_TRANSPARENT);
 		}
-		gc.drawArc(rect.x + offset, rect.y + offset, rect.width - offset * 2, rect.height - offset * 2, -45, 270);
-		gc.drawArc(rect.x + scaleWidth, rect.y + scaleWidth, rect.width - scaleWidth * 2, rect.height - scaleWidth * 2, -45, 270);
+		gc.drawArc(rect.x + scaleOuterOffset, rect.y + scaleOuterOffset, rect.width - scaleOuterOffset * 2, rect.height - scaleOuterOffset * 2, -45, 270);
+		gc.drawArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, -45, 270);
 		
 		// Draw needle
 		gc.setBackground(colors.create(NEEDLE_COLOR));
-		int angle = (int)(225 - (dci.getValue() - minValue) / angleValue);
+		double dciValue = dci.getValue();
+		if (dciValue < minValue)
+			dciValue = minValue;
+		if (dciValue > maxValue)
+			dciValue = maxValue;
+		int angle = (int)(225 - (dciValue - minValue) / angleValue);
 		Point needleEnd = positionOnArc(cx, cy, outerRadius - ((rect.width / 2) * (SCALE_WIDTH / 2) / 100), angle);
 		Point np1 = positionOnArc(cx, cy, NEEDLE_PIN_RADIUS / 2, angle - 90);
 		Point np2 = positionOnArc(cx, cy, NEEDLE_PIN_RADIUS / 2, angle + 90);
@@ -442,15 +442,20 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		// Draw current value
 		String value = getValueAsDisplayString(dci);
 		gc.setFont(SharedFonts.ELEMENT_TITLE);
-		gc.setForeground(colors.create(NEEDLE_COLOR));
 		Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
-		gc.drawText(value, p1.x + ((p2.x - p1.x - ext.x) / 2), p1.y - ext.y / 2, true);
+		gc.setLineWidth(3);
+		gc.setBackground(colors.create(NEEDLE_COLOR));
+		int boxW = Math.max(outerRadius - scaleInnerOffset - 10, ext.x + 8);
+		gc.fillRoundRectangle(cx - boxW / 2, cy + rect.height / 4, boxW, ext.y + 6, 3, 3);
+		gc.setForeground(SharedColors.WHITE);
+		gc.drawText(value, cx - ext.x / 2, cy + rect.height / 4 + 3, true);
 		gc.setFont(null);
 		
 		// Draw legend, ignore legend position
 		if (legendVisible)
 		{
 			ext = gc.textExtent(dci.getName(), SWT.DRAW_TRANSPARENT);
+			gc.setForeground(SharedColors.BLACK);
 			gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 		}
 	}
@@ -509,7 +514,15 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 	{
 		double value = (225 - angle) * angleValue + minValue;
 		double absValue = Math.abs(value);
-		if (absValue >= 1000)
+		if (absValue >= 1000000000)
+		{
+			return Long.toString(Math.round(value / 1000000000)) + "G";
+		}
+		else if (absValue >= 1000000)
+		{
+			return Long.toString(Math.round(value / 1000000)) + "M";
+		}
+		else if (absValue >= 1000)
 		{
 			return Long.toString(Math.round(value / 1000)) + "K";
 		}
