@@ -127,42 +127,47 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-      // Remove outdated event log records
-      dwRetentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
-      if (dwRetentionTime > 0)
-      {
-			dwRetentionTime *= 86400;	// Convert days to seconds
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<%ld"), currTime - dwRetentionTime);
-         DBQuery(hdb, szQuery);
-      }
+		if (DBBegin(hdb))
+		{
+			// Remove outdated event log records
+			dwRetentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
+			if (dwRetentionTime > 0)
+			{
+				dwRetentionTime *= 86400;	// Convert days to seconds
+				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<%ld"), currTime - dwRetentionTime);
+				DBQuery(hdb, szQuery);
+			}
 
-      // Remove outdated syslog records
-      dwRetentionTime = ConfigReadULong(_T("SyslogRetentionTime"), 90);
-      if (dwRetentionTime > 0)
-      {
-			dwRetentionTime *= 86400;	// Convert days to seconds
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<%ld"), currTime - dwRetentionTime);
-         DBQuery(hdb, szQuery);
-      }
+			// Remove outdated syslog records
+			dwRetentionTime = ConfigReadULong(_T("SyslogRetentionTime"), 90);
+			if (dwRetentionTime > 0)
+			{
+				dwRetentionTime *= 86400;	// Convert days to seconds
+				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<%ld"), currTime - dwRetentionTime);
+				DBQuery(hdb, szQuery);
+			}
 
-      // Remove outdated audit log records
-      dwRetentionTime = ConfigReadULong(_T("AuditLogRetentionTime"), 90);
-      if (dwRetentionTime > 0)
-      {
-			dwRetentionTime *= 86400;	// Convert days to seconds
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), currTime - dwRetentionTime);
-         DBQuery(hdb, szQuery);
-      }
+			// Remove outdated audit log records
+			dwRetentionTime = ConfigReadULong(_T("AuditLogRetentionTime"), 90);
+			if (dwRetentionTime > 0)
+			{
+				dwRetentionTime *= 86400;	// Convert days to seconds
+				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), currTime - dwRetentionTime);
+				DBQuery(hdb, szQuery);
+			}
 
-      // Delete empty subnets if needed
-      if (g_dwFlags & AF_DELETE_EMPTY_SUBNETS)
-         DeleteEmptySubnets();
+			// Delete empty subnets if needed
+			if (g_dwFlags & AF_DELETE_EMPTY_SUBNETS)
+				DeleteEmptySubnets();
 
-      // Remove deleted objects which are no longer referenced
-      CleanDeletedObjects(hdb);
+			// Remove deleted objects which are no longer referenced
+			CleanDeletedObjects(hdb);
 
-      // Remove expired DCI data
-		g_idxNodeById.forEach(CleanDciData, NULL);
+			// Remove expired DCI data
+			g_idxNodeById.forEach(CleanDciData, NULL);
+
+			DBCommit(hdb);
+		}
 
       // Run DB-specific maintenance tasks
       if (g_nDBSyntax == DB_SYNTAX_PGSQL)

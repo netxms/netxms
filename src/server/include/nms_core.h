@@ -638,6 +638,19 @@ typedef struct
 
 
 //
+// Delayed request for idata_ INSERT
+//
+
+typedef struct
+{
+	time_t timestamp;
+	DWORD nodeId;
+	DWORD dciId;
+	TCHAR value[MAX_RESULT_LENGTH];
+} DELAYED_IDATA_INSERT;
+
+
+//
 // Functions
 //
 
@@ -683,6 +696,7 @@ void SaveObjects(DB_HANDLE hdb);
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);
+void QueueIDataInsert(time_t timestamp, DWORD nodeId, DWORD dciId, const TCHAR *value);
 void StartDBWriter();
 void StopDBWriter();
 

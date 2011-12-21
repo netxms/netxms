@@ -35,6 +35,7 @@
 //
 
 Queue *g_pLazyRequestQueue = NULL;
+Queue *g_pIDataInsertQueue = NULL;
 
 
 //
@@ -43,6 +44,7 @@ Queue *g_pLazyRequestQueue = NULL;
 
 static int m_iNumWriters = 1;
 static THREAD m_hWriteThreadList[MAX_DB_WRITERS];
+static THREAD m_hIDataWriterThread;
 
 
 //
@@ -97,6 +99,21 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 
    g_pLazyRequestQueue->Put(rq);
 	DbgPrintf(8, _T("SQL request queued: %s"), query);
+}
+
+
+//
+// Queue INSERT request for idata_xxx table
+//
+
+void QueueIDataInsert(time_t timestamp, DWORD nodeId, DWORD dciId, const TCHAR *value)
+{
+	DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)malloc(sizeof(DELAYED_IDATA_INSERT));
+	rq->timestamp = timestamp;
+	rq->nodeId = nodeId;
+	rq->dciId = dciId;
+	nx_strncpy(rq->value, value, MAX_RESULT_LENGTH);
+	g_pIDataInsertQueue->Put(rq);
 }
 
 
@@ -158,6 +175,54 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 
 
 //
+// Database "lazy" write thread for idata_xxx INSERTs
+//
+
+static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
+{
+   DB_HANDLE hdb;
+
+   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
+   {
+		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+      hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
+      if (hdb == NULL)
+      {
+         nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
+         return THREAD_OK;
+      }
+   }
+   else
+   {
+      hdb = g_hCoreDB;
+   }
+
+   while(1)
+   {
+		DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)g_pIDataInsertQueue->GetOrBlock();
+      if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
+         break;
+
+		TCHAR query[256];
+		_sntprintf(query, 256, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value) VALUES (?,?,?)"), (int)rq->nodeId);
+		DB_STATEMENT hStmt = DBPrepare(hdb, query);
+		if (hStmt != NULL)
+		{
+			DBFreeStatement(hStmt);
+		}
+
+		free(rq);
+	}
+
+   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
+   {
+      DBDisconnect(hdb);
+   }
+   return THREAD_OK;
+}
+
+
+//
 // Start writer thread
 //
 
@@ -176,6 +241,8 @@ void StartDBWriter()
 
    for(i = 0; i < m_iNumWriters; i++)
       m_hWriteThreadList[i] = ThreadCreateEx(DBWriteThread, 0, NULL);
+
+	m_hIDataWriterThread = ThreadCreateEx(IDataWriteThread, 0, NULL);
 }
 
 
@@ -191,4 +258,7 @@ void StopDBWriter()
       g_pLazyRequestQueue->Put(INVALID_POINTER_VALUE);
    for(i = 0; i < m_iNumWriters; i++)
       ThreadJoin(m_hWriteThreadList[i]);
+
+	g_pIDataInsertQueue->Put(INVALID_POINTER_VALUE);
+	ThreadJoin(m_hIDataWriterThread);
 }

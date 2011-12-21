@@ -1098,8 +1098,6 @@ void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
    m_prevRawValue = rawValue;
    m_tPrevValueTimeStamp = tmTimeStamp;
 
-	String escValue = DBPrepareString(g_hCoreDB, pValue->String());
-
 	// Prepare SQL statement bindings
 	TCHAR dciId[32], pollTime[32];
 	_sntprintf(dciId, 32, _T("%d"), (int)m_dwId);
