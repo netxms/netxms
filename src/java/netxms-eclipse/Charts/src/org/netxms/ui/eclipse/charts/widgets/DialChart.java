@@ -41,6 +41,7 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 import org.netxms.ui.eclipse.shared.SharedColors;
+import org.netxms.ui.eclipse.shared.SharedFonts;
 import org.netxms.ui.eclipse.tools.ColorCache;
 
 /**
@@ -53,6 +54,7 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 	private static final int INNER_MARGIN_WIDTH = 5;
 	private static final int INNER_MARGIN_HEIGHT = 5;
 	private static final int NEEDLE_PIN_RADIUS = 8;
+	private static final int SCALE_OFFSET = 30;	// In percents
 	private static final int SCALE_WIDTH = 40;	// In percents
 	
 	private static final RGB GREEN_ZONE_COLOR = new RGB(0, 224, 0);
@@ -342,7 +344,7 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		
 		int w = (size.x - OUTER_MARGIN_WIDTH * 2) / parameters.size();
 		int h = size.y - OUTER_MARGIN_HEIGHT - top;
-		if ((w > 10) && (h > 10))
+		if ((w > 30) && (h > 30))
 		{
 			for(int i = 0; i < parameters.size(); i++)
 			{
@@ -361,6 +363,10 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 	private void renderElement(GC gc, DataComparisonElement dci, int x, int y, int w, int h)
 	{
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
+		if (legendVisible)
+		{
+			rect.height -= gc.textExtent("MMM").y - 4;
+		}
 		if (rect.height > rect.width)
 		{
 			rect.y += (rect.height - rect.width) / 2;
@@ -381,7 +387,8 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		Point p1 = positionOnArc(cx, cy, outerRadius, 225);
 		Point p2 = positionOnArc(cx, cy, outerRadius, -45);
 		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
-		gc.fillRectangle(p1.x, cy, p2.x - p1.x, p2.y - cy);
+		gc.fillArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
+//		gc.fillRectangle(p1.x, cy, p2.x - p1.x, p2.y - cy);
 		
 		// Draw zones
 		int startAngle = 225;
@@ -394,21 +401,32 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		// Draw center part and border
 		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
 		gc.setForeground(SharedColors.BLACK);
-		gc.fillArc(rect.x + scaleWidth, rect.y + scaleWidth, rect.width - scaleWidth * 2, rect.height - scaleWidth * 2, -50, 290);
-		gc.drawArc(rect.x, rect.y, rect.width, rect.height, -45, 270);
-		gc.drawLine(p1.x, p1.y, p2.x, p2.y);
+//		gc.fillArc(rect.x + scaleWidth, rect.y + scaleWidth, rect.width - scaleWidth * 2, rect.height - scaleWidth * 2, -50, 290);
+//		gc.drawArc(rect.x, rect.y, rect.width, rect.height, -45, 270);
+//		gc.drawLine(p1.x, p1.y, p2.x, p2.y);
+		gc.fillArc(rect.x + scaleWidth, rect.y + scaleWidth, rect.width - scaleWidth * 2, rect.height - scaleWidth * 2, 0, 360);
+		gc.drawArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
 		
 		// Draw scale
-		double arcLength = outerRadius * 4.7123889803846898576939650749193;	// r * (270 degrees angle in radians)
-		int step = (int)(270 / (arcLength / 20));		// step in degrees
-		int markRadius = outerRadius - ((rect.width / 2) * (SCALE_WIDTH / 5) / 100);
-System.out.println("step="+step+" radius=" +markRadius);		
-		for(int i = 224; i >= -45; i -= step)
+		int offset = ((rect.width / 2) * SCALE_OFFSET / 100);
+		int textOffset = ((rect.width / 2) * SCALE_OFFSET / 200);
+		//double arcLength = (outerRadius - offset) * 4.7123889803846898576939650749193;	// r * (270 degrees angle in radians)
+		//int step = (int)(270 / (arcLength / 50));		// step in degrees
+		//int markRadius = outerRadius - ((rect.width / 2) * (SCALE_WIDTH / 5) / 100);
+		int step = 27;
+		for(int i = 225; i >= -45; i -= step)
 		{
-			Point l1 = positionOnArc(cx, cy, outerRadius, i);
-			Point l2 = positionOnArc(cx, cy, markRadius, i);
+			Point l1 = positionOnArc(cx, cy, outerRadius - offset, i);
+			Point l2 = positionOnArc(cx, cy, outerRadius - scaleWidth, i);
 			gc.drawLine(l1.x, l1.y, l2.x, l2.y);
+
+			String value = roundedMarkValue(i, angleValue);
+			Point t = positionOnArc(cx, cy, outerRadius - textOffset, i);
+			Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
+			gc.drawText(value, t.x - ext.x / 2, t.y - ext.y / 2, SWT.DRAW_TRANSPARENT);
 		}
+		gc.drawArc(rect.x + offset, rect.y + offset, rect.width - offset * 2, rect.height - offset * 2, -45, 270);
+		gc.drawArc(rect.x + scaleWidth, rect.y + scaleWidth, rect.width - scaleWidth * 2, rect.height - scaleWidth * 2, -45, 270);
 		
 		// Draw needle
 		gc.setBackground(colors.create(NEEDLE_COLOR));
@@ -423,14 +441,17 @@ System.out.println("step="+step+" radius=" +markRadius);
 		
 		// Draw current value
 		String value = getValueAsDisplayString(dci);
+		gc.setFont(SharedFonts.ELEMENT_TITLE);
+		gc.setForeground(colors.create(NEEDLE_COLOR));
 		Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
-		gc.drawText(value, p1.x + ((p2.x - p1.x - ext.x) / 2), p1.y - ext.y - 4, true);
+		gc.drawText(value, p1.x + ((p2.x - p1.x - ext.x) / 2), p1.y - ext.y / 2, true);
+		gc.setFont(null);
 		
 		// Draw legend, ignore legend position
 		if (legendVisible)
 		{
 			ext = gc.textExtent(dci.getName(), SWT.DRAW_TRANSPARENT);
-			gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), p1.y + 4, true);
+			gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 		}
 	}
 	
@@ -455,8 +476,10 @@ System.out.println("step="+step+" radius=" +markRadius);
 		if (angle <= 0)
 			return startAngle;
 		
+		int offset = ((rect.width / 2) * SCALE_OFFSET / 100);
+		
 		gc.setBackground(colors.create(color));
-		gc.fillArc(rect.x, rect.y, rect.width, rect.height, startAngle, -angle);
+		gc.fillArc(rect.x + offset, rect.y + offset, rect.width - offset * 2, rect.height - offset * 2, startAngle, -angle);
 		return startAngle - angle;
 	}
 
@@ -473,6 +496,35 @@ System.out.println("step="+step+" radius=" +markRadius);
 	private Point positionOnArc(int cx, int cy, int radius, int angle)
 	{
 		return new Point((int)(radius * Math.cos(Math.toRadians(angle)) + cx), (int)(radius * -Math.sin(Math.toRadians(angle)) + cy));
+	}
+	
+	/**
+	 * Get rounded value for scale mark
+	 * 
+	 * @param angle
+	 * @param angleValue
+	 * @return
+	 */
+	private String roundedMarkValue(int angle, double angleValue)
+	{
+		double value = (225 - angle) * angleValue + minValue;
+		double absValue = Math.abs(value);
+		if (absValue >= 1000)
+		{
+			return Long.toString(Math.round(value / 1000)) + "K";
+		}
+		else if (absValue >= 1)
+		{
+			return Long.toString(Math.round(value));
+		}
+		else if (absValue == 0)
+		{
+			return "0";
+		}
+		else
+		{
+			return Double.toString(value);
+		}
 	}
 
 	/**
