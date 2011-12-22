@@ -38,6 +38,7 @@ public class DialChart extends PropertyPage
 	private LabeledText title;
 	private Button checkShowTitle;
 	private Button checkShowLegend;
+	private Button checkLegendInside;
 	private LabeledText minValue;
 	private LabeledText maxValue;
 	private LabeledText leftYellowZone;
@@ -135,6 +136,15 @@ public class DialChart extends PropertyPage
 		gd.horizontalSpan = 2;
 		checkShowLegend.setLayoutData(gd);
 		
+		checkLegendInside = new Button(dialogArea, SWT.CHECK);
+		checkLegendInside.setText("Place legend &inside dial");
+		checkLegendInside.setSelection(config.isLegendInside());
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
+		checkLegendInside.setLayoutData(gd);
+		
 		return dialogArea;
 	}
 
@@ -169,6 +179,7 @@ public class DialChart extends PropertyPage
 		config.setRightRedZone(rr);
 		config.setShowTitle(checkShowTitle.getSelection());
 		config.setShowLegend(checkShowLegend.getSelection());
+		config.setLegendInside(checkLegendInside.getSelection());
 		return true;
 	}
 }

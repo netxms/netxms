@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.charts.widgets;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.jface.preference.PreferenceConverter;
@@ -29,6 +30,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -41,8 +43,8 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 import org.netxms.ui.eclipse.shared.SharedColors;
-import org.netxms.ui.eclipse.shared.SharedFonts;
 import org.netxms.ui.eclipse.tools.ColorCache;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Dial chart implementation
@@ -63,6 +65,9 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 	private static final RGB NEEDLE_COLOR = new RGB(51, 78, 113);
 	private static final RGB NEEDLE_PIN_COLOR = new RGB(239, 228, 176);
 	
+	private static Font[] scaleFonts = null;
+	private static Font[] valueFonts = null;
+	
 	private List<DataComparisonElement> parameters = new ArrayList<DataComparisonElement>(MAX_CHART_ITEMS);
 	private Image chartImage = null;
 	private ColorCache colors;
@@ -72,6 +77,7 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 	private double leftYellowZone = 0.0;
 	private double rightYellowZone = 70.0;
 	private double rightRedZone = 90.0;
+	private boolean legendInside = true;
 	
 	/**
 	 * @param parent
@@ -80,6 +86,10 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 	public DialChart(Composite parent, int style)
 	{
 		super(parent, style | SWT.NO_BACKGROUND);
+		
+		if (scaleFonts == null)
+			createFonts();
+		
 		colors = new ColorCache(this);
 		addPaintListener(this);
 		addDisposeListener(this);
@@ -100,6 +110,20 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 			{
 			}
 		});
+	}
+	
+	/**
+	 * Create fonts
+	 */
+	private void createFonts()
+	{
+		scaleFonts = new Font[16];
+		for(int i = 0; i < scaleFonts.length; i++)
+			scaleFonts[i] = new Font(getDisplay(), "Verdana", i + 6, SWT.NORMAL);
+
+		valueFonts = new Font[16];
+		for(int i = 0; i < valueFonts.length; i++)
+			valueFonts[i] = new Font(getDisplay(), "Verdana", i + 6, SWT.BOLD);
 	}
 
 	/* (non-Javadoc)
@@ -363,7 +387,7 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 	private void renderElement(GC gc, DataComparisonElement dci, int x, int y, int w, int h)
 	{
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
-		if (legendVisible)
+		if (legendVisible && !legendInside)
 		{
 			rect.height -= gc.textExtent("MMM").y - 4;
 		}
@@ -409,13 +433,17 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		int textOffset = ((rect.width / 2) * SCALE_OFFSET / 200);
 		double arcLength = (outerRadius - scaleOuterOffset) * 4.7123889803846898576939650749193;	// r * (270 degrees angle in radians)
 		int step = (arcLength >= 200) ? 27 : 54;
+		double valueStep = Math.abs((maxValue - minValue) / ((arcLength >= 200) ? 10 : 20)); 
+		int textWidth = (int)(Math.sqrt((outerRadius - scaleOuterOffset) * (outerRadius - scaleOuterOffset) / 2) * 0.7);
+		final Font markFont = WidgetHelper.getBestFittingFont(gc, scaleFonts, "900MM", textWidth, outerRadius - scaleOuterOffset);
+		gc.setFont(markFont);
 		for(int i = 225; i >= -45; i -= step)
 		{
 			Point l1 = positionOnArc(cx, cy, outerRadius - scaleOuterOffset, i);
 			Point l2 = positionOnArc(cx, cy, outerRadius - scaleInnerOffset, i);
 			gc.drawLine(l1.x, l1.y, l2.x, l2.y);
 
-			String value = roundedMarkValue(i, angleValue);
+			String value = roundedMarkValue(i, angleValue, valueStep);
 			Point t = positionOnArc(cx, cy, outerRadius - textOffset, i);
 			Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
 			gc.drawText(value, t.x - ext.x / 2, t.y - ext.y / 2, SWT.DRAW_TRANSPARENT);
@@ -441,22 +469,30 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		
 		// Draw current value
 		String value = getValueAsDisplayString(dci);
-		gc.setFont(SharedFonts.ELEMENT_TITLE);
+		gc.setFont(WidgetHelper.getMatchingSizeFont(valueFonts, markFont));
 		Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
 		gc.setLineWidth(3);
 		gc.setBackground(colors.create(NEEDLE_COLOR));
-		int boxW = Math.max(outerRadius - scaleInnerOffset - 10, ext.x + 8);
+		int boxW = Math.max(outerRadius - scaleInnerOffset - 6, ext.x + 8);
 		gc.fillRoundRectangle(cx - boxW / 2, cy + rect.height / 4, boxW, ext.y + 6, 3, 3);
 		gc.setForeground(SharedColors.WHITE);
 		gc.drawText(value, cx - ext.x / 2, cy + rect.height / 4 + 3, true);
-		gc.setFont(null);
 		
 		// Draw legend, ignore legend position
 		if (legendVisible)
 		{
 			ext = gc.textExtent(dci.getName(), SWT.DRAW_TRANSPARENT);
 			gc.setForeground(SharedColors.BLACK);
-			gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
+			if (legendInside)
+			{
+				gc.setFont(markFont);
+				gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleInnerOffset / 2 + rect.height / 4, true);
+			}
+			else
+			{
+				gc.setFont(null);
+				gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
+			}
 		}
 	}
 	
@@ -510,7 +546,7 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 	 * @param angleValue
 	 * @return
 	 */
-	private String roundedMarkValue(int angle, double angleValue)
+	private String roundedMarkValue(int angle, double angleValue, double step)
 	{
 		double value = (225 - angle) * angleValue + minValue;
 		double absValue = Math.abs(value);
@@ -526,7 +562,7 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		{
 			return Long.toString(Math.round(value / 1000)) + "K";
 		}
-		else if (absValue >= 1)
+		else if ((absValue >= 1) && (step >= 1))
 		{
 			return Long.toString(Math.round(value));
 		}
@@ -536,7 +572,15 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		}
 		else
 		{
-			return Double.toString(value);
+			if (step < 0.00001)
+				return Double.toString(value);
+			if (step < 0.0001)
+				return new DecimalFormat("#.#####").format(value);
+			if (step < 0.001)
+				return new DecimalFormat("#.####").format(value);
+			if (step < 0.01)
+				return new DecimalFormat("#.###").format(value);
+			return new DecimalFormat("#.##").format(value);
 		}
 	}
 
@@ -653,5 +697,21 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 	public void setRightRedZone(double rightRedZone)
 	{
 		this.rightRedZone = rightRedZone;
+	}
+
+	/**
+	 * @return the legendInside
+	 */
+	public boolean isLegendInside()
+	{
+		return legendInside;
+	}
+
+	/**
+	 * @param legendInside the legendInside to set
+	 */
+	public void setLegendInside(boolean legendInside)
+	{
+		this.legendInside = legendInside;
 	}
 }

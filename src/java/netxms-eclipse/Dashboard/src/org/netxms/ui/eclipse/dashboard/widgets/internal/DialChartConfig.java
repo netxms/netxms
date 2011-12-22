@@ -16,6 +16,9 @@ public class DialChartConfig extends AbstractChartConfig
 	private boolean showTitle = true;
 	
 	@Element(required = false)
+	private boolean legendInside = false;
+	
+	@Element(required = false)
 	private double minValue = 0.0;
 	
 	@Element(required = false)
@@ -156,5 +159,21 @@ public class DialChartConfig extends AbstractChartConfig
 	public void setLeftRedZone(double leftRedZone)
 	{
 		this.leftRedZone = leftRedZone;
+	}
+
+	/**
+	 * @return the legendInside
+	 */
+	public boolean isLegendInside()
+	{
+		return legendInside;
+	}
+
+	/**
+	 * @param legendInside the legendInside to set
+	 */
+	public void setLegendInside(boolean legendInside)
+	{
+		this.legendInside = legendInside;
 	}
 }

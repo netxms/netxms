@@ -29,6 +29,9 @@ import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -440,5 +443,61 @@ public class WidgetHelper
 			}
 		};
 		manager.add(selectAll);
+	}
+	
+	/**
+	 * Get best fitting font from given font list for given string and bounding rectangle.
+	 * Fonts in the list must be ordered from smaller to larger.
+	 * 
+	 * @param gc GC
+	 * @param fonts list of available fonts
+	 * @param text text to fit
+	 * @param width width of bounding rectangle
+	 * @param height height of bounding rectangle
+	 * @return best font
+	 */
+	public static Font getBestFittingFont(GC gc, Font[] fonts, String text, int width, int height)
+	{
+		int first = 0;
+		int last = fonts.length - 1;
+		int curr = last / 2;
+		Font font = null;
+		while(last > first)
+		{
+			gc.setFont(fonts[curr]);
+			Point ext = gc.textExtent(text);
+			if ((ext.x <= width) && (ext.y <= height))
+			{
+				font = fonts[curr];
+				first = curr + 1;
+				curr = first + (last - first) / 2;
+			}
+			else
+			{
+				last = curr - 1;
+				curr = first + (last - first) / 2;
+			}
+		}
+		
+		// Use smallest font if no one fit
+		if (font == null)
+			font = fonts[0];
+		return font;
+	}
+	
+	/**
+	 * Find font with matching size in font array.
+	 * 
+	 * @param fonts fonts to select from
+	 * @param sourceFont font to match
+	 * @return matching font or null
+	 */
+	public static Font getMatchingSizeFont(Font[] fonts, Font sourceFont)
+	{
+		float h = sourceFont.getFontData()[0].height;
+		for(int i = 0; i < fonts.length; i++)
+			if (fonts[i].getFontData()[0].height == h)
+				return fonts[i];
+		return null;
 	}
 }

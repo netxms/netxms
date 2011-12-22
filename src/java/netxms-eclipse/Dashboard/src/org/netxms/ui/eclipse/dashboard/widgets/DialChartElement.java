@@ -55,6 +55,7 @@ public class DialChartElement extends ComparisonChartElement
 		chart.setChartTitle(config.getTitle());
 		chart.setTitleVisible(config.isShowTitle());
 		chart.setLegendVisible(config.isShowLegend());
+		((DialChart)chart).setLegendInside(config.isLegendInside());
 		((DialChart)chart).setMinValue(config.getMinValue());
 		((DialChart)chart).setMaxValue(config.getMaxValue());
 		((DialChart)chart).setLeftYellowZone(config.getLeftYellowZone());
