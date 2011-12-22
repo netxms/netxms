@@ -582,6 +582,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	// Create queue for delayed SQL queries
 	g_pLazyRequestQueue = new Queue(256, 64);
+	g_pIDataInsertQueue = new Queue(1024, 1024);
 
 	// Initialize database driver and connect to database
 	DBSetDebugPrintCallback(DbgPrintf2);
@@ -1156,6 +1157,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ShowQueueStats(pCtx, &g_topologyPollQueue, _T("Topology poller"));
 			ShowQueueStats(pCtx, g_pItemQueue, _T("Data collector"));
 			ShowQueueStats(pCtx, g_pLazyRequestQueue, _T("Database writer"));
+			ShowQueueStats(pCtx, g_pIDataInsertQueue, _T("Database writer (IData)"));
 			ShowQueueStats(pCtx, g_pEventQueue, _T("Event processor"));
 			ShowQueueStats(pCtx, &g_discoveryPollQueue, _T("Network discovery poller"));
 			ShowQueueStats(pCtx, &g_nodePollerQueue, _T("Node poller"));

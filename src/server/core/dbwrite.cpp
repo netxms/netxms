@@ -203,17 +203,49 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
-		TCHAR query[256];
-		_sntprintf(query, 256, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value) VALUES (?,?,?)"), (int)rq->nodeId);
-		DB_STATEMENT hStmt = DBPrepare(hdb, query);
-		if (hStmt != NULL)
+		if (DBBegin(hdb))
 		{
-			DBFreeStatement(hStmt);
-		}
+			int count = 0;
+			while(1)
+			{
+				TCHAR query[256];
+				BOOL success;
 
-		free(rq);
+				_sntprintf(query, 256, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value) VALUES (?,?,?)"), (int)rq->nodeId);
+				DB_STATEMENT hStmt = DBPrepare(hdb, query);
+				if (hStmt != NULL)
+				{
+					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
+					DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, rq->timestamp);
+					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, rq->value, DB_BIND_STATIC);
+					success = DBExecute(hStmt);
+					DBFreeStatement(hStmt);
+				}
+				else
+				{
+					success = FALSE;
+				}
+				free(rq);
+
+				count++;
+				if (!success || (count > 1000))
+					break;
+
+				rq = (DELAYED_IDATA_INSERT *)g_pIDataInsertQueue->Get();
+				if (rq == NULL)
+					break;
+				if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
+					goto stop;
+			}
+			DBCommit(hdb);
+		}
+		else
+		{
+			free(rq);
+		}
 	}
 
+stop:
    if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
    {
       DBDisconnect(hdb);

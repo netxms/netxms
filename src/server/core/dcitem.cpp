@@ -1113,12 +1113,15 @@ void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
 	                4, updateRawValueTypes, values);
 
 	// Save transformed value to database
+	QueueIDataInsert(tmTimeStamp, m_pNode->Id(), m_dwId, pValue->String());
+	/*
 	TCHAR query[128];
 	_sntprintf(query, 128, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value) VALUES (?,?,?)"), m_pNode->Id());
 	values[0] = dciId;
 	values[1] = pollTime;
 	values[2] = pValue->String();
 	QueueSQLRequest(query, 3, updateValueTypes, values);
+	*/
 
    // Check thresholds and add value to cache
    checkThresholds(*pValue);

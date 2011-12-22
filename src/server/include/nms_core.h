@@ -841,6 +841,7 @@ extern TCHAR NXCORE_EXPORTABLE g_szJavaPath[];
 extern DB_DRIVER g_dbDriver;
 extern DB_HANDLE NXCORE_EXPORTABLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;
+extern Queue *g_pIDataInsertQueue;
 
 extern int NXCORE_EXPORTABLE g_nDBSyntax;
 
