@@ -2667,7 +2667,15 @@ DWORD Node::GetInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuff
       }
       else if (!_tcsicmp(szParam, _T("Server.AverageDBWriterQueueSize")))
       {
+         _sntprintf(szBuffer, dwBufSize, _T("%f"), g_dAvgDBAndIDataWriterQueueSize);
+      }
+      else if (!_tcsicmp(szParam, _T("Server.AverageDBWriterQueueSize.Other")))
+      {
          _sntprintf(szBuffer, dwBufSize, _T("%f"), g_dAvgDBWriterQueueSize);
+      }
+      else if (!_tcsicmp(szParam, _T("Server.AverageDBWriterQueueSize.IData")))
+      {
+         _sntprintf(szBuffer, dwBufSize, _T("%f"), g_dAvgIDataWriterQueueSize);
       }
       else if (!_tcsicmp(szParam, _T("Server.AverageStatusPollerQueueSize")))
       {

@@ -44,6 +44,8 @@ extern Queue g_configPollQueue;
 
 double g_dAvgPollerQueueSize = 0;
 double g_dAvgDBWriterQueueSize = 0;
+double g_dAvgIDataWriterQueueSize = 0;
+double g_dAvgDBAndIDataWriterQueueSize = 0;
 double g_dAvgStatusPollerQueueSize = 0;
 double g_dAvgConfigPollerQueueSize = 0;
 DWORD g_dwAvgDCIQueuingTime = 0;
@@ -240,15 +242,20 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 {
    DWORD i, dwCurrPos = 0;
    DWORD dwPollerQS[12], dwDBWriterQS[12];
+   DWORD dwIDataWriterQS[12], dwDBAndIDataWriterQS[12];
    DWORD dwStatusPollerQS[12], dwConfigPollerQS[12];
-   double dSum1, dSum2, dSum3, dSum4;
+   double dSum1, dSum2, dSum3, dSum4, dSum5, dSum6;
 
    memset(dwPollerQS, 0, sizeof(DWORD) * 12);
    memset(dwDBWriterQS, 0, sizeof(DWORD) * 12);
+   memset(dwIDataWriterQS, 0, sizeof(DWORD) * 12);
+   memset(dwDBAndIDataWriterQS, 0, sizeof(DWORD) * 12);
    memset(dwStatusPollerQS, 0, sizeof(DWORD) * 12);
    memset(dwConfigPollerQS, 0, sizeof(DWORD) * 12);
    g_dAvgPollerQueueSize = 0;
    g_dAvgDBWriterQueueSize = 0;
+   g_dAvgIDataWriterQueueSize = 0;
+   g_dAvgDBAndIDataWriterQueueSize = 0;
    g_dAvgStatusPollerQueueSize = 0;
    g_dAvgConfigPollerQueueSize = 0;
    while(!IsShutdownInProgress())
@@ -259,6 +266,8 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
       // Get current values
       dwPollerQS[dwCurrPos] = g_pItemQueue->Size();
       dwDBWriterQS[dwCurrPos] = g_pLazyRequestQueue->Size();
+      dwIDataWriterQS[dwCurrPos] = g_pIDataInsertQueue->Size();
+      dwDBAndIDataWriterQS[dwCurrPos] = g_pLazyRequestQueue->Size() + g_pIDataInsertQueue->Size();
       dwStatusPollerQS[dwCurrPos] = g_statusPollQueue.Size();
       dwConfigPollerQS[dwCurrPos] = g_configPollQueue.Size();
       dwCurrPos++;
@@ -266,17 +275,21 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
          dwCurrPos = 0;
 
       // Calculate new averages
-      for(i = 0, dSum1 = 0, dSum2 = 0, dSum3 = 0, dSum4 = 0; i < 12; i++)
+      for(i = 0, dSum1 = 0, dSum2 = 0, dSum3 = 0, dSum4 = 0, dSum5 = 0, dSum6 = 0; i < 12; i++)
       {
          dSum1 += dwPollerQS[i];
          dSum2 += dwDBWriterQS[i];
-         dSum3 += dwStatusPollerQS[i];
-         dSum4 += dwConfigPollerQS[i];
+         dSum3 += dwIDataWriterQS[i];
+         dSum4 += dwDBAndIDataWriterQS[i];
+         dSum5 += dwStatusPollerQS[i];
+         dSum6 += dwConfigPollerQS[i];
       }
       g_dAvgPollerQueueSize = dSum1 / 12;
       g_dAvgDBWriterQueueSize = dSum2 / 12;
-      g_dAvgStatusPollerQueueSize = dSum3 / 12;
-      g_dAvgConfigPollerQueueSize = dSum4 / 12;
+      g_dAvgIDataWriterQueueSize = dSum3 / 12;
+      g_dAvgDBAndIDataWriterQueueSize = dSum4 / 12;
+      g_dAvgStatusPollerQueueSize = dSum5 / 12;
+      g_dAvgConfigPollerQueueSize = dSum6 / 12;
    }
    return THREAD_OK;
 }

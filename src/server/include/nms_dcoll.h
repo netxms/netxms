@@ -332,6 +332,8 @@ void CalculateItemValueMD(ItemValue &result, int nDataType,
 
 extern double g_dAvgPollerQueueSize;
 extern double g_dAvgDBWriterQueueSize;
+extern double g_dAvgIDataWriterQueueSize;
+extern double g_dAvgDBAndIDataWriterQueueSize;
 extern double g_dAvgStatusPollerQueueSize;
 extern double g_dAvgConfigPollerQueueSize;
 extern DWORD g_dwAvgDCIQueuingTime;
