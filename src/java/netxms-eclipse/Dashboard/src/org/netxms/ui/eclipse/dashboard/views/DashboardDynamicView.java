@@ -62,7 +62,7 @@ public class DashboardDynamicView extends ViewPart
 	{
 		parentComposite = parent;
 		if (dashboard != null)
-			dbc = new DashboardControl(parent, SWT.NONE, dashboard, false);
+			dbc = new DashboardControl(parent, SWT.NONE, dashboard, this, false);
 
 		createActions();
 		contributeToActionBars();
@@ -154,7 +154,7 @@ public class DashboardDynamicView extends ViewPart
 		if (dbc != null)
 			dbc.dispose();
 		dashboard = object;
-		dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, false);
+		dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, false);
 		parentComposite.layout();
 		setPartName("Dashboard: " + dashboard.getObjectName());
 	}
@@ -172,7 +172,7 @@ public class DashboardDynamicView extends ViewPart
 		dashboard = (Dashboard)((NXCSession)ConsoleSharedData.getSession()).findObjectById(dashboard.getObjectId(), Dashboard.class);
 		if (dashboard != null)
 		{
-			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, false);
+			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, false);
 			parentComposite.layout();
 			setPartName("Dashboard: " + dashboard.getObjectName());
 		}

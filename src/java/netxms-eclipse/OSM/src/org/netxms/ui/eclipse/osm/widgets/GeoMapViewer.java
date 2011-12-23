@@ -45,8 +45,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.GeoLocation;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -89,7 +89,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private Area coverage = null;
 	private List<GenericObject> objects = new ArrayList<GenericObject>();
 	private MapAccessor accessor;
-	private ViewPart viewPart = null;
+	private IViewPart viewPart = null;
 	private AnimatedImage waitingImage = null;
 	private Point currentPoint;
 	private Point dragStartPoint = null;
@@ -680,7 +680,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	/**
 	 * @return the viewPart
 	 */
-	public ViewPart getViewPart()
+	public IViewPart getViewPart()
 	{
 		return viewPart;
 	}
@@ -688,7 +688,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	/**
 	 * @param viewPart the viewPart to set
 	 */
-	public void setViewPart(ViewPart viewPart)
+	public void setViewPart(IViewPart viewPart)
 	{
 		this.viewPart = viewPart;
 	}

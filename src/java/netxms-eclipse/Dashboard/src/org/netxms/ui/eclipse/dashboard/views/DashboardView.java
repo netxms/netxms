@@ -85,7 +85,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	public void createPartControl(Composite parent)
 	{
 		parentComposite = parent;
-		dbc = new DashboardControl(parent, SWT.NONE, dashboard, false);
+		dbc = new DashboardControl(parent, SWT.NONE, dashboard, this, false);
 		dbcModifyListener = new DashboardModifyListener() {
 			@Override
 			public void save()
@@ -342,7 +342,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 
 			if (dashboard != null)
 			{
-				dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, false);
+				dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, false);
 				parentComposite.layout(true, true);
 				setPartName("Dashboard: " + dashboard.getObjectName());
 				dbc.setModifyListener(dbcModifyListener);
@@ -354,7 +354,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		}
 		else
 		{
-			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, dbc.getElements(), dbc.isModified());
+			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, dbc.getElements(), this, dbc.isModified());
 			parentComposite.layout(true, true);
 			dbc.setModifyListener(dbcModifyListener);
 		}

@@ -12,6 +12,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.GenericObject;
@@ -36,9 +37,9 @@ public class StatusIndicatorElement extends ElementWidget
 	 * @param parent
 	 * @param element
 	 */
-	protected StatusIndicatorElement(final DashboardControl parent, DashboardElement element)
+	protected StatusIndicatorElement(final DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
-		super(parent, element);
+		super(parent, element, viewPart);
 
 		try
 		{

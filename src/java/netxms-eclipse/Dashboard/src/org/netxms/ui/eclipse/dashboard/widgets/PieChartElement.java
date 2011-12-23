@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
@@ -39,9 +40,9 @@ public class PieChartElement extends ComparisonChartElement
 	 * @param parent
 	 * @param data
 	 */
-	public PieChartElement(DashboardControl parent, DashboardElement element)
+	public PieChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
-		super(parent, element);
+		super(parent, element, viewPart);
 		
 		try
 		{

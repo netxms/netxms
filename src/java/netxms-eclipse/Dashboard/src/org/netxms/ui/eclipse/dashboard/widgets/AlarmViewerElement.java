@@ -56,7 +56,7 @@ public class AlarmViewerElement extends ElementWidget
 		layout.marginWidth = 0;
 		setLayout(layout);
 
-		viewer = new AlarmList(null, this, SWT.NONE, "Dashboard.AlarmList");
+		viewer = new AlarmList(viewPart, this, SWT.NONE, "Dashboard.AlarmList");
 		viewer.setRootObject(config.getObjectId());
 	}
 }

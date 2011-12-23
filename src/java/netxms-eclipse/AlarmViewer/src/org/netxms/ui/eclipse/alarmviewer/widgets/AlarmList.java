@@ -39,8 +39,8 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -73,7 +73,7 @@ public class AlarmList extends Composite
 	public static final int COLUMN_CREATED = 5;
 	public static final int COLUMN_LASTCHANGE = 6;
 	
-	private final ViewPart viewPart;
+	private final IViewPart viewPart;
 	private NXCSession session = null;
 	private NXCListener clientListener = null;
 	private SortableTableViewer alarmViewer;
@@ -90,7 +90,7 @@ public class AlarmList extends Composite
 	 * @param style widget style
 	 * @param configPrefix prefix for saving/loading widget configuration
 	 */
-	public AlarmList(ViewPart viewPart, Composite parent, int style, final String configPrefix)
+	public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
