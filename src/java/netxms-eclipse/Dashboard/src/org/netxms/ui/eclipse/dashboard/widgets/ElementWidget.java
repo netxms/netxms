@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
@@ -31,6 +32,7 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
 class ElementWidget extends DashboardComposite implements ControlListener
 {
 	protected DashboardElement element;
+	protected IViewPart viewPart;
 	
 	private DashboardControl dbc;
 	private DashboardElementLayout layout;
@@ -41,11 +43,12 @@ class ElementWidget extends DashboardComposite implements ControlListener
 	 * @param parent
 	 * @param style
 	 */
-	protected ElementWidget(DashboardControl parent, int style, DashboardElement element)
+	protected ElementWidget(DashboardControl parent, int style, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, style);
 		dbc = parent;
 		this.element = element;
+		this.viewPart = viewPart;
 		parseLayout(element.getLayout());
 		addControlListener(this);
 	}
@@ -54,11 +57,12 @@ class ElementWidget extends DashboardComposite implements ControlListener
 	 * @param parent
 	 * @param style
 	 */
-	protected ElementWidget(DashboardControl parent, DashboardElement element)
+	protected ElementWidget(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, SWT.BORDER);
 		dbc = parent;
 		this.element = element;
+		this.viewPart = viewPart;
 		parseLayout(element.getLayout());
 		addControlListener(this);
 	}

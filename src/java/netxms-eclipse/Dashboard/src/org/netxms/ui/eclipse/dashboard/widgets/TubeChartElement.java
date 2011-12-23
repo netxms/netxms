@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
@@ -38,9 +39,9 @@ public class TubeChartElement extends ComparisonChartElement
 	 * @param parent
 	 * @param data
 	 */
-	public TubeChartElement(DashboardControl parent, DashboardElement element)
+	public TubeChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
-		super(parent, element);
+		super(parent, element, viewPart);
 		
 		try
 		{

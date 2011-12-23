@@ -24,6 +24,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -41,9 +42,9 @@ public class LabelElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public LabelElement(DashboardControl parent, DashboardElement element)
+	public LabelElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
-		super(parent, element);
+		super(parent, element, viewPart);
 		
 		try
 		{

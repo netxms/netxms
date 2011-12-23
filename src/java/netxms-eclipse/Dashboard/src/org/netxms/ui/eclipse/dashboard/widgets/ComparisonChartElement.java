@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Widget;
+import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
@@ -49,9 +50,9 @@ public abstract class ComparisonChartElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public ComparisonChartElement(DashboardControl parent, DashboardElement element)
+	public ComparisonChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
-		super(parent, element);
+		super(parent, element, viewPart);
 		session = (NXCSession)ConsoleSharedData.getSession();
 
 		setLayout(new FillLayout());	

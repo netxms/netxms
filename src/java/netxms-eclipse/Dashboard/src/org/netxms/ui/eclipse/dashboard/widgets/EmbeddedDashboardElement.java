@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
@@ -39,9 +40,9 @@ public class EmbeddedDashboardElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public EmbeddedDashboardElement(DashboardControl parent, DashboardElement element)
+	public EmbeddedDashboardElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
-		super(parent, SWT.NONE, element);
+		super(parent, SWT.NONE, element, viewPart);
 
 		try
 		{
@@ -63,7 +64,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 		
 		if (object != null)
 		{
-			new DashboardControl(this, SWT.NONE, object, true);	/* TODO: set embedded=false if border=true */
+			new DashboardControl(this, SWT.NONE, object, viewPart, true);	/* TODO: set embedded=false if border=true */
 		}
 	}
 }

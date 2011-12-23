@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.IAdapterManager;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.api.DashboardElementCreationData;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.CustomWidgetConfig;
@@ -35,9 +36,9 @@ public class CustomWidgetElement extends ElementWidget
 	 * @param parent
 	 * @param element
 	 */
-	public CustomWidgetElement(DashboardControl parent, DashboardElement element)
+	public CustomWidgetElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
-		super(parent, SWT.NONE, element);
+		super(parent, SWT.NONE, element, viewPart);
 		
 		CustomWidgetConfig config;
 		try

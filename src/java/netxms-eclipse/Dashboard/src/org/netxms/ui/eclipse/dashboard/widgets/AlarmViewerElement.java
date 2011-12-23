@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig;
@@ -36,9 +37,9 @@ public class AlarmViewerElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public AlarmViewerElement(DashboardControl parent, DashboardElement element)
+	public AlarmViewerElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
-		super(parent, element);
+		super(parent, element, viewPart);
 
 		try
 		{

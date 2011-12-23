@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.ui.IViewPart;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
@@ -47,9 +48,9 @@ public class AvailabilityChartElement extends ElementWidget implements DisposeLi
 	 * @param parent
 	 * @param data
 	 */
-	public AvailabilityChartElement(DashboardControl parent, DashboardElement element)
+	public AvailabilityChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
-		super(parent, element);
+		super(parent, element, viewPart);
 		
 		try
 		{

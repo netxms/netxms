@@ -71,17 +71,19 @@ public class DashboardControl extends Composite
 	private boolean editMode = false;
 	private boolean modified = false;
 	private DashboardModifyListener modifyListener = null;
+	private IViewPart viewPart;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public DashboardControl(Composite parent, int style, Dashboard dashboard, boolean embedded)
+	public DashboardControl(Composite parent, int style, Dashboard dashboard, IViewPart viewPart, boolean embedded)
 	{
 		super(parent, style);
 		this.dashboard = dashboard;
 		this.embedded = embedded;
 		this.elements = new ArrayList<DashboardElement>(dashboard.getElements());
+		this.viewPart = viewPart;
 		createContent();
 	}
 
@@ -89,13 +91,14 @@ public class DashboardControl extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public DashboardControl(Composite parent, int style, Dashboard dashboard, List<DashboardElement> elements, boolean modified)
+	public DashboardControl(Composite parent, int style, Dashboard dashboard, List<DashboardElement> elements, IViewPart viewPart, boolean modified)
 	{
 		super(parent, style);
 		this.dashboard = dashboard;
 		this.embedded = false;
 		this.modified = modified;
 		this.elements = new ArrayList<DashboardElement>(elements);
+		this.viewPart = viewPart;
 		createContent();
 	}
 
@@ -176,52 +179,52 @@ public class DashboardControl extends Composite
 		switch(e.getType())
 		{
 			case DashboardElement.LINE_CHART:
-				w = new LineChartElement(this, e);
+				w = new LineChartElement(this, e, viewPart);
 				break;
 			case DashboardElement.BAR_CHART:
-				w = new BarChartElement(this, e);
+				w = new BarChartElement(this, e, viewPart);
 				break;
 			case DashboardElement.TUBE_CHART:
-				w = new TubeChartElement(this, e);
+				w = new TubeChartElement(this, e, viewPart);
 				break;
 			case DashboardElement.PIE_CHART:
-				w = new PieChartElement(this, e);
+				w = new PieChartElement(this, e, viewPart);
 				break;
 			case DashboardElement.DIAL_CHART:
-				w = new DialChartElement(this, e);
+				w = new DialChartElement(this, e, viewPart);
 				break;
 			case DashboardElement.STATUS_CHART:
-				w = new ObjectStatusChartElement(this, e);
+				w = new ObjectStatusChartElement(this, e, viewPart);
 				break;
 			case DashboardElement.AVAILABLITY_CHART:
-				w = new AvailabilityChartElement(this, e);
+				w = new AvailabilityChartElement(this, e, viewPart);
 				break;
 			case DashboardElement.LABEL:
-				w = new LabelElement(this, e);
+				w = new LabelElement(this, e, viewPart);
 				break;
 			case DashboardElement.DASHBOARD:
-				w = new EmbeddedDashboardElement(this, e);
+				w = new EmbeddedDashboardElement(this, e, viewPart);
 				break;
 			case DashboardElement.NETWORK_MAP:
-				w = new NetworkMapElement(this, e);
+				w = new NetworkMapElement(this, e, viewPart);
 				break;
 			case DashboardElement.GEO_MAP:
-				w = new GeoMapElement(this, e);
+				w = new GeoMapElement(this, e, viewPart);
 				break;
 			case DashboardElement.STATUS_INDICATOR:
-				w = new StatusIndicatorElement(this, e);
+				w = new StatusIndicatorElement(this, e, viewPart);
 				break;
 			case DashboardElement.CUSTOM:
-				w = new CustomWidgetElement(this, e);
+				w = new CustomWidgetElement(this, e, viewPart);
 				break;
 			case DashboardElement.WEB_PAGE:
-				w = new WebPageElement(this, e);
+				w = new WebPageElement(this, e, viewPart);
 				break;
 			case DashboardElement.ALARM_VIEWER:
-				w = new AlarmViewerElement(this, e);
+				w = new AlarmViewerElement(this, e, viewPart);
 				break;
 			default:
-				w = new ElementWidget(this, e);
+				w = new ElementWidget(this, e, viewPart);
 				break;
 		}
 
