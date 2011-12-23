@@ -154,10 +154,10 @@ public class StatusIndicatorElement extends ElementWidget
 			drawElement(e, MARGIN_X, MARGIN_Y, CIRCLE_SIZE, bgColor, redColors, config.getTitle());
 		}
 
-		redColors[0].dispose();
-		redColors[1].dispose();
-		greenColors[0].dispose();
-		greenColors[1].dispose();
+		//redColors[0].dispose();
+		//redColors[1].dispose();
+		//greenColors[0].dispose();
+		//greenColors[1].dispose();
 		bgColor.dispose();
 	}
 
