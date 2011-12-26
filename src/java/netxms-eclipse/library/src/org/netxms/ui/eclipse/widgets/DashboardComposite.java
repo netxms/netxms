@@ -24,6 +24,7 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.ColorCache;
@@ -32,7 +33,7 @@ import org.netxms.ui.eclipse.tools.ColorCache;
  * Composite with lightweight border (Windows 7 style)
  *
  */
-public class DashboardComposite extends Composite implements PaintListener
+public class DashboardComposite extends Canvas implements PaintListener
 {
 	protected ColorCache colors;
 	

@@ -34,6 +34,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class CreateScriptDialog extends Dialog
 {
+	private boolean rename;
 	private Text nameInputField;
 	private String name;
 	
@@ -42,9 +43,11 @@ public class CreateScriptDialog extends Dialog
 	 * 
 	 * @param parent Parent shell
 	 */
-	public CreateScriptDialog(Shell parent)
+	public CreateScriptDialog(Shell parent, String currentName)
 	{
 		super(parent);
+		rename = (currentName != null);
+		name = currentName;
 	}
 
 	/* (non-Javadoc)
@@ -60,7 +63,7 @@ public class CreateScriptDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Script name", "",
+      nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Script name", name,
                                                       WidgetHelper.DEFAULT_LAYOUT_DATA);
       nameInputField.getShell().setMinimumSize(300, 0);
       
@@ -88,7 +91,7 @@ public class CreateScriptDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create new script");
+		newShell.setText(rename ? "Rename script" : "Create new script");
 	}
 
 	/**

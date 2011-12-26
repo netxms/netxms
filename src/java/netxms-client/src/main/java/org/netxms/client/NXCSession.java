@@ -4520,7 +4520,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	@Override
 	public void renameScript(long scriptId, String name) throws IOException, NXCException
 	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCRIPT);
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENAME_SCRIPT);
 		msg.setVariableInt32(NXCPCodes.VID_SCRIPT_ID, (int)scriptId);
 		msg.setVariable(NXCPCodes.VID_NAME, name);
 		sendMessage(msg);

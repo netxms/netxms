@@ -80,6 +80,7 @@ public class ScriptLibrary extends ViewPart
 	private RefreshAction actionRefresh;
 	private Action actionNew;
 	private Action actionEdit;
+	private Action actionRename;
 	private Action actionDelete;
 
 	/* (non-Javadoc)
@@ -108,6 +109,7 @@ public class ScriptLibrary extends ViewPart
 				if (selection != null)
 				{
 					actionEdit.setEnabled(selection.size() == 1);
+					actionRename.setEnabled(selection.size() == 1);
 					actionDelete.setEnabled(selection.size() > 0);
 				}
 			}
@@ -150,9 +152,6 @@ public class ScriptLibrary extends ViewPart
 	{
 		actionRefresh = new RefreshAction()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
@@ -160,45 +159,39 @@ public class ScriptLibrary extends ViewPart
 			}
 		};
 
-		actionNew = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionNew = new Action("&New...", Activator.getImageDescriptor("icons/new.png")) {
 			@Override
 			public void run()
 			{
 				createNewScript();
 			}
 		};
-		actionNew.setText("&New...");
-		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png"));
 
-		actionEdit = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionEdit = new Action("&Edit", Activator.getImageDescriptor("icons/edit.png")) {
 			@Override
 			public void run()
 			{
 				editScript();
 			}
 		};
-		actionEdit.setText("&Edit");
-		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png"));
 		actionEdit.setEnabled(false);
 
-		actionDelete = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionRename = new Action("&Rename...") {
+			@Override
+			public void run()
+			{
+				renameScript();
+			}
+		};
+		actionRename.setEnabled(false);
+
+		actionDelete = new Action("&Delete", Activator.getImageDescriptor("icons/delete.png")) {
 			@Override
 			public void run()
 			{
 				deleteScript();
 			}
 		};
-		actionDelete.setText("&Delete");
-		actionDelete.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png"));
 		actionDelete.setEnabled(false);
 	}
 
@@ -222,6 +215,7 @@ public class ScriptLibrary extends ViewPart
 	{
 		manager.add(actionNew);
 		manager.add(actionDelete);
+		manager.add(actionRename);
 		manager.add(actionEdit);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -272,6 +266,7 @@ public class ScriptLibrary extends ViewPart
 	{
 		mgr.add(actionNew);
 		mgr.add(actionEdit);
+		mgr.add(actionRename);
 		mgr.add(actionDelete);
 	}
 
@@ -308,7 +303,7 @@ public class ScriptLibrary extends ViewPart
 	 */
 	private void createNewScript()
 	{
-		final CreateScriptDialog dlg = new CreateScriptDialog(getSite().getShell());
+		final CreateScriptDialog dlg = new CreateScriptDialog(getSite().getShell(), null);
 		if (dlg.open() == Window.OK)
 		{
 			new ConsoleJob("Create new script", this, Activator.PLUGIN_ID, null) {
@@ -316,9 +311,10 @@ public class ScriptLibrary extends ViewPart
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					final long id = scriptLibraryManager.modifyScript(0, dlg.getName(), "");
-					new UIJob("Update script list") {
+					runInUIThread(new Runnable()
+					{
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							Object[] input = (Object[])viewer.getInput();
 							List<Script> list = new ArrayList<Script>(input.length);
@@ -329,9 +325,8 @@ public class ScriptLibrary extends ViewPart
 							viewer.setInput(list.toArray());
 							viewer.setSelection(new StructuredSelection(script));
 							actionEdit.run();
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 
 				@Override
@@ -357,6 +352,51 @@ public class ScriptLibrary extends ViewPart
 		catch(PartInitException e)
 		{
 			MessageDialog.openError(getSite().getWorkbenchWindow().getShell(), "Error", "Cannot open script editor: " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Edit script
+	 */
+	private void renameScript()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		final Script script = (Script)selection.getFirstElement();
+		final CreateScriptDialog dlg = new CreateScriptDialog(getSite().getShell(), script.getName());
+		if (dlg.open() == Window.OK)
+		{
+			new ConsoleJob("Rename script", this, Activator.PLUGIN_ID, null)
+			{
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					scriptLibraryManager.renameScript(script.getId(), dlg.getName());
+					runInUIThread(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							Object[] input = (Object[])viewer.getInput();
+							List<Script> list = new ArrayList<Script>(input.length);
+							for(Object o : input)
+							{
+								if (((Script)o).getId() != script.getId())
+									list.add((Script)o);
+							}
+							final Script newScript = new Script(script.getId(), dlg.getName(), script.getSource());
+							list.add(newScript);
+							viewer.setInput(list.toArray());
+							viewer.setSelection(new StructuredSelection(newScript));
+						}
+					});
+				}
+				
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot rename script";
+				}
+			}.start();
 		}
 	}
 

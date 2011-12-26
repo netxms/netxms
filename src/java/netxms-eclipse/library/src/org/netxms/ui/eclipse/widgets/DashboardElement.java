@@ -33,6 +33,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -44,7 +45,7 @@ import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
  * Dashboard element. Provides all basic functionality - border, buttons, etc.
  *
  */
-public abstract class DashboardElement extends Composite
+public abstract class DashboardElement extends Canvas
 {
 	private static final Color DEFAULT_BORDER_COLOR = new Color(Display.getCurrent(), 153, 180, 209);
 	private static final Color DEFAULT_TITLE_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
