@@ -271,6 +271,32 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 
 
 //
+// Upgrade from V244 to V245
+//
+
+static BOOL H_UpgradeFromV244(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE nodes ADD runtime_flags integer\n")
+		_T("UPDATE nodes SET runtime_flags=0\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SetColumnNullable(_T("actions"), _T("rcpt_addr"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("actions"), _T("email_subject"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("actions"), _T("action_data"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+
+	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("rcpt_addr")));
+	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("email_subject")));
+	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("action_data")));
+	
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='245' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V243 to V244
 //
 
@@ -5854,6 +5880,7 @@ static struct
 	{ 241, 242, H_UpgradeFromV241 },
 	{ 242, 243, H_UpgradeFromV242 },
 	{ 243, 244, H_UpgradeFromV243 },
+	{ 244, 245, H_UpgradeFromV244 },
    { 0, 0, NULL }
 };
 

@@ -204,9 +204,23 @@ BOOL Node::CreateFromDB(DWORD dwId)
                            _T("platform_name,poller_node_id,zone_guid,")
                            _T("proxy_node,snmp_proxy,required_polls,uname,")
 									_T("use_ifxtable,snmp_port,community,usm_auth_password,")
-									_T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr")
-	                        _T(" FROM nodes WHERE id=%d"), dwId);
-   hResult = DBSelect(g_hCoreDB, query);
+									_T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
+	                        _T("runtime_flags FROM nodes WHERE id=%d"), dwId);
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, 
+		_T("SELECT primary_name,primary_ip,node_flags,")
+      _T("snmp_version,auth_method,secret,")
+      _T("agent_port,status_poll_type,snmp_oid,agent_version,")
+      _T("platform_name,poller_node_id,zone_guid,")
+      _T("proxy_node,snmp_proxy,required_polls,uname,")
+		_T("use_ifxtable,snmp_port,community,usm_auth_password,")
+		_T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
+      _T("runtime_flags FROM nodes WHERE id=?"));
+	if (hStmt == NULL)
+		return FALSE;
+
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
+	hResult = DBSelectPrepared(hStmt);
+	DBFreeStatement(hStmt);
    if (hResult == NULL)
       return FALSE;     // Query failed
 
@@ -253,6 +267,9 @@ BOOL Node::CreateFromDB(DWORD dwId)
 	TCHAR *value = DBGetField(hResult, 0, 24, baseAddr, 16);
 	if (value != NULL)
 		StrToBin(value, m_baseBridgeAddress, MAC_ADDR_LENGTH);
+
+	m_dwDynamicFlags = DBGetFieldULong(hResult, 0, 25);
+	m_dwDynamicFlags &= ~NDF_PERSISTENT;	// Clear out all non-persistent runtime flags
 
    DBFreeResult(hResult);
 
@@ -346,9 +363,9 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  _T("agent_version,platform_name,uname,")
                  _T("poller_node_id,zone_guid,snmp_proxy,required_polls,")
 		           _T("use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
-					  _T("snmp_sys_name,bridge_base_addr) VALUES ")
-		           _T("(%d,'%s',%s,%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d,%s,'%s')"),
-                 m_dwId, IpToStr(m_dwIpAddr, szIpAddr), (const TCHAR *)DBPrepareString(hdb, m_primaryName),
+					  _T("snmp_sys_name,bridge_base_addr,runtime_flags) VALUES ")
+		           _T("(%d,'%s',%s,%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d,%s,'%s',%d)"),
+                 (int)m_dwId, IpToStr(m_dwIpAddr, szIpAddr), (const TCHAR *)DBPrepareString(hdb, m_primaryName),
 					  (int)m_wSNMPPort, m_dwFlags, m_snmpVersion, (
 					  const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
 					  m_iStatusPollType, (int)m_wAgentPort, m_wAuthMethod, 
@@ -361,7 +378,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
 					  (const TCHAR *)DBPrepareString(hdb, m_sysName),
-					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress));
+					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), (int)m_dwDynamicFlags);
 	}
    else
 	{
@@ -372,7 +389,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  _T("snmp_oid=%s,uname=%s,agent_version=%s,platform_name=%s,poller_node_id=%d,")
                  _T("zone_guid=%d,proxy_node=%d,snmp_proxy=%d,")
 					  _T("required_polls=%d,use_ifxtable=%d,usm_auth_password=%s,")
-					  _T("usm_priv_password=%s,usm_methods=%d,snmp_sys_name=%s,bridge_base_addr='%s' WHERE id=%d"),
+					  _T("usm_priv_password=%s,usm_methods=%d,snmp_sys_name=%s,bridge_base_addr='%s',")
+					  _T("runtime_flags=%d WHERE id=%d"),
                  IpToStr(m_dwIpAddr, szIpAddr), (const TCHAR *)DBPrepareString(hdb, m_primaryName), m_wSNMPPort, 
                  m_dwFlags, m_snmpVersion, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
                  m_iStatusPollType, m_wAgentPort, m_wAuthMethod,
@@ -385,7 +403,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 					  m_nUseIfXTable, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
 					  (const TCHAR *)DBPrepareString(hdb, m_sysName), 
-					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), m_dwId);
+					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), (int)m_dwDynamicFlags, (int)m_dwId);
 	}
    bResult = DBQuery(hdb, szQuery);
 

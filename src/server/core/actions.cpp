@@ -89,15 +89,9 @@ static BOOL LoadActions()
          DBGetField(hResult, i, 1, m_pActionList[i].szName, MAX_OBJECT_NAME);
          m_pActionList[i].iType = DBGetFieldLong(hResult, i, 2);
          m_pActionList[i].bIsDisabled = DBGetFieldLong(hResult, i, 3);
-
          DBGetField(hResult, i, 4, m_pActionList[i].szRcptAddr, MAX_RCPT_ADDR_LEN);
-         DecodeSQLString(m_pActionList[i].szRcptAddr);
-
          DBGetField(hResult, i, 5, m_pActionList[i].szEmailSubject, MAX_EMAIL_SUBJECT_LEN);
-         DecodeSQLString(m_pActionList[i].szEmailSubject);
-
          m_pActionList[i].pszData = DBGetField(hResult, i, 6, NULL, 0);
-         DecodeSQLString(m_pActionList[i].pszData);
       }
       DBFreeResult(hResult);
       bResult = TRUE;
@@ -142,13 +136,13 @@ void CleanupActions()
 
 static void SaveActionToDB(NXC_ACTION *pAction)
 {
-   DB_RESULT hResult;
-   BOOL bExist = FALSE;
-   TCHAR *pszEscRcpt, *pszEscSubj, *pszEscData, szQuery[4096];
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Check if action with given ID already exist in database
-   _sntprintf(szQuery, 4096, _T("SELECT action_id FROM actions WHERE action_id=%d"), pAction->dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   TCHAR szQuery[8192];
+   _sntprintf(szQuery, 8192, _T("SELECT action_id FROM actions WHERE action_id=%d"), pAction->dwId);
+   DB_RESULT hResult = DBSelect(hdb, szQuery);
+   bool bExist = false;
    if (hResult != NULL)
    {
       bExist = (DBGetNumRows(hResult) > 0);
@@ -156,27 +150,28 @@ static void SaveActionToDB(NXC_ACTION *pAction)
    }
 
    // Prepare and execute INSERT or UPDATE query
-   pszEscRcpt = EncodeSQLString(pAction->szRcptAddr);
-   pszEscSubj = EncodeSQLString(pAction->szEmailSubject);
-   pszEscData = EncodeSQLString(CHECK_NULL_EX(pAction->pszData));
    if (bExist)
-      _sntprintf(szQuery, 4096, 
-		           _T("UPDATE actions SET action_name='%s',action_type=%d,is_disabled=%d,")
-                 _T("rcpt_addr='%s',email_subject='%s',action_data='%s'")
+      _sntprintf(szQuery, 8192, 
+		           _T("UPDATE actions SET action_name=%s,action_type=%d,is_disabled=%d,")
+                 _T("rcpt_addr=%s,email_subject=%s,action_data=%s ")
                  _T("WHERE action_id=%d"),
-              pAction->szName, pAction->iType, pAction->bIsDisabled,
-              pszEscRcpt, pszEscSubj, pszEscData, pAction->dwId);
+              (const TCHAR *)DBPrepareString(hdb, pAction->szName, 63), pAction->iType, pAction->bIsDisabled,
+              (const TCHAR *)DBPrepareString(hdb, pAction->szRcptAddr, 255), 
+				  (const TCHAR *)DBPrepareString(hdb, pAction->szEmailSubject, 255),
+				  (const TCHAR *)DBPrepareString(hdb, CHECK_NULL_EX(pAction->pszData)), pAction->dwId);
    else
-      _sntprintf(szQuery, 4096,
+      _sntprintf(szQuery, 8192,
 		           _T("INSERT INTO actions (action_id,action_name,action_type,")
                  _T("is_disabled,rcpt_addr,email_subject,action_data) VALUES")
-                 _T(" (%d,'%s',%d,%d,'%s','%s','%s')"),
-              pAction->dwId,pAction->szName, pAction->iType, pAction->bIsDisabled,
-              pszEscRcpt, pszEscSubj, pszEscData);
-   DBQuery(g_hCoreDB, szQuery);
-   free(pszEscRcpt);
-   free(pszEscSubj);
-   free(pszEscData);
+                 _T(" (%d,%s,%d,%d,%s,%s,%s)"),
+              pAction->dwId, (const TCHAR *)DBPrepareString(hdb, pAction->szName, 63), 
+				  pAction->iType, pAction->bIsDisabled,
+              (const TCHAR *)DBPrepareString(hdb, pAction->szRcptAddr, 255), 
+				  (const TCHAR *)DBPrepareString(hdb, pAction->szEmailSubject, 255),
+				  (const TCHAR *)DBPrepareString(hdb, CHECK_NULL_EX(pAction->pszData)));
+	DBQuery(hdb, szQuery);
+
+	DBConnectionPoolReleaseConnection(hdb);
 }
 
 

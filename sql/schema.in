@@ -199,6 +199,7 @@ CREATE TABLE nodes
 	primary_name varchar(255) null,
 	primary_ip varchar(15) not null,
 	node_flags integer not null,
+	runtime_flags integer not null,
 	snmp_version integer not null,
 	snmp_port integer not null,
 	community varchar(127) null,
@@ -628,12 +629,12 @@ CREATE TABLE actions
 	// Field "rcpt_addr" holds e-mail address for e-mail actions,
 	// phone number for sms actions, and remote host address for
 	// remote execution actions
-	rcpt_addr varchar(255) not null,
-	email_subject varchar(255) not null,
+	rcpt_addr varchar(255) null,
+	email_subject varchar(255) null,
 	// Field "action_data" holds message text for e-mail and sms actions,
 	// command line for external command execution actions, or
 	// action name with optional arguments for remote execution actions
-	action_data SQL_TEXT not null,
+	action_data SQL_TEXT null,
 	PRIMARY KEY(action_id)
 ) TABLE_TYPE;
 
