@@ -1588,8 +1588,10 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedIcons.jav
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ColorCache.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ColorConverter.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/IntermediateSelectionProvider.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/NumericTextFieldValidator.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ObjectLabelComparator.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/StringComparator.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/TextFieldValidator.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetFactory.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetHelper.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/views/AbstractTraceView.java -text

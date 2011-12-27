@@ -22,6 +22,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ST;
@@ -43,7 +44,9 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.library.Messages;
+import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -499,5 +502,47 @@ public class WidgetHelper
 			if (fonts[i].getFontData()[0].height == h)
 				return fonts[i];
 		return null;
+	}
+	
+	/**
+	 * Validate text input
+	 * 
+	 * @param text text control
+	 * @param validator validator
+	 * @return true if text is valid
+	 */
+	private static boolean validateTextInputInternal(Control control, String text, String label, TextFieldValidator validator)
+	{
+		boolean ok = validator.validate(text);
+		control.setBackground(ok ? null : SharedColors.RED);
+		if (!ok)
+		{
+			MessageDialog.openError(control.getShell(), "Input Validation Error", validator.getErrorMessage(text, label));
+		}
+		return ok;
+	}
+	
+	/**
+	 * Validate text input
+	 * 
+	 * @param text text control
+	 * @param validator validator
+	 * @return true if text is valid
+	 */
+	public static boolean validateTextInput(Text text, String label, TextFieldValidator validator)
+	{
+		return validateTextInputInternal(text, text.getText(), label, validator);
+	}
+	
+	/**
+	 * Validate text input
+	 * 
+	 * @param text text control
+	 * @param validator validator
+	 * @return true if text is valid
+	 */
+	public static boolean validateTextInput(LabeledText text, TextFieldValidator validator)
+	{
+		return validateTextInputInternal(text, text.getText(), text.getLabel(), validator);
 	}
 }

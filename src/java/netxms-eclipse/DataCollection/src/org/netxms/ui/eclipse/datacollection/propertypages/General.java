@@ -52,6 +52,7 @@ import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.SharedColors;
+import org.netxms.ui.eclipse.tools.NumericTextFieldValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -81,6 +82,8 @@ public class General extends PropertyPage
 	private Combo dataType;
 	private Button checkInterpretRawSnmpValue;
 	private Combo snmpRawType;
+	private Button checkUseCustomSnmpPort;
+	private Text customSnmpPort;
 	private ObjectSelector proxyNode;
 	private Combo schedulingMode;
 	private LabeledText pollingInterval;
@@ -234,10 +237,49 @@ public class General extends PropertyPage
       snmpRawType.select(dci.getSnmpRawValueType());
       snmpRawType.setEnabled((dci.getOrigin() == DataCollectionItem.SNMP) && dci.isSnmpRawValueInOctetString());
       fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(checkInterpretRawSnmpValue, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      fd.right = new FormAttachment(checkInterpretRawSnmpValue, 0, SWT.RIGHT);
+      snmpRawType.setLayoutData(fd);
+      
+      checkUseCustomSnmpPort = new Button(groupData, SWT.CHECK);
+      checkUseCustomSnmpPort.setText("Use custom SNMP port:");
+      checkUseCustomSnmpPort.setSelection(dci.getSnmpPort() != 0);
+      checkUseCustomSnmpPort.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+		      customSnmpPort.setEnabled(checkUseCustomSnmpPort.getSelection());
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
+      fd = new FormData();
       fd.left = new FormAttachment(checkInterpretRawSnmpValue, WidgetHelper.OUTER_SPACING, SWT.RIGHT);
       fd.right = new FormAttachment(100, 0);
       fd.top = new FormAttachment(dataType.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      snmpRawType.setLayoutData(fd);
+      checkUseCustomSnmpPort.setLayoutData(fd);
+      checkUseCustomSnmpPort.setEnabled(dci.getOrigin() == DataCollectionItem.SNMP);
+
+      customSnmpPort = new Text(groupData, SWT.BORDER);
+      if ((dci.getOrigin() == DataCollectionItem.SNMP) && (dci.getSnmpPort() != 0))
+      {
+      	customSnmpPort.setEnabled(true);
+      	customSnmpPort.setText(Integer.toString(dci.getSnmpPort()));
+      }
+      else
+      {
+      	customSnmpPort.setEnabled(false);
+      }
+      fd = new FormData();
+      fd.left = new FormAttachment(checkInterpretRawSnmpValue, WidgetHelper.OUTER_SPACING, SWT.RIGHT);
+      fd.right = new FormAttachment(100, 0);
+      fd.top = new FormAttachment(checkUseCustomSnmpPort, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      customSnmpPort.setLayoutData(fd);
       
       proxyNode = new ObjectSelector(groupData, SWT.NONE);
       proxyNode.setLabel("Proxy node");
@@ -395,6 +437,8 @@ public class General extends PropertyPage
 		pollingInterval.getTextControl().setEnabled((index != DataCollectionItem.PUSH) && (schedulingMode.getSelectionIndex() == 0));
 		checkInterpretRawSnmpValue.setEnabled(index == DataCollectionItem.SNMP);
 		snmpRawType.setEnabled((index == DataCollectionItem.SNMP) && checkInterpretRawSnmpValue.getSelection());
+		checkUseCustomSnmpPort.setEnabled(index == DataCollectionItem.SNMP);
+		customSnmpPort.setEnabled((index == DataCollectionItem.SNMP) && checkUseCustomSnmpPort.getSelection());
 	}
 	
 	/**
@@ -445,6 +489,11 @@ public class General extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
+		if (!WidgetHelper.validateTextInput(customSnmpPort, "Custom SNMP port", new NumericTextFieldValidator(1, 65535)) ||
+		    !WidgetHelper.validateTextInput(pollingInterval, new NumericTextFieldValidator(1, 1000000)) ||
+		    !WidgetHelper.validateTextInput(retentionTime, new NumericTextFieldValidator(1, 65535)))
+			return;
+		
 		if (isApply)
 			setValid(false);
 		
@@ -458,6 +507,14 @@ public class General extends PropertyPage
 		dci.setRetentionTime(Integer.parseInt(retentionTime.getText()));
 		dci.setSnmpRawValueInOctetString(checkInterpretRawSnmpValue.getSelection());
 		dci.setSnmpRawValueType(snmpRawType.getSelectionIndex());
+		if (checkUseCustomSnmpPort.getSelection())
+		{
+			dci.setSnmpPort(Integer.parseInt(customSnmpPort.getText()));
+		}
+		else
+		{
+			dci.setSnmpPort(0);
+		}
 		
 		if (statusActive.getSelection())
 			dci.setStatus(DataCollectionItem.ACTIVE);
@@ -520,5 +577,7 @@ public class General extends PropertyPage
 		statusDisabled.setSelection(false);
 		statusUnsupported.setSelection(false);
 		retentionTime.setText("30");
+		checkInterpretRawSnmpValue.setSelection(false);
+		checkUseCustomSnmpPort.setSelection(false);
 	}
 }
