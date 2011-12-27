@@ -35,9 +35,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -51,7 +49,6 @@ import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
-import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.NumericTextFieldValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -338,23 +335,6 @@ public class General extends PropertyPage
       fd.right = new FormAttachment(100, 0);
       fd.top = new FormAttachment(0, 0);
       pollingInterval.setLayoutData(fd);
-      pollingInterval.getTextControl().addListener(SWT.Modify, new Listener() {
-			@Override
-			public void handleEvent(Event event)
-			{
-				try
-				{
-					new Integer(pollingInterval.getText());
-					General.this.setErrorMessage(null);
-					pollingInterval.getTextControl().setBackground(null);
-				}
-				catch(NumberFormatException e)
-				{
-					General.this.setErrorMessage("Invalid number entered in \"Polling interval\" field");
-					pollingInterval.getTextControl().setBackground(SharedColors.RED);
-				}
-			}
-      });
       
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -405,23 +385,6 @@ public class General extends PropertyPage
       retentionTime.setLabel("Retention time (days)");
       retentionTime.getTextControl().setTextLimit(5);
       retentionTime.setText(Integer.toString(dci.getRetentionTime()));
-      retentionTime.getTextControl().addListener(SWT.Modify, new Listener() {
-			@Override
-			public void handleEvent(Event event)
-			{
-				try
-				{
-					new Integer(retentionTime.getText());
-					General.this.setErrorMessage(null);
-					retentionTime.getTextControl().setBackground(null);
-				}
-				catch(NumberFormatException e)
-				{
-					General.this.setErrorMessage("Invalid number entered in \"Retention time\" field");
-					retentionTime.getTextControl().setBackground(SharedColors.RED);
-				}
-			}
-      });
       
       return dialogArea;
 	}
@@ -487,12 +450,12 @@ public class General extends PropertyPage
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
-	protected void applyChanges(final boolean isApply)
+	protected boolean applyChanges(final boolean isApply)
 	{
-		if (!WidgetHelper.validateTextInput(customSnmpPort, "Custom SNMP port", new NumericTextFieldValidator(1, 65535)) ||
-		    !WidgetHelper.validateTextInput(pollingInterval, new NumericTextFieldValidator(1, 1000000)) ||
-		    !WidgetHelper.validateTextInput(retentionTime, new NumericTextFieldValidator(1, 65535)))
-			return;
+		if (!WidgetHelper.validateTextInput(customSnmpPort, "Custom SNMP port", new NumericTextFieldValidator(1, 65535), this) ||
+		    !WidgetHelper.validateTextInput(pollingInterval, new NumericTextFieldValidator(1, 1000000), this) ||
+		    !WidgetHelper.validateTextInput(retentionTime, new NumericTextFieldValidator(1, 65535), this))
+			return false;
 		
 		if (isApply)
 			setValid(false);
@@ -543,6 +506,7 @@ public class General extends PropertyPage
 				return "Cannot update general DCI settings";
 			}
 		}.start();
+		return true;
 	}
 
 	/* (non-Javadoc)
@@ -551,8 +515,7 @@ public class General extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
-		applyChanges(false);
-		return true;
+		return applyChanges(false);
 	}
 
 	/* (non-Javadoc)

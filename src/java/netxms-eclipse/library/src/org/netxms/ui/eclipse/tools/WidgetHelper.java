@@ -43,6 +43,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.ui.eclipse.library.Messages;
 import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -511,13 +512,21 @@ public class WidgetHelper
 	 * @param validator validator
 	 * @return true if text is valid
 	 */
-	private static boolean validateTextInputInternal(Control control, String text, String label, TextFieldValidator validator)
+	private static boolean validateTextInputInternal(Control control, String text, String label, TextFieldValidator validator, PropertyPage page)
 	{
 		boolean ok = validator.validate(text);
 		control.setBackground(ok ? null : SharedColors.RED);
-		if (!ok)
+		if (ok)
 		{
-			MessageDialog.openError(control.getShell(), "Input Validation Error", validator.getErrorMessage(text, label));
+			if (page != null)
+				page.setErrorMessage(null);
+		}
+		else
+		{
+			if (page != null)
+				page.setErrorMessage(validator.getErrorMessage(text, label));
+			else	
+				MessageDialog.openError(control.getShell(), "Input Validation Error", validator.getErrorMessage(text, label));
 		}
 		return ok;
 	}
@@ -529,9 +538,9 @@ public class WidgetHelper
 	 * @param validator validator
 	 * @return true if text is valid
 	 */
-	public static boolean validateTextInput(Text text, String label, TextFieldValidator validator)
+	public static boolean validateTextInput(Text text, String label, TextFieldValidator validator, PropertyPage page)
 	{
-		return validateTextInputInternal(text, text.getText(), label, validator);
+		return validateTextInputInternal(text, text.getText(), label, validator, page);
 	}
 	
 	/**
@@ -541,8 +550,8 @@ public class WidgetHelper
 	 * @param validator validator
 	 * @return true if text is valid
 	 */
-	public static boolean validateTextInput(LabeledText text, TextFieldValidator validator)
+	public static boolean validateTextInput(LabeledText text, TextFieldValidator validator, PropertyPage page)
 	{
-		return validateTextInputInternal(text, text.getText(), text.getLabel(), validator);
+		return validateTextInputInternal(text.getTextControl(), text.getText(), text.getLabel(), validator, page);
 	}
 }

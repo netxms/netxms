@@ -387,7 +387,14 @@ public class DataCollectionEditor extends ViewPart
 		actionCreate.setText("&New...");
 		actionCreate.setImageDescriptor(Activator.getImageDescriptor("icons/new.png"));
 
-		actionEdit = new PropertyDialogAction(getSite(), viewer);
+		actionEdit = new PropertyDialogAction(getSite(), viewer) {
+			@Override
+			public void run()
+			{
+				super.run();
+				viewer.refresh();
+			}
+		};
 		actionEdit.setText("&Edit...");
 		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png"));
 		actionEdit.setEnabled(false);
