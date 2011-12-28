@@ -81,7 +81,7 @@ public class Threshold
 		id = 0;
 		fireEvent = 17;
 		rearmEvent = 18;
-		arg1 = 0;
+		arg1 = 1;
 		arg2 = 0;
 		function = F_LAST;
 		operation = OP_LE;

@@ -514,6 +514,9 @@ public class WidgetHelper
 	 */
 	private static boolean validateTextInputInternal(Control control, String text, String label, TextFieldValidator validator, PropertyPage page)
 	{
+		if (!control.isEnabled())
+			return true;	// Ignore validation for disabled controls
+		
 		boolean ok = validator.validate(text);
 		control.setBackground(ok ? null : SharedColors.RED);
 		if (ok)

@@ -48,7 +48,7 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 		{ "Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Informational", "Debug" };
 	private static final String[] facilityText =
 		{ "Kernel", "User", "Mail", "System", "Auth", "Syslog", "Lpr", "News", "UUCP", "Cron", "Security",
-		  "FTPD", "NTP", "Log Audit", "Log Alert", "Local0", "Local1", "Local2", "Local3", "Local4",
+		  "FTPD", "NTP", "Log Audit", "Log Alert", "Clock", "Local0", "Local1", "Local2", "Local3", "Local4",
 		  "Local5", "Local6", "Local7"
 		};
 	
@@ -102,9 +102,23 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 				final GenericObject object = session.findObjectById(record.getSourceObjectId());
 				return (object != null) ? object.getObjectName() : "<unknown>";
 			case SyslogMonitor.COLUMN_SEVERITY:
-				return severityText[record.getSeverity()];
+				try
+				{
+					return severityText[record.getSeverity()];
+				}
+				catch(ArrayIndexOutOfBoundsException e)
+				{
+					return "<" + Integer.toString(record.getSeverity()) + ">";
+				}
 			case SyslogMonitor.COLUMN_FACILITY:
-				return facilityText[record.getFacility()];
+				try
+				{
+					return facilityText[record.getFacility()];
+				}
+				catch(ArrayIndexOutOfBoundsException e)
+				{
+					return "<" + Integer.toString(record.getFacility()) + ">";
+				}
 			case SyslogMonitor.COLUMN_MESSAGE:
 				return record.getMessage();
 			case SyslogMonitor.COLUMN_TAG:

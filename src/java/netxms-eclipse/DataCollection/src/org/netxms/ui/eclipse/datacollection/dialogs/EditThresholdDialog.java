@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -36,6 +35,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
+import org.netxms.ui.eclipse.tools.NumericTextFieldValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -193,20 +193,8 @@ public class EditThresholdDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		int numSamples;
-		try
-		{
-			numSamples = Integer.parseInt(samples.getText());
-		}
-		catch(NumberFormatException e)
-		{
-			numSamples = 0;
-		}
-		if ((numSamples < 1) || (numSamples > 1000))
-		{
-			MessageDialog.openWarning(getShell(), "Warning", "Invalid number of samples: please enter value in range 1 .. 1000");
+		if (!WidgetHelper.validateTextInput(samples, "Samples", new NumericTextFieldValidator(1, 1000), null))
 			return;
-		}
 		
 		int rpt;
 		if (repeatDefault.getSelection())
@@ -219,25 +207,15 @@ public class EditThresholdDialog extends Dialog
 		}
 		else
 		{
-			try
-			{
-				rpt = Integer.parseInt(repeatInterval.getText());
-			}
-			catch(NumberFormatException e)
-			{
-				rpt = -2;
-			}
-		}
-		if (rpt == -2)
-		{
-			MessageDialog.openWarning(getShell(), "Warning", "Invalid repeat interval: please enter positive numeric value");
-			return;
+			if (!WidgetHelper.validateTextInput(repeatInterval, "Repeat Interval", new NumericTextFieldValidator(1, 1000000), null))
+				return;
+			rpt = Integer.parseInt(repeatInterval.getText());
 		}
 		
 		threshold.setFunction(function.getSelectionIndex());
 		threshold.setOperation(operation.getSelectionIndex());
 		threshold.setValue(value.getText());
-		threshold.setArg1(numSamples);
+		threshold.setArg1(Integer.parseInt(samples.getText()));
 		threshold.setRepeatInterval(rpt);
 		threshold.setFireEvent((int)activationEvent.getEventCode());
 		threshold.setRearmEvent((int)deactivationEvent.getEventCode());
