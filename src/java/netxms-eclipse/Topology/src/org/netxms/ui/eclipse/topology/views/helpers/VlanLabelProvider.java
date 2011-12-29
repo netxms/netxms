@@ -1,21 +1,53 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.topology.views.helpers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.Port;
 import org.netxms.client.topology.VlanInfo;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.views.VlanView;
 
 /**
  * Label provider for VLAN list
- *
  */
 public class VlanLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+	private NXCSession session;
+	
+	/**
+	 * Default constructor
+	 */
+	public VlanLabelProvider()
+	{
+		super();
+		session = (NXCSession)ConsoleSharedData.getSession();
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
@@ -54,30 +86,54 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 	 */
 	private String buildPortList(VlanInfo vlan)
 	{
-		Port[] ports = vlan.getPorts();
-		if (ports.length == 0)
+		List<Port> ports = new ArrayList<Port>(Arrays.asList(vlan.getPorts()));
+		if (ports.size() == 0)
 			return "";
 		
-		int slot = ports[0].getSlot();
-		int lastPort = ports[0].getPort();
-		int firstPort = lastPort;
-		
 		StringBuilder sb = new StringBuilder();
+
+		// Add non-physical ports first
+		Iterator<Port> it = ports.iterator();
+		while(it.hasNext())
+		{
+			Port p = it.next();
+			Interface iface = (Interface)session.findObjectById(p.getObjectId(), Interface.class);
+			if (iface != null)
+			{
+				if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) == 0)
+				{
+					if (sb.length() > 0)
+						sb.append(',');
+					sb.append(iface.getObjectName());
+					it.remove();
+				}
+			}
+		}
+		
+		if (ports.size() == 0)
+			return sb.toString();
+		
+		int slot = ports.get(0).getSlot();
+		int lastPort = ports.get(0).getPort();
+		int firstPort = lastPort;
+
+		if (sb.length() > 0)
+			sb.append(',');
 		sb.append(slot);
 		sb.append('/');
 		sb.append(firstPort);
 		
 		int i;
-		for(i = 1; i < ports.length; i++)
+		for(i = 1; i < ports.size(); i++)
 		{
-			if ((ports[i].getSlot() == slot) && (ports[i].getPort() == lastPort + 1))
+			if ((ports.get(i).getSlot() == slot) && (ports.get(i).getPort() == lastPort + 1))
 			{
 				lastPort++;
 				continue;
 			}
 			
 			// If previous series was not single port, add ending port
-			if (ports[i - 1].getPort() != firstPort)
+			if (ports.get(i - 1).getPort() != firstPort)
 			{
 				if (lastPort - firstPort > 1)
 					sb.append('-');
@@ -88,8 +144,8 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 				sb.append(lastPort);
 			}
 			
-			slot = ports[i].getSlot();
-			lastPort = ports[i].getPort();
+			slot = ports.get(i).getSlot();
+			lastPort = ports.get(i).getPort();
 			firstPort = lastPort;
 			
 			sb.append(',');
@@ -99,7 +155,7 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 		}
 
 		// If previous series was not single port, add ending port
-		if (ports[i - 1].getPort() != firstPort)
+		if (ports.get(i - 1).getPort() != firstPort)
 		{
 			if (lastPort - firstPort > 1)
 				sb.append('-');

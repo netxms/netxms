@@ -9,6 +9,7 @@
 	- Implemented alarm viewer element type in dashboards
 	- Syslog monitor
 	- Event monitor
+- Added common driver for Cisco Catalyst switches with CISCO-STACK-MIB support
 - New MIBs added: CISCO-STACK-MIB, FDDI-SMT73-MIB
 
 

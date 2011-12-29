@@ -88,14 +88,21 @@ static DWORD HandlerTrunkPorts(DWORD version, SNMP_Variable *var, SNMP_Transport
    DWORD nameLen = var->GetName()->Length();
 	DWORD ifIndex = var->GetName()->GetValue()[nameLen - 1];
 
+	// Check if port is acting as trunk
+	DWORD oidName[256], value;
+   memcpy(oidName, var->GetName()->GetValue(), nameLen * sizeof(DWORD));
+   oidName[nameLen - 2] = 14;	// .1.3.6.1.4.1.9.9.46.1.6.1.1.14
+	if (SnmpGet(version, transport, NULL, oidName, nameLen, &value, sizeof(DWORD), 0) != SNMP_ERR_SUCCESS)
+	   return SNMP_ERR_SUCCESS;	// Cannot get trunk state, ignore port
+	if (value != 1)
+	   return SNMP_ERR_SUCCESS;	// Not a trunk port, ignore
+
 	// Native VLAN
 	int vlanId = var->GetValueAsInt();
 	if (vlanId != 0)
 		vlanList->addMemberPort(vlanId, ifIndex);
 
 	// VLAN map for VLAN IDs 0..1023
-	DWORD oidName[256];
-   memcpy(oidName, var->GetName()->GetValue(), nameLen * sizeof(DWORD));
    oidName[nameLen - 2] = 4;	// .1.3.6.1.4.1.9.9.46.1.6.1.1.4
 	BYTE map[128];
 	memset(map, 0, 128);
