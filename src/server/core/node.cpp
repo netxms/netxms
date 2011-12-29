@@ -1595,7 +1595,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 				}
 
 				// Select device driver
-				NetworkDeviceDriver *driver = FindDriverForNode(this);
+				NetworkDeviceDriver *driver = FindDriverForNode(this, pTransport);
 				DbgPrintf(5, _T("ConfPoll(%s): selected device driver %s"), m_szName, driver->getName());
 				LockData();
 				if (driver != m_driver)

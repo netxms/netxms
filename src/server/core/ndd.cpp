@@ -127,10 +127,46 @@ void LoadNetworkDeviceDrivers()
  * @param node Node object to test
  * @returns Pointer to device driver object
  */
-NetworkDeviceDriver *FindDriverForNode(Node *node)
+struct __selected_driver
 {
+	int priority;
+	NetworkDeviceDriver *driver;
+};
+
+static int CompareDrivers(const void *e1, const void *e2)
+{
+	return -(((struct __selected_driver *)e1)->priority - ((struct __selected_driver *)e2)->priority);
+}
+
+NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport)
+{
+	struct __selected_driver selection[MAX_DEVICE_DRIVERS];
+	int selected = 0;
+
 	for(int i = 0; i < s_numDrivers; i++)
-		if (s_drivers[i]->isDeviceSupported(node->getObjectId()))
-			return s_drivers[i];
+	{
+		int pri = s_drivers[i]->isPotentialDevice(node->getObjectId());
+		if (pri > 0)
+		{
+			if (pri > 255)
+				pri = 255;
+			selection[selected].priority = pri;
+			selection[selected].driver = s_drivers[i];
+			selected++;
+			DbgPrintf(6, _T("FindDriverForNode(%s): found potential device driver %s with priority %d"),
+			          node->Name(), s_drivers[i]->getName(), pri);
+		}
+	}
+
+	if (selected > 0)
+	{
+		qsort(selection, selected, sizeof(struct __selected_driver), CompareDrivers);
+		for(int i = 0 ; i < selected; i++)
+		{
+			if (selection[i].driver->isDeviceSupported(pTransport, node->getObjectId()))
+				return selection[i].driver;
+		}
+	}
+
 	return s_defaultDriver;
 }

@@ -57,11 +57,22 @@ const TCHAR *NetworkDeviceDriver::getVersion()
 }
 
 /**
- * Check if given device is supported by driver
+ * Check if given device can be potentially supported by driver
  *
  * @param oid Device OID
  */
-bool NetworkDeviceDriver::isDeviceSupported(const TCHAR *oid)
+int NetworkDeviceDriver::isPotentialDevice(const TCHAR *oid)
+{
+	return 1;
+}
+
+/**
+ * Check if given device is supported by driver
+ *
+ * @param snmp SNMP transport
+ * @param oid Device OID
+ */
+bool NetworkDeviceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
 	return true;
 }

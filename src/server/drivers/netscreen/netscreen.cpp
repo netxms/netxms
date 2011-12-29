@@ -48,13 +48,24 @@ const TCHAR *NetscreenDriver::getVersion()
 }
 
 /**
- * Check if given device is supported by driver
+ * Check if given device can be potentially supported by driver
  *
  * @param oid Device OID
  */
-bool NetscreenDriver::isDeviceSupported(const TCHAR *oid)
+int NetscreenDriver::isPotentialDevice(const TCHAR *oid)
 {
-	return _tcsncmp(oid, _T(".1.3.6.1.4.1.3224.1"), 19) == 0;
+	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.3224.1"), 19) == 0) ? 254 : 0;
+}
+
+/**
+ * Check if given device is supported by driver
+ *
+ * @param snmp SNMP transport
+ * @param oid Device OID
+ */
+bool NetscreenDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+{
+	return true;
 }
 
 /**

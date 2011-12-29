@@ -48,13 +48,24 @@ const TCHAR *PassportDriver::getVersion()
 }
 
 /**
- * Check if given device is supported by driver
+ * Check if given device can be potentially supported by driver
  *
  * @param oid Device OID
  */
-bool PassportDriver::isDeviceSupported(const TCHAR *oid)
+int PassportDriver::isPotentialDevice(const TCHAR *oid)
 {
-	return _tcsncmp(oid, _T(".1.3.6.1.4.1.2272"), 17) == 0;
+	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.2272"), 17) == 0) ? 127 : 0;
+}
+
+/**
+ * Check if given device is supported by driver
+ *
+ * @param snmp SNMP transport
+ * @param oid Device OID
+ */
+bool PassportDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+{
+	return true;
 }
 
 /**

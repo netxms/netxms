@@ -48,11 +48,11 @@ const TCHAR *Cat2900Driver::getVersion()
 }
 
 /**
- * Check if given device is supported by driver
+ * Check if given device can be potentially supported by driver
  *
  * @param oid Device OID
  */
-bool Cat2900Driver::isDeviceSupported(const TCHAR *oid)
+int Cat2900Driver::isPotentialDevice(const TCHAR *oid)
 {
 	static int supportedDevices[] = { 170, 171, 183, 184, 217, 218, 219, 220, 
 	                                  221, 246, 247, 248, 323, 324, 325, 359,
@@ -61,13 +61,24 @@ bool Cat2900Driver::isDeviceSupported(const TCHAR *oid)
 												 560, -1 };
 
 	if (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.1."), 17))
-		return false;	// Not a Cisco device
+		return 0;	// Not a Cisco device
 
 	int id = _tcstol(&oid[17], NULL, 10);
 	for(int i = 0; supportedDevices[i] != -1; i++)
 		if (supportedDevices[i] == id)
-			return true;
-	return false;
+			return 200;
+	return 0;
+}
+
+/**
+ * Check if given device is supported by driver
+ *
+ * @param snmp SNMP transport
+ * @param oid Device OID
+ */
+bool Cat2900Driver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+{
+	return true;
 }
 
 /**

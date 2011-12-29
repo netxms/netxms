@@ -215,7 +215,12 @@ public class AlarmList extends Composite
 			public void run()
 			{
 				if (!alarmViewer.getControl().isDisposed())
-					alarmViewer.refresh();
+				{
+					synchronized(alarmList)
+					{
+						alarmViewer.refresh();
+					}
+				}
 			}
 		});
 	}
