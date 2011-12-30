@@ -260,15 +260,14 @@ public class LastValuesWidget extends Composite
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final DciValue[] data = session.getLastValues(node.getObjectId());
-				new UIJob("Update last values view") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						if (!isDisposed())
 							dataViewer.setInput(data);
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 		};
 		job.setUser(false);

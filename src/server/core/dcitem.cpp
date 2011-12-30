@@ -1509,6 +1509,30 @@ void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
       pMsg->SetVariable(dwId++, (DWORD)0);
    }
    pMsg->SetVariable(dwId++, (WORD)m_status);
+
+	DWORD i;
+   for(i = 0; i < m_dwNumThresholds; i++)
+   {
+		if (m_ppThresholdList[i]->isReached())
+			break;
+   }
+	if (i < m_dwNumThresholds)
+	{
+		EVENT_TEMPLATE *evt = FindEventTemplateByCode(m_ppThresholdList[i]->getEventCode());
+		if (evt != NULL)
+		{
+			pMsg->SetVariable(dwId++, evt->dwSeverity + 1);
+		}
+		else
+		{
+	      pMsg->SetVariable(dwId++, (DWORD)0);
+		}
+	}
+	else
+	{
+      pMsg->SetVariable(dwId++, (DWORD)0);
+	}
+
 	unlock();
 }
 
