@@ -331,42 +331,39 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
    SendPollerMsg(dwRqId, _T("      Current interface status is %s\r\n"), g_szStatusText[m_iStatus]);
 
    // Poll interface using different methods
-   if (m_dwIfType != IFTYPE_NETXMS_NAT_ADAPTER)
+   if ((pNode->getFlags() & NF_IS_NATIVE_AGENT) &&
+       (!(pNode->getFlags() & NF_DISABLE_NXCP)) && (!(pNode->getRuntimeFlags() & NDF_AGENT_UNREACHABLE)))
    {
-      if ((pNode->getFlags() & NF_IS_NATIVE_AGENT) &&
-          (!(pNode->getFlags() & NF_DISABLE_NXCP)) && (!(pNode->getRuntimeFlags() & NDF_AGENT_UNREACHABLE)))
-      {
-         SendPollerMsg(dwRqId, _T("      Retrieving interface status from NetXMS agent\r\n"));
-         newStatus = pNode->getInterfaceStatusFromAgent(m_dwIfIndex);
-			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new status from NetXMS agent %d"), m_dwId, m_szName, newStatus);
-         if (newStatus != STATUS_UNKNOWN)
-			{
-				SendPollerMsg(dwRqId, POLLER_INFO _T("      Interface status retrieved from NetXMS agent\r\n"));
-            bNeedPoll = FALSE;
-			}
-			else
-			{
-				SendPollerMsg(dwRqId, POLLER_WARNING _T("      Unable to retrieve interface status from NetXMS agent\r\n"));
-			}
-      }
-   
-      if (bNeedPoll && (pNode->getFlags() & NF_IS_SNMP) &&
-          (!(pNode->getFlags() & NF_DISABLE_SNMP)) && (!(pNode->getRuntimeFlags() & NDF_SNMP_UNREACHABLE)) &&
-			 (pTransport != NULL))
-      {
-         SendPollerMsg(dwRqId, _T("      Retrieving interface status from SNMP agent\r\n"));
-         newStatus = pNode->getInterfaceStatusFromSNMP(pTransport, m_dwIfIndex);
-			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new status from SNMP %d"), m_dwId, m_szName, newStatus);
-         if (newStatus != STATUS_UNKNOWN)
-			{
-				SendPollerMsg(dwRqId, POLLER_INFO _T("      Interface status retrieved from SNMP agent\r\n"));
-            bNeedPoll = FALSE;
-			}
-			else
-			{
-				SendPollerMsg(dwRqId, POLLER_WARNING _T("      Unable to retrieve interface status from SNMP agent\r\n"));
-			}
-      }
+      SendPollerMsg(dwRqId, _T("      Retrieving interface status from NetXMS agent\r\n"));
+      newStatus = pNode->getInterfaceStatusFromAgent(m_dwIfIndex);
+		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new status from NetXMS agent %d"), m_dwId, m_szName, newStatus);
+      if (newStatus != STATUS_UNKNOWN)
+		{
+			SendPollerMsg(dwRqId, POLLER_INFO _T("      Interface status retrieved from NetXMS agent\r\n"));
+         bNeedPoll = FALSE;
+		}
+		else
+		{
+			SendPollerMsg(dwRqId, POLLER_WARNING _T("      Unable to retrieve interface status from NetXMS agent\r\n"));
+		}
+   }
+
+   if (bNeedPoll && (pNode->getFlags() & NF_IS_SNMP) &&
+       (!(pNode->getFlags() & NF_DISABLE_SNMP)) && (!(pNode->getRuntimeFlags() & NDF_SNMP_UNREACHABLE)) &&
+		 (pTransport != NULL))
+   {
+      SendPollerMsg(dwRqId, _T("      Retrieving interface status from SNMP agent\r\n"));
+      newStatus = pNode->getInterfaceStatusFromSNMP(pTransport, m_dwIfIndex);
+		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new status from SNMP %d"), m_dwId, m_szName, newStatus);
+      if (newStatus != STATUS_UNKNOWN)
+		{
+			SendPollerMsg(dwRqId, POLLER_INFO _T("      Interface status retrieved from SNMP agent\r\n"));
+         bNeedPoll = FALSE;
+		}
+		else
+		{
+			SendPollerMsg(dwRqId, POLLER_WARNING _T("      Unable to retrieve interface status from SNMP agent\r\n"));
+		}
    }
    
    if (bNeedPoll)
@@ -374,6 +371,9 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 		// Pings cannot be used for cluster sync interfaces
       if ((pNode->getFlags() & NF_DISABLE_ICMP) || bClusterSync || (m_dwIpAddr == 0) || isLoopback())
       {
+			// Interface doesn't have an IP address, so we can't ping it
+			SendPollerMsg(dwRqId, POLLER_WARNING _T("      Interface status cannot be determined\r\n"));
+			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): cannot use ping for status check"), m_dwId, m_szName);
          newStatus = STATUS_UNKNOWN;
       }
       else
@@ -418,23 +418,13 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 			}
 			else	// not using ICMP proxy
 			{
-				if (!(pNode->getFlags() & NF_BEHIND_NAT) || (m_dwIfType == IFTYPE_NETXMS_NAT_ADAPTER))
-				{
-					SendPollerMsg(dwRqId, _T("      Starting ICMP ping\r\n"));
-					DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,1500,NULL,%d)"), m_dwId, m_szName, htonl(m_dwIpAddr), g_dwPingSize);
-					dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL, g_dwPingSize);
-					if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
-						nxlog_write(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
-					newStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;
-					DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): ping result %d, new status %d"), m_dwId, m_szName, dwPingStatus, newStatus);
-				}
-				else
-				{
-					// Interface doesn't have an IP address, so we can't ping it
-					SendPollerMsg(dwRqId, POLLER_WARNING _T("      Interface status cannot be determined\r\n"));
-					DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): no IP address, will not ping"), m_dwId, m_szName);
-					newStatus = STATUS_UNKNOWN;
-				}
+				SendPollerMsg(dwRqId, _T("      Starting ICMP ping\r\n"));
+				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,1500,NULL,%d)"), m_dwId, m_szName, htonl(m_dwIpAddr), g_dwPingSize);
+				dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL, g_dwPingSize);
+				if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
+					nxlog_write(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
+				newStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;
+				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): ping result %d, new status %d"), m_dwId, m_szName, dwPingStatus, newStatus);
 			}
       }
    }

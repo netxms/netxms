@@ -1937,20 +1937,17 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
          {
             Interface *pInterface = (Interface *)m_pChildList[i];
 
-            if (pInterface->getIfType() != IFTYPE_NETXMS_NAT_ADAPTER)
+            for(j = 0; j < pIfList->getSize(); j++)
             {
-               for(j = 0; j < pIfList->getSize(); j++)
-               {
-                  if ((pIfList->get(j)->dwIndex == pInterface->getIfIndex()) &&
-                      (pIfList->get(j)->dwIpAddr == pInterface->IpAddr()))
-                     break;
-               }
+               if ((pIfList->get(j)->dwIndex == pInterface->getIfIndex()) &&
+                   (pIfList->get(j)->dwIpAddr == pInterface->IpAddr()))
+                  break;
+            }
 
-               if (j == pIfList->getSize())
-               {
-                  // No such interface in current configuration, add it to delete list
-                  ppDeleteList[iDelCount++] = pInterface;
-               }
+            if (j == pIfList->getSize())
+            {
+               // No such interface in current configuration, add it to delete list
+               ppDeleteList[iDelCount++] = pInterface;
             }
          }
       }
@@ -2061,57 +2058,18 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 
       if (i == (DWORD)pIfList->getSize())
       {
-         BOOL bCreate = TRUE;
-
          // Node is behind NAT
-         m_dwFlags |= NF_BEHIND_NAT;
-
-         // Check if we already have NAT interface
-         LockChildList(FALSE);
-         for(i = 0; i < (int)m_dwChildCount; i++)
-            if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
-            {
-               if (((Interface *)m_pChildList[i])->getIfType() == IFTYPE_NETXMS_NAT_ADAPTER)
-               {
-                  bCreate = FALSE;
-                  break;
-               }
-            }
-         UnlockChildList();
-
-         if (bCreate)
+         if (!(m_dwFlags & NF_BEHIND_NAT))
          {
-            TCHAR szBuffer[MAX_OBJECT_NAME];
-
-            // Create pseudo interface for NAT
-            ConfigReadStr(_T("NATAdapterName"), szBuffer, MAX_OBJECT_NAME, _T("NetXMS NAT Adapter"));
-            createNewInterface(m_dwIpAddr, 0, szBuffer, szBuffer, 0x7FFFFFFF, IFTYPE_NETXMS_NAT_ADAPTER);
-            hasChanges = TRUE;
-         }
+				m_dwFlags |= NF_BEHIND_NAT;
+				hasChanges = TRUE;
+			}
       }
       else
       {
          // Check if NF_BEHIND_NAT flag set incorrectly
          if (m_dwFlags & NF_BEHIND_NAT)
          {
-            Interface *pIfNat;
-
-            // Remove NAT interface
-            LockChildList(FALSE);
-            for(i = 0, pIfNat = NULL; i < (int)m_dwChildCount; i++)
-               if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
-               {
-                  if (((Interface *)m_pChildList[i])->getIfType() == IFTYPE_NETXMS_NAT_ADAPTER)
-                  {
-                     pIfNat = (Interface *)m_pChildList[i];
-                     break;
-                  }
-               }
-            UnlockChildList();
-
-            if (pIfNat != NULL)
-               deleteInterface(pIfNat);
-
             m_dwFlags &= ~NF_BEHIND_NAT;
             hasChanges = TRUE;
          }

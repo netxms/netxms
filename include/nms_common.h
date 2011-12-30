@@ -791,8 +791,6 @@ typedef struct tagPOINT
 #define IFTYPE_IEEE80212            55
 #define IFTYPE_FIBRECHANNEL         56
 
-#define IFTYPE_NETXMS_NAT_ADAPTER   65535
-
 
 //
 // IP Header -- RFC 791
