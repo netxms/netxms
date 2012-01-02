@@ -588,6 +588,7 @@ src/java/netxms-client/src/test/java/org/netxms/client/LogTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/MacAddressTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ObjectTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ObjectToolsTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/SendEventTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ServerConfigTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ServerFilesTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/SessionTest.java -text

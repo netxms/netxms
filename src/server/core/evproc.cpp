@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -209,8 +209,9 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
          NetObj *pObject = FindObjectById(pEvent->getSourceId());
          if (pObject == NULL)
             pObject = g_pEntireNet;
-			DbgPrintf(5, _T("EVENT %d (ID:") UINT64_FMT _T(" F:0x%04X S:%d%s) FROM %s: %s"), pEvent->getCode(), 
+			DbgPrintf(5, _T("EVENT %d (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAG:\"%s\"%s) FROM %s: %s"), pEvent->getCode(), 
                    pEvent->getId(), pEvent->getFlags(), pEvent->getSeverity(),
+						 CHECK_NULL_EX(pEvent->getUserTag()),
                    (pEvent->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
                    pObject->Name(), pEvent->getMessage());
       }

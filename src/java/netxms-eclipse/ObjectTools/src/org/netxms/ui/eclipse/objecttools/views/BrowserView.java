@@ -153,7 +153,8 @@ public class BrowserView extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		browser.setFocus();
+		if (!browser.isDisposed())
+			browser.setFocus();
 	}
 
 	/**

@@ -4732,16 +4732,24 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
 	{
       pObject = FindObjectById(dwObjectId);  // Object is specified explicitely
 	}
-   else
+   else   // Client is the source
 	{
 		if (m_clientAddr->sa_family == AF_INET)
-			pObject = FindNodeByIP(0, ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr));  // Client is the source
+		{
+			DWORD addr = ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr);
+			if (addr == 0x7F000001)
+				pObject = FindObjectById(g_dwMgmtNode);	// Client on loopback
+			else
+				pObject = FindNodeByIP(0, addr);
+		}
 		else
+		{
 #ifdef WITH_IPV6
 			pObject = NULL;	// TODO: find object by IPv6 address
 #else
 			pObject = NULL;
 #endif
+		}
 	}
    if (pObject != NULL)
    {
@@ -4749,6 +4757,12 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_SEND_EVENTS))
       {
          dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
+			if ((dwEventCode == 0) && pRequest->IsVariableExist(VID_EVENT_NAME))
+			{
+				TCHAR eventName[256];
+				pRequest->GetVariableStr(VID_EVENT_NAME, eventName, 256);
+				dwEventCode = EventCodeFromName(eventName, 0);
+			}
 			pRequest->GetVariableStr(VID_USER_TAG, szUserTag, MAX_USERTAG_LENGTH);
          iNumArgs = pRequest->GetVariableShort(VID_NUM_ARGS);
          if (iNumArgs > 32)
