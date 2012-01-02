@@ -130,6 +130,8 @@ public:
    DWORD getRearmEventCode() { return m_rearmEventCode; }
 	int getFunction() { return m_function; }
 	int getOperation() { return m_operation; }
+	int getParam1() { return m_param1; }
+	int getParam2() { return m_param2; }
    const TCHAR *getStringValue() { return m_value.String(); }
    BOOL isReached() { return m_isReached; }
 	

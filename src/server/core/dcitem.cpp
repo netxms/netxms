@@ -1518,19 +1518,12 @@ void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
    }
 	if (i < m_dwNumThresholds)
 	{
-		EVENT_TEMPLATE *evt = FindEventTemplateByCode(m_ppThresholdList[i]->getEventCode());
-		if (evt != NULL)
-		{
-			pMsg->SetVariable(dwId++, evt->dwSeverity + 1);
-		}
-		else
-		{
-	      pMsg->SetVariable(dwId++, (DWORD)0);
-		}
+      pMsg->SetVariable(dwId++, (WORD)1);
+		m_ppThresholdList[i]->createMessage(pMsg, dwId);
 	}
 	else
 	{
-      pMsg->SetVariable(dwId++, (DWORD)0);
+      pMsg->SetVariable(dwId++, (WORD)0);
 	}
 
 	unlock();

@@ -721,7 +721,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetLastValues(NXC_SESSION hSession, DWORD dwNodeId,
          *pdwNumItems = pResponse->GetVariableLong(VID_NUM_ITEMS);
          *ppValueList = (NXC_DCI_VALUE *)malloc(sizeof(NXC_DCI_VALUE) * (*pdwNumItems));
          memset(*ppValueList, 0, sizeof(NXC_DCI_VALUE) * (*pdwNumItems));
-         for(i = 0, dwId = VID_DCI_VALUES_BASE; i < *pdwNumItems; i++, dwId +=2)
+         for(i = 0, dwId = VID_DCI_VALUES_BASE; i < *pdwNumItems; i++, dwId +=42)
          {
             (*ppValueList)[i].dwId = pResponse->GetVariableLong(dwId++);
             pResponse->GetVariableStr(dwId++, (*ppValueList)[i].szName, MAX_ITEM_NAME);

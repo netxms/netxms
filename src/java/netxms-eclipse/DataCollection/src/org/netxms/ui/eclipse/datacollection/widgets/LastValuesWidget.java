@@ -19,8 +19,6 @@
 package org.netxms.ui.eclipse.datacollection.widgets;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -41,7 +39,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.Node;
@@ -67,6 +64,7 @@ public class LastValuesWidget extends Composite
 	public static final int COLUMN_DESCRIPTION = 1;
 	public static final int COLUMN_VALUE = 2;
 	public static final int COLUMN_TIMESTAMP = 3;
+	public static final int COLUMN_THRESHOLD = 4;
 	
 	private final ViewPart viewPart;
 	private Node node;
@@ -131,8 +129,8 @@ public class LastValuesWidget extends Composite
 		});
 		
 		// Setup table columns
-		final String[] names = { "ID", "Description", "Value", "Timestamp" };
-		final int[] widths = { 70, 250, 150, 100 };
+		final String[] names = { "ID", "Description", "Value", "Timestamp", "Threshold" };
+		final int[] widths = { 70, 250, 150, 120, 150 };
 		dataViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 	
 		labelProvider = new LastValuesLabelProvider();

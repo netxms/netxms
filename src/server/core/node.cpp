@@ -3207,7 +3207,7 @@ DWORD Node::getLastValues(CSCPMessage *pMsg)
 		if (_tcsnicmp(m_ppItems[i]->getDescription(), _T("@system."), 8))
 		{
 			m_ppItems[i]->getLastValue(pMsg, dwId);
-			dwId += 10;
+			dwId += 50;
 			dwCount++;
 		}
 	}

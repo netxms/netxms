@@ -25,6 +25,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.propertypages.Thresholds;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -46,6 +47,11 @@ public class ThresholdLabelProvider implements ITableLabelProvider
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
+		if (columnIndex == Thresholds.COLUMN_OPERATION)
+		{
+			final EventTemplate event = session.findEventTemplateByCode(((Threshold)element).getFireEvent());
+			return StatusDisplayInfo.getStatusImage(event.getSeverity());
+		}
 		return null;
 	}
 

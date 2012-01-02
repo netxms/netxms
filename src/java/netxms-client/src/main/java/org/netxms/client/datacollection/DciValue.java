@@ -37,6 +37,7 @@ public class DciValue
 	private int dataType;
 	private int status;				// status (active, disabled, etc.)
 	private Date timestamp;
+	private Threshold activeThreshold;
 	
 	/**
 	 * Constructor for creating NXCDCIValue from NXCP message
@@ -56,7 +57,11 @@ public class DciValue
 		dataType = msg.getVariableAsInteger(var++);
 		value = msg.getVariableAsString(var++);
 		timestamp = new Date(msg.getVariableAsInt64(var++) * 1000);
-		status = msg.getVariableAsInteger(var);
+		status = msg.getVariableAsInteger(var++);
+		if (msg.getVariableAsBoolean(var++))
+			activeThreshold = new Threshold(msg, var);
+		else
+			activeThreshold = null;
 	}
 
 	/**
@@ -129,5 +134,13 @@ public class DciValue
 	public long getNodeId()
 	{
 		return nodeId;
+	}
+
+	/**
+	 * @return the activeThreshold
+	 */
+	public Threshold getActiveThreshold()
+	{
+		return activeThreshold;
 	}
 }

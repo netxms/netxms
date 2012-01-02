@@ -142,7 +142,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
-	public static final int CLIENT_PROTOCOL_VERSION = 29;
+	public static final int CLIENT_PROTOCOL_VERSION = 30;
 
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
@@ -2289,7 +2289,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS);
 		DciValue[] list = new DciValue[count];
 		long base = NXCPCodes.VID_DCI_VALUES_BASE;
-		for(int i = 0; i < count; i++, base += 10)
+		for(int i = 0; i < count; i++, base += 50)
 			list[i] = new DciValue(nodeId, response, base);
 
 		return list;

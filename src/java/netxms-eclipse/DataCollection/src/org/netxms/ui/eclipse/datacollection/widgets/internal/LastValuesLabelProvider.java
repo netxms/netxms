@@ -20,23 +20,28 @@ package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
 import java.text.DateFormat;
 import java.text.NumberFormat;
-
-import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.Threshold;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
+import org.netxms.ui.eclipse.datacollection.propertypages.Thresholds;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 
 
 /**
  * Label provider for last values view
  */
-public class LastValuesLabelProvider implements ITableLabelProvider
+public class LastValuesLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	private Image[] stateImages = new Image[3];
 	private boolean useMultipliers = true;
+	private ThresholdLabelProvider thresholdLabelProvider;
 	
 	/**
 	 * Default constructor 
@@ -48,6 +53,8 @@ public class LastValuesLabelProvider implements ITableLabelProvider
 		stateImages[0] = Activator.getImageDescriptor("icons/active.gif").createImage();
 		stateImages[1] = Activator.getImageDescriptor("icons/disabled.gif").createImage();
 		stateImages[2] = Activator.getImageDescriptor("icons/unsupported.gif").createImage();
+		
+		thresholdLabelProvider = new ThresholdLabelProvider();
 	}
 	
 	/* (non-Javadoc)
@@ -56,7 +63,15 @@ public class LastValuesLabelProvider implements ITableLabelProvider
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		return (columnIndex == LastValuesWidget.COLUMN_ID) ? stateImages[((DciValue)element).getStatus()] : null;
+		switch(columnIndex)
+		{
+			case LastValuesWidget.COLUMN_ID:
+				return stateImages[((DciValue)element).getStatus()];
+			case LastValuesWidget.COLUMN_THRESHOLD:
+				Threshold threshold = ((DciValue)element).getActiveThreshold();
+				return (threshold != null) ? thresholdLabelProvider.getColumnImage(threshold, Thresholds.COLUMN_OPERATION) : StatusDisplayInfo.getStatusImage(Severity.NORMAL);
+		}
+		return null;
 	}
 
 	/* (non-Javadoc)
@@ -75,10 +90,25 @@ public class LastValuesLabelProvider implements ITableLabelProvider
 				return useMultipliers ? getValue((DciValue)element) : ((DciValue)element).getValue();
 			case LastValuesWidget.COLUMN_TIMESTAMP:
 				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((DciValue)element).getTimestamp());
+			case LastValuesWidget.COLUMN_THRESHOLD:
+				return formatThreshold(((DciValue)element).getActiveThreshold());
 		}
 		return null;
 	}
 	
+	/**
+	 * Format threshold
+	 * 
+	 * @param activeThreshold
+	 * @return
+	 */
+	private String formatThreshold(Threshold threshold)
+	{
+		if (threshold == null)
+			return "OK";
+		return thresholdLabelProvider.getColumnText(threshold, Thresholds.COLUMN_OPERATION);
+	}
+
 	/**
 	 * @param element
 	 * @return
@@ -140,14 +170,6 @@ public class LastValuesLabelProvider implements ITableLabelProvider
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	@Override
-	public void addListener(ILabelProviderListener listener)
-	{
-	}
-
-	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
 	 */
 	@Override
@@ -155,23 +177,8 @@ public class LastValuesLabelProvider implements ITableLabelProvider
 	{
 		for(int i = 0; i < stateImages.length; i++)
 			stateImages[i].dispose();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
-	 */
-	@Override
-	public boolean isLabelProperty(Object element, String property)
-	{
-		return false;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	@Override
-	public void removeListener(ILabelProviderListener listener)
-	{
+		thresholdLabelProvider.dispose();
+		super.dispose();
 	}
 
 	/**
