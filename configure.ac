@@ -1940,14 +1940,16 @@ AC_CONFIG_FILES([
 	README
 	Makefile
 	contrib/Makefile
+	contrib/backgrounds/Makefile
+	contrib/integration/Makefile
+	contrib/integration/HP_EVA/Makefile
+	contrib/mibs/Makefile
 	contrib/startup/Makefile
 	contrib/startup/debian/Makefile
 	contrib/startup/gentoo/Makefile
 	contrib/startup/redhat/Makefile
 	contrib/startup/suse/Makefile
 	contrib/startup/ubuntu/Makefile
-	contrib/mibs/Makefile
-	contrib/backgrounds/Makefile
 	doc/Makefile
 	doc/internal/Makefile
 	doc/manuals/Makefile

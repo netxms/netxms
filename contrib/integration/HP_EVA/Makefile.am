@@ -1,4 +1,4 @@
-# Copyright (C) 2004 NetXMS Team <bugs@netxms.org>
+# Copyright (C) 2004-2009 NetXMS Team <bugs@netxms.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -8,9 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-
-EXTRA_DIST = \
-	netxmsd.conf-dist nxagentd.conf-dist nxhttpd.conf-dist \
-	installAgent.sh installBinaryAgent.sh
-SUBDIRS = integration startup
-SUBDIRS += @CONTRIB_MODULES@
+EXTRA_DIST = hp_eva_collect_data.pl
