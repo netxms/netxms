@@ -207,7 +207,12 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		}
 		
 		getSite().setSelectionProvider(this);
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+		
+		/* FIXME: remove two listeners after upgrade to Zest 2.0. For Zest 1.3
+		 * it is needed because of crazy internal implementation of selection listeners
+		 * in GraphViewer.
+		 */
+		ISelectionChangedListener listener = new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent e)
 			{
@@ -232,7 +237,9 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 					l.selectionChanged(event);
 				}
 			}
-		});
+		};
+		viewer.addSelectionChangedListener(listener);
+		viewer.addPostSelectionChangedListener(listener);
 		
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override

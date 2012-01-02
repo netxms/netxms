@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,11 @@ import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.FigureListener;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.MouseEvent;
+import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.graphics.GC;
@@ -53,7 +56,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	
 	private BackgroundFigure backgroundFigure;
 	private Image backgroundImage = null;
-	private GeoLocation backgroundLocation;
+	private GeoLocation backgroundLocation = null;
 	private int backgroundZoom;
 	private IFigure zestRootLayer;
 	private boolean graphControlResized = false;
@@ -75,8 +78,7 @@ public class ExtendedGraphViewer extends GraphViewer
 
 		getGraphControl().getRootLayer().add(backgroundFigure, 0);
 		
-		final Runnable timer = new Runnable()
-		{
+		final Runnable timer = new Runnable() {
 			@Override
 			public void run()
 			{
@@ -97,6 +99,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			public void controlResized(ControlEvent e)
 			{
 				graphControlResized = true;
+				resizeBackground();
 				if (backgroundLocation != null)
 				{
 					getGraphControl().getDisplay().timerExec(1000, timer);
@@ -113,10 +116,29 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void figureMoved(IFigure source)
 			{
+				resizeBackground();
 				if (backgroundLocation != null)
 				{
 					getGraphControl().getDisplay().timerExec(1000, timer);
 				}
+			}
+		});
+		
+		backgroundFigure.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseReleased(MouseEvent me)
+			{
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent me)
+			{
+				ExtendedGraphViewer.this.setSelection(new StructuredSelection(), true);
+			}
+			
+			@Override
+			public void mouseDoubleClicked(MouseEvent me)
+			{
 			}
 		});
 	}
@@ -160,6 +182,16 @@ public class ExtendedGraphViewer extends GraphViewer
 	}
 	
 	/**
+	 * Resize background figure
+	 */
+	private void resizeBackground()
+	{
+		final Rectangle controlSize = getGraphControl().getClientArea();
+		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
+		backgroundFigure.setSize(Math.min(controlSize.width, rootLayerSize.width), Math.min(controlSize.height, rootLayerSize.height));
+	}
+	
+	/**
 	 * Reload map background
 	 */
 	private void reloadMapBackground()
@@ -180,10 +212,6 @@ public class ExtendedGraphViewer extends GraphViewer
 						if ((mapSize.x != rootLayerSize.width) || (mapSize.y != rootLayerSize.height))
 							return;
 						
-						if (mapSize.x > rootLayerSize.width)
-							mapSize.x = rootLayerSize.width;
-						if (mapSize.y > rootLayerSize.height)
-							mapSize.y = rootLayerSize.height;
 						backgroundFigure.setSize(mapSize.x, mapSize.y);
 						drawTiles(tiles);
 						getGraphControl().redraw();
