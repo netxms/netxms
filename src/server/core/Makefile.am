@@ -35,6 +35,9 @@ libnxcore_la_LIBADD = ../../libnetxms/libnetxms.la \
 		      ../../db/libnxdb/libnxdb.la \
 		      ../libnxsrv/libnxsrv.la \
                       ../../libnxsl/libnxsl.la
+if USE_INTERNAL_LIBTRE
+libnxcore_la_LIBADD += @top_srcdir@/src/libtre/libnxtre.la
+endif
 
 EXTRA_DIST = \
 	nxcore.vcproj \
