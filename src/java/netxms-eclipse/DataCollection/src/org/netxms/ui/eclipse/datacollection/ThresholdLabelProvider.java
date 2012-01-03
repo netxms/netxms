@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package org.netxms.ui.eclipse.datacollection;
 
-import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
@@ -30,16 +30,16 @@ import org.netxms.ui.eclipse.datacollection.propertypages.Thresholds;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * @author Victor
- *
+ * Label provider for threshold objects
  */
-public class ThresholdLabelProvider implements ITableLabelProvider
+public class ThresholdLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	private static final String[] functions = { "last(", "average(", "deviation(", "diff()", "error(", "sum(" };
 	private static final String[] operations = { "<", "<=", "==", ">=", ">", "!=", "like", "!like" };
 	
 	private WorkbenchLabelProvider eventLabelProvider = new WorkbenchLabelProvider();
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+	private Image thresholdIcon = Activator.getImageDescriptor("icons/threshold.png").createImage();
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -47,10 +47,13 @@ public class ThresholdLabelProvider implements ITableLabelProvider
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		if (columnIndex == Thresholds.COLUMN_OPERATION)
+		switch(columnIndex)
 		{
-			final EventTemplate event = session.findEventTemplateByCode(((Threshold)element).getFireEvent());
-			return StatusDisplayInfo.getStatusImage(event.getSeverity());
+			case Thresholds.COLUMN_OPERATION:
+				return thresholdIcon;
+			case Thresholds.COLUMN_EVENT:
+				final EventTemplate event = session.findEventTemplateByCode(((Threshold)element).getFireEvent());
+				return StatusDisplayInfo.getStatusImage(event.getSeverity());
 		}
 		return null;
 	}
@@ -87,36 +90,13 @@ public class ThresholdLabelProvider implements ITableLabelProvider
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	@Override
-	public void addListener(ILabelProviderListener listener)
-	{
-	}
-
-	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
 	 */
 	@Override
 	public void dispose()
 	{
 		eventLabelProvider.dispose();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
-	 */
-	@Override
-	public boolean isLabelProperty(Object element, String property)
-	{
-		return false;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	@Override
-	public void removeListener(ILabelProviderListener listener)
-	{
+		thresholdIcon.dispose();
+		super.dispose();
 	}
 }

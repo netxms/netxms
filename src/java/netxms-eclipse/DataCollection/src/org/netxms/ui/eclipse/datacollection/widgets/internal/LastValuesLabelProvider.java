@@ -20,8 +20,10 @@ package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
 import java.text.DateFormat;
 import java.text.NumberFormat;
+import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -37,7 +39,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 /**
  * Label provider for last values view
  */
-public class LastValuesLabelProvider extends LabelProvider implements ITableLabelProvider
+public class LastValuesLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
 	private Image[] stateImages = new Image[3];
 	private boolean useMultipliers = true;
@@ -69,7 +71,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 				return stateImages[((DciValue)element).getStatus()];
 			case LastValuesWidget.COLUMN_THRESHOLD:
 				Threshold threshold = ((DciValue)element).getActiveThreshold();
-				return (threshold != null) ? thresholdLabelProvider.getColumnImage(threshold, Thresholds.COLUMN_OPERATION) : StatusDisplayInfo.getStatusImage(Severity.NORMAL);
+				return (threshold != null) ? thresholdLabelProvider.getColumnImage(threshold, Thresholds.COLUMN_EVENT) : StatusDisplayInfo.getStatusImage(Severity.NORMAL);
 		}
 		return null;
 	}
@@ -195,5 +197,23 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	public void setUseMultipliers(boolean useMultipliers)
 	{
 		this.useMultipliers = useMultipliers;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)
+	 */
+	@Override
+	public Color getForeground(Object element, int columnIndex)
+	{
+		return (((DciValue)element).getActiveThreshold() != null) ? StatusDisplayInfo.getStatusColor(Severity.MAJOR) : null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ITableColorProvider#getBackground(java.lang.Object, int)
+	 */
+	@Override
+	public Color getBackground(Object element, int columnIndex)
+	{
+		return null;
 	}
 }
