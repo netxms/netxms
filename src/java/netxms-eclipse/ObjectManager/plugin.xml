@@ -202,6 +202,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.StatusCalculation"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.StatusCalculation"
+              name="Status Calculation">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.GenericObject">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension

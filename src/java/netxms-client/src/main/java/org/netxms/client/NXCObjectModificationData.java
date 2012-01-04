@@ -89,6 +89,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_REPORT_DEFINITION  = 0x080000000000L;
 	public static final long MODIFY_CLUSTER_RESOURCES  = 0x100000000000L;
 	public static final long MODIFY_PRIMARY_NAME       = 0x200000000000L;
+	public static final long MODIFY_STATUS_CALCULATION = 0x400000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -149,6 +150,13 @@ public class NXCObjectModificationData
 	private int ifXTablePolicy;
 	private String reportDefinition;
 	private List<ClusterResource> resourceList;
+	private int statusCalculationMethod;
+	private int statusPropagationMethod;
+	private int fixedPropagatedStatus;
+	private int statusShift;
+	private int[] statusTransformation;
+	private int statusSingleThreshold;
+	private int[] statusThresholds;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1155,5 +1163,124 @@ public class NXCObjectModificationData
 	{
 		this.primaryName = primaryName;
 		flags |= MODIFY_PRIMARY_NAME;
+	}
+
+	/**
+	 * @return the statusCalculationMethod
+	 */
+	public int getStatusCalculationMethod()
+	{
+		return statusCalculationMethod;
+	}
+
+	/**
+	 * @param statusCalculationMethod the statusCalculationMethod to set
+	 */
+	public void setStatusCalculationMethod(int statusCalculationMethod)
+	{
+		this.statusCalculationMethod = statusCalculationMethod;
+		flags |= MODIFY_STATUS_CALCULATION;
+	}
+
+	/**
+	 * @return the statusPropagationMethod
+	 */
+	public int getStatusPropagationMethod()
+	{
+		return statusPropagationMethod;
+	}
+
+	/**
+	 * @param statusPropagationMethod the statusPropagationMethod to set
+	 */
+	public void setStatusPropagationMethod(int statusPropagationMethod)
+	{
+		this.statusPropagationMethod = statusPropagationMethod;
+		flags |= MODIFY_STATUS_CALCULATION;
+	}
+
+	/**
+	 * @return the fixedPropagatedStatus
+	 */
+	public int getFixedPropagatedStatus()
+	{
+		return fixedPropagatedStatus;
+	}
+
+	/**
+	 * @param fixedPropagatedStatus the fixedPropagatedStatus to set
+	 */
+	public void setFixedPropagatedStatus(int fixedPropagatedStatus)
+	{
+		this.fixedPropagatedStatus = fixedPropagatedStatus;
+		flags |= MODIFY_STATUS_CALCULATION;
+	}
+
+	/**
+	 * @return the statusShift
+	 */
+	public int getStatusShift()
+	{
+		return statusShift;
+	}
+
+	/**
+	 * @param statusShift the statusShift to set
+	 */
+	public void setStatusShift(int statusShift)
+	{
+		this.statusShift = statusShift;
+		flags |= MODIFY_STATUS_CALCULATION;
+	}
+
+	/**
+	 * @return the statusTransformation
+	 */
+	public int[] getStatusTransformation()
+	{
+		return statusTransformation;
+	}
+
+	/**
+	 * @param statusTransformation the statusTransformation to set
+	 */
+	public void setStatusTransformation(int[] statusTransformation)
+	{
+		this.statusTransformation = statusTransformation;
+		flags |= MODIFY_STATUS_CALCULATION;
+	}
+
+	/**
+	 * @return the statusSingleThreshold
+	 */
+	public int getStatusSingleThreshold()
+	{
+		return statusSingleThreshold;
+	}
+
+	/**
+	 * @param statusSingleThreshold the statusSingleThreshold to set
+	 */
+	public void setStatusSingleThreshold(int statusSingleThreshold)
+	{
+		this.statusSingleThreshold = statusSingleThreshold;
+		flags |= MODIFY_STATUS_CALCULATION;
+	}
+
+	/**
+	 * @return the statusThresholds
+	 */
+	public int[] getStatusThresholds()
+	{
+		return statusThresholds;
+	}
+
+	/**
+	 * @param statusThresholds the statusThresholds to set
+	 */
+	public void setStatusThresholds(int[] statusThresholds)
+	{
+		this.statusThresholds = statusThresholds;
+		flags |= MODIFY_STATUS_CALCULATION;
 	}
 }

@@ -81,6 +81,17 @@ public class GenericObject
 	public static final int STATUS_DISABLED       = 7;
 	public static final int STATUS_TESTING        = 8;
 	
+	public static final int CALCULATE_DEFAULT              = 0;
+	public static final int CALCULATE_MOST_CRITICAL        = 1;
+	public static final int CALCULATE_SINGLE_THRESHOLD     = 2;
+	public static final int CALCULATE_MULTIPLE_THRESHOLDS  = 3;
+
+	public static final int PROPAGATE_DEFAULT              = 0;
+	public static final int PROPAGATE_UNCHANGED            = 1;
+	public static final int PROPAGATE_FIXED                = 2;
+	public static final int PROPAGATE_RELATIVE             = 3;
+	public static final int PROPAGATE_TRANSLATED           = 4;
+	
 	// Associated client session
 	protected NXCSession session = null;
 	
@@ -99,6 +110,14 @@ public class GenericObject
 	private HashSet<Long> trustedNodes = new HashSet<Long>(0);
 	private boolean inheritAccessRights = true;
 	private HashSet<AccessListElement> accessList = new HashSet<AccessListElement>(0);
+	
+	private int statusCalculationMethod;
+	private int statusPropagationMethod;
+	private int fixedPropagatedStatus;
+	private int statusShift;
+	private int[] statusTransformation;
+	private int statusSingleThreshold;
+	private int[] statusThresholds;
 
 	protected HashSet<Long> parents = new HashSet<Long>(0);
 	protected HashSet<Long> childs = new HashSet<Long>(0);
@@ -127,6 +146,22 @@ public class GenericObject
 		comments = "";
 		geolocation = new GeoLocation(false);
 		image = NXCommon.EMPTY_GUID;
+
+		statusCalculationMethod = CALCULATE_DEFAULT;
+		statusPropagationMethod = PROPAGATE_DEFAULT;
+		fixedPropagatedStatus = STATUS_NORMAL;
+		statusShift = 0;
+		statusTransformation = new int[4];
+		statusTransformation[0] = STATUS_WARNING;
+		statusTransformation[1] = STATUS_MINOR;
+		statusTransformation[2] = STATUS_MAJOR;
+		statusTransformation[3] = STATUS_CRITICAL;
+		statusSingleThreshold = 75;
+		statusThresholds = new int[4];
+		statusThresholds[0] = 75;
+		statusThresholds[1] = 75;
+		statusThresholds[2] = 75;
+		statusThresholds[3] = 75;
 	}
 	
 	/**
@@ -154,6 +189,27 @@ public class GenericObject
 		submapId = msg.getVariableAsInt64(NXCPCodes.VID_SUBMAP_ID);
 		if (image == null)
 			image = NXCommon.EMPTY_GUID;
+		
+		statusCalculationMethod = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_CALCULATION_ALG);
+		statusPropagationMethod = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_PROPAGATION_ALG);
+		fixedPropagatedStatus = msg.getVariableAsInteger(NXCPCodes.VID_FIXED_STATUS);
+		statusShift = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_SHIFT);
+		statusTransformation = new int[4];
+		statusTransformation[0] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_1);
+		statusTransformation[1] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_2);
+		statusTransformation[2] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_3);
+		statusTransformation[3] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_4);
+		statusSingleThreshold = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_SINGLE_THRESHOLD);
+		statusThresholds = new int[4];
+		statusThresholds[0] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_THRESHOLD_1);
+		statusThresholds[1] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_THRESHOLD_2);
+		statusThresholds[2] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_THRESHOLD_3);
+		statusThresholds[3] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_THRESHOLD_4);
+		
+		// Status shift can be negative, but all int16 values read from message
+		// as unsigned, so we need to convert shift value
+		if (statusShift > 32767)
+			statusShift = statusShift - 65536;
 		
 		// Parents
 		count = msg.getVariableAsInteger(NXCPCodes.VID_PARENT_CNT);
@@ -570,5 +626,61 @@ public class GenericObject
 	public long getSubmapId()
 	{
 		return submapId;
+	}
+
+	/**
+	 * @return the statusCalculationMethod
+	 */
+	public int getStatusCalculationMethod()
+	{
+		return statusCalculationMethod;
+	}
+
+	/**
+	 * @return the statusPropagationMethod
+	 */
+	public int getStatusPropagationMethod()
+	{
+		return statusPropagationMethod;
+	}
+
+	/**
+	 * @return the fixedPropagatedStatus
+	 */
+	public int getFixedPropagatedStatus()
+	{
+		return fixedPropagatedStatus;
+	}
+
+	/**
+	 * @return the statusShift
+	 */
+	public int getStatusShift()
+	{
+		return statusShift;
+	}
+
+	/**
+	 * @return the statusTransformation
+	 */
+	public int[] getStatusTransformation()
+	{
+		return statusTransformation;
+	}
+
+	/**
+	 * @return the statusSingleThreshold
+	 */
+	public int getStatusSingleThreshold()
+	{
+		return statusSingleThreshold;
+	}
+
+	/**
+	 * @return the statusThresholds
+	 */
+	public int[] getStatusThresholds()
+	{
+		return statusThresholds;
 	}
 }

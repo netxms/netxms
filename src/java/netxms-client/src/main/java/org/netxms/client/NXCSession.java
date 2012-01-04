@@ -2997,6 +2997,25 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			msg.setVariable(NXCPCodes.VID_PRIMARY_NAME, data.getPrimaryName());
 		}
 		
+		if ((flags & NXCObjectModificationData.MODIFY_STATUS_CALCULATION) != 0)
+		{
+	      msg.setVariableInt16(NXCPCodes.VID_STATUS_CALCULATION_ALG, data.getStatusCalculationMethod());
+	      msg.setVariableInt16(NXCPCodes.VID_STATUS_PROPAGATION_ALG, data.getStatusPropagationMethod());
+	      msg.setVariableInt16(NXCPCodes.VID_FIXED_STATUS, data.getFixedPropagatedStatus());
+	      msg.setVariableInt16(NXCPCodes.VID_STATUS_SHIFT, data.getStatusShift());
+	      int[] transformation = data.getStatusTransformation();
+	      msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_1, transformation[0]);
+	      msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_2, transformation[1]);
+	      msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_3, transformation[2]);
+	      msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_4, transformation[3]);
+	      msg.setVariableInt16(NXCPCodes.VID_STATUS_SINGLE_THRESHOLD, data.getStatusSingleThreshold());
+	      int[] thresholds = data.getStatusThresholds();
+	      msg.setVariableInt16(NXCPCodes.VID_STATUS_THRESHOLD_1, thresholds[0]);
+	      msg.setVariableInt16(NXCPCodes.VID_STATUS_THRESHOLD_2, thresholds[1]);
+	      msg.setVariableInt16(NXCPCodes.VID_STATUS_THRESHOLD_3, thresholds[2]);
+	      msg.setVariableInt16(NXCPCodes.VID_STATUS_THRESHOLD_4, thresholds[3]);
+		}
+		
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
