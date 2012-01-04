@@ -291,7 +291,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	 */
 	protected void replaceMapPage(final NetworkMapPage page)
 	{
-		new UIJob("Replace map page") {
+		new UIJob(viewer.getControl().getDisplay(), "Replace map page") {
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)
 			{
@@ -800,7 +800,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	 */
 	protected void onObjectChange(final GenericObject object)
 	{
-		new UIJob("Refresh map") {
+		new UIJob(viewer.getControl().getDisplay(), "Refresh map") {
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)
 			{

@@ -19,15 +19,12 @@
 package org.netxms.ui.eclipse.console.actions;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
@@ -77,9 +74,9 @@ public class OpenServerConsole implements IWorkbenchWindowActionDelegate
 						{
 							final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 							session.openConsole();
-							new UIJob(Messages.getString("OpenServerConsole.JobTitle")) { //$NON-NLS-1$
+							runInUIThread(new Runnable() {
 								@Override
-								public IStatus runInUIThread(IProgressMonitor monitor)
+								public void run()
 								{
 									try
 									{
@@ -89,9 +86,8 @@ public class OpenServerConsole implements IWorkbenchWindowActionDelegate
 									{
 										MessageDialog.openError(window.getShell(), Messages.getString("OpenServerConsole.Error"), Messages.getString("OpenServerConsole.ViewErrorMessage") + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
 									}
-									return Status.OK_STATUS;
 								}
-							}.schedule();
+							});
 						}
 
 						@Override

@@ -11,7 +11,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.expressions;bundle-version="3.4.101",
  org.eclipse.ui.console;bundle-version="3.4.0",
  org.netxms.ui.eclipse.console;bundle-version="1.1.8",
- org.netxms.ui.eclipse.usermanager;bundle-version="1.1.5",
+ org.netxms.ui.eclipse.usermanager;bundle-version="1.1.8",
  org.netxms.ui.eclipse.snmp;bundle-version="1.1.0",
  org.eclipse.ui.workbench.texteditor;bundle-version="3.7.0",
  org.eclipse.jface.text;bundle-version="3.7.1"

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,10 +26,7 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -127,17 +124,16 @@ public class ServerConfigurationEditor extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				varList = session.getServerVariables();
-				new UIJob("Initialize server configuration editor") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						synchronized(varList)
 						{
 							viewer.setInput(varList.values().toArray());
 						}
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 		}.start();
 	}

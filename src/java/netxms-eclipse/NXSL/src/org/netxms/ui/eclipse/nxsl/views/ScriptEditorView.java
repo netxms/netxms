@@ -241,18 +241,17 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final Script script = scriptLibraryManager.getScript(scriptId);
-				new UIJob("Update script editor") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						scriptName = script.getName();
 						setPartName("Edit Script - " + scriptName);
 						editor.setText(script.getSource());
 						actionSave.setEnabled(false);
 						actionFindReplace.update();
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 		}.start();
 	}
@@ -289,7 +288,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	private void doScriptSave(String source, IProgressMonitor monitor) throws Exception
 	{
 		scriptLibraryManager.modifyScript(scriptId, scriptName, source);
-		new UIJob("Update script editor") {
+		new UIJob(editor.getDisplay(), "Update script editor") {
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)
 			{

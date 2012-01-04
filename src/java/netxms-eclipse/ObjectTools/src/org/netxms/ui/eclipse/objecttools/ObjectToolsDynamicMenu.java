@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,9 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -45,7 +43,6 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.IWorkbenchContribution;
-import org.eclipse.ui.progress.UIJob;
 import org.eclipse.ui.services.IEvaluationService;
 import org.eclipse.ui.services.IServiceLocator;
 import org.netxms.client.NXCSession;
@@ -273,14 +270,13 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.executeAction(node.getObjectId(), tool.getData());
-				new UIJob("Notify user about action execution") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						MessageDialog.openInformation(null, "Tool Execution", "Action " + tool.getData() + " executed successfully on node " + node.getObjectName());
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 		}.start();
 	}

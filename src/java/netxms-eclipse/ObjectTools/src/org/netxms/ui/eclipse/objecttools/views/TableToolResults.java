@@ -20,8 +20,6 @@ package org.netxms.ui.eclipse.objecttools.views;
 
 import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -33,7 +31,6 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.objects.GenericObject;
@@ -169,14 +166,13 @@ public class TableToolResults extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final Table table = session.executeTableTool(tool.getId(), nodeId);
-				new UIJob("Update table tool results") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						updateViewer(table);
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override

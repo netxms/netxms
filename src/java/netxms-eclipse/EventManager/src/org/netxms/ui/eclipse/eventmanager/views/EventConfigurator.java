@@ -161,9 +161,9 @@ public class EventConfigurator extends ViewPart implements SessionListener
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final List<EventTemplate> list = session.getEventTemplates();
-				new UIJob("Update event configurator") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						eventTemplates = new HashMap<Long, EventTemplate>(list.size());
 						for(final EventTemplate t: list)
@@ -171,9 +171,8 @@ public class EventConfigurator extends ViewPart implements SessionListener
 							eventTemplates.put(t.getCode(), t);
 						}
 						viewer.setInput(eventTemplates.values().toArray());
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 		}.start();
 	}
@@ -187,7 +186,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		switch(n.getCode())
 		{
 			case NXCNotification.EVENT_TEMPLATE_MODIFIED:
-				new UIJob("Update event template list") {
+				new UIJob(viewer.getControl().getDisplay(), "Update event template list") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
@@ -207,7 +206,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 				}.schedule();
 				break;
 			case NXCNotification.EVENT_TEMPLATE_DELETED:
-				new UIJob("Remove event template from list") {
+				new UIJob(viewer.getControl().getDisplay(), "Remove event template from list") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
@@ -388,16 +387,15 @@ public class EventConfigurator extends ViewPart implements SessionListener
 					long code = session.generateEventCode();
 					etmpl.setCode(code);
 					session.modifyEventTemplate(etmpl);
-					new UIJob("Update event configurator") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							eventTemplates.put(etmpl.getCode(), etmpl);
 							viewer.setInput(eventTemplates.values().toArray());
 							viewer.setSelection(new StructuredSelection(etmpl), true);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 			}.start();
 		}
@@ -427,16 +425,15 @@ public class EventConfigurator extends ViewPart implements SessionListener
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					session.modifyEventTemplate(etmpl);
-					new UIJob("Update event template list") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							eventTemplates.put(etmpl.getCode(), etmpl);
 							viewer.setInput(eventTemplates.values());
 							viewer.setSelection(new StructuredSelection(etmpl));
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 			}.start();
 		}

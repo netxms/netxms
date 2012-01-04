@@ -23,9 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -49,7 +47,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.EventTemplate;
@@ -441,14 +438,13 @@ public class Thresholds extends PropertyPage
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				dci.getOwner().modifyItem(dci);
-				new UIJob("Update data collection item list") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						((TableViewer)dci.getOwner().getUserData()).update(dci, null);
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			/* (non-Javadoc)
@@ -459,14 +455,13 @@ public class Thresholds extends PropertyPage
 			{
 				if (isApply)
 				{
-					new UIJob("Update \"Thresholds\" property page") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							Thresholds.this.setValid(true);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 			}
 		}.start();

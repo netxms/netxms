@@ -21,8 +21,6 @@ package org.netxms.ui.eclipse.serverconfig.actions;
 import java.io.FileInputStream;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
@@ -30,7 +28,6 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
@@ -89,14 +86,13 @@ public class ImportConfiguration implements IWorkbenchWindowActionDelegate
 					final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 					session.importConfiguration(content, dlg.getFlags());
 					
-					new UIJob("Notify about configuration import completion") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							MessageDialog.openInformation(shell, "Information", "Configuration was successfully imported from file " + dlg.getFileName());
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 			};
 			job.start();

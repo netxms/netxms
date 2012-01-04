@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@ package org.netxms.ui.eclipse.filemanager.dialogs;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -35,7 +33,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerFile;
 import org.netxms.ui.eclipse.filemanager.Activator;
@@ -113,14 +110,13 @@ public class SelectServerFileDialog extends Dialog
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final ServerFile[] files = ((NXCSession)ConsoleSharedData.getSession()).listServerFiles();
-				new UIJob("Update file list") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						viewer.setInput(files);
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override

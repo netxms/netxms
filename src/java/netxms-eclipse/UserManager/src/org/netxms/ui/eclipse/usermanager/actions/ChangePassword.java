@@ -19,15 +19,12 @@
 package org.netxms.ui.eclipse.usermanager.actions;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -81,14 +78,13 @@ public class ChangePassword implements IWorkbenchWindowActionDelegate
 				{
 					Session session = ConsoleSharedData.getSession();
 					((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), dlg.getOldPassword());
-					new UIJob("Password change notification") {
+					runInUIThread(new Runnable() {						
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							MessageDialog.openInformation(window.getShell(), "Information", "Password changed successfully");
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 			};
 			job.start();

@@ -421,7 +421,7 @@ public class ActionManager extends ViewPart implements SessionListener
 	 */
 	private void updateActionsList()
 	{
-		new UIJob(Messages.ActionManager_UiUpdateJobName) {
+		new UIJob(viewer.getControl().getDisplay(), Messages.ActionManager_UiUpdateJobName) {
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)
 			{

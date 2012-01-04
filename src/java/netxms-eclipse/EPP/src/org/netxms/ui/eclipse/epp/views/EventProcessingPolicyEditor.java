@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,9 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -50,7 +48,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -402,28 +399,25 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 				
 				policy = session.openEventProcessingPolicy();
 				policyLocked = true;
-				new UIJob("Update rules presentation") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						initPolicyEditor();
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override
 			protected void jobFailureHandler()
 			{
-				new UIJob("Close event processing policy editor")
-				{
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						EventProcessingPolicyEditor.this.getViewSite().getPage().hideView(EventProcessingPolicyEditor.this);
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 		};
 		job.start();
@@ -522,28 +516,26 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.saveEventProcessingPolicy(policy);
-				new UIJob("Update policy editor UI") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						modified = false;
 						firePropertyChange(PROP_DIRTY);
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override
 			protected void jobFinalize()
 			{
-				new UIJob("Update policy editor UI") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						actionSave.setEnabled(modified);
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override

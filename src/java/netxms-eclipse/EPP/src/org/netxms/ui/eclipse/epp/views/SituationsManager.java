@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -49,7 +47,6 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
@@ -150,14 +147,13 @@ public class SituationsManager extends ViewPart implements SessionListener
 			@Override
 			protected void jobFailureHandler()
 			{
-				new UIJob("Close situations manager") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().hideView(SituationsManager.this);
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 		}.start();
 	}

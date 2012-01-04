@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.progress.IProgressService;
@@ -45,12 +46,14 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 {
 	private final class ToolDetailLoader implements IRunnableWithProgress
 	{
+		private Display display;
 		private final long toolId;
 		private ObjectToolDetails result = null;
 
-		private ToolDetailLoader(long toolId)
+		private ToolDetailLoader(long toolId, Display display)
 		{
 			this.toolId = toolId;
+			this.display = display;
 		}
 
 		@Override
@@ -60,7 +63,7 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 			try
 			{
 				result = session.getObjectToolDetails(toolId);
-				new UIJob("Update object tool adapter cache") {
+				new UIJob(display, "Update object tool adapter cache") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
@@ -71,7 +74,7 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 			}
 			catch(final Exception e)
 			{
-				new UIJob("Show error message") {
+				new UIJob(display, "Show error message") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
@@ -114,7 +117,7 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 			ObjectToolDetails details = cache.get(toolId);
 			if (details == null)
 			{
-				ToolDetailLoader job = new ToolDetailLoader(toolId);
+				ToolDetailLoader job = new ToolDetailLoader(toolId, PlatformUI.getWorkbench().getDisplay());
 				IProgressService service = PlatformUI.getWorkbench().getProgressService();
 				try
 				{

@@ -21,8 +21,6 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 import java.util.Arrays;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -32,7 +30,6 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -136,14 +133,13 @@ public class Transformation extends PropertyPage
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				dci.getOwner().modifyItem(dci);
-				new UIJob("Update data collection item list") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						((TableViewer)dci.getOwner().getUserData()).update(dci, null);
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			/* (non-Javadoc)
@@ -154,14 +150,13 @@ public class Transformation extends PropertyPage
 			{
 				if (isApply)
 				{
-					new UIJob("Update \"Transformation\" property page") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							Transformation.this.setValid(true);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 			}
 		}.start();

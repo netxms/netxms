@@ -21,9 +21,7 @@ package org.netxms.ui.eclipse.logviewer.views;
 import java.util.Collection;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -39,7 +37,6 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IActionBars;
@@ -48,7 +45,6 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
@@ -397,14 +393,13 @@ public class LogViewer extends ViewPart
 					logHandle.query(filter);
 					currentPosition = 0;
 					resultSet = logHandle.retrieveData(currentPosition, PAGE_SIZE);
-					new UIJob("Update log viewer") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							viewer.setInput(resultSet.getAllRows());
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 			}.start();
 		}
@@ -449,14 +444,13 @@ public class LogViewer extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				resultSet = logHandle.retrieveData(currentPosition, PAGE_SIZE);
-				new UIJob("Update log viewer") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						viewer.setInput(resultSet.getAllRows());
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 		}.start();
 	}

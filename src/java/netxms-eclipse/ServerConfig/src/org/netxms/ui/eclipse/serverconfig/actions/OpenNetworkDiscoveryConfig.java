@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,12 @@
 package org.netxms.ui.eclipse.serverconfig.actions;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator;
@@ -71,9 +68,9 @@ public class OpenNetworkDiscoveryConfig implements IWorkbenchWindowActionDelegat
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final DiscoveryConfig config = DiscoveryConfig.load();
-				new UIJob("Open network discovery configurator") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						try 
 						{
@@ -84,9 +81,8 @@ public class OpenNetworkDiscoveryConfig implements IWorkbenchWindowActionDelegat
 						{
 							MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 						}
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -44,7 +42,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
@@ -307,9 +304,9 @@ public class ServerJobManager extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final NXCServerJob[] jobList = session.getServerJobList();
-				new UIJob("Update job list") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						// Remember current selection
 						IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
@@ -332,9 +329,8 @@ public class ServerJobManager extends ViewPart
 							}
 						}
 						viewer.setSelection(new StructuredSelection(selectedJobs));
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override

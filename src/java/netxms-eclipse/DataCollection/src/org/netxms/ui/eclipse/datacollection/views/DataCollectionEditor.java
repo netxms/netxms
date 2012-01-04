@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@ package org.netxms.ui.eclipse.datacollection.views;
 import java.util.Iterator;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -59,7 +57,6 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -647,17 +644,16 @@ public class DataCollectionEditor extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final long id = dciConfig.createItem();
-				new UIJob("Open created DCI") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						viewer.setInput(dciConfig.getItems());
 						DataCollectionItem dci = dciConfig.findItem(id);
 						viewer.setSelection(new StructuredSelection(dci), true);
 						actionEdit.run();
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override

@@ -140,7 +140,7 @@ public class UserManagementView extends ViewPart
 			{
 				if (n.getCode() == SessionNotification.USER_DB_CHANGED)
 				{
-					new UIJob("Update user list")
+					new UIJob(viewer.getControl().getDisplay(), "Update user list")
 					{
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)

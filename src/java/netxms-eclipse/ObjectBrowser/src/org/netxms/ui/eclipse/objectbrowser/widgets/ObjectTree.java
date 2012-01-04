@@ -213,7 +213,7 @@ public class ObjectTree extends Composite
 				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
 				{
 					changeCount++;
-					new UIJob("Update object tree") {
+					new UIJob(getDisplay(), "Update object tree") {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{

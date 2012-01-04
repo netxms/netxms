@@ -281,7 +281,7 @@ public class NodePollerView extends ViewPart
 			@Override
 			public void onPollerMessage(final String message)
 			{
-				new UIJob("Update poller window") {
+				new UIJob(textArea.getDisplay(), "Update poller window") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
@@ -321,7 +321,7 @@ public class NodePollerView extends ViewPart
 	 */
 	private void onPollComplete(final boolean success, final String errorMessage)
 	{
-		new UIJob("Update poller window") {
+		new UIJob(textArea.getDisplay(), "Update poller window") {
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)
 			{
