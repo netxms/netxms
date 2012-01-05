@@ -43,6 +43,12 @@
                label="&amp;Open dashboard"
                menubarPath="additions">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.dashboard.actions.CloneDashboard"
+               id="org.netxms.ui.eclipse.dashboard.popupActions.CloneDashboard"
+               label="Clone dashboard"
+               menubarPath="additions">
+         </action>
       </objectContribution>
    </extension>
    <extension
