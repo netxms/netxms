@@ -198,29 +198,39 @@ static void random_vector(unsigned char *vector)
 
 static int rad_pwencode(const char *pwd_in, char *pwd_out, const char *secret, const char *vector)
 {
+	int passLen = (int)strlen(pwd_in);
+	if (passLen > AUTH_PASS_LEN)
+		passLen = AUTH_PASS_LEN;
+
 	char passbuf[AUTH_PASS_LEN];
-	char md5buf[256];
-	int i, secretlen;
-
-	i = (int)strlen(pwd_in);
 	memset(passbuf, 0, AUTH_PASS_LEN);
-	memcpy(passbuf, pwd_in, i > AUTH_PASS_LEN ? AUTH_PASS_LEN : i);
+	memcpy(passbuf, pwd_in, passLen);
 
-	secretlen = (int)strlen(secret);
+	int secretlen = (int)strlen(secret);
 	if (secretlen + AUTH_VECTOR_LEN > 256)
 	{
 		secretlen = 256 - AUTH_VECTOR_LEN;
 	}
-	strncpy(md5buf, secret, sizeof(md5buf));
-	memcpy(md5buf + secretlen, vector, AUTH_VECTOR_LEN);
-	CalculateMD5Hash((BYTE *)md5buf, secretlen + AUTH_VECTOR_LEN, (BYTE *)pwd_out);
 
-	for(i = 0; i < AUTH_PASS_LEN; i++)
+	char key[256];
+	strncpy(key, secret, sizeof(key) - AUTH_VECTOR_LEN);
+
+	int outLen = 0;
+	const char *currVector = vector;
+	while(outLen < passLen)
 	{
-		*pwd_out++ ^= passbuf[i];
+		memcpy(key + secretlen, currVector, AUTH_VECTOR_LEN);
+		CalculateMD5Hash((BYTE *)key, secretlen + AUTH_VECTOR_LEN, (BYTE *)&pwd_out[outLen]);
+		currVector = &pwd_out[outLen];
+
+		for(int i = 0; i < AUTH_VECTOR_LEN; i++)
+		{
+			pwd_out[outLen] ^= passbuf[outLen];
+			outLen++;
+		}
 	}
 
-	return AUTH_PASS_LEN;
+	return outLen;
 }
 
 
@@ -761,11 +771,6 @@ bool RadiusAuth(const TCHAR *login, const TCHAR *passwd)
 		result = DoRadiusAuth(login, passwd, useSecondary, server);
 #endif
 	}
-	nxlog_write((result == 0) ? MSG_RADIUS_AUTH_SUCCESS : MSG_RADIUS_AUTH_FAILED,
-#ifdef UNICODE
-			NXLOG_INFO, "ss", mbLogin, server);
-#else
-			NXLOG_INFO, "ss", login, server);
-#endif
+	nxlog_write((result == 0) ? MSG_RADIUS_AUTH_SUCCESS : MSG_RADIUS_AUTH_FAILED, NXLOG_INFO, "ss", login, server);
 	return result == 0;
 }

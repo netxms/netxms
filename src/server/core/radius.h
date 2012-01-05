@@ -26,9 +26,9 @@
 #ifndef _RADIUS_H_
 #define _RADIUS_H_
 
-#define AUTH_VECTOR_LEN		16
-#define AUTH_PASS_LEN		16
-#define AUTH_STRING_LEN		254	/* 253 max + trailing zero */
+#define AUTH_VECTOR_LEN			16
+#define AUTH_PASS_LEN			128
+#define AUTH_STRING_LEN			254	/* 253 max + trailing zero */
 
 typedef struct pw_auth_hdr {
 	BYTE		code;

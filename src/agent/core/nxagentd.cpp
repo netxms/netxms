@@ -1118,9 +1118,9 @@ void Shutdown()
 // Common Main()
 //
 
-void Main(void)
+void Main()
 {
-   nxlog_write(MSG_AGENT_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
+   nxlog_write(MSG_AGENT_STARTED, NXLOG_INFO, NULL);
 
    if (g_dwFlags & AF_DAEMON)
    {

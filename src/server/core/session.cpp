@@ -583,7 +583,9 @@ void ClientSession::writeThread()
       if (pRawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      DebugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
+		if (ntohs(pRawMsg->wCode) != CMD_ADM_MESSAGE)
+			DebugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
+
       if (m_pCtx != NULL)
       {
          pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
@@ -1340,7 +1342,9 @@ void ClientSession::sendMessage(CSCPMessage *msg)
    TCHAR szBuffer[128];
    BOOL bResult;
 
-	DebugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
+	if (msg->GetCode() != CMD_ADM_MESSAGE)
+		DebugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
+
 	CSCP_MESSAGE *pRawMsg = msg->CreateMessage();
    if (m_pCtx != NULL)
    {
