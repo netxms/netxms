@@ -462,7 +462,7 @@ public:
 	void disconnect();
 
 	bool canRead(DWORD timeout);
-	int read(char *pBuff, int nSize);
+	int read(char *pBuff, int nSize, DWORD timeout = INFINITE);
 	bool waitForText(const char *text, int timeout);
 	
 	int write(const char *pBuff, int nSize);

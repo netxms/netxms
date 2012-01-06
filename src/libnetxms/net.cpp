@@ -113,9 +113,9 @@ bool SocketConnection::canRead(DWORD timeout)
 /**
  * Read data from socket
  */
-int SocketConnection::read(char *pBuff, int nSize)
+int SocketConnection::read(char *pBuff, int nSize, DWORD timeout)
 {
-	return RecvEx(m_socket, pBuff, nSize, 0, INFINITE);
+	return RecvEx(m_socket, pBuff, nSize, 0, timeout);
 }
 
 /**
