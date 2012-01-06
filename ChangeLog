@@ -7,12 +7,14 @@
 - Changes and improvements in Java console:
 	- Implemented embedded web page element type in dashboards
 	- Implemented alarm viewer element type in dashboards
+	- Dashboard cloning
 	- Syslog monitor
 	- Event monitor
 	- Implemented status calculation/propagation object property page
 	- Execution of "local command" type tools improved
 	- Dial charts improved
 	- Fixed object selection bug in network maps
+	- Implemented agent package management and deployment
 - Added common driver for Cisco Catalyst switches with CISCO-STACK-MIB support
 - Implemented event identification by name in sendEvent API
 - RADIUS authentication now supports passwords up to 128 characters long 

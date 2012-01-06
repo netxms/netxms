@@ -205,7 +205,8 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	@Override
 	public Color getForeground(Object element, int columnIndex)
 	{
-		return (((DciValue)element).getActiveThreshold() != null) ? StatusDisplayInfo.getStatusColor(Severity.MAJOR) : null;
+		return null;
+		//return (((DciValue)element).getActiveThreshold() != null) ? StatusDisplayInfo.getStatusColor(Severity.MAJOR) : null;
 	}
 
 	/* (non-Javadoc)
