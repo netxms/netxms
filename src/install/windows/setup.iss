@@ -13,3 +13,4 @@ LicenseFile=..\..\..\GPL.txt
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
+
