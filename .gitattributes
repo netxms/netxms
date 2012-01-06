@@ -324,10 +324,6 @@ src/install/windows/common.iss -text
 src/install/windows/files-x64/Microsoft.VC80.CRT/msvcm80.dll -text
 src/install/windows/files-x64/Microsoft.VC80.CRT/msvcp80.dll -text
 src/install/windows/files-x64/Microsoft.VC80.CRT/msvcr80.dll -text
-src/install/windows/files-x64/Microsoft.VC80.MFC/mfc80.dll -text
-src/install/windows/files-x64/Microsoft.VC80.MFC/mfc80u.dll -text
-src/install/windows/files-x64/Microsoft.VC80.MFC/mfcm80.dll -text
-src/install/windows/files-x64/Microsoft.VC80.MFC/mfcm80u.dll -text
 src/install/windows/files-x64/libeay32.dll -text
 src/install/windows/files-x64/libintl.dll -text
 src/install/windows/files-x64/libmysql.dll -text
@@ -336,13 +332,7 @@ src/install/windows/files-x64/oci.dll -text
 src/install/windows/files-x64/oraociei11.dll -text
 src/install/windows/files-x64/sqlncli.msi -text
 src/install/windows/files-x64/ssleay32.dll -text
-src/install/windows/files/Microsoft.VC80.CRT/msvcm80.dll -text
-src/install/windows/files/Microsoft.VC80.CRT/msvcp80.dll -text
-src/install/windows/files/Microsoft.VC80.CRT/msvcr80.dll -text
-src/install/windows/files/Microsoft.VC80.MFC/mfc80.dll -text
-src/install/windows/files/Microsoft.VC80.MFC/mfc80u.dll -text
-src/install/windows/files/Microsoft.VC80.MFC/mfcm80.dll -text
-src/install/windows/files/Microsoft.VC80.MFC/mfcm80u.dll -text
+src/install/windows/files-x64/vcredist_x64.exe -text
 src/install/windows/files/dbghelp.dll -text
 src/install/windows/files/libeay32.dll -text
 src/install/windows/files/libiconv-2.dll -text
@@ -353,6 +343,7 @@ src/install/windows/files/oci.dll -text
 src/install/windows/files/oraociei11.dll -text
 src/install/windows/files/sqlncli.msi -text
 src/install/windows/files/ssleay32.dll -text
+src/install/windows/files/vcredist_x86.exe -text
 src/install/windows/netxms-x64.iss -text
 src/install/windows/setup.iss -text
 src/java/eclipse_addons.txt -text
