@@ -195,5 +195,6 @@ Source: "Files-x64\vcredist_x64.exe"; DestDir: "{app}\var"; DestName: "vcredist.
 Source: "Files\rm.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: base
 Source: "Files-x64\sqlncli.msi"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: server\mssql
 
+#include "icons.iss"
 #include "common.iss"
 

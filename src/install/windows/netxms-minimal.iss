@@ -2,19 +2,13 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #include "setup.iss"
-OutputBaseFilename=netxms-1.1.8
+OutputBaseFilename=netxms-1.1.8-minimal
 
 [Components]
 Name: "base"; Description: "Base Files"; Types: full compact custom; Flags: fixed
-Name: "console"; Description: "Administrator's Console"; Types: full
 Name: "tools"; Description: "Command Line Tools"; Types: full
 Name: "server"; Description: "NetXMS Server"; Types: full compact
-Name: "server\mssql"; Description: "Microsoft SQL Server 2008 Native Client"; Types: full
-Name: "server\mysql"; Description: "MySQL Client Library"; Types: full
-Name: "server\pgsql"; Description: "PostgreSQL Client Library"; Types: full
-Name: "server\oracle"; Description: "Oracle Instant Client"; Types: full
 Name: "websrv"; Description: "Web Server"; Types: full
-Name: "jre"; Description: "Java Runtime Environment"; Types: full
 Name: "pdb"; Description: "Install PDB files for selected components"; Types: custom
 
 [Tasks]
@@ -37,17 +31,17 @@ Source: "..\..\..\Release\nxzlib.pdb"; DestDir: "{app}\bin"; Flags: ignoreversio
 ; Executables and DLLs shared between different components (server, console, etc.)
 Source: "..\..\..\Release\libnxcl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools websrv
 Source: "..\..\..\Release\libnxcl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (tools or websrv) and pdb
-Source: "..\..\..\Release\libnxclw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console tools
-Source: "..\..\..\Release\libnxclw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (console or tools) and pdb
+Source: "..\..\..\Release\libnxclw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
+Source: "..\..\..\Release\libnxclw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools and pdb
 Source: "..\..\..\Release\libnxmap.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server tools websrv
 Source: "..\..\..\Release\libnxmap.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (server or tools or websrv) and pdb
-Source: "..\..\..\Release\libnxmapw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console server
-Source: "..\..\..\Release\libnxmapw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (console or server) and pdb
-Source: "..\..\..\Release\libnxsnmpw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
-Source: "..\..\..\Release\libnxsnmpw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (server or console) and pdb
-Source: "..\..\..\Release\libnxsl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
-Source: "..\..\..\Release\libnxsl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (server or console) and pdb
-Source: "..\..\..\Release\nxscript.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
+Source: "..\..\..\Release\libnxmapw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\Release\libnxmapw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\Release\libnxsnmpw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\Release\libnxsnmpw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\Release\libnxsl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\Release\libnxsl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\Release\nxscript.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\Release\nxconfig.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server websrv
 ; Server files
 Source: "..\..\..\Release\nxsqlite.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
@@ -147,22 +141,6 @@ Source: "..\..\..\contrib\netxmsd.conf-dist"; DestDir: "{app}\etc"; Flags: ignor
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
 Source: "..\..\..\images\*"; DestDir: "{app}\var\images"; Flags: ignoreversion; Components: server
 Source: "..\..\java\report-generator\target\report-generator.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server
-; Console files
-Source: "..\..\..\Release\scilexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
-Source: "..\..\..\Release\scilexer.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
-Source: "..\..\..\Release\libnxsnmpw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
-Source: "..\..\..\Release\libnxsnmpw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
-Source: "..\..\..\Release\nxuilib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
-Source: "..\..\..\Release\nxuilib.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
-Source: "..\..\..\Release\nxlexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
-Source: "..\..\..\Release\nxlexer.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
-Source: "..\..\..\Release\nxcon.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
-Source: "..\..\..\Release\nxcon.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
-Source: "..\..\..\Release\nxav.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
-Source: "..\..\..\Release\nxav.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
-Source: "..\..\..\Release\nxnotify.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
-Source: "..\..\..\Release\nxnotify.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
-Source: "..\..\java\build\win32.win32.x86\nxmc\*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs; Components: console
 ; Command-line tools files
 Source: "..\..\..\Release\nxalarm.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 Source: "..\..\..\Release\nxsms.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
@@ -182,21 +160,11 @@ Source: "..\..\webui\nxhttpd\static\images\ctrlpanel\*.png"; DestDir: "{app}\var
 Source: "..\..\webui\nxhttpd\static\images\objects\*.png"; DestDir: "{app}\var\www\images\objects"; Flags: ignoreversion; Components: websrv
 Source: "..\..\webui\nxhttpd\static\images\status\*.png"; DestDir: "{app}\var\www\images\status"; Flags: ignoreversion; Components: websrv
 ; Third party files
-Source: "Files\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
-Source: "Files\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "Files\libintl-8.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "Files\libiconv-2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "Files\oci.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
-Source: "Files\oraociei11.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
-Source: "Files\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
-Source: "Files\jre\*"; DestDir: "{app}\bin\jre"; Flags: ignoreversion recursesubdirs; Components: jre
 ; Install-time files
 Source: "Files\vcredist_x86.exe"; DestDir: "{app}\var"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall; Components: base
 Source: "Files\rm.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: base
-Source: "Files\sqlncli.msi"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: server\mssql
 
-#include "icons.iss"
-#include "run-full.iss"
+#include "icons-minimal.iss"
 #include "common.iss"
 

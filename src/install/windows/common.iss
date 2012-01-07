@@ -1,16 +1,3 @@
-
-[Icons]
-Name: "{group}\Alarm Notifier"; Filename: "{app}\bin\nxnotify.exe"; Components: console
-Name: "{group}\Alarm Viewer"; Filename: "{app}\bin\nxav.exe"; Components: console
-Name: "{group}\NetXMS Console"; Filename: "{app}\bin\nxmc.exe"; Components: console
-Name: "{group}\Legacy NetXMS Console"; Filename: "{app}\bin\nxcon.exe"; Components: console
-Name: "{group}\Recompile MIB Files"; Filename: "{app}\bin\nxmibc.exe"; Parameters: "-P -z -d ""{app}\var\mibs"" -o ""{app}\var\mibs\netxms.mib"""; Components: console
-Name: "{group}\Server Configuration Wizard"; Filename: "{app}\bin\nxconfig.exe"; Components: server
-Name: "{group}\Server Console"; Filename: "{app}\bin\nxadm.exe"; Parameters: "-i"; Components: server
-Name: "{group}\{cm:UninstallProgram,NetXMS}"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\NetXMS Console"; Filename: "{app}\bin\nxmc.exe"; Tasks: desktopicon; Components: console
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\NetXMS Console"; Filename: "{app}\bin\nxmc.exe"; Tasks: quicklaunchicon; Components: console
-
 [Dirs]
 Name: "{app}\etc"
 Name: "{app}\database"
@@ -30,7 +17,6 @@ Filename: "{app}\var\rm.exe"; Parameters: "-f {app}\bin\*.manifest"; WorkingDir:
 Filename: "{app}\var\rm.exe"; Parameters: "-rf {app}\bin\Microsoft.VC80.*"; WorkingDir: "{app}\var"; StatusMsg: "Removing old CRT files..."; Flags: runhidden
 Filename: "{app}\var\rm.exe"; Parameters: "-rf {app}\lib\ndd\Microsoft.VC80.CRT"; WorkingDir: "{app}\var"; StatusMsg: "Removing old CRT files..."; Flags: runhidden
 Filename: "{app}\var\vcredist.exe"; WorkingDir: "{app}\var"; StatusMsg: "Installing Visual C++ runtime..."; Flags: waituntilterminated
-Filename: "msiexec.exe"; Parameters: "/i {app}\var\sqlncli.msi"; WorkingDir: "{app}\bin"; StatusMsg: "Installing Microsoft SQL Native Client..."; Flags: waituntilterminated; Components: server\mssql
 Filename: "{app}\bin\nxmibc.exe"; Parameters: "-z -d ""{app}\var\mibs"" -o ""{app}\var\mibs\netxms.mib"""; WorkingDir: "{app}\bin"; StatusMsg: "Compiling MIB files..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxconfig.exe"; Parameters: "--create-agent-config"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's configuration file..."; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing agent service..."; Flags: runhidden; Components: server
@@ -42,7 +28,6 @@ Filename: "{app}\bin\netxmsd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; St
 Filename: "{app}\bin\nxconfig.exe"; Parameters: "--create-nxhttpd-config {code:GetMasterServer}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating web server's configuration file..."; Components: websrv
 Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-c ""{app}\etc\nxhttpd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing web server service..."; Flags: runhidden; Components: websrv
 Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting web server service..."; Flags: runhidden; Components: websrv
-Filename: "{app}\bin\nxmc.exe"; Parameters: "-clean -initialize"; WorkingDir: "{app}\bin"; StatusMsg: "Initializing management console..."; Flags: waituntilterminated; Components: console
 
 [UninstallRun]
 Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-S"; StatusMsg: "Stopping web server service..."; RunOnceId: "StopWebService"; Flags: runhidden; Components: websrv
