@@ -6,5 +6,6 @@
 	<classpathentry kind="lib" path="jar/netxms-base-1.1.8.jar"/>
 	<classpathentry kind="lib" path="jar/netxms-client-1.1.8.jar"/>
 	<classpathentry kind="lib" path="jar/netxms-client-api-1.1.8.jar"/>
+	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
