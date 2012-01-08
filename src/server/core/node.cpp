@@ -198,14 +198,6 @@ BOOL Node::CreateFromDB(DWORD dwId)
       return FALSE;
    }
 
-   _sntprintf(query, 1024, _T("SELECT primary_name,primary_ip,node_flags,")
-                           _T("snmp_version,auth_method,secret,")
-                           _T("agent_port,status_poll_type,snmp_oid,agent_version,")
-                           _T("platform_name,poller_node_id,zone_guid,")
-                           _T("proxy_node,snmp_proxy,required_polls,uname,")
-									_T("use_ifxtable,snmp_port,community,usm_auth_password,")
-									_T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
-	                        _T("runtime_flags FROM nodes WHERE id=%d"), dwId);
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, 
 		_T("SELECT primary_name,primary_ip,node_flags,")
       _T("snmp_version,auth_method,secret,")
@@ -220,13 +212,16 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
 	hResult = DBSelectPrepared(hStmt);
-	DBFreeStatement(hStmt);
    if (hResult == NULL)
+	{
+		DBFreeStatement(hStmt);
       return FALSE;     // Query failed
+	}
 
    if (DBGetNumRows(hResult) == 0)
    {
       DBFreeResult(hResult);
+		DBFreeStatement(hStmt);
       DbgPrintf(2, _T("Missing record in \"nodes\" table for node object %d"), dwId);
       return FALSE;
    }
@@ -272,6 +267,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 	m_dwDynamicFlags &= ~NDF_PERSISTENT;	// Clear out all non-persistent runtime flags
 
    DBFreeResult(hResult);
+	DBFreeStatement(hStmt);
 
    if (!m_bIsDeleted)
    {

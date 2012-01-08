@@ -634,6 +634,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(MYSQL_RESULT *hResult, int iRow, int iC
 		{
 			mysql_stmt_data_seek(hResult->statement, iRow);
 			mysql_stmt_fetch(hResult->statement);
+			hResult->currentRow = iRow;
 		}
 		return (LONG)hResult->lengthFields[iColumn];
 	}
@@ -668,6 +669,7 @@ extern "C" WCHAR EXPORT *DrvGetField(MYSQL_RESULT *hResult, int iRow, int iColum
 		{
 			mysql_stmt_data_seek(hResult->statement, iRow);
 			mysql_stmt_fetch(hResult->statement);
+			hResult->currentRow = iRow;
 		}
 
 		memset(&b, 0, sizeof(MYSQL_BIND));
