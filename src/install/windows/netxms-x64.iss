@@ -196,5 +196,6 @@ Source: "Files\rm.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterin
 Source: "Files-x64\sqlncli.msi"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: server\mssql
 
 #include "icons.iss"
+#include "run-full.iss"
 #include "common.iss"
 

@@ -217,7 +217,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 				{
 					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
 					DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
-					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, rq->value, DB_BIND_STATIC);
+					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, rq->value, DB_BIND_STATIC);
 					success = DBExecute(hStmt);
 					DBFreeStatement(hStmt);
 				}
