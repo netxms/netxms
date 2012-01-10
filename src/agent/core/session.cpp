@@ -139,7 +139,7 @@ CommSession::~CommSession()
    safe_free(m_pMsgBuffer);
    if (m_hCurrFile != -1)
       close(m_hCurrFile);
-	if (m_pCtx != NULL)
+	if ((m_pCtx != NULL) && (m_pCtx != PROXY_ENCRYPTION_CTX))
 		m_pCtx->decRefCount();
 	MutexDestroy(m_socketWriteMutex);
 }
