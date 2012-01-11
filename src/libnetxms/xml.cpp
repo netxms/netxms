@@ -24,7 +24,7 @@
 
 
 //
-// ! Encode string for XML
+// Encode string for XML
 //
 
 TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length)
