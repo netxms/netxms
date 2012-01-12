@@ -18,12 +18,17 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.views;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 
 /**
@@ -35,6 +40,7 @@ public class AlarmBrowser extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.view.alarm_browser"; //$NON-NLS-1$
 	
 	private AlarmList alarmView;
+	private Action actionRefresh;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -53,7 +59,56 @@ public class AlarmBrowser extends ViewPart
 		fd.bottom = new FormAttachment(100, 0);
 		alarmView.setLayoutData(fd);
 		
+		createActions();
+		contributeToActionBars();
+		
 		getSite().setSelectionProvider(alarmView.getSelectionProvider());
+	}
+
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionRefresh = new RefreshAction() {
+			@Override
+			public void run()
+			{
+				alarmView.refresh();
+			}
+		};
+	}
+	
+	/**
+	 * Contribute actions to action bar
+	 */
+	private void contributeToActionBars()
+	{
+		IActionBars bars = getViewSite().getActionBars();
+		fillLocalPullDown(bars.getMenuManager());
+		fillLocalToolBar(bars.getToolBarManager());
+	}
+
+	/**
+	 * Fill local pull-down menu
+	 * 
+	 * @param manager
+	 *           Menu manager for pull-down menu
+	 */
+	private void fillLocalPullDown(IMenuManager manager)
+	{
+		manager.add(actionRefresh);
+	}
+
+	/**
+	 * Fill local tool bar
+	 * 
+	 * @param manager
+	 *           Menu manager for local toolbar
+	 */
+	private void fillLocalToolBar(IToolBarManager manager)
+	{
+		manager.add(actionRefresh);
 	}
 
 	/* (non-Javadoc)

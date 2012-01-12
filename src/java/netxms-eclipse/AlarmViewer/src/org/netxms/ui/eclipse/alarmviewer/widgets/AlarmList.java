@@ -124,37 +124,9 @@ public class AlarmList extends Composite
 				alarmViewer.getControl().setBounds(AlarmList.this.getClientArea());
 			}
 		});
-
-		// Request alarm list from server
-		new ConsoleJob(Messages.AlarmList_SyncJobName, viewPart, Activator.PLUGIN_ID, JOB_FAMILY) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				final HashMap<Long, Alarm> list = session.getAlarms(false);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						if (!alarmViewer.getControl().isDisposed())
-						{
-							synchronized(alarmList)
-							{
-								alarmList.clear();
-								alarmList.putAll(list);
-								alarmViewer.setInput(alarmList.values());
-							}
-						}
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.AlarmList_SyncJobError;
-			}
-		}.start();
 		
+		refresh();
+
 		// Add client library listener
 		clientListener = new NXCListener() {
 			@Override
@@ -327,5 +299,40 @@ public class AlarmList extends Composite
 		{
 			alarmViewer.refresh();
 		}
+	}
+
+	/**
+	 * Refresh alarm list
+	 */
+	public void refresh()
+	{
+		new ConsoleJob(Messages.AlarmList_SyncJobName, viewPart, Activator.PLUGIN_ID, JOB_FAMILY) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final HashMap<Long, Alarm> list = session.getAlarms(false);
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						if (!alarmViewer.getControl().isDisposed())
+						{
+							synchronized(alarmList)
+							{
+								alarmList.clear();
+								alarmList.putAll(list);
+								alarmViewer.setInput(alarmList.values());
+							}
+						}
+					}
+				});
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return Messages.AlarmList_SyncJobError;
+			}
+		}.start();
 	}
 }

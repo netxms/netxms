@@ -57,6 +57,15 @@ public class AlarmTab extends ObjectTab
 	}
 
 	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
+	 */
+	@Override
+	public void refresh()
+	{
+		alarmList.refresh();
+	}
+
+	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#getSelectionProvider()
 	 */
 	@Override
