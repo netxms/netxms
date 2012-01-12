@@ -111,7 +111,7 @@ DWORD UninstallPackage(DWORD dwPkgId)
          _tcscat(szFileName, DDIR_PACKAGES);
          _tcscat(szFileName, FS_PATH_SEPARATOR);
          _tcscat(szFileName, CHECK_NULL_EX(DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING)));
-         if (_tunlink(szFileName) == 0)
+         if ((_taccess(szFilename, 0) == -1) || (_tunlink(szFileName) == 0))
          {
             // Delete record from database
             _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);

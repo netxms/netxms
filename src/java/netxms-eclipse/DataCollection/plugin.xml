@@ -123,6 +123,19 @@
                menubarPath="datacollection">
          </action>
       </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.Cluster"
+            objectClass="org.netxms.client.objects.Cluster">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
+               enablesFor="1"
+               icon="icons/dc_editor.png"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#Cluster"
+               label="Data Collection Configuration"
+               menubarPath="datacollection">
+         </action>
+      </objectContribution>
    </extension>
 
   <extension

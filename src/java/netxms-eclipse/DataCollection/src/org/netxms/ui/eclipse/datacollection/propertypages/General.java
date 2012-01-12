@@ -18,6 +18,9 @@
  */
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
@@ -38,7 +41,11 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.ClusterResource;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
@@ -49,6 +56,7 @@ import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.NumericTextFieldValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -72,6 +80,8 @@ public class General extends PropertyPage
 	};
 	
 	private DataCollectionItem dci;
+	private GenericObject owner;
+	private Map<Integer, Long> clusterResourceMap;
 	private Text description;
 	private LabeledText parameter;
 	private Button selectButton;
@@ -97,6 +107,9 @@ public class General extends PropertyPage
 	protected Control createContents(Composite parent)
 	{		
 		dci = (DataCollectionItem)getElement().getAdapter(DataCollectionItem.class);
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		owner = session.findObjectById(dci.getNodeId());
+		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
@@ -341,9 +354,31 @@ public class General extends PropertyPage
       fd.right = new FormAttachment(100, 0);
       fd.top = new FormAttachment(schedulingMode.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       clusterResource = WidgetHelper.createLabeledCombo(groupPolling, SWT.READ_ONLY, "Associate with cluster resource", fd);
-      clusterResource.add("<none>");
-      clusterResource.select(0);
-      clusterResource.setEnabled(dci.getResourceId() != 0);
+      if (owner instanceof Cluster)
+      {
+      	clusterResourceMap = new HashMap<Integer, Long>();
+      	clusterResourceMap.put(0, 0L);
+      	
+	      clusterResource.add("<none>");
+	      if (dci.getResourceId() == 0)
+	      	clusterResource.select(0);
+	      
+	      int index = 1;
+	      for (ClusterResource r : ((Cluster)owner).getResources())
+	      {
+	      	clusterResource.add(r.getName());
+	      	clusterResourceMap.put(index, r.getId());
+		      if (dci.getResourceId() == r.getId())
+		      	clusterResource.select(index);
+	      	index++;
+	      }
+      }
+      else
+      {
+	      clusterResource.add("<none>");
+	      clusterResource.select(0);
+	      clusterResource.setEnabled(false);
+      }
       	
       /** status **/
       Group groupStatus = new Group(dialogArea, SWT.NONE);
@@ -485,6 +520,11 @@ public class General extends PropertyPage
 			dci.setStatus(DataCollectionItem.DISABLED);
 		else if (statusUnsupported.getSelection())
 			dci.setStatus(DataCollectionItem.NOT_SUPPORTED);
+		
+		if (owner instanceof Cluster)
+		{
+			dci.setResourceId(clusterResourceMap.get(clusterResource.getSelectionIndex()));
+		}
 
 		new ConsoleJob("Update general settings for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
 			@Override

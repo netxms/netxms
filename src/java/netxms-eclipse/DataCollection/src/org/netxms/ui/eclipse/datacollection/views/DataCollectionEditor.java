@@ -60,6 +60,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Template;
@@ -125,7 +126,7 @@ public class DataCollectionEditor extends ViewPart
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		GenericObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
-		object = ((obj != null) && ((obj instanceof Node) || (obj instanceof Template))) ? obj : null;
+		object = ((obj != null) && ((obj instanceof Node) || (obj instanceof Template) || (obj instanceof Cluster))) ? obj : null;
 		setPartName("Data Collection Configuration - " + ((object != null) ? object.getObjectName() : "<error>"));
 	}
 

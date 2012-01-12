@@ -167,12 +167,16 @@ public class NodePolling extends PropertyPage
 	 */
 	private int collectNodeFlags()
 	{
-		int flags = 0;
+		int flags = object.getFlags();
 		for(int i = 0; i < flagButtons.size(); i++)
 		{
 			if (flagButtons.get(i).getSelection())
 			{
 				flags |= flagValues.get(i);
+			}
+			else
+			{
+				flags &= ~flagValues.get(i);
 			}
 		}
 		return flags;

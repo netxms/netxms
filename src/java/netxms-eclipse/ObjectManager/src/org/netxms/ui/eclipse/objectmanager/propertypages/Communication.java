@@ -140,6 +140,7 @@ public class Communication extends PropertyPage
 
 		agentForceEncryption = new Button(agentGroup, SWT.CHECK);
 		agentForceEncryption.setText("Force encryption");
+		agentForceEncryption.setSelection((node.getFlags() & Node.NF_FORCE_ENCRYPTION) != 0);
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(agentPort, 0, SWT.BOTTOM);
@@ -384,6 +385,14 @@ public class Communication extends PropertyPage
 		md.setSnmpAuthName(snmpAuthName.getText());
 		md.setSnmpAuthPassword(snmpAuthPassword.getText());
 		md.setSnmpPrivPassword(snmpPrivPassword.getText());
+		
+		/* TODO: sync in some way with "Polling" page */
+		int flags = node.getFlags();
+		if (agentForceEncryption.getSelection())
+			flags |= Node.NF_FORCE_ENCRYPTION;
+		else
+			flags &= ~Node.NF_FORCE_ENCRYPTION;
+		md.setNodeFlags(flags);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Update communication settings for node " + node.getObjectName(), null, Activator.PLUGIN_ID, null) {
