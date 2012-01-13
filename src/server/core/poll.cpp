@@ -718,30 +718,35 @@ static void QueueForPolling(NetObj *object, void *data)
 				{
 					node->IncRefCount();
 					node->lockForConfigurationPoll();
+					DbgPrintf(6, _T("Node %d \"%s\" queued for configuration poll"), (int)node->Id(), node->Name());
 					g_configPollQueue.Put(node);
 				}
 				if (node->isReadyForStatusPoll())
 				{
 					node->IncRefCount();
 					node->lockForStatusPoll();
+					DbgPrintf(6, _T("Node %d \"%s\" queued for status poll"), (int)node->Id(), node->Name());
 					g_statusPollQueue.Put(node);
 				}
 				if (node->isReadyForRoutePoll())
 				{
 					node->IncRefCount();
 					node->lockForRoutePoll();
+					DbgPrintf(6, _T("Node %d \"%s\" queued for routing table poll"), (int)node->Id(), node->Name());
 					g_routePollQueue.Put(node);
 				}
 				if (node->isReadyForDiscoveryPoll())
 				{
 					node->IncRefCount();
 					node->lockForDiscoveryPoll();
+					DbgPrintf(6, _T("Node %d \"%s\" queued for discovery poll"), (int)node->Id(), node->Name());
 					g_discoveryPollQueue.Put(node);
 				}
 				if (node->isReadyForTopologyPoll())
 				{
 					node->IncRefCount();
 					node->lockForTopologyPoll();
+					DbgPrintf(6, _T("Node %d \"%s\" queued for topology poll"), (int)node->Id(), node->Name());
 					g_topologyPollQueue.Put(node);
 				}
 			}
@@ -752,6 +757,7 @@ static void QueueForPolling(NetObj *object, void *data)
 				if (cond->ReadyForPoll())
 				{
 					cond->LockForPoll();
+					DbgPrintf(6, _T("Condition %d \"%s\" queued for poll"), (int)object->Id(), object->Name());
 					g_conditionPollerQueue.Put(cond);
 				}
 			}
@@ -763,6 +769,7 @@ static void QueueForPolling(NetObj *object, void *data)
 				{
 					cluster->IncRefCount();
 					cluster->lockForStatusPoll();
+					DbgPrintf(6, _T("Cluster %d \"%s\" queued for status poll"), (int)cluster->Id(), cluster->Name());
 					g_statusPollQueue.Put(cluster);
 				}
 			}
@@ -774,6 +781,7 @@ static void QueueForPolling(NetObj *object, void *data)
 				{
 					service->IncRefCount();
 					service->lockForPolling();
+					DbgPrintf(6, _T("Business service %d \"%s\" queued for poll"), (int)object->Id(), object->Name());
 					g_businessServicePollerQueue.Put(service);
 				}
 			}

@@ -988,6 +988,7 @@ inline bool Node::isReadyForRoutePoll()
 	       (!(m_dwFlags & NF_DISABLE_ROUTE_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
+          (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
           ((DWORD)time(NULL) - (DWORD)m_tLastRTUpdate > g_dwRoutingTableUpdateInterval);
 }
 
@@ -999,6 +1000,7 @@ inline bool Node::isReadyForTopologyPoll()
 	       (!(m_dwFlags & NF_DISABLE_TOPOLOGY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_TOPOLOGY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
+          (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
           ((DWORD)time(NULL) - (DWORD)m_tLastTopologyPoll > g_dwTopologyPollingInterval);
 }
 

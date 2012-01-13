@@ -47,6 +47,7 @@ Node::Node() : Template()
    m_tLastDiscoveryPoll = 0;
    m_tLastStatusPoll = 0;
    m_tLastConfigurationPoll = 0;
+	m_tLastTopologyPoll = 0;
    m_tLastRTUpdate = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
@@ -111,6 +112,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
    m_tLastDiscoveryPoll = 0;
    m_tLastStatusPoll = 0;
    m_tLastConfigurationPoll = 0;
+	m_tLastTopologyPoll = 0;
    m_tLastRTUpdate = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
@@ -264,7 +266,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 		StrToBin(value, m_baseBridgeAddress, MAC_ADDR_LENGTH);
 
 	m_dwDynamicFlags = DBGetFieldULong(hResult, 0, 25);
-	m_dwDynamicFlags &= ~NDF_PERSISTENT;	// Clear out all non-persistent runtime flags
+	m_dwDynamicFlags &= NDF_PERSISTENT;	// Clear out all non-persistent runtime flags
 
    DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
