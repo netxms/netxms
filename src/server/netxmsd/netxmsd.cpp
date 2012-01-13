@@ -338,8 +338,7 @@ int main(int argc, char *argv[])
 
    // Check for alternate config file location
 #ifdef _WIN32
-   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0,
-                    KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
    {
       dwSize = MAX_PATH * sizeof(TCHAR);
       RegQueryValueEx(hKey, _T("ConfigFile"), NULL, NULL, (BYTE *)g_szConfigFile, &dwSize);

@@ -1316,6 +1316,7 @@ int main(int argc, char *argv[])
    {
       dwSize = MAX_PATH * sizeof(TCHAR);
       RegQueryValueEx(hKey, _T("ConfigFile"), NULL, NULL, (BYTE *)g_szConfigFile, &dwSize);
+      dwSize = MAX_PATH * sizeof(TCHAR);
       RegQueryValueEx(hKey, _T("ConfigIncludeDir"), NULL, NULL, (BYTE *)g_szConfigIncludeDir, &dwSize);
       RegCloseKey(hKey);
    }
