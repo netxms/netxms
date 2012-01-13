@@ -30,9 +30,9 @@
 
 #define NETXMS_VERSION_MAJOR        1
 #define NETXMS_VERSION_MINOR        1
-#define NETXMS_VERSION_BUILD        8
+#define NETXMS_VERSION_BUILD        9
 #define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("1.1.8")
+#define NETXMS_VERSION_STRING       _T("1.1.9")
 
 
 //
