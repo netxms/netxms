@@ -4108,7 +4108,7 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
           (pChild->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
       {
          // Parent object should be container or service root,
-			// or template group/root for templates
+			// or template group/root for templates and template groups
          // For unbind, it can also be template or cluster
          if ((pParent->Type() == OBJECT_CONTAINER) ||
              (pParent->Type() == OBJECT_SERVICEROOT) ||
@@ -4116,6 +4116,8 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
              ((pParent->Type() == OBJECT_CLUSTER) && (!bBind)) ||
 				 ((pParent->Type() == OBJECT_TEMPLATEGROUP) && (pChild->Type() == OBJECT_TEMPLATE)) ||
 				 ((pParent->Type() == OBJECT_TEMPLATEROOT) && (pChild->Type() == OBJECT_TEMPLATE)) ||
+				 ((pParent->Type() == OBJECT_TEMPLATEGROUP) && (pChild->Type() == OBJECT_TEMPLATEGROUP)) ||
+				 ((pParent->Type() == OBJECT_TEMPLATEROOT) && (pChild->Type() == OBJECT_TEMPLATEGROUP)) ||
 				 ((pParent->Type() == OBJECT_BUSINESSSERVICE) && (pChild->Type() == OBJECT_BUSINESSSERVICE)) ||
 				 ((pParent->Type() == OBJECT_BUSINESSSERVICEROOT) && (pChild->Type() == OBJECT_BUSINESSSERVICE)))
          {

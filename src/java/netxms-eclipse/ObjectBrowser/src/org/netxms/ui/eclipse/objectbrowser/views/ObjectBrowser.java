@@ -58,6 +58,9 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Template;
+import org.netxms.client.objects.TemplateGroup;
+import org.netxms.client.objects.TemplateRoot;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
@@ -80,6 +83,7 @@ public class ObjectBrowser extends ViewPart
 	private Action actionHideUnmanaged;
 	private Action actionHideTemplateChecks;
 	private Action actionMoveObject;
+	private Action actionMoveTemplate;
 	private Action actionMoveBusinessService;
 	private Action actionRefresh;
 	private Action actionProperties;
@@ -205,6 +209,14 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
+		actionMoveTemplate = new Action("&Move to another group") {
+			@Override
+			public void run()
+			{
+				moveObject(SubtreeType.TEMPLATES);
+			}
+		};
+		
 		actionMoveBusinessService = new Action("&Move to another service") {
 			@Override
 			public void run()
@@ -312,6 +324,8 @@ public class ObjectBrowser extends ViewPart
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
 		if (isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
 			manager.add(actionMoveObject);
+		if (isValidSelectionForMove(SubtreeType.TEMPLATES))
+			manager.add(actionMoveTemplate);
 		if (isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
 			manager.add(actionMoveBusinessService);
 		manager.add(new Separator());
@@ -370,6 +384,11 @@ public class ObjectBrowser extends ViewPart
 			         (currentObject instanceof Container)) &&
 			        ((parentObject instanceof Container) ||
 			         (parentObject instanceof ServiceRoot));
+			case TEMPLATES:
+				return ((currentObject instanceof Template) ||
+			         (currentObject instanceof TemplateGroup)) &&
+			        ((parentObject instanceof TemplateGroup) ||
+			         (parentObject instanceof TemplateRoot));
 			case BUSINESS_SERVICES:
 				return (currentObject instanceof BusinessService) &&
 				       ((parentObject instanceof BusinessService) ||
@@ -396,6 +415,9 @@ public class ObjectBrowser extends ViewPart
 		{
 			case INFRASTRUCTURE:
 				filter = ObjectSelectionDialog.createContainerSelectionFilter();
+				break;
+			case TEMPLATES:
+				filter = ObjectSelectionDialog.createTemplateSelectionFilter();
 				break;
 			case BUSINESS_SERVICES:
 				filter = ObjectSelectionDialog.createBusinessServiceSelectionFilter();
