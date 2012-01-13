@@ -330,7 +330,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			final String os = Platform.getOS();
 			if (os.equals(Platform.OS_WIN32))
 			{
-				command = "CMD.EXE /C START " + command;
+				command = "CMD.EXE /C START \"NetXMS\" " + command;
 			}
 			else
 			{
