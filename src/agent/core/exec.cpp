@@ -421,8 +421,8 @@ LONG H_ExternalParameter(const TCHAR *pszCmd, const TCHAR *pszArg, TCHAR *pValue
 		sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 		sa.lpSecurityDescriptor = NULL;
 		sa.bInheritHandle = TRUE;
-		hOutput = CreateFile(szTempFile, GENERIC_READ | GENERIC_WRITE, 0, &sa, 
-									CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
+		hOutput = CreateFile(szTempFile, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		                     &sa, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, NULL);
 		if (hOutput != INVALID_HANDLE_VALUE)
 		{
 			// Fill in process startup info structure
@@ -434,8 +434,7 @@ LONG H_ExternalParameter(const TCHAR *pszCmd, const TCHAR *pszArg, TCHAR *pValue
 			si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
 			// Create new process
-			if (CreateProcess(NULL, pszCmdLine, NULL, NULL, TRUE,
-									CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
+			if (CreateProcess(NULL, pszCmdLine, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
 			{
 				// Wait for process termination and close all handles
 				if (WaitForSingleObject(pi.hProcess, g_dwExecTimeout) == WAIT_OBJECT_0)
