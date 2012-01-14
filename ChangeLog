@@ -1,4 +1,26 @@
 *
+* 1.1.10
+*
+
+
+
+*
+* 1.1.9
+*
+
+- Fixed server crash during startup
+- Fixed failed SQL queries if MS SQL used as backend
+- FIxed "Resource not available" error when trying to view VLANs on a switch
+- Bugfix: data collection configuration not available for cluster objects
+- Bugfix: cannot remove package from list if file does not exist
+- Bugfix: temporary file not deleted after external parameter execution
+- Bugfix: cannot change node's "force encryption" flag from Java console
+- Bugfix: cannot execute local commands with spaces in path
+- Template can be moved between template groups
+- Added "refresh" function to alarm browser in Java console
+
+
+*
 * 1.1.8
 *
 
