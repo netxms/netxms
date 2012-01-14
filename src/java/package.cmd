@@ -18,3 +18,7 @@ copy netxms-client\target\netxms-client-%version%.jar netxms-eclipse\core\jar\
 copy netxms-base\target\netxms-base-%version%.jar ..\..\android\src\console\jar\
 copy netxms-client-api\target\netxms-client-api-%version%.jar ..\..\android\src\console\jar\
 copy netxms-client\target\netxms-client-%version%.jar ..\..\android\src\console\jar\
+
+copy netxms-base\target\netxms-base-%version%.jar ..\..\webui\webapp\Core\jar\
+copy netxms-client-api\target\netxms-client-api-%version%.jar ..\..\webui\webapp\Core\jar\
+copy netxms-client\target\netxms-client-%version%.jar ..\..\webui\webapp\Core\jar\

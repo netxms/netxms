@@ -26,7 +26,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
@@ -137,7 +136,7 @@ public class EventMonitor extends AbstractTraceView implements SessionListener
 	{
 		if (n.getCode() == NXCNotification.NEW_EVENTLOG_RECORD)
 		{
-			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+			runInUIThread(new Runnable() {
 				@Override
 				public void run()
 				{
