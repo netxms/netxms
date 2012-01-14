@@ -35,7 +35,7 @@ public class SharedColors
 	 */
 	public static void init()
 	{
-		Display display = Display.getCurrent();
+		Display display = Display.getDefault();
 		
 		BLACK = new Color(display, 0, 0, 0);
 		RED = new Color(display, 255, 0, 0);

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Geolocation"
+            allowMultiple="true"
+            icon="icons/map.png"
+            class="org.netxms.ui.eclipse.osm.views.LocationMap"
+            id="org.netxms.ui.eclipse.osm.views.LocationMap">
+      </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            class="org.netxms.ui.eclipse.osm.views.WorldMap"
+            icon="icons/map.png"
+            id="org.netxms.ui.eclipse.osm.views.WorldMap"
+            name="World Map"
+            restorable="true">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.osm.actions.popup.object.Node"
+            objectClass="org.netxms.client.objects.Node">
+         <action
+               class="org.netxms.ui.eclipse.osm.actions.OpenLocationMap"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap#Node"
+               label="Geolocation"
+               icon="icons/map.png"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.osm.actions.popup.object.Cluster"
+            objectClass="org.netxms.client.objects.Cluster">
+         <action
+               class="org.netxms.ui.eclipse.osm.actions.OpenLocationMap"
+               enablesFor="1"
+               icon="icons/map.png"
+               id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap#Cluster"
+               label="Geolocation"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.osm.actions.popup.object.Container"
+            objectClass="org.netxms.client.objects.Container">
+         <action
+               class="org.netxms.ui.eclipse.osm.actions.OpenLocationMap"
+               enablesFor="1"
+               icon="icons/map.png"
+               id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap#Container"
+               label="Geolocation"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.startup">
+      <startup
+            class="org.netxms.ui.eclipse.osm.Startup">
+      </startup>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Open world map view"
+            id="org.netxms.ui.eclipse.osm.commands.open_world_map"
+            name="World Map">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.open_world_map"
+            label="World Map"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.osm.actions.OpenWorldMap"
+               definitionId="org.netxms.ui.eclipse.osm.commands.open_world_map"
+               icon="icons/map.png"
+               id="org.netxms.ui.eclipse.osm.actions.open_world_map"
+               label="World Map"
+               menubarPath="view/main"
+               style="push"
+               tooltip="Open World Map view">
+         </action>
+      </actionSet>
+   </extension>
+
+</plugin>

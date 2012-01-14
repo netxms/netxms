@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor"
+            icon="icons/dc_editor.png"
+            id="org.netxms.ui.eclipse.datacollection.view.data_collection_editor"
+            name="Data Collection Configuration"
+            restorable="false">
+      </view>
+      <view
+            name="Last Values"
+            allowMultiple="true"
+            icon="icons/last_values.png"
+            class="org.netxms.ui.eclipse.datacollection.views.LastValues"
+            id="org.netxms.ui.eclipse.datacollection.view.last_values">
+      </view>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.Node"
+            objectClass="org.netxms.client.objects.Node">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#Node"
+               label="Data Collection Configuration"
+               icon="icons/dc_editor.png"
+               menubarPath="datacollection">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.ShowLastValues"
+               enablesFor="1"
+               icon="icons/last_values.png"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues"
+               label="Last values"
+               menubarPath="datacollection">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.Template"
+            objectClass="org.netxms.client.objects.Template">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#Template"
+               label="Data Collection Configuration"
+               icon="icons/dc_editor.png"
+               menubarPath="datacollection">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.RemoveTemplate"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.RemoveTemplate"
+               label="&amp;Remove..."
+               menubarPath="objectbinding"
+               style="push"
+               tooltip="Remove template from node(s)">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.ApplyTemplate"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.ApplyTemplate"
+               label="&amp;Apply..."
+               menubarPath="objectbinding"
+               style="push"
+               tooltip="Apply template to node(s)">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.TemplateRoot"
+            objectClass="org.netxms.client.objects.TemplateRoot">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplateGroup"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplateGroup#TemplateRoot"
+               label="Create template &amp;group..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplate"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplate#TemplateRoot"
+               label="Create &amp;template..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.TemplateGroup"
+            objectClass="org.netxms.client.objects.TemplateGroup">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplateGroup"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplateGroup#TemplateGroup"
+               label="Create template &amp;group..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplate"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplate#TemplateGroup"
+               label="Create &amp;template..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.Interface"
+            objectClass="org.netxms.client.objects.Interface">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.CreateInterfraceDci"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.CreateInterfaceDci#Interface"
+               label="Create data collection items..."
+               menubarPath="datacollection">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.Cluster"
+            objectClass="org.netxms.client.objects.Cluster">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
+               enablesFor="1"
+               icon="icons/dc_editor.png"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#Cluster"
+               label="Data Collection Configuration"
+               menubarPath="datacollection">
+         </action>
+      </objectContribution>
+   </extension>
+
+  <extension
+     point="org.eclipse.ui.propertyPages">
+        <page
+           id="org.netxms.ui.eclipse.datacollection.propertypages.General#0"
+           name="General"
+	       class="org.netxms.ui.eclipse.datacollection.propertypages.General">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.datacollection.DataCollectionItem">
+             </instanceof>
+          </enabledWhen>
+        </page>
+        <page
+           id="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule#10"
+           name="Custom Schedule"
+	       class="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.datacollection.DataCollectionItem">
+             </instanceof>
+          </enabledWhen>
+        </page>
+        <page
+           id="org.netxms.ui.eclipse.datacollection.propertypages.Transformation#20"
+           name="Transformation"
+	       class="org.netxms.ui.eclipse.datacollection.propertypages.Transformation">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.datacollection.DataCollectionItem">
+             </instanceof>
+          </enabledWhen>
+        </page>
+        <page
+           id="org.netxms.ui.eclipse.datacollection.propertypages.Thresholds#30"
+           name="Thresholds"
+	       class="org.netxms.ui.eclipse.datacollection.propertypages.Thresholds">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.datacollection.DataCollectionItem">
+             </instanceof>
+          </enabledWhen>
+        </page>
+   </extension>
+
+  <extension
+     point="org.eclipse.core.runtime.adapters">
+        <factory 
+           class="org.netxms.ui.eclipse.datacollection.DataCollectionAdapterFactory" 
+           adaptableType="org.netxms.client.datacollection.DataCollectionItem">
+          <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
+        </factory>
+  </extension>
+
+   <extension
+         point="org.netxms.ui.eclipse.objectview.tabs">
+      <tab
+            class="org.netxms.ui.eclipse.datacollection.objecttabs.LastValues"
+            icon="icons/last_values.png"
+            name="Last Values"
+            order="20">
+      </tab>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Toggle DCI Filter"
+            id="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
+            name="Toggle DCI Filter">
+         <defaultHandler
+               class="org.netxms.ui.eclipse.datacollection.actions.ToggleDCIFilterHandler">
+            <parameter
+                  name="default"
+                  value="default">
+            </parameter>
+         </defaultHandler>
+         <state
+               class="org.eclipse.jface.commands.ToggleState"
+               id="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter.state">
+         </state>
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
+            contextId="org.netxms.ui.eclipse.datacollection.context.LastValues"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+F2">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.datacollection.context.LastValues"
+            name="Last Values List"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:org.netxms.ui.eclipse.objectview.view.tabbed_object_view?after=additions">
+         <command
+               commandId="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
+               label="Show DCI &amp;filter"
+               style="toggle"
+               tooltip="Show/hide DCI filter">
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="nxmcObjectViewActiveTab">
+                  <instanceof
+                        value="org.netxms.ui.eclipse.datacollection.objecttabs.LastValues">
+                  </instanceof>
+               </with>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.services">
+      <sourceProvider
+            provider="org.netxms.ui.eclipse.objectview.services.SourceProvider">
+         <variable
+               name="nxmcObjectViewActiveTab"
+               priorityLevel="workbench">
+         </variable>
+      </sourceProvider>
+   </extension>
+
+</plugin>

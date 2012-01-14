@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension-point id="org.netxms.ui.eclipse.objectview.tabs" name="Object Tabs" schema="schema/org.netxms.ui.eclipse.objectview.tabs.exsd"/>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Object Details"
+            allowMultiple="false"
+            icon="icons/object_details.png"
+            class="org.netxms.ui.eclipse.objectview.views.TabbedObjectView"
+            id="org.netxms.ui.eclipse.objectview.view.tabbed_object_view">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            name="Object Details"
+            description="Open Object Details"
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.objectview.commands.open_tabbed_object_view">
+      </command>
+   </extension>
+   
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.ui.eclipse.action_set.object_details"
+		   label="Object Details"
+		   visible="true">
+		   <action id="org.netxms.ui.eclipse.objectview.actions.open_tabbed_object_view"
+			   menubarPath="view/primary"
+			   label="Object Details"
+			   tooltip="Open Object Details"
+			   icon="icons/object_details.png"
+			   class="org.netxms.ui.eclipse.objectview.actions.ShowObjectDetailsView"
+			   definitionId="org.netxms.ui.eclipse.objectview.commands.open_tabbed_object_view">
+		   </action>
+	   </actionSet>
+   </extension>
+
+   <extension
+         point="org.netxms.ui.eclipse.objectview.tabs">
+      <tab
+            class="org.netxms.ui.eclipse.objectview.objecttabs.ObjectOverview"
+            icon="icons/overview_tab.gif"
+            name="Overview"
+            order="0">
+      </tab>
+   </extension>
+
+</plugin>

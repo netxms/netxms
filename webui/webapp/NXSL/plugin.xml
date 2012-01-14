@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.nxsl.views.ScriptLibrary"
+            icon="icons/library.png"
+            id="org.netxms.ui.eclipse.nxsl.views.ScriptLibrary"
+            name="Script Library"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.nxsl.views.ScriptEditorView"
+            icon="icons/editor.png"
+            id="org.netxms.ui.eclipse.nxsl.views.ScriptEditorView"
+            name="Edit Script"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            id="org.netxms.ui.eclipse.console.category.views"
+            name="Views">
+      </category>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open Script Library"
+            id="org.netxms.ui.eclipse.nxsl.commands.open_script_library"
+            name="Script Library">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.script_library"
+            label="Script Library"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.nxsl.actions.OpenScriptLibrary"
+               definitionId="org.netxms.ui.eclipse.nxsl.commands.open_script_library"
+               icon="icons/library.png"
+               id="org.netxms.ui.eclipse.nxsl.actions.OpenScriptLibrary"
+               label="Script Library"
+               menubarPath="config/additions"
+               style="push"
+               toolbarPath="config/additions"
+               tooltip="Open Script Library">
+         </action>
+      </actionSet>
+   </extension>
+
+</plugin>

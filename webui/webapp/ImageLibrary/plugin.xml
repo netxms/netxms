@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.imagelibrary.views.ImageLibrary"
+            icon="icons/imglib.png"
+            id="org.netxms.ui.eclipse.imagelibrary.view.imagelibrary"
+            name="Image Library"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.image_library"
+            label="Image Library"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.imagelibrary.actions.OpenLibraryManager"
+               definitionId="org.netxms.ui.eclipse.imagelibrary.commands.open_library_manager"
+               icon="icons/imglib.png"
+               id="org.netxms.ui.eclipse.imagelibrary.actions.open"
+               label="Image Library"
+               menubarPath="config/additions"
+               style="push"
+               toolbarPath="config/additions"
+               tooltip="Open Image Library management">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.ui.startup">
+      <startup
+            class="org.netxms.ui.eclipse.imagelibrary.Startup">
+      </startup>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Open Image Library management"
+            id="org.netxms.ui.eclipse.imagelibrary.commands.open_library_manager"
+            name="Image Library">
+      </command>
+   </extension>
+</plugin>

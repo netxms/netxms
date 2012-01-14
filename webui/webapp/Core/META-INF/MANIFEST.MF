@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NetXMS WebUI Core
 Bundle-SymbolicName: org.netxms.webui.core; singleton:=true
-Bundle-Version: 1.1.7
+Bundle-Version: 1.1.9
 Bundle-Activator: org.netxms.webui.core.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.rap.ui,
@@ -12,9 +12,9 @@ Bundle-ActivationPolicy: lazy
 Import-Package: javax.servlet;version="2.5.0",
  javax.servlet.http;version="2.5.0"
 Bundle-ClassPath: .,
- jar/netxms-base-1.1.8.jar,
- jar/netxms-client-api-1.1.8.jar,
- jar/netxms-client-1.1.8.jar,
+ jar/netxms-base-1.1.9.jar,
+ jar/netxms-client-1.1.9.jar,
+ jar/netxms-client-api-1.1.9.jar,
  jar/simple-xml-2.4.1.jar
 Export-Package: org.netxms.api.client,
  org.netxms.api.client.constants,
@@ -33,6 +33,7 @@ Export-Package: org.netxms.api.client,
  org.netxms.client.maps.elements,
  org.netxms.client.objects,
  org.netxms.client.objecttools,
+ org.netxms.client.packages,
  org.netxms.client.reports,
  org.netxms.client.situations,
  org.netxms.client.snmp,

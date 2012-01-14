@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="%view.AlarmBrowser"
+            allowMultiple="false"
+            icon="icons/alarm_browser.png"
+            class="org.netxms.ui.eclipse.alarmviewer.views.AlarmBrowser"
+            id="org.netxms.ui.eclipse.alarmviewer.view.alarm_browser">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            name="%action.openAlarmBrowser"
+            description="%actionDescription.openAlarmBrowser"
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.alarmviewer.commands.open_alarm_browser">
+      </command>
+   </extension>
+   
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.ui.eclipse.action_set.alarm_browser"
+		   label="Alarm Browser"
+		   visible="true">
+		   <action id="org.netxms.ui.eclipse.alarmviewer.actions.open"
+			   menubarPath="view/primary"
+			   toolbarPath="view/additions"
+			   label="%action.openAlarmBrowser"
+			   tooltip="%actionDescription.openAlarmBrowser"
+			   icon="icons/alarm_browser.png"
+			   class="org.netxms.ui.eclipse.alarmviewer.actions.OpenAlarmBrowser"
+			   definitionId="org.netxms.ui.eclipse.alarmviewer.commands.open_alarm_browser">
+		   </action>
+	   </actionSet>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.alarmviewer.commands.open_alarm_browser"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="F8">
+      </key>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.Alarm"
+            objectClass="org.netxms.client.events.Alarm">
+         <action
+               class="org.netxms.ui.eclipse.alarmviewer.actions.TerminateAlarm"
+               id="org.netxms.ui.eclipse.alarmviewer.popupActions.TerminateAlarm"
+               label="%action.terminate"
+   		       icon="icons/terminated.png"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.alarmviewer.actions.AcknowledgeAlarm"
+               icon="icons/acknowledged.png"
+               id="org.netxms.ui.eclipse.alarmviewer.popupActions.AcknowledgeAlarm"
+               label="%action.acknowledge"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+   </extension>
+
+   <extension
+         point="org.netxms.ui.eclipse.objectview.tabs">
+      <tab
+            class="org.netxms.ui.eclipse.alarmviewer.objecttabs.AlarmTab"
+            icon="icons/alarm_browser.png"
+            name="%tab.Alarms"
+            order="10">
+      </tab>
+   </extension>
+
+</plugin>

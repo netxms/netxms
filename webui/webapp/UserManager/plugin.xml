@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="User Manager"
+            icon="icons/user_manager.png"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.usermanager.views.UserManagementView"
+            id="org.netxms.ui.eclipse.usermanager.view.user_manager">
+      </view>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            name="Views"
+            id="org.netxms.ui.eclipse.console.category.views">
+      </category>
+      <category
+            id="org.netxms.ui.eclipse.console.category.tools"
+            name="Tools">
+      </category>
+      <command
+            name="User Manager"
+            description="Open user manager"
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.usermanager.commands.open_user_manager">
+      </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.tools"
+            description="Change password for current user"
+            id="org.netxms.ui.eclipse.usermanager.commands.change_password"
+            name="Change password...">
+      </command>
+   </extension>
+
+
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.ui.eclipse.action_set.user_manager"
+		   label="User Manager"
+		   visible="true">
+		   <action id="org.netxms.ui.eclipse.usermanager.actions.open"
+			   menubarPath="config/additions"
+			   toolbarPath="config/additions"
+			   label="User Manager"
+			   tooltip="Open user manager"
+			   icon="icons/user_manager.png"
+			   class="org.netxms.ui.eclipse.usermanager.actions.OpenUserManager"
+			   definitionId="org.netxms.ui.eclipse.usermanager.commands.open_user_manager">
+		   </action>
+	   </actionSet>
+	   <actionSet id="org.netxms.ui.eclipse.action_set.change_password"
+		   label="Change password..."
+		   visible="true">
+		   <action
+           class="org.netxms.ui.eclipse.usermanager.actions.ChangePassword"
+           definitionId="org.netxms.ui.eclipse.usermanager.commands.change_password"
+           icon="icons/change_password.png"
+           id="org.netxms.ui.eclipse.usermanager.actions.change_password"
+           label="Change password..."
+           menubarPath="tools/additions"
+           tooltip="Change password for current user">
+		   </action>
+	   </actionSet>
+   </extension>
+
+  <extension
+     point = "org.eclipse.ui.propertyPages">
+        <page
+           id="org.netxms.ui.eclipse.usermanager.propertypages.General#0"
+           name="General"
+	       class="org.netxms.ui.eclipse.usermanager.propertypages.General">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.api.client.users.AbstractUserObject">
+             </instanceof>
+          </enabledWhen>
+        </page>
+        <page
+           id="org.netxms.ui.eclipse.usermanager.propertypages.Authentication#1"
+           name="Authentication"
+	       class="org.netxms.ui.eclipse.usermanager.propertypages.Authentication">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.api.client.users.User">
+             </instanceof>
+          </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.usermanager.propertypages.Members"
+              id="org.netxms.ui.eclipse.usermanager.propertypages.Memebres#2"
+              name="Members">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.api.client.users.UserGroup">
+              </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.usermanager.propertypages.SystemRights"
+              id="org.netxms.ui.eclipse.usermanager.propertypages.SystemRights#3"
+              name="System Rights">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.api.client.users.AbstractUserObject">
+              </instanceof>
+           </enabledWhen>
+        </page>
+  </extension>
+
+  <extension
+     point="org.eclipse.core.runtime.adapters">
+        <factory 
+           class="org.netxms.ui.eclipse.usermanager.UserAdapterFactory" 
+           adaptableType="org.netxms.api.client.users.AbstractUserObject">
+          <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
+        </factory>
+        <factory 
+           class="org.netxms.ui.eclipse.usermanager.UserAdapterFactory" 
+           adaptableType="org.netxms.api.client.users.AbstractAccessListElement">
+          <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
+        </factory>
+  </extension>
+</plugin>

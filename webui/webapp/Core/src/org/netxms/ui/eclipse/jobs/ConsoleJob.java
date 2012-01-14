@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
@@ -44,6 +45,7 @@ public abstract class ConsoleJob extends Job
 	private String pluginId;
 	private Object jobFamily;
 	private boolean passException = false;
+	private Display display;
 	
 	/**
 	 * Constructor for console job object
@@ -61,6 +63,9 @@ public abstract class ConsoleJob extends Job
 		siteService = (wbPart != null) ? 
 					(IWorkbenchSiteProgressService)wbPart.getSite().getService(IWorkbenchSiteProgressService.class) : null;
 		setUser(true);
+		display = PlatformUI.getWorkbench().getDisplay();
+		if (display == null)
+			throw new IllegalThreadStateException("ConsoleJob constructor called from non-UI thread");
 	}
 
 	/* (non-Javadoc)
@@ -183,6 +188,6 @@ public abstract class ConsoleJob extends Job
 	 */
 	protected void runInUIThread(final Runnable runnable)
 	{
-		PlatformUI.getWorkbench().getDisplay().asyncExec(runnable);
+		display.asyncExec(runnable);
 	}
 }

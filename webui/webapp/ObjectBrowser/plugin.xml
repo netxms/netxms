@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point="org.eclipse.core.runtime.preferences">
+      <initializer class="org.netxms.ui.eclipse.objectbrowser.PreferenceInitializer"/>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Objects"
+            allowMultiple="false"
+            icon="icons/object_browser.gif"
+            class="org.netxms.ui.eclipse.objectbrowser.views.ObjectBrowser"
+            id="org.netxms.ui.eclipse.view.navigation.objectbrowser">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            name="Object Browser"
+            description="Open Object Browser"
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.objectbrowser.commands.open_object_browser">
+      </command>
+      <command
+            description="Toggle Object Filter"
+            id="org.netxms.ui.eclipse.objectbrowser.commands.show_object_filter"
+            name="Toggle Object Filter">
+      </command>
+   </extension>
+   
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.ui.eclipse.action_set.object_browser"
+		   label="Object Browser"
+		   visible="true">
+		   <action id="org.netxms.ui.eclipse.objectbrowser.actions.open"
+			   menubarPath="view/primary"
+			   toolbarPath="view/additions"
+			   label="Object Browser"
+			   tooltip="Open Object Browser"
+			   icon="icons/object_browser.gif"
+			   class="org.netxms.ui.eclipse.objectbrowser.actions.OpenObjectBrowser"
+			   definitionId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_browser">
+		   </action>
+	   </actionSet>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_browser"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="F3">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objectbrowser.commands.show_object_filter"
+            contextId="org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+F2">
+      </key>
+   </extension>
+
+  <extension
+     point="org.eclipse.core.runtime.adapters">
+        <factory 
+           class="org.netxms.ui.eclipse.objectbrowser.ObjectAdapterFactory" 
+           adaptableType="org.netxms.client.objects.GenericObject">
+          <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
+        </factory>
+  </extension>
+
+  <extension
+     point="org.eclipse.ui.decorators">
+       <decorator
+          id="org.netxms.ui.eclipse.decorators.NXCObject"
+          label="NetXMS Objects Decorator"
+          state="true"
+          lightweight= "true"
+          class="org.netxms.ui.eclipse.objectbrowser.ObjectDecorator">
+         <enablement>
+           <objectClass name="org.netxms.client.objects.GenericObject"/>
+         </enablement>
+         <description>
+            Decorate NetXMS objects (nodes, containers, etc.) with current status indicators
+         </description>
+    </decorator>
+  </extension>
+  <extension
+        point="org.eclipse.ui.contexts">
+     <context
+           id="org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser"
+           name="Object Browser"
+           parentId="org.eclipse.ui.contexts.window">
+     </context>
+  </extension>
+</plugin>

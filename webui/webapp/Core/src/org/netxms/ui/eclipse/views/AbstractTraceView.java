@@ -401,4 +401,12 @@ public abstract class AbstractTraceView extends ViewPart
 		this.filter = filter;
 		viewer.addFilter(filter);
 	}
+	
+	/**
+	 * @param runnable
+	 */
+	protected void runInUIThread(final Runnable runnable)
+	{
+		viewer.getControl().getDisplay().asyncExec(runnable);
+	}
 }

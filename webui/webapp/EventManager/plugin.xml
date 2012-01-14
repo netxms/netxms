@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Event Configuration"
+            icon="icons/event_configurator.png"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.eventmanager.views.EventConfigurator"
+            id="org.netxms.ui.eclipse.eventmanager.view.event_configurator">
+      </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.eventmanager.views.EventMonitor"
+            icon="icons/event_monitor.png"
+            id="org.netxms.ui.eclipse.eventmanager.views.EventMonitor"
+            name="Event Monitor"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.eventmanager.views.SyslogMonitor"
+            icon="icons/event_monitor.png"
+            id="org.netxms.ui.eclipse.eventmanager.views.SyslogMonitor"
+            name="Syslog Monitor"
+            restorable="true">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            name="Views"
+            id="org.netxms.ui.eclipse.console.category.views">
+      </category>
+      <command
+            name="Event Configuration"
+            description="Open event configuration"
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.eventmanager.commands.open_event_configurator">
+      </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open event monitor"
+            id="org.netxms.ui.eclipse.eventmanager.commands.open_event_monitor"
+            name="Event Monitor">
+      </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open syslog monitor"
+            id="org.netxms.ui.eclipse.eventmanager.commands.open_syslog_monitor"
+            name="Syslog Monitor">
+      </command>
+   </extension>
+
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.ui.eclipse.action_set.event_configuration"
+		   label="Event Configuration"
+		   visible="true">
+		   <action id="org.netxms.ui.eclipse.eventmanager.actions.open"
+			   menubarPath="config/additions"
+			   toolbarPath="config/additions"
+			   label="Event Configuration"
+			   tooltip="Open event configuration"
+			   icon="icons/event_configurator.png"
+			   class="org.netxms.ui.eclipse.eventmanager.actions.OpenEventConfigurator"
+			   definitionId="org.netxms.ui.eclipse.eventmanager.commands.open_event_configurator">
+		   </action>
+     <action
+           class="org.netxms.ui.eclipse.eventmanager.actions.OpenEventMonitor"
+           definitionId="org.netxms.ui.eclipse.eventmanager.commands.open_event_monitor"
+           id="org.netxms.ui.eclipse.eventmanager.actions.open_event_monitor"
+           label="Events"
+           menubarPath="monitor/additions"
+           tooltip="Open event monitor">
+     </action>
+     <action
+           class="org.netxms.ui.eclipse.eventmanager.actions.OpenSyslogMonitor"
+           definitionId="org.netxms.ui.eclipse.eventmanager.commands.open_syslog_monitor"
+           id="org.netxms.ui.eclipse.eventmanager.actions.open_syslog_monitor"
+           label="Syslog"
+           menubarPath="monitor/additions"
+           tooltip="Open syslog monitor">
+     </action>
+	   </actionSet>
+   </extension>
+
+  <extension
+     point="org.eclipse.core.runtime.adapters">
+        <factory 
+           class="org.netxms.ui.eclipse.eventmanager.EventTemplateAdapterFactory" 
+           adaptableType="org.netxms.client.events.EventTemplate">
+          <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
+        </factory>
+  </extension>
+  <extension
+        point="org.eclipse.core.runtime.preferences">
+     <initializer
+           class="org.netxms.ui.eclipse.eventmanager.PreferenceInitializer">
+     </initializer>
+  </extension>
+
+</plugin>

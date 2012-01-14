@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="jar/netxms-client-1.1.8.jar"/>
-	<classpathentry exported="true" kind="lib" path="jar/netxms-client-api-1.1.8.jar"/>
-	<classpathentry exported="true" kind="lib" path="jar/netxms-base-1.1.8.jar"/>
+	<classpathentry exported="true" kind="lib" path="jar/netxms-base-1.1.9.jar"/>
+	<classpathentry exported="true" kind="lib" path="jar/netxms-client-1.1.9.jar"/>
+	<classpathentry exported="true" kind="lib" path="jar/netxms-client-api-1.1.9.jar"/>
 	<classpathentry exported="true" kind="lib" path="jar/simple-xml-2.4.1.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>

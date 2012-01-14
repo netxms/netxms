@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.startup">
+      <startup
+            class="org.netxms.ui.eclipse.snmp.Startup">
+      </startup>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor"
+            icon="icons/trapeditor.png"
+            id="org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor"
+            name="SNMP Trap Configuration"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.snmp.views.MibExplorer"
+            icon="icons/mibexplorer.gif"
+            id="org.netxms.ui.eclipse.snmp.views.MibExplorer"
+            name="MIB Explorer"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Open SNMP traps configuration"
+            id="org.netxms.ui.eclipse.snmp.commands.open_snmp_trap_editor"
+            name="SNMP Traps Configuration">
+      </command>
+      <command
+            description="Open MIB Explorer"
+            id="org.netxms.ui.eclipse.snmp.commands.open_mib_explorer"
+            name="MIB Explorer">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.snmp_traps_configuration"
+            label="SNMP Traps Configuration"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.snmp.actions.OpenTrapEditor"
+               definitionId="org.netxms.ui.eclipse.snmp.commands.open_snmp_trap_editor"
+               icon="icons/trapeditor.png"
+               id="org.netxms.ui.eclipse.snmp.actions.open_trap_editor"
+               label="SNMP Traps Configuration"
+               menubarPath="config/additions"
+               style="push"
+               tooltip="Open SNMP traps configuration">
+         </action>
+      </actionSet>
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.mib_explorer"
+            label="MIB Explorer"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.snmp.actions.OpenMibExplorer"
+               definitionId="org.netxms.ui.eclipse.snmp.commands.open_mib_explorer"
+               icon="icons/mibexplorer.gif"
+               id="org.netxms.ui.eclipse.snmp.actions.open_mib_explorer"
+               label="MIB Explorer"
+               menubarPath="view/tools"
+               style="push"
+               tooltip="Open MIB Explorer">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.snmp.actions.popup.object.Node"
+            objectClass="org.netxms.client.objects.Node">
+         <action
+               class="org.netxms.ui.eclipse.snmp.actions.OpenMibExplorerForNode"
+               enablesFor="1"
+               icon="icons/mibexplorer.gif"
+               id="org.netxms.ui.eclipse.snmp.popupActions.OpenMibExplorer"
+               label="&amp;MIB Explorer"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

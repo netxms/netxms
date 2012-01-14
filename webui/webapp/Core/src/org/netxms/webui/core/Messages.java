@@ -4,7 +4,7 @@ import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS
 {
-	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.library.messages"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "org.netxms.webui.core.messages"; //$NON-NLS-1$
 	public static String AbstractSelector_CopyToClipboard;
 	public static String AbstractSelector_Select;
 	public static String ConsoleJob_ErrorDialogTitle;
