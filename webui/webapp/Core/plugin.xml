@@ -23,5 +23,15 @@
             id="org.netxms.webui.core.perspective">
       </perspective>
    </extension>
-
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            id="org.netxms.ui.eclipse.viewcategory.config"
+            name="%category.config">
+      </category>
+      <category
+            id="org.netxms.ui.eclipse.viewcategory.tools"
+            name="%category.tools">
+      </category>
+   </extension>
 </plugin>

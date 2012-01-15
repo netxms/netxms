@@ -65,11 +65,11 @@ public class CreateNetworkService implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Create new network service", part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NETWORKSERVICE, dlg.getName(), parentId);
 				cd.setServiceType(dlg.getServiceType());
 				cd.setIpPort(dlg.getPort());

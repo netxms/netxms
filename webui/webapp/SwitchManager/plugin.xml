@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.switchmanager.views.Dot1xStatusView"
+            icon="icons/pae.png"
+            id="org.netxms.ui.eclipse.switchmanager.views.Dot1xStatusView"
+            name="802.1x Port State"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.snmp.actions.popup.object.Node"
+            objectClass="org.netxms.client.objects.Node">
+         <action
+               class="org.netxms.ui.eclipse.switchmanager.actions.OpenDot1xStateView"
+               icon="icons/pae.png"
+               id="org.netxms.ui.eclipse.snmp.popupActions.OpenDot1xStateView_Node"
+               label="802.1x port state"
+               menubarPath="topology">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.snmp.actions.popup.object.Container"
+            objectClass="org.netxms.client.objects.Container">
+         <action
+               class="org.netxms.ui.eclipse.switchmanager.actions.OpenDot1xStateView"
+               icon="icons/pae.png"
+               id="org.netxms.ui.eclipse.snmp.popupActions.OpenDot1xStateView_Container"
+               label="802.1x port state"
+               menubarPath="topology">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.snmp.actions.popup.object.ServiceRoot"
+            objectClass="org.netxms.client.objects.ServiceRoot">
+         <action
+               class="org.netxms.ui.eclipse.switchmanager.actions.OpenDot1xStateView"
+               icon="icons/pae.png"
+               id="org.netxms.ui.eclipse.snmp.popupActions.OpenDot1xStateView_ServiceRoot"
+               label="802.1x port state"
+               menubarPath="topology">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.snmp.actions.popup.object.Subnet"
+            objectClass="org.netxms.client.objects.Subnet">
+         <action
+               class="org.netxms.ui.eclipse.switchmanager.actions.OpenDot1xStateView"
+               icon="icons/pae.png"
+               id="org.netxms.ui.eclipse.snmp.popupActions.OpenDot1xStateView_Subnet"
+               label="802.1x port state"
+               menubarPath="topology">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.snmp.actions.popup.object.EntireNetwork"
+            objectClass="org.netxms.client.objects.EntireNetwork">
+         <action
+               class="org.netxms.ui.eclipse.switchmanager.actions.OpenDot1xStateView"
+               icon="icons/pae.png"
+               id="org.netxms.ui.eclipse.snmp.popupActions.OpenDot1xStateView_EntireNetwork"
+               label="802.1x port state"
+               menubarPath="topology">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

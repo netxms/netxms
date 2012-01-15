@@ -67,11 +67,11 @@ public class CreateNode implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Create new node", part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NODE, dlg.getObjectName(), parentId);
 				cd.setCreationFlags(dlg.getCreationFlags());
 				cd.setPrimaryName(dlg.getHostName());

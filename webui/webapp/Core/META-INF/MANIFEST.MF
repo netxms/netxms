@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NetXMS WebUI Core
 Bundle-SymbolicName: org.netxms.webui.core; singleton:=true
-Bundle-Version: 1.1.9
+Bundle-Version: 1.1.10
 Bundle-Activator: org.netxms.webui.core.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.rap.ui,

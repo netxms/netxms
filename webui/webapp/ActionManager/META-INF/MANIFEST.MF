@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: org.netxms.ui.eclipse.actionmanager
+Bundle-SymbolicName: org.netxms.ui.eclipse.actionmanager;singleton:=true
+Bundle-Version: 1.1.10
+Bundle-Activator: org.netxms.ui.eclipse.actionmanager.Activator
+Bundle-Vendor: netxms.org
+Require-Bundle: org.eclipse.rap.ui;bundle-version="1.4.1",
+ org.netxms.webui.core;bundle-version="1.1.10"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager"
+            icon="icons/server_jobs.gif"
+            id="org.netxms.ui.eclipse.serverjobmanager.view.server_job_manager"
+            name="Server Jobs">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            name="Views"
+            id="org.netxms.ui.eclipse.console.category.views">
+      </category>
+      <command
+            name="Server Jobs"
+            description="Open server job manager"
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.serverjobmanager.commands.open_server_job_manager">
+      </command>
+   </extension>
+
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.ui.eclipse.action_set.server_jobs"
+		   label="Server Jobs"
+		   visible="true">
+		   <action id="org.netxms.ui.eclipse.serverjobmanager.actions.open"
+			   menubarPath="view/tools"
+			   toolbarPath="tools/additions"
+			   label="Server Jobs"
+			   tooltip="Open server job manager"
+			   icon="icons/server_jobs.gif"
+			   class="org.netxms.ui.eclipse.serverjobmanager.actions.OpenServerJobManager"
+			   definitionId="org.netxms.ui.eclipse.serverjobmanager.commands.open_server_job_manager">
+		   </action>
+	   </actionSet>
+   </extension>
+
+</plugin>
