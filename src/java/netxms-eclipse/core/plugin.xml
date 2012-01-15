@@ -2,6 +2,7 @@
 <?eclipse version="3.2"?>
 <plugin>
    <extension-point id="org.netxms.ui.eclipse.tweaklets" name="NXMC Tweaklets" schema="schema/org.netxms.ui.eclipse.tweaklets.exsd"/>
+   <extension-point id="org.netxms.ui.eclipse.loginlisteners" name="NXMC Login Listeners" schema="schema/org.netxms.ui.eclipse.loginlisteners.exsd"/>
    <extension
          id="org.netxms.ui.eclipse.console.application"
          point="org.eclipse.core.runtime.applications">

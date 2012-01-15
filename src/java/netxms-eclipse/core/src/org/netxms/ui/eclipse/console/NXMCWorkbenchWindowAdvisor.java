@@ -27,6 +27,7 @@ import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.application.ActionBarAdvisor;
@@ -58,7 +59,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	@Override
 	public void preWindowOpen()
 	{
-		doLogin();
+		doLogin(Display.getCurrent());
 
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		
@@ -94,7 +95,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	/**
 	 * Show login dialog and perform login
 	 */
-	private void doLogin()
+	private void doLogin(final Display display)
 	{
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		final Shell shell = getWindowConfigurer().getWindow().getShell();
@@ -109,8 +110,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 
 			try
 			{
-				LoginJob job = new LoginJob(settings.get("Connect.Server"), settings.get("Connect.Login"), //$NON-NLS-1$ //$NON-NLS-2$
-				                            loginDialog.getPassword());
+				LoginJob job = new LoginJob(display, settings.get("Connect.Server"), //$NON-NLS-1$ 
+				                            settings.get("Connect.Login"), loginDialog.getPassword());//$NON-NLS-1$
 
 				new ProgressMonitorDialog(shell).run(true, true, job);
 				success = true;
@@ -126,6 +127,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			}
 			catch(Exception e)
 			{
+				e.printStackTrace();
 				MessageDialog.openError(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.exception"), e.toString()); //$NON-NLS-1$
 			}
 		} while(!success);

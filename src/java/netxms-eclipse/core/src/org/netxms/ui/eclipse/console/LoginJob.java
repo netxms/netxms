@@ -19,10 +19,16 @@
 package org.netxms.ui.eclipse.console;
 
 import java.lang.reflect.InvocationTargetException;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -48,12 +54,20 @@ public class LoginJob implements IRunnableWithProgress
 		}
 	}
 
+	private Display display;
 	private String server;
 	private String loginName;
 	private String password;
 
-	public LoginJob(final String server, final String loginName, final String password)
+	/**
+	 * @param display
+	 * @param server
+	 * @param loginName
+	 * @param password
+	 */
+	public LoginJob(final Display display, final String server, final String loginName, final String password)
 	{
+		this.display = display;
 		this.server = server;
 		this.loginName = loginName;
 		this.password = password;
@@ -114,6 +128,7 @@ public class LoginJob implements IRunnableWithProgress
 			
 			monitor.setTaskName(Messages.getString("LoginJob.init_extensions")); //$NON-NLS-1$
 			TweakletManager.postLogin(session);
+			callLoginListeners(session);
 			monitor.worked(5);
 
 			Runnable keepAliveTimer = new KeepAliveHelper();
@@ -128,6 +143,31 @@ public class LoginJob implements IRunnableWithProgress
 		finally
 		{
 			monitor.done();
+		}
+	}
+	
+	/**
+	 * Inform all registered login listeners about successful login
+	 * 
+	 * @param session new client session
+	 */
+	private void callLoginListeners(NXCSession session)
+	{
+		// Read all registered extensions and create listeners
+		final IExtensionRegistry reg = Platform.getExtensionRegistry();
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.loginlisteners"); //$NON-NLS-1$
+		for(int i = 0; i < elements.length; i++)
+		{
+			try
+			{
+				final ConsoleLoginListener listener = (ConsoleLoginListener)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
+				listener.afterLogin(session, display);
+			}
+			catch(CoreException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 }

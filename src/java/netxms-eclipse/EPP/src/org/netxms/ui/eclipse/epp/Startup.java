@@ -27,7 +27,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Early startup handler
- *
  */
 public class Startup implements IStartup
 {

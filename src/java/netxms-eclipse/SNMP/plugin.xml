@@ -2,12 +2,6 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="org.eclipse.ui.startup">
-      <startup
-            class="org.netxms.ui.eclipse.snmp.Startup">
-      </startup>
-   </extension>
-   <extension
          point="org.eclipse.ui.views">
       <view
             allowMultiple="false"
@@ -88,6 +82,12 @@
                menubarPath="additions">
          </action>
       </objectContribution>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.loginlisteners">
+      <loginlistener
+            class="org.netxms.ui.eclipse.snmp.LoginListener">
+      </loginlistener>
    </extension>
 
 </plugin>
