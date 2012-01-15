@@ -17,6 +17,7 @@ public class LoginListener implements ConsoleLoginListener
 	@Override
 	public void afterLogin(final NXCSession session, final Display display)
 	{
+		ImageProvider.createInstance(display);
 		Job job = new Job("Initialize image library") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)

@@ -21,10 +21,16 @@ import org.netxms.ui.eclipse.imagelibrary.Activator;
 
 public class ImageProvider
 {
-	private static ImageProvider instance = new ImageProvider();
+	private static ImageProvider instance = null;
 
 	private static final Map<UUID, Image> cache = Collections.synchronizedMap(new HashMap<UUID, Image>());
 	private static final Map<UUID, LibraryImage> libraryIndex = Collections.synchronizedMap(new HashMap<UUID, LibraryImage>());
+	
+	public static void createInstance(Display display)
+	{
+		if (instance == null)
+			instance = new ImageProvider(display);
+	}
 
 	/**
 	 * @return
@@ -42,10 +48,10 @@ public class ImageProvider
 	/**
 	 * 
 	 */
-	private ImageProvider()
+	private ImageProvider(Display display)
 	{
 		final ImageDescriptor imageDescriptor = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/missing.png");
-		missingImage = imageDescriptor.createImage();
+		missingImage = imageDescriptor.createImage(display);
 		updateListeners = new HashSet<ImageUpdateListener>();
 	}
 
