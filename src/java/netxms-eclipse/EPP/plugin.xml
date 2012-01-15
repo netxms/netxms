@@ -188,9 +188,9 @@
       </page>
    </extension>
    <extension
-         point="org.eclipse.ui.startup">
-      <startup
-            class="org.netxms.ui.eclipse.epp.Startup">
-      </startup>
+         point="org.netxms.ui.eclipse.loginlisteners">
+      <loginlistener
+            class="org.netxms.ui.eclipse.epp.LoginListener">
+      </loginlistener>
    </extension>
 </plugin>

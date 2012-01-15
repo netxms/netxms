@@ -37,12 +37,6 @@
       </menuContribution>
    </extension>
    <extension
-         point="org.eclipse.ui.startup">
-      <startup
-            class="org.netxms.ui.eclipse.objecttools.Startup">
-      </startup>
-   </extension>
-   <extension
          point="org.eclipse.ui.views">
       <view
             allowMultiple="true"
@@ -210,6 +204,12 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="CTRL+BREAK">
       </key>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.loginlisteners">
+      <loginlistener
+            class="org.netxms.ui.eclipse.objecttools.LoginListener">
+      </loginlistener>
    </extension>
 
 </plugin>

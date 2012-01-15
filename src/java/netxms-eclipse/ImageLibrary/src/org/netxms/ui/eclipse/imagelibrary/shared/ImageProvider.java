@@ -13,13 +13,11 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.netxms.api.client.images.LibraryImage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class ImageProvider
 {
@@ -71,11 +69,8 @@ public class ImageProvider
 	 * @throws NXCException
 	 * @throws IOException
 	 */
-	public void syncMetaData() throws NXCException, IOException
+	public void syncMetaData(final NXCSession session, final Display display) throws NXCException, IOException
 	{
-		final Display display = PlatformUI.getWorkbench().getDisplay();
-
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		imageLibrary = session.getImageLibrary();
 		for(final LibraryImage libraryImage : imageLibrary)
 		{

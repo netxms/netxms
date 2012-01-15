@@ -36,7 +36,6 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolHandler;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Cache for object tools
@@ -52,9 +51,9 @@ public class ObjectToolsCache
 	 * Initialize object tools cache. Should be called when connection with
 	 * the server already established.
 	 */
-	public static void init()
+	public static void init(NXCSession session)
 	{
-		session = (NXCSession)ConsoleSharedData.getSession();
+		ObjectToolsCache.session = session;
 		
 		registerHandlers();
 		reload();

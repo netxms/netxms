@@ -18,44 +18,21 @@
  */
 package org.netxms.ui.eclipse.epp;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.ui.IStartup;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.eclipse.swt.widgets.Display;
+import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
 
 /**
  * Early startup handler
  */
-public class Startup implements IStartup
+public class LoginListener implements ConsoleLoginListener
 {
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IStartup#earlyStartup()
+	 * @see org.netxms.ui.eclipse.console.api.ConsoleLoginListener#afterLogin(org.netxms.client.NXCSession, org.eclipse.swt.widgets.Display)
 	 */
 	@Override
-	public void earlyStartup()
+	public void afterLogin(NXCSession session, Display display)
 	{
-		// wait for connect
-		Job job = new Job("Set alarm listener for tray popups") {
-			@Override
-			protected IStatus run(IProgressMonitor monitor)
-			{
-				while(ConsoleSharedData.getSession() == null)
-				{
-					try
-					{
-						Thread.sleep(1000);
-					}
-					catch(InterruptedException e)
-					{
-					}
-				}
-				SituationCache.init();
-				return Status.OK_STATUS;
-			}
-		};
-		job.setSystem(true);
-		job.schedule();
+		SituationCache.init(session, display);
 	}
 }

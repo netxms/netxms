@@ -246,8 +246,7 @@ public class ImageLibrary extends ViewPart
 	{
 		final LibraryImage image = (LibraryImage)galleryItem.getData();
 		
-		new ConsoleJob("Update image", this, Activator.PLUGIN_ID, null)
-		{
+		new ConsoleJob("Update image", this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
@@ -284,7 +283,7 @@ public class ImageLibrary extends ViewPart
 					}
 				});
 
-				ImageProvider.getInstance().syncMetaData();
+				ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
 				refreshImages();	/* TODO: update single element */                      
 				
 				monitor.done();
@@ -305,8 +304,7 @@ public class ImageLibrary extends ViewPart
 	 */
 	protected void uploadNewImage(final String name, final String category, final String fileName)
 	{
-		new ConsoleJob("Upload image file", this, Activator.PLUGIN_ID, null)
-		{
+		new ConsoleJob("Upload image file", this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
@@ -338,7 +336,7 @@ public class ImageLibrary extends ViewPart
 					}
 				});
 				
-				ImageProvider.getInstance().syncMetaData();
+				ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
 				refreshImages();	/* TODO: update local copy */
 
 				monitor.done();

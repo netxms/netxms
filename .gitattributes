@@ -825,8 +825,8 @@ src/java/netxms-eclipse/EPP/icons/terminate.png -text
 src/java/netxms-eclipse/EPP/icons/v_layout.gif -text
 src/java/netxms-eclipse/EPP/plugin.xml -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/Activator.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/LoginListener.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/SituationCache.java -text
-src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/Startup.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/actions/OpenPolicyEditor.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/actions/OpenSituationsManager.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/ActionSelectionDialog.java -text
@@ -913,8 +913,8 @@ src/java/netxms-eclipse/ImageLibrary/icons/imglib.png -text
 src/java/netxms-eclipse/ImageLibrary/icons/missing.png -text
 src/java/netxms-eclipse/ImageLibrary/plugin.xml -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/Activator.java -text
+src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/LoginListener.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/Messages.java -text
-src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/Startup.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/actions/OpenLibraryManager.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/dialogs/ImagePropertiesDialog.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/dialogs/ImageSelectionDialog.java -text
@@ -1067,7 +1067,7 @@ src/java/netxms-eclipse/OSM/plugin.xml -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/Activator.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/GeoLocationCache.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/GeoLocationCacheListener.java -text
-src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/Startup.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/LoginListener.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/actions/OpenLocationMap.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/actions/OpenWorldMap.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/Area.java -text
@@ -1220,10 +1220,10 @@ src/java/netxms-eclipse/ObjectTools/icons/url.gif -text
 src/java/netxms-eclipse/ObjectTools/plugin.xml -text
 src/java/netxms-eclipse/ObjectTools/schema/org.netxms.ui.eclipse.objecttools.toolhandlers.exsd -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/Activator.java -text
+src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/LoginListener.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/ObjectToolsAdapterFactory.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/ObjectToolsCache.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/ObjectToolsDynamicMenu.java -text
-src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/Startup.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/actions/OpenObjectToolsEditor.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/dialogs/CreateNewToolDialog.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/dialogs/EditColumnDialog.java -text
