@@ -2800,7 +2800,9 @@ webui/webapp/Core/icons/zoom_in.png -text
 webui/webapp/Core/icons/zoom_out.png -text
 webui/webapp/Core/jar/simple-xml-2.4.1.jar -text
 webui/webapp/Core/plugin.xml -text
+webui/webapp/Core/schema/org.netxms.ui.eclipse.loginlisteners.exsd -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
+webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/ConsoleLoginListener.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/resources/DataCollectionDisplayInfo.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/resources/StatusDisplayInfo.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -text
@@ -3151,8 +3153,8 @@ webui/webapp/SNMP/icons/new.png -text
 webui/webapp/SNMP/icons/trapeditor.png -text
 webui/webapp/SNMP/plugin.xml -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/Activator.java -text
+webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/LoginListener.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/SnmpConstants.java -text
-webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/Startup.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenMibExplorer.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenMibExplorerForNode.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenTrapEditor.java -text

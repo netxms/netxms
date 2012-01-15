@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
+   <extension-point id="org.netxms.ui.eclipse.loginlisteners" name="NXMC Login Listeners" schema="schema/org.netxms.ui.eclipse.loginlisteners.exsd"/>
 
    <extension
          id="helloapp"

@@ -68,6 +68,25 @@ public abstract class ConsoleJob extends Job
 			throw new IllegalThreadStateException("ConsoleJob constructor called from non-UI thread");
 	}
 
+	/**
+	 * Constructor for console job object
+	 * 
+	 * @param name Job's name
+	 * @param viewPart Related view part or null
+	 * @param pluginId Related plugin ID
+	 * @param jobFamily Job's family or null
+	 */
+	public ConsoleJob(String name, IWorkbenchPart wbPart, String pluginId, Object jobFamily, Display display)
+	{
+		super(name);
+		this.pluginId = (pluginId != null) ? pluginId : Activator.PLUGIN_ID;
+		this.jobFamily = jobFamily;
+		siteService = (wbPart != null) ? 
+					(IWorkbenchSiteProgressService)wbPart.getSite().getService(IWorkbenchSiteProgressService.class) : null;
+		setUser(true);
+		this.display = display;
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.jobs.Job#run(org.eclipse.core.runtime.IProgressMonitor)
 	 */

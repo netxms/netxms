@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,40 +28,25 @@ import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.service.datalocation.Location;
-import org.eclipse.ui.IStartup;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.snmp.MibTree;
+import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Early startup class
  */
-public class Startup implements IStartup
+public class LoginListener implements ConsoleLoginListener
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IStartup#earlyStartup()
-	 */
 	@Override
-	public void earlyStartup()
+	public void afterLogin(final NXCSession session, Display display)
 	{
 		// wait for connect
-		ConsoleJob job = new ConsoleJob("Load MIB file on startup", null, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob("Load MIB file on startup", null, Activator.PLUGIN_ID, null, display) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				while(ConsoleSharedData.getSession() == null)
-				{
-					try
-					{
-						Thread.sleep(1000);
-					}
-					catch(InterruptedException e)
-					{
-					}
-				}
-				
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				Location loc = Platform.getInstanceLocation();
 				if (loc != null)
 				{
