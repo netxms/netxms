@@ -2939,8 +2939,8 @@ webui/webapp/ImageLibrary/icons/imglib.png -text
 webui/webapp/ImageLibrary/icons/missing.png -text
 webui/webapp/ImageLibrary/plugin.xml -text
 webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/Activator.java -text
+webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/LoginListener.java -text
 webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/Messages.java -text
-webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/Startup.java -text
 webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/actions/OpenLibraryManager.java -text
 webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/dialogs/ImagePropertiesDialog.java -text
 webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/dialogs/ImageSelectionDialog.java -text
@@ -2985,7 +2985,7 @@ webui/webapp/OSM/plugin.xml -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/Activator.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/GeoLocationCache.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/GeoLocationCacheListener.java -text
-webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/Startup.java -text
+webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/LoginListener.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/actions/OpenLocationMap.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/actions/OpenWorldMap.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/tools/Area.java -text

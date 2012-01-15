@@ -62,12 +62,6 @@
       </objectContribution>
    </extension>
    <extension
-         point="org.eclipse.ui.startup">
-      <startup
-            class="org.netxms.ui.eclipse.osm.Startup">
-      </startup>
-   </extension>
-   <extension
          point="org.eclipse.ui.commands">
       <command
             description="Open world map view"
@@ -92,6 +86,12 @@
                tooltip="Open World Map view">
          </action>
       </actionSet>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.loginlisteners">
+      <loginlistener
+            class="org.netxms.ui.eclipse.osm.LoginListener">
+      </loginlistener>
    </extension>
 
 </plugin>

@@ -13,20 +13,24 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.netxms.api.client.images.LibraryImage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class ImageProvider
 {
-	private static ImageProvider instance = new ImageProvider();
+	private static ImageProvider instance = null;
 
 	private static final Map<UUID, Image> cache = Collections.synchronizedMap(new HashMap<UUID, Image>());
 	private static final Map<UUID, LibraryImage> libraryIndex = Collections.synchronizedMap(new HashMap<UUID, LibraryImage>());
+	
+	public static void createInstance(Display display)
+	{
+		if (instance == null)
+			instance = new ImageProvider(display);
+	}
 
 	/**
 	 * @return
@@ -44,10 +48,10 @@ public class ImageProvider
 	/**
 	 * 
 	 */
-	private ImageProvider()
+	private ImageProvider(Display display)
 	{
 		final ImageDescriptor imageDescriptor = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/missing.png");
-		missingImage = imageDescriptor.createImage();
+		missingImage = imageDescriptor.createImage(display);
 		updateListeners = new HashSet<ImageUpdateListener>();
 	}
 
@@ -71,11 +75,8 @@ public class ImageProvider
 	 * @throws NXCException
 	 * @throws IOException
 	 */
-	public void syncMetaData() throws NXCException, IOException
+	public void syncMetaData(final NXCSession session, final Display display) throws NXCException, IOException
 	{
-		final Display display = PlatformUI.getWorkbench().getDisplay();
-
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		imageLibrary = session.getImageLibrary();
 		for(final LibraryImage libraryImage : imageLibrary)
 		{

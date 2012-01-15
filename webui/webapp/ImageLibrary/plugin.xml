@@ -34,17 +34,17 @@
       </actionSet>
    </extension>
    <extension
-         point="org.eclipse.ui.startup">
-      <startup
-            class="org.netxms.ui.eclipse.imagelibrary.Startup">
-      </startup>
-   </extension>
-   <extension
          point="org.eclipse.ui.commands">
       <command
             description="Open Image Library management"
             id="org.netxms.ui.eclipse.imagelibrary.commands.open_library_manager"
             name="Image Library">
       </command>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.loginlisteners">
+      <loginlistener
+            class="org.netxms.ui.eclipse.imagelibrary.LoginListener">
+      </loginlistener>
    </extension>
 </plugin>
