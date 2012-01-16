@@ -86,22 +86,28 @@ public class ImageProvider
 				try
 				{
 					final LibraryImage completeLibraryImage = session.getImage(libraryImage.getGuid());
-					final ByteArrayInputStream stream = new ByteArrayInputStream(completeLibraryImage.getBinaryData());
-					try
-					{
-						final Image image = new Image(display, stream);
-						cache.put(completeLibraryImage.getGuid(), image);
-					}
-					catch(SWTException e)
-					{
-						Activator.logError("Exception in ImageProvider.syncMetaData()", e);
-						cache.put(completeLibraryImage.getGuid(), missingImage);
-					}
+					display.asyncExec(new Runnable() {
+						@Override
+						public void run()
+						{
+							final ByteArrayInputStream stream = new ByteArrayInputStream(completeLibraryImage.getBinaryData());
+							try
+							{
+								final Image image = new Image(display, stream);
+								cache.put(completeLibraryImage.getGuid(), image);
+							}
+							catch(SWTException e)
+							{
+								Activator.logError("Exception in ImageProvider.syncMetaData()", e);
+								cache.put(completeLibraryImage.getGuid(), missingImage);
+							}
 
-					for(final ImageUpdateListener listener : updateListeners)
-					{
-						listener.imageUpdated(completeLibraryImage.getGuid());
-					}
+							for(final ImageUpdateListener listener : updateListeners)
+							{
+								listener.imageUpdated(completeLibraryImage.getGuid());
+							}
+						}
+					});
 				}
 				catch(Exception e)
 				{

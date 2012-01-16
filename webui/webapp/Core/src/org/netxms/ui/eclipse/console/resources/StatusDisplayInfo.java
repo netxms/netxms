@@ -39,7 +39,7 @@ public final class StatusDisplayInfo
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
 	 */
-	public static void init()
+	public static void init(Display display)
 	{
 		statusText[Severity.NORMAL] = "Normal";
 		statusText[Severity.WARNING] = "Warning";
@@ -62,9 +62,8 @@ public final class StatusDisplayInfo
 		statusImageDesc[Severity.TESTING] = Activator.getImageDescriptor("icons/status/testing.png"); //$NON-NLS-1$
 		
 		for(int i = 0; i < statusImageDesc.length; i++)
-			statusImage[i] = statusImageDesc[i].createImage();
+			statusImage[i] = statusImageDesc[i].createImage(display);
 
-		Display display = Display.getDefault();
 		statusColor[Severity.NORMAL] = new Color(display, 0, 192, 0);
 		statusColor[Severity.WARNING] = new Color(display, 0, 255, 255);
 		statusColor[Severity.MINOR] = new Color(display, 231, 226, 0);

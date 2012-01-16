@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.shared;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.webui.core.Activator;
 
 /**
@@ -81,7 +82,7 @@ public class SharedIcons
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
 	 */
-	public static void init()
+	public static void init(Display display)
 	{
 		ALARM = Activator.getImageDescriptor("icons/alarm.png"); //$NON-NLS-1$
 		ADD_OBJECT = Activator.getImageDescriptor("icons/add_obj.gif"); //$NON-NLS-1$
@@ -108,29 +109,29 @@ public class SharedIcons
 		ZOOM_IN = Activator.getImageDescriptor("icons/zoom_in.png"); //$NON-NLS-1$
 		ZOOM_OUT = Activator.getImageDescriptor("icons/zoom_out.png"); //$NON-NLS-1$
 
-		IMG_ADD_OBJECT = ADD_OBJECT.createImage();
-		IMG_ALARM = ALARM.createImage();
-		IMG_CHECKBOX_OFF = CHECKBOX_OFF.createImage();
-		IMG_CHECKBOX_ON = CHECKBOX_ON.createImage();
-		IMG_CLEAR_LOG = CLEAR_LOG.createImage();
-		IMG_CLOSE = CLOSE.createImage();
-		IMG_COLLAPSE = COLLAPSE.createImage();
-		IMG_COLLAPSE_ALL = COLLAPSE_ALL.createImage();
-		IMG_COPY = COPY.createImage();
-		IMG_CUT = CUT.createImage();
-		IMG_DELETE_OBJECT = DELETE_OBJECT.createImage();
-		IMG_EDIT = EDIT.createImage();
-		IMG_EXECUTE = EXECUTE.createImage();
-		IMG_EXPAND = EXPAND.createImage();
-		IMG_EXPAND_ALL = EXPAND_ALL.createImage();
-		IMG_FIND = FIND.createImage();
-		IMG_PASTE = PASTE.createImage();
-		IMG_REFRESH = REFRESH.createImage();
-		IMG_RESTART = RESTART.createImage();
-		IMG_SAVE = SAVE.createImage();
-		IMG_TERMINATE = TERMINATE.createImage();
-		IMG_UNKNOWN_OBJECT = UNKNOWN_OBJECT.createImage();
-		IMG_ZOOM_IN = ZOOM_IN.createImage();
-		IMG_ZOOM_OUT = ZOOM_OUT.createImage();
+		IMG_ADD_OBJECT = ADD_OBJECT.createImage(display);
+		IMG_ALARM = ALARM.createImage(display);
+		IMG_CHECKBOX_OFF = CHECKBOX_OFF.createImage(display);
+		IMG_CHECKBOX_ON = CHECKBOX_ON.createImage(display);
+		IMG_CLEAR_LOG = CLEAR_LOG.createImage(display);
+		IMG_CLOSE = CLOSE.createImage(display);
+		IMG_COLLAPSE = COLLAPSE.createImage(display);
+		IMG_COLLAPSE_ALL = COLLAPSE_ALL.createImage(display);
+		IMG_COPY = COPY.createImage(display);
+		IMG_CUT = CUT.createImage(display);
+		IMG_DELETE_OBJECT = DELETE_OBJECT.createImage(display);
+		IMG_EDIT = EDIT.createImage(display);
+		IMG_EXECUTE = EXECUTE.createImage(display);
+		IMG_EXPAND = EXPAND.createImage(display);
+		IMG_EXPAND_ALL = EXPAND_ALL.createImage(display);
+		IMG_FIND = FIND.createImage(display);
+		IMG_PASTE = PASTE.createImage(display);
+		IMG_REFRESH = REFRESH.createImage(display);
+		IMG_RESTART = RESTART.createImage(display);
+		IMG_SAVE = SAVE.createImage(display);
+		IMG_TERMINATE = TERMINATE.createImage(display);
+		IMG_UNKNOWN_OBJECT = UNKNOWN_OBJECT.createImage(display);
+		IMG_ZOOM_IN = ZOOM_IN.createImage(display);
+		IMG_ZOOM_OUT = ZOOM_OUT.createImage(display);
 	}
 }

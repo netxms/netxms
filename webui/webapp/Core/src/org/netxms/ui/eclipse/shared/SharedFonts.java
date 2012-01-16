@@ -33,10 +33,8 @@ public class SharedFonts
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
 	 */
-	public static void init()
+	public static void init(Display display)
 	{
-		Display display = Display.getCurrent();
-		
 		CONSOLE = new Font(display, "Courier New", 10, SWT.NORMAL); //$NON-NLS-1$
 		ELEMENT_TITLE = new Font(display, "Verdana", 8, SWT.BOLD); //$NON-NLS-1$
 	}

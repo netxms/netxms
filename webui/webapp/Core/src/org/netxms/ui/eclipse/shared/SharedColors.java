@@ -33,10 +33,8 @@ public class SharedColors
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
 	 */
-	public static void init()
+	public static void init(Display display)
 	{
-		Display display = Display.getDefault();
-		
 		BLACK = new Color(display, 0, 0, 0);
 		RED = new Color(display, 255, 0, 0);
 		WHITE = new Color(display, 255, 255, 255);

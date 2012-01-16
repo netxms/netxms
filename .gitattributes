@@ -2809,6 +2809,7 @@ webui/webapp/Core/icons/copy.gif -text
 webui/webapp/Core/icons/cut.gif -text
 webui/webapp/Core/icons/delete_obj.gif -text
 webui/webapp/Core/icons/edit.png -text
+webui/webapp/Core/icons/execute.gif -text
 webui/webapp/Core/icons/expand.png -text
 webui/webapp/Core/icons/expandall.png -text
 webui/webapp/Core/icons/find.gif -text
@@ -2818,6 +2819,7 @@ webui/webapp/Core/icons/paste.gif -text
 webui/webapp/Core/icons/pause.png -text
 webui/webapp/Core/icons/pview.gif -text
 webui/webapp/Core/icons/refresh.gif -text
+webui/webapp/Core/icons/restart.gif -text
 webui/webapp/Core/icons/save.gif -text
 webui/webapp/Core/icons/status/critical.png -text
 webui/webapp/Core/icons/status/disabled.png -text
@@ -2829,6 +2831,8 @@ webui/webapp/Core/icons/status/testing.png -text
 webui/webapp/Core/icons/status/unknown.png -text
 webui/webapp/Core/icons/status/unmanaged.png -text
 webui/webapp/Core/icons/status/warning.png -text
+webui/webapp/Core/icons/terminate.gif -text
+webui/webapp/Core/icons/unknown_obj.gif -text
 webui/webapp/Core/icons/zoom_in.png -text
 webui/webapp/Core/icons/zoom_out.png -text
 webui/webapp/Core/jar/simple-xml-2.4.1.jar -text

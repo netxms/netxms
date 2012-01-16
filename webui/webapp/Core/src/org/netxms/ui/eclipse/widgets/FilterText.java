@@ -90,6 +90,8 @@ public class FilterText extends Composite
 		buttonArea.setLayout(buttonLayout);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.CENTER;
+		gd.widthHint = 1;
+		gd.heightHint = 1;
 		buttonArea.setLayoutData(gd);
 		
 		closeButton = new Label(this, SWT.NONE);
@@ -99,6 +101,7 @@ public class FilterText extends Composite
 		closeButton.setToolTipText(Messages.FilterText_CloseFilter);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.CENTER;
+		gd.horizontalAlignment = SWT.CENTER;
 		closeButton.setLayoutData(gd);
 		closeButton.addMouseListener(new MouseListener() {
 			private boolean doAction = false;
@@ -167,6 +170,9 @@ public class FilterText extends Composite
 				}
 			});
 		}
+		
+		((GridData)buttonArea.getLayoutData()).widthHint = (attrButtons.size() > 0) ? SWT.DEFAULT : 1;
+		((GridData)buttonArea.getLayoutData()).heightHint = (attrButtons.size() > 0) ? SWT.DEFAULT : 1;
 		
 		layout(true, true);
 	}

@@ -4,7 +4,8 @@
    <extension-point id="org.netxms.ui.eclipse.loginlisteners" name="NXMC Login Listeners" schema="schema/org.netxms.ui.eclipse.loginlisteners.exsd"/>
 
    <extension
-         id="helloapp"
+         id="nxmc"
+         name="NetXMS Management Console"
          point="org.eclipse.core.runtime.applications">
       <application
             thread="main"
@@ -33,5 +34,49 @@
             id="org.netxms.ui.eclipse.viewcategory.tools"
             name="%category.tools">
       </category>
+   </extension>
+   <extension
+         point="org.eclipse.rap.ui.branding">
+      <branding
+            id="org.netxms.webui.core.branding"
+            servletName="nxmc"
+            themeId="org.eclipse.rap.rwt.theme.Default">
+      </branding>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="%command.ToggleTraceFilter"
+            id="org.netxms.ui.eclipse.library.commands.show_trace_filter"
+            name="%command.ToggleTraceFilter">
+      </command>
+      <command
+            description="%command.PauseTrace"
+            id="org.netxms.ui.eclipse.library.commands.pause_trace"
+            name="%command.PauseTrace">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.library.commands.show_trace_filter"
+            contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+F2">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.library.commands.pause_trace"
+            contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="PAUSE">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.library.context.AbstractTraceView"
+            name="Abstract Trace View"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
 </plugin>
