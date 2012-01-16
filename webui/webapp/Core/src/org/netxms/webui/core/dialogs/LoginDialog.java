@@ -28,13 +28,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -51,11 +46,9 @@ import org.netxms.webui.core.Activator;
  */
 public class LoginDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private ImageDescriptor loginImage;
-	private Button checkBoxEncrypt;
-	private Button checkBoxDontCache;
-	private Button checkBoxClearCache;
-	private Button checkBoxMatchVersion;
 	private Combo comboServer;
 	private Text textLogin;
 	private Text textPassword;
@@ -110,35 +103,30 @@ public class LoginDialog extends Dialog
       label = new Label(dialogArea, SWT.NONE);
       label.setImage(loginImage.createImage());
       label.addDisposeListener(
-      		new DisposeListener()
-      		{
-      			public void widgetDisposed(DisposeEvent event)
+      		new DisposeListener() {
+				private static final long serialVersionUID = 1L;
+
+				public void widgetDisposed(DisposeEvent event)
       			{
       				((Label)event.widget).getImage().dispose();
       			}
-      		}
-      		);
+      		});
       gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
       label.setLayoutData(gd);
       
-      Composite fields = new Composite(dialogArea, SWT.NONE);
-      FormLayout formLayout = new FormLayout();
-      formLayout.spacing = WidgetHelper.DIALOG_SPACING;
-      fields.setLayout(formLayout);
-      gd = new GridData();
-      gd.horizontalSpan = 2;
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      fields.setLayoutData(gd);
-      
       // Connection
-      Group groupConn = new Group(fields, SWT.NONE);
+      Group groupConn = new Group(dialogArea, SWT.NONE);
       groupConn.setText("Connection");
       GridLayout gridLayout = new GridLayout(2, false);
       gridLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       gridLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       groupConn.setLayout(gridLayout);
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      groupConn.setLayoutData(gd);
 
       label = new Label(groupConn, SWT.NONE);
       label.setText("Server");
@@ -173,28 +161,6 @@ public class LoginDialog extends Dialog
       gridData.grabExcessHorizontalSpace = true;
       textPassword.setLayoutData(gridData);
       
-      // Options
-      Group groupOpts = new Group(fields, SWT.NONE);
-      groupOpts.setText("Options");
-      RowLayout rowLayout = new RowLayout();
-      rowLayout.type = SWT.VERTICAL;
-      //rowLayout.justify = true;
-      rowLayout.spacing = 4;
-      groupOpts.setLayout(rowLayout);
-
-      FormData fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(groupOpts, 0, SWT.LEFT);
-      fd.bottom = new FormAttachment(100, 0);
-		groupConn.setLayoutData(fd);   
-
-      fd = new FormData();
-		fd.top = new FormAttachment(0, 0);
-		fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-		groupOpts.setLayoutData(fd);
-		
 		if (comboServer.getText().isEmpty())
 			comboServer.setFocus();
 		else if (textLogin.getText().isEmpty())

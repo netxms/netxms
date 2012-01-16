@@ -19,7 +19,6 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.widgets.Item;
 import org.netxms.nebula.animation.AnimationRunner;
 import org.netxms.nebula.animation.movement.IMovement;
@@ -292,9 +291,9 @@ public class DefaultGalleryGroupRenderer extends AbstractGridGroupRenderer {
 
 		} else {
 
-			Transform transform = new Transform(gc.getDevice());
-			transform.rotate(-90);
-			gc.setTransform(transform);
+			//Transform transform = new Transform(gc.getDevice());
+			//transform.rotate(-90);
+			//gc.setTransform(transform);
 
 			int baseX = x;
 			int baseY = y - group.height;
@@ -335,8 +334,8 @@ public class DefaultGalleryGroupRenderer extends AbstractGridGroupRenderer {
 							* (2 + fontHeight), true);
 				}
 			}
-			gc.setTransform(null);
-			transform.dispose();
+			//gc.setTransform(null);
+			//transform.dispose();
 		}
 	}
 

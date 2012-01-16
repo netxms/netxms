@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView"
+            icon="icons/agent_config.gif"
+            id="org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView"
+            name="Agent Config"
+            restorable="false">
+      </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.agentmanager.views.PackageManager"
+            icon="icons/package.gif"
+            id="org.netxms.ui.eclipse.agentmanager.views.PackageManager"
+            name="Package Manager"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.agentmanager.views.PackageDeploymentMonitor"
+            icon="icons/package_deploy.gif"
+            id="org.netxms.ui.eclipse.agentmanager.views.PackageDeploymentMonitor"
+            name="Package Deployment Monitor"
+            restorable="false">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.agentmanager.actions.popup.object.Node"
+            objectClass="org.netxms.client.objects.Node">
+         <action
+               class="org.netxms.ui.eclipse.agentmanager.actions.OpenAgentConfig"
+               enablesFor="+"
+               icon="icons/agent_config.gif"
+               id="org.netxms.ui.eclipse.agentmanager.popupActions.OpenAgentConfig_Node"
+               label="Edit agent&apos;s configuration file"
+               menubarPath="objectmgmt"
+               style="push">
+         </action>
+      </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.agent_management"
+            label="Agent Management"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.agentmanager.actions.OpenPackageManager"
+               definitionId="org.netxms.ui.eclipse.agentmanager.commands.open_package_manager"
+               icon="icons/package.gif"
+               id="org.netxms.ui.eclipse.agentmanager.actions.open_package_manager"
+               label="Package Manager"
+               menubarPath="config/additions"
+               toolbarPath="config/additions"
+               tooltip="Open package manager">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open package manager"
+            id="org.netxms.ui.eclipse.agentmanager.commands.open_package_manager"
+            name="Package Manager">
+      </command>
+   </extension>
+
+</plugin>

@@ -260,11 +260,10 @@ public abstract class AbstractGridGroupRenderer extends
 					System.out.println("itemRender.draw"); //$NON-NLS-1$
 				Rectangle oldClipping = gc.getClipping();
 
-				gc.setClipping(oldClipping.intersection(new Rectangle(
-						xPixelPos, yPixelPos, itemWidth, itemHeight)));
+				//gc.setClipping(oldClipping.intersection(new Rectangle(xPixelPos, yPixelPos, itemWidth, itemHeight)));
 				gallery.getItemRenderer().draw(gc, gItem, index, xPixelPos,
 						yPixelPos, itemWidth, itemHeight);
-				gc.setClipping(oldClipping);
+				//gc.setClipping(oldClipping);
 				if (Gallery.DEBUG)
 					System.out.println("itemRender done"); //$NON-NLS-1$
 			}

@@ -40,7 +40,7 @@
       <branding
             id="org.netxms.webui.core.branding"
             servletName="nxmc"
-            themeId="org.eclipse.rap.rwt.theme.Default">
+            themeId="org.eclipse.rap.design.example.business.theme">
       </branding>
    </extension>
    <extension

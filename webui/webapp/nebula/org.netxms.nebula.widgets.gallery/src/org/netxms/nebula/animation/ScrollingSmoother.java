@@ -147,7 +147,8 @@ public class ScrollingSmoother {
 				end = mseffect.getEnd();
 			}
 
-			end -= event.count * currentScrollBar.getIncrement();
+			//end -= event.count * currentScrollBar.getIncrement();
+			end -= event.count;
 
 			if (end > currentScrollBar.getMaximum()
 					- currentScrollBar.getThumb()) {
@@ -172,6 +173,7 @@ public class ScrollingSmoother {
 	 *            true or false.
 	 */
 	public void smoothControl(boolean enable) {
+		/*
 		if (enable) {
 			component.addListener(SWT.MouseWheel, mouseWheelListener);
 
@@ -195,6 +197,7 @@ public class ScrollingSmoother {
 						.removeSelectionListener(cancelEffectIfUserSelection);
 
 		}
+		*/
 	}
 
 	SelectionListener cancelEffectIfUserSelection = new SelectionListener() {

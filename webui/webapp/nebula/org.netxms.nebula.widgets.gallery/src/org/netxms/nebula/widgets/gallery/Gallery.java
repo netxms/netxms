@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Item;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.TypedListener;
 
@@ -141,7 +142,7 @@ public class Gallery extends Canvas {
 	/**
 	 * Image quality : interpolation
 	 */
-	int interpolation = SWT.HIGH;
+	int interpolation = 2; //SWT.HIGH;
 
 	/**
 	 * Image quality : antialias
@@ -346,8 +347,7 @@ public class Gallery extends Canvas {
 	 */
 	public void removeSelectionListener(SelectionListener listener) {
 		checkWidget();
-		removeListener(SWT.Selection, listener);
-		removeListener(SWT.DefaultSelection, listener);
+		removeSelectionListener(listener);
 	}
 
 	/**
@@ -356,7 +356,7 @@ public class Gallery extends Canvas {
 	 * 
 	 * @param listener
 	 */
-	public void removeTreeListener(SelectionListener listener) {
+	public void removeTreeListener(Listener listener) {
 		checkWidget();
 		removeListener(SWT.Expand, listener);
 	}
@@ -387,6 +387,7 @@ public class Gallery extends Canvas {
 	protected void sendPaintItemEvent(Item item, int index, GC gc, int x,
 			int y, int width, int height) {
 
+		/*
 		Event e = new Event();
 		e.item = item;
 		e.type = SWT.PaintItem;
@@ -399,6 +400,7 @@ public class Gallery extends Canvas {
 		e.width = width;
 		e.height = height;
 		this.notifyListeners(SWT.PaintItem, e);
+		*/
 	}
 
 	/**
@@ -1182,27 +1184,10 @@ public class Gallery extends Canvas {
 						|| lastControlHeight != getSize().y
 						|| lastContentHeight != this.gHeight || lastContentWidth != this.gWidth));
 		try {
-			// Linux-GTK Bug 174932
-			if (!SWT.getPlatform().equals(BUG_PLATFORM_LINUX_GTK_174932)) {
-				gc.setAdvanced(true);
-			}
-
-			if (gc.getAdvanced()) {
-				if (lowQualityPaint) {
-					gc.setAntialias(SWT.OFF);
-					gc.setInterpolation(SWT.OFF);
-				} else {
-					gc.setAntialias(antialias);
-					gc.setInterpolation(interpolation);
-				}
-			}
-			// End of Bug 174932
-
 			Rectangle clipping = gc.getClipping();
 
 			gc.setBackground(this.getBackground());
-			drawBackground(gc, clipping.x, clipping.y, clipping.width,
-					clipping.height);
+			//drawBackground(gc, clipping.x, clipping.y, clipping.width, clipping.height);
 
 			int[] indexes = getVisibleItems(clipping);
 
@@ -1386,12 +1371,12 @@ public class Gallery extends Canvas {
 				clipping.width, clipping.height);
 
 		clipping.intersect(new Rectangle(x, y, item.width, item.height));
-		gc.setClipping(clipping);
+		//gc.setClipping(clipping);
 		// Draw group
 		this.groupRenderer.draw(gc, item, x, y, clipping.x, clipping.y,
 				clipping.width, clipping.height);
 
-		gc.setClipping(previousClipping);
+		//gc.setClipping(previousClipping);
 	}
 
 	/**
@@ -1631,13 +1616,13 @@ public class Gallery extends Canvas {
 			return;
 
 		bar.setMinimum(0);
-		bar.setPageIncrement(clientSize);
+		//bar.setPageIncrement(clientSize);
 		bar.setMaximum(totalSize);
 		bar.setThumb(clientSize);
 
 		// Let the group renderer use a custom increment value.
-		if (groupRenderer != null)
-			bar.setIncrement(groupRenderer.getScrollBarIncrement());
+		//if (groupRenderer != null)
+		//	bar.setIncrement(groupRenderer.getScrollBarIncrement());
 
 		if (totalSize > clientSize) {
 			if (DEBUG)
@@ -1702,8 +1687,7 @@ public class Gallery extends Canvas {
 		if (gHeight > areaHeight) {
 			// image is higher than client area
 			ScrollBar bar = getVerticalBar();
-			scroll(0, translate - bar.getSelection(), 0, 0,
-					getClientArea().width, areaHeight, false);
+			//scroll(0, translate - bar.getSelection(), 0, 0, getClientArea().width, areaHeight, false);
 			translate = bar.getSelection();
 		} else {
 			translate = 0;
@@ -1716,8 +1700,7 @@ public class Gallery extends Canvas {
 		if (gWidth > areaWidth) {
 			// image is higher than client area
 			ScrollBar bar = getHorizontalBar();
-			scroll(translate - bar.getSelection(), 0, 0, 0, areaWidth,
-					getClientArea().height, false);
+			//scroll(translate - bar.getSelection(), 0, 0, 0, areaWidth,getClientArea().height, false);
 			translate = bar.getSelection();
 		} else {
 			translate = 0;

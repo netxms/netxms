@@ -71,6 +71,8 @@ public class AlarmBrowser extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = -8657999097554656174L;
+
 			@Override
 			public void run()
 			{

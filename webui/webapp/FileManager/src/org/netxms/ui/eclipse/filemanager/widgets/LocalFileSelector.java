@@ -1,0 +1,99 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.ui.eclipse.filemanager.widgets;
+
+import java.io.File;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.FileDialog;
+import org.netxms.ui.eclipse.widgets.AbstractSelector;
+
+/**
+ * @author Victor
+ *
+ */
+public class LocalFileSelector extends AbstractSelector
+{
+	private static final long serialVersionUID = -4498155724060582050L;
+
+	private File file = null;
+	
+	/**
+	 * @param parent
+	 * @param style
+	 */
+	public LocalFileSelector(Composite parent, int style)
+	{
+		super(parent, style);
+
+		setImage(null);
+		setText("<none>");
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
+	 */
+	@Override
+	protected void selectionButtonHandler()
+	{
+		FileDialog fd = new FileDialog(getShell(), SWT.OPEN);
+		fd.setText("Select File");
+		fd.setFilterExtensions(new String[] { "*.*" });
+		fd.setFilterNames(new String[] { "All files" });
+		String selected = fd.open();
+		if (selected != null)
+			setFile(new File(selected));
+		else
+			setFile(null);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getButtonToolTip()
+	 */
+	@Override
+	protected String getButtonToolTip()
+	{
+		return "Select file";
+	}
+
+	/**
+	 * @return the file
+	 */
+	public File getFile()
+	{
+		return file;
+	}
+
+	/**
+	 * @param file the file to set
+	 */
+	public void setFile(File file)
+	{
+		this.file = file;
+		if (file != null)
+		{
+			setText(file.getAbsolutePath());
+		}
+		else
+		{
+			setImage(null);
+			setText("<none>");
+		}
+	}
+}
