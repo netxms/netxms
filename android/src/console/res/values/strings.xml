@@ -49,4 +49,12 @@
 <string name="alarm_acknowledge">Acknowledge Alarm</string>
 <string name="pref_alarm_notification">Alarm Notification</string>
 <string name="pref_alarm_sound">Alarm sound</string>
+<string name="alarm_viewlastvalues">View Last Values</string>
+<string name="last_values_graph_half_hour">Graph last half hour</string>
+<string name="last_values_graph_one_hour">Graph last hour</string>
+<string name="last_values_graph_two_hours">Graph last two hours</string>
+<string name="last_values_graph_four_hours">Graph last four hours</string>
+<string name="last_values_graph_one_day">Graph last day</string>
+<string name="last_values_graph_one_week">Graph last week</string>
+<string name="graph_title">History Graph</string>
 </resources>

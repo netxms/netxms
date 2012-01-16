@@ -4,6 +4,7 @@ android/src/console/.externalToolBuilders/Build[!!-~]Number[!!-~]Generator.launc
 android/src/console/.externalToolBuilders/run.exe -text
 android/src/console/AndroidManifest.xml -text
 android/src/console/default.properties -text
+android/src/console/jar/GraphView-2.0.jar -text
 android/src/console/res/drawable-hdpi/alarms.png -text
 android/src/console/res/drawable-hdpi/ic_menu_preferences.png -text
 android/src/console/res/drawable-hdpi/icon.png -text
@@ -35,12 +36,14 @@ android/src/console/res/drawable/status_unknown.png -text
 android/src/console/res/drawable/status_unmanaged.png -text
 android/src/console/res/drawable/status_warning.png -text
 android/src/console/res/layout/alarm_view.xml -text
+android/src/console/res/layout/graphics.xml -text
 android/src/console/res/layout/homescreen.xml -text
 android/src/console/res/layout/last_values.xml -text
 android/src/console/res/layout/node_view.xml -text
 android/src/console/res/layout/screen_header_full.xml -text
 android/src/console/res/layout/screen_header_small.xml -text
 android/src/console/res/menu/alarm_actions.xml -text
+android/src/console/res/menu/last_values_actions.xml -text
 android/src/console/res/menu/main_menu.xml -text
 android/src/console/res/menu/node_actions.xml -text
 android/src/console/res/values-v11/styles.xml -text
@@ -49,6 +52,7 @@ android/src/console/res/values/styles.xml -text
 android/src/console/res/xml/preferences.xml -text
 android/src/console/src/org/netxms/ui/android/main/activities/AlarmBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/ConsolePreferences.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/DrawGraph.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/HomeScreen.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/LastValues.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/NodeBrowser.java -text

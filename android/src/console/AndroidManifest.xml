@@ -38,5 +38,8 @@
         <activity android:label="@string/app_name" 
                   android:name=".main.activities.LastValues">
         </activity>        
-	</application>
+                <activity android:label="@string/app_name" 
+                  android:name=".main.activities.DrawGraph">
+        </activity>        
+        	</application>
 </manifest>

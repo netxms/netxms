@@ -4,9 +4,11 @@
 package org.netxms.ui.android.main.activities;
 
 import org.netxms.client.events.Alarm;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.AlarmListAdapter;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.ContextMenu;
@@ -99,6 +101,15 @@ public class AlarmBrowser extends AbstractClientActivity
 			case R.id.terminate:
 				adapter.terminateItem(al.getId());
 				refreshList();
+				return true;
+			case R.id.viewlastvalues:
+				GenericObject object = service.findObjectById(al.getSourceObjectId());
+				if (object!=null)
+				{
+					Intent newIntent = new Intent(this, LastValues.class);
+					newIntent.putExtra("objectId", object.getObjectId());
+					startActivity(newIntent);
+				}
 				return true;
 			default:
 				return super.onContextItemSelected(item);

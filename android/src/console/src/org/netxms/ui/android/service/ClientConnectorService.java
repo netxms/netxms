@@ -153,7 +153,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		Notification n = new Notification(android.R.drawable.stat_notify_sdcard, text, System.currentTimeMillis());
 		n.defaults = Notification.DEFAULT_LIGHTS;
 
-		Intent notifyIntent = new Intent(getApplicationContext(), HomeScreen.class);
+		Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowser.class);
 		PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
 		n.setLatestEventInfo(getApplicationContext(), getString(R.string.notification_title), text, intent);
 		if ((sound != null) && (sound.length() > 0))

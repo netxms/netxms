@@ -7,13 +7,21 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.LastValuesAdapter;
+
 import android.content.ComponentName;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
 /**
  * Last values view
@@ -42,6 +50,7 @@ public class LastValues extends AbstractClientActivity
 
 		listView = (ListView)findViewById(R.id.ValueList);
 		listView.setAdapter(adapter);
+		registerForContextMenu(listView);
 	}
 
 	/*
@@ -135,5 +144,60 @@ public class LastValues extends AbstractClientActivity
 				adapter.notifyDataSetChanged();
 			}
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreateContextMenu(android.view.ContextMenu, android.view.View, android.view.ContextMenu.ContextMenuInfo)
+	 */
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
+	{
+		android.view.MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.last_values_actions, menu);
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onContextItemSelected(android.view.MenuItem)
+	 */
+	@Override
+	public boolean onContextItemSelected(MenuItem item)
+	{
+		// get selected item
+		AdapterView.AdapterContextMenuInfo info =
+				(AdapterContextMenuInfo) item.getMenuInfo();
+		DciValue val = (DciValue) adapter.getItem(info.position);
+		long secsBack=0;
+		
+		// process menu selection
+		switch (item.getItemId())
+		{
+			case R.id.graph_half_hour:
+				secsBack=1800;
+				break;
+			case R.id.graph_one_hour:
+				secsBack=3600;
+				break;
+			case R.id.graph_two_hours:
+				secsBack=7200;
+				break;
+			case R.id.graph_four_hours:
+				secsBack=14400;
+				break;
+			case R.id.graph_one_day:
+				secsBack=86400;
+				break;
+			case R.id.graph_one_week:
+				secsBack=604800;
+				break;
+			default:
+				return super.onContextItemSelected(item);
+		}
+		Intent newIntent = new Intent(this, DrawGraph.class);
+		newIntent.putExtra("nodeId", nodeId);
+		newIntent.putExtra("dciId", val.getId());
+		newIntent.putExtra("seconds", secsBack);
+		newIntent.putExtra("title", val.getDescription());
+		startActivity(newIntent);
+		return true;
 	}
 }

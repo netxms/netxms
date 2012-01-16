@@ -1,0 +1,9 @@
+
+    <menu xmlns:android="http://schemas.android.com/apk/res/android">
+        <item android:id="@+id/graph_half_hour" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_half_hour"></item>
+        <item android:id="@+id/graph_one_hour" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_one_hour"></item>
+        <item android:id="@+id/graph_two_hours" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_two_hours"></item>
+        <item android:id="@+id/graph_four_hours" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_four_hours"></item>
+        <item android:id="@+id/graph_one_day" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_one_day"></item>
+        <item android:id="@+id/graph_one_week" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_one_week"></item>
+    </menu>
