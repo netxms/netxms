@@ -32,6 +32,8 @@ import org.eclipse.swt.widgets.Control;
  */
 public class ImageCache implements DisposeListener
 {
+	private static final long serialVersionUID = 1L;
+
 	private Map<ImageDescriptor, Image> cache = new HashMap<ImageDescriptor, Image>();
 
 	/**

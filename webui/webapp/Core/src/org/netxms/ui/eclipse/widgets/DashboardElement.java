@@ -47,6 +47,8 @@ import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
  */
 public abstract class DashboardElement extends Canvas
 {
+	private static final long serialVersionUID = -9080487483187052859L;
+	
 	private static final Color DEFAULT_BORDER_COLOR = new Color(Display.getCurrent(), 153, 180, 209);
 	private static final Color DEFAULT_TITLE_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
 	private static final int BORDER_WIDTH = 3;
@@ -84,6 +86,8 @@ public abstract class DashboardElement extends Canvas
 		setFont(SharedFonts.ELEMENT_TITLE);
 		
 		addPaintListener(new PaintListener() {
+			private static final long serialVersionUID = -5503147029441108914L;
+
 			@Override
 			public void paintControl(PaintEvent e)
 			{
@@ -92,6 +96,8 @@ public abstract class DashboardElement extends Canvas
 		});
 		
 		addMouseListener(new MouseListener() {
+			private static final long serialVersionUID = 7576373820712020023L;
+
 			@Override
 			public void mouseUp(MouseEvent e)
 			{
@@ -245,6 +251,8 @@ public abstract class DashboardElement extends Canvas
 		l.setToolTipText(button.getName());
 		l.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		l.addMouseListener(new MouseListener() {
+			private static final long serialVersionUID = -12169841952812734L;
+
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{

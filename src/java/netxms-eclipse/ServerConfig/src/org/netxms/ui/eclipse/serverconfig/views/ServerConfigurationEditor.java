@@ -266,7 +266,7 @@ public class ServerConfigurationEditor extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create configuration variable";
+					return "Cannot modify configuration variable";
 				}
 
 				@Override

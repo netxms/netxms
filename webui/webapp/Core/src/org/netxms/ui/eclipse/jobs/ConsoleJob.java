@@ -127,10 +127,16 @@ public abstract class ConsoleJob extends Job
 	 */
 	public void start()
 	{
-		if (siteService != null)
-			siteService.schedule(this, 0, true);
-		else
-			schedule();
+		display.asyncExec(new Runnable() {
+			@Override
+			public void run()
+			{
+				if (siteService != null)
+					siteService.schedule(ConsoleJob.this, 0, true);
+				else
+					schedule();
+			}
+		});
 	}
 	
 	/**

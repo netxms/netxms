@@ -29,6 +29,8 @@ import org.netxms.webui.core.Messages;
  */
 public class RefreshAction extends Action
 {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * Constructor
 	 */

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Server Configuration"
+            icon="icons/server_config.png"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor"
+            id="org.netxms.ui.eclipse.serverconfig.view.server_config">
+      </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator"
+            icon="icons/network_discovery.gif"
+            id="org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator"
+            name="Network Discovery"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            name="Tools"
+            id="org.netxms.ui.eclipse.console.category.tools">
+      </category>
+      <command
+            name="Export configuration..."
+            description="Export configuration"
+            categoryId="org.netxms.ui.eclipse.console.category.tools"
+            id="org.netxms.ui.eclipse.serverconfig.commands.export_configuration">
+      </command>
+      <command
+            name="Import configuration..."
+            description="Import configuration"
+            categoryId="org.netxms.ui.eclipse.console.category.tools"
+            id="org.netxms.ui.eclipse.serverconfig.commands.import_configuration">
+      </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open server configuration editor"
+            id="org.netxms.ui.eclipse.serverconfig.commands.open_server_config"
+            name="Server Configuration">
+      </command>
+      <category
+            id="org.netxms.ui.eclipse.console.category.views"
+            name="Views">
+      </category>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open network discovery configuration"
+            id="org.netxms.ui.eclipse.serverconfig.commands.open_netdisco_config"
+            name="Network Discovery">
+      </command>
+   </extension>
+
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.ui.eclipse.action_set.server_configuration"
+		   label="Server Configuration"
+		   visible="true">
+		   <action id="org.netxms.ui.eclipse.serverconfig.actions.open"
+			   menubarPath="config/additions"
+			   toolbarPath="config/additions"
+			   label="Server Configuration"
+			   tooltip="Open server configuration editor"
+			   icon="icons/server_config.png"
+			   class="org.netxms.ui.eclipse.serverconfig.actions.OpenServerConfig"
+			   definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_server_config">
+		   </action>
+     <action
+           class="org.netxms.ui.eclipse.serverconfig.actions.OpenNetworkDiscoveryConfig"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_netdisco_config"
+           icon="icons/network_discovery.gif"
+           id="org.netxms.ui.eclipse.serverconfig.actions.open_netdisco_config"
+           label="Network Discovery"
+           menubarPath="config/additions"
+           toolbarPath="config/additions"
+           tooltip="Open network discovery configuration">
+     </action>
+	   </actionSet>
+	   <actionSet id="org.netxms.ui.eclipse.action_set.export_import_configuration"
+		   label="Configuration export/import"
+		   visible="true">
+		   <action
+           class="org.netxms.ui.eclipse.serverconfig.actions.ExportConfiguration"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.export_configuration"
+           icon="icons/export.gif"
+           id="org.netxms.ui.eclipse.serverconfig.actions.export_configuration"
+           label="Export configuration..."
+           menubarPath="tools/additions"
+           tooltip="Export configuration">
+		   </action>
+     <action
+           class="org.netxms.ui.eclipse.serverconfig.actions.ImportConfiguration"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.import_configuration"
+           icon="icons/import.gif"
+           id="org.netxms.ui.eclipse.serverconfig.actions.import_configuration"
+           label="Import configuration..."
+           menubarPath="tools/additions"
+           tooltip="Import configuration">
+     </action>
+	   </actionSet>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.serverconfig.actions.popup.delete_variable"
+            objectClass="org.netxms.api.client.servermanager.ServerVariable">
+         <menu
+               id="org.netxms.ui.eclipse.serverconfig.menu.variables"
+               label="Delete"
+               path="additions">
+         </menu>
+         <action
+               class="org.netxms.ui.eclipse.serverconfig.actions.DeleteVariable"
+               id="org.netxms.ui.eclipse.serverconfig.popupActions.DeleteVariable"
+               label="Delete"
+   		       icon="icons/delete_variable.png"
+               menubarPath="org.netxms.ui.eclipse.serverconfig.menu.variables"
+               enablesFor="+">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.serverconfig.actions.popup.edit_variable"
+            objectClass="org.netxms.api.client.servermanager.ServerVariable">
+         <menu
+               id="org.netxms.ui.eclipse.serverconfig.menu.variables"
+               label="Edit..."
+               path="additions">
+         </menu>
+         <action
+               class="org.netxms.ui.eclipse.serverconfig.actions.EditVariable"
+               id="org.netxms.ui.eclipse.serverconfig.popupActions.EditVariable"
+               label="Edit..."
+   		       icon="icons/edit_variable.png"
+               menubarPath="org.netxms.ui.eclipse.serverconfig.menu.variables"
+               enablesFor="1">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

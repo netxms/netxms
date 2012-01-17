@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Event Processing Policy"
+            icon="icons/epp.png"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor"
+            id="org.netxms.ui.eclipse.epp.view.policy_editor">
+      </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.epp.views.SituationsManager"
+            icon="icons/situation.gif"
+            id="org.netxms.ui.eclipse.epp.views.SituationsManager"
+            name="Situations"
+            restorable="true">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            name="Views"
+            id="org.netxms.ui.eclipse.console.category.views">
+      </category>
+      <command
+            name="Event Processing Policy"
+            description="Open event processing policy editor"
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.epp.commands.open_policy_editor">
+      </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open situations manager"
+            id="org.netxms.ui.eclipse.epp.commands.open_situations_manager"
+            name="Situations Manager">
+      </command>
+   </extension>
+
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.ui.eclipse.action_set.event_processing_policy"
+	   	   label="Event Processing Policy"
+		   visible="true">
+		   <action id="org.netxms.ui.eclipse.epp.actions.open_policy_editor"
+			   menubarPath="config/additions"
+			   label="Event Processing Policy"
+			   tooltip="Open event processing policy editor"
+			   icon="icons/epp.png"
+			   class="org.netxms.ui.eclipse.epp.actions.OpenPolicyEditor"
+			   definitionId="org.netxms.ui.eclipse.epp.commands.open_policy_editor">
+		   </action>
+	   </actionSet>
+    <actionSet
+          id="org.netxms.ui.eclipse.action_set.situations_manager"
+          label="Situations Manager"
+          visible="true">
+       <action
+             class="org.netxms.ui.eclipse.epp.actions.OpenSituationsManager"
+             definitionId="org.netxms.ui.eclipse.epp.commands.open_situations_manager"
+             icon="icons/situation.gif"
+             id="org.netxms.ui.eclipse.epp.actions.open_situations_manager"
+             label="Situations Manager"
+             menubarPath="config/additions"
+             tooltip="Open situations manager">
+       </action>
+    </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.epp.commands.open_policy_editor"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="F4">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleEvents"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10"
+            name="Events">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects#0"
+            name="Source Objects">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleSeverityFilter"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleSeverityFilter#20"
+            name="Severity Filter">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript#30"
+            name="Filtering Script">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleServerActions"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleServerActions#30"
+            name="Server Actions">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleCondition"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
+            name="Condition">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleAction"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
+            name="Action">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleAlarm"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleAlarm#10"
+            name="Alarm">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleComments"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleComments#2"
+            name="Comments">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleSituation"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleSituation#20"
+            name="Situation">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.loginlisteners">
+      <loginlistener
+            class="org.netxms.ui.eclipse.epp.LoginListener">
+      </loginlistener>
+   </extension>
+</plugin>

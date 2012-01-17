@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.topology.actions.popup.object.Node"
+            objectClass="org.netxms.client.objects.Node">
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.FindConnectionPoint"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#Node"
+               label="Find &amp;switch port"
+               menubarPath="topology"
+               style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.ShowVlans"
+               enablesFor="1"
+               icon="icons/vlanview.gif"
+               id="org.netxms.ui.eclipse.topology.popupActions.VlanView"
+               label="Show VLANs"
+               menubarPath="topology"
+               style="push">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.topology.actions.popup.object.Interface"
+            objectClass="org.netxms.client.objects.Interface">
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.FindConnectionPoint"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#Interface"
+               label="Find &amp;switch port"
+               menubarPath="topology"
+               style="push">
+         </action>
+      </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.tools"
+            description="Find MAC address location in the network"
+            id="org.netxms.ui.eclipse.topology.commands.find_mac_address"
+            name="Find &amp;MAC address...">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.find_mac_address"
+            label="Find MAC address"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.FindMacAddress"
+               definitionId="org.netxms.ui.eclipse.topology.commands.find_mac_address"
+               id="org.netxms.ui.eclipse.topology.actions.find_mac_address"
+               label="Find &amp;MAC address..."
+               menubarPath="tools/additions"
+               style="push"
+               tooltip="Find MAC address location in the network">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.topology.views.HostSearchResults"
+            icon="icons/search_history.png"
+            id="org.netxms.ui.eclipse.topology.views.HostSearchResults"
+            name="Connection Search"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.topology.views.VlanView"
+            icon="icons/vlanview.gif"
+            id="org.netxms.ui.eclipse.topology.views.VlanView"
+            name="VLAN View"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.topology.commands.find_mac_address"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+F11">
+      </key>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.objectview.tabs">
+      <tab
+            class="org.netxms.ui.eclipse.topology.objecttabs.Ports"
+            icon="icons/ports.gif"
+            name="Ports">
+      </tab>
+   </extension>
+
+</plugin>
