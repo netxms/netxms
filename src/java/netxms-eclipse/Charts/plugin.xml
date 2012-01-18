@@ -12,4 +12,10 @@
             category="org.eclipse.ui.preferencePages.Charts">
       </page>
    </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.netxms.ui.eclipse.charts.PreferenceInitializer">
+      </initializer>
+   </extension>
 </plugin>
