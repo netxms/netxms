@@ -127,7 +127,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final List<Situation> list = session.getSituations();
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{

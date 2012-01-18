@@ -109,6 +109,8 @@ public class SituationsManager extends ViewPart implements SessionListener
 		details.getTable().setLinesVisible(true);
 		WidgetHelper.restoreTableViewerSettings(details, Activator.getDefault().getDialogSettings(), "SituationInstanceDetails");
 		details.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -127,7 +129,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final List<Situation> list = session.getSituations();
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
@@ -164,6 +166,8 @@ public class SituationsManager extends ViewPart implements SessionListener
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -172,6 +176,8 @@ public class SituationsManager extends ViewPart implements SessionListener
 		};
 		
 		actionCreate = new Action("&Create...") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -180,6 +186,8 @@ public class SituationsManager extends ViewPart implements SessionListener
 		};
 		
 		actionDelete = new Action("&Delete") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -231,8 +239,9 @@ public class SituationsManager extends ViewPart implements SessionListener
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -275,6 +284,8 @@ public class SituationsManager extends ViewPart implements SessionListener
 	private void createSituation()
 	{
 		InputDialog dlg = new InputDialog(getSite().getShell(), "Create Situation", "Name for new situation object", "", new IInputValidator()	{
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public String isValid(String newText)
 			{
@@ -344,7 +355,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 		    (n.getCode() == NXCNotification.SITUATION_UPDATED) ||
 		    (n.getCode() == NXCNotification.SITUATION_DELETED))
 		{
-			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+			situationTree.getControl().getDisplay().asyncExec(new Runnable() {
 				@Override
 				public void run()
 				{
