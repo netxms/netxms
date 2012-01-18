@@ -6,7 +6,11 @@ Bundle-Version: 1.1.9
 Bundle-Activator: org.netxms.ui.eclipse.charts.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.netxms.webui.core;bundle-version="1.1.9",
- org.eclipse.rap.ui;bundle-version="1.4.1"
+ org.eclipse.rap.ui;bundle-version="1.4.1",
+ org.eclipse.birt.chart;bundle-version="2.6.1",
+ org.eclipse.birt.chart.engine;bundle-version="2.6.2",
+ org.eclipse.birt.chart.device.extension;bundle-version="2.6.2",
+ org.eclipse.birt.chart.engine.extension;bundle-version="2.6.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.charts.api,

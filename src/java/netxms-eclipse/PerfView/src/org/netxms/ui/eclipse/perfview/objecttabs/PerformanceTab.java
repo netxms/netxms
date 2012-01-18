@@ -114,11 +114,11 @@ public class PerformanceTab extends ObjectTab
 		}
 		updateChartAreaLayout();
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		Job job = new Job("Update performance tab") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
-				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				try
 				{
 					final PerfTabDci[] items = session.getPerfTabItems(object.getObjectId());

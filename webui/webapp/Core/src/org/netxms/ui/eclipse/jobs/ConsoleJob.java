@@ -105,6 +105,9 @@ public abstract class ConsoleJob extends Job
                   (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
                   getErrorMessage() + ": " + e.getMessage(), passException ? e : null); //$NON-NLS-1$
 			jobFailureHandler();
+			
+			// debug
+			e.printStackTrace();
 		}
 		finally
 		{

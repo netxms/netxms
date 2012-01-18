@@ -634,23 +634,21 @@ public class DataComparisonView extends ViewPart
 					}
 				}
 
-				new UIJob("Update chart")
-				{
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						if (chartType == DataComparisonChart.DIAL_CHART)
 							for(int i = 0; i < thresholds.length; i++)
 								chart.updateParameterThresholds(i, thresholds[i]);
 						setChartData(values);
 						updateInProgress = false;
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 		};
 		job.setUser(false);
-		job.schedule();
+		job.start();
 	}
 	
 	/**
