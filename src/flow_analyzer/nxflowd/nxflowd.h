@@ -77,5 +77,6 @@ extern DWORD g_udpPort;
 extern char g_configFile[];
 extern char g_logFile[];
 extern int g_debugLevel;
+extern DB_HANDLE g_dbConnection;
 
 #endif

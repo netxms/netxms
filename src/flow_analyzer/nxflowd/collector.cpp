@@ -79,6 +79,9 @@ static struct
 	const char *dbField;
 } s_fieldMapping[] =
 {
+	{ IPFIX_FT_EXPORTERIPV4ADDRESS, "exporter_ip_addr" },
+	{ IPFIX_FT_SOURCEMACADDRESS, "source_mac_addr" },
+	{ IPFIX_FT_DESTINATIONMACADDRESS, "dest_mac_addr" },
 	{ IPFIX_FT_SOURCEIPV4ADDRESS, "source_ip_addr" },
 	{ IPFIX_FT_DESTINATIONIPV4ADDRESS, "dest_ip_addr" },
 	{ IPFIX_FT_PROTOCOLIDENTIFIER, "ip_proto" },
@@ -166,7 +169,7 @@ static int H_DataRecord(ipfixs_node_t *node, ipfixt_node_t *trec, ipfix_datareco
 		query += (const TCHAR *)values;
 		query += ")";
 
-		printf(">>> %s\n", (const TCHAR *)query);
+		DBQuery(g_dbConnection, query);
 	}
 	return 0;
 }
@@ -216,6 +219,14 @@ static THREAD_RESULT THREAD_CALL CollectorThread(void *arg)
 
 bool StartCollector()
 {
+	// Initialize flow ID
+	DB_RESULT hResult = DBSelect(g_dbConnection, _T("SELECT max(flow_id) FROM flows"));
+	if (hResult != NULL)
+	{
+		s_flowId = DBGetFieldInt64(hResult, 0, 0) + 1;
+		DBFreeResult(hResult);
+	}
+
 	s_collectorInfo = (ipfix_col_info_t *)malloc(sizeof(ipfix_col_info_t));
 	s_collectorInfo->export_newsource = NULL;
 	s_collectorInfo->export_newmsg = H_NewMessage;
