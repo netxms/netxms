@@ -4,9 +4,12 @@
 package org.netxms.ui.eclipse.charts.widgets;
 
 import java.util.Date;
+import java.util.List;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.GraphItemStyle;
+import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 
 /**
@@ -15,88 +18,74 @@ import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 public class LineChart extends GenericChart implements HistoricalDataChart
 {
 
-	/**
-	 * @param parent
-	 * @param style
-	 */
 	public LineChart(Composite parent, int style)
 	{
 		super(parent, style);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#initializationComplete()
-	 */
 	@Override
 	public void initializationComplete()
 	{
 		// TODO Auto-generated method stub
-
+		
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setChartTitle(java.lang.String)
-	 */
 	@Override
 	public void setChartTitle(String title)
 	{
 		// TODO Auto-generated method stub
-
+		
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setTitleVisible(boolean)
-	 */
 	@Override
 	public void setTitleVisible(boolean visible)
 	{
 		// TODO Auto-generated method stub
-
+		
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLegendVisible(boolean)
-	 */
+	@Override
+	public boolean isGridVisible()
+	{
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void setGridVisible(boolean visible)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
 	@Override
 	public void setLegendVisible(boolean visible)
 	{
 		// TODO Auto-generated method stub
-
+		
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#set3DModeEnabled(boolean)
-	 */
 	@Override
 	public void set3DModeEnabled(boolean enabled)
 	{
 		// TODO Auto-generated method stub
-
+		
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLogScaleEnabled(boolean)
-	 */
 	@Override
 	public void setLogScaleEnabled(boolean enabled)
 	{
 		// TODO Auto-generated method stub
-
+		
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#refresh()
-	 */
 	@Override
 	public void refresh()
 	{
 		// TODO Auto-generated method stub
-
+		
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#hasAxes()
-	 */
 	@Override
 	public boolean hasAxes()
 	{
@@ -104,19 +93,76 @@ public class LineChart extends GenericChart implements HistoricalDataChart
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#setTimeRange(java.util.Date, java.util.Date)
-	 */
+	@Override
+	public void setBackgroundColor(ChartColor color)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setPlotAreaColor(ChartColor color)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setLegendColor(ChartColor foreground, ChartColor background)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setAxisColor(ChartColor color)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setGridColor(ChartColor color)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
 	@Override
 	public void setTimeRange(Date from, Date to)
 	{
 		// TODO Auto-generated method stub
-
+		
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#addParameter(org.netxms.client.datacollection.GraphItem)
-	 */
+	@Override
+	public boolean isZoomEnabled()
+	{
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void setZoomEnabled(boolean enableZoom)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<GraphItemStyle> getItemStyles()
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setItemStyles(List<GraphItemStyle> itemStyles)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
 	@Override
 	public int addParameter(GraphItem item)
 	{
@@ -124,14 +170,38 @@ public class LineChart extends GenericChart implements HistoricalDataChart
 		return 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#updateParameter(int, org.netxms.client.datacollection.DciData, boolean)
-	 */
 	@Override
 	public void updateParameter(int index, DciData data, boolean updateChart)
 	{
 		// TODO Auto-generated method stub
-
+		
 	}
 
+	@Override
+	public void adjustXAxis(boolean repaint)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void adjustYAxis(boolean repaint)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void zoomIn()
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void zoomOut()
+	{
+		// TODO Auto-generated method stub
+		
+	}
 }

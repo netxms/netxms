@@ -18,18 +18,21 @@
  */
 package org.netxms.ui.eclipse.perfview.objecttabs.internal;
 
+import java.util.Arrays;
 import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Widget;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.PerfTabDci;
-import org.netxms.ui.eclipse.charts.widgets.LineChart;
+import org.netxms.ui.eclipse.charts.api.ChartFactory;
+import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
@@ -46,7 +49,7 @@ public class PerfTabGraph extends DashboardComposite
 
 	private long nodeId;
 	private PerfTabDci dci;
-	private LineChart chart;
+	private HistoricalDataChart chart;
 	private Runnable refreshTimer;
 	private boolean updateInProgress = false;
 	private NXCSession session;
@@ -64,14 +67,14 @@ public class PerfTabGraph extends DashboardComposite
 		
 		setLayout(new FillLayout());
 		
-		chart = new LineChart(this, SWT.NONE);
-		//chart.setZoomEnabled(false);
+		chart = ChartFactory.createLineChart(this, SWT.NONE);
+		chart.setZoomEnabled(false);
 		chart.setTitleVisible(true);
 		chart.setChartTitle(settings.getTitle().isEmpty() ? dci.getDescription() : settings.getTitle());
 		chart.setLegendVisible(false);
 		
 		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
-		//chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
+		chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
 		
 		chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", dci.getDescription()));
 
@@ -115,7 +118,7 @@ public class PerfTabGraph extends DashboardComposite
 					@Override
 					public void run()
 					{
-						if (!chart.isDisposed())
+						if (!((Widget)chart).isDisposed())
 						{
 							chart.setTimeRange(from, to);
 							chart.updateParameter(0, data, true);

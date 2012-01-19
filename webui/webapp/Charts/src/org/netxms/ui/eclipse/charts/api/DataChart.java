@@ -53,6 +53,20 @@ public interface DataChart
 	public abstract void setTitleVisible(boolean visible);
 	
 	/**
+	 * Get grid's visibility
+	 * 
+	 * @return true if grid is visible
+	 */
+	public abstract boolean isGridVisible();
+
+	/**
+	 * Show or hide chart's grid
+	 * 
+	 * @param visible true to show grid, false to hide
+	 */
+	public abstract void setGridVisible(boolean visible);
+	
+	/**
 	 * Get title's visibility
 	 * 
 	 * @return true if title is visible
@@ -161,4 +175,40 @@ public interface DataChart
 	 * @return true if chart has axes
 	 */
 	public abstract boolean hasAxes();
+	
+	/**
+	 * Set chart's background color
+	 * 
+	 * @param color
+	 */
+	public abstract void setBackgroundColor(ChartColor color);
+	
+	/**
+	 * Set chart's plot area background color
+	 * 
+	 * @param color
+	 */
+	public abstract void setPlotAreaColor(ChartColor color);
+	
+	/**
+	 * Set legend's color
+	 * 
+	 * @param foreground
+	 * @param background
+	 */
+	public abstract void setLegendColor(ChartColor foreground, ChartColor background);
+	
+	/**
+	 * Set axis color
+	 * 
+	 * @param color
+	 */
+	public abstract void setAxisColor(ChartColor color);
+	
+	/**
+	 * Set grid color
+	 * 
+	 * @param color
+	 */
+	public abstract void setGridColor(ChartColor color);
 }

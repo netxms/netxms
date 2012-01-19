@@ -2800,13 +2800,16 @@ webui/webapp/Charts/plugin.xml -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/Activator.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/PreferenceInitializer.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/ChartColor.java -text
+webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/ChartFactory.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/ChartPluginSharedData.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/DataChart.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/DataComparisonChart.java -text
+webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/DialChart.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/HistoricalDataChart.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/ChartColors.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/GeneralChartPrefs.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/DataComparisonBirtChart.java -text
+webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/DialChartWidget.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/GenericBirtChart.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/GenericChart.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/LineChart.java -text
