@@ -31,8 +31,8 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
-import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
 import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -42,9 +42,9 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
  */
 public class AvailabilityChart extends OverviewPageElement
 {
-	DataComparisonBirtChart dayChart;
-	DataComparisonBirtChart weekChart;
-	DataComparisonBirtChart monthChart;
+	DataComparisonChart dayChart;
+	DataComparisonChart weekChart;
+	DataComparisonChart monthChart;
 	ColorCache colors;
 	
 	/**
@@ -123,9 +123,9 @@ public class AvailabilityChart extends OverviewPageElement
 	 * @param title
 	 * @return
 	 */
-	private DataComparisonBirtChart createChart(Composite parent, String title)
+	private DataComparisonChart createChart(Composite parent, String title)
 	{
-		DataComparisonBirtChart chart = new DataComparisonBirtChart(parent, SWT.NONE, DataComparisonChart.PIE_CHART);
+		DataComparisonChart chart = ChartFactory.createPieChart(parent, SWT.NONE);
 		chart.setTitleVisible(true);
 		chart.set3DModeEnabled(true);
 		chart.setChartTitle(title);
@@ -142,7 +142,7 @@ public class AvailabilityChart extends OverviewPageElement
 		GridData gd = new GridData();
 		gd.widthHint = 250;
 		gd.heightHint = 190;
-		chart.setLayoutData(gd);
+		((Control)chart).setLayoutData(gd);
 		return chart;
 	}
 	

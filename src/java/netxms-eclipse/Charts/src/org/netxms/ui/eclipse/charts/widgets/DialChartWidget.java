@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
-import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.charts.api.DialChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.ColorCache;
@@ -49,7 +50,11 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * Dial chart implementation
  */
-public class DialChart extends GenericChart implements DataComparisonChart, PaintListener, DisposeListener
+/**
+ * @author Victor
+ *
+ */
+public class DialChartWidget extends GenericChart implements DialChart, PaintListener, DisposeListener
 {
 	private static final int OUTER_MARGIN_WIDTH = 5;
 	private static final int OUTER_MARGIN_HEIGHT = 5;
@@ -78,12 +83,13 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 	private double rightYellowZone = 70.0;
 	private double rightRedZone = 90.0;
 	private boolean legendInside = true;
+	private boolean gridVisible = true;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public DialChart(Composite parent, int style)
+	public DialChartWidget(Composite parent, int style)
 	{
 		super(parent, style | SWT.NO_BACKGROUND);
 		
@@ -237,6 +243,9 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 	{
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#getChartType()
+	 */
 	@Override
 	public int getChartType()
 	{
@@ -439,9 +448,12 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		gc.setFont(markFont);
 		for(int i = 225; i >= -45; i -= step)
 		{
-			Point l1 = positionOnArc(cx, cy, outerRadius - scaleOuterOffset, i);
-			Point l2 = positionOnArc(cx, cy, outerRadius - scaleInnerOffset, i);
-			gc.drawLine(l1.x, l1.y, l2.x, l2.y);
+			if (gridVisible)
+			{
+				Point l1 = positionOnArc(cx, cy, outerRadius - scaleOuterOffset, i);
+				Point l2 = positionOnArc(cx, cy, outerRadius - scaleInnerOffset, i);
+				gc.drawLine(l1.x, l1.y, l2.x, l2.y);
+			}
 
 			String value = roundedMarkValue(i, angleValue, valueStep);
 			Point t = positionOnArc(cx, cy, outerRadius - textOffset, i);
@@ -603,115 +615,182 @@ public class DialChart extends GenericChart implements DataComparisonChart, Pain
 		}
 	}
 
-	/**
-	 * @return the minValue
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#getMinValue()
 	 */
+	@Override
 	public double getMinValue()
 	{
 		return minValue;
 	}
 
-	/**
-	 * @param minValue the minValue to set
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#setMinValue(double)
 	 */
+	@Override
 	public void setMinValue(double minValue)
 	{
 		this.minValue = minValue;
 	}
 
-	/**
-	 * @return the maxValue
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#getMaxValue()
 	 */
+	@Override
 	public double getMaxValue()
 	{
 		return maxValue;
 	}
 
-	/**
-	 * @param maxValue the maxValue to set
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#setMaxValue(double)
 	 */
+	@Override
 	public void setMaxValue(double maxValue)
 	{
 		this.maxValue = maxValue;
 	}
 
-	/**
-	 * @return the leftRedZone
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#getLeftRedZone()
 	 */
+	@Override
 	public double getLeftRedZone()
 	{
 		return leftRedZone;
 	}
 
-	/**
-	 * @param leftRedZone the leftRedZone to set
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#setLeftRedZone(double)
 	 */
+	@Override
 	public void setLeftRedZone(double leftRedZone)
 	{
 		this.leftRedZone = leftRedZone;
 	}
 
-	/**
-	 * @return the leftYelowZone
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#getLeftYellowZone()
 	 */
+	@Override
 	public double getLeftYellowZone()
 	{
 		return leftYellowZone;
 	}
 
-	/**
-	 * @param leftYelowZone the leftYelowZone to set
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#setLeftYellowZone(double)
 	 */
+	@Override
 	public void setLeftYellowZone(double leftYellowZone)
 	{
 		this.leftYellowZone = leftYellowZone;
 	}
 
-	/**
-	 * @return the rightYellowZone
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#getRightYellowZone()
 	 */
+	@Override
 	public double getRightYellowZone()
 	{
 		return rightYellowZone;
 	}
 
-	/**
-	 * @param rightYellowZone the rightYellowZone to set
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#setRightYellowZone(double)
 	 */
+	@Override
 	public void setRightYellowZone(double rightYellowZone)
 	{
 		this.rightYellowZone = rightYellowZone;
 	}
 
-	/**
-	 * @return the rightRedZone
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#getRightRedZone()
 	 */
+	@Override
 	public double getRightRedZone()
 	{
 		return rightRedZone;
 	}
 
-	/**
-	 * @param rightRedZone the rightRedZone to set
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#setRightRedZone(double)
 	 */
+	@Override
 	public void setRightRedZone(double rightRedZone)
 	{
 		this.rightRedZone = rightRedZone;
 	}
 
-	/**
-	 * @return the legendInside
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#isLegendInside()
 	 */
+	@Override
 	public boolean isLegendInside()
 	{
 		return legendInside;
 	}
 
-	/**
-	 * @param legendInside the legendInside to set
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DialChart#setLegendInside(boolean)
 	 */
+	@Override
 	public void setLegendInside(boolean legendInside)
 	{
 		this.legendInside = legendInside;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isGridVisible()
+	 */
+	@Override
+	public boolean isGridVisible()
+	{
+		return gridVisible;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setGridVisible(boolean)
+	 */
+	@Override
+	public void setGridVisible(boolean visible)
+	{
+		gridVisible = visible;
+	}
+
+	@Override
+	public void setBackgroundColor(ChartColor color)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setPlotAreaColor(ChartColor color)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setLegendColor(ChartColor foreground, ChartColor background)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setAxisColor(ChartColor color)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setGridColor(ChartColor color)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }

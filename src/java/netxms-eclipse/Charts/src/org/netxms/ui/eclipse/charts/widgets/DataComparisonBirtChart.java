@@ -23,22 +23,17 @@ import java.util.List;
 import org.eclipse.birt.chart.model.Chart;
 import org.eclipse.birt.chart.model.ChartWithAxes;
 import org.eclipse.birt.chart.model.ChartWithoutAxes;
-import org.eclipse.birt.chart.model.DialChart;
 import org.eclipse.birt.chart.model.attribute.AxisType;
 import org.eclipse.birt.chart.model.attribute.ChartDimension;
 import org.eclipse.birt.chart.model.attribute.LeaderLineStyle;
 import org.eclipse.birt.chart.model.attribute.LegendItemType;
-import org.eclipse.birt.chart.model.attribute.LineDecorator;
 import org.eclipse.birt.chart.model.attribute.LineStyle;
 import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.RiserType;
 import org.eclipse.birt.chart.model.attribute.Text;
-import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.LineAttributesImpl;
 import org.eclipse.birt.chart.model.component.Axis;
-import org.eclipse.birt.chart.model.component.DialRegion;
 import org.eclipse.birt.chart.model.component.Series;
-import org.eclipse.birt.chart.model.component.impl.DialRegionImpl;
 import org.eclipse.birt.chart.model.component.impl.SeriesImpl;
 import org.eclipse.birt.chart.model.data.NumberDataSet;
 import org.eclipse.birt.chart.model.data.SeriesDefinition;
@@ -49,16 +44,14 @@ import org.eclipse.birt.chart.model.data.impl.SeriesDefinitionImpl;
 import org.eclipse.birt.chart.model.data.impl.TextDataSetImpl;
 import org.eclipse.birt.chart.model.impl.ChartWithAxesImpl;
 import org.eclipse.birt.chart.model.impl.ChartWithoutAxesImpl;
-import org.eclipse.birt.chart.model.impl.DialChartImpl;
 import org.eclipse.birt.chart.model.type.BarSeries;
-import org.eclipse.birt.chart.model.type.DialSeries;
 import org.eclipse.birt.chart.model.type.PieSeries;
 import org.eclipse.birt.chart.model.type.impl.BarSeriesImpl;
-import org.eclipse.birt.chart.model.type.impl.DialSeriesImpl;
 import org.eclipse.birt.chart.model.type.impl.PieSeriesImpl;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 
@@ -81,9 +74,6 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	private boolean transposed = false;
 	private boolean labelsVisible = false;
 	private double rotation = 0.0;
-	private double dialYellowZone = 70.0;
-	private double dialRedZone = 90.0;
-	private double dialMaxValue = 100.0;
 	
 	/**
 	 * @param parent
@@ -113,9 +103,6 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 				break;
 			case PIE_CHART:
 				chart = createChartWithoutAxes();
-				break;
-			case DIAL_CHART:
-				chart = createDialChart();
 				break;
 			default:
 				chart = ChartWithoutAxesImpl.create();	// Create empty chart
@@ -243,64 +230,6 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	}
 	
 	/**
-	 * Create dial chart
-	 * 
-	 * @return dial chart
-	 */
-	private Chart createDialChart()
-	{
-		DialChart chart = (DialChart)DialChartImpl.create();
-		chart.setDimension(ChartDimension.TWO_DIMENSIONAL_LITERAL);
-		chart.getBlock().setBackground(getColorFromPreferences("Chart.Colors.Background"));
-		chart.getPlot().setBackground(getColorFromPreferences("Chart.Colors.Background"));
-		// For chart without axes, we wish to paint plot area with same background color as other chart parts
-		//chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
-		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.Background"));
-		chart.setSeriesThickness(25);
-		chart.setDialSuperimposition(false);
-		
-		// Title
-		Text tc = chart.getTitle().getLabel().getCaption();
-		tc.setValue(getChartTitle());
-		tc.getFont().setSize(11);
-		tc.getFont().setName(CHART_FONT_NAME);
-		chart.getTitle().setVisible(isTitleVisible());
-		
-		// Legend
-		chart.getLegend().setItemType(LegendItemType.CATEGORIES_LITERAL);
-		chart.getLegend().setVisible(isLegendVisible());
-		chart.getLegend().setPosition(positionFromInt(legendPosition));
-		chart.getLegend().setBackground(getColorFromPreferences("Chart.Colors.Background"));
-		chart.getLegend().getText().getFont().setName(CHART_FONT_NAME);
-		chart.getLegend().getText().getFont().setSize(CHART_FONT_SIZE_LEGEND);
-		
-		// Categories
-      SeriesDefinition sdCategory = SeriesDefinitionImpl.create();
-      sdCategory.setSeriesPalette(getBirtPalette());
-      Series seCategory = SeriesImpl.create();
-      //seCategory.setDataSet(TextDataSetImpl.create(getElementNames()));
-      seCategory.setDataSet(TextDataSetImpl.create(new String[] { "category" }));
-      sdCategory.getSeries().add(seCategory);
-      chart.getSeriesDefinitions().add(sdCategory);
-      
-      // Values
-      SeriesDefinition sdValues = SeriesDefinitionImpl.create();
-      sdCategory.getSeriesDefinitions().add(sdValues);		
-      
-      for(DataComparisonElement e : parameters)
-      {
-      	Series s = createSeriesImplementation();
-      	s.setDataSet(NumberDataSetImpl.create(new double[] { e.getValue() }));
-      	s.setSeriesIdentifier(e.getName());
-         sdValues.getSeries().add(s);
-         e.setSeries(s);
-         updateDialRegions(e);
-      }
-		
-		return chart;
-	}
-	
-	/**
 	 * Create series implementation for selected chart type
 	 * @return
 	 */
@@ -340,24 +269,6 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 					ps.getLabel().getCaption().getFont().setSize(CHART_FONT_SIZE_AXIS);
 				}
 				return ps;
-			case DIAL_CHART:
-				DialSeries ds = (DialSeries)DialSeriesImpl.create();
-				ds.getDial().getScale().setMin(NumberDataElementImpl.create(0));
-				ds.getDial().getScale().setMax(NumberDataElementImpl.create(dialMaxValue));
-				//ds.getDial().getScale().setStep(10);
-				ds.getNeedle().setDecorator(LineDecorator.ARROW_LITERAL);
-				ds.getNeedle().getLineAttributes().setColor(ColorDefinitionImpl.BLACK());
-				ds.getNeedle().getLineAttributes().setThickness(2);
-				ds.getDial().getMinorGrid().getTickAttributes().setVisible(true);
-				ds.getDial().getMinorGrid().getTickAttributes().setColor(ColorDefinitionImpl.BLACK());
-				ds.getDial().getMajorGrid().getTickAttributes().setColor(ColorDefinitionImpl.BLACK());
-				ds.getDial().setStartAngle(-45);
-				ds.getDial().setStopAngle(225);
-				ds.getLabel().setVisible(true);
-				ds.getLabel().getCaption().setValue("aasaca");
-				
-				//ds.getDial().setFill(GradientImpl.create(ColorDefinitionImpl.GREEN(), ColorDefinitionImpl.YELLOW(), 0, false));
-				return ds;
 			default:
 				return null;
 		}
@@ -456,62 +367,15 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		}
 	}
 	
-	/**
-	 * @param e
-	 */
-	private void updateDialRegions(DataComparisonElement e)
-	{
-		DialSeries s = (DialSeries)e.getSeries();
-		
-		DialRegion r = DialRegionImpl.create();
-		r.setStartValue(NumberDataElementImpl.create(0));
-		r.setEndValue(NumberDataElementImpl.create(dialYellowZone));
-		r.setFill(ColorDefinitionImpl.GREEN());
-		r.getOutline().setColor(ColorDefinitionImpl.BLACK());
-		r.getOutline().setVisible(true);
-		r.setInnerRadius(20);
-		s.getDial().getDialRegions().add(r);
-		
-		r = DialRegionImpl.create();
-		r.setStartValue(NumberDataElementImpl.create(dialYellowZone));
-		r.setEndValue(NumberDataElementImpl.create(dialRedZone));
-		r.setFill(ColorDefinitionImpl.YELLOW());
-		r.getOutline().setColor(ColorDefinitionImpl.BLACK());
-		r.getOutline().setVisible(true);
-		r.setInnerRadius(20);
-		s.getDial().getDialRegions().add(r);
-
-		r = DialRegionImpl.create();
-		r.setStartValue(NumberDataElementImpl.create(dialRedZone));
-		r.setEndValue(NumberDataElementImpl.create(dialMaxValue));
-		r.setFill(ColorDefinitionImpl.RED());
-		r.getOutline().setColor(ColorDefinitionImpl.BLACK());
-		r.getOutline().setVisible(true);
-		r.setInnerRadius(20);
-		s.getDial().getDialRegions().add(r);
-	}
-
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataChart#refresh()
 	 */
 	@Override
 	public void refresh()
 	{
-		if (chartType == DIAL_CHART)
-		{
-			for(DataComparisonElement e : parameters)
-			{
-				updateDialRegions(e);
-				DialSeries s = (DialSeries)e.getSeries();
-				s.setDataSet(NumberDataSetImpl.create(new double[] { e.getValue() }));
-			}
-		}
-		else
-		{
-			if (valueSeries == null)
-				return;
-			valueSeries.setDataSet(NumberDataSetImpl.create(getElementValues()));
-		}
+		if (valueSeries == null)
+			return;
+		valueSeries.setDataSet(NumberDataSetImpl.create(getElementValues()));
 		super.refresh();
 	}
 
@@ -584,51 +448,58 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		return rotation;
 	}
 
-	/**
-	 * @return the dialYellowZone
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isGridVisible()
 	 */
-	public double getDialYellowZone()
+	@Override
+	public boolean isGridVisible()
 	{
-		return dialYellowZone;
+		// TODO Auto-generated method stub
+		return false;
 	}
 
-	/**
-	 * @param dialYellowZone the dialYellowZone to set
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setGridVisible(boolean)
 	 */
-	public void setDialYellowZone(double dialYellowZone)
+	@Override
+	public void setGridVisible(boolean visible)
 	{
-		this.dialYellowZone = dialYellowZone;
+		// TODO Auto-generated method stub
+		
 	}
 
-	/**
-	 * @return the dialRedZone
-	 */
-	public double getDialRedZone()
+	@Override
+	public void setBackgroundColor(ChartColor color)
 	{
-		return dialRedZone;
+		// TODO Auto-generated method stub
+		
 	}
 
-	/**
-	 * @param dialRedZone the dialRedZone to set
-	 */
-	public void setDialRedZone(double dialRedZone)
+	@Override
+	public void setPlotAreaColor(ChartColor color)
 	{
-		this.dialRedZone = dialRedZone;
+		// TODO Auto-generated method stub
+		
 	}
 
-	/**
-	 * @return the dialMaxValue
-	 */
-	public double getDialMaxValue()
+	@Override
+	public void setLegendColor(ChartColor foreground, ChartColor background)
 	{
-		return dialMaxValue;
+		// TODO Auto-generated method stub
+		
 	}
 
-	/**
-	 * @param dialMaxValue the dialMaxValue to set
-	 */
-	public void setDialMaxValue(double dialMaxValue)
+	@Override
+	public void setAxisColor(ChartColor color)
 	{
-		this.dialMaxValue = dialMaxValue;
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setGridColor(ChartColor color)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }

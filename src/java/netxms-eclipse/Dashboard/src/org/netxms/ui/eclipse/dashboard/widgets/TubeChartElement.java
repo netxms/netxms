@@ -23,8 +23,7 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
-import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
+import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
 
@@ -53,7 +52,7 @@ public class TubeChartElement extends ComparisonChartElement
 			config = new TubeChartConfig();
 		}
 
-		chart = new DataComparisonBirtChart(this, SWT.NONE, DataComparisonChart.TUBE_CHART);
+		chart = ChartFactory.createTubeChart(this, SWT.NONE);
 		chart.setTitleVisible(true);
 		chart.setChartTitle(config.getTitle());
 		chart.setLegendPosition(config.getLegendPosition());

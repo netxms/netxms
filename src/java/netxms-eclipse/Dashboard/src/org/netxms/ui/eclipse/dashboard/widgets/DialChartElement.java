@@ -23,7 +23,8 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.widgets.DialChart;
+import org.netxms.ui.eclipse.charts.api.ChartFactory;
+import org.netxms.ui.eclipse.charts.api.DialChart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DialChartConfig;
 
@@ -52,7 +53,7 @@ public class DialChartElement extends ComparisonChartElement
 			config = new DialChartConfig();
 		}
 
-		chart = new DialChart(this, SWT.NONE);
+		chart = ChartFactory.createDialChart(this, SWT.NONE);
 		chart.setChartTitle(config.getTitle());
 		chart.setTitleVisible(config.isShowTitle());
 		chart.setLegendVisible(config.isShowLegend());

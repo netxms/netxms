@@ -22,8 +22,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -33,15 +31,16 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
@@ -49,9 +48,8 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
-import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
-import org.netxms.ui.eclipse.charts.widgets.GenericChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -75,7 +73,6 @@ public class DataComparisonView extends ViewPart
 	private static final String KEY_LEGEND_POSITION = "legendPosition";
 	
 	private DataComparisonChart chart;
-	private GenericChart chartWidget;
 	protected NXCSession session;
 	private boolean updateInProgress = false;
 	protected ArrayList<GraphItem> items = new ArrayList<GraphItem>(8);
@@ -205,11 +202,21 @@ public class DataComparisonView extends ViewPart
 		}
 	}
 	
+	/**
+	 * @param i
+	 * @param defval
+	 * @return
+	 */
 	private static int safeCast(Integer i, int defval)
 	{
 		return (i != null) ? i : defval;
 	}
 	
+	/**
+	 * @param b
+	 * @param defval
+	 * @return
+	 */
 	private static boolean safeCast(Boolean b, boolean defval)
 	{
 		return (b != null) ? b : defval;
@@ -238,8 +245,18 @@ public class DataComparisonView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		chart = new DataComparisonBirtChart(parent, SWT.NONE, chartType);
-		chartWidget = (GenericChart)chart;
+		switch(chartType)
+		{
+			case DataComparisonChart.BAR_CHART:
+				chart = ChartFactory.createBarChart(parent, SWT.NONE);
+				break;
+			case DataComparisonChart.TUBE_CHART:
+				chart = ChartFactory.createTubeChart(parent, SWT.NONE);
+				break;
+			case DataComparisonChart.PIE_CHART:
+				chart = ChartFactory.createPieChart(parent, SWT.NONE);
+				break;
+		}
 		
 		chart.setLegendPosition(legendPosition);
 		chart.setLegendVisible(showLegend);
@@ -259,12 +276,11 @@ public class DataComparisonView extends ViewPart
 		updateChart();
 
 		final Display display = getSite().getShell().getDisplay();
-		refreshTimer = new Runnable()
-		{
+		refreshTimer = new Runnable() {
 			@Override
 			public void run()
 			{
-				if (chartWidget.isDisposed())
+				if (((Widget)chart).isDisposed())
 					return;
 
 				updateChart();
@@ -273,7 +289,7 @@ public class DataComparisonView extends ViewPart
 			}
 		};
 		if (autoRefreshEnabled)
-			getSite().getShell().getDisplay().timerExec(autoRefreshInterval, refreshTimer);
+			display.timerExec(autoRefreshInterval, refreshTimer);
 	}
 
 	/* (non-Javadoc)
@@ -282,7 +298,7 @@ public class DataComparisonView extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		chartWidget.setFocus();
+		((Composite)chart).setFocus();
 	}
 	
 	/**
@@ -302,8 +318,8 @@ public class DataComparisonView extends ViewPart
 		});
 
 		// Create menu.
-		Menu menu = menuMgr.createContextMenu(chartWidget);
-		chartWidget.setMenu(menu);
+		Menu menu = menuMgr.createContextMenu((Control)chart);
+		((Control)chart).setMenu(menu);
 	}
 
 	/**

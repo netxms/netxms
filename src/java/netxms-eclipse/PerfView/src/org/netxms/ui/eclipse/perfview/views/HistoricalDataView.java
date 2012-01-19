@@ -44,6 +44,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
@@ -59,15 +60,14 @@ import org.netxms.client.datacollection.GraphSettingsChangeListener;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.charts.widgets.LineChart;
+import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.charts.api.ChartFactory;
+import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphSettingsFactory;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
-import org.netxms.ui.eclipse.tools.ColorConverter;
-import org.swtchart.IAxis;
-import org.swtchart.LineStyle;
 
 /**
  * History graph view
@@ -96,7 +96,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	
 	private NXCSession session;
 	private ArrayList<GraphItem> items = new ArrayList<GraphItem>(1);
-	private LineChart chart;
+	private HistoricalDataChart chart;
 	private boolean updateInProgress = false;
 	private Runnable refreshTimer;
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
@@ -131,7 +131,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			@Override
 			public void run()
 			{
-				if (chart.isDisposed())
+				if (((Widget)chart).isDisposed())
 					return;
 				
 				updateChart();
@@ -279,16 +279,13 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		// Chart visual settings
 		chart.setItemStyles(Arrays.asList(settings.getItemStyles()));
 		chart.setLogScaleEnabled(settings.isLogScale());
-		setGridVisible(settings.isGridVisible());
+		chart.setGridVisible(settings.isGridVisible());
 		chart.setLegendVisible(settings.isLegendVisible());
-		chart.setBackground(ColorConverter.colorFromInt(settings.getBackgroundColor(), chart.getColorCache()));
-		chart.setBackgroundInPlotArea(ColorConverter.colorFromInt(settings.getPlotBackgroundColor(), chart.getColorCache()));
-		chart.getLegend().setForeground(ColorConverter.colorFromInt(settings.getLegendTextColor(), chart.getColorCache()));
-		chart.getLegend().setBackground(ColorConverter.colorFromInt(settings.getLegendBackgroundColor(), chart.getColorCache()));
-		chart.getAxisSet().getXAxis(0).getTick().setForeground(ColorConverter.colorFromInt(settings.getAxisColor(), chart.getColorCache()));
-		chart.getAxisSet().getYAxis(0).getTick().setForeground(ColorConverter.colorFromInt(settings.getAxisColor(), chart.getColorCache()));
-		chart.getAxisSet().getXAxis(0).getGrid().setForeground(ColorConverter.colorFromInt(settings.getGridColor(), chart.getColorCache()));
-		chart.getAxisSet().getYAxis(0).getGrid().setForeground(ColorConverter.colorFromInt(settings.getGridColor(), chart.getColorCache()));
+		chart.setBackgroundColor(new ChartColor(settings.getBackgroundColor()));
+		chart.setPlotAreaColor(new ChartColor(settings.getPlotBackgroundColor()));
+		chart.setLegendColor(new ChartColor(settings.getLegendTextColor()), new ChartColor(settings.getLegendBackgroundColor()));
+		chart.setAxisColor(new ChartColor(settings.getAxisColor()));
+		chart.setGridColor(new ChartColor(settings.getGridColor()));
 		
 		// Data
 		items.clear();
@@ -316,7 +313,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		chart = new LineChart(parent, SWT.NONE);
+		chart = ChartFactory.createLineChart(parent, SWT.NONE);
 		
 		createActions();
 		contributeToActionBars();
@@ -343,9 +340,9 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		});
 
 		// Create menu.
-		Menu menu = menuMgr.createContextMenu(chart);
-		chart.setMenu(menu);
-		for(Control ch : chart.getChildren())
+		Menu menu = menuMgr.createContextMenu((Control)chart);
+		((Control)chart).setMenu(menu);
+		for(Control ch : ((Composite)chart).getChildren())
 		{
 			ch.setMenu(menu);
 		}
@@ -377,7 +374,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						if (!chart.isDisposed())
+						if (!((Widget)chart).isDisposed())
 						{
 							chart.setTimeRange(settings.getTimeFrom(), settings.getTimeTo());
 							setChartData(data);
@@ -411,7 +408,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	@Override
 	public void setFocus()
 	{
-		chart.setFocus();
+		((Composite)chart).setFocus();
 	}
 	
 	/**
@@ -450,7 +447,6 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 				{
 					chart.setLogScaleEnabled(!settings.isLogScale());
 					settings.setLogScale(!settings.isLogScale());
-					chart.redraw();
 				}
 				catch(IllegalStateException e)
 				{
@@ -469,8 +465,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			@Override
 			public void run()
 			{
-				chart.getAxisSet().zoomIn();
-				chart.redraw();
+				chart.zoomIn();
 			}
 		};
 		actionZoomIn.setText("Zoom &in");
@@ -483,8 +478,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			@Override
 			public void run()
 			{
-				chart.getAxisSet().zoomOut();
-				chart.redraw();
+				chart.zoomOut();
 			}
 		};
 		actionZoomOut.setText("Zoom &out");
@@ -497,11 +491,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			@Override
 			public void run()
 			{
-				for(IAxis axis : chart.getAxisSet().getXAxes())
-				{
-					axis.adjustRange();
-				}
-				chart.redraw();
+				chart.adjustXAxis(true);
 			}
 		};
 		actionAdjustX.setText("Adjust &X axis");
@@ -514,13 +504,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			@Override
 			public void run()
 			{
-				/*
-				for(IAxis axis : chart.getAxisSet().getYAxes())
-				{
-					axis.adjustRange();
-				}*/
-				chart.adjustYAxis();
-				chart.redraw();
+				chart.adjustYAxis(true);
 			}
 		};
 		actionAdjustY.setText("Adjust &Y axis");
@@ -533,12 +517,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			@Override
 			public void run()
 			{
-				for(IAxis axis : chart.getAxisSet().getXAxes())
-				{
-					axis.adjustRange();
-				}
-				chart.adjustYAxis();
-				chart.redraw();
+				chart.adjustXAxis(false);
+				chart.adjustYAxis(true);
 			}
 		};
 		actionAdjustBoth.setText("&Adjust");
@@ -737,18 +717,6 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		getDataFromServer();
 	}
 
-	/**
-	 * Set chart grid visibility
-	 * 
-	 * @param visible true if grid must be visible
-	 */
-	protected void setGridVisible(boolean visible)
-	{
-		final LineStyle ls = visible ? LineStyle.DOT : LineStyle.NONE;
-		chart.getAxisSet().getXAxis(0).getGrid().setStyle(ls);
-		chart.getAxisSet().getYAxis(0).getGrid().setStyle(ls);
-	}
-	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
 	 */

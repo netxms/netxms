@@ -689,13 +689,15 @@ src/java/netxms-eclipse/Charts/plugin.xml -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/Activator.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/PreferenceInitializer.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/ChartColor.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/ChartFactory.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/DataChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/DataComparisonChart.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/DialChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/HistoricalDataChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/ChartColors.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/GeneralChartPrefs.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/DataComparisonBirtChart.java -text
-src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/DialChart.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/DialChartWidget.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/GenericBirtChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/GenericChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/LineChart.java -text

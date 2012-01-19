@@ -31,8 +31,8 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
-import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AvailabilityChartConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -64,7 +64,7 @@ public class AvailabilityChartElement extends ElementWidget implements DisposeLi
 
 		setLayout(new FillLayout());
 		
-		chart = new DataComparisonBirtChart(this, SWT.NONE, DataComparisonChart.PIE_CHART);
+		chart = ChartFactory.createPieChart(this, SWT.NONE);
 		chart.setTitleVisible(config.isShowTitle());
 		chart.setChartTitle(config.getTitle());
 		chart.setLegendPosition(config.getLegendPosition());

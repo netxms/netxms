@@ -27,6 +27,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
@@ -35,7 +36,8 @@ import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.widgets.LineChart;
+import org.netxms.ui.eclipse.charts.api.ChartFactory;
+import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
@@ -47,7 +49,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class LineChartElement extends ElementWidget
 {
-	private LineChart chart;
+	private HistoricalDataChart chart;
 	private LineChartConfig config;
 	private Runnable refreshTimer;
 	private boolean updateInProgress = false;
@@ -74,7 +76,7 @@ public class LineChartElement extends ElementWidget
 
 		setLayout(new FillLayout());
 		
-		chart = new LineChart(this, SWT.NONE);
+		chart = ChartFactory.createLineChart(this, SWT.NONE);
 		chart.setZoomEnabled(false);
 		chart.setTitleVisible(true);
 		chart.setChartTitle(config.getTitle());
@@ -134,7 +136,7 @@ public class LineChartElement extends ElementWidget
 						@Override
 						public void run()
 						{
-							if (!chart.isDisposed())
+							if (!((Widget)chart).isDisposed())
 							{
 								chart.setTimeRange(from, to);
 								chart.updateParameter(index, data, false);
@@ -146,7 +148,7 @@ public class LineChartElement extends ElementWidget
 					@Override
 					public void run()
 					{
-						if (!chart.isDisposed())
+						if (!((Widget)chart).isDisposed())
 							chart.refresh();
 						updateInProgress = false;
 					}

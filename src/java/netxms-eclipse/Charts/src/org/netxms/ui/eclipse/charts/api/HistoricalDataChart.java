@@ -19,9 +19,11 @@
 package org.netxms.ui.eclipse.charts.api;
 
 import java.util.Date;
+import java.util.List;
 
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.GraphItemStyle;
 
 /**
  * Historical data chart interface
@@ -38,6 +40,26 @@ public interface HistoricalDataChart extends DataChart
 	public abstract void setTimeRange(Date from, Date to);
 	
 	/**
+	 * @return the zoomEnabled
+	 */
+	public abstract boolean isZoomEnabled();
+
+	/**
+	 * @param zoomEnabled the zoomEnabled to set
+	 */
+	public abstract void setZoomEnabled(boolean enableZoom);
+
+	/**
+	 * @return the itemStyles
+	 */
+	public abstract List<GraphItemStyle> getItemStyles();
+
+	/**
+	 * @param itemStyles the itemStyles to set
+	 */
+	public abstract void setItemStyles(List<GraphItemStyle> itemStyles);
+
+	/**
 	 * Add new parameter to chart.
 	 * 
 	 * @param item parameter
@@ -53,4 +75,28 @@ public interface HistoricalDataChart extends DataChart
 	 * @param updateChart if true, chart will be updated (repainted)
 	 */
 	public abstract void updateParameter(int index, DciData data, boolean updateChart);
+	
+	/**
+	 * Adjust X axis to fit all data
+	 * 
+	 * @param repaint if true, chart will be repainted after change
+	 */
+	public abstract void adjustXAxis(boolean repaint);
+
+	/**
+	 * Adjust Y axis to fit all data
+	 * 
+	 * @param repaint if true, chart will be repainted after change
+	 */
+	public abstract void adjustYAxis(boolean repaint);
+	
+	/**
+	 * Zoom in
+	 */
+	public abstract void zoomIn();
+	
+	/**
+	 * Zoom out
+	 */
+	public abstract void zoomOut();
 }

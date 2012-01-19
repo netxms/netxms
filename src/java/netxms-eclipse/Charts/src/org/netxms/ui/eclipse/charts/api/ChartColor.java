@@ -112,6 +112,16 @@ public final class ChartColor
 	}
 	
 	/**
+	 * Get color as SWT RGB object
+	 * 
+	 * @return RGB object
+	 */
+	public RGB getRGBObject()
+	{
+		return new RGB(red, green, blue);
+	}
+	
+	/**
 	 * Convenient method for creating chart color object from preference store
 	 * 
 	 * @param preferenceStore preference store
