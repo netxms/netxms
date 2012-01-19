@@ -3496,3 +3496,6 @@ webui/webapp/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widg
 webui/webapp/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/gallery/ListItemRenderer.java -text
 webui/webapp/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/gallery/NoGroupRenderer.java -text
 webui/webapp/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/gallery/RendererHelper.java -text
+webui/webapp/war/WEB-INF/launch.ini -text
+webui/webapp/war/WEB-INF/web.xml -text
+webui/webapp/war/nxmc.warproduct -text
