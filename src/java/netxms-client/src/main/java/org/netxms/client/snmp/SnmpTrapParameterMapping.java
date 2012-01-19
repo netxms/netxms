@@ -72,7 +72,7 @@ public class SnmpTrapParameterMapping
 		else
 		{
 			msg.setVariableInt32(NXCPCodes.VID_TRAP_PLEN_BASE + index, objectId.getLength());
-			objectId.setNXCPVariable(msg, NXCPCodes.VID_TRAP_PNAME_BASE);
+			objectId.setNXCPVariable(msg, NXCPCodes.VID_TRAP_PNAME_BASE + index);
 		}
 	}
 
