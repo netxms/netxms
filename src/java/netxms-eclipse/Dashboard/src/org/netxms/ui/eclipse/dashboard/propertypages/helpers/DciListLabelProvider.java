@@ -26,7 +26,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
@@ -144,7 +143,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				}
 				final String[] names = session.resolveDciNames(nodeIds, dciIds);
 				
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{

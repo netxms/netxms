@@ -94,8 +94,9 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		actionShowViewMenu = ActionFactory.SHOW_VIEW_MENU.create(window);
 		register(actionShowViewMenu);
 
-		actionOpenProgressView = new Action()
-		{
+		actionOpenProgressView = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			/*
 			 * (non-Javadoc)
 			 * 

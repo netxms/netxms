@@ -52,7 +52,6 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
@@ -684,7 +683,7 @@ public class DataCollectionEditor extends ViewPart
 				dciConfig.copyItems(dciConfig.getNodeId(), dciList);
 				dciConfig.close();
 				dciConfig.open();
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
@@ -729,7 +728,7 @@ public class DataCollectionEditor extends ViewPart
 				{
 					for(long id : dciList)
 						dciConfig.deleteItem(id);
-					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{
@@ -799,7 +798,7 @@ public class DataCollectionEditor extends ViewPart
 				monitor.worked(1);
 				
 				dciConfig.open();
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{

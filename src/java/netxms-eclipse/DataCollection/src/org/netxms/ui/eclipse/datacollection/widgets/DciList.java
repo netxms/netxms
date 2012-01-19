@@ -28,7 +28,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
@@ -124,7 +123,7 @@ public class DciList extends Composite
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final DciValue[] data = session.getLastValues(node.getObjectId());
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{

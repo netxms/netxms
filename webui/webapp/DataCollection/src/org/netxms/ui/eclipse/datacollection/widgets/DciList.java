@@ -28,7 +28,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
@@ -46,6 +45,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class DciList extends Composite
 {
+	private static final long serialVersionUID = 1L;
+
 	// Columns
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_PARAMETER = 1;
@@ -85,6 +86,8 @@ public class DciList extends Composite
 		WidgetHelper.restoreTableViewerSettings(viewer, ds, configPrefix);
 		
 		addListener(SWT.Resize, new Listener() {
+			private static final long serialVersionUID = 1L;
+
 			public void handleEvent(Event e)
 			{
 				viewer.getControl().setBounds(DciList.this.getClientArea());
@@ -92,6 +95,8 @@ public class DciList extends Composite
 		});
 		
 		viewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -124,7 +129,7 @@ public class DciList extends Composite
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final DciValue[] data = session.getLastValues(node.getObjectId());
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{

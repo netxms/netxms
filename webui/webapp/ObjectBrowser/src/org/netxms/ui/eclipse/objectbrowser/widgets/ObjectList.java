@@ -34,7 +34,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
@@ -50,6 +49,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ObjectList extends Composite
 {
+	private static final long serialVersionUID = 1L;
+
 	// Options
 	public static final int NONE = 0;
 	public static final int CHECKBOXES = 0x01;
@@ -92,6 +93,8 @@ public class ObjectList extends Composite
 		filterText = new Text(filterArea, SWT.BORDER);
 		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		filterText.addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -122,7 +125,7 @@ public class ObjectList extends Composite
 			{
 				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
 				{
-					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					getDisplay().asyncExec(new Runnable() {
 						@Override
 						public void run()
 						{
@@ -136,6 +139,8 @@ public class ObjectList extends Composite
 
 		// Set dispose listener
 		addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

@@ -52,7 +52,6 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
@@ -142,6 +141,8 @@ public class DataCollectionEditor extends ViewPart
 		// Create filter area
 		filterText = new FilterText(content, SWT.NONE);
 		filterText.addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -149,6 +150,8 @@ public class DataCollectionEditor extends ViewPart
 			}
 		});
 		filterText.setCloseAction(new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -206,6 +209,8 @@ public class DataCollectionEditor extends ViewPart
 			}
 		});
 		viewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -365,8 +370,9 @@ public class DataCollectionEditor extends ViewPart
 	{
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
-		actionRefresh = new RefreshAction()
-		{
+		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -374,8 +380,9 @@ public class DataCollectionEditor extends ViewPart
 			}
 		};
 
-		actionCreate = new Action()
-		{
+		actionCreate = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -386,6 +393,8 @@ public class DataCollectionEditor extends ViewPart
 		actionCreate.setImageDescriptor(Activator.getImageDescriptor("icons/new.png"));
 
 		actionEdit = new PropertyDialogAction(getSite(), viewer) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -399,9 +408,8 @@ public class DataCollectionEditor extends ViewPart
 
 		actionDelete = new Action()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -414,6 +422,8 @@ public class DataCollectionEditor extends ViewPart
 
 		actionCopy = new Action()
 		{
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -423,8 +433,9 @@ public class DataCollectionEditor extends ViewPart
 		actionCopy.setText("&Copy to other node(s)...");
 		actionCopy.setEnabled(false);
 
-		actionMove = new Action()
-		{
+		actionMove = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -434,8 +445,9 @@ public class DataCollectionEditor extends ViewPart
 		actionMove.setText("&Move to other node(s)...");
 		actionMove.setEnabled(false);
 
-		actionConvert = new Action()
-		{
+		actionConvert = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -445,8 +457,9 @@ public class DataCollectionEditor extends ViewPart
 		actionConvert.setText("Convert to &template item...");
 		actionConvert.setEnabled(false);
 
-		actionDuplicate = new Action()
-		{
+		actionDuplicate = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -456,8 +469,9 @@ public class DataCollectionEditor extends ViewPart
 		actionDuplicate.setText("D&uplicate");
 		actionDuplicate.setEnabled(false);
 
-		actionActivate = new Action()
-		{
+		actionActivate = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -468,8 +482,9 @@ public class DataCollectionEditor extends ViewPart
 		actionActivate.setImageDescriptor(Activator.getImageDescriptor("icons/active.gif"));
 		actionActivate.setEnabled(false);
 
-		actionDisable = new Action()
-		{
+		actionDisable = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -480,8 +495,9 @@ public class DataCollectionEditor extends ViewPart
 		actionDisable.setImageDescriptor(Activator.getImageDescriptor("icons/disabled.gif"));
 		actionDisable.setEnabled(false);
 
-		actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX)
-      {
+		actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -503,8 +519,9 @@ public class DataCollectionEditor extends ViewPart
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -684,7 +701,7 @@ public class DataCollectionEditor extends ViewPart
 				dciConfig.copyItems(dciConfig.getNodeId(), dciList);
 				dciConfig.close();
 				dciConfig.open();
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
@@ -729,7 +746,7 @@ public class DataCollectionEditor extends ViewPart
 				{
 					for(long id : dciList)
 						dciConfig.deleteItem(id);
-					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{
@@ -799,7 +816,7 @@ public class DataCollectionEditor extends ViewPart
 				monitor.worked(1);
 				
 				dciConfig.open();
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{

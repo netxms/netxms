@@ -25,7 +25,6 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
-import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciData;
@@ -97,7 +96,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 				{
 					final DciData data = session.getCollectedData(dciList[i].nodeId, dciList[i].dciId, null, null, 1);
 					final int index = i;
-					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{
@@ -108,7 +107,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 						}
 					});
 				}
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
