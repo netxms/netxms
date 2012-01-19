@@ -93,7 +93,6 @@ public class DataComparisonView extends ViewPart
 	private Action actionShowBarChart;
 	private Action actionShowTubeChart;
 	private Action actionShowPieChart;
-	private Action actionShowDialChart;
 	private Action actionShowIn3D;
 	private Action actionShowTranslucent;
 	private Action actionUseLogScale;
@@ -464,16 +463,6 @@ public class DataComparisonView extends ViewPart
 		actionShowPieChart.setChecked(chart.getChartType() == DataComparisonChart.PIE_CHART);
 		actionShowPieChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_pie.png"));
 
-		actionShowDialChart = new Action("&Dial chart", Action.AS_RADIO_BUTTON) {
-			@Override
-			public void run()
-			{
-				setChartType(DataComparisonChart.DIAL_CHART);
-			}
-		};
-		actionShowDialChart.setChecked(chart.getChartType() == DataComparisonChart.DIAL_CHART);
-		actionShowDialChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_dial.png"));
-
 		actionHorizontal = new Action("Show &horizontally", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
@@ -526,7 +515,6 @@ public class DataComparisonView extends ViewPart
 		manager.add(actionShowBarChart);
 		manager.add(actionShowTubeChart);
 		manager.add(actionShowPieChart);
-		manager.add(actionShowDialChart);
 		manager.add(new Separator());
 		manager.add(actionVertical);
 		manager.add(actionHorizontal);
@@ -557,7 +545,6 @@ public class DataComparisonView extends ViewPart
 		manager.add(actionShowBarChart);
 		manager.add(actionShowTubeChart);
 		manager.add(actionShowPieChart);
-		manager.add(actionShowDialChart);
 		manager.add(new Separator());
 		manager.add(actionVertical);
 		manager.add(actionHorizontal);
@@ -580,7 +567,6 @@ public class DataComparisonView extends ViewPart
 		manager.add(actionShowBarChart);
 		manager.add(actionShowTubeChart);
 		manager.add(actionShowPieChart);
-		manager.add(actionShowDialChart);
 		manager.add(new Separator());
 		manager.add(actionVertical);
 		manager.add(actionHorizontal);
