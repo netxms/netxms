@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.charts.preferencepages;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
-import org.eclipse.jface.preference.RadioGroupFieldEditor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.netxms.ui.eclipse.charts.Activator;
@@ -31,6 +30,8 @@ import org.netxms.ui.eclipse.charts.Activator;
  */
 public class GeneralChartPrefs extends FieldEditorPreferencePage implements IWorkbenchPreferencePage
 {
+	private static final long serialVersionUID = 1L;
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */

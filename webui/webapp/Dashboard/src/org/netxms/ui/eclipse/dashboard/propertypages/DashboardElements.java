@@ -70,6 +70,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 @SuppressWarnings("restriction")
 public class DashboardElements extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	public static final int COLUMN_TYPE = 0;
 	public static final int COLUMN_SPAN = 1;
 	public static final int COLUMN_ALIGNMENT = 2;
@@ -329,11 +331,12 @@ public class DashboardElements extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Update dashboard configuration", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
+				session.modifyObject(md);
 			}
 
 			@Override

@@ -32,7 +32,6 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
@@ -50,12 +49,10 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * Dial chart implementation
  */
-/**
- * @author Victor
- *
- */
 public class DialChartWidget extends GenericChart implements DialChart, PaintListener, DisposeListener
 {
+	private static final long serialVersionUID = 1L;
+	
 	private static final int OUTER_MARGIN_WIDTH = 5;
 	private static final int OUTER_MARGIN_HEIGHT = 5;
 	private static final int INNER_MARGIN_WIDTH = 5;
@@ -74,7 +71,6 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	private static Font[] valueFonts = null;
 	
 	private List<DataComparisonElement> parameters = new ArrayList<DataComparisonElement>(MAX_CHART_ITEMS);
-	private Image chartImage = null;
 	private ColorCache colors;
 	private double minValue = 0.0;
 	private double maxValue = 100.0;
@@ -100,14 +96,11 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		addPaintListener(this);
 		addDisposeListener(this);
 		addControlListener(new ControlListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void controlResized(ControlEvent e)
 			{
-				if (chartImage != null)
-				{
-					chartImage.dispose();
-					chartImage = null;
-				}
 				refresh();
 			}
 			
@@ -306,7 +299,6 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	@Override
 	public void refresh()
 	{
-		render();
 		redraw();
 	}
 
@@ -325,8 +317,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	@Override
 	public void paintControl(PaintEvent e)
 	{
-		if (chartImage != null)
-			e.gc.drawImage(chartImage, 0, 0);
+		render(e.gc);
 	}
 
 	/* (non-Javadoc)
@@ -335,25 +326,15 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	@Override
 	public void widgetDisposed(DisposeEvent e)
 	{
-		if (chartImage != null)
-			chartImage.dispose();
 	}
 	
 	/**
 	 * Render chart
 	 */
-	private void render()
+	private void render(GC gc)
 	{
-		/*
 		Point size = getSize();
-		if (chartImage == null)
-		{
-			if ((size.x <= 0) || (size.y <= 0))
-				return;
-			chartImage = new Image(getDisplay(), size.x, size.y);
-		}
-		
-		GC gc = new GC(chartImage);
+
 		gc.setBackground(getColorFromPreferences("Chart.Colors.Background"));
 		gc.fillRectangle(0, 0, size.x, size.y);
 		gc.setAntialias(SWT.ON);
@@ -364,7 +345,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		// Draw title
 		if (titleVisible && (title != null))
 		{
-			Point ext = gc.textExtent(title, SWT.DRAW_TRANSPARENT);
+			Point ext = gc.textExtent(title);
 			int x = (ext.x < size.x) ? (size.x - ext.x) / 2 : 0;
 			gc.drawText(title, x, top, true);
 			top += ext.y + INNER_MARGIN_HEIGHT;
@@ -385,9 +366,6 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 				renderElement(gc, parameters.get(i), i * w, top, w, h);
 			}
 		}
-		
-		gc.dispose();
-		*/
 	}
 
 	/**
@@ -397,7 +375,6 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	 */
 	private void renderElement(GC gc, DataComparisonElement dci, int x, int y, int w, int h)
 	{
-		/*
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
 		if (legendVisible && !legendInside)
 		{
@@ -426,11 +403,11 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		
 		// Draw zones
 		int startAngle = 225;
-		startAngle = drawZone(gc, rect, startAngle, minValue, leftRedZone, angleValue, RED_ZONE_COLOR);
-		startAngle = drawZone(gc, rect, startAngle, leftRedZone, leftYellowZone, angleValue, YELLOW_ZONE_COLOR);
-		startAngle = drawZone(gc, rect, startAngle, leftYellowZone, rightYellowZone, angleValue, GREEN_ZONE_COLOR);
-		startAngle = drawZone(gc, rect, startAngle, rightYellowZone, rightRedZone, angleValue, YELLOW_ZONE_COLOR);
-		startAngle = drawZone(gc, rect, startAngle, rightRedZone, maxValue, angleValue, RED_ZONE_COLOR);
+		startAngle = drawZone(gc, rect, cx, cy, startAngle, minValue, leftRedZone, angleValue, RED_ZONE_COLOR);
+		startAngle = drawZone(gc, rect, cx, cy, startAngle, leftRedZone, leftYellowZone, angleValue, YELLOW_ZONE_COLOR);
+		startAngle = drawZone(gc, rect, cx, cy, startAngle, leftYellowZone, rightYellowZone, angleValue, GREEN_ZONE_COLOR);
+		startAngle = drawZone(gc, rect, cx, cy, startAngle, rightYellowZone, rightRedZone, angleValue, YELLOW_ZONE_COLOR);
+		startAngle = drawZone(gc, rect, cx, cy, startAngle, rightRedZone, maxValue, angleValue, RED_ZONE_COLOR);
 		
 		// Draw center part and border
 		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
@@ -460,7 +437,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 
 			String value = roundedMarkValue(i, angleValue, valueStep);
 			Point t = positionOnArc(cx, cy, outerRadius - textOffset, i);
-			Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
+			Point ext = gc.textExtent(value);
 			gc.drawText(value, t.x - ext.x / 2, t.y - ext.y / 2, SWT.DRAW_TRANSPARENT);
 		}
 		gc.drawArc(rect.x + scaleOuterOffset, rect.y + scaleOuterOffset, rect.width - scaleOuterOffset * 2, rect.height - scaleOuterOffset * 2, -45, 270);
@@ -485,7 +462,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		// Draw current value
 		String value = getValueAsDisplayString(dci);
 		gc.setFont(WidgetHelper.getMatchingSizeFont(valueFonts, markFont));
-		Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
+		Point ext = gc.textExtent(value);
 		gc.setLineWidth(3);
 		gc.setBackground(colors.create(NEEDLE_COLOR));
 		int boxW = Math.max(outerRadius - scaleInnerOffset - 6, ext.x + 8);
@@ -496,7 +473,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		// Draw legend, ignore legend position
 		if (legendVisible)
 		{
-			ext = gc.textExtent(dci.getName(), SWT.DRAW_TRANSPARENT);
+			ext = gc.textExtent(dci.getName());
 			gc.setForeground(SharedColors.BLACK);
 			if (legendInside)
 			{
@@ -509,7 +486,6 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 				gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 			}
 		}
-		*/
 	}
 	
 	/**
@@ -524,7 +500,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	 * @param color color
 	 * @return
 	 */
-	private int drawZone(GC gc, Rectangle rect, int startAngle, double minValue, double maxValue, double angleValue, RGB color)
+	private int drawZone(GC gc, Rectangle rect, int cx, int cy, int startAngle, double minValue, double maxValue, double angleValue, RGB color)
 	{
 		if (minValue >= maxValue)
 			return startAngle;	// Ignore incorrect zone settings
@@ -536,7 +512,20 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		int offset = ((rect.width / 2) * SCALE_OFFSET / 100);
 		
 		gc.setBackground(colors.create(color));
-		gc.fillArc(rect.x + offset, rect.y + offset, rect.width - offset * 2, rect.height - offset * 2, startAngle, -angle);
+		gc.fillArc(rect.x + offset, rect.y + offset, rect.width - offset * 2, rect.height - offset * 2, startAngle - angle, angle);
+		
+		int radius = (rect.width - offset * 2 + 1) / 2 + 1;
+		Point p1 = positionOnArc(cx, cy, radius, startAngle);
+		Point p2 = positionOnArc(cx, cy, radius, startAngle - angle);
+		int[] points = new int[6];
+		points[0] = p1.x;
+		points[1] = p1.y;
+		points[2] = cx;
+		points[3] = cy;
+		points[4] = p2.x;
+		points[5] = p2.y;
+		gc.fillPolygon(points);
+		
 		return startAngle - angle;
 	}
 

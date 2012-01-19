@@ -17,6 +17,7 @@ import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
  */
 public class LineChart extends GenericChart implements HistoricalDataChart
 {
+	private static final long serialVersionUID = 1L;
 
 	public LineChart(Composite parent, int style)
 	{

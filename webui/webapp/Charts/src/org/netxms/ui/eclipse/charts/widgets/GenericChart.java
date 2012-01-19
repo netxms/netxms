@@ -30,6 +30,8 @@ import org.netxms.ui.eclipse.charts.api.DataChart;
  */
 public abstract class GenericChart extends Canvas implements DataChart
 {
+	private static final long serialVersionUID = 1L;
+
 	protected String title = "Chart";
 	protected boolean titleVisible = false;
 	protected boolean legendVisible = true;
