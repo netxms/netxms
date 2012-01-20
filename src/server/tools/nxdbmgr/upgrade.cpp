@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2011 Victor Kirhenshtein
+** Copyright (C) 2004-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -171,7 +171,7 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 	int queryLen = 512;
 	BOOL success = FALSE;
 
-	query = (TCHAR *)malloc(queryLen);
+	query = (TCHAR *)malloc(queryLen * sizeof(TCHAR));
 
 	switch(g_iSyntax)
 	{
@@ -211,7 +211,7 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 			if ((int)newValue.getSize() + 256 > queryLen)
 			{
 				queryLen = newValue.getSize() + 256;
-				query = (TCHAR *)realloc(query, queryLen);
+				query = (TCHAR *)realloc(query, queryLen * sizeof(TCHAR));
 			}
 			_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT, table, column,
 						  (const TCHAR *)newValue, idColumn, id);
