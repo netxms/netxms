@@ -128,6 +128,7 @@ import org.netxms.client.reports.ReportRenderFormat;
 import org.netxms.client.reports.ReportResult;
 import org.netxms.client.situations.Situation;
 import org.netxms.client.snmp.SnmpTrap;
+import org.netxms.client.snmp.SnmpTrapLogRecord;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
@@ -438,6 +439,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 						case NXCPCodes.CMD_EVENTLOG_RECORDS:
 							processNewEvents(msg);
 							break;
+						case NXCPCodes.CMD_TRAP_LOG_RECORDS:
+							processNewTraps(msg);
+							break;
 						case NXCPCodes.CMD_SYSLOG_RECORDS:
 							processSyslogRecords(msg);
 							break;
@@ -508,6 +512,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			{
 				Event event = new Event(msg, varId);
 				sendNotification(new NXCNotification(NXCNotification.NEW_EVENTLOG_RECORD, order, event));
+			}
+		}
+
+		/**
+		 * Process SNMP trap notification messages.
+		 * 
+		 * @param msg NXCP message
+		 */
+		private void processNewTraps(final NXCPMessage msg)
+		{
+			int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_RECORDS);
+			int order = msg.getVariableAsInteger(NXCPCodes.VID_RECORDS_ORDER);
+			long varId = NXCPCodes.VID_TRAP_LOG_MSG_BASE;
+			for(int i = 0; i < count; i++)
+			{
+				SnmpTrapLogRecord trap = new SnmpTrapLogRecord(msg, varId);
+				sendNotification(new NXCNotification(NXCNotification.NEW_SNMP_TRAP, order, trap));
 			}
 		}
 

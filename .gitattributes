@@ -571,6 +571,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/snmp/MibTree.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpObjectId.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpObjectIdFormatException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpTrap.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpTrapLogRecord.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpTrapParameterMapping.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpUsmCredential.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpValue.java -text
@@ -1345,6 +1346,7 @@ src/java/netxms-eclipse/SNMP/icons/delete.png -text
 src/java/netxms-eclipse/SNMP/icons/edit.png -text
 src/java/netxms-eclipse/SNMP/icons/mibexplorer.gif -text
 src/java/netxms-eclipse/SNMP/icons/new.png -text
+src/java/netxms-eclipse/SNMP/icons/snmp_trap_monitor.png -text
 src/java/netxms-eclipse/SNMP/icons/trapeditor.png -text
 src/java/netxms-eclipse/SNMP/plugin.xml -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/Activator.java -text
@@ -1352,6 +1354,7 @@ src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/LoginListener.java -
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/SnmpConstants.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenMibExplorer.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenMibExplorerForNode.java -text
+src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenSnmpTrapMonitor.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenTrapEditor.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/MibSelectionDialog.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/ParamMappingEditDialog.java -text
@@ -1359,8 +1362,11 @@ src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/TrapConfigur
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/helpers/ParamMappingLabelProvider.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/MibExplorer.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/SnmpTrapEditor.java -text
+src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/SnmpTrapMonitor.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapComparator.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapLabelProvider.java -text
+src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapMonitorFilter.java -text
+src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapMonitorLabelProvider.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpValueLabelProvider.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/widgets/MibBrowser.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/widgets/MibObjectDetails.java -text
