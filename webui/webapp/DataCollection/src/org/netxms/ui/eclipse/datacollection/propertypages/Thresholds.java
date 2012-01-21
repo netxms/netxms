@@ -58,8 +58,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * @author Victor
- *
+ * "Thresholds" page for data collection item
  */
 public class Thresholds extends PropertyPage
 {
@@ -70,6 +69,7 @@ public class Thresholds extends PropertyPage
 	
 	private DataCollectionItem dci;
 	private LabeledText instance;
+	private Button checkAllThresholds;
 	private TableViewer thresholds;
 	private Button addButton;
 	private Button modifyButton;
@@ -102,6 +102,10 @@ public class Thresholds extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       instance.setLayoutData(gd);
+      
+      checkAllThresholds = new Button(dialogArea, SWT.CHECK);
+      checkAllThresholds.setText("Process &all thresholds");
+      checkAllThresholds.setSelection(dci.isProcessAllThresholds());
       
       Composite thresholdArea = new Composite(dialogArea, SWT.NONE);
       gd = new GridData();
@@ -426,6 +430,7 @@ public class Thresholds extends PropertyPage
 			setValid(false);
 		
 		dci.setInstance(instance.getText());
+		dci.setProcessAllThresholds(checkAllThresholds.getSelection());
 		
 		new ConsoleJob("Update thresholds for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
 			@Override
