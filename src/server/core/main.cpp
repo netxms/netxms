@@ -136,7 +136,7 @@ QWORD g_qwServerId;
 RSA *g_pServerKey = NULL;
 time_t g_tServerStartTime = 0;
 DWORD g_dwLockTimeout = 60000;   // Default timeout for acquiring mutex
-DWORD g_dwAgentCommandTimeout = 2000;  // Default timeout for requests to agent
+DWORD g_dwAgentCommandTimeout = 4000;  // Default timeout for requests to agent
 DWORD g_dwThresholdRepeatInterval = 0;	// Disabled by default
 int g_nRequiredPolls = 1;
 DB_DRIVER g_dbDriver = NULL;

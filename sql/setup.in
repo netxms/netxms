@@ -147,7 +147,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('SNMPRequestTimeout','2000',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('AgentCommandTimeout','2000',1,1);
+	VALUES ('AgentCommandTimeout','4000',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('TopologyExpirationTime','900',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)

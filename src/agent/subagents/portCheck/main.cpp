@@ -136,7 +136,7 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 // Init callback
 //
 
-DWORD m_dwDefaultTimeout = 30000;
+DWORD m_dwDefaultTimeout = 3000;
 
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {

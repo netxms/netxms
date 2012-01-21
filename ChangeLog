@@ -2,6 +2,9 @@
 * 1.1.10
 *
 
+- Changed default timeout for service checking subagent
+- Java console:
+	- Added missing DCI option "process all thresholds"
 
 
 *
