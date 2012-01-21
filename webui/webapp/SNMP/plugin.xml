@@ -21,6 +21,13 @@
             name="MIB Explorer"
             restorable="true">
       </view>
+      <view
+            class="org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor"
+            icon="icons/snmp_trap_monitor.png"
+            id="org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor"
+            name="SNMP Trap Monitor"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -33,6 +40,12 @@
             description="Open MIB Explorer"
             id="org.netxms.ui.eclipse.snmp.commands.open_mib_explorer"
             name="MIB Explorer">
+      </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open SNMP trap monitor"
+            id="org.netxms.ui.eclipse.snmp.commands.open_snmp_trap_monitor"
+            name="SNMP Trap Monitor">
       </command>
    </extension>
    <extension
@@ -50,6 +63,14 @@
                menubarPath="config/additions"
                style="push"
                tooltip="Open SNMP traps configuration">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.snmp.actions.OpenSnmpTrapMonitor"
+               definitionId="org.netxms.ui.eclipse.snmp.commands.open_snmp_trap_monitor"
+               id="org.netxms.ui.eclipse.snmp.actions.open_snmp_trap_monitor"
+               label="SNMP Traps"
+               menubarPath="monitor/additions"
+               tooltip="Open SNMP trap monitor">
          </action>
       </actionSet>
       <actionSet

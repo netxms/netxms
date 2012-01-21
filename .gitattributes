@@ -3365,6 +3365,7 @@ webui/webapp/SNMP/icons/delete.png -text
 webui/webapp/SNMP/icons/edit.png -text
 webui/webapp/SNMP/icons/mibexplorer.gif -text
 webui/webapp/SNMP/icons/new.png -text
+webui/webapp/SNMP/icons/snmp_trap_monitor.png -text
 webui/webapp/SNMP/icons/trapeditor.png -text
 webui/webapp/SNMP/plugin.xml -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/Activator.java -text
@@ -3372,6 +3373,7 @@ webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/LoginListener.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/SnmpConstants.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenMibExplorer.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenMibExplorerForNode.java -text
+webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenSnmpTrapMonitor.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenTrapEditor.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/MibSelectionDialog.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/ParamMappingEditDialog.java -text
@@ -3379,8 +3381,11 @@ webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/TrapConfigurationDialog
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/helpers/ParamMappingLabelProvider.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/views/MibExplorer.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/views/SnmpTrapEditor.java -text
+webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/views/SnmpTrapMonitor.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapComparator.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapLabelProvider.java -text
+webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapMonitorFilter.java -text
+webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapMonitorLabelProvider.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpValueLabelProvider.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/widgets/MibBrowser.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/widgets/MibObjectDetails.java -text
