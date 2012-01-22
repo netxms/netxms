@@ -30,6 +30,8 @@ import org.eclipse.swt.widgets.TableColumn;
  */
 public class TableSortingListener extends SelectionAdapter
 {
+	private static final long serialVersionUID = 1L;
+
 	private TableViewer viewer;
 	
 	/**

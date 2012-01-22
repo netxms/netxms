@@ -2828,6 +2828,7 @@ webui/webapp/Core/OSGI-INF/l10n/bundle_ru.properties -text
 webui/webapp/Core/build.properties -text
 webui/webapp/Core/icons/add_obj.gif -text
 webui/webapp/Core/icons/alarm.png -text
+webui/webapp/Core/icons/app_settings.png -text
 webui/webapp/Core/icons/checkbox_off.png -text
 webui/webapp/Core/icons/checkbox_on.png -text
 webui/webapp/Core/icons/clear_log.gif -text
@@ -2842,7 +2843,7 @@ webui/webapp/Core/icons/execute.gif -text
 webui/webapp/Core/icons/expand.png -text
 webui/webapp/Core/icons/expandall.png -text
 webui/webapp/Core/icons/find.gif -text
-webui/webapp/Core/icons/login.png -text
+webui/webapp/Core/icons/login.jpg -text
 webui/webapp/Core/icons/password.png -text
 webui/webapp/Core/icons/paste.gif -text
 webui/webapp/Core/icons/pause.png -text
@@ -2908,7 +2909,7 @@ webui/webapp/Core/src/org/netxms/webui/core/ApplicationWorkbenchWindowAdvisor.ja
 webui/webapp/Core/src/org/netxms/webui/core/LoginJob.java -text
 webui/webapp/Core/src/org/netxms/webui/core/Messages.java -text
 webui/webapp/Core/src/org/netxms/webui/core/Perspective.java -text
-webui/webapp/Core/src/org/netxms/webui/core/dialogs/LoginDialog.java -text
+webui/webapp/Core/src/org/netxms/webui/core/dialogs/LoginForm.java -text
 webui/webapp/Core/src/org/netxms/webui/core/dialogs/PasswordExpiredDialog.java -text
 webui/webapp/Core/src/org/netxms/webui/core/messages.properties -text
 webui/webapp/Core/src/org/netxms/webui/core/messages_es.properties -text

@@ -45,6 +45,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class FilterText extends Composite
 {
+	private static final long serialVersionUID = 1L;
+
 	private Text text;
 	private Composite buttonArea;
 	private List<Button> attrButtons = new ArrayList<Button>(4);
@@ -104,6 +106,7 @@ public class FilterText extends Composite
 		gd.horizontalAlignment = SWT.CENTER;
 		closeButton.setLayoutData(gd);
 		closeButton.addMouseListener(new MouseListener() {
+			private static final long serialVersionUID = 1L;
 			private boolean doAction = false;
 			
 			@Override
@@ -157,6 +160,8 @@ public class FilterText extends Composite
 			b.setText(attr);
 			attrButtons.add(b);
 			b.addSelectionListener(new SelectionListener () {
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{

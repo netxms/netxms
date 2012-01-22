@@ -1,8 +1,25 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.webui.core;
 
 import java.lang.reflect.InvocationTargetException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -17,7 +34,7 @@ import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
-import org.netxms.webui.core.dialogs.LoginDialog;
+import org.netxms.webui.core.dialogs.LoginForm;
 import org.netxms.webui.core.dialogs.PasswordExpiredDialog;
 import org.netxms.webui.tools.RWTHelper;
 
@@ -68,84 +85,23 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	 */
 	private void doLogin()
 	{
-		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		boolean success = false;
 
-		LoginDialog loginDialog;
+		LoginForm loginDialog;
 		do
 		{
-			loginDialog = new LoginDialog(null);
+			loginDialog = new LoginForm(null);
 			if (loginDialog.open() != Window.OK)
 				continue;
-			//	System.exit(0);	// TODO: do we need to use more graceful method?
 
 			try
 			{
-				LoginJob job = new LoginJob(settings.get("Connect.Server"), settings.get("Connect.Login"), //$NON-NLS-1$ //$NON-NLS-2$
+				// TODO: read server address from app settings
+				LoginJob job = new LoginJob("127.0.0.1", loginDialog.getLogin(), //$NON-NLS-1$
 				                            loginDialog.getPassword(), Display.getCurrent());
 
-System.out.println("BEGIN");				
-				//new ProgressMonitorDialog(null).run(true, false, job);
-job.run(new IProgressMonitor()
-{
-	
-	@Override
-	public void worked(int work)
-	{
-		// TODO Auto-generated method stub
-		
-	}
-	
-	@Override
-	public void subTask(String name)
-	{
-		// TODO Auto-generated method stub
-		
-	}
-	
-	@Override
-	public void setTaskName(String name)
-	{
-		// TODO Auto-generated method stub
-		
-	}
-	
-	@Override
-	public void setCanceled(boolean value)
-	{
-		// TODO Auto-generated method stub
-		
-	}
-	
-	@Override
-	public boolean isCanceled()
-	{
-		// TODO Auto-generated method stub
-		return false;
-	}
-	
-	@Override
-	public void internalWorked(double work)
-	{
-		// TODO Auto-generated method stub
-		
-	}
-	
-	@Override
-	public void done()
-	{
-		// TODO Auto-generated method stub
-		
-	}
-	
-	@Override
-	public void beginTask(String name, int totalWork)
-	{
-		// TODO Auto-generated method stub
-		
-	}
-});
-System.out.println("DONE");				
+				// TODO: implement login on non-UI thread
+				new ProgressMonitorDialog(null).run(false, false, job);
 				success = true;
 			}
 			catch(InvocationTargetException e)

@@ -27,11 +27,12 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * @author Victor
- *
+ * Composite widget - text wit label
  */
 public class LabeledText extends Composite
 {
+	private static final long serialVersionUID = 1L;
+
 	private Label label;
 	private Text text;
 

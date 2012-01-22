@@ -44,6 +44,8 @@ import org.netxms.webui.core.Messages;
  */
 public class AbstractSelector extends Composite
 {
+	private static final long serialVersionUID = 1L;
+
 	private Label label;
 	private CLabel text;
 	private Button button;
@@ -89,6 +91,8 @@ public class AbstractSelector extends Composite
 		button.setText("..."); //$NON-NLS-1$
 		button.setToolTipText(getButtonToolTip());
 		button.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -108,6 +112,8 @@ public class AbstractSelector extends Composite
 		text.setToolTipText(getTextToolTip());
 		
 		addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -132,8 +138,9 @@ public class AbstractSelector extends Composite
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

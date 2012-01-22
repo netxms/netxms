@@ -35,10 +35,11 @@ import org.netxms.webui.core.Activator;
 
 /**
  * "Password expired" dialog
- *
  */
 public class PasswordExpiredDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private Text textPassword1;
 	private Text textPassword2;
 	private String password;
@@ -87,8 +88,8 @@ public class PasswordExpiredDialog extends Dialog
 		gd.widthHint = 250;
 		editArea.setLayoutData(gd);
 		
-		final ModifyListener listener = new ModifyListener()
-		{
+		final ModifyListener listener = new ModifyListener() {
+			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void modifyText(ModifyEvent e)
