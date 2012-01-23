@@ -123,6 +123,8 @@ int main(int argc, char *argv[])
 						 "   %%n Source object name\n"
 						 "   %%s Severity as number\n"
 						 "   %%S Severity as text\n"
+						 "   %%x Alarm state as number\n"
+						 "   %%X Alarm state as text\n"
 						 "   %%%% Percent sign\n"
                    "\n");
             return 1;

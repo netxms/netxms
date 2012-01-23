@@ -244,11 +244,14 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
 //    %n Source object name
 //    %s Severity as number
 //    %S Severity as text
+//    %x Alarm state as number
+//    %X Alarm state as text
 //    %% Percent sign
 //
 
 TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *alarm, TCHAR *format)
 {
+	static const TCHAR *alarmState[] = { _T("OUTSTANDING"), _T("ACKNOWLEDGED"), _T("TERMINATED") };
 	static const TCHAR *helpdeskState[] = { _T("IGNORED"), _T("OPEN"), _T("CLOSED") };
 	static const TCHAR *severityText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL") };
 
@@ -314,6 +317,12 @@ TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *ala
 				break;
 			case 'S':
 				out += severityText[alarm->nCurrentSeverity];
+				break;
+			case 'x':
+				out.addFormattedString(_T("%d"), (int)alarm->nState);
+				break;
+			case 'X':
+				out += alarmState[alarm->nState];
 				break;
 			case 0:
 				curr--;
