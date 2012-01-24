@@ -26,7 +26,6 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rwt.RWT;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
@@ -63,8 +62,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		doLogin();
 		
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-		configurer.setInitialSize(new Point(400, 300));
-		configurer.setShowCoolBar(false);
+		configurer.setShowCoolBar(true);
+		configurer.setShowPerspectiveBar(true);
 		configurer.setShowStatusLine(false);
 		configurer.setTitle("NetXMS Management Console");
 		configurer.setShellStyle(SWT.NO_TRIM);

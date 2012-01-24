@@ -2906,6 +2906,7 @@ webui/webapp/Core/src/org/netxms/webui/core/Application.java -text
 webui/webapp/Core/src/org/netxms/webui/core/ApplicationActionBarAdvisor.java -text
 webui/webapp/Core/src/org/netxms/webui/core/ApplicationWorkbenchAdvisor.java -text
 webui/webapp/Core/src/org/netxms/webui/core/ApplicationWorkbenchWindowAdvisor.java -text
+webui/webapp/Core/src/org/netxms/webui/core/ExtendedContributionComparator.java -text
 webui/webapp/Core/src/org/netxms/webui/core/LoginJob.java -text
 webui/webapp/Core/src/org/netxms/webui/core/Messages.java -text
 webui/webapp/Core/src/org/netxms/webui/core/Perspective.java -text

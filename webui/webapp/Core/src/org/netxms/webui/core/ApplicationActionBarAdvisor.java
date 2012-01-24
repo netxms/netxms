@@ -3,9 +3,15 @@ package org.netxms.webui.core;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IContributionItem;
+import org.eclipse.jface.action.ICoolBarManager;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.ToolBarContributionItem;
+import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.SWT;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
@@ -17,6 +23,7 @@ import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
+import org.netxms.base.NXCommon;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 
 /**
@@ -26,6 +33,7 @@ import org.netxms.ui.eclipse.shared.IActionConstants;
 public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 {
 	private IWorkbenchAction actionExit;
+	private Action actionAbout;
 	private IWorkbenchAction actionShowPreferences;
 	private IWorkbenchAction actionCustomizePerspective;
 	private IWorkbenchAction actionSavePerspective;
@@ -53,7 +61,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	 * @see org.eclipse.ui.application.ActionBarAdvisor#makeActions(org.eclipse.ui.IWorkbenchWindow)
 	 */
 	@Override
-	protected void makeActions(IWorkbenchWindow window)
+	protected void makeActions(final IWorkbenchWindow window)
 	{
 		contribItemShowView = ContributionItemFactory.VIEWS_SHORTLIST.create(window);
 		contribItemOpenPerspective = ContributionItemFactory.PERSPECTIVES_SHORTLIST.create(window);
@@ -61,6 +69,16 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		actionExit = ActionFactory.QUIT.create(window);
 		register(actionExit);
 
+		actionAbout = new Action("&About NetXMS Management Console") {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public void run()
+			{
+				MessageDialog.openInformation(window.getShell(), "About", "NetXMS Management Console (Web Edition)\nVersion " + NXCommon.VERSION + "\nCopyright (c) 2003-2012 Raden Solutions");
+			}
+		};
+		
 		actionShowPreferences = ActionFactory.PREFERENCES.create(window);
 		register(actionShowPreferences);
 
@@ -97,11 +115,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		actionOpenProgressView = new Action() {
 			private static final long serialVersionUID = 1L;
 
-			/*
-			 * (non-Javadoc)
-			 * 
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
@@ -208,5 +221,33 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 
 		// Help
 		helpMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		helpMenu.add(actionAbout);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.application.ActionBarAdvisor#fillCoolBar(org.eclipse.jface.action.ICoolBarManager)
+	 */
+	@Override
+	protected void fillCoolBar(ICoolBarManager coolBar)
+	{
+		IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
+		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		coolBar.add(new ToolBarContributionItem(toolbar, "product")); //$NON-NLS-1$
+
+		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
+		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		coolBar.add(new ToolBarContributionItem(toolbar, "view")); //$NON-NLS-1$
+
+		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
+		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		coolBar.add(new ToolBarContributionItem(toolbar, "logs")); //$NON-NLS-1$
+
+		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
+		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		coolBar.add(new ToolBarContributionItem(toolbar, "tools")); //$NON-NLS-1$
+
+		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
+		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		coolBar.add(new ToolBarContributionItem(toolbar, "config")); //$NON-NLS-1$
 	}
 }

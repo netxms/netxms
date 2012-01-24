@@ -5,7 +5,8 @@ Bundle-SymbolicName: org.netxms.webui.core; singleton:=true
 Bundle-Version: 1.1.10
 Bundle-Activator: org.netxms.webui.core.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.eclipse.rap.ui,
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.rap.ui,
  org.eclipse.rap.ui.forms;bundle-version="1.4.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

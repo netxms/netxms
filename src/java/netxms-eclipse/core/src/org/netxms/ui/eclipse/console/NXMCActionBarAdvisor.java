@@ -301,6 +301,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		navMenu.add(actionPrevView);
 
 		// Help
+		helpMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		helpMenu.add(actionAbout);
 	}
 
