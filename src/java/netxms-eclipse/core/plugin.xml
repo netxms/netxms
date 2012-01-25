@@ -29,11 +29,13 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="%view.progress"
-            icon="icons/pview.gif"
+            allowMultiple="false"
             category="org.eclipse.ui"
             class="org.eclipse.ui.ExtensionFactory:progressView"
-            id="org.eclipse.ui.views.ProgressView">
+            icon="icons/pview.gif"
+            id="org.eclipse.ui.views.ProgressView"
+            name="%view.progress"
+            restorable="true">
       </view>
       <category
             id="org.netxms.ui.eclipse.viewcategory.config"
