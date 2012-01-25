@@ -188,7 +188,9 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		final Rectangle controlSize = getGraphControl().getClientArea();
 		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
-		backgroundFigure.setSize(Math.min(controlSize.width, rootLayerSize.width), Math.min(controlSize.height, rootLayerSize.height));
+		// Without the -2 for rootLayerSize background resize to root size triggers
+		// root layer size increase by 2, thus causing infinite resize loop
+		backgroundFigure.setSize(Math.max(controlSize.width, rootLayerSize.width - 2), Math.max(controlSize.height, rootLayerSize.height - 2));
 	}
 	
 	/**
