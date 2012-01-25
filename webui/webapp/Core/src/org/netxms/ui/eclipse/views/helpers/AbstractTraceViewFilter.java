@@ -25,6 +25,8 @@ import org.eclipse.jface.viewers.ViewerFilter;
  */
 public abstract class AbstractTraceViewFilter extends ViewerFilter
 {
+	private static final long serialVersionUID = 1L;
+
 	protected String filterString = null;
 
 	/**

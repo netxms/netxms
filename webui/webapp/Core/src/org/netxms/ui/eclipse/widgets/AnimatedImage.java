@@ -18,6 +18,8 @@ import org.eclipse.swt.widgets.Label;
  */
 public class AnimatedImage extends Composite implements DisposeListener
 {
+	private static final long serialVersionUID = 1L;
+
 	private Image image;
 	private Label label;
 	

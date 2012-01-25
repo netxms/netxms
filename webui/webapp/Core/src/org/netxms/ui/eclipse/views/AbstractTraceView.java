@@ -82,6 +82,8 @@ public abstract class AbstractTraceView extends ViewPart
 
 		filterText = new FilterText(clientArea, SWT.NONE);
 		filterText.addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -89,6 +91,8 @@ public abstract class AbstractTraceView extends ViewPart
 			}
 		});
 		filterText.setCloseAction(new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -103,6 +107,8 @@ public abstract class AbstractTraceView extends ViewPart
 		setupViewer(viewer);
 		WidgetHelper.restoreColumnSettings(viewer.getTable(), getDialogSettings(), getConfigPrefix());
 		viewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -152,6 +158,8 @@ public abstract class AbstractTraceView extends ViewPart
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
 		actionClear = new Action("&Clear", SharedIcons.CLEAR_LOG) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -160,6 +168,8 @@ public abstract class AbstractTraceView extends ViewPart
 		};
 		
 		actionPause = new Action("&Pause", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -171,8 +181,9 @@ public abstract class AbstractTraceView extends ViewPart
 		final ActionHandler pauseHandler = new ActionHandler(actionPause);
 		handlerService.activateHandler(actionPause.getActionDefinitionId(), pauseHandler);
 		
-      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX)
-      {
+      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -229,8 +240,9 @@ public abstract class AbstractTraceView extends ViewPart
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

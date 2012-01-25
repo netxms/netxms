@@ -2870,6 +2870,7 @@ webui/webapp/Core/plugin.xml -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.loginlisteners.exsd -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/ConsoleLoginListener.java -text
+webui/webapp/Core/src/org/netxms/ui/eclipse/console/perspectives/DefaultPerspective.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/resources/DataCollectionDisplayInfo.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/resources/StatusDisplayInfo.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -text
@@ -2909,7 +2910,6 @@ webui/webapp/Core/src/org/netxms/webui/core/ApplicationWorkbenchWindowAdvisor.ja
 webui/webapp/Core/src/org/netxms/webui/core/ExtendedContributionComparator.java -text
 webui/webapp/Core/src/org/netxms/webui/core/LoginJob.java -text
 webui/webapp/Core/src/org/netxms/webui/core/Messages.java -text
-webui/webapp/Core/src/org/netxms/webui/core/Perspective.java -text
 webui/webapp/Core/src/org/netxms/webui/core/dialogs/LoginForm.java -text
 webui/webapp/Core/src/org/netxms/webui/core/dialogs/PasswordExpiredDialog.java -text
 webui/webapp/Core/src/org/netxms/webui/core/messages.properties -text

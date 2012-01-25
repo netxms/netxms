@@ -46,6 +46,8 @@ import org.eclipse.swt.widgets.Display;
  */
 public class CommandBox extends Composite implements DisposeListener
 {
+	private static final long serialVersionUID = 1L;
+
 	private static final Color FOREGROUND_COLOR = new Color(Display.getDefault(), 0, 0, 96);
 	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
 	
@@ -89,6 +91,8 @@ public class CommandBox extends Composite implements DisposeListener
 			label.setBackground(BACKGROUND_COLOR);
 			//label.setFont(font);
 			label.addMouseListener(new MouseListener() {
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void mouseDoubleClick(MouseEvent e)
 				{

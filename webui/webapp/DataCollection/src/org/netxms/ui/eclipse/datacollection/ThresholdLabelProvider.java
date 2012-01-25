@@ -34,6 +34,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ThresholdLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
 	private static final String[] functions = { "last(", "average(", "deviation(", "diff()", "error(", "sum(" };
 	private static final String[] operations = { "<", "<=", "==", ">=", ">", "!=", "like", "!like" };
 	

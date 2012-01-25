@@ -31,10 +31,11 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Abstract selector widget
- *
  */
 public class StatusSelector extends Composite
 {
+	private static final long serialVersionUID = 1L;
+
 	private Label label;
 	private Combo combo;
 	

@@ -35,6 +35,8 @@ import org.netxms.ui.eclipse.tools.ColorCache;
  */
 public class DashboardComposite extends Canvas implements PaintListener
 {
+	private static final long serialVersionUID = 1L;
+
 	protected ColorCache colors;
 	
 	private Color borderOuterColor;

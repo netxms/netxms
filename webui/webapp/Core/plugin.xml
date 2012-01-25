@@ -19,9 +19,9 @@
    <extension
          point="org.eclipse.ui.perspectives">
       <perspective
-            name="RAP Perspective"
-            class="org.netxms.webui.core.Perspective"
-            id="org.netxms.webui.core.perspective">
+            class="org.netxms.ui.eclipse.console.perspectives.DefaultPerspective"
+            id="org.netxms.ui.eclipse.console.DefaultPerspective"
+            name="%perspective.default">
       </perspective>
    </extension>
    <extension
@@ -34,6 +34,15 @@
             id="org.netxms.ui.eclipse.viewcategory.tools"
             name="%category.tools">
       </category>
+      <view
+            allowMultiple="false"
+            category="org.eclipse.ui"
+            class="org.eclipse.ui.ExtensionFactory:progressView"
+            icon="icons/pview.gif"
+            id="org.eclipse.ui.views.ProgressView"
+            name="%view.progress"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.rap.ui.branding">
