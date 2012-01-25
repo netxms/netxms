@@ -63,7 +63,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class ServerJobManager extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.serverjobmanager.view.server_job_manager";
+	public static final String ID = "org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager";
 	public static final String JOB_FAMILY = "ServerJobManagerJob";
 		
 	// Columns

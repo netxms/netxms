@@ -18,8 +18,10 @@
  */
 package org.netxms.ui.eclipse.console.perspectives;
 
+import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPerspectiveFactory;
+import org.eclipse.ui.IPlaceholderFolderLayout;
 
 /**
  * Default perspective
@@ -37,7 +39,18 @@ public class DefaultPerspective implements IPerspectiveFactory
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.console.DefaultPerspective"); //$NON-NLS-1$
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.dashboard.DashboardPerspective"); //$NON-NLS-1$
 		
-		layout.addView("org.netxms.ui.eclipse.view.navigation.objectbrowser", IPageLayout.LEFT, 0, ""); //$NON-NLS-1$ //$NON-NLS-2$
-		layout.addView("org.netxms.ui.eclipse.objectview.view.tabbed_object_view", IPageLayout.RIGHT, 0.25f, "org.netxms.ui.eclipse.view.navigation.objectbrowser"); //$NON-NLS-1$ //$NON-NLS-2$
+		final IFolderLayout navigationFolder = layout.createFolder("org.netxms.ui.eclipse.folders.navigation", IPageLayout.LEFT, 0, ""); //$NON-NLS-1$ //$NON-NLS-2$
+		navigationFolder.addView("org.netxms.ui.eclipse.view.navigation.objectbrowser"); //$NON-NLS-1$
+		navigationFolder.addView("org.netxms.ui.eclipse.perfview.views.PredefinedGraphTree"); //$NON-NLS-1$
+		navigationFolder.addPlaceholder("org.netxms.ui.eclipse.dashboard.views.DashboardNavigator"); //$NON-NLS-1$
+
+		final IFolderLayout mainFolder = layout.createFolder("org.netxms.ui.eclipse.folders.main", IPageLayout.RIGHT, 0.20f, "org.netxms.ui.eclipse.folders.navigation"); //$NON-NLS-1$ //$NON-NLS-2$
+		mainFolder.addView("org.netxms.ui.eclipse.objectview.view.tabbed_object_view"); //$NON-NLS-1$
+		mainFolder.addView("org.netxms.ui.eclipse.alarmviewer.view.alarm_browser"); //$NON-NLS-1$
+		mainFolder.addPlaceholder("*"); //$NON-NLS-1$
+
+		final IPlaceholderFolderLayout statusFolder = layout.createPlaceholderFolder("org.netxms.ui.eclipse.folders.status", IPageLayout.BOTTOM, 0.75f, "org.netxms.ui.eclipse.folders.main"); //$NON-NLS-1$ //$NON-NLS-2$
+		statusFolder.addPlaceholder("org.eclipse.ui.views.ProgressView"); //$NON-NLS-1$
+		statusFolder.addPlaceholder("org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager"); //$NON-NLS-1$
 	}
 }

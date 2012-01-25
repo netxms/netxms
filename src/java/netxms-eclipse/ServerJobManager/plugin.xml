@@ -8,7 +8,7 @@
             category="org.netxms.ui.eclipse.viewcategory.tools"
             class="org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager"
             icon="icons/server_jobs.gif"
-            id="org.netxms.ui.eclipse.serverjobmanager.view.server_job_manager"
+            id="org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager"
             name="Server Jobs">
       </view>
    </extension>

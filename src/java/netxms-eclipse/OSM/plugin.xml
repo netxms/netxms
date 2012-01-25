@@ -81,7 +81,7 @@
                icon="icons/map.png"
                id="org.netxms.ui.eclipse.osm.actions.open_world_map"
                label="World Map"
-               menubarPath="view/main"
+               menubarPath="view/primary"
                style="push"
                tooltip="Open World Map view">
          </action>
