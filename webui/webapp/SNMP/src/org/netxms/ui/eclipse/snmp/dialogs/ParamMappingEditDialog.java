@@ -26,6 +26,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -52,6 +53,7 @@ public class ParamMappingEditDialog extends Dialog
 	private Text objectId;
 	private Button buttonSelect;
 	private Spinner position;
+	private Button checkForceText;
 
 	/**
 	 * Create dialog.
@@ -188,6 +190,18 @@ public class ParamMappingEditDialog extends Dialog
 		position.setLayoutData(gd);
 		
 		new Label(positionSelection, SWT.NONE).setText("Enter varbind's position in range 1 .. 255");
+
+		final Group optionsGroup = new Group(dialogArea, SWT.NONE);
+		optionsGroup.setText("Options");
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		optionsGroup.setLayoutData(gd);
+		optionsGroup.setLayout(new RowLayout(SWT.VERTICAL));
+		
+		checkForceText = new Button(optionsGroup, SWT.CHECK);
+		checkForceText.setText("&Never convert value to hex string");
+		checkForceText.setSelection((pm.getFlags() & SnmpTrapParameterMapping.FORCE_TEXT) != 0);
 		
 		enableControls(pm.getType() == SnmpTrapParameterMapping.BY_OBJECT_ID);
 		
@@ -253,6 +267,7 @@ public class ParamMappingEditDialog extends Dialog
 		}
 		pm.setType(type);
 		pm.setDescription(description.getText());
+		pm.setFlags(checkForceText.getSelection() ? SnmpTrapParameterMapping.FORCE_TEXT : 0);
 		super.okPressed();
 	}
 }
