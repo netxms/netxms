@@ -75,6 +75,7 @@ public class SnmpTrap
 				pm = new SnmpTrapParameterMapping((int)(oidLen & 0x7FFFFFFF));
 			}
 			pm.setDescription(msg.getVariableAsString(NXCPCodes.VID_TRAP_PDESCR_BASE + i));
+			pm.setFlags(msg.getVariableAsInteger(NXCPCodes.VID_TRAP_PFLAGS_BASE + i));
 			parameterMapping.add(pm);
 		}
 	}

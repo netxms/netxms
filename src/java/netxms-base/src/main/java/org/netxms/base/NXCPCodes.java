@@ -708,6 +708,8 @@ public final class NXCPCodes
 	public static final long VID_TRAP_PNAME_LAST          = 0x000097FFL;
 	public static final long VID_TRAP_PDESCR_BASE         = 0x00009800L;
 	public static final long VID_TRAP_PDESCR_LAST         = 0x00009BFFL;
+	public static final long VID_TRAP_PFLAGS_BASE         = 0x00009C00L;
+	public static final long VID_TRAP_PFLAGS_LAST         = 0x00009FFFL;
 	public static final long VID_PARENT_ID_BASE           = 0x00003000L;
 	public static final long VID_PARENT_ID_LAST           = 0x00003FFFL;
 	public static final long VID_CHILD_ID_BASE            = 0x80000000L;

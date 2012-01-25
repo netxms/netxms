@@ -272,7 +272,7 @@ CREATE TABLE cluster_resources
 (
 	cluster_id integer not null,
 	resource_id integer not null,
-	resource_name varchar(255) not null,
+	resource_name varchar(255),
 	ip_addr varchar(15) not null,
 	current_owner integer not null,
 	PRIMARY KEY(cluster_id,resource_id)
@@ -848,6 +848,7 @@ CREATE TABLE snmp_trap_pmap
 (
 	trap_id integer not null,
 	parameter integer not null,
+	flags integer not null,
 	snmp_oid varchar(255),
 	description varchar(255),
 	PRIMARY KEY(trap_id,parameter)

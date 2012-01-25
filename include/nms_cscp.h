@@ -907,6 +907,8 @@ typedef struct
 #define VID_TRAP_PNAME_LAST         ((DWORD)0x000097FF)
 #define VID_TRAP_PDESCR_BASE        ((DWORD)0x00009800)
 #define VID_TRAP_PDESCR_LAST        ((DWORD)0x00009BFF)
+#define VID_TRAP_PFLAGS_BASE        ((DWORD)0x00009C00)
+#define VID_TRAP_PFLAGS_LAST        ((DWORD)0x00009FFF)
 
 // Object information can contain variable number of parent and child objects' ids.
 // Because each variable in message have to have unique identifier,

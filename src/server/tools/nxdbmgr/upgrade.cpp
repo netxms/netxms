@@ -164,7 +164,7 @@ static BOOL DropPrimaryKey(const TCHAR *table)
 // Convert strings from # encoded form to normal form
 //
 
-static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *column)
+static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *idColumn2, const TCHAR *column)
 {
 	DB_RESULT hResult;
 	TCHAR *query;
@@ -191,7 +191,8 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 		return FALSE;
 	}
 
-	_sntprintf(query, queryLen, _T("SELECT %s,%s FROM %s WHERE %s LIKE '%%#%%'"), idColumn, column, table, column);
+	_sntprintf(query, queryLen, _T("SELECT %s,%s%s%s FROM %s WHERE %s LIKE '%%#%%'"), 
+	           idColumn, column, (idColumn2 != NULL) ? _T(",") : _T(""), (idColumn2 != NULL) ? idColumn2 : _T(""), table, column);
 	hResult = SQLSelect(query);
 	if (hResult == NULL)
 	{
@@ -202,7 +203,6 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 	int count = DBGetNumRows(hResult);
 	for(int i = 0; i < count; i++)
 	{
-		INT64 id = DBGetFieldInt64(hResult, i, 0);
 		TCHAR *value = DBGetField(hResult, i, 1, NULL, 0);
 		if (_tcschr(value, _T('#')) != NULL)
 		{
@@ -213,8 +213,18 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 				queryLen = newValue.getSize() + 256;
 				query = (TCHAR *)realloc(query, queryLen * sizeof(TCHAR));
 			}
-			_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT, table, column,
-						  (const TCHAR *)newValue, idColumn, id);
+			INT64 id = DBGetFieldInt64(hResult, i, 0);
+			if (idColumn2 != NULL)
+			{
+				INT64 id2 = DBGetFieldInt64(hResult, i, 2);
+				_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT _T(" AND %s=") INT64_FMT, 
+				           table, column, (const TCHAR *)newValue, idColumn, id, idColumn2, id2);
+			}
+			else
+			{
+				_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT, table, column,
+							  (const TCHAR *)newValue, idColumn, id);
+			}
 			if (!SQLQuery(query))
 				goto cleanup;
 		}
@@ -225,6 +235,11 @@ cleanup:
 	DBFreeResult(hResult);
 	free(query);
 	return success;
+}
+
+static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *column)
+{
+	return ConvertStrings(table, idColumn, NULL, column);
 }
 
 
@@ -267,6 +282,30 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 	free(escMessage);
 	free(escDescription);
 	return SQLQuery(query);
+}
+
+
+//
+// Upgrade from V245 to V246
+//
+
+static BOOL H_UpgradeFromV245(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE snmp_trap_pmap ADD flags integer\n")
+		_T("UPDATE snmp_trap_pmap SET flags=0\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SetColumnNullable(_T("snmp_trap_pmap"), _T("description"), _T("varchar(255)")));
+	CHK_EXEC(ConvertStrings(_T("snmp_trap_pmap"), _T("trap_id"), _T("parameter"), _T("description")));
+	
+	CHK_EXEC(SetColumnNullable(_T("cluster_resources"), _T("resource_name"), _T("varchar(255)")));
+	CHK_EXEC(ConvertStrings(_T("cluster_resources"), _T("cluster_id"), _T("resource_id"), _T("resource_name")));
+	
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='246' WHERE var_name='SchemaVersion'")));
+   return TRUE;
 }
 
 
@@ -5881,6 +5920,7 @@ static struct
 	{ 242, 243, H_UpgradeFromV242 },
 	{ 243, 244, H_UpgradeFromV243 },
 	{ 244, 245, H_UpgradeFromV244 },
+	{ 245, 246, H_UpgradeFromV245 },
    { 0, 0, NULL }
 };
 

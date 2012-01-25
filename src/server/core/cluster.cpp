@@ -183,7 +183,6 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
 					{
 						m_pResourceList[i].dwId = DBGetFieldULong(hResult, i, 0);
 						DBGetField(hResult, i, 1, m_pResourceList[i].szName, MAX_DB_STRING);
-						DecodeSQLString(m_pResourceList[i].szName);
 						m_pResourceList[i].dwIpAddr = DBGetFieldIPAddr(hResult, i, 2);
 						m_pResourceList[i].dwCurrOwner = DBGetFieldULong(hResult, i, 3);
 					}
@@ -211,7 +210,7 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
 
 BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 {
-	TCHAR szQuery[4096], szIpAddr[16], szNetMask[16], *pszEscName;
+	TCHAR szQuery[4096], szIpAddr[16], szNetMask[16];
    DB_RESULT hResult;
    BOOL bResult, bNewObject = TRUE;
    DWORD i;
@@ -312,12 +311,10 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 				DBQuery(hdb, szQuery);
 				for(i = 0; i < m_dwNumResources; i++)
 				{
-					pszEscName = EncodeSQLString(m_pResourceList[i].szName);
-					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_resources (cluster_id,resource_id,resource_name,ip_addr,current_owner) VALUES (%d,%d,'%s','%s',%d)"),
-								 m_dwId, m_pResourceList[i].dwId, pszEscName,
-								 IpToStr(m_pResourceList[i].dwIpAddr, szIpAddr),
-								 m_pResourceList[i].dwCurrOwner);
-					free(pszEscName);
+					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_resources (cluster_id,resource_id,resource_name,ip_addr,current_owner) VALUES (%d,%d,%s,'%s',%d)"),
+					           m_dwId, m_pResourceList[i].dwId, (const TCHAR *)DBPrepareString(hdb, m_pResourceList[i].szName),
+								  IpToStr(m_pResourceList[i].dwIpAddr, szIpAddr),
+								  m_pResourceList[i].dwCurrOwner);
 					bResult = DBQuery(hdb, szQuery);
 					if (!bResult)
 						break;

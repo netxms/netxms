@@ -30,7 +30,11 @@ public class SnmpTrapParameterMapping
 	public static final int BY_OBJECT_ID = 0;
 	public static final int BY_POSITION = 1;
 	
+	// Flags
+	public static final int FORCE_TEXT = 0x0001;
+	
 	private int type;
+	private int flags;
 	private SnmpObjectId objectId;
 	private int position;
 	private String description;
@@ -64,6 +68,7 @@ public class SnmpTrapParameterMapping
 	 */
 	public void fillMessage(NXCPMessage msg, int index)
 	{
+		msg.setVariableInt32(NXCPCodes.VID_TRAP_PFLAGS_BASE + index, flags);
 		msg.setVariable(NXCPCodes.VID_TRAP_PDESCR_BASE + index, description);
 		if (type == BY_POSITION)
 		{
@@ -138,5 +143,21 @@ public class SnmpTrapParameterMapping
 	public void setDescription(String description)
 	{
 		this.description = description;
+	}
+
+	/**
+	 * @return the flags
+	 */
+	public int getFlags()
+	{
+		return flags;
+	}
+
+	/**
+	 * @param flags the flags to set
+	 */
+	public void setFlags(int flags)
+	{
+		this.flags = flags;
 	}
 }

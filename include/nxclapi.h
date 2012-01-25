@@ -864,6 +864,13 @@ enum
 
 
 //
+// SNMP trap flags
+//
+
+#define TRAP_VARBIND_FORCE_TEXT     0x0001
+
+
+//
 // IP network
 //
 
@@ -937,7 +944,8 @@ typedef struct
 typedef struct
 {
    DWORD *pdwObjectId;     // Trap OID
-   DWORD dwOidLen;         // Trap OID length (if highest bit is set, than it's a position)
+   DWORD dwOidLen;         // Trap OID length (if highest bit is set, then it's a position)
+	DWORD dwFlags;
    TCHAR szDescription[MAX_DB_STRING];
 } NXC_OID_MAP;
 

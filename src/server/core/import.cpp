@@ -323,6 +323,7 @@ static DWORD ImportTrap(ConfigEntry *trap)
 					tc.pMaps[i].pdwObjectId = (DWORD *)nx_memdup(temp, sizeof(DWORD) * tc.pMaps[i].dwOidLen);
 				}
 				nx_strncpy(tc.pMaps[i].szDescription, parameter->getSubEntryValue(_T("description"), 0, _T("")), MAX_DB_STRING);
+				tc.pMaps[i].dwFlags = parameter->getSubEntryValueUInt(_T("flags"), 0, 0);
 			}
 		}
 		delete parameters;

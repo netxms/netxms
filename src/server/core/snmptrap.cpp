@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ static BOOL LoadTrapCfg()
       // Load parameter mappings
       for(i = 0; i < m_dwNumTraps; i++)
       {
-         _sntprintf(szQuery, 256, _T("SELECT snmp_oid,description FROM snmp_trap_pmap ")
+         _sntprintf(szQuery, 256, _T("SELECT snmp_oid,description,flags FROM snmp_trap_pmap ")
                                   _T("WHERE trap_id=%d ORDER BY parameter"),
                     m_pTrapCfg[i].dwId);
          hResult = DBSelect(g_hCoreDB, szQuery);
@@ -116,7 +116,7 @@ static BOOL LoadTrapCfg()
                   }
                }
                DBGetField(hResult, j, 1, m_pTrapCfg[i].pMaps[j].szDescription, MAX_DB_STRING);
-               DecodeSQLString(m_pTrapCfg[i].pMaps[j].szDescription);
+					m_pTrapCfg[i].pMaps[j].dwFlags = DBGetFieldULong(hResult, j, 2);
             }
             DBFreeResult(hResult);
          }
@@ -179,7 +179,7 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
          if (pVar != NULL)
          {
 				bool convertToHex = true;
-				pszArgList[i] = _tcsdup(s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 256, &convertToHex) : pVar->GetValueAsString(szBuffer, 256));
+				pszArgList[i] = _tcsdup((s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ? pVar->getValueAsPrintableString(szBuffer, 256, &convertToHex) : pVar->GetValueAsString(szBuffer, 256));
          }
          else
          {
@@ -197,7 +197,7 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
             if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
             {
 					bool convertToHex = true;
-					pszArgList[i] = _tcsdup(s_allowVarbindConversion ? pdu->getVariable(j)->getValueAsPrintableString(szBuffer, 256, &convertToHex) : pdu->getVariable(j)->GetValueAsString(szBuffer, 256));
+					pszArgList[i] = _tcsdup((s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ? pdu->getVariable(j)->getValueAsPrintableString(szBuffer, 256, &convertToHex) : pdu->getVariable(j)->GetValueAsString(szBuffer, 256));
                break;
             }
          }
@@ -459,7 +459,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 
 static void FillTrapConfigDataMsg(CSCPMessage &msg, NXC_TRAP_CFG_ENTRY *trap)
 {
-   DWORD i, dwId1, dwId2, dwId3;
+   DWORD i, dwId1, dwId2, dwId3, dwId4;
 
 	msg.SetVariable(VID_TRAP_ID, trap->dwId);
    msg.SetVariable(VID_TRAP_OID_LEN, trap->dwOidLen); 
@@ -468,13 +468,14 @@ static void FillTrapConfigDataMsg(CSCPMessage &msg, NXC_TRAP_CFG_ENTRY *trap)
    msg.SetVariable(VID_DESCRIPTION, trap->szDescription);
    msg.SetVariable(VID_USER_TAG, trap->szUserTag);
    msg.SetVariable(VID_TRAP_NUM_MAPS, trap->dwNumMaps);
-   for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
-       i < trap->dwNumMaps; i++, dwId1++, dwId2++, dwId3++)
+   for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE, dwId4 = VID_TRAP_PFLAGS_BASE; 
+       i < trap->dwNumMaps; i++, dwId1++, dwId2++, dwId3++, dwId4++)
    {
       msg.SetVariable(dwId1, trap->pMaps[i].dwOidLen);
       if ((trap->pMaps[i].dwOidLen & 0x80000000) == 0)
          msg.SetVariableToInt32Array(dwId2, trap->pMaps[i].dwOidLen, trap->pMaps[i].pdwObjectId);
       msg.SetVariable(dwId3, trap->pMaps[i].szDescription);
+		msg.SetVariable(dwId4, trap->pMaps[i].dwFlags);
    }
 }
 
@@ -605,38 +606,50 @@ DWORD DeleteTrap(DWORD dwId)
 // Save parameter mapping to database
 //
 
-static BOOL SaveParameterMapping(NXC_TRAP_CFG_ENTRY *pTrap)
+static BOOL SaveParameterMapping(DB_HANDLE hdb, NXC_TRAP_CFG_ENTRY *pTrap)
 {
-	TCHAR szQuery[1024], szOID[1024], *pszEscDescr;
-	BOOL bRet;
-	DWORD i;
-
+	TCHAR szQuery[1024];
    _sntprintf(szQuery, 1024, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), pTrap->dwId);
-   bRet = DBQuery(g_hCoreDB, szQuery);
-   if (bRet)
+   BOOL bRet = DBQuery(hdb, szQuery);
+
+	if (bRet)
    {
-      for(i = 0; i < pTrap->dwNumMaps; i++)
-      {
-         if ((pTrap->pMaps[i].dwOidLen & 0x80000000) == 0)
-         {
-            SNMPConvertOIDToText(pTrap->pMaps[i].dwOidLen,
-                                 pTrap->pMaps[i].pdwObjectId,
-                                 szOID, 1024);
-         }
-         else
-         {
-            _sntprintf(szOID, 1024, _T("POS:%d"), pTrap->pMaps[i].dwOidLen & 0x7FFFFFFF);
-         }
-         pszEscDescr = EncodeSQLString(pTrap->pMaps[i].szDescription);
-         _sntprintf(szQuery, 1024, _T("INSERT INTO snmp_trap_pmap (trap_id,parameter,")
-                                   _T("snmp_oid,description) VALUES (%d,%d,'%s','%s')"),
-                    pTrap->dwId, i + 1, szOID, pszEscDescr);
-         free(pszEscDescr);
-         bRet = DBQuery(g_hCoreDB, szQuery);
-         if (!bRet)
-            break;
-      }
+		DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_trap_pmap (trap_id,parameter,snmp_oid,description,flags) VALUES (?,?,?,?,?)"));
+		if (hStmt != NULL)
+		{
+			for(DWORD i = 0; i < pTrap->dwNumMaps; i++)
+			{
+				TCHAR oid[1024];
+
+				if ((pTrap->pMaps[i].dwOidLen & 0x80000000) == 0)
+				{
+					SNMPConvertOIDToText(pTrap->pMaps[i].dwOidLen,
+												pTrap->pMaps[i].pdwObjectId,
+												oid, 1024);
+				}
+				else
+				{
+					_sntprintf(oid, 1024, _T("POS:%d"), pTrap->pMaps[i].dwOidLen & 0x7FFFFFFF);
+				}
+
+				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, pTrap->dwId);
+				DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i + 1);
+				DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, oid, DB_BIND_STATIC);
+				DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pTrap->pMaps[i].szDescription, DB_BIND_STATIC);
+				DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pTrap->pMaps[i].dwFlags);
+
+				bRet = DBExecute(hStmt);
+				if (!bRet)
+					break;
+			}
+			DBFreeStatement(hStmt);
+		}
+		else
+		{
+			bRet = FALSE;
+		}
    }
+
 	return bRet;
 }
 
@@ -703,23 +716,25 @@ DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
 				 (const TCHAR *)DBPrepareString(g_hCoreDB, m_pTrapCfg[m_dwNumTraps].szDescription),
 				 (const TCHAR *)DBPrepareString(g_hCoreDB, m_pTrapCfg[m_dwNumTraps].szUserTag));
 
-	if(DBBegin(g_hCoreDB))
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	if(DBBegin(hdb))
    {
-      bSuccess = DBQuery(g_hCoreDB, szQuery);
+      bSuccess = DBQuery(hdb, szQuery);
       if (bSuccess)
       {
-			bSuccess = SaveParameterMapping(&m_pTrapCfg[m_dwNumTraps]);
+			bSuccess = SaveParameterMapping(hdb, &m_pTrapCfg[m_dwNumTraps]);
       }
       if (bSuccess)
-         DBCommit(g_hCoreDB);
+         DBCommit(hdb);
       else
-         DBRollback(g_hCoreDB);
+         DBRollback(hdb);
       dwResult = bSuccess ? RCC_SUCCESS : RCC_DB_FAILURE;
    }
    else
    {
       dwResult = RCC_DB_FAILURE;
    }
+	DBConnectionPoolReleaseConnection(hdb);
 
 	if (dwResult == RCC_SUCCESS)
 		NotifyOnTrapCfgChange(NX_NOTIFY_TRAPCFG_CREATED, &m_pTrapCfg[m_dwNumTraps]);
@@ -737,7 +752,7 @@ DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
 
 DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
 {
-   DWORD i, j, dwId1, dwId2, dwId3, dwTrapId, dwResult = RCC_INVALID_TRAP_ID;
+   DWORD i, j, dwId1, dwId2, dwId3, dwId4, dwTrapId, dwResult = RCC_INVALID_TRAP_ID;
    TCHAR szQuery[1024], szOID[1024];
    BOOL bSuccess;
 
@@ -764,8 +779,8 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
          // Read new mappings from message
          m_pTrapCfg[i].dwNumMaps = pMsg->GetVariableLong(VID_TRAP_NUM_MAPS);
          m_pTrapCfg[i].pMaps = (NXC_OID_MAP *)malloc(sizeof(NXC_OID_MAP) * m_pTrapCfg[i].dwNumMaps);
-         for(j = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
-             j < m_pTrapCfg[i].dwNumMaps; j++, dwId1++, dwId2++, dwId3++)
+         for(j = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE, dwId4 = VID_TRAP_PFLAGS_BASE; 
+             j < m_pTrapCfg[i].dwNumMaps; j++, dwId1++, dwId2++, dwId3++, dwId4++)
          {
             m_pTrapCfg[i].pMaps[j].dwOidLen = pMsg->GetVariableLong(dwId1);
             if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
@@ -780,6 +795,7 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
                m_pTrapCfg[i].pMaps[j].pdwObjectId = NULL;
             }
             pMsg->GetVariableStr(dwId3, m_pTrapCfg[i].pMaps[j].szDescription, MAX_DB_STRING);
+				m_pTrapCfg[i].pMaps[j].dwFlags = pMsg->GetVariableLong(dwId4);
          }
 
          // Update database
@@ -788,23 +804,25 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
                     szOID, m_pTrapCfg[i].dwEventCode,
 						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_pTrapCfg[i].szDescription),
 						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_pTrapCfg[i].szUserTag), m_pTrapCfg[i].dwId);
-         if(DBBegin(g_hCoreDB))
+			DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         if(DBBegin(hdb))
          {
-            bSuccess = DBQuery(g_hCoreDB, szQuery);
+            bSuccess = DBQuery(hdb, szQuery);
             if (bSuccess)
             {
-					bSuccess = SaveParameterMapping(&m_pTrapCfg[i]);
+					bSuccess = SaveParameterMapping(hdb, &m_pTrapCfg[i]);
             }
             if (bSuccess)
-               DBCommit(g_hCoreDB);
+               DBCommit(hdb);
             else
-               DBRollback(g_hCoreDB);
+               DBRollback(hdb);
             dwResult = bSuccess ? RCC_SUCCESS : RCC_DB_FAILURE;
          }
          else
          {
             dwResult = RCC_DB_FAILURE;
          }
+			DBConnectionPoolReleaseConnection(hdb);
 
 			if (dwResult == RCC_SUCCESS)
 				NotifyOnTrapCfgChange(NX_NOTIFY_TRAPCFG_MODIFIED, &m_pTrapCfg[i]);
@@ -849,8 +867,11 @@ void CreateNXMPTrapRecord(String &str, DWORD dwId)
 				str += _T("\t\t\t<parameters>\n");
 				for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
 				{
-					str.addFormattedString(_T("\t\t\t\t<parameter id=\"%d\">\n\t\t\t\t\t<description>%s</description>\n"),
-					                       j + 1, (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].pMaps[j].szDescription));
+					str.addFormattedString(_T("\t\t\t\t<parameter id=\"%d\">\n")
+			                             _T("\t\t\t\t\t<flags>%d</flags>\n")
+					                       _T("\t\t\t\t\t<description>%s</description>\n"),
+												  j + 1, m_pTrapCfg[i].pMaps[j].dwFlags, 
+												  (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].pMaps[j].szDescription));
                if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
 					{
 						str.addFormattedString(_T("\t\t\t\t\t<oid>%s</oid>\n"),

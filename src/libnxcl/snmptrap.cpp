@@ -30,7 +30,7 @@
 
 static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
 {
-   DWORD i, dwId1, dwId2, dwId3;
+   DWORD i, dwId1, dwId2, dwId3, dwId4;
 
    pTrap->dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
    pMsg->GetVariableStr(VID_DESCRIPTION, pTrap->szDescription, MAX_DB_STRING);
@@ -40,8 +40,8 @@ static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
    pMsg->GetVariableInt32Array(VID_TRAP_OID, pTrap->dwOidLen, pTrap->pdwObjectId);
    pTrap->dwNumMaps = pMsg->GetVariableLong(VID_TRAP_NUM_MAPS);
    pTrap->pMaps = (NXC_OID_MAP *)malloc(sizeof(NXC_OID_MAP) * pTrap->dwNumMaps);
-   for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE;
-       i < pTrap->dwNumMaps; i++, dwId1++, dwId2++, dwId3++)
+   for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE, dwId4 = VID_TRAP_PFLAGS_BASE;
+       i < pTrap->dwNumMaps; i++, dwId1++, dwId2++, dwId3++, dwId4++)
    {
       pTrap->pMaps[i].dwOidLen = pMsg->GetVariableLong(dwId1);
       if ((pTrap->pMaps[i].dwOidLen & 0x80000000) == 0)
@@ -54,6 +54,7 @@ static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
          pTrap->pMaps[i].pdwObjectId = NULL;
       }
       pMsg->GetVariableStr(dwId3, pTrap->pMaps[i].szDescription, MAX_DB_STRING);
+		pTrap->pMaps[i].dwFlags = pMsg->GetVariableLong(dwId4);
    }
 }
 
@@ -275,7 +276,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateTrap(NXC_SESSION hSession, DWORD *pdwTrapId)
 DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY *pTrap)
 {
    CSCPMessage msg;
-   DWORD i, dwRqId, dwId1, dwId2, dwId3;
+   DWORD i, dwRqId, dwId1, dwId2, dwId3, dwId4;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -288,13 +289,14 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY 
    msg.SetVariable(VID_DESCRIPTION, pTrap->szDescription);
    msg.SetVariable(VID_USER_TAG, pTrap->szUserTag);
    msg.SetVariable(VID_TRAP_NUM_MAPS, pTrap->dwNumMaps);
-   for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
-       i < pTrap->dwNumMaps; i++, dwId1++, dwId2++, dwId3++)
+   for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE, dwId4 = VID_TRAP_PFLAGS_BASE; 
+       i < pTrap->dwNumMaps; i++, dwId1++, dwId2++, dwId3++, dwId4++)
    {
       msg.SetVariable(dwId1, pTrap->pMaps[i].dwOidLen);
       if ((pTrap->pMaps[i].dwOidLen & 0x80000000) == 0)
          msg.SetVariableToInt32Array(dwId2, pTrap->pMaps[i].dwOidLen, pTrap->pMaps[i].pdwObjectId);
       msg.SetVariable(dwId3, pTrap->pMaps[i].szDescription);
+		msg.SetVariable(dwId4, pTrap->pMaps[i].dwFlags);
    }
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
