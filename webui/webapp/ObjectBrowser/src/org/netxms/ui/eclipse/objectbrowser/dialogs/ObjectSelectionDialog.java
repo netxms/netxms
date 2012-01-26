@@ -60,19 +60,20 @@ public class ObjectSelectionDialog extends Dialog
 	 */
 	public static Set<Integer> createNodeSelectionFilter()
 	{
-		HashSet<Integer> classFilter = new HashSet<Integer>(6);
+		HashSet<Integer> classFilter = new HashSet<Integer>(7);
 		classFilter.add(GenericObject.OBJECT_NETWORK);
 		classFilter.add(GenericObject.OBJECT_ZONE);
 		classFilter.add(GenericObject.OBJECT_SUBNET);
 		classFilter.add(GenericObject.OBJECT_SERVICEROOT);
 		classFilter.add(GenericObject.OBJECT_CONTAINER);
+		classFilter.add(GenericObject.OBJECT_CLUSTER);
 		classFilter.add(GenericObject.OBJECT_NODE);
 		return classFilter;
 	}
 
 	/**
-	 * Create filter for node selection - it allows node objects and possible
-	 * parents - subnets and containers.
+	 * Create filter for template selection - it allows template objects and possible
+	 * parents - template groups.
 	 * 
 	 * @return Class filter for node selection
 	 */
@@ -93,11 +94,12 @@ public class ObjectSelectionDialog extends Dialog
 	 */
 	public static Set<Integer> createNodeAndTemplateSelectionFilter()
 	{
-		HashSet<Integer> classFilter = new HashSet<Integer>(8);
+		HashSet<Integer> classFilter = new HashSet<Integer>(9);
 		classFilter.add(GenericObject.OBJECT_NETWORK);
 		classFilter.add(GenericObject.OBJECT_SUBNET);
 		classFilter.add(GenericObject.OBJECT_SERVICEROOT);
 		classFilter.add(GenericObject.OBJECT_CONTAINER);
+		classFilter.add(GenericObject.OBJECT_CLUSTER);
 		classFilter.add(GenericObject.OBJECT_NODE);
 		classFilter.add(GenericObject.OBJECT_TEMPLATEROOT);
 		classFilter.add(GenericObject.OBJECT_TEMPLATEGROUP);
