@@ -80,6 +80,7 @@ public class LoginJob implements IRunnableWithProgress
 	public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
 	{
 		monitor.beginTask("Connecting to server...", 100); //$NON-NLS-1$
+		
 		try
 		{
 			final String hostName;

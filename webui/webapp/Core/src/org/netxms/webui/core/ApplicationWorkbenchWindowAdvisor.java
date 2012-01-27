@@ -100,7 +100,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 				                            loginDialog.getPassword(), Display.getCurrent());
 
 				// TODO: implement login on non-UI thread
-				new ProgressMonitorDialog(null).run(false, false, job);
+				ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
+				pd.run(false, false, job);
 				success = true;
 			}
 			catch(InvocationTargetException e)

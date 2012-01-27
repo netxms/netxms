@@ -50,6 +50,7 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
@@ -289,17 +290,16 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	 * 
 	 * @param page new map page
 	 */
-	protected void replaceMapPage(final NetworkMapPage page)
+	protected void replaceMapPage(final NetworkMapPage page, Display display)
 	{
-		new UIJob(viewer.getControl().getDisplay(), "Replace map page") {
+		display.asyncExec(new Runnable() {
 			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor)
+			public void run()
 			{
 				mapPage = page;
 				viewer.setInput(mapPage);
-				return Status.OK_STATUS;
 			}
-		}.schedule();
+		});
 	}
 	
 	/**

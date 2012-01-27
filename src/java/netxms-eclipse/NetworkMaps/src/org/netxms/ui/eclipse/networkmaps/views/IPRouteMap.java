@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.networkmaps.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.maps.NetworkMapLink;
@@ -90,7 +91,7 @@ public class IPRouteMap extends NetworkMap
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				getRoute();
+				getRoute(getDisplay());
 			}
 
 			@Override
@@ -99,7 +100,7 @@ public class IPRouteMap extends NetworkMap
 				// On failure, create map with root object only
 				NetworkMapPage page = new NetworkMapPage();
 				page.addElement(new NetworkMapObject(mapPage.createElementId(), rootObject.getObjectId()));
-				replaceMapPage(page);
+				replaceMapPage(page, getDisplay());
 			}
 
 			@Override
@@ -115,7 +116,7 @@ public class IPRouteMap extends NetworkMap
 	 * 
 	 * @throws Exception 
 	 */
-	private void getRoute() throws Exception
+	private void getRoute(Display display) throws Exception
 	{
 		final NetworkPath path = session.getNetworkPath(rootObject.getObjectId(), targetObject.getObjectId());
 		final NetworkMapPage page = new NetworkMapPage();
@@ -128,6 +129,6 @@ public class IPRouteMap extends NetworkMap
 				page.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, prevElementId, elementId));
 			prevElementId = elementId;
 		}
-		replaceMapPage(page);
+		replaceMapPage(page, display);
 	}
 }

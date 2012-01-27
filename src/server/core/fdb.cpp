@@ -117,9 +117,11 @@ DWORD ForwardingDatabase::findMacAddress(const BYTE *macAddr)
 
 //
 // Check if port has only one MAC in FDB
+// If macAddr parameter is not NULL, MAC address found on port
+// copied into provided buffer
 //
 
-bool ForwardingDatabase::isSingleMacOnPort(DWORD ifIndex)
+bool ForwardingDatabase::isSingleMacOnPort(DWORD ifIndex, BYTE *macAddr)
 {
 	int count = 0;
 	for(int i = 0; i < m_fdbSize; i++)
@@ -128,7 +130,10 @@ bool ForwardingDatabase::isSingleMacOnPort(DWORD ifIndex)
 			count++;
 			if (count > 1)
 				return false;
+			if (macAddr != NULL)
+				memcpy(macAddr, m_fdb[i].macAddr, MAC_ADDR_LENGTH);
 		}
+
 	return count == 1;
 }
 

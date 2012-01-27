@@ -107,6 +107,7 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
 	// For bridges, scan forwarding database
 	if (node->isBridge())
 	{
+		node->addHostConnections(nbs);
 	}
 	else	// try to find switch port for nodes
 	{

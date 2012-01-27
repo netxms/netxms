@@ -186,11 +186,14 @@ public class ExtendedGraphViewer extends GraphViewer
 	 */
 	private void resizeBackground()
 	{
-		final Rectangle controlSize = getGraphControl().getClientArea();
-		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
-		// Without the -2 for rootLayerSize background resize to root size triggers
-		// root layer size increase by 2, thus causing infinite resize loop
-		backgroundFigure.setSize(Math.max(controlSize.width, rootLayerSize.width - 2), Math.max(controlSize.height, rootLayerSize.height - 2));
+		if ((backgroundLocation != null) || (backgroundImage != null))
+		{
+			final Rectangle controlSize = getGraphControl().getClientArea();
+			final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
+			// Without the -2 for rootLayerSize background resize to root size triggers
+			// root layer size increase by 2, thus causing infinite resize loop
+			backgroundFigure.setSize(Math.max(controlSize.width, rootLayerSize.width - 2), Math.max(controlSize.height, rootLayerSize.height - 2));
+		}
 	}
 	
 	/**

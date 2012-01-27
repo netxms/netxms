@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
@@ -184,5 +185,13 @@ public abstract class ConsoleJob extends Job
 	protected void runInUIThread(final Runnable runnable)
 	{
 		PlatformUI.getWorkbench().getDisplay().asyncExec(runnable);
+	}
+	
+	/**
+	 * @return
+	 */
+	protected Display getDisplay()
+	{
+		return PlatformUI.getWorkbench().getDisplay();
 	}
 }

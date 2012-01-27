@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -4025,6 +4025,23 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    SendPollerMsg(dwRqId, _T("Starting topology poll for node %s\r\n"), m_szName);
 	DbgPrintf(4, _T("Started topology poll for node %s [%d]"), m_szName, m_dwId);
 
+	ForwardingDatabase *fdb = GetSwitchForwardingDatabase(this);
+	MutexLock(m_mutexTopoAccess);
+	if (m_fdb != NULL)
+		m_fdb->decRefCount();
+	m_fdb = fdb;
+	MutexUnlock(m_mutexTopoAccess);
+	if (fdb != NULL)
+	{
+		DbgPrintf(4, _T("Switch forwarding database retrieved for node %s [%d]"), m_szName, m_dwId);
+	   SendPollerMsg(dwRqId, POLLER_INFO _T("Switch forwarding database retrieved\r\n"));
+	}
+	else
+	{
+		DbgPrintf(4, _T("Failed to get switch forwarding database from node %s [%d]"), m_szName, m_dwId);
+	   SendPollerMsg(dwRqId, POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
+	}
+
 	LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(this);
 	if (nbs != NULL)
 	{
@@ -4069,23 +4086,6 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	else
 	{
 	   SendPollerMsg(dwRqId, POLLER_ERROR _T("Link layer topology retrieved\r\n"));
-	}
-
-	ForwardingDatabase *fdb = GetSwitchForwardingDatabase(this);
-	MutexLock(m_mutexTopoAccess);
-	if (m_fdb != NULL)
-		m_fdb->decRefCount();
-	m_fdb = fdb;
-	MutexUnlock(m_mutexTopoAccess);
-	if (fdb != NULL)
-	{
-		DbgPrintf(4, _T("Switch forwarding database retrieved for node %s [%d]"), m_szName, m_dwId);
-	   SendPollerMsg(dwRqId, POLLER_INFO _T("Switch forwarding database retrieved\r\n"));
-	}
-	else
-	{
-		DbgPrintf(4, _T("Failed to get switch forwarding database from node %s [%d]"), m_szName, m_dwId);
-	   SendPollerMsg(dwRqId, POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
 	}
 
 	if (m_driver != NULL)
@@ -4135,6 +4135,46 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	pollerUnlock();
 
 	DbgPrintf(4, _T("Finished topology poll for node %s [%d]"), m_szName, m_dwId);
+}
+
+
+//
+// Update host connections using forwarding database information
+//
+
+void Node::addHostConnections(LinkLayerNeighbors *nbs)
+{
+	ForwardingDatabase *fdb = getSwitchForwardingDatabase();
+	if (fdb == NULL)
+		return;
+
+	LockChildList(FALSE);
+	for(int i = 0; i < (int)m_dwChildCount; i++)
+	{
+		if (m_pChildList[i]->Type() != OBJECT_INTERFACE)
+			continue;
+
+		Interface *ifLocal = (Interface *)m_pChildList[i];
+		BYTE macAddr[MAC_ADDR_LENGTH];
+		if (fdb->isSingleMacOnPort(ifLocal->getIfIndex(), macAddr))
+		{
+			Interface *ifRemote = FindInterfaceByMAC(macAddr);
+			if (ifRemote != NULL)
+			{
+				LL_NEIGHBOR_INFO info;
+
+				info.ifLocal = ifLocal->getIfIndex();
+				info.ifRemote = ifRemote->getIfIndex();
+				info.objectId = ifRemote->getParentNode()->Id();
+				info.isPtToPt = true;
+				info.protocol = LL_PROTO_FDB;
+				nbs->addConnection(&info);
+			}
+		}
+	}
+	UnlockChildList();
+
+	fdb->decRefCount();
 }
 
 

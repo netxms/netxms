@@ -81,7 +81,7 @@ public class VlanMap extends NetworkMap
 			{
 				NetworkMapPage page = new NetworkMapPage();
 				collectVlanInfo(page, (Node)rootObject);
-				replaceMapPage(page);
+				replaceMapPage(page, getDisplay());
 			}
 
 			@Override
@@ -90,7 +90,7 @@ public class VlanMap extends NetworkMap
 				// On failure, create map with root object only
 				NetworkMapPage page = new NetworkMapPage();
 				page.addElement(new NetworkMapObject(mapPage.createElementId(), rootObject.getObjectId()));
-				replaceMapPage(page);
+				replaceMapPage(page, getDisplay());
 			}
 
 			@Override

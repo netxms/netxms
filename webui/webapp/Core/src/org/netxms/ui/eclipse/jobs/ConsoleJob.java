@@ -218,4 +218,12 @@ public abstract class ConsoleJob extends Job
 	{
 		display.asyncExec(runnable);
 	}
+	
+	/**
+	 * @return
+	 */
+	protected Display getDisplay()
+	{
+		return display;
+	}
 }

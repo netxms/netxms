@@ -43,7 +43,7 @@ public class Layer2Topology extends NetworkMap
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NetworkMapPage page = session.queryLayer2Topology(rootObject.getObjectId());
-				replaceMapPage(page);
+				replaceMapPage(page, getDisplay());
 			}
 
 			@Override
@@ -52,7 +52,7 @@ public class Layer2Topology extends NetworkMap
 				// On failure, create map with root object only
 				NetworkMapPage page = new NetworkMapPage();
 				page.addElement(new NetworkMapObject(mapPage.createElementId(), rootObject.getObjectId()));
-				replaceMapPage(page);
+				replaceMapPage(page, getDisplay());
 			}
 
 			@Override

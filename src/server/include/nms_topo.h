@@ -110,9 +110,11 @@ public:
 
 	time_t getTimeStamp() { return m_timestamp; }
 	int getAge() { return (int)(time(NULL) - m_timestamp); }
+	int getSize() { return m_fdbSize; }
+	FDB_ENTRY *getEntry(int index) { return ((index >= 0) && (index < m_fdbSize)) ? &m_fdb[index] : NULL; }
 
 	DWORD findMacAddress(const BYTE *macAddr);
-	bool isSingleMacOnPort(DWORD ifIndex);
+	bool isSingleMacOnPort(DWORD ifIndex, BYTE *macAddr = NULL);
 };
 
 
