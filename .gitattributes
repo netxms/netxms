@@ -118,6 +118,8 @@ sdk/openssl/lib/x64/ssleay32.lib -text
 sdk/openssl/lib/x86/libeay32.lib -text
 sdk/openssl/lib/x86/ssleay32.lib -text
 sdk/samples/C/subagent/sample-subagent.vcproj -text
+sdk/samples/Java/get-dci-from-server/pom.xml -text
+sdk/samples/Java/get-dci-from-server/src/main/java/org/netxms/samples/Sample.java -text
 src/agent/core/epp.cpp -text
 src/agent/core/nxagentd-unicode.vcproj -text
 src/agent/core/nxagentd.vcproj -text
