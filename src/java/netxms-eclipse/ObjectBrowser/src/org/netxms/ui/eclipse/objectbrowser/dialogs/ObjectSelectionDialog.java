@@ -72,6 +72,19 @@ public class ObjectSelectionDialog extends Dialog
 	}
 
 	/**
+	 * Create filter for zone selection - it allows only zone and entire network obejcts.
+	 * 
+	 * @return Class filter for node selection
+	 */
+	public static Set<Integer> createZoneSelectionFilter()
+	{
+		HashSet<Integer> classFilter = new HashSet<Integer>(7);
+		classFilter.add(GenericObject.OBJECT_NETWORK);
+		classFilter.add(GenericObject.OBJECT_ZONE);
+		return classFilter;
+	}
+
+	/**
 	 * Create filter for template selection - it allows template objects and possible
 	 * parents - template groups.
 	 * 

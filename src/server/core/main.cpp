@@ -1032,6 +1032,20 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 	{
 		DumpProcess(pCtx);
 	}
+	else if (IsCommand(_T("GET"), szBuffer, 3))
+	{
+		pArg = ExtractWord(pArg, szBuffer);
+		if (szBuffer[0] != 0)
+		{
+			TCHAR value[256];
+			ConfigReadStr(szBuffer, value, 256, _T(""));
+			ConsolePrintf(pCtx, _T("%s = %s\n"), szBuffer, value);
+		}
+		else
+		{
+			ConsolePrintf(pCtx, _T("Variable name missing\n"));
+		}
+	}
 	else if (IsCommand(_T("RAISE"), szBuffer, 5))
 	{
 		// Get argument
@@ -1067,6 +1081,27 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		else
 		{
 			ConsolePrintf(pCtx, _T("Cannot exit from local server console\n"));
+		}
+	}
+	else if (IsCommand(_T("SET"), szBuffer, 3))
+	{
+		pArg = ExtractWord(pArg, szBuffer);
+		if (szBuffer[0] != 0)
+		{
+			TCHAR value[256];
+			pArg = ExtractWord(pArg, value);
+			if (ConfigWriteStr(szBuffer, value, TRUE, TRUE, TRUE))
+			{
+				ConsolePrintf(pCtx, _T("Configuration variable %s updated\n"), szBuffer);
+			}
+			else
+			{
+				ConsolePrintf(pCtx, _T("ERROR: cannot update configuration variable %s\n"), szBuffer);
+			}
+		}
+		else
+		{
+			ConsolePrintf(pCtx, _T("Variable name missing\n"));
 		}
 	}
 	else if (IsCommand(_T("SHOW"), szBuffer, 2))
@@ -1367,8 +1402,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   debug [<level>|off]       - Set debug level (valid range is 0..9)\n")
 				_T("   down                      - Down NetXMS server\n")
 				_T("   exit                      - Exit from remote session\n")
+				_T("   get <variable>            - Get value of server configuration variable\n")
 				_T("   help                      - Display this help\n")
 				_T("   raise <exception>         - Raise exception\n")
+				_T("   set <variable> <value>    - Set value of server configuration variable\n")
 				_T("   show flags                - Show internal server flags\n")
 				_T("   show index <index>        - Show internal index\n")
 				_T("   show objects              - Dump network objects to screen\n")

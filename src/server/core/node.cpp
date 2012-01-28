@@ -3413,6 +3413,7 @@ void Node::changeZone(DWORD newZone)
 
    m_zoneId = newZone;
    m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL;
+	m_tLastConfigurationPoll = 0;
 
 	// Remove from subnets
 	LockParentList(FALSE);
@@ -4272,7 +4273,22 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 				// Create subnet
 				pSubnet = new Subnet(iface->dwIpAddr & iface->dwIpNetMask, iface->dwIpNetMask, m_zoneId, FALSE);
 				NetObjInsert(pSubnet, TRUE);
-				g_pEntireNet->AddSubnet(pSubnet);
+				if (g_dwFlags & AF_ENABLE_ZONING)
+				{
+					Zone *zone = FindZoneByGUID(m_zoneId);
+					if (zone != NULL)
+					{
+						zone->addSubnet(pSubnet);
+					}
+					else
+					{
+						DbgPrintf(1, _T("Inconsistent configuration - zone %d does not exist"), (int)m_zoneId);
+					}
+				}
+				else
+				{
+					g_pEntireNet->AddSubnet(pSubnet);
+				}
 				pSubnet->AddNode(this);
 				DbgPrintf(4, _T("Node::CheckSubnetBinding(): Creating new subnet %s [%d] for node %s [%d]"),
 				          pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);

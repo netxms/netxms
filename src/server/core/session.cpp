@@ -4212,14 +4212,21 @@ void ClientSession::deleteObject(CSCPMessage *pRequest)
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
-      // Check if it is a built-in object, like _T("Entire Network")
-      if (pObject->Id() >= 10)
+      // Check if it is a built-in object, like "Entire Network"
+      if (pObject->Id() >= 10)  // FIXME: change to 100
       {
          // Check access rights
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
          {
-				ThreadCreate(DeleteObjectWorker, 0, pObject);
-            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				if ((pObject->Type() != OBJECT_ZONE) || pObject->isEmpty())
+				{
+					ThreadCreate(DeleteObjectWorker, 0, pObject);
+					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				}
+				else
+				{
+	            msg.SetVariable(VID_RCC, RCC_ZONE_NOT_EMPTY);
+				}
          }
          else
          {

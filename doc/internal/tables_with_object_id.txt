@@ -1,0 +1,48 @@
+The following tables contains object identifiers:
+
+
+object_properties				object_id, submap_id
+object_custom_attributes	object_id
+zones								id, agent_proxy, snmp_proxy, icmp_proxy
+nodes								id, poller_node_id, proxy_node, snmp_proxy
+clusters							id
+cluster_members				cluster_id, node_id
+cluster_sync_subnets			cluster_id
+cluster_resources				cluster_id, current_owner
+subnets							id
+interfaces						id, node_id, peer_node_id
+network_services				id, node_id, poller_node_id
+vpn_connectors					id, node_id, peer_gateway
+vpn_connector_networks		vpn_id
+containers						id
+conditions                 id, source_object
+cond_dci_map					condition_id, node_id
+templates						id
+dct_node_map					template_id, node_id
+nsmap								subnet_id, node_id
+container_members				container_id, object_id
+acl								object_id
+trusted_nodes					source_object_id,target_node_id
+items								node_id, template_id, proxy_node
+event_log						event_source
+policy_source_list			object_id
+deleted_objects				object_id
+alarms							source_object_id
+syslog							source_object_id
+snmp_trap_log					object_id
+audit_log						object_id
+ap_common						id
+ap_bindings						policy_id,node_id
+ap_config_files				policy_id
+network_maps					id, seed
+network_map_elements			map_id					+ XML
+dashboards						id							+ XML
+business_services				service_id
+slm_checks						id
+node_links						nodelink_id, node_id
+slm_agreements					service_id
+slm_tickets						service_id, check_id
+slm_service_history			service_id
+job_history						node_id
+reports							id
+report_results					report_id

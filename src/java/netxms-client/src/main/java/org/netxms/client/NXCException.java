@@ -123,7 +123,8 @@ public class NXCException extends NetXMSClientException
 		"Job cannot be put on hold",
 		"Job on hold cannot be resumed",
 		"Zone ID is already in use",
-		"Invalid zone ID"
+		"Invalid zone ID",
+		"Cannot delete non-empty zone object"
 	};
 	private static final String[] extendedErrorTexts =
 	{

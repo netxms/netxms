@@ -91,6 +91,7 @@ public final class RCC extends CommonRCC
 	public static final int RCC_JOB_UNHOLD_FAILED = 92;
 	public static final int RCC_ZONE_ID_ALREADY_IN_USE = 93;
 	public static final int RCC_INVALID_ZONE_ID = 94;
+	public static final int RCC_ZONE_NOT_EMPTY = 95;
 	
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;
