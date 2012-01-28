@@ -29,6 +29,8 @@ import org.netxms.client.objects.GenericObject;
  */
 public class ObjectDecorator implements ILightweightLabelDecorator
 {
+	private static final long serialVersionUID = 1L;
+
 	// Status images
 	private ImageDescriptor[] statusImages;
 	

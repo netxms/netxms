@@ -34,6 +34,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class CreateObjectDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private String objectClassName;
 	private String objectName;
 	private Text textName;

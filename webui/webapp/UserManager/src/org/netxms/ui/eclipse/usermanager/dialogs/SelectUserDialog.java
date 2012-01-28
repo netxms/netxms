@@ -52,6 +52,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class SelectUserDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private TableViewer userList;
 	private Session session;
 	private boolean showGroups;
@@ -107,6 +109,8 @@ public class SelectUserDialog extends Dialog
 			}
       });
       userList.addFilter(new ViewerFilter() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public boolean select(Viewer viewer, Object parentElement, Object element)
 			{

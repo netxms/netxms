@@ -31,6 +31,8 @@ import org.netxms.ui.eclipse.usermanager.views.UserManagementView;
  */
 public class UserLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */

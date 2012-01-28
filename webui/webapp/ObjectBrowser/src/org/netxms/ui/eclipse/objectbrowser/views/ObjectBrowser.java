@@ -196,6 +196,8 @@ public class ObjectBrowser extends ViewPart
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
 		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -204,6 +206,8 @@ public class ObjectBrowser extends ViewPart
 		};
 		
 		actionMoveObject = new Action("&Move to another container") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -212,6 +216,8 @@ public class ObjectBrowser extends ViewPart
 		};
 		
 		actionMoveTemplate = new Action("&Move to another group") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -220,6 +226,8 @@ public class ObjectBrowser extends ViewPart
 		};
 		
 		actionMoveBusinessService = new Action("&Move to another service") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -229,6 +237,8 @@ public class ObjectBrowser extends ViewPart
 		
       actionHideUnmanaged = new Action("&Hide unmanaged objects", Action.AS_CHECK_BOX)
       {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -240,6 +250,8 @@ public class ObjectBrowser extends ViewPart
 
       actionHideTemplateChecks = new Action("Hide check templates", Action.AS_CHECK_BOX)
       {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -251,6 +263,8 @@ public class ObjectBrowser extends ViewPart
 
       actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX)
       {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -299,6 +313,8 @@ public class ObjectBrowser extends ViewPart
 		MenuManager manager = new MenuManager();
 		manager.setRemoveAllWhenShown(true);
 		manager.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

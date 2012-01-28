@@ -49,6 +49,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class IPAddressSelectionDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private Node node;
 	private TableViewer viewer;
 	private InetAddress address;
@@ -101,6 +103,8 @@ public class IPAddressSelectionDialog extends Dialog
 		viewer.getControl().setLayoutData(gd);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setComparator(new ViewerComparator() {
+			private static final long serialVersionUID = 1L;
+
 			private long addrAsLong(InetAddress addrObject)
 			{
 				byte[] addr = addrObject.getAddress();

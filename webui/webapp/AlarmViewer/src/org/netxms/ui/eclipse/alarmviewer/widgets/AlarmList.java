@@ -62,6 +62,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class AlarmList extends Composite
 {
+	private static final long serialVersionUID = 1L;
 	public static final String JOB_FAMILY = "AlarmViewJob"; //$NON-NLS-1$
 	
 	// Columns
@@ -108,6 +109,8 @@ public class AlarmList extends Composite
 		alarmFilter = new AlarmListFilter();
 		alarmViewer.addFilter(alarmFilter);
 		alarmViewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -119,6 +122,8 @@ public class AlarmList extends Composite
 		createPopupMenu();
 
 		addListener(SWT.Resize, new Listener() {
+			private static final long serialVersionUID = 1L;
+
 			public void handleEvent(Event e)
 			{
 				alarmViewer.getControl().setBounds(AlarmList.this.getClientArea());
@@ -158,6 +163,8 @@ public class AlarmList extends Composite
 		session.addListener(clientListener);
 		
 		addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -203,6 +210,8 @@ public class AlarmList extends Composite
 	private void createActions()
 	{
 		actionCopy = new Action(Messages.AlarmList_CopyToClipboard) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -228,6 +237,8 @@ public class AlarmList extends Composite
 		};
 
 		actionCopyMessage = new Action(Messages.AlarmList_CopyMsgToClipboard) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -258,6 +269,8 @@ public class AlarmList extends Composite
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener()
 		{
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

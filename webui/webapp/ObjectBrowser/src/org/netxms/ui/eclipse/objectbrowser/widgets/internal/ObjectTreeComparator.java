@@ -30,6 +30,8 @@ import org.netxms.client.objects.GenericObject;
  */
 public class ObjectTreeComparator extends ViewerComparator
 {
+	private static final long serialVersionUID = 1L;
+
 	// Categories
 	private static final int CATEGORY_CONTAINER = 10;
 	private static final int CATEGORY_NODELINK = 100;

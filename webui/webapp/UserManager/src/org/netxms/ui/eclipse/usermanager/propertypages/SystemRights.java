@@ -41,6 +41,8 @@ import org.netxms.ui.eclipse.usermanager.Activator;
  */
 public class SystemRights extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private UserManager userManager;
 	private AbstractUserObject object;
 	private Map<Integer, Button> buttons = new HashMap<Integer, Button>();

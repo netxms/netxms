@@ -20,6 +20,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class AlarmComparator extends ViewerComparator
 {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * 
 	 */

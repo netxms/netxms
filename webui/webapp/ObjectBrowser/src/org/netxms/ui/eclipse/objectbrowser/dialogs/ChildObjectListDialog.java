@@ -61,6 +61,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ChildObjectListDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private long parentObject;
 	private Set<Integer> classFilter;
 	private ObjectListFilter filter;
@@ -160,6 +162,8 @@ public class ChildObjectListDialog extends Dialog
 		filterText = new Text(filterArea, SWT.BORDER);
 		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		filterText.addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -192,6 +196,8 @@ public class ChildObjectListDialog extends Dialog
 		gd.grabExcessVerticalSpace = true;
 		objectList.getControl().setLayoutData(gd);
 		objectList.getTable().addControlListener(new ControlListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void controlMoved(ControlEvent e)
 			{

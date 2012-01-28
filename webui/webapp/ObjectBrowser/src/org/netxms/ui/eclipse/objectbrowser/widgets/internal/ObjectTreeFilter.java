@@ -38,6 +38,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ObjectTreeFilter extends ViewerFilter
 {
+	private static final long serialVersionUID = 1L;
+
 	private String filterString = null;
 	private boolean hideUnmanaged = false;
 	private boolean hideTemplateChecks = false;

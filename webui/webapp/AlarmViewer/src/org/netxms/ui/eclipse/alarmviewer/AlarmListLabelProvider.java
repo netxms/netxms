@@ -38,6 +38,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class AlarmListLabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	// Constants
 	private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, Messages.AlarmListLabelProvider_AlarmState_Terminated };
 	

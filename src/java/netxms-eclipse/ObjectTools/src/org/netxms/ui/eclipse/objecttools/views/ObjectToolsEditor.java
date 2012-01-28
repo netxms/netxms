@@ -305,17 +305,16 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final List<ObjectTool> tl = session.getObjectTools();
-				new UIJob("Update object tools list") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						tools.clear();
 						for(ObjectTool t : tl)
 							tools.put(t.getId(), t);
 						viewer.setInput(tools.values().toArray());
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override
@@ -341,17 +340,16 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 					final long toolId = session.generateObjectToolId();
 					final ObjectToolDetails details = new ObjectToolDetails(toolId, dlg.getType(), dlg.getName());
 					session.modifyObjectTool(details);
-					new UIJob("Open tool properties") {
+					runInUIThread(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, details);
 							dlg.open();
 							if (details.isModified())
 								saveObjectTool(details);
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 
 				@Override
@@ -419,14 +417,13 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			protected void jobFailureHandler()
 			{
 				// Was unable to save configuration on server, invalidate cache
-				new UIJob("Update object tool adapter cache") {
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						ObjectToolsAdapterFactory.deleteFromCache(details.getId());
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 		}.schedule();
 	}
@@ -452,7 +449,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 				refreshToolList();
 				break;
 			case NXCNotification.OBJECT_TOOL_DELETED:
-				new UIJob("Delete object tool from list") {
+				new UIJob(getSite().getShell().getDisplay(), "Delete object tool from list") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{

@@ -35,6 +35,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ObjectListFilter extends ViewerFilter
 {
+	private static final long serialVersionUID = 1L;
+
 	private String filterString = null;
 	private Set<Integer> classFilter = null;
 	private GenericObject[] sourceObjects = null;

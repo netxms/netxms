@@ -19,10 +19,7 @@
 package org.netxms.ui.eclipse.alarmviewer;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.eclipse.ui.progress.IProgressService;
-import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.osgi.framework.BundleContext;
 
 /**

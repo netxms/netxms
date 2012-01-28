@@ -246,9 +246,8 @@ public class UserManagementView extends ViewPart
 	{
 		actionRefresh = new RefreshAction()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -258,9 +257,8 @@ public class UserManagementView extends ViewPart
 
 		actionAddUser = new Action()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -272,9 +270,8 @@ public class UserManagementView extends ViewPart
 
 		actionAddGroup = new Action()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -291,9 +288,8 @@ public class UserManagementView extends ViewPart
 
 		actionDeleteUser = new Action()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -305,6 +301,8 @@ public class UserManagementView extends ViewPart
 		actionDeleteUser.setEnabled(false);
 
 		actionChangePassword = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -344,6 +342,8 @@ public class UserManagementView extends ViewPart
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener()
 		{
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

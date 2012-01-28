@@ -46,6 +46,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ObjectSelectionDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private ObjectTree objectTree;
 	private long[] rootObjects;
 	private long[] selectedObjects;
