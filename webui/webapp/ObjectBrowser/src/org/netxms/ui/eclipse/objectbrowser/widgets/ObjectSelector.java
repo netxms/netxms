@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.widgets;
 
+import java.util.Set;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
@@ -35,6 +36,7 @@ public class ObjectSelector extends AbstractSelector
 {
 	private long objectId = 0;
 	private Class<? extends GenericObject> objectClass = Node.class;
+	private Set<Integer> classFilter = null;
 	private String emptySelectionName = "<none>";
 	
 	/**
@@ -53,7 +55,7 @@ public class ObjectSelector extends AbstractSelector
 	@Override
 	protected void selectionButtonHandler()
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, null);
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, classFilter);
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
@@ -126,5 +128,21 @@ public class ObjectSelector extends AbstractSelector
 	public void setEmptySelectionName(String emptySelectionName)
 	{
 		this.emptySelectionName = emptySelectionName;
+	}
+
+	/**
+	 * @return the classFilter
+	 */
+	public Set<Integer> getClassFilter()
+	{
+		return classFilter;
+	}
+
+	/**
+	 * @param classFilter the classFilter to set
+	 */
+	public void setClassFilter(Set<Integer> classFilter)
+	{
+		this.classFilter = classFilter;
 	}
 }

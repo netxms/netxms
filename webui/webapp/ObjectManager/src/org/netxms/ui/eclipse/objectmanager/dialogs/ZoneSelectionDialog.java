@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Zone;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -77,6 +78,7 @@ public class ZoneSelectionDialog extends Dialog
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
       objectSelector.setLabel("Zone object");
       objectSelector.setObjectClass(Zone.class);
+      objectSelector.setClassFilter(ObjectSelectionDialog.createZoneSelectionFilter());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
