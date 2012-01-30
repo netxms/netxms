@@ -2752,6 +2752,7 @@ webui/webapp/ActionManager/icons/disabled_overlay.png -text
 webui/webapp/ActionManager/icons/email.png -text
 webui/webapp/ActionManager/icons/exec_local.png -text
 webui/webapp/ActionManager/icons/exec_remote.png -text
+webui/webapp/ActionManager/icons/exec_script.gif -text
 webui/webapp/ActionManager/icons/fwd_event.png -text
 webui/webapp/ActionManager/icons/sms.png -text
 webui/webapp/ActionManager/plugin.xml -text

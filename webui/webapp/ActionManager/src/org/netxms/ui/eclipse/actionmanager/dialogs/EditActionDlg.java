@@ -52,6 +52,7 @@ public class EditActionDlg extends Dialog
 	private LabeledText data;
 	private Button typeLocalExec;
 	private Button typeRemoteExec;
+	private Button typeExecScript;
 	private Button typeEMail;
 	private Button typeSMS;
 	private Button typeForward;
@@ -132,6 +133,11 @@ public class EditActionDlg extends Dialog
 		typeRemoteExec.setSelection(action.getType() == ServerAction.EXEC_REMOTE);
 		typeRemoteExec.addSelectionListener(new TypeButtonSelectionListener());
 		
+		typeExecScript = new Button(typeGroup, SWT.RADIO);
+		typeExecScript.setText("Execute &NXSL script");
+		typeExecScript.setSelection(action.getType() == ServerAction.EXEC_NXSL_SCRIPT);
+		typeExecScript.addSelectionListener(new TypeButtonSelectionListener());
+		
 		typeEMail = new Button(typeGroup, SWT.RADIO);
 		typeEMail.setText(Messages.EditActionDlg_SenMail);
 		typeEMail.setSelection(action.getType() == ServerAction.SEND_EMAIL);
@@ -205,6 +211,8 @@ public class EditActionDlg extends Dialog
 				return Messages.EditActionDlg_PhoneNumber;
 			case ServerAction.FORWARD_EVENT:
 				return Messages.EditActionDlg_RemoteServer;
+			case ServerAction.EXEC_NXSL_SCRIPT:
+				return "Script name";
 		}
 		return Messages.EditActionDlg_Recipient;
 	}
@@ -237,6 +245,8 @@ public class EditActionDlg extends Dialog
 			action.setType(ServerAction.EXEC_LOCAL);
 		else if (typeRemoteExec.getSelection())
 			action.setType(ServerAction.EXEC_REMOTE);
+		else if (typeExecScript.getSelection())
+			action.setType(ServerAction.EXEC_NXSL_SCRIPT);
 		else if (typeEMail.getSelection())
 			action.setType(ServerAction.SEND_EMAIL);
 		else if (typeSMS.getSelection())
@@ -264,6 +274,8 @@ public class EditActionDlg extends Dialog
 			type = ServerAction.EXEC_LOCAL;
 		else if (typeRemoteExec.getSelection())
 			type = ServerAction.EXEC_REMOTE;
+		else if (typeExecScript.getSelection())
+			type = ServerAction.EXEC_NXSL_SCRIPT;
 		else if (typeEMail.getSelection())
 			type = ServerAction.SEND_EMAIL;
 		else if (typeSMS.getSelection())
@@ -294,6 +306,11 @@ public class EditActionDlg extends Dialog
 				data.setEnabled(true);
 				break;
 			case ServerAction.FORWARD_EVENT:
+				recipient.setEnabled(true);
+				subject.setEnabled(false);
+				data.setEnabled(false);
+				break;
+			case ServerAction.EXEC_NXSL_SCRIPT:
 				recipient.setEnabled(true);
 				subject.setEnabled(false);
 				data.setEnabled(false);
