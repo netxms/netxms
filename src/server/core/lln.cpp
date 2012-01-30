@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -111,6 +111,9 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
 	}
 	else	// try to find switch port for nodes
 	{
+		// interfaces of end nodes should be linked to switches already,
+		// so we just walk node's interfaces and copy connection point information
+		node->addExistingConnections(nbs);
 	}
 
 	return nbs;

@@ -96,7 +96,7 @@ TCHAR *g_szObjectClass[] = { _T("Generic"), _T("Subnet"), _T("Node"), _T("Interf
 									  _T("PolicyRoot"), _T("AgentPolicy"), _T("AgentPolicyConfig"),
 									  _T("NetworkMapRoot"), _T("NetworkMapGroup"), _T("NetworkMap"),
                              _T("DashboardRoot"), _T("Dashboard") };
-TCHAR *g_szActionType[] = { _T("Execute"), _T("Remote"), _T("E-Mail"), _T("SMS"), _T("Forward") };
+TCHAR *g_szActionType[] = { _T("Execute"), _T("Remote"), _T("E-Mail"), _T("SMS"), _T("Forward"), _T("Script") };
 TCHAR *g_szServiceType[] = { _T("User-defined"), _T("SSH"), _T("POP3"), _T("SMTP"),
                              _T("FTP"), _T("HTTP"), NULL };
 TCHAR *g_szDeploymentStatus[] = { _T("Pending"), _T("Uploading package"),

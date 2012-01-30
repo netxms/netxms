@@ -614,6 +614,7 @@ src/java/netxms-eclipse/ActionManager/icons/disabled_overlay.png -text
 src/java/netxms-eclipse/ActionManager/icons/email.png -text
 src/java/netxms-eclipse/ActionManager/icons/exec_local.png -text
 src/java/netxms-eclipse/ActionManager/icons/exec_remote.png -text
+src/java/netxms-eclipse/ActionManager/icons/exec_script.gif -text
 src/java/netxms-eclipse/ActionManager/icons/fwd_event.png -text
 src/java/netxms-eclipse/ActionManager/icons/sms.png -text
 src/java/netxms-eclipse/ActionManager/plugin.xml -text

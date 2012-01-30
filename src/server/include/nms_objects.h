@@ -918,6 +918,7 @@ public:
 	ForwardingDatabase *getSwitchForwardingDatabase();
 	Interface *findConnectionPoint(DWORD *localIfId, BYTE *localMacAddr);
 	void addHostConnections(LinkLayerNeighbors *nbs);
+	void addExistingConnections(LinkLayerNeighbors *nbs);
 
 	ServerJobQueue *getJobQueue() { return m_jobQueue; }
 };

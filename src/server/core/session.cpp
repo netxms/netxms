@@ -9268,33 +9268,26 @@ void ClientSession::QueryL2Topology(CSCPMessage *pRequest)
 		{
 			if (pObject->Type() == OBJECT_NODE)
 			{
-				if (((Node *)pObject)->isBridge())
-				{
-					nxmap_ObjList *pTopology;
+				nxmap_ObjList *pTopology;
 
-					pTopology = ((Node *)pObject)->GetL2Topology();
-					if (pTopology == NULL)
-					{
-						pTopology = ((Node *)pObject)->BuildL2Topology(&dwResult);
-					}
-					else
-					{
-						dwResult = RCC_SUCCESS;
-					}
-					if (pTopology != NULL)
-					{
-						msg.SetVariable(VID_RCC, RCC_SUCCESS);
-						pTopology->CreateMessage(&msg);
-						delete pTopology;
-					}
-					else
-					{
-						msg.SetVariable(VID_RCC, dwResult);
-					}
+				pTopology = ((Node *)pObject)->GetL2Topology();
+				if (pTopology == NULL)
+				{
+					pTopology = ((Node *)pObject)->BuildL2Topology(&dwResult);
 				}
 				else
 				{
-					msg.SetVariable(VID_RCC, RCC_NO_L2_TOPOLOGY_SUPPORT);
+					dwResult = RCC_SUCCESS;
+				}
+				if (pTopology != NULL)
+				{
+					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+					pTopology->CreateMessage(&msg);
+					delete pTopology;
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, dwResult);
 				}
 			}
 			else

@@ -4180,6 +4180,35 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
 
 
 //
+// Add existing connections to link layer neighbours table
+//
+
+void Node::addExistingConnections(LinkLayerNeighbors *nbs)
+{
+	LockChildList(FALSE);
+	for(int i = 0; i < (int)m_dwChildCount; i++)
+	{
+		if (m_pChildList[i]->Type() != OBJECT_INTERFACE)
+			continue;
+
+		Interface *ifLocal = (Interface *)m_pChildList[i];
+		if ((ifLocal->getPeerNodeId() != 0) && (ifLocal->getPeerInterfaceId() != 0))
+		{
+			LL_NEIGHBOR_INFO info;
+
+			info.ifLocal = ifLocal->getIfIndex();
+			info.ifRemote = ifLocal->getPeerInterfaceId();
+			info.objectId = ifLocal->getPeerNodeId();
+			info.isPtToPt = true;
+			info.protocol = LL_PROTO_FDB;
+			nbs->addConnection(&info);
+		}
+	}
+	UnlockChildList();
+}
+
+
+//
 // Resolve port indexes in VLAN list
 //
 

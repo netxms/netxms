@@ -85,12 +85,23 @@ public class ExtendedGraphViewer extends GraphViewer
 				if (getGraphControl().isDisposed())
 					return;
 
-				if (graphControlResized)
+				if (backgroundLocation != null)
 				{
-					backgroundFigure.setSize(10, 10);
-					graphControlResized = false;
+					if (graphControlResized)
+					{
+						backgroundFigure.setSize(10, 10);
+						graphControlResized = false;
+					}
+					else
+					{
+						resizeBackground();
+					}
+					reloadMapBackground();
 				}
-				reloadMapBackground();
+				else
+				{
+					resizeBackground();
+				}
 			}
 		};
 		
@@ -99,11 +110,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			public void controlResized(ControlEvent e)
 			{
 				graphControlResized = true;
-				resizeBackground();
-				if (backgroundLocation != null)
-				{
-					getGraphControl().getDisplay().timerExec(1000, timer);
-				}
+				getGraphControl().getDisplay().timerExec(1000, timer);
 			}
 			
 			@Override
@@ -116,11 +123,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void figureMoved(IFigure source)
 			{
-				resizeBackground();
-				if (backgroundLocation != null)
-				{
-					getGraphControl().getDisplay().timerExec(1000, timer);
-				}
+				getGraphControl().getDisplay().timerExec(1000, timer);
 			}
 		});
 		
@@ -186,14 +189,11 @@ public class ExtendedGraphViewer extends GraphViewer
 	 */
 	private void resizeBackground()
 	{
-		if ((backgroundLocation != null) || (backgroundImage != null))
-		{
-			final Rectangle controlSize = getGraphControl().getClientArea();
-			final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
-			// Without the -2 for rootLayerSize background resize to root size triggers
-			// root layer size increase by 2, thus causing infinite resize loop
-			backgroundFigure.setSize(Math.max(controlSize.width, rootLayerSize.width - 2), Math.max(controlSize.height, rootLayerSize.height - 2));
-		}
+		final Rectangle controlSize = getGraphControl().getClientArea();
+		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
+		// Without the -2 for rootLayerSize background resize to root size triggers
+		// root layer size increase by 2, thus causing infinite resize loop
+		backgroundFigure.setSize(Math.max(controlSize.width, rootLayerSize.width - 4), Math.max(controlSize.height, rootLayerSize.height - 4));
 	}
 	
 	/**

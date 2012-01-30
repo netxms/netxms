@@ -68,6 +68,8 @@ public class ServerActionAdapterFactory implements IAdapterFactory
 						return Activator.getImageDescriptor("icons/sms.png"); //$NON-NLS-1$
 					case ServerAction.FORWARD_EVENT:
 						return Activator.getImageDescriptor("icons/fwd_event.png"); //$NON-NLS-1$
+					case ServerAction.EXEC_NXSL_SCRIPT:
+						return Activator.getImageDescriptor("icons/exec_script.gif"); //$NON-NLS-1$
 				}
 				return null;
 			}

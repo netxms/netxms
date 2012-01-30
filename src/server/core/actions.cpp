@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -347,6 +347,43 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 
 
 //
+// Execute NXSL script
+//
+
+static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
+{
+	BOOL success = FALSE;
+	g_pScriptLibrary->lock();
+	NXSL_Program *script = g_pScriptLibrary->findScript(scriptName);
+	if (script != NULL)
+	{
+		NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
+		NetObj *object = FindObjectById(event->getSourceId());
+		if ((object != NULL) && (object->Type() == OBJECT_NODE))
+			script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
+		script->setGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)));
+
+		if (script->run(pEnv) == 0)
+		{
+			DbgPrintf(4, _T("ExecuteActionScript: script %s successfully executed"), scriptName);
+			success = TRUE;
+		}
+		else
+		{
+			DbgPrintf(4, _T("ExecuteActionScript: Script %s execution error: %s"), scriptName, script->getErrorText());
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, script->getErrorText(), 0);
+		}
+	}
+	else
+	{
+		DbgPrintf(4, _T("ExecuteActionScript(): Cannot find script %s"), scriptName);
+	}
+	g_pScriptLibrary->unlock();
+	return success;
+}
+
+
+//
 // Execute action on specific event
 //
 
@@ -417,6 +454,10 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
 				case ACTION_FORWARD_EVENT:
                DbgPrintf(3, _T("*actions* Forwarding event to \"%s\""), pszExpandedRcpt);
                bSuccess = ForwardEvent(pszExpandedRcpt, pEvent);
+					break;
+				case ACTION_NXSL_SCRIPT:
+               DbgPrintf(3, _T("*actions* Executing NXSL script \"%s\""), pszExpandedRcpt);
+               bSuccess = ExecuteActionScript(pszExpandedRcpt, pEvent);
 					break;
             default:
                break;
