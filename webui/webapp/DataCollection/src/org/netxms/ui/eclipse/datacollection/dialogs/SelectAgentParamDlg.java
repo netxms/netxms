@@ -36,8 +36,10 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 {
 	private static final long serialVersionUID = 1L;
 
-	private List<AgentParameter> parameters;
-	
+	/**
+	 * @param parentShell
+	 * @param nodeId
+	 */
 	public SelectAgentParamDlg(Shell parentShell, long nodeId)
 	{
 		super(parentShell, nodeId);
@@ -51,8 +53,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
-		ConsoleJob job = new ConsoleJob("Get list of supported parameters for " + object.getObjectName(),
-				                          null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Get list of supported parameters for " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -62,31 +63,16 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				parameters = session.getSupportedParameters(object.getObjectId());
+				final List<AgentParameter> parameters = session.getSupportedParameters(object.getObjectId());
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						viewer.setInput(parameters.toArray());
+					}
+				});
 			}
-
-			@Override
-			protected void jobFailureHandler()
-			{
-				parameters = new ArrayList<AgentParameter>(0);
-			}
-		};
-		job.start();
-		
-		boolean jobCompleted = false;
-		do
-		{
-			try
-			{
-				job.join();
-				jobCompleted = true;
-			}
-			catch(InterruptedException e)
-			{
-			}
-		} while(!jobCompleted);
-				
-		viewer.setInput(parameters.toArray());
+		}.start();
 	}
 
 	/* (non-Javadoc)
