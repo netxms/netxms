@@ -59,6 +59,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class ClusterResources extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_IP_ADDRESS = 1;
 
@@ -126,6 +128,8 @@ public class ClusterResources extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
       addButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -145,6 +149,8 @@ public class ClusterResources extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
       editButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -164,6 +170,8 @@ public class ClusterResources extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
       deleteButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

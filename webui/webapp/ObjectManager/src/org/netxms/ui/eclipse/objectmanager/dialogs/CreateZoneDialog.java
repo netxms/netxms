@@ -35,6 +35,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CreateZoneDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private LabeledText nameField;
 	private LabeledText zoneIdField;
 	

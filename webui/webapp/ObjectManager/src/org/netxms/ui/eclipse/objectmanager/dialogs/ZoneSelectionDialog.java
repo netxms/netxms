@@ -39,6 +39,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ZoneSelectionDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private ObjectSelector objectSelector;
 	private long zoneId;
 	

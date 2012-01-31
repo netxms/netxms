@@ -18,7 +18,10 @@
  */
 package org.netxms.ui.eclipse.objectmanager.dialogs;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -30,26 +33,23 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 
 /**
- * Object's custom attribute edit dialog
- *
+ * Cluster's sync networks edit dialog
  */
-public class AttributeEditDialog extends Dialog
+public class ClusterNetworkEditDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
-	private Text textName;
-	private Text textValue;
-	private String attrName;
-	private String attrValue;
+	private Text textAddress;
+	private Text textMask;
+	private InetAddress address;
+	private InetAddress mask;
 	
 	/**
 	 * @param parentShell
 	 */
-	public AttributeEditDialog(Shell parentShell, String attrName, String attrValue)
+	public ClusterNetworkEditDialog(Shell parentShell, InetAddress address, InetAddress mask)
 	{
 		super(parentShell);
-		this.attrName = attrName;
-		this.attrValue = attrValue;
+		this.address = address;
+		this.mask = mask;
 	}
 
 	/* (non-Javadoc)
@@ -67,30 +67,24 @@ public class AttributeEditDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Name");
+      label.setText("Address");
       
-      textName = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
-      textName.setTextLimit(63);
-      if (attrName != null)
-      {
-      	textName.setText(attrName);
-      	textName.setEditable(false);
-      }
+      textAddress = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
+      textAddress.setTextLimit(15);
+      if (address != null)
+      	textAddress.setText(address.getHostAddress());
       
       label = new Label(dialogArea, SWT.NONE);
       label.setText("");
 
       label = new Label(dialogArea, SWT.NONE);
-      label.setText("Value");
+      label.setText("Mask");
 
-      textValue = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
-      textValue.setTextLimit(255);
-      textValue.getShell().setMinimumSize(300, 0);
-      if (attrValue != null)
-      	textValue.setText(attrValue);
-      
-      if (attrName != null)
-      	textValue.setFocus();
+      textMask = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
+      textMask.setTextLimit(15);
+      textMask.getShell().setMinimumSize(300, 0);
+      if (mask != null)
+      	textMask.setText(mask.getHostAddress());
       
 		return dialogArea;
 	}
@@ -102,29 +96,8 @@ public class AttributeEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((attrName == null) ? "Add Attribute" : "Modify Attribute");
+		newShell.setText((address == null) ? "Add Network" : "Modify Network");
 	}
-	
-	
-	/**
-	 * Get variable name
-	 * 
-	 */
-	public String getAttrName()
-	{
-		return attrName;
-	}
-	
-	
-	/**
-	 * Get variable value
-	 * 
-	 */
-	public String getAttrValue()
-	{
-		return attrValue;
-	}
-
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
@@ -132,8 +105,32 @@ public class AttributeEditDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		attrName = textName.getText();
-		attrValue = textValue.getText();
+		try
+		{
+			address = InetAddress.getByName(textAddress.getText());
+			mask = InetAddress.getByName(textMask.getText());
+		}
+		catch(UnknownHostException e)
+		{
+			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid IP address and network mask");
+			return;
+		}
 		super.okPressed();
+	}
+
+	/**
+	 * @return the address
+	 */
+	public InetAddress getAddress()
+	{
+		return address;
+	}
+
+	/**
+	 * @return the mask
+	 */
+	public InetAddress getMask()
+	{
+		return mask;
 	}
 }

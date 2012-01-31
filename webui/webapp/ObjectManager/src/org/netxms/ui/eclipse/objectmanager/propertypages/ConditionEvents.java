@@ -43,6 +43,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ConditionEvents extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private Condition object;
 	private EventSelector activationEvent;
 	private EventSelector deactivationEvent;

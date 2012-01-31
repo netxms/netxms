@@ -3270,6 +3270,7 @@ webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/Topol
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/UnbindObject.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/Unmanage.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/AttributeEditDialog.java -text
+webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/ClusterNetworkEditDialog.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/ConditionDciEditDialog.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateNetworkServiceDialog.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateNodeDialog.java -text
@@ -3279,6 +3280,7 @@ webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/ZoneS
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AccessControl.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AutoApply.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AutoBind.java -text
+webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/ClusterNetworks.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/ClusterResources.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/Comments.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/Communication.java -text
@@ -3299,6 +3301,8 @@ webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/helpers/AttrListLabelProvider.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/helpers/AttrViewerComparator.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/helpers/DciListLabelProvider.java -text
+webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/helpers/NetworkListComparator.java -text
+webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/helpers/NetworkListLabelProvider.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/helpers/ResourceListComparator.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/helpers/ResourceListLabelProvider.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/views/NodePollerView.java -text

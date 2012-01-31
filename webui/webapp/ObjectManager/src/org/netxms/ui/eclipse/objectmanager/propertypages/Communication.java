@@ -51,6 +51,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class Communication extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private Node node;
 	private LabeledText primaryName;
 	private LabeledText agentPort;
@@ -100,6 +102,8 @@ public class Communication extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		primaryName.setLayoutData(gd);
 		primaryName.getTextControl().addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -156,6 +160,8 @@ public class Communication extends PropertyPage
 		agentAuthMethod.add("SHA1");
 		agentAuthMethod.select(node.getAgentAuthMethod());
 		agentAuthMethod.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -202,6 +208,8 @@ public class Communication extends PropertyPage
 		snmpVersion.add("3");
 		snmpVersion.select(snmpVersionToIndex(node.getSnmpVersion()));
 		snmpVersion.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

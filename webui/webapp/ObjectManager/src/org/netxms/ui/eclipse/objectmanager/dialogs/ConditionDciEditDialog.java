@@ -41,6 +41,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class ConditionDciEditDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private ConditionDciInfo dci;
 	private String nodeName;
 	private String dciName;
@@ -108,6 +110,8 @@ public class ConditionDciEditDialog extends Dialog
 		function.add("Sum");
 		function.select(dci.getFunction());
 		function.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

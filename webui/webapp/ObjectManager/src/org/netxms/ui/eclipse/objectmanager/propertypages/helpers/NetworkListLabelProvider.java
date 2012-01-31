@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,26 +19,22 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.client.AccessListElement;
+import org.netxms.client.objects.ClusterSyncNetwork;
+import org.netxms.ui.eclipse.objectmanager.propertypages.ClusterNetworks;
 
 /**
- * Label provider for NetXMS objects access lists
- *
+ * Label provider for cluster network list elements
  */
-public class AccessListLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
+public class NetworkListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		if (columnIndex == 0)
-			return getImage(element);
 		return null;
 	}
 
@@ -48,25 +44,15 @@ public class AccessListLabelProvider extends WorkbenchLabelProvider implements I
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
+		if (!(element instanceof ClusterSyncNetwork))
+			return null;
+
 		switch(columnIndex)
 		{
-			case 0:
-				return getText(element);
-			case 1:
-				AccessListElement e = (AccessListElement)element;
-				StringBuilder sb = new StringBuilder(16);
-				sb.append(e.hasRead() ? 'R' : '-');
-				sb.append(e.hasModify() ? 'M' : '-');
-				sb.append(e.hasCreate() ? 'C' : '-');
-				sb.append(e.hasDelete() ? 'D' : '-');
-				sb.append(e.hasControl() ? 'O' : '-');
-				sb.append(e.hasSendEvents() ? 'E' : '-');
-				sb.append(e.hasReadAlarms() ? 'V' : '-');
-				sb.append(e.hasAckAlarms() ? 'K' : '-');
-				sb.append(e.hasTerminateAlarms() ? 'T' : '-');
-				sb.append(e.hasPushData() ? 'P' : '-');
-				sb.append(e.hasAccessControl() ? 'A' : '-');
-				return sb.toString();
+			case ClusterNetworks.COLUMN_ADDRESS:
+				return ((ClusterSyncNetwork)element).getSubnetAddress().getHostAddress();
+			case ClusterNetworks.COLUMN_NETMASK:
+				return ((ClusterSyncNetwork)element).getSubnetMask().getHostAddress();
 		}
 		return null;
 	}

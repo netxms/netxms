@@ -43,6 +43,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class NetworkServicePolling extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private NetworkService object;
 	private Combo serviceType;
 	private LabeledText port;

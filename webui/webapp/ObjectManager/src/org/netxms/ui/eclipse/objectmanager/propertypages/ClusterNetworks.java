@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,16 @@
  */
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
-
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.ILabelProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -37,36 +39,37 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.ClusterSyncNetwork;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.dialogs.ClusterNetworkEditDialog;
+import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.NetworkListComparator;
+import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.NetworkListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- *"Trusted nodes" property page for NetXMS objects
+ * "Cluster Interconnect Networks" property page
  */
-public class TrustedNodes extends PropertyPage
+public class ClusterNetworks extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
+	public static final int COLUMN_ADDRESS = 0;
+	public static final int COLUMN_NETMASK = 1;
 
-	public static final int COLUMN_NAME = 0;
-	
-	private GenericObject object = null;
+	private Cluster object;
 	private SortableTableViewer viewer;
 	private Button addButton;
+	private Button editButton;
 	private Button deleteButton;
-	private HashMap<Long, GenericObject> trustedNodes = new HashMap<Long, GenericObject>(0);
+	private List<ClusterSyncNetwork> networks = null;
 	private boolean isModified = false;
-
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
@@ -75,29 +78,28 @@ public class TrustedNodes extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (GenericObject)getElement().getAdapter(GenericObject.class);
-		
+		object = (Cluster)getElement().getAdapter(Cluster.class);
+		if (object == null)	// Paranoid check
+			return dialogArea;
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { "Node" };
-      final int[] columnWidths = { 300 };
+      final String[] columnNames = { "Address", "Mask" };
+      final int[] columnWidths = { 150, 150 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new WorkbenchLabelProvider());
-      viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
+      viewer.setLabelProvider(new NetworkListLabelProvider());
+      viewer.setComparator(new NetworkListComparator());
       
-      GenericObject[] nodes = object.getTrustedNodes();
-      for(int i = 0; i < nodes.length; i++)
-      {
-      	if (nodes[i] != null)
-      		trustedNodes.put(nodes[i].getObjectId(), nodes[i]);
-      }
-      viewer.setInput(trustedNodes.values().toArray());
+      networks = new ArrayList<ClusterSyncNetwork>(object.getSyncNetworks().size());
+      for(ClusterSyncNetwork n : object.getSyncNetworks())
+      	networks.add(new ClusterSyncNetwork(n));
+      viewer.setInput(networks.toArray());
       
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -112,76 +114,143 @@ public class TrustedNodes extends PropertyPage
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
       buttonLayout.marginWidth = 0;
+      buttonLayout.marginRight = 0;
       buttons.setLayout(buttonLayout);
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.RIGHT;
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("Add...");
-      addButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
-				if (dlg.open() == Window.OK)
-				{
-					GenericObject[] nodes = dlg.getSelectedObjects(Node.class);
-			      for(int i = 0; i < nodes.length; i++)
-			      	trustedNodes.put(nodes[i].getObjectId(), nodes[i]);
-			      viewer.setInput(trustedNodes.values().toArray());
-			      isModified = true;
-				}
-			}
-      });
+      addButton.setText("&Add...");
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
-		
-      deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("Delete");
-      deleteButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
+      addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
 				widgetSelected(e);
 			}
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				Iterator<GenericObject> it = selection.iterator();
-				if (it.hasNext())
-				{
-					while(it.hasNext())
-					{
-						GenericObject object = it.next();
-						trustedNodes.remove(object.getObjectId());
-					}
-			      viewer.setInput(trustedNodes.values().toArray());
-			      isModified = true;
-				}
+				addNetwork();
 			}
       });
+		
+      editButton = new Button(buttons, SWT.PUSH);
+      editButton.setText("&Modify...");
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      editButton.setLayoutData(rd);
+      editButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				editNetwork();
+			}
+      });
+      
+      deleteButton = new Button(buttons, SWT.PUSH);
+      deleteButton.setText("&Delete");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
+      deleteButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				deleteNetwork();
+			}
+      });
       
-		return dialogArea;
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				editButton.notifyListeners(SWT.Selection, new Event());
+			}
+      });
+      
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				editButton.setEnabled(selection.size() == 1);
+				deleteButton.setEnabled(selection.size() > 0);
+			}
+		});
+
+      return dialogArea;
+	}
+
+	/**
+	 * Add new cluster network
+	 */
+	private void addNetwork()
+	{
+		ClusterNetworkEditDialog dlg = new ClusterNetworkEditDialog(getShell(), null, null);
+		if (dlg.open() == Window.OK)
+		{
+			ClusterSyncNetwork n = new ClusterSyncNetwork(dlg.getAddress(), dlg.getMask());
+			networks.add(n);
+			viewer.setInput(networks.toArray());
+			viewer.setSelection(new StructuredSelection(n));
+			isModified = true;
+		}
 	}
 	
+	/**
+	 * Edit currently selected network
+	 */
+	private void editNetwork()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		ClusterSyncNetwork n = (ClusterSyncNetwork)selection.getFirstElement();
+		ClusterNetworkEditDialog dlg = new ClusterNetworkEditDialog(getShell(), n.getSubnetAddress(), n.getSubnetMask());
+		if (dlg.open() == Window.OK)
+		{
+			n.setSubnetAddress(dlg.getAddress());
+			n.setSubnetMask(dlg.getMask());
+			viewer.update(n, null);
+			isModified = true;
+		}
+	}
+	
+	/**
+	 * Delete currently selected network(s)
+	 */
+	private void deleteNetwork()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() == 0)
+			return;
+		
+		for(Object o : selection.toList())
+		{
+			networks.remove(o);
+		}
+		viewer.setInput(networks.toArray());
+		isModified = true;
+	}
+
 	/**
 	 * Apply changes
 	 * 
@@ -197,18 +266,19 @@ public class TrustedNodes extends PropertyPage
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		Set<Long> idList = trustedNodes.keySet();
-		long[] nodes = new long[idList.size()];
-		int i = 0;
-		for(long id : idList)
-			nodes[i++] = id;
-		md.setTrustedNodes(nodes);
-		
-		new ConsoleJob("Update trusted nodes for object " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		md.setNetworkList(networks);
+		new ConsoleJob("Update cluster interconnect network list", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
+				isModified = false;
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot update cluster interconnect network list";
 			}
 
 			@Override
@@ -220,20 +290,14 @@ public class TrustedNodes extends PropertyPage
 						@Override
 						public void run()
 						{
-							TrustedNodes.this.setValid(true);
+							ClusterNetworks.this.setValid(true);
 						}
 					});
 				}
 			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return "Cannot update trusted nodes list";
-			}
-		}.schedule();
+		}.start();
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
 	 */
@@ -251,17 +315,5 @@ public class TrustedNodes extends PropertyPage
 	{
 		applyChanges(false);
 		return true;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
-	@Override
-	protected void performDefaults()
-	{
-		trustedNodes.clear();
-		viewer.setInput(new GenericObject[0]);
-		isModified = true;
-		super.performDefaults();
 	}
 }

@@ -46,6 +46,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class Location extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private GenericObject object;
 	private LabeledText latitude;
 	private LabeledText longitude;
@@ -112,6 +114,8 @@ public class Location extends PropertyPage
       longitude.setEnabled(gl.getType() == GeoLocation.MANUAL);
       
       final SelectionListener listener = new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

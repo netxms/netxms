@@ -53,6 +53,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CreateNodeDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private NXCSession session;
 	
 	private LabeledText objectNameField;
@@ -141,6 +143,8 @@ public class CreateNodeDialog extends Dialog
 		gd.verticalAlignment = SWT.BOTTOM;
 		resolve.setLayoutData(gd);
 		resolve.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

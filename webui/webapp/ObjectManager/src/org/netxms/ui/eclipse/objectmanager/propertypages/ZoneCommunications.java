@@ -38,6 +38,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ZoneCommunications extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private Zone zone;
 	private ObjectSelector agentProxy;
 	private ObjectSelector snmpProxy;

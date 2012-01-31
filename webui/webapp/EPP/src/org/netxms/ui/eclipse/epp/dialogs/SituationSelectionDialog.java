@@ -51,6 +51,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class SituationSelectionDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private boolean multiSelection;
 	private Text filterText;
 	private TableViewer viewer;
@@ -130,6 +132,8 @@ public class SituationSelectionDialog extends Dialog
 		viewer.getTable().setLayoutData(gd);
 		
 		filterText.addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{

@@ -40,6 +40,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ConditionScript extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private Condition object;
 	private ScriptEditor filterSource;
 	private String initialScript;

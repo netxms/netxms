@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,18 +21,16 @@ package org.netxms.ui.eclipse.objectmanager.propertypages.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.objects.ClusterResource;
-import org.netxms.ui.eclipse.objectmanager.propertypages.ClusterResources;
+import org.netxms.client.objects.ClusterSyncNetwork;
+import org.netxms.ui.eclipse.objectmanager.propertypages.ClusterNetworks;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Comparator for cluster resource list elements
+ * Comparator for cluster network list elements
  *
  */
-public class ResourceListComparator extends ViewerComparator
+public class NetworkListComparator extends ViewerComparator
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
@@ -44,17 +42,24 @@ public class ResourceListComparator extends ViewerComparator
 		int result;
 		switch(column)
 		{
-			case ClusterResources.COLUMN_NAME:
-				result = ((ClusterResource)e1).getName().compareToIgnoreCase(((ClusterResource)e2).getName());
-				break;
-			case ClusterResources.COLUMN_IP_ADDRESS:
-				byte[] addr1 = ((ClusterResource)e1).getVirtualAddress().getAddress();
-				byte[] addr2 = ((ClusterResource)e2).getVirtualAddress().getAddress();
+			case ClusterNetworks.COLUMN_ADDRESS:
+				byte[] addr1 = ((ClusterSyncNetwork)e1).getSubnetAddress().getAddress();
+				byte[] addr2 = ((ClusterSyncNetwork)e2).getSubnetAddress().getAddress();
 
 				result = 0;
 				for(int i = 0; (i < addr1.length) && (result == 0); i++)
 				{
 					result = Integer.signum(addr1[i] - addr2[i]);
+				}
+				break;
+			case ClusterNetworks.COLUMN_NETMASK:
+				byte[] mask1 = ((ClusterSyncNetwork)e1).getSubnetMask().getAddress();
+				byte[] mask2 = ((ClusterSyncNetwork)e2).getSubnetMask().getAddress();
+
+				result = 0;
+				for(int i = 0; (i < mask1.length) && (result == 0); i++)
+				{
+					result = Integer.signum(mask1[i] - mask2[i]);
 				}
 				break;
 			default:

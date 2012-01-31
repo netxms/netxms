@@ -31,9 +31,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
@@ -48,7 +46,6 @@ import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedFonts;
 import org.netxms.ui.eclipse.shared.SharedIcons;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Forced node poll view
@@ -59,11 +56,7 @@ public class NodePollerView extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.objectmanager.views.NodePollerView";
 	
 	private static final String[] POLL_NAME = { "", "Status Poll", "Configuration Poll", "Interface Poll", "Topology Poll" };
-	private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
-	private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);
-	private static final Color COLOR_INFO = new Color(Display.getCurrent(), 0, 128, 0);
-	private static final Color COLOR_LOCAL = new Color(Display.getCurrent(), 0, 0, 192);
-	
+
 	private NXCSession session;
 	private Node node;
 	private int pollType;
@@ -117,6 +110,8 @@ public class NodePollerView extends ViewPart
 	private void createActions()
 	{
 		actionRestart = new Action("&Restart poll", SharedIcons.RESTART) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -125,6 +120,8 @@ public class NodePollerView extends ViewPart
 		};
 
 		actionClearOutput = new Action("&Clear output", SharedIcons.CLEAR_LOG) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -177,6 +174,8 @@ public class NodePollerView extends ViewPart
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener()
 		{
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -212,8 +211,6 @@ public class NodePollerView extends ViewPart
 		if (index != -1)
 		{
 			textArea.append(message.substring(0, index));
-			char code = message.charAt(index + 1);
-			int lastPos = textArea.getCharCount();
 			final String msgPart = message.substring(index + 2);
 			textArea.append(msgPart);
 		}
@@ -224,28 +221,6 @@ public class NodePollerView extends ViewPart
 		
 		//textArea.setCaretOffset(textArea.getCharCount());
 		//textArea.setTopIndex(textArea.getLineCount() - 1);
-	}
-	
-	/**
-	 * Get color from color code
-	 * 
-	 * @param code
-	 * @return
-	 */
-	private Color getTextColor(char code)
-	{
-		switch(code)
-		{
-			case 'e':
-				return COLOR_ERROR;
-			case 'w':
-				return COLOR_WARNING;
-			case 'i':
-				return COLOR_INFO;
-			case 'l':
-				return COLOR_LOCAL;
-		}
-		return null;
 	}
 
 	/* (non-Javadoc)
