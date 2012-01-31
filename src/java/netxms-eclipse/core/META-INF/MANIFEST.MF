@@ -2,12 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: org.netxms.ui.eclipse.console;singleton:=true
-Bundle-Version: 1.1.9
+Bundle-Version: 1.1.10
 Bundle-Activator: org.netxms.ui.eclipse.console.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
  org.eclipse.core.runtime;bundle-version="3.7.0",
- org.netxms.ui.eclipse.library;bundle-version="1.1.9",
+ org.netxms.ui.eclipse.library;bundle-version="1.1.10",
  org.eclipse.core.resources;bundle-version="3.7.100",
  org.eclipse.tm.terminal;bundle-version="3.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6

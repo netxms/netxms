@@ -33,6 +33,7 @@ import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.ClusterResource;
+import org.netxms.client.objects.ClusterSyncNetwork;
 
 /**
  * @author Victor
@@ -43,53 +44,54 @@ import org.netxms.client.objects.ClusterResource;
 public class NXCObjectModificationData
 {
 	// Modification flags
-	public static final long MODIFY_NAME               = 0x000000000001L;
-	public static final long MODIFY_ACL                = 0x000000000002L;
-	public static final long MODIFY_CUSTOM_ATTRIBUTES  = 0x000000000004L;
-	public static final long MODIFY_AUTO_APPLY         = 0x000000000008L;
-	public static final long MODIFY_AUTO_BIND          = 0x000000000010L;
-	public static final long MODIFY_POLICY_CONFIG      = 0x000000000020L;
-	public static final long MODIFY_VERSION            = 0x000000000040L;
-	public static final long MODIFY_DESCRIPTION        = 0x000000000080L;
-	public static final long MODIFY_AGENT_PORT         = 0x000000000100L;
-	public static final long MODIFY_AGENT_AUTH         = 0x000000000200L;
-	public static final long MODIFY_SNMP_VERSION       = 0x000000000400L;
-	public static final long MODIFY_SNMP_AUTH          = 0x000000000800L;
-	public static final long MODIFY_AGENT_PROXY        = 0x000000001000L;
-	public static final long MODIFY_SNMP_PROXY         = 0x000000002000L;
-	public static final long MODIFY_TRUSTED_NODES      = 0x000000004000L;
-	public static final long MODIFY_GEOLOCATION        = 0x000000008000L;
-	public static final long MODIFY_PRIMARY_IP         = 0x000000010000L;
-	public static final long MODIFY_SNMP_PORT          = 0x000000020000L;
-	public static final long MODIFY_MAP_LAYOUT         = 0x000000040000L;
-	public static final long MODIFY_MAP_BACKGROUND     = 0x000000080000L;
-	public static final long MODIFY_MAP_CONTENT        = 0x000000100000L;
-	public static final long MODIFY_IMAGE              = 0x000000200000L;
-	public static final long MODIFY_ICMP_PROXY         = 0x000000400000L;
-	public static final long MODIFY_COLUMN_COUNT       = 0x000000800000L;
-	public static final long MODIFY_DASHBOARD_ELEMENTS = 0x000001000000L;
-	public static final long MODIFY_SCRIPT             = 0x000002000000L;
-	public static final long MODIFY_ACTIVATION_EVENT   = 0x000004000000L;
-	public static final long MODIFY_DEACTIVATION_EVENT = 0x000008000000L;
-	public static final long MODIFY_SOURCE_OBJECT      = 0x000010000000L;
-	public static final long MODIFY_ACTIVE_STATUS      = 0x000020000000L;
-	public static final long MODIFY_INACTIVE_STATUS    = 0x000040000000L;
-	public static final long MODIFY_DCI_LIST           = 0x000080000000L;
-	public static final long MODIFY_SUBMAP_ID          = 0x000100000000L;
-	public static final long MODIFY_IP_ADDRESS         = 0x000200000000L;
-	public static final long MODIFY_IP_PROTOCOL        = 0x000400000000L;
-	public static final long MODIFY_IP_PORT            = 0x000800000000L;
-	public static final long MODIFY_SERVICE_TYPE       = 0x001000000000L;
-	public static final long MODIFY_POLLER_NODE        = 0x002000000000L;
-	public static final long MODIFY_REQUIRED_POLLS     = 0x004000000000L;
-	public static final long MODIFY_REQUEST            = 0x008000000000L;
-	public static final long MODIFY_RESPONSE           = 0x010000000000L;
-	public static final long MODIFY_NODE_FLAGS         = 0x020000000000L;
-	public static final long MODIFY_IFXTABLE_POLICY    = 0x040000000000L;
-	public static final long MODIFY_REPORT_DEFINITION  = 0x080000000000L;
-	public static final long MODIFY_CLUSTER_RESOURCES  = 0x100000000000L;
-	public static final long MODIFY_PRIMARY_NAME       = 0x200000000000L;
-	public static final long MODIFY_STATUS_CALCULATION = 0x400000000000L;
+	public static final long MODIFY_NAME               = 0x00000000000001L;
+	public static final long MODIFY_ACL                = 0x00000000000002L;
+	public static final long MODIFY_CUSTOM_ATTRIBUTES  = 0x00000000000004L;
+	public static final long MODIFY_AUTO_APPLY         = 0x00000000000008L;
+	public static final long MODIFY_AUTO_BIND          = 0x00000000000010L;
+	public static final long MODIFY_POLICY_CONFIG      = 0x00000000000020L;
+	public static final long MODIFY_VERSION            = 0x00000000000040L;
+	public static final long MODIFY_DESCRIPTION        = 0x00000000000080L;
+	public static final long MODIFY_AGENT_PORT         = 0x00000000000100L;
+	public static final long MODIFY_AGENT_AUTH         = 0x00000000000200L;
+	public static final long MODIFY_SNMP_VERSION       = 0x00000000000400L;
+	public static final long MODIFY_SNMP_AUTH          = 0x00000000000800L;
+	public static final long MODIFY_AGENT_PROXY        = 0x00000000001000L;
+	public static final long MODIFY_SNMP_PROXY         = 0x00000000002000L;
+	public static final long MODIFY_TRUSTED_NODES      = 0x00000000004000L;
+	public static final long MODIFY_GEOLOCATION        = 0x00000000008000L;
+	public static final long MODIFY_PRIMARY_IP         = 0x00000000010000L;
+	public static final long MODIFY_SNMP_PORT          = 0x00000000020000L;
+	public static final long MODIFY_MAP_LAYOUT         = 0x00000000040000L;
+	public static final long MODIFY_MAP_BACKGROUND     = 0x00000000080000L;
+	public static final long MODIFY_MAP_CONTENT        = 0x00000000100000L;
+	public static final long MODIFY_IMAGE              = 0x00000000200000L;
+	public static final long MODIFY_ICMP_PROXY         = 0x00000000400000L;
+	public static final long MODIFY_COLUMN_COUNT       = 0x00000000800000L;
+	public static final long MODIFY_DASHBOARD_ELEMENTS = 0x00000001000000L;
+	public static final long MODIFY_SCRIPT             = 0x00000002000000L;
+	public static final long MODIFY_ACTIVATION_EVENT   = 0x00000004000000L;
+	public static final long MODIFY_DEACTIVATION_EVENT = 0x00000008000000L;
+	public static final long MODIFY_SOURCE_OBJECT      = 0x00000010000000L;
+	public static final long MODIFY_ACTIVE_STATUS      = 0x00000020000000L;
+	public static final long MODIFY_INACTIVE_STATUS    = 0x00000040000000L;
+	public static final long MODIFY_DCI_LIST           = 0x00000080000000L;
+	public static final long MODIFY_SUBMAP_ID          = 0x00000100000000L;
+	public static final long MODIFY_IP_ADDRESS         = 0x00000200000000L;
+	public static final long MODIFY_IP_PROTOCOL        = 0x00000400000000L;
+	public static final long MODIFY_IP_PORT            = 0x00000800000000L;
+	public static final long MODIFY_SERVICE_TYPE       = 0x00001000000000L;
+	public static final long MODIFY_POLLER_NODE        = 0x00002000000000L;
+	public static final long MODIFY_REQUIRED_POLLS     = 0x00004000000000L;
+	public static final long MODIFY_REQUEST            = 0x00008000000000L;
+	public static final long MODIFY_RESPONSE           = 0x00010000000000L;
+	public static final long MODIFY_NODE_FLAGS         = 0x00020000000000L;
+	public static final long MODIFY_IFXTABLE_POLICY    = 0x00040000000000L;
+	public static final long MODIFY_REPORT_DEFINITION  = 0x00080000000000L;
+	public static final long MODIFY_CLUSTER_RESOURCES  = 0x00100000000000L;
+	public static final long MODIFY_PRIMARY_NAME       = 0x00200000000000L;
+	public static final long MODIFY_STATUS_CALCULATION = 0x00400000000000L;
+	public static final long MODIFY_CLUSTER_NETWORKS   = 0x00800000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -150,6 +152,7 @@ public class NXCObjectModificationData
 	private int ifXTablePolicy;
 	private String reportDefinition;
 	private List<ClusterResource> resourceList;
+	private List<ClusterSyncNetwork> networkList;
 	private int statusCalculationMethod;
 	private int statusPropagationMethod;
 	private int fixedPropagatedStatus;
@@ -1146,6 +1149,23 @@ public class NXCObjectModificationData
 	{
 		this.resourceList = resourceList;
 		flags |= MODIFY_CLUSTER_RESOURCES;
+	}
+
+	/**
+	 * @return the networkList
+	 */
+	public List<ClusterSyncNetwork> getNetworkList()
+	{
+		return networkList;
+	}
+
+	/**
+	 * @param networkList the networkList to set
+	 */
+	public void setNetworkList(List<ClusterSyncNetwork> networkList)
+	{
+		this.networkList = networkList;
+		flags |= MODIFY_CLUSTER_NETWORKS;
 	}
 
 	/**

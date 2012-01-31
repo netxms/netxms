@@ -212,6 +212,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.ClusterNetworks"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.ClusterNetworks#15"
+              name="Cluster Networks">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Cluster">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension

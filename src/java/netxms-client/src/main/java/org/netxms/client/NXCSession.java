@@ -26,6 +26,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -95,6 +96,7 @@ import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
+import org.netxms.client.objects.ClusterSyncNetwork;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
@@ -235,6 +237,18 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	// Event templates
 	private Map<Long, EventTemplate> eventTemplates = new HashMap<Long, EventTemplate>();
 	private boolean eventTemplatesNeedSync = false;
+	
+	/**
+	 * Convert IP address to 32 bit integer
+	 * 
+	 * @param addr
+	 * @return
+	 */
+	private long int32FromInetAddress(InetAddress addr)
+	{
+		byte[] bytes = addr.getAddress();
+		return ((long)bytes[0] << 24) | ((long)bytes[1] << 16) | ((long)bytes[2] << 8) | (long)bytes[3];
+	}
 
 	/**
 	 * Create object from message
@@ -3043,6 +3057,20 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				msg.setVariable(varId++, r.getVirtualAddress());
 				varId += 7;
 			}
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_CLUSTER_NETWORKS) != 0)
+		{
+			int count = data.getNetworkList().size();
+			msg.setVariableInt32(NXCPCodes.VID_NUM_SYNC_SUBNETS, count);
+			long[] subnets = new long[count * 2];
+			int pos = 0;
+			for(ClusterSyncNetwork n : data.getNetworkList())
+			{
+				subnets[pos++] = int32FromInetAddress(n.getSubnetAddress());
+				subnets[pos++] = int32FromInetAddress(n.getSubnetMask());
+			}
+			msg.setVariable(NXCPCodes.VID_SYNC_SUBNETS, subnets);
 		}
 		
 		if ((flags & NXCObjectModificationData.MODIFY_PRIMARY_NAME) != 0)
