@@ -2031,6 +2031,40 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+	
+	/**
+	 * Get server config CLOB
+	 * 
+	 * @param name
+	 * @return
+	 * @throws IOException
+	 * @throws NXCException
+	 */
+	public String getServerConfigClob(final String name) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_CONFIG_GET_CLOB);
+		msg.setVariable(NXCPCodes.VID_NAME, name);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsString(NXCPCodes.VID_VALUE);
+	}
+	
+	/**
+	 * Set server config CLOB
+	 * 
+	 * @param name
+	 * @param value
+	 * @throws IOException
+	 * @throws NXCException
+	 */
+	public void setServerConfigClob(final String name, final String value) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_CONFIG_SET_CLOB);
+		msg.setVariable(NXCPCodes.VID_NAME, name);
+		msg.setVariable(NXCPCodes.VID_VALUE, value);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 
 	/**
 	 * Subscribe to notification channel(s)
@@ -2038,10 +2072,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param channels
 	 *           Notification channels to subscribe to. Multiple channels can be
 	 *           specified by combining them with OR operation.
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void subscribe(int channels) throws IOException, NXCException
 	{

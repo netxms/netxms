@@ -1385,6 +1385,7 @@ src/java/netxms-eclipse/ServerConfig/icons/export.gif -text
 src/java/netxms-eclipse/ServerConfig/icons/import.gif -text
 src/java/netxms-eclipse/ServerConfig/icons/network_discovery.gif -text
 src/java/netxms-eclipse/ServerConfig/icons/server_config.png -text
+src/java/netxms-eclipse/ServerConfig/icons/syslog_cfg.gif -text
 src/java/netxms-eclipse/ServerConfig/plugin.xml -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/Activator.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/DeleteVariable.java -text
@@ -1393,11 +1394,13 @@ src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/acti
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/ImportConfiguration.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/OpenNetworkDiscoveryConfig.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/OpenServerConfig.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/OpenSyslogParserConfig.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/AddUsmCredDialog.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/ConfigurationImportDialog.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/VariableEditDialog.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/NetworkDiscoveryConfigurator.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/ServerConfigurationEditor.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/SyslogParserConfigurator.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/helpers/DiscoveryConfig.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/helpers/ServerVariableComparator.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/helpers/SnmpUsmComparator.java -text
