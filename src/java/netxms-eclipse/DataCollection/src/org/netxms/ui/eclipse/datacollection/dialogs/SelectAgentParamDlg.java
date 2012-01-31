@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.AgentParameter;
@@ -29,27 +28,28 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * @author victor
- *
+ * Dialog for selecting parameters provided by NetXMS agent
  */
 public class SelectAgentParamDlg extends AbstractSelectParamDlg
 {
-	private List<AgentParameter> parameters;
-	
+	/**
+	 * @param parentShell
+	 * @param nodeId
+	 */
 	public SelectAgentParamDlg(Shell parentShell, long nodeId)
 	{
 		super(parentShell, nodeId);
 	}
 
-	/**
-	 * Fill parameter list
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#fillParameterList()
 	 */
+	@Override
 	protected void fillParameterList()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
-		ConsoleJob job = new ConsoleJob("Get list of supported parameters for " + object.getObjectName(),
-				                          null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Get list of supported parameters for " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -59,25 +59,16 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				parameters = session.getSupportedParameters(object.getObjectId());
+				final List<AgentParameter> parameters = session.getSupportedParameters(object.getObjectId());
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						viewer.setInput(parameters.toArray());
+					}
+				});
 			}
-		};
-		job.start();
-		
-		boolean jobCompleted = false;
-		do
-		{
-			try
-			{
-				job.join();
-				jobCompleted = true;
-			}
-			catch(InterruptedException e)
-			{
-			}
-		} while(!jobCompleted);
-				
-		viewer.setInput(parameters.toArray());
+		}.start();
 	}
 
 	/* (non-Javadoc)

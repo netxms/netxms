@@ -18,9 +18,7 @@
  */
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
-import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.AgentParameter;
