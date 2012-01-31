@@ -2823,10 +2823,13 @@ webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/ChartColors
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/GeneralChartPrefs.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/DataComparisonBirtChart.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/DialChartWidget.java -text
+webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/FlotAPIResource.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/GenericBirtChart.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/GenericChart.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/LineChart.java -text
+webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/LineChartResource.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/internal/DataComparisonElement.java -text
+webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/internal/linechartkit/LineChartLCA.java -text
 webui/webapp/Core/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/Core/META-INF/MANIFEST.MF -text
 webui/webapp/Core/OSGI-INF/l10n/bundle.properties -text

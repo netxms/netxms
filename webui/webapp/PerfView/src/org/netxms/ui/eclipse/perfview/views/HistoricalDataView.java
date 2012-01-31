@@ -371,20 +371,19 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 					thresholds[i] = session.getThresholds(item.getNodeId(), item.getDciId());
 					monitor.worked(1);
 				}
-
-				new UIJob("Update chart") {
+				
+				runInUIThread(new Runnable() {
+					
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
-					{
+					public void run() {
 						if (!((Widget)chart).isDisposed())
 						{
 							chart.setTimeRange(settings.getTimeFrom(), settings.getTimeTo());
 							setChartData(data);
 						}
 						updateInProgress = false;
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override
