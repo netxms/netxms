@@ -54,6 +54,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public abstract class AbstractSelectParamDlg extends Dialog implements IParameterSelectionDialog
 {
+	private static final long serialVersionUID = 1L;
+
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_TYPE = 1;
 	public static final int COLUMN_DESCRIPTION = 2;
@@ -117,6 +119,8 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	   gd.grabExcessHorizontalSpace = true;
 	   filterText.setLayoutData(gd);
 	   filterText.addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -137,6 +141,8 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	   viewer.addFilter(filter);
 	   
 	   viewer.getTable().addMouseListener(new MouseListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{
@@ -155,6 +161,8 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	   });
 	   
 	   viewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

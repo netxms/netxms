@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -29,11 +30,12 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * @author victor
- *
+ * Dialog for selecting parameters provided by NetXMS agent
  */
 public class SelectAgentParamDlg extends AbstractSelectParamDlg
 {
+	private static final long serialVersionUID = 1L;
+
 	private List<AgentParameter> parameters;
 	
 	public SelectAgentParamDlg(Shell parentShell, long nodeId)
@@ -41,9 +43,10 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 		super(parentShell, nodeId);
 	}
 
-	/**
-	 * Fill parameter list
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#fillParameterList()
 	 */
+	@Override
 	protected void fillParameterList()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -60,6 +63,12 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				parameters = session.getSupportedParameters(object.getObjectId());
+			}
+
+			@Override
+			protected void jobFailureHandler()
+			{
+				parameters = new ArrayList<AgentParameter>(0);
 			}
 		};
 		job.start();
