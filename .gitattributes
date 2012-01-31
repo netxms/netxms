@@ -3449,7 +3449,10 @@ webui/webapp/ServerConfig/icons/export.gif -text
 webui/webapp/ServerConfig/icons/import.gif -text
 webui/webapp/ServerConfig/icons/network_discovery.gif -text
 webui/webapp/ServerConfig/icons/server_config.png -text
+webui/webapp/ServerConfig/icons/syslog_cfg.gif -text
 webui/webapp/ServerConfig/plugin.xml -text
+webui/webapp/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/OpenSyslogParserConfig.java -text
+webui/webapp/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/SyslogParserConfigurator.java -text
 webui/webapp/ServerJobManager/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/ServerJobManager/META-INF/MANIFEST.MF -text
 webui/webapp/ServerJobManager/build.properties -text

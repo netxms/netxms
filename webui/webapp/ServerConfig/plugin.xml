@@ -19,6 +19,14 @@
             name="Network Discovery"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.serverconfig.views.SyslogParserConfigurator"
+            icon="icons/syslog_cfg.gif"
+            id="org.netxms.ui.eclipse.serverconfig.views.SyslogParserConfigurator"
+            name="Syslog Parser"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -54,6 +62,12 @@
             id="org.netxms.ui.eclipse.serverconfig.commands.open_netdisco_config"
             name="Network Discovery">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open syslog parser configuration"
+            id="org.netxms.ui.eclipse.serverconfig.commands.open_syslog_config"
+            name="Syslog Parser">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -78,6 +92,16 @@
            menubarPath="config/additions"
            toolbarPath="config/additions"
            tooltip="Open network discovery configuration">
+     </action>
+     <action
+           class="org.netxms.ui.eclipse.serverconfig.actions.OpenSyslogParserConfig"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_syslog_config"
+           icon="icons/syslog_cfg.gif"
+           id="org.netxms.ui.eclipse.serverconfig.actions.open_syslog_config"
+           label="Syslog Parser"
+           menubarPath="config/additions"
+           toolbarPath="config/additions"
+           tooltip="Open syslog parser configuration">
      </action>
 	   </actionSet>
 	   <actionSet id="org.netxms.ui.eclipse.action_set.export_import_configuration"
