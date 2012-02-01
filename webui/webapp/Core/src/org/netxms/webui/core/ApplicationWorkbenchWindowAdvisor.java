@@ -18,7 +18,11 @@
  */
 package org.netxms.webui.core;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Properties;
+import javax.servlet.ServletContext;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
@@ -42,12 +46,19 @@ import org.netxms.webui.tools.RWTHelper;
  */
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 {
-
+	private Properties properties;
+	
+	/**
+	 * @param configurer
+	 */
 	public ApplicationWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
 	{
 		super(configurer);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#createActionBarAdvisor(org.eclipse.ui.application.IActionBarConfigurer)
+	 */
 	public ActionBarAdvisor createActionBarAdvisor(IActionBarConfigurer configurer)
 	{
 		return new ApplicationActionBarAdvisor(configurer);
@@ -85,18 +96,20 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	private void doLogin()
 	{
 		boolean success = false;
+		
+		readAppProperties();
 
 		LoginForm loginDialog;
 		do
 		{
-			loginDialog = new LoginForm(null);
+			loginDialog = new LoginForm(null, properties);
 			if (loginDialog.open() != Window.OK)
 				continue;
 
 			try
 			{
 				// TODO: read server address from app settings
-				LoginJob job = new LoginJob("127.0.0.1", loginDialog.getLogin(), //$NON-NLS-1$
+				LoginJob job = new LoginJob(properties.getProperty("server", "127.0.0.1"), loginDialog.getLogin(), //$NON-NLS-1$ //$NON-NLS-2$
 				                            loginDialog.getPassword(), Display.getCurrent());
 
 				// TODO: implement login on non-UI thread
@@ -158,6 +171,40 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 					{
 						MessageDialog.openError(null, "Exception", e.toString());
 					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Read application properties from nxmc.properties in the root of WAR file
+	 */
+	private void readAppProperties()
+	{
+		properties = new Properties();
+		InputStream in = null;
+		try
+		{
+			ServletContext ctx = RWT.getSessionStore().getHttpSession().getServletContext();
+System.out.println("CONTEXT: "+ ctx);			
+			in = ctx.getResourceAsStream("/nxmc.properties");
+			if (in != null)
+				properties.load(in);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			if (in != null)
+			{
+				try
+				{
+					in.close();
+				}
+				catch(IOException e)
+				{
 				}
 			}
 		}

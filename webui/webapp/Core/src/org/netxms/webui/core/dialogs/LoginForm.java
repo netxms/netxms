@@ -18,6 +18,8 @@
  */
 package org.netxms.webui.core.dialogs;
 
+import java.util.Properties;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -39,6 +41,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.forms.events.HyperlinkAdapter;
+import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.base.NXCommon;
 import org.netxms.ui.eclipse.tools.ColorCache;
@@ -53,6 +57,8 @@ public class LoginForm extends Window
 {
 	private static final long serialVersionUID = 1L;
 	
+	private Properties properties;
+	private boolean advancedSettingsEnabled;
 	private ColorCache colors;
 	private LabeledText textLogin;
 	private LabeledText textPassword;
@@ -62,10 +68,12 @@ public class LoginForm extends Window
 	/**
 	 * @param parentShell
 	 */
-	public LoginForm(Shell parentShell)
+	public LoginForm(Shell parentShell, Properties properties)
 	{
 		super(parentShell);
 		setBlockOnOpen(true);
+		this.properties = properties;
+		advancedSettingsEnabled = Boolean.parseBoolean(properties.getProperty("enableAdvancedSettings", "true"));
 	}
 
 	/* (non-Javadoc)
@@ -176,7 +184,7 @@ public class LoginForm extends Window
 		okButton.setLayoutData(gd);
 		
 		ImageHyperlink setupLink = new ImageHyperlink(loginArea, SWT.NONE);
-		setupLink.setText("Settings");
+		setupLink.setText("Options");
 		final Image setupImage = Activator.getImageDescriptor("icons/app_settings.png").createImage();
 		setupLink.setImage(setupImage);
 		gd = new GridData();
@@ -184,6 +192,21 @@ public class LoginForm extends Window
 		gd.verticalAlignment = SWT.BOTTOM;
 		gd.grabExcessVerticalSpace = true;
 		setupLink.setLayoutData(gd);
+		setupLink.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+				if (advancedSettingsEnabled)
+				{
+					LoginSettingsDialog dlg = new LoginSettingsDialog(getShell(), properties);
+					dlg.open();
+				}
+				else
+				{
+					MessageDialog.openError(getShell(), "Error", "Advanced login options was disabled by server administrator");
+				}
+			}
+		});
 		
 		content.addDisposeListener(new DisposeListener() {
 			private static final long serialVersionUID = 1L;

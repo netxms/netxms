@@ -62,6 +62,7 @@
       <plugin id="org.netxms.ui.eclipse.nxsl"/>
       <plugin id="org.netxms.ui.eclipse.objectbrowser"/>
       <plugin id="org.netxms.ui.eclipse.objectmanager"/>
+      <plugin id="org.netxms.ui.eclipse.objecttools"/>
       <plugin id="org.netxms.ui.eclipse.objectview"/>
       <plugin id="org.netxms.ui.eclipse.osm"/>
       <plugin id="org.netxms.ui.eclipse.perfview"/>
@@ -134,6 +135,7 @@
       <plugin id="org.netxms.ui.eclipse.nxsl" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.objectbrowser" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.objectmanager" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.objecttools" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.objectview" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.osm" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.perfview" autoStart="true" startLevel="0" />
