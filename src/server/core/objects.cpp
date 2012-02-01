@@ -527,7 +527,7 @@ Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr)
 
 static bool MACComparator(NetObj *object, void *macAddr)
 {
-	return ((object->Type() == OBJECT_INTERFACE) &&
+	return ((object->Type() == OBJECT_INTERFACE) && !object->isDeleted() &&
 		     !memcmp(macAddr, ((Interface *)object)->getMacAddr(), 6));
 }
 
@@ -546,7 +546,7 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
 
 static bool DescriptionComparator(NetObj *object, void *description)
 {
-	return ((object->Type() == OBJECT_INTERFACE) &&
+	return ((object->Type() == OBJECT_INTERFACE) && !object->isDeleted() &&
 	        !_tcscmp((const TCHAR *)description, ((Interface *)object)->getDescription()));
 }
 
@@ -652,8 +652,8 @@ struct __find_object_data
 static bool ObjectNameComparator(NetObj *object, void *data)
 {
 	struct __find_object_data *fd = (struct __find_object_data *)data;
-	return ((fd->objClass == -1) || (fd->objClass == object->Type())) && 
-	       !_tcsicmp(object->Name(), fd->name);
+	return ((fd->objClass == -1) || (fd->objClass == object->Type())) &&
+	       !object->isDeleted() && !_tcsicmp(object->Name(), fd->name);
 }
 
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
@@ -674,7 +674,7 @@ static bool ObjectGuidComparator(NetObj *object, void *data)
 {
 	uuid_t temp;
 	object->getGuid(temp);
-	return !uuid_compare((BYTE *)data, temp);
+	return !object->isDeleted() && !uuid_compare((BYTE *)data, temp);
 }
 
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass)
@@ -690,7 +690,7 @@ NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass)
 
 static bool TemplateNameComparator(NetObj *object, void *name)
 {
-	return (object->Type() == OBJECT_TEMPLATE) && !_tcsicmp(object->Name(), (const TCHAR *)name);
+	return (object->Type() == OBJECT_TEMPLATE) && !object->isDeleted() && !_tcsicmp(object->Name(), (const TCHAR *)name);
 }
 
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName)
@@ -705,7 +705,7 @@ Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName)
 
 static bool ClusterResourceIPComparator(NetObj *object, void *ipAddr)
 {
-	return (object->Type() == OBJECT_CLUSTER) && ((Cluster *)object)->isVirtualAddr(CAST_FROM_POINTER(ipAddr, DWORD));
+	return (object->Type() == OBJECT_CLUSTER) && !object->isDeleted() && ((Cluster *)object)->isVirtualAddr(CAST_FROM_POINTER(ipAddr, DWORD));
 }
 
 Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(DWORD ipAddr)
@@ -728,7 +728,7 @@ struct __cluster_ip_data
 static bool ClusterIPComparator(NetObj *object, void *data)
 {
 	struct __cluster_ip_data *d = (struct __cluster_ip_data *)data;
-	return (object->Type() == OBJECT_CLUSTER) &&
+	return (object->Type() == OBJECT_CLUSTER) && !object->isDeleted() &&
 	       (((Cluster *)object)->getZoneId() == d->zoneId) &&
 			 (((Cluster *)object)->isVirtualAddr(d->ipAddr) ||
 			  ((Cluster *)object)->isSyncAddr(d->ipAddr));

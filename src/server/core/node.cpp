@@ -4162,14 +4162,18 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
 			Interface *ifRemote = FindInterfaceByMAC(macAddr);
 			if (ifRemote != NULL)
 			{
-				LL_NEIGHBOR_INFO info;
+				Node *peerNode = ifRemote->getParentNode();
+				if (peerNode != NULL)
+				{
+					LL_NEIGHBOR_INFO info;
 
-				info.ifLocal = ifLocal->getIfIndex();
-				info.ifRemote = ifRemote->getIfIndex();
-				info.objectId = ifRemote->getParentNode()->Id();
-				info.isPtToPt = true;
-				info.protocol = LL_PROTO_FDB;
-				nbs->addConnection(&info);
+					info.ifLocal = ifLocal->getIfIndex();
+					info.ifRemote = ifRemote->getIfIndex();
+					info.objectId = peerNode->Id();
+					info.isPtToPt = true;
+					info.protocol = LL_PROTO_FDB;
+					nbs->addConnection(&info);
+				}
 			}
 		}
 	}
