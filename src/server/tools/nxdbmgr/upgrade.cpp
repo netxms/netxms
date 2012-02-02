@@ -286,6 +286,89 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 
 
 //
+// Upgrade from V246 to V247
+//
+
+static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
+{
+	static TCHAR insertQuery[] = _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)");
+
+	CHK_EXEC(SetColumnNullable(_T("object_custom_attributes"), _T("attr_value"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+
+	// Convert strings in object_custom_attributes table
+	DB_RESULT hResult = SQLSelect(_T("SELECT object_id,attr_name,attr_value FROM object_custom_attributes"));
+	if (hResult != NULL)
+	{
+		if (SQLQuery(_T("DELETE FROM object_custom_attributes")))
+		{
+			TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+			DB_STATEMENT hStmt = DBPrepareEx(g_hCoreDB, insertQuery, errorText);
+			if (hStmt != NULL)
+			{
+				TCHAR name[128], *value;
+				int count = DBGetNumRows(hResult);
+				for(int i = 0; i < count; i++)
+				{
+					DWORD id = DBGetFieldULong(hResult, i, 0);
+					DBGetField(hResult, i, 1, name, 128);
+					DecodeSQLString(name);
+					value = DBGetField(hResult, i, 2, NULL, 0);
+					DecodeSQLString(value);
+
+					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+					DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, value, DB_BIND_DYNAMIC);
+					if (g_bTrace)
+						ShowQuery(insertQuery);
+					if (!DBExecuteEx(hStmt, errorText))
+					{
+						WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, insertQuery);
+						if (!g_bIgnoreErrors)
+						{
+							DBFreeStatement(hStmt);
+							DBFreeResult(hResult);
+							return FALSE;
+						}
+					}
+				}
+				DBFreeStatement(hStmt);
+			}
+			else
+			{
+				WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, insertQuery);
+				if (!g_bIgnoreErrors)
+				{
+					DBFreeResult(hResult);
+					return FALSE;
+				}
+			}
+		}
+		else
+		{
+			if (!g_bIgnoreErrors)
+			{
+				DBFreeResult(hResult);
+				return FALSE;
+			}
+		}
+
+		DBFreeResult(hResult);
+	}
+	else
+	{
+		if (!g_bIgnoreErrors)
+			return FALSE;
+	}
+
+	CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_ocattr_oid ON object_custom_attributes(object_id)")));
+	CHK_EXEC(CreateConfigParam(_T("AlarmHistoryRetentionTime"), _T("180"), 1, 0));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='247' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V245 to V246
 //
 
@@ -5921,6 +6004,7 @@ static struct
 	{ 243, 244, H_UpgradeFromV243 },
 	{ 244, 245, H_UpgradeFromV244 },
 	{ 245, 246, H_UpgradeFromV245 },
+	{ 246, 247, H_UpgradeFromV246 },
    { 0, 0, NULL }
 };
 

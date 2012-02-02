@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -127,12 +127,21 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
+		// Remove outdated alarm records
+		dwRetentionTime = ConfigReadULong(_T("AlarmHistoryRetentionTime"), 180);
+		if (dwRetentionTime > 0)
+		{
+			dwRetentionTime *= 86400;	// Convert days to seconds
+			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM alarms WHERE alarm_state=2 AND last_change_time<%ld"), (long)(currTime - dwRetentionTime));
+			DBQuery(hdb, szQuery);
+		}
+
 		// Remove outdated event log records
 		dwRetentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
 		if (dwRetentionTime > 0)
 		{
 			dwRetentionTime *= 86400;	// Convert days to seconds
-			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<%ld"), currTime - dwRetentionTime);
+			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<%ld"), (long)(currTime - dwRetentionTime));
 			DBQuery(hdb, szQuery);
 		}
 
@@ -141,7 +150,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		if (dwRetentionTime > 0)
 		{
 			dwRetentionTime *= 86400;	// Convert days to seconds
-			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<%ld"), currTime - dwRetentionTime);
+			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<%ld"), (long)(currTime - dwRetentionTime));
 			DBQuery(hdb, szQuery);
 		}
 
@@ -150,7 +159,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		if (dwRetentionTime > 0)
 		{
 			dwRetentionTime *= 86400;	// Convert days to seconds
-			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), currTime - dwRetentionTime);
+			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), (long)(currTime - dwRetentionTime));
 			DBQuery(hdb, szQuery);
 		}
 

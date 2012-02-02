@@ -169,9 +169,11 @@ CREATE TABLE object_custom_attributes
 (
 	object_id integer not null,
 	attr_name varchar(127) not null,
-	attr_value SQL_TEXT not null,
+	attr_value SQL_TEXT null,
 	PRIMARY KEY(object_id,attr_name)
 ) TABLE_TYPE;
+
+CREATE INDEX idx_ocattr_oid ON object_custom_attributes(object_id);
 
 
 /*

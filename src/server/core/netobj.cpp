@@ -213,11 +213,9 @@ BOOL NetObj::loadCommonProperties()
 		   		name = DBGetField(hResult, i, 0, NULL, 0);
 		   		if (name != NULL)
 		   		{
-						DecodeSQLString(name);
 						value = DBGetField(hResult, i, 1, NULL, 0);
 						if (value != NULL)
 						{
-							DecodeSQLString(value);
 							m_customAttributes.setPreallocated(name, value);
 						}
 					}
@@ -317,19 +315,23 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
 		bResult = DBQuery(hdb, szQuery);
 		if (bResult)
 		{
-			TCHAR *escName, *escValue;
-		
-			for(i = 0; i < (int)m_customAttributes.getSize(); i++)
+			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"));
+			if (hStmt != NULL)
 			{
-				escName = EncodeSQLString(m_customAttributes.getKeyByIndex(i));
-				escValue = EncodeSQLString(m_customAttributes.getValueByIndex(i));
-				_sntprintf(szQuery, 32768, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (%d,'%s','%s')"),
-				           m_dwId, escName, escValue);
-				free(escName);
-				free(escValue);
-				bResult = DBQuery(hdb, szQuery);
-				if (!bResult)
-					break;
+				for(i = 0; i < (int)m_customAttributes.getSize(); i++)
+				{
+					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+					DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_customAttributes.getKeyByIndex(i), DB_BIND_STATIC);
+					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_customAttributes.getValueByIndex(i), DB_BIND_STATIC);
+					bResult = DBExecute(hStmt);
+					if (!bResult)
+						break;
+				}
+				DBFreeStatement(hStmt);
+			}
+			else
+			{
+				bResult = FALSE;
 			}
 		}
    }
