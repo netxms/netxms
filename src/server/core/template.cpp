@@ -772,28 +772,31 @@ DWORD Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       m_dwVersion = pRequest->GetVariableLong(VID_TEMPLATE_VERSION);
 
    // Change apply filter
-	if (pRequest->GetVariableShort(VID_AUTO_APPLY))
+	if (pRequest->IsVariableExist(VID_AUTO_APPLY))
 	{
-		safe_free(m_applyFilterSource);
-		delete m_applyFilter;
-		m_applyFilterSource = pRequest->GetVariableStr(VID_APPLY_FILTER);
-		if (m_applyFilterSource != NULL)
+		if (pRequest->GetVariableShort(VID_AUTO_APPLY))
 		{
-			TCHAR error[256];
+			safe_free(m_applyFilterSource);
+			delete m_applyFilter;
+			m_applyFilterSource = pRequest->GetVariableStr(VID_APPLY_FILTER);
+			if (m_applyFilterSource != NULL)
+			{
+				TCHAR error[256];
 
-			m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256);
-			if (m_applyFilter == NULL)
-				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+				m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256);
+				if (m_applyFilter == NULL)
+					nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+			}
+			else
+			{
+				m_applyFilter = NULL;
+			}
 		}
 		else
 		{
-			m_applyFilter = NULL;
+			delete_and_null(m_applyFilter);
+			safe_free_and_null(m_applyFilterSource);
 		}
-	}
-	else
-	{
-		delete_and_null(m_applyFilter);
-		safe_free_and_null(m_applyFilterSource);
 	}
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);

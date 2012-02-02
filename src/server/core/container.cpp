@@ -287,15 +287,18 @@ DWORD Container::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       LockData();
 
    // Change auto-bind filter
-	if (pRequest->GetVariableShort(VID_ENABLE_AUTO_BIND))
+	if (pRequest->IsVariableExist(VID_ENABLE_AUTO_BIND))
 	{
-		TCHAR *script = pRequest->GetVariableStr(VID_AUTO_BIND_FILTER);
-		setAutoBindFilter(script);
-		safe_free(script);
-	}
-	else
-	{
-		setAutoBindFilter(NULL);
+		if (pRequest->GetVariableShort(VID_ENABLE_AUTO_BIND))
+		{
+			TCHAR *script = pRequest->GetVariableStr(VID_AUTO_BIND_FILTER);
+			setAutoBindFilter(script);
+			safe_free(script);
+		}
+		else
+		{
+			setAutoBindFilter(NULL);
+		}
 	}
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
