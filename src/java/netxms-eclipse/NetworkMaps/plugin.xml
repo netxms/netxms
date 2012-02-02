@@ -225,6 +225,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.networkmaps.propertypages.MapLinkGeneral"
+            id="org.netxms.ui.eclipse.networkmaps.propertypages.MapLinkGeneral#0"
+            name="General">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">

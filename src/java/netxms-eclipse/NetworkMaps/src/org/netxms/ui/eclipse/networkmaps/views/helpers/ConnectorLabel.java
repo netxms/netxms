@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.geometry.Dimension;
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -29,7 +30,6 @@ import org.eclipse.swt.widgets.Display;
 
 /**
  * Connector label
- *
  */
 public class ConnectorLabel extends Label
 {
@@ -74,13 +74,16 @@ public class ConnectorLabel extends Label
 	@Override
 	protected void paintFigure(Graphics gc)
 	{
-		Rectangle rect = new Rectangle(getBounds());
+		Rectangle bounds = getBounds();
 
 		gc.setBackgroundColor(BACKGROUND_COLOR);
 		gc.setAntialias(SWT.ON);
-		gc.fillRoundRectangle(rect, 8, 8);
-		
-		super.paintFigure(gc);
+		gc.fillRoundRectangle(bounds, 8, 8);
+
+		gc.translate(bounds.x, bounds.y);
+		final Point pos = getTextLocation();
+		gc.drawText(getSubStringText(), pos.x + 2, pos.y);
+		gc.translate(-bounds.x, -bounds.y);
 	}
 
 	/* (non-Javadoc)

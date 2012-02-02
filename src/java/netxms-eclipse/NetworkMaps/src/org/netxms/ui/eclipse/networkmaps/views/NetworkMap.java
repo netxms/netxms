@@ -204,7 +204,6 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
 		}
 		
 		getSite().setSelectionProvider(this);

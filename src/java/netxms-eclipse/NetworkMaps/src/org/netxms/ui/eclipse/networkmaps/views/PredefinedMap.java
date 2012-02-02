@@ -22,8 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -49,7 +47,6 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.maps.NetworkMapLink;
@@ -67,13 +64,13 @@ import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.dialogs.AddGroupBoxDialog;
+import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * View for predefined map
- * 
  */
 @SuppressWarnings("restriction")
 public class PredefinedMap extends NetworkMap implements ImageUpdateListener
@@ -87,6 +84,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	private Action actionAddImage;
 	private Action actionRemove;
 	private Action actionMapProperties;
+	private Action actionLinkProperties;
 
 	/**
 	 * Create predefined map view
@@ -247,8 +245,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		final ActionHandler addObjectHandler = new ActionHandler(actionAddObject);
 		handlerService.activateHandler(actionAddObject.getActionDefinitionId(), addObjectHandler);
 
-		actionAddGroupBox = new Action("&Group box...")
-		{
+		actionAddGroupBox = new Action("&Group box...") {
 			@Override
 			public void run()
 			{
@@ -256,8 +253,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			}
 		};
 
-		actionAddImage = new Action("&Image...")
-		{
+		actionAddImage = new Action("&Image...") {
 			@Override
 			public void run()
 			{
@@ -265,29 +261,25 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			}
 		};
 
-		actionLinkObjects = new Action("&Link selected objects")
-		{
+		actionLinkObjects = new Action("&Link selected objects", Activator.getImageDescriptor("icons/link_add.png")) {
 			@Override
 			public void run()
 			{
 				linkSelectedObjects();
 			}
 		};
-		actionLinkObjects.setImageDescriptor(Activator.getImageDescriptor("icons/link_add.png"));
 		actionLinkObjects.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.LinkObjects");
 		actionLinkObjects.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.LinkObjects");
 		final ActionHandler linkObjectHandler = new ActionHandler(actionLinkObjects);
 		handlerService.activateHandler(actionLinkObjects.getActionDefinitionId(), linkObjectHandler);
 
-		actionRemove = new Action("&Remove from map")
-		{
+		actionRemove = new Action("&Remove from map", SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
 				removeSelectedElements();
 			}
 		};
-		actionRemove.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 		actionRemove.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.Remove");
 		actionRemove.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove");
 		final ActionHandler removeHandler = new ActionHandler(actionRemove);
@@ -298,6 +290,14 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			public void run()
 			{
 				showMapProperties();
+			}
+		};
+
+		actionLinkProperties = new Action("&Properties") {
+			@Override
+			public void run()
+			{
+				showLinkProperties();
 			}
 		};
 	}
@@ -357,9 +357,15 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	@Override
 	protected void fillLinkContextMenu(IMenuManager manager)
 	{
+		int size = ((IStructuredSelection)viewer.getSelection()).size();
 		manager.add(actionRemove);
 		manager.add(new Separator());
 		super.fillLinkContextMenu(manager);
+		if (size == 1)
+		{
+			manager.add(new Separator());
+			manager.add(actionLinkProperties);
+		}
 	}
 
 	/*
@@ -556,15 +562,13 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
-				new UIJob("Refresh map view")
-				{
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						viewer.refresh();
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override
@@ -656,5 +660,23 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 				}
 			}
 		});
+	}
+	
+	/**
+	 * Show properties for currently selected link
+	 */
+	private void showLinkProperties()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapLink))
+			return;
+		LinkEditor link = new LinkEditor((NetworkMapLink)selection.getFirstElement(), mapPage);
+		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, link);
+		if (dlg != null)
+		{
+			dlg.open();
+			if (link.isModified())
+				saveMap();
+		}
 	}
 }

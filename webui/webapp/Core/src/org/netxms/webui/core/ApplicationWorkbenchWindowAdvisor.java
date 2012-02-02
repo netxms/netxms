@@ -186,7 +186,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		try
 		{
 			ServletContext ctx = RWT.getSessionStore().getHttpSession().getServletContext();
-System.out.println("CONTEXT: "+ ctx);			
 			in = ctx.getResourceAsStream("/nxmc.properties");
 			if (in != null)
 				properties.load(in);

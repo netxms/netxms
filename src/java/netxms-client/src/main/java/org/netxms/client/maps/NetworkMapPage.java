@@ -96,6 +96,21 @@ public class NetworkMapPage
 	}
 	
 	/**
+	 * Get map element by element ID.
+	 * 
+	 * @param elementId element ID
+	 * @param requiredClass optional class filter (set to null to disable filtering)
+	 * @return map element or null
+	 */
+	public NetworkMapElement getElement(long elementId, Class<? extends NetworkMapElement> requiredClass)
+	{
+		NetworkMapElement e = elements.get(elementId);
+		if ((e == null) || (requiredClass == null))
+			return e;
+		return requiredClass.isInstance(e) ? e : null;
+	}
+	
+	/**
 	 * Remove element from map
 	 * 
 	 * @param elementId map element ID

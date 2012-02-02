@@ -20,8 +20,10 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import java.util.UUID;
 import org.eclipse.draw2d.ConnectionEndpointLocator;
+import org.eclipse.draw2d.ConnectionLocator;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -133,10 +135,6 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			GenericObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
 			return (object != null) ? object.getObjectName() : null;
-		}
-		if (element instanceof NetworkMapLink)
-		{
-			return ((NetworkMapLink)element).getName();
 		}
 		return null;
 	}
@@ -364,7 +362,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
 			sourceEndpointLocator.setVDistance(0);
-			Label label = new ConnectorLabel(link.getConnectorName1());
+			final Label label = new ConnectorLabel(link.getConnectorName1());
 			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, sourceEndpointLocator);
 		}
@@ -372,9 +370,17 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
 			targetEndpointLocator.setVDistance(0);
-			Label label = new ConnectorLabel(link.getConnectorName2());
+			final Label label = new ConnectorLabel(link.getConnectorName2());
 			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, targetEndpointLocator);
+		}
+		if (link.hasName())
+		{
+			ConnectionLocator nameLocator = new ConnectionLocator(connection.getConnectionFigure());
+			nameLocator.setRelativePosition(PositionConstants.CENTER);
+			final Label label = new ConnectorLabel(link.getName());
+			label.setFont(fontLabel);
+			connection.getConnectionFigure().add(label, nameLocator);
 		}
 		
 		connection.setLineWidth(2);
