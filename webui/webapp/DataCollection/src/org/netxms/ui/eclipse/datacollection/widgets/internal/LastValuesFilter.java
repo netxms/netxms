@@ -12,6 +12,8 @@ import org.netxms.client.datacollection.DciValue;
  */
 public class LastValuesFilter extends ViewerFilter
 {
+	private static final long serialVersionUID = 1L;
+
 	private String filterString = null;
 
 	/* (non-Javadoc)

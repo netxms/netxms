@@ -27,6 +27,8 @@ import org.netxms.client.datacollection.DataCollectionItem;
  */
 public class DciFilter extends ViewerFilter
 {
+	private static final long serialVersionUID = 1L;
+
 	private String filterString = null;
 
 	/* (non-Javadoc)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,10 +63,10 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * "General" property page for DCI
- *
  */
 public class General extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
 	private static final String[] snmpRawTypes = 
 	{ 
 		"None", 
@@ -173,6 +173,8 @@ public class General extends PropertyPage
       selectButton = new Button(groupData, SWT.PUSH);
       selectButton.setText("&Select...");
       selectButton.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -210,6 +212,8 @@ public class General extends PropertyPage
       origin.add("Push");
       origin.select(dci.getOrigin());
       origin.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -240,6 +244,8 @@ public class General extends PropertyPage
       checkInterpretRawSnmpValue.setText("Interpret SNMP octet string raw value as");
       checkInterpretRawSnmpValue.setSelection(dci.isSnmpRawValueInOctetString());
       checkInterpretRawSnmpValue.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -273,6 +279,8 @@ public class General extends PropertyPage
       checkUseCustomSnmpPort.setText("Use custom SNMP port:");
       checkUseCustomSnmpPort.setSelection(dci.getSnmpPort() != 0);
       checkUseCustomSnmpPort.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -342,6 +350,8 @@ public class General extends PropertyPage
       schedulingMode.select(dci.isUseAdvancedSchedule() ? 1 : 0);
       schedulingMode.setEnabled(dci.getOrigin() != DataCollectionItem.PUSH);
       schedulingMode.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -512,8 +522,8 @@ public class General extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		dci.setDescription(description.getText());
-		dci.setName(parameter.getText());
+		dci.setDescription(description.getText().trim());
+		dci.setName(parameter.getText().trim());
 		dci.setOrigin(origin.getSelectionIndex());
 		dci.setDataType(dataType.getSelectionIndex());
 		dci.setProxyNode(proxyNode.getObjectId());

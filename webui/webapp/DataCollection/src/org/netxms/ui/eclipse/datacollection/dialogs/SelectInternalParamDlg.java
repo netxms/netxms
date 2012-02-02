@@ -32,6 +32,12 @@ import org.netxms.client.objects.Template;
  */
 public class SelectInternalParamDlg extends AbstractSelectParamDlg
 {
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * @param parentShell
+	 * @param nodeId
+	 */
 	public SelectInternalParamDlg(Shell parentShell, long nodeId)
 	{
 		super(parentShell, nodeId);

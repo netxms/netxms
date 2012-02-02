@@ -38,6 +38,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class DciLabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private NXCSession session;
 	private Image statusImages[];
 	private HashMap<Integer, String> originTexts = new HashMap<Integer, String>();

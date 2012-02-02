@@ -30,6 +30,8 @@ import org.netxms.ui.eclipse.snmp.dialogs.MibSelectionDialog;
  */
 public class SelectSnmpParamDlg extends MibSelectionDialog implements IParameterSelectionDialog
 {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * @param parentShell
 	 */

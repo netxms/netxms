@@ -45,6 +45,8 @@ import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
  */
 public class SelectDciDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private SashForm splitter;
 	private ObjectTree objectTree;
 	private DciList dciList;

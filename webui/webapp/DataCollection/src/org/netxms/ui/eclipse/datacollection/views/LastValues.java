@@ -125,6 +125,8 @@ public class LastValues extends ViewPart
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
 		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -133,6 +135,8 @@ public class LastValues extends ViewPart
 		};
 		
 		actionAutoUpdate = new Action("Refresh &automatically", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -142,6 +146,8 @@ public class LastValues extends ViewPart
 		actionAutoUpdate.setChecked(dataView.isAutoRefreshEnabled());
 		
 		actionUseMultipliers = new Action("Use &multipliers", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -150,8 +156,9 @@ public class LastValues extends ViewPart
 		};
 		actionUseMultipliers.setChecked(dataView.areMultipliersUsed());
 
-		actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX)
-      {
+		actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

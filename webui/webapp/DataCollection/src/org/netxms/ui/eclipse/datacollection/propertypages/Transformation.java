@@ -42,6 +42,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class Transformation extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
 	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" };
 	private static final String[] DCI_VARIABLES = { "$node" };
 	

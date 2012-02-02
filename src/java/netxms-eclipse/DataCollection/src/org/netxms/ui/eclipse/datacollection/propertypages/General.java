@@ -512,8 +512,8 @@ public class General extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		dci.setDescription(description.getText());
-		dci.setName(parameter.getText());
+		dci.setDescription(description.getText().trim());
+		dci.setName(parameter.getText().trim());
 		dci.setOrigin(origin.getSelectionIndex());
 		dci.setDataType(dataType.getSelectionIndex());
 		dci.setProxyNode(proxyNode.getObjectId());

@@ -62,6 +62,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class Thresholds extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	public static final int COLUMN_OPERATION = 0;
 	public static final int COLUMN_EVENT = 1;
 	
@@ -153,7 +155,9 @@ public class Thresholds extends PropertyPage
       upButton.setText("&Up");
       upButton.setEnabled(false);
       upButton.addSelectionListener(new SelectionListener() {
-		@Override
+			private static final long serialVersionUID = 1L;
+
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
 			widgetSelected(e);
@@ -170,7 +174,9 @@ public class Thresholds extends PropertyPage
       downButton.setText("&Down");
       downButton.setEnabled(false);
       downButton.addSelectionListener(new SelectionListener() {
-   		@Override
+			private static final long serialVersionUID = 1L;
+
+				@Override
    			public void widgetDefaultSelected(SelectionEvent e)
    			{
    			widgetSelected(e);
@@ -203,6 +209,8 @@ public class Thresholds extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
       addButton.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -223,6 +231,8 @@ public class Thresholds extends PropertyPage
       modifyButton.setLayoutData(rd);
       modifyButton.setEnabled(false);
       modifyButton.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -243,6 +253,8 @@ public class Thresholds extends PropertyPage
       deleteButton.setLayoutData(rd);
       deleteButton.setEnabled(false);
       deleteButton.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

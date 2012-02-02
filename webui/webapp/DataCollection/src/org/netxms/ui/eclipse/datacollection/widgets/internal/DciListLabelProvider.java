@@ -30,6 +30,8 @@ import org.netxms.ui.eclipse.datacollection.widgets.DciList;
  */
 public class DciListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	// State images
 	private Image[] stateImages = new Image[3];
 	

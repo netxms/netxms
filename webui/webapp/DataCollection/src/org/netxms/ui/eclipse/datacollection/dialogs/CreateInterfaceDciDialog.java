@@ -26,6 +26,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CreateInterfaceDciDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
 	private static final String[] names = 
 		{ 
 			"Inbound traffic (bytes)", 
@@ -184,6 +185,8 @@ public class CreateInterfaceDciDialog extends Dialog
 	 */
 	private class InterfaceDciForm extends Composite
 	{
+		private static final long serialVersionUID = 1L;
+
 		private Button checkEnable;
 		private Button checkDelta;
 		private Text description;
@@ -242,6 +245,8 @@ public class CreateInterfaceDciDialog extends Dialog
 			description.setEnabled(enabled);
 			
 			checkEnable.addSelectionListener(new SelectionListener() {
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{
