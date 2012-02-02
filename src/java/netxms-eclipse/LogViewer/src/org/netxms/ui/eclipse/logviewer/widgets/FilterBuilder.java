@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.logviewer.widgets;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -339,7 +338,7 @@ public class FilterBuilder extends Composite
 				elements.add(columnElement);
 				
 				final ColumnFilterEditor editor = new ColumnFilterEditor((Composite)condition.getClient(), 
-						SWT.BORDER, column, columnElement, new Runnable() {
+						toolkit, column, columnElement, new Runnable() {
 							@Override
 							public void run()
 							{
@@ -350,6 +349,7 @@ public class FilterBuilder extends Composite
 								FilterBuilder.this.getParent().layout(true, true);
 							}
 						});
+				editor.setFilterBuilder(FilterBuilder.this);
 				editor.moveAbove(lastControl);
 				GridData gd = new GridData();
 				gd.grabExcessHorizontalSpace = true;

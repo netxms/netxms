@@ -965,6 +965,7 @@ src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages_r
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/views/LogViewer.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/views/helpers/LogLabelProvider.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/widgets/ColumnFilterEditor.java -text
+src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/widgets/ConditionEditor.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/widgets/FilterBuilder.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/widgets/helpers/ColumnSelectionHandler.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/widgets/helpers/FilterTreeElement.java -text
