@@ -878,7 +878,16 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			{
 				GenericObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
 				if (object != null)
+				{
 					objects.add(object);
+				}
+				else
+				{
+					// Fix for issue NX-24
+					// If object not found, add map element to selection
+					// This will allow removal of unknown objects from map
+					objects.add(element);
+				}
 			}
 			else if (isSelectableElement(element))
 			{
