@@ -55,6 +55,7 @@ public class SelectUserDialog extends Dialog
 	private TableViewer userList;
 	private Session session;
 	private boolean showGroups;
+	private boolean multiSelection = true;
 	private AbstractUserObject[] selection;
 	
 	/**
@@ -64,6 +65,14 @@ public class SelectUserDialog extends Dialog
 	{
 		super(parentShell);
 		this.showGroups = showGroups;
+	}
+	
+	/**
+	 * @param enable
+	 */
+	public void enableMultiSelection(boolean enable)
+	{
+		multiSelection = enable;
 	}
 
 	/* (non-Javadoc)
@@ -95,7 +104,7 @@ public class SelectUserDialog extends Dialog
       final String[] columnNames = { "Login Name" };
       final int[] columnWidths = { 250 };
       userList = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
-                                         SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+                                         SWT.BORDER | (multiSelection ? SWT.MULTI : 0) | SWT.FULL_SELECTION);
       userList.setContentProvider(new ArrayContentProvider());
       userList.setLabelProvider(new WorkbenchLabelProvider());
       userList.setComparator(new UserComparator());
