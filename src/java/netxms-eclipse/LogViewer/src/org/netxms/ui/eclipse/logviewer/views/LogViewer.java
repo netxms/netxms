@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FormAttachment;
@@ -55,7 +54,6 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.logviewer.Activator;
 import org.netxms.ui.eclipse.logviewer.Messages;
-import org.netxms.ui.eclipse.logviewer.dialogs.QueryBuilder;
 import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
 import org.netxms.ui.eclipse.logviewer.widgets.FilterBuilder;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -376,33 +374,29 @@ public class LogViewer extends ViewPart
 	 */
 	private void doQuery()
 	{
-		final QueryBuilder dlg = new QueryBuilder(getSite().getShell(), logHandle, filter);
-		if (dlg.open() == Window.OK)
-		{
-			filter = dlg.getFilter();
-			new ConsoleJob("Query server log", this, Activator.PLUGIN_ID, JOB_FAMILY) {
-				@Override
-				protected String getErrorMessage()
-				{
-					return "Cannot query server log " + logName;
-				}
+		filter = filterBuilder.createFilter();
+		new ConsoleJob("Query server log", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot query server log " + logName;
+			}
 
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					logHandle.query(filter);
-					currentPosition = 0;
-					resultSet = logHandle.retrieveData(currentPosition, PAGE_SIZE);
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							viewer.setInput(resultSet.getAllRows());
-						}
-					});
-				}
-			}.start();
-		}
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				logHandle.query(filter);
+				currentPosition = 0;
+				resultSet = logHandle.retrieveData(currentPosition, PAGE_SIZE);
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						viewer.setInput(resultSet.getAllRows());
+					}
+				});
+			}
+		}.start();
 	}
 	
 	/**

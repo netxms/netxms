@@ -44,6 +44,7 @@ public class ColumnFilter
 	private String like;
 	private HashSet<ColumnFilter> set;
 	private int operation;	// Set operation: AND or OR
+	private boolean negated = false;
 	
 	/**
 	 * Create filter of type EQUALS
@@ -116,16 +117,19 @@ public class ColumnFilter
 		{
 			case EQUALS:
 				msg.setVariableInt64(baseId + 1, equalsTo);
-				varCount++;
+				msg.setVariableInt16(baseId + 2, negated ? 1 : 0);
+				varCount += 2;
 				break;
 			case RANGE:
 				msg.setVariableInt64(baseId + 1, rangeFrom);
 				msg.setVariableInt64(baseId + 2, rangeTo);
-				varCount += 2;
+				msg.setVariableInt16(baseId + 3, negated ? 1 : 0);
+				varCount += 3;
 				break;
 			case LIKE:
 				msg.setVariable(baseId + 1, like);
-				varCount++;
+				msg.setVariableInt16(baseId + 2, negated ? 1 : 0);
+				varCount += 2;
 				break;
 			case SET:
 				msg.setVariableInt16(baseId + 1, operation);
@@ -239,5 +243,21 @@ public class ColumnFilter
 	public Set<ColumnFilter> getSubFilters()
 	{
 		return set;
+	}
+
+	/**
+	 * @return the negated
+	 */
+	public boolean isNegated()
+	{
+		return negated;
+	}
+
+	/**
+	 * @param negated the negated to set
+	 */
+	public void setNegated(boolean negated)
+	{
+		this.negated = negated;
 	}
 }

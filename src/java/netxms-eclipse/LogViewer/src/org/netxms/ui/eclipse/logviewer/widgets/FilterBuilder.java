@@ -19,7 +19,10 @@
 package org.netxms.ui.eclipse.logviewer.widgets;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -50,11 +53,12 @@ import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
+import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
+import org.netxms.client.log.LogFilter;
 import org.netxms.client.log.OrderingColumn;
 import org.netxms.ui.eclipse.logviewer.widgets.helpers.ColumnSelectionHandler;
-import org.netxms.ui.eclipse.logviewer.widgets.helpers.FilterTreeElement;
 import org.netxms.ui.eclipse.logviewer.widgets.helpers.OrderingColumnEditingSupport;
 import org.netxms.ui.eclipse.logviewer.widgets.helpers.OrderingListLabelProvider;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -65,8 +69,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
 public class FilterBuilder extends Composite
 {
 	private Log logHandle = null;
-	private List<FilterTreeElement> elements = new ArrayList<FilterTreeElement>();
-	private FilterTreeElement rootElement = null;
+	private Map<String, ColumnFilterEditor> columns = new HashMap<String, ColumnFilterEditor>();
 	private List<OrderingColumn> orderingColumns = new ArrayList<OrderingColumn>();
 	private FormToolkit toolkit;
 	private Form form;
@@ -84,9 +87,6 @@ public class FilterBuilder extends Composite
 	public FilterBuilder(Composite parent, int style)
 	{
 		super(parent, style);
-		
-		rootElement = new FilterTreeElement(FilterTreeElement.ROOT, null, null);
-		elements.add(rootElement);
 		
 		setLayout(new FillLayout());
 		
@@ -266,7 +266,14 @@ public class FilterBuilder extends Composite
 	 */
 	public void clearFilter()
 	{
+		orderingColumns.clear();
+		orderingList.setInput(orderingColumns.toArray());
 		
+		for(ColumnFilterEditor e : columns.values())
+			e.dispose();
+		columns.clear();
+
+		getParent().layout(true, true);
 	}
 	
 	/**
@@ -321,31 +328,19 @@ public class FilterBuilder extends Composite
 	{
 		createColumnSelectionMenu(new ColumnSelectionHandler() {
 			@Override
-			public void columnSelected(LogColumn column)
+			public void columnSelected(final LogColumn column)
 			{
 				// Check if selected column already has filters
-				for(FilterTreeElement e : elements)
-				{
-					if ((e.getType() == FilterTreeElement.COLUMN) &&
-					    (((LogColumn)e.getObject()).getName().equals(column.getName())))
-					{
-						return;	// Column already added
-					}
-				}
+				if (columns.get(column.getName()) != null)
+					return;	// Column already added
 				
 				// Add column
-				final FilterTreeElement columnElement = new FilterTreeElement(FilterTreeElement.COLUMN, column, rootElement);
-				elements.add(columnElement);
-				
 				final ColumnFilterEditor editor = new ColumnFilterEditor((Composite)condition.getClient(), 
-						toolkit, column, columnElement, new Runnable() {
+						toolkit, column, new Runnable() {
 							@Override
 							public void run()
 							{
-								rootElement.removeChild(columnElement);
-								elements.remove(columnElement);
-								/* TODO: remove all childs? */
-								columnElement.getEditor().dispose();
+								columns.remove(column.getName());
 								FilterBuilder.this.getParent().layout(true, true);
 							}
 						});
@@ -355,7 +350,8 @@ public class FilterBuilder extends Composite
 				gd.grabExcessHorizontalSpace = true;
 				gd.horizontalAlignment = SWT.FILL;
 				editor.setLayoutData(gd);
-				columnElement.setEditor(editor);
+				
+				columns.put(column.getName(), editor);
 				
 				FilterBuilder.this.getParent().layout(true, true);
 			}
@@ -410,5 +406,23 @@ public class FilterBuilder extends Composite
 			}
 		});
 		columnSelectionMenu.setVisible(true);
+	}
+	
+	/**
+	 * @return
+	 */
+	public LogFilter createFilter()
+	{
+		LogFilter filter = new LogFilter();
+		for(Entry<String, ColumnFilterEditor> e : columns.entrySet())
+		{
+			ColumnFilter cf = e.getValue().buildFilterTree();
+			if (cf != null)
+			{
+				filter.setColumnFilter(e.getKey(), cf);
+			}
+		}
+		filter.setOrderingColumns(new ArrayList<OrderingColumn>(orderingColumns));
+		return filter;
 	}
 }

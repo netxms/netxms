@@ -93,6 +93,7 @@ private:
 	int m_varCount;	// Number of variables read from NXCP message during construction
 	int m_type;
 	TCHAR *m_column;
+	bool m_negated;
 	union t_ColumnFilterValue
 	{
 		INT64 equalsTo;

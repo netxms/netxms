@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,16 +37,19 @@ ColumnFilter::ColumnFilter(CSCPMessage *msg, const TCHAR *column, DWORD baseId)
 	{
 		case FILTER_EQUALS:
 			m_value.equalsTo = msg->GetVariableInt64(baseId + 1);
-			m_varCount = 2;
+			m_negated = msg->GetVariableShort(baseId + 2) ? true : false;
+			m_varCount = 3;
 			break;
 		case FILTER_RANGE:
 			m_value.range.start = msg->GetVariableInt64(baseId + 1);
 			m_value.range.end = msg->GetVariableInt64(baseId + 2);
-			m_varCount = 3;
+			m_negated = msg->GetVariableShort(baseId + 3) ? true : false;
+			m_varCount = 4;
 			break;
 		case FILTER_LIKE:
 			m_value.like = msg->GetVariableStr(baseId + 1);
-			m_varCount = 2;
+			m_negated = msg->GetVariableShort(baseId + 2) ? true : false;
+			m_varCount = 3;
 			break;
 		case FILTER_SET:
 			m_value.set.operation = msg->GetVariableShort(baseId + 1);
@@ -101,18 +104,27 @@ String ColumnFilter::generateSql()
 	switch(m_type)
 	{
 		case FILTER_EQUALS:
+			if (m_negated)
+				sql += _T("NOT ");
 			sql.addFormattedString(_T("%s = ") INT64_FMT, m_column, m_value.equalsTo);
 			break;
 		case FILTER_RANGE:
+			if (m_negated)
+				sql += _T("NOT ");
 			sql.addFormattedString(_T("%s BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_column, m_value.range.start, m_value.range.end);
 			break;
 		case FILTER_LIKE:
 			if (m_value.like[0] == 0)
 			{
-				sql.addFormattedString(_T("(%s IS NULL) OR (%s = '')"), m_column, m_column);
+				if (m_negated)
+					sql.addFormattedString(_T("(%s IS NOT NULL) AND (%s <> '')"), m_column, m_column);
+				else
+					sql.addFormattedString(_T("(%s IS NULL) OR (%s = '')"), m_column, m_column);
 			}
 			else
 			{
+				if (m_negated)
+					sql += _T("NOT ");
 				sql.addFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(g_hCoreDB, m_value.like));
 			}
 			break;
