@@ -1,0 +1,143 @@
+FOUNDRY-SN-ROOT-MIB DEFINITIONS ::= BEGIN
+-- LAN Switch-Router Root MIB Release 1.0.1
+-- Revision 01/30/99
+-- Copyright 1996 Foundry Networks, Inc.
+-- All rights reserved.
+-- This Foundry SNMP Management Information Base Specification
+-- (Specification) embodies Foundry's confidential and
+-- proprietary intellectual property. Foundry retains all
+-- title and ownership in the Specification, including any
+-- revisions.
+-- This Specification is supplied "AS IS," and Foundry makes
+-- no warranty, either express or implied, as to the use,
+-- operation, condition, or performance of the Specification.
+-- SECTION 1: Top Level Definitions
+IMPORTS
+	enterprises
+		FROM	RFC1155-SMI;	
+foundry		OBJECT IDENTIFIER ::= { enterprises 1991 }
+products	OBJECT IDENTIFIER ::= { foundry 1 }
+switch		OBJECT IDENTIFIER ::= { products 1 }
+  snChassis		OBJECT IDENTIFIER ::= { switch 1 }
+  snAgentSys	OBJECT IDENTIFIER ::= { switch 2 }
+  snSwitch		OBJECT IDENTIFIER ::= { switch 3 }
+  snL4			OBJECT IDENTIFIER ::= { switch 4 }
+  snStack		OBJECT IDENTIFIER ::= { switch 5 }
+router 		OBJECT IDENTIFIER ::= { products 2 }
+  snIpx			OBJECT IDENTIFIER ::= { router 1 }
+  snIp			OBJECT IDENTIFIER ::= { router 2 }
+  snRip			OBJECT IDENTIFIER ::= { router 3 }
+  snOspf		OBJECT IDENTIFIER ::= { router 4 }
+  snDvmrp		OBJECT IDENTIFIER ::= { router 5 }
+  snIgmp		OBJECT IDENTIFIER ::= { router 6 }
+  snFsrp		OBJECT IDENTIFIER ::= { router 7 }
+  snGblRt		OBJECT IDENTIFIER ::= { router 8 }
+  snPim			OBJECT IDENTIFIER ::= { router 9 }
+  snAppleTalk	OBJECT IDENTIFIER ::= { router 10 }
+  snBgp4		OBJECT IDENTIFIER ::= { router 11 }
+  snVrrp		OBJECT IDENTIFIER ::= { router 12 }
+  snLoopbackIf 	OBJECT IDENTIFIER ::= { router 13 }
+  snPOS 		OBJECT IDENTIFIER ::= { router 14 }
+registration	OBJECT IDENTIFIER ::= { products 3 } -- sysObjectID values
+  snFastIron        OBJECT IDENTIFIER ::= { registration 1 }   -- Stackable FastIron family
+  snFIWGSwitch      OBJECT IDENTIFIER ::= { snFastIron 1 }     -- Stackable FastIron workgroup switch
+  snFIBBSwitch      OBJECT IDENTIFIER ::= { snFastIron 2 }     -- Stackable FastIron backbone switch
+  snNetIron         OBJECT IDENTIFIER ::= { registration 2 }   -- Stackable NetIron family
+  snNIRouter        OBJECT IDENTIFIER ::= { snNetIron 1 }      -- Stackable NetIron router
+  snServerIron      OBJECT IDENTIFIER ::= { registration 3 }   -- Stackable ServerIron family
+  snSI              OBJECT IDENTIFIER ::= { snServerIron 1 }   -- Stackable ServerIron
+  snSIXL            OBJECT IDENTIFIER ::= { snServerIron 2 }   -- Stackable ServerIronXL
+  snSIXLTCS         OBJECT IDENTIFIER ::= { snServerIron 3 }   -- Stackable ServerIronXL TCS
+  snTurboIron       OBJECT IDENTIFIER ::= { registration 4 }   -- Stackable TurboIron family
+  snTISwitch        OBJECT IDENTIFIER ::= { snTurboIron 1 }    -- Stackable TurboIron switch
+  snTIRouter        OBJECT IDENTIFIER ::= { snTurboIron 2 }    -- Stackable TurboIron router
+  snTurboIron8      OBJECT IDENTIFIER ::= { registration 5 }   -- Stackable TurboIron 8 family
+  snT8Switch        OBJECT IDENTIFIER ::= { snTurboIron8 1 }   -- Stackable TurboIron 8 switch
+  snT8Router        OBJECT IDENTIFIER ::= { snTurboIron8 2 }   -- Stackable TurboIron 8 router
+  snT8SI            OBJECT IDENTIFIER ::= { snTurboIron8 3 }
+  snT8SIXLG         OBJECT IDENTIFIER ::= { snTurboIron8 4 }   -- Stackable ServerIronXLG
+  snBigIron4000     OBJECT IDENTIFIER ::= { registration 6 }   -- BigIron 4000 family
+  snBI4000Switch    OBJECT IDENTIFIER ::= { snBigIron4000 1 }  -- BigIron 4000 switch
+  snBI4000Router    OBJECT IDENTIFIER ::= { snBigIron4000 2 }  -- BigIron 4000 router
+  snBI4000SI        OBJECT IDENTIFIER ::= { snBigIron4000 3 }  -- BigServerIron
+  snBigIron8000     OBJECT IDENTIFIER ::= { registration 7 }   -- BigIron 8000 family
+  snBI8000Switch    OBJECT IDENTIFIER ::= { snBigIron8000 1 }  -- BigIron 8000 switch
+  snBI8000Router    OBJECT IDENTIFIER ::= { snBigIron8000 2 }  -- BigIron 8000 router
+  snBI8000SI        OBJECT IDENTIFIER ::= { snBigIron8000 3 }  -- BigServerIron
+  snFastIron2       OBJECT IDENTIFIER ::= { registration 8 }   -- FastIron II family
+  snFI2Switch       OBJECT IDENTIFIER ::= { snFastIron2 1 }    -- FastIron II switch
+  snFI2Router       OBJECT IDENTIFIER ::= { snFastIron2 2 }    -- FastIron II router
+  snFastIron2Plus   OBJECT IDENTIFIER ::= { registration 9 }     -- FastIron II Plus family
+  snFI2PlusSwitch   OBJECT IDENTIFIER ::= { snFastIron2Plus 1 }  -- FastIron II Plus switch
+  snFI2PlusRouter   OBJECT IDENTIFIER ::= { snFastIron2Plus 2 }  -- FastIron II Plus router
+  snNetIron400      OBJECT IDENTIFIER ::= { registration 10 }  -- NetIron 400 family
+  snNI400Router     OBJECT IDENTIFIER ::= { snNetIron400 1 }   -- NetIron 400 router
+  snNetIron800      OBJECT IDENTIFIER ::= { registration 11 }  -- NetIron 800 family
+  snNI800Router     OBJECT IDENTIFIER ::= { snNetIron800 1 }   -- NetIron 800 router
+  snFastIron2GC     OBJECT IDENTIFIER ::= { registration 12 }  -- FastIron II GC family
+  snFI2GCSwitch     OBJECT IDENTIFIER ::= { snFastIron2GC 1 }  -- FastIron II GC switch
+  snFI2GCRouter     OBJECT IDENTIFIER ::= { snFastIron2GC 2 }  -- FastIron II GC router
+  snFastIron2PlusGC OBJECT IDENTIFIER ::= { registration 13 }     -- FastIron II Plus GC family
+  snFI2PlusGCSwitch OBJECT IDENTIFIER ::= { snFastIron2PlusGC 1 } -- FastIron II Plus GC switch
+  snFI2PlusGCRouter OBJECT IDENTIFIER ::= { snFastIron2PlusGC 2 } -- FastIron II Plus GC router
+  snBigIron15000    OBJECT IDENTIFIER ::= { registration 14 }   -- BigIron 15000 family
+  snBI15000Switch   OBJECT IDENTIFIER ::= { snBigIron15000 1 }  -- BigIron 15000 switch
+  snBI15000Router   OBJECT IDENTIFIER ::= { snBigIron15000 2 }  -- BigIron 15000 router
+  snBI15000SI       OBJECT IDENTIFIER ::= { snBigIron15000 3 }
+  snNetIron1500     OBJECT IDENTIFIER ::= { registration 15 }   -- NetIron 1500 family
+  snNI1500Router    OBJECT IDENTIFIER ::= { snNetIron1500 1 }   -- NetIron 1500 router
+  snFastIron3       OBJECT IDENTIFIER ::= { registration 16 }   -- FastIron III family
+  snFI3Switch       OBJECT IDENTIFIER ::= { snFastIron3 1 }     -- FastIron III switch
+  snFI3Router       OBJECT IDENTIFIER ::= { snFastIron3 2 }     -- FastIron III router
+  snFastIron3GC     OBJECT IDENTIFIER ::= { registration 17 }   -- FastIron III GC family
+  snFI3GCSwitch     OBJECT IDENTIFIER ::= { snFastIron3GC 1 }   -- FastIron III GC switch
+  snFI3GCRouter     OBJECT IDENTIFIER ::= { snFastIron3GC 2 }   -- FastIron III GC router
+  snServerIron400   OBJECT IDENTIFIER ::= { registration 18 }   -- ServerIron 400 family
+  snSI400Switch     OBJECT IDENTIFIER ::= { snServerIron400 1 } -- ServerIron 400 switch
+  snSI400Router     OBJECT IDENTIFIER ::= { snServerIron400 2 } -- ServerIron 400 router
+  snServerIron800   OBJECT IDENTIFIER ::= { registration 19 }   -- ServerIron 800 family
+  snSI800Switch     OBJECT IDENTIFIER ::= { snServerIron800 1 } -- ServerIron800 switch
+  snSI800Router     OBJECT IDENTIFIER ::= { snServerIron800 2 } -- ServerIron800 router
+  snServerIron1500  OBJECT IDENTIFIER ::= { registration 20 }    -- ServerIron 1500 family
+  snSI1500Switch    OBJECT IDENTIFIER ::= { snServerIron1500 1 } -- ServerIron1500 switch
+  snSI1500Router    OBJECT IDENTIFIER ::= { snServerIron1500 2 } -- ServerIron1500 router
+  sn4802            OBJECT IDENTIFIER ::= { registration 21 }  -- Stackable 4802 family
+  sn4802Switch      OBJECT IDENTIFIER ::= { sn4802 1 }         -- Stackable 4802 switch
+  sn4802Router      OBJECT IDENTIFIER ::= { sn4802 2 }         -- Stackable 4802 router
+  sn4802SI          OBJECT IDENTIFIER ::= { sn4802 3 }         -- Stackable 4802 ServerIron
+  snFastIron400     OBJECT IDENTIFIER ::= { registration 22 } -- FastIron 400 family
+  snFI400Switch     OBJECT IDENTIFIER ::= { snFastIron400 1 } -- FastIron 400 switch
+  snFI400Router     OBJECT IDENTIFIER ::= { snFastIron400 2 } -- FastIron 400 router
+  snFastIron800     OBJECT IDENTIFIER ::= { registration 23 } -- FastIron 800 family
+  snFI800Switch     OBJECT IDENTIFIER ::= { snFastIron800 1 } -- FastIron800 switch
+  snFI800Router     OBJECT IDENTIFIER ::= { snFastIron800 2 } -- FastIron800 router
+  snFastIron1500    OBJECT IDENTIFIER ::= { registration 24 }  -- FastIron 1500 family
+  snFI1500Switch    OBJECT IDENTIFIER ::= { snFastIron1500 1 } -- FastIron1500 switch
+  snFI1500Router    OBJECT IDENTIFIER ::= { snFastIron1500 2 } -- FastIron1500 router
+  snFES2402         OBJECT IDENTIFIER ::= { registration 25 } -- FastIron Edge Switch(FES) 2402
+  snFES2402Switch   OBJECT IDENTIFIER ::= { snFES2402 1 }     -- FES2402 switch
+  snFES2402Router   OBJECT IDENTIFIER ::= { snFES2402 2 }     -- FES2402 router
+  snFES4802         OBJECT IDENTIFIER ::= { registration 26 } -- FastIron Edge Switch(FES) 4802
+  snFES4802Switch   OBJECT IDENTIFIER ::= { snFES4802 1 }     -- FES4802 switch
+  snFES4802Router   OBJECT IDENTIFIER ::= { snFES4802 2 }     -- FES4802 router
+  snFES9604         OBJECT IDENTIFIER ::= { registration 27 } -- FastIron Edge Switch(FES) 9604
+  snFES9604Switch   OBJECT IDENTIFIER ::= { snFES9604 1 }     -- FES9604 switch
+  snFES9604Router   OBJECT IDENTIFIER ::= { snFES9604 2 }     -- FES9604 router
+-- EdgeIron Stackable family
+edgeIron            OBJECT IDENTIFIER ::= { products 4 }
+  edgeIronMib       OBJECT IDENTIFIER ::= { edgeIron 1 }  -- MIB root for EdgeIron family
+-- EdgeIron Type 2 Stackable family
+edgeIronType2       OBJECT IDENTIFIER ::= { products 5 }
+  edgeIronType2Mib  OBJECT IDENTIFIER ::= { edgeIronType2 1 } -- MIB root for EdgeIron type 2 family
+vendors             OBJECT IDENTIFIER ::= { foundry 2 }
+  digitalChina      OBJECT IDENTIFIER ::= { vendors 1 }
+  dcrs7504          OBJECT IDENTIFIER ::= { digitalChina 1 } -- DCRS-7504 family
+  dcrs7504Switch    OBJECT IDENTIFIER ::= { dcrs7504 1 }     -- DCRS-7504 switch
+  dcrs7504Router    OBJECT IDENTIFIER ::= { dcrs7504 2 }     -- DCRS-7504 router
+  dcrs7508          OBJECT IDENTIFIER ::= { digitalChina 2 } -- DCRS-7508 family
+  dcrs7508Switch    OBJECT IDENTIFIER ::= { dcrs7508 1 }     -- DCRS-7508 switch
+  dcrs7508Router    OBJECT IDENTIFIER ::= { dcrs7508 2 }     -- DCRS-7508 router
+  dcrs7515          OBJECT IDENTIFIER ::= { digitalChina 3 } -- DCRS-7515 family
+  dcrs7515Switch    OBJECT IDENTIFIER ::= { dcrs7515 1 }     -- DCRS-7515 switch
+  dcrs7515Router    OBJECT IDENTIFIER ::= { dcrs7515 2 }     -- DCRS-7515 router
+END
