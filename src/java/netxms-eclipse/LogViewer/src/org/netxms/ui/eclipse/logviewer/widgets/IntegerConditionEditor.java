@@ -18,28 +18,25 @@
  */
 package org.netxms.ui.eclipse.logviewer.widgets;
 
-import java.util.Calendar;
-import java.util.Date;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.log.ColumnFilter;
 
 /**
  * Condition editor for timestamp columns
  */
-public class TimestampConditionEditor extends ConditionEditor
+public class IntegerConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { "BETWEEN", "BEFORE", "AFTER" };
-	
-	private DateTime datePicker1;
-	private DateTime timePicker1;
-	private DateTime datePicker2;
-	private DateTime timePicker2;
+	private static final String[] OPERATIONS = { "EQUAL", "NOT EQUAL", "<", "<=", ">=", ">", "BETWEEN" };
+
+	private Text value1;
+	private Text value2;
 	private Label andLabel;
 	
 	/**
@@ -48,7 +45,7 @@ public class TimestampConditionEditor extends ConditionEditor
 	 * @param column
 	 * @param parentElement
 	 */
-	public TimestampConditionEditor(Composite parent, FormToolkit toolkit)
+	public IntegerConditionEditor(Composite parent, FormToolkit toolkit)
 	{
 		super(parent, toolkit);
 	}
@@ -81,22 +78,17 @@ public class TimestampConditionEditor extends ConditionEditor
 		gd.grabExcessHorizontalSpace = true;
 		group.setLayoutData(gd);
 
-		final Calendar c = Calendar.getInstance();
-		c.setTime(new Date());
-
-		datePicker1 = new DateTime(group, SWT.DATE | SWT.DROP_DOWN);
-		datePicker1.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
-
-		timePicker1 = new DateTime(group, SWT.TIME);
-		timePicker1.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
-		
+		value1 = toolkit.createText(group, "0");
+		RowData rd = new RowData();
+		rd.width = 90;
+		value1.setLayoutData(rd);
 		andLabel = toolkit.createLabel(group, "  and  ");
-
-		datePicker2 = new DateTime(group, SWT.DATE | SWT.DROP_DOWN);
-		datePicker2.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
-
-		timePicker2 = new DateTime(group, SWT.TIME);
-		timePicker2.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
+		andLabel.setVisible(false);
+		value2 = toolkit.createText(group, "0");
+		rd = new RowData();
+		rd.width = 90;
+		value2.setLayoutData(rd);
+		value2.setVisible(false);
 	}
 
 	/* (non-Javadoc)
@@ -105,17 +97,15 @@ public class TimestampConditionEditor extends ConditionEditor
 	@Override
 	protected void operationSelectionChanged(int selectionIndex)
 	{
-		if (selectionIndex == 0)	// between
+		if (selectionIndex == 6)	// between
 		{
 			andLabel.setVisible(true);
-			datePicker2.setVisible(true);
-			timePicker2.setVisible(true);
+			value2.setVisible(true);
 		}
 		else
 		{
 			andLabel.setVisible(false);
-			datePicker2.setVisible(false);
-			timePicker2.setVisible(false);
+			value2.setVisible(false);
 		}
 	}
 
@@ -125,29 +115,51 @@ public class TimestampConditionEditor extends ConditionEditor
 	@Override
 	public ColumnFilter createFilter()
 	{
-		final Calendar c = Calendar.getInstance();
-		c.clear();
-		c.set(datePicker1.getYear(), datePicker1.getMonth(), datePicker1.getDay(),
-				timePicker1.getHours(), timePicker1.getMinutes(), timePicker1.getSeconds());
-		final long timestamp = c.getTimeInMillis() / 1000;
+		long n1;
+		try
+		{
+			n1 = Long.parseLong(value1.getText());
+		}
+		catch(NumberFormatException e)
+		{
+			n1 = 0;
+		}
 		
 		ColumnFilter filter;
 		switch(getSelectedOperation())
 		{
-			case 0:	// between
-				c.clear();
-				c.set(datePicker2.getYear(), datePicker2.getMonth(), datePicker2.getDay(),
-						timePicker2.getHours(), timePicker2.getMinutes(), timePicker2.getSeconds());
-				filter = new ColumnFilter(timestamp, c.getTimeInMillis() / 1000);
+			case 1:	// not equal
+				filter = new ColumnFilter(ColumnFilter.EQUALS, n1);
+				filter.setNegated(true);
 				break;
-			case 1:	// before
-				filter = new ColumnFilter(ColumnFilter.LESS, timestamp);
+			case 2:	// less
+				filter = new ColumnFilter(ColumnFilter.LESS, n1);
 				break;
-			case 2:	// after
-				filter = new ColumnFilter(ColumnFilter.GREATER, timestamp);
+			case 3:	// less or equal
+				filter = new ColumnFilter(ColumnFilter.GREATER, n1);
+				filter.setNegated(true);
+				break;
+			case 4:	// greater or equal
+				filter = new ColumnFilter(ColumnFilter.LESS, n1);
+				filter.setNegated(true);
+				break;
+			case 5:	// greater
+				filter = new ColumnFilter(ColumnFilter.GREATER, n1);
+				break;
+			case 6:	// between
+				long n2;
+				try
+				{
+					n2 = Long.parseLong(value2.getText());
+				}
+				catch(NumberFormatException e)
+				{
+					n2 = 0;
+				}
+				filter = new ColumnFilter(n1, n2);
 				break;
 			default:
-				filter = new ColumnFilter(timestamp, timestamp);
+				filter = new ColumnFilter(ColumnFilter.EQUALS, n1);
 				break;
 		}
 		return filter;

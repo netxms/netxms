@@ -36,7 +36,9 @@ ColumnFilter::ColumnFilter(CSCPMessage *msg, const TCHAR *column, DWORD baseId)
 	switch(m_type)
 	{
 		case FILTER_EQUALS:
-			m_value.equalsTo = msg->GetVariableInt64(baseId + 1);
+		case FILTER_LESS:
+		case FILTER_GREATER:
+			m_value.numericValue = msg->GetVariableInt64(baseId + 1);
 			m_negated = msg->GetVariableShort(baseId + 2) ? true : false;
 			m_varCount = 3;
 			break;
@@ -106,7 +108,17 @@ String ColumnFilter::generateSql()
 		case FILTER_EQUALS:
 			if (m_negated)
 				sql += _T("NOT ");
-			sql.addFormattedString(_T("%s = ") INT64_FMT, m_column, m_value.equalsTo);
+			sql.addFormattedString(_T("%s = ") INT64_FMT, m_column, m_value.numericValue);
+			break;
+		case FILTER_LESS:
+			if (m_negated)
+				sql += _T("NOT ");
+			sql.addFormattedString(_T("%s < ") INT64_FMT, m_column, m_value.numericValue);
+			break;
+		case FILTER_GREATER:
+			if (m_negated)
+				sql += _T("NOT ");
+			sql.addFormattedString(_T("%s > ") INT64_FMT, m_column, m_value.numericValue);
 			break;
 		case FILTER_RANGE:
 			if (m_negated)

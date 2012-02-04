@@ -146,7 +146,7 @@ public class ObjectConditionEditor extends ConditionEditor
 	@Override
 	public ColumnFilter createFilter()
 	{
-		ColumnFilter filter = new ColumnFilter(objectId);
+		ColumnFilter filter = new ColumnFilter(ColumnFilter.EQUALS, objectId);
 		filter.setNegated(getSelectedOperation() == 1);
 		return filter;
 	}

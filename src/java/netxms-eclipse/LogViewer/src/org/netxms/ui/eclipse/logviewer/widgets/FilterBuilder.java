@@ -344,7 +344,7 @@ public class FilterBuilder extends Composite
 								FilterBuilder.this.getParent().layout(true, true);
 							}
 						});
-				editor.setFilterBuilder(FilterBuilder.this);
+				editor.attachFilterBuilder(FilterBuilder.this);
 				editor.moveAbove(lastControl);
 				GridData gd = new GridData();
 				gd.grabExcessHorizontalSpace = true;

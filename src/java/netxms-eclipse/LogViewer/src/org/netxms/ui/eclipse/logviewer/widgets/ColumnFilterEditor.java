@@ -198,6 +198,8 @@ public class ColumnFilterEditor extends DashboardComposite
 		{
 			case LogColumn.LC_EVENT_CODE:
 				return new EventConditionEditor(this, toolkit);
+			case LogColumn.LC_INTEGER:
+				return new IntegerConditionEditor(this, toolkit);
 			case LogColumn.LC_OBJECT_ID:
 				return new ObjectConditionEditor(this, toolkit);
 			case LogColumn.LC_SEVERITY:
@@ -214,9 +216,10 @@ public class ColumnFilterEditor extends DashboardComposite
 	/**
 	 * @param filterBuilder the filterBuilder to set
 	 */
-	public void setFilterBuilder(FilterBuilder filterBuilder)
+	public void attachFilterBuilder(FilterBuilder filterBuilder)
 	{
 		this.filterBuilder = filterBuilder;
+		addCondition();
 	}
 	
 	/**

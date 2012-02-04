@@ -29,6 +29,7 @@ qx.Class.define("org.netxms.ui.eclipse.charts.widgets.LineChart", {
 
 			if (this._plot != null) {
 				this._plot.getOptions().grid.show = this.getGridVisible();
+				this._plot.getOptions().grid.borderWidth = 1;
     	    	this._plot.draw();
 			}
         },

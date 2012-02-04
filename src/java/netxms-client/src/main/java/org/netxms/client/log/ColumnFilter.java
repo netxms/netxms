@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,7 @@ import java.util.Set;
 import org.netxms.base.NXCPMessage;
 
 /**
- * @author Victor Kirhenshtein
- *
+ * Column filter
  */
 public class ColumnFilter
 {
@@ -33,6 +32,8 @@ public class ColumnFilter
 	public static final int RANGE = 1;
 	public static final int SET = 2;
 	public static final int LIKE = 3;
+	public static final int LESS = 4;
+	public static final int GREATER = 5;
 	
 	public static final int AND = 0;
 	public static final int OR = 1;
@@ -40,21 +41,21 @@ public class ColumnFilter
 	private int type;
 	private long rangeFrom;
 	private long rangeTo;
-	private long equalsTo;
+	private long numericValue;
 	private String like;
 	private HashSet<ColumnFilter> set;
 	private int operation;	// Set operation: AND or OR
 	private boolean negated = false;
 	
 	/**
-	 * Create filter of type EQUALS
+	 * Create filter of type EQUALS, LESS, or GREATER
 	 * 
 	 * @param value
 	 */
-	public ColumnFilter(long value)
+	public ColumnFilter(int type, long value)
 	{
-		type = EQUALS;
-		equalsTo = value;
+		this.type = type;
+		numericValue = value;
 	}
 
 	/**
@@ -116,7 +117,9 @@ public class ColumnFilter
 		switch(type)
 		{
 			case EQUALS:
-				msg.setVariableInt64(baseId + 1, equalsTo);
+			case LESS:
+			case GREATER:
+				msg.setVariableInt64(baseId + 1, numericValue);
 				msg.setVariableInt16(baseId + 2, negated ? 1 : 0);
 				varCount += 2;
 				break;
@@ -182,17 +185,17 @@ public class ColumnFilter
 	/**
 	 * @return the equalsTo
 	 */
-	public long getEqualsTo()
+	public long getNumericValue()
 	{
-		return equalsTo;
+		return numericValue;
 	}
 
 	/**
 	 * @param equalsTo the equalsTo to set
 	 */
-	public void setEqualsTo(long equalsTo)
+	public void setNumericValue(long numericValue)
 	{
-		this.equalsTo = equalsTo;
+		this.numericValue = numericValue;
 	}
 
 	/**

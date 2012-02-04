@@ -146,7 +146,7 @@ public class EventConditionEditor extends ConditionEditor
 	@Override
 	public ColumnFilter createFilter()
 	{
-		ColumnFilter filter = new ColumnFilter(eventCode);
+		ColumnFilter filter = new ColumnFilter(ColumnFilter.EQUALS, eventCode);
 		filter.setNegated(getSelectedOperation() == 1);
 		return filter;
 	}

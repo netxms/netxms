@@ -79,7 +79,7 @@ public class SeverityConditionEditor extends ConditionEditor
 	@Override
 	public ColumnFilter createFilter()
 	{
-		ColumnFilter filter = new ColumnFilter(severity.getSelectionIndex());
+		ColumnFilter filter = new ColumnFilter(ColumnFilter.EQUALS, severity.getSelectionIndex());
 		filter.setNegated(getSelectedOperation() == 1);
 		return filter;
 	}

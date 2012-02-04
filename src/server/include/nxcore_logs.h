@@ -47,6 +47,8 @@
 #define FILTER_RANGE       1
 #define FILTER_SET         2
 #define FILTER_LIKE        3
+#define FILTER_LESS        4
+#define FILTER_GREATER     5
 
 
 //
@@ -96,7 +98,7 @@ private:
 	bool m_negated;
 	union t_ColumnFilterValue
 	{
-		INT64 equalsTo;
+		INT64 numericValue;	// numeric value for <, >, and = operations
 		struct
 		{
 			INT64 start;
