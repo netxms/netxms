@@ -62,7 +62,11 @@ qx.Class.define("org.netxms.ui.eclipse.charts.widgets.LineChart", {
 			//console.log(arguments);
 			//console.log(plotData);
 			
-	    	$.plot($("#" + this._id), plotData, { xaxis: { mode: "time" } });
+			try {
+	    		$.plot($("#" + this._id), plotData, { xaxis: { mode: "time" } });
+	    	}
+	    	catch(e) {
+	    	}
 
 			//$.plot($("#" + this._id), plotData);
 			//plot = this._getPlot();
