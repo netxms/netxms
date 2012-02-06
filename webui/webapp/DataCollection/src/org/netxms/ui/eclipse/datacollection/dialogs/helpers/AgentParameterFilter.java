@@ -27,6 +27,8 @@ import org.netxms.client.AgentParameter;
  */
 public class AgentParameterFilter extends ViewerFilter
 {
+	private static final long serialVersionUID = 1L;
+
 	private String filter = "";
 	
 	/* (non-Javadoc)

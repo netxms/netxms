@@ -17,6 +17,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class AgentParameterComparator extends ViewerComparator
 {
+	private static final long serialVersionUID = 1L;
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */

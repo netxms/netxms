@@ -48,6 +48,8 @@ public class LastValues extends ObjectTab
 		dataView = new LastValuesWidget(getViewPart(), parent, SWT.NONE, (Node)getObject(), "LastValuesTab");
 		dataView.setAutoRefreshEnabled(true);
 		dataView.setFilterCloseAction(new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

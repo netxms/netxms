@@ -57,6 +57,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class LastValuesWidget extends Composite
 {
+	private static final long serialVersionUID = 1L;
 	public static final String JOB_FAMILY = "LastValuesViewJob";
 	
 	// Columns
@@ -114,6 +115,8 @@ public class LastValuesWidget extends Composite
 		// Create filter area
 		filterText = new FilterText(this, SWT.NONE);
 		filterText.addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -121,6 +124,8 @@ public class LastValuesWidget extends Composite
 			}
 		});
 		filterText.setCloseAction(new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -142,6 +147,8 @@ public class LastValuesWidget extends Composite
 		WidgetHelper.restoreTableViewerSettings(dataViewer, ds, configPrefix);
 		
 		actionUseMultipliers = new Action("Use &multipliers", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -152,6 +159,8 @@ public class LastValuesWidget extends Composite
 		createPopupMenu();
 
 		dataViewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -208,8 +217,9 @@ public class LastValuesWidget extends Composite
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

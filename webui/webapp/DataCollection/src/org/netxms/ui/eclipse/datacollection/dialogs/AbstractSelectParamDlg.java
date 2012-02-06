@@ -18,6 +18,9 @@
  */
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -36,6 +39,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.AgentParameter;
@@ -169,6 +173,8 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 			   WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), getConfigurationPrefix() + ".viewer");
 			}
 	   });
+
+	   createPopupMenu();
 	   
 	   gd = new GridData();
 	   gd.heightHint = 250;
@@ -181,6 +187,35 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	   fillParameterList();
 	   
 		return dialogArea;
+	}
+	
+	/**
+	 * Create pop-up menu
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager.
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu
+		Menu menu = menuMgr.createContextMenu(viewer.getControl());
+		viewer.getControl().setMenu(menu);
+	}
+	
+	/**
+	 * @param manager
+	 */
+	protected void fillContextMenu(IMenuManager manager)
+	{
 	}
 
 	/* (non-Javadoc)
