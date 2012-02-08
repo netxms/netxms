@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.1.9], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.1.10], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -331,7 +331,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools webui"
-	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix"
+	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
 	CONTRIB_MODULES="mibs backgrounds"
@@ -509,6 +509,7 @@ fi
 check_substr "$COMPONENTS" "oracle"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS oracle"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS oracle"
 fi
 
 check_substr "$COMPONENTS" "db2"
@@ -1973,6 +1974,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/netbsd/Makefile
 	src/agent/subagents/odbcquery/Makefile
 	src/agent/subagents/openbsd/Makefile
+	src/agent/subagents/oracle/Makefile
 	src/agent/subagents/ping/Makefile
 	src/agent/subagents/portCheck/Makefile
 	src/agent/subagents/sms/Makefile

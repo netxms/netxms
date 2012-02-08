@@ -98,6 +98,7 @@ doc/manuals/netxms_solution_guide.doc -text
 doc/manuals/netxms_user_manual.odt -text
 doc/manuals/netxms_webapi_reference.odt -text
 doc/manuals/nxcp_reference.odt -text
+doc/manuals/oracle[!!-~]monitoring[!!-~]subagent[!!-~]-[!!-~]user[!!-~]guide.odt -text
 doc/misc/agent_parameters.xlsx -text
 doc/misc/dummy -text
 images/092e4b35-4e7c-42df-b9b7-d5805bfac64e -text
@@ -133,6 +134,10 @@ src/agent/subagents/informix/Makefile.am -text
 src/agent/subagents/informix/informix.vcproj -text
 src/agent/subagents/logwatch/logwatch.vcproj -text
 src/agent/subagents/odbcquery/odbcquery.vcproj -text
+src/agent/subagents/oracle/Makefile.am -text
+src/agent/subagents/oracle/main.cpp -text
+src/agent/subagents/oracle/oracle.vcproj -text
+src/agent/subagents/oracle/oracle_subagent.h -text
 src/agent/subagents/ping/ping.vcproj -text
 src/agent/subagents/portCheck/portcheck.vcproj -text
 src/agent/subagents/sms/sms.vcproj -text
