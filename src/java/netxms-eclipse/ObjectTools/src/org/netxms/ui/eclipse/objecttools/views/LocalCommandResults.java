@@ -18,10 +18,11 @@
  */
 package org.netxms.ui.eclipse.objecttools.views;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -336,17 +337,28 @@ public class LocalCommandResults extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				process = Runtime.getRuntime().exec(command);
-				BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+				InputStream in = process.getInputStream();
 				try
 				{
+					byte[] data = new byte[16384];
+					boolean isWindows = Platform.getOS().equals(Platform.OS_WIN32);
 					while(true)
 					{
-						String line = in.readLine();
-						if (line == null)
+						int bytes = in.read(data);
+						if (bytes == -1)
 							break;
-						out.write(line);
-						out.write("\n");
+						String s = new String(Arrays.copyOf(data, bytes));
+						
+						// The following is a workaround for issue NX-65
+						// Problem is that on Windows XP many system commands
+						// (like ping, tracert, etc.) generates output with lines
+						// ending in 0x0D 0x0D 0x0A
+						if (isWindows)
+							out.write(s.replace("\r\r\n", " \r\n"));
+						else
+							out.write(s);
 					}
+					
 					out.write("\n\n*** TERMINATED ***\n");
 				}
 				catch(IOException e)

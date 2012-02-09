@@ -11,6 +11,7 @@ public class Messages extends NLS
 	private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME);
 	public static String LogViewer_AuditLog;
 	public static String LogViewer_EventLog;
+	public static String LogViewer_SnmpTrapLog;
 	public static String LogViewer_syslog;
 	static
 	{
