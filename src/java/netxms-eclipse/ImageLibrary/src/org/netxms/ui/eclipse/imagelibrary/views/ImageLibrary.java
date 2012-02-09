@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -19,6 +20,8 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Image;
@@ -41,6 +44,7 @@ import org.netxms.nebula.widgets.gallery.GalleryItem;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImagePropertiesDialog;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
+import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -48,7 +52,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
 /**
  * Image library configurator
  */
-public class ImageLibrary extends ViewPart
+public class ImageLibrary extends ViewPart implements ImageUpdateListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.imagelibrary.view.imagelibrary";
 
@@ -72,8 +76,12 @@ public class ImageLibrary extends ViewPart
 
 	protected int currentIconSize = MIN_GRID_ICON_SIZE;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets
+	 * .Composite)
 	 */
 	@Override
 	public void createPartControl(final Composite parent)
@@ -119,9 +127,21 @@ public class ImageLibrary extends ViewPart
 		{
 			e1.printStackTrace();
 		}
+
+		ImageProvider.getInstance().addUpdateListener(this);
+		parent.addDisposeListener(new DisposeListener()
+		{
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				ImageProvider.getInstance().removeUpdateListener(ImageLibrary.this);
+			}
+		});
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
@@ -245,8 +265,9 @@ public class ImageLibrary extends ViewPart
 	protected void editImage(final GalleryItem galleryItem, final String name, final String category, final String fileName)
 	{
 		final LibraryImage image = (LibraryImage)galleryItem.getData();
-		
-		new ConsoleJob("Update image", this, Activator.PLUGIN_ID, null) {
+
+		new ConsoleJob("Update image", this, Activator.PLUGIN_ID, null)
+		{
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
@@ -266,15 +287,16 @@ public class ImageLibrary extends ViewPart
 					image.setCategory(category);
 				}
 
-				session.modifyImage(image, new ProgressListener() {
+				session.modifyImage(image, new ProgressListener()
+				{
 					private long prevDone = 0;
-					
+
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
 						monitor.beginTask("Update image file", (int)workTotal);
 					}
-					
+
 					@Override
 					public void markProgress(long workDone)
 					{
@@ -284,8 +306,8 @@ public class ImageLibrary extends ViewPart
 				});
 
 				ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
-				refreshImages();	/* TODO: update single element */                      
-				
+				refreshImages(); /* TODO: update single element */
+
 				monitor.done();
 			}
 
@@ -304,7 +326,8 @@ public class ImageLibrary extends ViewPart
 	 */
 	protected void uploadNewImage(final String name, final String category, final String fileName)
 	{
-		new ConsoleJob("Upload image file", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Upload image file", this, Activator.PLUGIN_ID, null)
+		{
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
@@ -319,15 +342,16 @@ public class ImageLibrary extends ViewPart
 				image.setName(name);
 				image.setCategory(category);
 
-				session.createImage(image, new ProgressListener() {
+				session.createImage(image, new ProgressListener()
+				{
 					private long prevDone = 0;
-					
+
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
 						monitor.beginTask("Upload image file", (int)workTotal);
 					}
-					
+
 					@Override
 					public void markProgress(long workDone)
 					{
@@ -335,9 +359,9 @@ public class ImageLibrary extends ViewPart
 						prevDone = workDone;
 					}
 				});
-				
+
 				ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
-				refreshImages();	/* TODO: update local copy */
+				refreshImages(); /* TODO: update local copy */
 
 				monitor.done();
 			}
@@ -452,7 +476,8 @@ public class ImageLibrary extends ViewPart
 	 */
 	private void refreshImages() throws NetXMSClientException, IOException
 	{
-		new ConsoleJob("Reload image library", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Reload image library", this, Activator.PLUGIN_ID, null)
+		{
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -473,7 +498,8 @@ public class ImageLibrary extends ViewPart
 						}
 					}
 				}
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable()
+				{
 					@Override
 					public void run()
 					{
@@ -487,10 +513,10 @@ public class ImageLibrary extends ViewPart
 			{
 				return "Cannot load image library";
 			}
-			
+
 		}.start();
 	}
-	
+
 	/**
 	 * Refresh UI after retrieving imaqe library from server
 	 */
@@ -529,17 +555,38 @@ public class ImageLibrary extends ViewPart
 					catch(SWTException e)
 					{
 						Activator.logError("Exception in ImageLibrary.refreshUI()", e);
-						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
+						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show
+																												// as
+																												// "missing"
 					}
 				}
 				else
 				{
-					imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
+					imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show
+																											// as
+																											// "missing"
 				}
 				imageItem.setData(image);
 			}
 		}
 
 		gallery.redraw();
+	}
+
+	@Override
+	public void imageUpdated(UUID guid)
+	{
+		try
+		{
+			refreshImages();
+		}
+		catch(NetXMSClientException e)
+		{
+			Activator.logError("Exception in ImageLibrary.imageUpdated()", e);
+		}
+		catch(IOException e)
+		{
+			Activator.logError("Exception in ImageLibrary.imageUpdated()", e);
+		}
 	}
 }
