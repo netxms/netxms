@@ -209,6 +209,7 @@ typedef void * HSNMPSESSION;
 #define INFO_CAT_SNMP_TRAP       6
 #define INFO_CAT_AUDIT_RECORD    7
 #define INFO_CAT_SITUATION       8
+#define INFO_CAT_LIBRARY_IMAGE   9
 
 
 //
@@ -621,6 +622,7 @@ public:
    void onAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
    void onActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction);
 	void onSituationChange(CSCPMessage *msg);
+	void onLibraryImageChange(uuid_t *guid);
 };
 
 

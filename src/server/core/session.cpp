@@ -697,6 +697,13 @@ void ClientSession::updateThread()
             MutexUnlock(m_mutexSendSituations);
             delete (CSCPMessage *)pUpdate->pData;
             break;
+			case INFO_CAT_LIBRARY_IMAGE:
+				msg.SetCode(CMD_IMAGE_LIBRARY_UPDATE);
+				msg.SetVariable(VID_GUID, (BYTE *)pUpdate->pData, UUID_LENGTH);
+				sendMessage(&msg);
+				msg.DeleteAllVariables();
+            free(pUpdate->pData);
+				break;
          default:
             break;
       }
@@ -10461,6 +10468,29 @@ void ClientSession::sendLibraryImage(CSCPMessage *request)
 		sendFile(absFileName, request->GetId());
 }
 
+void ClientSession::onLibraryImageChange(uuid_t *guid)
+{
+	UPDATE_INFO *pUpdate;
+
+	if (guid != NULL && isAuthenticated())
+	{
+		pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+		pUpdate->dwCategory = INFO_CAT_LIBRARY_IMAGE;
+		pUpdate->pData = nx_memdup(guid, UUID_LENGTH);
+      m_pUpdateQueue->Put(pUpdate);
+		}
+}
+
+
+//
+// Send updates to all connected clients
+//
+
+static void SendLibraryImageUpdate(ClientSession *pSession, void *pArg)
+{
+	pSession->onLibraryImageChange((uuid_t *)pArg);
+}
+
 
 //
 // Update library image from client
@@ -10598,6 +10628,11 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 
 	msg.SetVariable(VID_RCC, rcc);
 	sendMessage(&msg);
+
+	if (rcc == RCC_SUCCESS)
+	{
+		EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid);
+	}
 }
 
 
@@ -10656,6 +10691,11 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 
 	msg.SetVariable(VID_RCC, rcc);
 	sendMessage(&msg);
+
+	if (rcc == RCC_SUCCESS)
+	{
+		EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid);
+	}
 }
 
 

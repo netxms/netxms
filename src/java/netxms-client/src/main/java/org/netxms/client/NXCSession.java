@@ -37,9 +37,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -474,6 +474,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 						case NXCPCodes.CMD_ADM_MESSAGE:
 							processConsoleOutput(msg);
 							break;
+						case NXCPCodes.CMD_IMAGE_LIBRARY_UPDATE:
+							processImageLibraryUpdate(msg);
+							break;
 						default:
 							if (msg.getMessageCode() >= 0x1000)
 							{
@@ -731,7 +734,20 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			}
 			sendNotification(new NXCNotification(code, eventCode, et));
 		}
+
+		/**
+		 * Process server notification on image library change
+		 * 
+		 * @param msg
+		 *           notification message
+		 */
+		public void processImageLibraryUpdate(NXCPMessage msg)
+		{
+			final UUID imageGuid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
+			sendNotification(new NXCNotification(NXCNotification.IMAGE_LIBRARY_UPDATED, imageGuid));
+		}
 	}
+
 
 	/**
 	 * Housekeeper thread - cleans received files, etc.

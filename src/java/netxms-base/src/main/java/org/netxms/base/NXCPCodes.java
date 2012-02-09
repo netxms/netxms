@@ -283,6 +283,7 @@ public final class NXCPCodes
 	public static final int CMD_CHANGE_ZONE              = 0x00FD;
 	public static final int CMD_GET_AGENT_FILE           = 0x00FE;
 	public static final int CMD_GET_FILE_DETAILS         = 0x00FF;
+	public static final int CMD_IMAGE_LIBRARY_UPDATE     = 0x0100;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;

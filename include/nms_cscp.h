@@ -462,6 +462,7 @@ typedef struct
 #define CMD_CHANGE_ZONE                0x00FD
 #define CMD_GET_AGENT_FILE             0x00FE
 #define CMD_GET_FILE_DETAILS           0x00FF
+#define CMD_IMAGE_LIBRARY_UPDATE			0x0100
 
 
 //
