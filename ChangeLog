@@ -2,11 +2,25 @@
 * 1.1.10
 *
 
+- Completely new web interface
 - New action type: execute NXSL script
 - Changed default timeout for service checking subagent
+- Added option to force creation of character string instead of hex string in SNMP trap mapping
 - Java console:
+	- Log viewers greatly improved
 	- Added missing DCI option "process all thresholds"
+	- Added missing "interconnect networks" property for cluster objects
+	- Added possibility to add and edit names on map link
 	- SNMP trap monitor
+	- "Query" button implemented in agent parameter selection dialog
+	- Implemented syslog parser configuration
+	- Resolved issue: Cannot delete non-existing object from map
+	- Resolved issue: Template filtering script is lost when template is renamed
+	- Resolved issue: Tab character not stripped from DCI parameter configuration and server reports "unsupported"
+	- Resolved issue: Map background not drawn beyound viewport
+	- Resolved issue: Node under cluster not shown in object selection dialog
+	- Resolved issue: "Cluster resource" field unavailable for DCI on cluster node
+	- Resolved issue: Reports not working on Windows
 - New format specifiers in nxalarm: %x and %X
 - New MIBs added: BAY-STACK-ADAC-MIB, BAY-STACK-ARP-INSPECTION-MIB,
   BAY-STACK-DHCP-SNOOPING-MIB, BAY-STACK-ECMP-MIB, BAY-STACK-ERROR-MESSAGE-MIB,
@@ -17,6 +31,8 @@
   FOUNDRY-SN-OSPF-GROUP-MIB, FOUNDRY-SN-ROOT-MIB, 
   FOUNDRY-SN-SW-L4-SWITCH-GROUP-MIB, FOUNDRY-SN-SWITCH-GROUP-MIB,
   FOUNDRY-SN-TRAP-MIB, FOUNDRY-SN-VSRP-MIB
+- Resolved issue: Subnet objects not placed correctly under zones
+- Resolved issue: No retention time for alarm history
 
 
 *

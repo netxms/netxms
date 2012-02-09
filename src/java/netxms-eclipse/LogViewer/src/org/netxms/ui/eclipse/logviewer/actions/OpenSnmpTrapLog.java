@@ -28,9 +28,9 @@ import org.eclipse.ui.PartInitException;
 import org.netxms.ui.eclipse.logviewer.views.LogViewer;
 
 /**
- * Show syslog viewer
+ * Open SNMP trap log
  */
-public class OpenSyslog implements IWorkbenchWindowActionDelegate
+public class OpenSnmpTrapLog implements IWorkbenchWindowActionDelegate
 {
 	private IWorkbenchWindow window;
 
@@ -61,7 +61,7 @@ public class OpenSyslog implements IWorkbenchWindowActionDelegate
 		{	
 			try 
 			{
-				window.getActivePage().showView(LogViewer.ID, "syslog", IWorkbenchPage.VIEW_ACTIVATE);
+				window.getActivePage().showView(LogViewer.ID, "SnmpTrapLog", IWorkbenchPage.VIEW_ACTIVATE);
 			} 
 			catch (PartInitException e) 
 			{

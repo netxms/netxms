@@ -48,9 +48,10 @@ public class Log
 	 * @param session Client session
 	 * @param msg NXCP message with server's reply
 	 */
-	public Log(NXCSession session, NXCPMessage msg)
+	public Log(NXCSession session, NXCPMessage msg, String name)
 	{
 		this.session = session;
+		this.name = name;
 		handle = msg.getVariableAsInteger(NXCPCodes.VID_LOG_HANDLE);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS);

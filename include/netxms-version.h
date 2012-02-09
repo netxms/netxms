@@ -30,16 +30,16 @@
 
 #define NETXMS_VERSION_MAJOR        1
 #define NETXMS_VERSION_MINOR        1
-#define NETXMS_VERSION_BUILD        9
+#define NETXMS_VERSION_BUILD        10
 #define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("1.1.9")
+#define NETXMS_VERSION_STRING       _T("1.1.10")
 
 
 //
 // Current client-server protocol version
 //
 
-#define CLIENT_PROTOCOL_VERSION     30
+#define CLIENT_PROTOCOL_VERSION     31
 
 
 #endif

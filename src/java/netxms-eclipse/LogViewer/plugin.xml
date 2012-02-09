@@ -37,6 +37,12 @@
             id="org.netxms.ui.eclipse.logviewer.commands.show_filter"
             name="Show Filter">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open SNMP Trap Log"
+            id="org.netxms.ui.eclipse.logviewer.commands.openSnmpTrapLog"
+            name="SNMP Trap Log">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -70,6 +76,16 @@
            menubarPath="view/logs"
            toolbarPath="logs/additions"
            tooltip="Open Syslog">
+     </action>
+     <action
+           class="org.netxms.ui.eclipse.logviewer.actions.OpenSnmpTrapLog"
+           definitionId="org.netxms.ui.eclipse.logviewer.commands.openSnmpTrapLog"
+           icon="icons/EventLog.png"
+           id="org.netxms.ui.eclipse.logviewer.actions.openSnmpTrapLog"
+           label="SNMP Trap Log"
+           menubarPath="view/logs"
+           toolbarPath="logs/additions"
+           tooltip="Open SNMP Trap Log">
      </action>
 	   </actionSet>
    </extension>

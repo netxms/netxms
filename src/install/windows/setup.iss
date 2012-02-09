@@ -1,7 +1,7 @@
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 1.1.9
-AppVersion=1.1.9
+AppVerName=NetXMS 1.1.10
+AppVersion=1.1.10
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org

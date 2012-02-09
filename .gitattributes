@@ -959,6 +959,7 @@ src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/Activator.
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/Messages.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/actions/OpenAuditLog.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/actions/OpenEventLog.java -text
+src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/actions/OpenSnmpTrapLog.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/actions/OpenSyslog.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages.properties -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages_ru.properties -text

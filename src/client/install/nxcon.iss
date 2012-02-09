@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Management Console
-AppVerName=NetXMS Management Console 1.1.9
-AppVersion=1.1.9
+AppVerName=NetXMS Management Console 1.1.10
+AppVersion=1.1.10
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName={pf}\NetXMS Management Console
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\GPL.txt
-OutputBaseFilename=netxms-console-1.1.9
+OutputBaseFilename=netxms-console-1.1.10
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none

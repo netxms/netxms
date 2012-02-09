@@ -145,7 +145,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
-	public static final int CLIENT_PROTOCOL_VERSION = 30;
+	public static final int CLIENT_PROTOCOL_VERSION = 31;
 
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
@@ -3701,7 +3701,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariable(NXCPCodes.VID_LOG_NAME, logName);
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
-		Log log = new Log(this, response);
+		Log log = new Log(this, response, logName);
 		return log;
 	}
 

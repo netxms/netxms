@@ -1,7 +1,7 @@
 ; Installation script for NetXMS Server / Windows x64
 
 #include "setup.iss"
-OutputBaseFilename=netxms-1.1.9-x64
+OutputBaseFilename=netxms-1.1.10-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 

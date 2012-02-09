@@ -50,6 +50,16 @@ static NXCORE_LOG s_logs[] =
 			{ NULL, NULL, 0 }
 		}
 	},
+	{ _T("SnmpTrapLog"), _T("snmp_trap_log"), SYSTEM_ACCESS_VIEW_TRAP_LOG,
+		{
+			{ _T("trap_timestamp"), _T("Time"), LC_TIMESTAMP },
+			{ _T("ip_addr"), _T("Source IP"), LC_TEXT },
+			{ _T("object_id"), _T("Object"), LC_OBJECT_ID },
+			{ _T("trap_oid"), _T("Trap OID"), LC_TEXT },
+			{ _T("trap_varlist"), _T("Varbinds"), LC_TEXT },
+			{ NULL, NULL, 0 }
+		}
+	},
 	{ _T("syslog"), _T("syslog"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
 		{
 			{ _T("msg_timestamp"), _T("Time"), LC_TIMESTAMP },
