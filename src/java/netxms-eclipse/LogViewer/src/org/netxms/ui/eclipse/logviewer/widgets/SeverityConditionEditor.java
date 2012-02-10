@@ -32,7 +32,7 @@ import org.netxms.ui.eclipse.widgets.ImageCombo;
  */
 public class SeverityConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { "LIKE", "NOT LIKE" };
+	private static final String[] OPERATIONS = { "IS", "IS NOT", "BELOW", "ABOVE" };
 	
 	private ImageCombo severity;
 	
@@ -79,8 +79,19 @@ public class SeverityConditionEditor extends ConditionEditor
 	@Override
 	public ColumnFilter createFilter()
 	{
-		ColumnFilter filter = new ColumnFilter(ColumnFilter.EQUALS, severity.getSelectionIndex());
-		filter.setNegated(getSelectedOperation() == 1);
-		return filter;
+		switch(getSelectedOperation())
+		{
+			case 0:	// IS
+				return new ColumnFilter(ColumnFilter.EQUALS, severity.getSelectionIndex());
+			case 1:	// IS NOT
+				ColumnFilter filter = new ColumnFilter(ColumnFilter.EQUALS, severity.getSelectionIndex());
+				filter.setNegated(true);
+				return filter;
+			case 2:	// BELOW
+				return new ColumnFilter(ColumnFilter.LESS, severity.getSelectionIndex());
+			case 3:	// ABOVE
+				return new ColumnFilter(ColumnFilter.GREATER, severity.getSelectionIndex());
+		}
+		return new ColumnFilter(ColumnFilter.EQUALS, severity.getSelectionIndex());
 	}
 }

@@ -5,6 +5,7 @@
 - Completely new web interface
 - New action type: execute NXSL script
 - Changed default timeout for service checking subagent
+- Added Oracle monitoring subagent
 - Added option to force creation of character string instead of hex string in SNMP trap mapping
 - Java console:
 	- Log viewers greatly improved
@@ -21,6 +22,7 @@
 	- Resolved issue: Node under cluster not shown in object selection dialog
 	- Resolved issue: "Cluster resource" field unavailable for DCI on cluster node
 	- Resolved issue: Reports not working on Windows
+	- Resolved issue: extra new line characters in local command output
 - New format specifiers in nxalarm: %x and %X
 - New MIBs added: BAY-STACK-ADAC-MIB, BAY-STACK-ARP-INSPECTION-MIB,
   BAY-STACK-DHCP-SNOOPING-MIB, BAY-STACK-ECMP-MIB, BAY-STACK-ERROR-MESSAGE-MIB,
