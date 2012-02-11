@@ -389,6 +389,7 @@ cleanup:
 
 static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
 {
+	return THREAD_OK;
 }
 
 #endif

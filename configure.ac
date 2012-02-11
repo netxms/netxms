@@ -64,6 +64,7 @@ FORCE_INTERNAL_LIBTRE="no"
 USE_INTERNAL_ZLIB="no"
 FORCE_INTERNAL_ZLIB="no"
 FORCE_32BIT_BUILD="no"
+FORCE_INTERNAL_GETOPT="no"
 LDFLAGS_PREFIX=""
 LDFLAGS_SUFFIX=""
 LTINIT_CC=""
@@ -145,6 +146,12 @@ AC_ARG_WITH(internal-zlib,
 [AS_HELP_STRING(--with-internal-zlib,force use of bundled zlib)],
 [
 	FORCE_INTERNAL_ZLIB="yes"
+])
+
+AC_ARG_WITH(internal-getopt,
+[AS_HELP_STRING(--with-internal-getopt,force use of bundled getopt)],
+[
+	FORCE_INTERNAL_GETOPT="yes"
 ])
 
 AC_ARG_WITH(sqlite,
@@ -531,7 +538,10 @@ fi
 if test "x$PLATFORM" = "xHP-UX"; then
 	AC_CHECK_PROG([CCC], [aCC], [aCC])
 fi
-AC_PROG_CC(aCC gcc cc cl)
+if test "x$PLATFORM" = "xAIX"; then
+	AC_CHECK_PROG([CCC], [xlC_r], [xlC_r])
+fi
+AC_PROG_CC(aCC xlC_r gcc cc cl)
 AC_PROG_CPP
 AC_PROG_CXX
 if test "x$CXX" = "xg++"; then
@@ -732,7 +742,7 @@ if test "x$CXX" = "xaCC" ; then
 	fi
 fi
 
-if test "x$CXX" = "xxlC" ; then
+if test "x$CXX" = "xxlC_r" ; then
         if test "x$FORCE_32BIT_BUILD" = "xyes"; then
                 AC_MSG_CHECKING(whether C compiler accepts -q32)
                 OLD_CPPFLAGS="$CPPFLAGS"
@@ -740,6 +750,7 @@ if test "x$CXX" = "xxlC" ; then
                 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
                         [
                                 LDFLAGS="-q32 $LDFLAGS"
+				OBJECT_MODE=32
                                 AC_MSG_RESULT(yes)
                         ],
                         [
@@ -753,6 +764,7 @@ if test "x$CXX" = "xxlC" ; then
                 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
                         [
                                 LDFLAGS="-q64 $LDFLAGS"
+				OBJECT_MODE=64
                                 AC_MSG_RESULT(yes)
                         ],
                         [
@@ -958,7 +970,7 @@ AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h])
-AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h getopt.h])
+AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
@@ -980,7 +992,6 @@ AC_CHECK_LIB(xnet, accept)
 AC_CHECK_LIB(socket, if_nameindex)
 AC_CHECK_LIB(dl, dlopen)
 AC_CHECK_LIB(kstat, kstat_open)
-AC_CHECK_LIB(gnugetopt, getopt_long)
 
 if test "x$BUILD_SERVER" = "xyes" ; then
    AC_CHECK_LIB(termcap, tgetstr, [], [AC_CHECK_LIB(ncurses, tgetstr, [], AC_CHECK_LIB(curses, tgetstr))])
@@ -1117,7 +1128,7 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([gettimeofday memmove memset bcopy strchr strcspn strdup strerror])
 AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
-AC_CHECK_FUNCS([usleep nanosleep getopt_long gmtime_r localtime_r lstat64])
+AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r lstat64])
 
 AC_CHECK_DECLS([nanosleep])
 
@@ -1193,12 +1204,6 @@ AC_MSG_RESULT(yes)
 AC_DEFINE(HAVE_TM_GMTOFF,1,Define to 1 if struct tm has tm_gmtoff member)
 ],[
 AC_MSG_RESULT(no)
-])
-
-AC_CHECK_DECLS([getopt_long],,,[
-#if HAVE_GETOPT_H
-#include <getopt.h>
-#endif
 ])
 
 AC_CHECK_FUNCS([sysctlbyname sysctlnametomib])
@@ -1287,12 +1292,33 @@ AC_CHECK_DECLS([va_copy, __va_copy],,,[
 
 
 #--------------------------------------------------------------------
+# getopt
+#--------------------------------------------------------------------
+
+if test "x$FORCE_INTERNAL_GETOPT" = "xyes"; then
+	AC_DEFINE([USE_BUNDLED_GETOPT], [1], [Define to 1 if bundled getopt must be used])
+else
+	AC_CHECK_HEADERS([getopt.h])
+	AC_CHECK_LIB(gnugetopt, getopt_long)
+	AC_CHECK_DECLS([getopt_long],,,[
+#if HAVE_GETOPT_H
+#include <getopt.h>
+#endif
+	])
+fi
+
+
+#--------------------------------------------------------------------
 # AIX specific checks
 #--------------------------------------------------------------------
 
 if test "x$PLATFORM" = "xAIX"; then
 	AC_CHECK_HEADERS([procinfo.h],,,[[ ]])
-	AC_CHECK_DECLS([getkerninfo])
+	AC_CHECK_DECLS([getkerninfo, getprocs, getprocs64],,,[
+#if HAVE_PROCINFO_H
+#include <procinfo.h>
+#endif
+	])
 	AC_CHECK_FUNCS([getprocs64],,,[
 #if HAVE_PROCINFO_H
 #include <procinfo.h>

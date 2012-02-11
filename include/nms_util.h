@@ -505,7 +505,7 @@ typedef struct  __CODE_TO_TEXT
 // getopt() prototype if needed
 //
 
-#ifdef _WIN32
+#if USE_BUNDLED_GETOPT
 #include <netxms_getopt.h>
 #endif
 

@@ -155,6 +155,7 @@ typedef int bool;
 #define WITH_IPV6               1
 
 #define USE_BUNDLED_LIBTRE      1
+#define USE_BUNDLED_GETOPT      1
 
 #define FS_PATH_SEPARATOR       _T("\\")
 #define FS_PATH_SEPARATOR_CHAR  _T('\\')

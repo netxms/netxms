@@ -18,6 +18,12 @@
 #ifndef _GETOPT_H
 #define _GETOPT_H 1
 
+#undef HAVE_GETOPT_LONG
+#define HAVE_GETOPT_LONG 1
+
+#undef HAVE_DECL_GETOPT_LONG
+#define HAVE_DECL_GETOPT_LONG 1
+
 #ifdef _WIN32
 #ifdef LIBNETXMS_EXPORTS
 #define GETOPT_EXPORTABLE __declspec(dllexport)

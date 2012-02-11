@@ -45,11 +45,15 @@
 #if HAVE_GETPROCS64
 typedef struct procentry64 PROCENTRY;
 #define GETPROCS getprocs64
+#if !HAVE_DECL_GETPROCS64
 extern "C" int getprocs64(struct procentry64 *, int, struct fdsinfo64 *, int, pid_t *, int);
+#endif
 #else
 typedef struct procsinfo PROCENTRY;
 #define GETPROCS getprocs
+#if !HAVE_DECL_GETPROCS
 extern "C" int getprocs(struct procsinfo *, int, struct fdsinfo *, int, pid_t *, int);
+#endif
 #endif
 
 

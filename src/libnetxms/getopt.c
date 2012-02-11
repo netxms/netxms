@@ -21,7 +21,9 @@
    Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  
 */
 
-#ifdef _WIN32
+#include <config.h>
+
+#if USE_BUNDLED_GETOPT
 
 #ifndef __STDC__
 #  ifndef const

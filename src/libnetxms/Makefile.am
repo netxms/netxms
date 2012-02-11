@@ -3,7 +3,7 @@ if USE_INTERNAL_EXPAT
 INCLUDES += -I@top_srcdir@/src/libexpat/libexpat
 endif
 SOURCES = agent.cpp array.cpp base64.cpp config.cpp crypto.cpp gen_uuid.c \
-	  geolocation.cpp dload.cpp hash.cpp ice.c icmp.cpp \
+	  geolocation.cpp getopt.c dload.cpp hash.cpp ice.c icmp.cpp \
 	  log.cpp main.cpp md5.cpp message.cpp msgwq.cpp net.cpp \
 	  nxcp.cpp qsort.c queue.cpp rwlock.cpp scandir.c serial.cpp \
 	  sha1.cpp string.cpp stringlist.cpp strmap.cpp strtoll.c strtoull.c \
@@ -25,5 +25,5 @@ endif
 EXTRA_DIST = \
 	libnetxms.vcproj libnetxmsw.vcproj \
 	libnetxms.h ice.h md5.h sha1.h uuidP.h \
-	dir.c dirw.c getopt.c \
+	dir.c dirw.c \
 	seh.cpp StackWalker.cpp StackWalker.h
