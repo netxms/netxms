@@ -732,6 +732,36 @@ if test "x$CXX" = "xaCC" ; then
 	fi
 fi
 
+if test "x$CXX" = "xxlC" ; then
+        if test "x$FORCE_32BIT_BUILD" = "xyes"; then
+                AC_MSG_CHECKING(whether C compiler accepts -q32)
+                OLD_CPPFLAGS="$CPPFLAGS"
+                CPPFLAGS="-q32 $CPPFLAGS"
+                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+                        [
+                                LDFLAGS="-q32 $LDFLAGS"
+                                AC_MSG_RESULT(yes)
+                        ],
+                        [
+                                CPPFLAGS="$OLD_CPPFLAGS"
+                                AC_MSG_RESULT(no)
+                        ])
+        else
+                AC_MSG_CHECKING(whether C compiler accepts -q64)
+                OLD_CPPFLAGS="$CPPFLAGS"
+                CPPFLAGS="-q64 $CPPFLAGS"
+                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+                        [
+                                LDFLAGS="-q64 $LDFLAGS"
+                                AC_MSG_RESULT(yes)
+                        ],
+                        [
+                                CPPFLAGS="$OLD_CPPFLAGS"
+                                AC_MSG_RESULT(no)
+                        ])
+        fi
+fi
+
 
 #--------------------------------------------------------------------
 # Initialize libtool
