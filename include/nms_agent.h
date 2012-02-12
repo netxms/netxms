@@ -61,6 +61,7 @@
 //
 
 #define AGENT_POLICY_CONFIG      1
+#define AGENT_POLICY_LOG_PARSER  2
 
 
 //
