@@ -21,7 +21,11 @@
    Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  
 */
 
-#include <config.h>
+#ifndef _WIN32
+# include <config.h>
+#else
+# define USE_BUNDLED_GETOPT 1
+#endif
 
 #if USE_BUNDLED_GETOPT
 
