@@ -1,95 +1,0 @@
-body {
-margin:0; padding:0; font-family:verdana, arial, sans-serif; font-size: 80%; text-align:center;
-background-image: url(login/f_h2.jpg);background-repeat: repeat-x;background-position: top;}
-
-p {
-margin:0.2em 0 1.2em 0
-; padding:0.3em;}
-
-h1 {
-padding:0; margin:1em;
-font-size: 20px; font-style:italic; 
-color: #f0c030;
-font-family: Verdana, Helvetica, Arial, sans-serif;text-transform: uppercase;letter-spacing: 0.6em;}
-
-h2 {color: #78b73e; font-size: 90%;  
-font-style: normal;font-family: Verdana, Helvetica, Arial, sans-serif;border-bottom: 1px #cccccc dashed;font-weight: bold;}
-
-
-div {
-margin:0; padding:0; display:block;}
-
-a:link, a:visited {
-color: #F0c030;}
-a:hover {
-color:#3B4471; text-decoration:none;}
-a:active {
-color:#8CD749; text-decoration:underline;}
-
-
-
-.container {
- margin:0 auto 0 auto; padding:0; width:100%;background-image: url(login/footer.jpg);background-repeat: no-repeat;background-position: left bottom;}
-
-.titleblock {
-text-align:left;
-background-image: url(login/h_osw3.jpg); background-position: top right;height: 142px;background-repeat: no-repeat;}
-
-.titleblock p {color: #8ba249;text-transform: lowercase;text-indent: 1em;font-style: normal;font-size: 14px;}
-
-
-
-ul.navbar {
-list-style-type:none; float:left; display:block; width:100%; line-height: 1em ;
-clear:both; margin:0;padding:0;  background-color: #fafafa;border-bottom: 1px #e7e7e7 solid;}
-
-ul.navbar li {
-display:inline;}
-
-a.nav:link, a.nav:visited {
-display:block; float:left; width: 150px; margin:0; 
-text-decoration:none; background-color: #fafafa ;color: #000000;font-weight: bold;
-font-size: 0.8em;}
-
-a.nav:hover {
-display:block; float:left; width: 150px; margin:0; 
-text-decoration:none;
-color:#ffffff;
-background-color: #78b73e;font-weight: bold;
-}
-
-a.nav:active {
-display:block; float:left; width: 150px; margin:0; 
-text-decoration:none; background-color:#999999; color:#FFFFFF;}
-
-
-
-.rightcontainer {
-float:right; clear:both; width:13em; margin: 3.4em 0em 0em 0em;padding-top: 0em;background-color: #fafafa;}
-
-.rightbox {
-margin:0; padding:0;  text-align:center;border: 1px #ededed solid;}
-
-.rightcontainer h2 {
-text-align:left; padding:0 0 0 1.5em;}
-
-.linkbox a {display:block;}
-
-
-
-.content {
-clear:left; text-align:left; margin:1.2em 13.5em 0 0; padding: 0em 1ex 1em 1ex}
-
-.content h2 {text-indent:3em;}
-
-
-
-.footer {
-color: #000000; padding:0.8em; 
-text-align: right;clear:both;font-family: Verdana, Helvetica, Arial, sans-serif;font-size: 75%;border-bottom: 1px #e3e3e3 solid;}
-
-.footer .right {
-float:right; clear:right;
-text-align:right;}
-
-.footer p {margin:0;}

@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.1.10], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.1.11], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -116,12 +116,6 @@ AC_ARG_WITH(ipso-agent,
 [AS_HELP_STRING(--with-ipso-agent,build statically linked IPSO agent)],
 [
 	COMPONENTS="$COMPONENTS ipso-agent"
-])
-
-AC_ARG_WITH(webui,
-[AS_HELP_STRING(--with-webui,build web interface)],
-[
-	COMPONENTS="$COMPONENTS webui"
 ])
 
 AC_ARG_WITH(mdebug,
@@ -337,7 +331,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools webui"
+	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
@@ -484,12 +478,6 @@ if test $? = 0; then
 			# unknown
 			;;
 	esac
-fi
-
-check_substr "$COMPONENTS" "webui"
-if test $? = 0; then
-	BUILD_NXHTTPD="yes"
-	MODULES="$MODULES libnxmap libnxcl webui"
 fi
 
 check_substr "$COMPONENTS" "mysql"
@@ -1908,19 +1896,6 @@ if test $? = 0; then
 		[AC_MSG_ERROR(libthcli is required for Informix support)])
 fi
 
-#--------------------------------------------------------------------
-# nxhttpd
-#--------------------------------------------------------------------
-
-check_substr "$COMPONENTS" "webui"
-if test $? = 0; then
-	AC_CHECK_HEADER(gd.h,,AC_MSG_ERROR([*** GD support not installed - please install first ***]))
-	AC_CHECK_LIB(gd, gdImageCreate, [], [
-			AC_MSG_ERROR(libgd is required for web interface)
-		])
-
-fi
-
 
 #--------------------------------------------------------------------
 # Other settings
@@ -2119,16 +2094,6 @@ AC_CONFIG_FILES([
 	src/tools/Makefile
 	src/tools/nxcptest/Makefile
 	src/tools/nxdevcfg/Makefile
-	src/webui/Makefile
-	src/webui/nxhttpd/Makefile
-	src/webui/nxhttpd/static/Makefile
-	src/webui/nxhttpd/static/images/Makefile
-	src/webui/nxhttpd/static/images/buttons/Makefile
-	src/webui/nxhttpd/static/images/buttons/normal/Makefile
-	src/webui/nxhttpd/static/images/buttons/pressed/Makefile
-	src/webui/nxhttpd/static/images/ctrlpanel/Makefile
-	src/webui/nxhttpd/static/images/objects/Makefile
-	src/webui/nxhttpd/static/images/status/Makefile
 	src/zlib/Makefile
 	sql/Makefile
 	tools/Makefile
