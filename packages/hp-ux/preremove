@@ -1,0 +1,5 @@
+#!/bin/sh
+
+/sbin/init.d/nxagentd stop
+rm -f /sbin/rc0.d/K100nxagentd
+rm -f /sbin/rc3.d/S999nxagentd

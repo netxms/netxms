@@ -1,0 +1,2814 @@
+#---------------------------------------------------------------------------
+# File:        /usr/lib/sw/sys.defaults
+#
+# Purpose:     HP Software Distributor list of options
+#
+# Copyright:   (C) Copyright 1993-2010 Hewlett-Packard Development Company, L.P.
+#
+# Description: This file contains a complete list of options supported
+#	       by the HP Software Distributor (SD) commands.  To modify
+#	       the value of an option for an SD command, simply copy the
+#	       default definition below, modify its value and remove the
+#	       comment character (#) from the beginning of the line, then
+#	       append that line to one of these files:
+#
+#                  /var/adm/sw/defaults	
+#			changes the option for all users on
+#			this system
+#
+#                  ~/.swdefaults 
+#			changes the option for a specific user
+#
+#	       See the sd(5) manual page for a complete description of
+#	       the SD options.
+#
+#	       See also the manual page for the specific SD command to
+#	       which the option applies.
+#
+#              Options may be specified without command names.  
+#              For example, you can use:
+#
+#                  reinstall=false
+#
+#              rather than:
+#
+#                  <command1>.reinstall=false 
+#                  <command2>.reinstall=false
+#
+#              The options below are in two sections:
+#                  
+#                  Section 1 shows each command alphabetically and the
+#                            valid options for each command.
+#                  Section 2 shows each option alphabetically, the
+#                            valid commands for that option, a description
+#                            of the option and its default value.
+#
+#---------------------------------------------------------------------------
+# Section 1: Commands and their options
+#---------------------------------------------------------------------------
+# 
+# swacl
+#   admin_directory
+#   distribution_target_directory
+#   installed_software_catalog
+#   level
+#   log_msgid
+#   lookupcache_timeout_minutes
+#   return_warning_exitcode
+#   rpc_binding_info
+#   rpc_timeout
+#   run_as_superuser
+#   select_local
+#   software
+#   target_directory
+#   targets
+#   verbose
+#
+# swagent
+#   alternate_source
+#   compress_cmd
+#   compression_type
+#   config_cleanup_cmd
+#   install_cleanup_cmd
+#   install_setup_cmd
+#   kernel_build_cmd
+#   kernel_path
+#   mount_cmd
+#   reboot_cmd
+#   remove_setup_cmd
+#   rpc_binding_info_alt_source
+#   source_depot_audit
+#   system_file_path
+#   system_prep_cmd
+#   uncompress_cmd
+#
+# swagentd
+#   agent
+#   logfile
+#   lookupcache_timeout_minutes
+#   max_agents
+#   minimum_job_polling_interval
+#   rpc_binding_info
+#
+# swask
+#   admin_directory
+#   ask
+#   autoselect_dependencies
+#   autoselect_minimum_dependencies
+#   autoselect_patches
+#   enforce_scripts
+#   installed_software_catalog
+#   log_msgid
+#   logdetail
+#   logfile
+#   loglevel
+#   lookupcache_timeout_minutes
+#   patch_filter
+#   return_warning_exitcode
+#   run_as_superuser
+#   verbose
+#
+# swconfig
+#   admin_directory
+#   agent_auto_exit
+#   agent_timeout_minutes
+#   allow_incompatible
+#   allow_multiple_versions
+#   ask
+#   autoremove_job
+#   autoselect_dependencies
+#   autoselect_dependents
+#   autoselect_minimum_dependencies
+#   compress_index
+#   controller_source
+#   enforce_dependencies
+#   enforce_scripts
+#   enforce_selections
+#   installed_software_catalog
+#   job_title
+#   loadorder_use_coreqs
+#   log_msgid
+#   logdetail
+#   logfile
+#   loglevel
+#   lookupcache_timeout_minutes
+#   mount_all_filesystems
+#   preview
+#   reconfigure
+#   return_warning_exitcode
+#   reuse_short_job_numbers
+#   rpc_binding_info
+#   rpc_timeout
+#   run_as_superuser
+#   select_local
+#   software
+#   targets
+#   verbose
+#   write_remote_files
+#
+# swcopy
+#   admin_directory
+#   agent_auto_exit
+#   agent_timeout_minutes
+#   allow_split_patches
+#   autoremove_job
+#   autoselect_dependencies
+#   autoselect_minimum_dependencies
+#   autoselect_patches
+#   autoselect_reference_bundles
+#   codeword
+#   compress_files
+#   compress_index
+#   controller_source
+#   create_target_path
+#   create_time_filter
+#   customer_id
+#   distribution_source_directory
+#   distribution_target_directory
+#   enforce_dependencies
+#   enforce_dsa
+#   enforce_selections
+#   job_title
+#   layout_version
+#   loadorder_use_coreqs
+#   log_msgid
+#   logdetail
+#   logfile
+#   loglevel
+#   lookupcache_timeout_minutes
+#   max_targets
+#   mount_all_filesystems
+#   patch_filter
+#   patch_match_target
+#   polling_interval
+#   preserve_create_time
+#   preview
+#   recopy
+#   register_new_depot
+#   reinstall
+#   reinstall_files
+#   reinstall_files_use_cksum
+#   remove_obsolete_filesets
+#   retry_rpc
+#   retry_rpc_interval
+#   return_warning_exitcode
+#   reuse_short_job_numbers
+#   rpc_binding_info
+#   rpc_timeout
+#   run_as_superuser
+#   select_local
+#   software
+#   software_view
+#   source
+#   source_cdrom
+#   source_tape
+#   source_type
+#   target_directory
+#   targets
+#   uncompress_files
+#   use_alternate_source
+#   verbose
+#   write_remote_files
+#
+# swinstall
+#   admin_directory
+#   agent_auto_exit
+#   agent_timeout_minutes
+#   allow_downdate
+#   allow_incompatible
+#   allow_multiple_versions
+#   allow_split_patches
+#   ask
+#   autoreboot
+#   autorecover
+#   autorecover_product
+#   autoremove_job
+#   autoselect_dependencies
+#   autoselect_minimum_dependencies
+#   autoselect_patches
+#   autoselect_reference_bundles
+#   codeword
+#   compress_index
+#   controller_source
+#   create_target_path
+#   create_time_filter
+#   customer_id
+#   defer_configure
+#   distribution_source_directory
+#   enforce_dependencies
+#   enforce_dsa
+#   enforce_kernbld_failure
+#   enforce_locatable
+#   enforce_scripts
+#   enforce_selections
+#   installed_software_catalog
+#   job_title
+#   layout_version
+#   loadorder_use_coreqs
+#   log_msgid
+#   logdetail
+#   logfile
+#   loglevel
+#   lookupcache_timeout_minutes
+#   match_target
+#   max_targets
+#   mount_all_filesystems
+#   os_name
+#   os_release
+#   patch_filter
+#   patch_match_target
+#   patch_save_files
+#   polling_interval
+#   preview
+#   recopy
+#   register_new_root
+#   reinstall
+#   reinstall_files
+#   reinstall_files_use_cksum
+#   retry_rpc
+#   retry_rpc_interval
+#   return_warning_exitcode
+#   reuse_short_job_numbers
+#   rpc_binding_info
+#   rpc_timeout
+#   run_as_superuser
+#   run_scripts
+#   select_local
+#   software
+#   software_view
+#   source
+#   source_cdrom
+#   source_tape
+#   source_type
+#   targets
+#   use_alternate_source
+#   verbose
+#   write_remote_files
+#
+# swjob
+#   admin_directory
+#   agent_timeout_minutes
+#   log_msgid
+#   lookupcache_timeout_minutes
+#   one_liner
+#   return_warning_exitcode
+#   rpc_binding_info
+#   rpc_timeout
+#   run_as_superuser
+#   targets
+#   verbose
+#
+# swlist
+#   admin_directory
+#   agent_timeout_minutes
+#   codeword
+#   create_time_filter
+#   customer_id
+#   distribution_target_directory
+#   installed_software_catalog
+#   layout_version
+#   level
+#   log_msgid
+#   lookupcache_timeout_minutes
+#   one_liner
+#   patch_one_liner
+#   return_warning_exitcode
+#   rpc_binding_info
+#   rpc_timeout
+#   run_as_superuser
+#   select_local
+#   show_superseded_patches
+#   software
+#   software_view
+#   target_directory
+#   targets
+#   verbose
+#
+# swmodify
+#   admin_directory
+#   allow_large_files
+#   compress_index
+#   control_files
+#   distribution_target_directory
+#   files
+#   installed_software_catalog
+#   layout_version
+#   log_msgid
+#   logdetail
+#   logfile
+#   loglevel
+#   lookupcache_timeout_minutes
+#   patch_commit
+#   run_as_superuser
+#   software
+#   source_file
+#   target_directory
+#   targets
+#   verbose
+#
+# swpackage
+#   admin_directory
+#   allow_large_files
+#   allow_large_serial_depot
+#   allow_partial_bundles
+#   autoselect_dependencies
+#   compress_cmd
+#   compress_files
+#   compress_index
+#   compression_type
+#   create_target_acls
+#   distribution_source_directory
+#   distribution_target_directory
+#   distribution_target_serial
+#   enforce_dsa
+#   follow_symlinks
+#   include_file_revisions
+#   layout_version
+#   loadorder_use_coreqs
+#   log_msgid
+#   logdetail
+#   logfile
+#   loglevel
+#   lookupcache_timeout_minutes
+#   media_capacity
+#   media_type
+#   package_in_place
+#   reinstall_files
+#   reinstall_files_use_cksum
+#   remove_obsolete_filesets
+#   run_as_superuser
+#   software
+#   source_file
+#   source_type
+#   target_directory
+#   target_tape
+#   target_type
+#   targets
+#   uncompress_cmd
+#   verbose
+#   write_remote_file
+#
+# swreg
+#   admin_directory
+#   distribution_target_directory
+#   level
+#   log_msgid
+#   logdetail
+#   logfile
+#   loglevel
+#   lookupcache_timeout_minutes
+#   objects_to_register
+#   return_warning_exitcode
+#   rpc_binding_info
+#   rpc_timeout
+#   run_as_superuser
+#   select_local
+#   target_directory
+#   targets
+#   verbose
+#
+# swremove
+#   admin_directory
+#   agent_auto_exit
+#   agent_timeout_minutes
+#   allow_split_patches
+#   auto_kernel_build
+#   autoreboot
+#   autoremove_job
+#   autoselect_dependents
+#   autoselect_reference_bundles
+#   compress_index
+#   controller_source
+#   distribution_target_directory
+#   enforce_dependencies
+#   enforce_scripts
+#   enforce_selections
+#   installed_software_catalog
+#   job_title
+#   loadorder_use_coreqs
+#   log_msgid
+#   logdetail
+#   logfile
+#   loglevel
+#   lookupcache_timeout_minutes
+#   mount_all_filesystems
+#   polling_interval
+#   preview
+#   remove_empty_depot
+#   remove_empty_depot_directory
+#   reuse_short_job_numbers
+#   return_warning_exitcode
+#   rpc_binding_info
+#   rpc_timeout
+#   run_as_superuser
+#   run_scripts
+#   select_local
+#   software
+#   software_view
+#   target_directory
+#   targets
+#   verbose
+#   write_remote_files
+#
+# swverify
+#   admin_directory
+#   agent_auto_exit
+#   agent_timeout_minutes
+#   allow_incompatible
+#   allow_multiple_versions
+#   autoremove_job
+#   autoselect_dependencies
+#   autoselect_minimum_dependencies
+#   check_contents
+#   check_contents_uncompressed
+#   check_contents_use_cksum
+#   check_permissions
+#   check_requisites
+#   check_scripts
+#   check_volatile
+#   controller_source
+#   distribution_target_directory
+#   enforce_dependencies
+#   enforce_locatable
+#   enforce_selections
+#   fix
+#   installed_software_catalog
+#   job_title
+#   loadorder_use_coreqs
+#   log_msgid
+#   logdetail
+#   logfile
+#   loglevel
+#   lookupcache_timeout_minutes
+#   mount_all_filesystems
+#   reuse_short_job_numbers
+#   return_warning_exitcode
+#   rpc_binding_info
+#   rpc_timeout
+#   run_as_superuser
+#   select_local
+#   software
+#   target_directory
+#   targets
+#   verbose
+#
+#
+#---------------------------------------------------------------------------
+# Section 2: Options and their commands, descriptions and defaults
+#---------------------------------------------------------------------------
+##############################################################################
+#  admin_directory
+########
+#  swacl.admin_directory        = /var/home/LOGNAME/sw
+#  swask.admin_directory        = /var/home/LOGNAME/sw
+#  swconfig.admin_directory     = /var/home/LOGNAME/sw
+#  swcopy.admin_directory       = /var/home/LOGNAME/sw
+#  swinstall.admin_directory    = /var/home/LOGNAME/sw
+#  swjob.admin_directory        = /var/home/LOGNAME/sw
+#  swlist.admin_directory       = /var/home/LOGNAME/sw
+#  swmodify.admin_directory     = /var/home/LOGNAME/sw
+#  swpackage.admin_directory    = /var/home/LOGNAME/sw
+#  swreg.admin_directory        = /var/home/LOGNAME/sw
+#  swremove.admin_directory     = /var/home/LOGNAME/sw
+#  swverify.admin_directory     = /var/home/LOGNAME/sw
+#
+# During nonprivileged mode this directory is the location for SD logfiles and
+# is the default parent directory for the installed software catalog.  If a
+# path element is "LOGNAME", that path element is replaced with the invoking
+# user name.  If the first path element is "HOME" that path element is replaced
+# with the invoking user's home directory from the system password file.  This
+# option is forced to "/var/adm/sw" when the run_as_superuser option is true or
+# when SD is invoked by super-user.
+#
+# Default during nonprivileged mode (run_as_superuser = false):
+#       /var/home/LOGNAME/sw
+#
+# Value when in privileged mode (run_as_superuser = true):
+#       /var/adm/sw
+##############################################################################
+#  agent
+########
+#  swagentd.agent		= /usr/lbin/swagent
+#
+# The location of the agent program invoked by the daemon.
+#
+##############################################################################
+#  agent_auto_exit
+########
+#  swconfig.agent_auto_exit	= true
+#  swcopy.agent_auto_exit	= true
+#  swinstall.agent_auto_exit	= true
+#  swremove.agent_auto_exit	= true
+#  swverify.agent_auto_exit	= false
+#
+# Causes target agent to automatically exit after execute phase, or after
+# failed analyze phase.  This is forced to false when the controller is using
+# an interactive UI, when -p (preview) or swverify is used, when invoked by
+# Ignite/UX or update-ux, or when invoked by another SD command.  When true,
+# this enhances network reliability and performance when controller and target
+# agent are communicating across a slow or unreliable network connection.
+#
+# true:  (Default)
+#	Target agent will automatically exit when appropriate.
+#
+# false:
+#	Target agent will not exit until the controller ends the session.
+#
+##############################################################################
+#  agent_timeout_minutes
+########
+#  swconfig.agent_timeout_minutes       = 10000
+#  swcopy.agent_timeout_minutes	        = 10000
+#  swinstall.agent_timeout_minutes      = 10000
+#  swjob.agent_timeout_minutes	        = 10000
+#  swlist.agent_timeout_minutes	        = 10000
+#  swremove.agent_timeout_minutes       = 10000
+#  swverify.agent_timeout_minutes       = 10000
+#
+# Causes target agent to exit after being inactive for the specified time.
+# This can be used to make target agents more quickly detect lost network
+# connections, since RPC can take as long as 130 minutes to detect a lost
+# connection.  The recommended value is the longest period of inactivity
+# expected in your environment.  For command line invocation a value between
+# 10 minutes and 60 minutes is suitable.  A value of 60 minutes or more is
+# recommended when the graphical user interface will be used.
+#
+# The default is 10000 minutes, which is slightly less than 7 days.
+#
+##############################################################################
+#  allow_downdate
+########
+#  swinstall.allow_downdate     = false
+#
+# Protects against inadvertently overwriting currently installed software with
+# otherwise identical software which has an older revision.
+#
+# true: 
+#	Permit the installation of an older revision.
+#
+# false: (Default)
+#	Prevent the installation of an older revision.
+#
+##############################################################################
+#
+#  allow_incompatible
+########
+#  swconfig.allow_incompatible	= false
+#  swinstall.allow_incompatible	= false
+#  swverify.allow_incompatible	= false
+#
+# Enforces compatibility between installed software and target selections.
+#
+# true: 
+#	Permit the installation of software even if it is not compatible with
+#	target systems.  
+#       swverify will generate WARNING messages for each software selection that
+#	is not compatible with a given target.
+#
+# false: (Default)
+#	Prohibit installation of software that is not compatible with target
+#	system.  
+#       swverify will generate ERROR messages for each software selection that
+#	is not compatible with a given target.
+#
+##############################################################################
+#  allow_large_files
+########
+#  swmodify.allow_large_files = false
+#  swpackage.allow_large_files = false
+#
+# Specifies if a file whose size is greater than or equal to 2 gigabytes can
+# be packaged/modified.
+#
+# This version of SD supports a large file up to 2 terabytes
+# (2048 gigabytes).
+#
+# true:
+#	Permit the packaging/modifying of a file whose size is greater than
+#	or equal to 2 gigabytes.  If the file is packaged or modified in a
+#	depot, then the depot can only be used by the December 2005 OEUR
+#       (HP-UX 11i v2) version of SD and newer versions of SD on HP-UX 11i v1,
+#       HP-UX 11i v2, and future releases.
+#
+# false: (Default)
+#	Prohibit the packaging/modifying of a file whose size is greater than
+#	or equal to 2 gigabytes.
+#
+##############################################################################
+#  allow_large_serial_depot
+########
+#  swpackage.allow_large_serial_depot = false
+#
+# Specifies if swpackage is allowed to create a serial depot greater
+# than 2 gigabytes.
+#
+# true:
+#	Permit the creation of a serial depot greater than 2 gigabytes.
+#       The depot is only usable by SD in the HP-UX 11i v1 (11.11)
+#       December 2004 OEUR, HP-UX 11i v2 (11.23) March 2005 OEUR
+#       and newer releases.
+#
+# false: (Default)
+#	Prohibit the creation of a serial depot greater than 2 gigabytes.
+#
+##############################################################################
+#  allow_multiple_versions
+########
+#  swconfig.allow_multiple_versions = false
+#  swinstall.allow_multiple_versions= false
+#  swverify.allow_multiple_versions = false
+#
+# Determines whether multiple versions of a product can be installed on the
+# system.
+#
+# true: 
+#	A different version of the software can be installed, but the location
+#	where it is to be installed must be different from that of the currently
+#	installed version.
+#	For swconfig, another version of an existing product can be configured
+#       in its new location.
+#	swverify generates an ERROR message for each software selection
+#	which is one of multiple versions of a product installed on the
+#	same root filesystem.
+#
+# false: (Default)
+#	Prevent installation/configuration if another version of the product 
+#	is already installed on the system.
+#	swverify generates a WARNING message for each software selection
+#	which is one of multiple versions of a product installed on the
+#	same root filesystem.
+#
+##############################################################################
+#  allow_partial_bundles
+########
+#  swpackage.allow_partial_bundles = true
+#
+# Determines whether to process partial bundles without WARNING/NOTE
+#
+# true: (Default) 
+#	swpackage packages what is available in the source(psf). It ignores
+#	missing bundle contents and ambiguous bundle contents in the psf. 
+#	Bundles are wrappers around the products and it is the packager's 
+#	responsibility to make sure bundles contents are in the psf or in 
+#	the depot or it will be added to the depot before using it or the 
+#	missing/ambiguous contents will not affect the system after 
+#	installation.
+#
+# false: 
+#	swpackage expects all the bundle contents to be present in the 
+#	source(psf) and be unique. Every content that is ambiguous or 
+#	missing gets a NOTE and every bundle that has a missing or ambiguous
+#	content gets a WARNING. swpackage succeeds.
+#
+##############################################################################
+#  allow_split_patches
+########
+#  swinstall.allow_split_patches= false
+#  swcopy.allow_split_patches= false
+#  swremove.allow_split_patches= false
+#
+#
+# true: 
+#	Allow a single patch fileset to install/copy to a target without
+#       dragging along appropriate sibling filesets. Appropriate sibling
+#       filesets are filesets that have an ancestor on the target that
+#       would usually be loaded if the option was set to its default 
+#       value of false. This is allowing a target to contain a patch 
+#       that has been "split" up into component filesets. This can be a 
+#       potentially bad situation as it could have just allowed one 
+#       fileset in a sibling group to be updated, while others remain at
+#       an earlier release. Swlist the target after this is allowed, 
+#       user may see more than one patch "active" at one time. This can
+#       be a difficult system to maintain and/or troubleshoot. Likewise,
+#       for swremove, the idea is to allow a single patch fileset to be
+#       removed, without sibling filesets being removed along with it. 
+# 
+#
+# false: (Default)
+#	Include in installation/copy of a single fileset from a
+#       multi-fileset patch, other filesets that are appropriate for
+#       install/copy as well, (based on target ancestors). This is
+#	applicable for dependency resolution of patch filesets as
+#	well as straightforward selections. Likewise, swremoving a 
+#       fileset, when this option is false, sibling filesets will be 
+#       removed at the same time. 
+# 
+##############################################################################
+#  alternate_source
+########
+#  swagent.alternate_source	= 
+#
+# If the swinstall or swcopy command has set use_alternate_source=true,
+# the target agent will consult and use the configured value of its own
+# alternate_source option to determine the source that it will use in
+# the install or copy.  The agent's value for alternate_source is
+# specified using the host:path syntax.  If the host portion is not
+# specified, then the local host is used.  If the path portion is not
+# specified, then the path sent by the command is used.  If there is no
+# configured value at all for alternate_source, the agent will apply the
+# controller-supplied path to its own local host.  The protocol sequence and
+# endpoint given by the option, swagent.rpc_binding_info_alt_source, are 
+# used when the agent attempts to contact the depot specified by 
+# swagent.alternate_source. 
+#
+##############################################################################
+#  ask
+########
+#  swask.ask     = true
+#  swconfig.ask  = false
+#  swinstall.ask = false
+#
+# Runs the interactive software "request" scripts for the software objects
+# selected. These scripts store the responses to the "response" files for use
+# by the control scripts executed by swinstall. 
+#
+# true: 
+#	If ask=true then execute the software "request" scripts for the selected
+#	software and the response files will be available for use by the control
+#	scripts executed by swinstall. The request script shall write a single
+#	response file in the control directory defined by the supplied 
+#	environment variable SW_CONTROL_DIRECTORY.
+#
+# false: (Default)
+#	Don't execute the software "request" scripts and the behavior just like
+#	before(simply install software).
+#
+# as_needed:
+#	If ask=as_needed, execute the request script only if a "response" file
+#	does not already exist in the control directory.
+#
+##############################################################################
+#  auto_kernel_build
+########
+#  swremove.auto_kernel_build	= true
+#
+# Controls whether the removal of a kernel fileset will automatically include
+# the rebuilding of a new kernel.
+#
+# true:  (Default)
+#	The remove session will include a kernel build if a kernel fileset is
+#	selected for removal.  The system will be rebooted if the kernel build
+#	succeeds.
+#
+# false:
+#	The swremove session will not result in a kernel build.  The removal
+#	is intended only to remove the kernel library from the system and to
+#	keep the kernel fileset's functionality intact in the kernel.
+#
+##############################################################################
+#  autoreboot
+########
+#  swinstall.autoreboot		= false
+#  swremove.autoreboot		= false
+#
+# Protects against inadvertently installing/removing software that 
+# requires a system reboot when swremove is invoked non-interactively 
+# (Command Line).
+# Protects against local system rebooting without user confirmation
+# when swinstall/swremove is run interactively.
+#
+# true: 
+#	Software that requires a system reboot can be installed/removed.  
+#       All target system(s) will be automatically rebooted without 
+#       requiring further confirmation.
+#
+# false: (Default)
+#	If in Command Line mode and software that requires a system reboot is
+#	selected for installation/removal, the install/remove session 
+#       will exit with an error	message.
+#	If in Interactive mode, software that requires a reboot can be 
+#	installed/removed.  A confirmation message will be presented 
+#       before rebooting the local target system.
+#
+##############################################################################
+#  autorecover
+########
+#  swinstall.autorecover	= false
+#  
+# Controls automatic recovery if an error occurs during install.
+#
+# true: 
+#	If true and an error occurs, execute the unpostinstall script
+#	(if the postinstall script was run). Run unpreinstall
+#	script. Restore the files within the fileset from a copy saved
+#	prior to the failed install. Restore the value of the "state"
+#	attribute. 
+#
+# false: (Default)
+#	If false and install error occurs, no error recovery shall be
+#	attempted.
+##############################################################################
+#  autorecover_product
+########
+#  swinstall.autorecover_product = false
+#
+# Causes swinstall to remove the original files as they are updated.  If
+# an error occurs during the installation (e.g. network failure), then
+# the original files are lost, and the installation must be re-tried.
+# If set to true, all files are saved as backup copies until all
+# filesets in the current product loading are complete; then they are
+# removed.  This allows for automatic recovery of of the original
+# filesets in that product if the load fails.
+#
+##############################################################################
+#  autoremove_job
+########
+#  swconfig.autoremove_job	 = false
+#  swcopy.autoremove_job     = false
+#  swinstall.autoremove_job  = false
+#  swremove.autoremove_job   = false
+#  swverify.autoremove_job	 = false
+#
+# Controls automatic job removal.  If the job is automatically removed,
+# job information (job status or controller/agent logfiles) cannot be 
+# queried with "swjob". The default value was changed from true to false.
+# 11.00 SD had the default value of true. 
+#
+##############################################################################
+#  autoselect_dependencies
+########
+#  swask.autoselect_dependencies     = true
+#  swconfig.autoselect_dependencies  = true
+#  swcopy.autoselect_dependencies    = true
+#  swinstall.autoselect_dependencies = true
+#  swpackage.autoselect_dependencies = true
+#  swverify.autoselect_dependencies  = true
+# 
+# Controls the automatic selection (marked for 
+# installation/copying/configuration/packaging/verification) 
+# of prerequisite and corequisite software that is not explicitly 
+# selected by the user.  swpackage will only autoselect dependencies
+# within a product.
+# 
+# The autoselect_minimum_dependencies option is ignored when
+# this option is set to false.
+#
+# true:  (Default)
+#	Requisite software will be automatically marked for 
+#       installation/copying/configuration/packaging/verification.
+#
+# false:
+#	Requisite software which is not explicitly selected will not be
+#	automatically marked for 
+#       installation/copying/configuration/packaging/verification.
+#
+# as_needed:
+#	For swinstall and swcopy, requisite software that is automatically
+#	marked for installation/copying will only be operated upon if
+#	the dependency is not already met on the target.
+#
+##############################################################################
+#  autoselect_dependents
+########
+#  swconfig.autoselect_dependents = false
+#  swremove.autoselect_dependents = false
+# 
+# Controls the automatic selection (marked for removal/unconfiguration) 
+# of dependent software that is not explicitly selected by the user.  
+# A dependent is the opposite of a requisite.  
+# A dependent fileset has established either a prerequisite
+# or a corequisite on the fileset under discussion.
+# 
+# true:
+#	Dependent software will be automatically marked for 
+#       removal/unconfiguration.
+#
+# false:  (Default)
+#	Dependent software which is not explicitly selected will not be
+#	automatically marked for removal/unconfiguration.
+#
+##############################################################################
+#  autoselect_minimum_dependencies
+########
+#  swask.autoselect_minimum_dependencies = false
+#  swconfig.autoselect_minimum_dependencies = false
+#  swcopy.autoselect_minimum_dependencies = false
+#  swinstall.autoselect_minimum_dependencies = false
+#  swverify.autoselect_minimum_dependencies = false
+# 
+# Controls the automatic selection
+# (marked for ask/config/copy/install/verify) 
+# of the first left-most dependency in a list of OR
+# dependencies that satisfies a requisite when another
+# dependency in the list that also satisfies the
+# requisite is explicitly selected by the user.
+# 
+# This option is ignored when the autoselect_dependencies
+# option is set to false.
+#
+# true:
+#	The first left-most dependency in a list of OR
+#	dependencies that satisfies a requisite is not
+#	automatically selected when another dependency
+#	in the list that also satisfies the requisite
+#	is explicitly selected.
+#
+# false:  (Default)
+#	The first left-most dependency in a list of OR
+#	dependencies that satisfies a requisite is
+#	automatically selected even when another dependency
+#	in the list that also satisfies the requisite is
+#	explicitly selected.
+#
+##############################################################################
+#  autoselect_patches
+########
+#  swask.autoselect_patches     = true
+#  swcopy.autoselect_patches    = true
+#  swinstall.autoselect_patches = true
+#
+# Automatically selects the latest patches (based on superseding and 
+# ancestor attributes) for a software object that a user selects for a
+# swinstall/swcopy operation.  This allows patches to be automatically 
+# installed/copied in the same swinstall/swcopy session as the 
+# filesets which they patch.
+# When set to false, the patches corresponding to the selected object 
+# will not be automatically selected for install/swcopy.
+#
+# The "patch_filter" option can be used in conjunction with  
+# "autoselect_patches" to limit which patches will be selected.
+#
+# Please Note: This option requires patches that are in an enhanced SD
+# patch format.  Patches which are not in this enhanced format will not
+# respond to "autoselect_patches".
+#
+##############################################################################
+#  autoselect_reference_bundles
+########
+#  swcopy.autoselect_reference_bundles 	   = true
+#  swinstall.autoselect_reference_bundles  = true
+#  swremove.autoselect_reference_bundles   = true
+#
+# true:  (Default)
+#	Copy any bundle which is marked with the attribute "is_reference=true"
+#	and which contains that fileset onto the target system.  The bundle is
+#	only copied for reference purposes, to indicate a component has been
+#	installed.  In this case only the "wrapper" is installed, not the
+#	entire reference bundle.
+#
+#	Bundles purchased from HP are marked "is_reference=true" so this
+#	feature is designed to allow the user to determine which purchased
+#	bundle or bundles any HP fileset is part of.
+#
+#       For swremove, a bundle "wrapper" is automatically removed if the 
+#       last fileset in its contents is removed and it is marked 
+#       "is_reference=true".
+#
+# false:
+#	The above feature is deactivated and reference bundle "wrappers" are
+#	not automatically installed/removed.
+#
+##############################################################################
+#  check_contents
+########
+#  swverify.check_contents	= true
+#
+# Verify the timestamp, size, and checksum attributes of files.  If set
+# to false, these attributes are not verified.
+#
+##############################################################################
+#  check_contents_uncompressed
+########
+#  swverify.check_contents_uncompressed = false
+#
+#  Used in conjunction with swverify.check_contents and
+#  swverify.check_contents_use_cksum to control whether
+#  or not to compute and verify the uncompressed checksum
+#  and size of a compressed file. This option is ignored if
+#  the file is not compressed.
+#
+#  Since the timestamp of uncompressed contents is meaningless,
+#  the timestamp of only the file, whether it is compressed or
+#  not, is always verified.
+#
+# true:
+#	If the file is compressed, it is uncompressed into memory and
+#	the checksum and size of the uncompressed contents are computed.
+#	Then, the checksum and size of the compressed file and the 
+#	checksum and size of the uncompressed contents are verified.
+#
+#	If swverify.check_contents_use_cksum=false, neither the compressed
+#	nor uncompressed checksums are calculated, and only the compressed 
+#	and uncompressed sizes are verified.
+#
+# false:  (Default)
+#	If the file is compressed, only the checksum and size of the
+#	the compressed file is computed and verified.
+#
+##############################################################################
+#  check_contents_use_cksum
+########
+#  swverify.check_contents_use_cksum = true
+#
+#  Used in conjunction with swverify.check_contents to turn on/off
+#  checksum calculation.
+#
+# true:  (Default)
+#	Calculates the checksum of the file being verified so that the
+#	timestamp, size, and checksum are all verified.
+#
+# false:
+#	Turns off checksum calculation while preserving timestamp and size
+#	checking during swverify if swverify.check_contents is set to true.
+#
+##############################################################################
+#  check_permissions
+########
+#  swverify.check_permissions	= true
+#
+# Verify the mode, owner, UID, group, and GID attributes of installed
+# files.  If set to false, these attributes are not verified.
+#
+##############################################################################
+#  check_requisites
+########
+#  swverify.check_requisites	= true
+#
+# Verify that the prerequisite and corequisite dependencies of the
+# software selections are being met.  If set to false, these checks are
+# not performed.
+#
+##############################################################################
+#  check_scripts
+########
+#  swverify.check_scripts	= true
+#
+# Run the fileset/product verify scripts for installed software.  If set
+# to false, these scripts are not executed.
+#
+##############################################################################
+#  check_volatile
+########
+#  swverify.check_volatile	= false
+#
+# Do not verify those files marked as volatile (i.e. can be changed).
+# If set to true, volatile files are also checked (for installed
+# software).
+#
+##############################################################################
+#  codeword
+########
+#  swcopy.codeword		 = 
+#  swinstall.codeword		 = 
+#  swlist.codeword		 = 
+#
+# Provides the "codeword" needed to unlock protected HP CD-ROM software.
+# 
+# Most HP software products are shipped on CD-ROM as "protected" products.
+# These products cannot be installed or copied unless a "codeword" and a
+# "customer ID" are provided.  Software which is unlocked by a codeword
+# may only be used on computers for which the customer has a valid license
+# to use that software.  It is the customer's responsibility to ensure
+# that the codeword and software are used in this manner.  The customer ID
+# uniquely identifies the owner of the codeword.
+# 
+# To find your codeword, examine the CD-ROM certificate which you received
+# from HP for this CD-ROM.  It shows the codeword along with the customer
+# ID for which this codeword is valid.  One codeword usually unlocks all
+# of the products on a CD-ROM which you have purchased.  When an
+# additional HP software product is purchased, an additional codeword will
+# be provided by HP.  Just enter the new codeword and customer ID, as described
+# below and it will be merged with any previously entered codewords.
+# 
+# A codeword for a particular customer ID and CD-ROM needs to be entered
+# only once per target computer. The codeword and customer ID are stored for 
+# future reference in the "/var/adm/sw/.codewords" file.  
+# 
+# Codewords and customer ID's can be entered on the command line using the
+# "-x" syntax or can be entered in the Interactive User Interface (IUI).
+# Generally codewords are not entered in this defaults file.  The IUI will
+# prompt for the codeword and customer ID when SD detects a protected
+# CD-ROM source and no codeword for that CD-ROM has previously been stored.
+# The user can also enter additional codewords using the "Add New Codeword"
+# "action" in the IUI. 
+#
+# Note:  In the SD-OV release which supports HP-UX B.10.01 and in the SD
+# shipped with HP-UX B.10.10 and later, the ".codewords" file located on
+# a host system which is serving a protected CD-ROM to other hosts
+# will be searched by SD for valid customer_id/codeword pairs.  This
+# provides a timesaver for system administrators needing to update
+# multiple systems.  To cause the customer_id/codeword for a CD-ROM to be
+# properly stored, run swinstall or swcopy on the host serving the
+# CD-ROM.  Be sure to specify "preview" (-p) if you don't want to load
+# any software on that host!  After the codeword has been stored, hosts
+# which swinstall or swcopy using that host and CD-ROM as a software
+# source will no longer require a codeword or customer_id.
+#
+# Example:  (where "/CD-ROM" is the mount point of a protected CD-ROM)
+# swinstall -p -s /CD-ROM -x customer_id="xxx" -x codeword="yyy" nonexistent_sw
+# swinstall -p -i -s /CD-ROM  
+#   (Enter customer_id and codeword when prompted or use "Add New Codeword".
+#    No software need be selected.)
+#
+#
+##############################################################################
+#  compress_cmd
+########
+#  swagent.compress_cmd		= /usr/contrib/bin/gzip
+#  swpackage.compress_cmd	= /usr/contrib/bin/gzip
+#
+# Defines the command called by the source agent (or swpackage) to 
+# compress files before transmission/packaging.  
+# In some cases (e.g. upload from PC's) the target agent
+# may also compress in which case this attribute determines that compressor
+# path. The default value for HP-UX is /usr/bin/compress, and the default 
+# value for SunOS is /usr/ucb/compress. 
+#
+# If the GZIP fileset has been installed then the default may be set to 
+# /usr/contrib/bin/gzip.  The gzip program often compresses better 
+# and uncompresses faster than /usr/bin/compress.
+#
+# The gzip (GNU-zip) program is FREE software NOT sold or gauranteed by HP.
+# See the info file /usr/contrib/info/gzip.info or the copyright file for
+# the GZIP fileset for complete information.  The source for gzip is 
+# included in the GZIP fileset and is placed in the /usr/contrib/src when 
+# that fileset is installed on a system.
+#
+##############################################################################
+#  compress_files
+########
+#  swcopy.compress_files	= false
+#  swpackage.compress_files	= false
+#
+########
+#
+# Determines whether files will be compressed before being transferred from the
+# media to the install target.  This can enhance performance on slow networks.
+# Also works in conjunction with uncompress_files to determine if files are
+# compressed during transfer and then stored in compressed format.
+#
+# true:
+#	Individual files will be compressed before transfer using the current
+#       compress_cmd and uncompressed on the target system using the current
+#       uncompress_cmd. If the current compression_type is set to "gzip",
+#       and a compatible compress_cmd provided, then the internal 
+#       uncompression routine (funzip) will be used to uncompress the files.
+#       In order to use "gzip" the optional, free, GZIP fileset must have
+#       been installed. See the information included with the GZIP fileset
+#       to learn about the license and use of free software.
+#
+# false:  (Default)
+#	Individual files will be transferred as they are found on the media.
+#	If they were stored in a compressed format on the media, then they
+#	will be transferred in that compressed format. Files will always be 
+#	uncompressed prior to being installed on the target system.
+#
+# For swpackage:
+#   Files which have already been compressed by a previous swpackage 
+#   are not affected by this option.
+#
+#   Only one of the compress_files and uncompress_files options may be set to 
+#   true during a swpackage session. The compress_files option may not be
+#   set to true if package_in_place is set to true or if the media_type is
+#   set to tape.
+#
+##############################################################################
+#  compress_index
+########
+#  swconfig.compress_index	= false
+#  swcopy.compress_index	= false
+#  swinstall.compress_index	= false
+#  swmodify.compress_index	= false
+#  swpackage.compress_index	= false
+#  swremove.compress_index	= false
+#
+########
+#
+# Determines whether SD commands create compressed INDEX and INFO 
+# catalog files when writing to target depots or roots.  The normal INDEX 
+# and INFO files are always retained.  The compressed files are named
+# INDEX.gz and INFO.gz, and reside in the same directories as the 
+# uncompressed version of those files.
+#
+# In HP-UX 11.01 and higher, SD source clients (controllers and target
+# agents) load compressed INDEX and INFO files from the source agent,
+# when the source agent supports this feature and when INDEX.gz or
+# INFO.gz are on the source depot and are not older than the
+# corresponding INDEX or INFO files.  The normal INDEX or INFO is
+# accessed by the source agent if the INDEX.gz or INFO.gz file is not
+# on the source depot, or the compressed file is older than the
+# corresponding INDEX or INFO file, or any problem occurs when accessing,
+# transferring, or uncompressing the INDEX.gz or INFO.gz file
+#
+# true:
+#       INDEX.gz and INFO.gz will be created on the target.
+#
+# false:  (Default)
+#       INDEX.gz and INFO.gz will not be created on the target.
+#
+##############################################################################
+#  compression_type
+########
+#  swagent.compression_type	= gzip
+#  swpackage.compression_type	= gzip
+#
+# Defines the default compression type used by the agent/swpackage 
+# when it compresses files during or after transmission/packaging. 
+# If uncompress_files is set to false,
+# the compression type is recorded for each file compressed so that the 
+# correct uncompression can later be  applied during a swinstall, or a swcopy
+# with uncompress_files set to true. The compress_cmd  specified must produce
+# files with the compression_type specified. The uncompress_cmd must be able
+# to process files of the compression_type specified unless the 
+# compression_type is "gzip" which is uncompressed by the internal 
+# uncompressor, funzip. The funzip program is a public domain program which
+# can uncompress files compressed with gzip.
+#
+# If the GZIP fileset has been installed then the default may be set to 
+# "gzip"  The gzip program often compresses better  and uncompresses 
+# faster than compress. The gzip program is free software. 
+# See the notes above under the "swagent.compress_cmd" entry for more 
+# information.
+#
+##############################################################################
+#  config_cleanup_cmd
+########
+#  swagent.config_cleanup_cmd	= /usr/lbin/sw/config_clean
+#
+# Defines the script called by the agent to perform release-specific
+# configure cleanup steps.  For an NFSD client update, this script will
+# invoke the tlink command.
+#
+# Please Note:  Transition links do not exist on 11.31 and newer
+# releases so there are no configure cleanup steps to perform therefore
+# the config_cleanup_cmd is never executed for these releases.
+#
+##############################################################################
+#  control_files
+########
+#  swmodify.control_files	=
+#
+# When adding or deleting control file objects, this option lists the
+# tags of those control files.  There is no supplied default.  (Control
+# file objects being added can also be specified in the given
+# product_specification_file .)
+#
+# If there is more than one tag, they must be separated by whitespace
+# and surrounded by quotes.
+#
+##############################################################################
+#  controller_source
+########
+#  swconfig.controller_source	=
+#  swcopy.controller_source	=
+#  swinstall.controller_source	=
+#  swremove.controller_source	=
+#  swverify.controller_source	=
+#
+# The location of a depot for the controller to access to resolve
+# selections.  This has no effect on which source is used by the target.
+# Specify this as host, /path, or host:/path.  This is useful for
+# reducing network traffic between controller and target.
+# This option is ignored when Interactive User Interface is used.
+#
+##############################################################################
+#  create_target_acls
+########
+#  swpackage.create_target_acls	= true
+#
+# When creating a target depot, create Access Control Lists (ACLs) in
+# the depot.  If the user is the superuser, a value of false for this
+# keyword causes swpackage to not create ACLs for each new product being
+# packaged (and for the depot if the depot is new).
+#
+##############################################################################
+#  create_target_path
+########
+#  swcopy.create_target_path	= true
+#  swinstall.create_target_path	= true
+#
+# Control the creation of a target directory if it doesn't exist.  This option
+# can prevent the erroneous creation of new alternate root directories.
+#
+# true:  (Default)
+#	If the target directory will be created on the system if it does not
+#	exist already.
+#
+# false:
+#	The target directory will not be created if it does not already exist.
+#
+##############################################################################
+#  customer_id
+########
+#  swcopy.customer_id	 =
+#  swinstall.customer_id =
+#  swlist.customer_id    =
+# 
+# Provides the "customer ID" needed to unlock protected HP CD-ROM software.
+#
+# See the entry for "swinstall.codeword" above for more information.
+#
+##############################################################################
+#  create_time_filter
+########
+#  swcopy.create_time_filter	= 0
+#  swinstall.create_time_filter	= 0
+#  swlist.create_time_filter	= 0
+#
+# Controls time settings for cumulative source depots.  The default of zero
+# includes all bundles, products, subproducts, and filesets in the source
+# depot as candidates for selection (and autoselection of dependencies and
+# patches), based on the software selections and other options.  When set to a
+# time (specified as seconds from epoch), only bundles, products, and filesets
+# (and the subproducts in the product) with a create_time less than or equal
+# to the specified value are available for selection (or autoselection).
+# 
+# To list the create_time of bundles, products and filesets, use:
+# 
+#	swlist -a create_time -a create_date
+#
+##############################################################################
+#  defer_configure
+########
+#  swinstall.defer_configure	= false
+#
+# Controls whether the configure phase of software installation will occur
+# immediately after the install phase or not.  This option has no effect if
+# any kernel filesets are installed in the swinstall session.  In that case
+# configuration of all successfully installed software will occur after the
+# system reboots.
+#
+# true:
+#	Configuration of the software will not occur automatically immediately
+#	after the install phase is finished.  Any configuration necessary
+#	must be done manually at a later time.  Software successfully installed
+#	remains in the "installed" state.
+#
+# false:  (Default)
+#	The configuration of successfully installed software will occur after
+#	the install phase as part of the same swinstall session.
+#
+##############################################################################
+#  distribution_source_directory
+########
+#  swcopy.distribution_source_directory	        = /var/spool/sw
+#  swinstall.distribution_source_directory	= /var/spool/sw
+#  swpackage.distribution_source_directory	= /var/spool/sw
+#
+# Defines the default location of the source depot.  This syntax can be
+# host:path.
+#
+##############################################################################
+#  distribution_target_directory
+########
+#  swacl.distribution_target_directory		= /var/spool/sw
+#  swcopy.distribution_target_directory		= /var/spool/sw
+#  swlist.distribution_target_directory		= /var/spool/sw
+#  swmodify.distribution_target_directory	= /var/spool/sw
+#  swpackage.distribution_target_directory	= /var/spool/sw
+#  swreg.distribution_target_directory		= /var/spool/sw
+#  swremove.distribution_target_directory	= /var/spool/sw
+#  swverify.distribution_target_directory	= /var/spool/sw
+#
+# Defines the default location of the target depot.
+#
+##############################################################################
+#  distribution_target_serial
+########
+#  swpackage.distribution_target_serial		= /dev/rmt/0m	
+#
+# Defines the default of the target tape. 
+#
+##############################################################################
+#  enforce_dependencies
+########
+#  swconfig.enforce_dependencies = true
+#  swcopy.enforce_dependencies	 = true
+#  swinstall.enforce_dependencies= true
+#  swremove.enforce_dependencies = true
+#  swverify.enforce_dependencies = true
+#
+# Prerequisites and corequisites specified by the software_selections must
+# be resolved either in the specified source, or already installed on the
+# target system.  This helps prevent unusable software from being
+# installed on the system or swremove leaving partial installations.
+#
+# true:  (Default)
+#
+#	The correct requisite software must either be selected for installation
+#	in the current session or it must already exist on the target in the
+#	correct state, either "installed" or "configured" ("available" for 
+#       swcopy).  An unresolved	requisite will result in an ERROR, 
+#       and the software will be unselected.
+#
+#       For swremove, if a selected fileset has dependents (i.e. other 
+#       software depends on the fileset) and they are not selected, 
+#       do not remove the selected filesets.
+#
+#       For swverify, generate an ERROR message for each
+#       unresolved dependency specified by each software selection.
+#
+# false:
+#	Dependencies will still be checked, but their absence results in just a
+#	WARNING.
+#
+#
+##############################################################################
+#  enforce_dsa
+########
+#  swcopy.enforce_dsa		= true
+#  swinstall.enforce_dsa	= true
+#  swpackage.enforce_dsa	= true
+#
+# Controls whether or not a failure in the disk space analysis (DSA) part of
+# the Analysis phase is fatal to the session.
+#
+# true:  (Default)
+#	A failure in DSA will result in a failure of Analysis phase for the
+#	entire session.  The installation/copy/package will not proceed.
+#
+# false:
+#	A failure in DSA will be logged, but the session will be allowed to
+#	proceed.  There is a risk of filling a mounted disk or volume to its
+#	maximum capacity at some point during the session.  Attempts
+#	to exceed the capacity will result in a catastrophic failure of the
+#	session, and possibly leave an unusable system.
+#
+##############################################################################
+#  enforce_kernbld_failure
+########
+#  swinstall.enforce_kernbld_failure = true
+#
+# Controls whether or not a failure in either of the kernel build steps
+# (system_prep and mk_kernel) is fatal to the install session.
+#
+# true:  (Default)
+#	Failure to build a kernel will cause the install process to exit if
+#	in non-interactive mode, or to suspend if in an interactive mode.
+#
+# false:
+#	A failure return from a kernel build process  will be ignored, and the
+#	install session will proceed.  The currently running kernel will remain
+#	in place.
+#
+##############################################################################
+#  enforce_locatable
+########
+#  swinstall.enforce_locatable	= true
+#  swverify.enforce_locatable	= true
+#
+# Controls the handling of errors when relocating a non-relocatable
+# fileset.  Although this option is defined for swverify, there is no
+# swverify behavior associated with the option.
+#
+# true:  (Default)
+#	If true, an error will be generated if an attempt is made to
+#	relocate a non-relocatable fileset.
+#
+# false:
+#	If false, an attempt will be made to relocate the fileset. 
+#
+##############################################################################
+#  enforce_scripts
+########
+#  swask.enforce_scripts	= true
+#  swconfig.enforce_scripts	= true
+#  swinstall.enforce_scripts	= true
+#  swremove.enforce_scripts	= true
+#
+# Controls the handling of errors generated by scripts.  If enforce_scripts
+# equals false, then all script error returns are treated as warnings, and
+# the task continues as it would with script warnings.  If enforce_scripts
+# equals true, and a script returns an error, then the error is handled as
+# appropriate for the command executing and the type of fileset.  Setting
+# enforce_scripts=false provides a way to continue on with kernel fileset
+# failures, where the default behavior is to suspend.
+#
+# Generally, the option determines if a failure in a script will result in
+# the fileset/product being deselected.
+#
+# true: 
+#	For swinstall, a failure return from a product checkinstall 
+#       script will cause all filesets in that product to be unselected.  
+#       A failure return from a	fileset checkinstall script will cause that 
+#       fileset to be unselected; the status of other filesets in that 
+#       product will be unaffected by the unselection.
+#
+#       For swremove, a failure return from a fileset/product checkremove 
+#       script will cause all filesets in that fileset/product to be
+#       unselected (ie. none of the filesets in that product will be removed).
+#
+# false:
+#	A failure return from a checkinstall/checkremove script will not 
+#       change the selection status of either a product or a fileset.  
+#       Installation/removal will be attempted regardless of the failure.
+#
+##############################################################################
+#  enforce_selections
+########
+#  swconfig.enforce_selections= false
+#  swcopy.enforce_selections= false
+#  swinstall.enforce_selections= false
+#  swremove.enforce_selections= false
+#  swverify.enforce_selections= false
+#
+# Controls the handling of errors generated by the command.  If the value of 
+# enforce_selections is false, then the task continues normally even if 
+# any one of the selection fails. If all the selections fail, then the task 
+# aborts. If the value of enforce_selections is true, then the task aborts  
+# even if any one of the selections fail.
+#
+# true:  
+#       Exit with failure, if any one of the selections is not present in 
+# 	the source.
+#
+# false:  (Default)	
+#       Exit with failure, if all the selections are not present in the source. 
+#	Exits with success, if any of the selections are not present in 
+#	the source.
+#
+##############################################################################
+#  files
+########
+#  swmodify.files		=
+# When adding or deleting file objects, this option can list the
+# pathnames of those files.  There is no supplied default.  (File
+# objects being added can also be specified in the given product
+# specification file.)
+#
+# If there is more than one pathname, they must be separated by
+# whitespace and surrounded by double-quotes.
+#
+##############################################################################
+#  fix
+########
+#  swverify.fix = false
+#
+# Controls whether or not vendor-specific scripts to correct and report
+# problems on installed software are run.  Fix scripts can create
+# missing directories, correct file modifications, (mode, owner, group,
+# major, minor), and recreate symbolic links.
+#
+# true:
+#	Fix scripts are run.
+#
+# false: (Default)
+#	Fix scripts are not run.
+#
+##############################################################################
+#  follow_symlinks
+########
+#  swpackage.follow_symlinks	= false
+#
+# Do not follow symbolic links in the package source files, but include
+# the symbolic links in the packaged product(s).  A value of true for
+# this keyword causes swpackage to follow symbolic links in the package
+# source files and include the file(s) they reference in the packaged
+# product(s).
+#
+##############################################################################
+#  include_file_revisions
+########
+#  swpackage.include_file_revisions= false
+#
+# Do not include each source file's revision attribute in the product(s)
+# being packaged.  Because this operation is time consuming, the
+# revision attributes are not included by default.  A value of true
+# causes swpackage to execute what(1) and possibly ident(1) to try to
+# determine a file's revision.
+#
+##############################################################################
+#  install_cleanup_cmd
+########
+#  swagent.install_cleanup_cmd	= /usr/lbin/sw/install_clean
+#
+# Defines the script called by the agent to perform release-specific install
+# cleanup steps immediately after the last postinstall script has been run.
+# For an OS update, this script should at least remove commands that were
+# saved by the "install_setup" script.
+#
+# Please Note:  Transition links do not exist on 11.31 and newer
+# releases so there are no install cleanup steps to perform therefore
+# the install_cleanup_cmd is never executed for these releases.
+#
+##############################################################################
+#  install_setup_cmd
+########
+#  swagent.install_setup_cmd	= /usr/lbin/sw/install_setup
+#
+# Defines the script called by the agent to perform release-specific install
+# preparation.  For an OS update, this script should at least copy commands
+# needed for the checkinstall, preinstall, and postinstall scripts to a path
+# where they can be accessed while the real commands are being updated.
+#
+# Please Note:  Transition links do not exist on 11.31 and newer
+# releases so there are no install setup steps to perform therefore
+# the install_setup_cmd is never executed for these releases.
+#
+##############################################################################
+#  installed_software_catalog
+########
+#  swacl.installed_software_catalog     = products
+#  swask.installed_software_catalog     = products
+#  swconfig.installed_software_catalog  = products
+#  swinstall.installed_software_catalog = products
+#  swlist.installed_software_catalog    = products
+#  swmodify.installed_software_catalog  = products
+#  swremove.installed_software_catalog  = products
+#  swverify.installed_software_catalog  = products
+#
+# The directory path where information describing installed software is stored,
+# also known as the IPD (Installed Products Database).  If this is an absolute
+# path (starts with the slash character) it defines the location of the IPD.
+# If this value is a relative path it is appended to the value of the
+# admin_directory option to determine the path to the IPD.  For alternate roots
+# this path is resolved relative to the location of the alternate root.  Note,
+# this option does not affect where software is installed, it defines only the
+# location of the data describing software that is installed.
+#
+# This option allows simultaneous installation and removal of multiple
+# software applications by multiple users or multiple processes, using a
+# different installed_software_catalog for each application or group of
+# applications.
+#
+# Caution:  management of a specific application should be done using a
+# specific installed_software_catalog.  SD can not support the same
+# application described in multiple installed_software_catalogs.
+#
+##############################################################################
+#  job_title
+########
+#  swconfig.job_title	=
+#  swcopy.job_title	=
+#  swinstall.job_title  =
+#  swremove.job_title	=
+#  swverify.job_title	=
+#
+# This is an ASCII string giving a title to a job.  It is displayed
+# along with the job ID to provide additional identifying information 
+# about a job when "swjob" is invoked.
+#
+#
+##############################################################################
+#  kernel_build_cmd
+########
+#  swagent.kernel_build_cmd	= /usr/sbin/mk_kernel
+#
+# Defines the script called by the agent for kernel building.
+#
+##############################################################################
+#  kernel_path
+########
+#  swagent.kernel_path		= /stand/vmunix
+#
+# Defines the path to the system's bootable kernel.
+#
+##############################################################################
+#  layout_version
+########
+#  swcopy.layout_version    = 1.0
+#  swinstall.layout_version = 1.0
+#  swlist.layout_version    = 1.0
+#  swmodify.layout_version  = 1.0
+#  swpackage.layout_version = 1.0
+#
+# Defines the revision level of the distribution (depot and ipd structure).
+# Prior to 11.0 the layout_version was 0.8
+#
+##############################################################################
+#  level
+########
+#  swacl.level		= 
+#  swlist.level		= 
+#  swreg.level		= 
+#
+# Defines the default level to which objects are listed.  The valid
+# levels are: depot, product, subproduct, fileset, file, category and patch.
+#
+# For swacl, defines the level of ACLS to view/modify.  
+# The supported swacl levels are:
+# host, depot, root, product, product_template, global_soc_template,
+# global_product_template.
+#
+##############################################################################
+#  loadorder_use_coreqs
+########
+#  swconfig.loadorder_use_coreqs  = true
+#  swcopy.loadorder_use_coreqs    = true
+#  swinstall.loadorder_use_coreqs = true
+#  swpackage.loadorder_use_coreqs = true
+#  swremove.loadorder_use_coreqs  = true
+#  swverify.loadorder_use_coreqs  = true
+#
+# Controls the handling of corequisite during loading order by the command.  If the value of
+# loadorder_use_coreqs is true, then the load order will considers corequisites of a 
+# prerequisite as prerequisite. SD will promotes corequisites to prerequisites in the loading order.
+# If the value of loadorder_use_coreqs is false, then the load order does not consider 
+# corequisites of a prerequisite as prerequisite. SD will not promote corequisites to 
+# prerequisites in loading order.
+#
+# true:   (Default)		
+#       Promote corequisite of a prerequisite to prerequisite in the loading order.
+#
+# false: 
+#       Do not promote corequisite of a prerequisite to prerequisite in the loading order.
+#
+##############################################################################
+#  log_msgid
+########
+#  swacl.log_msgid     = 0
+#  swask.log_msgid     = 0
+#  swconfig.log_msgid  = 0
+#  swcopy.log_msgid    = 0
+#  swinstall.log_msgid = 0
+#  swjob.log_msgid     = 0
+#  swlist.log_msgid    = 0
+#  swmodify.log_msgid  = 0
+#  swpackage.log_msgid = 0
+#  swreg.log_msgid     = 0
+#  swremove.log_msgid  = 0
+#  swverify.log_msgid  = 0
+#
+# Controls whether numeric identification numbers are prepended to SD
+# messages. A value of 0 (default) indicates no identifiers are attached.  
+# Note that not all messages produced by SD have corresponding numbers. 
+# For example, product and fileset control scripts generate messages
+# independent of the SD executables.  Message numbers are enclosed
+# within [brackets] preceding the message itself.
+# Values of 1-4 indicate that identifiers are attached as follows: 
+#    1: ERROR messages.
+#    2: ERROR and WARNING messages.
+#    3: ERROR, WARNING, and NOTE messages.
+#    4: All messages that have an identification number.
+#
+##############################################################################
+#  logdetail
+########
+#  swask.logdetail     = false
+#  swconfig.logdetail  = false
+#  swcopy.logdetail    = false
+#  swinstall.logdetail = false
+#  swmodify.logdetail  = false
+#  swpackage.logdetail = false
+#  swreg.logdetail     = false
+#  swremove.logdetail  = false
+#  swverify.logdetail  = false
+#
+# Controls the inclusion of additional detail information in the logfile.
+# A value of "true" causes the additonal detail information to be included
+# in the logfile. This option provides some degree of logfile compatability
+# with previous releases of SD. 
+#
+##############################################################################
+#  logfile
+########
+#  swagentd.logfile	= /var/adm/sw/swagentd.log
+#  swask.logfile	= /var/adm/sw/swask.log
+#  swconfig.logfile	= /var/adm/sw/swconfig.log
+#  swcopy.logfile	= /var/adm/sw/swcopy.log
+#  swinstall.logfile	= /var/adm/sw/swinstall.log
+#  swmodify.logfile	= /var/adm/sw/swmodify.log
+#  swpackage.logfile	= /var/adm/sw/swpackage.log
+#  swreg.logfile        = /var/adm/sw/swreg.log
+#  swremove.logfile	= /var/adm/sw/swremove.log
+#  swverify.logfile	= /var/adm/sw/swverify.log
+#
+#
+# Specifies the path to the command's log file.
+#
+##############################################################################
+#  loglevel
+########
+#  swask.loglevel	= 1
+#  swconfig.loglevel	= 1
+#  swcopy.loglevel	= 1
+#  swinstall.loglevel	= 1
+#  swmodify.loglevel	= 1  # default for direct invocaton of swmodify
+#  swmodify.loglevel	= 0  # default for swmodify invoked by control script
+#  swpackage.loglevel	= 1
+#  swreg.loglevel	= 1
+#  swremove.loglevel	= 1
+#  swverify.loglevel	= 1
+#
+# Controls the log level for the events logged to the command logfile,
+# and the target agent logfiles.  A value of 1 enables all POSIX events
+# except file events logging to the logfiles. A value of 2 enables loglevel 1
+# information and file events logging to the logfiles. A value of 0 disables
+# any information logging to the logfiles. 
+#
+# This defaults to 0 for swmodify commands invoked by control files.
+# To enable logging by swmodify commands invoked by control files, set
+# swmodify.loglevel=1 in the system defaults file.
+#
+##############################################################################
+#  lookupcache_timeout_minutes
+########
+#  swacl.lookupcache_timeout_minutes		= 10
+#  swagentd.lookupcache_timeout_minutes		= 10
+#  swask.lookupcache_timeout_minutes		= 10
+#  swconfig.lookupcache_timeout_minutes		= 10
+#  swcopy.lookupcache_timeout_minutes		= 10
+#  swinstall.lookupcache_timeout_minutes	= 10
+#  swjob.lookupcache_timeout_minutes		= 10
+#  swlist.lookupcache_timeout_minutes		= 10
+#  swmodify.lookupcache_timeout_minutes		= 10
+#  swpackage.lookupcache_timeout_minutes	= 10
+#  swreg.lookupcache_timeout_minutes		= 10
+#  swremove.lookupcache_timeout_minutes		= 10
+#  swverify.lookupcache_timeout_minutes		= 10
+#
+# Controls the time in minutes to cache and re-use the results of hostname or
+# IP address resolution lookups.  A value of 0 disables the facility to cache
+# and re-use lookup results.  The maximum value allowed is 10080 minutes,
+# which is one week.
+#
+##############################################################################
+#  match_target
+########
+#  swinstall.match_target    = false
+#
+# If set to true, other software selections are ignored and software
+# selection is done by locating filesets on the source which match the
+# target system's installed filesets.  If multiple targets are
+# specified, the first in the list is used as the basis for selections.
+#
+##############################################################################
+#  max_agents
+########
+#  swagentd.max_agents		= -1
+#
+# The maximum number of agents that are permitted to run simultaneously.
+# The value of -1 means that there is no limit.
+#
+##############################################################################
+#  max_targets 
+########
+#  swinstall.max_targets 	= 25
+#  swcopy.max_targets 		= 25
+#
+# When set to a positive integer, the CLI for swinstall and swcopy will
+# only initiate this many target installs or copies at once. If set
+# to < 1, then all targets are attempted at once.
+# Server and network performance will determine the optimal
+# setting; a recommended starting point is the default of 25.
+#
+##############################################################################
+#  media_capacity
+########
+#  swpackage.media_capacity	= 1330
+#
+# Specifies the capacity of the target tape in one-million byte units.
+#
+##############################################################################
+#  media_type
+########
+#  swpackage.media_type		= directory
+#
+# Defines the type of distribution to create.  The recognized types are
+# directory and tape.
+#
+##############################################################################
+#  minimum_job_polling_interval
+########
+#  swagentd.minimum_job_polling_interval	= 1
+#
+# Defines how often, in minutes, the daemon will "wake up" and scan the
+# job queue to determine if any scheduled jobs need to be initiated
+# or if any active jobs need their remote target status cached locally.
+# If set to 0, no scheduled jobs will be initiated, and no caching
+# of active jobs will occur.
+#
+#
+##############################################################################
+#  mount_all_filesystems
+########
+#  swconfig.mount_all_filesystems = true
+#  swcopy.mount_all_filesystems	  = true
+#  swinstall.mount_all_filesystems= true
+#  swremove.mount_all_filesystems = true
+#  swverify.mount_all_filesystems = true
+#
+# Controls whether or not the process will attempt to mount all filesystems in
+# the /etc/fstab file at the beginning of the analysis phase.  This step
+# ensures that all listed filesystems are mounted before proceeding.  This
+# policy helps to ensure that files are not loaded into a directory that may
+# be below a future mount point.
+#
+# true:
+#	The file containing the list of mounted filesystem will be read, and
+#	an attempt will be made to mount any filesystems which are not already
+#	mounted.  If this attempt fails, and a listed filesystem cannot be
+#	mounted, an ERROR results and the command cannot proceed.
+#
+# false:
+#	The mount operation is not attempted, and no check of the current
+#	mounts is performed.
+#
+##############################################################################
+#  mount_cmd
+########
+#  swagent.mount_cmd	= /sbin/mount 
+#  swagent.mount_cmd	= /etc/mount 
+#  swagent.mount_cmd	= /usr/etc/mount 
+#
+# Defines the command called by the agent to mount all filesystems.  
+# The default value for HP-UX 10.x  and 11.x is /sbin/mount.
+# The default value for HP-UX  9.0 is /etc/mount.
+# The default value for SunOS is /usr/etc/mount.
+#
+##############################################################################
+#  objects_to_register
+########
+#  swreg.objects_to_register	=
+#
+# Defines the default root selections.  If there is more than one
+# root selection listed, they must be separated by spaces.
+#
+##############################################################################
+#  one_liner
+########
+#  swlist.one_liner		= revision title
+#  swjob.one_liner		= {jobid operation state results title}
+#
+# Defines the attributes which will be listed for each object when no -a
+# or -v options are specified.  Each attribute included in the one_liner
+# definition is separated by <tab> or <space>.
+#
+##############################################################################
+#  os_name
+########
+#  swinstall.os_name	        =
+# 
+# Please Note: os_name should not be enabled from this file.
+#
+# This option is used in conjunction with the os_release option to
+# specify the operating system for an HP-UX update.  You must specify
+# the bit width, as well as the name.  The syntax is:
+# 
+# -x os_name=HP-UX:32
+# or
+# -x os_name=HP-UX:64
+# 
+# The os_name option should only be specified from the command line.
+# Refer to the SW-DIST readme file for complete syntax, with the
+# following command:
+# 
+# /usr/sbin/swlist -a readme -l product SW-DIST
+# 
+# To access the readme file from a depot, use the following command:
+# 
+# /usr/sbin/swlist -d -a readme -l product SW-DIST @ hostA:/depot
+# 
+##############################################################################
+#  os_release
+########
+#  swinstall.os_release	        =
+#
+# Please Note: os_release should not be enabled from this file.
+# 
+# This option is used in conjunction with the os_name option to specify
+# the operating system for an HP-UX update. The syntax is:
+# 
+# -x os_release=<OS revision>
+# 
+# The os_release option should only be specified from the command line.
+# Refer to the SW-DIST readme file for complete syntax, with the
+# following command:
+# 
+# /usr/sbin/swlist -a readme -l product SW-DIST
+# 
+# To access the readme file from a depot, use the following command:
+# 
+# /usr/sbin/swlist -d -a readme -l product SW-DIST @ hostA:/depot
+#
+##############################################################################
+#  package_in_place
+########
+#  swpackage.package_in_place	= false
+#
+# Package the specified products such that the target depot will not
+# contain the files that make up a product.  Instead, insert references
+# to the original source files used to build a product.
+#
+##############################################################################
+#  patch_commit
+########
+#  swmodify.patch_commit        = false
+#
+# If set to true, this option removes the save files and sets the
+# patch_state to "committed" for the patches specified in the
+# software selections.
+#
+##############################################################################
+#  patch_filter
+########
+#  swask.patch_filter       = *.*
+#  swcopy.patch_filter      = *.*
+#  swinstall.patch_filter   = *.*
+#
+# This option can be used in conjunction with the "autoselect_patches"
+# or "patch_match_target" options to filter the available patches to meet 
+# the criteria specified by the filter.  The default value of this option 
+# is *.*.  A key use of this option is to allow the filtering of patches
+# by the "category" attribute. 
+#
+# Please Note: This option requires patches that are in an enhanced SD
+# patch format.  Patches which are not in this enhanced format will not
+# respond to "autoselect_patches" or "patch_match_target" and so can not
+# make use of the "patch_filter" option.
+#
+##############################################################################
+#  patch_match_target
+########
+#  swcopy.patch_match_target    = false
+#  swinstall.patch_match_target = false
+#
+# If set to true, this option automatically selects the latest patches
+# (software identified by the "is_patch" attribute) that correspond to 
+# non-patch software previously installed on a system.  This allows the user
+# to automatically swinstall/swcopy the set of patches which are pertinent the
+# non-patch software already installed.
+#
+# The "patch_filter" option can be used in conjunction with 
+# "patch_match_target".
+#
+# Please Note: This option requires patches that are in an enhanced SD
+# patch format.  Patches which are not in this enhanced format will not
+# respond to "patch_match_target". 
+#
+##############################################################################
+#  patch_one_liner
+########
+#  swlist.patch_one_liner = {title patch_state}
+#
+# patch_one_liner is an option for swlist that
+# defaults to revision, title and patch state when swlist is used with the level
+# (-l) patch. You can use swlist with patch_one_liner option without -a or -v
+# and specify what attributes you would like to see for the listed
+# patches, so it would look something like this:
+# 
+# 	swlist -l patch -x patch_one_liner="ancestor patch_state ..."
+#
+##############################################################################
+#  patch_save_files
+########
+#  swinstall.patch_save_files = true
+#
+# Saves patched files, which permits future rollback of patches. When set 
+# to false, patches cannot be rolled back (removed) unless the non-patch
+# software modified by the patch is removed at the same time.
+#
+##############################################################################
+#  polling_interval
+########
+#  swcopy.polling_interval	= 2
+#  swinstall.polling_interval	= 2
+#  swremove.polling_interval	= 2
+#
+# Defines the polling interval, in seconds, used by interactive (GUI)
+# sessions.  It specifies how often each target agent will be polled to
+# obtain status information about the task being performed.  When operating
+# across wide-area networks, the polling interval can be increased to reduce
+# network overhead.
+#
+##############################################################################
+#  preserve_create_time
+########
+#  swcopy.preserve_create_time	= false
+#
+# Causes the original create time to be preserved when you copy depots,
+# which produces consistent results when you use the copies.
+# 
+# Note that using this option when copying to a master depot can change
+# the objects that are visible when you use the create_time_filter option.
+# 
+# true
+# 	The create_time of software bundles, products, and filesets is
+# 	set to that specified in the source depot.
+#
+# false (default)
+# 	Sets the create_time of software bundles, products, and filesets
+# 	to the time the object is created in the target depot.
+# 
+#
+##############################################################################
+#  preview
+########
+#  swcopy.preview	= false
+#  swinstall.preview	= false
+#  swremove.preview	= false
+#  swconfig.preview	= false
+#
+# Run this command in preview mode only (same as specifying -p).
+#
+##############################################################################
+#  reboot_cmd
+########
+#  swagent.reboot_cmd		= /sbin/reboot
+#  swagent.reboot_cmd		= /etc/reboot
+#  swagent.reboot_cmd		= /usr/etc/reboot
+# 
+# Defines the command called by the agent to reboot the system.  The
+# default value for HP-UX 10.0 is /sbin/reboot, the default value for
+# HP-UX 10.0 is /etc/reboot, and the default value for SunOS is
+# /usr/etc/reboot.
+#
+##############################################################################
+#  reconfigure
+########
+#  swconfig.reconfigure		= false
+#
+# Prevents software which is already in the CONFIGURED state from being
+# reconfigured.  If set to true, CONFIGURED software can be
+# reconfigured.
+#
+##############################################################################
+#  recopy
+########
+#  swcopy.recopy		= false
+#  swinstall.recopy		= false
+#
+# Controls whether or not a fileset already on the system will reinstalled 
+# (or recopied) if the user selects it.  It is intended to save time by not 
+# forcing the reinstallation (recopy) of filesets already in place.
+#
+# This option is synonymous with the reinstall option.
+#
+# true
+#       Every selected fileset will be reinstalled (recopied), even if its
+#	current revision (the one on the source) is already on the target.
+#
+# false (Default)
+#       A fileset will be skipped in the analysis phase and not installed
+#	(not copied) when the same revision that is on the source is already
+#	on the target.
+#
+##############################################################################
+#  register_new_depot
+########
+#  swcopy.register_new_depot	= true
+#
+# Register a newly created depot with the local swagentd.  This action
+# allows other SD commands to automatically "see" this depot.  If set to
+# false, a new depot will not be automatically registered.  (It can be
+# registered later with the swreg command.)
+#
+##############################################################################
+# register_new_root
+########
+# swinstall.register_new_root   = true
+#
+# Causes roots to be registered during swinstall.
+#
+##############################################################################
+#  reinstall
+########
+#  swcopy.reinstall		= false
+#  swinstall.reinstall		= false
+#
+# Controls whether or not a fileset already on the system will reinstalled 
+# (or recopied) if the user selects it.  It is intended to save time by not 
+# forcing the reinstallation (recopy) of filesets already in place.
+#
+# This option is synonymous with the recopy option.
+#
+# true
+#       Every selected fileset will be reinstalled (recopied), even if its
+#	current revision (the one on the source) is already on the target.
+#
+# false (Default)
+#       A fileset will be skipped in the analysis phase and not installed
+#	(not copied) when the same revision that is on the source is already
+#	on the target.
+#
+##############################################################################
+#  reinstall_files
+########
+#  swcopy.reinstall_files	= false
+#  swinstall.reinstall_files	= false
+#  swpackage.reinstall_files	= false
+#
+# true 
+#       When reinstalling/recopying/repackaging) a fileset, 
+#       each of its files will be reinstalled/recopied/repackaged
+#       even if the file on the media is identical with the file already on
+#       the system.
+#
+# false (Default)
+#       When reinstalling/recopying/repackaging) a fileset, 
+#       each file on the media will be compared
+#       to the corresponding file on the system.  If the files are identical
+#       (see the "reinstall_files_use_cksum" option) the file in the system
+#       will not be over-written.
+#
+##############################################################################
+#  reinstall_files_use_cksum
+########
+#  swcopy.reinstall_files_use_cksum    = true
+#  swinstall.reinstall_files_use_cksum = true
+#  swpackage.reinstall_files_use_cksum = false
+#
+# Controls the method used to determine if a file on the media is identical to
+# a file on the target system.  This option is checked only if the
+# "reinstall_files" option is "false".  The result of this identity check will
+# determine if the file will or will not be overwritten.  Including the
+# checksum is a slower but more robust test for equivalence.
+#
+# true (Default)
+#       When comparing individual ordinary files (not directories or links) to
+#       determine whether or not they are identical, include a checksum
+#       (actually a CRC) comparison to verify their equivalence.
+#
+# false
+#       When comparing individual files to determine whether they are
+#       identical or not, omit the above checksum comparison.  Test for
+#       equivalence using only the size in bytes and the modification time for
+#       each file.
+#
+##############################################################################
+#  remove_empty_depot
+########
+#  swremove.remove_empty_depot    = true
+#
+# true (Default)
+#       When the last product (or bundle) in a depot is removed, the depot
+#       itself will be removed.  The depot's swagent.log file and directory
+#       structure are not removed by default.  If the swagent.log and
+#       directory should be removed, the remove_empty_depot_directory
+#       option must also be set to "true".
+#
+# false
+#       The depot is not removed when the last product (or bundle) in it
+#       is removed.
+#
+##############################################################################
+#  remove_empty_depot_directory
+########
+#  swremove.remove_empty_depot_directory = false
+#
+# true
+#        If the remove_empty_depot option is set to "true" and the
+#        last product (or bundle) in a depot is removed, the depot's
+#        swagent.log file and directory are also removed.
+#
+# false (Default)
+#        The depot's swagent.log and directory are not removed
+#        when the last product (or bundle) in it is removed.
+#
+##############################################################################
+#  remove_obsolete_filesets
+########
+#  swcopy.remove_obsolete_filesets= false
+#  swpackage.remove_obsolete_filesets= false
+#
+# Controls whether swcopy or swpackage automatically remove obsolete filesets
+# from target products in the target depot.
+#
+# true
+#       After copy or package is complete, remove obsolete filesets from target
+#       products written to during the swcopy or swpackage.  Obsolete filesets
+#       are filesets that were not part of the product during the most
+#       recent packaging of the product residing on the source depot or during
+#       the current packaging of the product defined in the source psf.
+#
+# false (Default)
+#       Do not remove obsolete filesets.
+#
+##############################################################################
+#  remove_setup_cmd
+########
+#  swagent.remove_setup_cmd	= /usr/lbin/sw/remove_setup
+#
+# Defines the script called by the agent to perform release-specific remove
+# preparation.  For an OS update, this script will invoke the tlink
+# command whenever a fileset is removed.
+#
+# Please Note:  Transition links do not exist on 11.31 and newer
+# releases so there are no remove preparation steps to perform therefore
+# the remove_setup_cmd is never executed for these releases.
+#
+##############################################################################
+#  return_warning_exitcode
+########
+#  swinstall.return_warning_exitcode = false
+#  swcopy.return_warning_exitcode = false
+#  swremove.return_warning_exitcode = false
+#  swreg.return_warning_exitcode = false
+#  swconfig.return_warning_exitcode = false
+#  swacl.return_warning_exitcode = false
+#  swjob.return_warning_exitcode = false
+#  swask.return_warning_exitcode = false
+#
+# Controls the exit code of SD controller commands if there are warnings and/or 
+# errors. This option is applicable only when a single target is specified.  
+# 
+#
+# true 
+#       When set to true, SD controller commands return the following exit 
+#       code:
+#           0  The command executed successfully with no WARNINGs and ERRORs.
+#           1  There were one or more ERRORs while executing the command.
+#           2  There were one or more WARNINGs but no ERRORs while executing
+#              the command.
+#                      
+# false (Default)
+#       When set to the default value of false, SD controller commands return  
+#       the following exit code:
+#           0  The command executed successfully with no WARNINGs and ERRORs 
+#              on all targets.
+#           1  The command execution failed on ALL targets.
+#           2  The command execution failed on SOME targets.
+#
+##############################################################################
+#  retry_rpc
+########
+#  swcopy.retry_rpc		= 1
+#  swinstall.retry_rpc		= 1
+#
+# Defines the number of times a lost source connection will be retried
+# during file transfers in swinstall.  A lost connection is one
+# that has timed out.  When used in conjunction with the rpc_timeout
+# option, the success of installing over slow or busy networks
+# can be increased.  If set to zero, then any rpc_timeout to the
+# source will cause the task to abort.  If set from 1 to 9, then the
+# install of each fileset will be attempted that number of times.
+# The reinstall_files option should also be set to false to 
+# avoid installing files within the fileset that were successfully
+# installed.
+#
+# Retry_rpc also applies to the swinstall/swcopy controller contacting
+# the target agent.  The algorithm uses the values from the option
+# retry_rpc_interval.
+#
+# To allow long waits to handle transient network failures, the
+# suggested values for retry_rpc_interval are {1 2 4 8 15}, along with a
+# suggested value of 5 for retry_rpc.  If the agent session fails to
+# start, the suggested values cause the controller to retry the RPC to
+# contact the target 5 times over a period of 30 minutes.  The
+# controller will attempt to re-contact that agent after 1 minute for
+# the first retry, then 2 minutes for the second retry, 4 for the third,
+# then 8, then 15 for all additional retries.
+#
+##############################################################################
+#  retry_rpc_interval
+########
+#  swcopy.retry_rpc_interval        = {0}
+#  swinstall.retry_rpc_interval     = {0}
+#
+# The retry_rpc_interval option controls the interval schedule in
+# minutes for repeated attempts to make a connection to a target after
+# an initial failure.  This option is used in conjunction with the
+# retry_rpc option.  If the number of values is equal to the value of
+# retry_rpc, the target will be retried retry_rpc times with the given
+# wait intervals.  If the number of values is less than retry_rpc, the
+# last value given is repeated until the number of actual retries is
+# equal to retry_rpc.
+#
+# The default for this option is 0, which causes no delay between retries.
+#
+# A suggested value of {1 2 4 8 15} for this option, along with a
+# suggested value of 5 for the retry_rpc option, will cause SD to wait
+# up to 30 minutes during transient network failures.  See the retry_rpc
+# option for more configuration details.
+#
+##############################################################################
+#  reuse_short_job_numbers
+########
+#  swconfig.reuse_short_job_numbers = true
+#  swcopy.reuse_short_job_numbers   = true
+#  swinstall.reuse_short_job_numbers= true
+#  swremove.reuse_short_job_numbers = true
+#  swverify.reuse_short_job_numbers = true
+#
+# Controls whether all job id numbers less than 10000 are used, before
+# beginning to use job id numbers greater than 10000.
+#
+# true (Default)
+#       All job id numbers less than 10000 are used before using higher
+#       numbers.  Typically old jobs are removed long before job number
+#       9999 is reached, so typically the job number quickly rolls over
+#       from 9999 back to 1.
+#
+# false
+#       After job id number 9999 is reached, begin using numbers above
+#       10000.  This avoids a possible long delay searching for unused
+#       job numbers after job 9999 is used, when old jobs have not been
+#       removed before 9999 is reached.  This prevents rollover from
+#       9999 back to 1, so is usually not desirable.  When this is set
+#       job numbers will increase to 8 digits (99999999) if necessary.
+#
+##############################################################################
+#  rpc_binding_info
+########
+#  swacl.rpc_binding_info	= ncacn_ip_tcp:[2121] ncadg_ip_udp:[2121]
+#  swagentd.rpc_binding_info	=  ncacn_ip_tcp:[2121] ncadg_ip_udp:[2121]
+#  swconfig.rpc_binding_info	= ncacn_ip_tcp:[2121] ncadg_ip_udp:[2121]
+#  swcopy.rpc_binding_info	= ncacn_ip_tcp:[2121] ncadg_ip_udp:[2121]
+#  swinstall.rpc_binding_info	= ncacn_ip_tcp:[2121] ncadg_ip_udp:[2121]
+#  swjob.rpc_binding_info	= ncacn_ip_tcp:[2121] ncadg_ip_udp:[2121]
+#  swlist.rpc_binding_info	= ncacn_ip_tcp:[2121] ncadg_ip_udp:[2121]
+#  swreg.rpc_binding_info	= ncacn_ip_tcp:[2121] ncadg_ip_udp:[2121]
+#  swremove.rpc_binding_info	= ncacn_ip_tcp:[2121] ncadg_ip_udp:[2121]
+#  swverify.rpc_binding_info	= ncacn_ip_tcp:[2121] ncadg_ip_udp:[2121]
+#
+# Defines the protocol sequence(s) and endpoint(s) which the daemon should
+# listen on.  HP-UX supports both the udp (ncadg_ip_udp:[2121])
+# and tcp (ncacn_ip_tcp:[2121]) protocol sequence/endpoint.  Specifying
+# both udp and tcp for the swagentd rpc_binding_info default will allow 
+# the daemon to accept connections from either protocol sequence.  
+# SD on SunOS only supports the udp (ncadg_ip_udp:[2121]) protocol/endpoint.
+#
+##############################################################################
+#  rpc_binding_info_alt_source
+########
+#  swagent.rpc_binding_info_alt_source	= ncadg_ip_udp:[2121]
+#
+# Defines the protocol sequence(s) and endpoint(s) used when the agent
+# attempts to contact an alternate source depot (as specified by the
+# swagent.alternate_source option).  HP-UX supports both the udp 
+# (ncadg_ip_udp:[2121]) and tcp (ncacn_ip_tcp:[2121]) protocol 
+# sequence/endpoint.  SD on SunOS only supports udp (ncadg_ip_udp:[2121]).
+# By default udp is used.
+#
+##############################################################################
+#  rpc_binding_info_source
+########
+#  swinstall.rpc_binding_info_source	=
+#  swcopy.rpc_binding_info_source	=
+#
+# Defines the protocol sequence(s) and endpoints(s) used to contact a source
+# depot.  If rpc_binding_info_source is not specified, rpc_binding_info is
+# used.  If both are specified, rpc_binding_info_source is used.
+#
+##############################################################################
+#  rpc_binding_info_target
+########
+#  swinstall.rpc_binding_info_target	=
+#  swcopy.rpc_binding_info_target	=
+#
+# Defines the protocol sequence(s) and endpoints(s) used to contact targets.
+# If rpc_binding_info_target is not specified, rpc_binding_info is 
+# used.  If both are specified, rpc_binding_info_target is used.
+#
+#
+##############################################################################
+#  rpc_timeout
+########
+#  swacl.rpc_timeout		= 5
+#  swconfig.rpc_timeout		= 5
+#  swcopy.rpc_timeout		= 5
+#  swinstall.rpc_timeout	= 5
+#  swjob.rpc_timeout		= 5
+#  swlist.rpc_timeout		= 5
+#  swreg.rpc_timeout		= 5
+#  swremove.rpc_timeout		= 5
+#  swverify.rpc_timeout		= 5
+#
+# Establishes the relative length of the communications timeout when using
+# the UDP protocol.  Higher values mean longer times.
+# You may need a higher value for a slow or busy
+# network.  Each value is approximately twice as long as the preceeding 
+# value.  A value of 5 is about 30 seconds.
+#
+##############################################################################
+#  run_as_superuser
+########
+#  swacl.run_as_superuser            = true
+#  swask.run_as_superuser            = true
+#  swconfig.run_as_superuser         = true
+#  swcopy.run_as_superuser           = true
+#  swinstall.run_as_superuser        = true
+#  swjob.run_as_superuser            = true
+#  swlist.run_as_superuser           = true
+#  swmodify.run_as_superuser         = true
+#  swpackage.run_as_superuser        = true
+#  swreg.run_as_superuser            = true
+#  swremove.run_as_superuser         = true
+#  swverify.run_as_superuser         = true
+#
+# Controls nonprivileged mode.  This option is ignored (treated as true) when
+# invoking user is super-user.
+#
+# true: (Default)
+#       SD operations are performed with super-user privilege.
+#       Permission for operations is granted or denied according to SD
+#       ACLs.  SD logfiles and IPD are stored under /var/adm/sw.  The
+#       admin_directory option is ignored.
+#
+# false:
+#       If invoking user is local non super-user, SD operations are
+#       performed in nonprivileged mode.  In this mode permission is
+#       checked with regard to file system permissions of the invoking
+#       user.  SD ACLs are ignored.
+#
+#       In this mode all files created by SD have the uid and gid of the
+#       invoking user, and the mode of created files is set according to
+#       the invoking user's umask.  SD logfiles and IPD are stored under
+#       /var/home/<username>/sw, or at a location specified by the
+#       admin_directory option.
+#
+#       In this mode remote (push) tasks are not allowed.  The
+#       autoremove_jobs option is forced to true.  Local source depots
+#       cannot be read unless they were created in nonprivileged mode.
+#       Remote source depots can be used in this mode, in which case
+#       source access will be controlled by SD ACLs on the remote host.
+#
+#       This mode is intended for creation and management of application
+#       software that is designed to be installed without superuser
+#       privilege.  Typically this mode is useful only for selected
+#       in-house applications, managed in an environment that supports
+#       this mode.
+#
+##############################################################################
+#  run_scripts
+########
+#  swinstall.run_scripts        = true
+#  swremove.run_scripts         = true
+#
+# Controls whether or not control scripts (such as preinstall, preremove,
+# postremove, configure, etc) are run during an install or remove session.
+# Control scripts are an important part of software packages and setting
+# this to false may keep software from being installed correctly.  Control
+# scripts also provide important cleanup when software is removed.  Setting
+# this to false during swremove may result in some manual cleanup being
+# required.
+#
+##############################################################################
+#  select_local
+########
+#  swacl.select_local		= true
+#  swconfig.select_local	= true
+#  swcopy.select_local		= true
+#  swinstall.select_local	= true
+#  swlist.select_local		= true
+#  swreg.select_local		= true
+#  swremove.select_local	= true
+#  swverify.select_local	= true
+#
+# If no target selections are specified, select the default root
+# directory /, or the default distribution_target_directory when 
+# operating on depots, at the local host as the target of the command.
+#
+##############################################################################
+#  show_superseded_patches
+########
+#  swlist.show_superseded_patches = false
+#
+# swlist will not display superseded patches.  To see them, you must
+# set this option to true.  Even if you explicitly swlist the superseded
+# patch, it will not display unless this option is true. Default value for
+# this option was changed from true to false. 11.00 SD had the default value
+# of true for this option. 
+#
+##############################################################################
+#  software
+########
+#  swacl.software		= 
+#  swconfig.software		= 
+#  swcopy.software		= 
+#  swinstall.software		= 
+#  swlist.software		= 
+#  swmodify.software		= 
+#  swpackage.software		= 
+#  swremove.software		= 
+#  swverify.software		= 
+#
+# Defines the default software selections.  If there is more than one
+# software selection listed, they must be separated by spaces.
+#
+##############################################################################
+#  software_view
+########
+#  swcopy.software_view      = all_bundles
+#  swinstall.software_view   = all_bundles
+#  swlist.software_view      = all_bundles
+#  swremove.software_view    = all_bundles
+#
+# Indicates the software view to be used by the Interactive UI of the 
+# controller.  It can be set to products, all_bundles, or a bundle 
+# category tag (to indicate to show only bundles of that category).
+#
+##############################################################################
+#  source
+########
+#  swcopy.source		=
+#  swinstall.source		=
+#
+# Defines the default source to use. This overrides other source options.
+#
+##############################################################################
+#  source_cdrom
+########
+#  swcopy.source_cdrom	     = /SD_CDROM
+#  swinstall.source_cdrom    = /SD_CDROM
+#
+# Defines the default location of the source cdrom.  This syntax can be
+# host:path.
+#
+##############################################################################
+#  source_depot_audit
+########
+#  swagent.source_depot_audit	= false
+#
+# Controls whether software depot(s) on this system need to be audited.
+# A value of "true" turns on the "audit" functionality and create "swaudit.log"
+# which will contain the information about "WHO" and "WHEN" attempted to pull
+# "WHAT" software in "WHICH" version from the depot, and also "HOW" the task
+# goes(success/failure of a request). The default setting is "false".
+#
+##############################################################################
+#  source_directory
+########
+#  see distribution_source_directory
+#  
+##############################################################################
+#  source_file
+########
+#  swmodify.source_file		=
+#  swpackage.source_file	= psf
+#
+# Defines the default Product Specification File to read as the source.
+#
+##############################################################################
+#  source_tape
+########
+#  swcopy.source_tape		= /dev/rmt/0m
+#  swinstall.source_tape	= /dev/rmt/0m
+#
+# Defines the default location of the source tape, usually the
+# character-special file of a local tape device.
+#
+##############################################################################
+#  source_type
+########
+#  swcopy.source_type		= directory
+#  swinstall.source_type	= directory
+#  swpackage.source_type	= file
+#
+# Defines the default source type.
+# Allowed values for swinstall/swcopy are either directory, tape or cdrom.
+# Allowed values for swpackage are file and directory.
+#
+##############################################################################
+#  system_file_path
+########
+#  swagent.system_file_path	= /stand/system
+#
+# Defines the path to the kernel's template file.
+#
+##############################################################################
+#  system_prep_cmd
+########
+#  swagent.system_prep_cmd	= /usr/lbin/sysadm/system_prep
+#
+# Defines the kernel build preparation script called by the agent.
+# This script must do any necessary preparation so that control
+# scripts can correctly configure the kernel about to be built.
+#
+##############################################################################
+#  target_directory
+########
+#  see distribution_target_directory
+#  
+##############################################################################
+#  target_tape
+########
+#  see distribution_target_serial
+#  
+##############################################################################
+#  target_type
+########
+#  see media_type
+#  
+##############################################################################
+#  targets
+########
+#  swacl.targets		=
+#  swconfig.targets		= 
+#  swcopy.targets		= 
+#  swinstall.targets		= 
+#  swjob.targets		= 
+#  swlist.targets		= 
+#  swmodify.targets		= 
+#  swpackage.targets		= 
+#  swreg.targets		=
+#  swremove.targets		= 
+#  swverify.targets		= 
+#
+# Defines the default target selections.  If there is more than one
+# target selection listed, they must be separated by spaces.
+#
+##############################################################################
+#  uncompress_cmd
+########
+#  swagent.uncompress_cmd	= /usr/contrib/bin/gunzip
+#  swpackage.uncompress_cmd	= /usr/contrib/bin/gunzip
+#
+# Defines the command called by the target agent (or swpackage) to 
+# uncompress files after transmission. 
+# This command processes files which were stored on the
+# media in a compressed format. If the compression_type stored with the 
+# file is "gzip" then the internal uncompression, funzip, is used instead
+# of the external uncompress_cmd. The default value for HP-UX is 
+# /usr/bin/uncompress, and the default value for SunOS is /usr/ucb/uncompress.
+#
+# If the GZIP fileset has been installed then the default may be switched to 
+# "/usr/contrib/bin/gunzip" See the notes above under the 
+# "swagent.compress_cmd" entry for more information.
+#
+##############################################################################
+#  uncompress_files
+########
+#  swcopy.uncompress_files	= false
+#  swpackage.uncompress_files	= false
+#
+# When uncompress_files is set to true, files are uncompressed using 
+# the current uncompress_cmd unless their stored compression_type is 
+# "gzip" in  which case they are uncompressed by the internal uncompressor,
+# funzip. Files which are not compressed are not affected by this option.
+#
+# Only one of the uncompress_files and compress_files options may be set to 
+# true during a swpackage session. The uncompress_files option may not be
+# set to true if package_in_place is set to true or if the media_type is
+# set to tape.
+#
+##############################################################################
+#  use_alternate_source
+########
+#  swcopy.use_alternate_source	 = false
+#  swinstall.use_alternate_source= false
+#
+# Empowers each target agent to use its own, configured alternate
+# source, instead of the one specified by the user.  If false, each
+# target agent will use the same source, namely the source specified by
+# the user and validated by the command.  The protocol sequence and
+# endpoint given by the option, swagent.rpc_binding_info_alt_source, 
+# are used when the agent attempts to contact the depot specified by 
+# swagent.alternate_source.
+#
+##############################################################################
+#  verbose
+########
+#  swacl.verbose	= 1
+#  swask.verbose	= 1
+#  swconfig.verbose	= 1
+#  swcopy.verbose	= 1
+#  swinstall.verbose	= 1
+#  swjob.verbose	= 1
+#  swlist.verbose	= 0
+#  swmodify.verbose	= 1
+#  swpackage.verbose	= 1
+#  swreg.verbose	= 1
+#  swremove.verbose	= 1
+#  swverify.verbose	= 1
+#
+# Controls the verbosity of the command output (stdout).  A value of 0
+# disables output to stdout.  (Error and warning messages are always
+# written to stderr).  A value of 1 enables verbose messaging to stdout.
+# A value of 2 enables very verbose messaging to stdout.
+#
+##############################################################################
+#  write_remote_files
+########
+#  swconfig.write_remote_files	= false
+#  swcopy.write_remote_files	= false
+#  swinstall.write_remote_files	= false
+#  swpackage.write_remote_files	= false
+#  swremove.write_remote_files 	= false
+#
+# Prevents the operation of files on a target which exists on a
+# remote (NFS) filesystem.  Files destined for a remote filesystem will
+# be skipped.  If set to true and if the superuser has write permission
+# on the remote filesystem, the remote files will be 
+# installed/copied/removed/configured/packaged.
+#  

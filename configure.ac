@@ -1979,6 +1979,7 @@ AC_CONFIG_FILES([
 	contrib/startup/Makefile
 	contrib/startup/debian/Makefile
 	contrib/startup/gentoo/Makefile
+	contrib/startup/hp-ux/Makefile
 	contrib/startup/redhat/Makefile
 	contrib/startup/suse/Makefile
 	contrib/startup/ubuntu/Makefile

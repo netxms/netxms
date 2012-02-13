@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if test "x$1" = "xpurge"; then
+	rm -f /etc/netxmsd.conf
+	rm -f /etc/netxmsd.conf.backup
+	rm -f /etc/netxmsd.conf.sample
+	rm -rf /usr/share/netxms
+fi

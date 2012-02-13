@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if [ -f /etc/init.d/nxagentd ]; then
+	if [ -f /etc/nxagentd.conf ]; then
+		/etc/init.d/nxagentd start
+	else
+		echo "****************************************************"
+		echo "WARNING"
+		echo "Configuration file /etc/nxagentd.conf not found"
+		echo "Please create it and then start agent by running"
+		echo "/etc/init.d/nxagentd start"
+		echo "****************************************************"
+	fi
+fi

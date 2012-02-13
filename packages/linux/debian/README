@@ -1,0 +1,17 @@
+Building binary packages for Debian:
+
+0. Prerequisites:
+	Packages libssl-dev, libexpat1-dev, and libreadline5-dev must be installed
+
+1. Configure and build NetXMS as following:
+
+	./configure --prefix=/usr --with-server --with-odbc --with-sqlite --with-pgsql --with-mysql
+	make install
+
+2. Go to packages/linux/debian
+
+3. Run populate.sh <version>
+
+4. Run build.sh
+
+5. Resulting .deb files will be in output directory

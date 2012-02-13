@@ -1,0 +1,107 @@
+#!/bin/sh
+
+VERSION=$1
+if [ "x$VERSION" = "x" ]; then
+	echo "Usage: $0 <version>"
+	exit
+fi
+
+ARCH=`uname -m`
+if [ "x$ARCH" = "xx86_64" ]; then
+	ARCH="amd64"
+fi
+
+# netxms-base
+mkdir netxms-base
+mkdir netxms-base/DEBIAN
+mkdir netxms-base/usr
+mkdir netxms-base/usr/bin
+mkdir netxms-base/usr/lib
+cat netxms-base.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-base/DEBIAN/control
+cp /usr/bin/nxcptest netxms-base/usr/bin/
+cp -P /usr/lib/libnetxms.so* netxms-base/usr/lib/
+cp -P /usr/lib/libnxsqlite.so* netxms-base/usr/lib/
+
+# netxms-agent
+mkdir netxms-agent
+mkdir netxms-agent/DEBIAN
+mkdir netxms-agent/etc
+mkdir netxms-agent/etc/init.d
+mkdir netxms-agent/usr
+mkdir netxms-agent/usr/bin
+mkdir netxms-agent/usr/lib
+cat netxms-agent.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-agent/DEBIAN/control
+cp netxms-agent.preinst netxms-agent/DEBIAN/preinst
+cp netxms-agent.postinst netxms-agent/DEBIAN/postinst
+cp netxms-agent.prerm netxms-agent/DEBIAN/prerm
+cp netxms-agent.postrm netxms-agent/DEBIAN/postrm
+cp /usr/bin/nxagentd netxms-agent/usr/bin/
+cp -P /usr/lib/libnxlp.so* netxms-agent/usr/lib/
+cp -P /usr/lib/libnsm_* netxms-agent/usr/lib/
+cp ../../../contrib/startup/debian/nxagentd netxms-agent/etc/init.d/
+chmod 755 netxms-agent/etc/init.d/nxagentd
+
+# netxms-server
+mkdir netxms-server
+mkdir netxms-server/DEBIAN
+mkdir netxms-server/etc
+mkdir netxms-server/etc/init.d
+mkdir netxms-server/usr
+mkdir netxms-server/usr/bin
+mkdir netxms-server/usr/lib
+mkdir netxms-server/usr/share
+mkdir netxms-server/usr/share/netxms
+mkdir netxms-server/usr/share/netxms/mibs
+mkdir netxms-server/usr/share/netxms/sql
+cat netxms-server.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-server/DEBIAN/control
+cp netxms-server.preinst netxms-server/DEBIAN/preinst
+cp netxms-server.postinst netxms-server/DEBIAN/postinst
+cp netxms-server.prerm netxms-server/DEBIAN/prerm
+cp netxms-server.postrm netxms-server/DEBIAN/postrm
+cp /usr/bin/netxmsd netxms-server/usr/bin/
+cp /usr/bin/nxadm netxms-server/usr/bin/
+cp /usr/bin/nxdbmgr netxms-server/usr/bin/
+cp /usr/bin/nxencpasswd netxms-server/usr/bin/
+cp /usr/bin/nxget netxms-server/usr/bin/
+cp /usr/bin/nxmibc netxms-server/usr/bin/
+cp /usr/bin/nxscript netxms-server/usr/bin/
+cp /usr/bin/nxsnmpget netxms-server/usr/bin/
+cp /usr/bin/nxsnmpset netxms-server/usr/bin/
+cp /usr/bin/nxsnmpwalk netxms-server/usr/bin/
+cp /usr/bin/nxupload netxms-server/usr/bin/
+cp -P /usr/lib/libnxcore.so* netxms-server/usr/lib/
+cp -P /usr/lib/libnxddr_sqlite.so* netxms-server/usr/lib/
+cp -P /usr/lib/libnxmap.so* netxms-server/usr/lib/
+cp -P /usr/lib/libnxsl.so* netxms-server/usr/lib/
+cp -P /usr/lib/libnxsms_generic.so* netxms-server/usr/lib/
+cp -P /usr/lib/libnxsms_nxagent.so* netxms-server/usr/lib/
+cp -P /usr/lib/libnxsnmp.so* netxms-server/usr/lib/
+cp -P /usr/lib/libnxsrv.so* netxms-server/usr/lib/
+cp /usr/share/netxms/mibs/*.txt netxms-server/usr/share/netxms/mibs/
+cp /usr/share/netxms/sql/* netxms-server/usr/share/netxms/sql/
+cp ../../../contrib/startup/debian/netxmsd netxms-server/etc/init.d/
+chmod 755 netxms-server/etc/init.d/netxmsd
+
+# netxms-server-pgsql
+mkdir netxms-server-pgsql
+mkdir netxms-server-pgsql/DEBIAN
+mkdir netxms-server-pgsql/usr
+mkdir netxms-server-pgsql/usr/lib
+cat netxms-server-pgsql.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-server-pgsql/DEBIAN/control
+cp -P /usr/lib/libnxddr_pgsql.so* netxms-server-pgsql/usr/lib/
+
+# netxms-server-mysql
+mkdir netxms-server-mysql
+mkdir netxms-server-mysql/DEBIAN
+mkdir netxms-server-mysql/usr
+mkdir netxms-server-mysql/usr/lib
+cat netxms-server-mysql.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-server-mysql/DEBIAN/control
+cp -P /usr/lib/libnxddr_mysql.so* netxms-server-mysql/usr/lib/
+
+# netxms-server-odbc
+mkdir netxms-server-odbc
+mkdir netxms-server-odbc/DEBIAN
+mkdir netxms-server-odbc/usr
+mkdir netxms-server-odbc/usr/lib
+cat netxms-server-odbc.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-server-odbc/DEBIAN/control
+cp -P /usr/lib/libnxddr_odbc.so* netxms-server-odbc/usr/lib/

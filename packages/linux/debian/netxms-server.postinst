@@ -1,0 +1,17 @@
+#!/bin/sh
+
+echo "NetXMS: compiling MIB files"
+/usr/bin/nxmibc -z -d /usr/share/netxms/mibs -o /usr/share/netxms/mibs/netxms.mib > /dev/null
+
+if [ -f /etc/init.d/netxmsd ]; then
+	if [ -f /etc/netxmsd.conf ]; then
+		/etc/init.d/netxmsd start
+	else
+		echo "****************************************************"
+		echo "WARNING"
+		echo "Configuration file /etc/netxmsd.conf not found"
+		echo "Please create it and then start server by running"
+		echo "/etc/init.d/netxmsd start"
+		echo "****************************************************"
+	fi
+fi
