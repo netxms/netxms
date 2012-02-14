@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import java.text.DateFormat;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.Alarm;
@@ -34,7 +35,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Label provider for alarm list
- *
  */
 public class AlarmListLabelProvider implements ITableLabelProvider
 {
@@ -43,7 +43,7 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 	// Constants
 	private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, Messages.AlarmListLabelProvider_AlarmState_Terminated };
 	
-	// Severity images
+	private NXCSession session;
 	private Image[] severityImages = new Image[5];
 	private Image[] stateImages = new Image[3];
 	
@@ -52,8 +52,8 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 	 */
 	public AlarmListLabelProvider()
 	{
-		super();
-
+		session = (NXCSession)ConsoleSharedData.getSession();
+		
 		severityImages[Severity.NORMAL] = StatusDisplayInfo.getStatusImage(Severity.NORMAL);
 		severityImages[Severity.WARNING] = StatusDisplayInfo.getStatusImage(Severity.WARNING);
 		severityImages[Severity.MINOR] = StatusDisplayInfo.getStatusImage(Severity.MINOR);
@@ -94,12 +94,17 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 			case AlarmList.COLUMN_STATE:
 				return stateText[((Alarm)element).getState()];
 			case AlarmList.COLUMN_SOURCE:
-				GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(((Alarm)element).getSourceObjectId());
-				return (object != null) ? object.getObjectName() : null;
+				GenericObject object = session.findObjectById(((Alarm)element).getSourceObjectId());
+				return (object != null) ? object.getObjectName() : ("[" + Long.toString(((Alarm)element).getSourceObjectId()) + "]");
 			case AlarmList.COLUMN_MESSAGE:
 				return ((Alarm)element).getMessage();
 			case AlarmList.COLUMN_COUNT:
 				return Integer.toString(((Alarm)element).getRepeatCount());
+			case AlarmList.COLUMN_ACK_BY:
+				if (((Alarm)element).getState() == Alarm.STATE_OUTSTANDING)
+					return null;
+				AbstractUserObject user = session.findUserDBObjectById(((Alarm)element).getAckByUser());
+				return (user != null) ? user.getName() : ("[" + Long.toString(((Alarm)element).getAckByUser()) + "]");
 			case AlarmList.COLUMN_CREATED:
 				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG).format(((Alarm)element).getCreationTime());
 			case AlarmList.COLUMN_LASTCHANGE:
