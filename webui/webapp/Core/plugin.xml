@@ -88,4 +88,12 @@
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
+
+  <extension
+      point="org.eclipse.equinox.http.registry.servlets">
+    <servlet
+         alias="/"
+         class="org.netxms.webui.core.RedirectServlet">
+    </servlet>
+  </extension>
 </plugin>

@@ -1975,6 +1975,7 @@ webui/webapp/Core/icons/login.jpg -text
 webui/webapp/Core/icons/password.png -text
 webui/webapp/Core/icons/paste.gif -text
 webui/webapp/Core/icons/pause.png -text
+webui/webapp/Core/icons/progress.gif -text
 webui/webapp/Core/icons/pview.gif -text
 webui/webapp/Core/icons/refresh.gif -text
 webui/webapp/Core/icons/restart.gif -text
@@ -2038,6 +2039,7 @@ webui/webapp/Core/src/org/netxms/webui/core/ApplicationWorkbenchWindowAdvisor.ja
 webui/webapp/Core/src/org/netxms/webui/core/ExtendedContributionComparator.java -text
 webui/webapp/Core/src/org/netxms/webui/core/LoginJob.java -text
 webui/webapp/Core/src/org/netxms/webui/core/Messages.java -text
+webui/webapp/Core/src/org/netxms/webui/core/RedirectServlet.java -text
 webui/webapp/Core/src/org/netxms/webui/core/dialogs/LoginForm.java -text
 webui/webapp/Core/src/org/netxms/webui/core/dialogs/LoginSettingsDialog.java -text
 webui/webapp/Core/src/org/netxms/webui/core/dialogs/PasswordExpiredDialog.java -text
