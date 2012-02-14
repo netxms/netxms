@@ -143,23 +143,22 @@ public class ClientConnectorService extends Service implements SessionListener
 	/**
 	 * Show notification
 	 * 
+	 * @param severity
 	 * @param text
 	 */
-	public void showNotification(int id, String text)
+	public void showNotification(int severity, String text)
 	{
-		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-		final String sound = sp.getString("alarm.sound", "");
-		
-		Notification n = new Notification(android.R.drawable.stat_notify_sdcard, text, System.currentTimeMillis());
+		Notification n = new Notification(GetAlarmIcon(severity), text, System.currentTimeMillis());
 		n.defaults = Notification.DEFAULT_LIGHTS;
 
 		Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowser.class);
 		PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
 		n.setLatestEventInfo(getApplicationContext(), getString(R.string.notification_title), text, intent);
+		final String sound = GetAlarmSound(severity);
 		if ((sound != null) && (sound.length() > 0))
 			n.sound = Uri.parse(sound);
 
-		notificationManager.notify(id, n);
+		notificationManager.notify(NOTIFY_ALARM, n);
 	}
 
 	/**
@@ -263,7 +262,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 
 		GenericObject object = session.findObjectById(alarm.getSourceObjectId());
-		showNotification(NOTIFY_ALARM, ((object != null) ? object.getObjectName() : "<unknown>") + ": " + alarm.getMessage());
+		showNotification(alarm.getCurrentSeverity(), ((object != null) ? object.getObjectName() : "<unknown>") + ": " + alarm.getMessage());
 	}
 
 	/**
@@ -376,6 +375,53 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 	}
 
+	/**
+	 * Get alarm sound based on alarm severity
+	 * 
+	 * @param severity
+	 */
+	private String GetAlarmSound(int severity)
+	{
+		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+		switch (severity)
+		{
+			case 0:	// Normal
+				return sp.getString("alarm.sound.normal", "");
+			case 1:	// Warning
+				return sp.getString("alarm.sound.warning", "");
+			case 2:	// Minor
+				return sp.getString("alarm.sound.minor", "");
+			case 3:	// Major
+				return sp.getString("alarm.sound.major", "");
+			case 4:	// Critical
+				return sp.getString("alarm.sound.critical", "");
+		}
+		return "";
+	}
+
+	/**
+	 * Get alarm icon based on alarm severity
+	 * 
+	 * @param severity
+	 */
+	private int GetAlarmIcon(int severity)
+	{
+		switch (severity)
+		{
+			case 0:	// Normal
+				return R.drawable.status_normal;
+			case 1:	// Warning
+				return R.drawable.status_warning;
+			case 2:	// Minor
+				return R.drawable.status_minor;
+			case 3:	// Major
+				return R.drawable.status_major;
+			case 4:	// Critical
+				return R.drawable.status_critical;
+		}
+		return android.R.drawable.stat_notify_sdcard;
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * 
