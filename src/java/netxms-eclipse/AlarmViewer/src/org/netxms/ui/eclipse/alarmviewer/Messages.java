@@ -9,6 +9,7 @@ public class Messages extends NLS
 	public static String AcknowledgeAlarm_JobName;
 	public static String AcknowledgeAlarm_TaskName;
 	public static String AlarmComparator_Unknown;
+	public static String AlarmList_AckBy;
 	public static String AlarmList_ColumnCount;
 	public static String AlarmList_ColumnCreated;
 	public static String AlarmList_ColumnLastChange;

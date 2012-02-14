@@ -22,12 +22,10 @@
 */
 
 #ifndef _WIN32
-# include <config.h>
-#else
-# define USE_BUNDLED_GETOPT 1
+#include <config.h>
 #endif
 
-#if USE_BUNDLED_GETOPT
+#if USE_BUNDLED_GETOPT || defined(_WIN32)
 
 #ifndef __STDC__
 #  ifndef const

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,8 +70,9 @@ public class AlarmList extends Composite
 	public static final int COLUMN_SOURCE = 2;
 	public static final int COLUMN_MESSAGE = 3;
 	public static final int COLUMN_COUNT = 4;
-	public static final int COLUMN_CREATED = 5;
-	public static final int COLUMN_LASTCHANGE = 6;
+	public static final int COLUMN_ACK_BY = 5;
+	public static final int COLUMN_CREATED = 6;
+	public static final int COLUMN_LASTCHANGE = 7;
 	
 	private final IViewPart viewPart;
 	private NXCSession session = null;
@@ -97,8 +98,8 @@ public class AlarmList extends Composite
 		this.viewPart = viewPart;		
 		
 		// Setup table columns
-		final String[] names = { Messages.AlarmList_ColumnSeverity, Messages.AlarmList_ColumnState, Messages.AlarmList_ColumnSource, Messages.AlarmList_ColumnMessage, Messages.AlarmList_ColumnCount, Messages.AlarmList_ColumnCreated, Messages.AlarmList_ColumnLastChange };
-		final int[] widths = { 100, 100, 150, 300, 70, 100, 100 };
+		final String[] names = { Messages.AlarmList_ColumnSeverity, Messages.AlarmList_ColumnState, Messages.AlarmList_ColumnSource, Messages.AlarmList_ColumnMessage, Messages.AlarmList_ColumnCount, Messages.AlarmList_AckBy, Messages.AlarmList_ColumnCreated, Messages.AlarmList_ColumnLastChange };
+		final int[] widths = { 100, 100, 150, 300, 70, 100, 100, 100 };
 		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 	

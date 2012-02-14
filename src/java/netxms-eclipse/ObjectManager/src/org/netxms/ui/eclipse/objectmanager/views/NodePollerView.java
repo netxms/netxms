@@ -321,6 +321,9 @@ public class NodePollerView extends ViewPart
 	 */
 	private void onPollComplete(final boolean success, final String errorMessage)
 	{
+		if (textArea.isDisposed())
+			return;
+		
 		new UIJob(textArea.getDisplay(), "Update poller window") {
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)

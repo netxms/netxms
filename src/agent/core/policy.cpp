@@ -153,6 +153,9 @@ DWORD DeployPolicy(CommSession *session, CSCPMessage *request)
 		case AGENT_POLICY_CONFIG:
 			rcc = DeployConfig(session->getIndex(), guid, request);
 			break;
+		case AGENT_POLICY_LOG_PARSER:
+			rcc = DeployLogParser(session->getIndex(), guid, request);
+			break;
 		default:
 			rcc = ERR_BAD_ARGUMENTS;
 			break;
@@ -193,6 +196,32 @@ static DWORD RemoveConfig(DWORD session, uuid_t guid,  CSCPMessage *msg)
 
 
 //
+// Remove log parser file
+//
+
+static DWORD RemoveLogParser(DWORD session, uuid_t guid,  CSCPMessage *msg)
+{
+	TCHAR path[MAX_PATH], name[64], tail;
+	DWORD rcc;
+
+	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
+	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
+	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
+				  uuid_to_string(guid, name));
+
+	if (_tremove(path) != 0)
+	{
+		rcc = (errno == ENOENT) ? ERR_SUCCESS : ERR_IO_FAILURE;
+	}
+	else
+	{
+		rcc = ERR_SUCCESS;
+	}
+	return rcc;
+}
+
+
+//
 // Uninstall policy from agent
 //
 
@@ -210,6 +239,9 @@ DWORD UninstallPolicy(CommSession *session, CSCPMessage *request)
 	{
 		case AGENT_POLICY_CONFIG:
 			rcc = RemoveConfig(session->getIndex(), guid, request);
+			break;
+		case AGENT_POLICY_LOG_PARSER:
+			rcc = RemoveLogParser(session->getIndex(), guid, request);
 			break;
 		default:
 			rcc = ERR_BAD_ARGUMENTS;

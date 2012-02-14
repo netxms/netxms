@@ -25,8 +25,7 @@ import org.netxms.base.NXCPMessage;
 
 
 /**
- * @author Victor
- *
+ * Alarm
  */
 public class Alarm
 {
@@ -59,7 +58,6 @@ public class Alarm
 	private String helpdeskReference;
 	private int timeout;
 	private int timeoutEvent;
-	
 	
 	/**
 	 * @param msg Source NXCP message
