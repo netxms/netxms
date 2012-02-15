@@ -15,7 +15,7 @@ public class LogParserRule
 {
 	@Attribute(required=false)
 	private String context;
-	
+
 	@Attribute(name="break", required=false)
 	private boolean breakProcessing;
 	
@@ -33,4 +33,172 @@ public class LogParserRule
 	
 	@Element(required=false)
 	private String tag;
+
+	@Element(required=false)
+	private String description = "";
+	
+	@Element(required=false)
+	private LogParserContext contextDefinition;
+	
+	private LogParserRuleEditor editor;
+
+	/**
+	 * @return the context
+	 */
+	public String getContext()
+	{
+		return context;
+	}
+
+	/**
+	 * @param context the context to set
+	 */
+	public void setContext(String context)
+	{
+		this.context = context;
+	}
+
+	/**
+	 * @return the breakProcessing
+	 */
+	public boolean isBreakProcessing()
+	{
+		return breakProcessing;
+	}
+
+	/**
+	 * @param breakProcessing the breakProcessing to set
+	 */
+	public void setBreakProcessing(boolean breakProcessing)
+	{
+		this.breakProcessing = breakProcessing;
+	}
+
+	/**
+	 * @return the match
+	 */
+	public String getMatch()
+	{
+		return match;
+	}
+
+	/**
+	 * @param match the match to set
+	 */
+	public void setMatch(String match)
+	{
+		this.match = match;
+	}
+
+	/**
+	 * @return the event
+	 */
+	public LogParserEvent getEvent()
+	{
+		return event;
+	}
+
+	/**
+	 * @param event the event to set
+	 */
+	public void setEvent(LogParserEvent event)
+	{
+		this.event = event;
+	}
+
+	/**
+	 * @return the severity
+	 */
+	public int getSeverity()
+	{
+		return severity;
+	}
+
+	/**
+	 * @param severity the severity to set
+	 */
+	public void setSeverity(int severity)
+	{
+		this.severity = severity;
+	}
+
+	/**
+	 * @return the facility
+	 */
+	public int getFacility()
+	{
+		return facility;
+	}
+
+	/**
+	 * @param facility the facility to set
+	 */
+	public void setFacility(int facility)
+	{
+		this.facility = facility;
+	}
+
+	/**
+	 * @return the tag
+	 */
+	public String getTag()
+	{
+		return tag;
+	}
+
+	/**
+	 * @param tag the tag to set
+	 */
+	public void setTag(String tag)
+	{
+		this.tag = tag;
+	}
+
+	/**
+	 * @return the description
+	 */
+	public String getDescription()
+	{
+		return description;
+	}
+
+	/**
+	 * @param description the description to set
+	 */
+	public void setDescription(String description)
+	{
+		this.description = description;
+	}
+
+	/**
+	 * @return the contextDefinition
+	 */
+	public LogParserContext getContextDefinition()
+	{
+		return contextDefinition;
+	}
+
+	/**
+	 * @param contextDefinition the contextDefinition to set
+	 */
+	public void setContextDefinition(LogParserContext contextDefinition)
+	{
+		this.contextDefinition = contextDefinition;
+	}
+
+	/**
+	 * @return the editor
+	 */
+	public LogParserRuleEditor getEditor()
+	{
+		return editor;
+	}
+
+	/**
+	 * @param editor the editor to set
+	 */
+	public void setEditor(LogParserRuleEditor editor)
+	{
+		this.editor = editor;
+	}
 }

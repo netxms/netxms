@@ -18,4 +18,36 @@ public class LogParserEvent
 	
 	@Text
 	private String event;
+
+	/**
+	 * @return the parameterCount
+	 */
+	public int getParameterCount()
+	{
+		return parameterCount;
+	}
+
+	/**
+	 * @param parameterCount the parameterCount to set
+	 */
+	public void setParameterCount(int parameterCount)
+	{
+		this.parameterCount = parameterCount;
+	}
+
+	/**
+	 * @return the event
+	 */
+	public String getEvent()
+	{
+		return event;
+	}
+
+	/**
+	 * @param event the event to set
+	 */
+	public void setEvent(String event)
+	{
+		this.event = event;
+	}
 }

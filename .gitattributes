@@ -1452,8 +1452,10 @@ src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/view
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/LogParserEditor.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/ScriptSelector.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParser.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserContext.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserEvent.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserRule.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserRuleEditor.java -text
 src/java/netxms-eclipse/ServerJobManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/ServerJobManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ServerJobManager/build.properties -text
