@@ -70,7 +70,12 @@ public class Generator {
             dataSourceName = "";
         }
 
-        Class.forName(config.getProperty(CONFIG_JDBCDRIVER + dataSourceName));
+        final String driverName = config.getProperty(CONFIG_JDBCDRIVER + dataSourceName);
+        if (driverName == null) {
+            throw new RuntimeException(CONFIG_JDBCURL + dataSourceName + " not found in config file");
+        }
+        Class.forName(driverName);
+        
         Connection connection = null;
         try {
             //noinspection CallToDriverManagerGetConnection
