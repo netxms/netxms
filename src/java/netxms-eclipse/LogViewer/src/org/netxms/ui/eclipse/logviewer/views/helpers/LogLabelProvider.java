@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,19 +22,19 @@ import java.text.DateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.NXCSession;
+import org.netxms.client.events.Alarm;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.logviewer.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -43,9 +43,12 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class LogLabelProvider implements ITableLabelProvider
 {
+	public static final String[] ALARM_STATE_TEXTS = { "Outstanding", "Acknowledged", "Terminated" };
+	public static final String[] ALARM_HD_STATE_TEXTS = { "Ignored", "Open", "Closed" };
+	
 	private LogColumn[] columns;
 	private NXCSession session;
-	private Image[] statusImages;
+	private Image[] alarmStateImages;
 	private WorkbenchLabelProvider wbLabelProvider;
 	
 	public LogLabelProvider(Log logHandle)
@@ -54,12 +57,10 @@ public class LogLabelProvider implements ITableLabelProvider
 		columns = c.toArray(new LogColumn[c.size()]);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		statusImages = new Image[9];
-		for(int i = 0; i < 9; i++)
-		{
-			ImageDescriptor d = StatusDisplayInfo.getStatusImageDescriptor(i);
-			statusImages[i] = (d != null) ? d.createImage() : null;
-		}
+		alarmStateImages = new Image[3];
+		alarmStateImages[Alarm.STATE_OUTSTANDING] = Activator.getImageDescriptor("icons/outstanding.png").createImage();
+		alarmStateImages[Alarm.STATE_ACKNOWLEDGED] = Activator.getImageDescriptor("icons/acknowledged.png").createImage();
+		alarmStateImages[Alarm.STATE_TERMINATED] = Activator.getImageDescriptor("icons/terminated.png").createImage();
 		
 		wbLabelProvider = new WorkbenchLabelProvider();
 	}
@@ -78,7 +79,17 @@ public class LogLabelProvider implements ITableLabelProvider
 				try
 				{
 					int severity = Integer.parseInt(value);
-					return statusImages[severity];
+					return StatusDisplayInfo.getStatusImage(severity);
+				}
+				catch(NumberFormatException e)
+				{
+					return null;
+				}
+			case LogColumn.LC_ALARM_STATE:
+				try
+				{
+					int state = Integer.parseInt(value);
+					return alarmStateImages[state];
 				}
 				catch(NumberFormatException e)
 				{
@@ -177,6 +188,26 @@ public class LogLabelProvider implements ITableLabelProvider
 				{
 					return null;
 				}
+			case LogColumn.LC_ALARM_STATE:
+				try
+				{
+					int state = Integer.parseInt(value);
+					return ALARM_STATE_TEXTS[state];
+				}
+				catch(Exception e)
+				{
+					return "<error>";
+				}
+			case LogColumn.LC_ALARM_HD_STATE:
+				try
+				{
+					int state = Integer.parseInt(value);
+					return ALARM_HD_STATE_TEXTS[state];
+				}
+				catch(Exception e)
+				{
+					return "<error>";
+				}
 			default:
 				return value;
 		}
@@ -196,9 +227,9 @@ public class LogLabelProvider implements ITableLabelProvider
 	@Override
 	public void dispose()
 	{
-		for(int i = 0; i < statusImages.length; i++)
-			if (statusImages[i] != null)
-				statusImages[i].dispose();
+		for(int i = 0; i < alarmStateImages.length; i++)
+			if (alarmStateImages[i] != null)
+				alarmStateImages[i].dispose();
 	}
 
 	/* (non-Javadoc)

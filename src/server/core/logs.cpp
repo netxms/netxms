@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,6 +29,24 @@
 
 static NXCORE_LOG s_logs[] =
 {
+	{ _T("AlarmLog"), _T("alarms"), SYSTEM_ACCESS_VIEW_AUDIT_LOG,
+		{
+			{ _T("alarm_id"), _T("Alarm ID"), LC_INTEGER },
+			{ _T("alarm_state"), _T("State"), LC_ALARM_STATE },
+			{ _T("hd_state"), _T("Helpdesk State"), LC_ALARM_HD_STATE },
+			{ _T("source_object_id"), _T("Source"), LC_OBJECT_ID },
+			{ _T("current_severity"), _T("Severity"), LC_SEVERITY },
+			{ _T("original_severity"), _T("Original Severity"), LC_SEVERITY },
+			{ _T("source_event_code"), _T("Event"), LC_EVENT_CODE },
+			{ _T("message"), _T("Message"), LC_TEXT },
+			{ _T("repeat_count"), _T("Repeat Count"), LC_INTEGER },
+			{ _T("creation_time"), _T("Created"), LC_TIMESTAMP },
+			{ _T("last_change_time"), _T("Last Changed"), LC_TIMESTAMP },
+			{ _T("ack_by"), _T("Ack by"), LC_USER_ID },
+			{ _T("term_by"), _T("Terminated by"), LC_USER_ID },
+			{ NULL, NULL, 0 }
+		}
+	},
 	{ _T("AuditLog"), _T("audit_log"), SYSTEM_ACCESS_VIEW_AUDIT_LOG,
 		{
 			{ _T("record_id"), _T("Record ID"), LC_INTEGER },

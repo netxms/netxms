@@ -196,6 +196,10 @@ public class ColumnFilterEditor extends DashboardComposite
 	{
 		switch(column.getType())
 		{
+			case LogColumn.LC_ALARM_HD_STATE:
+				return new AlarmHDStateConditionEditor(this, toolkit);
+			case LogColumn.LC_ALARM_STATE:
+				return new AlarmStateConditionEditor(this, toolkit);
 			case LogColumn.LC_EVENT_CODE:
 				return new EventConditionEditor(this, toolkit);
 			case LogColumn.LC_INTEGER:

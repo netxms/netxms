@@ -30,15 +30,6 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class OrderingListLabelProvider implements ITableLabelProvider
 {
-	private Image checkboxOff;
-	private Image checkboxOn;
-	
-	public OrderingListLabelProvider()
-	{
-		checkboxOff = SharedIcons.CHECKBOX_OFF.createImage();
-		checkboxOn = SharedIcons.CHECKBOX_ON.createImage();
-	}
-	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
@@ -46,7 +37,7 @@ public class OrderingListLabelProvider implements ITableLabelProvider
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		if (columnIndex == 1)
-			return ((OrderingColumn)element).isDescending() ? checkboxOn : checkboxOff;
+			return ((OrderingColumn)element).isDescending() ? SharedIcons.IMG_CHECKBOX_ON : SharedIcons.IMG_CHECKBOX_OFF;
 		return null;
 	}
 
@@ -81,8 +72,6 @@ public class OrderingListLabelProvider implements ITableLabelProvider
 	@Override
 	public void dispose()
 	{
-		checkboxOff.dispose();
-		checkboxOn.dispose();
 	}
 
 	/* (non-Javadoc)

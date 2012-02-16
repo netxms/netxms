@@ -27,13 +27,15 @@ import org.netxms.base.NXCPMessage;
 public class LogColumn
 {
 	// Column types
-	public static final int LC_TEXT          = 0;
-	public static final int LC_SEVERITY      = 1;
-	public static final int LC_OBJECT_ID     = 2;
-	public static final int LC_USER_ID       = 3;
-	public static final int LC_EVENT_CODE    = 4;
-	public static final int LC_TIMESTAMP     = 5;
-	public static final int LC_INTEGER       = 6;
+	public static final int LC_TEXT           = 0;
+	public static final int LC_SEVERITY       = 1;
+	public static final int LC_OBJECT_ID      = 2;
+	public static final int LC_USER_ID        = 3;
+	public static final int LC_EVENT_CODE     = 4;
+	public static final int LC_TIMESTAMP      = 5;
+	public static final int LC_INTEGER        = 6;
+	public static final int LC_ALARM_STATE    = 7;
+	public static final int LC_ALARM_HD_STATE = 8;
 
 	private String name;
 	private String description;

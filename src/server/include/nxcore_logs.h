@@ -37,6 +37,8 @@
 #define LC_EVENT_CODE      4
 #define LC_TIMESTAMP       5
 #define LC_INTEGER         6
+#define LC_ALARM_STATE     7
+#define LC_ALARM_HD_STATE  8
 
 
 //
