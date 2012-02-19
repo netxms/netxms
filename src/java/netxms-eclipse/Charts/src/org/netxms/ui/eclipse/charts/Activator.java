@@ -33,7 +33,7 @@ import org.osgi.framework.BundleContext;
 public class Activator extends AbstractUIPlugin
 {
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.charts";
+	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.charts"; //$NON-NLS-1$
 
 	// The shared instance
 	private static Activator plugin;
@@ -55,10 +55,10 @@ public class Activator extends AbstractUIPlugin
 
 		// Register icon for our jobs
 		IProgressService service = PlatformUI.getWorkbench().getProgressService();
-	   service.registerIconForFamily(getImageDescriptor("icons/graph.png"), Activator.PLUGIN_ID);
+	   service.registerIconForFamily(getImageDescriptor("icons/graph.png"), Activator.PLUGIN_ID); //$NON-NLS-1$
 	   
-	   chartTitleFont = new Font(Display.getDefault(), "Verdana", 9, SWT.NORMAL);
-	   chartFont = new Font(Display.getDefault(), "Verdana", 8, SWT.NORMAL);
+	   chartTitleFont = new Font(Display.getDefault(), "Verdana", 9, SWT.NORMAL); //$NON-NLS-1$
+	   chartFont = new Font(Display.getDefault(), "Verdana", 8, SWT.NORMAL); //$NON-NLS-1$
 	}
 
 	/*

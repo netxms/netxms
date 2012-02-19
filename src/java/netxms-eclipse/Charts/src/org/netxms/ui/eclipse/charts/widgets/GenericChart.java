@@ -22,6 +22,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.charts.Activator;
+import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DataChart;
 
@@ -30,7 +31,7 @@ import org.netxms.ui.eclipse.charts.api.DataChart;
  */
 public abstract class GenericChart extends Canvas implements DataChart
 {
-	protected String title = "Chart";
+	protected String title = Messages.GenericChart_Title0;
 	protected boolean titleVisible = false;
 	protected boolean legendVisible = true;
 	protected boolean displayIn3D = true;

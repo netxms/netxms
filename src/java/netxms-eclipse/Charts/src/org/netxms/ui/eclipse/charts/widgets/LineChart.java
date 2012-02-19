@@ -44,6 +44,7 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.charts.Activator;
+import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.SelectionRectangle;
@@ -100,20 +101,20 @@ public class LineChart extends Chart implements HistoricalDataChart
 		colors = new ColorCache(this);
 		
 		preferenceStore = Activator.getDefault().getPreferenceStore();
-		showToolTips = preferenceStore.getBoolean("Chart.ShowToolTips");
-		zoomEnabled = preferenceStore.getBoolean("Chart.EnableZoom");
-		setBackground(getColorFromPreferences("Chart.Colors.Background"));
-		selection.setColor(getColorFromPreferences("Chart.Colors.Selection"));
+		showToolTips = preferenceStore.getBoolean("Chart.ShowToolTips"); //$NON-NLS-1$
+		zoomEnabled = preferenceStore.getBoolean("Chart.EnableZoom"); //$NON-NLS-1$
+		setBackground(getColorFromPreferences("Chart.Colors.Background")); //$NON-NLS-1$
+		selection.setColor(getColorFromPreferences("Chart.Colors.Selection")); //$NON-NLS-1$
 
 		// Create default item styles
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		for(int i = 0; i < GraphSettings.MAX_GRAPH_ITEM_COUNT; i++)
-			itemStyles.add(new GraphItemStyle(GraphItemStyle.LINE, ColorConverter.getColorFromPreferencesAsInt(preferenceStore, "Chart.Colors.Data." + i), 0, 0));
+			itemStyles.add(new GraphItemStyle(GraphItemStyle.LINE, ColorConverter.getColorFromPreferencesAsInt(preferenceStore, "Chart.Colors.Data." + i), 0, 0)); //$NON-NLS-1$
 		
 		// Setup title
 		ITitle title = getTitle();
-		title.setVisible(preferenceStore.getBoolean("Chart.ShowTitle"));
-		title.setForeground(getColorFromPreferences("Chart.Colors.Title"));
+		title.setVisible(preferenceStore.getBoolean("Chart.ShowTitle")); //$NON-NLS-1$
+		title.setForeground(getColorFromPreferences("Chart.Colors.Title")); //$NON-NLS-1$
 		title.setFont(Activator.getDefault().getChartTitleFont());
 		
 		// Setup legend
@@ -131,24 +132,24 @@ public class LineChart extends Chart implements HistoricalDataChart
 		xAxis.getTitle().setVisible(false);
 		xAxis.setRange(new Range(timeFrom, timeTo));
 		IAxisTick xTick = xAxis.getTick();
-		xTick.setForeground(getColorFromPreferences("Chart.Axis.X.Color"));
-		DateFormat format = new SimpleDateFormat("HH:mm");
+		xTick.setForeground(getColorFromPreferences("Chart.Axis.X.Color")); //$NON-NLS-1$
+		DateFormat format = new SimpleDateFormat(Messages.LineChart_ShortTimeFormat);
 		xTick.setFormat(format);
 		xTick.setFont(Activator.getDefault().getChartFont());
 		
 		final IAxis yAxis = axisSet.getYAxis(0);
 		yAxis.getTitle().setVisible(false);
-		yAxis.getTick().setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
+		yAxis.getTick().setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
 		yAxis.getTick().setFont(Activator.getDefault().getChartFont());
 		
 		// Setup grid
-		xAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.X.Style"));
-		xAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.X.Color"));
-		yAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.Y.Style"));
-		yAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.Y.Color"));
+		xAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.X.Style")); //$NON-NLS-1$
+		xAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.X.Color")); //$NON-NLS-1$
+		yAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.Y.Style")); //$NON-NLS-1$
+		yAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.Y.Color")); //$NON-NLS-1$
 		
 		// Setup plot area
-		setBackgroundInPlotArea(getColorFromPreferences("Chart.Colors.PlotArea"));
+		setBackgroundInPlotArea(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
 		final Composite plotArea = getPlotArea();
 		if (showToolTips)
 		{
@@ -168,7 +169,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 				{
 					Date timestamp = new Date((long)xAxis.getDataCoordinate(e.x));
 					double value = yAxis.getDataCoordinate(e.y);
-					getPlotArea().setToolTipText(DateFormat.getDateTimeInstance().format(timestamp) + "\n" + value);
+					getPlotArea().setToolTipText(DateFormat.getDateTimeInstance().format(timestamp) + "\n" + value); //$NON-NLS-1$
 				}
 			});
 		}
@@ -361,7 +362,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		series.setAntialias(SWT.ON);
 		series.setSymbolType(PlotSymbolType.NONE);
 		series.setLineWidth(2);
-		series.setLineColor(getColorFromPreferences("Chart.Colors.Data." + index));
+		series.setLineColor(getColorFromPreferences("Chart.Colors.Data." + index)); //$NON-NLS-1$
 		
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);
@@ -384,22 +385,22 @@ public class LineChart extends Chart implements HistoricalDataChart
 		int angle;
 		if (seconds <= 600)
 		{
-			formatString = "HH:mm:ss";
+			formatString = Messages.LineChart_MediumTimeFormat;
 			angle = 0;
 		}
 		else if (seconds <= 86400)
 		{
-			formatString = "HH:mm";
+			formatString = Messages.LineChart_ShortTimeFormat;
 			angle = 0;
 		}
 		else if (seconds <= 86400 * 7)
 		{
-			formatString = "E HH:mm";
+			formatString = Messages.LineChart_Medium2TimeFormat;
 			angle = 0;
 		}
 		else
 		{
-			formatString = "MMM.dd HH:mm";
+			formatString = Messages.LineChart_LongTimeFormat;
 			angle = 45;
 		}
 		

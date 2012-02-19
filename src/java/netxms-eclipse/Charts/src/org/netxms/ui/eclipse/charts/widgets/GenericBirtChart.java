@@ -75,9 +75,9 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		try
 		{
 			PlatformConfig config = new PlatformConfig();
-			config.setBIRTHome("");
+			config.setBIRTHome(""); //$NON-NLS-1$
 			final ChartEngine chartEngine = ChartEngine.instance(config);
-			deviceRenderer = chartEngine.getRenderer("dv.SWT");
+			deviceRenderer = chartEngine.getRenderer("dv.SWT"); //$NON-NLS-1$
 			generator = chartEngine.getGenerator();
 		}
 		catch(ChartException e)
