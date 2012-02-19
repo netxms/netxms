@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -278,6 +278,29 @@ LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
       value->add(szBuffer);
    }
    return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Handler for Agent.IsSubagentLoaded
+// 
+
+LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+{
+	TCHAR name[256];
+
+	AgentGetParameterArg(pszCmd, 1, name, 256);
+	int rc = 0;
+   for(DWORD i = 0; i < m_dwNumSubAgents; i++)
+   {
+		if (!_tcsicmp(name, m_pSubAgentList[i].pInfo->name))
+		{
+			rc = 1;
+			break;
+		}
+	}
+	ret_int(pValue, rc);
+	return SYSINFO_RC_SUCCESS;
 }
 
 

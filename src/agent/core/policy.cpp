@@ -137,6 +137,16 @@ static DWORD DeployConfig(DWORD session, uuid_t guid, CSCPMessage *msg)
 
 
 //
+// Deploy log parser policy
+//
+
+static DWORD DeployLogParser(DWORD session, uuid_t guid, CSCPMessage *msg)
+{
+	return ERR_NOT_IMPLEMENTED;
+}
+
+
+//
 // Deploy policy on agent
 //
 

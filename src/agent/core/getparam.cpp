@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
 LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
@@ -244,6 +245,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.ConfigurationServer"), H_StringConstant, g_szConfigServer, DCI_DT_STRING, DCIDESC_AGENT_CONFIG_SERVER },
    { _T("Agent.FailedRequests"), H_UIntPtr, (TCHAR *)&m_dwFailedRequests, DCI_DT_UINT, DCIDESC_AGENT_FAILEDREQUESTS },
    { _T("Agent.GeneratedTraps"), H_AgentTraps, _T("G"), DCI_DT_UINT64, DCIDESC_AGENT_GENERATED_TRAPS },
+   { _T("Agent.IsSubagentLoaded(*)"), H_IsSubagentLoaded, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_SUBAGENT_LOADED },
    { _T("Agent.LastTrapTime"), H_AgentTraps, _T("T"), DCI_DT_UINT64, DCIDESC_AGENT_LAST_TRAP_TIME },
    { _T("Agent.ProcessedRequests"), H_UIntPtr, (TCHAR *)&m_dwProcessedRequests, DCI_DT_UINT, DCIDESC_AGENT_PROCESSEDREQUESTS },
    { _T("Agent.Registrar"), H_StringConstant, g_szRegistrar, DCI_DT_STRING, DCIDESC_AGENT_REGISTRAR },
