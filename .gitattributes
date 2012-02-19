@@ -642,6 +642,7 @@ src/java/netxms-eclipse/ActionManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ActionManager/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/ActionManager/OSGI-INF/l10n/bundle_es.properties -text
 src/java/netxms-eclipse/ActionManager/OSGI-INF/l10n/bundle_ru.properties -text
+src/java/netxms-eclipse/ActionManager/OSGI-INF/l10n/bundle_zh_CN.properties -text
 src/java/netxms-eclipse/ActionManager/build.properties -text
 src/java/netxms-eclipse/ActionManager/icons/actionmgr.png -text
 src/java/netxms-eclipse/ActionManager/icons/disabled_overlay.png -text
@@ -660,9 +661,11 @@ src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/ac
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/dialogs/EditActionDlg.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/messages.properties -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/messages_es.properties -text
+src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/messages_zh_CN.properties -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/ActionManager.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers/ActionComparator.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers/ActionLabelProvider.java -text
+src/java/netxms-eclipse/AgentManager/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/AgentManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/AgentManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/AgentManager/build.properties -text
@@ -677,9 +680,11 @@ src/java/netxms-eclipse/AgentManager/icons/unsaved_config.png -text
 src/java/netxms-eclipse/AgentManager/plugin.xml -text
 src/java/netxms-eclipse/AgentManager/resource.properties -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/Activator.java -text
+src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/Messages.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/actions/OpenAgentConfig.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/actions/OpenPackageManager.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/dialogs/SaveConfigDialog.java -text
+src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/messages.properties -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/views/AgentConfigEditorView.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/views/PackageDeploymentMonitor.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/views/PackageManager.java -text
@@ -699,6 +704,7 @@ src/java/netxms-eclipse/AlarmViewer/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/AlarmViewer/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/AlarmViewer/OSGI-INF/l10n/bundle_es.properties -text
 src/java/netxms-eclipse/AlarmViewer/OSGI-INF/l10n/bundle_ru.properties -text
+src/java/netxms-eclipse/AlarmViewer/OSGI-INF/l10n/bundle_zh_CN.properties -text
 src/java/netxms-eclipse/AlarmViewer/build.properties -text
 src/java/netxms-eclipse/AlarmViewer/icons/acknowledged.png -text
 src/java/netxms-eclipse/AlarmViewer/icons/alarm_browser.png -text
@@ -717,6 +723,7 @@ src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/action
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/TerminateAlarm.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages.properties -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages_es.properties -text
+src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages_zh_CN.properties -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/objecttabs/AlarmTab.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmBrowser.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmList.java -text
@@ -965,6 +972,7 @@ src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/dial
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/dialogs/ImageSelectionDialog.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/messages.properties -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/messages_ru.properties -text
+src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/messages_zh_CN.properties -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/shared/ImageProvider.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/shared/ImageUpdateListener.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/views/ImageLibrary.java -text
@@ -996,6 +1004,7 @@ src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/actions/Op
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/actions/OpenSyslog.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages.properties -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages_ru.properties -text
+src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages_zh_CN.properties -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/views/LogViewer.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/views/helpers/LogLabelProvider.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/widgets/AlarmHDStateConditionEditor.java -text
@@ -1562,6 +1571,7 @@ src/java/netxms-eclipse/core/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/core/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/core/OSGI-INF/l10n/bundle_es.properties -text
 src/java/netxms-eclipse/core/OSGI-INF/l10n/bundle_ru.properties -text
+src/java/netxms-eclipse/core/OSGI-INF/l10n/bundle_zh_CN.properties -text
 src/java/netxms-eclipse/core/build.properties -text
 src/java/netxms-eclipse/core/icons/alt_about.gif -text
 src/java/netxms-eclipse/core/icons/alt_launcher.icns -text
@@ -1611,6 +1621,7 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/dialogs/PasswordE
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages.properties -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages_es.properties -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages_ru.properties -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages_zh_CN.properties -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/perspectives/DefaultPerspective.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/preferencepages/HttpProxyPrefs.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/preferencepages/WorkbenchGeneralPrefs.java -text
@@ -1624,6 +1635,7 @@ src/java/netxms-eclipse/library/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/library/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/library/OSGI-INF/l10n/bundle_es.properties -text
 src/java/netxms-eclipse/library/OSGI-INF/l10n/bundle_ru.properties -text
+src/java/netxms-eclipse/library/OSGI-INF/l10n/bundle_zh_CN.properties -text
 src/java/netxms-eclipse/library/build.properties -text
 src/java/netxms-eclipse/library/icons/add_obj.gif -text
 src/java/netxms-eclipse/library/icons/alarm.png -text
@@ -1660,6 +1672,7 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/Messages.java 
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/messages.properties -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/messages_es.properties -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/messages_ru.properties -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/messages_zh_CN.properties -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/ConsoleSharedData.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/IActionConstants.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedColors.java -text

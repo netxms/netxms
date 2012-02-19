@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.DeploymentStatus;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.DeploymentStatusComparator;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.DeploymentStatusLabelProvider;
@@ -34,7 +35,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class PackageDeploymentMonitor extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.PackageDeploymentMonitor";
+	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.PackageDeploymentMonitor"; //$NON-NLS-1$
 	
 	public static final int COLUMN_NODE = 0;
 	public static final int COLUMN_STATUS = 1;
@@ -49,7 +50,7 @@ public class PackageDeploymentMonitor extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "Node", "Status", "Message" };
+		final String[] names = { Messages.PackageDeploymentMonitor_ColumnNode, Messages.PackageDeploymentMonitor_ColumnStatus, Messages.PackageDeploymentMonitor_ColumnMessage };
 		final int[] widths = { 200, 110, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NODE, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());

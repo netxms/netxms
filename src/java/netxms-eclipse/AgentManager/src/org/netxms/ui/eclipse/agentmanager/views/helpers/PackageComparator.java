@@ -39,7 +39,7 @@ public class PackageComparator extends ViewerComparator
 		PackageInfo p1 = (PackageInfo)e1;
 		PackageInfo p2 = (PackageInfo)e2;
 		int result;
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case PackageManager.COLUMN_ID:
 				result = Long.signum(p1.getId() - p2.getId());

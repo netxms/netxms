@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.agentmanager.Activator;
+import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -56,7 +57,7 @@ public class SaveConfigDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Unsaved changes");
+		newShell.setText(Messages.SaveConfigDialog_UnsavedChanges);
 	}
 
 	/* (non-Javadoc)
@@ -65,10 +66,10 @@ public class SaveConfigDialog extends Dialog
 	@Override
 	protected void createButtonsForButtonBar(Composite parent)
 	{
-		createButton(parent, SAVE_ID, "&Save", false);
-		createButton(parent, SAVE_AND_APPLY_ID, "Save && &Apply", false);
-		createButton(parent, DISCARD_ID, "&Discard", false);
-		createButton(parent, IDialogConstants.CANCEL_ID, "Cancel", false);
+		createButton(parent, SAVE_ID, Messages.SaveConfigDialog_Save, false);
+		createButton(parent, SAVE_AND_APPLY_ID, Messages.SaveConfigDialog_SaveApply, false);
+		createButton(parent, DISCARD_ID, Messages.SaveConfigDialog_Discard, false);
+		createButton(parent, IDialogConstants.CANCEL_ID, Messages.SaveConfigDialog_Cancel, false);
 	}
 
 	/* (non-Javadoc)
@@ -87,10 +88,10 @@ public class SaveConfigDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		final Label image = new Label(dialogArea, SWT.NONE);
-		image.setImage(Activator.getImageDescriptor("icons/unsaved_config.png").createImage());
+		image.setImage(Activator.getImageDescriptor("icons/unsaved_config.png").createImage()); //$NON-NLS-1$
 		
 		final CLabel text = new CLabel(dialogArea, SWT.LEFT);
-		text.setText("Agent's configuration has been modified. Please select one of the following actions:\n\t\"Save\"\t\tSave new configuration\n\t\"Save && Apply\"\tSave new configuration and apply it\n\t\"Discard\"\tDiscard changes\n\t\"Cancel\"\t\tReturn to editing configuration");
+		text.setText(Messages.SaveConfigDialog_ModifiedMessage);
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;

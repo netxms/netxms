@@ -38,7 +38,7 @@ public class DeploymentStatusComparator extends ViewerComparator
 		DeploymentStatus s1 = (DeploymentStatus)e1;
 		DeploymentStatus s2 = (DeploymentStatus)e2;
 		int result;
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case PackageDeploymentMonitor.COLUMN_NODE:
 				result = s1.getNodeName().compareToIgnoreCase(s2.getNodeName());

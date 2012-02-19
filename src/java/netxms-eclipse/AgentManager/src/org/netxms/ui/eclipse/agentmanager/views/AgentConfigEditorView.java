@@ -45,6 +45,7 @@ import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.dialogs.SaveConfigDialog;
 import org.netxms.ui.eclipse.agentmanager.widgets.AgentConfigEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -56,7 +57,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
 @SuppressWarnings("deprecation")
 public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 {
-	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView";
+	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView"; //$NON-NLS-1$
 	
 	private NXCSession session;
 	private long nodeId;
@@ -81,7 +82,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		nodeId = Long.parseLong(site.getSecondaryId());
 		
 		GenericObject object = session.findObjectById(nodeId);
-		setPartName("Agent Config - " + ((object != null) ? object.getObjectName() : Long.toString(nodeId)));
+		setPartName(Messages.AgentConfigEditorView_PartName + ((object != null) ? object.getObjectName() : Long.toString(nodeId)));
 	}
 
 	/* (non-Javadoc)
@@ -137,9 +138,9 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 	{
 		try
 		{
-			actionFindReplace = new FindReplaceAction(getResourceBundle(), "actions.find_and_replace.", this);
+			actionFindReplace = new FindReplaceAction(getResourceBundle(), "actions.find_and_replace.", this); //$NON-NLS-1$
 			IHandlerService hs = (IHandlerService)getSite().getService(IHandlerService.class);
-			hs.activateHandler("org.eclipse.ui.edit.findReplace", new ActionHandler(actionFindReplace)); 		
+			hs.activateHandler("org.eclipse.ui.edit.findReplace", new ActionHandler(actionFindReplace)); 		 //$NON-NLS-1$
 		}
 		catch(IOException e)
 		{
@@ -167,7 +168,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 			{
 			}
 		};
-		actionSave.setText("&Save");
+		actionSave.setText(Messages.AgentConfigEditorView_Save);
 		actionSave.setImageDescriptor(SharedIcons.SAVE);
 	}
 
@@ -220,7 +221,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(getViewSite().getShell(), "Error", "Cannot save agent's configuration file: " + e.getMessage());
+			MessageDialog.openError(getViewSite().getShell(), Messages.AgentConfigEditorView_Error, Messages.AgentConfigEditorView_SaveError + e.getMessage());
 		}
 	}
 
@@ -267,7 +268,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 	private ResourceBundle getResourceBundle() throws IOException
 	{
 		InputStream in = null;
-		String resource = "resource.properties";
+		String resource = "resource.properties"; //$NON-NLS-1$
 		ClassLoader loader = this.getClass().getClassLoader();
 		if (loader != null)
 		{

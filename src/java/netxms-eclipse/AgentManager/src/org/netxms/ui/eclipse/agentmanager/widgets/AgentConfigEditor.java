@@ -50,7 +50,7 @@ public class AgentConfigEditor extends Composite
 	{
 		super(parent, style);
 		
-		editorFont = new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL);
+		editorFont = new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL); //$NON-NLS-1$
 		
 		setLayout(new FillLayout());
 		editor = new SourceViewer(this, new VerticalRuler(20), editorStyle);

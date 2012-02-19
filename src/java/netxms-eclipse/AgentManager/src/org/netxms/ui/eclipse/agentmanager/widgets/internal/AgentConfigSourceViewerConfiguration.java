@@ -53,7 +53,7 @@ public class AgentConfigSourceViewerConfiguration extends SourceViewerConfigurat
 	};
 	
 	private static final String[] configKeywords = { 
-		"ControlServers", "LogFile", "MasterServers" };
+		"ControlServers", "LogFile", "MasterServers" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	
 	private static final IRule[] codeRules = { 
 		new KeywordRule(configWordDetector, AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.KEYWORD),
@@ -111,7 +111,7 @@ public class AgentConfigSourceViewerConfiguration extends SourceViewerConfigurat
 		reconciler.setRepairer(dr, AgentConfigDocument.CONTENT_SECTION);
 	
 		scanner = new RuleBasedScanner();
-		scanner.setRules(new IRule[] { new PatternRule("\"", "\n", AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.ERROR), (char)0, false) });
+		scanner.setRules(new IRule[] { new PatternRule("\"", "\n", AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.ERROR), (char)0, false) }); //$NON-NLS-1$ //$NON-NLS-2$
 		scanner.setDefaultReturnToken(AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.STRING));
 		dr = new DefaultDamagerRepairer(scanner);
 		reconciler.setDamager(dr, AgentConfigDocument.CONTENT_STRING);
