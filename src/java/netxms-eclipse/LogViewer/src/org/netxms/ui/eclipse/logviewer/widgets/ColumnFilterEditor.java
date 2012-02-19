@@ -173,7 +173,7 @@ public class ColumnFilterEditor extends DashboardComposite
 				conditions.remove(ce);
 				if (conditions.size() > 0)
 					conditions.get(0).setLogicalOperation("");
-				filterBuilder.getParent().layout(true, true);
+				filterBuilder.updateLayout();
 			}
 		});
 		
@@ -185,7 +185,7 @@ public class ColumnFilterEditor extends DashboardComposite
 		if (conditions.size() > 1)
 			ce.setLogicalOperation((booleanOperation == ColumnFilter.AND) ? "AND" : "OR");
 
-		filterBuilder.getParent().layout(true, true);
+		filterBuilder.updateLayout();
 	}
 	
 	/**

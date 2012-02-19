@@ -38,6 +38,7 @@ import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -47,9 +48,9 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.Form;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
+import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
@@ -72,7 +73,7 @@ public class FilterBuilder extends Composite
 	private Map<String, ColumnFilterEditor> columns = new HashMap<String, ColumnFilterEditor>();
 	private List<OrderingColumn> orderingColumns = new ArrayList<OrderingColumn>();
 	private FormToolkit toolkit;
-	private Form form;
+	private ScrolledForm form;
 	private Section condition;
 	private Section ordering;
 	private TableViewer orderingList;
@@ -91,7 +92,7 @@ public class FilterBuilder extends Composite
 		setLayout(new FillLayout());
 		
 		toolkit = new FormToolkit(getDisplay());
-		form = toolkit.createForm(this);
+		form = toolkit.createScrolledForm(this);
 		form.setText("Filter");
 		form.getToolBarManager().add(new Action("&Execute", SharedIcons.EXECUTE) {
 			@Override
@@ -135,6 +136,18 @@ public class FilterBuilder extends Composite
 		});
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+	 */
+	@Override
+	public Point computeSize(int wHint, int hHint, boolean changed)
+	{
+		Point size = super.computeSize(wHint, hHint, changed);
+		if (size.y > 400)
+			size.y = 400;
+		return size;
+	}
+
 	/**
 	 * Create condition section
 	 */
@@ -272,8 +285,8 @@ public class FilterBuilder extends Composite
 		for(ColumnFilterEditor e : columns.values())
 			e.dispose();
 		columns.clear();
-
-		getParent().layout(true, true);
+		
+		updateLayout();
 	}
 	
 	/**
@@ -341,7 +354,7 @@ public class FilterBuilder extends Composite
 							public void run()
 							{
 								columns.remove(column.getName());
-								FilterBuilder.this.getParent().layout(true, true);
+								FilterBuilder.this.updateLayout();
 							}
 						});
 				editor.attachFilterBuilder(FilterBuilder.this);
@@ -353,7 +366,7 @@ public class FilterBuilder extends Composite
 				
 				columns.put(column.getName(), editor);
 				
-				FilterBuilder.this.getParent().layout(true, true);
+				FilterBuilder.this.updateLayout();
 			}
 		});
 	}
@@ -424,5 +437,14 @@ public class FilterBuilder extends Composite
 		}
 		filter.setOrderingColumns(new ArrayList<OrderingColumn>(orderingColumns));
 		return filter;
+	}
+	
+	/**
+	 * Update layout after internal change
+	 */
+	public void updateLayout()
+	{
+		form.reflow(true);
+		getParent().layout(true, true);
 	}
 }
