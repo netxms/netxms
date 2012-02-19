@@ -668,6 +668,7 @@ src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/vi
 src/java/netxms-eclipse/AgentManager/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/AgentManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/AgentManager/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/AgentManager/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/AgentManager/build.properties -text
 src/java/netxms-eclipse/AgentManager/icons/active.gif -text
 src/java/netxms-eclipse/AgentManager/icons/agent_config.gif -text

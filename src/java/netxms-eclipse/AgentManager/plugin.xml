@@ -9,7 +9,7 @@
             class="org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView"
             icon="icons/agent_config.gif"
             id="org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView"
-            name="Agent Config"
+            name="%view.AgentConfig"
             restorable="false">
       </view>
       <view
@@ -17,7 +17,7 @@
             class="org.netxms.ui.eclipse.agentmanager.views.PackageManager"
             icon="icons/package.gif"
             id="org.netxms.ui.eclipse.agentmanager.views.PackageManager"
-            name="Package Manager"
+            name="%view.PackageManager"
             restorable="true">
       </view>
       <view
@@ -25,7 +25,7 @@
             class="org.netxms.ui.eclipse.agentmanager.views.PackageDeploymentMonitor"
             icon="icons/package_deploy.gif"
             id="org.netxms.ui.eclipse.agentmanager.views.PackageDeploymentMonitor"
-            name="Package Deployment Monitor"
+            name="%view.PackageDeploymentMonitor"
             restorable="false">
       </view>
    </extension>
@@ -40,7 +40,7 @@
                enablesFor="+"
                icon="icons/agent_config.gif"
                id="org.netxms.ui.eclipse.agentmanager.popupActions.OpenAgentConfig_Node"
-               label="Edit agent&apos;s configuration file"
+               label="%menu.EditConfig"
                menubarPath="objectmgmt"
                style="push">
          </action>
@@ -50,17 +50,17 @@
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.action_set.agent_management"
-            label="Agent Management"
+            label="%actionSet.AgentManagement"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.agentmanager.actions.OpenPackageManager"
                definitionId="org.netxms.ui.eclipse.agentmanager.commands.open_package_manager"
                icon="icons/package.gif"
                id="org.netxms.ui.eclipse.agentmanager.actions.open_package_manager"
-               label="Package Manager"
+               label="%action.openPackageManager"
                menubarPath="config/additions"
                toolbarPath="config/additions"
-               tooltip="Open package manager">
+               tooltip="%actionDescription.openPackageManager">
          </action>
       </actionSet>
    </extension>
@@ -68,9 +68,9 @@
          point="org.eclipse.ui.commands">
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open package manager"
+            description="%actionDescription.openPackageManager"
             id="org.netxms.ui.eclipse.agentmanager.commands.open_package_manager"
-            name="Package Manager">
+            name="%action.openPackageManager">
       </command>
    </extension>
 
