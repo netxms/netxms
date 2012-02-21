@@ -4,10 +4,14 @@
 package org.netxms.ui.eclipse.serverconfig.widgets;
 
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -25,6 +29,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
+import org.netxms.ui.eclipse.serverconfig.dialogs.LogMacroEditDialog;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParser;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserRule;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserRuleEditor;
@@ -38,7 +43,7 @@ public class LogParserEditor extends Composite
 	private FormToolkit toolkit;
 	private ScrolledForm form;
 	private Set<ModifyListener> listeners = new HashSet<ModifyListener>();
-	private LogParser parser = null;
+	private LogParser parser = new LogParser();
 	private Composite rulesArea;
 	private TableViewer macroList;
 
@@ -99,6 +104,8 @@ public class LogParserEditor extends Composite
 		createMacroSection(macroArea);
 		
 		section.setClient(macroArea);
+		
+		form.reflow(true);
 	}
 
 	/**
@@ -136,6 +143,13 @@ public class LogParserEditor extends Composite
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		link.setLayoutData(gd);
+		link.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+				addMacro();
+			}
+		});
 
 		link = toolkit.createImageHyperlink(macroArea, SWT.NONE);
 		link.setImage(SharedIcons.IMG_EDIT);
@@ -143,6 +157,13 @@ public class LogParserEditor extends Composite
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		link.setLayoutData(gd);
+		link.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+				editMacro();
+			}
+		});
 
 		link = toolkit.createImageHyperlink(macroArea, SWT.NONE);
 		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -150,6 +171,13 @@ public class LogParserEditor extends Composite
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		link.setLayoutData(gd);
+		link.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+				deleteMacro();
+			}
+		});
 	}
 
 	/**
@@ -175,7 +203,15 @@ public class LogParserEditor extends Composite
 	 */
 	public String getParserXml()
 	{
-		return null;
+		try
+		{
+			return parser.createXml();
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			return "<parser>\n</parser>";
+		}
 	}
 
 	/**
@@ -217,7 +253,7 @@ public class LogParserEditor extends Composite
 	 */
 	private LogParserRuleEditor createRuleEditor(LogParserRule rule)
 	{
-		LogParserRuleEditor editor = new LogParserRuleEditor(rulesArea, SWT.BORDER);
+		LogParserRuleEditor editor = new LogParserRuleEditor(rulesArea, toolkit);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -235,6 +271,56 @@ public class LogParserEditor extends Composite
 		LogParserRuleEditor editor = createRuleEditor(rule);
 		editor.moveAbove(lastControl);
 		parser.getRules().add(rule);
-		getParent().layout(true, true);
+		form.reflow(true);
+	}
+	
+	/**
+	 * Add new macro
+	 */
+	private void addMacro()
+	{
+		LogMacroEditDialog dlg = new LogMacroEditDialog(getShell(), null, null);
+		if (dlg.open() == Window.OK)
+		{
+			parser.getMacros().put(dlg.getName(), dlg.getValue());
+			macroList.setInput(parser.getMacros().entrySet().toArray());
+		}
+	}
+	
+	/**
+	 * Edit selected macro
+	 */
+	@SuppressWarnings("unchecked")
+	private void editMacro()
+	{
+		IStructuredSelection selection = (IStructuredSelection)macroList.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		Entry<String, String> e = (Entry<String, String>)selection.getFirstElement();
+		LogMacroEditDialog dlg = new LogMacroEditDialog(getShell(), e.getKey(), e.getValue());
+		if (dlg.open() == Window.OK)
+		{
+			parser.getMacros().put(dlg.getName(), dlg.getValue());
+			macroList.setInput(parser.getMacros().entrySet().toArray());
+		}
+	}
+	
+	/**
+	 * Delete selected macro
+	 */
+	@SuppressWarnings("unchecked")
+	private void deleteMacro()
+	{
+		IStructuredSelection selection = (IStructuredSelection)macroList.getSelection();
+		if (selection.size() == 0)
+			return;
+		
+		Map<String, String> macros = parser.getMacros();
+		for(Object o : selection.toList())
+		{
+			macros.remove(((Entry<String, String>)o).getKey());
+		}
+		macroList.setInput(macros.entrySet().toArray());
 	}
 }
