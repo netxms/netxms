@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.serverconfig.widgets;
 
@@ -17,7 +32,6 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
@@ -45,6 +59,7 @@ public class LogParserEditor extends Composite
 	private Set<LogParserModifyListener> listeners = new HashSet<LogParserModifyListener>();
 	private LogParser parser = new LogParser();
 	private Composite rulesArea;
+	private ImageHyperlink addColumnLink;
 	private TableViewer macroList;
 
 	/**
@@ -82,14 +97,14 @@ public class LogParserEditor extends Composite
 		
 		section.setClient(rulesArea);
 		
-		final ImageHyperlink addColumnLink = toolkit.createImageHyperlink(rulesArea, SWT.NONE);
+		addColumnLink = toolkit.createImageHyperlink(rulesArea, SWT.NONE);
 		addColumnLink.setText("Add rule");
 		addColumnLink.setImage(SharedIcons.IMG_ADD_OBJECT);
 		addColumnLink.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
-				addRule(addColumnLink);
+				addRule();
 			}
 		});
 		
@@ -251,12 +266,12 @@ public class LogParserEditor extends Composite
 		
 		/* rules */
 		for(LogParserRule rule : parser.getRules())
-			createRuleEditor(rule);
+			createRuleEditor(rule).moveAbove(addColumnLink);
 		
 		/* macros */
 		macroList.setInput(parser.getMacros().entrySet().toArray());
 		
-		getParent().layout(true, true);
+		form.reflow(true);
 	}
 
 	/**
@@ -276,11 +291,11 @@ public class LogParserEditor extends Composite
 	/**
 	 * @param addColumnLink
 	 */
-	private void addRule(Control lastControl)
+	private void addRule()
 	{
 		LogParserRule rule = new LogParserRule();
 		LogParserRuleEditor editor = createRuleEditor(rule);
-		editor.moveAbove(lastControl);
+		editor.moveAbove(addColumnLink);
 		parser.getRules().add(rule);
 		form.reflow(true);
 		fireModifyListeners();

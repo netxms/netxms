@@ -34,7 +34,7 @@ public class LogParserContext
 	@Attribute(required=false)
 	private String reset = "auto";
 	
-	@Text
+	@Text(required=false)
 	private String data = "";
 
 	/**
