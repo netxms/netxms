@@ -13,7 +13,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -31,6 +30,7 @@ import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.netxms.ui.eclipse.serverconfig.dialogs.LogMacroEditDialog;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParser;
+import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserModifyListener;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserRule;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserRuleEditor;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -42,7 +42,7 @@ public class LogParserEditor extends Composite
 {
 	private FormToolkit toolkit;
 	private ScrolledForm form;
-	private Set<ModifyListener> listeners = new HashSet<ModifyListener>();
+	private Set<LogParserModifyListener> listeners = new HashSet<LogParserModifyListener>();
 	private LogParser parser = new LogParser();
 	private Composite rulesArea;
 	private TableViewer macroList;
@@ -183,7 +183,7 @@ public class LogParserEditor extends Composite
 	/**
 	 * @param modifyListener
 	 */
-	public void addModifyListener(ModifyListener modifyListener)
+	public void addModifyListener(LogParserModifyListener modifyListener)
 	{
 		listeners.add(modifyListener);
 	}
@@ -191,9 +191,18 @@ public class LogParserEditor extends Composite
 	/**
 	 * @param modifyListener
 	 */
-	public void removeModifyListener(ModifyListener modifyListener)
+	public void removeModifyListener(LogParserModifyListener modifyListener)
 	{
 		listeners.remove(modifyListener);
+	}
+	
+	/**
+	 * Execute all registered modify listeners
+	 */
+	private void fireModifyListeners()
+	{
+		for(LogParserModifyListener l : listeners)
+			l.modifyParser();
 	}
 
 	/**
@@ -203,6 +212,8 @@ public class LogParserEditor extends Composite
 	 */
 	public String getParserXml()
 	{
+		for(LogParserRule rule : parser.getRules())
+			rule.getEditor().save();
 		try
 		{
 			return parser.createXml();
@@ -253,7 +264,7 @@ public class LogParserEditor extends Composite
 	 */
 	private LogParserRuleEditor createRuleEditor(LogParserRule rule)
 	{
-		LogParserRuleEditor editor = new LogParserRuleEditor(rulesArea, toolkit);
+		LogParserRuleEditor editor = new LogParserRuleEditor(rulesArea, toolkit, rule);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -272,6 +283,7 @@ public class LogParserEditor extends Composite
 		editor.moveAbove(lastControl);
 		parser.getRules().add(rule);
 		form.reflow(true);
+		fireModifyListeners();
 	}
 	
 	/**
@@ -284,6 +296,7 @@ public class LogParserEditor extends Composite
 		{
 			parser.getMacros().put(dlg.getName(), dlg.getValue());
 			macroList.setInput(parser.getMacros().entrySet().toArray());
+			fireModifyListeners();
 		}
 	}
 	
@@ -303,6 +316,7 @@ public class LogParserEditor extends Composite
 		{
 			parser.getMacros().put(dlg.getName(), dlg.getValue());
 			macroList.setInput(parser.getMacros().entrySet().toArray());
+			fireModifyListeners();
 		}
 	}
 	
@@ -322,5 +336,6 @@ public class LogParserEditor extends Composite
 			macros.remove(((Entry<String, String>)o).getKey());
 		}
 		macroList.setInput(macros.entrySet().toArray());
+		fireModifyListeners();
 	}
 }

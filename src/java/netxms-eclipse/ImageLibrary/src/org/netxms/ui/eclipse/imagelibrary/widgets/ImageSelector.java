@@ -41,7 +41,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 	
 	public ImageSelector(Composite parent, int style)
 	{
-		super(parent, style);
+		super(parent, style, false);
 		ImageProvider.getInstance().addUpdateListener(this);
 		addDisposeListener(new DisposeListener() {
 			@Override

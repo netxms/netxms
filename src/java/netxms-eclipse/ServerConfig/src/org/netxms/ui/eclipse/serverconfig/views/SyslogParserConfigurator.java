@@ -25,8 +25,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
@@ -40,6 +38,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.widgets.LogParserEditor;
+import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserModifyListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
@@ -74,9 +73,9 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	public void createPartControl(Composite parent)
 	{
 		editor = new LogParserEditor(parent, SWT.NONE);
-		editor.addModifyListener(new ModifyListener() {
+		editor.addModifyListener(new LogParserModifyListener() {
 			@Override
-			public void modifyText(ModifyEvent e)
+			public void modifyParser()
 			{
 				setModified(true);
 			}
@@ -88,7 +87,6 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 		refresh();
 	}
 
-	
 	/**
 	 * Create actions
 	 */
@@ -266,6 +264,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	private void save()
 	{
 		final String xml = editor.getParserXml();
+System.out.println(xml);		
 		actionSave.setEnabled(false);
 		new ConsoleJob("Save syslog parser configuration", this, Activator.PLUGIN_ID, null) {
 			@Override

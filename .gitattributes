@@ -1476,6 +1476,7 @@ src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widg
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParser.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserContext.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserEvent.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserModifyListener.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserRule.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserRuleEditor.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/MacroListLabelProvider.java -text

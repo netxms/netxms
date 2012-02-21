@@ -18,51 +18,13 @@
  */
 package org.netxms.ui.eclipse.serverconfig.widgets.helpers;
 
-import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Text;
-
 /**
- * Event in log parser rule
+ * Modify listener for log parser editor
  */
-@Root(name="event", strict=false)
-public class LogParserEvent
+public interface LogParserModifyListener
 {
-	@Attribute(name="params", required=false)
-	private int parameterCount = 0;
-	
-	@Text
-	private String event = "0";
-
 	/**
-	 * @return the parameterCount
+	 * Called by parser editor when content is modified
 	 */
-	public int getParameterCount()
-	{
-		return parameterCount;
-	}
-
-	/**
-	 * @param parameterCount the parameterCount to set
-	 */
-	public void setParameterCount(int parameterCount)
-	{
-		this.parameterCount = parameterCount;
-	}
-
-	/**
-	 * @return the event
-	 */
-	public String getEvent()
-	{
-		return event;
-	}
-
-	/**
-	 * @param event the event to set
-	 */
-	public void setEvent(String event)
-	{
-		this.event = event;
-	}
+	public abstract void modifyParser();
 }

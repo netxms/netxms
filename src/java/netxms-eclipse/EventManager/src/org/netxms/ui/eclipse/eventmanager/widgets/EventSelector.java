@@ -42,7 +42,17 @@ public class EventSelector extends AbstractSelector
 	 */
 	public EventSelector(Composite parent, int style)
 	{
-		super(parent, style);
+		super(parent, style, false);
+		setText("<none>");
+	}
+
+	/**
+	 * @param parent
+	 * @param style
+	 */
+	public EventSelector(Composite parent, int style, boolean useHyperlink)
+	{
+		super(parent, style, useHyperlink);
 		setText("<none>");
 	}
 

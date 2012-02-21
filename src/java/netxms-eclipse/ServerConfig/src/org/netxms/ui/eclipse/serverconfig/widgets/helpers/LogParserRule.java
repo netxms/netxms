@@ -29,31 +29,31 @@ import org.simpleframework.xml.Root;
 public class LogParserRule
 {
 	@Attribute(required=false)
-	private String context;
+	private String context = "";
 
 	@Attribute(name="break", required=false)
-	private boolean breakProcessing;
+	private boolean breakProcessing = false;
 	
 	@Element(required=false)
-	private String match;
+	private String match = ".*";
 	
 	@Element(required=false)
-	private LogParserEvent event;
+	private LogParserEvent event = new LogParserEvent();
 	
 	@Element(required=false)
-	private int severity;
+	private int severity = 0;
 	
 	@Element(required=false)
-	private int facility;
+	private int facility = 0;
 	
 	@Element(required=false)
-	private String tag;
+	private String tag = "";
 
 	@Element(required=false)
 	private String description = "";
 	
-	@Element(required=false)
-	private LogParserContext contextDefinition;
+	@Element(name="context", required=false)
+	private LogParserContext contextDefinition = new LogParserContext();
 	
 	private LogParserRuleEditor editor;
 
