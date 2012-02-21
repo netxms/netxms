@@ -1461,6 +1461,7 @@ src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/acti
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/OpenSyslogParserConfig.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/AddUsmCredDialog.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/ConfigurationImportDialog.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/LogMacroEditDialog.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/VariableEditDialog.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/NetworkDiscoveryConfigurator.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/ServerConfigurationEditor.java -text
@@ -1477,6 +1478,7 @@ src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widg
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserEvent.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserRule.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserRuleEditor.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/MacroListLabelProvider.java -text
 src/java/netxms-eclipse/ServerJobManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/ServerJobManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ServerJobManager/build.properties -text
