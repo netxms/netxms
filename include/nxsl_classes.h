@@ -513,7 +513,8 @@ public:
 
    int run(NXSL_Environment *pEnv = NULL, DWORD argc = 0,
            NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL,
-           NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL);
+           NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
+			  const TCHAR *entryPoint = NULL);
 
    DWORD getCodeSize() { return m_dwCodeSize; }
 

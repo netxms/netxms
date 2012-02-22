@@ -388,6 +388,15 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
 							NXSL_ServerEnv *pEnv;
 
 							scriptName[i] = 0;
+
+							// Entry point can be given in form script/entry_point
+							TCHAR *entryPoint = _tcschr(scriptName, _T('/'));
+							if (entryPoint != NULL)
+							{
+								*entryPoint = 0;
+								entryPoint++;
+								StrStrip(entryPoint);
+							}
 							StrStrip(scriptName);
 
 							g_pScriptLibrary->lock();
@@ -401,7 +410,7 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
 								if (pszAlarmMsg != NULL)
 									script->setGlobalVariable(_T("$alarmMessage"), new NXSL_Value(pszAlarmMsg));
 
-								if (script->run(pEnv) == 0)
+								if (script->run(pEnv, 0, NULL, NULL, NULL, NULL, entryPoint) == 0)
 								{
 									NXSL_Value *result = script->getResult();
 									if (result != NULL)

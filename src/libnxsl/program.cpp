@@ -417,7 +417,7 @@ void NXSL_Program::error(int nError)
 
 int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
                       NXSL_VariableSystem *pUserLocals, NXSL_VariableSystem **ppGlobals,
-							 NXSL_VariableSystem *pConstants)
+							 NXSL_VariableSystem *pConstants, const TCHAR *entryPoint)
 {
    DWORD i, dwOrigCodeSize, dwOrigNumFn;
    NXSL_VariableSystem *pSavedGlobals, *pSavedConstants = NULL;
@@ -467,19 +467,28 @@ int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
       }
    }
 
-   // Locate main() and run
+   // Locate entry point and run
    if (i == m_dwNumPreloads)
    {
-      for(i = 0; i < m_dwNumFunctions; i++)
-         if (!_tcscmp(m_pFunctionList[i].m_szName, _T("main")))
-            break;
-
-		// No explicit main(), search for implicit
-      if (i == m_dwNumFunctions)
+		if (entryPoint != NULL)
 		{
 			for(i = 0; i < m_dwNumFunctions; i++)
-				if (!_tcscmp(m_pFunctionList[i].m_szName, _T("$main")))
+				if (!_tcscmp(m_pFunctionList[i].m_szName, entryPoint))
 					break;
+		}
+		else
+		{
+			for(i = 0; i < m_dwNumFunctions; i++)
+				if (!_tcscmp(m_pFunctionList[i].m_szName, _T("main")))
+					break;
+
+			// No explicit main(), search for implicit
+			if (i == m_dwNumFunctions)
+			{
+				for(i = 0; i < m_dwNumFunctions; i++)
+					if (!_tcscmp(m_pFunctionList[i].m_szName, _T("$main")))
+						break;
+			}
 		}
 
       if (i < m_dwNumFunctions)

@@ -42,7 +42,7 @@ int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
 
 int main(int argc, char *argv[])
 {
-   TCHAR *pszSource, szError[1024];
+   TCHAR *pszSource, szError[1024], entryPoint[256] = _T("");
    DWORD dwSize;
    NXSL_Program *pScript;
    NXSL_Environment *pEnv;
@@ -58,17 +58,25 @@ int main(int argc, char *argv[])
    m_pTestClass = new NXSL_TestClass;
 
    _tprintf(_T("NetXMS Scripting Host  Version ") NETXMS_VERSION_STRING _T("\n")
-            _T("Copyright (c) 2005-2010 Victor Kirhenshtein\n\n"));
+            _T("Copyright (c) 2005-2012 Victor Kirhenshtein\n\n"));
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "dr")) != -1)
+	while((ch = getopt(argc, argv, "de:r")) != -1)
    {
       switch(ch)
       {
          case 'd':
             dump = true;
             break;
+			case 'e':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, entryPoint, 255);
+				entryPoint[255] = 0;
+#else
+				nx_strncpy(entryPoint, optarg, 256);
+#endif
+				break;
 			case 'r':
 				printResult = true;
 				break;
@@ -83,8 +91,9 @@ int main(int argc, char *argv[])
    {
       printf("Usage: nxscript [options] script [arg1 [... argN]]\n\n"
              "Valid options are:\n"
-             "   -d Dump compiled script code\n"
-             "   -r Print script return value\n"
+             "   -d         Dump compiled script code\n"
+				 "   -e <name>  Entry point\n"
+             "   -r         Print script return value\n"
              "\n");
       return 127;
    }
@@ -120,7 +129,7 @@ int main(int argc, char *argv[])
 				ppArgs = NULL;
 			}
 
-			if (pScript->run(pEnv, argc - optind - 1, ppArgs) == 0)
+			if (pScript->run(pEnv, argc - optind - 1, ppArgs, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL) == 0)
 			{
 				NXSL_Value *result = pScript->getResult();
 				if (printResult)
