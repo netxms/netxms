@@ -28,12 +28,15 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -54,6 +57,8 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class LogParserEditor extends Composite
 {
+	private CTabFolder tabFolder;
+	private Text xmlEditor;
 	private FormToolkit toolkit;
 	private ScrolledForm form;
 	private Set<LogParserModifyListener> listeners = new HashSet<LogParserModifyListener>();
@@ -71,12 +76,30 @@ public class LogParserEditor extends Composite
 		super(parent, style);
 		
 		setLayout(new FillLayout());
+		
+		tabFolder = new CTabFolder(this, SWT.BOTTOM | SWT.FLAT | SWT.MULTI);
+		tabFolder.setUnselectedImageVisible(true);
+		tabFolder.setSimple(true);
 
+		createForm();
+		createTextEditor();
+	}
+	
+	/**
+	 * Create policy edit form
+	 */
+	private void createForm()
+	{
 		/* FORM */
 		toolkit = new FormToolkit(getDisplay());
-		form = toolkit.createScrolledForm(this);
+		form = toolkit.createScrolledForm(tabFolder);
 		form.setText("Log Parser");
 
+		final CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
+		tabItem.setText("Editor");
+		tabItem.setImage(SharedIcons.IMG_EDIT);
+		tabItem.setControl(form);
+		
 		TableWrapLayout layout = new TableWrapLayout();
 		layout.numColumns = 2;
 		form.getBody().setLayout(layout);
@@ -121,6 +144,20 @@ public class LogParserEditor extends Composite
 		section.setClient(macroArea);
 		
 		form.reflow(true);
+	}
+	
+	/**
+	 * Create text editor for direct XML edit
+	 */
+	private void createTextEditor()
+	{
+		xmlEditor = new Text(tabFolder, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+
+		final CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
+		tabItem.setText("Editor");
+		tabItem.setImage(SharedIcons.IMG_EDIT);
+		tabItem.setControl(form);
+
 	}
 
 	/**

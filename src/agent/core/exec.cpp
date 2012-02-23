@@ -512,6 +512,7 @@ LONG H_ExternalParameter(const TCHAR *pszCmd, const TCHAR *pszArg, TCHAR *pValue
 			else
 			{
 				// Timeout
+			   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter (shell exec): execution timeout"));
 				iStatus = SYSINFO_RC_ERROR;
 			}
 			ConditionSet(data->released);	// Allow worker to destroy data
