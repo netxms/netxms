@@ -2029,6 +2029,7 @@ webui/webapp/Core/icons/status/unmanaged.png -text
 webui/webapp/Core/icons/status/warning.png -text
 webui/webapp/Core/icons/terminate.gif -text
 webui/webapp/Core/icons/unknown_obj.gif -text
+webui/webapp/Core/icons/xml.gif -text
 webui/webapp/Core/icons/zoom_in.png -text
 webui/webapp/Core/icons/zoom_out.png -text
 webui/webapp/Core/jar/simple-xml-2.4.1.jar -text
@@ -2093,7 +2094,6 @@ webui/webapp/Dashboard/icons/ep_edit.png -text
 webui/webapp/Dashboard/icons/ep_left.png -text
 webui/webapp/Dashboard/icons/ep_right.png -text
 webui/webapp/Dashboard/icons/server_stats.png -text
-webui/webapp/Dashboard/icons/xml.gif -text
 webui/webapp/Dashboard/plugin.xml -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/Activator.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/DashboardElementAdapterFactory.java -text

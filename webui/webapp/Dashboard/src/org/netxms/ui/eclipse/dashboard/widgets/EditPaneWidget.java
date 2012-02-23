@@ -102,7 +102,7 @@ public class EditPaneWidget extends Canvas implements PaintListener
 				dbc.editElementXml(element);
 			}
 		};
-		actionEditXml.setImageDescriptor(Activator.getImageDescriptor("icons/xml.gif"));
+		actionEditXml.setImageDescriptor(SharedIcons.XML);
 		
 		actionDelete = new Action("&Delete") {
 			private static final long serialVersionUID = 1L;
