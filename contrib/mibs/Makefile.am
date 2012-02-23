@@ -60,6 +60,7 @@ mibs_DATA = \
 	CISCO-VLAN-IFTABLE-RELATIONSHIP-MIB.txt	\
 	CISCO-VLAN-MEMBERSHIP-MIB.txt \
 	CISCO-VTP-MIB.txt \
+        CONFIG-MIB.txt \
 	COSINE-GLOBAL-REG.txt \
 	COSINE-InVision-MIB.txt \
 	COSINE-ORION-MIB.txt \
@@ -82,6 +83,21 @@ mibs_DATA = \
 	FOUNDRY-SN-SWITCH-GROUP-MIB.txt \
 	FOUNDRY-SN-TRAP-MIB.txt \
 	FOUNDRY-SN-VSRP-MIB.txt \
+        HP-DOT1X-EXTENSIONS-MIB.txt \
+        HP-ENTITY-MIB.txt \
+        HP-ICF-8023-RPTR.txt \
+        HP-ICF-BASIC.txt \
+        HP-ICF-BRIDGE.txt \
+        HP-ICF-CHASSIS.txt \
+        HP-ICF-IPCONFIG.txt \
+        HP-ICF-OID.txt \
+        HP-ICF-STACK.txt \
+        HP-ICF-TC.txt \
+        HP-ICF-VRRP-MIB.txt \
+        HP-ICF-XRRP.txt \
+        HP-SwitchStack-MIB.txt \
+        HP-VLAN.txt \
+        HpicfHighAvailability-MIB.txt \
 	HOST-RESOURCES-MIB.txt \
 	HOST-RESOURCES-TYPES.txt \
 	IANA-ADDRESS-FAMILY-NUMBERS-MIB.txt \
@@ -98,6 +114,7 @@ mibs_DATA = \
 	INET-ADDRESS-MIB.txt \
 	IP-MIB.txt \
 	IPMROUTE-STD-MIB.txt \
+        IPV6-FLOW-LABEL-MIB.txt \
 	IPV6-TC.txt \
 	JUNIPER-IVE-MIB.txt \
 	LLDP-MIB.txt \
@@ -122,6 +139,7 @@ mibs_DATA = \
 	NETSCREEN-VPN-MON-MIB.txt \
 	NETSCREEN-VR-MIB.txt \
 	NETSCREEN-VSYS-MIB.txt \
+        NETSWITCH-MIB.txt \
 	NetWare-Server-MIB.txt \
 	NETWORK-APPLIANCE-MIB.txt \
 	NETWORK-SERVICES-MIB.txt \
@@ -158,6 +176,8 @@ mibs_DATA = \
 	S5-ROOT-MIB.txt \
 	S5-SWITCH-BAYSECURE-MIB.txt \
 	S5-TCS-MIB.txt \
+        SFLOW-MIB.txt \
+        SMON-MIB.txt \
 	SNMP-COMMUNITY-MIB.txt \
 	SNMP-FRAMEWORK-MIB.txt \
 	SNMP-PROXY-MIB.txt \
@@ -169,6 +189,7 @@ mibs_DATA = \
 	SNMPv2-SMI.txt \
 	SNMPv2-TC.txt \
 	SNMPv2-TM.txt \
+        STATISTICS-MIB.txt \
 	SW-MIB.txt \
 	SYNOPTICS-COMMON-MIB.txt \
 	SYNOPTICS-ROOT-MIB.txt \
