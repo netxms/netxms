@@ -154,9 +154,9 @@ public class LogParserEditor extends Composite
 		xmlEditor = new Text(tabFolder, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 
 		final CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
-		tabItem.setText("Editor");
-		tabItem.setImage(SharedIcons.IMG_EDIT);
-		tabItem.setControl(form);
+		tabItem.setText("XML");
+		tabItem.setImage(SharedIcons.IMG_XML);
+		tabItem.setControl(xmlEditor);
 
 	}
 
@@ -309,6 +309,8 @@ public class LogParserEditor extends Composite
 		macroList.setInput(parser.getMacros().entrySet().toArray());
 		
 		form.reflow(true);
+		
+		xmlEditor.setText(xml);
 	}
 
 	/**

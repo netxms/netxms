@@ -33,7 +33,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
@@ -97,7 +96,7 @@ public class EditPaneWidget extends Canvas implements PaintListener
 				dbc.editElementXml(element);
 			}
 		};
-		actionEditXml.setImageDescriptor(Activator.getImageDescriptor("icons/xml.gif"));
+		actionEditXml.setImageDescriptor(SharedIcons.XML);
 		
 		actionDelete = new Action("&Delete") {
 			@Override

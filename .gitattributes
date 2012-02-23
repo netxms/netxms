@@ -764,7 +764,6 @@ src/java/netxms-eclipse/Dashboard/icons/ep_edit.png -text
 src/java/netxms-eclipse/Dashboard/icons/ep_left.png -text
 src/java/netxms-eclipse/Dashboard/icons/ep_right.png -text
 src/java/netxms-eclipse/Dashboard/icons/server_stats.png -text
-src/java/netxms-eclipse/Dashboard/icons/xml.gif -text
 src/java/netxms-eclipse/Dashboard/plugin.xml -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/Activator.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/CloneDashboard.java -text
@@ -1450,7 +1449,6 @@ src/java/netxms-eclipse/ServerConfig/icons/import.gif -text
 src/java/netxms-eclipse/ServerConfig/icons/network_discovery.gif -text
 src/java/netxms-eclipse/ServerConfig/icons/server_config.png -text
 src/java/netxms-eclipse/ServerConfig/icons/syslog_cfg.gif -text
-src/java/netxms-eclipse/ServerConfig/icons/xml.gif -text
 src/java/netxms-eclipse/ServerConfig/plugin.xml -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/Activator.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/DeleteVariable.java -text
@@ -1670,6 +1668,7 @@ src/java/netxms-eclipse/library/icons/restart.gif -text
 src/java/netxms-eclipse/library/icons/save.gif -text
 src/java/netxms-eclipse/library/icons/terminate.gif -text
 src/java/netxms-eclipse/library/icons/unknown_obj.gif -text
+src/java/netxms-eclipse/library/icons/xml.gif -text
 src/java/netxms-eclipse/library/icons/zoom_in.png -text
 src/java/netxms-eclipse/library/icons/zoom_out.png -text
 src/java/netxms-eclipse/library/jar/simple-xml-2.4.1.jar -text
