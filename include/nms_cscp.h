@@ -875,6 +875,7 @@ typedef struct
 #define VID_DOT1X_BACKEND_STATE     ((DWORD)404)
 #define VID_IS_COMPLETE             ((DWORD)405)
 #define VID_MODIFY_TIME             ((DWORD)406)
+#define VID_IS_PHYS_PORT            ((DWORD)407)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

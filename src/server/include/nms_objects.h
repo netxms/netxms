@@ -601,6 +601,7 @@ public:
    void setSlotNumber(DWORD slot) { m_slotNumber = slot; Modify(); }
    void setPortNumber(DWORD port) { m_portNumber = port; Modify(); }
 	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; Modify(); }
+	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; Modify(); }
 	void setPeer(DWORD nodeId, DWORD ifId) { m_peerNodeId = nodeId; m_peerInterfaceId = ifId; Modify(); }
    void setDescription(const TCHAR *descr) { nx_strncpy(m_description, descr, MAX_DB_STRING); Modify(); }
 
@@ -820,9 +821,9 @@ public:
    BOOL isDown() { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
 
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
-   void createNewInterface(DWORD dwAddr, DWORD dwNetMask, const TCHAR *name = NULL, const TCHAR *descr = NULL,
-                           DWORD dwIndex = 0, DWORD dwType = 0, BYTE *pbMacAddr = NULL, DWORD bridgePort = 0,
-									DWORD slot = 0, DWORD port = 0, bool physPort = false);
+   Interface *createNewInterface(DWORD dwAddr, DWORD dwNetMask, const TCHAR *name = NULL, const TCHAR *descr = NULL,
+                                 DWORD dwIndex = 0, DWORD dwType = 0, BYTE *pbMacAddr = NULL, DWORD bridgePort = 0,
+											DWORD slot = 0, DWORD port = 0, bool physPort = false, bool manuallyCreated = false);
    void deleteInterface(Interface *pInterface);
 
 	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }

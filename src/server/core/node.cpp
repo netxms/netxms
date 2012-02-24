@@ -822,9 +822,9 @@ BOOL Node::isMyIP(DWORD dwIpAddr)
 // Create new interface
 //
 
-void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name, const TCHAR *descr,
-                              DWORD dwIndex, DWORD dwType, BYTE *pbMacAddr, DWORD bridgePort, 
-										DWORD slot, DWORD port, bool physPort)
+Interface *Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name, const TCHAR *descr,
+                                    DWORD dwIndex, DWORD dwType, BYTE *pbMacAddr, DWORD bridgePort, 
+										      DWORD slot, DWORD port, bool physPort, bool manuallyCreated)
 {
    Interface *pInterface;
    Subnet *pSubnet = NULL;
@@ -908,6 +908,7 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
 	pInterface->setSlotNumber(slot);
 	pInterface->setPortNumber(port);
 	pInterface->setPhysicalPortFlag(physPort);
+	pInterface->setManualCreationFlag(manuallyCreated);
 
    // Insert to objects' list and generate event
    NetObjInsert(pInterface, TRUE);
@@ -931,6 +932,8 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
                    pInterface->getIpNetMask(), pSubnet->getIpNetMask());
 		}
    }
+
+	return pInterface;
 }
 
 
@@ -1934,19 +1937,21 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
          if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
          {
             Interface *pInterface = (Interface *)m_pChildList[i];
+				if (!pInterface->isManuallyCreated())
+				{
+					for(j = 0; j < pIfList->getSize(); j++)
+					{
+						if ((pIfList->get(j)->dwIndex == pInterface->getIfIndex()) &&
+							 (pIfList->get(j)->dwIpAddr == pInterface->IpAddr()))
+							break;
+					}
 
-            for(j = 0; j < pIfList->getSize(); j++)
-            {
-               if ((pIfList->get(j)->dwIndex == pInterface->getIfIndex()) &&
-                   (pIfList->get(j)->dwIpAddr == pInterface->IpAddr()))
-                  break;
-            }
-
-            if (j == pIfList->getSize())
-            {
-               // No such interface in current configuration, add it to delete list
-               ppDeleteList[iDelCount++] = pInterface;
-            }
+					if (j == pIfList->getSize())
+					{
+						// No such interface in current configuration, add it to delete list
+						ppDeleteList[iDelCount++] = pInterface;
+					}
+				}
          }
       }
       UnlockChildList();
@@ -2091,7 +2096,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
          ppDeleteList = (Interface **)malloc(sizeof(Interface *) * m_dwChildCount);
          for(i = 0, iDelCount = 0; i < (int)m_dwChildCount; i++)
          {
-            if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+				if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) && !((Interface *)m_pChildList[i])->isManuallyCreated())
                ppDeleteList[iDelCount++] = (Interface *)m_pChildList[i];
          }
          UnlockChildList();

@@ -1580,7 +1580,8 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
          break;
       case OBJECT_NODE:
          if ((iChildClass == OBJECT_NETWORKSERVICE) ||
-             (iChildClass == OBJECT_VPNCONNECTOR))
+             (iChildClass == OBJECT_VPNCONNECTOR) ||
+				 (iChildClass == OBJECT_INTERFACE))
             return TRUE;
          break;
       case OBJECT_CLUSTER:

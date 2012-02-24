@@ -3776,6 +3776,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
    TCHAR *pszRequest, *pszResponse, *pszComments;
    DWORD dwIpAddr, zoneId, nodeId;
    WORD wIpProto, wIpPort;
+	BYTE macAddr[MAC_ADDR_LENGTH];
    BOOL bParentAlwaysValid = FALSE;
 
    // Prepare response message
@@ -3950,6 +3951,19 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								pObject = new SlmCheck(szObjectName, pRequest->GetVariableShort(VID_IS_TEMPLATE) ? true : false);
 								NetObjInsert(pObject, TRUE);
 								break;
+							case OBJECT_INTERFACE:
+								pRequest->GetVariableBinary(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+								pObject = ((Node *)pParent)->createNewInterface(pRequest->GetVariableLong(VID_IP_ADDRESS),
+								                                                pRequest->GetVariableLong(VID_IP_NETMASK),
+								                                                szObjectName, NULL,
+																				            pRequest->GetVariableLong(VID_IF_INDEX),
+								                                                pRequest->GetVariableLong(VID_IF_TYPE),
+																				            macAddr, 0,
+																				            pRequest->GetVariableLong(VID_IF_SLOT),
+																				            pRequest->GetVariableLong(VID_IF_PORT),
+																				            pRequest->GetVariableShort(VID_IS_PHYS_PORT) ? true : false,
+																								true);
+								break;
 							default:
 								break;
 						}
@@ -3957,7 +3971,8 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 						// If creation was successful do binding and set comments if needed
 						if (pObject != NULL)
 						{
-							if (pParent != NULL)    // parent can be NULL for nodes
+							if ((pParent != NULL) &&          // parent can be NULL for nodes
+							    (iClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
 							{
 								pParent->AddChild(pObject);
 								pObject->AddParent(pParent);
