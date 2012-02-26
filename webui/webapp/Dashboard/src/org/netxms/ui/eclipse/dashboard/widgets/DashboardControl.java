@@ -462,11 +462,11 @@ public class DashboardControl extends Composite
 	{
 		final NXCObjectModificationData md = new NXCObjectModificationData(dashboard.getObjectId());
 		md.setDashboardElements(new ArrayList<DashboardElement>(elements));
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Save dashboard layout", viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				session.modifyObject(md);
 				Display.getDefault().asyncExec(new Runnable() {
 					@Override
