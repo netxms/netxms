@@ -2416,6 +2416,7 @@ webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/Confi
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateCluster.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateCondition.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateContainer.java -text
+webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateInterface.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateNetworkService.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateNode.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateZone.java -text
@@ -2431,6 +2432,7 @@ webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/Unman
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/AttributeEditDialog.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/ClusterNetworkEditDialog.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/ConditionDciEditDialog.java -text
+webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateInterfaceDialog.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateNetworkServiceDialog.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateNodeDialog.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateZoneDialog.java -text

@@ -403,6 +403,13 @@
                label="Create network &amp;service..."
                menubarPath="objectcreation">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateInterface"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createInterface_Node"
+               label="Create &amp;interface..."
+               menubarPath="objectcreation">
+         </action>
       </objectContribution>
 
 
