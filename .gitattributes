@@ -55,6 +55,7 @@ android/src/console/res/xml/preferences.xml -text
 android/src/console/src/org/netxms/ui/android/main/activities/AlarmBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/ConsolePreferences.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/DrawGraph.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/GraphBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/HomeScreen.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/LastValues.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/NodeBrowser.java -text
