@@ -60,6 +60,7 @@ android/src/console/src/org/netxms/ui/android/main/activities/LastValues.java -t
 android/src/console/src/org/netxms/ui/android/main/activities/NodeBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/ActivityListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/AlarmListAdapter.java -text
+android/src/console/src/org/netxms/ui/android/main/adapters/GraphAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/LastValuesAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/NodeListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/views/ActivityListElement.java -text
