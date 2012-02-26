@@ -888,6 +888,7 @@ public:
    void updateDciCache();
 	DWORD getPerfTabDCIList(CSCPMessage *pMsg);
 	NXSL_Array *getParentsForNXSL();
+	NXSL_Array *getInterfacesForNXSL();
 
 	bool checkAgentTrapId(QWORD id);
 
@@ -1789,7 +1790,7 @@ void NetObjDelete(NetObj *pObject);
 
 void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, Interface *pObject);
 
-NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId);
+NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId, int objClass = -1);
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);

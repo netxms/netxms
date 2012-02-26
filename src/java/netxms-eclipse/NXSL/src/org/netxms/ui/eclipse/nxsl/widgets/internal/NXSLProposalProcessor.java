@@ -44,7 +44,9 @@ public class NXSLProposalProcessor implements IContentAssistProcessor
 	private static final String[] BUILTIN_FUNCTIONS = { "abs", "classof", "d2x", "exit", "exp", "gmtime",
 		"index", "left", "length", "localtime", "log", "log10", "lower", "ltrim", "max", "min", "pow",
 		"right", "rindex", "rtrim", "strftime", "substr", "time", "trace", "trim", "typeof", "upper",
-		"AddrInRange", "AddrInSubnet", "SecondsToUptime" };
+		"AddrInRange", "AddrInSubnet", "GetCustomAttribute", "GetEventParameter", "GetInterfaceName", 
+		"GetInterfaceObject", "GetNodeInterfaces", "GetNodeParents", "FindNodeObject", "PostEvent",
+		"SetCustomAttribute", "SetEventParameter", "SecondsToUptime" };
 	private static final String[] BUILTIN_CONSTANTS = { "null", "true", "false" };
 	
 	private ScriptEditor scriptEditor;

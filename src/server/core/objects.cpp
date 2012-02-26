@@ -633,9 +633,12 @@ Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD zoneId, DWORD dwNodeAddr)
 // Find object by ID
 //
 
-NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId)
+NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId, int objClass)
 {
-	return g_idxObjectById.get(dwId);
+	NetObj *object = g_idxObjectById.get(dwId);
+	if ((object == NULL) || (objClass == -1))
+		return object;
+	return (objClass == object->Type()) ? object : NULL;
 }
 
 

@@ -68,9 +68,9 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query)
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values)
 {
-	int size = sizeof(DELAYED_SQL_REQUEST) + (_tcslen(query) + 1) * sizeof(TCHAR) + bindCount * sizeof(TCHAR *) + bindCount;
+	int size = sizeof(DELAYED_SQL_REQUEST) + ((int)_tcslen(query) + 1) * sizeof(TCHAR) + bindCount * sizeof(TCHAR *) + bindCount;
 	for(int i = 0; i < bindCount; i++)
-		size += (_tcslen(values[i]) + 1) * sizeof(TCHAR) + sizeof(TCHAR *);
+		size += ((int)_tcslen(values[i]) + 1) * sizeof(TCHAR) + sizeof(TCHAR *);
 	DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)malloc(size);
 
 	BYTE *base = (BYTE *)&rq->bindings[bindCount];
@@ -80,7 +80,7 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 	rq->query = (TCHAR *)base;
 	_tcscpy(rq->query, query);
 	rq->bindCount = bindCount;
-	pos += (_tcslen(query) + 1) * sizeof(TCHAR);
+	pos += ((int)_tcslen(query) + 1) * sizeof(TCHAR);
 
 	rq->sqlTypes = &base[pos];
 	pos += bindCount;
@@ -92,7 +92,7 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 		rq->sqlTypes[i] = (BYTE)sqlTypes[i];
 		rq->bindings[i] = (TCHAR *)&base[pos];
 		_tcscpy(rq->bindings[i], values[i]);
-		pos += (_tcslen(values[i]) + 1) * sizeof(TCHAR);
+		pos += ((int)_tcslen(values[i]) + 1) * sizeof(TCHAR);
 		if (pos % align != 0)
 			pos += align - pos % align;
 	}

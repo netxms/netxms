@@ -4495,6 +4495,29 @@ NXSL_Array *Node::getParentsForNXSL()
 
 
 //
+// Get list of interface objects for NXSL script
+//
+
+NXSL_Array *Node::getInterfacesForNXSL()
+{
+	NXSL_Array *ifaces = new NXSL_Array;
+	int index = 0;
+
+	LockChildList(FALSE);
+	for(DWORD i = 0; i < m_dwChildCount; i++)
+	{
+		if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+		{
+			ifaces->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, m_pChildList[i])));
+		}
+	}
+	UnlockChildList();
+
+	return ifaces;
+}
+
+
+//
 // Get switch forwarding database
 //
 

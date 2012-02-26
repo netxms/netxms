@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -263,6 +263,27 @@ static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 
 //
+// Get node's interfaces
+// First argument: node object
+// Returns array of interface objects
+//
+
+static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	Node *node = (Node *)object->getData();
+	*ppResult = new NXSL_Value(node->getInterfacesForNXSL());
+	return 0;
+}
+
+
+//
 // Get event's named parameter
 // First argument: event object
 // Second argument: parameter's name
@@ -385,10 +406,12 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { _T("GetEventParameter"), F_GetEventParameter, 2 },
    { _T("GetInterfaceName"), F_GetInterfaceName, 2 },
    { _T("GetInterfaceObject"), F_GetInterfaceObject, 2 },
+   { _T("GetNodeInterfaces"), F_GetNodeInterfaces, 1 },
    { _T("GetNodeParents"), F_GetNodeParents, 1 },
 	{ _T("FindNodeObject"), F_FindNodeObject, 2 },
 	{ _T("PostEvent"), F_PostEvent, -1 },
-   { _T("SetCustomAttribute"), F_SetCustomAttribute, 3 }
+   { _T("SetCustomAttribute"), F_SetCustomAttribute, 3 },
+   { _T("SetEventParameter"), F_SetEventParameter, 3 },
 };
 
 

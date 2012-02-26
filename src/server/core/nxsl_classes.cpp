@@ -200,7 +200,6 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 {
    Interface *iface;
    NXSL_Value *pValue = NULL;
-   TCHAR szBuffer[256];
 
    iface = (Interface *)pObject->getData();
    if (!_tcscmp(pszAttr, _T("name")))
@@ -215,15 +214,22 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    {
       pValue = new NXSL_Value((LONG)iface->Status());
    }
+   else if (!_tcscmp(pszAttr, _T("macAddr")))
+   {
+		TCHAR buffer[256];
+		pValue = new NXSL_Value(BinToStr(iface->getMacAddr(), MAC_ADDR_LENGTH, buffer));
+   }
    else if (!_tcscmp(pszAttr, _T("ipAddr")))
    {
-      IpToStr(iface->IpAddr(), szBuffer);
-      pValue = new NXSL_Value(szBuffer);
+		TCHAR buffer[256];
+      IpToStr(iface->IpAddr(), buffer);
+      pValue = new NXSL_Value(buffer);
    }
    else if (!_tcscmp(pszAttr, _T("ipNetMask")))
    {
-		IpToStr(iface->getIpNetMask(), szBuffer);
-      pValue = new NXSL_Value(szBuffer);
+		TCHAR buffer[256];
+		IpToStr(iface->getIpNetMask(), buffer);
+      pValue = new NXSL_Value(buffer);
    }
    else if (!_tcscmp(pszAttr, _T("isLoopback")))
    {
@@ -260,6 +266,87 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    else if (!_tcscmp(pszAttr, _T("bridgePortNumber")))
    {
 		pValue = new NXSL_Value(iface->getBridgePortNumber());
+   }
+   else if (!_tcscmp(pszAttr, _T("node")))
+	{
+		Node *parentNode = iface->getParentNode();
+		if (parentNode != NULL)
+		{
+			pValue = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, parentNode));
+		}
+		else
+		{
+			pValue = new NXSL_Value;
+		}
+	}
+   else if (!_tcscmp(pszAttr, _T("peerNode")))
+   {
+		Node *peerNode = (Node *)FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
+		if (peerNode != NULL)
+		{
+			if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
+			{
+				Node *parentNode = iface->getParentNode();
+				if ((parentNode != NULL) && (peerNode->IsTrustedNode(parentNode->Id())))
+				{
+					pValue = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, peerNode));
+				}
+				else
+				{
+					// No access, return null
+					pValue = new NXSL_Value;
+					DbgPrintf(4, _T("NXSL::Interface::peerNode(%s [%d]): access denied for node %s [%d]"),
+					          iface->Name(), iface->Id(), peerNode->Name(), peerNode->Id());
+				}
+			}
+			else
+			{
+				pValue = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, peerNode));
+			}
+		}
+		else
+		{
+			pValue = new NXSL_Value;
+		}
+   }
+   else if (!_tcscmp(pszAttr, _T("peerInterface")))
+   {
+		Interface *peerIface = (Interface *)FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE);
+		if (peerIface != NULL)
+		{
+			if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
+			{
+				Node *parentNode = iface->getParentNode();
+				Node *peerNode = peerIface->getParentNode();
+				if ((parentNode != NULL) && (peerNode != NULL))
+				{
+					if (peerNode->IsTrustedNode(parentNode->Id()))
+					{
+						pValue = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, peerIface));
+					}
+					else
+					{
+						// No access, return null
+						pValue = new NXSL_Value;
+						DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): access denied for node %s [%d]"),
+									 iface->Name(), iface->Id(), peerNode->Name(), peerNode->Id());
+					}
+				}
+				else
+				{
+					pValue = new NXSL_Value;
+					DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): parentNode=%p peerNode=%p"), parentNode, peerNode);
+				}
+			}
+			else
+			{
+				pValue = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, peerIface));
+			}
+		}
+		else
+		{
+			pValue = new NXSL_Value;
+		}
    }
 	else
 	{
