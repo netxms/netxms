@@ -21,6 +21,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	public static final int ACTIVITY_ALARMS = 1;
 	public static final int ACTIVITY_DASHBOARDS = 2;
 	public static final int ACTIVITY_NODES = 3;
+	public static final int ACTIVITY_GRAPHS = 4;
 	
 	TextView statusText; 
 	
@@ -67,6 +68,9 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 				break;
 			case ACTIVITY_NODES:
 				startActivity(new Intent(this, NodeBrowser.class));
+				break;
+			case ACTIVITY_GRAPHS:
+				startActivity(new Intent(this, GraphBrowser.class));
 				break;
 			default:
 				break;
