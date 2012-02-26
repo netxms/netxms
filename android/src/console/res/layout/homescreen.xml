@@ -6,17 +6,21 @@
 		android:layout_height="fill_parent" 
 		xmlns:android="http://schemas.android.com/apk/res/android">
 	<include layout="@layout/screen_header_full" />
-	<GridView android:id="@+id/ActivityList" 
-			android:background="@drawable/home_screen_background"
-			android:listSelector="@drawable/home_screen_selection"
-			android:drawSelectorOnTop="true"
-			android:numColumns="auto_fit"
-			android:gravity="center"
-			android:stretchMode="columnWidth"
-			android:layout_width="fill_parent" 
-			android:layout_height="fill_parent"
-			android:layout_weight="0.9"
-			android:padding="16dp">
+
+	<GridView
+	    android:id="@+id/ActivityList"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent"
+	    android:layout_weight="0.9"
+	    android:background="@drawable/home_screen_background"
+	    android:drawSelectorOnTop="true"
+	    android:gravity="center"
+	    android:listSelector="@drawable/home_screen_selection"
+	    android:numColumns="auto_fit"
+	    android:padding="16dp"
+	    android:stretchMode="columnWidth"
+	    android:verticalSpacing="5dp" >
+
 	</GridView>
 	<TextView android:id="@+id/MainScreenVersion" 
 			android:textSize="8sp" 
