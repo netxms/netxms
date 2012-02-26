@@ -17,6 +17,7 @@ import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.activities.AlarmBrowser;
 import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.main.activities.NodeBrowser;
+import org.netxms.ui.android.main.activities.GraphBrowser;
 import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
 import org.netxms.ui.android.service.tasks.ExecActionTask;
@@ -59,6 +60,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	private HomeScreen homeScreen = null;
 	private AlarmBrowser alarmBrowser = null;
 	private NodeBrowser nodeBrowser = null;
+	private GraphBrowser graphBrowser = null;
 
 	private List<ObjectTool> objectTools = null;
 
@@ -190,7 +192,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			if ((session == null) && !connectionInProgress)
 			{
 				connectionInProgress = true;
-				setConnectionStatus("connecting...");
+				setConnectionStatus(getString(R.string.notify_connecting));
 				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 				new ConnectTask(this).execute(sp.getString("connection.server", ""), sp.getString("connection.login", ""),
 						sp.getString("connection.password", ""));
@@ -262,7 +264,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 
 		GenericObject object = session.findObjectById(alarm.getSourceObjectId());
-		showNotification(alarm.getCurrentSeverity(), ((object != null) ? object.getObjectName() : "<unknown>") + ": " + alarm.getMessage());
+		showNotification(alarm.getCurrentSeverity(), ((object != null) ? object.getObjectName() : getString(R.string.node_unknown)) + ": " + alarm.getMessage());
 	}
 
 	/**
@@ -369,6 +371,16 @@ public class ClientConnectorService extends Service implements SessionListener
 					public void run()
 					{
 						nodeBrowser.refreshList();
+					}
+				});
+			}
+			if (this.graphBrowser != null)
+			{
+				graphBrowser.runOnUiThread(new Runnable()
+				{
+					public void run()
+					{
+						graphBrowser.refreshList();
 					}
 				});
 			}
@@ -572,6 +584,14 @@ public class ClientConnectorService extends Service implements SessionListener
 	public void registerNodeBrowser(NodeBrowser browser)
 	{
 		this.nodeBrowser = browser;
+	}
+
+	/**
+	 * @param browser
+	 */
+	public void registerGraphBrowser(GraphBrowser browser)
+	{
+		this.graphBrowser = browser;
 	}
 
 	/**
