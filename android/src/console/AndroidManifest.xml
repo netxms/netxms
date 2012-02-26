@@ -43,6 +43,9 @@
                   android:name=".main.activities.NodeBrowser">
         </activity>
         <activity android:label="@string/app_name" 
+                  android:name=".main.activities.GraphBrowser">
+        </activity>
+        <activity android:label="@string/app_name" 
                   android:name=".main.activities.LastValues">
         </activity>        
                 <activity android:label="@string/app_name" 
