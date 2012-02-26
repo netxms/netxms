@@ -38,6 +38,9 @@ android/src/console/res/drawable/status_unknown.png -text
 android/src/console/res/drawable/status_unmanaged.png -text
 android/src/console/res/drawable/status_warning.png -text
 android/src/console/res/layout/alarm_view.xml -text
+android/src/console/res/layout/graph_view.xml -text
+android/src/console/res/layout/graph_view_child_layout.xml -text
+android/src/console/res/layout/graph_view_group_layout.xml -text
 android/src/console/res/layout/graphics.xml -text
 android/src/console/res/layout/homescreen.xml -text
 android/src/console/res/layout/last_values.xml -text
