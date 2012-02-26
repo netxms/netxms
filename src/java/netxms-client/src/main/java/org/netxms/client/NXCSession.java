@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -2734,6 +2734,16 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				break;
 			case GenericObject.OBJECT_SLMCHECK:
 				msg.setVariableInt16(NXCPCodes.VID_IS_TEMPLATE, data.isTemplate() ? 1 : 0);
+				break;
+			case GenericObject.OBJECT_INTERFACE:
+				msg.setVariable(NXCPCodes.VID_MAC_ADDR, data.getMacAddress().getValue());
+				msg.setVariable(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
+				msg.setVariable(NXCPCodes.VID_IP_NETMASK, data.getIpNetMask());
+				msg.setVariableInt32(NXCPCodes.VID_IF_TYPE, data.getIfType());
+				msg.setVariableInt32(NXCPCodes.VID_IF_INDEX, data.getIfIndex());
+				msg.setVariableInt32(NXCPCodes.VID_IF_SLOT, data.getSlot());
+				msg.setVariableInt32(NXCPCodes.VID_IF_PORT, data.getPort());
+				msg.setVariableInt16(NXCPCodes.VID_IS_PHYS_PORT, data.isPhysicalPort() ? 1 : 0);
 				break;
 		}
 

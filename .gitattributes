@@ -1226,6 +1226,7 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/ac
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateCluster.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateCondition.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateContainer.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateInterface.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateNetworkService.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateNode.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateZone.java -text
@@ -1241,6 +1242,7 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/ac
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/AttributeEditDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/ClusterNetworkEditDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/ConditionDciEditDialog.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateInterfaceDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateNetworkServiceDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateNodeDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateZoneDialog.java -text
@@ -1634,6 +1636,10 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/preferencepages/H
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/preferencepages/WorkbenchGeneralPrefs.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/resources/DataCollectionDisplayInfo.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/resources/StatusDisplayInfo.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/IPAddressValidator.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/IPNetMaskValidator.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/MacAddressValidator.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/ObjectNameValidator.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/views/ServerConsole.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/views/helpers/ServerConsoleTerminalConnector.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/widgets/StatusSelector.java -text

@@ -56,6 +56,12 @@ public class NXCObjectCreationData
 	private String response;
 	private long linkedNodeId;
 	private boolean template;
+	private MacAddress macAddress;
+	private int ifIndex;
+	private int ifType;
+	private int slot;
+	private int port;
+	private boolean physicalPort;
 	
 	/**
 	 * Constructor.
@@ -95,6 +101,12 @@ public class NXCObjectCreationData
 		response = "";
 		linkedNodeId = 0;
 		template = false;
+		macAddress = new MacAddress();
+		ifIndex = 0;
+		ifType = 1;
+		slot = 0;
+		port = 0;
+		physicalPort = false;
 	}
 
 	/**
@@ -415,5 +427,101 @@ public class NXCObjectCreationData
 	public void setTemplate(boolean template)
 	{
 		this.template = template;
+	}
+
+	/**
+	 * @return the macAddress
+	 */
+	public MacAddress getMacAddress()
+	{
+		return macAddress;
+	}
+
+	/**
+	 * @param macAddress the macAddress to set
+	 */
+	public void setMacAddress(MacAddress macAddress)
+	{
+		this.macAddress = macAddress;
+	}
+
+	/**
+	 * @return the ifIndex
+	 */
+	public int getIfIndex()
+	{
+		return ifIndex;
+	}
+
+	/**
+	 * @param ifIndex the ifIndex to set
+	 */
+	public void setIfIndex(int ifIndex)
+	{
+		this.ifIndex = ifIndex;
+	}
+
+	/**
+	 * @return the ifType
+	 */
+	public int getIfType()
+	{
+		return ifType;
+	}
+
+	/**
+	 * @param ifType the ifType to set
+	 */
+	public void setIfType(int ifType)
+	{
+		this.ifType = ifType;
+	}
+
+	/**
+	 * @return the slot
+	 */
+	public int getSlot()
+	{
+		return slot;
+	}
+
+	/**
+	 * @param slot the slot to set
+	 */
+	public void setSlot(int slot)
+	{
+		this.slot = slot;
+	}
+
+	/**
+	 * @return the port
+	 */
+	public int getPort()
+	{
+		return port;
+	}
+
+	/**
+	 * @param port the port to set
+	 */
+	public void setPort(int port)
+	{
+		this.port = port;
+	}
+
+	/**
+	 * @return the physicalPort
+	 */
+	public boolean isPhysicalPort()
+	{
+		return physicalPort;
+	}
+
+	/**
+	 * @param physicalPort the physicalPort to set
+	 */
+	public void setPhysicalPort(boolean physicalPort)
+	{
+		this.physicalPort = physicalPort;
 	}
 }

@@ -691,6 +691,8 @@ public final class NXCPCodes
 	public static final long VID_DOT1X_PAE_STATE         = 403;
 	public static final long VID_DOT1X_BACKEND_STATE     = 404;
 	public static final long VID_IS_COMPLETE             = 405;
+	public static final long VID_MODIFY_TIME             = 406;
+	public static final long VID_IS_PHYS_PORT            = 407;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
