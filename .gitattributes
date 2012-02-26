@@ -8,13 +8,16 @@ android/src/console/jar/GraphView-2.0.jar -text
 android/src/console/lint.xml -text
 android/src/console/project.properties -text
 android/src/console/res/drawable-hdpi/alarms.png -text
+android/src/console/res/drawable-hdpi/graphs.png -text
 android/src/console/res/drawable-hdpi/ic_menu_preferences.png -text
 android/src/console/res/drawable-hdpi/icon.png -text
 android/src/console/res/drawable-hdpi/nodes.png -text
 android/src/console/res/drawable-ldpi/alarms.png -text
+android/src/console/res/drawable-ldpi/graphs.png -text
 android/src/console/res/drawable-ldpi/icon.png -text
 android/src/console/res/drawable-ldpi/nodes.png -text
 android/src/console/res/drawable-mdpi/alarms.png -text
+android/src/console/res/drawable-mdpi/graphs.png -text
 android/src/console/res/drawable-mdpi/ic_menu_preferences.png -text
 android/src/console/res/drawable-mdpi/icon.png -text
 android/src/console/res/drawable-mdpi/nodes.png -text
