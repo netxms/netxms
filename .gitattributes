@@ -2046,6 +2046,10 @@ webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/ConsoleLoginListener.jav
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/perspectives/DefaultPerspective.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/resources/DataCollectionDisplayInfo.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/resources/StatusDisplayInfo.java -text
+webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/IPAddressValidator.java -text
+webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/IPNetMaskValidator.java -text
+webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/MacAddressValidator.java -text
+webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/ObjectNameValidator.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/shared/ConsoleSharedData.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/shared/IActionConstants.java -text
