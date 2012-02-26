@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.main.activities;
 
+import java.util.ArrayList;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
@@ -10,6 +11,7 @@ import org.netxms.ui.android.main.adapters.LastValuesAdapter;
 
 import android.content.ComponentName;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -172,31 +174,45 @@ public class LastValues extends AbstractClientActivity
 		switch (item.getItemId())
 		{
 			case R.id.graph_half_hour:
-				secsBack=1800;
+				secsBack = 1800;
 				break;
 			case R.id.graph_one_hour:
-				secsBack=3600;
+				secsBack = 3600;
 				break;
 			case R.id.graph_two_hours:
-				secsBack=7200;
+				secsBack = 7200;
 				break;
 			case R.id.graph_four_hours:
-				secsBack=14400;
+				secsBack = 14400;
 				break;
 			case R.id.graph_one_day:
-				secsBack=86400;
+				secsBack = 86400;
 				break;
 			case R.id.graph_one_week:
-				secsBack=604800;
+				secsBack = 604800;
 				break;
 			default:
 				return super.onContextItemSelected(item);
 		}
 		Intent newIntent = new Intent(this, DrawGraph.class);
-		newIntent.putExtra("nodeId", nodeId);
-		newIntent.putExtra("dciId", val.getId());
-		newIntent.putExtra("seconds", secsBack);
-		newIntent.putExtra("title", val.getDescription());
+		ArrayList<Integer> nodeIdList = new ArrayList<Integer>();
+		ArrayList<Integer> dciIdList = new ArrayList<Integer>();
+		ArrayList<Integer> colorList = new ArrayList<Integer>();
+		ArrayList<String> nameList = new ArrayList<String>();
+		// Set values
+		nodeIdList.add((int)nodeId);
+		dciIdList.add((int)val.getId());
+		colorList.add(Color.GREEN);
+		nameList.add(val.getDescription());
+		// Pass them to activity
+		newIntent.putExtra("numGraphs", 1);
+		newIntent.putIntegerArrayListExtra("nodeIdList", nodeIdList);
+		newIntent.putIntegerArrayListExtra("dciIdList", dciIdList);
+		newIntent.putIntegerArrayListExtra("colorList", colorList);
+		newIntent.putStringArrayListExtra("nameList", nameList);
+		newIntent.putExtra("graphTitle", val.getDescription());
+		newIntent.putExtra("timeFrom", System.currentTimeMillis() - secsBack * 1000);
+		newIntent.putExtra("timeTo", System.currentTimeMillis());
 		startActivity(newIntent);
 		return true;
 	}
