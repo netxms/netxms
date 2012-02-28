@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS SDK
-AppVerName=NetXMS SDK 1.1.1
-AppVersion=1.1.1
+AppVerName=NetXMS SDK 1.1.10
+AppVersion=1.1.10
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
 AppSupportURL=http://www.radensolutions.com
@@ -16,7 +16,7 @@ LicenseFile=..\..\LGPL.txt
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
-OutputBaseFilename=netxms-sdk-1.1.1
+OutputBaseFilename=netxms-sdk-1.1.10
 
 [Files]
 ; Header files
@@ -64,7 +64,6 @@ Source: "..\..\src\server\include\nms_topo.h"; DestDir: "{app}\include\server"; 
 Source: "..\..\src\server\include\nms_users.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 Source: "..\..\src\server\include\nxcore_jobs.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 Source: "..\..\src\server\include\nxcore_logs.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
-Source: "..\..\src\server\include\nxcore_maps.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 Source: "..\..\src\server\include\nxcore_situations.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 Source: "..\..\src\server\include\nxmodule.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 Source: "..\..\src\server\include\nxsrvapi.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
@@ -107,24 +106,25 @@ Source: "..\..\x64\release\nxcore.lib"; DestDir: "{app}\lib\x64"; Flags: ignorev
 Source: "..\..\x64\release\nxsqlite.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\nxzlib.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 ; Java API
-Source: "..\..\src\java\netxms-base\target\netxms-base-1.1.1.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\java\netxms-base\target\netxms-base-1.1.1-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\java\netxms-client\target\netxms-client-1.1.1.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\java\netxms-client\target\netxms-client-1.1.1-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\java\netxms-client-api\target\netxms-client-api-1.1.1.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\java\netxms-client-api\target\netxms-client-api-1.1.1-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\netxms-base\target\netxms-base-1.1.10.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\netxms-base\target\netxms-base-1.1.10-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\netxms-client\target\netxms-client-1.1.10.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\netxms-client\target\netxms-client-1.1.10-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\netxms-client-api\target\netxms-client-api-1.1.10.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\netxms-client-api\target\netxms-client-api-1.1.10-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
 ; Documentation
 Source: "..\..\doc\internal\event_code_ranges.txt"; DestDir: "{app}\doc"; Flags: ignoreversion;
 Source: "..\..\doc\internal\nxcp_command_ranges.txt"; DestDir: "{app}\doc"; Flags: ignoreversion;
 Source: "..\..\doc\internal\unicode.txt"; DestDir: "{app}\doc"; Flags: ignoreversion;
-Source: "..\..\doc\manuals\nxcp_reference.pdf"; DestDir: "{app}\doc"; Flags: ignoreversion;
+;Source: "..\..\doc\manuals\nxcp_reference.pdf"; DestDir: "{app}\doc"; Flags: ignoreversion;
 ; Examples
-Source: "..\samples\samples.sln"; DestDir: "{app}\samples"; Flags: ignoreversion;
-Source: "..\samples\subagent\sample-subagent.cpp"; DestDir: "{app}\samples\subagent"; Flags: ignoreversion;
-Source: "..\samples\subagent\sample-subagent.vcproj"; DestDir: "{app}\samples\subagent"; Flags: ignoreversion;
+Source: "..\samples\C\samples.sln"; DestDir: "{app}\samples"; Flags: ignoreversion;
+Source: "..\samples\C\subagent\sample-subagent.cpp"; DestDir: "{app}\samples\C\subagent"; Flags: ignoreversion;
+Source: "..\samples\C\subagent\sample-subagent.vcproj"; DestDir: "{app}\samples\C\subagent"; Flags: ignoreversion;
+Source: "..\samples\Java\get-dci-from-server\pom.xml"; DestDir: "{app}\samples\Java\get-dci-from-server"; Flags: ignoreversion;
+Source: "..\samples\Java\get-dci-from-server\src\*"; DestDir: "{app}\samples\Java\get-dci-from-server\src"; Flags: ignoreversion recursesubdirs;
 ; OpenSSL headers and libs
 Source: "..\openssl\include\*.h"; DestDir: "{app}\include\openssl"; Flags: ignoreversion;
 Source: "..\openssl\include\*.c"; DestDir: "{app}\include\openssl"; Flags: ignoreversion;
 Source: "..\openssl\lib\x86\*.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\openssl\lib\x64\*.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
-
