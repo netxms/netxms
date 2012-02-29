@@ -19,15 +19,18 @@
 package org.netxms.ui.eclipse.objectmanager.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objects.NetworkService;
+import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -44,12 +47,14 @@ public class CreateNetworkServiceDialog extends Dialog
 	private LabeledText portField;
 	private LabeledText requestField;
 	private LabeledText responseField;
+	private Button checkCreateDci;
 	
 	private String name;
 	private int serviceType;
 	private int port;
 	private String request;
 	private String response;
+	private boolean createDci;
 	
 	/**
 	 * @param parentShell
@@ -130,6 +135,16 @@ public class CreateNetworkServiceDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		responseField.setLayoutData(gd);
+
+		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		checkCreateDci = new Button(dialogArea, SWT.CHECK);
+		checkCreateDci.setText("&Create service status DCI at parent node");
+		checkCreateDci.setSelection(settings.getBoolean("CreateNetworkServiceDialog.checkCreateDci"));
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
+		checkCreateDci.setLayoutData(gd);
 		
 		return dialogArea;
 	}
@@ -163,6 +178,10 @@ public class CreateNetworkServiceDialog extends Dialog
 		
 		request = requestField.getText();
 		response = responseField.getText();
+		createDci = checkCreateDci.getSelection();
+		
+		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		settings.put("CreateNetworkServiceDialog.checkCreateDci", createDci);
 		
 		super.okPressed();
 	}
@@ -209,5 +228,13 @@ public class CreateNetworkServiceDialog extends Dialog
 	public String getResponse()
 	{
 		return response;
+	}
+
+	/**
+	 * @return the createDci
+	 */
+	public boolean isCreateDci()
+	{
+		return createDci;
 	}
 }

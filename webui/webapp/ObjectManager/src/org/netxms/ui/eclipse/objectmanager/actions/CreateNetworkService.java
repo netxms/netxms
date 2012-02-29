@@ -75,6 +75,7 @@ public class CreateNetworkService implements IObjectActionDelegate
 				cd.setIpPort(dlg.getPort());
 				cd.setRequest(dlg.getRequest());
 				cd.setResponse(dlg.getResponse());
+				cd.setCreateStatusDci(dlg.isCreateDci());
 				session.createObject(cd);
 			}
 
