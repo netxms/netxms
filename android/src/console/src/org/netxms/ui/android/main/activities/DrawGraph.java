@@ -191,7 +191,7 @@ public class DrawGraph extends AbstractClientActivity
 						GraphViewData[] gwData = new GraphViewData[dciDataRow.length];
 						for (int j = dciDataRow.length-1, k = 0; j >= 0; j--, k++)	// dciData are reversed!
 							gwData[k] = new GraphViewData(dciDataRow[j].getTimestamp().getTime(), dciDataRow[j].getValueAsDouble());  
-						GraphViewSeries gwSeries = new GraphViewSeries(items[i].getDescription(), 0xFF000000+itemStyles[i].getColor(), gwData);	// 0xFF000000 to add alpha contribution
+						GraphViewSeries gwSeries = new GraphViewSeries(items[i].getDescription(), toAndroidColor(itemStyles[i].getColor()), gwData);
 						graphView.addSeries(gwSeries);
 					}
 				}
@@ -201,5 +201,13 @@ public class DrawGraph extends AbstractClientActivity
 			}
 			dialog.cancel();
 		}
+	}
+
+	/**
+	 * Convert to Android color format (swap RGB and add alpha)
+	 */
+	private int toAndroidColor(int color)
+	{
+		return 0xFF000000 | ((color & 0x0000FF) << 16) | (color & 0x00FF00) | ((color & 0xFF0000) >> 16);	// Alpha | R | G | B
 	}
 }
