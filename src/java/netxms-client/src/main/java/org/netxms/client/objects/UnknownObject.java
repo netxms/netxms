@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.networkmaps.views.helpers;
+package org.netxms.client.objects;
 
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;

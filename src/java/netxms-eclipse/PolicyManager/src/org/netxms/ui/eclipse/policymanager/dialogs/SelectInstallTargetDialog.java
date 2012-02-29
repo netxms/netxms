@@ -141,7 +141,7 @@ public class SelectInstallTargetDialog extends Dialog
 		installMode = radioInstallOnCurrent.getSelection() ? INSTALL_ON_CURRENT : INSTALL_ON_SELECTED;
 				
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		List<GenericObject> objects = session.findMultipleObjects(objectTree.getCheckedObjects());
+		List<GenericObject> objects = session.findMultipleObjects(objectTree.getCheckedObjects(), false);
 		Iterator<GenericObject> it = objects.iterator();
 		while(it.hasNext())
 		{

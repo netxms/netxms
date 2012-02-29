@@ -50,6 +50,7 @@ import org.netxms.ui.eclipse.epp.SituationCache;
 import org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.widgets.DashboardElement;
 import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 
@@ -458,6 +459,7 @@ public class RuleEditor extends Composite
 				else
 				{
 					clabel.setText("[" + id.toString() + "]");
+					clabel.setImage(SharedIcons.IMG_UNKNOWN_OBJECT);
 				}
 			}
 			needAnd = true;

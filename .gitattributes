@@ -600,6 +600,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/objects/Subnet.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Template.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/TemplateGroup.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/TemplateRoot.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/UnknownObject.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Zone.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectTool.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectToolDetails.java -text
@@ -1132,7 +1133,6 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectFigureType.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectTooltip.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ResourceFigure.java -text
-src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/UnknownObject.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ZoomAction.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/widgets/NetworkMapWidget.java -text
 src/java/netxms-eclipse/OSM/.settings/org.eclipse.jdt.core.prefs -text

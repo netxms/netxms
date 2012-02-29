@@ -121,6 +121,7 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
+import org.netxms.client.objects.UnknownObject;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
@@ -1700,9 +1701,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * Find multiple NetXMS objects by identifiers
 	 * 
 	 * @param idList array of object identifiers
+	 * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
 	 * @return list of found objects
 	 */
-	public List<GenericObject> findMultipleObjects(final long[] idList)
+	public List<GenericObject> findMultipleObjects(final long[] idList, boolean returnUnknown)
 	{
 		List<GenericObject> result = new ArrayList<GenericObject>(idList.length);
 
@@ -1713,6 +1715,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				final GenericObject object = objectList.get(idList[i]);
 				if (object != null)
 					result.add(object);
+				else if (returnUnknown)
+					result.add(new UnknownObject(idList[i], this));
 			}
 		}
 
@@ -1722,11 +1726,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	/**
 	 * Find multiple NetXMS objects by identifiers
 	 * 
-	 * @param idList
-	 *           array of object identifiers
+	 * @param idList array of object identifiers
+	 * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
 	 * @return array of found objects
 	 */
-	public List<GenericObject> findMultipleObjects(final Long[] idList)
+	public List<GenericObject> findMultipleObjects(final Long[] idList, boolean returnUnknown)
 	{
 		List<GenericObject> result = new ArrayList<GenericObject>(idList.length);
 
@@ -1737,6 +1741,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				final GenericObject object = objectList.get(idList[i]);
 				if (object != null)
 					result.add(object);
+				else if (returnUnknown)
+					result.add(new UnknownObject(idList[i], this));
 			}
 		}
 

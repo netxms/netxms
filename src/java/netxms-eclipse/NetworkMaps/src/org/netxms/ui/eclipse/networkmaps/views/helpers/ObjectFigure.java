@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.UnknownObject;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
