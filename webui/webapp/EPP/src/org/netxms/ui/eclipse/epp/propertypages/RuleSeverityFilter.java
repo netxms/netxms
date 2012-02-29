@@ -35,6 +35,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class RuleSeverityFilter extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
 	private static final int[] severityFlag = { EventProcessingPolicyRule.SEVERITY_NORMAL, EventProcessingPolicyRule.SEVERITY_WARNING,
 		EventProcessingPolicyRule.SEVERITY_MINOR, EventProcessingPolicyRule.SEVERITY_MAJOR, EventProcessingPolicyRule.SEVERITY_CRITICAL
 	};

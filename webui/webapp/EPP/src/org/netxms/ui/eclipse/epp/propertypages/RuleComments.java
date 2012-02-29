@@ -33,6 +33,8 @@ import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
  */
 public class RuleComments extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private Text comments;

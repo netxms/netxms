@@ -28,6 +28,8 @@ import org.netxms.client.ServerAction;
  */
 public class ActionListFilter extends ViewerFilter
 {
+	private static final long serialVersionUID = 1L;
+
 	private String filterString = null;
 	
 	/* (non-Javadoc)

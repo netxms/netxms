@@ -57,6 +57,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class RuleSourceObjects extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private NXCSession session;
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
@@ -97,7 +99,7 @@ public class RuleSourceObjects extends PropertyPage
 			}
       });
 
-      for(GenericObject o : session.findMultipleObjects(rule.getSources().toArray(new Long[0])))
+      for(GenericObject o : session.findMultipleObjects(rule.getSources().toArray(new Long[0]), true))
       	objects.put(o.getObjectId(), o);
       viewer.setInput(objects.values().toArray());
       
@@ -123,6 +125,8 @@ public class RuleSourceObjects extends PropertyPage
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText("Add...");
       addButton.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -142,6 +146,8 @@ public class RuleSourceObjects extends PropertyPage
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText("Delete");
       deleteButton.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

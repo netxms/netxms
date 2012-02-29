@@ -282,7 +282,7 @@ public class ObjectSelectionDialog extends Dialog
 		if (selectedObjects == null)
 			return new ArrayList<GenericObject>(0);
 
-		return ((NXCSession)ConsoleSharedData.getSession()).findMultipleObjects(selectedObjects);
+		return ((NXCSession)ConsoleSharedData.getSession()).findMultipleObjects(selectedObjects, false);
 	}
 
 	/**

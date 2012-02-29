@@ -26,7 +26,9 @@ import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.ServiceCheck;
+import org.netxms.client.objects.UnknownObject;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Adapter factory for NetXMS objects
@@ -79,6 +81,9 @@ public class ObjectAdapterFactory implements IAdapterFactory
 				@Override
 				public ImageDescriptor getImageDescriptor(Object object)
 				{
+					if (object instanceof UnknownObject)
+						return SharedIcons.UNKNOWN_OBJECT;
+					
 					switch(((GenericObject)object).getObjectClass())
 					{
 						case GenericObject.OBJECT_NETWORK:

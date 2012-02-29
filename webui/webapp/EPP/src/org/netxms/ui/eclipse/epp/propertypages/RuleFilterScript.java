@@ -33,6 +33,8 @@ import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
  */
 public class RuleFilterScript extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private ScriptEditor scriptEditor;

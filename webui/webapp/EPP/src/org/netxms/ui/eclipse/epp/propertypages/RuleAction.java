@@ -34,6 +34,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class RuleAction extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private Button checkStopProcessing;

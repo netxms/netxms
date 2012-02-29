@@ -54,6 +54,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class RuleServerActions extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private SortableTableViewer viewer;
@@ -117,6 +119,8 @@ public class RuleServerActions extends PropertyPage
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText("Add...");
       addButton.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -136,6 +140,8 @@ public class RuleServerActions extends PropertyPage
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText("Delete");
       deleteButton.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

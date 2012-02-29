@@ -156,8 +156,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		scroller.setContent(dataArea);
 		scroller.setExpandVertical(true);
 		scroller.setExpandHorizontal(true);
-		//scroller.getVerticalBar().setIncrement(20);
 		scroller.addControlListener(new ControlAdapter() {
+			private static final long serialVersionUID = 1L;
+
 			public void controlResized(ControlEvent e)
 			{
 				Rectangle r = scroller.getClientArea();
@@ -190,6 +191,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private void createActions()
 	{
 		actionHorizontal = new Action("&Horizontal layout", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -201,6 +204,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/h_layout.gif"));
 		
 		actionVertical = new Action("&Vertical layout", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -212,6 +217,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/v_layout.gif"));
 
 		actionSave = new Action("&Save policy") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -222,6 +229,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionSave.setEnabled(false);
 
 		actionCollapseAll = new Action("&Collapse all") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -231,6 +240,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionCollapseAll.setImageDescriptor(SharedIcons.COLLAPSE_ALL);
 
 		actionExpandAll = new Action("&Expand all") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -240,6 +251,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionExpandAll.setImageDescriptor(SharedIcons.EXPAND_ALL);
 		
 		actionDelete = new Action("&Delete") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -250,6 +263,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionDelete.setEnabled(false);
 
 		actionInsertBefore = new Action("Insert &before") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -258,6 +273,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		};
 
 		actionInsertAfter = new Action("Insert &after") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -266,6 +283,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		};
 
 		actionCut = new Action("Cu&t") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -276,6 +295,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionCut.setEnabled(false);
 
 		actionCopy = new Action("&Copy") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -286,6 +307,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionCopy.setEnabled(false);
 
 		actionPaste = new Action("&Paste") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -296,6 +319,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionPaste.setEnabled(false);
 		
 		actionEnableRule = new Action("E&nable") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -304,6 +329,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		};
 
 		actionDisableRule = new Action("D&isable") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

@@ -30,6 +30,8 @@ import org.eclipse.swt.graphics.Image;
  */
 public class AttributeLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */

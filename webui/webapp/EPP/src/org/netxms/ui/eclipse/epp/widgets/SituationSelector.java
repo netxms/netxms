@@ -32,6 +32,8 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class SituationSelector extends AbstractSelector
 {
+	private static final long serialVersionUID = 1L;
+
 	private long situationId = 0;
 	
 	/**

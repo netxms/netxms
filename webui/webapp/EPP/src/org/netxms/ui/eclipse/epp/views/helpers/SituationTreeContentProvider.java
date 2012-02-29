@@ -30,6 +30,7 @@ import org.netxms.client.situations.SituationInstance;
  */
 public class SituationTreeContentProvider implements ITreeContentProvider
 {
+	private static final long serialVersionUID = 1L;
 	private static final String ROOT = "[root]";
 	
 	private Map<Long, Situation> situations;

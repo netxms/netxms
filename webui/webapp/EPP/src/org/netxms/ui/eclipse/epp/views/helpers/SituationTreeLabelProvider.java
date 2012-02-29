@@ -27,6 +27,8 @@ import org.netxms.client.situations.SituationInstance;
  */
 public class SituationTreeLabelProvider extends LabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
 	 */
