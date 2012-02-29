@@ -2,6 +2,7 @@ package org.netxms.ui.android.main.activities;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.netxms.client.NXCException;
 import org.netxms.client.datacollection.GraphItem;
@@ -10,10 +11,13 @@ import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.GraphAdapter;
 
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.View;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
@@ -28,10 +32,12 @@ public class GraphBrowser extends AbstractClientActivity
 {
 	private ExpandableListView listView;
 	private GraphAdapter adapter;
+	ProgressDialog dialog; 
 
 	@Override
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
+		dialog = new ProgressDialog(this); 
 		setContentView(R.layout.graph_view);
 		
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
@@ -122,23 +128,6 @@ public class GraphBrowser extends AbstractClientActivity
 		}
 	}
 	
-	/**
-	 * Refresh graphs list reloading from server
-	 */
-	public void refreshList()
-	{
-		try {
-			adapter.setGraphs(service.getSession().getPredefinedGraphs());
-		} catch (NXCException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		adapter.notifyDataSetChanged();
-	}
-
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onDestroy()
 	 */
@@ -148,5 +137,53 @@ public class GraphBrowser extends AbstractClientActivity
 		service.registerGraphBrowser(null);
 		unbindService(this);
 		super.onDestroy();
+	}
+
+	/**
+	 * Refresh graphs list reloading from server
+	 */
+	public void refreshList()
+	{
+		new LoadDataTask().execute();
+	}
+	
+	/**
+	 * Internal task for loading predefined graphs data
+	 */
+	private class LoadDataTask extends AsyncTask<Object, Void, List<GraphSettings>>
+	{
+		@Override
+		protected void onPreExecute()
+		{
+			dialog.setMessage(getString(R.string.progress_gathering_data)); 
+			dialog.setIndeterminate(true); 
+			dialog.setCancelable(false);
+			dialog.show();
+		}
+		@Override
+		protected List<GraphSettings> doInBackground(Object... params)
+		{
+			List<GraphSettings> graphs = null;
+			try {
+				graphs=service.getSession().getPredefinedGraphs();
+			} catch (NXCException e) {
+				Log.d("nxclient/GraphBrowser", "NXCException while executing LoadDataTask.doInBackground", e);
+				e.printStackTrace();
+			} catch (IOException e) {
+				Log.d("nxclient/GraphBrowser", "IOException while executing LoadDataTask.doInBackground", e);
+				e.printStackTrace();
+			}
+			return graphs;
+		}
+		@Override
+		protected void onPostExecute(List<GraphSettings> result)
+		{
+			dialog.cancel();
+			if (result != null)
+			{
+				adapter.setGraphs(result);
+				adapter.notifyDataSetChanged();
+			}
+		}
 	}
 }
