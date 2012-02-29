@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -876,6 +876,7 @@ typedef struct
 #define VID_IS_COMPLETE             ((DWORD)405)
 #define VID_MODIFY_TIME             ((DWORD)406)
 #define VID_IS_PHYS_PORT            ((DWORD)407)
+#define VID_CREATE_STATUS_DCI       ((DWORD)408)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

@@ -1584,6 +1584,7 @@ typedef struct
          WORD wPort;
          TCHAR *pszRequest;
          TCHAR *pszResponse;
+			bool createStatusDci;
       } netsrv;
    } cs;
 } NXC_OBJECT_CREATE_INFO;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.NetworkService;
 
 /**
- * @author Victor
- *
+ * NetXMS object creation data
  */
 public class NXCObjectCreationData
 {
@@ -62,6 +61,7 @@ public class NXCObjectCreationData
 	private int slot;
 	private int port;
 	private boolean physicalPort;
+	private boolean createStatusDci;
 	
 	/**
 	 * Constructor.
@@ -107,6 +107,7 @@ public class NXCObjectCreationData
 		slot = 0;
 		port = 0;
 		physicalPort = false;
+		createStatusDci = false;
 	}
 
 	/**
@@ -523,5 +524,21 @@ public class NXCObjectCreationData
 	public void setPhysicalPort(boolean physicalPort)
 	{
 		this.physicalPort = physicalPort;
+	}
+
+	/**
+	 * @return the createStatusDci
+	 */
+	public boolean isCreateStatusDci()
+	{
+		return createStatusDci;
+	}
+
+	/**
+	 * @param createStatusDci the createStatusDci to set
+	 */
+	public void setCreateStatusDci(boolean createStatusDci)
+	{
+		this.createStatusDci = createStatusDci;
 	}
 }

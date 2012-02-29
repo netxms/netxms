@@ -3985,6 +3985,17 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								{
 									((NodeLink *)pObject)->applyTemplates();
 								}
+								if (pObject->Type() == OBJECT_NETWORKSERVICE)
+								{
+									if (pRequest->GetVariableShort(VID_CREATE_STATUS_DCI))
+									{
+										TCHAR dciName[MAX_DB_STRING], dciDescription[MAX_DB_STRING];
+
+										_sntprintf(dciName, MAX_DB_STRING, _T("ChildStatus(%d)"), pObject->Id());
+										_sntprintf(dciDescription, MAX_DB_STRING, _T("Status of network service %s"), pObject->Name());
+										((Node *)pParent)->addItem(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT, 60, 30, (Node *)pParent, dciDescription));
+									}
+								}
 							}
 							
 							pszComments = pRequest->GetVariableStr(VID_COMMENTS);

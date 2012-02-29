@@ -1112,6 +1112,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
          msg.SetVariable(VID_IP_PORT, pCreateInfo->cs.netsrv.wPort);
          msg.SetVariable(VID_SERVICE_REQUEST, pCreateInfo->cs.netsrv.pszRequest);
          msg.SetVariable(VID_SERVICE_RESPONSE, pCreateInfo->cs.netsrv.pszResponse);
+			msg.SetVariable(VID_CREATE_STATUS_DCI, (WORD)(pCreateInfo->cs.netsrv.createStatusDci ? 1 : 0));
          break;
       default:
          break;
