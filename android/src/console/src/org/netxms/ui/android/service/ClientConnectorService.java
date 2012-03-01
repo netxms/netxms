@@ -55,7 +55,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	private NotificationManager notificationManager;
 	private NXCSession session = null;
 	private boolean connectionInProgress = false;
-	private String connectionStatus = "disconnected";
+	private String connectionStatus = "";
 	private Map<Long, Alarm> alarms = null;
 	private HomeScreen homeScreen = null;
 	private AlarmBrowser alarmBrowser = null;
@@ -90,7 +90,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		uiThreadHandler = new Handler(getMainLooper());
 		notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 
-		showToast("NetXMS service started");
+		showToast(getString(R.string.notify_started));
 
 		BroadcastReceiver receiver = new BroadcastReceiver()
 		{
@@ -230,6 +230,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				session.removeListener(this);
 				hideNotification(NOTIFY_ALARM);
 				showToast(getString(R.string.notify_disconnected));
+				setConnectionStatus(getString(R.string.notify_disconnected));
 			}
 			connectionInProgress = false;
 			session = null;
@@ -374,6 +375,16 @@ public class ClientConnectorService extends Service implements SessionListener
 					}
 				});
 			}
+		}
+	}
+
+	/**
+	 * @param object
+	 */
+	private void processGraphUpdate()
+	{
+		synchronized(mutex)
+		{
 			if (this.graphBrowser != null)
 			{
 				graphBrowser.runOnUiThread(new Runnable()
@@ -462,6 +473,9 @@ public class ClientConnectorService extends Service implements SessionListener
 			case NXCNotification.OBJECT_SYNC_COMPLETED:
 				processObjectUpdate((GenericObject)n.getObject());
 				break;
+			case NXCNotification.PREDEFINED_GRAPHS_CHANGED:
+				processGraphUpdate();
+				break;
 			default:
 				break;
 		}
@@ -533,7 +547,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void loadTools()
 	{
-		 try
+		try
 		{
 			this.objectTools = session.getObjectTools();
 		}

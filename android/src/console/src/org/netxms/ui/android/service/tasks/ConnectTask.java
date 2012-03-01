@@ -55,7 +55,8 @@ public class ConnectTask extends Thread
 	public void run()
 	{
 		final NXCSession session = new NXCSession(server, login, password);
-		service.setConnectionStatus("connecting...");
+		String status = service.getString(R.string.notify_connecting);
+		service.setConnectionStatus(status);
 		try
 		{
 			Log.d(TAG, "calling session.connect()");
@@ -64,15 +65,16 @@ public class ConnectTask extends Thread
 			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);
 
 			alarms = session.getAlarms(false);
-			service.showToast(service.getString(R.string.notify_connected, session.getServerAddress()));
-			service.setConnectionStatus("connected to " + session.getServerAddress());
+			status = service.getString(R.string.notify_connected, session.getServerAddress());
+			service.showToast(status);
+			service.setConnectionStatus(status);
 			service.onConnect(session, alarms);
 			service.loadTools();
 		}
 		catch(Exception e)
 		{
 			Log.d(TAG, "Exception on connect attempt", e);
-			service.setConnectionStatus("Connect failed: " + e.getLocalizedMessage());
+			service.setConnectionStatus(service.getString(R.string.notify_connect_failed, e.getLocalizedMessage()));
 			service.onDisconnect();
 		}
 	}

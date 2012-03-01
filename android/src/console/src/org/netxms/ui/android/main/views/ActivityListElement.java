@@ -3,6 +3,8 @@
  */
 package org.netxms.ui.android.main.views;
 
+import org.netxms.ui.android.R;
+
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -40,7 +42,7 @@ public class ActivityListElement extends LinearLayout
 		
 		TextView text = new TextView(context);
 		text.setText(textId);
-		text.setTextColor(0xFF404040);
+		text.setTextColor(R.color.text_color);
 		text.setGravity(Gravity.CENTER_HORIZONTAL);
 		addView(text, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 	}

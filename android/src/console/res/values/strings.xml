@@ -14,15 +14,20 @@
     <string name="app_name">NetXMS Client</string>
 	<string name="main_title">Home</string>
 	<string name="notification_title">NetXMS</string>
+	<string name="notify_started">NetXMS service started</string>
 	<string name="notify_disconnected">Disconnected from server</string>
 	<string name="notify_connected">Connected to server %1$s</string>
-	<string name="notify_connecting">connecting...</string><string name="home_screen_alarms">Alarms</string>
+	<string name="notify_connecting">Connecting...</string>
+	<string name="notify_connect_failed">Connection failed: %1$s</string>
+	<string name="notify_action_exec_fail">Cannot execute action: %1$s</string>
+	<string name="notify_action_exec_success">Action executed successfully</string>
+	<string name="notify_service_obj_sync_success">Objects synchronized</string>
+	<string name="notify_service_obj_sync_fail">Failed to synchronize objects with server.</string>
+	<string name="home_screen_alarms">Alarms</string>
 	<string name="home_screen_dashboards">Dashboards</string>
 	<string name="home_screen_nodes">Nodes</string>
 	<string name="home_screen_graphs">Graphs</string>
 	<string name="alarms_title">Alarms</string>
-	<string name="notify_service_obj_sync_fail">Failed to synchronize objects with server.</string>
-	<string name="notify_service_obj_sync_success">Objects synchronized</string>
 	<string name="disconnect">Disconnect &amp; Exit</string>
 	<string name="alarm_terminate">Terminate alarm</string>
 	<string name="cancel">Cancel</string>
@@ -65,8 +70,7 @@
 	<string name="pref_global_autostart_disabled">Do not auto start service on boot</string>
 	<string name="graphs_title">Predefined graphs</string>
 	<string name="graph_draw">Draw</string>
-	
-	<string name="graph_uncategorized">&lt;Uncategorized&gt;</string><string name="progress_gathering_data">Gathering data...</string>
+	<string name="graph_uncategorized">&lt;Uncategorized&gt;</string>
+	<string name="progress_gathering_data">Gathering data...</string>
 	<string name="node_unknown">&lt;unknown&gt;</string>
-	
 </resources>
