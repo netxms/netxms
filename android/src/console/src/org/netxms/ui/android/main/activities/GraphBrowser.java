@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.netxms.client.NXCException;
+import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
@@ -165,7 +166,9 @@ public class GraphBrowser extends AbstractClientActivity
 		{
 			List<GraphSettings> graphs = null;
 			try {
-				graphs=service.getSession().getPredefinedGraphs();
+				NXCSession session=service.getSession();
+				if (session != null)
+					graphs = session.getPredefinedGraphs();
 			} catch (NXCException e) {
 				Log.d("nxclient/GraphBrowser", "NXCException while executing LoadDataTask.doInBackground", e);
 				e.printStackTrace();
