@@ -39,6 +39,12 @@
 #define SQL_TYPE_TEXT4K    1
 #define SQL_TYPE_INT64     2
 
+//
+// Execute with error check
+//
+
+#define CHK_EXEC(x) do { if (!(x)) if (!g_bIgnoreErrors) return FALSE; } while (0)
+
 
 //
 // Functions
@@ -57,6 +63,7 @@ DB_RESULT SQLSelect(const TCHAR *pszQuery);
 DB_ASYNC_RESULT SQLAsyncSelect(const TCHAR *pszQuery);
 BOOL SQLQuery(const TCHAR *pszQuery);
 BOOL SQLBatch(const TCHAR *pszBatch);
+BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column);
 bool GetYesNo(const TCHAR *format, ...);
 void ShowQuery(const TCHAR *pszQuery);
 BOOL ExecSQLBatch(const char *pszFile);

@@ -229,10 +229,11 @@ BOOL SQLQuery(const TCHAR *pszQuery)
 
 BOOL SQLBatch(const TCHAR *pszBatch)
 {
-	String batch(pszBatch);
+   String batch(pszBatch);
    TCHAR *pszBuffer, *pszQuery, *ptr;
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    BOOL bRet = TRUE;
+	TCHAR table[128], column[128];
 
    batch.translate(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
    batch.translate(_T("$SQL:TEXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
@@ -247,24 +248,121 @@ BOOL SQLBatch(const TCHAR *pszBatch)
       if (!_tcscmp(pszQuery, _T("<END>")))
          break;
 
-      if (g_bTrace)
-         ShowQuery(pszQuery);
+		if (g_bTrace)
+			ShowQuery(pszQuery);
 
-      if (!DBQueryEx(g_hCoreDB, pszQuery, errorText))
-      {
-	      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
-         if (!g_bIgnoreErrors)
-         {
-            bRet = FALSE;
-            break;
-         }
-      }
+		if (_stscanf(pszQuery, _T("ALTER TABLE %128s DROP COLUMN %128s"), table, column) == 2)
+		{
+			if (!SQLDropColumn(table, column))
+			{
+				_ftprintf(stderr, _T("Cannot drop column %s.%s\n"), table, column);
+				if (!g_bIgnoreErrors)
+				{
+					bRet = FALSE;
+					break;
+				}
+			}
+		}
+		else
+		{
+			if (!DBQueryEx(g_hCoreDB, pszQuery, errorText))
+			{
+				WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
+				if (!g_bIgnoreErrors)
+				{
+					bRet = FALSE;
+					break;
+				}
+			}
+		}
+
       ptr++;
       pszQuery = ptr;
    }
    return bRet;
 }
 
+//
+// Drop column from the table
+//
+
+BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column)
+{
+	TCHAR query[1024];
+	DB_RESULT hResult;
+	BOOL success = FALSE;
+
+	if (g_iSyntax != DB_SYNTAX_SQLITE)
+	{
+		_sntprintf(query, 1024, _T("ALTER TABLE %s DROP COLUMN %s"), table, column);
+		success = SQLQuery(query);
+	}
+	else
+	{
+		_sntprintf(query, 1024, _T("PRAGMA TABLE_INFO('%s')"), table);
+		hResult = SQLSelect(query);
+		if (hResult != NULL)
+		{
+			int rows = DBGetNumRows(hResult);
+			const int blen = 2048;
+			TCHAR buffer[blen];
+			// Intermediate buffers for SQLs
+			TCHAR columnList[1024], createList[1024]; 
+			// TABLE_INFO() columns
+			TCHAR tabColName[128], tabColType[64], tabColNull[10], tabColDefault[128];
+			columnList[0] = createList[0] = _T('\0');
+			for (int i = 0; i < rows; i++)
+			{
+				DBGetField(hResult, i, 1, tabColName, 128);
+				DBGetField(hResult, i, 2, tabColType, 64);
+				DBGetField(hResult, i, 3, tabColNull, 10);
+				DBGetField(hResult, i, 4, tabColDefault, 128);
+				if (_tcsnicmp(tabColName, column, 128))
+				{
+					_tcscat(columnList, tabColName);
+					if (columnList[0] != _T('\0'))
+						_tcscat(columnList, _T(","));
+					_tcscat(createList, tabColName);
+					_tcscat(createList, tabColType);
+					if (tabColDefault[0] != _T('\0'))
+					{
+						_tcscat(createList, _T("DEFAULT "));
+						_tcscat(createList, tabColDefault);
+					}
+					if (tabColNull[0] == _T('1'))
+						_tcscat(createList, _T(" NOT NULL"));
+					_tcscat(createList, _T(","));
+				}
+			}
+			DBFreeResult(hResult);
+			if (rows > 0)
+			{
+				int cllen = _tcslen(columnList);
+				if (cllen > 0 && columnList[cllen - 1] == _T(','))
+					columnList[cllen - 1] = _T('\0');
+				// TODO: figure out if SQLite transactions will work here
+				_sntprintf(buffer, blen, _T("CREATE TABLE %s__backup__ (%s)"), table, columnList);
+				// _tprintf(_T("%s\n"), buffer);
+				CHK_EXEC(SQLQuery(buffer));
+				_sntprintf(buffer, blen, _T("INSERT INTO %s__backup__  (%s) SELECT %s FROM %s"), 
+					table, columnList, columnList, table);
+				// _tprintf(_T("%s\n"), buffer);
+				CHK_EXEC(SQLQuery(buffer));
+				_sntprintf(buffer, blen, _T("DROP TABLE %s"), table);
+				// _tprintf(_T("%s\n"), buffer);
+				CHK_EXEC(SQLQuery(buffer));
+				_sntprintf(buffer, blen, _T("ALTER TABLE %s__backup__ RENAME to %s"), table, table);
+				// _tprintf(_T("%s\n"), buffer);
+				CHK_EXEC(SQLQuery(buffer));
+				success = TRUE;
+			}
+		}
+	}
+
+	// TODO: preserve indices and constraints??
+
+	return success;
+}
 
 //
 // Read string value from metadata table
