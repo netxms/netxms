@@ -92,7 +92,7 @@ public class GraphAdapter extends BaseExpandableListAdapter
 	        convertView = layoutInflater.inflate(R.layout.graph_view_child_layout, null);
 	    }
         TextView tv = (TextView)convertView.findViewById(R.id.tvChild);
-		tv.setTextColor(0xFF404040);
+		tv.setTextColor(R.color.text_color);
         tv.setText(name);
         return convertView;
 	}
@@ -128,8 +128,8 @@ public class GraphAdapter extends BaseExpandableListAdapter
             convertView = layoutInflater.inflate(R.layout.graph_view_group_layout, null);
         }
         TextView tv = (TextView)convertView.findViewById(R.id.tvGroup);
-		tv.setTextColor(0xFF404040);
-        tv.setText("       " + name);	// TODO MI[25Feb12] change this ugly solution ASAP!
+		tv.setTextColor(R.color.text_color);
+        tv.setText(name);
         return convertView;
 	}
 	@Override

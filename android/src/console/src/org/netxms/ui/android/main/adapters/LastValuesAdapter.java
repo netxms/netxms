@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.ui.android.R;
+
 import android.content.Context;
 import android.view.Gravity;
 import android.view.View;
@@ -102,7 +104,7 @@ public class LastValuesAdapter extends BaseAdapter
 		{
 			itemName = new TextView(context);
 			itemName.setPadding(5, 2, 5, 2);
-			itemName.setTextColor(0xFF404040);
+			itemName.setTextColor(R.color.text_color);
 			itemName.setGravity(Gravity.LEFT);
 			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			lp.gravity = Gravity.LEFT;
@@ -110,7 +112,7 @@ public class LastValuesAdapter extends BaseAdapter
 
 			itemValue = new TextView(context);
 			itemValue.setPadding(5, 2, 5, 2);
-			itemValue.setTextColor(0xFF404040);
+			itemValue.setTextColor(R.color.text_color);
 			itemValue.setGravity(Gravity.RIGHT);
 			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			lp.gravity = Gravity.RIGHT;

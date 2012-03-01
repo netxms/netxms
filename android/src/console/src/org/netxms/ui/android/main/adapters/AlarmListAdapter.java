@@ -148,11 +148,11 @@ public class AlarmListAdapter extends BaseAdapter
 
 			source = new TextView(context);
 			source.setPadding(5, 2, 5, 2);
-			source.setTextColor(0xFF404040);
+			source.setTextColor(R.color.text_color);
 
 			message = new TextView(context);
 			message.setPadding(5, 2, 5, 2);
-			message.setTextColor(0xFF404040);
+			message.setTextColor(R.color.text_color);
 
 			texts = new LinearLayout(context);
 			texts.setOrientation(LinearLayout.VERTICAL);

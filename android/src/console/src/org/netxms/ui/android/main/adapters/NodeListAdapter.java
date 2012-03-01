@@ -159,12 +159,12 @@ public class NodeListAdapter extends BaseAdapter
 			// new object, create fields
 			objectName = new TextView(context);
 			objectName.setPadding(5, 2, 5, 2);
-			objectName.setTextColor(0xFF404040);
+			objectName.setTextColor(R.color.text_color);
 			objectName.setTextSize(objectName.getTextSize() * 1.1f);
 
 			objectStatus = new TextView(context);
 			objectStatus.setPadding(5, 2, 5, 2);
-			objectStatus.setTextColor(0xFF404040);
+			objectStatus.setTextColor(R.color.text_color);
 
 			objectIcon = new ImageView(context);
 			objectIcon.setPadding(5, 5, 5, 2);
