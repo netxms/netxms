@@ -55,6 +55,7 @@ android/src/console/res/menu/last_values_actions.xml -text
 android/src/console/res/menu/main_menu.xml -text
 android/src/console/res/menu/node_actions.xml -text
 android/src/console/res/values-v11/styles.xml -text
+android/src/console/res/values/colors.xml -text
 android/src/console/res/values/strings.xml -text
 android/src/console/res/values/styles.xml -text
 android/src/console/res/xml/preferences.xml -text
