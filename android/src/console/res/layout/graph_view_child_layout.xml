@@ -10,9 +10,9 @@
 		android:paddingLeft="5dip"
 		android:paddingRight="5dip"
 		android:gravity="center_vertical"
-			android:background="#ebeae1"
-			android:cacheColorHint="#ebeae1"
 		android:text="Children"
-		android:textSize="17dip">
+		android:textSize="17dip"
+		android:cacheColorHint="#ebeae1"
+		android:background="@drawable/explist_selection">
 	</TextView>
 </LinearLayout>

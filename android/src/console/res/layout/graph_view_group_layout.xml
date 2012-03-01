@@ -2,18 +2,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/graph_view_group_layout"
     android:layout_width="fill_parent"
-	android:layout_height="fill_parent">
-	<TextView
+	android:layout_height="fill_parent"
+	android:layout_centerVertical="true" >
+    	<TextView
 	    android:id="@+id/tvGroup"
 		android:layout_width="match_parent"
 	    android:layout_height="36dip"
-	    android:paddingLeft="5dip"
+	    android:paddingLeft="36dip"
 	    android:paddingRight="5dip"
 	    android:gravity="center_vertical"
-			android:background="#ebeae1"
-			android:cacheColorHint="#ebeae1"
 	    android:text="Groups"
 	    android:textSize="17dip"
+		android:cacheColorHint="#ebeae1"
+		android:background="@drawable/explist_selection"
 	    android:textStyle="bold" >
 	</TextView>
 </LinearLayout>
