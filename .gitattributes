@@ -23,6 +23,7 @@ android/src/console/res/drawable-mdpi/icon.png -text
 android/src/console/res/drawable-mdpi/nodes.png -text
 android/src/console/res/drawable/bw_gradient.xml -text
 android/src/console/res/drawable/dashboard.png -text
+android/src/console/res/drawable/explist_selection.xml -text
 android/src/console/res/drawable/header_background.xml -text
 android/src/console/res/drawable/home_screen_background.xml -text
 android/src/console/res/drawable/home_screen_selection.xml -text
