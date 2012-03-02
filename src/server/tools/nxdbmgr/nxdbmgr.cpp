@@ -255,7 +255,7 @@ BOOL SQLBatch(const TCHAR *pszBatch)
 		{
 			if (!SQLDropColumn(table, column))
 			{
-				_ftprintf(stderr, _T("Cannot drop column %s.%s\n"), table, column);
+				WriteToTerminalEx(_T("Cannot drop column \x1b[37;1m%s.%s\x1b[0m\n"), table, column);
 				if (!g_bIgnoreErrors)
 				{
 					bRet = FALSE;
