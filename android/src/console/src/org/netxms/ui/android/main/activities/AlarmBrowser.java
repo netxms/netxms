@@ -3,6 +3,8 @@
  */
 package org.netxms.ui.android.main.activities;
 
+import java.util.ArrayList;
+
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
@@ -28,6 +30,7 @@ public class AlarmBrowser extends AbstractClientActivity
 {
 	private ListView listView;
 	private AlarmListAdapter adapter;
+	private ArrayList<Integer> nodeIdList;
 	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
@@ -36,6 +39,7 @@ public class AlarmBrowser extends AbstractClientActivity
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
 		setContentView(R.layout.alarm_view);
+		nodeIdList = getIntent().getIntegerArrayListExtra("nodeIdList");
 		
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 		title.setText(R.string.alarms_title);
@@ -121,7 +125,7 @@ public class AlarmBrowser extends AbstractClientActivity
 	 */
 	public void refreshList()
 	{
-		adapter.setAlarms(service.getAlarms());
+		adapter.setAlarms(service.getAlarms(), nodeIdList);
 		adapter.notifyDataSetChanged();
 	}
 

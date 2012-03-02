@@ -49,9 +49,18 @@ public class AlarmListAdapter extends BaseAdapter
 	 * 
 	 * @param alarms
 	 */
-	public void setAlarms(Alarm[] alarms)
+	public void setAlarms(Alarm[] alarms, ArrayList<Integer> nodeIdList)
 	{
-		this.alarms = Arrays.asList(alarms);
+		if (nodeIdList == null || nodeIdList.size() == 0)
+			this.alarms = Arrays.asList(alarms);
+		else	// Filter on specific node
+		{
+			this.alarms.clear();
+			for (int i = 0; i < alarms.length; i++)
+				for (int j = 0; j < nodeIdList.size(); j++)
+					if (alarms[i].getSourceObjectId() == nodeIdList.get(j))
+						this.alarms.add(alarms[i]);
+		}
 		Collections.sort(this.alarms, new Comparator<Alarm>() {
 			@Override
 			public int compare(Alarm object1, Alarm object2)

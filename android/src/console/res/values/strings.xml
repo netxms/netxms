@@ -73,4 +73,5 @@
 	<string name="graph_uncategorized">&lt;Uncategorized&gt;</string>
 	<string name="progress_gathering_data">Gathering data...</string>
 	<string name="node_unknown">&lt;unknown&gt;</string>
+	<string name="view_alarms">View alarms</string>
 </resources>

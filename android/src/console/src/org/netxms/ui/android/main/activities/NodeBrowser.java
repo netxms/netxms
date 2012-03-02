@@ -3,6 +3,8 @@
  */
 package org.netxms.ui.android.main.activities;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
@@ -197,6 +199,12 @@ public class NodeBrowser extends AbstractClientActivity
 		// process menu selection
 		switch(item.getItemId())
 		{
+			case R.id.view_alarms:
+				if (object.getObjectClass() == GenericObject.OBJECT_NODE)
+					viewAlarms(new ArrayList<Integer>(Arrays.asList((int)object.getObjectId())));
+				else
+					new SyncMissingChildsTask().execute(new Object[] { object.getChildIdList() });
+				return true;
 			case R.id.unmanage:
 				adapter.unmanageObject(object.getObjectId());
 				refreshList();
@@ -347,6 +355,14 @@ public class NodeBrowser extends AbstractClientActivity
 		super.onDestroy();
 	}
 	
+	
+	private void viewAlarms(ArrayList<Integer> nodeIdList)
+	{
+		Intent newIntent = new Intent(this, AlarmBrowser.class);
+		newIntent.putIntegerArrayListExtra("nodeIdList", nodeIdList);
+		startActivity(newIntent);
+	}
+	
 	/**
 	 * Internal task for synching missing objects
 	 */
@@ -382,6 +398,55 @@ public class NodeBrowser extends AbstractClientActivity
 				adapter.setNodes(currentParent.getChildsAsArray());				
 				adapter.notifyDataSetChanged();
 			}
+		}
+	}
+
+	
+	/**
+	 * Internal task for synching missing objects
+	 */
+	private class SyncMissingChildsTask extends AsyncTask<Object, Void, Integer>
+	{
+		private ArrayList<Integer> childIdList;
+		
+		protected SyncMissingChildsTask()
+		{
+			childIdList = new ArrayList<Integer>();
+		}
+		
+		protected void getChildsList(long[] list, ArrayList<Integer> idList)
+		{
+			for (int i = 0; i< list.length; i++)
+			{
+				idList.add((int)list[i]);
+				GenericObject obj = service.findObjectById(list[i]);
+				if (obj != null && (obj.getObjectClass() == GenericObject.OBJECT_CONTAINER || 
+				                    obj.getObjectClass() == GenericObject.OBJECT_CLUSTER))
+				{
+					try
+					{
+						service.getSession().syncMissingObjects(obj.getChildIdList(), false, NXCSession.OBJECT_SYNC_WAIT);
+						getChildsList(obj.getChildIdList(), idList);
+					}
+					catch(Exception e)
+					{
+						Log.d("nxclient/SyncMissingChildsTask", "Exception while executing service.getSession().syncMissingObjects", e);
+					}
+				}
+			}
+		}
+
+		@Override
+		protected Integer doInBackground(Object... params)
+		{
+			getChildsList((long[])params[0], childIdList);
+			return 0;
+		}
+
+		@Override
+		protected void onPostExecute(Integer result)
+		{
+			viewAlarms(childIdList);
 		}
 	}
 }

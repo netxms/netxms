@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu
   xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:title="@string/unmanage" android:id="@+id/unmanage"></item>
-    <item android:title="@string/manage" android:id="@+id/manage"></item>   
+    <item android:id="@+id/view_alarms" android:title="@string/view_alarms"></item><item android:title="@string/unmanage" android:id="@+id/unmanage"></item>
+    <item android:title="@string/manage" android:id="@+id/manage"></item>
+       
 </menu>
