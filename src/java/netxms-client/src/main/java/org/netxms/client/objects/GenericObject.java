@@ -505,9 +505,12 @@ public class GenericObject
 			while(it.hasNext())
 			{
 				GenericObject obj = session.findObjectById(it.next());
-				if ((obj != null) && ((classFilter == -1) || (obj.getObjectClass() == classFilter)))
-					set.add(obj);
-				obj.getAllChildsInternal(classFilter, set);
+				if (obj != null)
+				{
+					if ((classFilter == -1) || (obj.getObjectClass() == classFilter))
+						set.add(obj);
+					obj.getAllChildsInternal(classFilter, set);
+				}
 			}
 		}
 	}
