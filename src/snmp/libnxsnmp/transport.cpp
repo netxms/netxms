@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -54,6 +54,7 @@ SNMP_Transport::SNMP_Transport()
 	m_contextEngine = NULL;
 	m_securityContext = NULL;
 	m_enableEngineIdAutoupdate = false;
+	m_updatePeerOnRecv = false;
 	m_snmpVersion = SNMP_VERSION_2C;
 }
 
@@ -438,6 +439,13 @@ retry_wait:
 			goto retry_wait;
 		}
 	}
+
+	// Update peer address
+	if ((rc >= 0) && m_updatePeerOnRecv)
+	{
+		memcpy(&m_peerAddr, senderAddr, sizeof(struct sockaddr_in));
+	}
+
 	return rc;
 }
 

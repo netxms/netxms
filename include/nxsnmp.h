@@ -360,7 +360,7 @@ private:
    DWORD *m_pdwValue;
    TCHAR *m_pszTextValue;
 
-   void ConvertToText(void);
+   void ConvertToText();
 
 public:
    SNMP_ObjectId();
@@ -368,8 +368,8 @@ public:
    ~SNMP_ObjectId();
 
    DWORD Length(void) { return m_dwLength; }
-   const DWORD *GetValue(void) { return m_pdwValue; }
-   const TCHAR *GetValueAsText(void) { return CHECK_NULL(m_pszTextValue); }
+   const DWORD *GetValue() { return m_pdwValue; }
+   const TCHAR *GetValueAsText() { return CHECK_NULL(m_pszTextValue); }
    void SetValue(DWORD *pdwValue, DWORD dwLength);
    void Extend(DWORD dwSubId);
 
@@ -527,6 +527,7 @@ private:
 	int m_contextEngineIdLen;
 	char m_contextName[SNMP_MAX_CONTEXT_NAME];
 	BYTE m_salt[8];
+	bool m_reportable;
 	
 	// The following attributes only used by parser and
 	// valid only for received PDUs
@@ -560,15 +561,20 @@ public:
    BOOL parse(BYTE *pRawData, DWORD dwRawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate);
    DWORD encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext);
 
-   DWORD getCommand(void) { return m_dwCommand; }
-   SNMP_ObjectId *getTrapId(void) { return m_pEnterprise; }
-   int getTrapType(void) { return m_iTrapType; }
-   int getSpecificTrapType(void) { return m_iSpecificTrap; }
-   DWORD getNumVariables(void) { return m_dwNumVariables; }
+   DWORD getCommand() { return m_dwCommand; }
+   SNMP_ObjectId *getTrapId() { return m_pEnterprise; }
+   int getTrapType() { return m_iTrapType; }
+   int getSpecificTrapType() { return m_iSpecificTrap; }
+   DWORD getNumVariables() { return m_dwNumVariables; }
    SNMP_Variable *getVariable(DWORD dwIndex) { return (dwIndex < m_dwNumVariables) ? m_ppVarList[dwIndex] : NULL; }
-   DWORD getVersion(void) { return m_dwVersion; }
-   DWORD getErrorCode(void) { return m_dwErrorCode; }
+   DWORD getVersion() { return m_dwVersion; }
+   DWORD getErrorCode() { return m_dwErrorCode; }
+
+	void setMessageId(DWORD msgId) { m_msgId = msgId; }
 	DWORD getMessageId() { return m_msgId; }
+
+	bool isReportable() { return m_reportable; }
+	void setReportable(bool value) { m_reportable = value; }
 
 	const char *getCommunity() { return (m_authObject != NULL) ? m_authObject : ""; }
 	const char *getUser() { return (m_authObject != NULL) ? m_authObject : ""; }
@@ -576,7 +582,7 @@ public:
 	int getSecurityModel() { return m_securityModel; }
 	int getFlags() { return (int)m_flags; }
 
-   DWORD getRequestId(void) { return m_dwRqId; }
+   DWORD getRequestId() { return m_dwRqId; }
    void setRequestId(DWORD dwId) { m_dwRqId = dwId; }
 
 	void setContextEngineId(BYTE *id, int len);
@@ -601,6 +607,7 @@ protected:
 	SNMP_Engine *m_authoritativeEngine;
 	SNMP_Engine *m_contextEngine;
 	bool m_enableEngineIdAutoupdate;
+	bool m_updatePeerOnRecv;
 	int m_snmpVersion;
 
 public:
@@ -622,10 +629,14 @@ public:
                    DWORD timeout = INFINITE, int numRetries = 1);
 
 	void setSecurityContext(SNMP_SecurityContext *ctx);
+	SNMP_SecurityContext *getSecurityContext() { return m_securityContext; }
 	const char *getCommunityString() { return (m_securityContext != NULL) ? m_securityContext->getCommunity() : ""; }
 
 	void enableEngineIdAutoupdate(bool enabled) { m_enableEngineIdAutoupdate = enabled; }
 	bool isEngineIdAutoupdateEnabled() { return m_enableEngineIdAutoupdate; }
+
+	void setPeerUpdatedOnRecv(bool enabled) { m_updatePeerOnRecv = enabled; }
+	bool isPeerUpdatedOnRecv() { return m_updatePeerOnRecv; }
 
 	void setSnmpVersion(int version) { m_snmpVersion = version; }
 	int getSnmpVersion() { return m_snmpVersion; }

@@ -86,6 +86,7 @@ SNMP_PDU::SNMP_PDU()
 	m_contextName[0] = 0;
 	m_msgMaxSize = SNMP_DEFAULT_MSG_MAX_SIZE;
 	m_authObject = NULL;
+	m_reportable = true;
 }
 
 
@@ -111,6 +112,7 @@ SNMP_PDU::SNMP_PDU(DWORD dwCommand, DWORD dwRqId, DWORD dwVersion)
 	m_contextName[0] = 0;
 	m_msgMaxSize = SNMP_DEFAULT_MSG_MAX_SIZE;
 	m_authObject = NULL;
+	m_reportable = true;
 }
 
 
@@ -378,7 +380,7 @@ BOOL SNMP_PDU::parseTrapPDU(BYTE *pData, DWORD dwPDULength)
 
 
 //
-// Parse version 2 TRAP PDU
+// Parse version 2 TRAP or INFORM-REQUEST PDU
 //
 
 BOOL SNMP_PDU::parseTrap2PDU(BYTE *pData, DWORD dwPDULength)
@@ -458,6 +460,7 @@ BOOL SNMP_PDU::parseV3Header(BYTE *header, DWORD headerLength)
 	BYTE flags;
    if (!BER_DecodeContent(type, currPos, length, &flags))
       return FALSE;   // Error parsing content
+	m_reportable = (flags & SNMP_REPORTABLE_FLAG) ? true : false;
 	m_flags = flags;
    currPos += length;
    remLength -= length + idLength;
@@ -644,7 +647,7 @@ BOOL SNMP_PDU::parsePdu(BYTE *pdu, DWORD pduLength)
             break;
          case ASN_INFORM_REQUEST_PDU:
             m_dwCommand = SNMP_INFORM_REQUEST;
-            success = parsePduContent(content, length);
+            success = parseTrap2PDU(content, length);
             break;
          case ASN_REPORT_PDU:
             m_dwCommand = SNMP_REPORT;
@@ -1157,7 +1160,7 @@ DWORD SNMP_PDU::encodeV3Header(BYTE *buffer, DWORD bufferSize, SNMP_SecurityCont
 	BYTE header[256];
 	DWORD bytes, securityModel = securityContext->getSecurityModel();
 
-	BYTE flags = SNMP_REPORTABLE_FLAG;
+	BYTE flags = m_reportable ? SNMP_REPORTABLE_FLAG : 0;
 	if (securityContext->getAuthoritativeEngine().getIdLen() != 0)
 	{
 		if (securityContext->needAuthentication())
@@ -1170,7 +1173,7 @@ DWORD SNMP_PDU::encodeV3Header(BYTE *buffer, DWORD bufferSize, SNMP_SecurityCont
 		}
 	}
 
-	bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_dwRqId, sizeof(DWORD), header, 256);
+	bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_msgId, sizeof(DWORD), header, 256);
 	bytes += BER_Encode(ASN_INTEGER, (BYTE *)&m_msgMaxSize, sizeof(DWORD), &header[bytes], 256 - bytes);
 	bytes += BER_Encode(ASN_OCTET_STRING, &flags, 1, &header[bytes], 256 - bytes);
 	bytes += BER_Encode(ASN_INTEGER, (BYTE *)&securityModel, sizeof(DWORD), &header[bytes], 256 - bytes);

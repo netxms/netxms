@@ -102,9 +102,9 @@ bool ReportJob::run()
 #endif
 
 	// dump report definition
-	write(fd, definition, strlen(definition));
+	write(fd, definition, (int)strlen(definition));
 	char marker[] = "\n### END OF REPORT DEFINITION\n";
-	write(fd, marker, strlen(marker));
+	write(fd, marker, (int)strlen(marker));
 
 	// dump all variables
 	for(int i = 0; i < (int)m_parameters->getSize(); i++)
@@ -116,9 +116,9 @@ bool ReportJob::run()
 		const char *key = m_parameters->getKeyByIndex(i);
 		const char *value = m_parameters->getValueByIndex(i);
 #endif
-		write(fd, key, strlen(key));
+		write(fd, key, (int)strlen(key));
 		write(fd, "=", 1);
-		write(fd, value, strlen(value));
+		write(fd, value, (int)strlen(value));
 		write(fd, "\n", 1);
 
 #ifdef UNICODE

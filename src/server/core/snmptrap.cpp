@@ -238,7 +238,7 @@ static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
 // Process trap
 //
 
-static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
+static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTransport, SNMP_Engine *localEngine, boolean isInformRq)
 {
    DWORD i, dwOriginAddr, dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
    TCHAR *pszTrapArgs, szBuffer[4096];
@@ -248,8 +248,20 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
    int iResult;
 
    dwOriginAddr = ntohl(pOrigin->sin_addr.s_addr);
-   DbgPrintf(4, _T("Received SNMP trap %s from %s"), 
+	DbgPrintf(4, _T("Received SNMP %s %s from %s"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"),
              pdu->getTrapId()->GetValueAsText(), IpToStr(dwOriginAddr, szBuffer));
+	if (isInformRq)
+	{
+		SNMP_PDU *response = new SNMP_PDU(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
+		if (pTransport->getSecurityContext() == NULL)
+		{
+			pTransport->setSecurityContext(new SNMP_SecurityContext(pdu->getCommunity()));
+		}
+		response->setMessageId(pdu->getMessageId());
+		response->setContextEngineId(localEngine->getId(), localEngine->getIdLen());
+		pTransport->sendMessage(response);
+		delete response;
+	}
 
    // Match IP address to object
    pNode = FindNodeByIP(0, dwOriginAddr);
@@ -399,6 +411,9 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    SNMP_UDPTransport *pTransport;
    SNMP_PDU *pdu;
 
+	static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
+	SNMP_Engine localEngine(engineId, 12);
+
    hSocket = socket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == -1)
    {
@@ -426,6 +441,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 
    pTransport = new SNMP_UDPTransport(hSocket);
 	pTransport->enableEngineIdAutoupdate(true);
+	pTransport->setPeerUpdatedOnRecv(true);
    DbgPrintf(1, _T("SNMP Trap Receiver started"));
 
    // Wait for packets
@@ -436,8 +452,44 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       if ((iBytes > 0) && (pdu != NULL))
       {
 			DbgPrintf(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
-         if (pdu->getCommand() == SNMP_TRAP)
-            ProcessTrap(pdu, &addr);
+			if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
+			{
+				if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_INFORM_REQUEST))
+				{
+					SNMP_SecurityContext *context = pTransport->getSecurityContext();
+					context->setAuthoritativeEngine(localEngine);
+				}
+            ProcessTrap(pdu, &addr, pTransport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
+			}
+			else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
+			{
+				// Engine ID discovery
+				DbgPrintf(6, _T("SNMPTrapReceiver: EngineId discovery"));
+				
+				SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
+				response->setReportable(false);
+				response->setMessageId(pdu->getMessageId());
+				response->setContextEngineId(localEngine.getId(), localEngine.getIdLen());
+
+				SNMP_Variable *var = new SNMP_Variable(_T(".1.3.6.1.6.3.15.1.1.4.0"));
+				var->SetValueFromString(ASN_INTEGER, _T("2"));
+				response->bindVariable(var);
+				
+				SNMP_SecurityContext *context = new SNMP_SecurityContext();
+				localEngine.setTime((int)time(NULL));
+				context->setAuthoritativeEngine(localEngine);
+				context->setSecurityModel(SNMP_SECURITY_MODEL_USM);
+				context->setAuthMethod(SNMP_AUTH_NONE);
+				context->setPrivMethod(SNMP_ENCRYPT_NONE);
+				pTransport->setSecurityContext(context);
+
+				pTransport->sendMessage(response);
+				delete response;
+			}
+			else if (pdu->getCommand() == SNMP_REPORT)
+			{
+				DbgPrintf(6, _T("SNMPTrapReceiver: REPORT PDU with error %s"), pdu->getVariable(0)->GetName()->GetValueAsText());
+			}
          delete pdu;
       }
       else

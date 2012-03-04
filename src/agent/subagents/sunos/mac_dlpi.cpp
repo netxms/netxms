@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * mac_dlpi.c
  *
@@ -175,10 +173,3 @@ int mac_addr_dlpi(char *pszIfName, u_char *pMacAddr)
 	}
 	return rc;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/

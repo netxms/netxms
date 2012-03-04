@@ -337,22 +337,18 @@ BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column)
 			DBFreeResult(hResult);
 			if (rows > 0)
 			{
-				int cllen = _tcslen(columnList);
+				int cllen = (int)_tcslen(columnList);
 				if (cllen > 0 && columnList[cllen - 1] == _T(','))
 					columnList[cllen - 1] = _T('\0');
 				// TODO: figure out if SQLite transactions will work here
 				_sntprintf(buffer, blen, _T("CREATE TABLE %s__backup__ (%s)"), table, columnList);
-				// _tprintf(_T("%s\n"), buffer);
 				CHK_EXEC(SQLQuery(buffer));
 				_sntprintf(buffer, blen, _T("INSERT INTO %s__backup__  (%s) SELECT %s FROM %s"), 
 					table, columnList, columnList, table);
-				// _tprintf(_T("%s\n"), buffer);
 				CHK_EXEC(SQLQuery(buffer));
 				_sntprintf(buffer, blen, _T("DROP TABLE %s"), table);
-				// _tprintf(_T("%s\n"), buffer);
 				CHK_EXEC(SQLQuery(buffer));
 				_sntprintf(buffer, blen, _T("ALTER TABLE %s__backup__ RENAME to %s"), table, table);
-				// _tprintf(_T("%s\n"), buffer);
 				CHK_EXEC(SQLQuery(buffer));
 				success = TRUE;
 			}
