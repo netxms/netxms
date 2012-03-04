@@ -1,6 +1,6 @@
 /*
 ** Windows platform subagent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ LONG H_AppAddressSpace(const char *pszCmd, const char *pArg, char *pValue);
 LONG H_ConnectedUsers(const char *pszCmd, const char *pArg, char *pValue);
 LONG H_RemoteShareStatus(const char *pszCmd, const char *pArg, char *pValue);
 LONG H_ProcessList(const char *cmd, const char *arg, StringList *value);
+LONG H_ProcessTable(const char *cmd, const char *arg, Table *value);
 LONG H_ProcCount(const char *cmd, const char *arg, char *value);
 LONG H_ProcCountSpecific(const char *cmd, const char *arg, char *value);
 LONG H_ProcInfo(const char *cmd, const char *arg, char *value);
@@ -144,8 +145,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 };
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {
-	{ "System.ActiveuserSessions", H_ActiveUserSessions, NULL },
+	{ "System.ActiveUserSessions", H_ActiveUserSessions, NULL },
 	{ "System.ProcessList", H_ProcessList, NULL }
+};
+static NETXMS_SUBAGENT_TABLE m_tables[] =
+{
+	{ "System.Processes", H_ProcessTable, NULL }
 };
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {
@@ -162,7 +167,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
-	0, NULL,	// tables
+	sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
+	m_tables,
 	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
 	m_actions,
 	0, NULL	// push parameters

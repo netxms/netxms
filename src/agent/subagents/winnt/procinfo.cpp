@@ -575,3 +575,78 @@ LONG H_ProcessList(const char *cmd, const char *arg, StringList *value)
    free(pdwProcList);
    return iResult;
 }
+
+
+//
+// Handler for System.Processes table
+//
+
+LONG H_ProcessTable(const char *cmd, const char *arg, Table *value)
+{
+   DWORD i, dwSize, dwNumProc, *pdwProcList;
+   LONG iResult = SYSINFO_RC_SUCCESS;
+   HMODULE phModList[MAX_MODULES];
+   HANDLE hProcess;
+
+	value->addColumn(_T("PID"));
+	value->addColumn(_T("NAME"));
+
+   pdwProcList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
+   if (EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize))
+   {
+      dwNumProc = dwSize / sizeof(DWORD);
+      for(i = 0; i < dwNumProc; i++)
+      {
+			value->addRow();
+			value->set(0, pdwProcList[i]);
+         hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pdwProcList[i]);
+         if (hProcess != NULL)
+         {
+            if (EnumProcessModules(hProcess, phModList, sizeof(HMODULE) * MAX_MODULES, &dwSize))
+            {
+               if (dwSize >= sizeof(HMODULE))     // At least one module exist
+               {
+                  TCHAR szBaseName[MAX_PATH];
+
+                  GetModuleBaseName(hProcess, phModList[0], szBaseName, MAX_PATH);
+						value->set(1, szBaseName);
+               }
+               else
+               {
+						value->set(1, _T("<unknown>"));
+               }
+            }
+            else
+            {
+               if (pdwProcList[i] == 4)
+               {
+						value->set(1, _T("System"));
+               }
+               else
+               {
+						value->set(1, _T("<unknown>"));
+               }
+            }
+            CloseHandle(hProcess);
+         }
+         else
+         {
+            if (pdwProcList[i] == 0)
+            {
+					value->set(1, _T("System Idle Process"));
+            }
+            else
+            {
+					value->set(1, _T("<unaccessible>"));
+            }
+         }
+      }
+   }
+   else
+   {
+      iResult = SYSINFO_RC_ERROR;
+   }
+
+   free(pdwProcList);
+   return iResult;
+}
