@@ -183,6 +183,7 @@ public class DrawGraph extends AbstractClientActivity
 		{
 			if (result != null)
 			{
+				int addedSeries = 0;
 				for (int i = 0; i < result.length; i++)
 				{
 					DciDataRow[] dciDataRow = result[i].getValues();
@@ -193,7 +194,14 @@ public class DrawGraph extends AbstractClientActivity
 							gwData[k] = new GraphViewData(dciDataRow[j].getTimestamp().getTime(), dciDataRow[j].getValueAsDouble());  
 						GraphViewSeries gwSeries = new GraphViewSeries(items[i].getDescription(), toAndroidColor(itemStyles[i].getColor()), gwData);
 						graphView.addSeries(gwSeries);
+						addedSeries++;
 					}
+				}
+				if (addedSeries == 0)	// Add an empty series when getting no data
+				{
+					GraphViewData[] gwData = new GraphViewData[] { new GraphViewData(0, 0) };  
+					GraphViewSeries gwSeries = new GraphViewSeries("", 0xFFFFFF, gwData);
+					graphView.addSeries(gwSeries);
 				}
 				LinearLayout layout = (LinearLayout)findViewById(R.id.graphics);   
 				if (layout != null)
