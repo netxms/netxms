@@ -4,16 +4,17 @@
 package org.netxms.ui.android.main.activities;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
+
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.NodeListAdapter;
+
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
@@ -200,10 +201,7 @@ public class NodeBrowser extends AbstractClientActivity
 		switch(item.getItemId())
 		{
 			case R.id.view_alarms:
-				if (object.getObjectClass() == GenericObject.OBJECT_NODE)
-					viewAlarms(new ArrayList<Integer>(Arrays.asList((int)object.getObjectId())));
-				else
-					new SyncMissingChildsTask().execute(new Object[] { object.getChildIdList() });
+				new SyncMissingChildsTask().execute(new Integer[] { (int)object.getObjectId() });
 				return true;
 			case R.id.unmanage:
 				adapter.unmanageObject(object.getObjectId());
@@ -405,7 +403,7 @@ public class NodeBrowser extends AbstractClientActivity
 	/**
 	 * Internal task for synching missing objects
 	 */
-	private class SyncMissingChildsTask extends AsyncTask<Object, Void, Integer>
+	private class SyncMissingChildsTask extends AsyncTask<Integer, Void, Integer>
 	{
 		private ArrayList<Integer> childIdList;
 		
@@ -414,11 +412,11 @@ public class NodeBrowser extends AbstractClientActivity
 			childIdList = new ArrayList<Integer>();
 		}
 		
-		protected void getChildsList(long[] list, ArrayList<Integer> idList)
+		protected void getChildsList(long[] list)
 		{
 			for (int i = 0; i< list.length; i++)
 			{
-				idList.add((int)list[i]);
+				childIdList.add((int)list[i]);
 				GenericObject obj = service.findObjectById(list[i]);
 				if (obj != null && (obj.getObjectClass() == GenericObject.OBJECT_CONTAINER || 
 				                    obj.getObjectClass() == GenericObject.OBJECT_CLUSTER))
@@ -426,7 +424,7 @@ public class NodeBrowser extends AbstractClientActivity
 					try
 					{
 						service.getSession().syncMissingObjects(obj.getChildIdList(), false, NXCSession.OBJECT_SYNC_WAIT);
-						getChildsList(obj.getChildIdList(), idList);
+						getChildsList(obj.getChildIdList());
 					}
 					catch(Exception e)
 					{
@@ -437,9 +435,12 @@ public class NodeBrowser extends AbstractClientActivity
 		}
 
 		@Override
-		protected Integer doInBackground(Object... params)
+		protected Integer doInBackground(Integer... params)
 		{
-			getChildsList((long[])params[0], childIdList);
+			long[] list = new long[params.length];
+			for (int i = 0; i < params.length; i++)
+				list[i] = params[i].longValue();
+			getChildsList(list);
 			return 0;
 		}
 
