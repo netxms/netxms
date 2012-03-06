@@ -64,6 +64,7 @@
 	<string name="last_values_graph_four_hours">Graph last four hours</string>
 	<string name="last_values_graph_one_day">Graph last day</string>
 	<string name="last_values_graph_one_week">Graph last week</string>
+	<string name="last_values_na">N/A</string>
 	<string name="pref_global">Global settings</string>
 	<string name="pref_global_autostart">Auto start on boot</string>
 	<string name="pref_global_autostart_enabled">Auto start service on boot</string>
@@ -72,6 +73,6 @@
 	<string name="graph_draw">Draw</string>
 	<string name="graph_uncategorized">&lt;Uncategorized&gt;</string>
 	<string name="progress_gathering_data">Gathering data...</string>
-	<string name="node_unknown">&lt;unknown&gt;</string>
+	<string name="node_unknown">&lt;Unknown&gt;</string>
 	<string name="view_alarms">View alarms</string>
 </resources>
