@@ -92,7 +92,7 @@ public class GraphAdapter extends BaseExpandableListAdapter
 	        convertView = layoutInflater.inflate(R.layout.graph_view_child_layout, null);
 	    }
         TextView tv = (TextView)convertView.findViewById(R.id.tvChild);
-		tv.setTextColor(R.color.text_color);
+		tv.setTextColor(context.getResources().getColor(R.color.text_color));
         tv.setText(name);
         return convertView;
 	}
@@ -128,7 +128,7 @@ public class GraphAdapter extends BaseExpandableListAdapter
             convertView = layoutInflater.inflate(R.layout.graph_view_group_layout, null);
         }
         TextView tv = (TextView)convertView.findViewById(R.id.tvGroup);
-		tv.setTextColor(R.color.text_color);
+		tv.setTextColor(context.getResources().getColor(R.color.text_color));
         tv.setText(name);
         return convertView;
 	}

@@ -14,6 +14,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
+import android.content.res.Resources;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -148,6 +149,7 @@ public class AlarmListAdapter extends BaseAdapter
 		TextView message, source;
 		LinearLayout view, texts;
 		ImageView severity;
+		Resources r = context.getResources();
 
 		if (convertView == null)
 		{
@@ -157,11 +159,11 @@ public class AlarmListAdapter extends BaseAdapter
 
 			source = new TextView(context);
 			source.setPadding(5, 2, 5, 2);
-			source.setTextColor(R.color.text_color);
+			source.setTextColor(r.getColor(R.color.text_color));
 
 			message = new TextView(context);
 			message.setPadding(5, 2, 5, 2);
-			message.setTextColor(R.color.text_color);
+			message.setTextColor(r.getColor(R.color.text_color));
 
 			texts = new LinearLayout(context);
 			texts.setOrientation(LinearLayout.VERTICAL);
@@ -187,7 +189,7 @@ public class AlarmListAdapter extends BaseAdapter
 		GenericObject object = service.findObjectById(alarm.getSourceObjectId());
 		if (object == null)
 		{
-			source.setText("<Unknown>");
+			source.setText(r.getString(R.string.node_unknown));
 		}
 		else
 		{

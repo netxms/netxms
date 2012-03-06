@@ -7,6 +7,7 @@ import org.netxms.ui.android.R;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
@@ -42,7 +43,7 @@ public class ActivityListElement extends LinearLayout
 		
 		TextView text = new TextView(context);
 		text.setText(textId);
-		text.setTextColor(R.color.text_color);
+		text.setTextColor(context.getResources().getColor(R.color.text_color));
 		text.setGravity(Gravity.CENTER_HORIZONTAL);
 		addView(text, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 	}
@@ -61,13 +62,14 @@ public class ActivityListElement extends LinearLayout
 		float density = metrics.density;
 		int arcSize = Math.round(density * 8);
 
+		Resources r = getResources();
 		Paint paint = new Paint();
-		paint.setColor(0xFFFFFFFF);
+		paint.setColor(r.getColor(R.color.item_home_background));
 		paint.setStyle(Style.FILL);
 		paint.setAntiAlias(true);
 		canvas.drawRoundRect(rectF, arcSize, arcSize, paint);
 
-		paint.setColor(0xFF000000);
+		paint.setColor(r.getColor(R.color.item_home_border));
 		paint.setStyle(Style.STROKE);
 		paint.setStrokeWidth(4);
 		canvas.drawRoundRect(rectF, arcSize, arcSize, paint);

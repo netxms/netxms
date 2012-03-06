@@ -12,6 +12,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.android.R;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -99,12 +100,13 @@ public class LastValuesAdapter extends BaseAdapter
 	{
 		TextView itemName, itemValue;
 		LinearLayout view;
+		Resources r = context.getResources();
 
 		if (convertView == null)
 		{
 			itemName = new TextView(context);
 			itemName.setPadding(5, 2, 5, 2);
-			itemName.setTextColor(R.color.text_color);
+			itemName.setTextColor(r.getColor(R.color.text_color));
 			itemName.setGravity(Gravity.LEFT);
 			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			lp.gravity = Gravity.LEFT;
@@ -112,7 +114,7 @@ public class LastValuesAdapter extends BaseAdapter
 
 			itemValue = new TextView(context);
 			itemValue.setPadding(5, 2, 5, 2);
-			itemValue.setTextColor(R.color.text_color);
+			itemValue.setTextColor(r.getColor(R.color.text_color));
 			itemValue.setGravity(Gravity.RIGHT);
 			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			lp.gravity = Gravity.RIGHT;
@@ -135,8 +137,8 @@ public class LastValuesAdapter extends BaseAdapter
 		DciValue item = currentValues.get(position);
 		if (item == null)
 		{
-			itemName.setText("<Unknown>");
-			itemValue.setText("N/A");
+			itemName.setText(r.getString(R.string.node_unknown));
+			itemValue.setText(r.getString(R.string.last_values_na));
 		}
 		else
 		{

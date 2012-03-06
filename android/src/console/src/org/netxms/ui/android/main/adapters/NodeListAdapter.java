@@ -12,6 +12,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.view.View;
@@ -153,18 +154,19 @@ public class NodeListAdapter extends BaseAdapter
 		TextView objectStatus;
 		LinearLayout view, texts;
 		ImageView objectIcon;
+		Resources r = context.getResources();
 
 		if (convertView == null)
 		{
 			// new object, create fields
 			objectName = new TextView(context);
 			objectName.setPadding(5, 2, 5, 2);
-			objectName.setTextColor(R.color.text_color);
+			objectName.setTextColor(r.getColor(R.color.text_color));
 			objectName.setTextSize(objectName.getTextSize() * 1.1f);
 
 			objectStatus = new TextView(context);
 			objectStatus.setPadding(5, 2, 5, 2);
-			objectStatus.setTextColor(R.color.text_color);
+			objectStatus.setTextColor(r.getColor(R.color.text_color));
 
 			objectIcon = new ImageView(context);
 			objectIcon.setPadding(5, 5, 5, 2);
@@ -193,8 +195,8 @@ public class NodeListAdapter extends BaseAdapter
 		GenericObject object = objectList.get(position);
 		if (object == null)
 		{
-			objectName.setText("<Unknown>");
-			objectStatus.setText("Unknown");
+			objectName.setText(r.getString(R.string.node_unknown));
+			objectStatus.setText(r.getString(R.string.status_unknown));
 		}
 		else
 		{
