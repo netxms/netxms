@@ -5,6 +5,7 @@ package org.netxms.ui.android.service;
 
 import java.util.List;
 import java.util.Map;
+
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.base.Logger;
@@ -21,6 +22,7 @@ import org.netxms.ui.android.main.activities.GraphBrowser;
 import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
 import org.netxms.ui.android.service.tasks.ExecActionTask;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -61,6 +63,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	private AlarmBrowser alarmBrowser = null;
 	private NodeBrowser nodeBrowser = null;
 	private GraphBrowser graphBrowser = null;
+	private Alarm unknownAlarm = null;
 
 	private List<ObjectTool> objectTools = null;
 
@@ -145,10 +148,11 @@ public class ClientConnectorService extends Service implements SessionListener
 	/**
 	 * Show notification
 	 * 
-	 * @param severity
-	 * @param text
+	 * @param id	notification id
+	 * @param severity	notification severity (used to determine icon)
+	 * @param text	notification text
 	 */
-	public void showNotification(int severity, String text)
+	public void showNotification(int id, int severity, String text)
 	{
 		Notification n = new Notification(GetAlarmIcon(severity), text, System.currentTimeMillis());
 		n.defaults = Notification.DEFAULT_LIGHTS;
@@ -160,7 +164,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		if ((sound != null) && (sound.length() > 0))
 			n.sound = Uri.parse(sound);
 
-		notificationManager.notify(NOTIFY_ALARM, n);
+		notificationManager.notify(id, n);
 	}
 
 	/**
@@ -245,14 +249,14 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	private void processAlarmChange(Alarm alarm)
 	{
+		GenericObject object = findObjectById(alarm.getSourceObjectId());
 		synchronized(mutex)
 		{
 			if (alarms != null)
 				alarms.put(alarm.getId(), alarm);
+			unknownAlarm = object == null ? alarm : null;
+			showNotification(NOTIFY_ALARM, alarm.getCurrentSeverity(), ((object != null) ? object.getObjectName() : getString(R.string.node_unknown)) + ": " + alarm.getMessage());
 		}
-		
-		syncObjectIfMissing(alarm.getSourceObjectId());
-
 		if (alarmBrowser != null)
 		{
 			alarmBrowser.runOnUiThread(new Runnable()
@@ -263,11 +267,8 @@ public class ClientConnectorService extends Service implements SessionListener
 				}
 			});
 		}
-
-		GenericObject object = session.findObjectById(alarm.getSourceObjectId());
-		showNotification(alarm.getCurrentSeverity(), ((object != null) ? object.getObjectName() : getString(R.string.node_unknown)) + ": " + alarm.getMessage());
 	}
-
+		
 	/**
 	 * Process alarm change
 	 * 
@@ -317,18 +318,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 	
 	/**
-	 * Sync object with given ID if it is missing
-	 * @param objectId
-	 */
-	private void syncObjectIfMissing(final long objectId)
-	{
-		if ((session != null) && (session.findObjectById(objectId) == null))
-		{
-			doBackgroundObjectSync(objectId);
-		}
-	}
-
-	/**
 	 * @param objectId
 	 * @return
 	 */
@@ -355,6 +344,11 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		synchronized(mutex)
 		{
+			if (unknownAlarm != null && unknownAlarm.getSourceObjectId() == object.getObjectId())	// Update <Unknown> notification
+			{
+				showNotification(NOTIFY_ALARM, unknownAlarm.getCurrentSeverity(), object.getObjectName() + ": " + unknownAlarm.getMessage());
+				unknownAlarm = null;
+			}
 			if (this.alarmBrowser != null)
 			{
 				alarmBrowser.runOnUiThread(new Runnable()
