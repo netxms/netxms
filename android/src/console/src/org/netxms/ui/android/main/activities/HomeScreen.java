@@ -34,6 +34,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 		setContentView(R.layout.homescreen);
 
 		GridView gridview = (GridView)findViewById(R.id.ActivityList);
+		gridview.setNumColumns(3);
 		gridview.setAdapter(new ActivityListAdapter(this));
 
 		gridview.setOnItemClickListener(this);
