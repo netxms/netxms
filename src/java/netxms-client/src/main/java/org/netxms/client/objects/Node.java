@@ -53,6 +53,7 @@ public class Node extends GenericObject
 	public static final int NF_HAS_VLANS              = 0x00002000;
 	public static final int NF_IS_8021X               = 0x00004000;
 	public static final int NF_IS_STP                 = 0x00008000;
+	public static final int NF_HAS_ENTITY_MIB         = 0x00010000;
 
 	// Node flags (user)
 	public static final int NF_DISABLE_DISCOVERY_POLL = 0x00400000;
@@ -380,6 +381,15 @@ public class Node extends GenericObject
 	public boolean isSpanningTreeSupported()
 	{
 		return (flags & NF_IS_STP) != 0;
+	}
+
+	/**
+	 * 
+	 * @return true if node supports ENTITY-MIB
+	 */
+	public boolean isEntityMibSupported()
+	{
+		return (flags & NF_HAS_ENTITY_MIB) != 0;
 	}
 
 	/**

@@ -1667,6 +1667,20 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 					UnlockData();
             }
 
+            // Check for ENTITY-MIB support
+            if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.47.1.4.1.0"), NULL, 0, szBuffer, 4096, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+            {
+					LockData();
+               m_dwFlags |= NF_HAS_ENTITY_MIB;
+					UnlockData();
+            }
+            else
+            {
+					LockData();
+               m_dwFlags &= ~NF_HAS_ENTITY_MIB;
+					UnlockData();
+            }
+
             // Check for printer MIB support
 				int count = 0;
 				SnmpEnumerate(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43.5.1.1.17"), PrintMIBWalkerCallback, &count, FALSE);

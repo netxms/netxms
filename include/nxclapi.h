@@ -236,6 +236,7 @@ typedef void * NXC_SESSION;
 #define NF_HAS_VLANS             0x00002000  /* VLAN information available */
 #define NF_IS_8021X              0x00004000  /* 802.1x support enabled on node */
 #define NF_IS_STP                0x00008000  /* Spanning Tree (IEEE 802.1d) enabled on node */
+#define NF_HAS_ENTITY_MIB        0x00010000  /* Supports ENTITY-MIB */
 
 #define NF_DISABLE_DISCOVERY_POLL 0x00400000
 #define NF_DISABLE_TOPOLOGY_POLL  0x00800000
