@@ -63,6 +63,10 @@ int main(int argc, char *argv[])
 
 	// Encrypt password
 	BYTE plainText[32], encrypted[32], key[16];
+	memset(plainText, 0, 32);
+	memset(encrypted, 0, 32);
+	memset(key, 0, 16);
+
 	CalculateMD5Hash((BYTE *)argv[optind], strlen(argv[optind]), key);
 	nx_strncpy((char *)plainText, argv[optind + 1], 32);
 	ICEEncryptData(plainText, 32, encrypted, key);
