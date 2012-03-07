@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -141,7 +141,7 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
 
 Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
                   TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy,
-                  Cluster *pCluster, DWORD zoneId, bool doConfPoll)
+                  Cluster *pCluster, DWORD zoneId, bool doConfPoll, bool discoveredNode)
 {
    Node *pNode;
    TCHAR szIpAddr1[32], szIpAddr2[32];
@@ -167,6 +167,29 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
    NetObjInsert(pNode, TRUE);
    if (pszName != NULL)
       pNode->setName(pszName);
+
+	// Use DNS name as primary name if required
+	if (discoveredNode && ConfigReadInt(_T("UseDNSNameForDiscoveredNodes"), 0))
+	{
+		DWORD ip = htonl(dwIpAddr);
+		struct hostent *hs = gethostbyaddr((char *)&ip, 4, AF_INET);
+		if (hs != NULL)
+		{
+			TCHAR dnsName[MAX_DNS_NAME];
+#ifdef UNICODE
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hs->h_name, -1, dnsName, MAX_DNS_NAME);
+			dnsName[MAX_DNS_NAME - 1] = 0;
+#else
+			nx_strncpy(dnsName, hs->h_name, MAX_DNS_NAME);
+#endif
+			if (ntohl(ResolveHostName(dnsName)) == dwIpAddr)
+			{
+				// We have valid DNS name which resolves back to node's IP address, use it as primary name
+				pNode->setPrimaryName(dnsName);
+				DbgPrintf(4, _T("PollNode: Using DNS name %s as primary name for node %s"), dnsName, IpToStr(dwIpAddr, szIpAddr1));
+			}
+		}
+	}
 
 	// Bind node to cluster before first configuration poll
 	if (pCluster != NULL)
@@ -426,7 +449,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 		          IpToStr(pInfo->dwIpAddr, szIpAddr), IpToStr(pInfo->dwNetMask, szNetMask), (int)pInfo->zoneId);
 		if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, pInfo->zoneId))
 		{
-         Node *node = PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, 0, NULL, pInfo->zoneId, true);
+         Node *node = PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, 0, NULL, pInfo->zoneId, true, true);
 		}
       free(pInfo);
    }

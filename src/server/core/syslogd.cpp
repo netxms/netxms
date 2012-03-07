@@ -246,7 +246,7 @@ static void BindMsgToNode(NX_SYSLOG_RECORD *pRec, DWORD dwSourceIP)
    }
    else
    {
-      dwIpAddr = ResolveHostNameA(pRec->szHostName);
+      dwIpAddr = ntohl(ResolveHostNameA(pRec->szHostName));
 		if ((dwIpAddr == INADDR_NONE) || (dwIpAddr == INADDR_ANY))
 		{
 #ifdef UNICODE

@@ -957,8 +957,7 @@ DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
 #ifdef UNICODE
    char szBuffer[256];
 
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                       pszName, -1, szBuffer, 256, NULL, NULL);
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pszName, -1, szBuffer, 256, NULL, NULL);
    dwAddr = inet_addr(szBuffer);
 #else
    dwAddr = inet_addr(pszName);

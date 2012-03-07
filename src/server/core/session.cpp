@@ -3842,7 +3842,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 															 pRequest->GetVariableLong(VID_AGENT_PROXY),
 															 pRequest->GetVariableLong(VID_SNMP_PROXY),
 															 (pParent != NULL) ? ((pParent->Type() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL,
-															 zoneId, false);
+															 zoneId, false, false);
 								if (pObject != NULL)
 								{
 									((Node *)pObject)->setPrimaryName(nodePrimaryName);
@@ -8071,7 +8071,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
             pRequest->GetVariableStr(dwId++, szName, 256);
 				if (szName[0] == _T('@'))
 				{
-					DWORD ipAddr = ResolveHostName(&szName[1]);
+					DWORD ipAddr = ntohl(ResolveHostName(&szName[1]));
 					pObject = FindNodeByIP(0, ipAddr);
 				}
 				else

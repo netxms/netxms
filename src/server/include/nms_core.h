@@ -728,7 +728,7 @@ void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 void CheckForMgmtNode();
 Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
                   TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy, Cluster *pCluster, 
-						DWORD zoneId, bool doConfPoll);
+						DWORD zoneId, bool doConfPoll, bool discoveredNode);
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData);
