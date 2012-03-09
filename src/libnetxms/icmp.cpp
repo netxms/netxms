@@ -21,11 +21,7 @@
 **/
 
 #include "libnetxms.h"
-#include <nms_threads.h>
 
-#if HAVE_POLL_H
-#include <poll.h>
-#endif
 
 //
 // Constants
@@ -33,6 +29,82 @@
 
 #define MAX_PING_SIZE      8192
 #define ICMP_REQUEST_ID    0x5050
+
+
+#ifdef _WIN32
+
+#include <iphlpapi.h>
+#include <icmpapi.h>
+
+//
+// Do an ICMP ping to specific address
+// Return value: TRUE if host is alive and FALSE otherwise
+// Parameters: dwAddr - IP address with network byte order
+//             iNumRetries - number of retries
+//             dwTimeout - Timeout waiting for response in milliseconds
+//
+
+DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
+                                    DWORD dwTimeout, DWORD *pdwRTT,
+                                    DWORD dwPacketSize)
+{
+   static char payload[MAX_PING_SIZE] = "NetXMS ICMP probe [01234567890]";
+
+	HANDLE hIcmpFile = IcmpCreateFile();
+	if (hIcmpFile == INVALID_HANDLE_VALUE)
+		return ICMP_API_ERROR;
+
+	char *reply = (char *)alloca(dwPacketSize + sizeof(ICMP_ECHO_REPLY));
+	int retries = iNumRetries;
+	DWORD rc = ICMP_API_ERROR;
+	do
+	{
+		rc = IcmpSendEcho(hIcmpFile, dwAddr, payload, (WORD)dwPacketSize, NULL, reply, (WORD)(dwPacketSize + sizeof(ICMP_ECHO_REPLY)), dwTimeout);
+		if (rc != 0)
+		{
+#if defined(_WIN64)
+			ICMP_ECHO_REPLY32 *er = (ICMP_ECHO_REPLY32 *)reply;
+#else
+			ICMP_ECHO_REPLY *er = (ICMP_ECHO_REPLY *)reply;
+#endif
+			switch(er->Status)
+			{
+				case IP_SUCCESS:
+					rc = ICMP_SUCCESS;
+					if (pdwRTT != NULL)
+						*pdwRTT = er->RoundTripTime;
+					break;
+				case IP_REQ_TIMED_OUT:
+					rc = ICMP_TIMEOUT;
+					break;
+				case IP_BUF_TOO_SMALL:
+				case IP_NO_RESOURCES:
+				case IP_PACKET_TOO_BIG:
+				case IP_GENERAL_FAILURE:
+					rc = ICMP_API_ERROR;
+					break;
+				default:
+					rc = ICMP_UNREACHEABLE;
+					break;
+			}
+		}
+		else
+		{
+			rc = (GetLastError() == IP_REQ_TIMED_OUT) ? ICMP_TIMEOUT : ICMP_API_ERROR;
+		}
+		retries--;
+	}
+	while((rc != ICMP_SUCCESS) && (retries > 0));
+
+	IcmpCloseHandle(hIcmpFile);
+	return rc;
+}
+
+#else	/* not _WIN32 */
+
+#if HAVE_POLL_H
+#include <poll.h>
+#endif
 
 
 //
@@ -299,3 +371,5 @@ stop_ping:
    closesocket(sock);
    return dwResult;
 }
+
+#endif
