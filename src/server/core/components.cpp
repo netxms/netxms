@@ -61,11 +61,13 @@ DWORD Component::updateFromSnmp(SNMP_Transport *snmp)
 	DWORD rc;
 	TCHAR buffer[256];
 
+	oid[12] = m_index;
+
 	oid[11] = 5;	// entPhysicalClass
 	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_class, sizeof(DWORD), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 
-	oid[11] = 5;	// entPhysicalContainedIn
+	oid[11] = 4;	// entPhysicalContainedIn
 	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_parentIndex, sizeof(DWORD), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 
@@ -118,7 +120,7 @@ void Component::buildTree(ObjectArray<Component> *elements)
  */
 void Component::print(CONSOLE_CTX console, int level)
 {
-	ConsolePrintf(console, _T("%*s%d %s\n"), level * 4, _T(""), (int)m_index, m_name);
+	ConsolePrintf(console, _T("%*s\x1b[1m%d\x1b[0m \x1b[32;1m%-32s\x1b[0m %s\n"), level * 4, _T(""), (int)m_index, m_name, m_description);
 	for(int i = 0; i < m_childs.size(); i++)
 		m_childs.get(i)->print(console, level + 1);
 }
@@ -150,6 +152,7 @@ Component *BuildComponentTree(Node *node, SNMP_Transport *snmp)
 	Component *root = NULL;
 	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.47.1.1.1.1.7"), EntityWalker, &elements, FALSE) == SNMP_ERR_SUCCESS)
 	{
+		DbgPrintf(6, _T("BuildComponentTree(%s [%d]): %d elements found"), node->Name(), (int)node->Id(), elements.size());
 		for(int i = 0; i < elements.size(); i++)
 			if (elements.get(i)->getParentIndex() == 0)
 			{
@@ -162,11 +165,13 @@ Component *BuildComponentTree(Node *node, SNMP_Transport *snmp)
 		}
 		else
 		{
+			DbgPrintf(6, _T("BuildComponentTree(%s [%d]): root element not found"), node->Name(), (int)node->Id());
 			elements.setOwner(true);	// cause element destruction on exit
 		}
 	}
 	else
 	{
+		DbgPrintf(6, _T("BuildComponentTree(%s [%d]): SNMP WALK failed"), node->Name(), (int)node->Id());
 		elements.setOwner(true);	// cause element destruction on exit
 	}
 	DbgPrintf(5, _T("BuildComponentTree(%s [%d]): %p"), node->Name(), (int)node->Id(), root);
