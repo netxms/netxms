@@ -453,6 +453,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\components.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\condition.cpp"
 				>
 			</File>

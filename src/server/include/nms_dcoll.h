@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -188,8 +188,6 @@ private:
    BYTE m_busy;                  // 1 when item is queued for polling, 0 if not
 	BYTE m_scheduledForDeletion;  // 1 when item is scheduled for deletion, 0 if not
 	WORD m_flags;
-   //BYTE m_advSchedule;           // 1 if item has advanced schedule
-   //BYTE m_processAllThresholds;  // 1 if all thresholds should be processed each time
    DWORD m_dwTemplateId;         // Related template's id
    DWORD m_dwTemplateItemId;     // Related template item's id
    DWORD m_dwNumThresholds;

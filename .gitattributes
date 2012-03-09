@@ -1843,6 +1843,7 @@ src/nxinstall/nxinstall.vcproj -text
 src/nxlptest/nxlptest.vcproj -text
 src/nxscript/nxscript.vcproj -text
 src/server/core/cdp.cpp -text
+src/server/core/components.cpp -text
 src/server/core/fdb.cpp -text
 src/server/core/import.cpp -text
 src/server/core/isc.cpp -text

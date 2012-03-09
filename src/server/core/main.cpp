@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 NetXMS Team
+** Copyright (C) 2003-2012 NetXMS Team
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1109,7 +1109,44 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		// Get argument
 		pArg = ExtractWord(pArg, szBuffer);
 
-		if (IsCommand(_T("FLAGS"), szBuffer, 1))
+		if (IsCommand(_T("COMPONENTS"), szBuffer, 1))
+		{
+			// Get argument
+			pArg = ExtractWord(pArg, szBuffer);
+			DWORD dwNode = _tcstoul(szBuffer, NULL, 0);
+			if (dwNode != 0)
+			{
+				NetObj *pObject = FindObjectById(dwNode);
+				if (pObject != NULL)
+				{
+					if (pObject->Type() == OBJECT_NODE)
+					{
+						Component *root = ((Node *)pObject)->getComponents();
+						if (root != NULL)
+						{
+							root->print(pCtx, 0);
+						}
+						else
+						{
+							ConsolePrintf(pCtx, _T("ERROR: Node does not have physical component information\n\n"));
+						}
+					}
+					else
+					{
+						ConsolePrintf(pCtx, _T("ERROR: Object is not a node\n\n"));
+					}
+				}
+				else
+				{
+					ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode);
+				}
+			}
+			else
+			{
+				ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+			}
+		}
+		else if (IsCommand(_T("FLAGS"), szBuffer, 1))
 		{
 			ConsolePrintf(pCtx, _T("Flags: 0x%08X\n"), g_dwFlags);
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DAEMON));
@@ -1406,6 +1443,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   help                      - Display this help\n")
 				_T("   raise <exception>         - Raise exception\n")
 				_T("   set <variable> <value>    - Set value of server configuration variable\n")
+				_T("   show components <node>    - Show physical components of given node\n")
 				_T("   show flags                - Show internal server flags\n")
 				_T("   show index <index>        - Show internal index\n")
 				_T("   show objects              - Dump network objects to screen\n")

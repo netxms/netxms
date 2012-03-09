@@ -6,8 +6,8 @@ lib_LTLIBRARIES = libnxcore.la
 libnxcore_la_SOURCES =  acl.cpp agent.cpp agent_policy.cpp actions.cpp \
 			admin.cpp alarm.cpp audit.cpp ap_config.cpp \
 			ap_jobs.cpp beacon.cpp bizservice.cpp bizsvcroot.cpp \
-			bridge.cpp cdp.cpp cert.cpp \
-			client.cpp cluster.cpp columnfilter.cpp condition.cpp \
+			bridge.cpp cdp.cpp cert.cpp client.cpp cluster.cpp \
+			columnfilter.cpp components.cpp condition.cpp \
 			config.cpp container.cpp correlate.cpp dashboard.cpp \
 			datacoll.cpp dbwrite.cpp dcitem.cpp dcithreshold.cpp \
 			dcivalue.cpp debug.cpp download_job.cpp ef.cpp \

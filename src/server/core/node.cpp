@@ -82,6 +82,7 @@ Node::Node() : Template()
 	m_fdb = NULL;
 	m_vlans = NULL;
 	m_driver = NULL;
+	m_components = NULL;
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 }
 
@@ -148,6 +149,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_fdb = NULL;
 	m_vlans = NULL;
 	m_driver = NULL;
+	m_components = NULL;
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 }
 
@@ -176,6 +178,7 @@ Node::~Node()
 		m_fdb->decRefCount();
 	if (m_vlans != NULL)
 		m_vlans->decRefCount();
+	delete m_components;
 }
 
 
@@ -1673,11 +1676,18 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 					LockData();
                m_dwFlags |= NF_HAS_ENTITY_MIB;
 					UnlockData();
+
+					Component *root = BuildComponentTree(this, pTransport);
+					LockData();
+					delete m_components;
+					m_components = root;
+					UnlockData();
             }
             else
             {
 					LockData();
                m_dwFlags &= ~NF_HAS_ENTITY_MIB;
+					delete_and_null(m_components);
 					UnlockData();
             }
 
