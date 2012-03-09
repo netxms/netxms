@@ -1262,6 +1262,9 @@ void ClientSession::processingThread()
 			case CMD_GET_NETWORK_PATH:
 				CALL_IN_NEW_THREAD(getNetworkPath, pMsg);
 				break;
+			case CMD_GET_NODE_COMPONENTS:
+				getNodeComponents(pMsg);
+				break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -11537,4 +11540,49 @@ void ClientSession::getNetworkPath(CSCPMessage *request)
 	}
 
 	sendMessage(&msg);
+}
+
+
+//
+// Get physical components of the node
+//
+
+void ClientSession::getNodeComponents(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get node id and check object class and access rights
+   Node *node = (Node *)FindObjectById(request->GetVariableLong(VID_OBJECT_ID), OBJECT_NODE);
+   if (node != NULL)
+   {
+      if (node->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+			ComponentTree *components = node->getComponents();
+			if (components != NULL)
+			{
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				components->fillMessage(&msg, VID_COMPONENT_LIST_BASE);
+				components->decRefCount();
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_NO_COMPONENT_DATA);
+			}
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
 }

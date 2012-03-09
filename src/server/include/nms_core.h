@@ -575,6 +575,7 @@ private:
 	void deleteReportResults(CSCPMessage *msg);
 	void renderReport(CSCPMessage *request);
 	void getNetworkPath(CSCPMessage *request);
+	void getNodeComponents(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

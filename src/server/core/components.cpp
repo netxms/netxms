@@ -23,6 +23,31 @@
 #include "nxcore.h"
 
 /**
+ * Component tree constructor
+ */
+ComponentTree::ComponentTree(Component *root)
+{
+	m_root = root;
+}
+
+/**
+ * Componnet tree destructor
+ */
+ComponentTree::~ComponentTree()
+{
+	delete m_root;
+}
+
+/**
+ * Fill NXCP message with tree data
+ */
+void ComponentTree::fillMessage(CSCPMessage *msg, DWORD baseId)
+{
+	if (m_root != NULL)
+		m_root->fillMessage(msg, baseId);
+}
+
+/**
  * Constructor
  */
 Component::Component(DWORD index, const TCHAR *name) : m_childs(0, 16, true)
@@ -126,6 +151,30 @@ void Component::print(CONSOLE_CTX console, int level)
 }
 
 /**
+ * Fill NXCP message
+ */
+DWORD Component::fillMessage(CSCPMessage *msg, DWORD baseId)
+{
+	msg->SetVariable(baseId, m_index);
+	msg->SetVariable(baseId + 1, m_parentIndex);
+	msg->SetVariable(baseId + 2, m_class);
+	msg->SetVariable(baseId + 3, m_ifIndex);
+	msg->SetVariable(baseId + 4, m_name);
+	msg->SetVariable(baseId + 5, m_description);
+	msg->SetVariable(baseId + 6, m_model);
+	msg->SetVariable(baseId + 7, m_serial);
+	msg->SetVariable(baseId + 8, m_vendor);
+	msg->SetVariable(baseId + 9, m_firmware);
+	msg->SetVariable(baseId + 10, (DWORD)m_childs.size());
+
+	DWORD varId = baseId + 11;
+	for(int i = 0; i < m_childs.size(); i++)
+		varId = m_childs.get(i)->fillMessage(msg, varId);
+
+	return varId;
+}
+
+/**
  * Physical entity tree walk callback
  */
 static DWORD EntityWalker(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
@@ -145,23 +194,27 @@ static DWORD EntityWalker(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport 
 /**
  * Build components tree for given node
  */
-Component *BuildComponentTree(Node *node, SNMP_Transport *snmp)
+ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp)
 {
 	DbgPrintf(5, _T("Building component tree for node %s [%d]"), node->Name(), (int)node->Id());
 	ObjectArray<Component> elements(16, 16);
-	Component *root = NULL;
+	ComponentTree *tree = NULL;
 	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.47.1.1.1.1.7"), EntityWalker, &elements, FALSE) == SNMP_ERR_SUCCESS)
 	{
 		DbgPrintf(6, _T("BuildComponentTree(%s [%d]): %d elements found"), node->Name(), (int)node->Id(), elements.size());
+
+		Component *root = NULL;
 		for(int i = 0; i < elements.size(); i++)
 			if (elements.get(i)->getParentIndex() == 0)
 			{
 				root = elements.get(i);
 				break;
 			}
+
 		if (root != NULL)
 		{
 			root->buildTree(&elements);
+			tree = new ComponentTree(root);
 		}
 		else
 		{
@@ -174,6 +227,6 @@ Component *BuildComponentTree(Node *node, SNMP_Transport *snmp)
 		DbgPrintf(6, _T("BuildComponentTree(%s [%d]): SNMP WALK failed"), node->Name(), (int)node->Id());
 		elements.setOwner(true);	// cause element destruction on exit
 	}
-	DbgPrintf(5, _T("BuildComponentTree(%s [%d]): %p"), node->Name(), (int)node->Id(), root);
-	return root;
+	DbgPrintf(5, _T("BuildComponentTree(%s [%d]): %p"), node->Name(), (int)node->Id(), tree);
+	return tree;
 }

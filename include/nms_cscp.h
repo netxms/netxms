@@ -463,6 +463,7 @@ typedef struct
 #define CMD_GET_AGENT_FILE             0x00FE
 #define CMD_GET_FILE_DETAILS           0x00FF
 #define CMD_IMAGE_LIBRARY_UPDATE			0x0100
+#define CMD_GET_NODE_COMPONENTS        0x0101
 
 
 //
@@ -1035,6 +1036,8 @@ typedef struct
 #define VID_VLAN_LIST_BASE          ((DWORD)0x10000000)
 
 #define VID_NETWORK_PATH_BASE       ((DWORD)0x40000000)
+
+#define VID_COMPONENT_LIST_BASE     ((DWORD)0x20000000)
 
 
 //

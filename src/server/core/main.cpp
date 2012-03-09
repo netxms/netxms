@@ -1121,10 +1121,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				{
 					if (pObject->Type() == OBJECT_NODE)
 					{
-						Component *root = ((Node *)pObject)->getComponents();
-						if (root != NULL)
+						ComponentTree *components = ((Node *)pObject)->getComponents();
+						if (components != NULL)
 						{
-							root->print(pCtx, 0);
+							components->print(pCtx);
+							components->decRefCount();
 						}
 						else
 						{

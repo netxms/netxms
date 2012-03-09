@@ -3481,10 +3481,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * 
 	 * @param objectId
 	 *           node or interface ID
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void wakeupNode(final long objectId) throws IOException, NXCException
 	{
@@ -3492,6 +3490,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Get node's physical components (obtained from ENTITY-MIB).
+	 * 
+	 * @param nodeId node object identifier
+	 * @return root component
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public PhysicalComponent getNodePhysicalComponents(long nodeId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NODE_COMPONENTS);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return new PhysicalComponent(response, NXCPCodes.VID_COMPONENT_LIST_BASE);
 	}
 
 	/**

@@ -1677,17 +1677,22 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
                m_dwFlags |= NF_HAS_ENTITY_MIB;
 					UnlockData();
 
-					Component *root = BuildComponentTree(this, pTransport);
+					ComponentTree *components = BuildComponentTree(this, pTransport);
 					LockData();
-					delete m_components;
-					m_components = root;
+					if (m_components != NULL)
+						m_components->decRefCount();
+					m_components = components;
 					UnlockData();
             }
             else
             {
 					LockData();
                m_dwFlags &= ~NF_HAS_ENTITY_MIB;
-					delete_and_null(m_components);
+					if (m_components != NULL)
+					{
+						m_components->decRefCount();
+						m_components = NULL;
+					}
 					UnlockData();
             }
 
@@ -4770,4 +4775,19 @@ bool Node::checkAgentTrapId(QWORD trapId)
 		m_lastAgentTrapId = trapId;
 	UnlockData();
 	return valid;
+}
+
+
+//
+// Get node's physical components
+//
+
+ComponentTree *Node::getComponents()
+{
+	LockData();
+	ComponentTree *components = m_components;
+	if (components != NULL)
+		components->incRefCount();
+	UnlockData();
+	return components;
 }

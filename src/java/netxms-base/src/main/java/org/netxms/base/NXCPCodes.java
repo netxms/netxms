@@ -284,6 +284,7 @@ public final class NXCPCodes
 	public static final int CMD_GET_AGENT_FILE           = 0x00FE;
 	public static final int CMD_GET_FILE_DETAILS         = 0x00FF;
 	public static final int CMD_IMAGE_LIBRARY_UPDATE     = 0x0100;
+	public static final int CMD_GET_NODE_COMPONENTS      = 0x0101;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
@@ -772,4 +773,5 @@ public final class NXCPCodes
 	public static final long VID_LINK_LIST_BASE           = 0x40000000L;
 	public static final long VID_VLAN_LIST_BASE           = 0x10000000L;
 	public static final long VID_NETWORK_PATH_BASE        = 0x40000000L;
+	public static final long VID_COMPONENT_LIST_BASE      = 0x20000000L;
 }

@@ -478,6 +478,7 @@ enum
 #define RCC_ZONE_ID_ALREADY_IN_USE  ((DWORD)93)
 #define RCC_INVALID_ZONE_ID         ((DWORD)94)
 #define RCC_ZONE_NOT_EMPTY          ((DWORD)95)
+#define RCC_NO_COMPONENT_DATA       ((DWORD)96)
 
 
 //

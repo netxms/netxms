@@ -235,7 +235,25 @@ public:
 	DWORD getIndex() { return m_index; }
 	DWORD getParentIndex() { return m_parentIndex; }
 
+	DWORD fillMessage(CSCPMessage *msg, DWORD baseId);
+
 	void print(CONSOLE_CTX console, int level);
+};
+
+class ComponentTree : public RefCountObject
+{
+private:
+	Component *m_root;
+
+public:
+	ComponentTree(Component *root);
+	virtual ~ComponentTree();
+
+	void fillMessage(CSCPMessage *msg, DWORD baseId);
+	void print(CONSOLE_CTX console) { if (m_root != NULL) m_root->print(console, 0); }
+
+	bool isEmpty() { return m_root == NULL; }
+	Component *getRoot() { return m_root; }
 };
 
 
@@ -783,7 +801,7 @@ protected:
 	nxmap_ObjList *m_pTopology;	// For compatibility, to be removed in 1.1.x
 	time_t m_topologyRebuildTimestamp;
 	ServerJobQueue *m_jobQueue;
-	Component *m_components;		// Hardware components
+	ComponentTree *m_components;		// Hardware components
 
    void pollerLock() { MutexLock(m_hPollerMutex); }
    void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
@@ -881,7 +899,7 @@ public:
 	VlanList *getVlans();
    BOOL getNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
                    DWORD *pdwIfIndex, BOOL *pbIsVPN);
-	Component *getComponents() { return m_components; }
+	ComponentTree *getComponents();
 
 	void setRecheckCapsFlag() { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
    void setDiscoveryPollTimeStamp();
@@ -1824,7 +1842,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
 
 void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, Interface *pObject);
-Component *BuildComponentTree(Node *node, SNMP_Transport *snmp);
+ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp);
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId, int objClass = -1);
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);

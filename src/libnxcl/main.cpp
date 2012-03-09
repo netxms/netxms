@@ -408,9 +408,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Job cannot be unhold"),
 		_T("Zone ID is already in use"),
 		_T("Invalid zone ID"),
-		_T("Cannot delete non-empty zone object")
+		_T("Cannot delete non-empty zone object"),
+		_T("No physical component data")
    };
-	return (dwError <= RCC_ZONE_NOT_EMPTY) ? pszErrorText[dwError] : _T("No text message for this error");
+	return (dwError <= RCC_NO_COMPONENT_DATA) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 
