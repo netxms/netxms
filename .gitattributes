@@ -2536,6 +2536,7 @@ webui/webapp/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/helpers/Tab
 webui/webapp/ObjectView/META-INF/MANIFEST.MF -text
 webui/webapp/ObjectView/build.properties -text
 webui/webapp/ObjectView/icons/cluster.png -text
+webui/webapp/ObjectView/icons/components.png -text
 webui/webapp/ObjectView/icons/object_details.png -text
 webui/webapp/ObjectView/icons/overview_tab.gif -text
 webui/webapp/ObjectView/icons/restart.png -text
@@ -2545,6 +2546,7 @@ webui/webapp/ObjectView/plugin.xml -text
 webui/webapp/ObjectView/schema/org.netxms.ui.eclipse.objectview.tabs.exsd -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/Activator.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowObjectDetailsView.java -text
+webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ComponentsTab.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectOverview.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectTab.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/AvailabilityChart.java -text
@@ -2555,6 +2557,8 @@ webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/GeneralInfo.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/OverviewPageElement.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/TableElement.java -text
+webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/helpers/ComponentTreeContentProvider.java -text
+webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/helpers/ComponentTreeLabelProvider.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/services/SourceProvider.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/views/TabbedObjectView.java -text
 webui/webapp/PerfView/.settings/org.eclipse.jdt.core.prefs -text

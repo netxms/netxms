@@ -47,6 +47,12 @@
             name="Overview"
             order="0">
       </tab>
+      <tab
+            class="org.netxms.ui.eclipse.objectview.objecttabs.ComponentsTab"
+            icon="icons/components.png"
+            name="Components"
+            order="30">
+      </tab>
    </extension>
 
 </plugin>

@@ -34,6 +34,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -265,6 +267,45 @@ public class WidgetHelper
 	public static void restoreColumnSettings(Table table, IDialogSettings settings, String prefix)
 	{
 		TableColumn[] columns = table.getColumns();
+		for(int i = 0; i < columns.length; i++)
+		{
+			try
+			{
+				int w = settings.getInt(prefix + "." + i + ".width"); //$NON-NLS-1$ //$NON-NLS-2$
+				columns[i].setWidth(w);
+			}
+			catch(NumberFormatException e)
+			{
+			}
+		}
+	}
+	
+	/**
+	 * Save settings of tree viewer columns
+	 * 
+	 * @param table Table control
+	 * @param settings Dialog settings object
+	 * @param prefix Prefix for properties
+	 */
+	public static void saveColumnSettings(Tree tree, IDialogSettings settings, String prefix)
+	{
+		TreeColumn[] columns = tree.getColumns();
+		for(int i = 0; i < columns.length; i++)
+		{
+			settings.put(prefix + "." + i + ".width", columns[i].getWidth()); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+	}
+	
+	/**
+	 * Restore settings of tree viewer columns previously saved by call to WidgetHelper.saveColumnSettings
+	 * 
+	 * @param table Table control
+	 * @param settings Dialog settings object
+	 * @param prefix Prefix for properties
+	 */
+	public static void restoreColumnSettings(Tree tree, IDialogSettings settings, String prefix)
+	{
+		TreeColumn[] columns = tree.getColumns();
 		for(int i = 0; i < columns.length; i++)
 		{
 			try
