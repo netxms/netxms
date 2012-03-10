@@ -49,6 +49,7 @@ public class PhysicalComponent
 	private String serialNumber;
 	private String firmware;
 	private String vendor;
+	private PhysicalComponent parent;
 	private List<PhysicalComponent> subcomponents;
 	private long nextVarId;
 	
@@ -58,8 +59,10 @@ public class PhysicalComponent
 	 * @param msg
 	 * @param baseId
 	 */
-	protected PhysicalComponent(NXCPMessage msg, long baseId)
+	protected PhysicalComponent(NXCPMessage msg, long baseId, PhysicalComponent parent)
 	{
+		this.parent = parent;
+		
 		index = msg.getVariableAsInteger(baseId);
 		parentIndex = msg.getVariableAsInteger(baseId + 1);
 		phyClass = msg.getVariableAsInteger(baseId + 2);
@@ -76,7 +79,7 @@ public class PhysicalComponent
 		long varId = baseId + 11;
 		for(int i = 0; i < count; i++)
 		{
-			final PhysicalComponent c = new PhysicalComponent(msg, varId);
+			final PhysicalComponent c = new PhysicalComponent(msg, varId, this);
 			varId = c.nextVarId;
 			subcomponents.add(c);
 		}
@@ -169,5 +172,13 @@ public class PhysicalComponent
 	public List<PhysicalComponent> getSubcomponents()
 	{
 		return subcomponents;
+	}
+
+	/**
+	 * @return the parent
+	 */
+	public PhysicalComponent getParent()
+	{
+		return parent;
 	}
 }

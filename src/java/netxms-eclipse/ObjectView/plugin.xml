@@ -53,6 +53,12 @@
             name="Cluster"
             order="5">
       </tab>
+      <tab
+            class="org.netxms.ui.eclipse.objectview.objecttabs.ComponentsTab"
+            icon="icons/components.png"
+            name="Components"
+            order="30">
+      </tab>
    </extension>
 
 </plugin>

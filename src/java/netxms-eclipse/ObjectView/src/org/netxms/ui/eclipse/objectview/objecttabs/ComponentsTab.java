@@ -1,0 +1,286 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.ui.eclipse.objectview.objecttabs;
+
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.TreeViewerColumn;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TreeItem;
+import org.eclipse.ui.IWorkbenchActionConstants;
+import org.netxms.client.NXCSession;
+import org.netxms.client.PhysicalComponent;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.objectview.objecttabs.helpers.ComponentTreeContentProvider;
+import org.netxms.ui.eclipse.objectview.objecttabs.helpers.ComponentTreeLabelProvider;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
+
+/**
+ * "Components" tab
+ */
+public class ComponentsTab extends ObjectTab
+{
+	public static final int COLUMN_NAME = 0;
+	public static final int COLUMN_CLASS = 1;
+	public static final int COLUMN_MODEL = 2;
+	public static final int COLUMN_FIRMWARE = 3;
+	public static final int COLUMN_SERIAL = 4;
+	public static final int COLUMN_VENDOR = 5;
+	
+	private TreeViewer viewer;
+	private Action actionCopy;
+	private Action actionCopyName;
+	private Action actionCopyModel;
+	private Action actionCopySerial;
+	private Action actionCollapeAll;
+	private Action actionExpandAll;
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
+	 */
+	@Override
+	protected void createTabContent(Composite parent)
+	{
+		viewer = new TreeViewer(parent, SWT.FULL_SELECTION | SWT.MULTI);
+		addColumn("Name", 200);
+		addColumn("Class", 100);
+		addColumn("Model", 150);
+		addColumn("Firmware", 100);
+		addColumn("Serial Number", 150);
+		addColumn("Vendor", 150);
+		viewer.setLabelProvider(new ComponentTreeLabelProvider());
+		viewer.setContentProvider(new ComponentTreeContentProvider());
+		viewer.getTree().setHeaderVisible(true);
+		viewer.getTree().setLinesVisible(true);
+		WidgetHelper.restoreColumnSettings(viewer.getTree(), Activator.getDefault().getDialogSettings(), "ComponentTree");
+		viewer.getTree().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveColumnSettings(viewer.getTree(), Activator.getDefault().getDialogSettings(), "ComponentTree");
+			}
+		});
+		createActions();
+		createPopupMenu();
+	}
+	
+	/**
+	 * @param name
+	 */
+	private void addColumn(String name, int width)
+	{
+		TreeViewerColumn tc = new TreeViewerColumn(viewer, SWT.LEFT);
+		tc.getColumn().setText(name);
+		tc.getColumn().setWidth(width);
+	}
+
+	/**
+	 * Create pop-up menu
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager.
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener() {
+			public void menuAboutToShow(IMenuManager manager)
+			{
+				fillContextMenu(manager);
+			}
+		});
+
+		// Create menu.
+		Menu menu = menuMgr.createContextMenu(viewer.getControl());
+		viewer.getControl().setMenu(menu);
+
+		// Register menu for extension.
+		if (getViewPart() != null)
+			getViewPart().getSite().registerContextMenu(menuMgr, viewer);
+	}
+
+	/**
+	 * Fill context menu
+	 * @param mgr Menu manager
+	 */
+	protected void fillContextMenu(IMenuManager manager)
+	{
+		manager.add(actionCopy);
+		manager.add(actionCopyName);
+		manager.add(actionCopyModel);
+		manager.add(actionCopySerial);
+		manager.add(new Separator());
+		manager.add(actionCollapeAll);
+		manager.add(actionExpandAll);
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+	}
+	
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionCopy = new Action("&Copy to clipboard", SharedIcons.COPY) {
+			@Override
+			public void run()
+			{
+				copySelectionToClipboard(-1);
+			}
+		};
+
+		actionCopyName = new Action("Copy &name to clipboard") {
+			@Override
+			public void run()
+			{
+				copySelectionToClipboard(COLUMN_NAME);
+			}
+		};
+
+		actionCopyModel = new Action("Copy &model to clipboard") {
+			@Override
+			public void run()
+			{
+				copySelectionToClipboard(COLUMN_MODEL);
+			}
+		};
+
+		actionCopySerial = new Action("Copy &serial number to clipboard") {
+			@Override
+			public void run()
+			{
+				copySelectionToClipboard(COLUMN_SERIAL);
+			}
+		};
+
+		actionCollapeAll = new Action("C&ollapse all", SharedIcons.COLLAPSE_ALL) {
+			@Override
+			public void run()
+			{
+				viewer.collapseAll();
+			}
+		};
+
+		actionExpandAll = new Action("&Expand all", SharedIcons.EXPAND_ALL) {
+			@Override
+			public void run()
+			{
+				viewer.expandAll();
+			}
+		};
+	}
+	
+	/**
+	 * Copy selected lines to clipboard
+	 */
+	private void copySelectionToClipboard(int column)
+	{
+		TreeItem[] selection = viewer.getTree().getSelection();
+		if (selection.length > 0)
+		{
+			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n";
+			StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < selection.length; i++)
+			{
+				if (i > 0)
+					sb.append(newLine);
+				if (column == -1)
+				{
+					sb.append(selection[i].getText(0));
+					for(int j = 1; j < viewer.getTree().getColumnCount(); j++)
+					{
+						sb.append("\t");
+						sb.append(selection[i].getText(j));
+					}
+				}
+				else
+				{
+					sb.append(selection[i].getText(column));
+				}
+			}
+			WidgetHelper.copyToClipboard(sb.toString());
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.GenericObject)
+	 */
+	@Override
+	public void objectChanged(final GenericObject object)
+	{
+		viewer.setInput(new Object[0]);
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		new ConsoleJob("Get node components", getViewPart(), Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final PhysicalComponent root = session.getNodePhysicalComponents(object.getObjectId());
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						if (viewer.getTree().isDisposed())
+							return;
+						
+						if ((ComponentsTab.this.getObject() != null) &&
+						    (ComponentsTab.this.getObject().getObjectId() == object.getObjectId()))
+						{
+							viewer.setInput(new Object[] { root });
+							viewer.expandAll();
+						}
+					}
+				});
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot get component information for node " + object.getObjectName();
+			}
+		}.start();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.GenericObject)
+	 */
+	@Override
+	public boolean showForObject(GenericObject object)
+	{
+		if (object instanceof Node)
+		{
+			return (((Node)object).getFlags() & Node.NF_HAS_ENTITY_MIB) != 0;
+		}
+		return false;
+	}
+}

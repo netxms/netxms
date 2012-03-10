@@ -3506,7 +3506,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
-		return new PhysicalComponent(response, NXCPCodes.VID_COMPONENT_LIST_BASE);
+		return new PhysicalComponent(response, NXCPCodes.VID_COMPONENT_LIST_BASE, null);
 	}
 
 	/**
