@@ -142,7 +142,7 @@ public class StatusIndicatorElement extends ElementWidget
 	 */
 	public void drawContent(PaintEvent e)
 	{
-		e.gc.setAntialias(SWT.ON);
+		//e.gc.setAntialias(SWT.ON);
 
 		Canvas canvas = (Canvas)e.widget;
 		//canvas.drawBackground(e.gc, 0, 0, 100, 100);

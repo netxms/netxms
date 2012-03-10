@@ -337,8 +337,8 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 
 		gc.setBackground(getColorFromPreferences("Chart.Colors.Background"));
 		gc.fillRectangle(0, 0, size.x, size.y);
-		gc.setAntialias(SWT.ON);
-		gc.setTextAntialias(SWT.ON);
+		//gc.setAntialias(SWT.ON);
+		//gc.setTextAntialias(SWT.ON);
 		
 		int top = OUTER_MARGIN_HEIGHT;
 		
