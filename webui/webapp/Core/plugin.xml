@@ -48,8 +48,7 @@
          point="org.eclipse.rap.ui.branding">
       <branding
             id="org.netxms.webui.core.branding"
-            servletName="nxmc"
-            themeId="org.eclipse.rap.design.example.business.theme">
+            servletName="nxmc">
       </branding>
    </extension>
    <extension
