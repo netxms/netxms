@@ -878,6 +878,7 @@ typedef struct
 #define VID_MODIFY_TIME             ((DWORD)406)
 #define VID_IS_PHYS_PORT            ((DWORD)407)
 #define VID_CREATE_STATUS_DCI       ((DWORD)408)
+#define VID_NUM_COMMENTS            ((DWORD)409)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

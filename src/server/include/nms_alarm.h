@@ -62,7 +62,7 @@ public:
    void TerminateByKey(const TCHAR *key, bool useRegexp);
    void DeleteAlarm(DWORD dwAlarmId);
 
-   void SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSession *pSession);
+   void sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession);
 
    NetObj *GetAlarmSourceObject(DWORD dwAlarmId);
 

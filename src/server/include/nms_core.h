@@ -419,7 +419,7 @@ private:
    void SetConfigVariable(CSCPMessage *pRequest);
    void DeleteConfigVariable(CSCPMessage *pRequest);
    void SendUserDB(DWORD dwRqId);
-   void SendAllAlarms(DWORD dwRqId, BOOL bIncludeAck);
+   void sendAllAlarms(DWORD dwRqId);
    void CreateUser(CSCPMessage *pRequest);
    void UpdateUser(CSCPMessage *pRequest);
    void DeleteUser(CSCPMessage *pRequest);
@@ -449,9 +449,9 @@ private:
    void createObject(CSCPMessage *pRequest);
    void changeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
    void deleteObject(CSCPMessage *pRequest);
-   void AcknowledgeAlarm(CSCPMessage *pRequest);
-   void TerminateAlarm(CSCPMessage *pRequest);
-   void DeleteAlarm(CSCPMessage *pRequest);
+   void acknowledgeAlarm(CSCPMessage *pRequest);
+   void terminateAlarm(CSCPMessage *pRequest);
+   void deleteAlarm(CSCPMessage *pRequest);
    void CreateAction(CSCPMessage *pRequest);
    void UpdateAction(CSCPMessage *pRequest);
    void DeleteAction(CSCPMessage *pRequest);
@@ -768,6 +768,8 @@ BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId);
 DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession *pSession);
 DWORD DeleteObjectToolFromDB(DWORD dwToolId);
 DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg);
+
+void DeleteAlarmNotes(DB_HANDLE hdb, DWORD alarmId);
 
 void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();

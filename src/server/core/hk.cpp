@@ -96,6 +96,60 @@ static void PGSQLMaintenance(DB_HANDLE hdb)
 
 
 //
+// Delete notes for alarm
+//
+
+void DeleteAlarmNotes(DB_HANDLE hdb, DWORD alarmId)
+{
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_notes WHERE alarm_id=?"));
+	if (hStmt == NULL)
+		return;
+
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
+	DBExecute(hStmt);
+	DBFreeStatement(hStmt);
+}
+
+
+//
+// Remove outdated alarm records
+//
+
+static void CleanAlarmHistory(DB_HANDLE hdb)
+{
+	DWORD retentionTime = ConfigReadULong(_T("AlarmHistoryRetentionTime"), 180);
+	if (retentionTime == 0)
+		return;
+
+	retentionTime *= 86400;	// Convert days to seconds
+	time_t ts = time(NULL) - (time_t)retentionTime;
+
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT alarm_id FROM alarms WHERE alarm_state=2 AND last_change_time<?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ts);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			int count = DBGetNumRows(hResult);
+			for(int i = 0; i < count; i++)
+				DeleteAlarmNotes(hdb, DBGetFieldULong(hResult, i, 0));
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
+
+	hStmt = DBPrepare(hdb, _T("DELETE FROM alarms WHERE alarm_state=2 AND last_change_time<?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ts);
+		DBExecute(hStmt);
+		DBFreeStatement(hStmt);
+	}
+}
+
+
+//
 // Callback for cleaning expired DCI data on node
 //
 
@@ -127,14 +181,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-		// Remove outdated alarm records
-		dwRetentionTime = ConfigReadULong(_T("AlarmHistoryRetentionTime"), 180);
-		if (dwRetentionTime > 0)
-		{
-			dwRetentionTime *= 86400;	// Convert days to seconds
-			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM alarms WHERE alarm_state=2 AND last_change_time<%ld"), (long)(currTime - dwRetentionTime));
-			DBQuery(hdb, szQuery);
-		}
+		CleanAlarmHistory(hdb);
 
 		// Remove outdated event log records
 		dwRetentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);

@@ -938,6 +938,7 @@ typedef struct
    TCHAR szKey[MAX_DB_STRING];
    TCHAR szHelpDeskRef[MAX_HELPDESK_REF_LEN];
    void *pUserData;        // Can be freely used by client application
+	DWORD noteCount;        // Number of notes added to alarm
 } NXC_ALARM;
 
 

@@ -54,6 +54,7 @@ void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
    pMsg->SetVariable(VID_REPEAT_COUNT, pAlarm->dwRepeatCount);
 	pMsg->SetVariable(VID_ALARM_TIMEOUT, pAlarm->dwTimeout);
 	pMsg->SetVariable(VID_ALARM_TIMEOUT_EVENT, pAlarm->dwTimeoutEvent);
+	pMsg->SetVariable(VID_NUM_COMMENTS, pAlarm->noteCount);
 }
 
 
@@ -92,6 +93,30 @@ static THREAD_RESULT THREAD_CALL WatchdogThreadStarter(void *pArg)
 {
 	((AlarmManager *)pArg)->WatchdogThread();
 	return THREAD_OK;
+}
+
+
+//
+// Get number of notes for alarm
+//
+
+static DWORD GetNoteCount(DB_HANDLE hdb, DWORD alarmId)
+{
+	DWORD value = 0;
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT count(*) FROM alarm_notes WHERE alarm_id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			if (DBGetNumRows(hResult) > 0)
+				value = DBGetFieldULong(hResult, 0, 0);
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
+	return value;
 }
 
 
@@ -139,6 +164,7 @@ BOOL AlarmManager::Init()
          m_pAlarmList[i].nState = (BYTE)DBGetFieldLong(hResult, i, 14);
          m_pAlarmList[i].dwTimeout = DBGetFieldULong(hResult, i, 15);
          m_pAlarmList[i].dwTimeoutEvent = DBGetFieldULong(hResult, i, 16);
+			m_pAlarmList[i].noteCount = GetNoteCount(g_hCoreDB, m_pAlarmList[i].dwAlarmId);
       }
    }
 
@@ -210,6 +236,7 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
       alarm.nHelpDeskState = ALARM_HELPDESK_IGNORED;
 		alarm.dwTimeout = dwTimeout;
 		alarm.dwTimeoutEvent = dwTimeoutEvent;
+		alarm.noteCount = 0;
       nx_strncpy(alarm.szMessage, pszExpMsg, MAX_DB_STRING);
       nx_strncpy(alarm.szKey, pszExpKey, MAX_DB_STRING);
 
@@ -406,6 +433,10 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
    _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%d"), dwAlarmId);
    QueueSQLRequest(szQuery);
 
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DeleteAlarmNotes(hdb, dwAlarmId);
+	DBConnectionPoolReleaseConnection(hdb);
+
    UpdateObjectStatus(dwObject);
 }
 
@@ -460,7 +491,7 @@ void AlarmManager::NotifyClients(DWORD dwCode, NXC_ALARM *pAlarm)
 // Send all alarms to client
 //
 
-void AlarmManager::SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSession *pSession)
+void AlarmManager::sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession)
 {
    DWORD i, dwUserId;
    NetObj *pObject;
@@ -472,32 +503,21 @@ void AlarmManager::SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSess
    msg.SetCode(CMD_ALARM_DATA);
    msg.SetId(dwRqId);
 
-   if (bIncludeAck)
+   Lock();
+   for(i = 0; i < m_dwNumAlarms; i++)
    {
-      // Request for all alarms including acknowledged,
-      // so we have to load them from database
-   }
-   else
-   {
-      // Unacknowledged alarms can be sent directly from memory
-      Lock();
-
-      for(i = 0; i < m_dwNumAlarms; i++)
+      pObject = FindObjectById(m_pAlarmList[i].dwSourceObject);
+      if (pObject != NULL)
       {
-         pObject = FindObjectById(m_pAlarmList[i].dwSourceObject);
-         if (pObject != NULL)
+         if (pObject->CheckAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS))
          {
-            if (pObject->CheckAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS))
-            {
-               FillAlarmInfoMessage(&msg, &m_pAlarmList[i]);
-               pSession->sendMessage(&msg);
-               msg.DeleteAllVariables();
-            }
+            FillAlarmInfoMessage(&msg, &m_pAlarmList[i]);
+            pSession->sendMessage(&msg);
+            msg.DeleteAllVariables();
          }
       }
-
-      Unlock();
    }
+   Unlock();
 
    // Send end-of-list indicator
    msg.SetVariable(VID_ALARM_ID, (DWORD)0);
@@ -606,7 +626,7 @@ void AlarmManager::GetAlarmStats(CSCPMessage *pMsg)
 // Watchdog thread
 //
 
-void AlarmManager::WatchdogThread(void)
+void AlarmManager::WatchdogThread()
 {
 	DWORD i;
 	time_t now;

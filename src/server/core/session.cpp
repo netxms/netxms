@@ -877,18 +877,18 @@ void ClientSession::processingThread()
             addClusterNode(pMsg);
             break;
          case CMD_GET_ALL_ALARMS:
-            SendAllAlarms(pMsg->GetId(), pMsg->GetVariableShort(VID_IS_ACK));
+            sendAllAlarms(pMsg->GetId());
             break;
-         case CMD_GET_ALARM:
+         case CMD_GET_ALARM: /* FIXME: wtf??? */
             break;
          case CMD_ACK_ALARM:
-            AcknowledgeAlarm(pMsg);
+            acknowledgeAlarm(pMsg);
             break;
          case CMD_TERMINATE_ALARM:
-            TerminateAlarm(pMsg);
+            terminateAlarm(pMsg);
             break;
          case CMD_DELETE_ALARM:
-            DeleteAlarm(pMsg);
+            deleteAlarm(pMsg);
             break;
          case CMD_CREATE_ACTION:
             CreateAction(pMsg);
@@ -4313,10 +4313,10 @@ void ClientSession::onAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 // Send all alarms to client
 //
 
-void ClientSession::SendAllAlarms(DWORD dwRqId, BOOL bIncludeAck)
+void ClientSession::sendAllAlarms(DWORD dwRqId)
 {
    MutexLock(m_mutexSendAlarms);
-   g_alarmMgr.SendAlarmsToClient(dwRqId, bIncludeAck, this);
+   g_alarmMgr.sendAlarmsToClient(dwRqId, this);
    MutexUnlock(m_mutexSendAlarms);
 }
 
@@ -4325,7 +4325,7 @@ void ClientSession::SendAllAlarms(DWORD dwRqId, BOOL bIncludeAck)
 // Acknowledge alarm
 //
 
-void ClientSession::AcknowledgeAlarm(CSCPMessage *pRequest)
+void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
@@ -4366,7 +4366,7 @@ void ClientSession::AcknowledgeAlarm(CSCPMessage *pRequest)
 // Terminate alarm
 //
 
-void ClientSession::TerminateAlarm(CSCPMessage *pRequest)
+void ClientSession::terminateAlarm(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
@@ -4407,7 +4407,7 @@ void ClientSession::TerminateAlarm(CSCPMessage *pRequest)
 // Delete alarm
 //
 
-void ClientSession::DeleteAlarm(CSCPMessage *pRequest)
+void ClientSession::deleteAlarm(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;

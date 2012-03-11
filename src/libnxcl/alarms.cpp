@@ -47,6 +47,7 @@ static void AlarmFromMsg(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
    pMsg->GetVariableStr(VID_HELPDESK_REF, pAlarm->szHelpDeskRef, MAX_HELPDESK_REF_LEN);
 	pAlarm->dwTimeout = pMsg->GetVariableLong(VID_ALARM_TIMEOUT);
 	pAlarm->dwTimeoutEvent = pMsg->GetVariableLong(VID_ALARM_TIMEOUT_EVENT);
+	pAlarm->noteCount = pMsg->GetVariableLong(VID_NUM_COMMENTS);
    pAlarm->pUserData = NULL;
 }
 
