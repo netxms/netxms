@@ -238,7 +238,7 @@ static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
 // Process trap
 //
 
-static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTransport, SNMP_Engine *localEngine, boolean isInformRq)
+static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq)
 {
    DWORD i, dwOriginAddr, dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
    TCHAR *pszTrapArgs, szBuffer[4096];

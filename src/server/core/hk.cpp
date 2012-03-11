@@ -127,7 +127,7 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT alarm_id FROM alarms WHERE alarm_state=2 AND last_change_time<?"));
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ts);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (DWORD)ts);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{
@@ -142,7 +142,7 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
 	hStmt = DBPrepare(hdb, _T("DELETE FROM alarms WHERE alarm_state=2 AND last_change_time<?"));
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ts);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (DWORD)ts);
 		DBExecute(hStmt);
 		DBFreeStatement(hStmt);
 	}
