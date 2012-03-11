@@ -452,6 +452,7 @@ public class ImageLibrary extends ViewPart
 	 */
 	private void refreshImages() throws NetXMSClientException, IOException
 	{
+		final Display display = PlatformUI.getWorkbench().getDisplay();
 		new ConsoleJob("Reload image library", this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -473,7 +474,7 @@ public class ImageLibrary extends ViewPart
 						}
 					}
 				}
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				display.asyncExec(new Runnable() {
 					@Override
 					public void run()
 					{
