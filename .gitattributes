@@ -11,6 +11,7 @@ android/src/console/res/drawable-hdpi/alarms.png -text
 android/src/console/res/drawable-hdpi/graphs.png -text
 android/src/console/res/drawable-hdpi/ic_menu_preferences.png -text
 android/src/console/res/drawable-hdpi/icon.png -text
+android/src/console/res/drawable-hdpi/macaddress.png -text
 android/src/console/res/drawable-hdpi/nodes.png -text
 android/src/console/res/drawable-ldpi/alarms.png -text
 android/src/console/res/drawable-ldpi/graphs.png -text
