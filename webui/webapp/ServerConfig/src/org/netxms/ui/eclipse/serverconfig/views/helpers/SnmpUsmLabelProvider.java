@@ -13,6 +13,8 @@ import org.netxms.client.snmp.SnmpUsmCredential;
  */
 public class SnmpUsmLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private static final String[] authMethodName = { "NONE", "MD5", "SHA1" };
 	private static final String[] privMethodName = { "NONE", "DES", "AES" };
 	

@@ -38,6 +38,12 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	
 	@Element(required = false)
 	private boolean showLegend = true;
+	
+	@Element(required = false)
+	private boolean showTitle = true;
+
+	@Element(required = false)
+	private int refreshRate = 30;
 
 	/**
 	 * @return the title
@@ -101,5 +107,37 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	public void setShowLegend(boolean showLegend)
 	{
 		this.showLegend = showLegend;
+	}
+
+	/**
+	 * @return the refreshRate
+	 */
+	public int getRefreshRate()
+	{
+		return refreshRate;
+	}
+
+	/**
+	 * @param refreshRate the refreshRate to set
+	 */
+	public void setRefreshRate(int refreshRate)
+	{
+		this.refreshRate = refreshRate;
+	}
+	
+	/**
+	 * @return the showTitle
+	 */
+	public boolean isShowTitle()
+	{
+		return showTitle;
+	}
+
+	/**
+	 * @param showTitle the showTitle to set
+	 */
+	public void setShowTitle(boolean showTitle)
+	{
+		this.showTitle = showTitle;
 	}
 }

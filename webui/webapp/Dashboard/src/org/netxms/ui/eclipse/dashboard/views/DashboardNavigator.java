@@ -97,6 +97,8 @@ public class DashboardNavigator extends ViewPart
 		MenuManager manager = new MenuManager();
 		manager.setRemoveAllWhenShown(true);
 		manager.addMenuListener(new IMenuListener() {
+      	private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

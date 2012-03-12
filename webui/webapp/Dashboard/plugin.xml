@@ -111,7 +111,7 @@
       </page>
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.DataSources"
-            id="org.netxms.ui.eclipse.dashboard.propertypages.DataSources#0"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.DataSources#20"
             name="Data Sources">
          <enabledWhen>
             <instanceof
@@ -171,7 +171,7 @@
       </page>
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.DialChart"
-            id="org.netxms.ui.eclipse.dashboard.propertypages.DialChart#0"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.DialChart#10"
             name="Dial Chart">
          <enabledWhen>
             <instanceof
@@ -196,6 +196,16 @@
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.AbstractChart"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.AbstractChart#0"
+            name="Chart (General Settings)">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig">
             </instanceof>
          </enabledWhen>
       </page>

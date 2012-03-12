@@ -35,6 +35,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class Layout extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private Combo comboHorizontalAlign;
 	private Combo comboVerticalAlign;
 	private Spinner spinnerHorizontalSpan;

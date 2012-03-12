@@ -34,10 +34,9 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class DialChart extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private DialChartConfig config;
-	private LabeledText title;
-	private Button checkShowTitle;
-	private Button checkShowLegend;
 	private Button checkLegendInside;
 	private LabeledText minValue;
 	private LabeledText maxValue;
@@ -61,19 +60,10 @@ public class DialChart extends PropertyPage
 		layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
 		
-		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel("Title");
-		title.setText(config.getTitle());
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		title.setLayoutData(gd);
-		
 		minValue = new LabeledText(dialogArea, SWT.NONE);
 		minValue.setLabel("Minimum value");
 		minValue.setText(Double.toString(config.getMinValue()));
-		gd = new GridData();
+		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		minValue.setLayoutData(gd);
@@ -118,24 +108,6 @@ public class DialChart extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		rightRedZone.setLayoutData(gd);
 		
-		checkShowTitle = new Button(dialogArea, SWT.CHECK);
-		checkShowTitle.setText("Show &title");
-		checkShowTitle.setSelection(config.isShowTitle());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		checkShowTitle.setLayoutData(gd);
-		
-		checkShowLegend = new Button(dialogArea, SWT.CHECK);
-		checkShowLegend.setText("Show &legend");
-		checkShowLegend.setSelection(config.isShowLegend());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		checkShowLegend.setLayoutData(gd);
-		
 		checkLegendInside = new Button(dialogArea, SWT.CHECK);
 		checkLegendInside.setText("Place legend &inside dial");
 		checkLegendInside.setSelection(config.isLegendInside());
@@ -170,15 +142,12 @@ public class DialChart extends PropertyPage
 			return false;
 		}
 		
-		config.setTitle(title.getText());
 		config.setMinValue(min);
 		config.setMaxValue(max);
 		config.setLeftYellowZone(ly);
 		config.setLeftRedZone(lr);
 		config.setRightYellowZone(ry);
 		config.setRightRedZone(rr);
-		config.setShowTitle(checkShowTitle.getSelection());
-		config.setShowLegend(checkShowLegend.getSelection());
 		config.setLegendInside(checkLegendInside.getSelection());
 		return true;
 	}

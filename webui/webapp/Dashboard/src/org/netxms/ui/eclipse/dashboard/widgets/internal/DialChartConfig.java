@@ -13,9 +13,6 @@ import org.simpleframework.xml.core.Persister;
 public class DialChartConfig extends AbstractChartConfig
 {
 	@Element(required = false)
-	private boolean showTitle = true;
-	
-	@Element(required = false)
 	private boolean legendInside = false;
 	
 	@Element(required = false)
@@ -95,22 +92,6 @@ public class DialChartConfig extends AbstractChartConfig
 	public void setRightRedZone(double redZone)
 	{
 		this.rightRedZone = redZone;
-	}
-
-	/**
-	 * @return the showTitle
-	 */
-	public boolean isShowTitle()
-	{
-		return showTitle;
-	}
-
-	/**
-	 * @param showTitle the showTitle to set
-	 */
-	public void setShowTitle(boolean showTitle)
-	{
-		this.showTitle = showTitle;
 	}
 
 	/**

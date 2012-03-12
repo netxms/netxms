@@ -31,6 +31,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
  */
 public class DashboardElementsLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
 	private static final String[] ELEMENT_TYPES = { "Label", "Line Chart", "Bar Chart", "Pie Chart", 
 		"Tube Chart", "Status Chart", "Status Indicator", "Dashboard", "Network Map", "Custom Widget", 
 		"Geo Map", "Alarm Viewer", "Availability Chart", "Dial Chart", "Web Page" };

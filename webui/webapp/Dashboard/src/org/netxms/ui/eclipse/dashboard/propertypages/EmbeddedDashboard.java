@@ -33,6 +33,8 @@ import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
  */
 public class EmbeddedDashboard extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private EmbeddedDashboardConfig config;
 	private ObjectSelector objectSelector;
 	

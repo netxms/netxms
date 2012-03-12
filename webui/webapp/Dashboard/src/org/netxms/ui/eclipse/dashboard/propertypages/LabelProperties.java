@@ -32,6 +32,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class LabelProperties extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private LabelConfig config;
 	private LabeledText title; 
 

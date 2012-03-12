@@ -12,6 +12,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class ServerVariableComparator extends ViewerComparator
 {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * Compare two booleans and return -1, 0, or 1
 	 */

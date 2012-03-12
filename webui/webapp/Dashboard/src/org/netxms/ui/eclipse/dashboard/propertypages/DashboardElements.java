@@ -158,7 +158,9 @@ public class DashboardElements extends PropertyPage
       upButton.setText("&Up");
       upButton.setEnabled(false);
       upButton.addSelectionListener(new SelectionListener() {
-		@Override
+      	private static final long serialVersionUID = 1L;
+
+      	@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
 				widgetSelected(e);
@@ -175,18 +177,20 @@ public class DashboardElements extends PropertyPage
       downButton.setText("&Down");
       downButton.setEnabled(false);
       downButton.addSelectionListener(new SelectionListener() {
-   		@Override
-   			public void widgetDefaultSelected(SelectionEvent e)
-   			{
-   				widgetSelected(e);
-   			}
+      	private static final long serialVersionUID = 1L;
 
-   			@Override
-   			public void widgetSelected(SelectionEvent e)
-   			{
-   				moveDown();
-   			}
-         });
+   		@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				moveDown();
+			}
+		});
 
       Composite rightButtons = new Composite(dialogArea, SWT.NONE);
       buttonLayout = new RowLayout();
@@ -202,6 +206,8 @@ public class DashboardElements extends PropertyPage
       addButton = new Button(rightButtons, SWT.PUSH);
       addButton.setText("&Add...");
       addButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -218,6 +224,8 @@ public class DashboardElements extends PropertyPage
       editButton = new Button(rightButtons, SWT.PUSH);
       editButton.setText("&Edit...");
       editButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -234,6 +242,8 @@ public class DashboardElements extends PropertyPage
       editXmlButton = new Button(rightButtons, SWT.PUSH);
       editXmlButton.setText("Edit &XML...");
       editXmlButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -250,6 +260,8 @@ public class DashboardElements extends PropertyPage
       deleteButton = new Button(rightButtons, SWT.PUSH);
       deleteButton.setText("&Delete");
       deleteButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

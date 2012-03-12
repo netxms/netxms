@@ -56,6 +56,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class DataSources extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	public static final int COLUMN_POSITION = 0;
 	public static final int COLUMN_NODE = 1;
 	public static final int COLUMN_METRIC = 2;
@@ -130,6 +132,8 @@ public class DataSources extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
       upButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -150,6 +154,8 @@ public class DataSources extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
       downButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -182,6 +188,8 @@ public class DataSources extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
       addButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -201,6 +209,8 @@ public class DataSources extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
       editButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -221,6 +231,8 @@ public class DataSources extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
       deleteButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

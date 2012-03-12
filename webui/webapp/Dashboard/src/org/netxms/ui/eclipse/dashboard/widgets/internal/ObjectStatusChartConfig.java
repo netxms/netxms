@@ -55,6 +55,9 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 	
 	@Element(required=false)
 	private boolean translucent = false;
+	
+	@Element(required=false)
+	private int refreshRate = 30;
 
 	/**
 	 * Create line chart settings object from XML document
@@ -207,5 +210,21 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 	public void setClassFilter(int[] classFilter)
 	{
 		this.classFilter = classFilter;
+	}
+
+	/**
+	 * @return the refreshRate
+	 */
+	public int getRefreshRate()
+	{
+		return refreshRate;
+	}
+
+	/**
+	 * @param refreshRate the refreshRate to set
+	 */
+	public void setRefreshRate(int refreshRate)
+	{
+		this.refreshRate = refreshRate;
 	}
 }

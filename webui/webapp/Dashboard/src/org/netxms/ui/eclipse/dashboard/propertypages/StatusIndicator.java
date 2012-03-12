@@ -34,6 +34,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class StatusIndicator extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private StatusIndicatorConfig config;
 	private ObjectSelector objectSelector;
 	private LabeledText title;

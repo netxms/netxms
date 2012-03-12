@@ -113,6 +113,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -127,6 +129,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 		
 		actionSave = new Action("&Save") {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -137,6 +141,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		actionSave.setEnabled(false);
 		
 		actionEditMode = new Action("Edit mode", Action.AS_CHECK_BOX) {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -150,6 +156,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		actionEditMode.setChecked(dbc.isEditMode());
 		
 		actionAddAlarmBrowser = new Action("Add &alarm browser") {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -158,6 +166,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 		
 		actionAddLabel = new Action("Add &label") {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -166,6 +176,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 		
 		actionAddBarChart = new Action("Add &bar chart") {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -174,6 +186,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 
 		actionAddPieChart = new Action("Add &pie chart") {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -182,6 +196,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 
 		actionAddTubeChart = new Action("Add &tube chart") {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -190,6 +206,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 
 		actionAddLineChart = new Action("Add &line chart") {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -198,6 +216,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 
 		actionAddAvailabilityChart = new Action("Add a&vailability chart") {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -206,6 +226,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 
 		actionAddDashboard = new Action("Add embedded &dashboard") {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -214,6 +236,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 
 		actionAddStatusIndicator = new Action("Add &status indicator") {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

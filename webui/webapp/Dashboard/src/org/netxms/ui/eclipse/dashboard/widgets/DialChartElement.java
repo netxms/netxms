@@ -55,6 +55,8 @@ public class DialChartElement extends ComparisonChartElement
 			config = new DialChartConfig();
 		}
 
+		refreshInterval = config.getRefreshRate() * 1000;
+		
 		chart = ChartFactory.createDialChart(this, SWT.NONE);
 		chart.setChartTitle(config.getTitle());
 		chart.setTitleVisible(config.isShowTitle());

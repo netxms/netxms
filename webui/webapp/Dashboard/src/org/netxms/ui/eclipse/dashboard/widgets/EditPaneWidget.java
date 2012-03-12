@@ -33,7 +33,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**

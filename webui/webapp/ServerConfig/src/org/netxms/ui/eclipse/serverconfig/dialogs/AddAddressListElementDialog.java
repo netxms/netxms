@@ -40,6 +40,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class AddAddressListElementDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private Button radioSubnet;
 	private Button radioRange;
 	private LabeledText textAddr1;
@@ -84,6 +86,8 @@ public class AddAddressListElementDialog extends Dialog
 		radioSubnet.setText("&Subnet");
 		radioSubnet.setSelection(true);
 		radioSubnet.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -101,6 +105,8 @@ public class AddAddressListElementDialog extends Dialog
 		radioRange = new Button(dialogArea, SWT.RADIO);
 		radioRange.setText("Address &range");
 		radioRange.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

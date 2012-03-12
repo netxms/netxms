@@ -2150,6 +2150,7 @@ webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/api/DashboardElementC
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/AddDashboardElementDlg.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/EditElementXmlDlg.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/perspectives/DashboardPerspective.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AbstractChart.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AlarmViewer.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AvailabilityChart.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/DashboardElements.java -text
