@@ -75,4 +75,12 @@
 	<string name="progress_gathering_data">Gathering data...</string>
 	<string name="node_unknown">&lt;Unknown&gt;</string>
 	<string name="view_alarms">View alarms</string>
+	<string name="reconnect">Reconnect</string>
+	<string name="home_screen_macaddress">MACaddr</string>
+	<string name="hint_type_macaddress">Type MAC address to search...</string><string name="macaddress_title">MAC address search</string>
+	
+	<string name="macaddress_invalid">MAC Address &quot;%1$s&quot; is invalid</string>
+	<string name="macaddress_nodeinfo">Node %1$s with MAC address %2$s is connected to network switch %3$s on port %4$s</string>
+	<string name="macaddress_nonodeinfo">Node with MAC addess %1$s is connected to network switch %2$s on port %3$s</string>
+	<string name="macaddress_notfound">MAC address &quot;%1$s&quot; not found</string>
 </resources>

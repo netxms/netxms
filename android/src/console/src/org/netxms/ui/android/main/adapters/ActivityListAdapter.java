@@ -19,9 +19,9 @@ import android.widget.LinearLayout.LayoutParams;
  */
 public class ActivityListAdapter extends BaseAdapter
 {
-	private static final int[] activityId = { HomeScreen.ACTIVITY_ALARMS, HomeScreen.ACTIVITY_NODES, HomeScreen.ACTIVITY_GRAPHS  };
-	private static final int[] imageId = { R.drawable.alarms, R.drawable.nodes, R.drawable.graphs };
-	private static final int[] textId = { R.string.home_screen_alarms, R.string.home_screen_nodes, R.string.home_screen_graphs };
+	private static final int[] activityId = { HomeScreen.ACTIVITY_ALARMS, HomeScreen.ACTIVITY_NODES, HomeScreen.ACTIVITY_GRAPHS, HomeScreen.ACTIVITY_MACADDRESS  };
+	private static final int[] imageId = { R.drawable.alarms, R.drawable.nodes, R.drawable.graphs, R.drawable.macaddress };
+	private static final int[] textId = { R.string.home_screen_alarms, R.string.home_screen_nodes, R.string.home_screen_graphs, R.string.home_screen_macaddress };
 
 	private Context context;
 
