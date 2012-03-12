@@ -24,9 +24,9 @@ import android.widget.ExpandableListView;
 import android.widget.TextView;
 
 /**
- * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
- * 
  * Browser for predefined graphics
+ * 
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
  * 
  */
 public class GraphBrowser extends AbstractClientActivity

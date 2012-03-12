@@ -28,9 +28,9 @@ import com.jjoe64.graphview.GraphView.GraphViewData;
 import com.jjoe64.graphview.GraphView.LegendAlign;
 
 /**
- * @author Marco Incalcaterra
- * 
  * Draw graph activity
+ * 
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
  * 
  */
 public class DrawGraph extends AbstractClientActivity
@@ -85,14 +85,28 @@ public class DrawGraph extends AbstractClientActivity
 					return s.format(new Date((long)value));
 				}
 				else
-					return super.formatLabel(value, isValueX); // let the y-value be normal-formatted
+				{
+					if (value <= 1E3)
+						return String.format("%.0f", value);
+					else if (value <= 1E6)
+						return String.format("%.1f K", value/1E3);
+					else if (value < 1E9)
+						return String.format("%.1f M", value/1E6);
+					else if (value < 1E12)
+						return String.format("%.1f G", value/1E9);
+					else if (value < 1E15)
+						return String.format("%.1f T", value/1E12);
+					return super.formatLabel(value, isValueX);
+				}
 			}
 		};
 		graphView.setShowLegend(true);   
+		graphView.setScalable(true);
+		graphView.setScrollable(true);
 		graphView.setLegendAlign(LegendAlign.TOP);   
 		graphView.setLegendWidth(240);  
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
-		title.setText(R.string.last_values_title);
+		title.setText(R.string.graph_title);
 	}
 
 	/* (non-Javadoc)
@@ -184,6 +198,8 @@ public class DrawGraph extends AbstractClientActivity
 			if (result != null)
 			{
 				int addedSeries = 0;
+				double start = 0;
+				double end = 0;
 				for (int i = 0; i < result.length; i++)
 				{
 					DciDataRow[] dciDataRow = result[i].getValues();
@@ -195,6 +211,8 @@ public class DrawGraph extends AbstractClientActivity
 						GraphViewSeries gwSeries = new GraphViewSeries(items[i].getDescription(), toAndroidColor(itemStyles[i].getColor()), gwData);
 						graphView.addSeries(gwSeries);
 						addedSeries++;
+						start = dciDataRow[dciDataRow.length-1].getTimestamp().getTime();
+						end = dciDataRow[0].getTimestamp().getTime();
 					}
 				}
 				if (addedSeries == 0)	// Add an empty series when getting no data
@@ -205,7 +223,10 @@ public class DrawGraph extends AbstractClientActivity
 				}
 				LinearLayout layout = (LinearLayout)findViewById(R.id.graphics);   
 				if (layout != null)
+				{
+					graphView.setViewPort(start, end-start+1);	// Start showing full graph
 					layout.addView(graphView);
+				}
 			}
 			dialog.cancel();
 		}
