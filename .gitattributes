@@ -34,6 +34,8 @@ android/src/console/res/drawable/header_background.xml -text
 android/src/console/res/drawable/home_screen_background.xml -text
 android/src/console/res/drawable/home_screen_selection.xml -text
 android/src/console/res/drawable/list_selection.xml -text
+android/src/console/res/drawable/mac_search_ko.png -text
+android/src/console/res/drawable/mac_search_ok.png -text
 android/src/console/res/drawable/object_cluster.png -text
 android/src/console/res/drawable/object_container.png -text
 android/src/console/res/drawable/object_node.png -text
@@ -54,6 +56,7 @@ android/src/console/res/layout/graph_view_group_layout.xml -text
 android/src/console/res/layout/graphics.xml -text
 android/src/console/res/layout/homescreen.xml -text
 android/src/console/res/layout/last_values.xml -text
+android/src/console/res/layout/macaddress_view.xml -text
 android/src/console/res/layout/node_view.xml -text
 android/src/console/res/layout/screen_header_full.xml -text
 android/src/console/res/layout/screen_header_small.xml -text
@@ -72,11 +75,13 @@ android/src/console/src/org/netxms/ui/android/main/activities/DrawGraph.java -te
 android/src/console/src/org/netxms/ui/android/main/activities/GraphBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/HomeScreen.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/LastValues.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/MacAddressBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/NodeBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/ActivityListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/AlarmListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/GraphAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/LastValuesAdapter.java -text
+android/src/console/src/org/netxms/ui/android/main/adapters/MacAddressListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/NodeListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/views/ActivityListElement.java -text
 android/src/console/src/org/netxms/ui/android/receiver/BootCompletedIntentReceiver.java -text

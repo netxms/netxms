@@ -3,8 +3,10 @@ package org.netxms.ui.android.main.activities;
 import org.netxms.base.NXCommon;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ActivityListAdapter;
+
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.View;
@@ -15,6 +17,10 @@ import android.widget.TextView;
 
 /**
  * Home screen activity
+ * 
+ * @author Victor Kirhenshtein
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
+ * 
  */
 public class HomeScreen extends AbstractClientActivity implements OnItemClickListener
 {
@@ -22,6 +28,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	public static final int ACTIVITY_DASHBOARDS = 2;
 	public static final int ACTIVITY_NODES = 3;
 	public static final int ACTIVITY_GRAPHS = 4;
+	public static final int ACTIVITY_MACADDRESS = 5;
 	
 	TextView statusText; 
 	
@@ -34,7 +41,10 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 		setContentView(R.layout.homescreen);
 
 		GridView gridview = (GridView)findViewById(R.id.ActivityList);
-		gridview.setNumColumns(3);
+		if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) 
+			gridview.setNumColumns(4);
+		else
+			gridview.setNumColumns(2);
 		gridview.setAdapter(new ActivityListAdapter(this));
 
 		gridview.setOnItemClickListener(this);
@@ -72,6 +82,9 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 				break;
 			case ACTIVITY_GRAPHS:
 				startActivity(new Intent(this, GraphBrowser.class));
+				break;
+			case ACTIVITY_MACADDRESS:
+				startActivity(new Intent(this, MacAddressBrowser.class));
 				break;
 			default:
 				break;
