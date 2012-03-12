@@ -53,6 +53,8 @@ public class PieChartElement extends ComparisonChartElement
 			config = new PieChartConfig();
 		}
 
+		refreshInterval = config.getRefreshRate() * 1000;
+		
 		setLayout(new FillLayout());
 		
 		chart = ChartFactory.createPieChart(this, SWT.NONE);

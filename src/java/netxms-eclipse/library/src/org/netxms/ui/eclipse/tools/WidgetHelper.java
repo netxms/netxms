@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
@@ -173,7 +174,7 @@ public class WidgetHelper
 	 * @param flags Flags for Text creation
 	 * @param labelText Label's text
 	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
-	 * @return Created Text object
+	 * @return Created Combo object
 	 */
 	public static Combo createLabeledCombo(final Composite parent, int flags, final String labelText,
 	                                       Object layoutData)
@@ -210,6 +211,57 @@ public class WidgetHelper
 		combo.setLayoutData(gridData);		
 		
 		return combo;
+	}
+	
+
+	/**
+    * Create pair of label and spinner, with label above
+	 * 
+	 * @param parent Parent composite
+	 * @param flags Flags for Text creation
+	 * @param labelText Label's text
+	 * @param minVal minimal spinner value
+	 * @param maxVal maximum spinner value
+	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
+	 * @return Created Spinner object
+	 */
+	public static Spinner createLabeledSpinner(final Composite parent, int flags, final String labelText, int minVal, int maxVal, Object layoutData)
+	{
+		Composite group = new Composite(parent, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		layout.verticalSpacing = INNER_SPACING;
+		layout.horizontalSpacing = 0;
+		layout.marginTop = 0;
+		layout.marginBottom = 0;
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		group.setLayout(layout);
+
+		if (layoutData != DEFAULT_LAYOUT_DATA)
+		{
+			group.setLayoutData(layoutData);
+		}
+		else
+		{
+			GridData gridData = new GridData();
+			gridData.horizontalAlignment = GridData.FILL;
+			gridData.grabExcessHorizontalSpace = true;
+			group.setLayoutData(gridData);
+		}
+		
+		Label label = new Label(group, SWT.NONE);
+		label.setText(labelText);
+
+		Spinner spinner = new Spinner(group, flags);
+		GridData gridData = new GridData();
+		gridData.horizontalAlignment = GridData.FILL;
+		gridData.grabExcessHorizontalSpace = true;
+		spinner.setLayoutData(gridData);
+		
+		spinner.setMinimum(minVal);
+		spinner.setMaximum(maxVal);
+		
+		return spinner;
 	}
 	
 	/**
@@ -431,6 +483,11 @@ public class WidgetHelper
       cb.dispose();
    }
 	
+	/**
+	 * @param manager
+	 * @param control
+	 * @param readOnly
+	 */
 	public static void addStyledTextEditorActions(final IMenuManager manager, final StyledText control, boolean readOnly)
 	{
 		if (!readOnly)

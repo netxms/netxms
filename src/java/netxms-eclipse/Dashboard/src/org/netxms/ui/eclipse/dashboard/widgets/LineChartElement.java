@@ -50,6 +50,7 @@ public class LineChartElement extends ElementWidget
 {
 	private HistoricalDataChart chart;
 	private LineChartConfig config;
+	private int refreshInterval;
 	private Runnable refreshTimer;
 	private boolean updateInProgress = false;
 	private NXCSession session;
@@ -73,6 +74,8 @@ public class LineChartElement extends ElementWidget
 			config = new LineChartConfig();
 		}
 
+		refreshInterval = config.getRefreshRate() * 1000;
+		
 		setLayout(new FillLayout());
 		
 		chart = ChartFactory.createLineChart(this, SWT.NONE);
@@ -103,10 +106,10 @@ public class LineChartElement extends ElementWidget
 					return;
 				
 				refreshData();
-				display.timerExec(30000, this);
+				display.timerExec(refreshInterval, this);
 			}
 		};
-		display.timerExec(30000, refreshTimer);
+		display.timerExec(refreshInterval, refreshTimer);
 		refreshData();
 	}
 

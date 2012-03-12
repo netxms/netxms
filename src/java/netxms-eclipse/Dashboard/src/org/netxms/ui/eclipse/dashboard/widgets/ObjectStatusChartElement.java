@@ -57,6 +57,8 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 			config = new ObjectStatusChartConfig();
 		}
 
+		refreshInterval = config.getRefreshRate() * 1000;
+		
 		chart = ChartFactory.createBarChart(this, SWT.NONE);
 		chart.setTitleVisible(true);
 		chart.setChartTitle(config.getTitle());

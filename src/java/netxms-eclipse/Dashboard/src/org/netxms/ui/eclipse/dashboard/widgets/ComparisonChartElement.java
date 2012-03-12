@@ -41,7 +41,8 @@ public abstract class ComparisonChartElement extends ElementWidget
 {
 	protected DataComparisonChart chart;
 	protected NXCSession session;
-
+	protected int refreshInterval = 30000;
+	
 	private Runnable refreshTimer;
 	private boolean updateInProgress = false;
 
@@ -71,10 +72,10 @@ public abstract class ComparisonChartElement extends ElementWidget
 					return;
 				
 				refreshData(getDciList());
-				display.timerExec(30000, this);
+				display.timerExec(refreshInterval, this);
 			}
 		};
-		display.timerExec(30000, refreshTimer);
+		display.timerExec(refreshInterval, refreshTimer);
 		refreshData(getDciList());
 	}
 
