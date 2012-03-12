@@ -93,6 +93,8 @@ android/src/console/src/org/netxms/ui/android/service/ClientConnectorService.jav
 android/src/console/src/org/netxms/ui/android/service/helpers/AndroidLoggingFacility.java -text
 android/src/console/src/org/netxms/ui/android/service/tasks/ConnectTask.java -text
 android/src/console/src/org/netxms/ui/android/service/tasks/ExecActionTask.java -text
+android/src/console/src/org/netxms/ui/android/tools/BarcodeScannerIntegrator.java -text
+android/src/console/src/org/netxms/ui/android/tools/BarcodeScannerIntentResult.java -text
 contrib/backgrounds/.keep -text
 contrib/integration/HP_EVA/hp_eva_collect_data.pl -text
 contrib/logo.jpg -text

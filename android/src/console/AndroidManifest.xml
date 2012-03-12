@@ -47,12 +47,16 @@
         </activity>
 		<activity android:label="@string/app_name" 
                   android:name=".main.activities.MacAddressBrowser">
-        </activity>
+			<intent-filter>
+				<action android:name="com.google.zxing.client.android.SCAN"/>
+				<category android:name="android.intent.category.DEFAULT"/>
+			</intent-filter>
+		</activity>
         <activity android:label="@string/app_name" 
                   android:name=".main.activities.LastValues">
         </activity>        
                 <activity android:label="@string/app_name" 
                   android:name=".main.activities.DrawGraph">
         </activity>        
-        	</application>
+	</application>
 </manifest>

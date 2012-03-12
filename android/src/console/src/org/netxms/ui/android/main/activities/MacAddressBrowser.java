@@ -12,16 +12,21 @@ import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.MacAddressListAdapter;
 import org.netxms.ui.android.main.adapters.MacAddressListAdapter.MacAddressInfo;
+import org.netxms.ui.android.tools.BarcodeScannerIntegrator;
+import org.netxms.ui.android.tools.BarcodeScannerIntentResult;
 
 import android.app.ProgressDialog;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -35,10 +40,14 @@ import android.widget.TextView;
 
 public class MacAddressBrowser extends AbstractClientActivity
 {
+	private EditText editText;
 	private ListView listView;
 	private MacAddressListAdapter adapter;
 	ProgressDialog dialog; 
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
+	 */
 	@Override
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
@@ -53,22 +62,44 @@ public class MacAddressBrowser extends AbstractClientActivity
 		listView = (ListView)findViewById(R.id.MacAddressList);
 		listView.setAdapter(adapter);
 		
-		final EditText edittext = (EditText) findViewById(R.id.MacAddressToSearch);
-		edittext.setOnKeyListener(new OnKeyListener() 
-		{    
+		editText = (EditText) findViewById(R.id.MacAddressToSearch);
+		editText.setOnKeyListener(new OnKeyListener() {    
 			public boolean onKey(View v, int keyCode, KeyEvent event)
 			{
 				if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER))	// If the event is a key-down event on the "enter" button
 				{
-					MacAddressInfo info = adapter.new MacAddressInfo();
-					info.setMacAddress(edittext.getText().toString());
-					new SearchMacAddressTask().execute(info);
+					startSearch();
 					return true;        
 				}
 				return false;
 			}
 		});
 	
+		final Button scanButton = (Button)findViewById(R.id.ScanBarcode);
+		scanButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v)
+			{
+				BarcodeScannerIntegrator integrator = new BarcodeScannerIntegrator(MacAddressBrowser.this);
+				integrator.initiateScan();
+			}
+		});
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onActivityResult(int, int, android.content.Intent)
+	 */
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+		Log.w("MacAddressBrowser", "onActivityResult: rq=" + requestCode + " result=" + resultCode);
+		BarcodeScannerIntentResult scanResult = BarcodeScannerIntegrator.parseActivityResult(requestCode, resultCode, data);
+		if (scanResult != null)
+		{
+			editText.setText(scanResult.getContents());
+			startSearch();
+		}
+		super.onActivityResult(requestCode, resultCode, data);
 	}
 
 	/* (non-Javadoc)
@@ -100,10 +131,23 @@ public class MacAddressBrowser extends AbstractClientActivity
 	}
 	
 	/**
+	 * Start MAC address search
+	 */
+	private void startSearch()
+	{
+		MacAddressInfo info = adapter.new MacAddressInfo();
+		info.setMacAddress(editText.getText().toString());
+		new SearchMacAddressTask().execute(info);
+	}
+	
+	/**
 	 * Internal task for loading info for MAC address search
 	 */
 	private class SearchMacAddressTask extends AsyncTask<Object, Void, MacAddressInfo>
 	{
+		/* (non-Javadoc)
+		 * @see android.os.AsyncTask#onPreExecute()
+		 */
 		@Override
 		protected void onPreExecute()
 		{
@@ -112,6 +156,10 @@ public class MacAddressBrowser extends AbstractClientActivity
 			dialog.setCancelable(false);
 			dialog.show();
 		}
+		
+		/* (non-Javadoc)
+		 * @see android.os.AsyncTask#doInBackground(Params[])
+		 */
 		@Override
 		protected MacAddressInfo doInBackground(Object... params)
 		{
@@ -162,6 +210,10 @@ public class MacAddressBrowser extends AbstractClientActivity
 			}
 			return info;
 		}
+		
+		/* (non-Javadoc)
+		 * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+		 */
 		@Override
 		protected void onPostExecute(MacAddressInfo result)
 		{
