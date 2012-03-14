@@ -84,7 +84,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 				startActivity(new Intent(this, GraphBrowser.class));
 				break;
 			case ACTIVITY_MACADDRESS:
-				startActivity(new Intent(this, MacAddressBrowser.class));
+				startActivity(new Intent(this, ConnectionPointBrowser.class));
 				break;
 			default:
 				break;

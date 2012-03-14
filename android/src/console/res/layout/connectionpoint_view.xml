@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent">
+	<include layout="@layout/screen_header_small" />
+
+	<LinearLayout
+	    android:id="@+id/MacAddressSearchArea"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal" >
+	    
+		<EditText
+		    android:id="@+id/MacAddressToSearch"
+		    android:layout_width="0dp"
+		    android:layout_height="match_parent"
+		    android:layout_weight="1"
+		    android:hint="@string/hint_type_macaddress"
+		    android:singleLine="true" >
+
+		    <requestFocus />
+		</EditText>
+
+		<Button
+		    android:id="@+id/ScanBarcode"
+		    android:layout_width="wrap_content"
+		    android:layout_height="match_parent"
+		    android:layout_gravity="right"
+		    android:text="Scan" />
+		
+	</LinearLayout>
+
+	<ListView 
+			android:id="@+id/ConnectionPointList" 
+			android:layout_width="fill_parent"
+  			android:layout_height="fill_parent"
+			android:background="#ebeae1"
+			android:cacheColorHint="#ebeae1"
+			android:listSelector="@drawable/list_selection">
+  	</ListView>
+</LinearLayout>

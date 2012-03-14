@@ -77,10 +77,12 @@
 	<string name="view_alarms">View alarms</string>
 	<string name="reconnect">Reconnect</string>
 	<string name="home_screen_macaddress">MACaddr</string>
-	<string name="hint_type_macaddress">Type MAC address to search...</string><string name="macaddress_title">MAC address search</string>
-	
-	<string name="macaddress_invalid">MAC Address &quot;%1$s&quot; is invalid</string>
-	<string name="macaddress_nodeinfo">Node %1$s with MAC address %2$s is connected to network switch %3$s on port %4$s</string>
-	<string name="macaddress_nonodeinfo">Node with MAC addess %1$s is connected to network switch %2$s on port %3$s</string>
-	<string name="macaddress_notfound">MAC address &quot;%1$s&quot; not found</string>
+	<string name="hint_type_macaddress">Type or scan MAC address...</string>
+	<string name="connectionpoint_title">MAC address search</string>
+	<string name="connectionpoint_invalid">MAC Address &quot;%1$s&quot; is invalid</string>
+	<string name="connectionpoint_notfound">Connection point not found</string>
+	<string name="connectionpoint_macaddress_notfound">Connection point for MAC address %1$s not found</string>
+	<string name="connectionpoint_nodeid_notfound">Connection point for node %1$s not found</string>
+	<string name="connectionpoint_info">Node%1$s with MAC address %2$s is connected to network switch %3$s on port %4$s</string>
+		<string name="find_switch_port">Find switch port</string>
 </resources>

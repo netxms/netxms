@@ -54,6 +54,7 @@ android/src/console/res/drawable/status_unknown.png -text
 android/src/console/res/drawable/status_unmanaged.png -text
 android/src/console/res/drawable/status_warning.png -text
 android/src/console/res/layout/alarm_view.xml -text
+android/src/console/res/layout/connectionpoint_view.xml -text
 android/src/console/res/layout/graph_view.xml -text
 android/src/console/res/layout/graph_view_child_layout.xml -text
 android/src/console/res/layout/graph_view_group_layout.xml -text
@@ -74,6 +75,7 @@ android/src/console/res/values/strings.xml -text
 android/src/console/res/values/styles.xml -text
 android/src/console/res/xml/preferences.xml -text
 android/src/console/src/org/netxms/ui/android/main/activities/AlarmBrowser.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/ConnectionPointBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/ConsolePreferences.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/DrawGraph.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/GraphBrowser.java -text
@@ -83,6 +85,7 @@ android/src/console/src/org/netxms/ui/android/main/activities/MacAddressBrowser.
 android/src/console/src/org/netxms/ui/android/main/activities/NodeBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/ActivityListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/AlarmListAdapter.java -text
+android/src/console/src/org/netxms/ui/android/main/adapters/ConnectionPointListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/GraphAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/LastValuesAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/MacAddressListAdapter.java -text
