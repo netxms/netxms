@@ -491,7 +491,7 @@ src/java/netxms-agent/src/main/java/org/netxms/agent/ParameterType.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/PipeConnector.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/RCC.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/SampleExtenalSubAgent.java -text
-src/java/netxms-agent/src/main/java/org/netxms/agent/xParameter.java -text
+src/java/netxms-agent/src/main/java/org/netxms/agent/SingleParameter.java -text
 src/java/netxms-base/pom.xml -text
 src/java/netxms-base/src/main/java/org/netxms/base/CompatTools.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/Glob.java -text
