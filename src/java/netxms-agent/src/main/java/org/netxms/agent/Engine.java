@@ -54,8 +54,8 @@ public class Engine implements MessageConsumer {
     private final Connector connector;
     private final Set<ParameterProvider> parameterProviders = new HashSet<ParameterProvider>(0);
     private final Set<ListProvider> listProviders = new HashSet<ListProvider>(0);
-    private Map<String, Parameter> parameterMap = new HashMap<String, Parameter>(0);
-    private Map<String, Parameter> listMap = new HashMap<String, Parameter>(0);
+    private Map<String, BaseParameter> parameterMap = new HashMap<String, BaseParameter>(0);
+    private Map<String, BaseParameter> listMap = new HashMap<String, BaseParameter>(0);
 
     public Engine(final Connector connector) {
         this.connector = connector;
@@ -71,14 +71,14 @@ public class Engine implements MessageConsumer {
     }
 
     void registerParameterProvider(final ParameterProvider provider) {
-        for (final Parameter parameter : provider.getParameters()) {
+        for (final BaseParameter parameter : provider.getParameters()) {
             parameterMap.put(parameter.getName().toLowerCase(), parameter);
         }
         parameterProviders.add(provider);
     }
 
     void registerListParameterProvider(final ListProvider provider) {
-        for (final Parameter parameter : provider.getLists()) {
+        for (final BaseParameter parameter : provider.getLists()) {
             listMap.put(parameter.getName().toLowerCase(), parameter);
         }
         listProviders.add(provider);
@@ -132,14 +132,14 @@ public class Engine implements MessageConsumer {
     }
 
     private void fillParameterListMessage(final NXCPMessage response) {
-        final List<Parameter> parameters = new ArrayList<Parameter>(0);
+        final List<BaseParameter> parameters = new ArrayList<BaseParameter>(0);
         for (final ParameterProvider parameterProvider : parameterProviders) {
             parameters.addAll(parameterProvider.getParameters());
         }
 
         response.setVariableInt32(NXCPCodes.VID_NUM_PARAMETERS, parameters.size());
         long variableId = NXCPCodes.VID_PARAM_LIST_BASE;
-        for (final Parameter parameter : parameters) {
+        for (final BaseParameter parameter : parameters) {
             response.setVariable(variableId++, parameter.getName());
             response.setVariable(variableId++, parameter.getDescription());
             response.setVariableInt16(variableId++, parameter.getType().getValue());
@@ -152,7 +152,7 @@ public class Engine implements MessageConsumer {
         final String argument = argumentParser.getArgument();
 
         if (parameterMap.containsKey(parameterName)) {
-            final Parameter parameter = parameterMap.get(parameterName);
+            final BaseParameter parameter = parameterMap.get(parameterName);
             final String value = parameter.getValue(argument);
             if (value != null) {
                 response.setVariableInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
@@ -171,7 +171,7 @@ public class Engine implements MessageConsumer {
         final String argument = argumentParser.getArgument();
 
         if (listMap.containsKey(parameterName)) {
-            final Parameter parameter = listMap.get(parameterName);
+            final BaseParameter parameter = listMap.get(parameterName);
             final String[] value = parameter.getListValue(argument);
             if (value != null) {
                 response.setVariableInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);

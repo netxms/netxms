@@ -27,20 +27,20 @@ public class SampleExtenalSubAgent implements ParameterProvider, ListProvider {
     }
 
     @Override
-    public List<Parameter> getLists() {
-        return new ArrayList<Parameter>(0);
+    public List<BaseParameter> getLists() {
+        return new ArrayList<BaseParameter>(0);
     }
 
     @Override
-    public List<Parameter> getParameters() {
-        final List<Parameter> parameters = new ArrayList<Parameter>(2);
-        parameters.add(new xParameter("Java.Parameter1", "Description 1", ParameterType.INT) {
+    public List<BaseParameter> getParameters() {
+        final List<BaseParameter> parameters = new ArrayList<BaseParameter>(2);
+        parameters.add(new SingleParameter("Java.Parameter1", "Description 1", ParameterType.INT) {
             @Override
             public String getValue(final String argument) {
                 return "123";
             }
         });
-        parameters.add(new xParameter("Java.Parameter2", "Description 2", ParameterType.STRING) {
+        parameters.add(new SingleParameter("Java.Parameter2", "Description 2", ParameterType.STRING) {
             @Override
             public String getValue(final String argument) {
                 return "some string";

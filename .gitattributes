@@ -480,12 +480,12 @@ src/java/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/
 src/java/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/gallery/NoGroupRenderer.java -text
 src/java/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/gallery/RendererHelper.java -text
 src/java/netxms-agent/pom.xml -text
+src/java/netxms-agent/src/main/java/org/netxms/agent/BaseParameter.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/Connector.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/Engine.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/ListParameter.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/ListProvider.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/MessageConsumer.java -text
-src/java/netxms-agent/src/main/java/org/netxms/agent/Parameter.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/ParameterProvider.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/ParameterType.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/PipeConnector.java -text

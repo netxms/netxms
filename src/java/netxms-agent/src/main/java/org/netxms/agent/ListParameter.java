@@ -1,6 +1,6 @@
 package org.netxms.agent;
 
-public abstract class ListParameter extends Parameter {
+public abstract class ListParameter extends BaseParameter {
 
     /**
      * @param name        Parameter name WITHOUT brackets (for parameters with arguments)

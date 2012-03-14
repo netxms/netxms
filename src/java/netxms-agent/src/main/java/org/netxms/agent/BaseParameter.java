@@ -21,7 +21,7 @@ package org.netxms.agent;
 /**
  * Agent's parameter
  */
-public abstract class Parameter {
+public abstract class BaseParameter {
 
     private String name;
     private String description;
@@ -32,7 +32,7 @@ public abstract class Parameter {
      * @param description Parameter description
      * @param type        Return type
      */
-    protected Parameter(final String name, final String description, final ParameterType type) {
+    protected BaseParameter(final String name, final String description, final ParameterType type) {
         this.name = name;
         this.description = description;
         this.type = type;
