@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SampleExtenalSubAgent implements ParameterProvider, ListProvider {
+public class SampleExternalSubAgent implements ParameterProvider, ListProvider {
     public static void main(final String[] args) throws IOException {
-        new SampleExtenalSubAgent().start();
+        new SampleExternalSubAgent().start();
     }
 
     private void start() throws IOException {
