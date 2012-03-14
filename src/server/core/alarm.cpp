@@ -658,3 +658,66 @@ void AlarmManager::WatchdogThread()
 		Unlock();
 	}
 }
+
+
+//
+// Check if givel alram/note id pair is valid
+//
+
+static bool IsValidNoteId(DWORD alarmId, DWORD noteId)
+{
+	bool isValid = false;
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT note_id FROM alarm_notes WHERE alarm_id=? AND note_id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, noteId);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			isValid = (DBGetNumRows(hResult) > 0);
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
+	DBConnectionPoolReleaseConnection(hdb);
+	return isValid;
+}
+
+
+//
+// Update alarm's note
+//
+
+DWORD AlarmManager::updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *text, DWORD userId)
+{
+   DWORD rcc = RCC_INVALID_ALARM_ID;
+
+   Lock();
+   for(DWORD i = 0; i < m_dwNumAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == alarmId)
+      {
+			if (noteId != 0)
+			{
+				if (IsValidNoteId(alarmId, noteId))
+				{
+				}
+				else
+				{
+					rcc = RCC_INVALID_ALARM_NOTE_ID;
+				}
+			}
+			else
+			{
+				// new note
+				noteId = CreateUniqueId(IDG_ALARM_NOTE);
+			}
+			NotifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+         rcc = RCC_SUCCESS;
+         break;
+      }
+   Unlock();
+
+   return rcc;
+}

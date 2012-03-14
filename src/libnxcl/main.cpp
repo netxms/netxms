@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -409,9 +409,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Zone ID is already in use"),
 		_T("Invalid zone ID"),
 		_T("Cannot delete non-empty zone object"),
-		_T("No physical component data")
+		_T("No physical component data"),
+		_T("Invalid alarm note ID")
    };
-	return (dwError <= RCC_NO_COMPONENT_DATA) ? pszErrorText[dwError] : _T("No text message for this error");
+	return (dwError <= RCC_INVALID_ALARM_NOTE_ID) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

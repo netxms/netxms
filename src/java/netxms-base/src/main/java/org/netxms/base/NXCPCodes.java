@@ -98,7 +98,7 @@ public final class NXCPCodes
 	public static final int CMD_GET_CURRENT_USER_ATTR    = 0x0044;
 	public static final int CMD_SET_CURRENT_USER_ATTR    = 0x0045;
 	public static final int CMD_GET_ALL_ALARMS           = 0x0046;
-	public static final int CMD_GET_ALARM                = 0x0047;
+	public static final int CMD_GET_ALARM_NOTES          = 0x0047;
 	public static final int CMD_ACK_ALARM                = 0x0048;
 	public static final int CMD_ALARM_UPDATE             = 0x0049;
 	public static final int CMD_ALARM_DATA               = 0x004A;
@@ -285,6 +285,7 @@ public final class NXCPCodes
 	public static final int CMD_GET_FILE_DETAILS         = 0x00FF;
 	public static final int CMD_IMAGE_LIBRARY_UPDATE     = 0x0100;
 	public static final int CMD_GET_NODE_COMPONENTS      = 0x0101;
+	public static final int CMD_UPDATE_ALARM_NOTE        = 0x0102;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
@@ -695,6 +696,7 @@ public final class NXCPCodes
 	public static final long VID_MODIFY_TIME             = 406;
 	public static final long VID_IS_PHYS_PORT            = 407;
 	public static final long VID_CREATE_STATUS_DCI       = 408;
+	public static final long VID_NUM_COMMENTS            = 409;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

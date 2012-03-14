@@ -114,7 +114,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_GET_CURRENT_USER_ATTR"),
       _T("CMD_SET_CURRENT_USER_ATTR"),
       _T("CMD_GET_ALL_ALARMS"),
-      _T("CMD_GET_ALARM"),
+      _T("CMD_GET_ALARM_NOTES"),
       _T("CMD_ACK_ALARM"),
       _T("CMD_ALARM_UPDATE"),
       _T("CMD_ALARM_DATA"),
@@ -300,10 +300,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_GET_AGENT_FILE"),
 		_T("CMD_GET_FILE_DETAILS"),
 		_T("CMD_IMAGE_LIBRARY_UPDATE"),
-		_T("CMD_GET_NODE_COMPONENTS")
+		_T("CMD_GET_NODE_COMPONENTS"),
+		_T("CMD_UPDATE_ALARM_NOTE")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_NODE_COMPONENTS))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_UPDATE_ALARM_NOTE))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

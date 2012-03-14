@@ -61,6 +61,7 @@ public:
    DWORD TerminateById(DWORD dwAlarmId, DWORD dwUserId);
    void TerminateByKey(const TCHAR *key, bool useRegexp);
    void DeleteAlarm(DWORD dwAlarmId);
+	DWORD updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *text, DWORD userId);
 
    void sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession);
 
@@ -77,6 +78,7 @@ public:
 //
 
 void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm);
+void DeleteAlarmNotes(DB_HANDLE hdb, DWORD alarmId);
 
 
 //

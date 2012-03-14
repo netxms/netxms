@@ -769,8 +769,6 @@ DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession 
 DWORD DeleteObjectToolFromDB(DWORD dwToolId);
 DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg);
 
-void DeleteAlarmNotes(DB_HANDLE hdb, DWORD alarmId);
-
 void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();
 

@@ -167,6 +167,21 @@ static BOOL SubAgentInit(Config *config)
 		g_shutdownCondition = ConditionCreate(TRUE);
 	}
 
+	// Load configuration from "oracle" section to allow simple configuration
+	// of one database without XML includes
+	memset(&info, 0, sizeof(info));
+	g_dbCount = -1;
+	if (config->parseTemplate(_T("ORACLE"), configTemplate))
+	{
+		if (info.dsn[0] != 0)
+		{
+			if (info.id[0] == 0)
+				_tcscpy(info.id, info.dsn);
+			memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(DatabaseInfo));
+			g_dbInfo[g_dbCount].accessMutex = MutexCreate();
+		}
+	}
+
 	// Load configuration
 	for (g_dbCount = -1, i = 1; result && i <= MAX_DATABASES; i++)
 	{

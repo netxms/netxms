@@ -879,7 +879,8 @@ void ClientSession::processingThread()
          case CMD_GET_ALL_ALARMS:
             sendAllAlarms(pMsg->GetId());
             break;
-         case CMD_GET_ALARM: /* FIXME: wtf??? */
+         case CMD_GET_ALARM_NOTES:
+				getAlarmNotes(pMsg);
             break;
          case CMD_ACK_ALARM:
             acknowledgeAlarm(pMsg);
