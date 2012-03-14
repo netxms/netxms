@@ -80,6 +80,7 @@ import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.events.AlarmNote;
 import org.netxms.client.events.Event;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
@@ -1995,16 +1996,59 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * 
 	 * @param alarmId
 	 *           Identifier of alarm to be changed.
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void closeAlarm(final long alarmId) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ALARM_HD_STATE);
 		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
 		msg.setVariableInt16(NXCPCodes.VID_HELPDESK_STATE, Alarm.HELPDESK_STATE_CLOSED);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Get list of notes (comments) for given alarm.
+	 * 
+	 * @param alarmId alarm ID
+	 * @return list of alarm's notes
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<AlarmNote> getAlarmNotes(long alarmId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALARM_NOTES);
+		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+		sendMessage(msg);
+		
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
+		final List<AlarmNote> notes = new ArrayList<AlarmNote>(count);
+		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			notes.add(new AlarmNote(response, varId));
+			varId += 10;
+		}
+		return notes;
+	}
+	
+	/**
+	 * Create or update alarm's note (comment). To create new note, set nodeId to 0.
+	 * 
+	 * @param alarmId alarm ID
+	 * @param noteId note ID or 0 for creating new note
+	 * @param text message text
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void updateAlarmNote(long alarmId, long noteId, String text) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_ALARM_NOTE);
+		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+		msg.setVariableInt32(NXCPCodes.VID_NOTE_ID, (int)noteId);
+		msg.setVariable(NXCPCodes.VID_COMMENTS, text);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}

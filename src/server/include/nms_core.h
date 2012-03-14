@@ -452,10 +452,12 @@ private:
    void acknowledgeAlarm(CSCPMessage *pRequest);
    void terminateAlarm(CSCPMessage *pRequest);
    void deleteAlarm(CSCPMessage *pRequest);
-   void CreateAction(CSCPMessage *pRequest);
-   void UpdateAction(CSCPMessage *pRequest);
-   void DeleteAction(CSCPMessage *pRequest);
-   void SendAllActions(DWORD dwRqId);
+	void getAlarmNotes(CSCPMessage *pRequest);
+	void updateAlarmNote(CSCPMessage *pRequest);
+   void createAction(CSCPMessage *pRequest);
+   void updateAction(CSCPMessage *pRequest);
+   void deleteAction(CSCPMessage *pRequest);
+   void sendAllActions(DWORD dwRqId);
    void SendContainerCategories(DWORD dwRqId);
    void ForcedNodePoll(CSCPMessage *pRequest);
    void OnTrap(CSCPMessage *pRequest);

@@ -820,7 +820,7 @@ CREATE TABLE alarm_notes
 	alarm_id integer not null,
 	change_time integer not null,
 	user_id integer not null,	// Last edited by
-	note_text SQL_TEXT not null,
+	note_text SQL_TEXT null,
 	PRIMARY KEY(note_id)
 ) TABLE_TYPE;
 

@@ -151,6 +151,7 @@ static BOOL DropPrimaryKey(const TCHAR *table)
 	return success;
 }
 
+
 //
 // Convert strings from # encoded form to normal form
 //

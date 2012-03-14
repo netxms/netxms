@@ -58,6 +58,7 @@ public class Alarm
 	private String helpdeskReference;
 	private int timeout;
 	private int timeoutEvent;
+	private int commentsCount;
 	
 	/**
 	 * @param msg Source NXCP message
@@ -82,6 +83,7 @@ public class Alarm
 		helpdeskReference = msg.getVariableAsString(NXCPCodes.VID_HELPDESK_REF);
 		timeout = msg.getVariableAsInteger(NXCPCodes.VID_ALARM_TIMEOUT);
 		timeoutEvent = msg.getVariableAsInteger(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
+		commentsCount = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COMMENTS);
 	}
 
 	/**
@@ -226,5 +228,13 @@ public class Alarm
 	public int getTimeoutEvent()
 	{
 		return timeoutEvent;
+	}
+
+	/**
+	 * @return the commentsCount
+	 */
+	public int getCommentsCount()
+	{
+		return commentsCount;
 	}
 }

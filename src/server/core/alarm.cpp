@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -91,7 +91,7 @@ AlarmManager::~AlarmManager()
 
 static THREAD_RESULT THREAD_CALL WatchdogThreadStarter(void *pArg)
 {
-	((AlarmManager *)pArg)->WatchdogThread();
+	((AlarmManager *)pArg)->watchdogThread();
 	return THREAD_OK;
 }
 
@@ -124,7 +124,7 @@ static DWORD GetNoteCount(DB_HANDLE hdb, DWORD alarmId)
 // Initialize alarm manager at system startup
 //
 
-BOOL AlarmManager::Init()
+BOOL AlarmManager::init()
 {
    DB_RESULT hResult;
    DWORD i;
@@ -179,7 +179,7 @@ BOOL AlarmManager::Init()
 // Create new alarm
 //
 
-void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
+void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
                             int iSeverity, DWORD dwTimeout,
 									 DWORD dwTimeoutEvent, Event *pEvent)
 {
@@ -195,7 +195,7 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
    // Check if we have a duplicate alarm
    if ((nState != ALARM_STATE_TERMINATED) && (*pszExpKey != 0))
    {
-      Lock();
+      lock();
 
       for(i = 0; i < m_dwNumAlarms; i++)
          if (!_tcscmp(pszExpKey, m_pAlarmList[i].szKey))
@@ -209,14 +209,14 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 				m_pAlarmList[i].dwTimeoutEvent = dwTimeoutEvent;
             nx_strncpy(m_pAlarmList[i].szMessage, pszExpMsg, MAX_DB_STRING);
             
-            NotifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
-            UpdateAlarmInDB(&m_pAlarmList[i]);
+            notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+            updateAlarmInDB(&m_pAlarmList[i]);
 
             bNewAlarm = FALSE;
             break;
          }
 
-      Unlock();
+      unlock();
    }
 
    if (bNewAlarm)
@@ -243,7 +243,7 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
       // Add new alarm to active alarm list if needed
       if (alarm.nState != ALARM_STATE_TERMINATED)
       {
-         Lock();
+         lock();
 
 			DbgPrintf(7, _T("AlarmManager: adding new active alarm, current alarm count %d"), (int)m_dwNumAlarms);
          m_dwNumAlarms++;
@@ -251,7 +251,7 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 			memcpy(&m_pAlarmList[m_dwNumAlarms - 1], &alarm, sizeof(NXC_ALARM));
          dwObjectId = alarm.dwSourceObject;
 
-         Unlock();
+         unlock();
       }
 
       // Save alarm to database
@@ -273,12 +273,12 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
       QueueSQLRequest(szQuery);
 
       // Notify connected clients about new alarm
-      NotifyClients(NX_NOTIFY_NEW_ALARM, &alarm);
+      notifyClients(NX_NOTIFY_NEW_ALARM, &alarm);
    }
 
    // Update status of related object if needed
    if ((dwObjectId != 0) && (alarm.nState != ALARM_STATE_TERMINATED))
-      UpdateObjectStatus(dwObjectId);
+      updateObjectStatus(dwObjectId);
 
 	free(pszExpMsg);
    free(pszExpKey);
@@ -289,11 +289,11 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 // Acknowledge alarm with given ID
 //
 
-DWORD AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
+DWORD AlarmManager::ackById(DWORD dwAlarmId, DWORD dwUserId)
 {
    DWORD i, dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
-   Lock();
+   lock();
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
@@ -303,8 +303,8 @@ DWORD AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
             m_pAlarmList[i].dwAckByUser = dwUserId;
             m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
             dwObject = m_pAlarmList[i].dwSourceObject;
-            NotifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
-            UpdateAlarmInDB(&m_pAlarmList[i]);
+            notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+            updateAlarmInDB(&m_pAlarmList[i]);
             dwRet = RCC_SUCCESS;
          }
          else
@@ -313,10 +313,10 @@ DWORD AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
          }
          break;
       }
-   Unlock();
+   unlock();
 
    if (dwRet == RCC_SUCCESS)
-      UpdateObjectStatus(dwObject);
+      updateObjectStatus(dwObject);
    return dwRet;
 }
 
@@ -326,11 +326,11 @@ DWORD AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
 // Should return RCC which can be sent to client
 //
 
-DWORD AlarmManager::TerminateById(DWORD dwAlarmId, DWORD dwUserId)
+DWORD AlarmManager::terminateById(DWORD dwAlarmId, DWORD dwUserId)
 {
    DWORD i, dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
-   Lock();
+   lock();
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
@@ -341,8 +341,8 @@ DWORD AlarmManager::TerminateById(DWORD dwAlarmId, DWORD dwUserId)
             m_pAlarmList[i].dwTermByUser = dwUserId;
             m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
             m_pAlarmList[i].nState = ALARM_STATE_TERMINATED;
-            NotifyClients(NX_NOTIFY_ALARM_TERMINATED, &m_pAlarmList[i]);
-            UpdateAlarmInDB(&m_pAlarmList[i]);
+            notifyClients(NX_NOTIFY_ALARM_TERMINATED, &m_pAlarmList[i]);
+            updateAlarmInDB(&m_pAlarmList[i]);
             m_dwNumAlarms--;
             memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
             dwRet = RCC_SUCCESS;
@@ -353,10 +353,10 @@ DWORD AlarmManager::TerminateById(DWORD dwAlarmId, DWORD dwUserId)
          }
          break;
       }
-   Unlock();
+   unlock();
 
    if (dwRet == RCC_SUCCESS)
-      UpdateObjectStatus(dwObject);
+      updateObjectStatus(dwObject);
    return dwRet;
 }
 
@@ -365,13 +365,13 @@ DWORD AlarmManager::TerminateById(DWORD dwAlarmId, DWORD dwUserId)
 // Terminate all alarms with given key
 //
 
-void AlarmManager::TerminateByKey(const TCHAR *pszKey, bool useRegexp)
+void AlarmManager::terminateByKey(const TCHAR *pszKey, bool useRegexp)
 {
    DWORD i, j, dwNumObjects, *pdwObjectList, dwCurrTime;
 
    pdwObjectList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumAlarms);
 
-   Lock();
+   lock();
    dwCurrTime = (DWORD)time(NULL);
    for(i = 0, dwNumObjects = 0; i < m_dwNumAlarms; i++)
 		if ((useRegexp ? RegexpMatch(m_pAlarmList[i].szKey, pszKey, TRUE) : !_tcscmp(pszKey, m_pAlarmList[i].szKey)) &&
@@ -392,17 +392,17 @@ void AlarmManager::TerminateByKey(const TCHAR *pszKey, bool useRegexp)
          m_pAlarmList[i].nState = ALARM_STATE_TERMINATED;
          m_pAlarmList[i].dwLastChangeTime = dwCurrTime;
          m_pAlarmList[i].dwTermByUser = 0;
-         NotifyClients(NX_NOTIFY_ALARM_TERMINATED, &m_pAlarmList[i]);
-         UpdateAlarmInDB(&m_pAlarmList[i]);
+         notifyClients(NX_NOTIFY_ALARM_TERMINATED, &m_pAlarmList[i]);
+         updateAlarmInDB(&m_pAlarmList[i]);
          m_dwNumAlarms--;
          memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
          i--;
       }
-   Unlock();
+   unlock();
 
    // Update status of objects
    for(i = 0; i < dwNumObjects; i++)
-      UpdateObjectStatus(pdwObjectList[i]);
+      updateObjectStatus(pdwObjectList[i]);
    free(pdwObjectList);
 }
 
@@ -411,23 +411,23 @@ void AlarmManager::TerminateByKey(const TCHAR *pszKey, bool useRegexp)
 // Delete alarm with given ID
 //
 
-void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
+void AlarmManager::deleteAlarm(DWORD dwAlarmId)
 {
    DWORD i, dwObject;
    TCHAR szQuery[256];
 
    // Delete alarm from in-memory list
-   Lock();
+   lock();
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
          dwObject = m_pAlarmList[i].dwSourceObject;
-         NotifyClients(NX_NOTIFY_ALARM_DELETED, &m_pAlarmList[i]);
+         notifyClients(NX_NOTIFY_ALARM_DELETED, &m_pAlarmList[i]);
          m_dwNumAlarms--;
          memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
          break;
       }
-   Unlock();
+   unlock();
 
    // Delete from database
    _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%d"), dwAlarmId);
@@ -437,7 +437,7 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
 	DeleteAlarmNotes(hdb, dwAlarmId);
 	DBConnectionPoolReleaseConnection(hdb);
 
-   UpdateObjectStatus(dwObject);
+   updateObjectStatus(dwObject);
 }
 
 
@@ -445,7 +445,7 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
 // Update alarm information in database
 //
 
-void AlarmManager::UpdateAlarmInDB(NXC_ALARM *pAlarm)
+void AlarmManager::updateAlarmInDB(NXC_ALARM *pAlarm)
 {
    TCHAR szQuery[2048];
 
@@ -468,7 +468,7 @@ void AlarmManager::UpdateAlarmInDB(NXC_ALARM *pAlarm)
 // Callback for client session enumeration
 //
 
-void AlarmManager::SendAlarmNotification(ClientSession *pSession, void *pArg)
+void AlarmManager::sendAlarmNotification(ClientSession *pSession, void *pArg)
 {
    pSession->onAlarmUpdate(((AlarmManager *)pArg)->m_dwNotifyCode,
                            ((AlarmManager *)pArg)->m_pNotifyAlarmInfo);
@@ -479,11 +479,11 @@ void AlarmManager::SendAlarmNotification(ClientSession *pSession, void *pArg)
 // Notify connected clients about changes
 //
 
-void AlarmManager::NotifyClients(DWORD dwCode, NXC_ALARM *pAlarm)
+void AlarmManager::notifyClients(DWORD dwCode, NXC_ALARM *pAlarm)
 {
    m_dwNotifyCode = dwCode;
    m_pNotifyAlarmInfo = pAlarm;
-   EnumerateClientSessions(SendAlarmNotification, this);
+   EnumerateClientSessions(sendAlarmNotification, this);
 }
 
 
@@ -503,7 +503,7 @@ void AlarmManager::sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession)
    msg.SetCode(CMD_ALARM_DATA);
    msg.SetId(dwRqId);
 
-   Lock();
+   lock();
    for(i = 0; i < m_dwNumAlarms; i++)
    {
       pObject = FindObjectById(m_pAlarmList[i].dwSourceObject);
@@ -517,7 +517,7 @@ void AlarmManager::sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession)
          }
       }
    }
-   Unlock();
+   unlock();
 
    // Send end-of-list indicator
    msg.SetVariable(VID_ALARM_ID, (DWORD)0);
@@ -529,21 +529,21 @@ void AlarmManager::sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession)
 // Get source object for given alarm id
 //
 
-NetObj *AlarmManager::GetAlarmSourceObject(DWORD dwAlarmId)
+NetObj *AlarmManager::getAlarmSourceObject(DWORD dwAlarmId)
 {
    DWORD i, dwObjectId = 0;
    TCHAR szQuery[256];
    DB_RESULT hResult;
 
    // First, look at our in-memory list
-   Lock();
+   lock();
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
          dwObjectId = m_pAlarmList[i].dwSourceObject;
          break;
       }
-   Unlock();
+   unlock();
 
    // If not found, search database
    if (i == m_dwNumAlarms)
@@ -569,13 +569,12 @@ NetObj *AlarmManager::GetAlarmSourceObject(DWORD dwAlarmId)
 // Will return STATUS_UNKNOWN if there are no active alarms
 //
 
-int AlarmManager::GetMostCriticalStatusForObject(DWORD dwObjectId)
+int AlarmManager::getMostCriticalStatusForObject(DWORD dwObjectId)
 {
    DWORD i;
    int iStatus = STATUS_UNKNOWN;
 
-   Lock();
-
+   lock();
    for(i = 0; i < m_dwNumAlarms; i++)
    {
       if ((m_pAlarmList[i].dwSourceObject == dwObjectId) &&
@@ -584,8 +583,7 @@ int AlarmManager::GetMostCriticalStatusForObject(DWORD dwObjectId)
          iStatus = (int)m_pAlarmList[i].nCurrentSeverity;
       }
    }
-
-   Unlock();
+   unlock();
    return iStatus;
 }
 
@@ -594,7 +592,7 @@ int AlarmManager::GetMostCriticalStatusForObject(DWORD dwObjectId)
 // Update object status after alarm acknowledgement or deletion
 //
 
-void AlarmManager::UpdateObjectStatus(DWORD dwObjectId)
+void AlarmManager::updateObjectStatus(DWORD dwObjectId)
 {
    NetObj *pObject;
 
@@ -608,16 +606,16 @@ void AlarmManager::UpdateObjectStatus(DWORD dwObjectId)
 // Fill message with alarm stats
 //
 
-void AlarmManager::GetAlarmStats(CSCPMessage *pMsg)
+void AlarmManager::getAlarmStats(CSCPMessage *pMsg)
 {
    DWORD i, dwCount[5];
 
-   Lock();
+   lock();
    pMsg->SetVariable(VID_NUM_ALARMS, m_dwNumAlarms);
    memset(dwCount, 0, sizeof(DWORD) * 5);
    for(i = 0; i < m_dwNumAlarms; i++)
       dwCount[m_pAlarmList[i].nCurrentSeverity]++;
-   Unlock();
+   unlock();
    pMsg->SetVariableToInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
 }
 
@@ -626,7 +624,7 @@ void AlarmManager::GetAlarmStats(CSCPMessage *pMsg)
 // Watchdog thread
 //
 
-void AlarmManager::WatchdogThread()
+void AlarmManager::watchdogThread()
 {
 	DWORD i;
 	time_t now;
@@ -636,7 +634,7 @@ void AlarmManager::WatchdogThread()
 		if (ConditionWait(m_condShutdown, 1000))
 			break;
 
-		Lock();
+		lock();
 		now = time(NULL);
 	   for(i = 0; i < m_dwNumAlarms; i++)
 		{
@@ -652,10 +650,10 @@ void AlarmManager::WatchdogThread()
 				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage,
 							 m_pAlarmList[i].szKey, m_pAlarmList[i].dwSourceEventCode);
 				m_pAlarmList[i].dwTimeout = 0;	// Disable repeated timeout events
-				UpdateAlarmInDB(&m_pAlarmList[i]);
+				updateAlarmInDB(&m_pAlarmList[i]);
 			}
 		}
-		Unlock();
+		unlock();
 	}
 }
 
@@ -694,7 +692,7 @@ DWORD AlarmManager::updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *te
 {
    DWORD rcc = RCC_INVALID_ALARM_ID;
 
-   Lock();
+   lock();
    for(DWORD i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == alarmId)
       {
@@ -702,6 +700,22 @@ DWORD AlarmManager::updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *te
 			{
 				if (IsValidNoteId(alarmId, noteId))
 				{
+					DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+					DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE alarm_notes SET change_time=?,user_id=?,note_text=? WHERE note_id=?"));
+					if (hStmt != NULL)
+					{
+						DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (DWORD)time(NULL));
+						DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userId);
+						DBBind(hStmt, 3, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
+						DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, noteId);
+						rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
+						DBFreeStatement(hStmt);
+					}
+					else
+					{
+						rcc = RCC_DB_FAILURE;
+					}
+					DBConnectionPoolReleaseConnection(hdb);
 				}
 				else
 				{
@@ -712,12 +726,71 @@ DWORD AlarmManager::updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *te
 			{
 				// new note
 				noteId = CreateUniqueId(IDG_ALARM_NOTE);
+				DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+				DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_notes (note_id,alarm_id,change_time,user_id,note_text) VALUES (?,?,?,?,?)"));
+				if (hStmt != NULL)
+				{
+					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, noteId);
+					DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, alarmId);
+					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (DWORD)time(NULL));
+					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, userId);
+					DBBind(hStmt, 5, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
+					rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
+					DBFreeStatement(hStmt);
+				}
+				else
+				{
+					rcc = RCC_DB_FAILURE;
+				}
+				DBConnectionPoolReleaseConnection(hdb);
 			}
-			NotifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+			notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
          rcc = RCC_SUCCESS;
          break;
       }
-   Unlock();
+   unlock();
 
    return rcc;
+}
+
+
+//
+// Get alarm's notes
+//
+
+DWORD AlarmManager::getAlarmNotes(DWORD alarmId, CSCPMessage *msg)
+{
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DWORD rcc = RCC_DB_FAILURE;
+
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT note_id,change_time,user_id,note_text FROM alarm_notes WHERE alarm_id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			int count = DBGetNumRows(hResult);
+			msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)count);
+
+			DWORD varId = VID_ELEMENT_LIST_BASE;
+			for(int i = 0; i < count; i++)
+			{
+				msg->SetVariable(varId++, DBGetFieldULong(hResult, i, 0));
+				msg->SetVariable(varId++, alarmId);
+				msg->SetVariable(varId++, DBGetFieldULong(hResult, i, 1));
+				msg->SetVariable(varId++, DBGetFieldULong(hResult, i, 2));
+				TCHAR *text = DBGetField(hResult, i, 3, NULL, 0);
+				msg->SetVariable(varId++, CHECK_NULL_EX(text));
+				safe_free(text);
+				varId += 5;
+			}
+			DBFreeResult(hResult);
+			rcc = RCC_SUCCESS;
+		}
+		DBFreeStatement(hStmt);
+	}
+
+	DBConnectionPoolReleaseConnection(hdb);
+	return rcc;
 }

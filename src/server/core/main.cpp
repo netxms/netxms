@@ -743,7 +743,7 @@ retry_db_lock:
 		return FALSE;
 
 	// Initialize alarms
-	if (!g_alarmMgr.Init())
+	if (!g_alarmMgr.init())
 		return FALSE;
 
 	// Initialize data collection subsystem

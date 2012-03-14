@@ -586,6 +586,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/datacollection/GraphSetti
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/PerfTabDci.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/Threshold.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/Alarm.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/events/AlarmNote.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/Event.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/EventProcessingPolicy.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/EventProcessingPolicyRule.java -text
@@ -752,6 +753,7 @@ src/java/netxms-eclipse/AlarmViewer/OSGI-INF/l10n/bundle_zh_CN.properties -text
 src/java/netxms-eclipse/AlarmViewer/build.properties -text
 src/java/netxms-eclipse/AlarmViewer/icons/acknowledged.png -text
 src/java/netxms-eclipse/AlarmViewer/icons/alarm_browser.png -text
+src/java/netxms-eclipse/AlarmViewer/icons/comments.png -text
 src/java/netxms-eclipse/AlarmViewer/icons/outstanding.png -text
 src/java/netxms-eclipse/AlarmViewer/icons/terminated.png -text
 src/java/netxms-eclipse/AlarmViewer/plugin.xml -text
@@ -770,6 +772,7 @@ src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messag
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages_zh_CN.properties -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/objecttabs/AlarmTab.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmBrowser.java -text
+src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmCommentsEditor.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmList.java -text
 src/java/netxms-eclipse/Charts/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/Charts/.settings/org.eclipse.jdt.core.prefs -text

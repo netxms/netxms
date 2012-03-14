@@ -31,6 +31,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -70,9 +71,10 @@ public class AlarmList extends Composite
 	public static final int COLUMN_SOURCE = 2;
 	public static final int COLUMN_MESSAGE = 3;
 	public static final int COLUMN_COUNT = 4;
-	public static final int COLUMN_ACK_BY = 5;
-	public static final int COLUMN_CREATED = 6;
-	public static final int COLUMN_LASTCHANGE = 7;
+	public static final int COLUMN_COMMENTS = 5;
+	public static final int COLUMN_ACK_BY = 6;
+	public static final int COLUMN_CREATED = 7;
+	public static final int COLUMN_LASTCHANGE = 8;
 	
 	private final IViewPart viewPart;
 	private NXCSession session = null;
@@ -82,6 +84,7 @@ public class AlarmList extends Composite
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
 	private Action actionCopy;
 	private Action actionCopyMessage;
+	private Action actionComments;
 	
 	/**
 	 * Create alarm list widget
@@ -98,8 +101,8 @@ public class AlarmList extends Composite
 		this.viewPart = viewPart;		
 		
 		// Setup table columns
-		final String[] names = { Messages.AlarmList_ColumnSeverity, Messages.AlarmList_ColumnState, Messages.AlarmList_ColumnSource, Messages.AlarmList_ColumnMessage, Messages.AlarmList_ColumnCount, Messages.AlarmList_AckBy, Messages.AlarmList_ColumnCreated, Messages.AlarmList_ColumnLastChange };
-		final int[] widths = { 100, 100, 150, 300, 70, 100, 100, 100 };
+		final String[] names = { Messages.AlarmList_ColumnSeverity, Messages.AlarmList_ColumnState, Messages.AlarmList_ColumnSource, Messages.AlarmList_ColumnMessage, Messages.AlarmList_ColumnCount, "Comments", Messages.AlarmList_AckBy, Messages.AlarmList_ColumnCreated, Messages.AlarmList_ColumnLastChange };
+		final int[] widths = { 100, 100, 150, 300, 70, 70, 100, 100, 100 };
 		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 	
@@ -247,6 +250,14 @@ public class AlarmList extends Composite
 				}
 			}
 		};
+		
+		actionComments = new Action("Comments...", Activator.getImageDescriptor("icons/comments.png")) {
+			@Override
+			public void run()
+			{
+				
+			}
+		};
 	}
 
 	/**
@@ -282,10 +293,22 @@ public class AlarmList extends Composite
 	{
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
-		manager.add(new Separator());
+
+		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+		if (selection.size() == 1)
+		{
+			manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+			manager.add(new Separator());
+		}
+		
 		manager.add(actionCopy);
 		manager.add(actionCopyMessage);
+
+		if (selection.size() == 1)
+		{
+			manager.add(new Separator());
+			manager.add(actionComments);
+		}
 	}
 
 	/**

@@ -413,12 +413,12 @@ void EPRule::GenerateAlarm(Event *pEvent)
 	{
 		TCHAR *pszAckKey = pEvent->expandText(m_szAlarmKey);
 		if (pszAckKey[0] != 0)
-			g_alarmMgr.TerminateByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false);
+			g_alarmMgr.terminateByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false);
 		free(pszAckKey);
 	}
 	else	// Generate new alarm
 	{
-		g_alarmMgr.NewAlarm(m_szAlarmMessage, m_szAlarmKey, ALARM_STATE_OUTSTANDING,
+		g_alarmMgr.newAlarm(m_szAlarmMessage, m_szAlarmKey, ALARM_STATE_OUTSTANDING,
 								  (m_iAlarmSeverity == SEVERITY_FROM_EVENT) ? pEvent->getSeverity() : m_iAlarmSeverity,
 								  m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent);
 	}

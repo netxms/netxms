@@ -277,7 +277,7 @@ typedef struct
 #define CMD_GET_CURRENT_USER_ATTR      0x0044
 #define CMD_SET_CURRENT_USER_ATTR      0x0045
 #define CMD_GET_ALL_ALARMS             0x0046
-#define CMD_GET_ALARM                  0x0047
+#define CMD_GET_ALARM_NOTES            0x0047
 #define CMD_ACK_ALARM                  0x0048
 #define CMD_ALARM_UPDATE               0x0049
 #define CMD_ALARM_DATA                 0x004A
@@ -464,6 +464,7 @@ typedef struct
 #define CMD_GET_FILE_DETAILS           0x00FF
 #define CMD_IMAGE_LIBRARY_UPDATE			0x0100
 #define CMD_GET_NODE_COMPONENTS        0x0101
+#define CMD_UPDATE_ALARM_NOTE          0x0102
 
 
 //
@@ -879,6 +880,7 @@ typedef struct
 #define VID_IS_PHYS_PORT            ((DWORD)407)
 #define VID_CREATE_STATUS_DCI       ((DWORD)408)
 #define VID_NUM_COMMENTS            ((DWORD)409)
+#define VID_NOTE_ID                 ((DWORD)410)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

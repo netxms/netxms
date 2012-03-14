@@ -882,6 +882,9 @@ void ClientSession::processingThread()
          case CMD_GET_ALARM_NOTES:
 				getAlarmNotes(pMsg);
             break;
+         case CMD_UPDATE_ALARM_NOTE:
+				updateAlarmNote(pMsg);
+            break;
          case CMD_ACK_ALARM:
             acknowledgeAlarm(pMsg);
             break;
@@ -892,16 +895,16 @@ void ClientSession::processingThread()
             deleteAlarm(pMsg);
             break;
          case CMD_CREATE_ACTION:
-            CreateAction(pMsg);
+            createAction(pMsg);
             break;
          case CMD_MODIFY_ACTION:
-            UpdateAction(pMsg);
+            updateAction(pMsg);
             break;
          case CMD_DELETE_ACTION:
-            DeleteAction(pMsg);
+            deleteAction(pMsg);
             break;
          case CMD_LOAD_ACTIONS:
-            SendAllActions(pMsg->GetId());
+            sendAllActions(pMsg->GetId());
             break;
          case CMD_GET_CONTAINER_CAT_LIST:
             SendContainerCategories(pMsg->GetId());
@@ -4338,13 +4341,13 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
 
    // Get alarm id and it's source object
    dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
-   pObject = g_alarmMgr.GetAlarmSourceObject(dwAlarmId);
+   pObject = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
    if (pObject != NULL)
    {
-      // User should have _T("acknowledge alarm") right to the object
+      // User should have "acknowledge alarm" right to the object
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
-         msg.SetVariable(VID_RCC, g_alarmMgr.AckById(dwAlarmId, m_dwUserId));
+         msg.SetVariable(VID_RCC, g_alarmMgr.ackById(dwAlarmId, m_dwUserId));
       }
       else
       {
@@ -4379,13 +4382,13 @@ void ClientSession::terminateAlarm(CSCPMessage *pRequest)
 
    // Get alarm id and it's source object
    dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
-   pObject = g_alarmMgr.GetAlarmSourceObject(dwAlarmId);
+   pObject = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
    if (pObject != NULL)
    {
-      // User should have _T("terminate alarm") right to the object
+      // User should have "terminate alarm" right to the object
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS))
       {
-         msg.SetVariable(VID_RCC, g_alarmMgr.TerminateById(dwAlarmId, m_dwUserId));
+         msg.SetVariable(VID_RCC, g_alarmMgr.terminateById(dwAlarmId, m_dwUserId));
       }
       else
       {
@@ -4420,16 +4423,97 @@ void ClientSession::deleteAlarm(CSCPMessage *pRequest)
 
    // Get alarm id and it's source object
    dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
-   pObject = g_alarmMgr.GetAlarmSourceObject(dwAlarmId);
+   pObject = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
    if (pObject != NULL)
    {
-      // User should have _T("terminate alarm") right to the object
-      // and system right _T("delete alarms")
+      // User should have "terminate alarm" right to the object
+      // and system right "delete alarms"
       if ((pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS)) &&
           (m_dwSystemAccess & SYSTEM_ACCESS_DELETE_ALARMS))
       {
-         g_alarmMgr.DeleteAlarm(dwAlarmId);
+         g_alarmMgr.deleteAlarm(dwAlarmId);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms pObject will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+
+//
+// Get comments for given alarm
+//
+
+void ClientSession::getAlarmNotes(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get alarm id and it's source object
+   DWORD alarmId = request->GetVariableLong(VID_ALARM_ID);
+   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   if (object != NULL)
+   {
+      // User should have "view alarms" right to the object
+		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+      {
+			msg.SetVariable(VID_RCC, g_alarmMgr.getAlarmNotes(alarmId, &msg));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms pObject will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+
+//
+// Update alarm comment
+//
+
+void ClientSession::updateAlarmNote(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get alarm id and it's source object
+   DWORD alarmId = request->GetVariableLong(VID_ALARM_ID);
+   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   if (object != NULL)
+   {
+      // User should have "acknowledge alarm" right to the object
+		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+      {
+			DWORD noteId = request->GetVariableLong(VID_NOTE_ID);
+			TCHAR *text = request->GetVariableStr(VID_COMMENTS);
+			msg.SetVariable(VID_RCC, g_alarmMgr.updateAlarmNote(alarmId, noteId, CHECK_NULL(text), m_dwUserId));
+			safe_free(text);
       }
       else
       {
@@ -4452,7 +4536,7 @@ void ClientSession::deleteAlarm(CSCPMessage *pRequest)
 // Create new action
 //
 
-void ClientSession::CreateAction(CSCPMessage *pRequest)
+void ClientSession::createAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 
@@ -4493,7 +4577,7 @@ void ClientSession::CreateAction(CSCPMessage *pRequest)
 // Update existing action's data
 //
 
-void ClientSession::UpdateAction(CSCPMessage *pRequest)
+void ClientSession::updateAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 
@@ -4520,7 +4604,7 @@ void ClientSession::UpdateAction(CSCPMessage *pRequest)
 // Delete action
 //
 
-void ClientSession::DeleteAction(CSCPMessage *pRequest)
+void ClientSession::deleteAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwActionId;
@@ -4580,7 +4664,7 @@ void ClientSession::onActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction)
 // Send all actions to client
 //
 
-void ClientSession::SendAllActions(DWORD dwRqId)
+void ClientSession::sendAllActions(DWORD dwRqId)
 {
    CSCPMessage msg;
 
@@ -6725,7 +6809,7 @@ void ClientSession::SendServerStats(DWORD dwRqId)
    msg.SetVariable(VID_NUM_SESSIONS, (DWORD)GetSessionCount());
 
    // Alarms
-   g_alarmMgr.GetAlarmStats(&msg);
+   g_alarmMgr.getAlarmStats(&msg);
 
    // Process info
 #ifdef _WIN32

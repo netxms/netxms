@@ -697,6 +697,7 @@ public final class NXCPCodes
 	public static final long VID_IS_PHYS_PORT            = 407;
 	public static final long VID_CREATE_STATUS_DCI       = 408;
 	public static final long VID_NUM_COMMENTS            = 409;
+	public static final long VID_NOTE_ID                 = 410;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

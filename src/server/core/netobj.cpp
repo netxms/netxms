@@ -594,7 +594,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
 
    if (m_iStatus != STATUS_UNMANAGED)
    {
-      iMostCriticalAlarm = g_alarmMgr.GetMostCriticalStatusForObject(m_dwId);
+      iMostCriticalAlarm = g_alarmMgr.getMostCriticalStatusForObject(m_dwId);
 
       LockData();
       if (m_iStatusCalcAlg == SA_CALCULATE_DEFAULT)

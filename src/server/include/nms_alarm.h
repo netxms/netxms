@@ -39,37 +39,36 @@ private:
 	CONDITION m_condShutdown;
 	THREAD m_hWatchdogThread;
 
-   void Lock() { MutexLock(m_mutex); }
-   void Unlock() { MutexUnlock(m_mutex); }
+   void lock() { MutexLock(m_mutex); }
+   void unlock() { MutexUnlock(m_mutex); }
 
-   static void SendAlarmNotification(ClientSession *pSession, void *pArg);
+   static void sendAlarmNotification(ClientSession *pSession, void *pArg);
 
-   void UpdateAlarmInDB(NXC_ALARM *pAlarm);
-   void NotifyClients(DWORD dwCode, NXC_ALARM *pAlarm);
-   void UpdateObjectStatus(DWORD dwObjectId);
+   void updateAlarmInDB(NXC_ALARM *pAlarm);
+   void notifyClients(DWORD dwCode, NXC_ALARM *pAlarm);
+   void updateObjectStatus(DWORD dwObjectId);
 
 public:
    AlarmManager();
    ~AlarmManager();
 
-	void WatchdogThread();
+	void watchdogThread();
 
-   BOOL Init();
-   void NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
+   BOOL init();
+   void newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 	              int iSeverity, DWORD dwTimeout, DWORD dwTimeoutEvent, Event *pEvent);
-   DWORD AckById(DWORD dwAlarmId, DWORD dwUserId);
-   DWORD TerminateById(DWORD dwAlarmId, DWORD dwUserId);
-   void TerminateByKey(const TCHAR *key, bool useRegexp);
-   void DeleteAlarm(DWORD dwAlarmId);
+   DWORD ackById(DWORD dwAlarmId, DWORD dwUserId);
+   DWORD terminateById(DWORD dwAlarmId, DWORD dwUserId);
+   void terminateByKey(const TCHAR *key, bool useRegexp);
+   void deleteAlarm(DWORD dwAlarmId);
 	DWORD updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *text, DWORD userId);
 
    void sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession);
+   void getAlarmStats(CSCPMessage *pMsg);
+	DWORD getAlarmNotes(DWORD alarmId, CSCPMessage *msg);
 
-   NetObj *GetAlarmSourceObject(DWORD dwAlarmId);
-
-   int GetMostCriticalStatusForObject(DWORD dwObjectId);
-
-   void GetAlarmStats(CSCPMessage *pMsg);
+   NetObj *getAlarmSourceObject(DWORD dwAlarmId);
+   int getMostCriticalStatusForObject(DWORD dwObjectId);
 };
 
 
