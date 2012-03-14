@@ -489,9 +489,12 @@ src/java/netxms-agent/src/main/java/org/netxms/agent/MessageConsumer.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/Parameter.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/ParameterProvider.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/ParameterType.java -text
-src/java/netxms-agent/src/main/java/org/netxms/agent/PipeConnector.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/RCC.java -text
 src/java/netxms-agent/src/main/java/org/netxms/agent/SampleExternalSubAgent.java -text
+src/java/netxms-agent/src/main/java/org/netxms/agent/Standalone.java -text
+src/java/netxms-agent/src/main/java/org/netxms/agent/parameters/AgentVersion.java -text
+src/java/netxms-agent/src/main/java/org/netxms/agent/transport/PipeConnector.java -text
+src/java/netxms-agent/src/main/java/org/netxms/agent/transport/SocketConnector.java -text
 src/java/netxms-base/pom.xml -text
 src/java/netxms-base/src/main/java/org/netxms/base/CompatTools.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/Glob.java -text

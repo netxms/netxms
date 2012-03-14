@@ -1,5 +1,7 @@
 package org.netxms.agent;
 
+import org.netxms.agent.transport.PipeConnector;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +35,7 @@ public class SampleExternalSubAgent implements ParameterProvider, ListProvider {
 
     @Override
     public List<BaseParameter> getParameters() {
-        final List<BaseParameter> parameters = new ArrayList<BaseParameter>(2);
+        final List<BaseParameter> parameters = new ArrayList<BaseParameter>(3);
         parameters.add(new Parameter("Java.Parameter1", "Description 1", ParameterType.INT) {
             @Override
             public String getValue(final String argument) {

@@ -1,5 +1,7 @@
-package org.netxms.agent;
+package org.netxms.agent.transport;
 
+import org.netxms.agent.Connector;
+import org.netxms.agent.MessageConsumer;
 import org.netxms.base.NXCPMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
