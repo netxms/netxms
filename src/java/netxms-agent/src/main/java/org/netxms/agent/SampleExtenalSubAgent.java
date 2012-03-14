@@ -34,13 +34,13 @@ public class SampleExtenalSubAgent implements ParameterProvider, ListProvider {
     @Override
     public List<BaseParameter> getParameters() {
         final List<BaseParameter> parameters = new ArrayList<BaseParameter>(2);
-        parameters.add(new SingleParameter("Java.Parameter1", "Description 1", ParameterType.INT) {
+        parameters.add(new Parameter("Java.Parameter1", "Description 1", ParameterType.INT) {
             @Override
             public String getValue(final String argument) {
                 return "123";
             }
         });
-        parameters.add(new SingleParameter("Java.Parameter2", "Description 2", ParameterType.STRING) {
+        parameters.add(new Parameter("Java.Parameter2", "Description 2", ParameterType.STRING) {
             @Override
             public String getValue(final String argument) {
                 return "some string";
