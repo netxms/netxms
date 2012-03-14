@@ -21,25 +21,13 @@ package org.netxms.agent.transport;
 import org.netxms.agent.internal.MessageConsumer;
 import org.netxms.base.NXCPMessage;
 
-public class SocketConnector implements Connector {
+public interface Connector {
 
-    public SocketConnector(final int port) {
-    }
+    void setMessageConsumer(MessageConsumer consumer);
 
-    @Override
-    public void setMessageConsumer(final MessageConsumer consumer) {
-    }
+    boolean sendMessage(NXCPMessage message);
 
-    @Override
-    public boolean sendMessage(final NXCPMessage message) {
-        return false;
-    }
+    void start();
 
-    @Override
-    public void start() {
-    }
-
-    @Override
-    public void stop() {
-    }
+    void stop();
 }

@@ -1,9 +1,9 @@
-package org.netxms.agent.parameters;
+package org.netxms.agent.internal.parameters;
 
-import org.netxms.agent.Parameter;
+import org.netxms.agent.ItemParameter;
 import org.netxms.agent.ParameterType;
 
-public class AgentVersion extends Parameter {
+public class AgentVersion extends ItemParameter {
 
     public AgentVersion() {
         super("Agent.Version", "Agent Version", ParameterType.STRING);

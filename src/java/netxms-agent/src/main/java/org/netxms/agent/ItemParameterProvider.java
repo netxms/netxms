@@ -16,30 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.agent.transport;
+package org.netxms.agent;
 
-import org.netxms.agent.internal.MessageConsumer;
-import org.netxms.base.NXCPMessage;
+import java.util.List;
 
-public class SocketConnector implements Connector {
+public interface ItemParameterProvider {
 
-    public SocketConnector(final int port) {
-    }
+    List<Parameter> getItemParameters();
 
-    @Override
-    public void setMessageConsumer(final MessageConsumer consumer) {
-    }
-
-    @Override
-    public boolean sendMessage(final NXCPMessage message) {
-        return false;
-    }
-
-    @Override
-    public void start() {
-    }
-
-    @Override
-    public void stop() {
-    }
 }
