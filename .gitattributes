@@ -2002,6 +2002,7 @@ webui/webapp/AlarmViewer/OSGI-INF/l10n/bundle_ru.properties -text
 webui/webapp/AlarmViewer/build.properties -text
 webui/webapp/AlarmViewer/icons/acknowledged.png -text
 webui/webapp/AlarmViewer/icons/alarm_browser.png -text
+webui/webapp/AlarmViewer/icons/comments.png -text
 webui/webapp/AlarmViewer/icons/outstanding.png -text
 webui/webapp/AlarmViewer/icons/terminated.png -text
 webui/webapp/AlarmViewer/plugin.xml -text
@@ -2017,6 +2018,7 @@ webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages.properti
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages_es.properties -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/objecttabs/AlarmTab.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmBrowser.java -text
+webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmCommentsEditor.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmList.java -text
 webui/webapp/Charts/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/Charts/META-INF/MANIFEST.MF -text

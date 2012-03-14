@@ -46,6 +46,7 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 	private NXCSession session;
 	private Image[] severityImages = new Image[5];
 	private Image[] stateImages = new Image[3];
+	private Image commentsImage;
 	
 	/**
 	 * Default constructor 
@@ -63,6 +64,8 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 		stateImages[0] = Activator.getImageDescriptor("icons/outstanding.png").createImage(); //$NON-NLS-1$
 		stateImages[1] = Activator.getImageDescriptor("icons/acknowledged.png").createImage(); //$NON-NLS-1$
 		stateImages[2] = Activator.getImageDescriptor("icons/terminated.png").createImage(); //$NON-NLS-1$
+		
+		commentsImage = Activator.getImageDescriptor("icons/comments.png").createImage(); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -77,6 +80,8 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 				return severityImages[((Alarm)element).getCurrentSeverity()];
 			case AlarmList.COLUMN_STATE:
 				return stateImages[((Alarm)element).getState()];
+			case AlarmList.COLUMN_COMMENTS:
+				return (((Alarm)element).getCommentsCount() > 0) ? commentsImage : null;
 		}
 		return null;
 	}
@@ -100,6 +105,8 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 				return ((Alarm)element).getMessage();
 			case AlarmList.COLUMN_COUNT:
 				return Integer.toString(((Alarm)element).getRepeatCount());
+			case AlarmList.COLUMN_COMMENTS:
+				return (((Alarm)element).getCommentsCount() > 0) ? Integer.toString(((Alarm)element).getCommentsCount()) : null;
 			case AlarmList.COLUMN_ACK_BY:
 				if (((Alarm)element).getState() == Alarm.STATE_OUTSTANDING)
 					return null;
