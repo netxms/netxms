@@ -24,6 +24,9 @@ import android.widget.ListView;
 
 /**
  * Alarm browser
+ * 
+ * @author Victor Kirhenshtein
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
  *
  */
 public class AlarmBrowser extends AbstractClientActivity

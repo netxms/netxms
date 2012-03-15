@@ -9,9 +9,9 @@ import android.preference.PreferenceManager;
 import org.netxms.ui.android.service.ClientConnectorService;
 
 /**
- * @author Marco Incalcaterra
- * 
  * Intent receiver for boot completed broadcast message
+ * 
+ * @author Marco Incalcaterra
  * 
  */
 public class BootCompletedIntentReceiver extends BroadcastReceiver

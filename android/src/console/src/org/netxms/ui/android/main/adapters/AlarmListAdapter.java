@@ -24,6 +24,9 @@ import android.widget.TextView;
 
 /**
  * Adapter for alarm list
+ *
+ * @author Victor Kirhenshtein
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
  * 
  */
 
@@ -48,7 +51,8 @@ public class AlarmListAdapter extends BaseAdapter
 	/**
 	 * Set alarms
 	 * 
-	 * @param alarms
+	 * @param alarms List of alarms
+	 * @param nodeIdList List of nodes to be used to filter alarms
 	 */
 	public void setAlarms(Alarm[] alarms, ArrayList<Integer> nodeIdList)
 	{

@@ -43,6 +43,9 @@ import android.widget.Toast;
 /**
  * Background communication service for NetXMS client.
  * 
+ * @author Victor Kirhenshtein
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
+ * 
  */
 public class ClientConnectorService extends Service implements SessionListener
 {
