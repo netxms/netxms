@@ -61,7 +61,6 @@ android/src/console/res/layout/graph_view_group_layout.xml -text
 android/src/console/res/layout/graphics.xml -text
 android/src/console/res/layout/homescreen.xml -text
 android/src/console/res/layout/last_values.xml -text
-android/src/console/res/layout/macaddress_view.xml -text
 android/src/console/res/layout/node_view.xml -text
 android/src/console/res/layout/screen_header_full.xml -text
 android/src/console/res/layout/screen_header_small.xml -text
@@ -88,7 +87,6 @@ android/src/console/src/org/netxms/ui/android/main/adapters/AlarmListAdapter.jav
 android/src/console/src/org/netxms/ui/android/main/adapters/ConnectionPointListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/GraphAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/LastValuesAdapter.java -text
-android/src/console/src/org/netxms/ui/android/main/adapters/MacAddressListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/NodeListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/views/ActivityListElement.java -text
 android/src/console/src/org/netxms/ui/android/receiver/BootCompletedIntentReceiver.java -text
