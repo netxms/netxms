@@ -82,7 +82,6 @@ android/src/console/src/org/netxms/ui/android/main/activities/DrawGraph.java -te
 android/src/console/src/org/netxms/ui/android/main/activities/GraphBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/HomeScreen.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/LastValues.java -text
-android/src/console/src/org/netxms/ui/android/main/activities/MacAddressBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/NodeBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/ActivityListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/AlarmListAdapter.java -text
