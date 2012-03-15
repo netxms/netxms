@@ -185,6 +185,9 @@ public class NodeBrowser extends AbstractClientActivity
 				}
 			}
 		}
+		else
+			menu.getItem(0).setVisible(false); 
+
 	}
 
 	/* (non-Javadoc)
@@ -200,6 +203,11 @@ public class NodeBrowser extends AbstractClientActivity
 		// process menu selection
 		switch(item.getItemId())
 		{
+			case R.id.find_switch_port:
+				Intent newIntent = new Intent(this, ConnectionPointBrowser.class);
+				newIntent.putExtra("nodeId", (int)object.getObjectId());
+				startActivity(newIntent);
+				return true;
 			case R.id.view_alarms:
 				new SyncMissingChildsTask().execute(new Integer[] { (int)object.getObjectId() });
 				return true;

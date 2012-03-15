@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/connectionpoint_deleteone" android:title="@string/connectionpoint_deleteone" android:enabled="true" android:visible="true"></item>
+    <item android:id="@+id/connectionpoint_deleteall" android:title="@string/connectionpoint_deleteall" android:enabled="true" android:visible="true" android:checkable="false" android:checked="false"></item>
+    
+
+</menu>

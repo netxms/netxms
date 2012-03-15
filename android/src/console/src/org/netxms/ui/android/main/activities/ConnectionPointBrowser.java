@@ -18,9 +18,11 @@ import org.netxms.ui.android.main.adapters.ConnectionPointListAdapter;
 import org.netxms.ui.android.tools.BarcodeScannerIntegrator;
 import org.netxms.ui.android.tools.BarcodeScannerIntentResult;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -29,14 +31,19 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
 /**
  * MAC address search result browser
@@ -48,12 +55,12 @@ import android.widget.TextView;
 public class ConnectionPointBrowser extends AbstractClientActivity
 {
 	private static final String CPLISTKEY = "ConnectionPointList"; 
+	private final int maxConnectionPoints = 50;
 	private List<String> cpList = new ArrayList<String>(0); 
 	private EditText editText;
 	private ListView listView;
 	private ConnectionPointListAdapter adapter;
 	private int nodeId = 0;
-	private int maxConnectionPoints = 50;
 	private ProgressDialog dialog;
 	private Resources r;
 	
@@ -73,6 +80,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 		adapter = new ConnectionPointListAdapter(this);
 		listView = (ListView)findViewById(R.id.ConnectionPointList);
 		listView.setAdapter(adapter);
+		registerForContextMenu(listView);
 		
 		editText = (EditText) findViewById(R.id.MacAddressToSearch);
 		editText.setOnKeyListener(new OnKeyListener() {    
@@ -100,6 +108,9 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 		});
 
 		nodeId = getIntent().getIntExtra("nodeId", 0);
+    	cpList = retrievePreferences(this, CPLISTKEY, maxConnectionPoints); 
+		adapter.setConnectionPoint(cpList);
+		adapter.notifyDataSetChanged();
 	}
 
 	/* (non-Javadoc)
@@ -139,6 +150,69 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 	}
 
 	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreateContextMenu(android.view.ContextMenu, android.view.View, android.view.ContextMenu.ContextMenuInfo)
+	 */
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
+	{
+		android.view.MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.connectionpoint_actions, menu);
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onContextItemSelected(android.view.MenuItem)
+	 */
+	@Override
+	public boolean onContextItemSelected(MenuItem item)
+	{
+		// get selected item
+		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+		final int position = info.position;
+		
+		// process menu selection
+		switch (item.getItemId())
+		{
+			case R.id.connectionpoint_deleteone:
+				new AlertDialog.Builder(this)
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.setTitle(R.string.confirm_tool_execution)
+				.setMessage(r.getString(R.string.connectionpoint_confirm_one))
+				.setCancelable(true)
+				.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which)
+					{
+						cpList.remove(position);
+						refreshList();
+					}
+				})
+				.setNegativeButton(R.string.no, null)
+				.show();
+				break;
+			case R.id.connectionpoint_deleteall:
+				new AlertDialog.Builder(this)
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.setTitle(R.string.confirm_tool_execution)
+				.setMessage(r.getString(R.string.connectionpoint_confirm_all))
+				.setCancelable(true)
+				.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which)
+					{
+						cpList.clear();
+						refreshList();
+					}
+				})
+				.setNegativeButton(R.string.no, null)
+				.show();
+				break;
+			default:
+				return super.onContextItemSelected(item);
+		}
+		return true;
+	}
+
+	/* (non-Javadoc)
 	 * @see android.app.Activity#onDestroy()
 	 */
 	@Override
@@ -149,18 +223,6 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 	}
 
 	/* (non-Javadoc)
-	 * @see android.app.Activity#onCreate()
-	 */
-    @Override
-    protected void onCreate(Bundle state)
-    {
-    	super.onCreate(state);
-    	cpList = retrievePreferences(this, CPLISTKEY, maxConnectionPoints); 
-		adapter.setConnectionPoint(cpList);
-		adapter.notifyDataSetChanged();
-    }
-
-	/* (non-Javadoc)
 	 * @see android.app.Activity#onStop()
 	 */
     @Override
@@ -169,6 +231,12 @@ public class ConnectionPointBrowser extends AbstractClientActivity
    		super.onStop();
     	storePreferences(this, CPLISTKEY, cpList, maxConnectionPoints); 
     }
+
+	private void refreshList()
+	{ 
+		adapter.setConnectionPoint(cpList);
+		adapter.notifyDataSetChanged();
+	}
 
 	/**
 	 * Store connection points result list
@@ -249,7 +317,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 		@Override
 		protected String doInBackground(Object... params)
 		{
-			String string = nodeId != 0 ? r.getString(R.string.connectionpoint_notfound, macAddress) : r.getString(R.string.connectionpoint_macaddress_notfound, macAddress);
+			String string = nodeId != 0 ? r.getString(R.string.connectionpoint_notfound) : r.getString(R.string.connectionpoint_macaddress_notfound, macAddress);
 			NXCSession session=service.getSession();
 			if (session != null)
 			{
@@ -307,8 +375,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 				cpList.add(0, result);
 				if (cpList.size() > maxConnectionPoints)
 					cpList.remove(maxConnectionPoints);
-				adapter.setConnectionPoint(cpList);
-				adapter.notifyDataSetChanged();
+				refreshList();
 			}
 		}
 	}

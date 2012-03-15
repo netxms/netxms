@@ -84,5 +84,9 @@
 	<string name="connectionpoint_macaddress_notfound">Connection point for MAC address %1$s not found</string>
 	<string name="connectionpoint_nodeid_notfound">Connection point for node %1$s not found</string>
 	<string name="connectionpoint_info">Node%1$s with MAC address %2$s is connected to network switch %3$s on port %4$s</string>
-		<string name="find_switch_port">Find switch port</string>
+	<string name="find_switch_port">Find switch port</string>
+	<string name="connectionpoint_deleteone">Delete item</string>
+	<string name="connectionpoint_deleteall">Delete all items</string>
+	<string name="connectionpoint_confirm_one">Delete selected item?</string>
+	<string name="connectionpoint_confirm_all">Delete all items?</string>
 </resources>
