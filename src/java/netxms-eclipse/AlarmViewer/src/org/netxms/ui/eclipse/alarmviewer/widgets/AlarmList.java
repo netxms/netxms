@@ -29,6 +29,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -42,6 +43,9 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -52,6 +56,7 @@ import org.netxms.ui.eclipse.alarmviewer.AlarmComparator;
 import org.netxms.ui.eclipse.alarmviewer.AlarmListFilter;
 import org.netxms.ui.eclipse.alarmviewer.AlarmListLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
+import org.netxms.ui.eclipse.alarmviewer.views.AlarmComments;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
@@ -251,11 +256,11 @@ public class AlarmList extends Composite
 			}
 		};
 		
-		actionComments = new Action("Comments...", Activator.getImageDescriptor("icons/comments.png")) {
+		actionComments = new Action("Comments", Activator.getImageDescriptor("icons/comments.png")) {
 			@Override
 			public void run()
 			{
-				
+				openComments();
 			}
 		};
 	}
@@ -334,7 +339,7 @@ public class AlarmList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final HashMap<Long, Alarm> list = session.getAlarms(false);
+				final HashMap<Long, Alarm> list = session.getAlarms();
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -358,5 +363,26 @@ public class AlarmList extends Composite
 				return Messages.AlarmList_SyncJobError;
 			}
 		}.start();
+	}
+	
+	/**
+	 * Open comments for selected alarm
+	 */
+	private void openComments()
+	{
+		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		final String secondaryId = Long.toString(((Alarm)selection.getFirstElement()).getId());
+		IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+		try
+		{
+			page.showView(AlarmComments.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
+		}
+		catch(PartInitException e)
+		{
+			MessageDialog.openError(getShell(), "Error", "Unable to open alarm comments view: " + e.getLocalizedMessage());
+		}
 	}
 }

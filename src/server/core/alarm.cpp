@@ -526,6 +526,29 @@ void AlarmManager::sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession)
 
 
 //
+// Get alarm with given ID into NXCP message
+// Should return RCC which can be sent to client
+//
+
+DWORD AlarmManager::getAlarm(DWORD dwAlarmId, CSCPMessage *msg)
+{
+   DWORD i, dwRet = RCC_INVALID_ALARM_ID;
+
+   lock();
+   for(i = 0; i < m_dwNumAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
+      {
+			FillAlarmInfoMessage(msg, &m_pAlarmList[i]);
+			dwRet = RCC_SUCCESS;
+         break;
+      }
+   unlock();
+
+	return dwRet;
+}
+
+
+//
 // Get source object for given alarm id
 //
 
@@ -744,8 +767,11 @@ DWORD AlarmManager::updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *te
 				}
 				DBConnectionPoolReleaseConnection(hdb);
 			}
-			notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
-         rcc = RCC_SUCCESS;
+			if (rcc == RCC_SUCCESS)
+			{
+				m_pAlarmList[i].noteCount++;
+				notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+			}
          break;
       }
    unlock();

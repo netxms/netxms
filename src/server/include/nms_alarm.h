@@ -63,6 +63,7 @@ public:
    void deleteAlarm(DWORD dwAlarmId);
 	DWORD updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *text, DWORD userId);
 
+   DWORD getAlarm(DWORD dwAlarmId, CSCPMessage *msg);
    void sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession);
    void getAlarmStats(CSCPMessage *pMsg);
 	DWORD getAlarmNotes(DWORD alarmId, CSCPMessage *msg);

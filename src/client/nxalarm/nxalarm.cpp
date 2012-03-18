@@ -45,7 +45,7 @@ static DWORD ListAlarms(NXC_SESSION session)
 	if (rcc != RCC_SUCCESS)
 		_tprintf(_T("WARNING: cannot load event database (%s)\n"), NXCGetErrorText(rcc));
 
-	rcc = NXCLoadAllAlarms(session, FALSE, &numAlarms, &alarmList);
+	rcc = NXCLoadAllAlarms(session, &numAlarms, &alarmList);
 	if (rcc == RCC_SUCCESS)
 	{
 		for(i = 0; i < numAlarms; i++)

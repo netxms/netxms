@@ -1883,23 +1883,16 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/**
-	 * Get alarm list.
+	 * Get list of active alarms. For accessing terminated alarms log view API should be used.
 	 * 
-	 * @param getTerminated
-	 *           if set to true, all alarms will be retrieved from database,
-	 *           otherwise only active alarms
 	 * @return Hash map containing alarms
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public HashMap<Long, Alarm> getAlarms(final boolean getTerminated) throws IOException, NXCException
+	public HashMap<Long, Alarm> getAlarms() throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALL_ALARMS);
 		final long rqId = msg.getMessageId();
-
-		msg.setVariableInt16(NXCPCodes.VID_IS_ACK, getTerminated ? 1 : 0);
 		sendMessage(msg);
 
 		final HashMap<Long, Alarm> alarmList = new HashMap<Long, Alarm>(0);
@@ -1914,16 +1907,30 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
 		return alarmList;
 	}
+	
+	/**
+	 * Get information about single active alarm. Terminated alarms cannot be accessed with this call.
+	 * 
+	 * @param alarmId alarm ID
+	 * @return alarm object
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public Alarm getAlarm(long alarmId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALARM);
+		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return new Alarm(response);
+	}
 
 	/**
 	 * Acknowledge alarm.
 	 * 
-	 * @param alarmId
-	 *           Identifier of alarm to be acknowledged.
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @param alarmId Identifier of alarm to be acknowledged.
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void acknowledgeAlarm(final long alarmId) throws IOException, NXCException
 	{

@@ -72,8 +72,7 @@ void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 // Load all alarms from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, BOOL bIncludeAck,
-                                          DWORD *pdwNumAlarms, NXC_ALARM **ppAlarmList)
+DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, DWORD *pdwNumAlarms, NXC_ALARM **ppAlarmList)
 {
    CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumAlarms = 0, dwAlarmId = 0;
@@ -83,7 +82,6 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, BOOL bIncludeAck
 
    msg.SetCode(CMD_GET_ALL_ALARMS);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_IS_ACK, (WORD)bIncludeAck);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    do

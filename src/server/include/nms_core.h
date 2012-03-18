@@ -449,6 +449,7 @@ private:
    void createObject(CSCPMessage *pRequest);
    void changeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
    void deleteObject(CSCPMessage *pRequest);
+   void getAlarm(CSCPMessage *pRequest);
    void acknowledgeAlarm(CSCPMessage *pRequest);
    void terminateAlarm(CSCPMessage *pRequest);
    void deleteAlarm(CSCPMessage *pRequest);

@@ -885,6 +885,9 @@ void ClientSession::processingThread()
          case CMD_UPDATE_ALARM_NOTE:
 				updateAlarmNote(pMsg);
             break;
+         case CMD_GET_ALARM:
+            getAlarm(pMsg);
+            break;
          case CMD_ACK_ALARM:
             acknowledgeAlarm(pMsg);
             break;
@@ -4322,6 +4325,47 @@ void ClientSession::sendAllAlarms(DWORD dwRqId)
    MutexLock(m_mutexSendAlarms);
    g_alarmMgr.sendAlarmsToClient(dwRqId, this);
    MutexUnlock(m_mutexSendAlarms);
+}
+
+
+//
+// Get specific alarm object
+//
+
+void ClientSession::getAlarm(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+   DWORD dwAlarmId;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get alarm id and it's source object
+   dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
+   pObject = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
+   if (pObject != NULL)
+   {
+      // User should have "view alarm" right to the object
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+      {
+         msg.SetVariable(VID_RCC, g_alarmMgr.getAlarm(dwAlarmId, &msg));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms pObject will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
 }
 
 

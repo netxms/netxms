@@ -3402,7 +3402,7 @@ DWORD CConsoleApp::LoadAlarms()
 {
    m_dwNumAlarms = 0;
    safe_free(m_pAlarmList);
-   return NXCLoadAllAlarms(g_hSession, FALSE, &m_dwNumAlarms, &m_pAlarmList);
+   return NXCLoadAllAlarms(g_hSession, &m_dwNumAlarms, &m_pAlarmList);
 }
 
 

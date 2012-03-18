@@ -301,10 +301,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_GET_FILE_DETAILS"),
 		_T("CMD_IMAGE_LIBRARY_UPDATE"),
 		_T("CMD_GET_NODE_COMPONENTS"),
-		_T("CMD_UPDATE_ALARM_NOTE")
+		_T("CMD_UPDATE_ALARM_NOTE"),
+		_T("CMD_GET_ALARM")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_UPDATE_ALARM_NOTE))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_ALARM))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

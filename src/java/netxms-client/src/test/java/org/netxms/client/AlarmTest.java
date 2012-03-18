@@ -37,7 +37,7 @@ public class AlarmTest extends SessionTest
 	{
 		final NXCSession session = connect();
 		
-		final Map<Long, Alarm> alarms = session.getAlarms(false);
+		final Map<Long, Alarm> alarms = session.getAlarms();
 		for(final Entry<Long, Alarm> e : alarms.entrySet())
 		{
 			System.out.println(e.getKey() + ": " + e.getValue().getMessage());
@@ -52,7 +52,7 @@ public class AlarmTest extends SessionTest
 	{
 		final NXCSession session = connect();
 		
-		HashMap<Long, Alarm> list = session.getAlarms(false);
+		HashMap<Long, Alarm> list = session.getAlarms();
 		if (list.size() > 0)
 		{
 			final Semaphore s = new Semaphore(0);
