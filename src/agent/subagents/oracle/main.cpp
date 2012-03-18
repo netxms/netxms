@@ -173,10 +173,10 @@ static BOOL SubAgentInit(Config *config)
 	g_dbCount = -1;
 	if (config->parseTemplate(_T("ORACLE"), configTemplate))
 	{
-		if (info.dsn[0] != 0)
+		if (info.name[0] != 0)
 		{
 			if (info.id[0] == 0)
-				_tcscpy(info.id, info.dsn);
+				_tcscpy(info.id, info.name);
 			memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(DatabaseInfo));
 			g_dbInfo[g_dbCount].accessMutex = MutexCreate();
 		}
@@ -253,7 +253,7 @@ static int getOracleVersion(DB_HANDLE handle)
 	DB_RESULT result = DBSelect(handle,_T("select version from v$instance"));
 	if (result == NULL)	
 	{
-		AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("%s: query from v$instance failed"));
+		AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("%s: query from v$instance failed"), MYNAMESTR);
 		return 700;		// assume Oracle 7.0 by default
 	}
 
