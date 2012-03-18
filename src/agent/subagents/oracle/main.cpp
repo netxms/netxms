@@ -91,8 +91,13 @@ LONG getParameters(const TCHAR *parameter, const TCHAR *argument, TCHAR *value)
 	{
 		if (!_tcsnicmp(g_dbInfo[i].id, dbId, MAX_STR))	// found DB
 		{
+			if (argument[0] == _T('R'))
+			{
+				ret_string(value, g_dbInfo[i].connected ? _T("YES") : _T("NO"));
+				ret = SYSINFO_RC_SUCCESS;
+			}
 			// Loop through parameter groups and check whose prefix matches the parameter requested
-			for (int k = 0; g_paramGroup[k].prefix; k++)
+			for (int k = 0; argument[0] == _T('X') && g_paramGroup[k].prefix; k++)
 			{
 				if (!_tcsnicmp(g_paramGroup[k].prefix, parameter, _tcslen(g_paramGroup[k].prefix))) // found prefix
 				{
@@ -144,7 +149,7 @@ static BOOL SubAgentInit(Config *config)
 	{
 		{ _T("Id"),					CT_STRING,	0, 0, MAX_STR, 0,	info.id },	
 		{ _T("Name"),				CT_STRING,	0, 0, MAX_STR, 0,	info.name },	
-		{ _T("Server"),				CT_STRING,	0, 0, MAX_STR, 0,	info.server },	
+		{ _T("TnsName"),			CT_STRING,	0, 0, MAX_STR, 0,	info.name },	
 		{ _T("UserName"),			CT_STRING,	0, 0, MAX_USERNAME, 0,	info.username },	
 		{ _T("Password"),			CT_STRING,	0, 0, MAX_PASSWORD, 0,	info.password },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
@@ -280,7 +285,7 @@ THREAD_RESULT THREAD_CALL queryThread(void* arg)
 
 	while (true)
 	{
-		db.handle = DBConnect(g_driverHandle, db.name, db.server, db.username, db.password, NULL, errorText);
+		db.handle = DBConnect(g_driverHandle, db.name, NULL /* db.server */, db.username, db.password, NULL, errorText);
 		if (db.handle != NULL)
 		{
 			AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: connected to DB"), MYNAMESTR);
@@ -383,6 +388,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("Oracle.Sessions.Count(*)"), getParameters, "X", DCI_DT_INT, _T("Oracle/Sessions: Number of sessions opened") },
 	{ _T("Oracle.Cursors.Count(*)"), getParameters, "X", DCI_DT_INT, _T("Oracle/Cursors: Current number of opened cursors systemwide") },
+	{ _T("Oracle.DBInfo.IsReachable(*)"), getParameters, "R", DCI_DT_STRING, _T("Oracle/Info: Database is reachable") },
 	{ _T("Oracle.DBInfo.Name(*)"), getParameters, "X", DCI_DT_STRING, _T("Oracle/Info: Database name") },
 	{ _T("Oracle.DBInfo.CreateDate(*)"), getParameters, "X", DCI_DT_STRING, _T("Oracle/Info: Database creation date") },
 	{ _T("Oracle.DBInfo.LogMode(*)"), getParameters, "X", DCI_DT_STRING, _T("Oracle/Info: Database log mode") },
