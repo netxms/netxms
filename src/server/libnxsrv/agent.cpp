@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1181,13 +1181,13 @@ DWORD AgentConnection::checkNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int
 // Get list of supported parameters from subagent
 //
 
-DWORD AgentConnection::getSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList)
+DWORD AgentConnection::getSupportedParameters(StructArray<NXC_AGENT_PARAM> **paramList, StructArray<NXC_AGENT_TABLE> **tableList)
 {
-   DWORD i, dwId, dwRqId, dwResult;
+   DWORD dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
 
-   *pdwNumParams = 0;
-   *ppParamList = NULL;
+   *paramList = NULL;
+	*tableList = NULL;
 
    if (!m_bIsConnected)
       return ERR_NOT_CONNECTED;
@@ -1203,19 +1203,31 @@ DWORD AgentConnection::getSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PAR
       if (pResponse != NULL)
       {
          dwResult = pResponse->GetVariableLong(VID_RCC);
-			DbgPrintf(6, _T("AgentConnection::GetSupportedParameters(): RCC=%d"), dwResult);
+			DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): RCC=%d"), dwResult);
          if (dwResult == ERR_SUCCESS)
          {
-            *pdwNumParams = pResponse->GetVariableLong(VID_NUM_PARAMETERS);
-            *ppParamList = (NXC_AGENT_PARAM *)malloc(sizeof(NXC_AGENT_PARAM) * (*pdwNumParams));
-            for(i = 0, dwId = VID_PARAM_LIST_BASE; i < *pdwNumParams; i++)
+            DWORD count = pResponse->GetVariableLong(VID_NUM_PARAMETERS);
+            NXC_AGENT_PARAM *plist = (NXC_AGENT_PARAM *)malloc(sizeof(NXC_AGENT_PARAM) * count);
+            for(DWORD i = 0, dwId = VID_PARAM_LIST_BASE; i < count; i++)
             {
-               pResponse->GetVariableStr(dwId++, (*ppParamList)[i].szName, MAX_PARAM_NAME);
-               pResponse->GetVariableStr(dwId++, (*ppParamList)[i].szDescription, MAX_DB_STRING);
-               (*ppParamList)[i].iDataType = (int)pResponse->GetVariableShort(dwId++);
+               pResponse->GetVariableStr(dwId++, plist[i].szName, MAX_PARAM_NAME);
+               pResponse->GetVariableStr(dwId++, plist[i].szDescription, MAX_DB_STRING);
+               plist[i].iDataType = (int)pResponse->GetVariableShort(dwId++);
             }
-				DbgPrintf(6, _T("AgentConnection::GetSupportedParameters(): %d parameters received from agent"), *pdwNumParams);
-         }
+				*paramList = new StructArray<NXC_AGENT_PARAM>(plist, (int)count);
+				DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): %d parameters received from agent"), count);
+
+            count = pResponse->GetVariableLong(VID_NUM_TABLES);
+            NXC_AGENT_TABLE *tlist = (NXC_AGENT_TABLE *)malloc(sizeof(NXC_AGENT_TABLE) * count);
+            for(DWORD i = 0, dwId = VID_TABLE_LIST_BASE; i < count; i++)
+            {
+               pResponse->GetVariableStr(dwId++, tlist[i].name, MAX_PARAM_NAME);
+               pResponse->GetVariableStr(dwId++, tlist[i].instanceColumn, MAX_DB_STRING);
+               pResponse->GetVariableStr(dwId++, tlist[i].description, MAX_DB_STRING);
+            }
+				*tableList = new StructArray<NXC_AGENT_TABLE>(tlist, (int)count);
+				DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): %d tables received from agent"), count);
+			}
          delete pResponse;
       }
       else

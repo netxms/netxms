@@ -456,7 +456,7 @@ public:
    DWORD startUpgrade(const TCHAR *pszPkgName);
    DWORD checkNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0, 
                              WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL);
-   DWORD getSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
+   DWORD getSupportedParameters(StructArray<NXC_AGENT_PARAM> **paramList, StructArray<NXC_AGENT_TABLE> **tableList);
    DWORD getConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
    DWORD updateConfigFile(const TCHAR *pszConfig);
    DWORD enableTraps();

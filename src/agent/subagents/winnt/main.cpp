@@ -150,7 +150,7 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 };
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
-	{ "System.Processes", H_ProcessTable, NULL }
+	{ "System.Processes", H_ProcessTable, NULL, "PID", DCTDESC_SYSTEM_PROCESSES }
 };
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {

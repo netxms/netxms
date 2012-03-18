@@ -497,6 +497,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dcobject.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\debug.cpp"
 				>
 			</File>

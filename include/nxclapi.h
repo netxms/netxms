@@ -899,6 +899,18 @@ typedef struct
 
 
 //
+// Agent's table information
+//
+
+typedef struct
+{
+   TCHAR name[MAX_PARAM_NAME];
+   TCHAR instanceColumn[MAX_COLUMN_NAME];
+   TCHAR description[MAX_DB_STRING];
+} NXC_AGENT_TABLE;
+
+
+//
 // Action structure
 //
 

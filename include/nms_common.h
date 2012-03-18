@@ -104,6 +104,7 @@
 #define MAX_SECRET_LENGTH        64
 #define MAX_DB_STRING            256
 #define MAX_PARAM_NAME           256
+#define MAX_COLUMN_NAME          64
 #define MAX_DNS_NAME             256
 #define GROUP_FLAG               ((DWORD)0x80000000)
 

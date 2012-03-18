@@ -165,88 +165,63 @@ public:
 
 
 //
-// Data collection item class
+// Generic data collection object
 //
 
 class Template;
 
-class NXCORE_EXPORTABLE DCItem
+class NXCORE_EXPORTABLE DCObject
 {
-private:
+protected:
    DWORD m_dwId;
    TCHAR m_szName[MAX_ITEM_NAME];
    TCHAR m_szDescription[MAX_DB_STRING];
-   TCHAR m_szInstance[MAX_DB_STRING];
 	TCHAR m_systemTag[MAX_DB_STRING];
    time_t m_tLastPoll;           // Last poll time
    int m_iPollingInterval;       // Polling interval in seconds
    int m_iRetentionTime;         // Retention time in seconds
-   BYTE m_deltaCalculation;      // Delta calculation method
-   BYTE m_source;                // SNMP or native agent?
-   BYTE m_dataType;
+   BYTE m_source;                // origin: SNMP, agent, etc.
    BYTE m_status;                // Item status: active, disabled or not supported
    BYTE m_busy;                  // 1 when item is queued for polling, 0 if not
 	BYTE m_scheduledForDeletion;  // 1 when item is scheduled for deletion, 0 if not
 	WORD m_flags;
    DWORD m_dwTemplateId;         // Related template's id
    DWORD m_dwTemplateItemId;     // Related template item's id
-   DWORD m_dwNumThresholds;
-   Threshold **m_ppThresholdList;
    Template *m_pNode;             // Pointer to node or template object this item related to
-   TCHAR *m_pszScript;           // Transformation script
-   NXSL_Program *m_pScript;      // Compiled transformation script
    MUTEX m_hMutex;
-   DWORD m_dwCacheSize;          // Number of items in cache
-   ItemValue **m_ppValueCache;
-   ItemValue m_prevRawValue;     // Previous raw value (used for delta calculation)
-   time_t m_tPrevValueTimeStamp;
-   BOOL m_bCacheLoaded;
    DWORD m_dwNumSchedules;
    TCHAR **m_ppScheduleList;
    time_t m_tLastCheck;          // Last schedule checking time
    DWORD m_dwErrorCount;         // Consequtive collection error count
 	DWORD m_dwResourceId;	   	// Associated cluster resource ID
 	DWORD m_dwProxyNode;          // Proxy node ID or 0 to disable
-	int m_nBaseUnits;
-	int m_nMultiplier;
-	TCHAR *m_pszCustomUnitName;
-	TCHAR *m_pszPerfTabSettings;
-	WORD m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
 	WORD m_snmpPort;					// Custom SNMP port or 0 for node default
+	TCHAR *m_pszPerfTabSettings;
 
    void lock() { MutexLock(m_hMutex); }
    void unlock() { MutexUnlock(m_hMutex); }
 
-   void transform(ItemValue &value, time_t nElapsedTime);
-   void checkThresholds(ItemValue &value);
-   void clearCache();
-
-	BOOL matchClusterResource();
+	bool matchClusterResource();
 
 	void expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
 
+	virtual bool isCacheLoaded();
+
+	// --- constructors ---
+   DCObject();
+   DCObject(const DCObject *src);
+   DCObject(DWORD dwId, const TCHAR *szName, int iSource, int iPollingInterval, int iRetentionTime, Template *pNode,
+            const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
+	DCObject(ConfigEntry *config, Template *owner);
+
 public:
-   DCItem();
-   DCItem(const DCItem *pItem);
-   DCItem(DB_RESULT hResult, int iRow, Template *pNode);
-   DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType, 
-          int iPollingInterval, int iRetentionTime, Template *pNode,
-          const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
-	DCItem(ConfigEntry *config, Template *owner);
-   ~DCItem();
+	virtual ~DCObject();
 
-   bool prepareForDeletion();
-   void updateFromTemplate(DCItem *pItem);
+   virtual BOOL saveToDB(DB_HANDLE hdb);
+   virtual void deleteFromDB();
 
-   BOOL saveToDB(DB_HANDLE hdb);
-   BOOL loadThresholdsFromDB();
-   void deleteFromDB();
-
-   void updateCacheSize(DWORD dwCondId = 0);
-
-   DWORD getId() { return m_dwId; }
+	DWORD getId() { return m_dwId; }
    int getDataSource() { return m_source; }
-   int getDataType() { return m_dataType; }
    int getStatus() { return m_status; }
    const TCHAR *getName() { return m_szName; }
    const TCHAR *getDescription() { return m_szDescription; }
@@ -260,17 +235,90 @@ public:
 	time_t getLastPollTime() { return m_tLastPoll; }
 	DWORD getErrorCount() { return m_dwErrorCount; }
 	WORD getSnmpPort() { return m_snmpPort; }
-	bool isInterpretSnmpRawValue() { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
-	WORD getSnmpRawValueType() { return m_snmpRawValueType; }
 
    bool isReadyForPolling(time_t currTime);
 	bool isScheduledForDeletion() { return m_scheduledForDeletion ? true : false; }
    void setLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
    void setStatus(int status, bool generateEvent);
    void setBusyFlag(BOOL busy) { m_busy = (BYTE)busy; }
-   void changeBinding(DWORD dwNewId, Template *pNode, BOOL doMacroExpansion);
    void setTemplateId(DWORD dwTemplateId, DWORD dwItemId) 
          { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
+
+   virtual void createMessage(CSCPMessage *pMsg);
+   virtual void updateFromMessage(CSCPMessage *pMsg);
+
+   virtual void changeBinding(DWORD dwNewId, Template *pNode, BOOL doMacroExpansion);
+
+	virtual void deleteExpiredData();
+	virtual bool deleteAllData();
+
+   virtual void getEventList(DWORD **ppdwList, DWORD *pdwSize);
+   virtual void createNXMPRecord(String &str);
+
+	void setName(const TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_ITEM_NAME); }
+	void setDescription(const TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
+	void setOrigin(int origin) { m_source = origin; }
+	void setRetentionTime(int nTime) { m_iRetentionTime = nTime; }
+	void setInterval(int nInt) { m_iPollingInterval = nInt; }
+	void setAdvScheduleFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ADVANCED_SCHEDULE; else m_flags &= ~DCF_ADVANCED_SCHEDULE; }
+	void addSchedule(const TCHAR *pszSchedule);
+
+	bool prepareForDeletion();
+};
+
+
+//
+// Data collection item class
+//
+
+class NXCORE_EXPORTABLE DCItem : public DCObject
+{
+protected:
+   TCHAR m_szInstance[MAX_DB_STRING];
+   BYTE m_deltaCalculation;      // Delta calculation method
+   BYTE m_dataType;
+   DWORD m_dwNumThresholds;
+   Threshold **m_ppThresholdList;
+   TCHAR *m_pszScript;           // Transformation script
+   NXSL_Program *m_pScript;      // Compiled transformation script
+   DWORD m_dwCacheSize;          // Number of items in cache
+   ItemValue **m_ppValueCache;
+   ItemValue m_prevRawValue;     // Previous raw value (used for delta calculation)
+   time_t m_tPrevValueTimeStamp;
+   bool m_bCacheLoaded;
+	int m_nBaseUnits;
+	int m_nMultiplier;
+	TCHAR *m_pszCustomUnitName;
+	WORD m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
+
+   void transform(ItemValue &value, time_t nElapsedTime);
+   void checkThresholds(ItemValue &value);
+   void clearCache();
+
+	virtual bool isCacheLoaded();
+
+public:
+   DCItem();
+   DCItem(const DCItem *pItem);
+   DCItem(DB_RESULT hResult, int iRow, Template *pNode);
+   DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType, 
+          int iPollingInterval, int iRetentionTime, Template *pNode,
+          const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
+	DCItem(ConfigEntry *config, Template *owner);
+   virtual ~DCItem();
+
+   void updateFromTemplate(DCItem *pItem);
+
+   virtual BOOL saveToDB(DB_HANDLE hdb);
+   virtual void deleteFromDB();
+   BOOL loadThresholdsFromDB();
+
+   void updateCacheSize(DWORD dwCondId = 0);
+
+   int getDataType() { return m_dataType; }
+	bool isInterpretSnmpRawValue() { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
+	WORD getSnmpRawValueType() { return m_snmpRawValueType; }
+
 	void systemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType);
 
    void processNewValue(time_t nTimeStamp, const TCHAR *pszValue);
@@ -279,31 +327,26 @@ public:
    void getLastValue(CSCPMessage *pMsg, DWORD dwId);
    NXSL_Value *getValueForNXSL(int nFunction, int nPolls);
 
-   void createMessage(CSCPMessage *pMsg);
+   virtual void createMessage(CSCPMessage *pMsg);
    void updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);
 	void fillMessageWithThresholds(CSCPMessage *msg);
 
-   void deleteExpiredData();
-	BOOL deleteAllData();
+   virtual void changeBinding(DWORD dwNewId, Template *pNode, BOOL doMacroExpansion);
 
-   void getEventList(DWORD **ppdwList, DWORD *pdwSize);
-   void createNXMPRecord(String &str);
+   virtual void deleteExpiredData();
+	virtual bool deleteAllData();
+
+   virtual void getEventList(DWORD **ppdwList, DWORD *pdwSize);
+   virtual void createNXMPRecord(String &str);
 
 	BOOL enumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), void *pArg);
 
-	void setName(const TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_ITEM_NAME); }
-	void setDescription(const TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
 	void setInstance(const TCHAR *pszInstance) { nx_strncpy(m_szInstance, pszInstance, MAX_DB_STRING); }
-	void setOrigin(int origin) { m_source = origin; }
 	void setDataType(int dataType) { m_dataType = dataType; }
-	void setRetentionTime(int nTime) { m_iRetentionTime = nTime; }
-	void setInterval(int nInt) { m_iPollingInterval = nInt; }
 	void setDeltaCalcMethod(int method) { m_deltaCalculation = method; }
 	void setAllThresholdsFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ALL_THRESHOLDS; else m_flags &= ~DCF_ALL_THRESHOLDS; }
-	void setAdvScheduleFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ADVANCED_SCHEDULE; else m_flags &= ~DCF_ADVANCED_SCHEDULE; }
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
-	void addSchedule(const TCHAR *pszSchedule);
    void setTransformationScript(const TCHAR *pszScript);
 
 	BOOL testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);

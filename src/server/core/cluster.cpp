@@ -479,17 +479,17 @@ void Cluster::calculateCompoundStatus(BOOL bForcedRecalc)
 // Check if given address is within sync network
 //
 
-BOOL Cluster::isSyncAddr(DWORD dwAddr)
+bool Cluster::isSyncAddr(DWORD dwAddr)
 {
 	DWORD i;
-	BOOL bRet = FALSE;
+	bool bRet = false;
 
 	LockData();
 	for(i = 0; i < m_dwNumSyncNets; i++)
 	{
 		if ((dwAddr & m_pSyncNetList[i].dwMask) == m_pSyncNetList[i].dwAddr)
 		{
-			bRet = TRUE;
+			bRet = true;
 			break;
 		}
 	}
@@ -502,17 +502,17 @@ BOOL Cluster::isSyncAddr(DWORD dwAddr)
 // Check if given address is a resource address
 //
 
-BOOL Cluster::isVirtualAddr(DWORD dwAddr)
+bool Cluster::isVirtualAddr(DWORD dwAddr)
 {
 	DWORD i;
-	BOOL bRet = FALSE;
+	bool bRet = false;
 
 	LockData();
 	for(i = 0; i < m_dwNumResources; i++)
 	{
 		if (m_pResourceList[i].dwIpAddr == dwAddr)
 		{
-			bRet = TRUE;
+			bRet = true;
 			break;
 		}
 	}
@@ -676,9 +676,9 @@ void Cluster::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 // Check if node is current owner of resource
 //
 
-BOOL Cluster::isResourceOnNode(DWORD dwResource, DWORD dwNode)
+bool Cluster::isResourceOnNode(DWORD dwResource, DWORD dwNode)
 {
-	BOOL bRet = FALSE;
+	bool bRet = FALSE;
 	DWORD i;
 
 	LockData();
@@ -687,7 +687,7 @@ BOOL Cluster::isResourceOnNode(DWORD dwResource, DWORD dwNode)
 		if (m_pResourceList[i].dwId == dwResource)
 		{
 			if (m_pResourceList[i].dwCurrOwner == dwNode)
-				bRet = TRUE;
+				bRet = true;
 			break;
 		}
 	}

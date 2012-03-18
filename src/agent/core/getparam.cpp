@@ -686,5 +686,7 @@ void GetParameterList(CSCPMessage *pMsg)
    for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
    {
       pMsg->SetVariable(dwId++, m_pTableList[i].name);
+		pMsg->SetVariable(dwId++, m_pTableList[i].instanceColumn);
+		pMsg->SetVariable(dwId++, m_pTableList[i].description);
    }
 }

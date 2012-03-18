@@ -60,8 +60,8 @@ Node::Node() : Template()
 	m_sysDescription = NULL;
 	m_sysName = NULL;
 	m_lldpNodeId = NULL;
-   m_dwNumParams = 0;
-   m_pParamList = NULL;
+   m_paramList = NULL;
+	m_tableList = NULL;
    m_dwPollerNode = 0;
    m_dwProxyNode = 0;
 	m_dwSNMPProxy = 0;
@@ -126,8 +126,8 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_sysDescription = NULL;
 	m_sysName = NULL;
 	m_lldpNodeId = NULL;
-   m_dwNumParams = 0;
-   m_pParamList = NULL;
+   m_paramList = NULL;
+	m_tableList = NULL;
    m_dwPollerNode = 0;
    m_dwProxyNode = dwProxyNode;
 	m_dwSNMPProxy = dwSNMPProxy;
@@ -165,7 +165,8 @@ Node::~Node()
    MutexDestroy(m_mutexRTAccess);
 	MutexDestroy(m_mutexTopoAccess);
    delete m_pAgentConnection;
-   safe_free(m_pParamList);
+   delete m_paramList;
+	delete m_tableList;
 	safe_free(m_sysDescription);
    DestroyRoutingTable(m_pRoutingTable);
 	if (m_linkLayerNeighbors != NULL)
@@ -1393,8 +1394,7 @@ static DWORD PrintMIBWalkerCallback(DWORD version, SNMP_Variable *var, SNMP_Tran
 void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
                              int nPoller, DWORD dwNetMask)
 {
-   DWORD dwOldFlags = m_dwFlags, dwAddr, rcc, dwNumParams;
-	NXC_AGENT_PARAM *pParamList;
+   DWORD dwOldFlags = m_dwFlags, dwAddr, rcc;
    AgentConnection *pAgentConn;
    TCHAR szBuffer[4096];
 	SNMP_Transport *pTransport;
@@ -1512,18 +1512,21 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
                UnlockData();
 				}
 
-            rcc = pAgentConn->getSupportedParameters(&dwNumParams, &pParamList);
+				StructArray<NXC_AGENT_PARAM> *plist;
+				StructArray<NXC_AGENT_TABLE> *tlist;
+            rcc = pAgentConn->getSupportedParameters(&plist, &tlist);
 				if (rcc == ERR_SUCCESS)
 				{
 					LockData();
-					safe_free(m_pParamList);
-					m_dwNumParams = dwNumParams;
-					m_pParamList = pParamList;
+					delete m_paramList;
+					delete m_tableList;
+					m_paramList = plist;
+					m_tableList = tlist;
 					UnlockData();
 				}
 				else
 				{
-				   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::GetSupportedParameters() failed: rcc=%d"), m_szName, rcc);
+				   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%d"), m_szName, rcc);
 				}
 
 				checkAgentPolicyBinding(pAgentConn);
@@ -3088,28 +3091,53 @@ int Node::getInterfaceStatusFromAgent(DWORD dwIndex)
 // Put list of supported parameters into CSCP message
 //
 
-void Node::WriteParamListToMessage(CSCPMessage *pMsg)
+void Node::writeParamListToMessage(CSCPMessage *pMsg)
 {
-   DWORD i, dwId;
-
    LockData();
-   if (m_pParamList != NULL)
+
+	if (m_paramList != NULL)
    {
-      pMsg->SetVariable(VID_NUM_PARAMETERS, m_dwNumParams);
-      for(i = 0, dwId = VID_PARAM_LIST_BASE; i < m_dwNumParams; i++)
+      pMsg->SetVariable(VID_NUM_PARAMETERS, (DWORD)m_paramList->size());
+
+		int i;
+		DWORD dwId;
+      for(i = 0, dwId = VID_PARAM_LIST_BASE; i < m_paramList->size(); i++)
       {
-         pMsg->SetVariable(dwId++, m_pParamList[i].szName);
-         pMsg->SetVariable(dwId++, m_pParamList[i].szDescription);
-         pMsg->SetVariable(dwId++, (WORD)m_pParamList[i].iDataType);
+			NXC_AGENT_PARAM *p = m_paramList->get(i);
+         pMsg->SetVariable(dwId++, p->szName);
+         pMsg->SetVariable(dwId++, p->szDescription);
+         pMsg->SetVariable(dwId++, (WORD)p->iDataType);
       }
-		DbgPrintf(6, _T("Node[%s]::WriteParamListToMessage(): sending %d parameters"), m_szName, m_dwNumParams);
+		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d parameters"), m_szName, m_paramList->size());
    }
    else
    {
-		DbgPrintf(6, _T("Node[%s]::WriteParamListToMessage(): m_pParamList == NULL"), m_szName);
+		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): m_paramList == NULL"), m_szName);
       pMsg->SetVariable(VID_NUM_PARAMETERS, (DWORD)0);
    }
-   UnlockData();
+
+	if (m_tableList != NULL)
+   {
+		pMsg->SetVariable(VID_NUM_TABLES, (DWORD)m_tableList->size());
+
+		int i;
+		DWORD dwId;
+      for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_tableList->size(); i++)
+      {
+			NXC_AGENT_TABLE *t = m_tableList->get(i);
+         pMsg->SetVariable(dwId++, t->name);
+         pMsg->SetVariable(dwId++, t->instanceColumn);
+         pMsg->SetVariable(dwId++, t->description);
+      }
+		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d tables"), m_szName, m_tableList->size());
+   }
+   else
+   {
+		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): m_tableList == NULL"), m_szName);
+      pMsg->SetVariable(VID_NUM_TABLES, (DWORD)0);
+   }
+
+	UnlockData();
 }
 
 
@@ -3117,11 +3145,10 @@ void Node::WriteParamListToMessage(CSCPMessage *pMsg)
 // Open list of supported parameters for reading
 //
 
-void Node::openParamList(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList)
+void Node::openParamList(StructArray<NXC_AGENT_PARAM> **paramList)
 {
    LockData();
-   *pdwNumParams = m_dwNumParams;
-   *ppParamList = m_pParamList;
+   *paramList = m_paramList;
 }
 
 

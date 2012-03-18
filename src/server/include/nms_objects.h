@@ -563,19 +563,19 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-	BOOL isSyncAddr(DWORD dwAddr);
-	BOOL isVirtualAddr(DWORD dwAddr);
-	BOOL isResourceOnNode(DWORD dwResource, DWORD dwNode);
+	bool isSyncAddr(DWORD dwAddr);
+	bool isVirtualAddr(DWORD dwAddr);
+	bool isResourceOnNode(DWORD dwResource, DWORD dwNode);
    DWORD getZoneId() { return m_zoneId; }
 
    void statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    void lockForStatusPoll() { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
-   BOOL isReadyForStatusPoll() 
+   bool isReadyForStatusPoll() 
    {
       return ((m_iStatus != STATUS_UNMANAGED) && (!m_bIsDeleted) &&
               (!(m_dwFlags & CLF_QUEUED_FOR_STATUS_POLL)) &&
               ((DWORD)time(NULL) - (DWORD)m_tmLastPoll > g_dwStatusPollingInterval))
-                  ? TRUE : FALSE;
+                  ? true : false;
    }
 };
 
@@ -773,8 +773,8 @@ protected:
 	TCHAR *m_sysName;				// SNMP sysName
 	TCHAR *m_lldpNodeId;			// lldpLocChassisId combined with lldpLocChassisIdSubtype, or NULL for non-LLDP nodes
 	NetworkDeviceDriver *m_driver;
-   DWORD m_dwNumParams;           // Number of elements in supported parameters list
-   NXC_AGENT_PARAM *m_pParamList; // List of supported parameters
+   StructArray<NXC_AGENT_PARAM> *m_paramList; // List of supported parameters
+   StructArray<NXC_AGENT_TABLE> *m_tableList; // List of supported tables
    time_t m_tLastDiscoveryPoll;
    time_t m_tLastStatusPoll;
    time_t m_tLastConfigurationPoll;
@@ -945,7 +945,7 @@ public:
 
 	bool checkAgentTrapId(QWORD id);
 
-   void openParamList(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
+   void openParamList(StructArray<NXC_AGENT_PARAM> **paramList);
    void closeParamList() { UnlockData(); }
 
    AgentConnectionEx *createAgentConnection();
@@ -954,7 +954,7 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-   void WriteParamListToMessage(CSCPMessage *pMsg);
+   void writeParamListToMessage(CSCPMessage *pMsg);
 
    DWORD wakeUp();
 

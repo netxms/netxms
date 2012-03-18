@@ -234,47 +234,23 @@ void RegisterDCIFunctions(NXSL_Environment *pEnv)
 // Default constructor for DCItem
 //
 
-DCItem::DCItem()
+DCItem::DCItem() : DCObject()
 {
-   m_dwId = 0;
-   m_dwTemplateId = 0;
-   m_dwTemplateItemId = 0;
    m_dwNumThresholds = 0;
    m_ppThresholdList = NULL;
-   m_busy = 0;
-	m_scheduledForDeletion = 0;
    m_dataType = DCI_DT_INT;
-   m_iPollingInterval = 3600;
-   m_iRetentionTime = 0;
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
-   m_source = DS_INTERNAL;
-   m_status = ITEM_STATUS_NOT_SUPPORTED;
-   m_szName[0] = 0;
-   m_szDescription[0] = 0;
    m_szInstance[0] = 0;
-	m_systemTag[0] = 0;
-   m_tLastPoll = 0;
    m_pszScript = NULL;
    m_pScript = NULL;
-   m_pNode = NULL;
-   m_hMutex = MutexCreateRecursive();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
-   m_bCacheLoaded = FALSE;
-   m_dwNumSchedules = 0;
-   m_ppScheduleList = NULL;
-   m_tLastCheck = 0;
-	m_flags = 0;
-   m_dwErrorCount = 0;
-	m_dwResourceId = 0;
-	m_dwProxyNode = 0;
+   m_bCacheLoaded = false;
 	m_nBaseUnits = DCI_BASEUNITS_OTHER;
 	m_nMultiplier = 1;
 	m_pszCustomUnitName = NULL;
-	m_pszPerfTabSettings = NULL;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
-	m_snmpPort = 0;	// use default
 }
 
 
@@ -282,52 +258,24 @@ DCItem::DCItem()
 // Create DCItem from another DCItem
 //
 
-DCItem::DCItem(const DCItem *pSrc)
+DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
 {
    DWORD i;
 
-   m_dwId = pSrc->m_dwId;
-   m_dwTemplateId = pSrc->m_dwTemplateId;
-   m_dwTemplateItemId = pSrc->m_dwTemplateItemId;
-   m_busy = 0;
-	m_scheduledForDeletion = 0;
    m_dataType = pSrc->m_dataType;
-   m_iPollingInterval = pSrc->m_iPollingInterval;
-   m_iRetentionTime = pSrc->m_iRetentionTime;
    m_deltaCalculation = pSrc->m_deltaCalculation;
-   m_source = pSrc->m_source;
-   m_status = pSrc->m_status;
-   m_tLastPoll = 0;
-	_tcscpy(m_szName, pSrc->m_szName);
-	_tcscpy(m_szDescription, pSrc->m_szDescription);
 	_tcscpy(m_szInstance, pSrc->m_szInstance);
-	_tcscpy(m_systemTag, pSrc->m_systemTag);
    m_pszScript = NULL;
    m_pScript = NULL;
    setTransformationScript(pSrc->m_pszScript);
-   m_pNode = NULL;
-   m_hMutex = MutexCreateRecursive();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
-   m_bCacheLoaded = FALSE;
-   m_tLastCheck = 0;
-   m_dwErrorCount = 0;
-	m_flags = pSrc->m_flags;
-	m_dwResourceId = pSrc->m_dwResourceId;
-	m_dwProxyNode = pSrc->m_dwProxyNode;
+   m_bCacheLoaded = false;
 	m_nBaseUnits = pSrc->m_nBaseUnits;
 	m_nMultiplier = pSrc->m_nMultiplier;
 	m_pszCustomUnitName = (pSrc->m_pszCustomUnitName != NULL) ? _tcsdup(pSrc->m_pszCustomUnitName) : NULL;
-	m_pszPerfTabSettings = (pSrc->m_pszPerfTabSettings != NULL) ? _tcsdup(pSrc->m_pszPerfTabSettings) : NULL;
 	m_snmpRawValueType = pSrc->m_snmpRawValueType;
-	m_snmpPort = pSrc->m_snmpPort;
-
-   // Copy schedules
-   m_dwNumSchedules = pSrc->m_dwNumSchedules;
-   m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
-   for(i = 0; i < m_dwNumSchedules; i++)
-      m_ppScheduleList[i] = _tcsdup(pSrc->m_ppScheduleList[i]);
 
    // Copy thresholds
    m_dwNumThresholds = pSrc->m_dwNumThresholds;
@@ -349,7 +297,7 @@ DCItem::DCItem(const DCItem *pSrc)
 // custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type
 //
 
-DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
+DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
    TCHAR *pszTmp, szQuery[256], szBuffer[MAX_DB_STRING];
    DB_RESULT hTempResult;
@@ -382,7 +330,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
-   m_bCacheLoaded = FALSE;
+   m_bCacheLoaded = false;
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
    m_flags = (WORD)DBGetFieldLong(hResult, iRow, 13);
@@ -447,49 +395,23 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType, 
                int iPollingInterval, int iRetentionTime, Template *pNode,
                const TCHAR *pszDescription, const TCHAR *systemTag)
+	: DCObject(dwId, szName, iSource, iPollingInterval, iRetentionTime, pNode, pszDescription, systemTag)
 {
-   m_dwId = dwId;
-   m_dwTemplateId = 0;
-   m_dwTemplateItemId = 0;
-   nx_strncpy(m_szName, szName, MAX_ITEM_NAME);
-   if (pszDescription != NULL)
-      nx_strncpy(m_szDescription, pszDescription, MAX_DB_STRING);
-   else
-      _tcscpy(m_szDescription, m_szName);
    m_szInstance[0] = 0;
-	nx_strncpy(m_systemTag, CHECK_NULL_EX(systemTag), MAX_DB_STRING);
-   m_source = iSource;
    m_dataType = iDataType;
-   m_iPollingInterval = iPollingInterval;
-   m_iRetentionTime = iRetentionTime;
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
-   m_status = ITEM_STATUS_ACTIVE;
-   m_busy = 0;
-	m_scheduledForDeletion = 0;
-   m_tLastPoll = 0;
    m_pszScript = NULL;
    m_pScript = NULL;
    m_dwNumThresholds = 0;
    m_ppThresholdList = NULL;
-   m_pNode = pNode;
-   m_hMutex = MutexCreateRecursive();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
-   m_bCacheLoaded = FALSE;
-   m_flags = 0;
-   m_dwNumSchedules = 0;
-   m_ppScheduleList = NULL;
-   m_tLastCheck = 0;
-   m_dwErrorCount = 0;
-	m_dwResourceId = 0;
-	m_dwProxyNode = 0;
+   m_bCacheLoaded = false;
 	m_nBaseUnits = DCI_BASEUNITS_OTHER;
 	m_nMultiplier = 1;
 	m_pszCustomUnitName = NULL;
-	m_pszPerfTabSettings = NULL;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
-	m_snmpPort = 0;	// use default
 
    updateCacheSize();
 }
@@ -499,67 +421,25 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
 // Create DCItem from import file
 //
 
-DCItem::DCItem(ConfigEntry *config, Template *owner)
+DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 {
-   m_dwId = CreateUniqueId(IDG_ITEM);
-   m_dwTemplateId = 0;
-   m_dwTemplateItemId = 0;
-	nx_strncpy(m_szName, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
-   nx_strncpy(m_szDescription, config->getSubEntryValue(_T("description"), 0, m_szName), MAX_DB_STRING);
    nx_strncpy(m_szInstance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
-	nx_strncpy(m_systemTag, config->getSubEntryValue(_T("systemTag"), 0, _T("")), MAX_DB_STRING);
-	m_source = (BYTE)config->getSubEntryValueInt(_T("origin"));
    m_dataType = (BYTE)config->getSubEntryValueInt(_T("dataType"));
-   m_iPollingInterval = config->getSubEntryValueInt(_T("interval"));
-   m_iRetentionTime = config->getSubEntryValueInt(_T("retention"));
    m_deltaCalculation = (BYTE)config->getSubEntryValueInt(_T("delta"));
-   m_status = ITEM_STATUS_ACTIVE;
-   m_busy = 0;
-	m_scheduledForDeletion = 0;
-	m_flags = 0;
-   m_tLastPoll = 0;
-   m_pNode = owner;
-   m_hMutex = MutexCreateRecursive();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
-   m_bCacheLoaded = FALSE;
-   m_tLastCheck = 0;
-   m_dwErrorCount = 0;
-	m_dwResourceId = 0;
-	m_dwProxyNode = 0;
+   m_bCacheLoaded = false;
 	m_nBaseUnits = DCI_BASEUNITS_OTHER;
 	m_nMultiplier = 1;
 	m_pszCustomUnitName = NULL;
-	m_pszPerfTabSettings = NULL;
 	m_snmpRawValueType = (WORD)config->getSubEntryValueInt(_T("snmpRawValueType"));
-	m_snmpPort = (WORD)config->getSubEntryValueInt(_T("snmpPort"));
 
 	if (config->getSubEntryValueInt(_T("allThresholds")))
 		m_flags |= DCF_ALL_THRESHOLDS;
 	if (config->getSubEntryValueInt(_T("rawValueInOctetString")))
 		m_flags |= DCF_RAW_VALUE_OCTET_STRING;
-	if (config->getSubEntryValueInt(_T("advancedSchedule")))
-		m_flags |= DCF_ADVANCED_SCHEDULE;
 
-	ConfigEntry *schedules = config->findEntry(_T("schedules"));
-	if (schedules != NULL)
-		schedules = schedules->findEntry(_T("schedule"));
-	if (schedules != NULL)
-	{
-		m_dwNumSchedules = (DWORD)schedules->getValueCount();
-		m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
-		for(int i = 0; i < (int)m_dwNumSchedules; i++)
-		{
-			m_ppScheduleList[i] = _tcsdup(schedules->getValue(i));
-		}
-	}
-	else
-	{
-		m_dwNumSchedules = 0;
-		m_ppScheduleList = NULL;
-	}
-   
 	m_pszScript = NULL;
 	m_pScript = NULL;
 	setTransformationScript(config->getSubEntryValue(_T("transformation")));
@@ -592,18 +472,12 @@ DCItem::DCItem(ConfigEntry *config, Template *owner)
 
 DCItem::~DCItem()
 {
-   DWORD i;
-
-   for(i = 0; i < m_dwNumThresholds; i++)
+   for(DWORD i = 0; i < m_dwNumThresholds; i++)
       delete m_ppThresholdList[i];
    safe_free(m_ppThresholdList);
-   for(i = 0; i < m_dwNumSchedules; i++)
-      free(m_ppScheduleList[i]);
-   safe_free(m_ppScheduleList);
    safe_free(m_pszScript);
    delete m_pScript;
 	safe_free(m_pszCustomUnitName);
-	safe_free(m_pszPerfTabSettings);
    clearCache();
    MutexDestroy(m_hMutex);
 }
@@ -875,47 +749,26 @@ void DCItem::checkThresholds(ItemValue &value)
 
 
 //
-// Create CSCP message with item data
+// Create NXCP message with item data
 //
 
 void DCItem::createMessage(CSCPMessage *pMsg)
 {
-   DWORD i, dwId;
+	DCObject::createMessage(pMsg);
 
    lock();
-   pMsg->SetVariable(VID_DCI_ID, m_dwId);
-   pMsg->SetVariable(VID_TEMPLATE_ID, m_dwTemplateId);
-   pMsg->SetVariable(VID_NAME, m_szName);
-   pMsg->SetVariable(VID_DESCRIPTION, m_szDescription);
-   pMsg->SetVariable(VID_FLAGS, m_flags);
    pMsg->SetVariable(VID_INSTANCE, m_szInstance);
-   pMsg->SetVariable(VID_SYSTEM_TAG, m_systemTag);
-   pMsg->SetVariable(VID_POLLING_INTERVAL, (DWORD)m_iPollingInterval);
-   pMsg->SetVariable(VID_RETENTION_TIME, (DWORD)m_iRetentionTime);
-   pMsg->SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_source);
    pMsg->SetVariable(VID_DCI_DATA_TYPE, (WORD)m_dataType);
-   pMsg->SetVariable(VID_DCI_STATUS, (WORD)m_status);
    pMsg->SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)m_deltaCalculation);
    pMsg->SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(m_pszScript));
-	pMsg->SetVariable(VID_RESOURCE_ID, m_dwResourceId);
-	pMsg->SetVariable(VID_AGENT_PROXY, m_dwProxyNode);
 	pMsg->SetVariable(VID_BASE_UNITS, (WORD)m_nBaseUnits);
 	pMsg->SetVariable(VID_MULTIPLIER, (DWORD)m_nMultiplier);
 	pMsg->SetVariable(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
-	pMsg->SetVariable(VID_SNMP_PORT, m_snmpPort);
 	if (m_pszCustomUnitName != NULL)
 		pMsg->SetVariable(VID_CUSTOM_UNITS_NAME, m_pszCustomUnitName);
-	if (m_pszPerfTabSettings != NULL)
-		pMsg->SetVariable(VID_PERFTAB_SETTINGS, m_pszPerfTabSettings);
    pMsg->SetVariable(VID_NUM_THRESHOLDS, m_dwNumThresholds);
-   for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, dwId += 10)
+   for(DWORD i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, dwId += 10)
       m_ppThresholdList[i]->createMessage(pMsg, dwId);
-   if (m_flags & DCF_ADVANCED_SCHEDULE)
-   {
-      pMsg->SetVariable(VID_NUM_SCHEDULES, m_dwNumSchedules);
-      for(i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
-         pMsg->SetVariable(dwId, m_ppScheduleList[i]);
-   }
    unlock();
 }
 
@@ -940,90 +793,46 @@ void DCItem::deleteFromDB()
 
 
 //
-// Update item from CSCP message
+// Update item from NXCP message
 //
 
 void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, 
                                DWORD **ppdwMapIndex, DWORD **ppdwMapId)
 {
-   DWORD i, j, dwNum, dwId;
-   Threshold **ppNewList;
-   TCHAR *pszStr;
+	DCObject::updateFromMessage(pMsg);
 
    lock();
 
-   pMsg->GetVariableStr(VID_NAME, m_szName, MAX_ITEM_NAME);
-   pMsg->GetVariableStr(VID_DESCRIPTION, m_szDescription, MAX_DB_STRING);
    pMsg->GetVariableStr(VID_INSTANCE, m_szInstance, MAX_DB_STRING);
-   pMsg->GetVariableStr(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
-	m_flags = pMsg->GetVariableShort(VID_FLAGS);
-   m_source = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
    m_dataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
-   m_iPollingInterval = pMsg->GetVariableLong(VID_POLLING_INTERVAL);
-   m_iRetentionTime = pMsg->GetVariableLong(VID_RETENTION_TIME);
-   setStatus(pMsg->GetVariableShort(VID_DCI_STATUS), true);
    m_deltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
-	m_dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
-	m_dwProxyNode = pMsg->GetVariableLong(VID_AGENT_PROXY);
-   pszStr = pMsg->GetVariableStr(VID_DCI_FORMULA);
+   TCHAR *pszStr = pMsg->GetVariableStr(VID_DCI_FORMULA);
    setTransformationScript(pszStr);
    free(pszStr);
 	m_nBaseUnits = pMsg->GetVariableShort(VID_BASE_UNITS);
 	m_nMultiplier = (int)pMsg->GetVariableLong(VID_MULTIPLIER);
 	safe_free(m_pszCustomUnitName);
 	m_pszCustomUnitName = pMsg->GetVariableStr(VID_CUSTOM_UNITS_NAME);
-	safe_free(m_pszPerfTabSettings);
-	m_pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
 	m_snmpRawValueType = pMsg->GetVariableShort(VID_SNMP_RAW_VALUE_TYPE);
-	m_snmpPort = pMsg->GetVariableShort(VID_SNMP_PORT);
-
-   // Update schedules
-   for(i = 0; i < m_dwNumSchedules; i++)
-      free(m_ppScheduleList[i]);
-   if (m_flags & DCF_ADVANCED_SCHEDULE)
-   {
-      m_dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
-      m_ppScheduleList = (TCHAR **)realloc(m_ppScheduleList, sizeof(TCHAR *) * m_dwNumSchedules);
-      for(i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
-      {
-         pszStr = pMsg->GetVariableStr(dwId);
-         if (pszStr != NULL)
-         {
-            m_ppScheduleList[i] = pszStr;
-         }
-         else
-         {
-            m_ppScheduleList[i] = _tcsdup(_T("(null)"));
-         }
-      }
-   }
-   else
-   {
-      if (m_ppScheduleList != NULL)
-      {
-         free(m_ppScheduleList);
-         m_ppScheduleList = NULL;
-      }
-      m_dwNumSchedules = 0;
-   }
 
    // Update thresholds
-   dwNum = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
+   DWORD dwNum = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
    DWORD *newThresholds = (DWORD *)malloc(sizeof(DWORD) * dwNum);
    *ppdwMapIndex = (DWORD *)malloc(dwNum * sizeof(DWORD));
    *ppdwMapId = (DWORD *)malloc(dwNum * sizeof(DWORD));
    *pdwNumMaps = 0;
 
    // Read all new threshold ids from message
-   for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
+   for(DWORD i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
    {
       newThresholds[i] = pMsg->GetVariableLong(dwId);
    }
    
    // Check if some thresholds was deleted, and reposition others if needed
-   ppNewList = (Threshold **)malloc(sizeof(Threshold *) * dwNum);
-   for(i = 0; i < m_dwNumThresholds; i++)
+   Threshold **ppNewList = (Threshold **)malloc(sizeof(Threshold *) * dwNum);
+   for(DWORD i = 0; i < m_dwNumThresholds; i++)
    {
+		DWORD j;
       for(j = 0; j < dwNum; j++)
          if (m_ppThresholdList[i]->getId() == newThresholds[j])
             break;
@@ -1046,7 +855,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    m_dwNumThresholds = dwNum;
 
    // Add or update thresholds
-   for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
+   for(DWORD i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
    {
       if (newThresholds[i] == 0)    // New threshold?
       {
@@ -1318,23 +1127,17 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
 
 void DCItem::changeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpansion)
 {
-   DWORD i;
+	DCObject::changeBinding(dwNewId, pNewNode, doMacroExpansion);
 
    lock();
-   m_pNode = pNewNode;
 	if (dwNewId != 0)
 	{
-		m_dwId = dwNewId;
-		for(i = 0; i < m_dwNumThresholds; i++)
+		for(DWORD i = 0; i < m_dwNumThresholds; i++)
 			m_ppThresholdList[i]->bindToItem(m_dwId);
 	}
 
 	if (doMacroExpansion)
-	{
-		expandMacros(m_szName, m_szName, MAX_ITEM_NAME);
-		expandMacros(m_szDescription, m_szDescription, MAX_DB_STRING);
 		expandMacros(m_szInstance, m_szInstance, MAX_DB_STRING);
-	}
 
    clearCache();
    updateCacheSize();
@@ -1481,7 +1284,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
       }
       m_dwCacheSize = dwRequiredSize;
    }
-   m_bCacheLoaded = TRUE;
+   m_bCacheLoaded = true;
 }
 
 
@@ -1619,230 +1422,18 @@ void DCItem::deleteExpiredData()
 // Delete all collected data
 //
 
-BOOL DCItem::deleteAllData()
+bool DCItem::deleteAllData()
 {
    TCHAR szQuery[256];
-	BOOL success;
+	bool success;
 
    lock();
    _sntprintf(szQuery, 256, _T("DELETE FROM idata_%d WHERE item_id=%d"), m_pNode->Id(), m_dwId);
-   success = DBQuery(g_hCoreDB, szQuery);
+	success = DBQuery(g_hCoreDB, szQuery) ? true : false;
 	clearCache();
 	updateCacheSize();
    unlock();
 	return success;
-}
-
-
-//
-// Prepare item for deletion
-//
-
-bool DCItem::prepareForDeletion()
-{
-	DbgPrintf(9, _T("DCItem::prepareForDeletion for DCI %d"), m_dwId);
-
-	lock();
-   m_status = ITEM_STATUS_DISABLED;   // Prevent future polls
-	m_scheduledForDeletion = 1;
-	bool canDelete = (m_busy ? false : true);
-   unlock();
-	DbgPrintf(9, _T("DCItem::prepareForDeletion: completed for DCI %d"), m_dwId);
-
-	return canDelete;
-}
-
-
-//
-// Match schedule element
-// NOTE: We assume that pattern can be modified during processing
-//
-
-static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue)
-{
-   TCHAR *ptr, *curr;
-   int nStep, nCurr, nPrev;
-   BOOL bRun = TRUE, bRange = FALSE;
-
-   // Check if step was specified
-   ptr = _tcschr(pszPattern, _T('/'));
-   if (ptr != NULL)
-   {
-      *ptr = 0;
-      ptr++;
-      nStep = _tcstol(ptr, NULL, 10);
-   }
-   else
-   {
-      nStep = 1;
-   }
-
-   if (*pszPattern == _T('*'))
-      goto check_step;
-
-   for(curr = pszPattern; bRun; curr = ptr + 1)
-   {
-      for(ptr = curr; (*ptr != 0) && (*ptr != '-') && (*ptr != ','); ptr++);
-      switch(*ptr)
-      {
-         case '-':
-            if (bRange)
-               return FALSE;  // Form like 1-2-3 is invalid
-            bRange = TRUE;
-            *ptr = 0;
-            nPrev = _tcstol(curr, NULL, 10);
-            break;
-         case 0:
-            bRun = FALSE;
-         case ',':
-            *ptr = 0;
-            nCurr = _tcstol(curr, NULL, 10);
-            if (bRange)
-            {
-               if ((nValue >= nPrev) && (nValue <= nCurr))
-                  goto check_step;
-               bRange = FALSE;
-            }
-            else
-            {
-               if (nValue == nCurr)
-                  return TRUE;
-            }
-            break;
-      }
-   }
-
-   return FALSE;
-
-check_step:
-   return (nValue % nStep) == 0;
-}
-
-
-//
-// Match schedule to current time
-//
-
-static BOOL MatchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule)
-{
-   const TCHAR *pszCurr;
-	TCHAR szValue[256];
-
-   // Minute
-   pszCurr = ExtractWord(pszSchedule, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_min))
-         return FALSE;
-
-   // Hour
-   pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_hour))
-         return FALSE;
-
-   // Day of month
-   pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_mday))
-         return FALSE;
-
-   // Month
-   pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_mon + 1))
-         return FALSE;
-
-   // Day of week
-   ExtractWord(pszCurr, szValue);
-	for(int i = 0; szValue[i] != 0; i++)
-		if (szValue[i] == _T('7'))
-			szValue[i] = _T('0');
-   return MatchScheduleElement(szValue, pCurrTime->tm_wday);
-}
-
-
-//
-// Check if associated cluster resource is active. Returns TRUE also if
-// DCI has no resource association
-//
-
-BOOL DCItem::matchClusterResource()
-{
-	Cluster *pCluster;
-
-	if (m_dwResourceId == 0)
-		return TRUE;
-
-	pCluster = ((Node *)m_pNode)->getMyCluster();
-	if (pCluster == NULL)
-		return FALSE;	// Has association, but cluster object cannot be found
-
-	return pCluster->isResourceOnNode(m_dwResourceId, m_pNode->Id());
-}
-
-
-//
-// Set DCI status
-//
-
-void DCItem::setStatus(int status, bool generateEvent)
-{
-	if (generateEvent && (m_pNode != NULL) && (m_status != (BYTE)status))
-	{
-		static DWORD eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
-		static const TCHAR *originName[5] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push") };
-
-		PostEvent(eventCode[status], m_pNode->Id(), "dssds", m_dwId, m_szName, m_szDescription,
-		          m_source, originName[m_source]);
-	}
-	m_status = (BYTE)status;
-}
-
-
-//
-// Check if DCI have to be polled
-//
-
-bool DCItem::isReadyForPolling(time_t currTime)
-{
-   bool result;
-
-   lock();
-   if ((m_status != ITEM_STATUS_DISABLED) && (!m_busy) &&
-       m_bCacheLoaded && (m_source != DS_PUSH_AGENT) &&
-		 (matchClusterResource()))
-   {
-      if (m_flags & DCF_ADVANCED_SCHEDULE)
-      {
-         DWORD i;
-         struct tm tmCurrLocal, tmLastLocal;
-
-         memcpy(&tmCurrLocal, localtime(&currTime), sizeof(struct tm));
-         memcpy(&tmLastLocal, localtime(&m_tLastCheck), sizeof(struct tm));
-         for(i = 0, result = false; i < m_dwNumSchedules; i++)
-         {
-            if (MatchSchedule(&tmCurrLocal, m_ppScheduleList[i]))
-            {
-               if ((currTime - m_tLastCheck >= 60) ||
-                   (tmCurrLocal.tm_min != tmLastLocal.tm_min))
-               {
-                  result = true;
-                  break;
-               }
-            }
-         }
-         m_tLastCheck = currTime;
-      }
-      else
-      {
-			if (m_status == ITEM_STATUS_NOT_SUPPORTED)
-		      result = (m_tLastPoll + m_iPollingInterval * 10 <= currTime);
-			else
-		      result = (m_tLastPoll + m_iPollingInterval <= currTime);
-      }
-   }
-   else
-   {
-      result = false;
-   }
-   unlock();
-   return result;
 }
 
 
@@ -2063,18 +1654,6 @@ void DCItem::addThreshold(Threshold *pThreshold)
 
 
 //
-// Add schedule
-//
-
-void DCItem::addSchedule(const TCHAR *pszSchedule)
-{
-	m_dwNumSchedules++;
-	m_ppScheduleList = (TCHAR **)realloc(m_ppScheduleList, sizeof(TCHAR *) * m_dwNumSchedules);
-	m_ppScheduleList[m_dwNumSchedules - 1] = _tcsdup(pszSchedule);
-}
-
-
-//
 // Enumerate all thresholds
 //
 
@@ -2094,110 +1673,6 @@ BOOL DCItem::enumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), voi
 	}
 	unlock();
 	return bRet;
-}
-
-
-//
-// Expand macros in text
-//
-
-void DCItem::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
-{
-	String temp;
-	TCHAR *head, *rest, *macro;
-	int index = 0, index2;
-
-	temp = src;
-	while((index = temp.find(_T("%{"), index)) != String::npos)
-	{
-		head = temp.subStr(0, index);
-		index2 = temp.find(_T("}"), index);
-		if (index2 == String::npos)
-		{
-			free(head);
-			break;	// Missing closing }
-		}
-		rest = temp.subStr(index2 + 1, -1);
-		macro = temp.subStr(index + 2, index2 - index - 2);
-		StrStrip(macro);
-
-		temp = head;
-		if (!_tcscmp(macro, _T("node_id")))
-		{
-			if (m_pNode != NULL)
-			{
-				temp.addFormattedString(_T("%d"), m_pNode->Id());
-			}
-			else
-			{
-				temp += _T("(error)");
-			}
-		}
-		else if (!_tcscmp(macro, _T("node_name")))
-		{
-			if (m_pNode != NULL)
-			{
-				temp += m_pNode->Name();
-			}
-			else
-			{
-				temp += _T("(error)");
-			}
-		}
-		else if (!_tcscmp(macro, _T("node_primary_ip")))
-		{
-			if (m_pNode != NULL)
-			{
-				TCHAR ipAddr[32];
-
-				temp += IpToStr(m_pNode->IpAddr(), ipAddr);
-			}
-			else
-			{
-				temp += _T("(error)");
-			}
-		}
-		else if (!_tcsncmp(macro, _T("script:"), 7))
-		{
-			NXSL_Program *script;
-			NXSL_ServerEnv *pEnv;
-
-	      g_pScriptLibrary->lock();
-			script = g_pScriptLibrary->findScript(&macro[7]);
-			if (script != NULL)
-			{
-				pEnv = new NXSL_ServerEnv;
-				if (m_pNode != NULL)
-					script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
-
-				if (script->run(pEnv) == 0)
-				{
-					NXSL_Value *result = script->getResult();
-					if (result != NULL)
-						temp += CHECK_NULL_EX(result->getValueAsCString());
-		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_dwId, src, &macro[7]);
-				}
-				else
-				{
-		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s execution error: %s"),
-					          m_dwId, src, &macro[7], script->getErrorText());
-					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7],
-								 script->getErrorText(), m_dwId);
-				}
-			}
-			else
-			{
-	         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Cannot find script %s"), m_dwId, src, &macro[7]);
-			}
-	      g_pScriptLibrary->unlock();
-		}
-		temp += rest;
-		
-		free(head);
-		free(rest);
-		free(macro);
-	}
-	nx_strncpy(dst, temp, dstLen);
 }
 
 
@@ -2280,4 +1755,15 @@ void DCItem::fillMessageWithThresholds(CSCPMessage *msg)
 	}
 
 	unlock();
+}
+
+
+//
+// Returns true if internal cache is loaded. If data collection object
+// does not have cache should return true
+//
+
+bool DCItem::isCacheLoaded()
+{
+	return m_bCacheLoaded;
 }

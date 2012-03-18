@@ -5523,7 +5523,7 @@ void ClientSession::SendParametersList(CSCPMessage *pRequest)
       {
          case OBJECT_NODE:
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            ((Node *)pObject)->WriteParamListToMessage(&msg);
+            ((Node *)pObject)->writeParamListToMessage(&msg);
             break;
          case OBJECT_CLUSTER:
          case OBJECT_TEMPLATE:

@@ -425,6 +425,25 @@ public:
 
 
 //
+// Auxilliary class to hold dynamically allocated array of structures
+//
+
+template <class T> class StructArray
+{
+private:
+	int m_count;
+	T *m_data;
+
+public:
+	StructArray(T *data, int count) { m_data = data; m_count = count; }
+	~StructArray() { safe_free(m_data); }
+
+	int size() { return m_count; }
+	T *get(int index) { return ((index >= 0) && (index < m_count)) ? &m_data[index] : NULL; }
+};
+
+
+//
 // Auxilliary class for objects which counts references and
 // destroys itself wheren reference count falls to 0
 //

@@ -278,6 +278,45 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 
 
 //
+// Upgrade from V247 to V248
+//
+
+static BOOL H_UpgradeFromV247(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateTable(_T("CREATE TABLE dc_tables (")
+	                     _T("item_id integer not null,")
+								_T("node_id integer not null,")
+								_T("template_id integer not null,")
+								_T("template_item_id integer not null,")
+								_T("name varchar(255) null,")
+								_T("instance_column varchar(63) null,")
+								_T("description varchar(255) null,")
+								_T("flags integer not null,")
+								_T("source integer not null,")
+								_T("snmp_port integer not null,")
+								_T("polling_interval integer not null,")
+								_T("retention_time integer not null,")
+								_T("status integer not null,")
+								_T("system_tag varchar(255) null,")
+								_T("resource_id integer not null,")
+								_T("proxy_node integer not null,")
+								_T("perftab_settings $SQL:TEXT null,")
+	                     _T("PRIMARY KEY(item_id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE dc_table_columns (")
+	                     _T("table_id integer not null,")
+	                     _T("column_name varchar(63) not null,")
+								_T("snmp_oid varchar(1023) null,")
+								_T("data_type integer not null,")
+								_T("transformation_script $SQL:TEXT null,")
+	                     _T("PRIMARY KEY(table_id,column_name))")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='248' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V246 to V247
 //
 
@@ -5997,6 +6036,7 @@ static struct
 	{ 244, 245, H_UpgradeFromV244 },
 	{ 245, 246, H_UpgradeFromV245 },
 	{ 246, 247, H_UpgradeFromV246 },
+	{ 247, 248, H_UpgradeFromV247 },
    { 0, 0, NULL }
 };
 

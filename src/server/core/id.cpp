@@ -216,12 +216,19 @@ BOOL InitIdTable()
       DBFreeResult(hResult);
    }
 
-   // Get first available data collection item id
+   // Get first available data collection object id
    hResult = DBSelect(g_hCoreDB, _T("SELECT max(item_id) FROM items"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         m_dwFreeIdTable[IDG_ITEM] = max(1, DBGetFieldULong(hResult, 0, 0) + 1);
+         m_dwFreeIdTable[IDG_ITEM] = max(m_dwFreeIdTable[IDG_ITEM], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(item_id) FROM dc_tables"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_ITEM] = max(m_dwFreeIdTable[IDG_ITEM], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

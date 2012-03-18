@@ -335,24 +335,23 @@ static void UpdateParamList(NetObj *object, void *data)
 {
 	struct __param_list *fullList = (struct __param_list *)data;
 
-	NXC_AGENT_PARAM *paramList;
-	DWORD numParams;
-	((Node *)object)->openParamList(&numParams, &paramList);
-	if ((numParams > 0) && (paramList != NULL))
+	StructArray<NXC_AGENT_PARAM> *paramList;
+	((Node *)object)->openParamList(&paramList);
+	if ((paramList != NULL) && (paramList->size() > 0))
 	{
-		fullList->data = (NXC_AGENT_PARAM *)realloc(fullList->data, sizeof(NXC_AGENT_PARAM) * (fullList->size + numParams));
-		for(DWORD i = 0; i < numParams; i++)
+		fullList->data = (NXC_AGENT_PARAM *)realloc(fullList->data, sizeof(NXC_AGENT_PARAM) * (fullList->size + paramList->size()));
+		for(int i = 0; i < paramList->size(); i++)
 		{
 			DWORD j;
 			for(j = 0; j < fullList->size; j++)
 			{
-				if (!_tcsicmp(paramList[i].szName, fullList->data[j].szName))
+				if (!_tcsicmp(paramList->get(i)->szName, fullList->data[j].szName))
 					break;
 			}
 
 			if (j == fullList->size)
 			{
-				memcpy(&fullList->data[j], &paramList[i], sizeof(NXC_AGENT_PARAM));
+				memcpy(&fullList->data[j], paramList->get(i), sizeof(NXC_AGENT_PARAM));
 				fullList->size++;
 			}
 		}
