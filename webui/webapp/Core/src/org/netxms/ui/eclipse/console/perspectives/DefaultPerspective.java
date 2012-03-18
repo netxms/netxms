@@ -52,5 +52,8 @@ public class DefaultPerspective implements IPerspectiveFactory
 		final IPlaceholderFolderLayout statusFolder = layout.createPlaceholderFolder("org.netxms.ui.eclipse.folders.status", IPageLayout.BOTTOM, 0.75f, "org.netxms.ui.eclipse.folders.main"); //$NON-NLS-1$ //$NON-NLS-2$
 		statusFolder.addPlaceholder("org.eclipse.ui.views.ProgressView"); //$NON-NLS-1$
 		statusFolder.addPlaceholder("org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager"); //$NON-NLS-1$
+
+		final IPlaceholderFolderLayout propertiesFolder = layout.createPlaceholderFolder("org.netxms.ui.eclipse.folders.properties", IPageLayout.RIGHT, 0.75f, "org.netxms.ui.eclipse.folders.main"); //$NON-NLS-1$ //$NON-NLS-2$
+		propertiesFolder.addPlaceholder("org.netxms.ui.eclipse.alarmviewer.views.AlarmComments:*"); //$NON-NLS-1$
 	}
 }

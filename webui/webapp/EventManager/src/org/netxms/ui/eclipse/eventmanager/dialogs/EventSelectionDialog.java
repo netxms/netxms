@@ -53,6 +53,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class EventSelectionDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private boolean multiSelection;
 	private Text filterText;
 	private TableViewer eventList;
@@ -136,6 +138,8 @@ public class EventSelectionDialog extends Dialog
 		eventList.getTable().setLayoutData(gd);
 		
 		filterText.addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{

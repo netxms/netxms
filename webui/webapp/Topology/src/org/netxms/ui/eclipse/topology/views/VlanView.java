@@ -150,6 +150,8 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -158,6 +160,8 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		};
 		
 		actionShowVlanMap = new Action("Show VLAN map") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -204,8 +208,9 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

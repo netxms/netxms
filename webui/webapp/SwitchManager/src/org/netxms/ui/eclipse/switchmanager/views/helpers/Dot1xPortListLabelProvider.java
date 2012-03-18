@@ -35,6 +35,8 @@ import org.netxms.ui.eclipse.switchmanager.views.Dot1xStatusView;
  */
 public class Dot1xPortListLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider, ITableFontProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private Color COLOR_UNKNOWN = new Color(Display.getCurrent(), 127, 127, 127);
 	private Color COLOR_FAILURE = new Color(Display.getCurrent(), 255, 0, 0);
 	private Color COLOR_POSSIBLE_FAILURE = new Color(Display.getCurrent(), 255, 128, 0);

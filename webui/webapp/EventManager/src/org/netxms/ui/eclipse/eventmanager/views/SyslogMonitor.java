@@ -129,6 +129,8 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 		super.createActions();
 		
 		actionShowColor = new Action("Show status &colors", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -139,6 +141,8 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 		actionShowColor.setChecked(labelProvider.isShowColor());
 		
 		actionShowIcons = new Action("Show status &icons", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

@@ -37,6 +37,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class EnterMacAddressDlg extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private LabeledText textMac;
 	private MacAddress macAddress;
 	

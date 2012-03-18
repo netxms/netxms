@@ -10,6 +10,14 @@
             class="org.netxms.ui.eclipse.alarmviewer.views.AlarmBrowser"
             id="org.netxms.ui.eclipse.alarmviewer.view.alarm_browser">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.alarmviewer.views.AlarmComments"
+            icon="icons/comments.png"
+            id="org.netxms.ui.eclipse.alarmviewer.views.AlarmComments"
+            name="Alarm Comments"
+            restorable="false">
+      </view>
    </extension>
 
    <extension

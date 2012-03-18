@@ -39,6 +39,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class EditEventTemplateDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private EventTemplate object;
 	private boolean isNew;
 	private LabeledText id;

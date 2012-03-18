@@ -38,6 +38,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class EventLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private static final Color FOREGROUND_COLOR_DARK = new Color(Display.getCurrent(), 0, 0, 0);
 	private static final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
 	private static final Color[] FOREGROUND_COLORS =

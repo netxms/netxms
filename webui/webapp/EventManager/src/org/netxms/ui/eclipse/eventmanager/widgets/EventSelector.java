@@ -34,6 +34,8 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class EventSelector extends AbstractSelector
 {
+	private static final long serialVersionUID = 1L;
+
 	private long eventCode = 0;
 	
 	/**

@@ -38,6 +38,8 @@ import org.netxms.ui.eclipse.topology.views.HostSearchResults;
  */
 public class ConnectionPointLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private static final Color COLOR_FOUND_OBJECT = new Color(Display.getDefault(), 0, 127, 0);
 	private static final Color COLOR_FOUND_MAC = new Color(Display.getDefault(), 0, 0, 127);
 	private static final Color COLOR_NOT_FOUND = new Color(Display.getDefault(), 127, 0, 0);

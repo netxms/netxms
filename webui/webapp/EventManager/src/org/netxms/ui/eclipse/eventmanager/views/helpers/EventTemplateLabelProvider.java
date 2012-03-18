@@ -30,6 +30,8 @@ import org.netxms.ui.eclipse.eventmanager.views.EventConfigurator;
  */
 public class EventTemplateLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{

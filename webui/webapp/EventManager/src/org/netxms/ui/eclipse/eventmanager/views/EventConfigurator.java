@@ -129,6 +129,8 @@ public class EventConfigurator extends ViewPart implements SessionListener
 			}
 		});
 		viewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -264,11 +266,9 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	 */
 	private void makeActions()
 	{
-		actionRefresh = new RefreshAction()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -277,9 +277,8 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		};
 
 		actionNew = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -290,9 +289,8 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png"));
 
 		actionEdit = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -304,9 +302,8 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		actionEdit.setEnabled(false);
 
 		actionDelete = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -326,8 +323,9 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

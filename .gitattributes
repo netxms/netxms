@@ -2005,8 +2005,10 @@ webui/webapp/AlarmViewer/build.properties -text
 webui/webapp/AlarmViewer/icons/acknowledged.png -text
 webui/webapp/AlarmViewer/icons/alarm_browser.png -text
 webui/webapp/AlarmViewer/icons/comments.png -text
+webui/webapp/AlarmViewer/icons/new_comment.png -text
 webui/webapp/AlarmViewer/icons/outstanding.png -text
 webui/webapp/AlarmViewer/icons/terminated.png -text
+webui/webapp/AlarmViewer/icons/user.png -text
 webui/webapp/AlarmViewer/plugin.xml -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/Activator.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmComparator.java -text
@@ -2016,10 +2018,12 @@ webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/Messages.java -te
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/AcknowledgeAlarm.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/OpenAlarmBrowser.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/TerminateAlarm.java -text
+webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/dialogs/EditCommentDialog.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages.properties -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages_es.properties -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/objecttabs/AlarmTab.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmBrowser.java -text
+webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmComments.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmCommentsEditor.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmList.java -text
 webui/webapp/Charts/.settings/org.eclipse.jdt.core.prefs -text
