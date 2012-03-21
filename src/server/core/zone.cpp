@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ Zone::Zone()
    m_agentProxy = 0;
    m_snmpProxy = 0;
 	m_icmpProxy = 0;
+	m_idxNodeByAddr = new ObjectIndex;
 	m_idxInterfaceByAddr = new ObjectIndex;
 	m_idxSubnetByAddr = new ObjectIndex;
 }
@@ -54,6 +55,7 @@ Zone::Zone(DWORD zoneId, const TCHAR *name)
    m_agentProxy = 0;
    m_snmpProxy = 0;
 	m_icmpProxy = 0;
+	m_idxNodeByAddr = new ObjectIndex;
 	m_idxInterfaceByAddr = new ObjectIndex;
 	m_idxSubnetByAddr = new ObjectIndex;
 }
@@ -65,6 +67,7 @@ Zone::Zone(DWORD zoneId, const TCHAR *name)
 
 Zone::~Zone()
 {
+	delete m_idxNodeByAddr;
 	delete m_idxInterfaceByAddr;
 	delete m_idxSubnetByAddr;
 }

@@ -1190,7 +1190,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			{
 				DumpIndex(pCtx, &g_idxInterfaceByAddr, true);
 			}
-			else if (IsCommand(_T("NODE"), szBuffer, 2))
+			else if (IsCommand(_T("NODEADDR"), szBuffer, 5))
+			{
+				DumpIndex(pCtx, &g_idxNodeByAddr, true);
+			}
+			else if (IsCommand(_T("NODEID"), szBuffer, 5))
 			{
 				DumpIndex(pCtx, &g_idxNodeById, false);
 			}
@@ -1198,11 +1202,15 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			{
 				DumpIndex(pCtx, &g_idxSubnetByAddr, true);
 			}
+			else if (IsCommand(_T("ZONE"), szBuffer, 1))
+			{
+				DumpIndex(pCtx, &g_idxZoneByGUID, true);
+			}
 			else
 			{
 				if (szBuffer[0] == 0)
 					ConsolePrintf(pCtx, _T("ERROR: Missing index name\n")
-							_T("Valid names are: CONDITION, ID, INTERFACE, NODE, SUBNET\n\n"));
+							_T("Valid names are: CONDITION, ID, INTERFACE, NODEADDR, NODEID, SUBNET, ZONE\n\n"));
 				else
 					ConsolePrintf(pCtx, _T("ERROR: Invalid index name\n\n"));
 			}

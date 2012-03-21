@@ -501,6 +501,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dctable.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\debug.cpp"
 				>
 			</File>

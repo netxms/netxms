@@ -31,23 +31,19 @@
 
 static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	NXSL_Object *object;
-	Node *node;
-	DCItem *dci;
-
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
 	if (!argv[1]->isInteger())
 		return NXSL_ERR_NOT_INTEGER;
 
-	object = argv[0]->getValueAsObject();
+	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	node = (Node *)object->getData();
-	dci = node->getItemById(argv[1]->getValueAsUInt32());
-	if (dci != NULL)
+	Node *node = (Node *)object->getData();
+	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
+	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 	{
 		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci));
 	}
@@ -68,25 +64,21 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 
 static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	NXSL_Object *object;
-	Node *node;
-	DCItem *dci;
-
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
 	if (!argv[1]->isInteger())
 		return NXSL_ERR_NOT_INTEGER;
 
-	object = argv[0]->getValueAsObject();
+	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	node = (Node *)object->getData();
-	dci = node->getItemById(argv[1]->getValueAsUInt32());
-	if (dci != NULL)
+	Node *node = (Node *)object->getData();
+	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
+	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 	{
-		*ppResult = dci->getValueForNXSL(F_LAST, 1);
+		*ppResult = ((DCItem *)dci)->getValueForNXSL(F_LAST, 1);
 	}
 	else
 	{
@@ -103,25 +95,21 @@ static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 
 static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 {
-	NXSL_Object *object;
-	Node *node;
-	DCItem *dci;
-
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	object = argv[0]->getValueAsObject();
+	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	node = (Node *)object->getData();
-	dci = byName ? node->getItemByName(argv[1]->getValueAsCString()) : node->getItemByDescription(argv[1]->getValueAsCString());
-	if (dci != NULL)
+	Node *node = (Node *)object->getData();
+	DCObject *dci = byName ? node->getDCObjectByName(argv[1]->getValueAsCString()) : node->getDCObjectByDescription(argv[1]->getValueAsCString());
+	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 	{
-		*ppResult = dci->getValueForNXSL(F_LAST, 1);
+		*ppResult = ((DCItem *)dci)->getValueForNXSL(F_LAST, 1);
 	}
 	else
 	{
@@ -162,23 +150,19 @@ static int F_GetDCIValueByDescription(int argc, NXSL_Value **argv, NXSL_Value **
 
 static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	NXSL_Object *object;
-	Node *node;
-	DCItem *dci;
-
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	object = argv[0]->getValueAsObject();
+	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	node = (Node *)object->getData();
-	dci = node->getItemByName(argv[1]->getValueAsCString());
-	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((DWORD)0);
+	Node *node = (Node *)object->getData();
+	DCObject *dci = node->getDCObjectByName(argv[1]->getValueAsCString());
+	*ppResult = ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM)) ? new NXSL_Value(dci->getId()) : new NXSL_Value((DWORD)0);
 	return 0;
 }
 
@@ -189,23 +173,19 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 
 static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	NXSL_Object *object;
-	Node *node;
-	DCItem *dci;
-
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	object = argv[0]->getValueAsObject();
+	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	node = (Node *)object->getData();
-	dci = node->getItemByDescription(argv[1]->getValueAsCString());
-	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((DWORD)0);
+	Node *node = (Node *)object->getData();
+	DCObject *dci = node->getDCObjectByDescription(argv[1]->getValueAsCString());
+	*ppResult = ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM)) ? new NXSL_Value(dci->getId()) : new NXSL_Value((DWORD)0);
 	return 0;
 }
 
@@ -479,7 +459,6 @@ DCItem::~DCItem()
    delete m_pScript;
 	safe_free(m_pszCustomUnitName);
    clearCache();
-   MutexDestroy(m_hMutex);
 }
 
 
@@ -518,12 +497,12 @@ void DCItem::clearCache()
 // Load data collection items thresholds from database
 //
 
-BOOL DCItem::loadThresholdsFromDB()
+bool DCItem::loadThresholdsFromDB()
 {
    DWORD i;
    TCHAR szQuery[256];
    DB_RESULT hResult;
-   BOOL bResult = FALSE;
+   bool result = false;
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
 	           _T("SELECT threshold_id,fire_value,rearm_value,check_function,")
@@ -541,12 +520,12 @@ BOOL DCItem::loadThresholdsFromDB()
             m_ppThresholdList[i] = new Threshold(hResult, i, this);
       }
       DBFreeResult(hResult);
-      bResult = TRUE;
+      result = true;
    }
 
    //updateCacheSize();
 
-   return bResult;
+   return result;
 }
 
 
@@ -1441,46 +1420,35 @@ bool DCItem::deleteAllData()
 // Update from template item
 //
 
-void DCItem::updateFromTemplate(DCItem *pItem)
+void DCItem::updateFromTemplate(DCObject *src)
 {
-   DWORD i, dwCount;
+	DCObject::updateFromTemplate(src);
+
+	if (src->getType() != DCO_TYPE_ITEM)
+	{
+		DbgPrintf(2, _T("INTERNAL ERROR: DCItem::updateFromTemplate(%d, %d): source type is %d"), (int)m_dwId, (int)src->getId(), src->getType());
+		return;
+	}
 
    lock();
+	DCItem *item = (DCItem *)src;
 
-   m_dataType = pItem->m_dataType;
-   m_iPollingInterval = pItem->m_iPollingInterval;
-   m_iRetentionTime = pItem->m_iRetentionTime;
-   m_deltaCalculation = pItem->m_deltaCalculation;
-   m_source = pItem->m_source;
-   setStatus(pItem->m_status, true);
-	m_flags = pItem->m_flags;
-	m_dwProxyNode = pItem->m_dwProxyNode;
-   setTransformationScript(pItem->m_pszScript);
-	m_dwResourceId = pItem->m_dwResourceId;
+   m_dataType = item->m_dataType;
+   m_deltaCalculation = item->m_deltaCalculation;
+   setTransformationScript(item->m_pszScript);
 
-	safe_free(m_pszPerfTabSettings);
-	m_pszPerfTabSettings = (pItem->m_pszPerfTabSettings != NULL) ? _tcsdup(pItem->m_pszPerfTabSettings) : NULL;
-
-	m_nBaseUnits = pItem->m_nBaseUnits;
-	m_nMultiplier = pItem->m_nMultiplier;
+	m_nBaseUnits = item->m_nBaseUnits;
+	m_nMultiplier = item->m_nMultiplier;
 	safe_free(m_pszCustomUnitName);
-	m_pszCustomUnitName = (pItem->m_pszCustomUnitName != NULL) ? _tcsdup(pItem->m_pszCustomUnitName) : NULL;
-
-   // Copy schedules
-   for(i = 0; i < m_dwNumSchedules; i++)
-      safe_free(m_ppScheduleList[i]);
-   safe_free(m_ppScheduleList);
-   m_dwNumSchedules = pItem->m_dwNumSchedules;
-   m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
-   for(i = 0; i < m_dwNumSchedules; i++)
-      m_ppScheduleList[i] = _tcsdup(pItem->m_ppScheduleList[i]);
+	m_pszCustomUnitName = (item->m_pszCustomUnitName != NULL) ? _tcsdup(item->m_pszCustomUnitName) : NULL;
 
    // Copy thresholds
    // ***************************
    // First, skip matching thresholds
-   dwCount = min(m_dwNumThresholds, pItem->m_dwNumThresholds);
+   DWORD dwCount = min(m_dwNumThresholds, item->m_dwNumThresholds);
+	DWORD i;
    for(i = 0; i < dwCount; i++)
-      if (!m_ppThresholdList[i]->compare(pItem->m_ppThresholdList[i]))
+      if (!m_ppThresholdList[i]->compare(item->m_ppThresholdList[i]))
          break;
    dwCount = i;   // First unmatched threshold's position
 
@@ -1489,19 +1457,16 @@ void DCItem::updateFromTemplate(DCItem *pItem)
       delete m_ppThresholdList[i];
 
    // (Re)create thresholds starting from first unmatched
-   m_dwNumThresholds = pItem->m_dwNumThresholds;
+   m_dwNumThresholds = item->m_dwNumThresholds;
    m_ppThresholdList = (Threshold **)realloc(m_ppThresholdList, sizeof(Threshold *) * m_dwNumThresholds);
    for(i = dwCount; i < m_dwNumThresholds; i++)
    {
-      m_ppThresholdList[i] = new Threshold(pItem->m_ppThresholdList[i]);
+      m_ppThresholdList[i] = new Threshold(item->m_ppThresholdList[i]);
       m_ppThresholdList[i]->createId();
       m_ppThresholdList[i]->bindToItem(m_dwId);
    }
 
-   expandMacros(pItem->m_szName, m_szName, MAX_ITEM_NAME);
-   expandMacros(pItem->m_szDescription, m_szDescription, MAX_DB_STRING);
-   expandMacros(pItem->m_szInstance, m_szInstance, MAX_DB_STRING);
-	expandMacros(pItem->m_systemTag, m_systemTag, MAX_DB_STRING);
+   expandMacros(item->m_szInstance, m_szInstance, MAX_DB_STRING);
 
    updateCacheSize();
    

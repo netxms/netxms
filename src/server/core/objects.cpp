@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ ObjectIndex g_idxSubnetByAddr;
 ObjectIndex g_idxInterfaceByAddr;
 ObjectIndex g_idxZoneByGUID;
 ObjectIndex g_idxNodeById;
+ObjectIndex g_idxNodeByAddr;
 ObjectIndex g_idxConditionById;
 ObjectIndex g_idxServiceCheckById;
 
@@ -296,6 +297,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(pObject->Id(), pObject);
+				g_idxNodeByAddr.put(pObject->IpAddr(), pObject);
             break;
          case OBJECT_SUBNET:
             if (pObject->IpAddr() != 0)
@@ -401,6 +403,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 			break;
       case OBJECT_NODE:
 			g_idxNodeById.remove(pObject->Id());
+			g_idxNodeByAddr.remove(pObject->IpAddr());
          break;
       case OBJECT_SUBNET:
          if (pObject->IpAddr() != 0)
@@ -493,10 +496,26 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD zoneId, DWORD ipAddr)
    if (ipAddr == 0)
       return NULL;
 
+	Zone *zone = IsZoningEnabled() ? (Zone *)g_idxZoneByGUID.get(zoneId) : NULL;
+
+	Node *node = NULL;
+	if (IsZoningEnabled())
+	{
+		if (zone != NULL)
+		{
+			node = zone->getNodeByAddr(ipAddr);
+		}
+	}
+	else
+	{
+		node = (Node *)g_idxNodeByAddr.get(ipAddr);
+	}
+	if (node != NULL)
+		return node;
+
 	Interface *iface = NULL;
 	if (IsZoningEnabled())
 	{
-		Zone *zone = (Zone *)g_idxZoneByGUID.get(zoneId);
 		if (zone != NULL)
 		{
 			iface = zone->getInterfaceByAddr(ipAddr);

@@ -283,7 +283,6 @@ DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    DWORD i, dwId;
    NetObj *pObject;
-   DCItem *pItem;
 
    if (!bAlreadyLocked)
       LockData();
@@ -347,10 +346,10 @@ DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
             {
                if (pObject->Type() == OBJECT_NODE)
                {
-                  pItem = ((Node *)pObject)->getItemById(m_pDCIList[i].dwId);
-                  if (pItem != NULL)
+                  DCObject *pItem = ((Node *)pObject)->getDCObjectById(m_pDCIList[i].dwId);
+                  if ((pItem != NULL) && (pItem->getType() == DCO_TYPE_ITEM))
                   {
-                     pItem->updateCacheSize(m_dwId);
+                     ((DCItem *)pItem)->updateCacheSize(m_dwId);
                   }
                }
             }
@@ -400,7 +399,6 @@ void Condition::check()
    NXSL_ServerEnv *pEnv;
    NXSL_Value **ppValueList, *pValue;
    NetObj *pObject;
-   DCItem *pItem;
    DWORD i, dwNumValues;
    int iOldStatus = m_iStatus;
 
@@ -419,10 +417,10 @@ void Condition::check()
       {
          if (pObject->Type() == OBJECT_NODE)
          {
-            pItem = ((Node *)pObject)->getItemById(m_pDCIList[i].dwId);
-            if (pItem != NULL)
+            DCObject *pItem = ((Node *)pObject)->getDCObjectById(m_pDCIList[i].dwId);
+            if ((pItem != NULL) && (pItem->getType() == DCO_TYPE_ITEM))
             {
-               ppValueList[i] = pItem->getValueForNXSL(m_pDCIList[i].nFunction, m_pDCIList[i].nPolls);
+               ppValueList[i] = ((DCItem *)pItem)->getValueForNXSL(m_pDCIList[i].nFunction, m_pDCIList[i].nPolls);
             }
          }
       }

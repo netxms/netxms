@@ -80,36 +80,36 @@ static void CreateManagementNode(DWORD ipAddr, DWORD netMask)
 	pNode->AddParent(g_pServiceRoot);
    
    // Add default data collection items
-   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), 
-                             DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
-   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                             _T("Server.AverageDCPollerQueueSize"), 
-                             DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
-                             _T("Data collection poller's request queue for last minute")));
-   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                             _T("Server.AverageDBWriterQueueSize"), 
-                             DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
-                             _T("Database writer's request queue for last minute")));
-   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                             _T("Server.AverageDBWriterQueueSize.IData"), 
-                             DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
-                             _T("Database writer's request queue (DCI data) for last minute")));
-   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                             _T("Server.AverageDBWriterQueueSize.Other"), 
-                             DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
-                             _T("Database writer's request queue (other queries) for last minute")));
-   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                             _T("Server.AverageDCIQueuingTime"), 
-                             DS_INTERNAL, DCI_DT_UINT, 60, 30, pNode,
-                             _T("Average time to queue DCI for polling for last minute")));
-   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                             _T("Server.AverageStatusPollerQueueSize"), 
-                             DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
-                             _T("Status poller queue for last minute")));
-   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                             _T("Server.AverageConfigurationPollerQueueSize"), 
-                             DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
-                             _T("Configuration poller queue for last minute")));
+   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), 
+                                 DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
+   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                 _T("Server.AverageDCPollerQueueSize"), 
+                                 DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                                 _T("Data collection poller's request queue for last minute")));
+   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                 _T("Server.AverageDBWriterQueueSize"), 
+                                 DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                                 _T("Database writer's request queue for last minute")));
+   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                 _T("Server.AverageDBWriterQueueSize.IData"), 
+                                 DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                                 _T("Database writer's request queue (DCI data) for last minute")));
+   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                 _T("Server.AverageDBWriterQueueSize.Other"), 
+                                 DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                                 _T("Database writer's request queue (other queries) for last minute")));
+   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                 _T("Server.AverageDCIQueuingTime"), 
+                                 DS_INTERNAL, DCI_DT_UINT, 60, 30, pNode,
+                                 _T("Average time to queue DCI for polling for last minute")));
+   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                 _T("Server.AverageStatusPollerQueueSize"), 
+                                 DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                                 _T("Status poller queue for last minute")));
+   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                 _T("Server.AverageConfigurationPollerQueueSize"), 
+                                 DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                                 _T("Configuration poller queue for last minute")));
 }
 
 

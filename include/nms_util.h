@@ -388,6 +388,8 @@ private:
 	void **m_data;
 	bool m_objectOwner;
 
+	void internalRemove(int index, bool allowDestruction);
+
 protected:
 	virtual void destroyObject(void *object);
 
@@ -399,7 +401,8 @@ public:
 	void *get(int index) { return ((index >= 0) && (index < m_size)) ? m_data[index] : NULL; }
 	void set(int index, void *object);
 	void replace(int index, void *object);
-	void remove(int index);
+	void remove(int index) { internalRemove(index, true); }
+	void unlink(int index) { internalRemove(index, false); }
 	void clear();
 
 	int size() { return m_size; }

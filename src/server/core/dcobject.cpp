@@ -704,3 +704,51 @@ void DCObject::getEventList(DWORD **ppdwList, DWORD *pdwSize)
 void DCObject::createNXMPRecord(String &str)
 {
 }
+
+
+//
+// Load data collection object thresholds from database
+//
+
+bool DCObject::loadThresholdsFromDB()
+{
+	return true;
+}
+
+
+//
+// Update DC object from template object
+//
+
+void DCObject::updateFromTemplate(DCObject *src)
+{
+	lock();
+
+   expandMacros(src->m_szName, m_szName, MAX_ITEM_NAME);
+   expandMacros(src->m_szDescription, m_szDescription, MAX_DB_STRING);
+	expandMacros(src->m_systemTag, m_systemTag, MAX_DB_STRING);
+
+   m_iPollingInterval = src->m_iPollingInterval;
+   m_iRetentionTime = src->m_iRetentionTime;
+   m_source = src->m_source;
+   setStatus(src->m_status, true);
+	m_flags = src->m_flags;
+	m_dwProxyNode = src->m_dwProxyNode;
+	m_dwResourceId = src->m_dwResourceId;
+	m_snmpPort = src->m_snmpPort;
+
+	safe_free(m_pszPerfTabSettings);
+	m_pszPerfTabSettings = (src->m_pszPerfTabSettings != NULL) ? _tcsdup(src->m_pszPerfTabSettings) : NULL;
+
+   // Copy schedules
+	DWORD i;
+   for(i = 0; i < m_dwNumSchedules; i++)
+      safe_free(m_ppScheduleList[i]);
+   safe_free(m_ppScheduleList);
+   m_dwNumSchedules = src->m_dwNumSchedules;
+   m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
+   for(i = 0; i < m_dwNumSchedules; i++)
+      m_ppScheduleList[i] = _tcsdup(src->m_ppScheduleList[i]);
+
+	unlock();
+}

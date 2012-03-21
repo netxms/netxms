@@ -460,8 +460,7 @@ inline void NetObj::DecRefCount()
 class NXCORE_EXPORTABLE Template : public NetObj
 {
 protected:
-   DWORD m_dwNumItems;     // Number of data collection items
-   DCItem **m_ppItems;     // Data collection items
+	ObjectArray<DCObject> *m_dcObjects;
    DWORD m_dwDCILockStatus;
    DWORD m_dwVersion;
    BOOL m_bDCIListModified;
@@ -498,17 +497,17 @@ public:
    int getVersionMajor() { return m_dwVersion >> 16; }
    int getVersionMinor() { return m_dwVersion & 0xFFFF; }
 
-   DWORD getItemCount() { return m_dwNumItems; }
-   bool addItem(DCItem *pItem, bool alreadyLocked = false);
+   int getItemCount() { return m_dcObjects->size(); }
+   bool addDCObject(DCObject *object, bool alreadyLocked = false);
    bool updateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
                    DWORD **ppdwMapIndex, DWORD **ppdwMapId);
-   bool deleteItem(DWORD dwItemId, bool needLock);
+   bool deleteDCObject(DWORD dcObjectId, bool needLock);
    bool setItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus);
    int getItemType(DWORD dwItemId);
-   DCItem *getItemById(DWORD dwItemId);
-   DCItem *getItemByIndex(DWORD dwIndex);
-   DCItem *getItemByName(const TCHAR *pszName);
-   DCItem *getItemByDescription(const TCHAR *pszDescription);
+   DCObject *getDCObjectById(DWORD dwItemId);
+   DCObject *getDCObjectByIndex(int index);
+   DCObject *getDCObjectByName(const TCHAR *pszName);
+   DCObject *getDCObjectByDescription(const TCHAR *pszDescription);
    BOOL LockDCIList(DWORD dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
    BOOL UnlockDCIList(DWORD dwSessionId);
    void SetDCIModificationFlag(void) { m_bDCIListModified = TRUE; }
@@ -527,7 +526,7 @@ public:
 
    void CreateNXMPRecord(String &str);
 	
-	BOOL EnumDCI(BOOL (* pfCallback)(DCItem *, DWORD, void *), void *pArg);
+	bool enumDCObjects(bool (* pfCallback)(DCObject *, DWORD, void *), void *pArg);
 	void associateItems();
 };
 
@@ -935,7 +934,7 @@ public:
    DWORD getLastValues(CSCPMessage *pMsg);
 	void processNewDciValue(DCItem *item, time_t currTime, const TCHAR *value);
    void cleanDCIData();
-   BOOL applyTemplateItem(DWORD dwTemplateId, DCItem *pItem);
+   bool applyTemplateItem(DWORD dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList);
    void unbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
    void updateDciCache();
@@ -1245,6 +1244,7 @@ protected:
    DWORD m_agentProxy;
    DWORD m_snmpProxy;
 	DWORD m_icmpProxy;
+	ObjectIndex *m_idxNodeByAddr;
 	ObjectIndex *m_idxInterfaceByAddr;
 	ObjectIndex *m_idxSubnetByAddr;
 
@@ -1276,8 +1276,10 @@ public:
 	void updateInterfaceIndex(DWORD oldIp, DWORD newIp, Interface *iface);
 	Subnet *getSubnetByAddr(DWORD ipAddr) { return(Subnet *) m_idxSubnetByAddr->get(ipAddr); }
 	Interface *getInterfaceByAddr(DWORD ipAddr) { return (Interface *)m_idxInterfaceByAddr->get(ipAddr); }
+	Node *getNodeByAddr(DWORD ipAddr) { return (Node *)m_idxNodeByAddr->get(ipAddr); }
 	Subnet *findSubnet(bool (*comparator)(NetObj *, void *), void *data) { return (Subnet *)m_idxSubnetByAddr->find(comparator, data); }
 	Interface *findInterface(bool (*comparator)(NetObj *, void *), void *data) { return (Interface *)m_idxInterfaceByAddr->find(comparator, data); }
+	Node *findNode(bool (*comparator)(NetObj *, void *), void *data) { return (Node *)m_idxNodeByAddr->find(comparator, data); }
 };
 
 
@@ -1896,6 +1898,7 @@ extern Queue *g_pTemplateUpdateQueue;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxObjectById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxSubnetByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByGUID;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxConditionById;

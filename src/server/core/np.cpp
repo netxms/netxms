@@ -203,7 +203,7 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
    }
 
    // Add default DCIs
-   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
+   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
 
 	if (doConfPoll)
 		pNode->configurationPoll(NULL, 0, -1, dwNetMask);

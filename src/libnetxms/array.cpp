@@ -122,12 +122,12 @@ void Array::replace(int index, void *object)
 // Remove element at given index
 //
 
-void Array::remove(int index)
+void Array::internalRemove(int index, bool allowDestruction)
 {
 	if ((index < 0) || (index >= m_size))
 		return;
 
-	if (m_objectOwner)
+	if (m_objectOwner && allowDestruction)
 		destroyObject(m_data[index]);
 	m_size--;
 	memmove(&m_data[index], &m_data[index + 1], sizeof(void *) * (m_size - index));

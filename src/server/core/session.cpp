@@ -2957,7 +2957,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      pItem = new DCItem(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, 
                                         DCI_DT_INT, 60, 30, (Node *)pObject);
                      pItem->setStatus(ITEM_STATUS_DISABLED, false);
-                     if ((bSuccess = ((Template *)pObject)->addItem(pItem)))
+                     if ((bSuccess = ((Template *)pObject)->addDCObject(pItem)))
                      {
                         msg.SetVariable(VID_RCC, RCC_SUCCESS);
                         // Return new item id to client
@@ -2996,7 +2996,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      break;
                   case CMD_DELETE_NODE_DCI:
                      dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
-                     bSuccess = ((Template *)pObject)->deleteItem(dwItemId, TRUE);
+                     bSuccess = ((Template *)pObject)->deleteDCObject(dwItemId, TRUE);
                      msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
                      break;
                }
@@ -3100,7 +3100,6 @@ void ClientSession::ClearDCIData(CSCPMessage *pRequest)
    CSCPMessage msg;
    NetObj *pObject;
 	DWORD dwItemId;
-	DCItem *dci;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -3116,7 +3115,7 @@ void ClientSession::ClearDCIData(CSCPMessage *pRequest)
          {
 				dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
 				DebugPrintf(4, _T("ClearDCIData: request for DCI %d at node %d"), dwItemId, pObject->Id()); 
-            dci = ((Template *)pObject)->getItemById(dwItemId);
+            DCObject *dci = ((Template *)pObject)->getDCObjectById(dwItemId);
 				if (dci != NULL)
 				{
 					msg.SetVariable(VID_RCC, dci->deleteAllData() ? RCC_SUCCESS : RCC_DB_FAILURE);
@@ -3184,8 +3183,8 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                    (((Template *)pDestination)->LockDCIList(m_dwIndex, m_szUserName, szLockInfo)))
                {
                   DWORD i, *pdwItemList, dwNumItems;
-                  const DCItem *pSrcItem;
-                  DCItem *pDstItem;
+                  const DCObject *pSrcItem;
+                  DCObject *pDstItem;
                   int iErrors = 0;
 
                   // Get list of items to be copied/moved
@@ -3196,19 +3195,27 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                   // Copy items
                   for(i = 0; i < dwNumItems; i++)
                   {
-                     pSrcItem = ((Template *)pSource)->getItemById(pdwItemList[i]);
+                     pSrcItem = ((Template *)pSource)->getDCObjectById(pdwItemList[i]);
                      if (pSrcItem != NULL)
                      {
-                        pDstItem = new DCItem(pSrcItem);
+								switch(pSrcItem->getType())
+								{
+									case DCO_TYPE_ITEM:
+		                        pDstItem = new DCItem((DCItem *)pSrcItem);
+										break;
+									case DCO_TYPE_TABLE:
+		                        pDstItem = new DCTable((DCTable *)pSrcItem);
+										break;
+								}
 								pDstItem->setTemplateId(0, 0);
                         pDstItem->changeBinding(CreateUniqueId(IDG_ITEM),
                                                 (Template *)pDestination, FALSE);
-                        if (((Template *)pDestination)->addItem(pDstItem))
+                        if (((Template *)pDestination)->addDCObject(pDstItem))
                         {
                            if (bMove)
                            {
                               // Delete original item
-                              if (!((Template *)pSource)->deleteItem(pdwItemList[i], TRUE))
+                              if (!((Template *)pSource)->deleteDCObject(pdwItemList[i], TRUE))
                               {
                                  iErrors++;
                               }
@@ -3288,10 +3295,10 @@ void ClientSession::sendDCIThresholds(CSCPMessage *request)
       {
 			if (object->Type() == OBJECT_NODE)
 			{
-				DCItem *dci = ((Node *)object)->getItemById(request->GetVariableLong(VID_DCI_ID));
-				if (dci != NULL)
+				DCObject *dci = ((Node *)object)->getDCObjectById(request->GetVariableLong(VID_DCI_ID));
+				if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 				{
-					dci->fillMessageWithThresholds(&msg);
+					((DCItem *)dci)->fillMessageWithThresholds(&msg);
 					msg.SetVariable(VID_RCC, RCC_SUCCESS);
 				}
 				else
@@ -3356,7 +3363,6 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
 					int iPos = 0, iType;
 					DCI_DATA_HEADER *pData = NULL;
 					DCI_DATA_ROW *pCurr;
-					DCItem *dci;
 
 					// Get request parameters
 					dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
@@ -3364,8 +3370,8 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
 					dwTimeFrom = pRequest->GetVariableLong(VID_TIME_FROM);
 					dwTimeTo = pRequest->GetVariableLong(VID_TIME_TO);
 
-					dci = ((Node *)pObject)->getItemById(dwItemId);
-					if (dci != NULL)
+					DCObject *dci = ((Node *)pObject)->getDCObjectById(dwItemId);
+					if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 					{
 						if ((dwMaxRows == 0) || (dwMaxRows > MAX_DCI_DATA_RECORDS))
 							dwMaxRows = MAX_DCI_DATA_RECORDS;
@@ -3382,7 +3388,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
 						}
 
 						// Get item's data type to determine actual row size
-						iType = dci->getDataType();
+						iType = ((DCItem *)dci)->getDataType();
 						// Create database-dependent query for fetching N rows
 						switch(g_nDBSyntax)
 						{
@@ -3410,7 +3416,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
 						{
 							// Send CMD_REQUEST_COMPLETED message
 							msg.SetVariable(VID_RCC, RCC_SUCCESS);
-							dci->fillMessageWithThresholds(&msg);
+							((DCItem *)dci)->fillMessageWithThresholds(&msg);
 							sendMessage(&msg);
 
 							dwNumRows = DBGetNumRows(hResult);
@@ -4003,7 +4009,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 
 										_sntprintf(dciName, MAX_DB_STRING, _T("ChildStatus(%d)"), pObject->Id());
 										_sntprintf(dciDescription, MAX_DB_STRING, _T("Status of network service %s"), pObject->Name());
-										((Node *)pParent)->addItem(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT, 60, 30, (Node *)pParent, dciDescription));
+										((Node *)pParent)->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT, 60, 30, (Node *)pParent, dciDescription));
 									}
 								}
 							}
@@ -7593,7 +7599,7 @@ void ClientSession::StartSnmpWalk(CSCPMessage *pRequest)
 DWORD ClientSession::ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName)
 {
    NetObj *pObject;
-   DCItem *pItem;
+   DCObject *pItem;
    DWORD dwResult;
 
    pObject = FindObjectById(dwNode);
@@ -7605,7 +7611,7 @@ DWORD ClientSession::ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName
 		{
 			if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 			{
-				pItem = ((Template *)pObject)->getItemById(dwItem);
+				pItem = ((Template *)pObject)->getDCObjectById(dwItem);
 				if (pItem != NULL)
 				{
 					*ppszName = (TCHAR *)pItem->getDescription();
@@ -8173,7 +8179,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
    DWORD i, dwObjectId, dwNumItems, dwId, dwItemId;
    NetObj *pObject;
    Node **ppNodeList = NULL;
-   DCItem *pItem, **ppItemList = NULL;
+   DCItem **ppItemList = NULL;
    TCHAR szName[256], **ppValueList;
    BOOL bOK;
 
@@ -8223,21 +8229,22 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
 
                   // Object OK, find DCI by ID or name (if ID==0)
                   dwItemId = pRequest->GetVariableLong(dwId++);
+						DCObject *pItem;
                   if (dwItemId != 0)
                   {
-                     pItem = ppNodeList[i]->getItemById(dwItemId);
+                     pItem = ppNodeList[i]->getDCObjectById(dwItemId);
                   }
                   else
                   {
                      pRequest->GetVariableStr(dwId++, szName, 256);
-                     pItem = ppNodeList[i]->getItemByName(szName);
+                     pItem = ppNodeList[i]->getDCObjectByName(szName);
                   }
 
-                  if (pItem != NULL)
+                  if ((pItem != NULL) && (pItem->getType() == DCO_TYPE_ITEM))
                   {
                      if (pItem->getDataSource() == DS_PUSH_AGENT)
                      {
-                        ppItemList[i] = pItem;
+                        ppItemList[i] = (DCItem *)pItem;
                         ppValueList[i] = pRequest->GetVariableStr(dwId++);
                         bOK = TRUE;
                      }
@@ -8686,7 +8693,6 @@ void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
-	DCItem *pItem;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -8700,12 +8706,12 @@ void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
              (pObject->Type() == OBJECT_CLUSTER) ||
              (pObject->Type() == OBJECT_TEMPLATE))
          {
-				pItem = ((Template *)pObject)->getItemById(pRequest->GetVariableLong(VID_DCI_ID));
-				if (pItem != NULL)
+				DCObject *pItem = ((Template *)pObject)->getDCObjectById(pRequest->GetVariableLong(VID_DCI_ID));
+				if ((pItem != NULL) && (pItem->getType() == DCO_TYPE_ITEM))
 				{
 					msg.SetVariable(VID_TEMPLATE_ID, pItem->getTemplateId());
 					msg.SetVariable(VID_RESOURCE_ID, pItem->getResourceId());
-					msg.SetVariable(VID_DCI_DATA_TYPE, (WORD)pItem->getDataType());
+					msg.SetVariable(VID_DCI_DATA_TYPE, (WORD)((DCItem *)pItem)->getDataType());
 					msg.SetVariable(VID_DCI_SOURCE_TYPE, (WORD)pItem->getDataSource());
 					msg.SetVariable(VID_NAME, pItem->getName());
 					msg.SetVariable(VID_DESCRIPTION, pItem->getDescription());
@@ -9948,10 +9954,8 @@ void ClientSession::testDCITransformation(CSCPMessage *pRequest)
       {
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
-				DCItem *dci;
-
-				dci = ((Node *)pObject)->getItemById(pRequest->GetVariableLong(VID_DCI_ID));
-				if (dci != NULL)
+				DCObject *dci = ((Node *)pObject)->getDCObjectById(pRequest->GetVariableLong(VID_DCI_ID));
+				if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 				{
 					BOOL success;
 					TCHAR *script, value[256], result[256];
@@ -9960,7 +9964,7 @@ void ClientSession::testDCITransformation(CSCPMessage *pRequest)
 					if (script != NULL)
 					{
 						pRequest->GetVariableStr(VID_VALUE, value, sizeof(value) / sizeof(TCHAR));
-						success = dci->testTransformation(script, value, result, sizeof(result) / sizeof(TCHAR));
+						success = ((DCItem *)dci)->testTransformation(script, value, result, sizeof(result) / sizeof(TCHAR));
 						free(script);
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);
 						msg.SetVariable(VID_EXECUTION_STATUS, (WORD)success);

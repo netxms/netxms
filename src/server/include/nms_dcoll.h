@@ -43,6 +43,15 @@
 
 
 //
+// Data collection object types
+//
+
+#define DCO_TYPE_GENERIC   0
+#define DCO_TYPE_ITEM      1
+#define DCO_TYPE_TABLE     2
+
+
+//
 // DCI value
 //
 
@@ -217,8 +226,13 @@ protected:
 public:
 	virtual ~DCObject();
 
+	virtual int getType() const { return DCO_TYPE_GENERIC; }
+
+   virtual void updateFromTemplate(DCObject *dcObject);
+
    virtual BOOL saveToDB(DB_HANDLE hdb);
    virtual void deleteFromDB();
+   virtual bool loadThresholdsFromDB();
 
 	DWORD getId() { return m_dwId; }
    int getDataSource() { return m_source; }
@@ -307,11 +321,13 @@ public:
 	DCItem(ConfigEntry *config, Template *owner);
    virtual ~DCItem();
 
-   void updateFromTemplate(DCItem *pItem);
+	virtual int getType() const { return DCO_TYPE_ITEM; }
+
+   virtual void updateFromTemplate(DCObject *dcObject);
 
    virtual BOOL saveToDB(DB_HANDLE hdb);
    virtual void deleteFromDB();
-   BOOL loadThresholdsFromDB();
+   virtual bool loadThresholdsFromDB();
 
    void updateCacheSize(DWORD dwCondId = 0);
 
@@ -350,6 +366,22 @@ public:
    void setTransformationScript(const TCHAR *pszScript);
 
 	BOOL testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
+};
+
+
+//
+// Tabular data collection object
+//
+
+class NXCORE_EXPORTABLE DCTable : public DCObject
+{
+public:
+	DCTable();
+   DCTable(const DCTable *src);
+	virtual ~DCTable();
+
+	virtual int getType() const { return DCO_TYPE_TABLE; }
+
 };
 
 

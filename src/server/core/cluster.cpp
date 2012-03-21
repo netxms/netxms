@@ -103,8 +103,8 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
    // Load DCI and access list
    loadACLFromDB();
    loadItemsFromDB();
-   for(i = 0; i < (int)m_dwNumItems; i++)
-      if (!m_ppItems[i]->loadThresholdsFromDB())
+   for(i = 0; i < m_dcObjects->size(); i++)
+      if (!m_dcObjects->get(i)->loadThresholdsFromDB())
          return FALSE;
 
    if (!m_bIsDeleted)
@@ -243,8 +243,8 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
    if (bResult)
    {
 		lockDciAccess();
-      for(i = 0; i < m_dwNumItems; i++)
-         m_ppItems[i]->saveToDB(hdb);
+      for(i = 0; i < (DWORD)m_dcObjects->size(); i++)
+         m_dcObjects->get(i)->saveToDB(hdb);
 		unlockDciAccess();
 
 		// Save cluster members list
