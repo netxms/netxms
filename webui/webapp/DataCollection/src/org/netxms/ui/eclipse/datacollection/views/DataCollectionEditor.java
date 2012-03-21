@@ -56,7 +56,9 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.Cluster;
@@ -789,7 +791,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask("Concert DCIs to template DCIs", 4);
+				monitor.beginTask("Convert DCIs to template DCIs", 4);
 				
 				boolean needApply = true;
 				for(long id : template.getChildIdList())
@@ -810,12 +812,44 @@ public class DataCollectionEditor extends ViewPart
 						
 				if (needApply)
 				{
-					session.applyTemplate(template.getObjectId(), dciConfig.getNodeId());
+					boolean success = false;
+					int retries = 5;
+					do
+					{
+						try
+						{
+							session.applyTemplate(template.getObjectId(), dciConfig.getNodeId());
+							success = true;
+						}
+						catch(NXCException e)
+						{
+							if (e.getErrorCode() != RCC.COMPONENT_LOCKED)
+								throw e;
+							Thread.sleep(200);
+						}
+						retries--;
+					} while(!success && (retries > 0));
 				}
-				Thread.sleep(750);
 				monitor.worked(1);
 				
-				dciConfig.open();
+				boolean success = false;
+				int retries = 5;
+				do
+				{
+					try
+					{
+						Thread.sleep(500);
+						dciConfig.open();
+						success = true;
+					}
+					catch(NXCException e)
+					{
+						if (e.getErrorCode() != RCC.COMPONENT_LOCKED)
+							throw e;
+					}
+					retries--;
+				} while(!success && (retries > 0));
+				
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
