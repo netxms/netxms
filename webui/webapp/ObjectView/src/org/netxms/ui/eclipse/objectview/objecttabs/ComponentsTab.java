@@ -35,8 +35,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.PhysicalComponent;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -241,26 +243,48 @@ public class ComponentsTab extends ObjectTab
 	{
 		viewer.setInput(new Object[0]);
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Get node components", getViewPart(), Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob("Get node components", getViewPart(), Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final PhysicalComponent root = session.getNodePhysicalComponents(object.getObjectId());
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						if (viewer.getTree().isDisposed())
-							return;
-						
-						if ((ComponentsTab.this.getObject() != null) &&
-						    (ComponentsTab.this.getObject().getObjectId() == object.getObjectId()))
+				try
+				{
+					final PhysicalComponent root = session.getNodePhysicalComponents(object.getObjectId());
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
 						{
-							viewer.setInput(new Object[] { root });
-							viewer.expandAll();
+							if (viewer.getTree().isDisposed())
+								return;
+							
+							if ((ComponentsTab.this.getObject() != null) &&
+							    (ComponentsTab.this.getObject().getObjectId() == object.getObjectId()))
+							{
+								viewer.setInput(new Object[] { root });
+								viewer.expandAll();
+							}
 						}
-					}
-				});
+					});
+				}
+				catch(NXCException e)
+				{
+					if (e.getErrorCode() != RCC.NO_COMPONENT_DATA)
+						throw e;
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
+						{
+							if (viewer.getTree().isDisposed())
+								return;
+							
+							if ((ComponentsTab.this.getObject() != null) &&
+							    (ComponentsTab.this.getObject().getObjectId() == object.getObjectId()))
+							{
+								viewer.setInput(new Object[0]);
+							}
+						}
+					});
+				}
 			}
 			
 			@Override
@@ -268,7 +292,9 @@ public class ComponentsTab extends ObjectTab
 			{
 				return "Cannot get component information for node " + object.getObjectName();
 			}
-		}.start();
+		};
+		job.setUser(false);
+		job.start();
 	}
 
 	/* (non-Javadoc)
