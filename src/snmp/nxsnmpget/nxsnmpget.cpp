@@ -105,11 +105,11 @@ int GetData(int argc, char *argv[])
                var = response->getVariable(i);
                if (var->GetType() == ASN_NO_SUCH_OBJECT)
                {
-                  printf("No such object: %s\n", var->GetName()->GetValueAsText());
+                  printf("No such object: %s\n", var->GetName()->getValueAsText());
                }
                else if (var->GetType() == ASN_NO_SUCH_INSTANCE)
                {
-                  printf("No such instance: %s\n", var->GetName()->GetValueAsText());
+                  printf("No such instance: %s\n", var->GetName()->getValueAsText());
                }
                else
                {
@@ -117,7 +117,7 @@ int GetData(int argc, char *argv[])
 						TCHAR typeName[256];
 
 						var->getValueAsPrintableString(szBuffer, 1024, &convert);
-						_tprintf(_T("%s [%s]: %s\n"), var->GetName()->GetValueAsText(),
+						_tprintf(_T("%s [%s]: %s\n"), var->GetName()->getValueAsText(),
 						         convert ? _T("Hex-STRING") : SNMPDataTypeName(var->GetType(), typeName, 256),
                            szBuffer);
                }

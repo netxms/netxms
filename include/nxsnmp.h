@@ -360,21 +360,21 @@ private:
    DWORD *m_pdwValue;
    TCHAR *m_pszTextValue;
 
-   void ConvertToText();
+   void convertToText();
 
 public:
    SNMP_ObjectId();
-   SNMP_ObjectId(DWORD dwLength, DWORD *pdwValue);
+   SNMP_ObjectId(DWORD dwLength, const DWORD *pdwValue);
    ~SNMP_ObjectId();
 
-   DWORD Length(void) { return m_dwLength; }
-   const DWORD *GetValue() { return m_pdwValue; }
-   const TCHAR *GetValueAsText() { return CHECK_NULL(m_pszTextValue); }
-   void SetValue(DWORD *pdwValue, DWORD dwLength);
-   void Extend(DWORD dwSubId);
+   DWORD getLength() { return m_dwLength; }
+   const DWORD *getValue() { return m_pdwValue; }
+   const TCHAR *getValueAsText() { return CHECK_NULL(m_pszTextValue); }
+   void setValue(DWORD *pdwValue, DWORD dwLength);
+   void extend(DWORD dwSubId);
 
-   int Compare(TCHAR *pszOid);
-   int Compare(DWORD *pdwOid, DWORD dwLen);
+   int compare(TCHAR *pszOid);
+   int compare(DWORD *pdwOid, DWORD dwLen);
 };
 
 

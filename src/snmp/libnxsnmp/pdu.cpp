@@ -366,12 +366,12 @@ BOOL SNMP_PDU::parseTrapPDU(BYTE *pData, DWORD dwPDULength)
          };
 
          // For standard trap types, create standard V2 Enterprise ID
-         m_pEnterprise->SetValue(pdwStdOid[m_iTrapType], 10);
+         m_pEnterprise->setValue(pdwStdOid[m_iTrapType], 10);
       }
       else
       {
-         m_pEnterprise->Extend(0);
-         m_pEnterprise->Extend(m_iSpecificTrap);
+         m_pEnterprise->extend(0);
+         m_pEnterprise->extend(m_iSpecificTrap);
       }
    }
 
@@ -406,16 +406,16 @@ BOOL SNMP_PDU::parseTrap2PDU(BYTE *pData, DWORD dwPDULength)
       // Set V1 trap type and specific trap type fields
       if (bResult)
       {
-         if ((m_pEnterprise->Compare(pdwStdTrapPrefix, 9) == OID_SHORTER) &&
-             (m_pEnterprise->Length() == 10))
+         if ((m_pEnterprise->compare(pdwStdTrapPrefix, 9) == OID_SHORTER) &&
+             (m_pEnterprise->getLength() == 10))
          {
-            m_iTrapType = m_pEnterprise->GetValue()[9];
+            m_iTrapType = m_pEnterprise->getValue()[9];
             m_iSpecificTrap = 0;
          }
          else
          {
             m_iTrapType = 6;
-            m_iSpecificTrap = m_pEnterprise->GetValue()[m_pEnterprise->Length() - 1];
+            m_iSpecificTrap = m_pEnterprise->getValue()[m_pEnterprise->getLength() - 1];
          }
       }
    }
@@ -935,7 +935,7 @@ DWORD SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 
    // Estimate required buffer size and allocate it
    for(dwBufferSize = 1024, i = 0; i < m_dwNumVariables; i++)
-      dwBufferSize += m_ppVarList[i]->GetValueLength() + m_ppVarList[i]->GetName()->Length() * 4 + 16;
+      dwBufferSize += m_ppVarList[i]->GetValueLength() + m_ppVarList[i]->GetName()->getLength() * 4 + 16;
    pBlock = (BYTE *)malloc(dwBufferSize);
    pVarBinds = (BYTE *)malloc(dwBufferSize);
    pPacket = (BYTE *)malloc(dwBufferSize);
@@ -966,8 +966,8 @@ DWORD SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
       switch(dwPDUType)
       {
          case ASN_TRAP_V1_PDU:
-            dwBytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_pEnterprise->GetValue(),
-                                 m_pEnterprise->Length() * sizeof(DWORD),
+            dwBytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_pEnterprise->getValue(),
+                                 m_pEnterprise->getLength() * sizeof(DWORD),
                                  pbCurrPos, dwBufferSize - dwPDUSize);
             dwPDUSize += dwBytes;
             pbCurrPos += dwBytes;

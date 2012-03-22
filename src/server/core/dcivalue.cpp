@@ -1,7 +1,6 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -211,7 +210,7 @@ void CalculateItemValueDiff(ItemValue &result, int nDataType,
    var = 0; \
    for(i = 0, nValueCount = 0; i < nNumValues; i++) \
    { \
-      if (ppValueList[i]->GetTimeStamp() != 1) \
+      if (ppValueList[i]->getTimeStamp() != 1) \
       { \
          var += (vtype)(*ppValueList[i]); \
          nValueCount++; \
@@ -262,7 +261,7 @@ void CalculateItemValueAverage(ItemValue &result, int nDataType,
    mean = 0; \
    for(i = 0, nValueCount = 0; i < nNumValues; i++) \
    { \
-      if (ppValueList[i]->GetTimeStamp() != 1) \
+      if (ppValueList[i]->getTimeStamp() != 1) \
       { \
          mean += (vtype)(*ppValueList[i]); \
          nValueCount++; \
@@ -272,7 +271,7 @@ void CalculateItemValueAverage(ItemValue &result, int nDataType,
    dev = 0; \
    for(i = 0, nValueCount = 0; i < nNumValues; i++) \
    { \
-      if (ppValueList[i]->GetTimeStamp() != 1) \
+      if (ppValueList[i]->getTimeStamp() != 1) \
       { \
          dev += ABS((vtype)(*ppValueList[i]) - mean); \
          nValueCount++; \

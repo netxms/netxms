@@ -106,19 +106,19 @@ int GetData(char *pszHost, char *pszRootOid)
                       (pVar->GetType() != ASN_NO_SUCH_INSTANCE))
                   {
                      // Should we stop walking?
-                     if ((pVar->GetName()->Length() < dwRootLen) ||
-                         (memcmp(pdwRootName, pVar->GetName()->GetValue(), dwRootLen * sizeof(DWORD))) ||
-                         ((pVar->GetName()->Length() == dwNameLen) &&
-                          (!memcmp(pVar->GetName()->GetValue(), pdwName, pVar->GetName()->Length() * sizeof(DWORD)))))
+                     if ((pVar->GetName()->getLength() < dwRootLen) ||
+                         (memcmp(pdwRootName, pVar->GetName()->getValue(), dwRootLen * sizeof(DWORD))) ||
+                         ((pVar->GetName()->getLength() == dwNameLen) &&
+                          (!memcmp(pVar->GetName()->getValue(), pdwName, pVar->GetName()->getLength() * sizeof(DWORD)))))
                      {
                         bRunning = FALSE;
                         delete pRespPDU;
                         delete pRqPDU;
                         break;
                      }
-                     memcpy(pdwName, pVar->GetName()->GetValue(), 
-                            pVar->GetName()->Length() * sizeof(DWORD));
-                     dwNameLen = pVar->GetName()->Length();
+                     memcpy(pdwName, pVar->GetName()->getValue(), 
+                            pVar->GetName()->getLength() * sizeof(DWORD));
+                     dwNameLen = pVar->GetName()->getLength();
 
                      // Print OID and value
                      pVar->GetValueAsString(szBuffer, 1024);
@@ -128,7 +128,7 @@ int GetData(char *pszHost, char *pszRootOid)
 
 							bool convert = true;
 							pVar->getValueAsPrintableString(szBuffer, 1024, &convert);
-							_tprintf(_T("%s [%s]: %s\n"), pVar->GetName()->GetValueAsText(),
+							_tprintf(_T("%s [%s]: %s\n"), pVar->GetName()->getValueAsText(),
 										convert ? _T("Hex-STRING") : SNMPDataTypeName(pVar->GetType(), typeName, 256),
 										szBuffer);
                   }

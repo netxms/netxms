@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -328,8 +328,8 @@ static DWORD TableHandler(DWORD dwVersion, SNMP_Variable *pVar,
 
       dwNameLen = SNMPParseOID(((SNMP_ENUM_ARGS *)pArg)->ppszOidList[0], pdwVarName, MAX_OID_LEN);
       pOid = pVar->GetName();
-      SNMPConvertOIDToText(pOid->Length() - dwNameLen, 
-         (DWORD *)&(pOid->GetValue())[dwNameLen], szSuffix, MAX_OID_LEN * 4);
+      SNMPConvertOIDToText(pOid->getLength() - dwNameLen, 
+         (DWORD *)&(pOid->getValue())[dwNameLen], szSuffix, MAX_OID_LEN * 4);
    }
 
    // Get values for other columns

@@ -84,17 +84,17 @@ static DWORD LLDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 
 	// Get additional info for current record
 	DWORD newOid[128];
-	memcpy(newOid, oid->GetValue(), oid->Length() * sizeof(DWORD));
+	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(DWORD));
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
 
-	newOid[oid->Length() - 4] = 4;	// lldpRemChassisIdSubtype
-	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->Length()));
+	newOid[oid->getLength() - 4] = 4;	// lldpRemChassisIdSubtype
+	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
-	newOid[oid->Length() - 4] = 7;	// lldpRemPortId
-	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->Length()));
+	newOid[oid->getLength() - 4] = 7;	// lldpRemPortId
+	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
-	newOid[oid->Length() - 4] = 6;	// lldpRemPortIdSubtype
-	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->Length()));
+	newOid[oid->getLength() - 4] = 6;	// lldpRemPortIdSubtype
+	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
 	SNMP_PDU *pRespPDU = NULL;
    DWORD rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
@@ -121,7 +121,7 @@ static DWORD LLDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 			info.protocol = LL_PROTO_LLDP;
 
 			// Index to lldpRemTable is lldpRemTimeMark, lldpRemLocalPortNum, lldpRemIndex
-			DWORD localPort = oid->GetValue()[oid->Length() - 2];
+			DWORD localPort = oid->getValue()[oid->getLength() - 2];
 
 			// Determine interface index from local port number. It can be
 			// either ifIndex or dot1dBasePort, as described in LLDP MIB:

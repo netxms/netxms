@@ -40,12 +40,12 @@ SNMP_ObjectId::SNMP_ObjectId()
 // SNMP_ObjectId constructor from existing gvalue
 //
 
-SNMP_ObjectId::SNMP_ObjectId(DWORD dwLength, DWORD *pdwValue)
+SNMP_ObjectId::SNMP_ObjectId(DWORD dwLength, const DWORD *pdwValue)
 {
    m_dwLength = dwLength;
    m_pdwValue = (DWORD *)nx_memdup(pdwValue, sizeof(DWORD) * dwLength);
    m_pszTextValue = NULL;
-   ConvertToText();
+   convertToText();
 }
 
 
@@ -64,7 +64,7 @@ SNMP_ObjectId::~SNMP_ObjectId()
 // Convert binary representation to text
 //
 
-void SNMP_ObjectId::ConvertToText()
+void SNMP_ObjectId::convertToText()
 {
    m_pszTextValue = (TCHAR *)realloc(m_pszTextValue, sizeof(TCHAR) * (m_dwLength * 6 + 1));
    SNMPConvertOIDToText(m_dwLength, m_pdwValue, m_pszTextValue, m_dwLength * 6 + 1);
@@ -75,14 +75,14 @@ void SNMP_ObjectId::ConvertToText()
 // Compare OID with another
 //
 
-int SNMP_ObjectId::Compare(TCHAR *pszOid)
+int SNMP_ObjectId::compare(TCHAR *pszOid)
 {
    DWORD dwBuffer[MAX_OID_LEN], dwLength;
 
    dwLength = SNMPParseOID(pszOid, dwBuffer, MAX_OID_LEN);
    if (dwLength == 0)
       return OID_ERROR;
-   return Compare(dwBuffer, dwLength);
+   return compare(dwBuffer, dwLength);
 }
 
 
@@ -90,7 +90,7 @@ int SNMP_ObjectId::Compare(TCHAR *pszOid)
 // Compare OID to another
 //
 
-int SNMP_ObjectId::Compare(DWORD *pdwOid, DWORD dwLen)
+int SNMP_ObjectId::compare(DWORD *pdwOid, DWORD dwLen)
 {
    if ((pdwOid == NULL) || (dwLen == 0) || (m_pdwValue == NULL))
       return OID_ERROR;
@@ -107,12 +107,12 @@ int SNMP_ObjectId::Compare(DWORD *pdwOid, DWORD dwLen)
 // Set new value
 //
 
-void SNMP_ObjectId::SetValue(DWORD *pdwValue, DWORD dwLength)
+void SNMP_ObjectId::setValue(DWORD *pdwValue, DWORD dwLength)
 {
    safe_free(m_pdwValue);
    m_dwLength = dwLength;
    m_pdwValue = (DWORD *)nx_memdup(pdwValue, sizeof(DWORD) * dwLength);
-   ConvertToText();
+   convertToText();
 }
 
 
@@ -120,9 +120,9 @@ void SNMP_ObjectId::SetValue(DWORD *pdwValue, DWORD dwLength)
 // Extend value by one subid
 //
 
-void SNMP_ObjectId::Extend(DWORD dwSubId)
+void SNMP_ObjectId::extend(DWORD dwSubId)
 {
    m_pdwValue = (DWORD *)realloc(m_pdwValue, sizeof(DWORD) * (m_dwLength + 1));
    m_pdwValue[m_dwLength++] = dwSubId;
-   ConvertToText();
+   convertToText();
 }

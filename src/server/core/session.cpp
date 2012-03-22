@@ -7508,7 +7508,7 @@ static DWORD WalkerCallback(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport
 	bool convertToHex = true;
 
 	pVar->getValueAsPrintableString(szBuffer, 4096, &convertToHex);
-   pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, (TCHAR *)pVar->GetName()->GetValueAsText());
+   pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, (TCHAR *)pVar->GetName()->getValueAsText());
 	pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, convertToHex ? (DWORD)0xFFFF : pVar->GetType());
    pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, szBuffer);
    ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars++;
@@ -8295,7 +8295,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
          {
 				if (_tcslen(ppValueList[i]) >= MAX_DCI_STRING_VALUE)
 					ppValueList[i][MAX_DCI_STRING_VALUE - 1] = 0;
-				ppNodeList[i]->processNewDciValue(ppItemList[i], t, ppValueList[i]);
+				ppNodeList[i]->processNewDCValue(ppItemList[i], t, ppValueList[i]);
 				ppItemList[i]->setLastPollTime(t);
          }
          msg.SetVariable(VID_RCC, RCC_SUCCESS);

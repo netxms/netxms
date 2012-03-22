@@ -31,7 +31,7 @@ static DWORD HandlerVlanList(DWORD version, SNMP_Variable *var, SNMP_Transport *
 {
    VlanList *vlanList = (VlanList *)arg;
 
-	VlanInfo *vlan = new VlanInfo(var->GetName()->GetValue()[var->GetName()->Length() - 1], VLAN_PRM_IFINDEX);
+	VlanInfo *vlan = new VlanInfo(var->GetName()->getValue()[var->GetName()->getLength() - 1], VLAN_PRM_IFINDEX);
 
 	TCHAR buffer[256];
 	vlan->setName(var->GetValueAsString(buffer, 256));
@@ -85,12 +85,12 @@ static void ParseVlanMap(VlanList *vlanList, DWORD ifIndex, BYTE *map, int offse
 static DWORD HandlerTrunkPorts(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
-   DWORD nameLen = var->GetName()->Length();
-	DWORD ifIndex = var->GetName()->GetValue()[nameLen - 1];
+   DWORD nameLen = var->GetName()->getLength();
+	DWORD ifIndex = var->GetName()->getValue()[nameLen - 1];
 
 	// Check if port is acting as trunk
 	DWORD oidName[256], value;
-   memcpy(oidName, var->GetName()->GetValue(), nameLen * sizeof(DWORD));
+   memcpy(oidName, var->GetName()->getValue(), nameLen * sizeof(DWORD));
    oidName[nameLen - 2] = 14;	// .1.3.6.1.4.1.9.9.46.1.6.1.1.14
 	if (SnmpGet(version, transport, NULL, oidName, nameLen, &value, sizeof(DWORD), 0) != SNMP_ERR_SUCCESS)
 	   return SNMP_ERR_SUCCESS;	// Cannot get trunk state, ignore port
@@ -137,11 +137,11 @@ static DWORD HandlerTrunkPorts(DWORD version, SNMP_Variable *var, SNMP_Transport
 static DWORD HandlerAccessPorts(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
-   DWORD nameLen = var->GetName()->Length();
-	DWORD ifIndex = var->GetName()->GetValue()[nameLen - 1];
+   DWORD nameLen = var->GetName()->getLength();
+	DWORD ifIndex = var->GetName()->getValue()[nameLen - 1];
 
 	DWORD oidName[256];
-   memcpy(oidName, var->GetName()->GetValue(), nameLen * sizeof(DWORD));
+   memcpy(oidName, var->GetName()->getValue(), nameLen * sizeof(DWORD));
 
 	// Entry type: 3=multi-vlan
 	if (var->GetValueAsInt() == 3)

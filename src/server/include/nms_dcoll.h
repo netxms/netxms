@@ -72,10 +72,10 @@ public:
    ItemValue(const ItemValue *pValue);
    ~ItemValue();
 
-   void SetTimeStamp(DWORD dwTime) { m_dwTimeStamp = dwTime; }
-   DWORD GetTimeStamp() { return m_dwTimeStamp; }
+   void setTimeStamp(DWORD dwTime) { m_dwTimeStamp = dwTime; }
+   DWORD getTimeStamp() { return m_dwTimeStamp; }
 
-   const TCHAR *String() { return m_szString; }
+   const TCHAR *getString() { return m_szString; }
 
    operator double() { return m_dFloat; }
    operator DWORD() { return m_dwInt32; }
@@ -141,7 +141,7 @@ public:
 	int getOperation() { return m_operation; }
 	int getParam1() { return m_param1; }
 	int getParam2() { return m_param2; }
-   const TCHAR *getStringValue() { return m_value.String(); }
+   const TCHAR *getStringValue() { return m_value.getString(); }
    BOOL isReached() { return m_isReached; }
 	
 	int getRepeatInterval() { return m_repeatInterval; }
@@ -233,6 +233,9 @@ public:
    virtual BOOL saveToDB(DB_HANDLE hdb);
    virtual void deleteFromDB();
    virtual bool loadThresholdsFromDB();
+
+   virtual void processNewValue(time_t nTimeStamp, void *value);
+   virtual void processNewError();
 
 	DWORD getId() { return m_dwId; }
    int getDataSource() { return m_source; }
@@ -337,7 +340,7 @@ public:
 
 	void systemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType);
 
-   void processNewValue(time_t nTimeStamp, const TCHAR *pszValue);
+   void processNewValue(time_t nTimeStamp, void *value);
    void processNewError();
 
    void getLastValue(CSCPMessage *pMsg, DWORD dwId);
@@ -370,11 +373,36 @@ public:
 
 
 //
+// Table column definition
+//
+
+class NXCORE_EXPORTABLE DCTableColumn
+{
+private:
+	TCHAR m_name[MAX_COLUMN_NAME];
+	int m_dataType;
+	SNMP_ObjectId *m_snmpOid;
+	TCHAR *m_scriptSource;
+	NXSL_Program *m_script;
+
+public:
+	DCTableColumn(const DCTableColumn *src);
+	~DCTableColumn();
+
+   void setTransformationScript(const TCHAR *script);
+};
+
+
+//
 // Tabular data collection object
 //
 
 class NXCORE_EXPORTABLE DCTable : public DCObject
 {
+protected:
+	TCHAR m_instanceColumn[MAX_COLUMN_NAME];
+	ObjectArray<DCTableColumn> *m_columns;
+
 public:
 	DCTable();
    DCTable(const DCTable *src);

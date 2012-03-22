@@ -31,7 +31,7 @@ static DWORD PortMapCallback(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 {
    TCHAR oid[MAX_OID_LEN * 4], suffix[MAX_OID_LEN * 4];
    SNMP_ObjectId *pOid = var->GetName();
-   SNMPConvertOIDToText(pOid->Length() - 11, (DWORD *)&(pOid->GetValue())[11], suffix, MAX_OID_LEN * 4);
+   SNMPConvertOIDToText(pOid->getLength() - 11, (DWORD *)&(pOid->getValue())[11], suffix, MAX_OID_LEN * 4);
 
 	// Get interface index
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);

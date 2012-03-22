@@ -150,7 +150,7 @@ retry:
 						if ((*response)->getCommand() == SNMP_REPORT)
 						{
 		               SNMP_Variable *var = (*response)->getVariable(0);
-							const TCHAR *oid = var->GetName()->GetValueAsText();
+							const TCHAR *oid = var->GetName()->getValueAsText();
 							rc = SNMP_ERR_AGENT;
 							for(int i = 0; m_oidToErrorMap[i].oid != NULL; i++)
 							{

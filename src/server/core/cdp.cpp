@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,11 +48,11 @@ static DWORD CDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpor
 
 	// Get additional info for current record
 	DWORD newOid[128];
-	memcpy(newOid, oid->GetValue(), oid->Length() * sizeof(DWORD));
+	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(DWORD));
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
 
 	newOid[13] = 7;	// cdpCacheDevicePort
-	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->Length()));
+	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
    SNMP_PDU *pRespPDU = NULL;
    DWORD rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
@@ -73,7 +73,7 @@ static DWORD CDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpor
 				LL_NEIGHBOR_INFO info;
 
 				// Index for cdpCacheTable is cdpCacheIfIndex, cdpCacheDeviceIndex
-				info.ifLocal = oid->GetValue()[oid->Length() - 2];
+				info.ifLocal = oid->getValue()[oid->getLength() - 2];
 				info.ifRemote = ifRemote->getIfIndex();
 				info.objectId = remoteNode->Id();
 				info.isPtToPt = true;

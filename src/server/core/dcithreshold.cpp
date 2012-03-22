@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -186,7 +186,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, DWORD dwIndex)
    }
 
    // Prepare and execute query
-   pszEscValue = EncodeSQLString(m_value.String());
+   pszEscValue = EncodeSQLString(m_value.getString());
    if (bNewObject)
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
 		              _T("INSERT INTO thresholds (threshold_id,item_id,fire_value,rearm_value,")
@@ -320,7 +320,7 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
                   bMatch = ((double)fvalue == (double)m_value);
                   break;
                case DCI_DT_STRING:
-                  bMatch = !_tcscmp(fvalue.String(), m_value.String());
+                  bMatch = !_tcscmp(fvalue.getString(), m_value.getString());
                   break;
             }
             break;
@@ -383,19 +383,19 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
                   bMatch = ((double)fvalue != (double)m_value);
                   break;
                case DCI_DT_STRING:
-                  bMatch = _tcscmp(fvalue.String(), m_value.String());
+                  bMatch = _tcscmp(fvalue.getString(), m_value.getString());
                   break;
             }
             break;
          case OP_LIKE:
             // This operation can be performed only on strings
             if (m_dataType == DCI_DT_STRING)
-               bMatch = MatchString(m_value.String(), fvalue.String(), TRUE);
+               bMatch = MatchString(m_value.getString(), fvalue.getString(), TRUE);
             break;
          case OP_NOTLIKE:
             // This operation can be performed only on strings
             if (m_dataType == DCI_DT_STRING)
-               bMatch = !MatchString(m_value.String(), fvalue.String(), TRUE);
+               bMatch = !MatchString(m_value.getString(), fvalue.getString(), TRUE);
             break;
          default:
             break;
@@ -481,7 +481,7 @@ void Threshold::createMessage(CSCPMessage *msg, DWORD baseId)
 	msg->SetVariable(varId++, (DWORD)m_param1);
 	msg->SetVariable(varId++, (DWORD)m_param2);
 	msg->SetVariable(varId++, (DWORD)m_repeatInterval);
-	msg->SetVariable(varId++, m_value.String());
+	msg->SetVariable(varId++, m_value.getString());
 	msg->SetVariable(varId++, (WORD)m_isReached);
 }
 
@@ -516,7 +516,7 @@ void Threshold::updateFromMessage(CSCPMessage *msg, DWORD baseId)
    var = (vtype)lastValue; \
    for(i = 1, nValueCount = 1; i < m_param1; i++) \
    { \
-      if (ppPrevValues[i - 1]->GetTimeStamp() != 1) \
+      if (ppPrevValues[i - 1]->getTimeStamp() != 1) \
       { \
          var += (vtype)(*ppPrevValues[i - 1]); \
          nValueCount++; \
@@ -565,7 +565,7 @@ void Threshold::calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
    var = (vtype)lastValue; \
    for(i = 1; i < m_param1; i++) \
    { \
-      if (ppPrevValues[i - 1]->GetTimeStamp() != 1) \
+      if (ppPrevValues[i - 1]->getTimeStamp() != 1) \
          var += (vtype)(*ppPrevValues[i - 1]); \
    } \
    *pResult = var; \
@@ -611,7 +611,7 @@ void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, Item
    mean = (vtype)lastValue; \
    for(i = 1, nValueCount = 1; i < m_param1; i++) \
    { \
-      if (ppPrevValues[i - 1]->GetTimeStamp() != 1) \
+      if (ppPrevValues[i - 1]->getTimeStamp() != 1) \
       { \
          mean += (vtype)(*ppPrevValues[i - 1]); \
          nValueCount++; \
@@ -621,7 +621,7 @@ void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, Item
    dev = ABS((vtype)lastValue - mean); \
    for(i = 1, nValueCount = 1; i < m_param1; i++) \
    { \
-      if (ppPrevValues[i - 1]->GetTimeStamp() != 1) \
+      if (ppPrevValues[i - 1]->getTimeStamp() != 1) \
       { \
          dev += ABS((vtype)(*ppPrevValues[i - 1]) - mean); \
          nValueCount++; \
@@ -701,7 +701,7 @@ BOOL Threshold::compare(Threshold *pThr)
          bMatch = ((double)pThr->m_value == (double)m_value);
          break;
       case DCI_DT_STRING:
-         bMatch = !_tcscmp(pThr->m_value.String(), m_value.String());
+         bMatch = !_tcscmp(pThr->m_value.getString(), m_value.getString());
          break;
       default:
          bMatch = TRUE;
@@ -740,7 +740,7 @@ void Threshold::createNXMPRecord(String &str, int index)
                           _T("\t\t\t\t\t\t\t<repeatInterval>%d</repeatInterval>\n")
                           _T("\t\t\t\t\t\t</threshold>\n"),
 								  index, m_function, m_operation,
-								  (const TCHAR *)EscapeStringForXML2(m_value.String()),
+								  (const TCHAR *)EscapeStringForXML2(m_value.getString()),
                           (const TCHAR *)EscapeStringForXML2(szEvent1),
 								  (const TCHAR *)EscapeStringForXML2(szEvent2),
 								  m_param1, m_param2, m_repeatInterval);

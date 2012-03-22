@@ -43,11 +43,11 @@ static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transpor
    DWORD oidName[MAX_OID_LEN], dwResult;
    VlanList *vlanList = (VlanList *)pArg;
 
-   DWORD dwNameLen = pVar->GetName()->Length();
+   DWORD dwNameLen = pVar->GetName()->getLength();
 	VlanInfo *vlan = new VlanInfo(pVar->GetValueAsInt(), VLAN_PRM_IFINDEX);
 
    // Get VLAN name
-   memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
+   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(DWORD));
    oidName[dwNameLen - 2] = 2;
    TCHAR buffer[256];
 	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, buffer, 256, SG_STRING_RESULT);

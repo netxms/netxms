@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,13 +31,13 @@ static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, DWORD snmpVers
 {
 	// Read data from appropriate entry in s5EnMsTopNmmEosTable
 	DWORD eosEntryOID[64];
-	memcpy(eosEntryOID, oid->GetValue(), oid->Length() * sizeof(DWORD));
+	memcpy(eosEntryOID, oid->getValue(), oid->getLength() * sizeof(DWORD));
 	eosEntryOID[11] = 3;
 	eosEntryOID[12] = 1;
 	eosEntryOID[13] = 1;
 
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
-	pRqPDU->bindVariable(new SNMP_Variable(eosEntryOID, oid->Length()));
+	pRqPDU->bindVariable(new SNMP_Variable(eosEntryOID, oid->getLength()));
 
 	WORD result = 0;
 	SNMP_PDU *pRespPDU = NULL;
@@ -64,8 +64,8 @@ static DWORD NDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpor
 	SNMP_ObjectId *oid = var->GetName();
 
 	// Entries indexed by slot, port, IP address, and segment ID
-	DWORD slot = oid->GetValue()[14];
-	DWORD port = oid->GetValue()[15];
+	DWORD slot = oid->getValue()[14];
+	DWORD port = oid->getValue()[15];
 
 	// Table always contains record with slot=0 and port=0 which
 	// represents local chassis. We should ignore this record.

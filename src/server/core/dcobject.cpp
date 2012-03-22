@@ -752,3 +752,21 @@ void DCObject::updateFromTemplate(DCObject *src)
 
 	unlock();
 }
+
+
+//
+// Process new collected value
+//
+
+void DCObject::processNewValue(time_t nTimeStamp, void *value)
+{
+}
+
+
+//
+// Process new data collection error
+//
+
+void DCObject::processNewError()
+{
+}

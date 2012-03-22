@@ -33,8 +33,8 @@ static DWORD HandlerArp(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pT
    BYTE bMac[64];
    DWORD dwResult;
 
-   dwNameLen = pVar->GetName()->Length();
-   memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
+   dwNameLen = pVar->GetName()->getLength();
+   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(DWORD));
 
    oidName[dwNameLen - 6] = 1;  // Retrieve interface index
    dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwIndex, sizeof(DWORD), 0);
@@ -142,13 +142,13 @@ static DWORD HandlerRoute(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *
    ROUTE route;
 	ROUTING_TABLE *rt = (ROUTING_TABLE *)pArg;
 
-   dwNameLen = pVar->GetName()->Length();
+   dwNameLen = pVar->GetName()->getLength();
 	if ((dwNameLen < 5) || (dwNameLen > MAX_OID_LEN))
 	{
-		DbgPrintf(4, _T("HandlerRoute(): strange dwNameLen %d (name=%s)"), dwNameLen, pVar->GetName()->GetValueAsText());
+		DbgPrintf(4, _T("HandlerRoute(): strange dwNameLen %d (name=%s)"), dwNameLen, pVar->GetName()->getValueAsText());
 		return SNMP_ERR_SUCCESS;
 	}
-   memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
+   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(DWORD));
    route.dwDestAddr = ntohl(pVar->GetValueAsUInt());
 
    oidName[dwNameLen - 5] = 2;  // Interface index

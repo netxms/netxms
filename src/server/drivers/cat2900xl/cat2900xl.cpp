@@ -91,9 +91,9 @@ static DWORD HandlerPortList(DWORD version, SNMP_Variable *var, SNMP_Transport *
 	NX_INTERFACE_INFO *iface = ifList->findByIfIndex(var->GetValueAsUInt());
 	if (iface != NULL)
 	{
-		DWORD nameLen = var->GetName()->Length();
-		iface->dwSlotNumber = var->GetName()->GetValue()[nameLen - 2];
-		iface->dwPortNumber = var->GetName()->GetValue()[nameLen - 1];
+		DWORD nameLen = var->GetName()->getLength();
+		iface->dwSlotNumber = var->GetName()->getValue()[nameLen - 2];
+		iface->dwPortNumber = var->GetName()->getValue()[nameLen - 1];
 		iface->isPhysicalPort = true;
 	}
 	return SNMP_ERR_SUCCESS;

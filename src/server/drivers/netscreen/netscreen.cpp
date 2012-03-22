@@ -87,9 +87,9 @@ static DWORD HandlerIfList(DWORD snmpVersion, SNMP_Variable *varbind, SNMP_Trans
 {
 	InterfaceList *ifList = (InterfaceList *)arg;
 
-   DWORD nameLen = varbind->GetName()->Length();
+   DWORD nameLen = varbind->GetName()->getLength();
 	DWORD oidName[MAX_OID_LEN];
-	memcpy(oidName, varbind->GetName()->GetValue(), nameLen * sizeof(DWORD));
+	memcpy(oidName, varbind->GetName()->getValue(), nameLen * sizeof(DWORD));
 
 	NX_INTERFACE_INFO iface;
 	memset(&iface, 0, sizeof(NX_INTERFACE_INFO));

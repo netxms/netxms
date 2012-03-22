@@ -180,7 +180,7 @@ DWORD Component::fillMessage(CSCPMessage *msg, DWORD baseId)
 static DWORD EntityWalker(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	TCHAR buffer[256];
-	Component *element = new Component(var->GetName()->GetValue()[12], var->GetValueAsString(buffer, 256));
+	Component *element = new Component(var->GetName()->getValue()[12], var->GetValueAsString(buffer, 256));
 	DWORD rc = element->updateFromSnmp(transport);
 	if (rc != SNMP_ERR_SUCCESS)
 	{

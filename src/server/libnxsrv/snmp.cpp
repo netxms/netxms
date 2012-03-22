@@ -209,19 +209,19 @@ DWORD LIBNXSRV_EXPORTABLE SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransp
                    (pVar->GetType() != ASN_NO_SUCH_INSTANCE))
                {
                   // Should we stop walking?
-                  if ((pVar->GetName()->Length() < dwRootLen) ||
-                      (memcmp(pdwRootName, pVar->GetName()->GetValue(), dwRootLen * sizeof(DWORD))) ||
-                      ((pVar->GetName()->Length() == dwNameLen) &&
-                       (!memcmp(pVar->GetName()->GetValue(), pdwName, pVar->GetName()->Length() * sizeof(DWORD)))))
+                  if ((pVar->GetName()->getLength() < dwRootLen) ||
+                      (memcmp(pdwRootName, pVar->GetName()->getValue(), dwRootLen * sizeof(DWORD))) ||
+                      ((pVar->GetName()->getLength() == dwNameLen) &&
+                       (!memcmp(pVar->GetName()->getValue(), pdwName, pVar->GetName()->getLength() * sizeof(DWORD)))))
                   {
                      bRunning = FALSE;
                      delete pRespPDU;
                      delete pRqPDU;
                      break;
                   }
-                  memcpy(pdwName, pVar->GetName()->GetValue(), 
-                         pVar->GetName()->Length() * sizeof(DWORD));
-                  dwNameLen = pVar->GetName()->Length();
+                  memcpy(pdwName, pVar->GetName()->getValue(), 
+                         pVar->GetName()->getLength() * sizeof(DWORD));
+                  dwNameLen = pVar->GetName()->getLength();
 
                   // Call user's callback function for processing
                   dwResult = pHandler(dwVersion, pVar, pTransport, pUserArg);

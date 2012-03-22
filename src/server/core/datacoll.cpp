@@ -53,40 +53,82 @@ Queue *g_pItemQueue = NULL;
 
 
 //
+// Collect data for DCI
+//
+
+static void *GetItemData(Node *pNode, DCItem *pItem, TCHAR *pBuffer, DWORD *error)
+{
+   switch(pItem->getDataSource())
+   {
+      case DS_INTERNAL:    // Server internal parameters (like status)
+         *error = pNode->GetInternalItem(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+         break;
+      case DS_SNMP_AGENT:
+			*error = pNode->getItemFromSNMP(pItem->getSnmpPort(), pItem->getName(), MAX_LINE_SIZE, 
+				pBuffer, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
+         break;
+      case DS_CHECKPOINT_AGENT:
+         *error = pNode->GetItemFromCheckPointSNMP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+         break;
+      case DS_NATIVE_AGENT:
+         *error = pNode->GetItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+         break;
+		default:
+			*error = DCE_NOT_SUPPORTED;
+			break;
+   }
+	return pBuffer;
+}
+
+
+//
+// Collect data for table
+//
+
+static void *GetTableData(Node *pNode, DCTable *table, DWORD *error)
+{
+	Table *result = NULL;
+   switch(table->getDataSource())
+   {
+		case DS_NATIVE_AGENT:
+			*error = pNode->getTableFromAgent(table->getName(), &result);
+			break;
+		default:
+			*error = DCE_NOT_SUPPORTED;
+			break;
+	}
+	return result;
+}
+
+
+//
 // Data collector
 //
 
 static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 {
-   DCItem *pItem;
-   Node *pNode;
    DWORD dwError;
-   time_t currTime;
-   TCHAR *pBuffer;
 
-   pBuffer = (TCHAR *)malloc(MAX_LINE_SIZE * sizeof(TCHAR));
-
+   TCHAR *pBuffer = (TCHAR *)malloc(MAX_LINE_SIZE * sizeof(TCHAR));
    while(!IsShutdownInProgress())
    {
-      pItem = (DCItem *)g_pItemQueue->GetOrBlock();
-		pNode = (Node *)pItem->getRelatedNode();
+      DCObject *pItem = (DCObject *)g_pItemQueue->GetOrBlock();
+		Node *pNode = (Node *)pItem->getRelatedNode();
 
 		if (pItem->isScheduledForDeletion())
 		{
-	      DbgPrintf(7, _T("DataCollector(): about to destroy DCI %d \"%s\" node=%d"),
+	      DbgPrintf(7, _T("DataCollector(): about to destroy DC object %d \"%s\" node=%d"),
 			          pItem->getId(), pItem->getName(), (pNode != NULL) ? pNode->Id() : -1);
 			pItem->deleteFromDB();
 			delete pItem;
 			continue;
 		}
 
-      DbgPrintf(8, _T("DataCollector(): processing DCI %d \"%s\" node=%d proxy=%d"),
+      DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" node=%d proxy=%d"),
 		          pItem->getId(), pItem->getName(), (pNode != NULL) ? pNode->Id() : -1, pItem->getProxyNode());
 		if (pItem->getProxyNode() != 0)
 		{
-			NetObj *object;
-
-			object = FindObjectById(pItem->getProxyNode());
+			NetObj *object = FindObjectById(pItem->getProxyNode());
 			if (object != NULL)
 			{
 				if ((object->Type() == OBJECT_NODE) &&
@@ -117,27 +159,24 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 			}
 		}
 
+      time_t currTime = time(NULL);
       if (pNode != NULL)
       {
-         switch(pItem->getDataSource())
-         {
-            case DS_INTERNAL:    // Server internal parameters (like status)
-               dwError = pNode->GetInternalItem(pItem->getName(), MAX_LINE_SIZE, pBuffer);
-               break;
-            case DS_SNMP_AGENT:
-					dwError = pNode->getItemFromSNMP(pItem->getSnmpPort(), pItem->getName(), MAX_LINE_SIZE, 
-						pBuffer, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
-               break;
-            case DS_CHECKPOINT_AGENT:
-               dwError = pNode->GetItemFromCheckPointSNMP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
-               break;
-            case DS_NATIVE_AGENT:
-               dwError = pNode->GetItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
-               break;
-         }
+			void *data;
 
-         // Get polling time
-         currTime = time(NULL);
+			switch(pItem->getType())
+			{
+				case DCO_TYPE_ITEM:
+					data = GetItemData(pNode, (DCItem *)pItem, pBuffer, &dwError);
+					break;
+				case DCO_TYPE_TABLE:
+					data = GetTableData(pNode, (DCTable *)pItem, &dwError);
+					break;
+				default:
+					data = NULL;
+					dwError = DCE_NOT_SUPPORTED;
+					break;
+			}
 
          // Transform and store received value into database or handle error
          switch(dwError)
@@ -145,7 +184,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
             case DCE_SUCCESS:
 					if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
 	               pItem->setStatus(ITEM_STATUS_ACTIVE, true);
-					((Node *)pItem->getRelatedNode())->processNewDciValue(pItem, currTime, pBuffer);
+					((Node *)pItem->getRelatedNode())->processNewDCValue(pItem, currTime, data);
                break;
             case DCE_COMM_ERROR:
                pItem->processNewError();
@@ -155,6 +194,9 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
                pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
                break;
          }
+
+			if (pItem->getType() == DCO_TYPE_TABLE)
+				delete (Table *)data;
 
          // Decrement node's usage counter
          pNode->DecRefCount();

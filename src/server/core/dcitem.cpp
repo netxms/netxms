@@ -639,7 +639,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
       if (DBGetNumRows(hResult) == 0)
       {
          _sntprintf(pszQuery, qlen, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time) VALUES (%d,%s,%ld)"),
-                 m_dwId, (const TCHAR *)DBPrepareString(hdb, m_prevRawValue.String()), (long)m_tPrevValueTimeStamp);
+                 m_dwId, (const TCHAR *)DBPrepareString(hdb, m_prevRawValue.getString()), (long)m_tPrevValueTimeStamp);
          DBQuery(hdb, pszQuery);
       }
       DBFreeResult(hResult);
@@ -859,7 +859,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 // Process new value
 //
 
-void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
+void DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
 {
 	static int updateRawValueTypes[] = { DB_SQLTYPE_VARCHAR, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER };
 	static int updateValueTypes[] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
@@ -878,7 +878,7 @@ void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
    m_dwErrorCount = 0;
 
    // Create new ItemValue object and transform it as needed
-   pValue = new ItemValue(pszOriginalValue, (DWORD)tmTimeStamp);
+   pValue = new ItemValue((const TCHAR *)originalValue, (DWORD)tmTimeStamp);
    if (m_tPrevValueTimeStamp == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
@@ -893,23 +893,27 @@ void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
 
    // Save raw value into database
 	const TCHAR *values[4];
-	values[0] = pszOriginalValue;
-	values[1] = pValue->String();
+	if (_tcslen((const TCHAR *)originalValue) >= MAX_DB_STRING)
+	{
+		// need to be truncated
+		TCHAR *temp = _tcsdup((const TCHAR *)originalValue);
+		temp[MAX_DB_STRING - 1] = 0;
+		values[0] = temp;
+	}
+	else
+	{
+		values[0] = (const TCHAR *)originalValue;
+	}
+	values[1] = pValue->getString();
 	values[2] = pollTime;
 	values[3] = dciId;
 	QueueSQLRequest(_T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=? WHERE item_id=?"),
 	                4, updateRawValueTypes, values);
+	if ((void *)values[0] != originalValue)
+		free((void *)values[0]);
 
 	// Save transformed value to database
-	QueueIDataInsert(tmTimeStamp, m_pNode->Id(), m_dwId, pValue->String());
-	/*
-	TCHAR query[128];
-	_sntprintf(query, 128, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value) VALUES (?,?,?)"), m_pNode->Id());
-	values[0] = dciId;
-	values[1] = pollTime;
-	values[2] = pValue->String();
-	QueueSQLRequest(query, 3, updateValueTypes, values);
-	*/
+	QueueIDataInsert(tmTimeStamp, m_pNode->Id(), m_dwId, pValue->getString());
 
    // Check thresholds and add value to cache
    checkThresholds(*pValue);
@@ -1281,8 +1285,8 @@ void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
    if (m_dwCacheSize > 0)
    {
       pMsg->SetVariable(dwId++, (WORD)m_dataType);
-      pMsg->SetVariable(dwId++, (TCHAR *)m_ppValueCache[0]->String());
-      pMsg->SetVariable(dwId++, m_ppValueCache[0]->GetTimeStamp());
+      pMsg->SetVariable(dwId++, (TCHAR *)m_ppValueCache[0]->getString());
+      pMsg->SetVariable(dwId++, m_ppValueCache[0]->getTimeStamp());
    }
    else
    {
@@ -1324,7 +1328,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
    switch(nFunction)
    {
       case F_LAST:
-         pValue = (m_dwCacheSize > 0) ? new NXSL_Value((TCHAR *)m_ppValueCache[0]->String()) : new NXSL_Value;
+         pValue = (m_dwCacheSize > 0) ? new NXSL_Value((TCHAR *)m_ppValueCache[0]->getString()) : new NXSL_Value;
          break;
       case F_DIFF:
          if (m_dwCacheSize >= 2)
@@ -1332,7 +1336,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
             ItemValue result;
 
             CalculateItemValueDiff(result, m_dataType, *m_ppValueCache[0], *m_ppValueCache[1]);
-            pValue = new NXSL_Value((TCHAR *)result.String());
+            pValue = new NXSL_Value(result.getString());
          }
          else
          {
@@ -1346,7 +1350,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
 
             CalculateItemValueAverage(result, m_dataType,
                                       min(m_dwCacheSize, (DWORD)nPolls), m_ppValueCache);
-            pValue = new NXSL_Value((TCHAR *)result.String());
+            pValue = new NXSL_Value(result.getString());
          }
          else
          {
@@ -1360,7 +1364,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
 
             CalculateItemValueMD(result, m_dataType,
                                  min(m_dwCacheSize, (DWORD)nPolls), m_ppValueCache);
-            pValue = new NXSL_Value((TCHAR *)result.String());
+            pValue = new NXSL_Value(result.getString());
          }
          else
          {
@@ -1475,7 +1479,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 
 
 //
-// Set new formula
+// Set new transformation script
 //
 
 void DCItem::setTransformationScript(const TCHAR *pszScript)

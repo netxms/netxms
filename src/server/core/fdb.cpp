@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -156,7 +156,7 @@ static DWORD FDBHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pT
 {
    SNMP_ObjectId *pOid = pVar->GetName();
    TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4];
-   SNMPConvertOIDToText(pOid->Length() - 11, (DWORD *)&(pOid->GetValue())[11], szSuffix, MAX_OID_LEN * 4);
+   SNMPConvertOIDToText(pOid->getLength() - 11, (DWORD *)&(pOid->getValue())[11], szSuffix, MAX_OID_LEN * 4);
 
 	// Get port number
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
@@ -198,7 +198,7 @@ static DWORD Dot1dPortTableHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Tr
 {
    SNMP_ObjectId *pOid = pVar->GetName();
    TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4];
-   SNMPConvertOIDToText(pOid->Length() - 11, (DWORD *)&(pOid->GetValue())[11], szSuffix, MAX_OID_LEN * 4);
+   SNMPConvertOIDToText(pOid->getLength() - 11, (DWORD *)&(pOid->getValue())[11], szSuffix, MAX_OID_LEN * 4);
 
 	// Get interface index
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);

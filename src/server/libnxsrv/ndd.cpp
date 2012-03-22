@@ -112,8 +112,8 @@ static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport 
    DWORD dwIndex, dwNetMask, dwNameLen, dwResult;
    DWORD oidName[MAX_OID_LEN];
 
-   dwNameLen = pVar->GetName()->Length();
-   memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
+   dwNameLen = pVar->GetName()->getLength();
+   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(DWORD));
    oidName[dwNameLen - 5] = 3;  // Retrieve network mask for this IP
    dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwNetMask, sizeof(DWORD), 0);
    if (dwResult != SNMP_ERR_SUCCESS)

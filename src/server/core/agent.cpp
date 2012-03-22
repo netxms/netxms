@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -120,7 +120,7 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 		{
 			DbgPrintf(5, _T("%s: agent data push: found DCI %d"), node->Name(), dci->getId());
 			time_t t = time(NULL);
-			node->processNewDciValue((DCItem *)dci, t, value);
+			node->processNewDCValue(dci, t, value);
 			dci->setLastPollTime(t);
 		}
 		else

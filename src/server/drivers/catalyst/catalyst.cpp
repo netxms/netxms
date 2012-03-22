@@ -81,9 +81,9 @@ static DWORD HandlerPortList(DWORD version, SNMP_Variable *var, SNMP_Transport *
 	NX_INTERFACE_INFO *iface = ifList->findByIfIndex(var->GetValueAsUInt());
 	if (iface != NULL)
 	{
-		DWORD nameLen = var->GetName()->Length();
+		DWORD nameLen = var->GetName()->getLength();
 		
-		DWORD moduleIndex = var->GetName()->GetValue()[nameLen - 2];
+		DWORD moduleIndex = var->GetName()->getValue()[nameLen - 2];
 		DWORD oid[] = { 1, 3, 6, 1, 4, 1, 9, 5, 1, 3, 1, 1, 25, 0 };
 		oid[13] = moduleIndex;
 		DWORD slot;
@@ -91,7 +91,7 @@ static DWORD HandlerPortList(DWORD version, SNMP_Variable *var, SNMP_Transport *
 			slot = moduleIndex;	// Assume slot # equal to module index if it cannot be read
 
 		iface->dwSlotNumber = slot;
-		iface->dwPortNumber = var->GetName()->GetValue()[nameLen - 1];
+		iface->dwPortNumber = var->GetName()->getValue()[nameLen - 1];
 		iface->isPhysicalPort = true;
 	}
 	return SNMP_ERR_SUCCESS;

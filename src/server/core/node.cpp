@@ -4519,10 +4519,10 @@ void Node::updateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
 // Process new DCI value
 //
 
-void Node::processNewDciValue(DCItem *item, time_t currTime, const TCHAR *value)
+void Node::processNewDCValue(DCObject *dco, time_t currTime, void *value)
 {
 	lockDciAccess();
-	item->processNewValue(currTime, value);
+	dco->processNewValue(currTime, value);
 	unlockDciAccess();
 }
 

@@ -419,10 +419,10 @@ DWORD SNMP_Variable::Encode(BYTE *pBuffer, DWORD dwBufferSize)
    DWORD dwBytes, dwWorkBufSize;
    BYTE *pWorkBuf;
 
-   dwWorkBufSize = m_dwValueLength + m_pName->Length() * 4 + 16;
+   dwWorkBufSize = m_dwValueLength + m_pName->getLength() * 4 + 16;
    pWorkBuf = (BYTE *)malloc(dwWorkBufSize);
-   dwBytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_pName->GetValue(), 
-                        m_pName->Length() * sizeof(DWORD), 
+   dwBytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_pName->getValue(), 
+                        m_pName->getLength() * sizeof(DWORD), 
                         pWorkBuf, dwWorkBufSize);
    dwBytes += BER_Encode(m_dwType, m_pValue, m_dwValueLength, 
                          pWorkBuf + dwBytes, dwWorkBufSize - dwBytes);

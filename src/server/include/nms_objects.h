@@ -932,7 +932,7 @@ public:
    DWORD getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, DWORD dwBufSize);
    DWORD getTableForClient(const TCHAR *name, Table **table);
    DWORD getLastValues(CSCPMessage *pMsg);
-	void processNewDciValue(DCItem *item, time_t currTime, const TCHAR *value);
+	void processNewDCValue(DCObject *dco, time_t currTime, void *value);
    void cleanDCIData();
    bool applyTemplateItem(DWORD dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList);

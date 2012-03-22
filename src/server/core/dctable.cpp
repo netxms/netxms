@@ -29,6 +29,8 @@
 
 DCTable::DCTable() : DCObject()
 {
+	m_instanceColumn[0] = 0;
+	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
 }
 
 
@@ -38,6 +40,10 @@ DCTable::DCTable() : DCObject()
 
 DCTable::DCTable(const DCTable *src) : DCObject(src)
 {
+	nx_strncpy(m_instanceColumn, src->m_instanceColumn, MAX_COLUMN_NAME);
+	m_columns = new ObjectArray<DCTableColumn>(src->m_columns->size(), 8, true);
+	for(int i = 0; i < src->m_columns->size(); i++)
+		m_columns->add(new DCTableColumn(src->m_columns->get(i)));
 }
 
 
@@ -47,4 +53,5 @@ DCTable::DCTable(const DCTable *src) : DCObject(src)
 
 DCTable::~DCTable()
 {
+	delete m_columns;
 }
