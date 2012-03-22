@@ -3206,26 +3206,37 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
 									case DCO_TYPE_TABLE:
 		                        pDstItem = new DCTable((DCTable *)pSrcItem);
 										break;
+									default:
+										pDstItem = NULL;
+										break;
 								}
-								pDstItem->setTemplateId(0, 0);
-                        pDstItem->changeBinding(CreateUniqueId(IDG_ITEM),
-                                                (Template *)pDestination, FALSE);
-                        if (((Template *)pDestination)->addDCObject(pDstItem))
-                        {
-                           if (bMove)
-                           {
-                              // Delete original item
-                              if (!((Template *)pSource)->deleteDCObject(pdwItemList[i], TRUE))
-                              {
-                                 iErrors++;
-                              }
-                           }
-                        }
-                        else
-                        {
-                           delete pDstItem;
-                           iErrors++;
-                        }
+								if (pDstItem != NULL)
+								{
+									pDstItem->setTemplateId(0, 0);
+									pDstItem->changeBinding(CreateUniqueId(IDG_ITEM),
+																	(Template *)pDestination, FALSE);
+									if (((Template *)pDestination)->addDCObject(pDstItem))
+									{
+										if (bMove)
+										{
+											// Delete original item
+											if (!((Template *)pSource)->deleteDCObject(pdwItemList[i], TRUE))
+											{
+												iErrors++;
+											}
+										}
+									}
+									else
+									{
+										delete pDstItem;
+										iErrors++;
+									}
+								}
+								else
+								{
+									DbgPrintf(2, _T("INTERNAL ERROR: ClientSession::CopyDCI(): unknown DCO type %d"), pSrcItem->getType());
+									iErrors++;
+								}
                      }
                      else
                      {

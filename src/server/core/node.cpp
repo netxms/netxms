@@ -3315,6 +3315,9 @@ bool Node::applyTemplateItem(DWORD dwTemplateId, DCObject *dcObject)
 			case DCO_TYPE_ITEM:
 				newObject = new DCItem((DCItem *)dcObject);
 				break;
+			case DCO_TYPE_TABLE:
+				newObject = new DCTable((DCTable *)dcObject);
+				break;
 			default:
 				newObject = NULL;
 				break;
