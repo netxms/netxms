@@ -104,6 +104,7 @@ const char LIBNXDB_EXPORTABLE *DBGetDriverName(DB_DRIVER driver);
 DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
                                        const TCHAR *login, const TCHAR *password, const TCHAR *schema, TCHAR *errorText);
 void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn);
+void LIBNXDB_EXPORTABLE DBEnableReconnect(DB_HANDLE hConn, bool enabled);
 
 DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepare(DB_HANDLE hConn, const TCHAR *szQuery);
 DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText);

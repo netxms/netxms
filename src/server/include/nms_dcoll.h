@@ -410,6 +410,8 @@ public:
 
 	virtual int getType() const { return DCO_TYPE_TABLE; }
 
+   virtual void processNewValue(time_t nTimeStamp, void *value);
+   virtual void processNewError();
 };
 
 

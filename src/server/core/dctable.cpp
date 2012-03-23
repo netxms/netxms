@@ -55,3 +55,21 @@ DCTable::~DCTable()
 {
 	delete m_columns;
 }
+
+
+//
+// Process new collected value
+//
+
+void DCTable::processNewValue(time_t nTimeStamp, void *value)
+{
+}
+
+
+//
+// Process new data collection error
+//
+
+void DCTable::processNewError()
+{
+}

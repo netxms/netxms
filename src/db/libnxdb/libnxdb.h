@@ -91,6 +91,7 @@ struct db_handle_t
    DBDRV_CONNECTION m_connection;
 	DB_DRIVER m_driver;
 	bool m_dumpSql;
+	bool m_reconnectEnabled;
    MUTEX m_mutexTransLock;      // Transaction lock
    int m_transactionLevel;
    char *m_server;

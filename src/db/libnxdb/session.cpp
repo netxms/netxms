@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -56,6 +56,7 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
       {
 			hConn->m_driver = driver;
 			hConn->m_dumpSql = driver->m_dumpSql;
+			hConn->m_reconnectEnabled = true;
 			hConn->m_connection = hDrvConn;
          hConn->m_mutexTransLock = MutexCreateRecursive();
          hConn->m_transactionLevel = 0;
@@ -112,6 +113,19 @@ void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
    safe_free(hConn->m_server);
    safe_free(hConn->m_schema);
    free(hConn);
+}
+
+
+//
+// Enable/disable reconnect
+//
+
+void LIBNXDB_EXPORTABLE DBEnableReconnect(DB_HANDLE hConn, bool enabled)
+{
+	if (hConn != NULL)
+	{
+		hConn->m_reconnectEnabled = enabled;
+	}
 }
 
 
@@ -173,7 +187,7 @@ BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
       ms = GetCurrentTimeMs();
 
    dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, wcErrorText);
-   if (dwResult == DBERR_CONNECTION_LOST)
+   if ((dwResult == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
       dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, wcErrorText);
@@ -239,7 +253,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
    if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
    hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
-   if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST))
+   if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
       hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
@@ -642,7 +656,7 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
 	if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
    hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
-   if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST))
+   if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
       hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
@@ -1035,7 +1049,7 @@ BOOL LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
       ms = GetCurrentTimeMs();
 
 	DWORD dwResult = hConn->m_driver->m_fpDrvExecute(hConn->m_connection, hStmt->m_statement, wcErrorText);
-   if (dwResult == DBERR_CONNECTION_LOST)
+   if ((dwResult == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
       dwResult = hConn->m_driver->m_fpDrvExecute(hStmt->m_connection, hStmt->m_statement, wcErrorText);
@@ -1102,7 +1116,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
    if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
 	hResult = hConn->m_driver->m_fpDrvSelectPrepared(hConn->m_connection, hStmt->m_statement, &dwError, wcErrorText);
-   if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST))
+   if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
 		hResult = hConn->m_driver->m_fpDrvSelectPrepared(hConn->m_connection, hStmt->m_statement, &dwError, wcErrorText);
@@ -1169,7 +1183,7 @@ BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
    if (hConn->m_transactionLevel == 0)
    {
       dwResult = hConn->m_driver->m_fpDrvBegin(hConn->m_connection);
-      if (dwResult == DBERR_CONNECTION_LOST)
+      if ((dwResult == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
       {
          DBReconnect(hConn);
          dwResult = hConn->m_driver->m_fpDrvBegin(hConn->m_connection);
