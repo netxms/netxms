@@ -84,7 +84,7 @@ LONG getParameters(const TCHAR *parameter, const TCHAR *argument, TCHAR *value)
 	if (!AgentGetParameterArg(parameter, 2, entity, MAX_STR) || entity[0] == _T('\0'))
 		nx_strncpy(entity, DB_NULLARG_MAGIC, MAX_STR);
 
-	AgentWriteDebugLog(5, _T("%s: ***** got request for params: dbid='%s', param='%s'"), MYNAMESTR, dbId, parameter);
+	AgentWriteDebugLog(7, _T("%s: got request for params: dbid='%s', param='%s'"), MYNAMESTR, dbId, parameter);
 
 	// Loop through databases and find an entry in g_dbInfo[] for this id
 	for (int i = 0; i <= g_dbCount; i++)
@@ -103,7 +103,7 @@ LONG getParameters(const TCHAR *parameter, const TCHAR *argument, TCHAR *value)
 				{
 					MutexLock(g_dbInfo[i].accessMutex);
 					// Loop through the values
-					AgentWriteDebugLog(7, _T("%s: valuecount %d"), MYNAMESTR, g_paramGroup[k].valueCount[i]);
+					AgentWriteDebugLog(9, _T("%s: valuecount %d"), MYNAMESTR, g_paramGroup[k].valueCount[i]);
 					for (int j = 0; j < g_paramGroup[k].valueCount[i]; j++)
 					{
 						StringMap* map = (g_paramGroup[k].values[i])[j].attrs;
@@ -187,30 +187,33 @@ static BOOL SubAgentInit(Config *config)
 		}
 	}
 
-	// Load configuration
-	for (g_dbCount = -1, i = 1; result && i <= MAX_DATABASES; i++)
+	// Load full-featured XML configuration
+	if (g_dbCount == -1) // Didn't load anything from the .conf file
 	{
-		TCHAR section[MAX_STR];
-		memset((void*)&info, 0, sizeof(info));
-		_sntprintf(section, MAX_STR, _T("oracle/databases/database#%d"), i);
-		if ((result = config->parseTemplate(section, configTemplate)) != TRUE)
+		for (i = 1; result && i <= MAX_DATABASES; i++)
 		{
-			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error parsing configuration template"), MYNAMESTR);
-			return FALSE;
-		}
-		if (info.name[0] != _T('\0'))
-			memcpy((void*)&g_dbInfo[++g_dbCount], (void*)&info, sizeof(info));
-		else
-			continue;
-		if (info.username[0] == '\0' || info.password[0] == '\0')
-		{
-			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting username and/or password for "), MYNAMESTR);
-			result = FALSE;
-		}
-		if (result && (g_dbInfo[g_dbCount].accessMutex = MutexCreate()) == NULL)
-		{
-			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to create mutex (%d)"), MYNAMESTR, i);
-			result = FALSE;
+			TCHAR section[MAX_STR];
+			memset((void*)&info, 0, sizeof(info));
+			_sntprintf(section, MAX_STR, _T("oracle/databases/database#%d"), i);
+			if ((result = config->parseTemplate(section, configTemplate)) != TRUE)
+			{
+				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error parsing configuration template"), MYNAMESTR);
+				return FALSE;
+			}
+			if (info.name[0] != _T('\0'))
+				memcpy((void*)&g_dbInfo[++g_dbCount], (void*)&info, sizeof(info));
+			else
+				continue;
+			if (info.username[0] == '\0' || info.password[0] == '\0')
+			{
+				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting username and/or password for "), MYNAMESTR);
+				result = FALSE;
+			}
+			if (result && (g_dbInfo[g_dbCount].accessMutex = MutexCreate()) == NULL)
+			{
+				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to create mutex (%d)"), MYNAMESTR, i);
+				result = FALSE;
+			}
 		}
 	}
 
@@ -286,9 +289,10 @@ THREAD_RESULT THREAD_CALL queryThread(void* arg)
 	while (true)
 	{
 		db.handle = DBConnect(g_driverHandle, db.name, NULL /* db.server */, db.username, db.password, NULL, errorText);
+		DBEnableReconnect(db.handle, false);
 		if (db.handle != NULL)
 		{
-			AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: connected to DB"), MYNAMESTR);
+			AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: connected to DB '%s'"), MYNAMESTR, db.name);
 			db.connected = true;
 			db.version = getOracleVersion(db.handle);
 		}
