@@ -198,17 +198,20 @@ public class LastValues extends AbstractClientActivity
 		ArrayList<Integer> nodeIdList = new ArrayList<Integer>();
 		ArrayList<Integer> dciIdList = new ArrayList<Integer>();
 		ArrayList<Integer> colorList = new ArrayList<Integer>();
+		ArrayList<Integer> lineWidthList = new ArrayList<Integer>();
 		ArrayList<String> nameList = new ArrayList<String>();
 		// Set values
 		nodeIdList.add((int)nodeId);
 		dciIdList.add((int)val.getId());
 		colorList.add(Color.GREEN);
+		lineWidthList.add(3);
 		nameList.add(val.getDescription());
 		// Pass them to activity
 		newIntent.putExtra("numGraphs", 1);
 		newIntent.putIntegerArrayListExtra("nodeIdList", nodeIdList);
 		newIntent.putIntegerArrayListExtra("dciIdList", dciIdList);
 		newIntent.putIntegerArrayListExtra("colorList", colorList);
+		newIntent.putIntegerArrayListExtra("lineWidthList", lineWidthList);
 		newIntent.putStringArrayListExtra("nameList", nameList);
 		newIntent.putExtra("graphTitle", val.getDescription());
 		newIntent.putExtra("timeFrom", System.currentTimeMillis() - secsBack * 1000);

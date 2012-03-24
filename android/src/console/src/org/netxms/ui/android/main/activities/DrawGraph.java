@@ -25,6 +25,7 @@ import android.widget.TextView;
 import com.jjoe64.graphview.*; 
 import com.jjoe64.graphview.GraphView.GraphViewSeries;
 import com.jjoe64.graphview.GraphView.GraphViewData;
+import com.jjoe64.graphview.GraphView.GraphViewStyle;
 import com.jjoe64.graphview.GraphView.LegendAlign;
 
 /**
@@ -60,6 +61,7 @@ public class DrawGraph extends AbstractClientActivity
 			ArrayList<Integer> nodeIdList = getIntent().getIntegerArrayListExtra("nodeIdList");
 			ArrayList<Integer> dciIdList = getIntent().getIntegerArrayListExtra("dciIdList");
 			ArrayList<Integer> colorList = getIntent().getIntegerArrayListExtra("colorList");
+			ArrayList<Integer> lineWidthList = getIntent().getIntegerArrayListExtra("lineWidthList");
 			ArrayList<String> nameList = getIntent().getStringArrayListExtra("nameList");
 			for (int i = 0; i < numGraphs; i++)
 			{
@@ -68,7 +70,8 @@ public class DrawGraph extends AbstractClientActivity
 				items[i].setDciId(dciIdList.get(i));
 				items[i].setDescription(nameList.get(i));
 				itemStyles[i] = new GraphItemStyle();
-				itemStyles[i].setColor(colorList.get(i));
+				itemStyles[i].setColor(toAndroidColor(colorList.get(i)));
+				itemStyles[i].setLineWidth(lineWidthList.get(i));
 			}
 			timeFrom = getIntent().getLongExtra("timeFrom", 0);
 			timeTo = getIntent().getLongExtra("timeTo", 0);
@@ -207,8 +210,8 @@ public class DrawGraph extends AbstractClientActivity
 					{
 						GraphViewData[] gwData = new GraphViewData[dciDataRow.length];
 						for (int j = dciDataRow.length-1, k = 0; j >= 0; j--, k++)	// dciData are reversed!
-							gwData[k] = new GraphViewData(dciDataRow[j].getTimestamp().getTime(), dciDataRow[j].getValueAsDouble());  
-						GraphViewSeries gwSeries = new GraphViewSeries(items[i].getDescription(), toAndroidColor(itemStyles[i].getColor()), gwData);
+							gwData[k] = new GraphViewData(dciDataRow[j].getTimestamp().getTime(), dciDataRow[j].getValueAsDouble());
+						GraphViewSeries gwSeries = new GraphViewSeries(items[i].getDescription(), new GraphViewStyle(itemStyles[i].getColor(), itemStyles[i].getLineWidth()), gwData);
 						graphView.addSeries(gwSeries);
 						addedSeries++;
 						start = dciDataRow[dciDataRow.length-1].getTimestamp().getTime();
@@ -218,7 +221,7 @@ public class DrawGraph extends AbstractClientActivity
 				if (addedSeries == 0)	// Add an empty series when getting no data
 				{
 					GraphViewData[] gwData = new GraphViewData[] { new GraphViewData(0, 0) };  
-					GraphViewSeries gwSeries = new GraphViewSeries("", 0xFFFFFF, gwData);
+					GraphViewSeries gwSeries = new GraphViewSeries("", new GraphViewStyle(0xFFFFFF, 4), gwData);
 					graphView.addSeries(gwSeries);
 				}
 				LinearLayout layout = (LinearLayout)findViewById(R.id.graphics);   

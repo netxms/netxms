@@ -97,6 +97,7 @@ public class GraphBrowser extends AbstractClientActivity
 			ArrayList<Integer> nodeIdList = new ArrayList<Integer>();
 			ArrayList<Integer> dciIdList = new ArrayList<Integer>();
 			ArrayList<Integer> colorList = new ArrayList<Integer>();
+			ArrayList<Integer> lineWidthList = new ArrayList<Integer>();
 			ArrayList<String> nameList = new ArrayList<String>();
 			// Set values
 			GraphItem[] items = gs.getItems();
@@ -106,6 +107,7 @@ public class GraphBrowser extends AbstractClientActivity
 				nodeIdList.add((int)items[i].getNodeId());
 				dciIdList.add((int)items[i].getDciId());
 				colorList.add(itemStyles[i].getColor());
+				lineWidthList.add(itemStyles[i].getLineWidth());
 				nameList.add(items[i].getDescription());
 			}
 			// Pass them to activity
@@ -113,6 +115,7 @@ public class GraphBrowser extends AbstractClientActivity
 			newIntent.putIntegerArrayListExtra("nodeIdList", nodeIdList);
 			newIntent.putIntegerArrayListExtra("dciIdList", dciIdList);
 			newIntent.putIntegerArrayListExtra("colorList", colorList);
+			newIntent.putIntegerArrayListExtra("lineWidthList", lineWidthList);
 			newIntent.putStringArrayListExtra("nameList", nameList);
 			newIntent.putExtra("graphTitle", adapter.TrimGroup(gs.getName()));
 			if (gs.getTimeFrameType() == GraphSettings.TIME_FRAME_FIXED)
