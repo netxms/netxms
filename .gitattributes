@@ -74,6 +74,10 @@ android/src/console/res/values/colors.xml -text
 android/src/console/res/values/strings.xml -text
 android/src/console/res/values/styles.xml -text
 android/src/console/res/xml/preferences.xml -text
+android/src/console/src/com/jjoe64/graphview/BarGraphView.java -text
+android/src/console/src/com/jjoe64/graphview/GraphView.java -text
+android/src/console/src/com/jjoe64/graphview/GraphViewDemo.java -text
+android/src/console/src/com/jjoe64/graphview/LineGraphView.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/AlarmBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/ConnectionPointBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/ConsolePreferences.java -text
