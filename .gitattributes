@@ -1650,10 +1650,13 @@ src/java/netxms-eclipse/core/icons/lang/es.png -text
 src/java/netxms-eclipse/core/icons/lang/gb.png -text
 src/java/netxms-eclipse/core/icons/lang/ru.png -text
 src/java/netxms-eclipse/core/icons/lang/zh.png -text
+src/java/netxms-eclipse/core/icons/launcher/128x128.png -text
 src/java/netxms-eclipse/core/icons/launcher/16x16.png -text
 src/java/netxms-eclipse/core/icons/launcher/32x32.png -text
 src/java/netxms-eclipse/core/icons/launcher/48x48.png -text
 src/java/netxms-eclipse/core/icons/launcher/64x64.png -text
+src/java/netxms-eclipse/core/icons/launcher/nxmc.icns -text
+src/java/netxms-eclipse/core/icons/launcher/nxmc.ico -text
 src/java/netxms-eclipse/core/icons/login.png -text
 src/java/netxms-eclipse/core/icons/password.png -text
 src/java/netxms-eclipse/core/icons/pview.gif -text

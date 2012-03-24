@@ -4,7 +4,7 @@
 <product name="NetXMS Management Console" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.2.0" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
-      <image path="/nxmc-core/icons/launcher/64x64.png"/>
+      <image path="/nxmc-core/icons/launcher/128x128.png"/>
       <text>
          NetXMS Management Console
 
@@ -22,15 +22,17 @@ Copyright (c) 2003-2012 Victor Kirhenshtein, Alex Kirhenshtein
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
-   <windowImages i16="/nxmc-core/icons/launcher/16x16.png" i32="/nxmc-core/icons/launcher/32x32.png" i48="/nxmc-core/icons/launcher/48x48.png" i64="/nxmc-core/icons/launcher/64x64.png"/>
+   <windowImages i16="/nxmc-core/icons/launcher/16x16.png" i32="/nxmc-core/icons/launcher/32x32.png" i48="/nxmc-core/icons/launcher/48x48.png" i64="/nxmc-core/icons/launcher/64x64.png" i128="/nxmc-core/icons/launcher/128x128.png"/>
 
    <splash
       startupProgressRect="0,285,400,15"
       startupMessageRect="7,265,386,20"
       startupForegroundColor="FFFF00" />
    <launcher name="nxmc">
+      <macosx icon="/nxmc-core/icons/launcher/nxmc.icns"/>
       <solaris/>
-      <win useIco="false">
+      <win useIco="true">
+         <ico path="/nxmc-core/icons/launcher/nxmc.ico"/>
          <bmp/>
       </win>
    </launcher>
