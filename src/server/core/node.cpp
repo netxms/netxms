@@ -444,11 +444,13 @@ BOOL Node::DeleteFromDB()
    bSuccess = Template::DeleteFromDB();
    if (bSuccess)
    {
-      _sntprintf(szQuery, 256, _T("DELETE FROM nodes WHERE id=%d"), m_dwId);
+      _sntprintf(szQuery, 256, _T("DELETE FROM nodes WHERE id=%d"), (int)m_dwId);
       QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, 256, _T("DELETE FROM nsmap WHERE node_id=%d"), m_dwId);
+      _sntprintf(szQuery, 256, _T("DELETE FROM nsmap WHERE node_id=%d"), (int)m_dwId);
       QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, 256, _T("DROP TABLE idata_%d"), m_dwId);
+      _sntprintf(szQuery, 256, _T("DROP TABLE idata_%d"), (int)m_dwId);
+      QueueSQLRequest(szQuery);
+      _sntprintf(szQuery, 256, _T("DROP TABLE tdata_%d"), (uint)m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;

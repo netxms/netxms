@@ -8,6 +8,7 @@ INSERT INTO metadata (var_name,var_value)
 	VALUES ('SchemaVersion',DB_FORMAT_VERSION);
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('Syntax',DB_SYNTAX);
+
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) null)');
 #if defined(DB_POSTGRESQL)
@@ -19,4 +20,17 @@ INSERT INTO metadata (var_name,var_value)
 #else
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('IDataIndexCreationCommand_0','CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)');
+#endif
+
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('TDataTableCreationCommand','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp integer not null,tdata_row integer not null,tdata_column integer not null,tdata_value varchar(255) null)');
+#if defined(DB_POSTGRESQL)
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('TDataIndexCreationCommand_0','CREATE INDEX idx_tdata_%d_timestamp_id ON tdata_%d(tdata_timestamp,item_id)');
+#elif defined(DB_MSSQL)
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('TDataIndexCreationCommand_0','CREATE CLUSTERED INDEX idx_tdata_%d_id_timestamp ON tdata_%d(item_id,tdata_timestamp)');
+#else
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('TDataIndexCreationCommand_0','CREATE INDEX idx_tdata_%d_id_timestamp ON tdata_%d(item_id,tdata_timestamp)');
 #endif

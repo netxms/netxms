@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="NetXMS Management Console" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.1.10" useFeatures="false" includeLaunchers="true">
+<product name="NetXMS Management Console" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.2.0" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
+      <image path="/nxmc-core/icons/launcher/64x64.png"/>
       <text>
          NetXMS Management Console
 
-Version 1.1.10
+Version 1.2.0
 Copyright (c) 2003-2012 Victor Kirhenshtein, Alex Kirhenshtein
       </text>
    </aboutInfo>
@@ -21,7 +22,7 @@ Copyright (c) 2003-2012 Victor Kirhenshtein, Alex Kirhenshtein
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
-   <windowImages/>
+   <windowImages i16="/nxmc-core/icons/launcher/16x16.png" i32="/nxmc-core/icons/launcher/32x32.png" i48="/nxmc-core/icons/launcher/48x48.png" i64="/nxmc-core/icons/launcher/64x64.png"/>
 
    <splash
       startupProgressRect="0,285,400,15"

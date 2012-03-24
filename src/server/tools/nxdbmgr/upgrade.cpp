@@ -278,6 +278,89 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 
 
 //
+// Upgrade from V248 to V249
+//
+
+#define TDATA_CREATE_QUERY  _T("CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp integer not null,tdata_row integer not null,tdata_column integer not null,tdata_value varchar(255) null)")
+#define TDATA_INDEX_MSSQL   _T("CREATE CLUSTERED INDEX idx_tdata_%d_id_timestamp ON tdata_%d(item_id,tdata_timestamp)")
+#define TDATA_INDEX_PGSQL   _T("CREATE INDEX idx_tdata_%d_timestamp_id ON tdata_%d(tdata_timestamp,item_id)")
+#define TDATA_INDEX_DEFAULT _T("CREATE INDEX idx_tdata_%d_id_timestamp ON tdata_%d(item_id,tdata_timestamp)")
+
+static BOOL CreateTData(DWORD nodeId)
+{
+	TCHAR query[256];
+
+	_sntprintf(query, 256, TDATA_CREATE_QUERY, (int)nodeId);
+	CHK_EXEC(SQLQuery(query));
+
+	switch(g_iSyntax)
+	{
+		case DB_SYNTAX_MSSQL:
+			_sntprintf(query, 256, TDATA_INDEX_MSSQL, (int)nodeId, (int)nodeId);
+			break;
+		case DB_SYNTAX_PGSQL:
+			_sntprintf(query, 256, TDATA_INDEX_PGSQL, (int)nodeId, (int)nodeId);
+			break;
+		default:
+			_sntprintf(query, 256, TDATA_INDEX_DEFAULT, (int)nodeId, (int)nodeId);
+			break;
+	}
+	CHK_EXEC(SQLQuery(query));
+
+	return TRUE;
+}
+
+static BOOL H_UpgradeFromV248(int currVersion, int newVersion)
+{
+	CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataTableCreationCommand','") TDATA_CREATE_QUERY _T("')")));
+
+	switch(g_iSyntax)
+	{
+		case DB_SYNTAX_MSSQL:
+			CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','") TDATA_INDEX_MSSQL _T("')")));
+			break;
+		case DB_SYNTAX_PGSQL:
+			CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','") TDATA_INDEX_PGSQL _T("')")));
+			break;
+		default:
+			CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','") TDATA_INDEX_DEFAULT _T("')")));
+			break;
+	}
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE dct_column_names (")
+								_T("column_id integer not null,")
+								_T("column_name varchar(63) not null,")
+	                     _T("PRIMARY KEY(column_id))")));
+
+	DB_RESULT hResult = SQLSelect(_T("SELECT id FROM nodes"));
+	if (hResult != NULL)
+	{
+		int count = DBGetNumRows(hResult);
+		for(int i = 0 ; i < count; i++)
+		{
+			if (!CreateTData(DBGetFieldULong(hResult, i, 0)))
+			{
+				if (!g_bIgnoreErrors)
+				{
+					DBFreeResult(hResult);
+					return FALSE;
+				}
+			}
+		}
+		DBFreeResult(hResult);
+	}
+	else
+	{
+		if (!g_bIgnoreErrors)
+			return FALSE;
+	}
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='249' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V247 to V248
 //
 
@@ -6037,6 +6120,7 @@ static struct
 	{ 245, 246, H_UpgradeFromV245 },
 	{ 246, 247, H_UpgradeFromV246 },
 	{ 247, 248, H_UpgradeFromV247 },
+	{ 248, 249, H_UpgradeFromV248 },
    { 0, 0, NULL }
 };
 

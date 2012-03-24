@@ -68,7 +68,7 @@
          </property>
          <property
                name="aboutText"
-               value="NetXMS Management Console&#x0A;&#x0A;Version 1.1.10&#x0A;Copyright (c) 2003-2012 Victor Kirhenshtein, Alex Kirhenshtein">
+               value="NetXMS Management Console&#x0A;&#x0A;Version 1.2.0&#x0A;Copyright (c) 2003-2012 Victor Kirhenshtein, Alex Kirhenshtein">
          </property>
          <property
                name="preferenceCustomization"
@@ -85,6 +85,14 @@
          <property
                name="startupProgressRect"
                value="0,285,400,15">
+         </property>
+         <property
+               name="aboutImage"
+               value="icons/launcher/64x64.png">
+         </property>
+         <property
+               name="windowImages"
+               value="icons/launcher/16x16.png,icons/launcher/32x32.png,icons/launcher/48x48.png,icons/launcher/64x64.png">
          </property>
       </product>
    </extension>

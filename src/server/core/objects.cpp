@@ -242,7 +242,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
       pObject->setId(CreateUniqueId(IDG_NETWORK_OBJECT));
 		pObject->generateGuid();
 
-      // Create table for storing data collection values
+      // Create tables for storing data collection values
       if (pObject->Type() == OBJECT_NODE)
       {
          TCHAR szQuery[256], szQueryTemplate[256];
@@ -262,7 +262,22 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
                DBQuery(g_hCoreDB, szQuery);
             }
          }
-      }
+
+         MetaDataReadStr(_T("TDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->Id());
+         DBQuery(g_hCoreDB, szQuery);
+
+         for(i = 0; i < 10; i++)
+         {
+            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("TDataIndexCreationCommand_%d"), i);
+            MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
+            if (szQueryTemplate[0] != 0)
+            {
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->Id(), pObject->Id());
+               DBQuery(g_hCoreDB, szQuery);
+            }
+         }
+		}
    }
 	g_idxObjectById.put(pObject->Id(), pObject);
    if (!pObject->isDeleted())
