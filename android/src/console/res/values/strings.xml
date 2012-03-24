@@ -17,8 +17,8 @@
 	<string name="notify_started">NetXMS service started</string>
 	<string name="notify_disconnected">Disconnected from server</string>
 	<string name="notify_connected">Connected to server %1$s</string>
-	<string name="notify_connecting">Connecting...</string>
-	<string name="notify_connect_failed">Connection failed: %1$s</string>
+	<string name="notify_connecting">Connecting to server...</string>
+	<string name="notify_connection_failed">Connection failed: %1$s</string>
 	<string name="notify_action_exec_fail">Cannot execute action: %1$s</string>
 	<string name="notify_action_exec_success">Action executed successfully</string>
 	<string name="notify_service_obj_sync_success">Objects synchronized</string>

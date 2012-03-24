@@ -3,11 +3,16 @@
  */
 package org.netxms.ui.android.service.tasks;
 
-import java.util.Map;
+import java.io.IOException;
+
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.Alarm;
-import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
+import org.netxms.ui.android.service.ClientConnectorService.ConnectionStatus;
+
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 
 /**
@@ -21,7 +26,7 @@ public class ConnectTask extends Thread
 	private String server;
 	private String login;
 	private String password;
-	private Map<Long, Alarm> alarms;
+	private Boolean encrypt;
 
 	/**
 	 * @param service
@@ -37,12 +42,14 @@ public class ConnectTask extends Thread
 	 * @param server
 	 * @param login
 	 * @param password
+	 * @param encrypt
 	 */
-	public void execute(String server, String login, String password)
+	public void execute(String server, String login, String password, Boolean encrypt)
 	{
 		this.server = server;
 		this.login = login;
 		this.password = password;
+		this.encrypt = encrypt;
 		start();
 	}
 
@@ -54,28 +61,65 @@ public class ConnectTask extends Thread
 	@Override
 	public void run()
 	{
-		final NXCSession session = new NXCSession(server, login, password);
-		String status = service.getString(R.string.notify_connecting);
-		service.setConnectionStatus(status);
-		try
-		{
-			Log.d(TAG, "calling session.connect()");
-			session.connect();
-			Log.d(TAG, "calling session.subscribe()");
-			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);
-
-			alarms = session.getAlarms(false);
-			status = service.getString(R.string.notify_connected, session.getServerAddress());
-			service.showToast(status);
-			service.setConnectionStatus(status);
-			service.onConnect(session, alarms);
-			service.loadTools();
-		}
-		catch(Exception e)
-		{
-			Log.d(TAG, "Exception on connect attempt", e);
-			service.setConnectionStatus(service.getString(R.string.notify_connect_failed, e.getLocalizedMessage()));
-			service.onDisconnect();
-		}
+		if (service != null)
+			if (isInternetOn())
+			{
+				service.setConnectionStatus(ConnectionStatus.CS_INPROGRESS, "");
+				NXCSession session = service.getSession();
+				if (session != null)
+					try
+					{
+						session.checkConnection();
+						service.setConnectionStatus(ConnectionStatus.CS_ALREADYCONNECTED, session.getServerAddress());
+					}
+					catch (NXCException e)
+					{
+						Log.d(TAG, "NXCException in checking connection", e);
+						service.onError(e.getLocalizedMessage());
+						session = null;
+					}
+					catch (IOException e)
+					{
+						Log.d(TAG, "IOException in checking connection", e);
+						service.onError(e.getLocalizedMessage());
+						session = null;
+					}
+				if (session == null)	// Already null or invalidated
+				{	
+					session = new NXCSession(server, login, password);
+					try
+					{
+						Log.d(TAG, "calling session.connect()");
+						session.connect();
+						Log.d(TAG, "calling session.subscribe()");
+						session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);
+						service.onConnect(session, session.getAlarms(false));
+						service.loadTools();
+					}
+					catch(Exception e)
+					{
+						Log.d(TAG, "Exception on connect attempt", e);
+						service.onError(e.getLocalizedMessage());
+					}
+				}
+			}
+			else
+			{
+				Log.d(TAG, "No internet connection");
+				service.setConnectionStatus(ConnectionStatus.CS_NOCONNECTION, "");
+			}
+		else
+			Log.d(TAG, "Service unavailable");
 	}
+
+	/**
+	 * Check for internet connectivity 
+	 */
+	private boolean isInternetOn()
+	{
+		ConnectivityManager connec = (ConnectivityManager)service.getSystemService(Context.CONNECTIVITY_SERVICE);
+		return connec.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED || 
+		       connec.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED;
+	}
+
 }

@@ -32,6 +32,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
@@ -49,25 +50,27 @@ import android.widget.Toast;
  */
 public class ClientConnectorService extends Service implements SessionListener
 {
+	public enum ConnectionStatus { CS_NOCONNECTION, CS_INPROGRESS, CS_ALREADYCONNECTED, CS_CONNECTED, CS_DISCONNECTED, CS_ERROR };
 	public static final String ACTION_RECONNECT = "org.netxms.ui.android.ACTION_RECONNECT";
+	public static final String ACTION_DISCONNECT = "org.netxms.ui.android.ACTION_DISCONNECT";
 
 	private static final int NOTIFY_ALARM = 1;
 	private static final String TAG = "nxclient.ClientConnectorService";
-
 	private String mutex = "MUTEX";
 	private Binder binder = new ClientConnectorBinder();
 	private Handler uiThreadHandler;
 	private NotificationManager notificationManager;
 	private NXCSession session = null;
-	private boolean connectionInProgress = false;
-	private String connectionStatus = "";
+	private ConnectionStatus connectionStatus = ConnectionStatus.CS_DISCONNECTED;
+	private String connectionStatusText = "";
+	private int connectionStatusColor = 0;
 	private Map<Long, Alarm> alarms = null;
 	private HomeScreen homeScreen = null;
 	private AlarmBrowser alarmBrowser = null;
 	private NodeBrowser nodeBrowser = null;
 	private GraphBrowser graphBrowser = null;
 	private Alarm unknownAlarm = null;
-
+	private long lastAlarmIdNotified;
 	private List<ObjectTool> objectTools = null;
 
 	/**
@@ -121,8 +124,11 @@ public class ClientConnectorService extends Service implements SessionListener
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId)
 	{
-		if ((intent != null) && (intent.getAction() != null) && intent.getAction().equals(ACTION_RECONNECT))
-			reconnect();
+		if ((intent != null) && (intent.getAction() != null))
+			if (intent.getAction().equals(ACTION_RECONNECT))
+				reconnect();
+			else if (intent.getAction().equals(ACTION_DISCONNECT))
+				onDisconnect();
 		return super.onStartCommand(intent, flags, startId);
 	}
 
@@ -196,17 +202,16 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		synchronized(mutex)
 		{
-			if ((session == null) && !connectionInProgress)
+			if (connectionStatus != ConnectionStatus.CS_INPROGRESS)
 			{
-				connectionInProgress = true;
-				setConnectionStatus(getString(R.string.notify_connecting));
+				connectionStatus = ConnectionStatus.CS_INPROGRESS;
 				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 				new ConnectTask(this).execute(sp.getString("connection.server", ""), sp.getString("connection.login", ""),
-						sp.getString("connection.password", ""));
+	                                          sp.getString("connection.password", ""), sp.getBoolean("connection.encrypt", false));
 			}
 		}
 	}
-
+	
 	/**
 	 * Called by connect task after successful connection
 	 * 
@@ -217,10 +222,13 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		synchronized(mutex)
 		{
-			connectionInProgress = false;
-			this.session = session;
-			this.alarms = alarms;
-			session.addListener(this);
+			if (session != null)
+			{
+				this.session = session;
+				this.alarms = alarms;
+				session.addListener(this);
+				setConnectionStatus(ConnectionStatus.CS_CONNECTED, session.getServerAddress());
+			}
 		}
 	}
 
@@ -230,21 +238,39 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void onDisconnect()
 	{
+		nullifySession();
+		hideNotification(NOTIFY_ALARM);
+		showToast(getString(R.string.notify_disconnected));
+		setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
+	}
+	
+	/**
+	 * Called by connect task on error during connection
+	 */
+	public void onError(String error)
+	{
+		nullifySession();
+		hideNotification(NOTIFY_ALARM);
+		showToast(getString(R.string.notify_connection_failed, error));
+		setConnectionStatus(ConnectionStatus.CS_ERROR, error);
+	}
+
+	/**
+	 * Release internal resources nullifying current session (if any)
+	 */
+	private void nullifySession()
+	{
 		synchronized(mutex)
 		{
 			if (session != null)
 			{
 				session.removeListener(this);
-				hideNotification(NOTIFY_ALARM);
-				showToast(getString(R.string.notify_disconnected));
-				setConnectionStatus(getString(R.string.notify_disconnected));
+				session = null;
 			}
-			connectionInProgress = false;
-			session = null;
 			alarms = null;
 		}
 	}
-
+	
 	/**
 	 * Process alarm change
 	 * 
@@ -256,7 +282,12 @@ public class ClientConnectorService extends Service implements SessionListener
 		synchronized(mutex)
 		{
 			if (alarms != null)
-				alarms.put(alarm.getId(), alarm);
+			{
+				lastAlarmIdNotified = alarm.getId(); 
+				alarms.put(lastAlarmIdNotified, alarm);
+			}
+			else
+				lastAlarmIdNotified = -1;
 			unknownAlarm = object == null ? alarm : null;
 			showNotification(NOTIFY_ALARM, alarm.getCurrentSeverity(), ((object != null) ? object.getObjectName() : getString(R.string.node_unknown)) + ": " + alarm.getMessage());
 		}
@@ -283,6 +314,11 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			if (alarms != null)
 				alarms.remove(id);
+			if (lastAlarmIdNotified == id)
+			{
+				hideNotification(NOTIFY_ALARM);
+				lastAlarmIdNotified = -1;
+			}
 		}
 
 		if (alarmBrowser != null)
@@ -608,25 +644,67 @@ public class ClientConnectorService extends Service implements SessionListener
 	/**
 	 * @return the connectionStatus
 	 */
-	public String getConnectionStatus()
+	public ConnectionStatus getConnectionStatus()
 	{
 		return connectionStatus;
+	}
+
+	/**
+	 * @return the connectionStatusText
+	 */
+	public String getConnectionStatusText()
+	{
+		return connectionStatusText;
+	}
+
+	/**
+	 * @return the connectionStatusColor
+	 */
+	public int getConnectionStatusColor()
+	{
+		return connectionStatusColor;
 	}
 
 	/**
 	 * @param connectionStatus
 	 *           the connectionStatus to set
 	 */
-	public void setConnectionStatus(final String connectionStatus)
+	public void setConnectionStatus(ConnectionStatus connectionStatus, String extra)
 	{
+		Resources r = getResources();
 		this.connectionStatus = connectionStatus;
+		switch (connectionStatus)
+		{
+			case CS_INPROGRESS:
+				connectionStatusText = getString(R.string.notify_connecting);
+				connectionStatusColor = r.getColor(R.color.notify_connecting);
+				break;
+			case CS_ALREADYCONNECTED:
+				connectionStatusText = getString(R.string.notify_connected, extra);
+				connectionStatusColor = r.getColor(R.color.notify_connected);
+				break;
+			case CS_CONNECTED:
+				connectionStatusText = getString(R.string.notify_connected, extra);
+				connectionStatusColor = r.getColor(R.color.notify_connected);
+				break;
+			case CS_DISCONNECTED:
+				connectionStatusText = getString(R.string.notify_disconnected);
+				connectionStatusColor = r.getColor(R.color.notify_disconnected);
+				break;
+			case CS_ERROR:
+				connectionStatusText = getString(R.string.notify_connection_failed, extra);
+				connectionStatusColor = r.getColor(R.color.notify_connection_failed);
+				break;
+			default:
+				break;
+		}
 		if (homeScreen != null)
 		{
 			homeScreen.runOnUiThread(new Runnable() {
 				@Override
 				public void run()
 				{
-					homeScreen.setStatusText(connectionStatus);
+					homeScreen.setStatusText(connectionStatusText, connectionStatusColor);
 				}
 			});
 		}

@@ -3,17 +3,20 @@ package org.netxms.ui.android.main.activities;
 import org.netxms.base.NXCommon;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ActivityListAdapter;
+import org.netxms.ui.android.service.ClientConnectorService.ConnectionStatus;
 
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * Home screen activity
@@ -63,7 +66,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	{
 		super.onServiceConnected(name, binder);
 		service.registerHomeScreen(this);
-		statusText.setText(service.getConnectionStatus());
+		setStatusText(service.getConnectionStatusText(), service.getConnectionStatusColor());
 	}
 
 	/* (non-Javadoc)
@@ -72,30 +75,48 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id)
 	{
-		switch((int)id)
-		{
-			case ACTIVITY_ALARMS:
-				startActivity(new Intent(this, AlarmBrowser.class));
-				break;
-			case ACTIVITY_NODES:
-				startActivity(new Intent(this, NodeBrowser.class));
-				break;
-			case ACTIVITY_GRAPHS:
-				startActivity(new Intent(this, GraphBrowser.class));
-				break;
-			case ACTIVITY_MACADDRESS:
-				startActivity(new Intent(this, ConnectionPointBrowser.class));
-				break;
-			default:
-				break;
-		}
+		// Avoid starting activity if no connection
+		if (service != null && (service.getConnectionStatus() == ConnectionStatus.CS_CONNECTED || 
+		                        service.getConnectionStatus() == ConnectionStatus.CS_ALREADYCONNECTED))
+			switch((int)id)
+			{
+				case ACTIVITY_ALARMS:
+					startActivity(new Intent(this, AlarmBrowser.class));
+					break;
+				case ACTIVITY_NODES:
+					startActivity(new Intent(this, NodeBrowser.class));
+					break;
+				case ACTIVITY_GRAPHS:
+					startActivity(new Intent(this, GraphBrowser.class));
+					break;
+				case ACTIVITY_MACADDRESS:
+					startActivity(new Intent(this, ConnectionPointBrowser.class));
+					break;
+				default:
+					break;
+			}
+		else
+			showToast(getString(R.string.notify_disconnected));
 	}
 	
 	/**
 	 * @param text
 	 */
-	public void setStatusText(String text)
+	public void setStatusText(String text, int color)
 	{
+		statusText.setTextColor(color);
 		statusText.setText(text);
+	}
+
+	public void showToast(final String text)
+	{
+		new Handler(getMainLooper()).post(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+			}
+		});
 	}
 }
