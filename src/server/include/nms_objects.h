@@ -1706,10 +1706,8 @@ protected:
 	LONG m_prevDiffMonth;
 
 	static LONG logRecordId;
-	static const LONG secondsInDay = 3600 * 24;
-	static const LONG secondsInWeek = 3600 * 24 * 7;
 	static LONG getSecondsInMonth();
-	static LONG getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? secondsInWeek : secondsInDay); }
+	static LONG getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? (3600 * 24 * 7) : (3600 * 24)); }
 	static LONG getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
 
 	void initServiceContainer();
