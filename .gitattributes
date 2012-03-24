@@ -94,6 +94,7 @@ android/src/console/src/org/netxms/ui/android/main/adapters/LastValuesAdapter.ja
 android/src/console/src/org/netxms/ui/android/main/adapters/NodeListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/views/ActivityListElement.java -text
 android/src/console/src/org/netxms/ui/android/receiver/BootCompletedIntentReceiver.java -text
+android/src/console/src/org/netxms/ui/android/receiver/ConnectivityChangeIntentReceiver.java -text
 android/src/console/src/org/netxms/ui/android/service/ClientConnectorService.java -text
 android/src/console/src/org/netxms/ui/android/service/helpers/AndroidLoggingFacility.java -text
 android/src/console/src/org/netxms/ui/android/service/tasks/ConnectTask.java -text
