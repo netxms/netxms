@@ -200,6 +200,36 @@ DCObject::~DCObject()
 
 
 //
+// Load custom schedules from database
+// (assumes that no schedules was created before this call)
+//
+
+BOOL DCObject::loadCustomSchedules()
+{
+   if (!(m_flags & DCF_ADVANCED_SCHEDULE))
+		return TRUE;
+
+	TCHAR query[256];
+
+   _sntprintf(query, 256, _T("SELECT schedule FROM dci_schedules WHERE item_id=%d"), m_dwId);
+   DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+   if (hResult != NULL)
+   {
+      m_dwNumSchedules = (DWORD)DBGetNumRows(hResult);
+      m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
+      for(DWORD i = 0; i < m_dwNumSchedules; i++)
+      {
+         m_ppScheduleList[i] = DBGetField(hResult, i, 0, NULL, 0);
+         DecodeSQLString(m_ppScheduleList[i]);
+      }
+      DBFreeResult(hResult);
+   }
+
+	return hResult != NULL;
+}
+
+
+//
 // Check if associated cluster resource is active. Returns true also if
 // DCI has no resource association
 //
@@ -673,7 +703,33 @@ void DCObject::updateFromMessage(CSCPMessage *pMsg)
 
 BOOL DCObject::saveToDB(DB_HANDLE hdb)
 {
-	return FALSE;
+	TCHAR query[1024];
+
+	lock();
+
+   // Save schedules
+   _sntprintf(query, 1024, _T("DELETE FROM dci_schedules WHERE item_id=%d"), (int)m_dwId);
+   BOOL success = DBQuery(hdb, query);
+	if (success && (m_flags & DCF_ADVANCED_SCHEDULE))
+   {
+      TCHAR *pszEscSchedule;
+      DWORD i;
+
+      for(i = 0; i < m_dwNumSchedules; i++)
+      {
+         pszEscSchedule = EncodeSQLString(m_ppScheduleList[i]);
+         _sntprintf(query, 1024, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES (%d,%d,'%s')"),
+                    m_dwId, i + 1, pszEscSchedule);
+         free(pszEscSchedule);
+         success = DBQuery(hdb, query);
+			if (!success)
+				break;
+      }
+   }
+
+	unlock();
+
+	return success;
 }
 
 
@@ -683,6 +739,9 @@ BOOL DCObject::saveToDB(DB_HANDLE hdb)
 
 void DCObject::deleteFromDB()
 {
+	TCHAR query[256];
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM dci_schedules WHERE item_id=%d"), (int)m_dwId);
+   QueueSQLRequest(query);
 }
 
 

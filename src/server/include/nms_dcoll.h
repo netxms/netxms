@@ -210,6 +210,8 @@ protected:
    void lock() { MutexLock(m_hMutex); }
    void unlock() { MutexUnlock(m_hMutex); }
 
+	BOOL loadCustomSchedules();
+
 	bool matchClusterResource();
 
 	void expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
@@ -390,6 +392,22 @@ public:
 	~DCTableColumn();
 
    void setTransformationScript(const TCHAR *script);
+
+	const TCHAR *getName() { return m_name; }
+	int getDataType() { return m_dataType; }
+	SNMP_ObjectId *getSnmpOid() { return m_snmpOid; }
+	const TCHAR *getScriptSource() { return m_scriptSource; }
+};
+
+
+//
+// Table column ID hash entry
+//
+
+struct TC_ID_MAP_ENTRY
+{
+	LONG id;
+	TCHAR name[MAX_COLUMN_NAME];
 };
 
 
@@ -403,15 +421,31 @@ protected:
 	TCHAR m_instanceColumn[MAX_COLUMN_NAME];
 	ObjectArray<DCTableColumn> *m_columns;
 
+	static TC_ID_MAP_ENTRY *m_cache;
+	static int m_cacheSize;
+	static int m_cacheAllocated;
+	static MUTEX m_cacheMutex;
+
+	static LONG columnIdFromName(const TCHAR *name);
+
 public:
 	DCTable();
    DCTable(const DCTable *src);
+   DCTable(DWORD id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
+	        Template *node, const TCHAR *instanceColumn = NULL, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
+   DCTable(DB_RESULT hResult, int iRow, Template *pNode);
 	virtual ~DCTable();
 
 	virtual int getType() const { return DCO_TYPE_TABLE; }
 
+   virtual BOOL saveToDB(DB_HANDLE hdb);
+   virtual void deleteFromDB();
+
    virtual void processNewValue(time_t nTimeStamp, void *value);
    virtual void processNewError();
+
+	virtual void deleteExpiredData();
+	virtual bool deleteAllData();
 };
 
 

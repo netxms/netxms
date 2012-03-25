@@ -305,3 +305,30 @@ void EscapeString(String &str)
    str.translate(_T("\n"), _T("\\n"));
    str.translate(_T("\t"), _T("\\t"));
 }
+
+
+//
+// Check if given record exists in database
+//
+
+bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, TCHAR *table, const TCHAR *idColumn, DWORD id)
+{
+	bool exist = false;
+
+	TCHAR query[256];
+	_sntprintf(query, 256, _T("SELECT %s FROM %s WHERE %s=?"), idColumn, table, idColumn);
+	
+	DB_STATEMENT hStmt = DBPrepare(hdb, query);
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			exist = (DBGetNumRows(hResult) > 0);
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
+	return exist;
+}

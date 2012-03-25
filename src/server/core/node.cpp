@@ -335,7 +335,6 @@ BOOL Node::CreateFromDB(DWORD dwId)
 BOOL Node::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR szQuery[4096], szIpAddr[16], baseAddress[16];
-   DB_RESULT hResult;
    BOOL bNewObject = TRUE;
    BOOL bResult;
 
@@ -344,19 +343,34 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 
    saveCommonProperties(hdb);
 
-   // Check for object's existence in database
-   _sntprintf(szQuery, 4096, _T("SELECT id FROM nodes WHERE id=%d"), m_dwId);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         bNewObject = FALSE;
-      DBFreeResult(hResult);
-   }
-
    // Form and execute INSERT or UPDATE query
 	int snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
-   if (bNewObject)
+   if (IsDatabaseRecordExist(hdb, _T("nodes"), _T("id"), m_dwId))
+	{
+      _sntprintf(szQuery, 4096,
+			_T("UPDATE nodes SET primary_ip='%s',primary_name=%s,snmp_port=%d,")
+                 _T("node_flags=%d,snmp_version=%d,community=%s,")
+                 _T("status_poll_type=%d,agent_port=%d,auth_method=%d,secret=%s,")
+                 _T("snmp_oid=%s,uname=%s,agent_version=%s,platform_name=%s,poller_node_id=%d,")
+                 _T("zone_guid=%d,proxy_node=%d,snmp_proxy=%d,")
+					  _T("required_polls=%d,use_ifxtable=%d,usm_auth_password=%s,")
+					  _T("usm_priv_password=%s,usm_methods=%d,snmp_sys_name=%s,bridge_base_addr='%s',")
+					  _T("runtime_flags=%d WHERE id=%d"),
+                 IpToStr(m_dwIpAddr, szIpAddr), (const TCHAR *)DBPrepareString(hdb, m_primaryName), m_wSNMPPort, 
+                 m_dwFlags, m_snmpVersion, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
+                 m_iStatusPollType, m_wAgentPort, m_wAuthMethod,
+					  (const TCHAR *)DBPrepareString(hdb, m_szSharedSecret), 
+                 (const TCHAR *)DBPrepareString(hdb, m_szObjectId),
+					  (const TCHAR *)DBPrepareString(hdb, m_sysDescription),
+                 (const TCHAR *)DBPrepareString(hdb, m_szAgentVersion),
+					  (const TCHAR *)DBPrepareString(hdb, m_szPlatformName), m_dwPollerNode, m_zoneId,
+                 m_dwProxyNode, m_dwSNMPProxy, m_iRequiredPollCount,
+					  m_nUseIfXTable, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
+					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
+					  (const TCHAR *)DBPrepareString(hdb, m_sysName), 
+					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), (int)m_dwDynamicFlags, (int)m_dwId);
+	}
+   else
 	{
       _sntprintf(szQuery, 4096,
                  _T("INSERT INTO nodes (id,primary_ip,primary_name,snmp_port,")
@@ -381,31 +395,6 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
 					  (const TCHAR *)DBPrepareString(hdb, m_sysName),
 					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), (int)m_dwDynamicFlags);
-	}
-   else
-	{
-      _sntprintf(szQuery, 4096,
-			_T("UPDATE nodes SET primary_ip='%s',primary_name=%s,snmp_port=%d,")
-                 _T("node_flags=%d,snmp_version=%d,community=%s,")
-                 _T("status_poll_type=%d,agent_port=%d,auth_method=%d,secret=%s,")
-                 _T("snmp_oid=%s,uname=%s,agent_version=%s,platform_name=%s,poller_node_id=%d,")
-                 _T("zone_guid=%d,proxy_node=%d,snmp_proxy=%d,")
-					  _T("required_polls=%d,use_ifxtable=%d,usm_auth_password=%s,")
-					  _T("usm_priv_password=%s,usm_methods=%d,snmp_sys_name=%s,bridge_base_addr='%s',")
-					  _T("runtime_flags=%d WHERE id=%d"),
-                 IpToStr(m_dwIpAddr, szIpAddr), (const TCHAR *)DBPrepareString(hdb, m_primaryName), m_wSNMPPort, 
-                 m_dwFlags, m_snmpVersion, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
-                 m_iStatusPollType, m_wAgentPort, m_wAuthMethod,
-					  (const TCHAR *)DBPrepareString(hdb, m_szSharedSecret), 
-                 (const TCHAR *)DBPrepareString(hdb, m_szObjectId),
-					  (const TCHAR *)DBPrepareString(hdb, m_sysDescription),
-                 (const TCHAR *)DBPrepareString(hdb, m_szAgentVersion),
-					  (const TCHAR *)DBPrepareString(hdb, m_szPlatformName), m_dwPollerNode, m_zoneId,
-                 m_dwProxyNode, m_dwSNMPProxy, m_iRequiredPollCount,
-					  m_nUseIfXTable, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
-					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
-					  (const TCHAR *)DBPrepareString(hdb, m_sysName), 
-					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), (int)m_dwDynamicFlags, (int)m_dwId);
 	}
    bResult = DBQuery(hdb, szQuery);
 
@@ -450,7 +439,7 @@ BOOL Node::DeleteFromDB()
       QueueSQLRequest(szQuery);
       _sntprintf(szQuery, 256, _T("DROP TABLE idata_%d"), (int)m_dwId);
       QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, 256, _T("DROP TABLE tdata_%d"), (uint)m_dwId);
+      _sntprintf(szQuery, 256, _T("DROP TABLE tdata_%d"), (int)m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;

@@ -251,35 +251,27 @@ BOOL Template::CreateFromDB(DWORD dwId)
 BOOL Template::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR *pszQuery, *pszEscScript, query2[256];
-   DB_RESULT hResult;
    DWORD i, len;
-   BOOL bNewObject = TRUE;
 
    // Lock object's access
    LockData();
 
    saveCommonProperties(hdb);
 
-   // Check for object's existence in database
-   _sntprintf(query2, 128, _T("SELECT id FROM templates WHERE id=%d"), m_dwId);
-   hResult = DBSelect(hdb, query2);
-   if (hResult != 0)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         bNewObject = FALSE;
-      DBFreeResult(hResult);
-   }
-
    // Form and execute INSERT or UPDATE query
 	pszEscScript = (m_applyFilterSource != NULL) ? EncodeSQLString(m_applyFilterSource) : _tcsdup(_T("#00"));
 	len = (DWORD)_tcslen(pszEscScript) + 256;
 	pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * len);
-   if (bNewObject)
-      _sntprintf(pszQuery, len, _T("INSERT INTO templates (id,version,enable_auto_apply,apply_filter) VALUES (%d,%d,%d,'%s')"),
-		           m_dwId, m_dwVersion, (m_applyFilterSource != NULL) ? 1 : 0, pszEscScript);
-   else
+   if (IsDatabaseRecordExist(hdb, _T("templates"), _T("id"), m_dwId))
+	{
       _sntprintf(pszQuery, len, _T("UPDATE templates SET version=%d,enable_auto_apply=%d,apply_filter='%s' WHERE id=%d"),
                  m_dwVersion, (m_applyFilterSource != NULL) ? 1 : 0, pszEscScript, m_dwId);
+	}
+   else
+	{
+      _sntprintf(pszQuery, len, _T("INSERT INTO templates (id,version,enable_auto_apply,apply_filter) VALUES (%d,%d,%d,'%s')"),
+		           m_dwId, m_dwVersion, (m_applyFilterSource != NULL) ? 1 : 0, pszEscScript);
+	}
 	free(pszEscScript);
    DBQuery(hdb, pszQuery);
 	free(pszQuery);
@@ -370,6 +362,20 @@ void Template::loadItemsFromDB()
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
          m_dcObjects->add(new DCItem(hResult, i, this));
+      DBFreeResult(hResult);
+   }
+
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
+	           _T("SELECT item_id,template_id,template_item_id,name,instance_column,")
+				  _T("description,flags,source,snmp_port,polling_interval,retention_time,")
+              _T("status,system_tag,resource_id,proxy_node,perftab_settings FROM dc_tables WHERE node_id=%d"), (int)m_dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+
+   if (hResult != 0)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+         m_dcObjects->add(new DCTable(hResult, i, this));
       DBFreeResult(hResult);
    }
 }

@@ -154,6 +154,7 @@ typedef void * HSNMPSESSION;
 #define IDG_GRAPH					18
 #define IDG_CERTIFICATE			19
 #define IDG_SITUATION         20
+#define IDG_DCT_COLUMN        21
 
 
 //
@@ -705,6 +706,8 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 void QueueIDataInsert(time_t timestamp, DWORD nodeId, DWORD dciId, const TCHAR *value);
 void StartDBWriter();
 void StopDBWriter();
+
+bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, TCHAR *table, const TCHAR *idColumn, DWORD id);
 
 void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszStr);
 

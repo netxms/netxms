@@ -27,7 +27,7 @@
 // Constants
 //
 
-#define NUMBER_OF_GROUPS   21
+#define NUMBER_OF_GROUPS   22
 
 
 //
@@ -38,14 +38,14 @@ static MUTEX m_mutexTableAccess;
 static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 100, 1, FIRST_USER_EVENT_ID, 1, 1, 
                                                    1, 1, 0x80000000,
                                                    1, 1, 0x80000001, 1, 1, 1, 1,
-                                                   10000, 10000, 1, 1, 1, 1
+                                                   10000, 10000, 1, 1, 1, 1, 1
                                                  };
 static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 
                                                 0x7FFFFFFF, 0xFFFFFFFE, 0x7FFFFFFF, 0xFFFFFFFF,
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
                                                 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
                                                 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-																0xFFFFFFFE
+																0xFFFFFFFE, 0x7FFFFFFE
                                               };
 static QWORD m_qwFreeEventId = 1;
 static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
@@ -70,7 +70,8 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("Agent Configs"),
 	_T("Graphs"),
 	_T("Certificates"),
-	_T("Situations")
+	_T("Situations"),
+	_T("Table Columns")
 };
 
 
@@ -403,6 +404,16 @@ BOOL InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          m_dwFreeIdTable[IDG_SLM_TICKET] = max(m_dwFreeIdTable[IDG_SLM_TICKET],
+                                               DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available data collection table column id
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(column_id) FROM dct_column_names"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_DCT_COLUMN] = max(m_dwFreeIdTable[IDG_DCT_COLUMN],
                                                DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }

@@ -271,18 +271,14 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
 //
 // Constructor for creating DCItem from database
 // Assumes that fields in SELECT query are in following order:
-// item_id,name,source,datatype,polling_interval,retention_time,status,
-// delta_calculation,transformation,template_id,description,instance,
-// template_item_id,flags,resource_id,proxy_node,base_units,unit_multiplier,
-// custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type
+//    item_id,name,source,datatype,polling_interval,retention_time,status,
+//    delta_calculation,transformation,template_id,description,instance,
+//    template_item_id,flags,resource_id,proxy_node,base_units,unit_multiplier,
+//    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type
 //
 
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
-   TCHAR *pszTmp, szQuery[256], szBuffer[MAX_DB_STRING];
-   DB_RESULT hTempResult;
-   DWORD i;
-
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    DBGetField(hResult, iRow, 1, m_szName, MAX_ITEM_NAME);
    m_source = (BYTE)DBGetFieldLong(hResult, iRow, 2);
@@ -293,26 +289,20 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
    m_deltaCalculation = (BYTE)DBGetFieldLong(hResult, iRow, 7);
    m_pszScript = NULL;
    m_pScript = NULL;
-   pszTmp = DBGetField(hResult, iRow, 8, NULL, 0);
+   TCHAR *pszTmp = DBGetField(hResult, iRow, 8, NULL, 0);
    setTransformationScript(pszTmp);
    free(pszTmp);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 10, m_szDescription, MAX_DB_STRING);
    DBGetField(hResult, iRow, 11, m_szInstance, MAX_DB_STRING);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 12);
-   m_busy = 0;
-	m_scheduledForDeletion = 0;
-   m_tLastPoll = 0;
    m_dwNumThresholds = 0;
    m_ppThresholdList = NULL;
    m_pNode = pNode;
-   m_hMutex = MutexCreateRecursive();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
-   m_tLastCheck = 0;
-   m_dwErrorCount = 0;
    m_flags = (WORD)DBGetFieldLong(hResult, iRow, 13);
 	m_dwResourceId = DBGetFieldULong(hResult, iRow, 14);
 	m_dwProxyNode = DBGetFieldULong(hResult, iRow, 15);
@@ -320,51 +310,27 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	m_nMultiplier = DBGetFieldLong(hResult, iRow, 17);
 	m_pszCustomUnitName = DBGetField(hResult, iRow, 18, NULL, 0);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 19, NULL, 0);
-	m_systemTag[0] = 0;
 	DBGetField(hResult, iRow, 20, m_systemTag, MAX_DB_STRING);
 	m_snmpPort = (WORD)DBGetFieldLong(hResult, iRow, 21);
 	m_snmpRawValueType = (WORD)DBGetFieldLong(hResult, iRow, 22);
 
-   if (m_flags & DCF_ADVANCED_SCHEDULE)
-   {
-      _sntprintf(szQuery, 256, _T("SELECT schedule FROM dci_schedules WHERE item_id=%d"), m_dwId);
-      hTempResult = DBSelect(g_hCoreDB, szQuery);
-      if (hTempResult != NULL)
-      {
-         m_dwNumSchedules = DBGetNumRows(hTempResult);
-         m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
-         for(i = 0; i < m_dwNumSchedules; i++)
-         {
-            m_ppScheduleList[i] = DBGetField(hTempResult, i, 0, NULL, 0);
-            DecodeSQLString(m_ppScheduleList[i]);
-         }
-         DBFreeResult(hTempResult);
-      }
-      else
-      {
-         m_dwNumSchedules = 0;
-         m_ppScheduleList = NULL;
-      }
-   }
-   else
-   {
-      m_dwNumSchedules = 0;
-      m_ppScheduleList = NULL;
-   }
-
    // Load last raw value from database
+	TCHAR szQuery[256];
    _sntprintf(szQuery, 256, _T("SELECT raw_value,last_poll_time FROM raw_dci_values WHERE item_id=%d"), m_dwId);
-   hTempResult = DBSelect(g_hCoreDB, szQuery);
+   DB_RESULT hTempResult = DBSelect(g_hCoreDB, szQuery);
    if (hTempResult != NULL)
    {
       if (DBGetNumRows(hTempResult) > 0)
       {
+		   TCHAR szBuffer[MAX_DB_STRING];
          m_prevRawValue = DBGetField(hTempResult, 0, 0, szBuffer, MAX_DB_STRING);
          m_tPrevValueTimeStamp = DBGetFieldULong(hTempResult, 0, 1);
          m_tLastPoll = m_tPrevValueTimeStamp;
       }
       DBFreeResult(hTempResult);
    }
+
+	loadCustomSchedules();
 }
 
 
@@ -537,7 +503,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 {
 	TCHAR *pszQuery;
    DB_RESULT hResult;
-   BOOL bNewObject = TRUE, bResult;
+   BOOL bResult;
 
    lock();
 
@@ -550,35 +516,8 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 	int qlen = escScript.getSize() + escPerfTabSettings.getSize() + 2048;
 	pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * qlen);
 
-   // Check for object's existence in database
-   _sntprintf(pszQuery, qlen, _T("SELECT item_id FROM items WHERE item_id=%d"), m_dwId);
-   hResult = DBSelect(hdb, pszQuery);
-   if (hResult != 0)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         bNewObject = FALSE;
-      DBFreeResult(hResult);
-   }
-
    // Prepare and execute query
-	if (bNewObject)
-	{
-      _sntprintf(pszQuery, qlen, 
-		           _T("INSERT INTO items (item_id,node_id,template_id,name,description,source,")
-                 _T("datatype,polling_interval,retention_time,status,delta_calculation,")
-                 _T("transformation,instance,template_item_id,flags,")
-                 _T("resource_id,proxy_node,base_units,unit_multiplier,")
-		           _T("custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type) VALUES ")
-		           _T("(%d,%d,%d,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%d,%d)"),
-                 m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
-                 (const TCHAR *)escName, (const TCHAR *)escDescr, m_source, m_dataType, m_iPollingInterval,
-                 m_iRetentionTime, m_status, m_deltaCalculation,
-                 (const TCHAR *)escScript, (const TCHAR *)escInstance, m_dwTemplateItemId,
-                 (int)m_flags, m_dwResourceId, m_dwProxyNode, m_nBaseUnits, m_nMultiplier, (const TCHAR *)escCustomUnitName,
-		           (const TCHAR *)escPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag), 
-					  (int)m_snmpPort, (int)m_snmpRawValueType);
-	}
-   else
+	if (IsDatabaseRecordExist(hdb, _T("items"), _T("item_id"), m_dwId))
 	{
       _sntprintf(pszQuery, qlen,
 		           _T("UPDATE items SET node_id=%d,template_id=%d,name=%s,source=%d,")
@@ -595,6 +534,23 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
                  (int)m_flags, m_dwResourceId, m_dwProxyNode, m_nBaseUnits, m_nMultiplier, (const TCHAR *)escCustomUnitName,
 		           (const TCHAR *)escPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag),
 					  (int)m_snmpPort, (int)m_snmpRawValueType, m_dwId);
+	}
+   else
+	{
+      _sntprintf(pszQuery, qlen, 
+		           _T("INSERT INTO items (item_id,node_id,template_id,name,description,source,")
+                 _T("datatype,polling_interval,retention_time,status,delta_calculation,")
+                 _T("transformation,instance,template_item_id,flags,")
+                 _T("resource_id,proxy_node,base_units,unit_multiplier,")
+		           _T("custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type) VALUES ")
+		           _T("(%d,%d,%d,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%d,%d)"),
+                 m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
+                 (const TCHAR *)escName, (const TCHAR *)escDescr, m_source, m_dataType, m_iPollingInterval,
+                 m_iRetentionTime, m_status, m_deltaCalculation,
+                 (const TCHAR *)escScript, (const TCHAR *)escInstance, m_dwTemplateItemId,
+                 (int)m_flags, m_dwResourceId, m_dwProxyNode, m_nBaseUnits, m_nMultiplier, (const TCHAR *)escCustomUnitName,
+		           (const TCHAR *)escPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag), 
+					  (int)m_snmpPort, (int)m_snmpRawValueType);
 	}
    bResult = DBQuery(hdb, pszQuery);
 
@@ -645,27 +601,9 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
       DBFreeResult(hResult);
    }
 
-   // Save schedules
-   _sntprintf(pszQuery, qlen, _T("DELETE FROM dci_schedules WHERE item_id=%d"), m_dwId);
-   DBQuery(hdb, pszQuery);
-   if (m_flags & DCF_ADVANCED_SCHEDULE)
-   {
-      TCHAR *pszEscSchedule;
-      DWORD i;
-
-      for(i = 0; i < m_dwNumSchedules; i++)
-      {
-         pszEscSchedule = EncodeSQLString(m_ppScheduleList[i]);
-         _sntprintf(pszQuery, qlen, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES (%d,%d,'%s')"),
-                    m_dwId, i + 1, pszEscSchedule);
-         free(pszEscSchedule);
-         DBQuery(hdb, pszQuery);
-      }
-   }
-
    unlock();
    free(pszQuery);
-   return bResult;
+	return bResult ? DCObject::saveToDB(hdb) : FALSE;
 }
 
 
@@ -760,13 +698,13 @@ void DCItem::deleteFromDB()
 {
    TCHAR szQuery[256];
 
+	DCObject::deleteFromDB();
+
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM items WHERE item_id=%d"), m_dwId);
    QueueSQLRequest(szQuery);
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM idata_%d WHERE item_id=%d"), m_pNode->Id(), m_dwId);
    QueueSQLRequest(szQuery);
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM thresholds WHERE item_id=%d"), m_dwId);
-   QueueSQLRequest(szQuery);
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dci_schedules WHERE item_id=%d"), m_dwId);
    QueueSQLRequest(szQuery);
 }
 
