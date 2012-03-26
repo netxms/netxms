@@ -699,6 +699,7 @@ public final class NXCPCodes
 	public static final long VID_CREATE_STATUS_DCI       = 408;
 	public static final long VID_NUM_COMMENTS            = 409;
 	public static final long VID_NOTE_ID                 = 410;
+	public static final long VID_DCOBJECT_TYPE           = 411;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
@@ -707,6 +708,7 @@ public final class NXCPCodes
 	public static final long VID_GROUP_MEMBER_BASE        = 0x00004000L;
 	public static final long VID_GROUP_MEMBER_LAST        = 0x00004FFFL;
 	public static final long VID_THRESHOLD_BASE           = 0x00800000L;
+	public static final long VID_DCI_COLUMN_BASE          = 0x30000000L;
 	public static final long VID_DCI_THRESHOLD_BASE       = 0x20000000L;
 	public static final long VID_DCI_SCHEDULE_BASE        = 0x10000000L;
 	public static final long VID_EVENT_ARG_BASE           = 0x00008000L;

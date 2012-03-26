@@ -389,6 +389,8 @@ private:
 
 public:
 	DCTableColumn(const DCTableColumn *src);
+	DCTableColumn(CSCPMessage *msg, DWORD baseId);
+	DCTableColumn(DB_RESULT hResult, int row);
 	~DCTableColumn();
 
    void setTransformationScript(const TCHAR *script);
@@ -443,6 +445,9 @@ public:
 
    virtual void processNewValue(time_t nTimeStamp, void *value);
    virtual void processNewError();
+
+   virtual void createMessage(CSCPMessage *pMsg);
+   virtual void updateFromMessage(CSCPMessage *pMsg);
 
 	virtual void deleteExpiredData();
 	virtual bool deleteAllData();

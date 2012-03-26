@@ -881,7 +881,7 @@ void CSCPMessage::SetVariableFromMBString(DWORD dwVarId, const char *pszValue)
 // Set binary variable to an array of DWORDs
 //
 
-void CSCPMessage::SetVariableToInt32Array(DWORD dwVarId, DWORD dwNumElements, DWORD *pdwData)
+void CSCPMessage::SetVariableToInt32Array(DWORD dwVarId, DWORD dwNumElements, const DWORD *pdwData)
 {
    DWORD i, *pdwBuffer;
 

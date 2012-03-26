@@ -36,7 +36,7 @@ public class DataCollectionConfiguration
 {
 	private NXCSession session;
 	private long nodeId;
-	private HashMap<Long, DataCollectionItem> items;
+	private HashMap<Long, DataCollectionObject> items;
 	private boolean isOpen = false;
 	private Object userData = null;
 
@@ -49,7 +49,7 @@ public class DataCollectionConfiguration
 	{
 		this.session = session;
 		this.nodeId = nodeId;
-		items = new HashMap<Long, DataCollectionItem>(0);
+		items = new HashMap<Long, DataCollectionObject>(0);
 	}
 	
 	/**
@@ -98,24 +98,39 @@ public class DataCollectionConfiguration
 	 * 
 	 * @return List of data collection items
 	 */
-	public DataCollectionItem[] getItems()
+	public DataCollectionObject[] getItems()
 	{
 		return items.values().toArray(new DataCollectionItem[items.size()]);
 	}
 	
 	/**
-	 * Find data collection item by ID.
+	 * Find data collection object by ID.
 	 *  
 	 * @param id DCI ID
 	 * @return Data collection item or <b>null</b> if item with given ID does not exist
 	 */
-	public DataCollectionItem findItem(long id)
+	public DataCollectionObject findItem(long id)
 	{
 		return items.get(id);
 	}
 	
 	/**
-	 * Create new data collection item.
+	 * Find data collection object by ID.
+	 *  
+	 * @param id data collection object ID
+	 * @param classFilter class filter for found object
+	 * @return Data collection item or <b>null</b> if item with given ID does not exist
+	 */
+	public DataCollectionObject findItem(long id, Class<? extends DataCollectionObject> classFilter)
+	{
+		DataCollectionObject o = items.get(id);
+		if (o == null)
+			return null;
+		return classFilter.isInstance(o) ? o : null;
+	}
+	
+	/**
+	 * Create new data collection object.
 	 * 
 	 * @return Identifier assigned to created item
 	 * @throws IOException if socket I/O error occurs
@@ -141,7 +156,7 @@ public class DataCollectionConfiguration
 	 */
 	public void modifyItem(long itemId) throws IOException, NXCException
 	{
-		DataCollectionItem item = items.get(itemId);
+		DataCollectionObject item = items.get(itemId);
 		if (item == null)
 			throw new NXCException(RCC.INVALID_DCI_ID);
 		modifyItem(item);
@@ -154,7 +169,7 @@ public class DataCollectionConfiguration
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void modifyItem(DataCollectionItem item) throws IOException, NXCException
+	public void modifyItem(DataCollectionObject item) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_MODIFY_NODE_DCI);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);

@@ -37,6 +37,85 @@ DCTableColumn::DCTableColumn(const DCTableColumn *src)
 
 
 //
+// Create column object from NXCP message
+//
+
+DCTableColumn::DCTableColumn(CSCPMessage *msg, DWORD baseId)
+{
+	msg->GetVariableStr(baseId, m_name, MAX_COLUMN_NAME);
+	m_dataType = (int)msg->GetVariableShort(baseId + 1);
+
+	if (msg->IsVariableExist(baseId + 2))
+	{
+		TCHAR *s = msg->GetVariableStr(baseId + 2);
+		setTransformationScript(s);
+		safe_free(s);
+	}
+	else
+	{
+		setTransformationScript(NULL);
+	}
+
+	if (msg->IsVariableExist(baseId + 3))
+	{
+		DWORD oid[256];
+		DWORD len = msg->GetVariableInt32Array(baseId + 3, 256, oid);
+		if (len > 0)
+		{
+			m_snmpOid = new SNMP_ObjectId(len, oid);
+		}
+		else
+		{
+			m_snmpOid = NULL;
+		}
+	}
+	else
+	{
+		m_snmpOid = NULL;
+	}
+}
+
+
+//
+// Create column object from database result set
+// Expected field order is following:
+//    column_name,data_type,snmp_oid,transformation_script
+//
+
+DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
+{
+	DBGetField(hResult, row, 0, m_name, MAX_COLUMN_NAME);
+	m_dataType = DBGetFieldLong(hResult, row, 1);
+
+	TCHAR *s = DBGetField(hResult, row, 2, NULL, 0);
+	setTransformationScript(s);
+	safe_free(s);
+
+	TCHAR oid[1024];
+	oid[0] = 0;
+	DBGetField(hResult, row, 3, oid, 1024);
+	StrStrip(oid);
+	if (oid[0] != 0)
+	{
+		DWORD oidBin[256];
+		DWORD len = SNMPParseOID(oid, oidBin, 256);
+		if (len > 0)
+		{
+			m_snmpOid = new SNMP_ObjectId(len, oidBin);
+		}
+		else
+		{
+			m_snmpOid = NULL;
+		}
+	}
+	else
+	{
+		m_snmpOid = NULL;
+	}
+}
+
+
+//
 // Destructor
 //
 

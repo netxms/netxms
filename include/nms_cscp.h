@@ -882,6 +882,7 @@ typedef struct
 #define VID_CREATE_STATUS_DCI       ((DWORD)408)
 #define VID_NUM_COMMENTS            ((DWORD)409)
 #define VID_NOTE_ID                 ((DWORD)410)
+#define VID_DCOBJECT_TYPE           ((DWORD)411)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)
@@ -900,7 +901,8 @@ typedef struct
 #define VID_GROUP_MEMBER_BASE       ((DWORD)0x00004000)
 #define VID_GROUP_MEMBER_LAST       ((DWORD)0x00004FFF)
 
-// Variable range for data collection thresholds
+// Variable range for data collection object attributes
+#define VID_DCI_COLUMN_BASE         ((DWORD)0x30000000)
 #define VID_DCI_THRESHOLD_BASE      ((DWORD)0x20000000)
 #define VID_DCI_SCHEDULE_BASE       ((DWORD)0x10000000)
 

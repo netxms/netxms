@@ -97,7 +97,7 @@ public:
 #else
    void SetVariableFromMBString(DWORD dwVarId, const char *pszValue) { Set(dwVarId, CSCP_DT_STRING, pszValue); }
 #endif
-   void SetVariableToInt32Array(DWORD dwVarId, DWORD dwNumElements, DWORD *pdwData);
+   void SetVariableToInt32Array(DWORD dwVarId, DWORD dwNumElements, const DWORD *pdwData);
    BOOL SetVariableFromFile(DWORD dwVarId, const TCHAR *pszFileName);
 
    DWORD GetVariableLong(DWORD dwVarId);

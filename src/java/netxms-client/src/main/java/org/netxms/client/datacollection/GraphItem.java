@@ -38,7 +38,7 @@ public class GraphItem
 	{
 		nodeId = 0;
 		dciId = 0;
-		source = DataCollectionItem.AGENT;
+		source = DataCollectionObject.AGENT;
 		dataType = DataCollectionItem.DT_STRING;
 		name = "<noname>";
 		description = "<noname>";

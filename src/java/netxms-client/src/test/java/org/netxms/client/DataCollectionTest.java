@@ -20,6 +20,7 @@ package org.netxms.client;
 
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
@@ -41,7 +42,7 @@ public class DataCollectionTest extends SessionTest
 		
 		boolean statusFound = false;
 		for(int i = 0; i < list.length; i++)
-			if ((list[i].getName().equalsIgnoreCase("Status")) && (list[i].getSource() == DataCollectionItem.INTERNAL))
+			if ((list[i].getName().equalsIgnoreCase("Status")) && (list[i].getSource() == DataCollectionObject.INTERNAL))
 				statusFound = true;
 		assertEquals(true, statusFound);
 		
@@ -54,7 +55,7 @@ public class DataCollectionTest extends SessionTest
 		
 		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(nodeId);
 		final long dciId = dc.createItem();
-		DataCollectionItem dci = dc.findItem(dciId);
+		DataCollectionItem dci = (DataCollectionItem)dc.findItem(dciId, DataCollectionItem.class);
 		dci.setName("TEST");
 		dci.getThresholds().add(new Threshold());
 		dc.modifyItem(dciId);

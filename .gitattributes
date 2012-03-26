@@ -580,6 +580,8 @@ src/java/netxms-client/src/main/java/org/netxms/client/dashboards/DashboardEleme
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/ConditionDciInfo.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionConfiguration.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionItem.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionObject.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionTable.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciDataRow.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciValue.java -text

@@ -182,7 +182,22 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 15, NULL, 0);
 
    m_pNode = pNode;
-	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);	/* TODO: load columns */
+	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
+
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT column_name,data_type,snmp_oid,transformation_script FROM dc_table_columns WHERE table_id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DB_RESULT hColumnList = DBSelectPrepared(hStmt);
+		if (hColumnList != NULL)
+		{
+			int count = DBGetNumRows(hColumnList);
+			for(int i = 0; i < count; i++)
+				m_columns->add(new DCTableColumn(hColumnList, i));
+			DBFreeResult(hColumnList);
+		}
+		DBFreeStatement(hStmt);
+	}
 
 	loadCustomSchedules();
 }
@@ -410,4 +425,58 @@ void DCTable::deleteFromDB()
    QueueSQLRequest(szQuery);
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_table_columns WHERE table_id=%d"), (int)m_dwId);
    QueueSQLRequest(szQuery);
+}
+
+
+//
+// Create NXCP message with item data
+//
+
+void DCTable::createMessage(CSCPMessage *pMsg)
+{
+	DCObject::createMessage(pMsg);
+
+   lock();
+   pMsg->SetVariable(VID_INSTANCE, m_instanceColumn);
+	pMsg->SetVariable(VID_NUM_COLUMNS, (DWORD)m_columns->size());
+	DWORD varId = VID_DCI_COLUMN_BASE;
+	for(int i = 0; i < m_columns->size(); i++)
+	{
+		DCTableColumn *column = m_columns->get(i);
+		pMsg->SetVariable(varId++, column->getName());
+		pMsg->SetVariable(varId++, (WORD)column->getDataType());
+		pMsg->SetVariable(varId++, CHECK_NULL_EX(column->getScriptSource()));
+		SNMP_ObjectId *oid = column->getSnmpOid();
+		if (oid != NULL)
+			pMsg->SetVariableToInt32Array(varId++, oid->getLength(), oid->getValue());
+		else
+			varId++;
+		varId += 6;
+	}
+   unlock();
+}
+
+
+//
+// Update data collection object from NXCP message
+//
+
+void DCTable::updateFromMessage(CSCPMessage *pMsg)
+{
+	DCObject::updateFromMessage(pMsg);
+
+   lock();
+
+	pMsg->GetVariableStr(VID_INSTANCE, m_instanceColumn, MAX_DB_STRING);
+
+	m_columns->clear();
+	int count = (int)pMsg->GetVariableLong(VID_NUM_COLUMNS);
+	DWORD varId = VID_DCI_COLUMN_BASE;
+	for(int i = 0; i < count; i++)
+	{
+		m_columns->add(new DCTableColumn(pMsg, varId));
+		varId += 10;
+	}
+
+	unlock();
 }
