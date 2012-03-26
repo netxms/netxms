@@ -53,10 +53,10 @@ typedef struct {
 
 typedef struct {
 	int version;						// minimum database version in xxx format for this query
-	TCHAR* prefix;					// parameter prefix, e.g. "Oracle.Tablespaces."
+	TCHAR* prefix;						// parameter prefix, e.g. "Oracle.Tablespaces."
 	TCHAR* query;						// the query
-	int	  queryColumns;						// number of columns returned by query
-	DBParameter* values[MAX_DATABASES];		// list of values
+	int	 queryColumns;						// number of columns returned by query
+	DBParameter* values[MAX_DATABASES];	// list of values
 	int valueCount[MAX_DATABASES];
 } DBParameterGroup;
 

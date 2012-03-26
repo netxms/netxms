@@ -48,9 +48,10 @@ DBParameterGroup g_paramGroup[] = {
 	{
 		700, _T("Oracle.Performance."),	// E086_PhysReadsRate (HP OV gives per minute), but this query gives current count; Oracle E088_LogicReadsRate 
 		_T("select ") DB_NULLARG_MAGIC _T(" ValueName, (select s.value PhysReads from v$sysstat s, v$statname n where n.name='physical reads' and n.statistic#=s.statistic#) PhysReads, ")
-		_T("(select s.value LogicReads from v$sysstat s, v$statname n where n.name='session logical reads' and n.statistic#=s.statistic#) LogicReads ")
+		_T("(select s.value LogicReads from v$sysstat s, v$statname n where n.name='session logical reads' and n.statistic#=s.statistic#) LogicReads, ")
+		_T("(select round((sum(decode(name,'consistent gets',value,0))+sum(decode(name,'db block gets',value,0))-sum(decode(name,'physical reads',value, 0)))/(sum(decode(name,'consistent gets',value,0))+sum(decode(name,'db block gets',value,0)))*100,2) from v$sysstat) CacheHitRatio ")
 		_T("from DUAL "),
-		2, { NULL }, 0
+		3, { NULL }, 0
 	},
 	{
 		700, _T("Oracle.CriticalStats."), // E007_TblSpcStatusCnt, E014_DataFStatusCnt, E016_SegmntExtendCnt, E067_RBSegmntStatCnt, E061_AutoArchvStatus, "Grid: Datafiles Need Media Recovery"
@@ -347,9 +348,9 @@ bool getParametersFromDB( int dbIndex )
 			continue; 
 
 		// Release previously allocated array of values for this group
-		for (int j = 0; j < g_paramGroup[i].valueCount[dbIndex]; j++)
+		for (int j = 0; g_paramGroup[i].values[dbIndex] && j < g_paramGroup[i].valueCount[dbIndex]; j++)
 			delete (g_paramGroup[i].values[dbIndex])[j].attrs;
-		safe_free((void*)g_paramGroup[i].values[dbIndex]);
+		safe_free_and_null(g_paramGroup[i].values[dbIndex]);
 
 		DB_RESULT queryResult = DBSelect(info.handle, g_paramGroup[i].query);
 		if (queryResult == NULL)
@@ -413,7 +414,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Oracle.CriticalStats.FailedJobs(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/CriticalStats: Number of failed jobs") },
 	{ _T("Oracle.Dual.ExcessRows(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Dual: Excessive rows") },
 	{ _T("Oracle.Performance.PhysReads(*)"),  getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Number of physical reads") },
-	{ _T("Oracle.Performance.LogicReads(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Number of logical reads") }
+	{ _T("Oracle.Performance.LogicReads(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Number of logical reads") },
+	{ _T("Oracle.Performance.CacheHitRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Data buffer cache hit ratio") }
 };
 
 /*
