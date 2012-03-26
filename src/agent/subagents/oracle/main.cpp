@@ -26,7 +26,12 @@ DBParameterGroup g_paramGroup[] = {
 		2, { NULL }, 0
 	},
 	{
-		700, _T("Oracle.DBInfo."),  // E001_DbInstanceStat
+		700, _T("Oracle.Objects."),
+			_T("select ") DB_NULLARG_MAGIC _T(" ValueName, count(*) InvalidCount from dba_objects where status!='VALID'"),
+			2, { NULL }, 0
+	},
+	{
+		700, _T("Oracle.DBInfo."), 
 		_T("select ") DB_NULLARG_MAGIC _T(" ValueName, name Name, to_char(created) CreateDate, log_mode LogMode, open_mode OpenMode from v$database"),
 		5, { NULL }, 0
 	},
@@ -41,20 +46,23 @@ DBParameterGroup g_paramGroup[] = {
 		3, { NULL }, 0
 	},
 	{
-		700, _T("Oracle.Dual."),	// E077_DualExssRowStat
+		700, _T("Oracle.Dual."),
 		_T("select ") DB_NULLARG_MAGIC _T(" ValueName, decode(count(*),1,0,1) ExcessRows from dual"),
 		1, { NULL }, 0
 	},
 	{
-		700, _T("Oracle.Performance."),	// E086_PhysReadsRate (HP OV gives per minute), but this query gives current count; Oracle E088_LogicReadsRate 
+		700, _T("Oracle.Performance."),
 		_T("select ") DB_NULLARG_MAGIC _T(" ValueName, (select s.value PhysReads from v$sysstat s, v$statname n where n.name='physical reads' and n.statistic#=s.statistic#) PhysReads, ")
 		_T("(select s.value LogicReads from v$sysstat s, v$statname n where n.name='session logical reads' and n.statistic#=s.statistic#) LogicReads, ")
-		_T("(select round((sum(decode(name,'consistent gets',value,0))+sum(decode(name,'db block gets',value,0))-sum(decode(name,'physical reads',value, 0)))/(sum(decode(name,'consistent gets',value,0))+sum(decode(name,'db block gets',value,0)))*100,2) from v$sysstat) CacheHitRatio ")
+		_T("(select round((sum(decode(name,'consistent gets',value,0))+sum(decode(name,'db block gets',value,0))-sum(decode(name,'physical reads',value, 0)))/(sum(decode(name,'consistent gets',value,0))+sum(decode(name,'db block gets',value,0)))*100,2) from v$sysstat) CacheHitRatio, ")
+		_T("(select round(sum(waits)*100/sum(gets),2) from v$rollstat) RollbackWaitRatio, ")
+		_T("(select round((1-(sum(getmisses)/sum(gets)))*100,2) from v$rowcache) DictCacheHitRatio, ")
+		_T("(select round(sum(pins)/(sum(pins)+sum(reloads))*100,2) from v$librarycache) LibCacheHitRatio ")
 		_T("from DUAL "),
 		3, { NULL }, 0
 	},
 	{
-		700, _T("Oracle.CriticalStats."), // E007_TblSpcStatusCnt, E014_DataFStatusCnt, E016_SegmntExtendCnt, E067_RBSegmntStatCnt, E061_AutoArchvStatus, "Grid: Datafiles Need Media Recovery"
+		700, _T("Oracle.CriticalStats."), 
 		_T("select ") DB_NULLARG_MAGIC _T(" ValueName, (select count(*) TSOFF from DBA_TABLESPACES where status <> 'ONLINE') TSOffCount, ")
 		_T("(select count(*) DFOFF from V$DATAFILE where status not in ('ONLINE','SYSTEM')) DFOffCount, ")
 		_T("(select count(*) from DBA_SEGMENTS where max_extents = extents) FullSegmentsCount, ")
@@ -415,7 +423,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Oracle.Dual.ExcessRows(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Dual: Excessive rows") },
 	{ _T("Oracle.Performance.PhysReads(*)"),  getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Number of physical reads") },
 	{ _T("Oracle.Performance.LogicReads(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Number of logical reads") },
-	{ _T("Oracle.Performance.CacheHitRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Data buffer cache hit ratio") }
+	{ _T("Oracle.Performance.CacheHitRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Data buffer cache hit ratio") },
+	{ _T("Oracle.Performance.LibCacheHitRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Library cache hit ratio") },
+	{ _T("Oracle.Performance.DictCacheHitRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Dictionary cache hit ratio") },
+	{ _T("Oracle.Performance.RollbackWaitRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Ratio of waits for requests to rollback segments") },
+	{ _T("Oracle.Objects.InvalidCount(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Objects: Number of invalid objects in DB") }
 };
 
 /*
