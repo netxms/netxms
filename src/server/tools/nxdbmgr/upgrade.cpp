@@ -29,6 +29,7 @@
 
 BOOL MigrateMaps();
 
+
 //
 // Create table
 //
@@ -274,6 +275,22 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 	free(escMessage);
 	free(escDescription);
 	return SQLQuery(query);
+}
+
+
+//
+// Upgrade from V249 to V250
+//
+
+static BOOL H_UpgradeFromV249(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateTable(_T("CREATE TABLE licenses (")
+	                     _T("id integer not null,")
+								_T("content $SQL:TEXT null,")
+	                     _T("PRIMARY KEY(id))")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='250' WHERE var_name='SchemaVersion'")));
+   return TRUE;
 }
 
 
@@ -6121,6 +6138,7 @@ static struct
 	{ 246, 247, H_UpgradeFromV246 },
 	{ 247, 248, H_UpgradeFromV247 },
 	{ 248, 249, H_UpgradeFromV248 },
+	{ 249, 250, H_UpgradeFromV249 },
    { 0, 0, NULL }
 };
 

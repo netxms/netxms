@@ -32,15 +32,6 @@ public class DataCollectionItem extends DataCollectionObject
 	public static final int DCF_ALL_THRESHOLDS = 0x0002;
 	public static final int DCF_RAW_VALUE_OCTET_STRING = 0x0004;
 	
-	// Data type
-	public static final int DT_INT = 0;
-	public static final int DT_UINT = 1;
-	public static final int DT_INT64 = 2;
-	public static final int DT_UINT64 = 3;
-	public static final int DT_STRING = 4;
-	public static final int DT_FLOAT = 5;
-	public static final int DT_NULL = 6;
-	
 	// Delta calculation
 	public static final int DELTA_NONE = 0;
 	public static final int DELTA_SIMPLE = 1;

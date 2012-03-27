@@ -31,7 +31,7 @@ import org.netxms.client.datacollection.Threshold;
  */
 public class DataCollectionTest extends SessionTest
 {
-	private static final long nodeId = 12;
+	private static final long nodeId = 101;
 	
 	public void testGetLastValues() throws Exception
 	{

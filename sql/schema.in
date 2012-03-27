@@ -1445,3 +1445,15 @@ CREATE TABLE report_results
 	job_id integer not null,
 	PRIMARY KEY(report_id, job_id)
 ) TABLE_TYPE;
+
+
+/*
+** License repository
+*/
+
+CREATE TABLE licenses
+(
+	id integer not null,
+	content SQL_TEXT null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;

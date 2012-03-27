@@ -18,6 +18,8 @@
  */
 package org.netxms.client.datacollection;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
@@ -27,6 +29,7 @@ import org.netxms.base.NXCPMessage;
 public class DataCollectionTable extends DataCollectionObject
 {
 	private String instanceColumn;
+	private List<ColumnDefinition> columns;
 	
 	/**
 	 * Create data collection object from NXCP message.
@@ -38,6 +41,15 @@ public class DataCollectionTable extends DataCollectionObject
 	{
 		super(owner, msg);
 		instanceColumn = msg.getVariableAsString(NXCPCodes.VID_INSTANCE);
+		
+		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS);
+		columns = new ArrayList<ColumnDefinition>(count);
+		long varId = NXCPCodes.VID_DCI_COLUMN_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			columns.add(new ColumnDefinition(msg, varId));
+			varId += 10;
+		}
 	}
 
 	/**
@@ -50,8 +62,28 @@ public class DataCollectionTable extends DataCollectionObject
 	{
 		super(owner, id);
 		instanceColumn = null;
+		columns = new ArrayList<ColumnDefinition>(0);
 	}
 
+	/**
+	 * Fill NXCP message with item's data.
+	 * 
+	 * @param msg NXCP message
+	 */
+	public void fillMessage(final NXCPMessage msg)
+	{
+		super.fillMessage(msg);
+		
+		msg.setVariable(NXCPCodes.VID_INSTANCE, instanceColumn);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_COLUMNS, columns.size());
+		long varId = NXCPCodes.VID_DCI_COLUMN_BASE;
+		for(int i = 0; i < columns.size(); i++)
+		{
+			columns.get(i).fillMessage(msg, varId);
+			varId += 10;
+		}
+	}
+	
 	/**
 	 * @return the instanceColumn
 	 */

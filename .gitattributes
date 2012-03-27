@@ -577,6 +577,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/constants/NodePoller.java
 src/java/netxms-client/src/main/java/org/netxms/client/constants/RCC.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/constants/Severity.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/dashboards/DashboardElement.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/datacollection/ColumnDefinition.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/ConditionDciInfo.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionConfiguration.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionItem.java -text

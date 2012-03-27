@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,9 +28,6 @@ import org.netxms.client.constants.RCC;
 
 /**
  * Data collection configuration for node
- * 
- * @author Victor Kirhenshtein
- *
  */
 public class DataCollectionConfiguration
 {
@@ -70,9 +67,23 @@ public class DataCollectionConfiguration
 			final NXCPMessage response = session.waitForMessage(NXCPCodes.CMD_NODE_DCI, msg.getMessageId());
 			if (response.isEndOfSequence())
 				break;
-			
-			DataCollectionItem item = new DataCollectionItem(this, response);
-			items.put(item.getId(), item);
+
+			int type = response.getVariableAsInteger(NXCPCodes.VID_DCOBJECT_TYPE);
+			DataCollectionObject dco;
+			switch(type)
+			{
+				case DataCollectionObject.DCO_TYPE_ITEM:
+					dco = new DataCollectionItem(this, response);
+					break;
+				case DataCollectionObject.DCO_TYPE_TABLE:
+					dco = new DataCollectionTable(this, response);
+					break;
+				default:
+					dco = null;
+					break;
+			}
+			if (dco != null)
+				items.put(dco.getId(), dco);
 		}
 		isOpen = true;
 	}
