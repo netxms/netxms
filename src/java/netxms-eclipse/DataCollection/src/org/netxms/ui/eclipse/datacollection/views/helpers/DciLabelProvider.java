@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
@@ -32,9 +33,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Label provider for user manager
- * 
- * @author Victor
- * 
  */
 public class DciLabelProvider implements ITableLabelProvider
 {
@@ -82,7 +80,7 @@ public class DciLabelProvider implements ITableLabelProvider
 	{
 		if (columnIndex != 0)
 			return null;
-		int status = ((DataCollectionItem)element).getStatus();
+		int status = ((DataCollectionObject)element).getStatus();
 		return ((status >= 0) && (status < statusImages.length)) ? statusImages[status] : null;
 	}
 
@@ -92,7 +90,7 @@ public class DciLabelProvider implements ITableLabelProvider
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		DataCollectionItem dci = (DataCollectionItem)element;
+		DataCollectionObject dci = (DataCollectionObject)element;
 		switch(columnIndex)
 		{
 			case DataCollectionEditor.COLUMN_ID:
@@ -104,7 +102,9 @@ public class DciLabelProvider implements ITableLabelProvider
 			case DataCollectionEditor.COLUMN_PARAMETER:
 				return dci.getName();
 			case DataCollectionEditor.COLUMN_DATATYPE:
-				return dtTexts.get(dci.getDataType());
+				if (dci instanceof DataCollectionItem)
+					return dtTexts.get(((DataCollectionItem)dci).getDataType());
+				return "<< TABLE >>";
 			case DataCollectionEditor.COLUMN_INTERVAL:
 				if (dci.isUseAdvancedSchedule())
 					return "custom schedule";

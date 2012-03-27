@@ -1,5 +1,4 @@
 /**
- * NetXMS - open source network management system
  * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
@@ -111,7 +110,7 @@ public class DataCollectionConfiguration
 	 */
 	public DataCollectionObject[] getItems()
 	{
-		return items.values().toArray(new DataCollectionItem[items.size()]);
+		return items.values().toArray(new DataCollectionObject[items.size()]);
 	}
 	
 	/**
@@ -141,7 +140,7 @@ public class DataCollectionConfiguration
 	}
 	
 	/**
-	 * Create new data collection object.
+	 * Create new data collection item.
 	 * 
 	 * @return Identifier assigned to created item
 	 * @throws IOException if socket I/O error occurs
@@ -151,6 +150,7 @@ public class DataCollectionConfiguration
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_CREATE_NEW_DCI);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariableInt16(NXCPCodes.VID_DCOBJECT_TYPE, DataCollectionObject.DCO_TYPE_ITEM);
 		session.sendMessage(msg);
 		final NXCPMessage response = session.waitForRCC(msg.getMessageId());
 		long id = response.getVariableAsInt64(NXCPCodes.VID_DCI_ID);
@@ -159,32 +159,51 @@ public class DataCollectionConfiguration
 	}
 	
 	/**
-	 * Modify data collection item.
+	 * Create new data collection table.
 	 * 
-	 * @param itemId Data collection item's identifier
+	 * @return Identifier assigned to created item
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void modifyItem(long itemId) throws IOException, NXCException
+	public long createTable() throws IOException, NXCException
 	{
-		DataCollectionObject item = items.get(itemId);
-		if (item == null)
+		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_CREATE_NEW_DCI);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariableInt16(NXCPCodes.VID_DCOBJECT_TYPE, DataCollectionObject.DCO_TYPE_TABLE);
+		session.sendMessage(msg);
+		final NXCPMessage response = session.waitForRCC(msg.getMessageId());
+		long id = response.getVariableAsInt64(NXCPCodes.VID_DCI_ID);
+		items.put(id, new DataCollectionTable(this, id));
+		return id;
+	}
+	
+	/**
+	 * Modify data collection object.
+	 * 
+	 * @param dcObjectId Data collection object identifier
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void modifyObject(long dcObjectId) throws IOException, NXCException
+	{
+		DataCollectionObject dco = items.get(dcObjectId);
+		if (dco == null)
 			throw new NXCException(RCC.INVALID_DCI_ID);
-		modifyItem(item);
+		modifyObject(dco);
 	}
 
 	/**
-	 * Modify data collection item.
+	 * Modify data collection object.
 	 * 
-	 * @param item Data collection item
+	 * @param dco Data collection object
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void modifyItem(DataCollectionObject item) throws IOException, NXCException
+	public void modifyObject(DataCollectionObject dco) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_MODIFY_NODE_DCI);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-		item.fillMessage(msg);
+		dco.fillMessage(msg);
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId());
 	}
@@ -198,7 +217,7 @@ public class DataCollectionConfiguration
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	private void copyItemsInternal(long destNodeId, long[] items, boolean move) throws IOException, NXCException
+	private void copyObjectsInternal(long destNodeId, long[] items, boolean move) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_COPY_DCI);
 		msg.setVariableInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int)nodeId);
@@ -211,29 +230,29 @@ public class DataCollectionConfiguration
 	}
 
 	/**
-	 * Copy data collection items.
+	 * Copy data collection objects.
 	 * 
 	 * @param destNodeId Destination node ID
 	 * @param items List of data collection items to copy
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void copyItems(long destNodeId, long[] items) throws IOException, NXCException
+	public void copyObjects(long destNodeId, long[] items) throws IOException, NXCException
 	{
-		copyItemsInternal(destNodeId, items, false);
+		copyObjectsInternal(destNodeId, items, false);
 	}
 
 	/**
-	 * Move data collection items.
+	 * Move data collection objects.
 	 * 
 	 * @param destNodeId Destination node ID
 	 * @param items List of data collection items to move
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void moveItems(long destNodeId, long[] items) throws IOException, NXCException
+	public void moveObjects(long destNodeId, long[] items) throws IOException, NXCException
 	{
-		copyItemsInternal(destNodeId, items, true);
+		copyObjectsInternal(destNodeId, items, true);
 	}
 	
 	/**
@@ -253,14 +272,14 @@ public class DataCollectionConfiguration
 	}
 	
 	/**
-	 * Set status of data collection items.
+	 * Set status of data collection objects.
 	 * 
 	 * @param items Data collection items' identifiers
 	 * @param status New status
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void setItemStatus(long[] items, int status) throws IOException, NXCException
+	public void setObjectStatus(long[] items, int status) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_SET_DCI_STATUS);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
@@ -272,13 +291,13 @@ public class DataCollectionConfiguration
 	}
 	
 	/**
-	 * Delete data collection item.
+	 * Delete data collection object.
 	 * 
 	 * @param itemId Data collection item identifier
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void deleteItem(long itemId) throws IOException, NXCException
+	public void deleteObject(long itemId) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_DELETE_NODE_DCI);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);

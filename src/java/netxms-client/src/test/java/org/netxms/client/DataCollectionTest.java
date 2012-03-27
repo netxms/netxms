@@ -58,13 +58,13 @@ public class DataCollectionTest extends SessionTest
 		DataCollectionItem dci = (DataCollectionItem)dc.findItem(dciId, DataCollectionItem.class);
 		dci.setName("TEST");
 		dci.getThresholds().add(new Threshold());
-		dc.modifyItem(dciId);
+		dc.modifyObject(dciId);
 		
 		Threshold[] thresholds = session.getThresholds(nodeId, dciId);
 		assertNotNull(thresholds);
 		assertEquals(1, thresholds.length);
 
-		dc.deleteItem(dciId);
+		dc.deleteObject(dciId);
 		dc.close();
 		session.disconnect();
 	}

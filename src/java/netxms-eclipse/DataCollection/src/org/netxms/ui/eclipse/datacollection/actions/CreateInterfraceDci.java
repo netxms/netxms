@@ -160,7 +160,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			dcc = new DataCollectionConfiguration(session, node.getObjectId());
 		}
 
-		final DataCollectionItem dci = dcc.findItem(dcc.createItem());
+		final DataCollectionItem dci = (DataCollectionItem)dcc.findItem(dcc.createItem(), DataCollectionItem.class);
 		dci.setPollingInterval(pollingInterval);
 		dci.setRetentionTime(retentionTime);
 		dci.setOrigin(node.hasAgent() ? DataCollectionItem.AGENT : DataCollectionItem.SNMP);
@@ -218,7 +218,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			}
 		}
 		
-		dcc.modifyItem(dci);
+		dcc.modifyObject(dci);
 			
 		if (lockRequired.get(node.getObjectId()))
 		{

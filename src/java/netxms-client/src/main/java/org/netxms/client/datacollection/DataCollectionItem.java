@@ -116,6 +116,7 @@ public class DataCollectionItem extends DataCollectionObject
 	{
 		super.fillMessage(msg);
 		
+		msg.setVariableInt16(NXCPCodes.VID_DCOBJECT_TYPE, DCO_TYPE_ITEM);
 		msg.setVariableInt16(NXCPCodes.VID_DCI_DATA_TYPE, dataType);
 		msg.setVariableInt16(NXCPCodes.VID_DCI_DELTA_CALCULATION, deltaCalculation);
 		msg.setVariable(NXCPCodes.VID_INSTANCE, instance);

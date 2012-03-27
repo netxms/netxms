@@ -42,7 +42,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * DCI property page for Performance Tab settings
- *
  */
 public class PerfTab extends PropertyPage
 {
@@ -143,7 +142,7 @@ public class PerfTab extends PropertyPage
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				dci.getOwner().modifyItem(dci);
+				dci.getOwner().modifyObject(dci);
 			}
 
 			/* (non-Javadoc)

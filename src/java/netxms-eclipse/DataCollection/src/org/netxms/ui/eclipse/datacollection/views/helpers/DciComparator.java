@@ -16,19 +16,17 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.datacollection;
+package org.netxms.ui.eclipse.datacollection.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
-import org.netxms.ui.eclipse.datacollection.views.helpers.DciLabelProvider;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * @author Victor
- *
+ * DCI comparator
  */
 public class DciComparator extends ViewerComparator
 {
@@ -50,8 +48,8 @@ public class DciComparator extends ViewerComparator
 	{
 		int result;
 
-		DataCollectionItem dci1 = (DataCollectionItem)e1;
-		DataCollectionItem dci2 = (DataCollectionItem)e2;
+		DataCollectionObject dci1 = (DataCollectionObject)e1;
+		DataCollectionObject dci2 = (DataCollectionObject)e2;
 
 		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
 		switch(column)

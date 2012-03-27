@@ -632,7 +632,7 @@ DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue)
          }
          break;
       }
-   if (i == m_iNumEnums)
+   if (i == m_iNumTables)
    {
       dwErrorCode = ERR_UNKNOWN_PARAMETER;
       m_dwUnsupportedRequests++;

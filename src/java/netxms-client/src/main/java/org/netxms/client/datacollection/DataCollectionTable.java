@@ -74,6 +74,7 @@ public class DataCollectionTable extends DataCollectionObject
 	{
 		super.fillMessage(msg);
 		
+		msg.setVariableInt16(NXCPCodes.VID_DCOBJECT_TYPE, DCO_TYPE_TABLE);
 		msg.setVariable(NXCPCodes.VID_INSTANCE, instanceColumn);
 		msg.setVariableInt32(NXCPCodes.VID_NUM_COLUMNS, columns.size());
 		long varId = NXCPCodes.VID_DCI_COLUMN_BASE;

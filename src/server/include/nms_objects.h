@@ -499,8 +499,8 @@ public:
 
    int getItemCount() { return m_dcObjects->size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false);
-   bool updateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
-                   DWORD **ppdwMapIndex, DWORD **ppdwMapId);
+   bool updateDCObject(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
+                       DWORD **ppdwMapIndex, DWORD **ppdwMapId);
    bool deleteDCObject(DWORD dcObjectId, bool needLock);
    bool setItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus);
    int getItemType(DWORD dwItemId);

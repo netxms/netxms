@@ -468,7 +468,7 @@ bool Template::deleteDCObject(DWORD dcObjectId, bool needLock)
 // Modify data collection item from NXCP message
 //
 
-bool Template::updateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId)
+bool Template::updateDCObject(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId)
 {
    bool success = false;
 
@@ -483,9 +483,13 @@ bool Template::updateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
 			if (object->getType() == DCO_TYPE_ITEM)
 			{
 				((DCItem *)object)->updateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
-				success = true;
-				m_bIsModified = TRUE;
 			}
+			else
+			{
+				object->updateFromMessage(pMsg);
+			}
+			success = true;
+			m_bIsModified = TRUE;
          break;
       }
 	}

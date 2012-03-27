@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,17 +29,17 @@
 //
 
 #define NETXMS_VERSION_MAJOR        1
-#define NETXMS_VERSION_MINOR        1
-#define NETXMS_VERSION_BUILD        10
+#define NETXMS_VERSION_MINOR        2
+#define NETXMS_VERSION_BUILD        0
 #define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("1.1.10")
+#define NETXMS_VERSION_STRING       _T("1.2.0")
 
 
 //
 // Current client-server protocol version
 //
 
-#define CLIENT_PROTOCOL_VERSION     31
+#define CLIENT_PROTOCOL_VERSION     32
 
 
 #endif

@@ -2947,47 +2947,67 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
             if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
                DWORD i, dwItemId, dwNumMaps, *pdwMapId, *pdwMapIndex;
-               DCItem *pItem;
+               DCObject *dcObject;
                BOOL bSuccess;
 
+					int dcObjectType = (int)pRequest->GetVariableShort(VID_DCOBJECT_TYPE);
                switch(pRequest->GetCode())
                {
                   case CMD_CREATE_NEW_DCI:
                      // Create dummy DCI
-                     pItem = new DCItem(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, 
-                                        DCI_DT_INT, 60, 30, (Node *)pObject);
-                     pItem->setStatus(ITEM_STATUS_DISABLED, false);
-                     if ((bSuccess = ((Template *)pObject)->addDCObject(pItem)))
-                     {
-                        msg.SetVariable(VID_RCC, RCC_SUCCESS);
-                        // Return new item id to client
-                        msg.SetVariable(VID_DCI_ID, pItem->getId());
-                     }
-                     else  // Unable to add item to node
-                     {
-                        delete pItem;
-                        msg.SetVariable(VID_RCC, RCC_DUPLICATE_DCI);
-                     }
+							switch(dcObjectType)
+							{
+								case DCO_TYPE_ITEM:
+									dcObject = new DCItem(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, DCI_DT_INT, 60, 30, (Node *)pObject);
+									break;
+								case DCO_TYPE_TABLE:
+									dcObject = new DCTable(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, 60, 30, (Node *)pObject);
+									break;
+								default:
+									dcObject = NULL;
+									break;
+							}
+							if (dcObject != NULL)
+							{
+								dcObject->setStatus(ITEM_STATUS_DISABLED, false);
+								if ((bSuccess = ((Template *)pObject)->addDCObject(dcObject)))
+								{
+									msg.SetVariable(VID_RCC, RCC_SUCCESS);
+									// Return new item id to client
+									msg.SetVariable(VID_DCI_ID, dcObject->getId());
+								}
+								else  // Unable to add item to node
+								{
+									delete dcObject;
+									msg.SetVariable(VID_RCC, RCC_DUPLICATE_DCI);
+								}
+							}
+							else
+							{
+								msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
+							}
                      break;
                   case CMD_MODIFY_NODE_DCI:
                      dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
-                     bSuccess = ((Template *)pObject)->updateItem(dwItemId, pRequest, &dwNumMaps,
-                                                                  &pdwMapIndex, &pdwMapId);
+							bSuccess = ((Template *)pObject)->updateDCObject(dwItemId, pRequest, &dwNumMaps, &pdwMapIndex, &pdwMapId);
                      if (bSuccess)
                      {
                         msg.SetVariable(VID_RCC, RCC_SUCCESS);
 
                         // Send index to id mapping for newly created thresholds to client
-                        msg.SetVariable(VID_DCI_NUM_MAPS, dwNumMaps);
-                        for(i = 0; i < dwNumMaps; i++)
-                        {
-                           pdwMapId[i] = htonl(pdwMapId[i]);
-                           pdwMapIndex[i] = htonl(pdwMapIndex[i]);
-                        }
-                        msg.SetVariable(VID_DCI_MAP_IDS, (BYTE *)pdwMapId, sizeof(DWORD) * dwNumMaps);
-                        msg.SetVariable(VID_DCI_MAP_INDEXES, (BYTE *)pdwMapIndex, sizeof(DWORD) * dwNumMaps);
-                        safe_free(pdwMapId);
-                        safe_free(pdwMapIndex);
+								if (dcObjectType == DCO_TYPE_ITEM)
+								{
+									msg.SetVariable(VID_DCI_NUM_MAPS, dwNumMaps);
+									for(i = 0; i < dwNumMaps; i++)
+									{
+										pdwMapId[i] = htonl(pdwMapId[i]);
+										pdwMapIndex[i] = htonl(pdwMapIndex[i]);
+									}
+									msg.SetVariable(VID_DCI_MAP_IDS, (BYTE *)pdwMapId, sizeof(DWORD) * dwNumMaps);
+									msg.SetVariable(VID_DCI_MAP_INDEXES, (BYTE *)pdwMapIndex, sizeof(DWORD) * dwNumMaps);
+									safe_free(pdwMapId);
+									safe_free(pdwMapIndex);
+								}
                      }
                      else
                      {

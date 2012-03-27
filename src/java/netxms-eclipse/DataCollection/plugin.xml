@@ -151,12 +151,22 @@
           </enabledWhen>
         </page>
         <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.GeneralTable"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.GeneralTable#0"
+              name="General">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DataCollectionTable">
+              </instanceof>
+           </enabledWhen>
+        </page>
+        <page
            id="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule#10"
            name="Custom Schedule"
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.datacollection.DataCollectionItem">
+                  value="org.netxms.client.datacollection.DataCollectionObject">
              </instanceof>
           </enabledWhen>
         </page>

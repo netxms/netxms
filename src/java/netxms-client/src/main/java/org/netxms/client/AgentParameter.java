@@ -22,7 +22,6 @@ import org.netxms.base.NXCPMessage;
 
 /**
  * Represents NetXMS agent's parameter
- *
  */
 public class AgentParameter
 {
