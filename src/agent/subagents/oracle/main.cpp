@@ -57,20 +57,23 @@ DBParameterGroup g_paramGroup[] = {
 		_T("(select round((sum(decode(name,'consistent gets',value,0))+sum(decode(name,'db block gets',value,0))-sum(decode(name,'physical reads',value, 0)))/(sum(decode(name,'consistent gets',value,0))+sum(decode(name,'db block gets',value,0)))*100,2) from v$sysstat) CacheHitRatio, ")
 		_T("(select round(sum(waits)*100/sum(gets),2) from v$rollstat) RollbackWaitRatio, ")
 		_T("(select round((1-(sum(getmisses)/sum(gets)))*100,2) from v$rowcache) DictCacheHitRatio, ")
-		_T("(select round(sum(pins)/(sum(pins)+sum(reloads))*100,2) from v$librarycache) LibCacheHitRatio ")
+		_T("(select round(sum(pins)/(sum(pins)+sum(reloads))*100,2) from v$librarycache) LibCacheHitRatio, ")
+		_T("(select round((100*b.value)/decode((a.value+b.value),0,1,(a.value+b.value)),2) from v$sysstat a,v$sysstat b where a.name='sorts (disk)' and b.name='sorts (memory)') MemorySortRatio, ")
+		_T("(select round(nvl((sum(busy)/(sum(busy)+sum(idle)))*100,0),2) from v$dispatcher) DispatcherWorkload, ")
+		_T("(select bytes	from v$sgastat where name='free memory' and pool='shared pool') FreeSharedPool ")
 		_T("from DUAL "),
 		3, { NULL }, 0
 	},
 	{
 		700, _T("Oracle.CriticalStats."), 
-		_T("select ") DB_NULLARG_MAGIC _T(" ValueName, (select count(*) TSOFF from DBA_TABLESPACES where status <> 'ONLINE') TSOffCount, ")
+		_T("select ") DB_NULLARG_MAGIC _T(" ValueName, (select count(*) TSOFF from dba_tablespaces where status <> 'ONLINE') TSOffCount, ")
 		_T("(select count(*) DFOFF from V$DATAFILE where status not in ('ONLINE','SYSTEM')) DFOffCount, ")
-		_T("(select count(*) from DBA_SEGMENTS where max_extents = extents) FullSegmentsCount, ")
-		_T("(select count(*) from DBA_ROLLBACK_SEGS where status <> 'ONLINE') RBSegsNotOnlineCount, ")
+		_T("(select count(*) from dba_segments where max_extents = extents) FullSegmentsCount, ")
+		_T("(select count(*) from dba_rollback_segs where status <> 'ONLINE') RBSegsNotOnlineCount, ")
 		_T("decode(sign(decode((select upper(log_mode) from v$database),'ARCHIVELOG',1,0)-")
 		_T("decode((select upper(value) from v$parameter where upper(name)='LOG_ARCHIVE_START'),'TRUE',1,0)),1, 1, 0) AutoArchivingOff, ")
-		_T("(SELECT count(file#) from v$datafile_header where recover ='YES') DatafilesNeedMediaRecovery, ")
-		_T("(SELECT count(*) FROM dba_jobs where NVL(failures,0) <> 0) FailedJobs ")
+		_T("(select count(file#) from v$datafile_header where recover ='YES') DatafilesNeedMediaRecovery, ")
+		_T("(select count(*) FROM dba_jobs where NVL(failures,0) <> 0) FailedJobs ")
 		_T("from DUAL"),		
 		5, { NULL }, 0
 	},
@@ -427,6 +430,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Oracle.Performance.LibCacheHitRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Library cache hit ratio") },
 	{ _T("Oracle.Performance.DictCacheHitRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Dictionary cache hit ratio") },
 	{ _T("Oracle.Performance.RollbackWaitRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Ratio of waits for requests to rollback segments") },
+	{ _T("Oracle.Performance.MemorySortRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: PGA memory sort ratio") },
+	{ _T("Oracle.Performance.DispatcherWorkload(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Dispatcher workload (percentage)") },
+	{ _T("Oracle.Performance.FreeSharedPool(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Free space in shared pool (bytes)") },
 	{ _T("Oracle.Objects.InvalidCount(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Objects: Number of invalid objects in DB") }
 };
 
