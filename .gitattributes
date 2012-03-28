@@ -2644,6 +2644,7 @@ webui/webapp/PerfView/icons/light-green.png -text
 webui/webapp/PerfView/icons/light-red.png -text
 webui/webapp/PerfView/icons/light-yellow.png -text
 webui/webapp/PerfView/icons/status_view.png -text
+webui/webapp/PerfView/icons/table.gif -text
 webui/webapp/PerfView/icons/view3d.png -text
 webui/webapp/PerfView/plugin.xml -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/Activator.java -text
@@ -2653,6 +2654,7 @@ webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowBarChart.ja
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowDataComparisonChart.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowHistoryGraph.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowPieChart.java -text
+webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowTableLastValues.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/objecttabs/PerformanceTab.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/objecttabs/internal/PerfTabGraph.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/propertypages/General.java -text
@@ -2660,10 +2662,14 @@ webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/propertypages/PerfTab.j
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/views/DataComparisonView.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/views/HistoricalDataView.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/views/PredefinedGraphTree.java -text
+webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/views/TableLastValues.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/GraphFolder.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/GraphSettingsFactory.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/GraphTreeContentProvider.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/GraphTreeLabelProvider.java -text
+webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/TableContentProvider.java -text
+webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/TableItemComparator.java -text
+webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/TableLabelProvider.java -text
 webui/webapp/Reporter/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/Reporter/META-INF/MANIFEST.MF -text
 webui/webapp/Reporter/build.properties -text

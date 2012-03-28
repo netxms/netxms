@@ -27,12 +27,20 @@
             name="Last Values Chart"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.perfview.views.TableLastValues"
+            icon="icons/table.gif"
+            id="org.netxms.ui.eclipse.perfview.views.TableLastValues"
+            name="Table Last Values"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.ui.eclipse.perfview.actions.popup.dci.graph_DciValue"
+            id="org.netxms.ui.eclipse.perfview.actions.popup.dci.DciValue"
             objectClass="org.netxms.client.datacollection.DciValue">
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowPieChart"
@@ -57,7 +65,7 @@
          </action>
       </objectContribution>
       <objectContribution
-            id="org.netxms.ui.eclipse.perfview.actions.popup.dci.graph_DataCollectionItem"
+            id="org.netxms.ui.eclipse.perfview.actions.popup.dci.DataCollectionItem"
             objectClass="org.netxms.client.datacollection.DataCollectionItem">
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowPieChart"
@@ -78,6 +86,17 @@
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph"
                label="Line Chart"
                icon="icons/chart_line.png"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.perfview.actions.popup.dci.DataCollectionTable"
+            objectClass="org.netxms.client.datacollection.DataCollectionTable">
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues"
+               id="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues"
+               label="Last values"
                menubarPath="additions">
          </action>
       </objectContribution>
