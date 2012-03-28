@@ -931,7 +931,8 @@ public:
    void queueItemsForPolling(Queue *pPollerQueue);
    DWORD getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, DWORD dwBufSize);
    DWORD getTableForClient(const TCHAR *name, Table **table);
-   DWORD getLastValues(CSCPMessage *pMsg);
+   DWORD getLastValues(CSCPMessage *msg);
+   DWORD getTableLastValues(DWORD dciId, CSCPMessage *msg);
 	void processNewDCValue(DCObject *dco, time_t currTime, void *value);
    void cleanDCIData();
    bool applyTemplateItem(DWORD dwTemplateId, DCObject *dcObject);

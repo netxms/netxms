@@ -422,6 +422,7 @@ class NXCORE_EXPORTABLE DCTable : public DCObject
 protected:
 	TCHAR m_instanceColumn[MAX_COLUMN_NAME];
 	ObjectArray<DCTableColumn> *m_columns;
+	Table *m_lastValue;
 
 	static TC_ID_MAP_ENTRY *m_cache;
 	static int m_cacheSize;
@@ -451,6 +452,8 @@ public:
 
 	virtual void deleteExpiredData();
 	virtual bool deleteAllData();
+
+	void getLastValue(CSCPMessage *msg);
 };
 
 

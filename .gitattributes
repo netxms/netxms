@@ -1427,8 +1427,14 @@ src/java/netxms-eclipse/PerfView/icons/light-green.png -text
 src/java/netxms-eclipse/PerfView/icons/light-red.png -text
 src/java/netxms-eclipse/PerfView/icons/light-yellow.png -text
 src/java/netxms-eclipse/PerfView/icons/status_view.png -text
+src/java/netxms-eclipse/PerfView/icons/table.gif -text
 src/java/netxms-eclipse/PerfView/icons/view3d.png -text
 src/java/netxms-eclipse/PerfView/plugin.xml -text
+src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowTableLastValues.java -text
+src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/TableLastValues.java -text
+src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/TableContentProvider.java -text
+src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/TableItemComparator.java -text
+src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/TableLabelProvider.java -text
 src/java/netxms-eclipse/PolicyManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/PolicyManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/PolicyManager/build.properties -text

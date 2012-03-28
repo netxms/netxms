@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -302,10 +302,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_IMAGE_LIBRARY_UPDATE"),
 		_T("CMD_GET_NODE_COMPONENTS"),
 		_T("CMD_UPDATE_ALARM_NOTE"),
-		_T("CMD_GET_ALARM")
+		_T("CMD_GET_ALARM"),
+		_T("CMD_GET_TABLE_LAST_VALUES")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_ALARM))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_TABLE_LAST_VALUES))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

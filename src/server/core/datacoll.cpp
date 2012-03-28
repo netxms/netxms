@@ -195,9 +195,6 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
                break;
          }
 
-			if (pItem->getType() == DCO_TYPE_TABLE)
-				delete (Table *)data;
-
          // Decrement node's usage counter
          pNode->DecRefCount();
 			if ((pItem->getProxyNode() != 0) && (pItem->getRelatedNode() != NULL))

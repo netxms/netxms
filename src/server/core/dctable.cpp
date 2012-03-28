@@ -125,6 +125,7 @@ DCTable::DCTable() : DCObject()
 {
 	m_instanceColumn[0] = 0;
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
+	m_lastValue = NULL;
 }
 
 
@@ -138,6 +139,7 @@ DCTable::DCTable(const DCTable *src) : DCObject(src)
 	m_columns = new ObjectArray<DCTableColumn>(src->m_columns->size(), 8, true);
 	for(int i = 0; i < src->m_columns->size(); i++)
 		m_columns->add(new DCTableColumn(src->m_columns->get(i)));
+	m_lastValue = NULL;
 }
 
 
@@ -151,6 +153,7 @@ DCTable::DCTable(DWORD id, const TCHAR *name, int source, int pollingInterval, i
 {
 	nx_strncpy(m_instanceColumn, CHECK_NULL_EX(instanceColumn), MAX_COLUMN_NAME);
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
+	m_lastValue = NULL;
 }
 
 
@@ -183,6 +186,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 
    m_pNode = pNode;
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
+	m_lastValue = NULL;
 
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT column_name,data_type,snmp_oid,transformation_script FROM dc_table_columns WHERE table_id=?"));
 	if (hStmt != NULL)
@@ -210,6 +214,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 DCTable::~DCTable()
 {
 	delete m_columns;
+	delete m_lastValue;
 }
 
 
@@ -264,6 +269,9 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
    }
 
    m_dwErrorCount = 0;
+	delete m_lastValue;
+	m_lastValue = (Table *)value;
+	m_lastValue->setTitle(m_szDescription);
 
 	// Copy required fields into local variables
 	DWORD tableId = m_dwId;
@@ -479,4 +487,19 @@ void DCTable::updateFromMessage(CSCPMessage *pMsg)
 	}
 
 	unlock();
+}
+
+
+//
+// Get last collected value
+//
+
+void DCTable::getLastValue(CSCPMessage *msg)
+{
+	if (m_lastValue != NULL)
+	{
+		m_lastValue->fillMessage(*msg, 0, -1);
+		if (m_instanceColumn[0] != 0)
+			msg->SetVariable(VID_INSTANCE, m_instanceColumn);
+	}
 }

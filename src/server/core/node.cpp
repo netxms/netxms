@@ -3242,7 +3242,7 @@ AgentConnectionEx *Node::createAgentConnection()
 // Get last collected values of all DCIs
 //
 
-DWORD Node::getLastValues(CSCPMessage *pMsg)
+DWORD Node::getLastValues(CSCPMessage *msg)
 {
    lockDciAccess();
 
@@ -3252,15 +3252,41 @@ DWORD Node::getLastValues(CSCPMessage *pMsg)
 		DCObject *object = m_dcObjects->get(i);
 		if ((object->getType() == DCO_TYPE_ITEM) && _tcsnicmp(object->getDescription(), _T("@system."), 8))
 		{
-			((DCItem *)object)->getLastValue(pMsg, dwId);
+			((DCItem *)object)->getLastValue(msg, dwId);
 			dwId += 50;
 			dwCount++;
 		}
 	}
-   pMsg->SetVariable(VID_NUM_ITEMS, dwCount);
+   msg->SetVariable(VID_NUM_ITEMS, dwCount);
 
    unlockDciAccess();
    return RCC_SUCCESS;
+}
+
+
+//
+// Get last collected values of givel table
+//
+
+DWORD Node::getTableLastValues(DWORD dciId, CSCPMessage *msg)
+{
+	DWORD rcc = RCC_INVALID_DCI_ID;
+
+   lockDciAccess();
+
+   for(int i = 0; i < m_dcObjects->size(); i++)
+	{
+		DCObject *object = m_dcObjects->get(i);
+		if ((object->getId() == dciId) && (object->getType() == DCO_TYPE_TABLE))
+		{
+			((DCTable *)object)->getLastValue(msg);
+			rcc = RCC_SUCCESS;
+			break;
+		}
+	}
+
+   unlockDciAccess();
+   return rcc;
 }
 
 

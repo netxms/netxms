@@ -2436,6 +2436,26 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/**
+	 * Get last values for given table DCI on given node
+	 * 
+	 * @param nodeId ID of the node to get DCI values for
+	 * @param dciId DCI ID
+	 * @return Table object with last values for table DCI
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public Table getTableLastValues(final long nodeId, final long dciId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_TABLE_LAST_VALUES);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariableInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
+		sendMessage(msg);
+
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return new Table(response);
+	}
+
+	/**
 	 * Get list of DCIs configured to be shown on performance tab in console for
 	 * given node.
 	 * 

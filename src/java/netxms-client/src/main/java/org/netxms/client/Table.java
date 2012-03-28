@@ -26,11 +26,11 @@ import org.netxms.base.NXCPMessage;
 
 /**
  * Generic class for holding data in tabular format. Table has named columns. All data stored as strings.
- *
  */
 public class Table
 {
 	private String title;
+	private String instanceColumn;
 	private List<String> columnNames;
 	private List<Integer> columnFormats;
 	private List<List<String>> data;
@@ -40,6 +40,8 @@ public class Table
 	 */
 	public Table()
 	{
+		title = "untitled";
+		instanceColumn = null;
 		columnNames = new ArrayList<String>(0);
 		columnFormats = new ArrayList<Integer>(0);
 		data = new ArrayList<List<String>>(0);
@@ -53,6 +55,7 @@ public class Table
 	public Table(final NXCPMessage msg)
 	{
 		title = msg.getVariableAsString(NXCPCodes.VID_TABLE_TITLE);
+		instanceColumn = msg.getVariableAsString(NXCPCodes.VID_INSTANCE);
 		
 		final int columnCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_COLS);
 		columnNames = new ArrayList<String>(columnCount);
@@ -244,5 +247,21 @@ public class Table
 		sb.append(", data=").append(data);
 		sb.append('}');
 		return sb.toString();
+	}
+
+	/**
+	 * @return the instanceColumn
+	 */
+	public String getInstanceColumn()
+	{
+		return instanceColumn;
+	}
+
+	/**
+	 * @param instanceColumn the instanceColumn to set
+	 */
+	public void setInstanceColumn(String instanceColumn)
+	{
+		this.instanceColumn = instanceColumn;
 	}
 }

@@ -287,6 +287,7 @@ public final class NXCPCodes
 	public static final int CMD_GET_NODE_COMPONENTS      = 0x0101;
 	public static final int CMD_UPDATE_ALARM_NOTE        = 0x0102;
 	public static final int CMD_GET_ALARM                = 0x0103;
+	public static final int CMD_GET_TABLE_LAST_VALUES    = 0x0104;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;

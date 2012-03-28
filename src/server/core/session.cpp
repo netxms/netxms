@@ -964,7 +964,10 @@ void ClientSession::processingThread()
             DeployPackage(pMsg);
             break;
          case CMD_GET_LAST_VALUES:
-            SendLastValues(pMsg);
+            getLastValues(pMsg);
+            break;
+         case CMD_GET_TABLE_LAST_VALUES:
+            getTableLastValues(pMsg);
             break;
          case CMD_GET_USER_VARIABLE:
             GetUserVariable(pMsg);
@@ -3543,7 +3546,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
 // Send latest collected values for all DCIs of given node
 //
 
-void ClientSession::SendLastValues(CSCPMessage *pRequest)
+void ClientSession::getLastValues(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
@@ -3561,6 +3564,49 @@ void ClientSession::SendLastValues(CSCPMessage *pRequest)
          if (pObject->Type() == OBJECT_NODE)
          {
             msg.SetVariable(VID_RCC, ((Node *)pObject)->getLastValues(&msg));
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+
+//
+// Send latest collected values for given table DCI of given node
+//
+
+void ClientSession::getTableLastValues(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get node id and check object class and access rights
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         if (pObject->Type() == OBJECT_NODE)
+         {
+				msg.SetVariable(VID_RCC, ((Node *)pObject)->getTableLastValues(pRequest->GetVariableLong(VID_DCI_ID), &msg));
          }
          else
          {
