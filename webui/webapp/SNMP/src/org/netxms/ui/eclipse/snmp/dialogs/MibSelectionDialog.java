@@ -48,6 +48,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class MibSelectionDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private MibBrowser mibTree;
 	private Text oid;
 	private MibObjectDetails details;
@@ -100,6 +102,8 @@ public class MibSelectionDialog extends Dialog
 		
 		oid = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 500, "Object identifier (OID)", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
 		oid.addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{

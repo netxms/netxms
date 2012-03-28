@@ -42,10 +42,11 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * DCI property page for Performance Tab settings
- *
  */
 public class PerfTab extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private DataCollectionItem dci;
 	private PerfTabGraphSettings settings;
 	private Button checkShow;
@@ -143,7 +144,7 @@ public class PerfTab extends PropertyPage
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				dci.getOwner().modifyItem(dci);
+				dci.getOwner().modifyObject(dci);
 			}
 
 			/* (non-Javadoc)

@@ -33,6 +33,8 @@ import org.netxms.client.datacollection.GraphSettings;
  */
 public class GraphTreeContentProvider implements ITreeContentProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private GraphFolder rootFolder;
 	private Map<GraphSettings, GraphFolder> parentFolders = new HashMap<GraphSettings, GraphFolder>();
 	

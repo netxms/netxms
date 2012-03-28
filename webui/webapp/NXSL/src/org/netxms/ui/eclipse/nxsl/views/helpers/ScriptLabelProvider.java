@@ -31,6 +31,8 @@ import org.netxms.ui.eclipse.nxsl.views.ScriptLibrary;
  */
 public class ScriptLabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private Image iconScript;
 	
 	public ScriptLabelProvider()

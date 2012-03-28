@@ -38,6 +38,8 @@ import org.netxms.ui.eclipse.snmp.widgets.helpers.MibTreeLabelProvider;
  */
 public class MibBrowser extends Composite
 {
+	private static final long serialVersionUID = 1L;
+
 	private TreeViewer mibTree;
 	
 	/**

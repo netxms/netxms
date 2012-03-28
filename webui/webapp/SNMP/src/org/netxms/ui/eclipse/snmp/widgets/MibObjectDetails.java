@@ -37,6 +37,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class MibObjectDetails extends Composite
 {
+	private static final long serialVersionUID = 1L;
+
 	private Text oid;
 	private Text description;
 	private Text type;
@@ -66,6 +68,8 @@ public class MibObjectDetails extends Composite
 		{
 			oid = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, "Object identifier (OID)", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
 			oid.addModifyListener(new ModifyListener() {
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void modifyText(ModifyEvent e)
 				{

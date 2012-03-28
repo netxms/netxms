@@ -41,6 +41,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class General extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private GraphSettings settings;
 	private LabeledText title;
 	private Button checkShowGrid;
@@ -154,6 +156,8 @@ public class General extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       refreshIntervalScale.setLayoutData(gd);
       refreshIntervalScale.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -172,6 +176,8 @@ public class General extends PropertyPage
       refreshIntervalSpinner.setMaximum(600);
       refreshIntervalSpinner.setSelection(settings.getAutoRefreshInterval() / 1000);
       refreshIntervalSpinner.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

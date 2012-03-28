@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditScheduleDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -51,14 +51,13 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * @author Victor
- *
+ * "Custom Schedule" property page
  */
 public class CustomSchedule extends PropertyPage
 {
 	private static final long serialVersionUID = 1L;
 
-	private DataCollectionItem dci;
+	private DataCollectionObject dci;
 	private HashSet<String> schedules;
 	private SortableTableViewer viewer;
 	private Button addButton;
@@ -71,7 +70,7 @@ public class CustomSchedule extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		dci = (DataCollectionItem)getElement().getAdapter(DataCollectionItem.class);
+		dci = (DataCollectionObject)getElement().getAdapter(DataCollectionObject.class);
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
@@ -264,7 +263,7 @@ public class CustomSchedule extends PropertyPage
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				dci.getOwner().modifyItem(dci);
+				dci.getOwner().modifyObject(dci);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()

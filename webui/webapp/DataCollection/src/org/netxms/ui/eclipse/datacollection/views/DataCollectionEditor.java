@@ -61,13 +61,15 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.datacollection.Activator;
-import org.netxms.ui.eclipse.datacollection.DciComparator;
+import org.netxms.ui.eclipse.datacollection.views.helpers.DciComparator;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciFilter;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -105,7 +107,8 @@ public class DataCollectionEditor extends ViewPart
 	private GenericObject object;
 	private DataCollectionConfiguration dciConfig = null;
 	private DciFilter filter;
-	private Action actionCreate;
+	private Action actionCreateItem;
+	private Action actionCreateTable;
 	private Action actionEdit;
 	private Action actionDelete;
 	private Action actionCopy;
@@ -187,15 +190,15 @@ public class DataCollectionEditor extends ViewPart
 					actionConvert.setEnabled(selection.size() > 0);
 					actionDuplicate.setEnabled(selection.size() > 0);
 					
-					Iterator<DataCollectionItem> it = selection.iterator();
+					Iterator<DataCollectionObject> it = selection.iterator();
 					boolean canActivate = false;
 					boolean canDisable = false;
 					while(it.hasNext() && (!canActivate || !canDisable))
 					{
-						DataCollectionItem dci = it.next();
-						if (dci.getStatus() != DataCollectionItem.ACTIVE)
+						DataCollectionObject dci = it.next();
+						if (dci.getStatus() != DataCollectionObject.ACTIVE)
 							canActivate = true;
-						if (dci.getStatus() != DataCollectionItem.DISABLED)
+						if (dci.getStatus() != DataCollectionObject.DISABLED)
 							canDisable = true;
 					}
 					actionActivate.setEnabled(canActivate);
@@ -316,7 +319,8 @@ public class DataCollectionEditor extends ViewPart
 	{
 		manager.add(actionShowFilter);
 		manager.add(new Separator());
-		manager.add(actionCreate);
+		manager.add(actionCreateItem);
+		manager.add(actionCreateTable);
 		manager.add(actionEdit);
 		manager.add(actionDelete);
 		manager.add(actionCopy);
@@ -340,7 +344,7 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
-		manager.add(actionCreate);
+		manager.add(actionCreateItem);
 		manager.add(actionRefresh);
 	}
 
@@ -351,7 +355,8 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	protected void fillContextMenu(final IMenuManager manager)
 	{
-		manager.add(actionCreate);
+		manager.add(actionCreateItem);
+		manager.add(actionCreateTable);
 		manager.add(actionEdit);
 		manager.add(actionDelete);
 		manager.add(actionCopy);
@@ -382,7 +387,7 @@ public class DataCollectionEditor extends ViewPart
 			}
 		};
 
-		actionCreate = new Action() {
+		actionCreateItem = new Action("&New parameter...", Activator.getImageDescriptor("icons/new.png")) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -391,8 +396,16 @@ public class DataCollectionEditor extends ViewPart
 				createItem();
 			}
 		};
-		actionCreate.setText("&New...");
-		actionCreate.setImageDescriptor(Activator.getImageDescriptor("icons/new.png"));
+
+		actionCreateTable = new Action("Ne&w table...") {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void run()
+			{
+				createTable();
+			}
+		};
 
 		actionEdit = new PropertyDialogAction(getSite(), viewer) {
 			private static final long serialVersionUID = 1L;
@@ -408,8 +421,7 @@ public class DataCollectionEditor extends ViewPart
 		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png"));
 		actionEdit.setEnabled(false);
 
-		actionDelete = new Action()
-		{
+		actionDelete = new Action("&Delete", Activator.getImageDescriptor("icons/delete.png")) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -418,12 +430,9 @@ public class DataCollectionEditor extends ViewPart
 				deleteItems();
 			}
 		};
-		actionDelete.setText("&Delete");
-		actionDelete.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png"));
 		actionDelete.setEnabled(false);
 
-		actionCopy = new Action()
-		{
+		actionCopy = new Action("&Copy to other node(s)...") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -432,10 +441,9 @@ public class DataCollectionEditor extends ViewPart
 				copyItems(false);
 			}
 		};
-		actionCopy.setText("&Copy to other node(s)...");
 		actionCopy.setEnabled(false);
 
-		actionMove = new Action() {
+		actionMove = new Action("&Move to other node(s)...") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -444,10 +452,9 @@ public class DataCollectionEditor extends ViewPart
 				copyItems(true);
 			}
 		};
-		actionMove.setText("&Move to other node(s)...");
 		actionMove.setEnabled(false);
 
-		actionConvert = new Action() {
+		actionConvert = new Action("Convert to &template item...") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -456,10 +463,9 @@ public class DataCollectionEditor extends ViewPart
 				convertToTemplate();
 			}
 		};
-		actionConvert.setText("Convert to &template item...");
 		actionConvert.setEnabled(false);
 
-		actionDuplicate = new Action() {
+		actionDuplicate = new Action("D&uplicate") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -468,33 +474,28 @@ public class DataCollectionEditor extends ViewPart
 				duplicateItems();
 			}
 		};
-		actionDuplicate.setText("D&uplicate");
 		actionDuplicate.setEnabled(false);
 
-		actionActivate = new Action() {
+		actionActivate = new Action("&Activate", Activator.getImageDescriptor("icons/active.gif")) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void run()
 			{
-				setItemStatus(DataCollectionItem.ACTIVE);
+				setItemStatus(DataCollectionObject.ACTIVE);
 			}
 		};
-		actionActivate.setText("&Activate");
-		actionActivate.setImageDescriptor(Activator.getImageDescriptor("icons/active.gif"));
 		actionActivate.setEnabled(false);
 
-		actionDisable = new Action() {
+		actionDisable = new Action("D&isable", Activator.getImageDescriptor("icons/disabled.gif")) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void run()
 			{
-				setItemStatus(DataCollectionItem.DISABLED);
+				setItemStatus(DataCollectionObject.DISABLED);
 			}
 		};
-		actionDisable.setText("D&isable");
-		actionDisable.setImageDescriptor(Activator.getImageDescriptor("icons/disabled.gif"));
 		actionDisable.setEnabled(false);
 
 		actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
@@ -592,16 +593,16 @@ public class DataCollectionEditor extends ViewPart
 				int pos = 0;
 				for(Object dci : selection.toList())
 				{
-					itemList[pos++] = ((DataCollectionItem)dci).getId();
+					itemList[pos++] = ((DataCollectionObject)dci).getId();
 				}
-				dciConfig.setItemStatus(itemList, newStatus);
+				dciConfig.setObjectStatus(itemList, newStatus);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
 						for(Object dci : selection.toList())
 						{
-							((DataCollectionItem)dci).setStatus(newStatus);
+							((DataCollectionObject)dci).setStatus(newStatus);
 							viewer.update(dci, null);
 						}
 					}
@@ -635,7 +636,7 @@ public class DataCollectionEditor extends ViewPart
 			{
 				for(Object dci : selection.toList())
 				{
-					dciConfig.deleteItem(((DataCollectionItem)dci).getId());
+					dciConfig.deleteObject(((DataCollectionObject)dci).getId());
 				}
 				runInUIThread(new Runnable() {
 					@Override
@@ -669,7 +670,7 @@ public class DataCollectionEditor extends ViewPart
 					public void run()
 					{
 						viewer.setInput(dciConfig.getItems());
-						DataCollectionItem dci = dciConfig.findItem(id);
+						DataCollectionItem dci = (DataCollectionItem)dciConfig.findItem(id, DataCollectionItem.class);
 						viewer.setSelection(new StructuredSelection(dci), true);
 						actionEdit.run();
 					}
@@ -685,13 +686,43 @@ public class DataCollectionEditor extends ViewPart
 	}
 	
 	/**
+	 * Create new data collection table
+	 */
+	private void createTable()
+	{
+		new ConsoleJob("Create new data collection table for " + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final long id = dciConfig.createTable();
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						viewer.setInput(dciConfig.getItems());
+						DataCollectionTable dci = (DataCollectionTable)dciConfig.findItem(id, DataCollectionTable.class);
+						viewer.setSelection(new StructuredSelection(dci), true);
+						actionEdit.run();
+					}
+				});
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot create new data collection table for " + object.getObjectName();
+			}
+		}.start();
+	}
+	
+	/**
 	 * Duplicate selected item(s)
 	 */
 	@SuppressWarnings("unchecked")
 	private void duplicateItems()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		Iterator<DataCollectionItem> it = selection.iterator();
+		Iterator<DataCollectionObject> it = selection.iterator();
 		final long[] dciList = new long[selection.size()];
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
 			dciList[i] = it.next().getId();
@@ -700,7 +731,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				dciConfig.copyItems(dciConfig.getNodeId(), dciList);
+				dciConfig.copyObjects(dciConfig.getNodeId(), dciList);
 				dciConfig.close();
 				dciConfig.open();
 				runInUIThread(new Runnable() {
@@ -731,7 +762,7 @@ public class DataCollectionEditor extends ViewPart
 			return;
 
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		Iterator<DataCollectionItem> it = selection.iterator();
+		Iterator<DataCollectionObject> it = selection.iterator();
 		final long[] dciList = new long[selection.size()];
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
 			dciList[i] = it.next().getId();
@@ -741,13 +772,13 @@ public class DataCollectionEditor extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				for(GenericObject o : dlg.getSelectedObjects(Node.class))
-					dciConfig.copyItems(o.getObjectId(), dciList);
+					dciConfig.copyObjects(o.getObjectId(), dciList);
 				for(GenericObject o : dlg.getSelectedObjects(Template.class))
-					dciConfig.copyItems(o.getObjectId(), dciList);
+					dciConfig.copyObjects(o.getObjectId(), dciList);
 				if (doMove)
 				{
 					for(long id : dciList)
-						dciConfig.deleteItem(id);
+						dciConfig.deleteObject(id);
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()
@@ -782,7 +813,7 @@ public class DataCollectionEditor extends ViewPart
 		final Template template = (Template)objects[0];
 		
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		Iterator<DataCollectionItem> it = selection.iterator();
+		Iterator<DataCollectionObject> it = selection.iterator();
 		final long[] dciList = new long[selection.size()];
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
 			dciList[i] = it.next().getId();
@@ -804,9 +835,9 @@ public class DataCollectionEditor extends ViewPart
 				}
 				monitor.worked(1);
 				
-				dciConfig.copyItems(template.getObjectId(), dciList);
+				dciConfig.copyObjects(template.getObjectId(), dciList);
 				for(long id : dciList)
-					dciConfig.deleteItem(id);
+					dciConfig.deleteObject(id);
 				dciConfig.close();
 				monitor.worked(1);
 						

@@ -2265,7 +2265,6 @@ webui/webapp/DataCollection/icons/unsupported.gif -text
 webui/webapp/DataCollection/plugin.xml -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/Activator.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/DataCollectionAdapterFactory.java -text
-webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/DciComparator.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/ThresholdLabelProvider.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/ApplyTemplate.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/CreateInterfraceDci.java -text
@@ -2292,10 +2291,12 @@ webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/hel
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/objecttabs/LastValues.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/CustomSchedule.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/General.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/GeneralTable.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/Thresholds.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/Transformation.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/DataCollectionEditor.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/LastValues.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/helpers/DciComparator.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/helpers/DciFilter.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/helpers/DciLabelProvider.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/DciList.java -text

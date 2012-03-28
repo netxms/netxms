@@ -133,7 +133,7 @@ public class Transformation extends PropertyPage
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				dci.getOwner().modifyItem(dci);
+				dci.getOwner().modifyObject(dci);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()

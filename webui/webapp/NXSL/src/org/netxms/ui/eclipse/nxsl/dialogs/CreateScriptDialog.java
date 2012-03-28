@@ -34,6 +34,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class CreateScriptDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private boolean rename;
 	private Text nameInputField;
 	private String name;

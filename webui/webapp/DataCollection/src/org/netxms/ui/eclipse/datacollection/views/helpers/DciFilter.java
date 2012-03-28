@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.datacollection.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 
 /**
  * Filter for DCi editor
@@ -40,7 +40,7 @@ public class DciFilter extends ViewerFilter
 		if ((filterString == null) || (filterString.isEmpty()))
 			return true;
 		
-		final DataCollectionItem dci = (DataCollectionItem)element;
+		final DataCollectionObject dci = (DataCollectionObject)element;
 		return dci.getDescription().toLowerCase().contains(filterString);
 	}
 

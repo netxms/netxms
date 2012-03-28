@@ -29,6 +29,8 @@ import org.netxms.ui.eclipse.perfview.Activator;
  */
 public class GraphTreeLabelProvider extends LabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private Image imgFolder;
 	private Image imgGraph;
 	

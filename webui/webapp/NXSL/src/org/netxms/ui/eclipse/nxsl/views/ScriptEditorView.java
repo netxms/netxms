@@ -84,6 +84,8 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		
 		editor = new ScriptEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL);
 		editor.getTextWidget().addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -117,11 +119,9 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -129,11 +129,9 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 			}
 		};
 		
-		actionSave = new Action()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionSave = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
