@@ -547,6 +547,8 @@ DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
          m_dwFailedRequests++;
 		}
    }
+	DebugPrintf(dwSessionId, 9, _T("Returning %s"), 
+		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN") : _T("INTERNAL")));
    return dwErrorCode;
 }
 
