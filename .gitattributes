@@ -2285,6 +2285,7 @@ webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/Tog
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/AbstractSelectParamDlg.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/CreateInterfaceDciDialog.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/DciRemoveConfirmationDialog.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/EditColumnDialog.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/EditScheduleDialog.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/EditThresholdDialog.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/IParameterSelectionDialog.java -text
@@ -2300,6 +2301,7 @@ webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/objecttabs/
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/CustomSchedule.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/General.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/GeneralTable.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/TableColumns.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/Thresholds.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/Transformation.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/DataCollectionEditor.java -text
