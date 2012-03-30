@@ -55,8 +55,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * "General" property page for DCI
- *
+ * "General" property page for table DCI
  */
 public class GeneralTable extends PropertyPage
 {

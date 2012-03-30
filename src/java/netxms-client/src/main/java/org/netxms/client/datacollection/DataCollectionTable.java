@@ -100,4 +100,20 @@ public class DataCollectionTable extends DataCollectionObject
 	{
 		this.instanceColumn = instanceColumn;
 	}
+
+	/**
+	 * @return the columns
+	 */
+	public List<ColumnDefinition> getColumns()
+	{
+		return columns;
+	}
+
+	/**
+	 * @param columns the columns to set
+	 */
+	public void setColumns(List<ColumnDefinition> columns)
+	{
+		this.columns = columns;
+	}
 }

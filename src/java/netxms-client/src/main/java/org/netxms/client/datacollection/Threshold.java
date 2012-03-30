@@ -90,6 +90,24 @@ public class Threshold
 	}
 	
 	/**
+	 * Copy constructor
+	 * 
+	 * @param src source object
+	 */
+	public Threshold(Threshold src)
+	{
+		id = src.id;
+		fireEvent = src.fireEvent;
+		rearmEvent = src.rearmEvent;
+		arg1 = src.arg1;
+		arg2 = src.arg2;
+		function = src.function;
+		operation = src.operation;
+		repeatInterval = src.repeatInterval;
+		value = src.value;
+	}
+	
+	/**
 	 * Fill NXCP message with threshold's data
 	 * 
 	 * @param msg NXCP message

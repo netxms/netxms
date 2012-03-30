@@ -45,6 +45,19 @@ public class ColumnDefinition
 	}
 	
 	/**
+	 * Copy constructor
+	 * 
+	 * @param src source object
+	 */
+	public ColumnDefinition(ColumnDefinition src)
+	{
+		name = src.name;
+		dataType = src.dataType;
+		snmpObjectId = src.snmpObjectId;
+		transformationScript = src.transformationScript;
+	}
+	
+	/**
 	 * Create column definition from NXCP message
 	 * 
 	 * @param msg NXCP message

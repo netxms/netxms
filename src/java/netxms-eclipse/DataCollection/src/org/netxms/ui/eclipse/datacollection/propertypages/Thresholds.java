@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -68,9 +69,10 @@ public class Thresholds extends PropertyPage
 	private static final String COLUMN_SETTINGS_PREFIX = "Thresholds.ThresholdList";
 	
 	private DataCollectionItem dci;
+	private List<Threshold> thresholds;
 	private LabeledText instance;
 	private Button checkAllThresholds;
-	private TableViewer thresholds;
+	private TableViewer thresholdList;
 	private Button addButton;
 	private Button modifyButton;
 	private Button deleteButton;
@@ -87,6 +89,10 @@ public class Thresholds extends PropertyPage
 		Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter");
 		
 		dci = (DataCollectionItem)getElement().getAdapter(DataCollectionItem.class);
+		thresholds = new ArrayList<Threshold>(dci.getThresholds().size());
+		for(Threshold t : dci.getThresholds())
+			thresholds.add(new Threshold(t));
+		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
@@ -124,16 +130,16 @@ public class Thresholds extends PropertyPage
 	
       new Label(thresholdArea, SWT.NONE).setText("Thresholds");
       
-      thresholds = new TableViewer(thresholdArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      thresholdList = new TableViewer(thresholdArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.horizontalSpan = 2;
-      thresholds.getControl().setLayoutData(gd);
+      thresholdList.getControl().setLayoutData(gd);
       setupThresholdList();
-      thresholds.setInput(dci.getThresholds().toArray());
+      thresholdList.setInput(thresholds.toArray());
       
       Composite leftButtons = new Composite(thresholdArea, SWT.NONE);
       gd = new GridData();
@@ -257,21 +263,20 @@ public class Thresholds extends PropertyPage
       });
       
       /*** Selection change listener for thresholds list ***/
-      thresholds.addSelectionChangedListener(new ISelectionChangedListener() {
+      thresholdList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
 				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-				List<Threshold> tlist = dci.getThresholds();
-				int index = tlist.indexOf(selection.getFirstElement());
+				int index = thresholds.indexOf(selection.getFirstElement());
 				upButton.setEnabled((selection.size() == 1) && (index > 0));
-				downButton.setEnabled((selection.size() == 1) && (index >= 0) && (index < tlist.size() - 1));
+				downButton.setEnabled((selection.size() == 1) && (index >= 0) && (index < thresholds.size() - 1));
 				modifyButton.setEnabled(selection.size() == 1);
 				deleteButton.setEnabled(selection.size() > 0);
 			}
       });
       
-      thresholds.addDoubleClickListener(new IDoubleClickListener() {
+      thresholdList.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
 			{
@@ -288,16 +293,15 @@ public class Thresholds extends PropertyPage
 	@SuppressWarnings("unchecked")
 	private void deleteThresholds()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)thresholds.getSelection();
+		final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
 		if (!selection.isEmpty())
 		{
-			final List<Threshold> list = dci.getThresholds();
 			Iterator<Threshold> it = selection.iterator();
 			while(it.hasNext())
 			{
-				list.remove(it.next());
+				thresholds.remove(it.next());
 			}
-	      thresholds.setInput(dci.getThresholds().toArray());
+	      thresholdList.setInput(thresholds.toArray());
 		}
 	}
 	
@@ -306,14 +310,14 @@ public class Thresholds extends PropertyPage
 	 */
 	private void editThreshold()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)thresholds.getSelection();
+		final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
 		if (selection.size() == 1)
 		{
 			final Threshold threshold = (Threshold)selection.getFirstElement();
 			EditThresholdDialog dlg = new EditThresholdDialog(getShell(), threshold);
 			if (dlg.open() == Window.OK)
 			{
-				thresholds.update(threshold, null);
+				thresholdList.update(threshold, null);
 			}
 		}
 	}
@@ -327,9 +331,9 @@ public class Thresholds extends PropertyPage
 		EditThresholdDialog dlg = new EditThresholdDialog(getShell(), threshold);
 		if (dlg.open() == Window.OK)
 		{
-			dci.getThresholds().add(threshold);
-	      thresholds.setInput(dci.getThresholds().toArray());
-	      thresholds.setSelection(new StructuredSelection(threshold));
+			thresholds.add(threshold);
+	      thresholdList.setInput(thresholds.toArray());
+	      thresholdList.setSelection(new StructuredSelection(threshold));
 		}
 	}
 	
@@ -338,18 +342,17 @@ public class Thresholds extends PropertyPage
 	 */
 	private void moveUp()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)thresholds.getSelection();
+		final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
 		if (selection.size() == 1)
 		{
-			final List<Threshold> list = dci.getThresholds();
 			final Threshold threshold = (Threshold)selection.getFirstElement();
 			
-			int index = list.indexOf(threshold);
+			int index = thresholds.indexOf(threshold);
 			if (index > 0)
 			{
-				Collections.swap(list, index - 1, index);
-		      thresholds.setInput(dci.getThresholds().toArray());
-		      thresholds.setSelection(new StructuredSelection(threshold));
+				Collections.swap(thresholds, index - 1, index);
+		      thresholdList.setInput(thresholds.toArray());
+		      thresholdList.setSelection(new StructuredSelection(threshold));
 			}
 		}
 	}
@@ -359,18 +362,17 @@ public class Thresholds extends PropertyPage
 	 */
 	private void moveDown()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)thresholds.getSelection();
+		final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
 		if (selection.size() == 1)
 		{
-			final List<Threshold> list = dci.getThresholds();
 			final Threshold threshold = (Threshold)selection.getFirstElement();
 			
-			int index = list.indexOf(threshold);
-			if ((index < list.size() - 1) && (index >= 0))
+			int index = thresholds.indexOf(threshold);
+			if ((index < thresholds.size() - 1) && (index >= 0))
 			{
-				Collections.swap(list, index + 1, index);
-		      thresholds.setInput(dci.getThresholds().toArray());
-		      thresholds.setSelection(new StructuredSelection(threshold));
+				Collections.swap(thresholds, index + 1, index);
+		      thresholdList.setInput(thresholds.toArray());
+		      thresholdList.setSelection(new StructuredSelection(threshold));
 			}
 		}
 	}
@@ -380,7 +382,7 @@ public class Thresholds extends PropertyPage
 	 */
 	private void setupThresholdList()
 	{
-		Table table = thresholds.getTable();
+		Table table = thresholdList.getTable();
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
 		
@@ -394,8 +396,8 @@ public class Thresholds extends PropertyPage
 		
 		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
 		
-      thresholds.setContentProvider(new ArrayContentProvider());
-      thresholds.setLabelProvider(new ThresholdLabelProvider());
+      thresholdList.setContentProvider(new ArrayContentProvider());
+      thresholdList.setLabelProvider(new ThresholdLabelProvider());
 	}
 
 	/* (non-Javadoc)
@@ -431,6 +433,8 @@ public class Thresholds extends PropertyPage
 		
 		dci.setInstance(instance.getText());
 		dci.setProcessAllThresholds(checkAllThresholds.getSelection());
+		dci.getThresholds().clear();
+		dci.getThresholds().addAll(thresholds);
 		
 		new ConsoleJob("Update thresholds for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
 			@Override
@@ -487,6 +491,6 @@ public class Thresholds extends PropertyPage
 	 */
 	private void saveSettings()
 	{
-		WidgetHelper.saveColumnSettings(thresholds.getTable(), Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
+		WidgetHelper.saveColumnSettings(thresholdList.getTable(), Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
 	}
 }
