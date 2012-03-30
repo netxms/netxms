@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string-array name="notificationStatusLabels"> 
+		<item>Never</item> 
+		<item>When connected</item> 
+		<item>When disconnected</item> 
+		<item>Always</item> 
+	</string-array>
+	<string-array name="notificationStatusValues"> 
+		<item>0</item> 
+		<item>1</item> 
+		<item>2</item> 
+		<item>3</item> 
+	</string-array>      
+	<string-array name="alarmsSortBy"> 
+		<item>Sort by severity ascending</item> 
+	    <item>Sort by severity descending</item> 
+		<item>Sort by date ascending</item> 
+		<item>Sort by date descending</item> 
+	</string-array>
+</resources>

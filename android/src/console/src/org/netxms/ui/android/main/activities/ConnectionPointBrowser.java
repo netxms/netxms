@@ -54,7 +54,7 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 
 public class ConnectionPointBrowser extends AbstractClientActivity
 {
-	private static final String CPLISTKEY = "ConnectionPointList"; 
+	private static final String CPLIST_KEY = "ConnectionPointList"; 
 	private final int maxConnectionPoints = 50;
 	private List<String> cpList = new ArrayList<String>(0); 
 	private EditText editText;
@@ -108,7 +108,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 		});
 
 		nodeId = getIntent().getIntExtra("nodeId", 0);
-    	cpList = retrievePreferences(this, CPLISTKEY, maxConnectionPoints); 
+    	cpList = retrievePreferences(this, CPLIST_KEY, maxConnectionPoints); 
 		adapter.setConnectionPoint(cpList);
 		adapter.notifyDataSetChanged();
 	}
@@ -229,7 +229,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity
    	protected void onStop()
    	{
    		super.onStop();
-    	storePreferences(this, CPLISTKEY, cpList, maxConnectionPoints); 
+    	storePreferences(this, CPLIST_KEY, cpList, maxConnectionPoints); 
     }
 
 	private void refreshList()

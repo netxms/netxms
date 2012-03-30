@@ -8,4 +8,5 @@
 	<color name="notify_disconnected">#FFFF0000</color>
 	<color name="notify_connecting">#FFFFFF00</color>
 	<color name="notify_connection_failed">#FFFF0000</color>
+	<color name="notify_no_connection">#FFFF0000</color>
 </resources>

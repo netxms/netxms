@@ -19,6 +19,7 @@
 	<string name="notify_connected">Connected to server %1$s</string>
 	<string name="notify_connecting">Connecting to server...</string>
 	<string name="notify_connection_failed">Connection failed: %1$s</string>
+	<string name="notify_no_connection">Data connection not available!"</string>
 	<string name="notify_action_exec_fail">Cannot execute action: %1$s</string>
 	<string name="notify_action_exec_success">Action executed successfully</string>
 	<string name="notify_service_obj_sync_success">Objects synchronized</string>
@@ -89,4 +90,11 @@
 	<string name="connectionpoint_deleteall">Delete all items</string>
 	<string name="connectionpoint_confirm_one">Delete selected item?</string>
 	<string name="connectionpoint_confirm_all">Delete all items?</string>
+	<string name="pref_global_notification_toast">Toast status notification</string>
+	<string name="pref_global_notification_toast_enabled">Toast status notification enabled</string>
+	<string name="pref_global_notification_toast_disabled">Toast status notification disabled</string>
+	<string name="pref_global_notification_icon">Icon status notification</string>
+	<string name="pref_global_notification_icon_enabled">Icon status notification enabled</string>
+	<string name="pref_global_notification_icon_disabled">Icon status notification disabled</string>
+	<string name="pref_global_notification_status">Status notification</string>
 </resources>

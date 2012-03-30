@@ -9,6 +9,14 @@
 		<EditTextPreference android:title="@string/pref_login" android:summary="@string/pref_login_summary" android:enabled="true" android:defaultValue="admin" android:key="connection.login"></EditTextPreference>
 		<EditTextPreference android:enabled="true" android:key="connection.password" android:title="@string/pref_password" android:summary="@string/pref_password_summary" android:password="true"></EditTextPreference>
 		<CheckBoxPreference android:title="@string/pref_encrypt" android:key="connection.encrypt" android:enabled="true" android:summaryOn="@string/pref_encrypt_summary_enabled" android:summaryOff="@string/pref_encrypt_summary_disabled" android:defaultValue="false"></CheckBoxPreference>
+	    <CheckBoxPreference android:summaryOff="@string/pref_global_notification_toast_disabled" android:summaryOn="@string/pref_global_notification_toast_enabled" android:key="global.notification.toast" android:enabled="true" android:defaultValue="true" android:title="@string/pref_global_notification_toast"/>
+	    <CheckBoxPreference android:summaryOff="@string/pref_global_notification_icon_disabled" android:summaryOn="@string/pref_global_notification_icon_enabled" android:key="global.notification.icon" android:enabled="true" android:defaultValue="false" android:title="@string/pref_global_notification_icon"/>
+	    <ListPreference android:dialogTitle="@string/pref_global_notification_status"
+	    	android:key="global.notification.status"
+	    	android:title="@string/pref_global_notification_status"
+	    	android:entryValues="@array/notificationStatusValues" 
+	    	android:entries="@array/notificationStatusLabels"
+	    	android:defaultValue="0"/>
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/pref_alarm_notification">
 	    <RingtonePreference android:title="@string/pref_alarm_sound_normal" android:ringtoneType="all" android:showDefault="true" android:showSilent="true" android:key="alarm.sound.normal" android:icon="@drawable/status_normal"></RingtonePreference>

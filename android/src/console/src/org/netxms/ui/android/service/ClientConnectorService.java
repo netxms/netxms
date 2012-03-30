@@ -48,6 +48,7 @@ import android.widget.Toast;
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
  * 
  */
+
 public class ClientConnectorService extends Service implements SessionListener
 {
 	public enum ConnectionStatus { CS_NOCONNECTION, CS_INPROGRESS, CS_ALREADYCONNECTED, CS_CONNECTED, CS_DISCONNECTED, CS_ERROR };
@@ -55,7 +56,10 @@ public class ClientConnectorService extends Service implements SessionListener
 	public static final String ACTION_DISCONNECT = "org.netxms.ui.android.ACTION_DISCONNECT";
 
 	private static final int NOTIFY_ALARM = 1;
+	private static final int NOTIFY_STATUS = 2;
 	private static final String TAG = "nxclient.ClientConnectorService";
+	private static final String LASTALARM_KEY = "LastALarmIdNotified";
+	
 	private String mutex = "MUTEX";
 	private Binder binder = new ClientConnectorBinder();
 	private Handler uiThreadHandler;
@@ -101,6 +105,8 @@ public class ClientConnectorService extends Service implements SessionListener
 
 		showToast(getString(R.string.notify_started));
 
+		lastAlarmIdNotified = PreferenceManager.getDefaultSharedPreferences(this).getInt(LASTALARM_KEY, 0);
+		
 		BroadcastReceiver receiver = new BroadcastReceiver()
 		{
 			@Override
@@ -152,16 +158,25 @@ public class ClientConnectorService extends Service implements SessionListener
 	public void onDestroy()
 	{
 		super.onDestroy();
+		savePreferences();
 	}
 
+	public void savePreferences()
+	{
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this); 
+	    SharedPreferences.Editor editor = prefs.edit(); 
+	    editor.putInt(LASTALARM_KEY, (int)lastAlarmIdNotified); 
+	    editor.commit(); 
+	}
+	
 	/**
-	 * Show notification
+	 * Show alarm notification
 	 * 
 	 * @param id	notification id
 	 * @param severity	notification severity (used to determine icon)
 	 * @param text	notification text
 	 */
-	public void showNotification(int id, int severity, String text)
+	public void showAlarmNotification(int id, int severity, String text)
 	{
 		Notification n = new Notification(GetAlarmIcon(severity), text, System.currentTimeMillis());
 		n.defaults = Notification.DEFAULT_LIGHTS;
@@ -174,6 +189,60 @@ public class ClientConnectorService extends Service implements SessionListener
 			n.sound = Uri.parse(sound);
 
 		notificationManager.notify(id, n);
+	}
+
+	/**
+	 * Show status notification
+	 * 
+	 * @param id	notification id
+	 * @param status	connection status
+	 * @param extra	extra text to add at the end of the toast
+	 */
+	public void showNotificationStatus(int id, ConnectionStatus status, String extra)
+	{
+		int icon = -1;
+		String text = "";
+		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+		int notificationType = Integer.parseInt(sp.getString("global.notification.status", "0"));
+		switch (status)
+		{
+			case CS_CONNECTED:
+				if (notificationType == 1 || notificationType == 3)
+					icon = R.drawable.notify_connected;
+				text = getString(R.string.notify_connected, extra);
+				break;
+			case CS_DISCONNECTED:
+				if (notificationType == 2 || notificationType == 3)
+					icon = R.drawable.notify_disconnected;
+				text = getString(R.string.notify_disconnected);
+				break;
+			case CS_ERROR:
+				if (notificationType == 2 || notificationType == 3)
+					icon = R.drawable.notify_disconnected;
+				text = getString(R.string.notify_connection_failed, extra);
+				break;
+			case CS_NOCONNECTION:
+			case CS_INPROGRESS:
+			case CS_ALREADYCONNECTED:
+			default:
+				return;
+		}
+		if (icon == -1)
+			hideNotification(id);
+		else
+		{
+			if (sp.getBoolean("global.notification.toast", true))
+				showToast(text);
+			if (sp.getBoolean("global.notification.icon", false))
+			{
+				Notification n = new Notification(icon, text, System.currentTimeMillis()); 
+				n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT; 
+				Intent notifyIntent = new Intent(getApplicationContext(), HomeScreen.class);
+				PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
+				n.setLatestEventInfo(getApplicationContext(), getString(R.string.notification_title), text, intent);
+				notificationManager.notify(id, n);
+			}
+		}
 	}
 
 	/**
@@ -204,7 +273,8 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			if (connectionStatus != ConnectionStatus.CS_INPROGRESS)
 			{
-				connectionStatus = ConnectionStatus.CS_INPROGRESS;
+				setConnectionStatus(ConnectionStatus.CS_INPROGRESS, "");
+				showNotificationStatus(NOTIFY_STATUS, ConnectionStatus.CS_INPROGRESS, "");
 				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 				new ConnectTask(this).execute(sp.getString("connection.server", ""), sp.getString("connection.login", ""),
 	                                          sp.getString("connection.password", ""), sp.getBoolean("connection.encrypt", false));
@@ -228,6 +298,20 @@ public class ClientConnectorService extends Service implements SessionListener
 				this.alarms = alarms;
 				session.addListener(this);
 				setConnectionStatus(ConnectionStatus.CS_CONNECTED, session.getServerAddress());
+				showNotificationStatus(NOTIFY_STATUS, ConnectionStatus.CS_CONNECTED, session.getServerAddress());
+				if (alarms != null)
+				{
+					long id = -1;
+					Alarm alarm = null;
+					for (Alarm itAlarm : alarms.values())	// Find the newest alarm received when we were offline
+						if (itAlarm.getId() > id)
+						{
+							alarm = itAlarm;
+							id = itAlarm.getId();
+						}
+					if (alarm != null && alarm.getId() > lastAlarmIdNotified)
+						processAlarmChange(alarm);
+				}
 			}
 		}
 	}
@@ -240,8 +324,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		nullifySession();
 		hideNotification(NOTIFY_ALARM);
-		showToast(getString(R.string.notify_disconnected));
 		setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
+		showNotificationStatus(NOTIFY_STATUS, ConnectionStatus.CS_DISCONNECTED, "");
 	}
 	
 	/**
@@ -251,8 +335,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		nullifySession();
 		hideNotification(NOTIFY_ALARM);
-		showToast(getString(R.string.notify_connection_failed, error));
 		setConnectionStatus(ConnectionStatus.CS_ERROR, error);
+		showNotificationStatus(NOTIFY_STATUS, ConnectionStatus.CS_ERROR, error);
 	}
 
 	/**
@@ -268,6 +352,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				session = null;
 			}
 			alarms = null;
+			unknownAlarm = null;
 		}
 	}
 	
@@ -286,20 +371,9 @@ public class ClientConnectorService extends Service implements SessionListener
 				lastAlarmIdNotified = alarm.getId(); 
 				alarms.put(lastAlarmIdNotified, alarm);
 			}
-			else
-				lastAlarmIdNotified = -1;
 			unknownAlarm = object == null ? alarm : null;
-			showNotification(NOTIFY_ALARM, alarm.getCurrentSeverity(), ((object != null) ? object.getObjectName() : getString(R.string.node_unknown)) + ": " + alarm.getMessage());
-		}
-		if (alarmBrowser != null)
-		{
-			alarmBrowser.runOnUiThread(new Runnable()
-			{
-				public void run()
-				{
-					alarmBrowser.refreshList();
-				}
-			});
+			showAlarmNotification(NOTIFY_ALARM, alarm.getCurrentSeverity(), ((object != null) ? object.getObjectName() : getString(R.string.node_unknown)) + ": " + alarm.getMessage());
+			refreshAlarmBrowser();
 		}
 	}
 		
@@ -315,21 +389,8 @@ public class ClientConnectorService extends Service implements SessionListener
 			if (alarms != null)
 				alarms.remove(id);
 			if (lastAlarmIdNotified == id)
-			{
 				hideNotification(NOTIFY_ALARM);
-				lastAlarmIdNotified = -1;
-			}
-		}
-
-		if (alarmBrowser != null)
-		{
-			alarmBrowser.runOnUiThread(new Runnable()
-			{
-				public void run()
-				{
-					alarmBrowser.refreshList();
-				}
-			});
+			refreshAlarmBrowser();
 		}
 	}
 	
@@ -385,34 +446,50 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			if (unknownAlarm != null && unknownAlarm.getSourceObjectId() == object.getObjectId())	// Update <Unknown> notification
 			{
-				showNotification(NOTIFY_ALARM, unknownAlarm.getCurrentSeverity(), object.getObjectName() + ": " + unknownAlarm.getMessage());
+				showAlarmNotification(NOTIFY_ALARM, unknownAlarm.getCurrentSeverity(), object.getObjectName() + ": " + unknownAlarm.getMessage());
 				unknownAlarm = null;
 			}
-			if (this.alarmBrowser != null)
-			{
-				alarmBrowser.runOnUiThread(new Runnable()
-				{
-					public void run()
-					{
-						alarmBrowser.refreshList();
-					}
-				});
-			}
-			if (this.nodeBrowser != null)
-			{
-				nodeBrowser.runOnUiThread(new Runnable()
-				{
-					public void run()
-					{
-						nodeBrowser.refreshList();
-					}
-				});
-			}
+			refreshAlarmBrowser();
+			refreshNodeBrowser();
 		}
 	}
 
 	/**
-	 * @param object
+	 * Refresh the alarm browser activity
+	 */
+	private void refreshAlarmBrowser()
+	{
+		if (alarmBrowser != null)
+		{
+			alarmBrowser.runOnUiThread(new Runnable()
+			{
+				public void run()
+				{
+					alarmBrowser.refreshList();
+				}
+			});
+		}
+	}
+
+	/**
+	 * Refresh the node browser activity
+	 */
+	private void refreshNodeBrowser()
+	{
+		if (nodeBrowser != null)
+		{
+			nodeBrowser.runOnUiThread(new Runnable()
+			{
+				public void run()
+				{
+					nodeBrowser.refreshList();
+				}
+			});
+		}
+	}
+
+	/**
+	 * Process graph update event
 	 */
 	private void processGraphUpdate()
 	{
@@ -675,6 +752,10 @@ public class ClientConnectorService extends Service implements SessionListener
 		this.connectionStatus = connectionStatus;
 		switch (connectionStatus)
 		{
+			case CS_NOCONNECTION:
+				connectionStatusText = getString(R.string.notify_no_connection);
+				connectionStatusColor = r.getColor(R.color.notify_no_connection);
+				break;
 			case CS_INPROGRESS:
 				connectionStatusText = getString(R.string.notify_connecting);
 				connectionStatusColor = r.getColor(R.color.notify_connecting);

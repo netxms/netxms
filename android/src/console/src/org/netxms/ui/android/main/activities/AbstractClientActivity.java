@@ -64,8 +64,9 @@ public abstract class AbstractClientActivity extends Activity implements Service
 				startActivity(new Intent(this, ConsolePreferences.class));
 				return true;
 			case R.id.disconnect:
-				if (!(service == null)) 
+				if (service != null) 
 				{
+					service.savePreferences();
 					service.clearNotifications();
 					service.stopSelf();
 					System.exit(0);
