@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -31,6 +32,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -50,9 +53,9 @@ import org.netxms.client.datacollection.ColumnDefinition;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.datacollection.Activator;
-import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditColumnDialog;
-import org.netxms.ui.eclipse.datacollection.dialogs.EditThresholdDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.TableColumnLabelProvider;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -243,17 +246,32 @@ public class TableColumns extends PropertyPage
 		table.setHeaderVisible(true);
 		
 		TableColumn column = new TableColumn(table, SWT.LEFT);
-		column.setText("Expression");
-		column.setWidth(200);
+		column.setText("Name");
+		column.setWidth(150);
 		
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText("Event");
+		column.setText("Display Name");
 		column.setWidth(150);
+		
+		column = new TableColumn(table, SWT.LEFT);
+		column.setText("Type");
+		column.setWidth(80);
+		
+		column = new TableColumn(table, SWT.LEFT);
+		column.setText("SNMP OID");
+		column.setWidth(200);
 		
 		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
 		
 		columnList.setContentProvider(new ArrayContentProvider());
-		columnList.setLabelProvider(new ThresholdLabelProvider());
+		columnList.setLabelProvider(new TableColumnLabelProvider());
+		columnList.setComparator(new ViewerComparator() {
+			@Override
+			public int compare(Viewer viewer, Object e1, Object e2)
+			{
+				return ((ColumnDefinition)e1).getName().compareToIgnoreCase(((ColumnDefinition)e2).getName());
+			}
+		});
 	}
 
 	/**
@@ -316,5 +334,95 @@ public class TableColumns extends PropertyPage
 		      columnList.setSelection(new StructuredSelection(column));
 			}
 		}
+	}
+	
+	/**
+	 * Apply changes
+	 * 
+	 * @param isApply true if update operation caused by "Apply" button
+	 */
+	protected void applyChanges(final boolean isApply)
+	{
+		if (isApply)
+			setValid(false);
+		
+		dci.setInstanceColumn(instanceColumn.getText());
+		dci.getColumns().clear();
+		dci.getColumns().addAll(columns);
+		
+		new ConsoleJob("Update table columns for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot update table columns";
+			}
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				dci.getOwner().modifyObject(dci);
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						((TableViewer)dci.getOwner().getUserData()).update(dci, null);
+					}
+				});
+			}
+
+			@Override
+			protected void jobFinalize()
+			{
+				if (isApply)
+				{
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
+						{
+							TableColumns.this.setValid(true);
+						}
+					});
+				}
+			}
+		}.start();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
+	 */
+	@Override
+	protected void performApply()
+	{
+		saveSettings();
+		applyChanges(true);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
+	 */
+	@Override
+	public boolean performOk()
+	{
+		saveSettings();
+		applyChanges(false);
+		return true;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performCancel()
+	 */
+	@Override
+	public boolean performCancel()
+	{
+		saveSettings();
+		return true;
+	}
+	
+	/**
+	 * Save settings
+	 */
+	private void saveSettings()
+	{
+		WidgetHelper.saveColumnSettings(columnList.getTable(), Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
 	}
 }

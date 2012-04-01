@@ -32,6 +32,8 @@ DCTableColumn::DCTableColumn(const DCTableColumn *src)
 	nx_strncpy(m_name, src->m_name, MAX_COLUMN_NAME);
 	m_dataType = src->m_dataType;
 	m_snmpOid = (src->m_snmpOid != NULL) ? new SNMP_ObjectId(src->m_snmpOid->getLength(), src->m_snmpOid->getValue()) : NULL;
+	m_scriptSource = NULL;
+	m_script = NULL;
 	setTransformationScript(src->m_scriptSource);
 }
 
@@ -45,6 +47,8 @@ DCTableColumn::DCTableColumn(CSCPMessage *msg, DWORD baseId)
 	msg->GetVariableStr(baseId, m_name, MAX_COLUMN_NAME);
 	m_dataType = (int)msg->GetVariableShort(baseId + 1);
 
+	m_scriptSource = NULL;
+	m_script = NULL;
 	if (msg->IsVariableExist(baseId + 2))
 	{
 		TCHAR *s = msg->GetVariableStr(baseId + 2);
@@ -87,6 +91,8 @@ DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
 	DBGetField(hResult, row, 0, m_name, MAX_COLUMN_NAME);
 	m_dataType = DBGetFieldLong(hResult, row, 1);
 
+	m_scriptSource = NULL;
+	m_script = NULL;
 	TCHAR *s = DBGetField(hResult, row, 2, NULL, 0);
 	setTransformationScript(s);
 	safe_free(s);

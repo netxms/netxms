@@ -190,6 +190,16 @@
              </instanceof>
           </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.TableColumns"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.TableColumns#20"
+              name="Columns">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DataCollectionTable">
+              </instanceof>
+           </enabledWhen>
+        </page>
    </extension>
 
   <extension
