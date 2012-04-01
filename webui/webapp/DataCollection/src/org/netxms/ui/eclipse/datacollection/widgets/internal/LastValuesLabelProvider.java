@@ -27,6 +27,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -91,6 +92,8 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 			case LastValuesWidget.COLUMN_DESCRIPTION:
 				return ((DciValue)element).getDescription();
 			case LastValuesWidget.COLUMN_VALUE:
+				if (((DciValue)element).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
+					return "<< TABLE >>";
 				return useMultipliers ? getValue((DciValue)element) : ((DciValue)element).getValue();
 			case LastValuesWidget.COLUMN_TIMESTAMP:
 				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((DciValue)element).getTimestamp());

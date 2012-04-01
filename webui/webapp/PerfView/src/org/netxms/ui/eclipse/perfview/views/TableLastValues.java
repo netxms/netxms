@@ -21,14 +21,21 @@ package org.netxms.ui.eclipse.perfview.views;
 import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -96,6 +103,7 @@ public class TableLastValues extends ViewPart
 
 		createActions();
 		contributeToActionBars();
+		createPopupMenu();
 		
 		refreshTable();
 	}
@@ -148,6 +156,40 @@ public class TableLastValues extends ViewPart
 		manager.add(actionRefresh);
 	}
 
+	/**
+	 * Create pop-up menu
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager.
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener() {
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu.
+		Menu menu = menuMgr.createContextMenu(viewer.getControl());
+		viewer.getControl().setMenu(menu);
+
+		// Register menu for extension.
+		getSite().registerContextMenu(menuMgr, viewer);
+	}
+
+
+	/**
+	 * Fill context menu
+	 * @param manager
+	 */
+	private void fillContextMenu(IMenuManager manager)
+	{
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
