@@ -55,6 +55,7 @@ LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_CPUCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_PhysicalDiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue);
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
 #endif
 
 
@@ -271,7 +272,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
 
 
 //
-// Standard agent's enumerations
+// Standard agent's lists
 //
 
 static NETXMS_SUBAGENT_LIST m_stdLists[] =
@@ -287,6 +288,20 @@ static NETXMS_SUBAGENT_LIST m_stdLists[] =
    { _T("Agent.SupportedParameters"), H_ParamList, NULL },
    { _T("Agent.SupportedPushParameters"), H_PushParamList, NULL },
    { _T("Agent.SupportedTables"), H_TableList, NULL }
+};
+
+
+
+
+//
+// Standard agent's tables
+//
+
+static NETXMS_SUBAGENT_TABLE m_stdTables[] =
+{
+#ifdef _WIN32
+   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES }
+#endif
 };
 
 
@@ -310,6 +325,12 @@ BOOL InitParameterList()
    if (m_pEnumList == NULL)
       return FALSE;
    memcpy(m_pEnumList, m_stdLists, sizeof(NETXMS_SUBAGENT_LIST) * m_iNumEnums);
+
+   m_iNumTables = sizeof(m_stdTables) / sizeof(NETXMS_SUBAGENT_TABLE);
+	m_pTableList = (NETXMS_SUBAGENT_TABLE *)malloc(sizeof(NETXMS_SUBAGENT_TABLE) * m_iNumTables);
+	if (m_pTableList == NULL)
+      return FALSE;
+	memcpy(m_pTableList, m_stdTables, sizeof(NETXMS_SUBAGENT_TABLE) * m_iNumTables);
 
    return TRUE;
 }

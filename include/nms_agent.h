@@ -318,7 +318,8 @@
 #define DCIDESC_DEPRECATED                        _T("<deprecated>")
 
 
-#define DCTDESC_SYSTEM_PROCESSES                  _T("List of all processes in a system")
+#define DCTDESC_FILESYSTEM_VOLUMES                _T("File system volumes")
+#define DCTDESC_SYSTEM_PROCESSES                  _T("Process table")
 
 
 //
