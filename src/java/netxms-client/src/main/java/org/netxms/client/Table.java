@@ -55,7 +55,7 @@ public class Table
 	public Table(final NXCPMessage msg)
 	{
 		title = msg.getVariableAsString(NXCPCodes.VID_TABLE_TITLE);
-		instanceColumn = msg.getVariableAsString(NXCPCodes.VID_INSTANCE);
+		instanceColumn = msg.getVariableAsString(NXCPCodes.VID_INSTANCE_COLUMN);
 		
 		final int columnCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_COLS);
 		columnNames = new ArrayList<String>(columnCount);

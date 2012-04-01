@@ -40,8 +40,8 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.ui.eclipse.perfview.actions.popup.dci.DciValue"
-            objectClass="org.netxms.client.datacollection.DciValue">
+            id="org.netxms.ui.eclipse.perfview.actions.popup.dci.SimpleDciValue"
+            objectClass="org.netxms.client.datacollection.SimpleDciValue">
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowPieChart"
                icon="icons/chart_pie.png"
@@ -61,6 +61,18 @@
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph"
                label="Line Chart"
                icon="icons/chart_line.png"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.perfview.actions.popup.dci.TableDciValue"
+            objectClass="org.netxms.client.datacollection.TableDciValue">
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues"
+               icon="icons/table.gif"
+               id="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues_TableDciValue"
+               label="Table Last Value"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -95,8 +107,9 @@
             objectClass="org.netxms.client.datacollection.DataCollectionTable">
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues"
-               id="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues"
-               label="Last values"
+               icon="icons/table.gif"
+               id="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues_DataCollectionTable"
+               label="Table Last Value"
                menubarPath="additions">
          </action>
       </objectContribution>

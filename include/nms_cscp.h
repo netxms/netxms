@@ -467,6 +467,7 @@ typedef struct
 #define CMD_UPDATE_ALARM_NOTE          0x0102
 #define CMD_GET_ALARM                  0x0103
 #define CMD_GET_TABLE_LAST_VALUES      0x0104
+#define CMD_GET_TABLE_DCI_DATA         0x0105
 
 
 //
@@ -884,6 +885,8 @@ typedef struct
 #define VID_NUM_COMMENTS            ((DWORD)409)
 #define VID_NOTE_ID                 ((DWORD)410)
 #define VID_DCOBJECT_TYPE           ((DWORD)411)
+#define VID_INSTANCE_COLUMN         ((DWORD)412)
+#define VID_DATA_COLUMN             ((DWORD)413)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

@@ -59,8 +59,16 @@ public abstract class ConsoleJob extends Job
 		super(name);
 		this.pluginId = (pluginId != null) ? pluginId : Activator.PLUGIN_ID;
 		this.jobFamily = jobFamily;
-		siteService = (wbPart != null) ? 
-					(IWorkbenchSiteProgressService)wbPart.getSite().getService(IWorkbenchSiteProgressService.class) : null;
+		try
+		{
+			IWorkbenchPart part = (wbPart != null) ? wbPart : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActivePart();
+			siteService = (part != null) ? 
+						(IWorkbenchSiteProgressService)wbPart.getSite().getService(IWorkbenchSiteProgressService.class) : null;
+		}
+		catch(NullPointerException e)
+		{
+			siteService = null;
+		}
 		setUser(true);
 	}
 

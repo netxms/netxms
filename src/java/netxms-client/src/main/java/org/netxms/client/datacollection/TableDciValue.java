@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,52 +21,17 @@ package org.netxms.client.datacollection;
 import org.netxms.base.NXCPMessage;
 
 /**
- * DCI information for performance tab in console
+ * Value of table DCI
  */
-public class PerfTabDci
+public class TableDciValue extends DciValue
 {
-	private long id;		// DCI ID
-	private int status;
-	private String description;
-	private String perfTabSettings;
-	
-	public PerfTabDci(NXCPMessage msg, long baseId)
-	{
-		id = msg.getVariableAsInt64(baseId);
-		description = msg.getVariableAsString(baseId + 1);
-		status = msg.getVariableAsInteger(baseId + 2);
-		perfTabSettings = msg.getVariableAsString(baseId + 3);
-	}
-
 	/**
-	 * @return the id
+	 * @param nodeId
+	 * @param msg
+	 * @param base
 	 */
-	public long getId()
+	protected TableDciValue(long nodeId, NXCPMessage msg, long base)
 	{
-		return id;
-	}
-
-	/**
-	 * @return the status
-	 */
-	public int getStatus()
-	{
-		return status;
-	}
-
-	/**
-	 * @return the description
-	 */
-	public String getDescription()
-	{
-		return description;
-	}
-
-	/**
-	 * @return the perfTabSettings
-	 */
-	public String getPerfTabSettings()
-	{
-		return perfTabSettings;
+		super(nodeId, msg, base);
 	}
 }

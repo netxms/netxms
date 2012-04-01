@@ -147,8 +147,9 @@ THREAD_RESULT THREAD_CALL ClientSession::ThreadStarter_##func(void *pArg) \
    return THREAD_OK; \
 }
 
-DEFINE_THREAD_STARTER(GetCollectedData)
-DEFINE_THREAD_STARTER(ClearDCIData)
+DEFINE_THREAD_STARTER(getCollectedData)
+DEFINE_THREAD_STARTER(getTableCollectedData)
+DEFINE_THREAD_STARTER(clearDCIData)
 DEFINE_THREAD_STARTER(QueryL2Topology)
 DEFINE_THREAD_STARTER(SendEventLog)
 DEFINE_THREAD_STARTER(SendSyslog)
@@ -794,7 +795,7 @@ void ClientSession::processingThread()
             generateEventCode(pMsg->GetId());
             break;
          case CMD_MODIFY_OBJECT:
-            ModifyObject(pMsg);
+            modifyObject(pMsg);
             break;
          case CMD_SET_OBJECT_MGMT_STATUS:
             changeObjectMgmtStatus(pMsg);
@@ -821,45 +822,48 @@ void ClientSession::processingThread()
             SetPassword(pMsg);
             break;
          case CMD_GET_NODE_DCI_LIST:
-            OpenNodeDCIList(pMsg);
+            openNodeDCIList(pMsg);
             break;
          case CMD_UNLOCK_NODE_DCI_LIST:
-            CloseNodeDCIList(pMsg);
+            closeNodeDCIList(pMsg);
             break;
          case CMD_CREATE_NEW_DCI:
          case CMD_MODIFY_NODE_DCI:
          case CMD_DELETE_NODE_DCI:
-            ModifyNodeDCI(pMsg);
+            modifyNodeDCI(pMsg);
             break;
          case CMD_SET_DCI_STATUS:
-            ChangeDCIStatus(pMsg);
+            changeDCIStatus(pMsg);
             break;
          case CMD_COPY_DCI:
-            CopyDCI(pMsg);
+            copyDCI(pMsg);
             break;
          case CMD_APPLY_TEMPLATE:
-            ApplyTemplate(pMsg);
+            applyTemplate(pMsg);
             break;
          case CMD_GET_DCI_DATA:
-            CALL_IN_NEW_THREAD(GetCollectedData, pMsg);
+            CALL_IN_NEW_THREAD(getCollectedData, pMsg);
+            break;
+         case CMD_GET_TABLE_DCI_DATA:
+            CALL_IN_NEW_THREAD(getTableCollectedData, pMsg);
             break;
 			case CMD_CLEAR_DCI_DATA:
-				CALL_IN_NEW_THREAD(ClearDCIData, pMsg);
+				CALL_IN_NEW_THREAD(clearDCIData, pMsg);
 				break;
          case CMD_OPEN_EPP:
-            OpenEPP(pMsg->GetId());
+            openEPP(pMsg->GetId());
             break;
          case CMD_CLOSE_EPP:
-            CloseEPP(pMsg->GetId());
+            closeEPP(pMsg->GetId());
             break;
          case CMD_SAVE_EPP:
-            SaveEPP(pMsg);
+            saveEPP(pMsg);
             break;
          case CMD_EPP_RECORD:
-            ProcessEPPRecord(pMsg);
+            processEPPRecord(pMsg);
             break;
          case CMD_GET_MIB_TIMESTAMP:
-            SendMIBTimestamp(pMsg->GetId());
+            sendMIBTimestamp(pMsg->GetId());
             break;
          case CMD_GET_MIB:
             CALL_IN_NEW_THREAD(sendMib, pMsg);
@@ -916,7 +920,7 @@ void ClientSession::processingThread()
             deleteObject(pMsg);
             break;
          case CMD_POLL_NODE:
-            ForcedNodePoll(pMsg);
+            forcedNodePoll(pMsg);
             break;
          case CMD_TRAP:
             OnTrap(pMsg);
@@ -991,10 +995,10 @@ void ClientSession::processingThread()
             setupEncryption(pMsg->GetId());
             break;
          case CMD_GET_AGENT_CONFIG:
-            GetAgentConfig(pMsg);
+            getAgentConfig(pMsg);
             break;
          case CMD_UPDATE_AGENT_CONFIG:
-            UpdateAgentConfig(pMsg);
+            updateAgentConfig(pMsg);
             break;
          case CMD_EXECUTE_ACTION:
             CALL_IN_NEW_THREAD(executeAction, pMsg);
@@ -1099,7 +1103,7 @@ void ClientSession::processingThread()
             SetAddrList(pMsg);
             break;
          case CMD_RESET_COMPONENT:
-            ResetComponent(pMsg);
+            resetComponent(pMsg);
             break;
          case CMD_EXPORT_CONFIGURATION:
             exportConfiguration(pMsg);
@@ -1384,6 +1388,42 @@ void ClientSession::sendMessage(CSCPMessage *msg)
       bResult = (SendEx(m_hSocket, (const char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->dwSize));
    }
    free(pRawMsg);
+
+   if (!bResult)
+   {
+      closesocket(m_hSocket);
+      m_hSocket = -1;
+   }
+}
+
+
+//
+// Send raw message to client
+//
+
+void ClientSession::sendRawMessage(CSCP_MESSAGE *msg)
+{
+   TCHAR szBuffer[128];
+   BOOL bResult;
+
+	DebugPrintf(6, _T("Sending raw message %s"), NXCPMessageCodeName(ntohs(msg->wCode), szBuffer));
+   if (m_pCtx != NULL)
+   {
+      CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(m_pCtx, msg);
+      if (pEnMsg != NULL)
+      {
+         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));
+         free(pEnMsg);
+      }
+      else
+      {
+         bResult = FALSE;
+      }
+   }
+   else
+   {
+      bResult = (SendEx(m_hSocket, (const char *)msg, ntohl(msg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(msg->dwSize));
+   }
 
    if (!bResult)
    {
@@ -2372,7 +2412,7 @@ void ClientSession::notify(DWORD dwCode, DWORD dwData)
 // Modify object
 //
 
-void ClientSession::ModifyObject(CSCPMessage *pRequest)
+void ClientSession::modifyObject(CSCPMessage *pRequest)
 {
    DWORD dwObjectId, dwResult = RCC_SUCCESS;
    NetObj *pObject;
@@ -2787,7 +2827,7 @@ void ClientSession::SetPassword(CSCPMessage *pRequest)
 // Send node's DCIs to client and lock data collection settings
 //
 
-void ClientSession::OpenNodeDCIList(CSCPMessage *pRequest)
+void ClientSession::openNodeDCIList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwObjectId;
@@ -2855,7 +2895,7 @@ void ClientSession::OpenNodeDCIList(CSCPMessage *pRequest)
 // Unlock node's data collection settings
 //
 
-void ClientSession::CloseNodeDCIList(CSCPMessage *pRequest)
+void ClientSession::closeNodeDCIList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwObjectId;
@@ -2926,7 +2966,7 @@ void ClientSession::CloseNodeDCIList(CSCPMessage *pRequest)
 // Create, modify, or delete data collection item for node
 //
 
-void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
+void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwObjectId;
@@ -3055,7 +3095,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
 // Change status for one or more DCIs
 //
 
-void ClientSession::ChangeDCIStatus(CSCPMessage *pRequest)
+void ClientSession::changeDCIStatus(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
@@ -3118,7 +3158,7 @@ void ClientSession::ChangeDCIStatus(CSCPMessage *pRequest)
 // Clear all collected data for DCI
 //
 
-void ClientSession::ClearDCIData(CSCPMessage *pRequest)
+void ClientSession::clearDCIData(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
@@ -3174,7 +3214,7 @@ void ClientSession::ClearDCIData(CSCPMessage *pRequest)
 // Copy or move DCI from one node or template to another
 //
 
-void ClientSession::CopyDCI(CSCPMessage *pRequest)
+void ClientSession::copyDCI(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pSource, *pDestination;
@@ -3361,169 +3401,277 @@ void ClientSession::sendDCIThresholds(CSCPMessage *request)
 
 
 //
+// Prepare statement for reading data from idata table
+//
+
+static DB_STATEMENT PrepareIDataSelect(DB_HANDLE hdb, DWORD nodeId, DWORD maxRows, const TCHAR *condition)
+{
+	TCHAR query[512];
+
+	switch(g_nDBSyntax)
+	{
+		case DB_SYNTAX_MSSQL:
+			_sntprintf(query, 512, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata_%d WHERE item_id=?%s ORDER BY idata_timestamp DESC"),
+			           (int)maxRows, (int)nodeId, condition);
+			break;
+		case DB_SYNTAX_ORACLE:
+			_sntprintf(query, 512, _T("SELECT * FROM (SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=?%s ORDER BY idata_timestamp DESC) WHERE ROWNUM<=%d"),
+						  (int)nodeId, condition, (int)maxRows);
+			break;
+		case DB_SYNTAX_MYSQL:
+		case DB_SYNTAX_PGSQL:
+		case DB_SYNTAX_SQLITE:
+			_sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=?%s ORDER BY idata_timestamp DESC LIMIT %d"),
+						  (int)nodeId, condition, (int)maxRows);
+			break;
+		default:
+			DbgPrintf(1, _T(">>> INTERNAL ERROR: unsupported database in PrepareTDataSelect"));
+			return NULL;	// Unsupported database
+	}
+	return DBPrepare(hdb, query);
+}
+
+
+//
+// Prepare statement for reading data from tdata table
+//
+
+static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, DWORD nodeId, DWORD maxRows, const TCHAR *condition)
+{
+	TCHAR query[512];
+
+	switch(g_nDBSyntax)
+	{
+		case DB_SYNTAX_MSSQL:
+			_sntprintf(query, 512, _T("SELECT TOP %d b.tdata_timestamp, b.tdata_value FROM tdata_%d a, tdata_%d b")
+			                       _T(" WHERE a.item_id=? AND a.tdata_column=? AND a.tdata_value=? AND a.item_id=b.item_id AND a.tdata_row=b.tdata_row AND b.tdata_column=?")
+										  _T("%s AND a.tdata_timestamp=b.tdata_timestamp ORDER BY b.tdata_timestamp DESC"),
+			           (int)maxRows, (int)nodeId, (int)nodeId, condition);
+			break;
+		case DB_SYNTAX_ORACLE:
+			_sntprintf(query, 512, _T("SELECT * FROM (SELECT b.tdata_timestamp, b.tdata_value FROM tdata_%d a, tdata_%d b")
+			                       _T(" WHERE a.item_id=? AND a.tdata_column=? AND a.tdata_value=? AND a.item_id=b.item_id AND a.tdata_row=b.tdata_row AND b.tdata_column=?")
+										  _T("%s AND a.tdata_timestamp=b.tdata_timestamp ORDER BY b.tdata_timestamp DESC) WHERE ROWNUM<=%d"),
+			           (int)nodeId, (int)nodeId, condition, (int)maxRows);
+			break;
+		case DB_SYNTAX_MYSQL:
+		case DB_SYNTAX_PGSQL:
+		case DB_SYNTAX_SQLITE:
+			_sntprintf(query, 512, _T("SELECT b.tdata_timestamp, b.tdata_value FROM tdata_%d a, tdata_%d b")
+			                       _T(" WHERE a.item_id=? AND a.tdata_column=? AND a.tdata_value=? AND a.item_id=b.item_id AND a.tdata_row=b.tdata_row AND b.tdata_column=?")
+										  _T("%s AND a.tdata_timestamp=b.tdata_timestamp ORDER BY b.tdata_timestamp DESC LIMIT %d"),
+			           (int)nodeId, (int)nodeId, condition, (int)maxRows);
+			break;
+		default:
+			DbgPrintf(1, _T(">>> INTERNAL ERROR: unsupported database in PrepareIDataSelect"));
+			return NULL;	// Unsupported database
+	}
+	return NULL;
+}
+
+
+//
+// Get collected data for table or simple DCI
+//
+
+bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *response, Node *node, int dciType)
+{
+	// Find DCI object
+	DCObject *dci = node->getDCObjectById(request->GetVariableLong(VID_DCI_ID));
+	if (dci == NULL)
+	{
+		response->SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
+		return false;
+	}
+
+	// DCI type in request should match actual DCI type
+	if (dci->getType() != dciType)
+	{
+		response->SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+		return false;
+	}
+
+	// Check that all required data present in message
+	if ((dciType == DCO_TYPE_TABLE) && (!request->IsVariableExist(VID_DATA_COLUMN) || !request->IsVariableExist(VID_INSTANCE)))
+	{
+		response->SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
+		return false;
+	}
+
+	// Get request parameters
+	DWORD maxRows = request->GetVariableLong(VID_MAX_ROWS);
+	DWORD timeFrom = request->GetVariableLong(VID_TIME_FROM);
+	DWORD timeTo = request->GetVariableLong(VID_TIME_TO);
+
+	if ((maxRows == 0) || (maxRows > MAX_DCI_DATA_RECORDS))
+		maxRows = MAX_DCI_DATA_RECORDS;
+
+	TCHAR condition[256] = _T("");
+	if (timeFrom != 0)
+		_tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND a.tdata_timestamp>=?") : _T(" AND idata_timestamp>=?"));
+	if (timeTo != 0)
+		_tcscat(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND a.tdata_timestamp<=?") : _T(" AND idata_timestamp<=?"));
+
+	DCI_DATA_HEADER *pData = NULL;
+	DCI_DATA_ROW *pCurr;
+
+	bool success = false;
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_STATEMENT hStmt;
+	switch(dciType)
+	{
+		case DCO_TYPE_ITEM:
+			hStmt = PrepareIDataSelect(hdb, node->Id(), maxRows, condition);
+			break;
+		case DCO_TYPE_TABLE:
+			hStmt = PrepareTDataSelect(hdb, node->Id(), maxRows, condition);
+			break;
+		default:
+			hStmt = NULL;
+			break;
+	}
+
+	if (hStmt != NULL)
+	{
+		int pos = 1;
+		DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, dci->getId());
+		if (dciType == DCO_TYPE_TABLE)
+		{
+			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, ((DCTable *)dci)->getInstanceColumnId());
+			DBBind(hStmt, pos++, DB_SQLTYPE_VARCHAR, request->GetVariableStr(VID_INSTANCE), DB_BIND_DYNAMIC);
+			
+			TCHAR dataColumn[MAX_COLUMN_NAME];
+			request->GetVariableStr(VID_DATA_COLUMN, dataColumn, MAX_COLUMN_NAME);
+			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, DCTable::columnIdFromName(dataColumn));
+		}
+		if (timeFrom != 0)
+			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, timeFrom);
+		if (timeTo != 0)
+			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, timeTo);
+
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+		   static DWORD m_dwRowSize[] = { 8, 8, 12, 12, 516, 12 };
+#if !defined(UNICODE) || defined(UNICODE_UCS4)
+			TCHAR szBuffer[MAX_DCI_STRING_VALUE];
+#endif
+
+			// Send CMD_REQUEST_COMPLETED message
+			response->SetVariable(VID_RCC, RCC_SUCCESS);
+			if (dciType == DCO_TYPE_ITEM)
+				((DCItem *)dci)->fillMessageWithThresholds(response);
+			sendMessage(response);
+
+			DWORD numRows = (DWORD)DBGetNumRows(hResult);
+
+			int dataType;
+			switch(dciType)
+			{
+				case DCO_TYPE_ITEM:
+					dataType = ((DCItem *)dci)->getDataType();
+					break;
+				case DCO_TYPE_TABLE:
+					dataType = DCI_DT_STRING;
+					break;
+				default:
+					dataType = DCI_DT_STRING;
+					break;
+			}
+
+			// Allocate memory for data and prepare data header
+			pData = (DCI_DATA_HEADER *)malloc(numRows * m_dwRowSize[dataType] + sizeof(DCI_DATA_HEADER));
+			pData->dwDataType = htonl((DWORD)dataType);
+			pData->dwItemId = htonl(dci->getId());
+
+			// Fill memory block with records
+			pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
+			for(DWORD i = 0; i < numRows; i++)
+			{
+				pCurr->dwTimeStamp = htonl(DBGetFieldULong(hResult, i, 0));
+				switch(dataType)
+				{
+					case DCI_DT_INT:
+					case DCI_DT_UINT:
+						pCurr->value.dwInteger = htonl(DBGetFieldULong(hResult, i, 1));
+						break;
+					case DCI_DT_INT64:
+					case DCI_DT_UINT64:
+						pCurr->value.qwInt64 = htonq(DBGetFieldUInt64(hResult, i, 1));
+						break;
+					case DCI_DT_FLOAT:
+						pCurr->value.dFloat = htond(DBGetFieldDouble(hResult, i, 1));
+						break;
+					case DCI_DT_STRING:
+#ifdef UNICODE
+#ifdef UNICODE_UCS4
+						DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
+						ucs4_to_ucs2(szBuffer, -1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
+#else
+						DBGetField(hResult, i, 1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
+#endif                        
+#else
+						DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
+						mb_to_ucs2(szBuffer, -1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
+#endif
+						SwapWideString(pCurr->value.szString);
+						break;
+				}
+				pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + m_dwRowSize[dataType]);
+			}
+			DBFreeResult(hResult);
+			pData->dwNumRows = htonl(numRows);
+
+			// Prepare and send raw message with fetched data
+			CSCP_MESSAGE *msg = 
+				CreateRawNXCPMessage(CMD_DCI_DATA, request->GetId(), 0,
+											numRows * m_dwRowSize[dataType] + sizeof(DCI_DATA_HEADER),
+											pData, NULL);
+			free(pData);
+			sendRawMessage(msg);
+			free(msg);
+			success = true;
+		}
+		else
+		{
+			response->SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
+		DBFreeStatement(hStmt);
+	}
+	else
+	{
+		response->SetVariable(VID_RCC, RCC_DB_FAILURE);
+	}
+	DBConnectionPoolReleaseConnection(hdb);
+	return success;
+}
+
+
+//
 // Get collected data
 //
 
-void ClientSession::GetCollectedData(CSCPMessage *pRequest)
+void ClientSession::getCollectedData(CSCPMessage *request)
 {
    CSCPMessage msg;
-   DWORD dwObjectId;
-   NetObj *pObject;
-   BOOL bSuccess = FALSE;
-   static DWORD m_dwRowSize[] = { 8, 8, 12, 12, 516, 12 };
-#if !defined(UNICODE) || defined(UNICODE_UCS4)
-   TCHAR szBuffer[MAX_DCI_STRING_VALUE];
-#endif
+	bool success = false;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(pRequest->GetId());
+   msg.SetId(request->GetId());
 
-   // Get node id and check object class and access rights
-   dwObjectId = pRequest->GetVariableLong(VID_OBJECT_ID);
-   pObject = FindObjectById(dwObjectId);
-   if (pObject != NULL)
+   Node *node = (Node *)FindObjectById(request->GetVariableLong(VID_OBJECT_ID), OBJECT_NODE);
+   if (node != NULL)
    {
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (node->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-			if (pObject->Type() == OBJECT_NODE)
+			if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
 			{
-				if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
-				{
-					DB_RESULT hResult;
-					DWORD i, dwItemId, dwMaxRows, dwTimeFrom, dwTimeTo;
-					DWORD dwNumRows = 0;
-					TCHAR szQuery[512], szCond[256];
-					int iPos = 0, iType;
-					DCI_DATA_HEADER *pData = NULL;
-					DCI_DATA_ROW *pCurr;
-
-					// Get request parameters
-					dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
-					dwMaxRows = pRequest->GetVariableLong(VID_MAX_ROWS);
-					dwTimeFrom = pRequest->GetVariableLong(VID_TIME_FROM);
-					dwTimeTo = pRequest->GetVariableLong(VID_TIME_TO);
-
-					DCObject *dci = ((Node *)pObject)->getDCObjectById(dwItemId);
-					if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
-					{
-						if ((dwMaxRows == 0) || (dwMaxRows > MAX_DCI_DATA_RECORDS))
-							dwMaxRows = MAX_DCI_DATA_RECORDS;
-
-						szCond[0] = 0;
-						if (dwTimeFrom != 0)
-						{
-							_sntprintf(szCond, 256, _T(" AND idata_timestamp>=%d"), dwTimeFrom);
-							iPos = (int)_tcslen(szCond);
-						}
-						if (dwTimeTo != 0)
-						{
-							_sntprintf(&szCond[iPos], 256 - iPos, _T(" AND idata_timestamp<=%d"), dwTimeTo);
-						}
-
-						// Get item's data type to determine actual row size
-						iType = ((DCItem *)dci)->getDataType();
-						// Create database-dependent query for fetching N rows
-						switch(g_nDBSyntax)
-						{
-							case DB_SYNTAX_MSSQL:
-								_sntprintf(szQuery, 512, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC"),
-											 dwMaxRows, dwObjectId, dwItemId, szCond);
-								break;
-							case DB_SYNTAX_ORACLE:
-								_sntprintf(szQuery, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s AND ROWNUM <= %d ORDER BY idata_timestamp DESC"),
-											 dwObjectId, dwItemId, szCond, dwMaxRows);
-								break;
-							case DB_SYNTAX_MYSQL:
-							case DB_SYNTAX_PGSQL:
-							case DB_SYNTAX_SQLITE:
-								_sntprintf(szQuery, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %d"),
-											 dwObjectId, dwItemId, szCond, dwMaxRows);
-								break;
-							default:
-								_sntprintf(szQuery, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %d"),
-											 dwObjectId, dwItemId, szCond, dwMaxRows);
-								break;
-						}
-						hResult = DBSelect(g_hCoreDB, szQuery);
-						if (hResult != NULL)
-						{
-							// Send CMD_REQUEST_COMPLETED message
-							msg.SetVariable(VID_RCC, RCC_SUCCESS);
-							((DCItem *)dci)->fillMessageWithThresholds(&msg);
-							sendMessage(&msg);
-
-							dwNumRows = DBGetNumRows(hResult);
-
-							// Allocate memory for data and prepare data header
-							pData = (DCI_DATA_HEADER *)malloc(dwNumRows * m_dwRowSize[iType] + sizeof(DCI_DATA_HEADER));
-							pData->dwDataType = htonl((DWORD)iType);
-							pData->dwItemId = htonl(dwItemId);
-
-							// Fill memory block with records
-							pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
-							for(i = 0; i < dwNumRows; i++)
-							{
-								pCurr->dwTimeStamp = htonl(DBGetFieldULong(hResult, i, 0));
-								switch(iType)
-								{
-									case DCI_DT_INT:
-									case DCI_DT_UINT:
-										pCurr->value.dwInteger = htonl(DBGetFieldULong(hResult, i, 1));
-										break;
-									case DCI_DT_INT64:
-									case DCI_DT_UINT64:
-										pCurr->value.qwInt64 = htonq(DBGetFieldUInt64(hResult, i, 1));
-										break;
-									case DCI_DT_FLOAT:
-										pCurr->value.dFloat = htond(DBGetFieldDouble(hResult, i, 1));
-										break;
-									case DCI_DT_STRING:
-#ifdef UNICODE
-#ifdef UNICODE_UCS4
-										DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
-										ucs4_to_ucs2(szBuffer, -1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
-#else
-										DBGetField(hResult, i, 1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
-#endif                        
-#else
-										DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
-										mb_to_ucs2(szBuffer, -1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
-#endif
-										SwapWideString(pCurr->value.szString);
-										break;
-								}
-								pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + m_dwRowSize[iType]);
-							}
-							DBFreeResult(hResult);
-							pData->dwNumRows = htonl(dwNumRows);
-
-							// Prepare and send raw message with fetched data
-							m_pSendQueue->Put(
-								CreateRawNXCPMessage(CMD_DCI_DATA, pRequest->GetId(), 0,
-															dwNumRows * m_dwRowSize[iType] + sizeof(DCI_DATA_HEADER),
-															pData, NULL));
-							free(pData);
-							bSuccess = TRUE;
-						}
-						else
-						{
-							msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-						}
-					}
-					else
-					{
-						msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
-					}
-				}
-				else
-				{
-					msg.SetVariable(VID_RCC, RCC_DB_CONNECTION_LOST);
-				}
+				success = getCollectedDataFromDB(request, &msg, node, DCO_TYPE_ITEM);
 			}
 			else
 			{
-	         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+				msg.SetVariable(VID_RCC, RCC_DB_CONNECTION_LOST);
 			}
       }
       else
@@ -3537,7 +3685,49 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
    }
 
    // Send response
-   if (!bSuccess)
+   if (!success)
+      sendMessage(&msg);
+}
+
+
+//
+// Get collected data for table DCI
+//
+
+void ClientSession::getTableCollectedData(CSCPMessage *request)
+{
+   CSCPMessage msg;
+	bool success = false;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   Node *node = (Node *)FindObjectById(request->GetVariableLong(VID_OBJECT_ID), OBJECT_NODE);
+   if (node != NULL)
+   {
+      if (node->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+			if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
+			{
+				success = getCollectedDataFromDB(request, &msg, node, DCO_TYPE_TABLE);
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_DB_CONNECTION_LOST);
+			}
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+	if (!success)
       sendMessage(&msg);
 }
 
@@ -3632,7 +3822,7 @@ void ClientSession::getTableLastValues(CSCPMessage *pRequest)
 // Open event processing policy
 //
 
-void ClientSession::OpenEPP(DWORD dwRqId)
+void ClientSession::openEPP(DWORD dwRqId)
 {
    CSCPMessage msg;
    TCHAR szBuffer[256];
@@ -3676,7 +3866,7 @@ void ClientSession::OpenEPP(DWORD dwRqId)
 // Close event processing policy
 //
 
-void ClientSession::CloseEPP(DWORD dwRqId)
+void ClientSession::closeEPP(DWORD dwRqId)
 {
    CSCPMessage msg;
 
@@ -3708,7 +3898,7 @@ void ClientSession::CloseEPP(DWORD dwRqId)
 // Save event processing policy
 //
 
-void ClientSession::SaveEPP(CSCPMessage *pRequest)
+void ClientSession::saveEPP(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 
@@ -3756,7 +3946,7 @@ void ClientSession::SaveEPP(CSCPMessage *pRequest)
 // Process EPP rule received from client
 //
 
-void ClientSession::ProcessEPPRecord(CSCPMessage *pRequest)
+void ClientSession::processEPPRecord(CSCPMessage *pRequest)
 {
    if (!(m_dwFlags & CSF_EPP_LOCKED))
    {
@@ -3816,7 +4006,7 @@ void ClientSession::sendMib(CSCPMessage *request)
 // Send timestamp of compiled MIB file to client
 //
 
-void ClientSession::SendMIBTimestamp(DWORD dwRqId)
+void ClientSession::sendMIBTimestamp(DWORD dwRqId)
 {
    CSCPMessage msg;
    TCHAR szBuffer[MAX_PATH];
@@ -4850,7 +5040,7 @@ void ClientSession::SendContainerCategories(DWORD dwRqId)
 // Perform a forced node poll
 //
 
-void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
+void ClientSession::forcedNodePoll(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    POLLER_START_DATA *pData;
@@ -5782,7 +5972,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
 // Apply data collection template to node
 //
 
-void ClientSession::ApplyTemplate(CSCPMessage *pRequest)
+void ClientSession::applyTemplate(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pSource, *pDestination;
@@ -6279,7 +6469,7 @@ void ClientSession::setupEncryption(DWORD dwRqId)
 // Get agent's configuration file
 //
 
-void ClientSession::GetAgentConfig(CSCPMessage *pRequest)
+void ClientSession::getAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
@@ -6349,7 +6539,7 @@ void ClientSession::GetAgentConfig(CSCPMessage *pRequest)
 // Update agent's configuration file
 //
 
-void ClientSession::UpdateAgentConfig(CSCPMessage *pRequest)
+void ClientSession::updateAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
@@ -8493,7 +8683,7 @@ void ClientSession::SetAddrList(CSCPMessage *pRequest)
 // Reset server component
 //
 
-void ClientSession::ResetComponent(CSCPMessage *pRequest)
+void ClientSession::resetComponent(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwCode;

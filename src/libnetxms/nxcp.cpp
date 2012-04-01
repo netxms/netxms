@@ -303,10 +303,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_GET_NODE_COMPONENTS"),
 		_T("CMD_UPDATE_ALARM_NOTE"),
 		_T("CMD_GET_ALARM"),
-		_T("CMD_GET_TABLE_LAST_VALUES")
+		_T("CMD_GET_TABLE_LAST_VALUES"),
+		_T("CMD_GET_TABLE_DCI_DATA")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_TABLE_LAST_VALUES))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_TABLE_DCI_DATA))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

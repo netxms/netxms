@@ -346,38 +346,43 @@ BOOL Template::DeleteFromDB()
 
 void Template::loadItemsFromDB()
 {
-   TCHAR szQuery[512];
-   DB_RESULT hResult;
-
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, 
 	           _T("SELECT item_id,name,source,datatype,polling_interval,retention_time,")
               _T("status,delta_calculation,transformation,template_id,description,")
               _T("instance,template_item_id,flags,resource_id,")
               _T("proxy_node,base_units,unit_multiplier,custom_units_name,")
-	           _T("perftab_settings,system_tag,snmp_port,snmp_raw_value_type FROM items WHERE node_id=%d"), m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+	           _T("perftab_settings,system_tag,snmp_port,snmp_raw_value_type FROM items WHERE node_id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			int count = DBGetNumRows(hResult);
+			for(int i = 0; i < count; i++)
+				m_dcObjects->add(new DCItem(hResult, i, this));
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
 
-   if (hResult != 0)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-         m_dcObjects->add(new DCItem(hResult, i, this));
-      DBFreeResult(hResult);
-   }
-
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
+	hStmt = DBPrepare(g_hCoreDB, 
 	           _T("SELECT item_id,template_id,template_item_id,name,instance_column,")
 				  _T("description,flags,source,snmp_port,polling_interval,retention_time,")
-              _T("status,system_tag,resource_id,proxy_node,perftab_settings FROM dc_tables WHERE node_id=%d"), (int)m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-
-   if (hResult != 0)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-         m_dcObjects->add(new DCTable(hResult, i, this));
-      DBFreeResult(hResult);
-   }
+              _T("status,system_tag,resource_id,proxy_node,perftab_settings FROM dc_tables WHERE node_id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			int count = DBGetNumRows(hResult);
+			for(int i = 0; i < count; i++)
+				m_dcObjects->add(new DCTable(hResult, i, this));
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
 }
 
 

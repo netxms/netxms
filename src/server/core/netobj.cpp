@@ -699,25 +699,26 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
 
 BOOL NetObj::loadACLFromDB()
 {
-   TCHAR szQuery[256];
-   DB_RESULT hResult;
    BOOL bSuccess = FALSE;
 
-   // Load access list
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT user_id,access_rights FROM acl WHERE object_id=%d"), m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult != NULL)
-   {
-      int i, iNumRows;
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT user_id,access_rights FROM acl WHERE object_id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			int i, iNumRows;
 
-      iNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < iNumRows; i++)
-         m_pAccessList->AddElement(DBGetFieldULong(hResult, i, 0), 
-                                   DBGetFieldULong(hResult, i, 1));
-      DBFreeResult(hResult);
-      bSuccess = TRUE;
-   }
-
+			iNumRows = DBGetNumRows(hResult);
+			for(i = 0; i < iNumRows; i++)
+				m_pAccessList->AddElement(DBGetFieldULong(hResult, i, 0), 
+												  DBGetFieldULong(hResult, i, 1));
+			DBFreeResult(hResult);
+			bSuccess = TRUE;
+		}
+		DBFreeStatement(hStmt);
+	}
    return bSuccess;
 }
 

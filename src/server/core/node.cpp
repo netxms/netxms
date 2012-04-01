@@ -189,8 +189,6 @@ Node::~Node()
 
 BOOL Node::CreateFromDB(DWORD dwId)
 {
-   TCHAR query[1024];
-   DB_RESULT hResult;
    int i, iNumRows;
    DWORD dwSubnetId;
    NetObj *pObject;
@@ -217,7 +215,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 		return FALSE;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
-	hResult = DBSelectPrepared(hStmt);
+	DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult == NULL)
 	{
 		DBFreeStatement(hStmt);
@@ -278,10 +276,17 @@ BOOL Node::CreateFromDB(DWORD dwId)
    if (!m_bIsDeleted)
    {
       // Link node to subnets
-      _sntprintf(query, 1024, _T("SELECT subnet_id FROM nsmap WHERE node_id=%d"), dwId);
-      hResult = DBSelect(g_hCoreDB, query);
+		hStmt = DBPrepare(g_hCoreDB, _T("SELECT subnet_id FROM nsmap WHERE node_id=?"));
+		if (hStmt == NULL)
+			return FALSE;
+
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+      hResult = DBSelectPrepared(hStmt);
       if (hResult == NULL)
+		{
+			DBFreeStatement(hStmt);
          return FALSE;     // Query failed
+		}
 
       iNumRows = DBGetNumRows(hResult);
       for(i = 0; i < iNumRows; i++)
@@ -306,7 +311,9 @@ BOOL Node::CreateFromDB(DWORD dwId)
       }
 
       DBFreeResult(hResult);
-      loadItemsFromDB();
+		DBFreeStatement(hStmt);
+
+		loadItemsFromDB();
       loadACLFromDB();
 
       // Walk through all items in the node and load appropriate thresholds
@@ -3250,11 +3257,20 @@ DWORD Node::getLastValues(CSCPMessage *msg)
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-		if ((object->getType() == DCO_TYPE_ITEM) && _tcsnicmp(object->getDescription(), _T("@system."), 8))
+		if (_tcsnicmp(object->getDescription(), _T("@system."), 8))
 		{
-			((DCItem *)object)->getLastValue(msg, dwId);
-			dwId += 50;
-			dwCount++;
+			if (object->getType() == DCO_TYPE_ITEM)
+			{
+				((DCItem *)object)->getLastValue(msg, dwId);
+				dwId += 50;
+				dwCount++;
+			}
+			else if (object->getType() == DCO_TYPE_TABLE)
+			{
+				((DCTable *)object)->getLastValueSummary(msg, dwId);
+				dwId += 50;
+				dwCount++;
+			}
 		}
 	}
    msg->SetVariable(VID_NUM_ITEMS, dwCount);

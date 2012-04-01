@@ -288,6 +288,7 @@ public final class NXCPCodes
 	public static final int CMD_UPDATE_ALARM_NOTE        = 0x0102;
 	public static final int CMD_GET_ALARM                = 0x0103;
 	public static final int CMD_GET_TABLE_LAST_VALUES    = 0x0104;
+	public static final int CMD_GET_TABLE_DCI_DATA       = 0x0105;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
@@ -701,6 +702,8 @@ public final class NXCPCodes
 	public static final long VID_NUM_COMMENTS            = 409;
 	public static final long VID_NOTE_ID                 = 410;
 	public static final long VID_DCOBJECT_TYPE           = 411;
+	public static final long VID_INSTANCE_COLUMN         = 412;
+	public static final long VID_DATA_COLUMN             = 413;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

@@ -445,7 +445,7 @@ void DCTable::createMessage(CSCPMessage *pMsg)
 	DCObject::createMessage(pMsg);
 
    lock();
-   pMsg->SetVariable(VID_INSTANCE, m_instanceColumn);
+   pMsg->SetVariable(VID_INSTANCE_COLUMN, m_instanceColumn);
 	pMsg->SetVariable(VID_NUM_COLUMNS, (DWORD)m_columns->size());
 	DWORD varId = VID_DCI_COLUMN_BASE;
 	for(int i = 0; i < m_columns->size(); i++)
@@ -475,7 +475,7 @@ void DCTable::updateFromMessage(CSCPMessage *pMsg)
 
    lock();
 
-	pMsg->GetVariableStr(VID_INSTANCE, m_instanceColumn, MAX_DB_STRING);
+	pMsg->GetVariableStr(VID_INSTANCE_COLUMN, m_instanceColumn, MAX_DB_STRING);
 
 	m_columns->clear();
 	int count = (int)pMsg->GetVariableLong(VID_NUM_COLUMNS);
@@ -500,6 +500,40 @@ void DCTable::getLastValue(CSCPMessage *msg)
 	{
 		m_lastValue->fillMessage(*msg, 0, -1);
 		if (m_instanceColumn[0] != 0)
-			msg->SetVariable(VID_INSTANCE, m_instanceColumn);
+			msg->SetVariable(VID_INSTANCE_COLUMN, m_instanceColumn);
 	}
+}
+
+
+//
+// Get summary of last collcted value (to show along simple DCI values)
+//
+
+void DCTable::getLastValueSummary(CSCPMessage *pMsg, DWORD dwId)
+{
+	lock();
+   pMsg->SetVariable(dwId++, m_dwId);
+   pMsg->SetVariable(dwId++, m_szName);
+   pMsg->SetVariable(dwId++, m_szDescription);
+   pMsg->SetVariable(dwId++, (WORD)m_source);
+   pMsg->SetVariable(dwId++, (WORD)DCI_DT_NULL);  // compatibility: data type
+   pMsg->SetVariable(dwId++, _T(""));             // compatibility: value
+   pMsg->SetVariable(dwId++, (DWORD)m_tLastPoll);
+   pMsg->SetVariable(dwId++, (WORD)m_status);
+	pMsg->SetVariable(dwId++, (WORD)getType());
+   pMsg->SetVariable(dwId++, (WORD)0);            // compatibility: number of thresholds
+
+	unlock();
+}
+
+
+//
+// Get ID of instance column
+//
+
+LONG DCTable::getInstanceColumnId()
+{
+	if (m_instanceColumn[0] != 0)
+		return columnIdFromName(m_instanceColumn);
+	return 0;	/* TODO: try to auto-detect instance column */
 }

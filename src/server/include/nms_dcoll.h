@@ -429,8 +429,6 @@ protected:
 	static int m_cacheAllocated;
 	static MUTEX m_cacheMutex;
 
-	static LONG columnIdFromName(const TCHAR *name);
-
 public:
 	DCTable();
    DCTable(const DCTable *src);
@@ -454,6 +452,11 @@ public:
 	virtual bool deleteAllData();
 
 	void getLastValue(CSCPMessage *msg);
+   void getLastValueSummary(CSCPMessage *pMsg, DWORD dwId);
+
+	LONG getInstanceColumnId();
+
+	static LONG columnIdFromName(const TCHAR *name);
 };
 
 

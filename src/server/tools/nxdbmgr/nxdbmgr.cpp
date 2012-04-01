@@ -282,6 +282,7 @@ BOOL SQLBatch(const TCHAR *pszBatch)
    return bRet;
 }
 
+
 //
 // Drop column from the table
 //
@@ -359,6 +360,7 @@ BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column)
 
 	return success;
 }
+
 
 //
 // Read string value from metadata table

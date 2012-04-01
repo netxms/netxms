@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.datacollection.DataCollectionTable;
+import org.netxms.client.datacollection.TableDciValue;
 import org.netxms.ui.eclipse.perfview.views.TableLastValues;
 
 /**
@@ -35,7 +36,7 @@ import org.netxms.ui.eclipse.perfview.views.TableLastValues;
 public class ShowTableLastValues implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private DataCollectionTable currentSelection = null;
+	private Object currentSelection = null;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -54,7 +55,10 @@ public class ShowTableLastValues implements IObjectActionDelegate
 	{
 		if (currentSelection != null)
 		{
-			final String id = Long.toString(currentSelection.getNodeId()) + "&" + Long.toString(currentSelection.getId());
+			final String id =
+					(currentSelection instanceof DataCollectionTable) ?
+							Long.toString(((DataCollectionTable)currentSelection).getNodeId()) + "&" + Long.toString(((DataCollectionTable)currentSelection).getId()) :
+							Long.toString(((TableDciValue)currentSelection).getNodeId()) + "&" + Long.toString(((TableDciValue)currentSelection).getId());
 			try
 			{
 				window.getActivePage().showView(TableLastValues.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
@@ -75,9 +79,9 @@ public class ShowTableLastValues implements IObjectActionDelegate
 		if ((selection instanceof IStructuredSelection) && !selection.isEmpty())
 		{
 			Object element = ((IStructuredSelection)selection).getFirstElement();
-			if (element instanceof DataCollectionTable)
+			if ((element instanceof DataCollectionTable) || (element instanceof TableDciValue))
 			{
-				currentSelection = (DataCollectionTable)element;
+				currentSelection = element;
 			}
 			else
 			{

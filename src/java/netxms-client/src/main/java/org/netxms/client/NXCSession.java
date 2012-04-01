@@ -2430,7 +2430,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		DciValue[] list = new DciValue[count];
 		long base = NXCPCodes.VID_DCI_VALUES_BASE;
 		for(int i = 0; i < count; i++, base += 50)
-			list[i] = new DciValue(nodeId, response, base);
+			list[i] = DciValue.createFromMessage(nodeId, response, base);
 
 		return list;
 	}
@@ -2555,26 +2555,30 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * Get collected DCI data from server. Please note that you should specify
 	 * either row count limit or time from/to limit.
 	 * 
-	 * @param nodeId
-	 *           Node ID
-	 * @param dciId
-	 *           DCI ID
-	 * @param from
-	 *           Start of time range or null for no limit
-	 * @param to
-	 *           End of time range or null for no limit
-	 * @param maxRows
-	 *           Maximum number of rows to retrieve or 0 for no limit
+	 * @param nodeId Node ID
+	 * @param dciId DCI ID
+	 * @param instance instance value (for table DCI only)
+	 * @param dataColumn name of column to retrieve data from (for table DCI only)
+	 * @param from Start of time range or null for no limit
+	 * @param to End of time range or null for no limit
+	 * @param maxRows Maximum number of rows to retrieve or 0 for no limit
 	 * @return DCI data set
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public DciData getCollectedData(final long nodeId, final long dciId, Date from, Date to, int maxRows) throws IOException,
-			NXCException
+	private DciData getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to, int maxRows) throws IOException, NXCException
 	{
-		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_DATA);
+		NXCPMessage msg;
+		if (instance != null)	// table DCI
+		{
+			msg = newMessage(NXCPCodes.CMD_GET_TABLE_DCI_DATA);
+			msg.setVariable(NXCPCodes.VID_INSTANCE, instance);
+			msg.setVariable(NXCPCodes.VID_DATA_COLUMN, dataColumn);
+		}
+		else
+		{
+			msg = newMessage(NXCPCodes.CMD_GET_DCI_DATA);
+		}
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
 		msg.setVariableInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
 
@@ -2624,12 +2628,50 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/**
+	 * Get collected DCI data from server. Please note that you should specify
+	 * either row count limit or time from/to limit.
+	 * 
+	 * @param nodeId Node ID
+	 * @param dciId DCI ID
+	 * @param from Start of time range or null for no limit
+	 * @param to End of time range or null for no limit
+	 * @param maxRows Maximum number of rows to retrieve or 0 for no limit
+	 * @return DCI data set
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public DciData getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows) throws IOException, NXCException
+	{
+		return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows);
+	}
+
+	/**
+	 * Get collected table DCI data from server. Please note that you should specify
+	 * either row count limit or time from/to limit.
+	 * 
+	 * @param nodeId Node ID
+	 * @param dciId DCI ID
+	 * @param instance instance value
+	 * @param dataColumn name of column to retrieve data from
+	 * @param from Start of time range or null for no limit
+	 * @param to End of time range or null for no limit
+	 * @param maxRows Maximum number of rows to retrieve or 0 for no limit
+	 * @return DCI data set
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public DciData getCollectedTableData(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to, int maxRows) throws IOException, NXCException
+	{
+		if (instance == null || dataColumn == null)
+			throw new NXCException(RCC.INVALID_ARGUMENT);
+		return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows);
+	}
+	
+	/**
 	 * Get list of thresholds configured for given DCI
 	 * 
-	 * @param nodeId
-	 *           Node object ID
-	 * @param dciId
-	 *           DCI ID
+	 * @param nodeId Node object ID
+	 * @param dciId DCI ID
 	 * @return List of configured thresholds
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out

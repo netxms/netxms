@@ -600,6 +600,8 @@ src/java/netxms-client/src/main/java/org/netxms/client/datacollection/GraphItemS
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/GraphSettings.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/GraphSettingsChangeListener.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/PerfTabDci.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/datacollection/SimpleDciValue.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/datacollection/TableDciValue.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/Threshold.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/Alarm.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/AlarmNote.java -text

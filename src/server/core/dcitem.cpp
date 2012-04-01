@@ -465,32 +465,31 @@ void DCItem::clearCache()
 
 bool DCItem::loadThresholdsFromDB()
 {
-   DWORD i;
-   TCHAR szQuery[256];
-   DB_RESULT hResult;
    bool result = false;
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
 	           _T("SELECT threshold_id,fire_value,rearm_value,check_function,")
               _T("check_operation,parameter_1,parameter_2,event_code,current_state,")
-              _T("rearm_event_code,repeat_interval FROM thresholds WHERE item_id=%d ")
-              _T("ORDER BY sequence_number"), m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult != NULL)
-   {
-      m_dwNumThresholds = DBGetNumRows(hResult);
-      if (m_dwNumThresholds > 0)
-      {
-         m_ppThresholdList = (Threshold **)malloc(sizeof(Threshold *) * m_dwNumThresholds);
-         for(i = 0; i < m_dwNumThresholds; i++)
-            m_ppThresholdList[i] = new Threshold(hResult, i, this);
-      }
-      DBFreeResult(hResult);
-      result = true;
-   }
-
-   //updateCacheSize();
-
+              _T("rearm_event_code,repeat_interval FROM thresholds WHERE item_id=? ")
+              _T("ORDER BY sequence_number"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			m_dwNumThresholds = DBGetNumRows(hResult);
+			if (m_dwNumThresholds > 0)
+			{
+				m_ppThresholdList = (Threshold **)malloc(sizeof(Threshold *) * m_dwNumThresholds);
+				for(DWORD i = 0; i < m_dwNumThresholds; i++)
+					m_ppThresholdList[i] = new Threshold(hResult, i, this);
+			}
+			DBFreeResult(hResult);
+			result = true;
+		}
+		DBFreeStatement(hStmt);
+	}
    return result;
 }
 
@@ -1233,6 +1232,7 @@ void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
       pMsg->SetVariable(dwId++, (DWORD)0);
    }
    pMsg->SetVariable(dwId++, (WORD)m_status);
+	pMsg->SetVariable(dwId++, (WORD)getType());
 
 	DWORD i;
    for(i = 0; i < m_dwNumThresholds; i++)

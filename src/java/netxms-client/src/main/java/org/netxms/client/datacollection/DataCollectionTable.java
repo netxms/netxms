@@ -40,7 +40,7 @@ public class DataCollectionTable extends DataCollectionObject
 	public DataCollectionTable(DataCollectionConfiguration owner, NXCPMessage msg)
 	{
 		super(owner, msg);
-		instanceColumn = msg.getVariableAsString(NXCPCodes.VID_INSTANCE);
+		instanceColumn = msg.getVariableAsString(NXCPCodes.VID_INSTANCE_COLUMN);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS);
 		columns = new ArrayList<ColumnDefinition>(count);
@@ -75,7 +75,7 @@ public class DataCollectionTable extends DataCollectionObject
 		super.fillMessage(msg);
 		
 		msg.setVariableInt16(NXCPCodes.VID_DCOBJECT_TYPE, DCO_TYPE_TABLE);
-		msg.setVariable(NXCPCodes.VID_INSTANCE, instanceColumn);
+		msg.setVariable(NXCPCodes.VID_INSTANCE_COLUMN, instanceColumn);
 		msg.setVariableInt32(NXCPCodes.VID_NUM_COLUMNS, columns.size());
 		long varId = NXCPCodes.VID_DCI_COLUMN_BASE;
 		for(int i = 0; i < columns.size(); i++)

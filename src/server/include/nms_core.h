@@ -379,8 +379,9 @@ private:
    static THREAD_RESULT THREAD_CALL UpdateThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL PollerThreadStarter(void *);
 
-	DECLARE_THREAD_STARTER(GetCollectedData)
-	DECLARE_THREAD_STARTER(ClearDCIData)
+	DECLARE_THREAD_STARTER(getCollectedData)
+	DECLARE_THREAD_STARTER(getTableCollectedData)
+	DECLARE_THREAD_STARTER(clearDCIData)
 	DECLARE_THREAD_STARTER(queryParameter)
 	DECLARE_THREAD_STARTER(queryAgentTable)
 	DECLARE_THREAD_STARTER(QueryL2Topology)
@@ -430,23 +431,25 @@ private:
    void modifyEventTemplate(CSCPMessage *pRequest);
    void deleteEventTemplate(CSCPMessage *pRequest);
    void generateEventCode(DWORD dwRqId);
-   void ModifyObject(CSCPMessage *pRequest);
+   void modifyObject(CSCPMessage *pRequest);
    void changeObjectMgmtStatus(CSCPMessage *pRequest);
-   void OpenNodeDCIList(CSCPMessage *pRequest);
-   void CloseNodeDCIList(CSCPMessage *pRequest);
-   void ModifyNodeDCI(CSCPMessage *pRequest);
-   void CopyDCI(CSCPMessage *pRequest);
-   void ApplyTemplate(CSCPMessage *pRequest);
-   void GetCollectedData(CSCPMessage *pRequest);
-	void ClearDCIData(CSCPMessage *pRequest);
-   void ChangeDCIStatus(CSCPMessage *pRequest);
+   void openNodeDCIList(CSCPMessage *pRequest);
+   void closeNodeDCIList(CSCPMessage *pRequest);
+   void modifyNodeDCI(CSCPMessage *pRequest);
+   void copyDCI(CSCPMessage *pRequest);
+   void applyTemplate(CSCPMessage *pRequest);
+   void getCollectedData(CSCPMessage *pRequest);
+   void getTableCollectedData(CSCPMessage *pRequest);
+	bool getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *response, Node *node, int dciType);
+	void clearDCIData(CSCPMessage *pRequest);
+   void changeDCIStatus(CSCPMessage *pRequest);
    void getLastValues(CSCPMessage *pRequest);
    void getTableLastValues(CSCPMessage *pRequest);
-   void OpenEPP(DWORD dwRqId);
-   void CloseEPP(DWORD dwRqId);
-   void SaveEPP(CSCPMessage *pRequest);
-   void ProcessEPPRecord(CSCPMessage *pRequest);
-   void SendMIBTimestamp(DWORD dwRqId);
+   void openEPP(DWORD dwRqId);
+   void closeEPP(DWORD dwRqId);
+   void saveEPP(CSCPMessage *pRequest);
+   void processEPPRecord(CSCPMessage *pRequest);
+   void sendMIBTimestamp(DWORD dwRqId);
    void sendMib(CSCPMessage *request);
    void createObject(CSCPMessage *pRequest);
    void changeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
@@ -462,7 +465,7 @@ private:
    void deleteAction(CSCPMessage *pRequest);
    void sendAllActions(DWORD dwRqId);
    void SendContainerCategories(DWORD dwRqId);
-   void ForcedNodePoll(CSCPMessage *pRequest);
+   void forcedNodePoll(CSCPMessage *pRequest);
    void OnTrap(CSCPMessage *pRequest);
    void OnWakeUpNode(CSCPMessage *pRequest);
    void queryParameter(CSCPMessage *pRequest);
@@ -483,8 +486,8 @@ private:
    void EnumUserVariables(CSCPMessage *pRequest);
    void DeleteUserVariable(CSCPMessage *pRequest);
    void changeObjectZone(CSCPMessage *pRequest);
-   void GetAgentConfig(CSCPMessage *pRequest);
-   void UpdateAgentConfig(CSCPMessage *pRequest);
+   void getAgentConfig(CSCPMessage *pRequest);
+   void updateAgentConfig(CSCPMessage *pRequest);
    void executeAction(CSCPMessage *pRequest);
    void sendObjectTools(DWORD dwRqId);
    void sendObjectToolDetails(CSCPMessage *pRequest);
@@ -517,7 +520,7 @@ private:
    void PushDCIData(CSCPMessage *pRequest);
    void GetAddrList(CSCPMessage *pRequest);
    void SetAddrList(CSCPMessage *pRequest);
-   void ResetComponent(CSCPMessage *pRequest);
+   void resetComponent(CSCPMessage *pRequest);
    void sendDCIEventList(CSCPMessage *request);
 	void SendDCIInfo(CSCPMessage *pRequest);
    void sendPerfTabDCIList(CSCPMessage *pRequest);
@@ -593,6 +596,7 @@ public:
 
    void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
    void sendMessage(CSCPMessage *pMsg);
+   void sendRawMessage(CSCP_MESSAGE *pMsg);
    void sendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg);
 	BOOL sendFile(const TCHAR *file, DWORD dwRqId);
 

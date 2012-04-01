@@ -24,9 +24,8 @@ import org.netxms.base.NXCPMessage;
 
 /**
  * DCI value
- *
  */
-public class DciValue
+public abstract class DciValue
 {
 	private long id;					// DCI id
 	private long nodeId;				// related node object id
@@ -36,16 +35,40 @@ public class DciValue
 	private int source;				// data source (agent, SNMP, etc.)
 	private int dataType;
 	private int status;				// status (active, disabled, etc.)
+	private int dcObjectType;		// Data collection object type (item, table, etc.)
 	private Date timestamp;
 	private Threshold activeThreshold;
 	
 	/**
-	 * Constructor for creating NXCDCIValue from NXCP message
+	 * Factory method to create correct DciValue subclass from NXCP message.
 	 * 
+	 * @param nodeId owning node ID
+	 * @param msg NXCP message
+	 * @param base Base variable ID for value object
+	 * @return DciValue object
+	 */
+	public static DciValue createFromMessage(long nodeId, NXCPMessage msg, long base)
+	{
+		int type = msg.getVariableAsInteger(base + 8);
+		switch(type)
+		{
+			case DataCollectionObject.DCO_TYPE_ITEM:
+				return new SimpleDciValue(nodeId, msg, base);
+			case DataCollectionObject.DCO_TYPE_TABLE:
+				return new TableDciValue(nodeId, msg, base);
+			default:
+				return null;
+		}
+	}
+	
+	/**
+	 * Constructor for creating DciValue from NXCP message
+	 * 
+	 * @param nodeId owning node ID
 	 * @param msg NXCP message
 	 * @param base Base variable ID for value object
 	 */
-	public DciValue(long nodeId, NXCPMessage msg, long base)
+	protected DciValue(long nodeId, NXCPMessage msg, long base)
 	{
 		long var = base;
 	
@@ -58,6 +81,7 @@ public class DciValue
 		value = msg.getVariableAsString(var++);
 		timestamp = new Date(msg.getVariableAsInt64(var++) * 1000);
 		status = msg.getVariableAsInteger(var++);
+		dcObjectType = msg.getVariableAsInteger(var++);
 		if (msg.getVariableAsBoolean(var++))
 			activeThreshold = new Threshold(msg, var);
 		else
@@ -142,5 +166,13 @@ public class DciValue
 	public Threshold getActiveThreshold()
 	{
 		return activeThreshold;
+	}
+
+	/**
+	 * @return the dcObjectType
+	 */
+	public int getDcObjectType()
+	{
+		return dcObjectType;
 	}
 }
