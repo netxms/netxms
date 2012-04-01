@@ -199,6 +199,12 @@ LONG H_NetIfLink(const char *pszParam, const char *pArg, char *pValue)
 						nRet = SYSINFO_RC_SUCCESS;
 					}
 				}
+            else if (errno == EINVAL || errno == ENOTTY)
+            {
+               // ifmedia not supported, assume the status is NORMAL
+               ret_int(pValue, 1);
+               nRet = SYSINFO_RC_SUCCESS;
+            }
 				close(nSocket);
 			}
 		}
