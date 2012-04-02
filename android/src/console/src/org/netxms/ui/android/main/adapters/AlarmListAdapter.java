@@ -40,8 +40,9 @@ public class AlarmListAdapter extends BaseAdapter
 	private ClientConnectorService service;
 	private AlarmSortBy sortBy = AlarmSortBy.SORT_SEVERITY_DESC;
 
-	private static final int[] imageId = { R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor, 
-	                                       R.drawable.status_major, R.drawable.status_critical };
+	private static final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor, 
+        R.drawable.status_major, R.drawable.status_critical };
+	private static final int[] stateImageId = { R.drawable.alarm_outstanding, R.drawable.alarm_acknowledged, R.drawable.alarm_terminated };
 
 	/**
 	 * 
@@ -196,19 +197,24 @@ public class AlarmListAdapter extends BaseAdapter
 	public View getView(int position, View convertView, ViewGroup parent)
 	{
 		TextView message, source, date;
-		LinearLayout view, texts, info;
-		ImageView severity;
+		LinearLayout view, texts, info, icons;
+		ImageView severity, state;
 		Resources r = context.getResources();
 
 		if (convertView == null)	// new alarm, create fields
 		{
 			severity = new ImageView(context);
 			severity.setPadding(5, 5, 5, 2);
-
+			state = new ImageView(context);
+			state.setPadding(5, 5, 5, 2);
+			icons = new LinearLayout(context);
+			icons.setOrientation(LinearLayout.VERTICAL);
+			icons.addView(severity);
+			icons.addView(state);
+			
 			source = new TextView(context);
 			source.setPadding(5, 2, 5, 2);
 			source.setTextColor(r.getColor(R.color.text_color));
-
 			date = new TextView(context);
 			date.setPadding(5, 2, 5, 2);
 			date.setTextColor(r.getColor(R.color.text_color));
@@ -216,16 +222,13 @@ public class AlarmListAdapter extends BaseAdapter
 			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			lp.gravity = Gravity.RIGHT;
 			date.setLayoutParams(lp);
-
 			message = new TextView(context);
 			message.setPadding(5, 2, 5, 2);
 			message.setTextColor(r.getColor(R.color.text_color));
-
 			info = new LinearLayout(context);
 			info.setOrientation(LinearLayout.HORIZONTAL);
 			info.addView(source);
 			info.addView(date);
-			
 			texts = new LinearLayout(context);
 			texts.setOrientation(LinearLayout.VERTICAL);
 			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -234,14 +237,16 @@ public class AlarmListAdapter extends BaseAdapter
 			texts.addView(message);
 
 			view = new LinearLayout(context);
-			view.addView(severity);
+			view.addView(icons);
 			view.addView(texts);
 		}
 		else
 		{ 
 			// get reference to existing alarm
 			view = (LinearLayout)convertView;
-			severity = (ImageView)view.getChildAt(0);
+			icons = (LinearLayout)view.getChildAt(0);
+			severity = (ImageView)icons.getChildAt(0);
+			state = (ImageView)icons.getChildAt(1);
 			texts = (LinearLayout)view.getChildAt(1);
 			info = (LinearLayout)texts.getChildAt(0);
 			source = (TextView)info.getChildAt(0);
@@ -255,7 +260,8 @@ public class AlarmListAdapter extends BaseAdapter
 		source.setText(object == null ? r.getString(R.string.node_unknown) : object.getObjectName());
 		date.setText(alarm.getLastChangeTime().toLocaleString());
 		message.setText(alarm.getMessage());
-		severity.setImageResource(AlarmListAdapter.imageId[alarm.getCurrentSeverity()]);
+		severity.setImageResource(AlarmListAdapter.severityImageId[alarm.getCurrentSeverity()]);
+		state.setImageResource(AlarmListAdapter.stateImageId[alarm.getState()]);
 
 		return view;
 	}
