@@ -310,6 +310,16 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		render();
 		redraw();
 	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#rebuild()
+	 */
+	@Override
+	public void rebuild()
+	{
+		render();
+		redraw();
+	}
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataChart#hasAxes()

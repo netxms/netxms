@@ -568,8 +568,9 @@ DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
          m_dwFailedRequests++;
 		}
    }
-	DebugPrintf(dwSessionId, 9, _T("Returning %s"), 
-		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN") : _T("INTERNAL")));
+
+	DebugPrintf(dwSessionId, 7, _T("GetParameterValue(): result is %d (%s)"), (int)dwErrorCode,
+		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR")));
    return dwErrorCode;
 }
 
@@ -615,6 +616,9 @@ DWORD GetListValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue)
       dwErrorCode = ERR_UNKNOWN_PARAMETER;
       m_dwUnsupportedRequests++;
    }
+
+	DebugPrintf(dwSessionId, 7, _T("GetListValue(): result is %d (%s)"), (int)dwErrorCode,
+		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR")));
    return dwErrorCode;
 }
 
@@ -660,6 +664,9 @@ DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue)
       dwErrorCode = ERR_UNKNOWN_PARAMETER;
       m_dwUnsupportedRequests++;
    }
+
+	DebugPrintf(dwSessionId, 7, _T("GetTableValue(): result is %d (%s)"), (int)dwErrorCode,
+		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR")));
    return dwErrorCode;
 }
 

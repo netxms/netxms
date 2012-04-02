@@ -66,6 +66,9 @@ public class AddDashboardElementDlg extends Dialog
 		elementTypeSelector.add("Availability Chart");
 		elementTypeSelector.add("Dial Chart");
 		elementTypeSelector.add("Web Page");
+		elementTypeSelector.add("Bar Chart for Table DCI");
+		elementTypeSelector.add("Pie Chart for Table DCI");
+		elementTypeSelector.add("Tube Chart for Table DCI");
 		elementTypeSelector.select(1);
 		
 		return dialogArea;

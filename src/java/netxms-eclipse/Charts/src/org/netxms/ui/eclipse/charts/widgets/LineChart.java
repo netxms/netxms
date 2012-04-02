@@ -605,6 +605,15 @@ public class LineChart extends Chart implements HistoricalDataChart
 	{
 		adjustYAxis(true);
 	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#rebuild()
+	 */
+	@Override
+	public void rebuild()
+	{
+		adjustYAxis(true);
+	}
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataChart#hasAxes()
