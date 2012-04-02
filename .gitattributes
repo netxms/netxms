@@ -2235,6 +2235,7 @@ webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/Layout.
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/NetworkMap.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/ObjectStatusChart.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/StatusIndicator.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/TableDataSource.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/WebPage.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/helpers/DashboardElementsLabelProvider.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/helpers/DciListLabelProvider.java -text
@@ -2258,6 +2259,10 @@ webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/NetworkMapEle
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/ObjectStatusChartElement.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/PieChartElement.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/StatusIndicatorElement.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/TableBarChartElement.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/TableComparisonChartElement.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/TablePieChartElement.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/TableTubeChartElement.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/TubeChartElement.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/WebPageElement.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/AbstractChartConfig.java -text
@@ -2279,6 +2284,10 @@ webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/Netw
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/ObjectStatusChartConfig.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/PieChartConfig.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/StatusIndicatorConfig.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/TableBarChartConfig.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/TableComparisonChartConfig.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/TablePieChartConfig.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/TableTubeChartConfig.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/TubeChartConfig.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/WebPageConfig.java -text
 webui/webapp/DataCollection/.settings/org.eclipse.jdt.core.prefs -text

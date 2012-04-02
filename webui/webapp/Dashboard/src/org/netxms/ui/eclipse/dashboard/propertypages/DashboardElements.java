@@ -422,6 +422,11 @@ public class DashboardElements extends PropertyPage
 				case DashboardElement.AVAILABLITY_CHART:
 					config = DashboardControl.DEFAULT_AVAILABILITY_CHART_CONFIG;
 					break;
+				case DashboardElement.TABLE_BAR_CHART:
+				case DashboardElement.TABLE_PIE_CHART:
+				case DashboardElement.TABLE_TUBE_CHART:
+					config = DashboardControl.DEFAULT_TABLE_CHART_CONFIG;
+					break;
 				case DashboardElement.LABEL:
 					config = DashboardControl.DEFAULT_LABEL_CONFIG;
 					break;

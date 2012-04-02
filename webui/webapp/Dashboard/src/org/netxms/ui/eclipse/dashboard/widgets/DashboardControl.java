@@ -60,6 +60,7 @@ public class DashboardControl extends Composite
 	public static final String DEFAULT_LINE_CHART_CONFIG = "<element>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>";
 	public static final String DEFAULT_DIAL_CHART_CONFIG = "<element>\n\t<maxValue>100</maxValue>\n\t<yellowZone>70</yellowZone>\n\t<redZone>90</redZone>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>"; 
 	public static final String DEFAULT_AVAILABILITY_CHART_CONFIG = "<element>\n\t<objectId>9</objectId>\n\t<showIn3D>true</showIn3D>\n</element>";
+	public static final String DEFAULT_TABLE_CHART_CONFIG = "<element>\n\t<showIn3D>true</showIn3D>\n\t<nodeId>0</nodeId>\n\t<dciId>0</dciId>\n\t<dataColumn>DATA</dataColumn>\n</element>"; 
 	public static final String DEFAULT_OBJECT_REFERENCE_CONFIG = "<element>\n\t<objectId>0</objectId>\n</element>";
 	public static final String DEFAULT_LABEL_CONFIG = "<element>\n\t<title>Label</title>\n</element>"; 
 	public static final String DEFAULT_NETWORK_MAP_CONFIG = "<element>\n\t<objectId>0</objectId>\n\t<title></title>\n</element>"; 
@@ -191,6 +192,15 @@ public class DashboardControl extends Composite
 				break;
 			case DashboardElement.PIE_CHART:
 				w = new PieChartElement(this, e, viewPart);
+				break;
+			case DashboardElement.TABLE_BAR_CHART:
+				w = new TableBarChartElement(this, e, viewPart);
+				break;
+			case DashboardElement.TABLE_PIE_CHART:
+				w = new TablePieChartElement(this, e, viewPart);
+				break;
+			case DashboardElement.TABLE_TUBE_CHART:
+				w = new TableTubeChartElement(this, e, viewPart);
 				break;
 			case DashboardElement.DIAL_CHART:
 				w = new DialChartElement(this, e, viewPart);

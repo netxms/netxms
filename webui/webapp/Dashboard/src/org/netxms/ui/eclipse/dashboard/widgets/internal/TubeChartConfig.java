@@ -23,7 +23,7 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
- * Configuration for bar chart
+ * Configuration for tube chart
  */
 public class TubeChartConfig extends ComparisonChartConfig
 {

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,37 +22,30 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.datacollection.GraphItem;
-import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.TablePieChartConfig;
 
 /**
- * Pie chart element
+ * Pie chart element for table DCI
  */
-public class PieChartElement extends ComparisonChartElement
+public class TablePieChartElement extends TableComparisonChartElement
 {
-	private static final long serialVersionUID = 1L;
-
-	private PieChartConfig config;
-
 	/**
 	 * @param parent
 	 * @param data
 	 */
-	public PieChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
+	public TablePieChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, element, viewPart);
 		
 		try
 		{
-			config = PieChartConfig.createFromXml(element.getData());
+			config = TablePieChartConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
-			config = new PieChartConfig();
+			config = new TablePieChartConfig();
 		}
 
 		refreshInterval = config.getRefreshRate() * 1000;
@@ -67,25 +60,6 @@ public class PieChartElement extends ComparisonChartElement
 		chart.set3DModeEnabled(config.isShowIn3D());
 		chart.setTranslucent(config.isTranslucent());
 		
-		int index = 0;
-		for(DashboardDciInfo dci : config.getDciList())
-		{
-			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName()), 0.0);
-			int color = dci.getColorAsInt();
-			if (color != -1)
-				chart.setPaletteEntry(index++, new ChartColor(color));
-		}
-		chart.initializationComplete();
-
 		startRefreshTimer();
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
-	 */
-	@Override
-	protected DashboardDciInfo[] getDciList()
-	{
-		return config.getDciList();
 	}
 }

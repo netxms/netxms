@@ -229,6 +229,15 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		fullRepaint = true;
 		redraw();
 	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#rebuild()
+	 */
+	@Override
+	public void rebuild()
+	{
+		recreateChart();
+	}
 
 	/*
 	 * (non-Javadoc)

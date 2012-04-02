@@ -138,6 +138,15 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 		System.out.println("setItemStyles");
 		this.itemStyles = itemStyles;
 	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#rebuild()
+	 */
+	@Override
+	public void rebuild()
+	{
+		adjustYAxis(true);
+	}
 
 	@Override
 	public int addParameter(GraphItem item) {

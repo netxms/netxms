@@ -170,6 +170,11 @@ public interface DataChart
 	public abstract void refresh();
 	
 	/**
+	 * Rebuild chart (usually after adding/removing parameters)
+	 */
+	public abstract void rebuild();
+	
+	/**
 	 * Returns true if chart has axes.
 	 * 
 	 * @return true if chart has axes
