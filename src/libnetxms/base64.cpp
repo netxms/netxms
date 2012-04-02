@@ -297,12 +297,31 @@ BOOL LIBNETXMS_EXPORTABLE isbase64 (char ch)
    encountered, decoding is stopped and false is returned.  This means
    that, when applicable, you must remove any line terminators that is
    part of the data stream before calling this function.  */
-BOOL LIBNETXMS_EXPORTABLE base64_decode (const char *in, size_t inlen, char *out, size_t *outlen)
+BOOL LIBNETXMS_EXPORTABLE base64_decode(const char *in, size_t inlen, char *out, size_t *outlen)
 {
    size_t outleft = *outlen;
 
+   while (inlen > 0)
+   {
+      if (in[inlen - 1] == 0x0d || in[inlen - 1] == 0x0a)
+      {
+         inlen--;
+      }
+      else
+      {
+         break;
+      }
+   }
+
    while (inlen >= 2)
    {
+      if (in[0] == 0x0d || in[0] == 0x0a)
+      {
+         in++;
+         inlen--;
+         continue;
+      }
+
       if (!isbase64 (in[0]) || !isbase64 (in[1]))
          break;
 
