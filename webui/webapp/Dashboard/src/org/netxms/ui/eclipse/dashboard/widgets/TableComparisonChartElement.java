@@ -154,24 +154,29 @@ public abstract class TableComparisonChartElement extends ElementWidget
 			String instance = data.getCell(i, icIndex);
 			if (instance == null)
 				continue;
+
+			double value;
+			try
+			{
+				value = Double.parseDouble(data.getCell(i, dcIndex));
+			}
+			catch(NumberFormatException e)
+			{
+				value = 0.0;
+			}
+			
 			Integer index = instanceMap.get(instance);
 			if (index == null)
 			{
-				if (instanceMap.size() >= DataChart.MAX_CHART_ITEMS)
+				if ((instanceMap.size() >= DataChart.MAX_CHART_ITEMS) ||
+				    ((value == 0) && config.isIgnoreZeroValues()))
 					continue;
 				index = chart.addParameter(new GraphItem(config.getNodeId(), config.getDciId(), 0, 0, Long.toString(config.getDciId()), instance), 0.0);
 				instanceMap.put(instance, index);
 				rebuild = true;
 			}
-			try
-			{
-				Double value = Double.parseDouble(data.getCell(i, dcIndex));
-				chart.updateParameter(index, value, false);
-			}
-			catch(NumberFormatException e)
-			{
-				chart.updateParameter(index, 0.0, false);
-			}
+
+			chart.updateParameter(index, value, false);
 		}
 
 		if (!chartInitialized)

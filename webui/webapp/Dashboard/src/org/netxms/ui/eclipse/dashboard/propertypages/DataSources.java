@@ -43,6 +43,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.ConditionDciInfo;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.DciListLabelProvider;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig;
@@ -56,8 +57,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class DataSources extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	public static final int COLUMN_POSITION = 0;
 	public static final int COLUMN_NODE = 1;
 	public static final int COLUMN_METRIC = 2;
@@ -132,8 +131,6 @@ public class DataSources extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
       upButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -154,8 +151,6 @@ public class DataSources extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
       downButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -188,8 +183,6 @@ public class DataSources extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
       addButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -209,8 +202,6 @@ public class DataSources extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
       editButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -231,8 +222,6 @@ public class DataSources extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
       deleteButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -276,6 +265,7 @@ public class DataSources extends PropertyPage
 	private void addItem()
 	{
 		SelectDciDialog dlg = new SelectDciDialog(getShell());
+		dlg.setDcObjectType(DataCollectionObject.DCO_TYPE_ITEM);
 		if (dlg.open() == Window.OK)
 		{
 			DciValue selection = dlg.getSelection();

@@ -51,6 +51,7 @@ public class SelectDciDialog extends Dialog
 	private ObjectTree objectTree;
 	private DciList dciList;
 	private DciValue selection;
+	private int dcObjectType = -1;
 	
 	/**
 	 * @param parentShell
@@ -98,7 +99,8 @@ public class SelectDciDialog extends Dialog
 		if (text != null)
 			objectTree.setFilter(text);
 
-		dciList = new DciList(null, splitter, SWT.BORDER, null, "SelectDciDialog.dciList");  //$NON-NLS-1$
+		dciList = new DciList(null, splitter, SWT.BORDER, null, "SelectDciDialog.dciList", dcObjectType);  //$NON-NLS-1$
+		dciList.setDcObjectType(dcObjectType);
 		dciList.getViewer().addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -183,5 +185,23 @@ public class SelectDciDialog extends Dialog
 	public DciValue getSelection()
 	{
 		return selection;
+	}
+
+	/**
+	 * @return the dcObjectType
+	 */
+	public int getDcObjectType()
+	{
+		return dcObjectType;
+	}
+
+	/**
+	 * @param dcObjectType the dcObjectType to set
+	 */
+	public void setDcObjectType(int dcObjectType)
+	{
+		this.dcObjectType = dcObjectType;
+		if (dciList != null)
+			dciList.setDcObjectType(dcObjectType);
 	}
 }

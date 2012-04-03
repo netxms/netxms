@@ -29,21 +29,18 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.GraphSettings;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.ComparisonChartConfig;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.TableComparisonChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.TableTubeChartConfig;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Generic chart properties
+ * Table comparison chart properties
  */
-public class AbstractChart extends PropertyPage
+public class TableComparisonChart extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
-	private AbstractChartConfig config;
+	private TableComparisonChartConfig config;
 	private LabeledText title;
 	private Spinner refreshRate;
 	private Combo legendPosition;
@@ -59,7 +56,7 @@ public class AbstractChart extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		config = (AbstractChartConfig)getElement().getAdapter(AbstractChartConfig.class);
+		config = (TableComparisonChartConfig)getElement().getAdapter(TableComparisonChartConfig.class);
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
@@ -109,35 +106,32 @@ public class AbstractChart extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		checkShowLegend.setLayoutData(gd);
-
-		if (config instanceof ComparisonChartConfig)
+		
+		checkShowIn3D = new Button(optionsGroup, SWT.CHECK);
+		checkShowIn3D.setText("Show in &3D");
+		checkShowIn3D.setSelection(config.isShowIn3D());
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		checkShowIn3D.setLayoutData(gd);
+		
+		checkTranslucent = new Button(optionsGroup, SWT.CHECK);
+		checkTranslucent.setText("T&ranslucent");
+		checkTranslucent.setSelection(config.isTranslucent());
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		checkTranslucent.setLayoutData(gd);
+		
+		if ((config instanceof TableBarChartConfig) || (config instanceof TableTubeChartConfig))
 		{
-			checkShowIn3D = new Button(optionsGroup, SWT.CHECK);
-			checkShowIn3D.setText("Show in &3D");
-			checkShowIn3D.setSelection(((ComparisonChartConfig)config).isShowIn3D());
+			checkTransposed = new Button(optionsGroup, SWT.CHECK);
+			checkTransposed.setText("Trans&posed");
+			checkTransposed.setSelection((config instanceof TableBarChartConfig) ? ((TableBarChartConfig)config).isTransposed() : ((TableTubeChartConfig)config).isTransposed());
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
-			checkShowIn3D.setLayoutData(gd);
-			
-			checkTranslucent = new Button(optionsGroup, SWT.CHECK);
-			checkTranslucent.setText("T&ranslucent");
-			checkTranslucent.setSelection(((ComparisonChartConfig)config).isTranslucent());
-			gd = new GridData();
-			gd.horizontalAlignment = SWT.FILL;
-			gd.grabExcessHorizontalSpace = true;
-			checkTranslucent.setLayoutData(gd);
-
-			if ((config instanceof BarChartConfig) || (config instanceof TubeChartConfig))
-			{
-				checkTransposed = new Button(optionsGroup, SWT.CHECK);
-				checkTransposed.setText("Trans&posed");
-				checkTransposed.setSelection((config instanceof BarChartConfig) ? ((BarChartConfig)config).isTransposed() : ((TubeChartConfig)config).isTransposed());
-				gd = new GridData();
-				gd.horizontalAlignment = SWT.FILL;
-				gd.grabExcessHorizontalSpace = true;
-				checkTransposed.setLayoutData(gd);
-			}
+			checkTransposed.setLayoutData(gd);
 		}
 		
 		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Refresh interval", 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
@@ -174,21 +168,18 @@ public class AbstractChart extends PropertyPage
 	{
 		config.setTitle(title.getText());
 		config.setLegendPosition(1 << legendPosition.getSelectionIndex());
+		config.setRefreshRate(refreshRate.getSelection());
 		config.setShowTitle(checkShowTitle.getSelection());
 		config.setShowLegend(checkShowLegend.getSelection());
-		config.setRefreshRate(refreshRate.getSelection());
-		if (config instanceof ComparisonChartConfig)
+		config.setShowIn3D(checkShowIn3D.getSelection());
+		config.setTranslucent(checkTranslucent.getSelection());
+		if (config instanceof TableBarChartConfig)
 		{
-			((ComparisonChartConfig)config).setShowIn3D(checkShowIn3D.getSelection());
-			((ComparisonChartConfig)config).setTranslucent(checkTranslucent.getSelection());
-			if (config instanceof BarChartConfig)
-			{
-				((BarChartConfig)config).setTransposed(checkTransposed.getSelection());
-			}
-			else if (config instanceof TubeChartConfig)
-			{
-				((TubeChartConfig)config).setTransposed(checkTransposed.getSelection());
-			}
+			((TableBarChartConfig)config).setTransposed(checkTransposed.getSelection());
+		}
+		else if (config instanceof TableTubeChartConfig)
+		{
+			((TableTubeChartConfig)config).setTransposed(checkTransposed.getSelection());
 		}
 		return true;
 	}

@@ -21,12 +21,13 @@ package org.netxms.ui.eclipse.dashboard.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.objects.Node;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableComparisonChartConfig;
-import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -35,9 +36,10 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class TableDataSource extends PropertyPage
 {
 	private TableComparisonChartConfig config;
-	private ObjectSelector node;
+	private DciSelector dci;
 	private LabeledText instanceColumn;
 	private LabeledText dataColumn;
+	private Button checkIgnoreZeroValues;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -54,14 +56,14 @@ public class TableDataSource extends PropertyPage
 		layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
 		
-		node = new ObjectSelector(dialogArea, SWT.NONE);
-		node.setLabel("Node");
-		node.setObjectClass(Node.class);
-		node.setObjectId(config.getNodeId());
+		dci = new DciSelector(dialogArea, SWT.NONE, false);
+		dci.setLabel("Data Collection Object");
+		dci.setDciId(config.getNodeId(), config.getDciId());
+		dci.setDcObjectType(DataCollectionObject.DCO_TYPE_TABLE);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		node.setLayoutData(gd);
+		dci.setLayoutData(gd);
 		
 		instanceColumn = new LabeledText(dialogArea, SWT.NONE);
 		instanceColumn.setLabel("Instance column");
@@ -78,6 +80,10 @@ public class TableDataSource extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		dataColumn.setLayoutData(gd);
+		
+		checkIgnoreZeroValues = new Button(dialogArea, SWT.CHECK);
+		checkIgnoreZeroValues.setText("Ignore zero values when building chart");
+		checkIgnoreZeroValues.setSelection(config.isIgnoreZeroValues());
 
 		return dialogArea;
 	}
@@ -88,9 +94,11 @@ public class TableDataSource extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
-		config.setNodeId(node.getObjectId());
+		config.setNodeId(dci.getNodeId());
+		config.setDciId(dci.getDciId());
 		config.setInstanceColumn(instanceColumn.getText().trim());
 		config.setDataColumn(dataColumn.getText().trim());
+		config.setIgnoreZeroValues(checkIgnoreZeroValues.getSelection());
 		return true;
 	}
 }

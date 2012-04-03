@@ -18,6 +18,10 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -56,6 +60,7 @@ public class DciList extends Composite
 	private Node node;
 	private NXCSession session;
 	private SortableTableViewer viewer;
+	private int dcObjectType;	// DC object type filter; -1 allows all object types
 	
 	/**
 	 * Create "last values" widget
@@ -66,12 +71,13 @@ public class DciList extends Composite
 	 * @param _node node to display data for
 	 * @param configPrefix configuration prefix for saving/restoring viewer settings
 	 */
-	public DciList(ViewPart viewPart, Composite parent, int style, Node _node, final String configPrefix)
+	public DciList(ViewPart viewPart, Composite parent, int style, Node _node, final String configPrefix, int dcObjectType)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		this.viewPart = viewPart;		
 		this.node = _node;
+		this.dcObjectType = dcObjectType;
 		
 		final IDialogSettings ds = Activator.getDefault().getDialogSettings();
 		
@@ -128,12 +134,25 @@ public class DciList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final DciValue[] data = session.getLastValues(node.getObjectId());
+				final List<DciValue> data = 
+						(dcObjectType == -1) ? Arrays.asList(session.getLastValues(node.getObjectId())) 
+								: new ArrayList<DciValue>(Arrays.asList(session.getLastValues(node.getObjectId())));
+				if (dcObjectType != -1)
+				{
+					Iterator<DciValue> it = data.iterator();
+					while(it.hasNext())
+					{
+						DciValue dci = it.next();
+						if (dci.getDcObjectType() != dcObjectType)
+							it.remove();
+					}
+				}
+						
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						viewer.setInput(data);
+						viewer.setInput(data.toArray());
 					}
 				});
 			}
@@ -178,5 +197,22 @@ public class DciList extends Composite
 	public SortableTableViewer getViewer()
 	{
 		return viewer;
+	}
+
+	/**
+	 * @return the dcObjectType
+	 */
+	public int getDcObjectType()
+	{
+		return dcObjectType;
+	}
+
+	/**
+	 * @param dcObjectType the dcObjectType to set
+	 */
+	public void setDcObjectType(int dcObjectType)
+	{
+		this.dcObjectType = dcObjectType;
+		getDataFromServer();
 	}
 }

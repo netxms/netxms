@@ -30,7 +30,6 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 
 /**
  * Object selector
- *
  */
 public class ObjectSelector extends AbstractSelector
 {
