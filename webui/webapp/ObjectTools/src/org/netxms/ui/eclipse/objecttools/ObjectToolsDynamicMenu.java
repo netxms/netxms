@@ -203,6 +203,17 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 */
 	private void executeObjectTool(final Node node, final ObjectTool tool)
 	{
+		if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
+		{
+			String temp = tool.getConfirmationText();
+			temp = temp.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
+			temp = temp.replace("%OBJECT_NAME%", node.getObjectName());
+			String message = temp.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
+			if (!MessageDialog.openQuestion(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
+					"Confirm Tool Execution", message))
+				return;
+		}
+		
 		switch(tool.getType())
 		{
 			case ObjectTool.TYPE_INTERNAL:
