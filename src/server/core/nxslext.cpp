@@ -395,6 +395,117 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	return 0;
 }
 
+static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (argc < 2)
+		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *obj = argv[0]->getValueAsObject();
+	if (_tcscmp(obj->getClass()->getName(), g_nxslNetObjClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	NetObj *parent = (NetObj*)obj->getData();
+	if (parent->Type() != OBJECT_CONTAINER && parent->Type() != OBJECT_SERVICEROOT)
+		return NXSL_ERR_BAD_CLASS;
+
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	const TCHAR *name = argv[1]->getValueAsCString();
+
+	Container *container = new Container(name, 0);
+	NetObjInsert(container, TRUE);
+	parent->AddChild(container);
+	container->AddParent(parent);
+
+	*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, container));
+
+	return 0;
+}
+
+static int F_RemoveContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (argc < 1)
+		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *obj = argv[0]->getValueAsObject();
+	if (_tcscmp(obj->getClass()->getName(), g_nxslNetObjClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	Container *container = (Container*)obj->getData();
+	if (container->Type() != OBJECT_CONTAINER)
+		return NXSL_ERR_BAD_CLASS;
+
+	container->deleteObject();
+
+	return 0;
+}
+
+static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (argc < 2)
+		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+	if (!argv[0]->isObject() || !argv[1]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *obj = argv[0]->getValueAsObject();
+	if (_tcscmp(obj->getClass()->getName(), g_nxslNetObjClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	Container *container = (Container*)obj->getData();
+	if (container->Type() != OBJECT_CONTAINER)
+		return NXSL_ERR_BAD_CLASS;
+
+	NXSL_Object *obj2 = argv[1]->getValueAsObject();
+	if (_tcscmp(obj2->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+		_tcscmp(obj2->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	NetObj *child = (NetObj*)obj2->getData();
+	if (child->Type() != OBJECT_CONTAINER && child->Type() != OBJECT_SUBNET || child->Type() != OBJECT_NODE)
+		return NXSL_ERR_BAD_CLASS;
+
+	container->linkObject(child);
+
+	return 0;
+}
+
+static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (argc < 2)
+		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+	if (!argv[0]->isObject() || !argv[1]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *obj = argv[0]->getValueAsObject();
+	if (_tcscmp(obj->getClass()->getName(), g_nxslNetObjClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	Container *container = (Container*)obj->getData();
+	if (container->Type() != OBJECT_CONTAINER)
+		return NXSL_ERR_BAD_CLASS;
+
+	NXSL_Object *obj2 = argv[1]->getValueAsObject();
+	if (_tcscmp(obj2->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+		_tcscmp(obj2->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	NetObj *child = (NetObj*)obj2->getData();
+	if (child->Type() != OBJECT_CONTAINER && child->Type() != OBJECT_SUBNET || child->Type() != OBJECT_NODE)
+		return NXSL_ERR_BAD_CLASS;
+
+	container->DeleteChild(child);
+
+	return 0;
+}
 
 //
 // Additional server functions to use within all scripts
@@ -414,6 +525,19 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { _T("SetEventParameter"), F_SetEventParameter, 3 },
 };
 
+//
+// Additional server functions to manage containers (disabled by default)
+//
+
+static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
+{
+	{ _T("CreateContainer"), F_CreateContainer, 2 },
+	{ _T("RemoveContainer"), F_RemoveContainer, 1 },
+	{ _T("BindObject"), F_BindObject, 2 },
+	{ _T("UnbindObject"), F_UnbindObject, 2 },
+};
+
+
 
 //
 // Constructor for server default script environment
@@ -426,6 +550,8 @@ NXSL_ServerEnv::NXSL_ServerEnv()
 	registerFunctionSet(sizeof(m_nxslServerFunctions) / sizeof(NXSL_ExtFunction), m_nxslServerFunctions);
 	RegisterDCIFunctions(this);
 	registerFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
+	if (g_dwFlags & AF_ENABLE_NXSL_CONTAINER_FUNCS)
+		registerFunctionSet(sizeof(m_nxslServerFunctionsForContainers) / sizeof(NXSL_ExtFunction), m_nxslServerFunctionsForContainers);
 }
 
 

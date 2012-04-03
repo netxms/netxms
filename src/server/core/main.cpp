@@ -141,7 +141,6 @@ DWORD g_dwThresholdRepeatInterval = 0;	// Disabled by default
 int g_nRequiredPolls = 1;
 DB_DRIVER g_dbDriver = NULL;
 
-
 //
 // Static data
 //
@@ -330,6 +329,8 @@ static void LoadGlobalConfig()
 		g_dwFlags |= AF_INTERNAL_CA;
 	if (ConfigReadInt(_T("CheckTrustedNodes"), 1))
 		g_dwFlags |= AF_CHECK_TRUSTED_NODES;
+	if (ConfigReadInt(_T("EnableNXSLContainerFunctions"), 1))
+		g_dwFlags |= AF_ENABLE_NXSL_CONTAINER_FUNCS;
 
 	if (g_szDataDir[0] == 0)
 	{
