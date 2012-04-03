@@ -31,6 +31,7 @@ BusinessServiceRoot::BusinessServiceRoot() : ServiceContainer()
 {
 	m_dwId = BUILTIN_OID_BUSINESSSERVICEROOT;
 	_tcscpy(m_szName, _T("Business Services"));
+	uuid_generate(m_guid);
 	m_iStatus = STATUS_NORMAL;
 }
 

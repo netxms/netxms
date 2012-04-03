@@ -58,6 +58,9 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 	
 	@Element(required = false)
 	private boolean translucent = false;
+		
+	@Element(required = false)
+	private boolean ignoreZeroValues = false;
 	
 	/**
 	 * @return the showIn3D
@@ -233,5 +236,21 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 	public void setRefreshRate(int refreshRate)
 	{
 		this.refreshRate = refreshRate;
+	}
+
+	/**
+	 * @return the ignoreZeroValues
+	 */
+	public boolean isIgnoreZeroValues()
+	{
+		return ignoreZeroValues;
+	}
+
+	/**
+	 * @param ignoreZeroValues the ignoreZeroValues to set
+	 */
+	public void setIgnoreZeroValues(boolean ignoreZeroValues)
+	{
+		this.ignoreZeroValues = ignoreZeroValues;
 	}
 }

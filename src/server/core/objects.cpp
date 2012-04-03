@@ -1471,22 +1471,6 @@ BOOL LoadObjects()
 		g_idxZoneByGUID.forEach(RecalcStatusCallback, NULL);
    }
 
-	// Validate system templates and create when needed
-   DbgPrintf(2, _T("Validating system templates..."));
-
-	pTemplate = FindTemplateByName(_T("@System.Agent"));
-	if (pTemplate == NULL)
-	{
-		pTemplate = new Template(_T("@System.Agent"));
-		pTemplate->setSystemFlag(TRUE);
-      NetObjInsert(pTemplate, TRUE);
-		g_pTemplateRoot->AddChild(pTemplate);
-		pTemplate->AddParent(g_pTemplateRoot);
-		pTemplate->calculateCompoundStatus();
-		pTemplate->unhide();
-	}
-	pTemplate->ValidateSystemTemplate();
-
    return TRUE;
 }
 

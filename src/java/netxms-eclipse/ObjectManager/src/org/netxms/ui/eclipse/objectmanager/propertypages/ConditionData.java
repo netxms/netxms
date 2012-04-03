@@ -45,6 +45,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ConditionDciInfo;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.Condition;
@@ -274,6 +275,7 @@ public class ConditionData extends PropertyPage
 	private void addItem()
 	{
 		SelectDciDialog dlg = new SelectDciDialog(getShell());
+		dlg.setDcObjectType(DataCollectionObject.DCO_TYPE_ITEM);
 		if (dlg.open() == Window.OK)
 		{
 			DciValue selection = dlg.getSelection();

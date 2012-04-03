@@ -17,4 +17,5 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.expressions;bundle-version="3.4.300"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.netxms.ui.eclipse.datacollection.dialogs
+Export-Package: org.netxms.ui.eclipse.datacollection.dialogs,
+ org.netxms.ui.eclipse.datacollection.widgets

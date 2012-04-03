@@ -32,6 +32,7 @@ Network::Network()
 {
    m_dwId = BUILTIN_OID_NETWORK;
    _tcscpy(m_szName, _T("Entire Network"));
+	uuid_generate(m_guid);
 }
 
 
