@@ -62,7 +62,7 @@ DBParameterGroup g_paramGroup[] = {
 		_T("(select round(nvl((sum(busy)/(sum(busy)+sum(idle)))*100,0),2) from v$dispatcher) DispatcherWorkload, ")
 		_T("(select bytes	from v$sgastat where name='free memory' and pool='shared pool') FreeSharedPool ")
 		_T("from DUAL "),
-		3, { NULL }, 0
+		10, { NULL }, 0
 	},
 	{
 		700, _T("Oracle.CriticalStats."), 
@@ -426,12 +426,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Oracle.Dual.ExcessRows(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Dual: Excessive rows") },
 	{ _T("Oracle.Performance.PhysReads(*)"),  getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Number of physical reads") },
 	{ _T("Oracle.Performance.LogicReads(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Number of logical reads") },
-	{ _T("Oracle.Performance.CacheHitRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Data buffer cache hit ratio") },
-	{ _T("Oracle.Performance.LibCacheHitRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Library cache hit ratio") },
-	{ _T("Oracle.Performance.DictCacheHitRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Dictionary cache hit ratio") },
-	{ _T("Oracle.Performance.RollbackWaitRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Ratio of waits for requests to rollback segments") },
-	{ _T("Oracle.Performance.MemorySortRatio(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: PGA memory sort ratio") },
-	{ _T("Oracle.Performance.DispatcherWorkload(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Dispatcher workload (percentage)") },
+	{ _T("Oracle.Performance.CacheHitRatio(*)"), getParameters, "X", DCI_DT_STRING, _T("Oracle/Performance: Data buffer cache hit ratio") },
+	{ _T("Oracle.Performance.LibCacheHitRatio(*)"), getParameters, "X", DCI_DT_STRING, _T("Oracle/Performance: Library cache hit ratio") },
+	{ _T("Oracle.Performance.DictCacheHitRatio(*)"), getParameters, "X", DCI_DT_STRING, _T("Oracle/Performance: Dictionary cache hit ratio") },
+	{ _T("Oracle.Performance.RollbackWaitRatio(*)"), getParameters, "X", DCI_DT_STRING, _T("Oracle/Performance: Ratio of waits for requests to rollback segments") },
+	{ _T("Oracle.Performance.MemorySortRatio(*)"), getParameters, "X", DCI_DT_STRING, _T("Oracle/Performance: PGA memory sort ratio") },
+	{ _T("Oracle.Performance.DispatcherWorkload(*)"), getParameters, "X", DCI_DT_STRING, _T("Oracle/Performance: Dispatcher workload (percentage)") },
 	{ _T("Oracle.Performance.FreeSharedPool(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Performance: Free space in shared pool (bytes)") },
 	{ _T("Oracle.Objects.InvalidCount(*)"), getParameters, "X", DCI_DT_INT64, _T("Oracle/Objects: Number of invalid objects in DB") }
 };
