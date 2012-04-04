@@ -32,6 +32,7 @@ import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ComparisonChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -45,6 +46,8 @@ public class AbstractChart extends PropertyPage
 
 	private AbstractChartConfig config;
 	private LabeledText title;
+	private Spinner timeRange;
+	private Combo timeUnits;
 	private Spinner refreshRate;
 	private Combo legendPosition;
 	private Button checkShowTitle;
@@ -140,7 +143,35 @@ public class AbstractChart extends PropertyPage
 			}
 		}
 		
-		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Refresh interval", 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		if (config instanceof LineChartConfig)
+		{
+			Composite timeRangeArea = new Composite(dialogArea, SWT.NONE);
+			layout = new GridLayout();
+			layout.numColumns = 2;
+			layout.marginWidth = 0;
+			layout.marginHeight = 0;
+			layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+			timeRangeArea.setLayout(layout);
+			gd = new GridData();
+			gd.horizontalAlignment = SWT.FILL;
+			gd.grabExcessHorizontalSpace = true;
+			timeRangeArea.setLayoutData(gd);
+			
+			timeRange = WidgetHelper.createLabeledSpinner(timeRangeArea, SWT.BORDER, "Time interval", 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
+			timeRange.setSelection(((LineChartConfig)config).getTimeRange());
+			
+			timeUnits = WidgetHelper.createLabeledCombo(timeRangeArea, SWT.READ_ONLY, "Time units", WidgetHelper.DEFAULT_LAYOUT_DATA);
+			timeUnits.add("minutes");
+			timeUnits.add("hours");
+			timeUnits.add("days");
+			timeUnits.select(((LineChartConfig)config).getTimeUnits());
+		}
+		
+		gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Refresh interval (seconds)", 1, 10000, gd);
 		refreshRate.setSelection(config.getRefreshRate());
 		
 		return dialogArea;
@@ -189,6 +220,11 @@ public class AbstractChart extends PropertyPage
 			{
 				((TubeChartConfig)config).setTransposed(checkTransposed.getSelection());
 			}
+		}
+		if (config instanceof LineChartConfig)
+		{
+			((LineChartConfig)config).setTimeRange(timeRange.getSelection());
+			((LineChartConfig)config).setTimeUnits(timeUnits.getSelectionIndex());
 		}
 		return true;
 	}

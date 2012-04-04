@@ -129,7 +129,7 @@ public class LineChartElement extends ElementWidget
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final Date from = new Date(System.currentTimeMillis() - 3600000);
+				final Date from = new Date(System.currentTimeMillis() - config.getTimeRangeMillis());
 				final Date to = new Date(System.currentTimeMillis());
 				final DashboardDciInfo[] dciList = config.getDciList();
 				for(int i = 0; i < dciList.length; i++)

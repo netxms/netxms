@@ -134,7 +134,11 @@ public class TableComparisonChart extends PropertyPage
 			checkTransposed.setLayoutData(gd);
 		}
 		
-		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Refresh interval", 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Refresh interval (seconds)", 1, 10000, gd);
 		refreshRate.setSelection(config.getRefreshRate());
 		
 		return dialogArea;
