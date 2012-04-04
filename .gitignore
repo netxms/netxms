@@ -5,6 +5,7 @@
 /aclocal.m4
 android/src/console/gen
 android/src/console/jar/*.jar
+android/src/console/libs/*.jar
 /autom4te.cache
 /bin
 /bin64
