@@ -167,6 +167,8 @@ abstract public class GraphView extends LinearLayout {
 					lastTouchEventX = event.getX();
 					handled = true;
 				}
+				if (handled)
+					invalidate();
 			}
 			return handled;
 		}
