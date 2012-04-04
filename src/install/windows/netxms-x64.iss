@@ -1,7 +1,7 @@
 ; Installation script for NetXMS Server / Windows x64
 
 #include "setup.iss"
-OutputBaseFilename=netxms-1.1.10-x64
+OutputBaseFilename=netxms-1.2.0-rc1-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
@@ -172,19 +172,6 @@ Source: "..\..\..\x64\Release\nxalarm.exe"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\..\..\x64\Release\nxsms.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 Source: "..\..\..\x64\Release\nxevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 Source: "..\..\..\x64\Release\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
-; Web server files
-Source: "..\..\..\x64\Release\libgd.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
-Source: "..\..\..\x64\Release\libgd.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv and pdb
-Source: "..\..\..\x64\Release\nxhttpd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
-Source: "..\..\..\x64\Release\nxhttpd.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv and pdb
-Source: "..\..\webui\nxhttpd\static\*.js"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
-Source: "..\..\webui\nxhttpd\static\netxms.css"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
-Source: "..\..\webui\nxhttpd\static\images\*.png"; DestDir: "{app}\var\www\images"; Flags: ignoreversion; Components: websrv
-Source: "..\..\webui\nxhttpd\static\images\buttons\normal\*.png"; DestDir: "{app}\var\www\images\buttons\normal"; Flags: ignoreversion; Components: websrv
-Source: "..\..\webui\nxhttpd\static\images\buttons\pressed\*.png"; DestDir: "{app}\var\www\images\buttons\pressed"; Flags: ignoreversion; Components: websrv
-Source: "..\..\webui\nxhttpd\static\images\ctrlpanel\*.png"; DestDir: "{app}\var\www\images\ctrlpanel"; Flags: ignoreversion; Components: websrv
-Source: "..\..\webui\nxhttpd\static\images\objects\*.png"; DestDir: "{app}\var\www\images\objects"; Flags: ignoreversion; Components: websrv
-Source: "..\..\webui\nxhttpd\static\images\status\*.png"; DestDir: "{app}\var\www\images\status"; Flags: ignoreversion; Components: websrv
 ; Third party files
 Source: "Files-x64\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
 Source: "Files-x64\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
