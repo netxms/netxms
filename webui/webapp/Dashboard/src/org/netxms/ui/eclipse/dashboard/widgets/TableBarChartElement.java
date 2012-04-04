@@ -29,6 +29,8 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
  */
 public class TableBarChartElement extends TableComparisonChartElement
 {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * @param parent
 	 * @param data

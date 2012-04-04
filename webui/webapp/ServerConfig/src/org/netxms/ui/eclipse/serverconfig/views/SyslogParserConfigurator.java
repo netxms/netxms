@@ -75,6 +75,8 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	{
 		editor = new Text(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		editor.addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -95,6 +97,8 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -103,6 +107,8 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 		};
 		
 		actionSave = new Action("&Save", SharedIcons.SAVE) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

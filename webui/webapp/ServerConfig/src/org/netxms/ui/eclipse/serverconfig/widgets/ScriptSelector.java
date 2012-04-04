@@ -36,6 +36,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ScriptSelector extends Composite
 {
+	private static final long serialVersionUID = 1L;
+
 	private Text text;
 	private ImageHyperlink selectionLink;
 	

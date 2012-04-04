@@ -43,6 +43,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public abstract class TableComparisonChartElement extends ElementWidget
 {
+	private static final long serialVersionUID = 1L;
+
 	protected DataComparisonChart chart;
 	protected NXCSession session;
 	protected int refreshInterval = 30000;

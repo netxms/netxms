@@ -35,6 +35,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class TableDataSource extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private TableComparisonChartConfig config;
 	private DciSelector dci;
 	private LabeledText instanceColumn;

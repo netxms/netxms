@@ -35,6 +35,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class AddUsmCredDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private LabeledText name;
 	private LabeledText authPasswd;
 	private LabeledText privPasswd;

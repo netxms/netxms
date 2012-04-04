@@ -23,9 +23,9 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
 
 /**
  * Bar chart element
@@ -65,7 +65,7 @@ public class BarChartElement extends ComparisonChartElement
 		chart.setTranslucent(config.isTranslucent());
 		
 		int index = 0;
-		for(DashboardDciInfo dci : config.getDciList())
+		for(ChartDciConfig dci : config.getDciList())
 		{
 			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName()), 0.0);
 			int color = dci.getColorAsInt();
@@ -81,7 +81,7 @@ public class BarChartElement extends ComparisonChartElement
 	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
 	 */
 	@Override
-	protected DashboardDciInfo[] getDciList()
+	protected ChartDciConfig[] getDciList()
 	{
 		return config.getDciList();
 	}

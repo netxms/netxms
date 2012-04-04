@@ -41,6 +41,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ConfigurationImportDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private Text textFileName;
 	private Button browseButton;
 	private Button overrideEventsByName;
@@ -80,6 +82,8 @@ public class ConfigurationImportDialog extends Dialog
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       browseButton.setLayoutData(gd);
       browseButton.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

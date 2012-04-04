@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.dashboard.widgets.internal;
+package org.netxms.ui.eclipse.charts.api;
 
 import org.netxms.client.datacollection.DciValue;
 import org.simpleframework.xml.Attribute;
@@ -24,10 +24,10 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- * DCI information for dashboard element
+ * DCI information for chart
  */
 @Root(name="dci")
-public class DashboardDciInfo
+public class ChartDciConfig
 {
 	private static final String UNSET_COLOR = "UNSET";
 	
@@ -49,7 +49,7 @@ public class DashboardDciInfo
 	/**
 	 * Default constructor
 	 */
-	public DashboardDciInfo()
+	public ChartDciConfig()
 	{
 		nodeId = 0;
 		dciId = 0;
@@ -63,7 +63,7 @@ public class DashboardDciInfo
 	 * 
 	 * @param src source object
 	 */
-	public DashboardDciInfo(DashboardDciInfo src)
+	public ChartDciConfig(ChartDciConfig src)
 	{
 		this.nodeId = src.nodeId;
 		this.dciId = src.dciId;
@@ -77,7 +77,7 @@ public class DashboardDciInfo
 	 * 
 	 * @param dci
 	 */
-	public DashboardDciInfo(DciValue dci)
+	public ChartDciConfig(DciValue dci)
 	{
 		nodeId = dci.getNodeId();
 		dciId = dci.getId();

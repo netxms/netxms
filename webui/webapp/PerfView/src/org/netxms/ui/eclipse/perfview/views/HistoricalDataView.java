@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -301,7 +301,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 
 		// Automatic refresh
 		actionAutoRefresh.setChecked(settings.isAutoRefresh());
-		HistoricalDataView.this.getSite().getShell().getDisplay().timerExec(settings.isAutoRefresh() ? settings.getAutoRefreshInterval() : -1, refreshTimer);
+		getSite().getShell().getDisplay().timerExec(settings.isAutoRefresh() ? settings.getAutoRefreshInterval() : -1, refreshTimer);
 	}
 
 	/* (non-Javadoc)

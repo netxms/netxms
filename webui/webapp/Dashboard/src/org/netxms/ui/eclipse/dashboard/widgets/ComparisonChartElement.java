@@ -28,9 +28,9 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciData;
+import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -84,7 +84,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 	/**
 	 * Refresh graph's data
 	 */
-	protected void refreshData(final DashboardDciInfo[] dciList)
+	protected void refreshData(final ChartDciConfig[] dciList)
 	{
 		if (updateInProgress)
 			return;
@@ -150,5 +150,5 @@ public abstract class ComparisonChartElement extends ElementWidget
 		return size;
 	}
 
-	protected abstract DashboardDciInfo[] getDciList();
+	protected abstract ChartDciConfig[] getDciList();
 }

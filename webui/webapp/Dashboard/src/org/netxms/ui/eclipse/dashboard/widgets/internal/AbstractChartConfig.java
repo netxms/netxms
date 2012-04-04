@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 
@@ -28,7 +29,7 @@ import org.simpleframework.xml.ElementArray;
 public abstract class AbstractChartConfig extends DashboardElementConfig
 {
 	@ElementArray(required = true)
-	private DashboardDciInfo[] dciList = new DashboardDciInfo[0];
+	private ChartDciConfig[] dciList = new ChartDciConfig[0];
 	
 	@Element(required = false)
 	private String title = "";
@@ -64,7 +65,7 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	/**
 	 * @return the dciList
 	 */
-	public DashboardDciInfo[] getDciList()
+	public ChartDciConfig[] getDciList()
 	{
 		return dciList;
 	}
@@ -72,7 +73,7 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	/**
 	 * @param dciList the dciList to set
 	 */
-	public void setDciList(DashboardDciInfo[] dciList)
+	public void setDciList(ChartDciConfig[] dciList)
 	{
 		this.dciList = dciList;
 	}
