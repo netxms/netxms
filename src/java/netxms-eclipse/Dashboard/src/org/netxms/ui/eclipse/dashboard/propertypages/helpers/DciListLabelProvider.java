@@ -28,9 +28,9 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.propertypages.DataSources;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -41,7 +41,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 {
 	private NXCSession session;
 	private Map<NodeItemPair, String> dciNameCache = new HashMap<NodeItemPair, String>();
-	private List<DashboardDciInfo> elementList;
+	private List<ChartDciConfig> elementList;
 	
 	private class NodeItemPair
 	{
@@ -85,7 +85,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	/**
 	 * The constructor
 	 */
-	public DciListLabelProvider(List<DashboardDciInfo> elementList)
+	public DciListLabelProvider(List<ChartDciConfig> elementList)
 	{
 		this.elementList = elementList;
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -106,7 +106,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		DashboardDciInfo dci = (DashboardDciInfo)element;
+		ChartDciConfig dci = (ChartDciConfig)element;
 		switch(columnIndex)
 		{
 			case DataSources.COLUMN_POSITION:
@@ -126,7 +126,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 * 
 	 * @param dciList
 	 */
-	public void resolveDciNames(final Collection<DashboardDciInfo> dciList)
+	public void resolveDciNames(final Collection<ChartDciConfig> dciList)
 	{
 		new ConsoleJob("Resolve DCI names", null, Activator.PLUGIN_ID, null) {
 			@Override
@@ -135,7 +135,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				final long[] nodeIds = new long[dciList.size()];
 				final long[] dciIds = new long[dciList.size()];
 				int i = 0;
-				for(DashboardDciInfo dci : dciList)
+				for(ChartDciConfig dci : dciList)
 				{
 					nodeIds[i] = dci.nodeId;
 					dciIds[i] = dci.dciId;
@@ -148,7 +148,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 					public void run()
 					{
 						int i = 0;
-						for(DashboardDciInfo dci : dciList)
+						for(ChartDciConfig dci : dciList)
 						{
 							dciNameCache.put(new NodeItemPair(dci.nodeId, dci.dciId), names[i++]);
 						}

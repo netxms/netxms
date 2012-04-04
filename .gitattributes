@@ -809,6 +809,7 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/Activator.java -
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/Messages.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/PreferenceInitializer.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/ChartColor.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/ChartDciConfig.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/ChartFactory.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/DataChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/DataComparisonChart.java -text
@@ -886,7 +887,6 @@ src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/in
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/AvailabilityChartConfig.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/BarChartConfig.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/CustomWidgetConfig.java -text
-src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/DashboardDciInfo.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/DashboardElementLayout.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/DialChartConfig.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/EmbeddedDashboardConfig.java -text

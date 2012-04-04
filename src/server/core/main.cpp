@@ -1377,35 +1377,59 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 	else if (IsCommand(_T("EXEC"), szBuffer, 3))
 	{
 		pArg = ExtractWord(pArg, szBuffer);
-		TCHAR *script;
-		DWORD fileSize;
-		if ((script = (TCHAR*)LoadFile(szBuffer, &fileSize)) != NULL)
+
+		NXSL_Program *compiledScript = g_pScriptLibrary->findScript(szBuffer);
+		if (compiledScript == NULL)
 		{
-			const int errorMsgLen = 512;
-			TCHAR errorMsg[errorMsgLen];
-			NXSL_Program *compiledScript = NXSLCompile(script, errorMsg, errorMsgLen);
-			if (compiledScript != NULL)
+			char *script;
+			DWORD fileSize;
+			if ((script = (char *)LoadFile(szBuffer, &fileSize)) != NULL)
 			{
-				NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
-				if (compiledScript->run(pEnv) == 0)
+				const int errorMsgLen = 512;
+				TCHAR errorMsg[errorMsgLen];
+#ifdef UNICODE
+				WCHAR *wscript = WideStringFromMBString(script);
+				compiledScript = NXSLCompile(wscript, errorMsg, errorMsgLen);
+				free(wscript);
+#else
+				compiledScript = NXSLCompile(script, errorMsg, errorMsgLen);
+#endif
+				free(script);
+				if (compiledScript == NULL)
 				{
-					NXSL_Value *pValue = compiledScript->getResult();
-					int retCode = pValue->getValueAsInt32();
-					ConsolePrintf(pCtx, _T("INFO: Script finished with rc=%d\n\n"), retCode);
-				}
-				else
-				{
-					ConsolePrintf(pCtx, _T("ERROR: Script finished with error: %s\n\n"), compiledScript->getErrorText());
+					ConsolePrintf(pCtx, _T("ERROR: Script compilation error: %s\n\n"), errorMsg);
 				}
 			}
 			else
 			{
-				ConsolePrintf(pCtx, _T("ERROR: Script compilation error: %s\n\n"), errorMsg);
+				ConsolePrintf(pCtx, _T("ERROR: Script \"%s\" not found\n\n"), szBuffer);
 			}
 		}
-		else
+
+		if (compiledScript != NULL)
 		{
-			ConsolePrintf(pCtx, _T("ERROR: Invalid file name\n\n"));
+			NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
+				
+			NXSL_Value *argv[32];
+			int argc = 0;
+			while(argc < 32)
+			{
+				pArg = ExtractWord(pArg, szBuffer);
+				if (szBuffer[0] == 0)
+					break;
+				argv[argc++] = new NXSL_Value(szBuffer);
+			}
+
+			if (compiledScript->run(pEnv, argc, argv) == 0)
+			{
+				NXSL_Value *pValue = compiledScript->getResult();
+				int retCode = pValue->getValueAsInt32();
+				ConsolePrintf(pCtx, _T("INFO: Script finished with rc=%d\n\n"), retCode);
+			}
+			else
+			{
+				ConsolePrintf(pCtx, _T("ERROR: Script finished with error: %s\n\n"), compiledScript->getErrorText());
+			}
 		}
 	}
 	else if (IsCommand(_T("TRACE"), szBuffer, 1))

@@ -27,9 +27,9 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
 
 /**
@@ -82,7 +82,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
 	 */
 	@Override
-	protected DashboardDciInfo[] getDciList()
+	protected ChartDciConfig[] getDciList()
 	{
 		return null;
 	}
@@ -91,7 +91,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#refreshData(org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo[])
 	 */
 	@Override
-	protected void refreshData(DashboardDciInfo[] dciList)
+	protected void refreshData(ChartDciConfig[] dciList)
 	{
 		int[] objectCount = new int[6];
 		Arrays.fill(objectCount, 0);

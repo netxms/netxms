@@ -45,9 +45,9 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.DciListLabelProvider;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -69,7 +69,7 @@ public class DataSources extends PropertyPage
 	private Button deleteButton;
 	private Button upButton;
 	private Button downButton;
-	private List<DashboardDciInfo> dciList = null;
+	private List<ChartDciConfig> dciList = null;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -81,9 +81,9 @@ public class DataSources extends PropertyPage
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-      dciList = new ArrayList<DashboardDciInfo>();
-      for(DashboardDciInfo dci : config.getDciList())
-      	dciList.add(new DashboardDciInfo(dci));
+      dciList = new ArrayList<ChartDciConfig>();
+      for(ChartDciConfig dci : config.getDciList())
+      	dciList.add(new ChartDciConfig(dci));
       
 		labelProvider = new DciListLabelProvider(dciList);
 		labelProvider.resolveDciNames(dciList);
@@ -269,7 +269,7 @@ public class DataSources extends PropertyPage
 		if (dlg.open() == Window.OK)
 		{
 			DciValue selection = dlg.getSelection();
-			DashboardDciInfo dci = new DashboardDciInfo(selection);
+			ChartDciConfig dci = new ChartDciConfig(selection);
 			
 			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, dci.name);
 			dciList.add(dci);
@@ -285,7 +285,7 @@ public class DataSources extends PropertyPage
 	private void editItem()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		DashboardDciInfo dci = (DashboardDciInfo)selection.getFirstElement();
+		ChartDciConfig dci = (ChartDciConfig)selection.getFirstElement();
 		if (dci == null)
 			return;
 		
@@ -356,7 +356,7 @@ public class DataSources extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
-		config.setDciList(dciList.toArray(new DashboardDciInfo[dciList.size()]));
+		config.setDciList(dciList.toArray(new ChartDciConfig[dciList.size()]));
 		return true;
 	}
 }

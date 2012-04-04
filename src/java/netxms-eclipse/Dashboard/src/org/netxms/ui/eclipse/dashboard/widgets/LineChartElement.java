@@ -35,10 +35,10 @@ import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -86,7 +86,7 @@ public class LineChartElement extends ElementWidget
 		
 		final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(config.getDciList().length);
 		int index = 0;
-		for(DashboardDciInfo dci : config.getDciList())
+		for(ChartDciConfig dci : config.getDciList())
 		{
 			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName()));
 			int color = dci.getColorAsInt();
@@ -129,7 +129,7 @@ public class LineChartElement extends ElementWidget
 			{
 				final Date from = new Date(System.currentTimeMillis() - config.getTimeRangeMillis());
 				final Date to = new Date(System.currentTimeMillis());
-				final DashboardDciInfo[] dciList = config.getDciList();
+				final ChartDciConfig[] dciList = config.getDciList();
 				for(int i = 0; i < dciList.length; i++)
 				{
 					final DciData data = session.getCollectedData(dciList[i].nodeId, dciList[i].dciId, from, to, 0);

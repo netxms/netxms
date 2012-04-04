@@ -304,7 +304,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 
 		// Automatic refresh
 		actionAutoRefresh.setChecked(settings.isAutoRefresh());
-		HistoricalDataView.this.getSite().getShell().getDisplay().timerExec(settings.isAutoRefresh() ? settings.getAutoRefreshInterval() : -1, refreshTimer);
+		getSite().getShell().getDisplay().timerExec(settings.isAutoRefresh() ? settings.getAutoRefreshInterval() : -1, refreshTimer);
 	}
 
 	/* (non-Javadoc)
