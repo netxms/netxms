@@ -397,9 +397,6 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 
 static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	if (argc < 2)
-		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
-
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
@@ -428,9 +425,6 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 
 static int F_RemoveContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	if (argc < 1)
-		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
-
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
@@ -438,20 +432,17 @@ static int F_RemoveContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	if (_tcscmp(obj->getClass()->getName(), g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	Container *container = (Container*)obj->getData();
-	if (container->Type() != OBJECT_CONTAINER)
+	NetObj *netobj = (NetObj*)obj->getData();
+	if (netobj->Type() != OBJECT_CONTAINER)
 		return NXSL_ERR_BAD_CLASS;
 
-	container->deleteObject();
+	netobj->deleteObject();
 
 	return 0;
 }
 
 static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	if (argc < 2)
-		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
-
 	if (!argv[0]->isObject() || !argv[1]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
@@ -459,8 +450,8 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	if (_tcscmp(obj->getClass()->getName(), g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	Container *container = (Container*)obj->getData();
-	if (container->Type() != OBJECT_CONTAINER)
+	NetObj *netobj = (NetObj*)obj->getData();
+	if (netobj->Type() != OBJECT_CONTAINER)
 		return NXSL_ERR_BAD_CLASS;
 
 	NXSL_Object *obj2 = argv[1]->getValueAsObject();
@@ -472,16 +463,16 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	if (child->Type() != OBJECT_CONTAINER && child->Type() != OBJECT_SUBNET || child->Type() != OBJECT_NODE)
 		return NXSL_ERR_BAD_CLASS;
 
-	container->linkObject(child);
+	if (child->IsChild(netobj->Id()))
+		return NXSL_ERR_INVALID_OBJECT_OPERATION;
+
+	((Container*)netobj)->linkObject(child);
 
 	return 0;
 }
 
 static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	if (argc < 2)
-		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
-
 	if (!argv[0]->isObject() || !argv[1]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
@@ -489,8 +480,8 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	if (_tcscmp(obj->getClass()->getName(), g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	Container *container = (Container*)obj->getData();
-	if (container->Type() != OBJECT_CONTAINER)
+	NetObj *netobj = (NetObj*)obj->getData();
+	if (netobj->Type() != OBJECT_CONTAINER)
 		return NXSL_ERR_BAD_CLASS;
 
 	NXSL_Object *obj2 = argv[1]->getValueAsObject();
@@ -502,7 +493,8 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	if (child->Type() != OBJECT_CONTAINER && child->Type() != OBJECT_SUBNET || child->Type() != OBJECT_NODE)
 		return NXSL_ERR_BAD_CLASS;
 
-	container->DeleteChild(child);
+	netobj->DeleteChild(child);
+	child->DeleteParent(netobj);
 
 	return 0;
 }

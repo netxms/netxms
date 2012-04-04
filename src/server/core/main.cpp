@@ -1374,6 +1374,40 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				ConsolePrintf(pCtx, _T("ERROR: Invalid SHOW subcommand\n\n"));
 		}
 	}
+	else if (IsCommand(_T("EXEC"), szBuffer, 3))
+	{
+		pArg = ExtractWord(pArg, szBuffer);
+		TCHAR *script;
+		DWORD fileSize;
+		if ((script = (TCHAR*)LoadFile(szBuffer, &fileSize)) != NULL)
+		{
+			const int errorMsgLen = 512;
+			TCHAR errorMsg[errorMsgLen];
+			NXSL_Program *compiledScript = NXSLCompile(script, errorMsg, errorMsgLen);
+			if (compiledScript != NULL)
+			{
+				NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
+				if (compiledScript->run(pEnv) == 0)
+				{
+					NXSL_Value *pValue = compiledScript->getResult();
+					int retCode = pValue->getValueAsInt32();
+					ConsolePrintf(pCtx, _T("INFO: Script finished with rc=%d\n\n"), retCode);
+				}
+				else
+				{
+					ConsolePrintf(pCtx, _T("ERROR: Script finished with error: %s\n\n"), compiledScript->getErrorText());
+				}
+			}
+			else
+			{
+				ConsolePrintf(pCtx, _T("ERROR: Script compilation error: %s\n\n"), errorMsg);
+			}
+		}
+		else
+		{
+			ConsolePrintf(pCtx, _T("ERROR: Invalid file name\n\n"));
+		}
+	}
 	else if (IsCommand(_T("TRACE"), szBuffer, 1))
 	{
 		DWORD dwNode1, dwNode2;
