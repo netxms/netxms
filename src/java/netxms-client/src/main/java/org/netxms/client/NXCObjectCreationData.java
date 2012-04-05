@@ -41,6 +41,8 @@ public class NXCObjectCreationData
 	private String comments;
 	private int creationFlags;
 	private String primaryName;
+	private int agentPort;
+	private int snmpPort;
 	private InetAddress ipAddress;
 	private InetAddress ipNetMask;
 	private long agentProxyId;
@@ -87,6 +89,8 @@ public class NXCObjectCreationData
 		}
 		
 		primaryName = null;
+		agentPort = 0;
+		snmpPort = 0;
 		comments = null;
 		creationFlags = 0;
 		agentProxyId = 0;
@@ -540,5 +544,37 @@ public class NXCObjectCreationData
 	public void setCreateStatusDci(boolean createStatusDci)
 	{
 		this.createStatusDci = createStatusDci;
+	}
+
+	/**
+	 * @return the agentPort
+	 */
+	public int getAgentPort()
+	{
+		return agentPort;
+	}
+
+	/**
+	 * @param agentPort the agentPort to set
+	 */
+	public void setAgentPort(int agentPort)
+	{
+		this.agentPort = agentPort;
+	}
+
+	/**
+	 * @return the snmpPort
+	 */
+	public int getSnmpPort()
+	{
+		return snmpPort;
+	}
+
+	/**
+	 * @param snmpPort the snmpPort to set
+	 */
+	public void setSnmpPort(int snmpPort)
+	{
+		this.snmpPort = snmpPort;
 	}
 }

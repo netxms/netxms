@@ -878,6 +878,8 @@ public:
    void deleteInterface(Interface *pInterface);
 
 	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }
+	void setAgentPort(WORD port) { m_wAgentPort = port; }
+	void setSnmpPort(WORD port) { m_wSNMPPort = port; }
    void changeIPAddress(DWORD dwIpAddr);
 	void changeZone(DWORD newZone);
 

@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
@@ -57,6 +58,8 @@ public class CreateNodeDialog extends Dialog
 	
 	private LabeledText objectNameField;
 	private LabeledText hostNameField;
+	private Spinner agentPortField;
+	private Spinner snmpPortField;
 	private Button checkUnmanaged;
 	private Button checkDisableAgent;
 	private Button checkDisableSNMP;
@@ -71,6 +74,8 @@ public class CreateNodeDialog extends Dialog
 	private long agentProxy;
 	private long snmpProxy;
 	private long zoneId;
+	private int agentPort;
+	private int snmpPort;
 	
 	/**
 	 * @param parentShell
@@ -102,8 +107,10 @@ public class CreateNodeDialog extends Dialog
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+		layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
 		objectNameField = new LabeledText(dialogArea, SWT.NONE);
@@ -113,6 +120,7 @@ public class CreateNodeDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 300;
+		gd.horizontalSpan = 2;
 		objectNameField.setLayoutData(gd);
 		
 		final Composite ipAddrGroup = new Composite(dialogArea, SWT.NONE);
@@ -124,6 +132,7 @@ public class CreateNodeDialog extends Dialog
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
 		ipAddrGroup.setLayoutData(gd);
 		
 		hostNameField = new LabeledText(ipAddrGroup, SWT.NONE);
@@ -154,11 +163,18 @@ public class CreateNodeDialog extends Dialog
 			}
 		});
 		
+		agentPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "NetXMS agent port", 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		agentPortField.setSelection(4700);
+		
+		snmpPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "SNMP agent port", 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		snmpPortField.setSelection(161);
+		
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
 		optionsGroup.setText("Options");
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
 		optionsGroup.setLayoutData(gd);
 		optionsGroup.setLayout(new RowLayout(SWT.VERTICAL));
 		
@@ -180,6 +196,7 @@ public class CreateNodeDialog extends Dialog
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
 		agentProxySelector.setLayoutData(gd);
 		
 		snmpProxySelector = new ObjectSelector(dialogArea, SWT.NONE);
@@ -188,6 +205,7 @@ public class CreateNodeDialog extends Dialog
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
 		snmpProxySelector.setLayoutData(gd);
 		
 		if (session.isZoningEnabled())
@@ -198,6 +216,7 @@ public class CreateNodeDialog extends Dialog
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
+			gd.horizontalSpan = 2;
 			zoneSelector.setLayoutData(gd);
 		}
 		
@@ -233,6 +252,9 @@ public class CreateNodeDialog extends Dialog
 			creationFlags |= NXCObjectCreationData.CF_DISABLE_ICMP;
 		if (checkDisableSNMP.getSelection())
 			creationFlags |= NXCObjectCreationData.CF_DISABLE_SNMP;
+		
+		agentPort = agentPortField.getSelection();
+		snmpPort = snmpPortField.getSelection();
 		
 		agentProxy = agentProxySelector.getObjectId();
 		snmpProxy = snmpProxySelector.getObjectId();
@@ -323,5 +345,21 @@ public class CreateNodeDialog extends Dialog
 	public long getZoneId()
 	{
 		return zoneId;
+	}
+
+	/**
+	 * @return the agentPort
+	 */
+	public int getAgentPort()
+	{
+		return agentPort;
+	}
+
+	/**
+	 * @return the snmpPort
+	 */
+	public int getSnmpPort()
+	{
+		return snmpPort;
 	}
 }

@@ -4121,6 +4121,8 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								pObject = PollNewNode(dwIpAddr,
 															 pRequest->GetVariableLong(VID_IP_NETMASK),
 															 pRequest->GetVariableLong(VID_CREATION_FLAGS),
+															 pRequest->GetVariableShort(VID_AGENT_PORT),
+															 pRequest->GetVariableShort(VID_SNMP_PORT),
 															 szObjectName,
 															 pRequest->GetVariableLong(VID_AGENT_PROXY),
 															 pRequest->GetVariableLong(VID_SNMP_PROXY),

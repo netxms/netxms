@@ -140,7 +140,7 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
 //
 
 Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
-                  TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy,
+                  WORD agentPort, WORD snmpPort, TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy,
                   Cluster *pCluster, DWORD zoneId, bool doConfPoll, bool discoveredNode)
 {
    Node *pNode;
@@ -164,6 +164,10 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
    if (dwCreationFlags & NXC_NCF_DISABLE_NXCP)
       dwFlags |= NF_DISABLE_NXCP;
    pNode = new Node(dwIpAddr, dwFlags, dwProxyNode, dwSNMPProxy, zoneId);
+	if (agentPort != 0)
+		pNode->setAgentPort(agentPort);
+	if (snmpPort != 0)
+		pNode->setSnmpPort(snmpPort);
    NetObjInsert(pNode, TRUE);
    if (pszName != NULL)
       pNode->setName(pszName);
@@ -449,7 +453,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 		          IpToStr(pInfo->dwIpAddr, szIpAddr), IpToStr(pInfo->dwNetMask, szNetMask), (int)pInfo->zoneId);
 		if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, pInfo->zoneId))
 		{
-         Node *node = PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, 0, NULL, pInfo->zoneId, true, true);
+         Node *node = PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, 0, 0, NULL, 0, 0, NULL, pInfo->zoneId, true, true);
 		}
       free(pInfo);
    }

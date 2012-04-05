@@ -2833,6 +2833,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 					msg.setVariable(NXCPCodes.VID_PRIMARY_NAME, data.getPrimaryName());
 				msg.setVariable(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
 				msg.setVariable(NXCPCodes.VID_IP_NETMASK, data.getIpNetMask());
+				msg.setVariableInt16(NXCPCodes.VID_AGENT_PORT, data.getAgentPort());
+				msg.setVariableInt16(NXCPCodes.VID_SNMP_PORT, data.getSnmpPort());
 				msg.setVariableInt32(NXCPCodes.VID_CREATION_FLAGS, data.getCreationFlags());
 				msg.setVariableInt32(NXCPCodes.VID_AGENT_PROXY, (int)data.getAgentProxyId());
 				msg.setVariableInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxyId());
