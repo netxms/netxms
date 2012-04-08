@@ -42,7 +42,7 @@ public class SituationSelector extends AbstractSelector
 	 */
 	public SituationSelector(Composite parent, int style)
 	{
-		super(parent, style);
+		super(parent, style, false);
 		setText("<none>");
 	}
 

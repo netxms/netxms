@@ -761,6 +761,9 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		gridVisible = visible;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setBackgroundColor(org.netxms.ui.eclipse.charts.api.ChartColor)
+	 */
 	@Override
 	public void setBackgroundColor(ChartColor color)
 	{
@@ -768,6 +771,9 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setPlotAreaColor(org.netxms.ui.eclipse.charts.api.ChartColor)
+	 */
 	@Override
 	public void setPlotAreaColor(ChartColor color)
 	{
@@ -775,6 +781,9 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLegendColor(org.netxms.ui.eclipse.charts.api.ChartColor, org.netxms.ui.eclipse.charts.api.ChartColor)
+	 */
 	@Override
 	public void setLegendColor(ChartColor foreground, ChartColor background)
 	{
@@ -782,6 +791,9 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setAxisColor(org.netxms.ui.eclipse.charts.api.ChartColor)
+	 */
 	@Override
 	public void setAxisColor(ChartColor color)
 	{
@@ -789,8 +801,31 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setGridColor(org.netxms.ui.eclipse.charts.api.ChartColor)
+	 */
 	@Override
 	public void setGridColor(ChartColor color)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#addError(java.lang.String)
+	 */
+	@Override
+	public void addError(String message)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#clearErrors()
+	 */
+	@Override
+	public void clearErrors()
 	{
 		// TODO Auto-generated method stub
 		

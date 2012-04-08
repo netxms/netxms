@@ -20,7 +20,10 @@ package org.netxms.ui.eclipse.perfview.objecttabs.internal;
 
 import java.util.Arrays;
 import java.util.Date;
+
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -45,8 +48,6 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
  */
 public class PerfTabGraph extends DashboardComposite
 {
-	private static final long serialVersionUID = 1L;
-
 	private long nodeId;
 	private PerfTabDci dci;
 	private HistoricalDataChart chart;
@@ -103,9 +104,9 @@ public class PerfTabGraph extends DashboardComposite
 			return;
 		
 		updateInProgress = true;
+		chart.clearErrors();
 		
-		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", null, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
-		{
+		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", null, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -131,7 +132,7 @@ public class PerfTabGraph extends DashboardComposite
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get DCI values for history graph";
+				return "Cannot get value for DCI " + dci.getId() + " (" + dci.getDescription() + ")";
 			}
 
 			@Override
@@ -139,6 +140,19 @@ public class PerfTabGraph extends DashboardComposite
 			{
 				updateInProgress = false;
 				super.jobFailureHandler();
+			}
+
+			@Override
+			protected IStatus createFailureStatus(Exception e)
+			{
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						chart.addError(getErrorMessage());
+					}
+				});
+				return Status.OK_STATUS;
 			}
 		};
 		job.setUser(false);

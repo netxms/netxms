@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -328,10 +330,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
-			private static final long serialVersionUID = 1L;
-
+		menuMgr.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -353,8 +352,9 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	private void getDataFromServer()
 	{
 		// Request data from server
-		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
-		{
+		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			private GraphItem currentItem;
+			
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -363,16 +363,16 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 				final Threshold[][] thresholds = new Threshold[items.size()][];
 				for(int i = 0; i < items.size(); i++)
 				{
-					GraphItem item = items.get(i);
-					data[i] = session.getCollectedData(item.getNodeId(), item.getDciId(), settings.getTimeFrom(), settings.getTimeTo(), 0);
-					thresholds[i] = session.getThresholds(item.getNodeId(), item.getDciId());
+					currentItem = items.get(i);
+					data[i] = session.getCollectedData(currentItem.getNodeId(), currentItem.getDciId(), settings.getTimeFrom(), settings.getTimeTo(), 0);
+					thresholds[i] = session.getThresholds(currentItem.getNodeId(), currentItem.getDciId());
 					monitor.worked(1);
 				}
 				
 				runInUIThread(new Runnable() {
-					
 					@Override
-					public void run() {
+					public void run()
+					{
 						if (!((Widget)chart).isDisposed())
 						{
 							chart.setTimeRange(settings.getTimeFrom(), settings.getTimeTo());
@@ -386,7 +386,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get DCI values for history graph";
+				return "Cannot get value for DCI " + session.getObjectName(currentItem.getNodeId()) + ":\"" + currentItem.getDescription() + "\"";
 			}
 
 			@Override
@@ -394,6 +394,19 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			{
 				updateInProgress = false;
 				super.jobFailureHandler();
+			}
+
+			@Override
+			protected IStatus createFailureStatus(Exception e)
+			{
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						chart.addError(getErrorMessage());
+					}
+				});
+				return Status.OK_STATUS;
 			}
 		};
 		job.setUser(false);
@@ -415,8 +428,9 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
 			@Override
 			public void run()
 			{
@@ -425,8 +439,6 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		};
 		
 		actionAutoRefresh = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -439,8 +451,6 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionAutoRefresh.setChecked(settings.isAutoRefresh());
 		
 		actionLogScale = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -460,8 +470,9 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionLogScale.setChecked(settings.isLogScale());
 		
 		actionZoomIn = new Action() {
-			private static final long serialVersionUID = 1L;
-
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
 			@Override
 			public void run()
 			{
@@ -472,8 +483,9 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 
 		actionZoomOut = new Action() {
-			private static final long serialVersionUID = 1L;
-
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
 			@Override
 			public void run()
 			{
@@ -484,8 +496,9 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 
 		actionAdjustX = new Action() {
-			private static final long serialVersionUID = 1L;
-
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
 			@Override
 			public void run()
 			{
@@ -496,8 +509,9 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionAdjustX.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_x.png"));
 
 		actionAdjustY = new Action() {
-			private static final long serialVersionUID = 1L;
-
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
 			@Override
 			public void run()
 			{
@@ -508,8 +522,9 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionAdjustY.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_y.png"));
 
 		actionAdjustBoth = new Action() {
-			private static final long serialVersionUID = 1L;
-
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
 			@Override
 			public void run()
 			{
@@ -521,8 +536,6 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionAdjustBoth.setImageDescriptor(Activator.getImageDescriptor("icons/adjust.png"));
 
 		actionShowLegend = new Action("&Show legend") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -534,8 +547,6 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionShowLegend.setChecked(settings.isLegendVisible());
 		
 		actionLegendLeft = new Action("Place on &left", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -546,8 +557,6 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionLegendLeft.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_LEFT);
 		
 		actionLegendRight = new Action("Place on &right", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -558,8 +567,6 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionLegendRight.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_RIGHT);
 		
 		actionLegendTop = new Action("Place on &top", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -570,8 +577,6 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionLegendTop.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_TOP);
 		
 		actionLegendBottom = new Action("Place on &bottom", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -586,8 +591,9 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		{
 			final Integer presetIndex = i;
 			presetActions[i] = new Action() {
-				private static final long serialVersionUID = 1L;
-
+				/* (non-Javadoc)
+				 * @see org.eclipse.jface.action.Action#run()
+				 */
 				@Override
 				public void run()
 				{

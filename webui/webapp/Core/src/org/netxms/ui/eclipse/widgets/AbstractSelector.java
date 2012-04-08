@@ -36,6 +36,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.ui.forms.events.HyperlinkAdapter;
+import org.eclipse.ui.forms.events.HyperlinkEvent;
+import org.eclipse.ui.forms.widgets.ImageHyperlink;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.webui.core.Messages;
 
@@ -49,6 +53,7 @@ public class AbstractSelector extends Composite
 	private Label label;
 	private CLabel text;
 	private Button button;
+	private ImageHyperlink link;
 	private Image scaledImage = null;
 	
 	/**
@@ -57,7 +62,7 @@ public class AbstractSelector extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public AbstractSelector(Composite parent, int style)
+	public AbstractSelector(Composite parent, int style, boolean useHyperlink)
 	{
 		super(parent, style);
 		
@@ -84,27 +89,46 @@ public class AbstractSelector extends Composite
 		gd.verticalAlignment = SWT.TOP;
 		text.setLayoutData(gd);
 		
-		button = new Button(this, SWT.PUSH);
-		gd = new GridData();
-		gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
-		button.setLayoutData(gd);
-		button.setText("..."); //$NON-NLS-1$
-		button.setToolTipText(getButtonToolTip());
-		button.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				selectionButtonHandler();
-			}
-		});
+		if (useHyperlink)
+		{
+			link = new ImageHyperlink(this, SWT.NONE);
+			gd = new GridData();
+			gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
+			link.setLayoutData(gd);
+			link.setImage(SharedIcons.IMG_FIND);
+			link.setToolTipText(getButtonToolTip());
+			link.addHyperlinkListener(new HyperlinkAdapter() {
+				@Override
+				public void linkActivated(HyperlinkEvent e)
+				{
+					selectionButtonHandler();
+				}
+			});
+		}
+		else
+		{
+			button = new Button(this, SWT.PUSH);
+			gd = new GridData();
+			gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
+			button.setLayoutData(gd);
+			button.setText("..."); //$NON-NLS-1$
+			button.setToolTipText(getButtonToolTip());
+			button.addSelectionListener(new SelectionListener() {
+				private static final long serialVersionUID = 1L;
+	
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e)
+				{
+					widgetSelected(e);
+				}
+	
+				@Override
+				public void widgetSelected(SelectionEvent e)
+				{
+					selectionButtonHandler();
+				}
+			});
+		}
 		
 		createActions();
 		createContextMenu();

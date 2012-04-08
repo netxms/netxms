@@ -44,7 +44,7 @@ public class EventSelector extends AbstractSelector
 	 */
 	public EventSelector(Composite parent, int style)
 	{
-		super(parent, style);
+		super(parent, style, false);
 		setText("<none>");
 	}
 

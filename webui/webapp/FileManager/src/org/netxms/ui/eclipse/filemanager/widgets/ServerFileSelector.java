@@ -43,7 +43,7 @@ public class ServerFileSelector extends AbstractSelector
 	 */
 	public ServerFileSelector(Composite parent, int style)
 	{
-		super(parent, style);
+		super(parent, style, false);
 		labelProvider = new WorkbenchLabelProvider();
 		setText("<none>");
 	}

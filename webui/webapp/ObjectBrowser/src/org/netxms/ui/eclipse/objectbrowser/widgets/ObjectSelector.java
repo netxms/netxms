@@ -46,7 +46,7 @@ public class ObjectSelector extends AbstractSelector
 	 */
 	public ObjectSelector(Composite parent, int style)
 	{
-		super(parent, style);
+		super(parent, style, false);
 		setText(emptySelectionName);
 	}
 

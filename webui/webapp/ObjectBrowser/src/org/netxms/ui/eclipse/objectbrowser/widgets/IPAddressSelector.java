@@ -47,7 +47,7 @@ public class IPAddressSelector extends AbstractSelector
 	 */
 	public IPAddressSelector(Composite parent, int style)
 	{
-		super(parent, style);
+		super(parent, style, false);
 		setText("<none>");
 		session = (NXCSession)ConsoleSharedData.getSession();
 	}

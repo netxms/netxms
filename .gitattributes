@@ -2081,6 +2081,7 @@ webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmList
 webui/webapp/Charts/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/Charts/META-INF/MANIFEST.MF -text
 webui/webapp/Charts/build.properties -text
+webui/webapp/Charts/icons/chart_error.png -text
 webui/webapp/Charts/plugin.xml -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/Activator.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/PreferenceInitializer.java -text

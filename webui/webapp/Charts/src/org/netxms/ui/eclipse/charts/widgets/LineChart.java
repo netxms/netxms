@@ -214,4 +214,24 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 	public double[][] getFlatXYData() {
 		return data.values().toArray(new double[][] {});
 	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#addError(java.lang.String)
+	 */
+	@Override
+	public void addError(String message)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#clearErrors()
+	 */
+	@Override
+	public void clearErrors()
+	{
+		// TODO Auto-generated method stub
+		
+	}
 }
