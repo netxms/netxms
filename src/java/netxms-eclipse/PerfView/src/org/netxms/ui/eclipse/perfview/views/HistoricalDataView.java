@@ -51,7 +51,6 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
@@ -331,8 +330,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -354,8 +352,9 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	private void getDataFromServer()
 	{
 		// Request data from server
-		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
-		{
+		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			private GraphItem currentItem;
+			
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -364,15 +363,15 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 				final Threshold[][] thresholds = new Threshold[items.size()][];
 				for(int i = 0; i < items.size(); i++)
 				{
-					GraphItem item = items.get(i);
-					data[i] = session.getCollectedData(item.getNodeId(), item.getDciId(), settings.getTimeFrom(), settings.getTimeTo(), 0);
-					thresholds[i] = session.getThresholds(item.getNodeId(), item.getDciId());
+					currentItem = items.get(i);
+					data[i] = session.getCollectedData(currentItem.getNodeId(), currentItem.getDciId(), settings.getTimeFrom(), settings.getTimeTo(), 0);
+					thresholds[i] = session.getThresholds(currentItem.getNodeId(), currentItem.getDciId());
 					monitor.worked(1);
 				}
-
-				new UIJob("Update chart") {
+				
+				runInUIThread(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						if (!((Widget)chart).isDisposed())
 						{
@@ -380,15 +379,14 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 							setChartData(data);
 						}
 						updateInProgress = false;
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get DCI values for history graph";
+				return "Cannot get value for DCI " + session.getObjectName(currentItem.getNodeId()) + ":\"" + currentItem.getDescription() + "\"";
 			}
 
 			@Override
@@ -396,6 +394,19 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			{
 				updateInProgress = false;
 				super.jobFailureHandler();
+			}
+
+			@Override
+			protected IStatus createFailureStatus(Exception e)
+			{
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						chart.addError(getErrorMessage());
+					}
+				});
+				return Status.OK_STATUS;
 			}
 		};
 		job.setUser(false);

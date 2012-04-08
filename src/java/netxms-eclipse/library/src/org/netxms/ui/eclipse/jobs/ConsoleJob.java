@@ -86,10 +86,8 @@ public abstract class ConsoleJob extends Job
 		}
 		catch(Exception e)
 		{
-			status = new Status(Status.ERROR, pluginId, 
-                  (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
-                  getErrorMessage() + ": " + e.getMessage(), passException ? e : null); //$NON-NLS-1$
 			jobFailureHandler();
+			status = createFailureStatus(e);
 		}
 		finally
 		{
@@ -133,6 +131,17 @@ public abstract class ConsoleJob extends Job
 	 * @return Error message
 	 */
 	protected abstract String getErrorMessage();
+	
+	/**
+	 * Called from within Job.run() if job has failed to create failure status. Subclasses may override
+	 * and return IStatus.OK_STATUS to avoid standard job failure message to pop up.
+	 */
+	protected IStatus createFailureStatus(Exception e)
+	{		
+		return new Status(Status.ERROR, pluginId, 
+            (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
+            getErrorMessage() + ": " + e.getMessage(), passException ? e : null); //$NON-NLS-1$
+	}
 	
 	/**
 	 * Called from within Job.run() if job has failed. Default implementation does nothing.

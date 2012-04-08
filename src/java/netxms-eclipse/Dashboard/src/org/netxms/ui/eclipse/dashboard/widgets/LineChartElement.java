@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
@@ -124,6 +126,8 @@ public class LineChartElement extends ElementWidget
 		updateInProgress = true;
 		
 		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			private ChartDciConfig currentDci;
+			
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -132,7 +136,8 @@ public class LineChartElement extends ElementWidget
 				final ChartDciConfig[] dciList = config.getDciList();
 				for(int i = 0; i < dciList.length; i++)
 				{
-					final DciData data = session.getCollectedData(dciList[i].nodeId, dciList[i].dciId, from, to, 0);
+					currentDci = dciList[i];
+					final DciData data = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0);
 					final int index = i;
 					runInUIThread(new Runnable() {
 						@Override
@@ -160,7 +165,7 @@ public class LineChartElement extends ElementWidget
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get DCI values for history graph";
+				return "Cannot get value for DCI " + session.getObjectName(currentDci.nodeId) + ":\"" + currentDci.name + "\"";
 			}
 
 			@Override
@@ -168,6 +173,19 @@ public class LineChartElement extends ElementWidget
 			{
 				updateInProgress = false;
 				super.jobFailureHandler();
+			}
+
+			@Override
+			protected IStatus createFailureStatus(Exception e)
+			{
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						chart.addError(getErrorMessage());
+					}
+				});
+				return Status.OK_STATUS;
 			}
 		};
 		job.setUser(false);

@@ -216,4 +216,16 @@ public interface DataChart
 	 * @param color
 	 */
 	public abstract void setGridColor(ChartColor color);
+	
+	/**
+	 * Add information about error. Chart implementation should display error notification in some way.
+	 * 
+	 * @param message error message
+	 */
+	public abstract void addError(String message);
+	
+	/**
+	 * Clear errors
+	 */
+	public abstract void clearErrors();
 }

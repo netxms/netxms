@@ -1881,6 +1881,18 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		}
 		return list;
 	}
+	
+	/**
+	 * Get object name by ID.
+	 * 
+	 * @param objectId object ID
+	 * @return object name if object is known, or string in form [<object_id>] for unknown objects
+	 */
+	public String getObjectName(long objectId)
+	{
+		GenericObject object = findObjectById(objectId);
+		return (object != null) ? object.getObjectName() : ("[" + Long.toString(objectId) + "]");
+	}
 
 	/**
 	 * Get list of active alarms. For accessing terminated alarms log view API should be used.

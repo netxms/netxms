@@ -22,11 +22,16 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
@@ -35,6 +40,7 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
@@ -89,6 +95,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private MouseListener zoomMouseListener = null;
 	private PaintListener zoomPaintListener = null;
 	private ColorCache colors;
+	private Set<String> errors = new HashSet<String>(0);
+	private Image errorImage = null;
 	
 	/**
 	 * @param parent
@@ -211,12 +219,22 @@ public class LineChart extends Chart implements HistoricalDataChart
 			public void paintControl(PaintEvent e)
 			{
 				paintThresholds(e, yAxis);
+				paintErrorIndicator(e.gc);
 			}
 
 			@Override
 			public boolean drawBehindSeries()
 			{
 				return true;
+			}
+		});
+		
+		addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				if (errorImage != null)
+					errorImage.dispose();
 			}
 		});
 	}
@@ -873,5 +891,58 @@ public class LineChart extends Chart implements HistoricalDataChart
 	public void setPlotAreaColor(ChartColor color)
 	{
 		setBackgroundInPlotArea(colors.create(color.getRGBObject()));
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#addError(java.lang.String)
+	 */
+	@Override
+	public void addError(String message)
+	{
+		if (errors.add(message))
+			redraw();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#clearErrors()
+	 */
+	@Override
+	public void clearErrors()
+	{
+		if (errors.size() > 0)
+		{
+			errors.clear();
+			redraw();
+		}
+	}
+	
+	/**
+	 * Draw error indicator if needed
+	 * 
+	 * @param gc
+	 */
+	private void paintErrorIndicator(GC gc)
+	{
+		if (errors.size() == 0)
+			return;
+
+		if (errorImage == null)
+			errorImage = Activator.getImageDescriptor("icons/chart_error.png").createImage();
+
+		gc.setAlpha(127);
+		gc.setBackground(colors.create(127, 127, 127));
+		gc.fillRectangle(getPlotArea().getClientArea());
+		gc.setAlpha(255);
+		gc.drawImage(errorImage, 10, 10);
+		
+		gc.setForeground(colors.create(192, 0, 0));
+		Iterator<String> it = errors.iterator();
+		int y = 12;
+		int h = gc.textExtent("X").y;
+		while(it.hasNext())
+		{
+			gc.drawText(it.next(), 40, y, true);
+			y += h + 5;
+		}
 	}
 }

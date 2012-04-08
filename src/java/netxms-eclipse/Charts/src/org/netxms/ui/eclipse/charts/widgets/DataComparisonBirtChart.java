@@ -475,6 +475,9 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setPlotAreaColor(org.netxms.ui.eclipse.charts.api.ChartColor)
+	 */
 	@Override
 	public void setPlotAreaColor(ChartColor color)
 	{
@@ -482,6 +485,9 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLegendColor(org.netxms.ui.eclipse.charts.api.ChartColor, org.netxms.ui.eclipse.charts.api.ChartColor)
+	 */
 	@Override
 	public void setLegendColor(ChartColor foreground, ChartColor background)
 	{
@@ -489,6 +495,9 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setAxisColor(org.netxms.ui.eclipse.charts.api.ChartColor)
+	 */
 	@Override
 	public void setAxisColor(ChartColor color)
 	{
@@ -496,8 +505,31 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setGridColor(org.netxms.ui.eclipse.charts.api.ChartColor)
+	 */
 	@Override
 	public void setGridColor(ChartColor color)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#addError(java.lang.String)
+	 */
+	@Override
+	public void addError(String message)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#clearErrors()
+	 */
+	@Override
+	public void clearErrors()
 	{
 		// TODO Auto-generated method stub
 		

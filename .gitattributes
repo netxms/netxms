@@ -804,6 +804,7 @@ src/java/netxms-eclipse/Charts/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/Charts/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/Charts/OSGI-INF/l10n/bundle.properties -text
 src/java/netxms-eclipse/Charts/build.properties -text
+src/java/netxms-eclipse/Charts/icons/chart_error.png -text
 src/java/netxms-eclipse/Charts/plugin.xml -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/Activator.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/Messages.java -text
