@@ -219,6 +219,12 @@
             name="Last Values"
             order="20">
       </tab>
+      <tab
+            class="org.netxms.ui.eclipse.datacollection.objecttabs.ThresholdSummary"
+            icon="icons/thresholds.gif"
+            name="Thresholds"
+            order="20">
+      </tab>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

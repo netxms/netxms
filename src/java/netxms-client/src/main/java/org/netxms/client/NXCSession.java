@@ -79,6 +79,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmNote;
 import org.netxms.client.events.Event;
@@ -2471,13 +2472,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * Get list of DCIs configured to be shown on performance tab in console for
 	 * given node.
 	 * 
-	 * @param nodeId
-	 *           Node object ID
+	 * @param nodeId Node object ID
 	 * @return List of performance tab DCIs
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public PerfTabDci[] getPerfTabItems(final long nodeId) throws IOException, NXCException
 	{
@@ -2492,6 +2490,35 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		long base = NXCPCodes.VID_SYSDCI_LIST_BASE;
 		for(int i = 0; i < count; i++, base += 10)
 			list[i] = new PerfTabDci(response, base);
+
+		return list;
+	}
+	
+	/**
+	 * Get threshold violation summary for all nodes under given parent object. Parent object could
+	 * be container, subnet, zone, entire network, or infrastructure service root.
+	 * 
+	 * @param objectId parent object ID
+	 * @return list of threshold violation summary objects for all nodes below given root
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<ThresholdViolationSummary> getThresholdSummary(final long objectId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_THRESHOLD_SUMMARY);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+		sendMessage(msg);
+
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+		List<ThresholdViolationSummary> list = new ArrayList<ThresholdViolationSummary>();
+		long varId = NXCPCodes.VID_THRESHOLD_BASE;
+		while(response.getVariableAsInt64(varId) != 0)
+		{
+			final ThresholdViolationSummary t = new ThresholdViolationSummary(response, varId);
+			list.add(t);
+			varId += 50 * t.getDciList().size() + 2; 
+		}
 
 		return list;
 	}
@@ -2703,7 +2730,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		for(int i = 0; i < count; i++)
 		{
 			list[i] = new Threshold(response, varId);
-			varId += 10;
+			varId += 20;
 		}
 
 		return list;

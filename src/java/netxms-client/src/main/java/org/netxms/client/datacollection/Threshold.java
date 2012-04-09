@@ -18,7 +18,9 @@
  */
 package org.netxms.client.datacollection;
 
+import java.util.Date;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.Severity;
 
 /**
  * Represents data collection item's threshold
@@ -51,6 +53,8 @@ public class Threshold
 	private int repeatInterval;
 	private String value;
 	private boolean active;
+	private int currentSeverity;
+	private Date lastEventTimestamp;
 	
 	/**
 	 * Create DCI threshold object from NXCP message
@@ -70,7 +74,9 @@ public class Threshold
 		arg2 = msg.getVariableAsInteger(varId++);
 		repeatInterval = msg.getVariableAsInteger(varId++);
 		value = msg.getVariableAsString(varId++);
-		active = msg.getVariableAsBoolean(varId);
+		active = msg.getVariableAsBoolean(varId++);
+		currentSeverity = msg.getVariableAsInteger(varId++);
+		lastEventTimestamp = msg.getVariableAsDate(varId);
 	}
 	
 	/**
@@ -87,6 +93,9 @@ public class Threshold
 		operation = OP_LE;
 		repeatInterval = -1;
 		value = "0";
+		active = false;
+		currentSeverity = Severity.NORMAL;
+		lastEventTimestamp = new Date(0);
 	}
 	
 	/**
@@ -105,10 +114,14 @@ public class Threshold
 		operation = src.operation;
 		repeatInterval = src.repeatInterval;
 		value = src.value;
+		active = src.active;
+		currentSeverity = src.currentSeverity;
+		lastEventTimestamp = src.lastEventTimestamp;
 	}
 	
 	/**
-	 * Fill NXCP message with threshold's data
+	 * Fill NXCP message with threshold's data. Operational data maintained by server
+	 * will not be put into message.
 	 * 
 	 * @param msg NXCP message
 	 * @param baseId Base variable identifier
@@ -272,5 +285,21 @@ public class Threshold
 	public boolean isActive()
 	{
 		return active;
+	}
+
+	/**
+	 * @return the currentSeverity
+	 */
+	public int getCurrentSeverity()
+	{
+		return currentSeverity;
+	}
+
+	/**
+	 * @return the lastEventTimestamp
+	 */
+	public Date getLastEventTimestamp()
+	{
+		return lastEventTimestamp;
 	}
 }

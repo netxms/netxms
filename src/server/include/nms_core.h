@@ -409,11 +409,11 @@ private:
    void pollerThread(Node *pNode, int iPollType, DWORD dwRqId);
 
    void setupEncryption(DWORD dwRqId);
-   void RespondToKeepalive(DWORD dwRqId);
+   void respondToKeepalive(DWORD dwRqId);
    void onFileUpload(BOOL bSuccess);
    void DebugPrintf(int level, const TCHAR *format, ...);
-   void SendServerInfo(DWORD dwRqId);
-   void Login(CSCPMessage *pRequest);
+   void sendServerInfo(DWORD dwRqId);
+   void login(CSCPMessage *pRequest);
    void sendAllObjects(CSCPMessage *pRequest);
    void sendSelectedObjects(CSCPMessage *pRequest);
    void SendEventLog(CSCPMessage *pRequest);
@@ -445,6 +445,7 @@ private:
    void changeDCIStatus(CSCPMessage *pRequest);
    void getLastValues(CSCPMessage *pRequest);
    void getTableLastValues(CSCPMessage *pRequest);
+	void getThresholdSummary(CSCPMessage *request);
    void openEPP(DWORD dwRqId);
    void closeEPP(DWORD dwRqId);
    void saveEPP(CSCPMessage *pRequest);

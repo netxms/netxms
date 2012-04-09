@@ -80,7 +80,7 @@ public class DataCollectionItem extends DataCollectionObject
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<Threshold>(count);
 		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
-		for(int i = 0; i < count; i++, varId += 10)
+		for(int i = 0; i < count; i++, varId += 20)
 		{
 			thresholds.add(new Threshold(msg, varId));
 		}

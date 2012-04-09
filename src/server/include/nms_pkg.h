@@ -30,8 +30,7 @@
 typedef struct
 {
    MUTEX mutex;    // Synchronization mutex
-   DWORD dwNumNodes;
-   Node **ppNodeList;
+	ObjectArray<Node> *nodeList;
    ClientSession *pSession;
    DWORD dwRqId;
    DWORD dwPackageId;

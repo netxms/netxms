@@ -410,7 +410,7 @@ public:
    BOOL CheckAccessRights(DWORD dwUserId, DWORD dwRequiredRights);
    void DropUserAccess(DWORD dwUserId);
 
-   void AddChildNodesToList(DWORD *pdwNumNodes, Node ***pppNodeList, DWORD dwUserId);
+   void addChildNodesToList(ObjectArray<Node> *nodeList, DWORD dwUserId);
    
    const TCHAR *GetCustomAttribute(const TCHAR *name) { return m_customAttributes.get(name); }
    void SetCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); Modify(); }
@@ -935,6 +935,7 @@ public:
    DWORD getTableForClient(const TCHAR *name, Table **table);
    DWORD getLastValues(CSCPMessage *msg);
    DWORD getTableLastValues(DWORD dciId, CSCPMessage *msg);
+	DWORD getThresholdSummary(CSCPMessage *msg, DWORD baseId);
 	void processNewDCValue(DCObject *dco, time_t currTime, void *value);
    void cleanDCIData();
    bool applyTemplateItem(DWORD dwTemplateId, DCObject *dcObject);

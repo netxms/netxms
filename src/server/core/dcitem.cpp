@@ -470,7 +470,8 @@ bool DCItem::loadThresholdsFromDB()
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
 	           _T("SELECT threshold_id,fire_value,rearm_value,check_function,")
               _T("check_operation,parameter_1,parameter_2,event_code,current_state,")
-              _T("rearm_event_code,repeat_interval FROM thresholds WHERE item_id=? ")
+              _T("rearm_event_code,repeat_interval,current_severity,")
+				  _T("last_event_timestamp FROM thresholds WHERE item_id=? ")
               _T("ORDER BY sequence_number"));
 	if (hStmt != NULL)
 	{
@@ -617,6 +618,7 @@ void DCItem::checkThresholds(ItemValue &value)
 
    DWORD i, iResult, dwInterval;
    ItemValue checkValue;
+	EVENT_TEMPLATE *evt;
 	time_t now = time(NULL);
 
    for(i = 0; i < m_dwNumThresholds; i++)
@@ -628,7 +630,9 @@ void DCItem::checkThresholds(ItemValue &value)
             PostEventWithNames(m_ppThresholdList[i]->getEventCode(), m_pNode->Id(), "ssssisd",
 					paramNamesReach, m_szName, m_szDescription, m_ppThresholdList[i]->getStringValue(), 
                (const TCHAR *)checkValue, m_dwId, m_szInstance, 0);
-				m_ppThresholdList[i]->setLastEventTimestamp();
+				evt = FindEventTemplateByCode(m_ppThresholdList[i]->getEventCode());
+				if (evt != NULL)
+					m_ppThresholdList[i]->markLastEvent((int)evt->dwSeverity);
             if (!(m_flags & DCF_ALL_THRESHOLDS))
                i = m_dwNumThresholds;  // Stop processing
             break;
@@ -650,7 +654,9 @@ void DCItem::checkThresholds(ItemValue &value)
 						PostEventWithNames(m_ppThresholdList[i]->getEventCode(), m_pNode->Id(), "ssssisd", 
 							paramNamesReach, m_szName, m_szDescription, m_ppThresholdList[i]->getStringValue(), 
 							(const TCHAR *)checkValue, m_dwId, m_szInstance, 1);
-						m_ppThresholdList[i]->setLastEventTimestamp();
+						evt = FindEventTemplateByCode(m_ppThresholdList[i]->getEventCode());
+						if (evt != NULL)
+							m_ppThresholdList[i]->markLastEvent((int)evt->dwSeverity);
 					}
 
 					if (!(m_flags & DCF_ALL_THRESHOLDS))
@@ -683,7 +689,7 @@ void DCItem::createMessage(CSCPMessage *pMsg)
 	if (m_pszCustomUnitName != NULL)
 		pMsg->SetVariable(VID_CUSTOM_UNITS_NAME, m_pszCustomUnitName);
    pMsg->SetVariable(VID_NUM_THRESHOLDS, m_dwNumThresholds);
-   for(DWORD i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, dwId += 10)
+   for(DWORD i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, dwId += 20)
       m_ppThresholdList[i]->createMessage(pMsg, dwId);
    unlock();
 }
@@ -1656,12 +1662,33 @@ void DCItem::fillMessageWithThresholds(CSCPMessage *msg)
 	lock();
 
 	msg->SetVariable(VID_NUM_THRESHOLDS, m_dwNumThresholds);
-	for(i = 0, id = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, id += 10)
+	for(i = 0, id = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, id += 20)
 	{
 		m_ppThresholdList[i]->createMessage(msg, id);
 	}
 
 	unlock();
+}
+
+
+//
+// Fill NXCP message with active threshold, if any
+//
+
+bool DCItem::hasActiveThreshold()
+{
+	bool result = false;
+	lock();
+	for(DWORD i = 0; i < m_dwNumThresholds; i++)
+	{
+		if (m_ppThresholdList[i]->isReached())
+		{
+			result = true;
+			break;
+		}
+	}
+	unlock();
+	return result;
 }
 
 

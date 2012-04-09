@@ -279,6 +279,34 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 
 
 //
+// Upgrade from V250 to V251
+//
+
+static BOOL H_UpgradeFromV250(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE thresholds ADD current_severity integer\n")
+		_T("ALTER TABLE thresholds ADD last_event_timestamp integer\n")
+		_T("UPDATE thresholds SET current_severity=0,last_event_timestamp=0\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SetColumnNullable(_T("thresholds"), _T("fire_value"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("thresholds"), _T("rearm_value"), _T("varchar(255)")));
+	CHK_EXEC(ConvertStrings(_T("thresholds"), _T("threshold_id"), _T("fire_value")));
+	CHK_EXEC(ConvertStrings(_T("thresholds"), _T("threshold_id"), _T("rearm_value")));
+
+	CHK_EXEC(CreateConfigParam(_T("EnableNXSLContainerFunctions"), _T("1"), 1, 1));
+	CHK_EXEC(CreateConfigParam(_T("UseDNSNameForDiscoveredNodes"), _T("0"), 1, 0));
+	CHK_EXEC(CreateConfigParam(_T("AllowTrapVarbindsConversion"), _T("1"), 1, 1));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='251' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V249 to V250
 //
 
@@ -6139,6 +6167,7 @@ static struct
 	{ 247, 248, H_UpgradeFromV247 },
 	{ 248, 249, H_UpgradeFromV248 },
 	{ 249, 250, H_UpgradeFromV249 },
+	{ 250, 251, H_UpgradeFromV250 },
    { 0, 0, NULL }
 };
 

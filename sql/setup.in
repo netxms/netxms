@@ -233,7 +233,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('UseDNSNameForDiscoveredNodes','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('EnableNXSLContainerFunctions','0',1,0);
+	VALUES ('EnableNXSLContainerFunctions','1',1,1);
 
 
 /*

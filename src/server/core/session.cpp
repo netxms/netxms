@@ -500,7 +500,7 @@ void ClientSession::readThread()
          else if (pMsg->GetCode() == CMD_KEEPALIVE)
 			{
 		      DebugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
-				RespondToKeepalive(pMsg->GetId());
+				respondToKeepalive(pMsg->GetId());
 				delete pMsg;
 			}
 			else
@@ -747,13 +747,13 @@ void ClientSession::processingThread()
       switch(m_wCurrentCmd)
       {
          case CMD_LOGIN:
-            Login(pMsg);
+            login(pMsg);
             break;
          case CMD_GET_SERVER_INFO:
-            SendServerInfo(pMsg->GetId());
+            sendServerInfo(pMsg->GetId());
             break;
          case CMD_KEEPALIVE:
-            RespondToKeepalive(pMsg->GetId());
+            respondToKeepalive(pMsg->GetId());
             break;
          case CMD_GET_MY_CONFIG:
             SendConfigForAgent(pMsg);
@@ -973,6 +973,9 @@ void ClientSession::processingThread()
          case CMD_GET_TABLE_LAST_VALUES:
             getTableLastValues(pMsg);
             break;
+			case CMD_GET_THRESHOLD_SUMMARY:
+				getThresholdSummary(pMsg);
+				break;
          case CMD_GET_USER_VARIABLE:
             GetUserVariable(pMsg);
             break;
@@ -1318,7 +1321,7 @@ void ClientSession::processingThread()
 // Respond to client's keepalive message
 //
 
-void ClientSession::RespondToKeepalive(DWORD dwRqId)
+void ClientSession::respondToKeepalive(DWORD dwRqId)
 {
    CSCPMessage msg;
 
@@ -1447,7 +1450,7 @@ BOOL ClientSession::sendFile(const TCHAR *file, DWORD dwRqId)
 // Send server information to client
 //
 
-void ClientSession::SendServerInfo(DWORD dwRqId)
+void ClientSession::sendServerInfo(DWORD dwRqId)
 {
    CSCPMessage msg;
 	TCHAR szBuffer[1024];
@@ -1548,7 +1551,7 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
 // Authenticate client
 //
 
-void ClientSession::Login(CSCPMessage *pRequest)
+void ClientSession::login(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
@@ -5827,8 +5830,7 @@ void ClientSession::SendParametersList(CSCPMessage *pRequest)
 void ClientSession::DeployPackage(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD i, j, dwNumObjects, *pdwObjectList, dwNumNodes, dwPkgId;
-   Node **ppNodeList;
+   DWORD i, dwNumObjects, *pdwObjectList, dwPkgId;
    NetObj *pObject;
    TCHAR szQuery[256], szPkgFile[MAX_PATH];
    TCHAR szVersion[MAX_AGENT_VERSION_LEN], szPlatform[MAX_PLATFORM_NAME_LEN];
@@ -5842,8 +5844,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
-      dwNumNodes = 0;
-      ppNodeList = NULL;
+		ObjectArray<Node> *nodeList = NULL;
 
       // Get package ID
       dwPkgId = pRequest->GetVariableLong(VID_PACKAGE_ID);
@@ -5864,6 +5865,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
                dwNumObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
                pdwObjectList = (DWORD *)malloc(sizeof(DWORD) * dwNumObjects);
                pRequest->GetVariableInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
+					nodeList = new ObjectArray<Node>((int)dwNumObjects);
                for(i = 0; i < dwNumObjects; i++)
                {
                   pObject = FindObjectById(pdwObjectList[i]);
@@ -5874,20 +5876,19 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
                         if (pObject->Type() == OBJECT_NODE)
                         {
                            // Check if this node already in the list
-                           for(j = 0; j < dwNumNodes; j++)
-                              if (ppNodeList[j]->Id() == pdwObjectList[i])
+									int j;
+                           for(j = 0; j < nodeList->size(); j++)
+                              if (nodeList->get(j)->Id() == pdwObjectList[i])
                                  break;
-                           if (j == dwNumNodes)
+                           if (j == nodeList->size())
                            {
                               pObject->IncRefCount();
-                              ppNodeList = (Node **)realloc(ppNodeList, sizeof(Node *) * (dwNumNodes + 1));
-                              ppNodeList[dwNumNodes] = (Node *)pObject;
-                              dwNumNodes++;
+                              nodeList->add((Node *)pObject);
                            }
                         }
                         else
                         {
-                           pObject->AddChildNodesToList(&dwNumNodes, &ppNodeList, m_dwUserId);
+                           pObject->addChildNodesToList(nodeList, m_dwUserId);
                         }
                      }
                      else
@@ -5934,8 +5935,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
          MutexLock(hMutex);
 
          pInfo = (DT_STARTUP_INFO *)malloc(sizeof(DT_STARTUP_INFO));
-         pInfo->dwNumNodes = dwNumNodes;
-         pInfo->ppNodeList = ppNodeList;
+         pInfo->nodeList = nodeList;
          pInfo->pSession = this;
          pInfo->mutex = hMutex;
          pInfo->dwRqId = pRequest->GetId();
@@ -5950,9 +5950,12 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
       }
       else
       {
-         for(i = 0; i < dwNumNodes; i++)
-            ppNodeList[i]->DecRefCount();
-         safe_free(ppNodeList);
+			if (nodeList != NULL)
+			{
+				for(int i = 0; i < nodeList->size(); i++)
+					nodeList->get(i)->DecRefCount();
+				delete nodeList;
+			}
       }
    }
    else
@@ -11973,6 +11976,58 @@ void ClientSession::getNodeComponents(CSCPMessage *request)
 			else
 			{
 				msg.SetVariable(VID_RCC, RCC_NO_COMPONENT_DATA);
+			}
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+
+//
+// Get threshold summary for underlying node objects
+//
+
+void ClientSession::getThresholdSummary(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get object id and check object class and access rights
+   NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+			if ((object->Type() == OBJECT_CONTAINER) || (object->Type() == OBJECT_SERVICEROOT) || 
+			    (object->Type() == OBJECT_SUBNET) || (object->Type() == OBJECT_NETWORK) || (object->Type() == OBJECT_ZONE))
+			{
+				ObjectArray<Node> *nodes = new ObjectArray<Node>();
+				object->addChildNodesToList(nodes, m_dwUserId);
+				DWORD varId = VID_THRESHOLD_BASE;
+				for(int i = 0; i < nodes->size(); i++)
+				{
+					if (nodes->get(i)->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+						varId = nodes->get(i)->getThresholdSummary(&msg, varId);
+					nodes->get(i)->DecRefCount();
+				}
+				delete nodes;
+			}
+			else
+			{
+	         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
       }
       else

@@ -4025,7 +4025,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 
 
 //
-// Send list of system DCIs
+// Send list of DCIs to be shown on performance tab
 //
 
 DWORD Node::getPerfTabDCIList(CSCPMessage *pMsg)
@@ -4051,6 +4051,38 @@ DWORD Node::getPerfTabDCIList(CSCPMessage *pMsg)
 
 	unlockDciAccess();
    return RCC_SUCCESS;
+}
+
+
+//
+// Get threshold violation summary into NXCP message
+//
+
+DWORD Node::getThresholdSummary(CSCPMessage *msg, DWORD baseId)
+{
+	DWORD varId = baseId;
+
+	msg->SetVariable(varId++, m_dwId);
+	DWORD countId = varId++;
+	DWORD count = 0;
+
+	lockDciAccess();
+   for(int i = 0; i < m_dcObjects->size(); i++)
+	{
+		DCObject *object = m_dcObjects->get(i);
+		if (object->getType() == DCO_TYPE_ITEM)
+		{
+			if (((DCItem *)object)->hasActiveThreshold())
+			{
+				((DCItem *)object)->getLastValue(msg, varId);
+				varId += 50;
+				count++;
+			}
+		}
+	}
+	unlockDciAccess();
+	msg->SetVariable(countId, count);
+   return varId;
 }
 
 

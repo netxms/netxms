@@ -606,6 +606,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/datacollection/PerfTabDci
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/SimpleDciValue.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/TableDciValue.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/Threshold.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/datacollection/ThresholdViolationSummary.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/Alarm.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/AlarmNote.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/Event.java -text
@@ -915,6 +916,7 @@ src/java/netxms-eclipse/DataCollection/icons/last_values.png -text
 src/java/netxms-eclipse/DataCollection/icons/new.png -text
 src/java/netxms-eclipse/DataCollection/icons/question.png -text
 src/java/netxms-eclipse/DataCollection/icons/threshold.png -text
+src/java/netxms-eclipse/DataCollection/icons/thresholds.gif -text
 src/java/netxms-eclipse/DataCollection/icons/unsupported.gif -text
 src/java/netxms-eclipse/DataCollection/plugin.xml -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/Activator.java -text
@@ -940,6 +942,7 @@ src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/helpers/AgentParameterFilter.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/helpers/AgentParameterLabelProvider.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/objecttabs/LastValues.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/objecttabs/ThresholdSummary.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/CustomSchedule.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/General.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/GeneralTable.java -text
@@ -952,10 +955,13 @@ src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/helpers/DciComparator.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/DciList.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/DciSelector.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/ThresholdSummaryWidget.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/DciListComparator.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/DciListLabelProvider.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/LastValuesComparator.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/LastValuesLabelProvider.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/ThresholdTreeContentProvider.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/ThresholdTreeLabelProvider.java -text
 src/java/netxms-eclipse/EPP/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/EPP/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/EPP/build.properties -text

@@ -111,6 +111,7 @@ private:
    BYTE m_function;          // Function code
    BYTE m_operation;         // Comparision operation code
    BYTE m_dataType;          // Related item data type
+	BYTE m_currentSeverity;   // Current everity (NORMAL if threshold is inactive)
    int m_param1;             // Function's parameter #1
    int m_param2;             // Function's parameter #2
    BOOL m_isReached;
@@ -146,7 +147,8 @@ public:
 	
 	int getRepeatInterval() { return m_repeatInterval; }
 	time_t getLastEventTimestamp() { return m_lastEventTimestamp; }
-	void setLastEventTimestamp() { m_lastEventTimestamp = time(NULL); }
+	int getCurrentSeverity() { return m_currentSeverity; }
+	void markLastEvent(int severity);
 
    BOOL saveToDB(DB_HANDLE hdb, DWORD dwIndex);
    int check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue);
@@ -339,6 +341,7 @@ public:
    int getDataType() { return m_dataType; }
 	bool isInterpretSnmpRawValue() { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
 	WORD getSnmpRawValueType() { return m_snmpRawValueType; }
+	bool hasActiveThreshold();
 
 	void systemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType);
 

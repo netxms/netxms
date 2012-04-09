@@ -819,16 +819,18 @@ CREATE TABLE thresholds
 	threshold_id integer not null,
 	item_id integer not null,
 	sequence_number integer not null,
-	fire_value varchar(255) not null,
-	rearm_value varchar(255) not null,
+	fire_value varchar(255) null,
+	rearm_value varchar(255) null,
 	check_function integer not null,
 	check_operation integer not null,
 	parameter_1 integer not null,
 	parameter_2 integer not null,
 	event_code integer not null,
 	rearm_event_code integer not null,
-	current_state integer not null,
 	repeat_interval integer not null,
+	current_state integer not null,
+	current_severity integer not null,
+	last_event_timestamp integer not null,
 	PRIMARY KEY(threshold_id)
 ) TABLE_TYPE;
 

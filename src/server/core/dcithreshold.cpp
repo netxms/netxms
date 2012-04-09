@@ -39,6 +39,7 @@ Threshold::Threshold(DCItem *pRelatedItem)
    m_param1 = 1;
    m_param2 = 0;
    m_isReached = FALSE;
+	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
 	m_lastEventTimestamp = 0;
 	m_numMatches = 0;
@@ -61,6 +62,7 @@ Threshold::Threshold()
    m_param1 = 1;
    m_param2 = 0;
    m_isReached = FALSE;
+	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
 	m_lastEventTimestamp = 0;
 	m_numMatches = 0;
@@ -84,6 +86,7 @@ Threshold::Threshold(Threshold *src)
    m_param1 = src->m_param1;
    m_param2 = src->m_param2;
    m_isReached = FALSE;
+	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = src->m_repeatInterval;
 	m_lastEventTimestamp = 0;
 	m_numMatches = 0;
@@ -94,8 +97,8 @@ Threshold::Threshold(Threshold *src)
 // Constructor for creating object from database
 // This constructor assumes that SELECT query look as following:
 // SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
-//        parameter_1,parameter_2,event_code,current_state,
-//        rearm_event_code,repeat_interval FROM thresholds
+//        parameter_1,parameter_2,event_code,current_state,rearm_event_code,
+//        repeat_interval,current_severity,last_event_timestamp FROM thresholds
 //
 
 Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
@@ -118,7 +121,8 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    m_param2 = DBGetFieldLong(hResult, iRow, 6);
    m_isReached = DBGetFieldLong(hResult, iRow, 8);
 	m_repeatInterval = DBGetFieldLong(hResult, iRow, 10);
-	m_lastEventTimestamp = 0;
+	m_currentSeverity = (BYTE)DBGetFieldLong(hResult, iRow, 11);
+	m_lastEventTimestamp = (time_t)DBGetFieldULong(hResult, iRow, 12);
 	m_numMatches = 0;
 }
 
@@ -140,6 +144,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
    m_param1 = config->getSubEntryValueInt(_T("param1"), 0, 1);
    m_param2 = config->getSubEntryValueInt(_T("param2"), 0, 1);
    m_isReached = FALSE;
+	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = config->getSubEntryValueInt(_T("repeatInterval"), 0, -1);
 	m_lastEventTimestamp = 0;
 	m_numMatches = 0;
@@ -159,7 +164,7 @@ Threshold::~Threshold()
 // Create new unique id for object
 //
 
-void Threshold::createId(void)
+void Threshold::createId()
 {
    m_id = CreateUniqueId(IDG_THRESHOLD); 
 }
@@ -171,42 +176,46 @@ void Threshold::createId(void)
 
 BOOL Threshold::saveToDB(DB_HANDLE hdb, DWORD dwIndex)
 {
-   TCHAR *pszEscValue, szQuery[512];
-   DB_RESULT hResult;
-   BOOL bNewObject = TRUE;
-
-   // Check for object's existence in database
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT threshold_id FROM thresholds WHERE threshold_id=%d"), m_id);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         bNewObject = FALSE;
-      DBFreeResult(hResult);
-   }
-
    // Prepare and execute query
-   pszEscValue = EncodeSQLString(m_value.getString());
-   if (bNewObject)
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
-		              _T("INSERT INTO thresholds (threshold_id,item_id,fire_value,rearm_value,")
-                    _T("check_function,check_operation,parameter_1,parameter_2,event_code,")
-                    _T("sequence_number,current_state,rearm_event_code,repeat_interval) VALUES ")
-                    _T("(%d,%d,'%s','#00',%d,%d,%d,%d,%d,%d,%d,%d,%d)"), 
-              m_id, m_itemId, pszEscValue, m_function, m_operation, m_param1,
-              m_param2, m_eventCode, dwIndex, m_isReached, m_rearmEventCode,
-				  m_repeatInterval);
-   else
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
-		              _T("UPDATE thresholds SET item_id=%d,fire_value='%s',check_function=%d,")
-                    _T("check_operation=%d,parameter_1=%d,parameter_2=%d,event_code=%d,")
-                    _T("sequence_number=%d,current_state=%d,")
-                    _T("rearm_event_code=%d,repeat_interval=%d WHERE threshold_id=%d"),
-              m_itemId, pszEscValue, m_function, m_operation, m_param1,
-              m_param2, m_eventCode, dwIndex, m_isReached,
-              m_rearmEventCode, m_repeatInterval, m_id);
-   free(pszEscValue);
-   return DBQuery(hdb, szQuery);
+	DB_STATEMENT hStmt;
+	if (IsDatabaseRecordExist(hdb, _T("thresholds"), _T("threshold_id"), m_id))
+	{
+		hStmt = DBPrepare(hdb, 		              
+			_T("INSERT INTO thresholds (item_id,fire_value,rearm_value,")
+			_T("check_function,check_operation,parameter_1,parameter_2,event_code,")
+			_T("sequence_number,current_state,rearm_event_code,repeat_interval,")
+			_T("current_severity,last_event_timestamp,threshold_id) ")
+			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+	}
+	else
+	{
+		hStmt = DBPrepare(hdb, 		              
+			_T("UPDATE thresholds SET item_id=?,fire_value=?,rearm_value=?,check_function=?,")
+         _T("check_operation=?,parameter_1=?,parameter_2=?,event_code=?,")
+         _T("sequence_number=?,current_state=?,rearm_event_code=?,")
+			_T("repeat_interval=?,current_severity=?,last_event_timestamp=? WHERE threshold_id=?"));
+	}
+	if (hStmt == NULL)
+		return FALSE;
+
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_itemId);
+	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_value.getString(), DB_BIND_STATIC);
+	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, NULL, DB_BIND_STATIC);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_function);
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_operation);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_param1);
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_param2);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_eventCode);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, dwIndex);
+	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (LONG)(m_isReached ? 1 : 0));
+	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_rearmEventCode);
+	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (LONG)m_repeatInterval);
+	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (LONG)m_currentSeverity);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)m_lastEventTimestamp);
+
+	BOOL success = DBExecute(hStmt);
+	DBFreeStatement(hStmt);
+	return success;
 }
 
 
@@ -427,10 +436,28 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
       // Update threshold status in database
       _sntprintf(szQuery, 256,
                  _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%d"),
-                 m_isReached, m_id);
+                 (int)m_isReached, (int)m_id);
       QueueSQLRequest(szQuery);
    }
    return iResult;
+}
+
+
+//
+// Mark last activation event
+//
+
+void Threshold::markLastEvent(int severity)
+{
+	m_lastEventTimestamp = time(NULL);
+	m_currentSeverity = (BYTE)severity;
+
+	// Update threshold in database
+	TCHAR query[256];
+   _sntprintf(query, 256,
+              _T("UPDATE thresholds SET current_severity=%d,last_event_timestamp=%d WHERE threshold_id=%d"),
+              (int)m_currentSeverity, (int)m_lastEventTimestamp, (int)m_id);
+	QueueSQLRequest(query);
 }
 
 
@@ -483,6 +510,8 @@ void Threshold::createMessage(CSCPMessage *msg, DWORD baseId)
 	msg->SetVariable(varId++, (DWORD)m_repeatInterval);
 	msg->SetVariable(varId++, m_value.getString());
 	msg->SetVariable(varId++, (WORD)m_isReached);
+	msg->SetVariable(varId++, (WORD)m_currentSeverity);
+	msg->SetVariable(varId++, (DWORD)m_lastEventTimestamp);
 }
 
 

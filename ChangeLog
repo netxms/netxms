@@ -3,6 +3,7 @@
 *
 
 - Added new NXSL functions and object properties for accessing topology information
+- New NXSL function FindObject
 - Java console:
 	- Added alarm history log viewer
 	- Time interval for line charts on dashboards made configurable

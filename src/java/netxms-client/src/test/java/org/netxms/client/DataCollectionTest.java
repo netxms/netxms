@@ -18,12 +18,15 @@
  */
 package org.netxms.client;
 
+import java.util.List;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.datacollection.ThresholdViolationSummary;
+import org.netxms.client.objects.Node;
 
 /**
  * Test cases for data collection
@@ -69,6 +72,33 @@ public class DataCollectionTest extends SessionTest
 		session.disconnect();
 	}
 	
+	public void testGetThresholdSummary() throws Exception
+	{
+		final NXCSession session = connect();
+		
+		session.syncObjects();
+
+		final List<ThresholdViolationSummary> list = session.getThresholdSummary(1);
+		for(ThresholdViolationSummary s : list)
+		{
+			Node node = (Node)session.findObjectById(s.getNodeId(), Node.class);
+			System.out.println("* " + node.getObjectName());
+			if (s.getDciList().size() > 0)
+			{
+				for(DciValue v : s.getDciList())
+				{
+					System.out.println("   + " + v.getDescription());
+				}
+			}
+			else
+			{
+				System.out.println("   --- no threshold violations");
+			}
+		}
+		
+		session.disconnect();
+	}
+
 	public void testGetPerfTabItems() throws Exception
 	{
 		final NXCSession session = connect();

@@ -468,6 +468,7 @@ typedef struct
 #define CMD_GET_ALARM                  0x0103
 #define CMD_GET_TABLE_LAST_VALUES      0x0104
 #define CMD_GET_TABLE_DCI_DATA         0x0105
+#define CMD_GET_THRESHOLD_SUMMARY      0x0106
 
 
 //

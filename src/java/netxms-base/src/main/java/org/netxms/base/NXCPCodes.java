@@ -289,6 +289,7 @@ public final class NXCPCodes
 	public static final int CMD_GET_ALARM                = 0x0103;
 	public static final int CMD_GET_TABLE_LAST_VALUES    = 0x0104;
 	public static final int CMD_GET_TABLE_DCI_DATA       = 0x0105;
+	public static final int CMD_GET_THRESHOLD_SUMMARY    = 0x0106;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;

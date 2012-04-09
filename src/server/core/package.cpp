@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -316,7 +316,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
 THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
 {
    DT_STARTUP_INFO *pStartup = (DT_STARTUP_INFO *)pArg;
-   DWORD i, dwNumThreads;
+   int i, numThreads;
    CSCPMessage msg;
    Queue *pQueue;
    THREAD *pThreadList;
@@ -326,16 +326,16 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
    MutexUnlock(pStartup->mutex);
 
    // Sanity check
-   if (pStartup->dwNumNodes == 0)
+   if ((pStartup->nodeList == NULL) || (pStartup->nodeList->size() == 0))
    {
       pStartup->pSession->decRefCount();
       return THREAD_OK;
    }
 
    // Read number of upgrade threads
-   dwNumThreads = ConfigReadInt(_T("NumberOfUpgradeThreads"), 10);
-   if (dwNumThreads > pStartup->dwNumNodes)
-      dwNumThreads = pStartup->dwNumNodes;
+   numThreads = ConfigReadInt(_T("NumberOfUpgradeThreads"), 10);
+   if (numThreads > pStartup->nodeList->size())
+      numThreads = pStartup->nodeList->size();
 
    // Create processing queue
    pQueue = new Queue;
@@ -344,22 +344,22 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
    // Send initial status for each node and queue them for deployment
    msg.SetCode(CMD_INSTALLER_INFO);
    msg.SetId(pStartup->dwRqId);
-   for(i = 0; i < pStartup->dwNumNodes; i++)
+   for(i = 0; i < pStartup->nodeList->size(); i++)
    {
-      pQueue->Put(pStartup->ppNodeList[i]);
-      msg.SetVariable(VID_OBJECT_ID, pStartup->ppNodeList[i]->Id());
+      pQueue->Put(pStartup->nodeList->get(i));
+      msg.SetVariable(VID_OBJECT_ID, pStartup->nodeList->get(i)->Id());
       msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_PENDING);
       pStartup->pSession->sendMessage(&msg);
       msg.DeleteAllVariables();
    }
 
    // Start worker threads
-   pThreadList = (THREAD *)malloc(sizeof(THREAD) * dwNumThreads);
-   for(i = 0; i < dwNumThreads; i++)
+   pThreadList = (THREAD *)malloc(sizeof(THREAD) * numThreads);
+   for(i = 0; i < numThreads; i++)
       pThreadList[i] = ThreadCreateEx(DeploymentThread, 0, pStartup);
 
    // Wait for all worker threads termination
-   for(i = 0; i < dwNumThreads; i++)
+   for(i = 0; i < numThreads; i++)
       ThreadJoin(pThreadList[i]);
 
    // Send final notification to client
@@ -369,7 +369,7 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
 
    // Cleanup
    MutexDestroy(pStartup->mutex);
-   safe_free(pStartup->ppNodeList);
+   delete pStartup->nodeList;
    free(pStartup);
    free(pThreadList);
    delete pQueue;

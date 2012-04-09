@@ -1137,9 +1137,9 @@ void NetObj::SendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...)
 // Add child node objects (direct and indirect childs) to list
 //
 
-void NetObj::AddChildNodesToList(DWORD *pdwNumNodes, Node ***pppNodeList, DWORD dwUserId)
+void NetObj::addChildNodesToList(ObjectArray<Node> *nodeList, DWORD dwUserId)
 {
-   DWORD i, j;
+   DWORD i;
 
    LockChildList(FALSE);
 
@@ -1149,21 +1149,20 @@ void NetObj::AddChildNodesToList(DWORD *pdwNumNodes, Node ***pppNodeList, DWORD 
       if (m_pChildList[i]->Type() == OBJECT_NODE)
       {
          // Check if this node already in the list
-         for(j = 0; j < *pdwNumNodes; j++)
-            if ((*pppNodeList)[j]->Id() == m_pChildList[i]->Id())
+			int j;
+			for(j = 0; j < nodeList->size(); j++)
+				if (nodeList->get(j)->Id() == m_pChildList[i]->Id())
                break;
-         if (j == *pdwNumNodes)
+         if (j == nodeList->size())
          {
             m_pChildList[i]->IncRefCount();
-            *pppNodeList = (Node **)realloc(*pppNodeList, sizeof(Node *) * (*pdwNumNodes + 1));
-            (*pppNodeList)[*pdwNumNodes] = (Node *)m_pChildList[i];
-            (*pdwNumNodes)++;
+				nodeList->add((Node *)m_pChildList[i]);
          }
       }
       else
       {
          if (m_pChildList[i]->CheckAccessRights(dwUserId, OBJECT_ACCESS_READ))
-            m_pChildList[i]->AddChildNodesToList(pdwNumNodes, pppNodeList, dwUserId);
+            m_pChildList[i]->addChildNodesToList(nodeList, dwUserId);
       }
    }
 
