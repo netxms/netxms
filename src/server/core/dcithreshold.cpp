@@ -110,7 +110,6 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    m_eventCode = DBGetFieldULong(hResult, iRow, 7);
    m_rearmEventCode = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 1, szBuffer, MAX_DB_STRING);
-   DecodeSQLString(szBuffer);
    m_value = szBuffer;
    m_function = (BYTE)DBGetFieldLong(hResult, iRow, 3);
    m_operation = (BYTE)DBGetFieldLong(hResult, iRow, 4);
