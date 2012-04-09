@@ -258,7 +258,7 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	if (!argv[1]->isObject() && !argv[1]->isNull())
+	if (argc == 2 && (!argv[1]->isNull() && !argv[1]->isObject()))
 		return NXSL_ERR_NOT_OBJECT;
 
 	if (argv[0]->isInteger())
