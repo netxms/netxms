@@ -242,6 +242,77 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 
 //
+// Find object
+// First argument: object id or name
+// Second argument (optional): current node object or null
+// Returns generic object or null if requested object was not found or access to it was denied
+//
+
+static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	NetObj *object = NULL;
+
+	if ((argc !=1) && (argc != 2))
+		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+	if (!argv[0]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	if (!argv[1]->isObject() && !argv[1]->isNull())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (argv[0]->isInteger())
+	{
+		object = FindObjectById(argv[0]->getValueAsUInt32());
+	}
+	else
+	{
+		object = FindObjectByName(argv[1]->getValueAsCString(), -1);
+	}
+
+	if (object != NULL)
+	{
+		if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
+		{
+			Node *currNode = NULL;
+			if ((argc == 2) && !argv[1]->isNull())
+			{
+				NXSL_Object *o = argv[1]->getValueAsObject();
+				if (_tcscmp(o->getClass()->getName(), g_nxslNodeClass.getName()))
+					return NXSL_ERR_BAD_CLASS;
+
+				currNode = (Node *)o->getData();
+			}
+			if ((currNode != NULL) && (object->IsTrustedNode(currNode->Id())))
+			{
+				*ppResult = new NXSL_Value(new NXSL_Object((object->Type() == OBJECT_NODE) ? (NXSL_Class *)&g_nxslNodeClass : (NXSL_Class *)&g_nxslNetObjClass, object));
+			}
+			else
+			{
+				// No access, return null
+				*ppResult = new NXSL_Value;
+				DbgPrintf(4, _T("NXSL::FindObject('%s', %s [%d]): access denied for node %s [%d]"),
+				          argv[0]->getValueAsCString(),
+				          (currNode != NULL) ? currNode->Name() : _T("null"), (currNode != NULL) ? currNode->Id() : 0,
+							 object->Name(), object->Id());
+			}
+		}
+		else
+		{
+			*ppResult = new NXSL_Value(new NXSL_Object((object->Type() == OBJECT_NODE) ? (NXSL_Class *)&g_nxslNodeClass : (NXSL_Class *)&g_nxslNetObjClass, object));
+		}
+	}
+	else
+	{
+		// Object not found, return null
+		*ppResult = new NXSL_Value;
+	}
+
+	return 0;
+}
+
+
+//
 // Get node object's parents
 // First argument: node object
 // Returns array of accessible parent objects
@@ -499,6 +570,7 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	return 0;
 }
 
+
 //
 // Additional server functions to use within all scripts
 //
@@ -512,6 +584,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { _T("GetNodeInterfaces"), F_GetNodeInterfaces, 1 },
    { _T("GetNodeParents"), F_GetNodeParents, 1 },
 	{ _T("FindNodeObject"), F_FindNodeObject, 2 },
+	{ _T("FindObject"), F_FindObject, -1 },
 	{ _T("PostEvent"), F_PostEvent, -1 },
    { _T("SetCustomAttribute"), F_SetCustomAttribute, 3 },
    { _T("SetEventParameter"), F_SetEventParameter, 3 },
