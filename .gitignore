@@ -3,9 +3,11 @@
 /Makefile.in
 /README
 /aclocal.m4
+android/src/console/bin
 android/src/console/gen
 android/src/console/jar/*.jar
 android/src/console/libs/*.jar
+android/src/console/res/values/build_number.xml
 /autom4te.cache
 /bin
 /bin64

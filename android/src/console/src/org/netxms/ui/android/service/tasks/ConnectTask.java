@@ -93,7 +93,7 @@ public class ConnectTask extends Thread
 						session.connect();
 						Log.d(TAG, "calling session.subscribe()");
 						session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);
-						service.onConnect(session, session.getAlarms(false));
+						service.onConnect(session, session.getAlarms());
 						service.loadTools();
 					}
 					catch(Exception e)

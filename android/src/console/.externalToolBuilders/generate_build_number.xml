@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="Build Script" default="make" basedir=".">
+    <target name="make">
+        <!-- Get current working directory. -->
+        <exec executable="pwd" outputproperty="dir.root" />
+        <!-- Get subversion revision number. -->
+        <exec executable="svnversion" outputproperty="repository.revision" />
+        <echo message="Repository revision is ${repository.revision}" />
+
+		<copy overwrite="true" file="build_number.xml" toFile="../res/values/build_number.xml">
+			<filterset>
+				<filter token="revision" value="${repository.revision}" />
+			</filterset>
+		</copy>
+    </target>
+</project>

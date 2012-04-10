@@ -1,6 +1,8 @@
 * text=auto !eol
 android/keystore/keystore -text
-android/src/console/.externalToolBuilders/Build[!!-~]Number[!!-~]Generator.launch -text
+android/src/console/.externalToolBuilders/Generate[!!-~]build_number.xml[!!-~]from[!!-~]SVN[!!-~]revision.launch -text
+android/src/console/.externalToolBuilders/build_number.xml -text
+android/src/console/.externalToolBuilders/generate_build_number.xml -text
 android/src/console/.externalToolBuilders/run.exe -text
 android/src/console/AndroidManifest.xml -text
 android/src/console/default.properties -text
