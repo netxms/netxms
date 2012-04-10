@@ -31,12 +31,12 @@ public class RedirectServlet extends HttpServlet
 {
 	private static final long serialVersionUID = 1L;
 
-	/* (non-Javadoc)
-	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-	 */
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
 	{
-		resp.sendRedirect(resp.encodeRedirectURL("nxmc?startup=org.netxms.webui.core.nxmc"));
+		final String path = req.getRequestURI().substring(req.getContextPath().length());
+		if (path == null || path.isEmpty() || "/".equals(path)) {
+			resp.sendRedirect(resp.encodeRedirectURL("nxmc?startup=org.netxms.webui.core.nxmc"));
+		}
 	}
 }
