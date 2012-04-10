@@ -2235,6 +2235,7 @@ webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/OpenDashboard
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/api/CustomDashboardElement.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/api/DashboardElementCreationData.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/AddDashboardElementDlg.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/DataSourceEditDlg.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/EditElementXmlDlg.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/perspectives/DashboardPerspective.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AbstractChart.java -text

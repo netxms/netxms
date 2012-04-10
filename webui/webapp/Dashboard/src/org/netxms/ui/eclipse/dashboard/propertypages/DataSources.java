@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -41,14 +42,18 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
+import org.netxms.ui.eclipse.dashboard.dialogs.DataSourceEditDlg;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.DciListLabelProvider;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
+import org.netxms.ui.eclipse.tools.ColorCache;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -62,6 +67,8 @@ public class DataSources extends PropertyPage
 	public static final int COLUMN_POSITION = 0;
 	public static final int COLUMN_NODE = 1;
 	public static final int COLUMN_METRIC = 2;
+	public static final int COLUMN_LABEL = 3;
+	public static final int COLUMN_COLOR = 4;
 	
 	private AbstractChartConfig config;
 	private DciListLabelProvider labelProvider;
@@ -72,6 +79,7 @@ public class DataSources extends PropertyPage
 	private Button upButton;
 	private Button downButton;
 	private List<ChartDciConfig> dciList = null;
+	private ColorCache colorCache;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -82,6 +90,7 @@ public class DataSources extends PropertyPage
 		config = (AbstractChartConfig)getElement().getAdapter(AbstractChartConfig.class);
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
+		colorCache = new ColorCache(dialogArea);
 		
       dciList = new ArrayList<ChartDciConfig>();
       for(ChartDciConfig dci : config.getDciList())
@@ -97,13 +106,24 @@ public class DataSources extends PropertyPage
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { "Pos", "Node", "Parameter", "Color" };
-      final int[] columnWidths = { 40, 130, 220, 80 };
+      final String[] columnNames = { "Pos", "Node", "Parameter", "Label", "Color" };
+      final int[] columnWidths = { 40, 130, 200, 150, 50 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(labelProvider);
       viewer.disableSorting();
+      /*
+       * SWT.PaintItem is not supported on RAP (yet?)
+      viewer.getTable().addListener(SWT.PaintItem, new Listener() {
+			@Override
+			public void handleEvent(Event event)
+			{
+				if (event.index == COLUMN_COLOR)
+					drawColorCell(event);
+			}
+		});
+		*/
       viewer.setInput(dciList.toArray());
       
       GridData gridData = new GridData();
@@ -272,6 +292,25 @@ public class DataSources extends PropertyPage
 	}
 
 	/**
+	 * @param event
+	 */
+	private void drawColorCell(Event event)
+	{
+		TableItem item = (TableItem)event.item;
+		ChartDciConfig dci = (ChartDciConfig)item.getData();
+		if (dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR))
+			return;
+		
+		int width = viewer.getTable().getColumn(COLUMN_COLOR).getWidth();
+		Color color = ColorConverter.colorFromInt(dci.getColorAsInt(), colorCache);
+		event.gc.setForeground(colorCache.create(0, 0, 0));
+		event.gc.setBackground(color);
+		event.gc.setLineWidth(1);
+		event.gc.fillRectangle(event.x + 3, event.y + 2, width - 7, event.height - 5);
+		event.gc.drawRectangle(event.x + 3, event.y + 2, width - 7, event.height - 5);
+	}
+
+	/**
 	 * Add new item
 	 */
 	private void addItem()
@@ -301,14 +340,11 @@ public class DataSources extends PropertyPage
 		if (dci == null)
 			return;
 		
-		/*
-		ConditionDciEditDialog dlg = new ConditionDciEditDialog(getShell(), dci, 
-				labelProvider.getColumnText(dci, COLUMN_NODE), labelProvider.getColumnText(dci, COLUMN_METRIC));
+		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci);
 		if (dlg.open() == Window.OK)
 		{
 			viewer.update(dci, null);
-			isModified = true;
-		}*/
+		}
 	}
 	
 	/**
@@ -330,8 +366,7 @@ public class DataSources extends PropertyPage
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.size() == 1)
 		{
-			ConditionDciInfo element = (ConditionDciInfo)selection.getFirstElement();
-			
+			Object element = selection.getFirstElement();
 			int index = dciList.indexOf(element);
 			if (index > 0)
 			{
@@ -350,8 +385,7 @@ public class DataSources extends PropertyPage
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.size() == 1)
 		{
-			ConditionDciInfo element = (ConditionDciInfo)selection.getFirstElement();
-			
+			Object element = selection.getFirstElement();
 			int index = dciList.indexOf(element);
 			if ((index < dciList.size() - 1) && (index >= 0))
 			{
