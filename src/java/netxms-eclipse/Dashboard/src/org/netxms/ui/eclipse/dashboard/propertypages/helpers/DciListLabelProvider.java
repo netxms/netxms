@@ -117,6 +117,10 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			case DataSources.COLUMN_METRIC:
 				String name = dciNameCache.get(new NodeItemPair(dci.nodeId, dci.dciId));
 				return (name != null) ? name : "<unresolved>";
+			case DataSources.COLUMN_LABEL:
+				return dci.name;
+			case DataSources.COLUMN_COLOR:
+				return dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR) ? "auto" : dci.color;
 		}
 		return null;
 	}

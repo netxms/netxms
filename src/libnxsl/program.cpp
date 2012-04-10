@@ -73,7 +73,7 @@ static const TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
 	_T("Function not found"),
 	_T("Invalid number of function's arguments"),
 	_T("Cannot do automatic type cast"),
-	_T("Left argument of -> must be a reference to object"),
+	_T("Function or operation argument is not an object"),
 	_T("Unknown object's attribute"),
 	_T("Requested module not found or cannot be loaded"),
 	_T("Argument is not of string type and cannot be converted to string"),

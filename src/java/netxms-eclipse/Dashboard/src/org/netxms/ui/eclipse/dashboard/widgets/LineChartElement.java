@@ -176,13 +176,13 @@ public class LineChartElement extends ElementWidget
 			}
 
 			@Override
-			protected IStatus createFailureStatus(Exception e)
+			protected IStatus createFailureStatus(final Exception e)
 			{
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						chart.addError(getErrorMessage());
+						chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")");
 					}
 				});
 				return Status.OK_STATUS;

@@ -397,13 +397,13 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			}
 
 			@Override
-			protected IStatus createFailureStatus(Exception e)
+			protected IStatus createFailureStatus(final Exception e)
 			{
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						chart.addError(getErrorMessage());
+						chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")");
 					}
 				});
 				return Status.OK_STATUS;

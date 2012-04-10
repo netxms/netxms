@@ -29,7 +29,7 @@ import org.simpleframework.xml.Root;
 @Root(name="dci")
 public class ChartDciConfig
 {
-	private static final String UNSET_COLOR = "UNSET";
+	public static final String UNSET_COLOR = "UNSET";
 	
 	@Attribute
 	public long nodeId;
