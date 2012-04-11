@@ -133,9 +133,12 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 		return itemStyles;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#setItemStyles(java.util.List)
+	 */
 	@Override
-	public void setItemStyles(List<GraphItemStyle> itemStyles) {
-		System.out.println("setItemStyles");
+	public void setItemStyles(List<GraphItemStyle> itemStyles)
+	{
 		this.itemStyles = itemStyles;
 	}
 	
@@ -149,36 +152,43 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 	}
 
 	@Override
-	public int addParameter(GraphItem item) {
-		System.out.println("addParameter");
+	public int addParameter(GraphItem item) 
+	{
 		items.add(item);
 		return items.size();
 	}
 
 	@Override
-	public void updateParameter(int index, DciData data, boolean updateChart) {
-		System.out.println("updateParameter");
-		if ((index < 0) || (index >= items.size())) {
+	public void updateParameter(int index, DciData data, boolean updateChart) 
+	{
+		if ((index < 0) || (index >= items.size())) 
+		{
 			return;
 		}
 
 		final DciDataRow[] values = data.getValues();
 
 		final double[] flatData = new double[values.length * 2];
-		for (int i = 0; i < values.length; i++) {
+		for (int i = 0; i < values.length; i++) 
+		{
 			DciDataRow row = values[i];
 			flatData[i * 2] = row.getTimestamp().getTime();
 			flatData[(i * 2) + 1] = row.getValueAsDouble();
 		}
 		this.data.put(index, flatData);
 
-		if (updateChart) {
+		if (updateChart) 
+		{
 			refresh();
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#adjustXAxis(boolean)
+	 */
 	@Override
-	public void adjustXAxis(boolean repaint) {
+	public void adjustXAxis(boolean repaint) 
+	{
 		System.out.println("adjustXAxis");
 	}
 

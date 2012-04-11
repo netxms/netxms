@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="false"
+            category="org.eclipse.ui"
+            class="org.netxms.ui.eclipse.serviceview.views.ServiceTreeView"
+            icon="icons/service_tree.png"
+            id="org.netxms.ui.eclipse.serviceview.views.ServiceTreeView"
+            name="Service Tree"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Open service tree vizualization"
+            id="org.netxms.ui.eclipse.serviceview.commands.open_service_tree"
+            name="Service Tree">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.service_view"
+            label="Service View"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.serviceview.actions.OpenServiceTree"
+               definitionId="org.netxms.ui.eclipse.serviceview.commands.open_service_tree"
+               icon="icons/service_tree.png"
+               id="org.netxms.ui.eclipse.serviceview.actions.open_service_tree"
+               label="Service Tree"
+               menubarPath="view/primary"
+               style="push">
+         </action>
+      </actionSet>
+   </extension>
+
+</plugin>

@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            class="org.netxms.ui.eclipse.networkmaps.views.IPNeighbors"
+            icon="icons/quickmap.png"
+            id="org.netxms.ui.eclipse.networkmaps.view.ip_neighbors"
+            name="IP Neighbors"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            class="org.netxms.ui.eclipse.networkmaps.views.ServiceDependency"
+            icon="icons/service_deps.gif"
+            id="org.netxms.ui.eclipse.networkmaps.views.ServiceDependency"
+            name="Service Dependency">
+      </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            class="org.netxms.ui.eclipse.networkmaps.views.ServiceComponents"
+            icon="icons/service_components.gif"
+            id="org.netxms.ui.eclipse.networkmaps.views.ServiceComponents"
+            name="Service Components"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            class="org.netxms.ui.eclipse.networkmaps.views.Layer2Topology"
+            icon="icons/layer2.png"
+            id="org.netxms.ui.eclipse.networkmaps.views.Layer2Topology"
+            name="Layer 2 Topology"
+            restorable="true">
+      </view>
+      <category
+            id="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            name="Network Maps">
+      </category>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            class="org.netxms.ui.eclipse.networkmaps.views.PredefinedMap"
+            icon="icons/netmap.png"
+            id="org.netxms.ui.eclipse.networkmaps.views.PredefinedMap"
+            name="Network Map"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            class="org.netxms.ui.eclipse.networkmaps.views.VlanMap"
+            icon="icons/quickmap.png"
+            id="org.netxms.ui.eclipse.networkmaps.views.VlanMap"
+            name="VLAN Map"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            class="org.netxms.ui.eclipse.networkmaps.views.IPRouteMap"
+            icon="icons/route.gif"
+            id="org.netxms.ui.eclipse.networkmaps.views.IPRouteMap"
+            name="IP Route"
+            restorable="true">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.Node"
+            objectClass="org.netxms.client.objects.Node">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowIPNeighbors"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowIPNeighbors"
+               label="IP Neighbors"
+               icon="icons/quickmap.png"
+               menubarPath="topology">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowLayer2Topology"
+               enablesFor="1"
+               icon="icons/layer2.png"
+               id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowLayer2Topology"
+               label="Layer 2 Topology"
+               menubarPath="topology">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceDependency"
+               enablesFor="1"
+               icon="icons/service_deps.gif"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceDependency#node"
+               label="Service Dependency"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowIPRoute"
+               enablesFor="+"
+               icon="icons/route.gif"
+               id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowIPRoute"
+               label="IP Route"
+               menubarPath="topology">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.Cluster"
+            objectClass="org.netxms.client.objects.Cluster">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceDependency"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceDependency#cluster"
+               label="Service Dependency"
+               icon="icons/service_deps.gif"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.Container"
+            objectClass="org.netxms.client.objects.Container">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceDependency"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceDependency#container"
+               label="Service Dependency"
+               icon="icons/service_deps.gif"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceComponents"
+               enablesFor="1"
+               icon="icons/service_components.gif"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceComponents#container"
+               label="Service Components"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.ServiceRoot"
+            objectClass="org.netxms.client.objects.ServiceRoot">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceComponents"
+               enablesFor="1"
+               icon="icons/service_components.gif"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceComponents#serviceroot"
+               label="Service Components"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.NetworkMapRoot"
+            objectClass="org.netxms.client.objects.NetworkMapRoot">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.CreateMapGroup"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMapGroup#NetworkMapRoot"
+               label="Create network map &amp;group..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.CreateNetworkMap"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMap#NetworkMapRoot"
+               label="Create network &amp;map..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.NetworkMapGroup"
+            objectClass="org.netxms.client.objects.NetworkMapGroup">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.CreateMapGroup"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMapGroup#NetworkMapGroup"
+               label="Create network map &amp;group..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.CreateNetworkMap"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMap#NetworkMapGroup"
+               label="Create network &amp;map..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.NetworkMap"
+            objectClass="org.netxms.client.objects.NetworkMap">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.OpenMapObject"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.Open#NetworkMap"
+               label="&amp;Open map"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="org.netxms.ui.eclipse.networkmaps.preferencepages.GeneralMapPreferences"
+            id="org.netxms.ui.eclipse.networkmaps.preferencepages.General"
+            name="Network Maps">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.networkmaps.propertypages.MapBackground"
+            id="org.netxms.ui.eclipse.networkmaps.propertypages.MapBackground"
+            name="Map Background">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.NetworkMap">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.networkmaps.propertypages.MapLinkGeneral"
+            id="org.netxms.ui.eclipse.networkmaps.propertypages.MapLinkGeneral#0"
+            name="General">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddObject"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+A">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.LinkObjects"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+L">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+R">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Add new object to the map"
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddObject"
+            name="Add object">
+      </command>
+      <command
+            description="Link selected objects"
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.LinkObjects"
+            name="Link selected objects">
+      </command>
+      <command
+            description="Remove selected element(s)"
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove"
+            name="Remove">
+      </command>
+   </extension>
+
+</plugin>
