@@ -267,7 +267,7 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	}
 	else
 	{
-		object = FindObjectByName(argv[1]->getValueAsCString(), -1);
+		object = FindObjectByName(argv[0]->getValueAsCString(), -1);
 	}
 
 	if (object != NULL)
@@ -509,6 +509,8 @@ static int F_RemoveContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 
 	netobj->deleteObject();
 
+	*ppResult = new NXSL_Value((LONG)0);
+
 	return 0;
 }
 
@@ -531,13 +533,18 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *child = (NetObj*)obj2->getData();
-	if (child->Type() != OBJECT_CONTAINER && child->Type() != OBJECT_SUBNET || child->Type() != OBJECT_NODE)
+	if (child->Type() != OBJECT_CONTAINER && child->Type() != OBJECT_SUBNET && child->Type() != OBJECT_NODE)
 		return NXSL_ERR_BAD_CLASS;
 
-	if (child->IsChild(netobj->Id()))
+	if (child->IsChild(netobj->Id())) // prevent loops
 		return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
-	((Container*)netobj)->linkObject(child);
+	//((Container*)netobj)->linkObject(child);
+	netobj->AddChild(child);
+	child->AddParent(netobj);
+	netobj->calculateCompoundStatus();
+
+	*ppResult = new NXSL_Value((LONG)0);
 
 	return 0;
 }
