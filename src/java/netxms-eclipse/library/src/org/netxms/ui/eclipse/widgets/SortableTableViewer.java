@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ import org.netxms.ui.eclipse.widgets.helpers.TableSortingListener;
 
 /**
  * Implementation of TableViewer with column sorting support
- *
  */
 public class SortableTableViewer extends TableViewer
 {
