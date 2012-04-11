@@ -4,7 +4,6 @@
 <product name="NXMC" uid="org.netxms.nxmc" version="1.2.0" useFeatures="false" includeLaunchers="false">
    <plugins>
       <plugin id="com.ibm.icu"/>
-      <plugin id="com.ibm.icu.base"/>
       <plugin id="org.apache.commons.codec"/>
       <plugin id="org.apache.commons.fileupload"/>
       <plugin id="org.apache.commons.io"/>
@@ -34,15 +33,9 @@
       <plugin id="org.eclipse.equinox.http.servletbridge"/>
       <plugin id="org.eclipse.equinox.preferences"/>
       <plugin id="org.eclipse.equinox.registry"/>
+      <plugin id="org.eclipse.equinox.servletbridge"/>
       <plugin id="org.eclipse.equinox.servletbridge.extensionbundle" fragment="true"/>
       <plugin id="org.eclipse.help"/>
-      <plugin id="org.eclipse.jetty.continuation"/>
-      <plugin id="org.eclipse.jetty.http"/>
-      <plugin id="org.eclipse.jetty.io"/>
-      <plugin id="org.eclipse.jetty.security"/>
-      <plugin id="org.eclipse.jetty.server"/>
-      <plugin id="org.eclipse.jetty.servlet"/>
-      <plugin id="org.eclipse.jetty.util"/>
       <plugin id="org.eclipse.osgi"/>
       <plugin id="org.eclipse.osgi.services"/>
       <plugin id="org.eclipse.rap.design.example"/>
@@ -86,7 +79,6 @@
 
    <configurations>
       <plugin id="com.ibm.icu" autoStart="true" startLevel="0" />
-      <plugin id="com.ibm.icu.base" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.codec" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.fileupload" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.io" autoStart="true" startLevel="0" />
@@ -116,14 +108,8 @@
       <plugin id="org.eclipse.equinox.http.servletbridge" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.preferences" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.registry" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.servletbridge" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.help" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.continuation" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.http" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.io" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.security" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.server" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.servlet" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.jetty.util" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.osgi" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.osgi.services" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.design.example" autoStart="true" startLevel="0" />
