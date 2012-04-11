@@ -211,6 +211,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, DWORD dwIndex)
 	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (LONG)m_repeatInterval);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (LONG)m_currentSeverity);
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)m_lastEventTimestamp);
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (LONG)m_id);
 
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
