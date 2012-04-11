@@ -177,7 +177,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, DWORD dwIndex)
 {
    // Prepare and execute query
 	DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("thresholds"), _T("threshold_id"), m_id))
+	if (!IsDatabaseRecordExist(hdb, _T("thresholds"), _T("threshold_id"), m_id))
 	{
 		hStmt = DBPrepare(hdb, 		              
 			_T("INSERT INTO thresholds (item_id,fire_value,rearm_value,")
