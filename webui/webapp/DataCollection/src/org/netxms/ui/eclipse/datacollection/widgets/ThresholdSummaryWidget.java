@@ -20,8 +20,6 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -34,15 +32,23 @@ import org.netxms.ui.eclipse.datacollection.widgets.internal.ThresholdTreeConten
 import org.netxms.ui.eclipse.datacollection.widgets.internal.ThresholdTreeLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
  * Widget to show threshold violation summary
  */
 public class ThresholdSummaryWidget extends Composite
 {
+	public static final int COLUMN_NODE = 0;
+	public static final int COLUMN_STATUS = 1;
+	public static final int COLUMN_PARAMETER = 2;
+	public static final int COLUMN_VALUE = 3;
+	public static final int COLUMN_CONDITION = 4;
+	public static final int COLUMN_TIMESTAMP = 5;
+	
 	private GenericObject object;
 	private IViewPart viewPart;
-	private TreeViewer viewer;
+	private SortableTreeViewer viewer;
 	
 	/**
 	 * @param parent
@@ -54,41 +60,11 @@ public class ThresholdSummaryWidget extends Composite
 		this.viewPart = viewPart;
 		setLayout(new FillLayout());
 
-		viewer = new TreeViewer(this, SWT.FULL_SELECTION);
-		setupViewer();
-		
-	}
-	
-	private void setupViewer()
-	{
-		viewer.getTree().setHeaderVisible(true);
-		
-		TreeViewerColumn column = new TreeViewerColumn(viewer, SWT.LEFT);
-		column.getColumn().setText("Node");
-		column.getColumn().setWidth(200);
-
-		column = new TreeViewerColumn(viewer, SWT.LEFT);
-		column.getColumn().setText("Status");
-		column.getColumn().setWidth(100);
-
-		column = new TreeViewerColumn(viewer, SWT.LEFT);
-		column.getColumn().setText("Parameter");
-		column.getColumn().setWidth(250);
-
-		column = new TreeViewerColumn(viewer, SWT.LEFT);
-		column.getColumn().setText("Value");
-		column.getColumn().setWidth(100);
-
-		column = new TreeViewerColumn(viewer, SWT.LEFT);
-		column.getColumn().setText("Condition");
-		column.getColumn().setWidth(100);
-
-		column = new TreeViewerColumn(viewer, SWT.LEFT);
-		column.getColumn().setText("Since");
-		column.getColumn().setWidth(140);
-		
+		final String[] names = { "Node",  "Status", "Parameter", "Value", "Condition", "Since" };
+		final int[] widths = { 200, 100, 250, 100, 100, 140 };
+		viewer = new SortableTreeViewer(this, names, widths, COLUMN_NODE, SWT.UP, SWT.FULL_SELECTION);
 		viewer.setContentProvider(new ThresholdTreeContentProvider());
-		viewer.setLabelProvider(new ThresholdTreeLabelProvider());
+		viewer.setLabelProvider(new ThresholdTreeLabelProvider());		
 	}
 
 	/**

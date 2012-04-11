@@ -30,6 +30,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.datacollection.propertypages.Thresholds;
+import org.netxms.ui.eclipse.datacollection.widgets.ThresholdSummaryWidget;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -47,16 +48,16 @@ public class ThresholdTreeLabelProvider extends LabelProvider implements ITableL
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		if ((element instanceof ThresholdViolationSummary) && (columnIndex == 0))
+		if ((element instanceof ThresholdViolationSummary) && (columnIndex == ThresholdSummaryWidget.COLUMN_NODE))
 		{
 			Node node = (Node)session.findObjectById(((ThresholdViolationSummary)element).getNodeId(), Node.class);
 			return (node != null) ? wbLabelProvider.getImage(node) : null;
 		}
-		else if ((element instanceof ThresholdViolationSummary) && (columnIndex == 1))
+		else if ((element instanceof ThresholdViolationSummary) && (columnIndex == ThresholdSummaryWidget.COLUMN_STATUS))
 		{
 			return StatusDisplayInfo.getStatusImage(((ThresholdViolationSummary)element).getCurrentSeverity());
 		}
-		else if ((element instanceof DciValue) && (columnIndex == 1))
+		else if ((element instanceof DciValue) && (columnIndex == ThresholdSummaryWidget.COLUMN_STATUS))
 		{
 			return StatusDisplayInfo.getStatusImage(((DciValue)element).getActiveThreshold().getCurrentSeverity());
 		}
@@ -73,10 +74,10 @@ public class ThresholdTreeLabelProvider extends LabelProvider implements ITableL
 		{
 			switch(columnIndex)
 			{
-				case 0:
+				case ThresholdSummaryWidget.COLUMN_NODE:
 					Node node = (Node)session.findObjectById(((ThresholdViolationSummary)element).getNodeId(), Node.class);
 					return (node != null) ? node.getObjectName() : null;
-				case 1:
+				case ThresholdSummaryWidget.COLUMN_STATUS:
 					return StatusDisplayInfo.getStatusText(((ThresholdViolationSummary)element).getCurrentSeverity());
 				default:
 					return null;
@@ -86,15 +87,15 @@ public class ThresholdTreeLabelProvider extends LabelProvider implements ITableL
 		{
 			switch(columnIndex)
 			{
-				case 1:
+				case ThresholdSummaryWidget.COLUMN_STATUS:
 					return StatusDisplayInfo.getStatusText(((DciValue)element).getActiveThreshold().getCurrentSeverity());
-				case 2:
+				case ThresholdSummaryWidget.COLUMN_PARAMETER:
 					return ((DciValue)element).getDescription();
-				case 3:
+				case ThresholdSummaryWidget.COLUMN_VALUE:
 					return ((DciValue)element).getValue();
-				case 4:
+				case ThresholdSummaryWidget.COLUMN_CONDITION:
 					return thresholdLabelProvider.getColumnText(((DciValue)element).getActiveThreshold(), Thresholds.COLUMN_OPERATION);
-				case 5:
+				case ThresholdSummaryWidget.COLUMN_TIMESTAMP:
 					return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((DciValue)element).getActiveThreshold().getLastEventTimestamp());
 				default:
 					return null;
