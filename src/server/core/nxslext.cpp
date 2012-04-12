@@ -466,6 +466,18 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	return 0;
 }
 
+
+//
+// Create container object
+// Syntax:
+//    CreateContainer(parent, name)
+// where:
+//     parent - parent object
+//     name   - name for new container
+// Return value:
+//     new container object
+//
+
 static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -488,6 +500,7 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	NetObjInsert(container, TRUE);
 	parent->AddChild(container);
 	container->AddParent(parent);
+	container->unhide();
 
 	*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, container));
 
@@ -509,7 +522,7 @@ static int F_RemoveContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 
 	netobj->deleteObject();
 
-	*ppResult = new NXSL_Value((LONG)0);
+	*ppResult = new NXSL_Value;
 
 	return 0;
 }
@@ -544,7 +557,7 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	child->AddParent(netobj);
 	netobj->calculateCompoundStatus();
 
-	*ppResult = new NXSL_Value((LONG)0);
+	*ppResult = new NXSL_Value;
 
 	return 0;
 }
@@ -573,6 +586,8 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 
 	netobj->DeleteChild(child);
 	child->DeleteParent(netobj);
+
+	*ppResult = new NXSL_Value;
 
 	return 0;
 }
