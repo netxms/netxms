@@ -208,17 +208,23 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			case CS_CONNECTED:
 				if (notificationType == 1 || notificationType == 3)
-					icon = R.drawable.notify_connected;
+				{
+					icon = R.drawable.ic_stat_connected;
+				}
 				text = getString(R.string.notify_connected, extra);
 				break;
 			case CS_DISCONNECTED:
 				if (notificationType == 2 || notificationType == 3)
-					icon = R.drawable.notify_disconnected;
+				{
+					icon = R.drawable.ic_stat_disconnected;
+				}
 				text = getString(R.string.notify_disconnected);
 				break;
 			case CS_ERROR:
 				if (notificationType == 2 || notificationType == 3)
-					icon = R.drawable.notify_disconnected;
+				{
+					icon = R.drawable.ic_stat_disconnected;
+				}
 				text = getString(R.string.notify_connection_failed, extra);
 				break;
 			case CS_NOCONNECTION:
