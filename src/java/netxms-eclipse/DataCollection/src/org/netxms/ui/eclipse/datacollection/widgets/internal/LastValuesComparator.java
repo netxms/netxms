@@ -27,7 +27,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Comparator for "Last Values" widget
- *
  */
 public class LastValuesComparator extends ViewerComparator
 {

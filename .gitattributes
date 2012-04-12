@@ -1023,6 +1023,7 @@ src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/DciListLabelProvider.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/LastValuesComparator.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/LastValuesLabelProvider.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/ThresholdTreeComparator.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/ThresholdTreeContentProvider.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/ThresholdTreeLabelProvider.java -text
 src/java/netxms-eclipse/EPP/.settings/org.eclipse.jdt.core.prefs -text
