@@ -145,28 +145,4 @@ class ElementWidget extends DashboardComposite implements ControlListener
 			editPane.moveAbove(null);
 		}
 	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#layout(boolean, boolean)
-	 */
-	@Override
-	public void layout(boolean changed, boolean all)
-	{
-		if (editMode)
-		{
-			if (editPane != null)
-			{
-				editPane.dispose();
-				editPane = null;
-			}
-		}
-		super.layout(editMode ? true : changed, all);
-		if (editMode)
-		{			
-			editPane = new EditPaneWidget(this, dbc, element);
-			editPane.setLocation(0,  0);
-			editPane.setSize(getSize());
-			editPane.moveAbove(null);
-		}
-	}
 }
