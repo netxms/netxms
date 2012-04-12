@@ -111,11 +111,10 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	 */
 	private void collectData(int[] objectCount, GenericObject root)
 	{
-		for(GenericObject o : root.getChildsAsArray())
+		for(GenericObject o : root.getAllChilds(-1))
 		{
 			if ((o.getStatus() <= Severity.UNKNOWN) && filterObject(o))
 				objectCount[o.getStatus()]++;
-			collectData(objectCount, o);
 		}
 	}
 

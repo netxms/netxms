@@ -930,8 +930,10 @@ src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/perspectiv
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AbstractChart.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AlarmViewer.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AvailabilityChart.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/CustomWidget.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/DashboardElements.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/DialChart.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/GeoMap.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/Layout.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/NetworkMap.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/ObjectStatusChart.java -text

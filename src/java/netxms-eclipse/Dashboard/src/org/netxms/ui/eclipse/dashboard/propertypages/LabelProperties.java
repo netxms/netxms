@@ -18,13 +18,17 @@
  */
 package org.netxms.ui.eclipse.dashboard.propertypages;
 
+import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -34,6 +38,8 @@ public class LabelProperties extends PropertyPage
 {
 	private LabelConfig config;
 	private LabeledText title; 
+	private ColorSelector foreground;
+	private ColorSelector background;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -46,6 +52,7 @@ public class LabelProperties extends PropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
 		title = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
@@ -54,7 +61,40 @@ public class LabelProperties extends PropertyPage
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
 		title.setLayoutData(gd);
+		
+		Composite fgArea = new Composite(dialogArea, SWT.NONE);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		fgArea.setLayoutData(gd);
+		RowLayout areaLayout = new RowLayout();
+		areaLayout.type = SWT.HORIZONTAL;
+		areaLayout.marginBottom = 0;
+		areaLayout.marginTop = 0;
+		areaLayout.marginLeft = 0;
+		areaLayout.marginRight = 0;
+		fgArea.setLayout(areaLayout);
+		new Label(fgArea, SWT.NONE).setText("Text color:");
+		foreground = new ColorSelector(fgArea);
+		foreground.setColorValue(ColorConverter.rgbFromInt(config.getForegroundColorAsInt()));
+		
+		Composite bgArea = new Composite(dialogArea, SWT.NONE);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		bgArea.setLayoutData(gd);
+		areaLayout = new RowLayout();
+		areaLayout.type = SWT.HORIZONTAL;
+		areaLayout.marginBottom = 0;
+		areaLayout.marginTop = 0;
+		areaLayout.marginLeft = 0;
+		areaLayout.marginRight = 0;
+		bgArea.setLayout(areaLayout);
+		new Label(bgArea, SWT.NONE).setText("Background color:");
+		background = new ColorSelector(bgArea);
+		background.setColorValue(ColorConverter.rgbFromInt(config.getBackgroundColorAsInt()));
 		
 		return dialogArea;
 	}
@@ -66,6 +106,8 @@ public class LabelProperties extends PropertyPage
 	public boolean performOk()
 	{
 		config.setTitle(title.getText());
+		config.setForeground("0x" + Integer.toHexString(ColorConverter.rgbToInt(foreground.getColorValue())));
+		config.setBackground("0x" + Integer.toHexString(ColorConverter.rgbToInt(background.getColorValue())));
 		return true;
 	}
 }

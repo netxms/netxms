@@ -185,6 +185,28 @@ public class GeoLocation
 	}
 	
 	/**
+	 * Convert latitude from floating point to text representation
+	 * 
+	 * @param lat latitude
+	 * @return text representation of given latitude
+	 */
+	public static String latitudeToString(double lat)
+	{
+		return posToText(lat, true);
+	}
+	
+	/**
+	 * Convert longitude from floating point to text representation
+	 * 
+	 * @param lon longitude
+	 * @return text representation of given longitude
+	 */
+	public static String longitudeToString(double lon)
+	{
+		return posToText(lon, false);
+	}
+	
+	/**
 	 * @return latitude as DMS string
 	 */
 	public String getLatitudeAsString()

@@ -29,7 +29,7 @@ import org.simpleframework.xml.core.Persister;
  */
 public class CustomWidgetConfig extends DashboardElementConfig
 {
-	@Element(required=true)
+	@Element(required=false)
 	private String className = "";
 
 	/**
