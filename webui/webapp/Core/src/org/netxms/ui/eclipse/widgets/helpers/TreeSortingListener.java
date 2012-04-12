@@ -30,6 +30,8 @@ import org.eclipse.swt.widgets.TreeColumn;
  */
 public class TreeSortingListener extends SelectionAdapter
 {
+	private static final long serialVersionUID = 1L;
+
 	private TreeViewer viewer;
 	
 	/**

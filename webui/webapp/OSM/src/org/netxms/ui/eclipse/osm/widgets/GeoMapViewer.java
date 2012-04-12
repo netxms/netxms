@@ -35,6 +35,7 @@ import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -58,6 +59,7 @@ import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
+import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
@@ -73,6 +75,8 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private static final Color LABEL_TEXT = new Color(Display.getCurrent(), 0, 0, 0);
 	private static final Color BORDER_COLOR = new Color(Display.getCurrent(), 128, 128, 128);
 	private static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 0, 0, 255);
+	
+	private static final Font TITLE_FONT = new Font(Display.getCurrent(), "Verdana", 10, SWT.BOLD); 
 
 	private static final int LABEL_ARROW_HEIGHT = 20;
 	private static final int LABEL_ARROW_OFFSET = 10;
@@ -96,7 +100,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private Point selectionEndPoint = null; 
 	private boolean loading = false;
 	private Set<GeoMapListener> mapListeners = new HashSet<GeoMapListener>(0);
-
+	private String title = null;
 	private int offsetX;
 	private int offsetY;
 
@@ -411,6 +415,16 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			gc.drawRectangle(x, y, w, h);
 		}
 		
+		// Draw title
+		if ((title != null) && !title.isEmpty())
+		{
+			gc.setFont(TITLE_FONT);
+			Rectangle rect = getClientArea();
+			int x = (rect.width - gc.textExtent(title).x) / 2;
+			gc.setForeground(SharedColors.BLACK);
+			gc.drawText(title, x, 10, true);
+		}
+		
 		gc.dispose();
 		e.gc.drawImage(bufferImage, 0, 0);
 		*/
@@ -665,5 +679,21 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	public void setViewPart(IViewPart viewPart)
 	{
 		this.viewPart = viewPart;
+	}
+
+	/**
+	 * @return the title
+	 */
+	public String getTitle()
+	{
+		return title;
+	}
+
+	/**
+	 * @param title the title to set
+	 */
+	public void setTitle(String title)
+	{
+		this.title = title;
 	}
 }

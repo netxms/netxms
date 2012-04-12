@@ -61,6 +61,7 @@ public class GeoMapElement extends ElementWidget
 		
 		mapWidget = new GeoMapViewer(this, SWT.NONE);
 		mapWidget.setViewPart(viewPart);
+		mapWidget.setTitle(config.getTitle());
 		mapWidget.showMap(config.getLatitude(), config.getLongitude(), config.getZoom());
 	}
 }

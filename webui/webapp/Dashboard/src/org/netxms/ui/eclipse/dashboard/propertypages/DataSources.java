@@ -33,7 +33,6 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -42,8 +41,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
@@ -52,8 +49,6 @@ import org.netxms.ui.eclipse.dashboard.dialogs.DataSourceEditDlg;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.DciListLabelProvider;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
-import org.netxms.ui.eclipse.tools.ColorCache;
-import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -79,7 +74,6 @@ public class DataSources extends PropertyPage
 	private Button upButton;
 	private Button downButton;
 	private List<ChartDciConfig> dciList = null;
-	private ColorCache colorCache;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -90,7 +84,6 @@ public class DataSources extends PropertyPage
 		config = (AbstractChartConfig)getElement().getAdapter(AbstractChartConfig.class);
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		colorCache = new ColorCache(dialogArea);
 		
       dciList = new ArrayList<ChartDciConfig>();
       for(ChartDciConfig dci : config.getDciList())
@@ -289,25 +282,6 @@ public class DataSources extends PropertyPage
 		});
 		
 		return dialogArea;
-	}
-
-	/**
-	 * @param event
-	 */
-	private void drawColorCell(Event event)
-	{
-		TableItem item = (TableItem)event.item;
-		ChartDciConfig dci = (ChartDciConfig)item.getData();
-		if (dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR))
-			return;
-		
-		int width = viewer.getTable().getColumn(COLUMN_COLOR).getWidth();
-		Color color = ColorConverter.colorFromInt(dci.getColorAsInt(), colorCache);
-		event.gc.setForeground(colorCache.create(0, 0, 0));
-		event.gc.setBackground(color);
-		event.gc.setLineWidth(1);
-		event.gc.fillRectangle(event.x + 3, event.y + 2, width - 7, event.height - 5);
-		event.gc.drawRectangle(event.x + 3, event.y + 2, width - 7, event.height - 5);
 	}
 
 	/**

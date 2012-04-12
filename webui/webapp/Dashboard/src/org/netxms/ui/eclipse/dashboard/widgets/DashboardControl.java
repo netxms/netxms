@@ -256,6 +256,23 @@ public class DashboardControl extends Composite
 		
 		return w;
 	}
+	
+	/**
+	 * Redo element layout
+	 */
+	private void redoLayout()
+	{
+		if (editMode)
+		{
+			setEditMode(false);
+			layout(true, true);
+			setEditMode(true);
+		}
+		else
+		{
+			layout(true, true);
+		}
+	}
 
 	/**
 	 * @return the editMode
@@ -293,9 +310,24 @@ public class DashboardControl extends Composite
 		{
 			elementWidgets.remove(element);
 			w.dispose();
-			layout(true, true);
+			redoLayout();
 		}
 		setModified();
+	}
+	
+	/**
+	 * Get next widget in order for given widget
+	 * 
+	 * @param curr
+	 * @return
+	 */
+	private Control getNextWidget(Control curr)
+	{
+		Control[] children = getChildren();
+		for(int i = 0; i < children.length - 1; i++)
+			if (children[i] == curr)
+				return children[i + 1];
+		return null;
 	}
 	
 	/**
@@ -318,7 +350,8 @@ public class DashboardControl extends Composite
 				
 				element.setData(config.createXml());
 				element.setLayout(config.getLayout().createXml());
-				layout(true, true);
+				recreateElement(element);
+				redoLayout();
 				setModified();
 			}
 			catch(Exception e)
@@ -331,7 +364,7 @@ public class DashboardControl extends Composite
 			MessageDialog.openError(getShell(), "Internal Error", "Internal error: no adapter for dashboard element");
 		}
 	}
-	
+
 	/**
 	 * Edit element XML
 	 * 
@@ -343,9 +376,24 @@ public class DashboardControl extends Composite
 		if (dlg.open() == Window.OK)
 		{
 			element.setData(dlg.getValue());
-			layout(true, true);
+			recreateElement(element);
+			redoLayout();
 			setModified();
 		}
+	}
+	
+	/**
+	 * @param element
+	 */
+	private void recreateElement(DashboardElement element)
+	{
+		ElementWidget w = elementWidgets.get(element);
+		Control next = getNextWidget(w);
+		w.dispose();
+		w = createElementWidget(element);
+		if (next != null)
+			w.moveAbove(next);
+		elementWidgets.put(element, w);
 	}
 	
 	/**
@@ -368,7 +416,7 @@ public class DashboardControl extends Composite
 				element.setLayout(config.getLayout().createXml());
 				elements.add(element);
 				createElementWidget(element);
-				layout(true, true);
+				redoLayout();
 				setModified();
 			}
 			catch(Exception e)

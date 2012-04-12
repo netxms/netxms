@@ -41,6 +41,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class DataSourceEditDlg extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private ChartDciConfig dci;
 	private DciSelector dciSelector;
 	private LabeledText name;
@@ -116,6 +118,8 @@ public class DataSourceEditDlg extends Dialog
 		gd.horizontalSpan = 2;
 		colorAuto.setLayoutData(gd);
 		colorAuto.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -133,6 +137,8 @@ public class DataSourceEditDlg extends Dialog
 		colorCustom.setText("&Custom color:");
 		colorCustom.setSelection(!dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
 		colorCustom.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

@@ -25,6 +25,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.NetworkMapConfig;
+import org.netxms.ui.eclipse.networkmaps.widgets.NetworkMapWidget;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -36,7 +37,7 @@ public class NetworkMapElement extends ElementWidget
 	private static final long serialVersionUID = 1L;
 
 	private NetworkMap mapObject;
-//	private NetworkMapWidget mapWidget;
+	private NetworkMapWidget mapWidget;
 	private NetworkMapConfig config;
 	
 	/**
@@ -67,10 +68,9 @@ public class NetworkMapElement extends ElementWidget
 		
 		if (mapObject != null)
 		{
-			// TODO: implement map element
-//			mapWidget = new NetworkMapWidget(this, SWT.NONE);
-//			mapWidget.setMapLayout(mapObject.getLayout());
-//			mapWidget.setContent(mapObject.createMapPage());
+			mapWidget = new NetworkMapWidget(this, SWT.NONE);
+			mapWidget.setMapLayout(mapObject.getLayout());
+			mapWidget.setContent(mapObject.createMapPage());
 		}
 	}
 }

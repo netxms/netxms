@@ -38,6 +38,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ServerJobLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private NXCSession session;
 	private Map<Integer, String> statusTexts = new HashMap<Integer, String>(5);
 	private Map<Integer, Image> statusImages = new HashMap<Integer, Image>(5);

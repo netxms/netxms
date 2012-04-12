@@ -24,10 +24,13 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -40,6 +43,7 @@ public class ObjectStatusChart extends PropertyPage
 	private ObjectStatusChartConfig config;
 	private ObjectSelector objectSelector;
 	private LabeledText title;
+	private Spinner refreshRate;
 	private Button checkShowLegend;
 	private Button checkShow3D;
 	private Button checkTransposed;
@@ -56,6 +60,7 @@ public class ObjectStatusChart extends PropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
@@ -65,6 +70,7 @@ public class ObjectStatusChart extends PropertyPage
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
 		objectSelector.setLayoutData(gd);
 		
 		title = new LabeledText(dialogArea, SWT.NONE);
@@ -73,23 +79,40 @@ public class ObjectStatusChart extends PropertyPage
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
 		title.setLayoutData(gd);
 		
-		checkShowLegend = new Button(dialogArea, SWT.CHECK);
+		Group optionsGroup = new Group(dialogArea, SWT.NONE);
+		optionsGroup.setText("Options");
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		optionsGroup.setLayoutData(gd);
+		GridLayout optionsLayout = new GridLayout();
+		optionsGroup.setLayout(optionsLayout);
+
+		checkShowLegend = new Button(optionsGroup, SWT.CHECK);
 		checkShowLegend.setText("Show &legend");
 		checkShowLegend.setSelection(config.isShowLegend());
 		
-		checkShow3D = new Button(dialogArea, SWT.CHECK);
+		checkShow3D = new Button(optionsGroup, SWT.CHECK);
 		checkShow3D.setText("&3D view");
 		checkShow3D.setSelection(config.isShowIn3D());
 		
-		checkTransposed = new Button(dialogArea, SWT.CHECK);
+		checkTransposed = new Button(optionsGroup, SWT.CHECK);
 		checkTransposed.setText("Trans&posed");
 		checkTransposed.setSelection(config.isTransposed());
 
-		checkTranslucent = new Button(dialogArea, SWT.CHECK);
+		checkTranslucent = new Button(optionsGroup, SWT.CHECK);
 		checkTranslucent.setText("&Translucent");
 		checkTranslucent.setSelection(config.isTranslucent());
+
+		gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Refresh interval (seconds)", 1, 10000, gd);
+		refreshRate.setSelection(config.getRefreshRate());
 
 		return dialogArea;
 	}
@@ -106,6 +129,7 @@ public class ObjectStatusChart extends PropertyPage
 		config.setShowIn3D(checkShow3D.getSelection());
 		config.setTransposed(checkTransposed.getSelection());
 		config.setTranslucent(checkTranslucent.getSelection());
+		config.setRefreshRate(refreshRate.getSelection());
 		return true;
 	}
 }

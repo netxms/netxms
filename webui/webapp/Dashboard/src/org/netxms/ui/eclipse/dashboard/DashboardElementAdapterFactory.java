@@ -23,6 +23,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AvailabilityChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.CustomWidgetConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DialChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
@@ -83,6 +84,8 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 						return AvailabilityChartConfig.createFromXml(element.getData());
 					case DashboardElement.BAR_CHART:
 						return BarChartConfig.createFromXml(element.getData());
+					case DashboardElement.CUSTOM:
+						return CustomWidgetConfig.createFromXml(element.getData());
 					case DashboardElement.DASHBOARD:
 						return EmbeddedDashboardConfig.createFromXml(element.getData());
 					case DashboardElement.DIAL_CHART:

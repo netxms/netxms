@@ -30,6 +30,8 @@ import org.netxms.ui.eclipse.widgets.helpers.TreeSortingListener;
  */
 public class SortableTreeViewer extends TreeViewer
 {
+	private static final long serialVersionUID = 1L;
+
 	public static final int DEFAULT_STYLE = -1;
 	
 	private boolean initialized = false;

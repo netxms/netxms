@@ -34,6 +34,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class ServerJobComparator extends ViewerComparator
 {
+	private static final long serialVersionUID = 1L;
+
 	private NXCSession session;
 	
 	/**

@@ -2320,10 +2320,12 @@ webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/perspectives/Dashboar
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AbstractChart.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AlarmViewer.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AvailabilityChart.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/CustomWidget.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/DashboardElements.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/DataSources.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/DialChart.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/EmbeddedDashboard.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/GeoMap.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/LabelProperties.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/Layout.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/NetworkMap.java -text

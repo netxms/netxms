@@ -13,6 +13,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Widget;
 import org.netxms.ui.eclipse.charts.widgets.LineChart;
 
+@SuppressWarnings("deprecation")
 public class LineChartLCA extends AbstractWidgetLCA {
 
 	@Override

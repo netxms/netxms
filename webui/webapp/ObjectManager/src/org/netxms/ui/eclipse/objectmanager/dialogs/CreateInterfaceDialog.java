@@ -45,6 +45,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CreateInterfaceDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private LabeledText nameField;
 	private LabeledText macAddrField;
 	private LabeledText ipAddrField;
@@ -137,6 +139,8 @@ public class CreateInterfaceDialog extends Dialog
 		gd.horizontalSpan = 2;
 		checkIsPhy.setLayoutData(gd);
 		checkIsPhy.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

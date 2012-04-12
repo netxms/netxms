@@ -18,30 +18,32 @@
  */
 package org.netxms.ui.eclipse.dashboard.propertypages;
 
-import org.eclipse.jface.preference.ColorSelector;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig;
-import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.client.GeoLocation;
+import org.netxms.client.GeoLocationFormatException;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Label configuration page
+ * Geo map configuration page
  */
-public class LabelProperties extends PropertyPage
+public class GeoMap extends PropertyPage
 {
 	private static final long serialVersionUID = 1L;
 
-	private LabelConfig config;
-	private LabeledText title; 
-	private ColorSelector foreground;
-	private ColorSelector background;
+	private GeoMapConfig config;
+	private LabeledText title;
+	private LabeledText latitude;
+	private LabeledText longitude;
+	private Spinner zoom;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -49,12 +51,12 @@ public class LabelProperties extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		config = (LabelConfig)getElement().getAdapter(LabelConfig.class);
+		config = (GeoMapConfig)getElement().getAdapter(GeoMapConfig.class);
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
+		layout.numColumns = 3;
 		dialogArea.setLayout(layout);
 		
 		title = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
@@ -63,40 +65,27 @@ public class LabelProperties extends PropertyPage
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
+		gd.horizontalSpan = 3;
 		title.setLayoutData(gd);
 		
-		Composite fgArea = new Composite(dialogArea, SWT.NONE);
+		latitude = new LabeledText(dialogArea, SWT.NONE);
+		latitude.setLabel("Latitude");
+		latitude.setText(GeoLocation.latitudeToString(config.getLatitude()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		fgArea.setLayoutData(gd);
-		RowLayout areaLayout = new RowLayout();
-		areaLayout.type = SWT.HORIZONTAL;
-		areaLayout.marginBottom = 0;
-		areaLayout.marginTop = 0;
-		areaLayout.marginLeft = 0;
-		areaLayout.marginRight = 0;
-		fgArea.setLayout(areaLayout);
-		new Label(fgArea, SWT.NONE).setText("Text color:");
-		foreground = new ColorSelector(fgArea);
-		foreground.setColorValue(ColorConverter.rgbFromInt(config.getForegroundColorAsInt()));
+		latitude.setLayoutData(gd);
 		
-		Composite bgArea = new Composite(dialogArea, SWT.NONE);
+		longitude = new LabeledText(dialogArea, SWT.NONE);
+		longitude.setLabel("Longitude");
+		longitude.setText(GeoLocation.longitudeToString(config.getLongitude()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		bgArea.setLayoutData(gd);
-		areaLayout = new RowLayout();
-		areaLayout.type = SWT.HORIZONTAL;
-		areaLayout.marginBottom = 0;
-		areaLayout.marginTop = 0;
-		areaLayout.marginLeft = 0;
-		areaLayout.marginRight = 0;
-		bgArea.setLayout(areaLayout);
-		new Label(bgArea, SWT.NONE).setText("Background color:");
-		background = new ColorSelector(bgArea);
-		background.setColorValue(ColorConverter.rgbFromInt(config.getBackgroundColorAsInt()));
+		longitude.setLayoutData(gd);
+		
+		zoom = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Zoom", 0, 18, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		zoom.setSelection(config.getZoom());
 		
 		return dialogArea;
 	}
@@ -107,9 +96,18 @@ public class LabelProperties extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
+		try
+		{
+			GeoLocation center = GeoLocation.parseGeoLocation(latitude.getText(), longitude.getText());
+			config.setLatitude(center.getLatitude());
+			config.setLongitude(center.getLongitude());
+		}
+		catch(GeoLocationFormatException e)
+		{
+			MessageDialog.openError(getShell(), "Error", "Please enter correct latitude and longitude value");
+		}
 		config.setTitle(title.getText());
-		config.setForeground("0x" + Integer.toHexString(ColorConverter.rgbToInt(foreground.getColorValue())));
-		config.setBackground("0x" + Integer.toHexString(ColorConverter.rgbToInt(background.getColorValue())));
+		config.setZoom(zoom.getSelection());
 		return true;
 	}
 }

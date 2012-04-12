@@ -511,9 +511,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionAdjustX.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_x.png"));
 
 		actionAdjustY = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -524,9 +523,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionAdjustY.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_y.png"));
 
 		actionAdjustBoth = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -538,6 +536,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionAdjustBoth.setImageDescriptor(Activator.getImageDescriptor("icons/adjust.png"));
 
 		actionShowLegend = new Action("&Show legend") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -549,6 +549,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionShowLegend.setChecked(settings.isLegendVisible());
 		
 		actionLegendLeft = new Action("Place on &left", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -559,6 +561,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionLegendLeft.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_LEFT);
 		
 		actionLegendRight = new Action("Place on &right", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -569,6 +573,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionLegendRight.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_RIGHT);
 		
 		actionLegendTop = new Action("Place on &top", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -579,6 +585,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionLegendTop.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_TOP);
 		
 		actionLegendBottom = new Action("Place on &bottom", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -593,9 +601,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		{
 			final Integer presetIndex = i;
 			presetActions[i] = new Action() {
-				/* (non-Javadoc)
-				 * @see org.eclipse.jface.action.Action#run()
-				 */
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void run()
 				{

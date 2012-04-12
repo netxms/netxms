@@ -32,7 +32,7 @@ import org.simpleframework.xml.core.Persister;
  */
 public class ObjectStatusChartConfig extends DashboardElementConfig
 {
-	@Element(required=true)
+	@Element(required=false)
 	private long rootObject = 0;
 	
 	@ElementArray(required=false)
