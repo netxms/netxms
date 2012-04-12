@@ -331,6 +331,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -428,9 +430,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -439,6 +440,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		};
 		
 		actionAutoRefresh = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -451,6 +454,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionAutoRefresh.setChecked(settings.isAutoRefresh());
 		
 		actionLogScale = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -470,9 +475,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionLogScale.setChecked(settings.isLogScale());
 		
 		actionZoomIn = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -483,9 +487,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 
 		actionZoomOut = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -496,9 +499,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 
 		actionAdjustX = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

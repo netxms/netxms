@@ -29,6 +29,8 @@ import org.netxms.ui.eclipse.widgets.DashboardElement;
  */
 public abstract class OverviewPageElement extends DashboardElement
 {
+	private static final long serialVersionUID = 1L;
+
 	private GenericObject object;
 	
 	/**

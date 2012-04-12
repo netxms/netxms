@@ -15,6 +15,8 @@ import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
  */
 public class EditColumnDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private ColumnDefinition column;
 	private ScriptEditor transformationScript; 
 	

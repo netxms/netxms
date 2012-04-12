@@ -114,6 +114,8 @@ public class TabbedObjectView extends ViewPart
 		tabFolder.setUnselectedImageVisible(true);
 		tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		tabFolder.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -167,6 +169,8 @@ public class TabbedObjectView extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

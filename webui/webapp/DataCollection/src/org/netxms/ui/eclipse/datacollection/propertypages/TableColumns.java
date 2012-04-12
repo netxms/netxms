@@ -64,6 +64,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class TableColumns extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
 	private static final String COLUMN_SETTINGS_PREFIX = "TableColumns.ColumnList";
 	
 	private DataCollectionTable dci;
@@ -161,6 +162,8 @@ public class TableColumns extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
       addButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -181,6 +184,8 @@ public class TableColumns extends PropertyPage
       modifyButton.setLayoutData(rd);
       modifyButton.setEnabled(false);
       modifyButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -201,6 +206,8 @@ public class TableColumns extends PropertyPage
       deleteButton.setLayoutData(rd);
       deleteButton.setEnabled(false);
       deleteButton.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -266,6 +273,8 @@ public class TableColumns extends PropertyPage
 		columnList.setContentProvider(new ArrayContentProvider());
 		columnList.setLabelProvider(new TableColumnLabelProvider());
 		columnList.setComparator(new ViewerComparator() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public int compare(Viewer viewer, Object e1, Object e2)
 			{
@@ -315,6 +324,8 @@ public class TableColumns extends PropertyPage
 	private void addColumn()
 	{
 		final InputDialog idlg = new InputDialog(getShell(), "New column definition", "Column name", "", new IInputValidator() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public String isValid(String newText)
 			{

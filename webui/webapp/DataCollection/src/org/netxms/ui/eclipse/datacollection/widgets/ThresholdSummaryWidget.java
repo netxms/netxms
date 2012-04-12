@@ -20,14 +20,21 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.widgets.internal.ThresholdTreeComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.ThresholdTreeContentProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.ThresholdTreeLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -39,6 +46,8 @@ import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
  */
 public class ThresholdSummaryWidget extends Composite
 {
+	private static final long serialVersionUID = 1L;
+
 	public static final int COLUMN_NODE = 0;
 	public static final int COLUMN_STATUS = 1;
 	public static final int COLUMN_PARAMETER = 2;
@@ -65,6 +74,44 @@ public class ThresholdSummaryWidget extends Composite
 		viewer = new SortableTreeViewer(this, names, widths, COLUMN_NODE, SWT.UP, SWT.FULL_SELECTION);
 		viewer.setContentProvider(new ThresholdTreeContentProvider());
 		viewer.setLabelProvider(new ThresholdTreeLabelProvider());		
+		viewer.setComparator(new ThresholdTreeComparator());
+
+		createPopupMenu();
+	}
+
+	/**
+	 * Create pop-up menu for alarm list
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager.
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu.
+		Menu menu = menuMgr.createContextMenu(viewer.getControl());
+		viewer.getControl().setMenu(menu);
+
+		// Register menu for extension.
+		if (viewPart != null)
+			viewPart.getSite().registerContextMenu(menuMgr, viewer);
+	}
+	
+	/**
+	 * Fill context menu
+	 * @param mgr Menu manager
+	 */
+	protected void fillContextMenu(IMenuManager mgr)
+	{
+		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	/**
@@ -86,6 +133,7 @@ public class ThresholdSummaryWidget extends Composite
 						if (isDisposed() || (object == null) || (rootId != object.getObjectId()))
 							return;
 						viewer.setInput(data);
+						viewer.expandAll();
 					}
 				});
 			}

@@ -17,6 +17,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 public abstract class TableElement extends OverviewPageElement
 {
+	private static final long serialVersionUID = 1L;
+
 	private Table table;
 	private Action actionCopy;
 	private Action actionCopyName;
@@ -66,6 +68,8 @@ public abstract class TableElement extends OverviewPageElement
 	protected void createActions()
 	{
 		actionCopy = new Action("Copy to clipboard") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -79,6 +83,8 @@ public abstract class TableElement extends OverviewPageElement
 		};
 
 		actionCopyName = new Action("Copy &name to clipboard") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -92,6 +98,8 @@ public abstract class TableElement extends OverviewPageElement
 		};
 
 		actionCopyValue = new Action("Copy &value to clipboard") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -113,6 +121,8 @@ public abstract class TableElement extends OverviewPageElement
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

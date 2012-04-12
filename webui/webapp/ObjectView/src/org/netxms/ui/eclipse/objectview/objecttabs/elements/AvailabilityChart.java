@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.ColorCache;
@@ -41,6 +42,8 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
  */
 public class AvailabilityChart extends OverviewPageElement
 {
+	private static final long serialVersionUID = 1L;
+
 	DataComparisonChart dayChart;
 	DataComparisonChart weekChart;
 	DataComparisonChart monthChart;
@@ -70,7 +73,6 @@ public class AvailabilityChart extends OverviewPageElement
 	@Override
 	void onObjectChange()
 	{
-		/*
 		ServiceContainer service = (ServiceContainer)getObject();
 		
 		dayChart.updateParameter(0, service.getUptimeForDay(), false);
@@ -81,7 +83,6 @@ public class AvailabilityChart extends OverviewPageElement
 		
 		monthChart.updateParameter(0, service.getUptimeForMonth(), false);
 		monthChart.updateParameter(1, 100.0 - service.getUptimeForMonth(), true);
-		*/
 	}
 
 	/* (non-Javadoc)
@@ -103,6 +104,8 @@ public class AvailabilityChart extends OverviewPageElement
 		
 		Canvas legend = new Canvas(clientArea, SWT.NONE);
 		legend.addPaintListener(new PaintListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void paintControl(PaintEvent e)
 			{
@@ -126,8 +129,7 @@ public class AvailabilityChart extends OverviewPageElement
 	 */
 	private DataComparisonChart createChart(Composite parent, String title)
 	{
-		/*
-		DataComparisonChart chart = new DataComparisonBirtChart(parent, SWT.NONE, DataComparisonChart.PIE_CHART);
+		DataComparisonChart chart = ChartFactory.createPieChart(parent, SWT.NONE);
 		chart.setTitleVisible(true);
 		chart.set3DModeEnabled(true);
 		chart.setChartTitle(title);
@@ -144,10 +146,8 @@ public class AvailabilityChart extends OverviewPageElement
 		GridData gd = new GridData();
 		gd.widthHint = 250;
 		gd.heightHint = 190;
-		chart.setLayoutData(gd);
+		((Control)chart).setLayoutData(gd);
 		return chart;
-		*/
-		return null;
 	}
 	
 	/**
@@ -157,7 +157,6 @@ public class AvailabilityChart extends OverviewPageElement
 	 */
 	private void paintLegend(GC gc)
 	{
-		/*
 		int th = gc.textExtent("UptimeDowntime").y;
 		
 		gc.setBackground(colors.create(127, 154, 72));
@@ -173,7 +172,6 @@ public class AvailabilityChart extends OverviewPageElement
 		gc.setForeground(SharedColors.BLACK);
 		gc.drawText("Uptime", 10 + th, 10, true);
 		gc.drawText("Downtime", 10 + th, 40, true);
-		*/
 	}
 
 	/* (non-Javadoc)

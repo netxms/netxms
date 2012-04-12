@@ -39,6 +39,8 @@ import org.netxms.ui.eclipse.widgets.CommandBox;
  */
 public class Commands extends OverviewPageElement
 {
+	private static final long serialVersionUID = 1L;
+
 	private CommandBox commandBox;
 	private Action actionRestartAgent;
 	private Action actionRestart;
@@ -61,6 +63,8 @@ public class Commands extends OverviewPageElement
 	private void createActions()
 	{
 		actionWakeup = new Action("Wakeup node using Wake-on-LAN") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -84,6 +88,8 @@ public class Commands extends OverviewPageElement
 		actionWakeup.setImageDescriptor(Activator.getImageDescriptor("icons/wol.png"));
 		
 		actionRestartAgent = new Action("Restart NetXMS agent") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -110,6 +116,8 @@ public class Commands extends OverviewPageElement
 		actionRestartAgent.setImageDescriptor(Activator.getImageDescriptor("icons/restart.png"));
 		
 		actionRestart = new Action("Restart system") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -136,6 +144,8 @@ public class Commands extends OverviewPageElement
 		actionRestart.setImageDescriptor(Activator.getImageDescriptor("icons/restart.png"));
 		
 		actionShutdown = new Action("Shutdown system") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

@@ -29,6 +29,8 @@ import org.netxms.client.datacollection.ThresholdViolationSummary;
  */
 public class ThresholdTreeContentProvider implements ITreeContentProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	List<ThresholdViolationSummary> data = null;
 	
 	/* (non-Javadoc)

@@ -40,6 +40,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class GeneralInfo extends TableElement
 {
+	private static final long serialVersionUID = 1L;
+
 	public GeneralInfo(Composite parent, GenericObject object)
 	{
 		super(parent, object);

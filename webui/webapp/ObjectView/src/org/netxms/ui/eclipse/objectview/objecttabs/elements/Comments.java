@@ -31,6 +31,8 @@ import org.netxms.ui.eclipse.shared.SharedColors;
  */
 public class Comments extends OverviewPageElement
 {
+	private static final long serialVersionUID = 1L;
+
 	private Text comments;
 
 	/**

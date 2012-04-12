@@ -38,6 +38,8 @@ import org.netxms.ui.eclipse.shared.SharedColors;
  */
 public class Connection extends OverviewPageElement
 {
+	private static final long serialVersionUID = 1L;
+
 	private NXCSession session;
 	private CLabel nodeLabel;
 	private CLabel interfaceLabel;
@@ -53,6 +55,8 @@ public class Connection extends OverviewPageElement
 		session = (NXCSession)ConsoleSharedData.getSession();
 		labelProvider = new WorkbenchLabelProvider();
 		addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

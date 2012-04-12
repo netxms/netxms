@@ -2430,6 +2430,7 @@ webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/int
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/LastValuesComparator.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/LastValuesFilter.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/LastValuesLabelProvider.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/ThresholdTreeComparator.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/ThresholdTreeContentProvider.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/ThresholdTreeLabelProvider.java -text
 webui/webapp/EPP/.settings/org.eclipse.jdt.core.prefs -text

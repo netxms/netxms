@@ -12,6 +12,8 @@ import org.netxms.client.PhysicalComponent;
  */
 public class ComponentTreeContentProvider implements ITreeContentProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
 	 */

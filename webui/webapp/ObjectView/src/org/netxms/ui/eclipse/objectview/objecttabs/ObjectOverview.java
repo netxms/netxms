@@ -66,6 +66,8 @@ public class ObjectOverview extends ObjectTab
 		scroller.setExpandHorizontal(true);
 		//FIXME: scroller.getVerticalBar().setIncrement(20);
 		scroller.addControlListener(new ControlAdapter() {
+			private static final long serialVersionUID = 1L;
+
 			public void controlResized(ControlEvent e)
 			{
 				Rectangle r = scroller.getClientArea();
