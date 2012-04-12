@@ -22,7 +22,6 @@
 
 #include "nxcore.h"
 
-
 //
 // Externals
 //
@@ -507,6 +506,16 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	return 0;
 }
 
+//
+// Remove container object
+// Syntax:
+//    RemoveContainer(container)
+// where:
+//     container - container to remove
+// Return value:
+//     null
+//
+
 static int F_RemoveContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -526,6 +535,17 @@ static int F_RemoveContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 
 	return 0;
 }
+
+//
+// Bind object to container
+// Syntax:
+//    BindObject(parent, child)
+// where:
+//     parent - container object
+//     child  - either node or container or subnet to be bound to parent
+// Return value:
+//     null
+//
 
 static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
@@ -552,7 +572,6 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	if (child->IsChild(netobj->Id())) // prevent loops
 		return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
-	//((Container*)netobj)->linkObject(child);
 	netobj->AddChild(child);
 	child->AddParent(netobj);
 	netobj->calculateCompoundStatus();
@@ -561,6 +580,17 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 
 	return 0;
 }
+
+//
+// Remove (unbind) object from container
+// Syntax:
+//    UnbindObject(parent, child)
+// where:
+//     parent - container object
+//     child  - either node or container or subnet to be removed from container
+// Return value:
+//     null
+//
 
 static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
@@ -581,7 +611,7 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *child = (NetObj*)obj2->getData();
-	if (child->Type() != OBJECT_CONTAINER && child->Type() != OBJECT_SUBNET || child->Type() != OBJECT_NODE)
+	if (child->Type() != OBJECT_CONTAINER && child->Type() != OBJECT_SUBNET && child->Type() != OBJECT_NODE)
 		return NXSL_ERR_BAD_CLASS;
 
 	netobj->DeleteChild(child);
