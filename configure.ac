@@ -619,15 +619,15 @@ if test "x$CC" = "xgcc" ; then
 
 	AC_LANG_POP([C++])
 
-	AC_MSG_CHECKING(whether C compiler accepts -Wno-unused-result)
-	OLD_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS -Wno-unused-result"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(yes) ], 
-		[ 
-			CPPFLAGS="$OLD_CPPFLAGS"
-			AC_MSG_RESULT(no)
-		])
+	#AC_MSG_CHECKING(whether C compiler accepts -Wno-unused-result)
+	#OLD_CPPFLAGS="$CPPFLAGS"
+	#CPPFLAGS="$CPPFLAGS -Wno-unused-result"
+	#AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+	#	[ AC_MSG_RESULT(yes) ], 
+	#	[ 
+	#		CPPFLAGS="$OLD_CPPFLAGS"
+	#		AC_MSG_RESULT(no)
+	#	])
 
 	if test "x$PLATFORM" = "xHP-UX"; then
 		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
