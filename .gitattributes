@@ -2789,6 +2789,7 @@ webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/ConditionScript.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/CustomAttributes.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/General.java -text
+webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/InterfacePolling.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/Location.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/MapAppearance.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/NetworkServicePolling.java -text

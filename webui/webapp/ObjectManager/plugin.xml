@@ -222,6 +222,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.InterfacePolling"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.InterfacePolling#20"
+              name="Polling">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Interface">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension

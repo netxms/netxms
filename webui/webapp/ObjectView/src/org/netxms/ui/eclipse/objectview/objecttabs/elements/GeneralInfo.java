@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,6 +68,8 @@ public class GeneralInfo extends TableElement
 				addPair("Interface Index", Integer.toString(iface.getIfIndex()));
 				addPair("Interface Type", Integer.toString(iface.getIfType()));
 				addPair("Description", iface.getDescription());
+				addPair("Administrative State", iface.getAdminStateAsText());
+				addPair("Operational State", iface.getOperStateAsText());
 				addPair("MAC Address", iface.getMacAddress().toString());
 				if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
 				{
