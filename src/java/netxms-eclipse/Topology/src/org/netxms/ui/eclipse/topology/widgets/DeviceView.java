@@ -104,7 +104,7 @@ public class DeviceView extends DashboardComposite
 		List<Interface> interfaces = new ArrayList<Interface>();
 		for(GenericObject o: object.getAllChilds(GenericObject.OBJECT_INTERFACE))
 		{
-			if ((((Interface)o).getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
+			if (((Interface)o).isPhysicalPort())
 				interfaces.add((Interface)o);
 		}
 		Collections.sort(interfaces, new Comparator<Interface>() {

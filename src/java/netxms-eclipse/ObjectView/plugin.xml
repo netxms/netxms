@@ -57,7 +57,13 @@
             class="org.netxms.ui.eclipse.objectview.objecttabs.ComponentsTab"
             icon="icons/components.png"
             name="Components"
-            order="30">
+            order="40">
+      </tab>
+      <tab
+            class="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab"
+            icon="icons/interface.png"
+            name="Interfaces"
+            order="50">
       </tab>
    </extension>
 

@@ -377,4 +377,20 @@ public class Interface extends GenericObject
 	{
 		return (flags & IF_EXPECTED_STATE_MASK) >> 28;
 	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isPhysicalPort()
+	{
+		return (flags & IF_PHYSICAL_PORT) != 0;
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isLoopback()
+	{
+		return (flags & IF_LOOPBACK) != 0;
+	}
 }
