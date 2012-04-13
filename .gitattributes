@@ -2851,6 +2851,7 @@ webui/webapp/ObjectView/META-INF/MANIFEST.MF -text
 webui/webapp/ObjectView/build.properties -text
 webui/webapp/ObjectView/icons/cluster.png -text
 webui/webapp/ObjectView/icons/components.png -text
+webui/webapp/ObjectView/icons/interface.png -text
 webui/webapp/ObjectView/icons/object_details.png -text
 webui/webapp/ObjectView/icons/overview_tab.gif -text
 webui/webapp/ObjectView/icons/restart.png -text
