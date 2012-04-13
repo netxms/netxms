@@ -588,6 +588,7 @@ TCHAR LIBNETXMS_EXPORTABLE *BinToStr(const BYTE *pData, DWORD dwSize, TCHAR *pSt
 
 //
 // Convert string of hexadecimal digits to byte array
+// Returns number of bytes written to destination
 //
 
 DWORD LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, DWORD dwSize)
@@ -600,8 +601,11 @@ DWORD LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, DWORD dwSize
    {
       pData[i] = hex2bin(*pCurr) << 4;
       pCurr++;
-      pData[i] |= hex2bin(*pCurr);
-      pCurr++;
+		if (*pCurr != 0)
+		{
+			pData[i] |= hex2bin(*pCurr);
+			pCurr++;
+		}
    }
    return i;
 }

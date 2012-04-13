@@ -597,6 +597,8 @@ protected:
 	DWORD m_portNumber;				// Vendor/device specific port number
 	DWORD m_peerNodeId;				// ID of peer node object, or 0 if unknown
 	DWORD m_peerInterfaceId;		// ID of peer interface object, or 0 if unknown
+	WORD m_adminState;				// interface administrative state
+	WORD m_operState;					// interface operational state
 	WORD m_dot1xPaeAuthState;		// 802.1x port auth state
 	WORD m_dot1xBackendAuthState;	// 802.1x backend auth state
    QWORD m_qwLastDownEventId;
@@ -629,6 +631,10 @@ public:
 	DWORD getPortNumber() { return m_portNumber; }
 	DWORD getPeerNodeId() { return m_peerNodeId; }
 	DWORD getPeerInterfaceId() { return m_peerInterfaceId; }
+	int getAdminState() { return (int)m_adminState; }
+	int getOperState() { return (int)m_operState; }
+	int getDot1xPaeAuthState() { return (int)m_dot1xPaeAuthState; }
+	int getDot1xBackendAuthState() { return (int)m_dot1xBackendAuthState; }
 	const TCHAR *getDescription() { return m_description; }
    const BYTE *getMacAddr() { return m_bMacAddr; }
 	bool isSyntheticMask() { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
@@ -892,8 +898,8 @@ public:
 	Interface *findInterfaceBySlotAndPort(DWORD slot, DWORD port);
 	Interface *findBridgePort(DWORD bridgePortNumber);
 	BOOL isMyIP(DWORD dwIpAddr);
-   int getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex);
-   int getInterfaceStatusFromAgent(DWORD dwIndex);
+   void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex, int *adminState, int *operState);
+   void getInterfaceStatusFromAgent(DWORD dwIndex, int *adminState, int *operState);
    ROUTING_TABLE *getRoutingTable();
    ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
 	LinkLayerNeighbors *getLinkLayerNeighbors();

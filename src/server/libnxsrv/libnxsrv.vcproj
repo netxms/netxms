@@ -369,10 +369,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\license.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>

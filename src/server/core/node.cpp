@@ -3024,9 +3024,9 @@ DWORD Node::wakeUp()
 // Get status of interface with given index from SNMP agent
 //
 
-int Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex)
+void Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex, int *adminState, int *operState)
 {
-   return SnmpGetInterfaceStatus(m_snmpVersion, pTransport, dwIndex);
+   SnmpGetInterfaceStatus(m_snmpVersion, pTransport, dwIndex, adminState, operState);
 }
 
 
@@ -3034,50 +3034,48 @@ int Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex)
 // Get status of interface with given index from native agent
 //
 
-int Node::getInterfaceStatusFromAgent(DWORD dwIndex)
+void Node::getInterfaceStatusFromAgent(DWORD dwIndex, int *adminState, int *operState)
 {
    TCHAR szParam[128], szBuffer[32];
-   DWORD dwAdminStatus, dwLinkState;
-   int iStatus;
 
    // Get administrative status
    _sntprintf(szParam, 128, _T("Net.Interface.AdminStatus(%u)"), dwIndex);
    if (GetItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
    {
-      dwAdminStatus = _tcstoul(szBuffer, NULL, 0);
+      *adminState = _tcstol(szBuffer, NULL, 0);
 
-      switch(dwAdminStatus)
+      switch(*adminState)
       {
-         case 3:
-            iStatus = STATUS_TESTING;
+         case IF_ADMIN_STATE_TESTING:
+				*operState = IF_OPER_STATE_UNKNOWN;
             break;
-         case 2:
+         case IF_ADMIN_STATE_DOWN:
          case 0:     // Agents before 0.2.1 may return 0 instead of 2
-            iStatus = STATUS_DISABLED;
+				*operState = IF_OPER_STATE_DOWN;
             break;
-         case 1:     // Interface administratively up, check link state
+         case IF_ADMIN_STATE_UP:     // Interface administratively up, check link state
             _sntprintf(szParam, 128, _T("Net.Interface.Link(%u)"), dwIndex);
             if (GetItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
             {
-               dwLinkState = _tcstoul(szBuffer, NULL, 0);
-               iStatus = (dwLinkState == 0) ? STATUS_CRITICAL : STATUS_NORMAL;
+               DWORD dwLinkState = _tcstoul(szBuffer, NULL, 0);
+               *operState = (dwLinkState == 0) ? IF_OPER_STATE_DOWN : IF_OPER_STATE_UP;
             }
             else
             {
-               iStatus = STATUS_UNKNOWN;
+					*operState = IF_OPER_STATE_UNKNOWN;
             }
             break;
          default:
-            iStatus = STATUS_UNKNOWN;
+				*adminState = IF_ADMIN_STATE_UNKNOWN;
+				*operState = IF_OPER_STATE_UNKNOWN;
             break;
       }
    }
    else
    {
-      iStatus = STATUS_UNKNOWN;
+		*adminState = IF_ADMIN_STATE_UNKNOWN;
+		*operState = IF_OPER_STATE_UNKNOWN;
    }
-
-   return iStatus;
 }
 
 

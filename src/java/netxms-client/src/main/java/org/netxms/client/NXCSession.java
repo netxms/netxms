@@ -3284,6 +3284,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	      msg.setVariableInt16(NXCPCodes.VID_STATUS_THRESHOLD_4, thresholds[3]);
 		}
 		
+		if ((flags & NXCObjectModificationData.MODIFY_EXPECTED_STATE) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_EXPECTED_STATE, data.getExpectedState());
+		}
+		
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}

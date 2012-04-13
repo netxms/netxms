@@ -2,6 +2,8 @@
 * 1.2.0
 *
 
+- Number of polls required for status change can be set individually
+  for each interface
 - Added new NXSL functions and object properties for accessing topology information
 - New NXSL function FindObject
 - Java console:

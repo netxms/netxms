@@ -888,6 +888,9 @@ typedef struct
 #define VID_DCOBJECT_TYPE           ((DWORD)411)
 #define VID_INSTANCE_COLUMN         ((DWORD)412)
 #define VID_DATA_COLUMN             ((DWORD)413)
+#define VID_ADMIN_STATE             ((DWORD)414)
+#define VID_OPER_STATE              ((DWORD)415)
+#define VID_EXPECTED_STATE          ((DWORD)416)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

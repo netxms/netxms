@@ -279,6 +279,78 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 
 
 //
+// Upgrade from V251 to V252
+//
+
+static BOOL H_UpgradeFromV251(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE interfaces ADD admin_state integer\n")
+		_T("ALTER TABLE interfaces ADD oper_state integer\n")
+		_T("UPDATE interfaces SET admin_state=0,oper_state=0\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(CreateEventTemplate(EVENT_INTERFACE_UNEXPECTED_UP, _T("SYS_IF_UNEXPECTED_UP"), EVENT_SEVERITY_MAJOR, 1,
+	                             _T("Interface \"%2\" unexpectedly changed state to UP (IP Addr: %3/%4, IfIndex: %5)"), 
+										  _T("Generated when interface goes up but it's expected state set to DOWN.\r\n")
+										  _T("Please note that source of event is node, not an interface itself.\r\n")
+	                             _T("Parameters:#\r\n")
+										  _T("   1) Interface object ID\r\n")
+										  _T("   2) Interface name\r\n")
+										  _T("   3) Interface IP address\r\n")
+										  _T("   4) Interface netmask\r\n")
+										  _T("   5) Interface index")
+										  ));
+
+	CHK_EXEC(CreateEventTemplate(EVENT_INTERFACE_EXPECTED_DOWN, _T("SYS_IF_EXPECTED_DOWN"), EVENT_SEVERITY_NORMAL, 1,
+	                             _T("Interface \"%2\" with expected state DOWN changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)"), 
+										  _T("Generated when interface goes down and it's expected state is DOWN.\r\n")
+										  _T("Please note that source of event is node, not an interface itself.\r\n")
+	                             _T("Parameters:#\r\n")
+										  _T("   1) Interface object ID\r\n")
+										  _T("   2) Interface name\r\n")
+										  _T("   3) Interface IP address\r\n")
+										  _T("   4) Interface netmask\r\n")
+										  _T("   5) Interface index")
+										  ));
+
+	// Create rule pair in event processing policy
+	int ruleId = 0;
+	DB_RESULT hResult = SQLSelect(_T("SELECT max(rule_id) FROM event_policy"));
+	if (hResult != NULL)
+	{
+		ruleId = DBGetFieldLong(hResult, 0, 0) + 1;
+		DBFreeResult(hResult);
+	}
+
+	TCHAR query[1024];
+	_sntprintf(query, 1024, 
+		_T("INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,")
+		_T("script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)	VALUES ")
+		_T("(%d,7944,'Show alarm when interface is unexpectedly up','%%m',5,'IF_UNEXP_UP_%%i_%%1',")
+		_T("'#00',0,%d,0,'#00')"), ruleId, EVENT_ALARM_TIMEOUT);
+	CHK_EXEC(SQLQuery(query));
+	_sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_INTERFACE_UNEXPECTED_UP);
+	CHK_EXEC(SQLQuery(query));
+	ruleId++;
+
+	_sntprintf(query, 1024, 
+		_T("INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,")
+		_T("script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)	VALUES ")
+		_T("(%d,7944,'Acknowlege interface unexpectedly up alarms when interface goes down','%%m',")
+		_T("6,'IF_UNEXP_UP_%%i_%%1','#00',0,%d,0,'#00')"), ruleId, EVENT_ALARM_TIMEOUT);
+	CHK_EXEC(SQLQuery(query));
+	_sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_INTERFACE_EXPECTED_DOWN);
+	CHK_EXEC(SQLQuery(query));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='252' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V250 to V251
 //
 
@@ -6168,6 +6240,7 @@ static struct
 	{ 248, 249, H_UpgradeFromV248 },
 	{ 249, 250, H_UpgradeFromV249 },
 	{ 250, 251, H_UpgradeFromV250 },
+	{ 251, 252, H_UpgradeFromV251 },
    { 0, 0, NULL }
 };
 

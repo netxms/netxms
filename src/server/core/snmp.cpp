@@ -83,13 +83,11 @@ ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, SNMP_Transport *pTransport)
 
 //
 // Get interface status via SNMP
-// Possible return values can be NORMAL, CRITICAL, DISABLED, TESTING and UNKNOWN
 //
 
-int SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD dwIfIndex)
+void SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD dwIfIndex, int *adminState, int *operState)
 {
    DWORD dwAdminStatus = 0, dwOperStatus = 0;
-   int iStatus;
    TCHAR szOid[256];
 
    // Interface administrative status
@@ -98,37 +96,37 @@ int SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD dw
 
    switch(dwAdminStatus)
    {
-      case 3:
-         iStatus = STATUS_TESTING;
+		case IF_ADMIN_STATE_DOWN:
+			*adminState = IF_ADMIN_STATE_DOWN;
+			*operState = IF_OPER_STATE_DOWN;
          break;
-      case 2:
-         iStatus = STATUS_DISABLED;
-         break;
-      case 1:     // Interface administratively up, check operational status
+      case IF_ADMIN_STATE_UP:
+		case IF_ADMIN_STATE_TESTING:
+			*adminState = (int)dwAdminStatus;
          // Get interface operational status
          _sntprintf(szOid, 256, _T(".1.3.6.1.2.1.2.2.1.8.%d"), dwIfIndex);
          SnmpGet(dwVersion, pTransport, szOid, NULL, 0, &dwOperStatus, sizeof(DWORD), 0);
          switch(dwOperStatus)
          {
             case 3:
-               iStatus = STATUS_TESTING;
+					*operState = IF_OPER_STATE_TESTING;
                break;
             case 2:  // Interface is down
-               iStatus = STATUS_CRITICAL;
+					*operState = IF_OPER_STATE_DOWN;
                break;
             case 1:
-               iStatus = STATUS_NORMAL;
+					*operState = IF_OPER_STATE_UP;
                break;
             default:
-               iStatus = STATUS_UNKNOWN;
+					*operState = IF_OPER_STATE_UNKNOWN;
                break;
          }
          break;
       default:
-         iStatus = STATUS_UNKNOWN;
+			*adminState = IF_ADMIN_STATE_UNKNOWN;
+			*operState = IF_OPER_STATE_UNKNOWN;
          break;
    }
-   return iStatus;
 }
 
 

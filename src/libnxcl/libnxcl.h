@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -38,7 +38,7 @@
 // Constants
 //
 
-#define OBJECT_CACHE_MAGIC 0x20110607
+#define OBJECT_CACHE_MAGIC 0x20120413
 
 #define MAX_SERVER_NAME    64
 #define MAX_LOGIN_NAME     64

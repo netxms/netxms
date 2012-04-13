@@ -36,10 +36,7 @@ import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.ClusterSyncNetwork;
 
 /**
- * @author Victor
- * 
  * This class is used to hold data for NXCSession.modifyObject()
- *
  */
 public class NXCObjectModificationData
 {
@@ -92,6 +89,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_PRIMARY_NAME       = 0x00200000000000L;
 	public static final long MODIFY_STATUS_CALCULATION = 0x00400000000000L;
 	public static final long MODIFY_CLUSTER_NETWORKS   = 0x00800000000000L;
+	public static final long MODIFY_EXPECTED_STATE     = 0x01000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -160,6 +158,7 @@ public class NXCObjectModificationData
 	private int[] statusTransformation;
 	private int statusSingleThreshold;
 	private int[] statusThresholds;
+	private int expectedState;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1302,5 +1301,22 @@ public class NXCObjectModificationData
 	{
 		this.statusThresholds = statusThresholds;
 		flags |= MODIFY_STATUS_CALCULATION;
+	}
+
+	/**
+	 * @return the expectedState
+	 */
+	public int getExpectedState()
+	{
+		return expectedState;
+	}
+
+	/**
+	 * @param expectedState the expectedState to set
+	 */
+	public void setExpectedState(int expectedState)
+	{
+		this.expectedState = expectedState;
+		flags |= MODIFY_EXPECTED_STATE;
 	}
 }

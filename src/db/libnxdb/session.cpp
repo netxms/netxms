@@ -548,7 +548,7 @@ DWORD LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColu
 //
 
 BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn,
-                                             int *pnArray, int nSize, int nDefault)
+                                            int *pnArray, int nSize, int nDefault)
 {
    char pbBytes[128];
    BOOL bResult;
@@ -570,6 +570,28 @@ BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iCo
    {
       for(i = 0; i < nSize; i++)
          pnArray[i] = nDefault;
+      bResult = FALSE;
+   }
+   return bResult;
+}
+
+BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn,
+                                             BYTE *data, int nSize, int nDefault)
+{
+   BOOL bResult;
+   TCHAR *pszVal, szBuffer[256];
+
+   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
+   if (pszVal != NULL)
+   {
+      int bytes = (int)StrToBin(pszVal, data, nSize);
+		if (bytes < nSize)
+			memset(&data[bytes], 0, nSize - bytes);
+      bResult = TRUE;
+   }
+   else
+   {
+		memset(data, nDefault, nSize);
       bResult = FALSE;
    }
    return bResult;
@@ -1308,7 +1330,7 @@ static TCHAR m_szSpecialChars[] = _T("\x01\x02\x03\x04\x05\x06\x07\x08")
                                   _T("\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10")
                                   _T("\x11\x12\x13\x14\x15\x16\x17\x18")
                                   _T("\x19\x1A\x1B\x1C\x1D\x1E\x1F")
-                                  _T("#%\"\\'\x7F");
+                                  _T("#%\\'\x7F");
 
 
 //

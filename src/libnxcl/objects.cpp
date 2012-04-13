@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -277,6 +277,8 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->iface.dwPort = pMsg->GetVariableLong(VID_IF_PORT);
          pMsg->GetVariableBinary(VID_MAC_ADDR, pObject->iface.bMacAddr, MAC_ADDR_LENGTH);
 			pObject->iface.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
+			pObject->iface.adminState = (BYTE)pMsg->GetVariableShort(VID_ADMIN_STATE);
+			pObject->iface.operState = (BYTE)pMsg->GetVariableShort(VID_OPER_STATE);
          break;
       case OBJECT_NODE:
 			pMsg->GetVariableStr(VID_PRIMARY_NAME, pObject->node.szPrimaryName, MAX_DNS_NAME);

@@ -29,8 +29,22 @@ import org.netxms.client.NXCSession;
 public class Interface extends GenericObject
 {
 	// Interface flags
-	public static final int IF_SYNTHETIC_MASK = 0x00000001;
-	public static final int IF_PHYSICAL_PORT  = 0x00000002;
+	public static final int IF_SYNTHETIC_MASK         = 0x00000001;
+	public static final int IF_PHYSICAL_PORT          = 0x00000002;
+	public static final int IF_EXCLUDE_FROM_TOPOLOGY  = 0x00000004;
+	public static final int IF_LOOPBACK               = 0x00000008;
+	public static final int IF_CREATED_MANUALLY       = 0x00000010;
+	public static final int IF_EXPECTED_STATE_MASK    = 0x30000000;
+	
+	public static final int ADMIN_STATE_UNKNOWN      = 0;
+	public static final int ADMIN_STATE_UP           = 0;
+	public static final int ADMIN_STATE_DOWN         = 0;
+	public static final int ADMIN_STATE_TESTING      = 0;
+	
+	public static final int OPER_STATE_UNKNOWN       = 0;
+	public static final int OPER_STATE_UP            = 0;
+	public static final int OPER_STATE_DOWN          = 0;
+	public static final int OPER_STATE_TESTING       = 0;
 	
 	public static final int PAE_STATE_UNKNOWN        = 0;
 	public static final int PAE_STATE_INITIALIZE     = 1;
@@ -54,6 +68,13 @@ public class Interface extends GenericObject
 	public static final int BACKEND_STATE_INITIALIZE = 7;
 	public static final int BACKEND_STATE_IGNORE     = 8;
 	
+	private static final String[] stateText =
+		{
+			"UNKNOWN",
+			"UP",
+			"DOWN",
+			"TESTING"
+		};
 	private static final String[] paeStateText =
 		{
 			"UNKNOWN",
@@ -93,6 +114,8 @@ public class Interface extends GenericObject
 	private long peerInterfaceId;
 	private long zoneId;
 	private String description;
+	private int adminState;
+	private int operState;
 	private int dot1xPaeState;
 	private int dot1xBackendState;
 	
@@ -115,6 +138,8 @@ public class Interface extends GenericObject
 		peerInterfaceId = msg.getVariableAsInt64(NXCPCodes.VID_PEER_INTERFACE_ID);
 		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
 		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
+		adminState = msg.getVariableAsInteger(NXCPCodes.VID_ADMIN_STATE);
+		operState = msg.getVariableAsInteger(NXCPCodes.VID_OPER_STATE);
 		dot1xPaeState = msg.getVariableAsInteger(NXCPCodes.VID_DOT1X_PAE_STATE);
 		dot1xBackendState = msg.getVariableAsInteger(NXCPCodes.VID_DOT1X_BACKEND_STATE);
 	}
@@ -295,5 +320,61 @@ public class Interface extends GenericObject
 		{
 			return backendStateText[BACKEND_STATE_UNKNOWN];
 		}
+	}
+
+	/**
+	 * @return the adminState
+	 */
+	public int getAdminState()
+	{
+		return adminState;
+	}
+
+	/**
+	 * @return the adminState
+	 */
+	public String getAdminStateAsText()
+	{
+		try
+		{
+			return stateText[adminState];
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			return stateText[ADMIN_STATE_UNKNOWN];
+		}
+	}
+
+	/**
+	 * @return the operState
+	 */
+	public int getOperState()
+	{
+		return operState;
+	}
+	
+	/**
+	 * @return the operState
+	 */
+	public String getOperStateAsText()
+	{
+		try
+		{
+			return stateText[operState];
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			return stateText[OPER_STATE_UNKNOWN];
+		}
+	}
+
+	/**
+	 * Get interface expected state
+	 * 
+	 * @return
+	 */
+	public int getExpectedState()
+	{
+		return (flags & IF_EXPECTED_STATE_MASK) >> 28;
 	}
 }

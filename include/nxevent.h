@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -116,6 +116,8 @@
 #define EVENT_8021X_PAE_FORCE_UNAUTH      59
 #define EVENT_8021X_AUTH_FAILED           60
 #define EVENT_8021X_AUTH_TIMEOUT          61
+#define EVENT_INTERFACE_UNEXPECTED_UP     62
+#define EVENT_INTERFACE_EXPECTED_DOWN     63
 
 #define EVENT_SNMP_UNMATCHED_TRAP         500
 #define EVENT_SNMP_COLD_START             501

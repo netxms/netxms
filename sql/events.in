@@ -116,6 +116,34 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
+		EVENT_INTERFACE_UNEXPECTED_UP, 'SYS_IF_UNEXPECTED_UP',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Interface "%2" unexpectedly changed state to UP (IP Addr: %3/%4, IfIndex: %5)',
+		'Generated when interface goes up but it''s expected state set to DOWN.#0D#0A' CONCAT
+		'Please note that source of event is node, not an interface itself.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Interface object ID#0D#0A' CONCAT
+		'   2) Interface name#0D#0A' CONCAT
+		'   3) Interface IP address#0D#0A' CONCAT
+		'   4) Interface netmask#0D#0A' CONCAT
+		'   5) Interface index'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_INTERFACE_EXPECTED_DOWN, 'SYS_IF_EXPECTED_DOWN',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Interface "%2" with expected state DOWN changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)',
+		'Generated when interface goes down and it''s expected state is DOWN.#0D#0A' CONCAT
+		'Please note that source of event is node, not an interface itself.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Interface object ID#0D#0A' CONCAT
+		'   2) Interface name#0D#0A' CONCAT
+		'   3) Interface IP address#0D#0A' CONCAT
+		'   4) Interface netmask#0D#0A' CONCAT
+		'   5) Interface index'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
 		EVENT_NODE_NORMAL, 'SYS_NODE_NORMAL',
 		EVENT_SEVERITY_NORMAL, 1,
 		'Node status changed to NORMAL',

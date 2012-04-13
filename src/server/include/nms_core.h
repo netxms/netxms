@@ -726,7 +726,7 @@ ARP_CACHE *GetLocalArpCache();
 ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, SNMP_Transport *pTransport);
 
 InterfaceList *GetLocalInterfaceList();
-int SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD dwIfIndex);
+void SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD dwIfIndex, int *adminState, int *operState);
 
 ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport);
 

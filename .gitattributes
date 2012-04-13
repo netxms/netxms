@@ -1435,6 +1435,7 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/pr
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/ConditionScript.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/CustomAttributes.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/General.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/InterfacePolling.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/Location.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/MapAppearance.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/NetworkServicePolling.java -text

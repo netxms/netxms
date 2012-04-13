@@ -259,6 +259,36 @@ typedef void * NXC_SESSION;
 #define IF_EXCLUDE_FROM_TOPOLOGY 0x00000004
 #define IF_LOOPBACK              0x00000008
 #define IF_CREATED_MANUALLY      0x00000010
+#define IF_EXPECTED_STATE_MASK   0x30000000	/* 2-bit field holding expected interface state */
+
+
+//
+// Expected interface states
+//
+
+#define IF_EXPECTED_STATE_UP     0
+#define IF_EXPECTED_STATE_DOWN   1
+#define IF_EXPECTED_STATE_IGNORE 2
+
+
+//
+// Interface administrative states
+//
+
+#define IF_ADMIN_STATE_UNKNOWN   0
+#define IF_ADMIN_STATE_UP        1
+#define IF_ADMIN_STATE_DOWN      2
+#define IF_ADMIN_STATE_TESTING   3
+
+
+//
+// Interface operational states
+//
+
+#define IF_OPER_STATE_UNKNOWN    0
+#define IF_OPER_STATE_UP         1
+#define IF_OPER_STATE_DOWN       2
+#define IF_OPER_STATE_TESTING    3
 
 
 //
@@ -1150,6 +1180,8 @@ struct __nxc_object_iface
 	DWORD dwPort;			// Port number
    BYTE bMacAddr[MAC_ADDR_LENGTH];
 	WORD wRequiredPollCount;
+	BYTE adminState;
+	BYTE operState;
 };
 
 struct __nxc_object_node

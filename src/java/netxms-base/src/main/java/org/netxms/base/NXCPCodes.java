@@ -705,6 +705,9 @@ public final class NXCPCodes
 	public static final long VID_DCOBJECT_TYPE           = 411;
 	public static final long VID_INSTANCE_COLUMN         = 412;
 	public static final long VID_DATA_COLUMN             = 413;
+	public static final long VID_ADMIN_STATE             = 414;
+	public static final long VID_OPER_STATE              = 415;
+	public static final long VID_EXPECTED_STATE          = 416;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

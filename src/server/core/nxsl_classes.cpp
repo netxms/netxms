@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -266,6 +266,22 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    else if (!_tcscmp(pszAttr, _T("bridgePortNumber")))
    {
 		pValue = new NXSL_Value(iface->getBridgePortNumber());
+   }
+   else if (!_tcscmp(pszAttr, _T("adminState")))
+   {
+		pValue = new NXSL_Value((LONG)iface->getAdminState());
+   }
+   else if (!_tcscmp(pszAttr, _T("operState")))
+   {
+		pValue = new NXSL_Value((LONG)iface->getOperState());
+   }
+   else if (!_tcscmp(pszAttr, _T("dot1xPaeAuthState")))
+   {
+		pValue = new NXSL_Value((LONG)iface->getDot1xPaeAuthState());
+   }
+   else if (!_tcscmp(pszAttr, _T("dot1xBackendAuthState")))
+   {
+		pValue = new NXSL_Value((LONG)iface->getDot1xBackendAuthState());
    }
    else if (!_tcscmp(pszAttr, _T("node")))
 	{
