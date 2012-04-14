@@ -56,7 +56,6 @@ import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 
 /**
  * Rule editor widget
- *
  */
 @SuppressWarnings("restriction")
 public class RuleEditor extends Composite
@@ -437,13 +436,17 @@ public class RuleEditor extends Composite
 		clientArea.setLayout(layout);
 		
 		boolean needAnd = false;
-		createLabel(clientArea, 0, true, "IF", null);
+		if (((rule.getSources().size() > 0) && rule.isSourceInverted()) ||
+			 ((rule.getSources().size() == 0) && (rule.getEvents().size() > 0) && rule.isEventsInverted()))
+			createLabel(clientArea, 0, true, "IF NOT", null);
+		else
+			createLabel(clientArea, 0, true, "IF", null);
 		
 		/* source */
 		if (rule.getSources().size() > 0)
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects#0");
-			addConditionGroupLabel(clientArea, "source object is one of the following:", needAnd, listener);
+			addConditionGroupLabel(clientArea, "source object is one of the following:", needAnd, rule.isSourceInverted(), listener);
 			
 			for(Long id : rule.getSources())
 			{
@@ -469,7 +472,7 @@ public class RuleEditor extends Composite
 		if (rule.getEvents().size() > 0)
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10");
-			addConditionGroupLabel(clientArea, "event code is one of the following:", needAnd, listener);
+			addConditionGroupLabel(clientArea, "event code is one of the following:", needAnd, rule.isEventsInverted(), listener);
 			
 			for(Long code : rule.getEvents())
 			{
@@ -495,7 +498,7 @@ public class RuleEditor extends Composite
 		if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_ANY) != EventProcessingPolicyRule.SEVERITY_ANY)
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSeverityFilter#20");
-			addConditionGroupLabel(clientArea, "event severity is one of the following:", needAnd, listener);
+			addConditionGroupLabel(clientArea, "event severity is one of the following:", needAnd, false, listener);
 			
 			if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_NORMAL) != 0)
 				addSeverityLabel(clientArea, Severity.NORMAL, listener);
@@ -519,7 +522,7 @@ public class RuleEditor extends Composite
 		if ((rule.getScript() != null) && !rule.getScript().isEmpty())
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript#30");
-			addConditionGroupLabel(clientArea, "the following script returns true:", needAnd, listener);
+			addConditionGroupLabel(clientArea, "the following script returns true:", needAnd, false, listener);
 			
 			ScriptEditor scriptEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.NONE);
 			GridData gd = new GridData();
@@ -589,10 +592,10 @@ public class RuleEditor extends Composite
 	 * @param title group's title
 	 * @param needAnd true if AND clause have to be added
 	 */
-	private void addConditionGroupLabel(Composite parent, String title, boolean needAnd, MouseListener mouseListener)
+	private void addConditionGroupLabel(Composite parent, String title, boolean needAnd, boolean inverted, MouseListener mouseListener)
 	{
 		if (needAnd)
-			createLabel(parent, 0, true, "AND", null);
+			createLabel(parent, 0, true, inverted ? "AND NOT" : "AND", null);
 		createLabel(parent, 1, false, title, mouseListener);
 	}
 	

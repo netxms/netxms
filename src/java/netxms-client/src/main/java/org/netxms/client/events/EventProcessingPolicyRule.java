@@ -412,4 +412,24 @@ public class EventProcessingPolicyRule
 	{
 		return (flags & DISABLED) != 0;
 	}
+	
+	/**
+	 * Check rule's NEGATED_SOURCE flag
+	 * 
+	 * @return true if NEGATED_SOURCE flag set
+	 */
+	public boolean isSourceInverted()
+	{
+		return (flags & NEGATED_SOURCE) != 0;
+	}
+	
+	/**
+	 * Check rule's NEGATED_EVENTS flag
+	 * 
+	 * @return true if NEGATED_EVENTS flag set
+	 */
+	public boolean isEventsInverted()
+	{
+		return (flags & NEGATED_EVENTS) != 0;
+	}
 }

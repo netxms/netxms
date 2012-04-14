@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,7 +53,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * "Source objects" property page for EPP rule
- *
  */
 public class RuleSourceObjects extends PropertyPage
 {
@@ -64,6 +63,7 @@ public class RuleSourceObjects extends PropertyPage
 	private Map<Long, GenericObject> objects = new HashMap<Long, GenericObject>();
 	private Button addButton;
 	private Button deleteButton;
+	private Button checkInverted;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -81,6 +81,10 @@ public class RuleSourceObjects extends PropertyPage
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
+      
+      checkInverted = new Button(dialogArea, SWT.CHECK);
+      checkInverted.setText("Inverted rule (match objects NOT in the list below)");
+      checkInverted.setSelection(rule.isSourceInverted());
       
       final String[] columnNames = { "Object" };
       final int[] columnWidths = { 300 };
@@ -200,6 +204,12 @@ public class RuleSourceObjects extends PropertyPage
 	 */
 	private void doApply()
 	{
+		int flags = rule.getFlags();
+		if (checkInverted.getSelection())
+			flags |= EventProcessingPolicyRule.NEGATED_SOURCE;
+		else
+			flags &= ~EventProcessingPolicyRule.NEGATED_SOURCE;
+		rule.setFlags(flags);
 		rule.setSources(new ArrayList<Long>(objects.keySet()));
 		editor.setModified(true);
 	}
