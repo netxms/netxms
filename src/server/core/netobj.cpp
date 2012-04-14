@@ -361,6 +361,7 @@ void NetObj::AddChild(NetObj *pObject)
    m_pChildList = (NetObj **)realloc(m_pChildList, sizeof(NetObj *) * (m_dwChildCount + 1));
    m_pChildList[m_dwChildCount++] = pObject;
    UnlockChildList();
+	IncRefCount();
    Modify();
 }
 
@@ -383,6 +384,7 @@ void NetObj::AddParent(NetObj *pObject)
    m_pParentList = (NetObj **)realloc(m_pParentList, sizeof(NetObj *) * (m_dwParentCount + 1));
    m_pParentList[m_dwParentCount++] = pObject;
    UnlockParentList();
+	IncRefCount();
    Modify();
 }
 
@@ -417,6 +419,7 @@ void NetObj::DeleteChild(NetObj *pObject)
       m_pChildList = NULL;
    }
    UnlockChildList();
+	DecRefCount();
    Modify();
 }
 
@@ -450,6 +453,7 @@ void NetObj::DeleteParent(NetObj *pObject)
       m_pParentList = NULL;
    }
    UnlockParentList();
+	DecRefCount();
    Modify();
 }
 
@@ -487,6 +491,7 @@ void NetObj::deleteObject()
    {
       m_pParentList[i]->DeleteChild(this);
       m_pParentList[i]->calculateCompoundStatus();
+		DecRefCount();
    }
    free(m_pParentList);
    m_pParentList = NULL;
@@ -499,6 +504,7 @@ void NetObj::deleteObject()
    for(i = 0; i < m_dwChildCount; i++)
    {
       m_pChildList[i]->DeleteParent(this);
+		DecRefCount();
       if (m_pChildList[i]->isOrphaned())
 			m_pChildList[i]->deleteObject();
    }

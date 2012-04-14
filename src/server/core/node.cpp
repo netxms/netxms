@@ -3794,7 +3794,8 @@ void Node::PrepareForDeletion()
       LockData();
       if ((m_dwDynamicFlags & 
             (NDF_QUEUED_FOR_STATUS_POLL | NDF_QUEUED_FOR_CONFIG_POLL |
-             NDF_QUEUED_FOR_DISCOVERY_POLL | NDF_QUEUED_FOR_ROUTE_POLL)) == 0)
+             NDF_QUEUED_FOR_DISCOVERY_POLL | NDF_QUEUED_FOR_ROUTE_POLL |
+				 NDF_QUEUED_FOR_TOPOLOGY_POLL)) == 0)
       {
          UnlockData();
          break;

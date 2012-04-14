@@ -84,6 +84,7 @@ extern DWORD g_dwConditionPollingInterval;
 #define BUILTIN_OID_REPORTROOT            8
 #define BUILTIN_OID_BUSINESSSERVICEROOT   9
 
+
 //
 // Node runtime (dynamic) flags
 //
