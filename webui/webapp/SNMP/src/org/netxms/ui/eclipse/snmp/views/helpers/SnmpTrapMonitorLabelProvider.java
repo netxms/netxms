@@ -33,6 +33,8 @@ import org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor;
  */
 public class SnmpTrapMonitorLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private NXCSession session;
 	
 	public SnmpTrapMonitorLabelProvider()

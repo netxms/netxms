@@ -192,6 +192,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SnmpValueLabelProvider());
 		viewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -211,6 +213,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -219,6 +223,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		};
 		
 		actionWalk = new Action("&Walk") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -228,6 +234,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		actionWalk.setEnabled(currentNode != null);
 		
 		actionSetNode = new Action("Set &node object...") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -241,6 +249,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		};
 		
 		actionCopy = new Action("Copy to clipboard") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -265,6 +275,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		};
 
 		actionCopyName = new Action("Copy &name to clipboard") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -273,6 +285,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		};
 
 		actionCopyType = new Action("Copy &type to clipboard") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -281,6 +295,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		};
 
 		actionCopyValue = new Action("Copy &value to clipboard") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -352,6 +368,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener()
 		{
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillTreeContextMenu(mgr);
@@ -388,8 +406,9 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillResultsContextMenu(mgr);

@@ -31,6 +31,8 @@ import org.netxms.client.snmp.SnmpTrapParameterMapping;
  */
 public class ParamMappingLabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private List<SnmpTrapParameterMapping> pmap;
 	
 	/**

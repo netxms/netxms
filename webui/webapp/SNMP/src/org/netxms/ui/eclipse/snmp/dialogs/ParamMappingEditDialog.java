@@ -46,6 +46,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ParamMappingEditDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private SnmpTrapParameterMapping pm;
 	private Text description;
 	private Button radioByOid;
@@ -107,6 +109,8 @@ public class ParamMappingEditDialog extends Dialog
 		radioByOid.setText("By object ID (OID)");
 		radioByOid.setSelection(pm.getType() == SnmpTrapParameterMapping.BY_OBJECT_ID);
 		radioByOid.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -143,6 +147,8 @@ public class ParamMappingEditDialog extends Dialog
 		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
 		buttonSelect.setLayoutData(gd);
 		buttonSelect.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -160,6 +166,8 @@ public class ParamMappingEditDialog extends Dialog
 		radioByPosition.setText("By position");
 		radioByPosition.setSelection(pm.getType() == SnmpTrapParameterMapping.BY_POSITION);
 		radioByPosition.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

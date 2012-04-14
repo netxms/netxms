@@ -124,6 +124,8 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 			}
 		});
 		viewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -185,6 +187,8 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -196,6 +200,8 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		};
 		
 		actionNew = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -209,6 +215,8 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png"));
 		
 		actionEdit = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -222,6 +230,8 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png"));
 		
 		actionDelete = new Action() {
+			private static final long serialVersionUID = 1L;
+
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -243,8 +253,9 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

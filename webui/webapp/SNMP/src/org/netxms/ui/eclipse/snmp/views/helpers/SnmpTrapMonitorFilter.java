@@ -30,6 +30,8 @@ import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
  */
 public class SnmpTrapMonitorFilter extends AbstractTraceViewFilter
 {
+	private static final long serialVersionUID = 1L;
+
 	private NXCSession session;
 	
 	/**

@@ -61,6 +61,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class TrapConfigurationDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
 	private static final String PARAMLIST_TABLE_SETTINGS = "TrapConfigurationDialog.ParamList";
 	
 	private SnmpTrap trap;
@@ -137,6 +138,8 @@ public class TrapConfigurationDialog extends Dialog
 		gd.verticalAlignment = SWT.BOTTOM;
 		buttonSelect.setLayoutData(gd);
 		buttonSelect.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -199,6 +202,8 @@ public class TrapConfigurationDialog extends Dialog
 		buttonAdd.setText("&Add...");
 		buttonAdd.setLayoutData(new RowData(WidgetHelper.BUTTON_WIDTH_HINT, SWT.DEFAULT));
 		buttonAdd.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -215,6 +220,8 @@ public class TrapConfigurationDialog extends Dialog
 		buttonEdit = new Button(buttonArea, SWT.PUSH);
 		buttonEdit.setText("&Edit...");
 		buttonEdit.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -231,6 +238,8 @@ public class TrapConfigurationDialog extends Dialog
 		buttonDelete = new Button(buttonArea, SWT.PUSH);
 		buttonDelete.setText("&Delete");
 		buttonDelete.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
