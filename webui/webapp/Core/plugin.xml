@@ -45,14 +45,6 @@
       </view>
    </extension>
    <extension
-         point="org.eclipse.rap.ui.branding">
-      <branding
-            id="org.netxms.webui.core.branding"
-            servletName="nxmc"
-            themeId="org.eclipse.rap.design.example.business.theme">
-      </branding>
-   </extension>
-   <extension
          point="org.eclipse.ui.commands">
       <command
             description="%command.ToggleTraceFilter"
@@ -96,4 +88,93 @@
          class="org.netxms.webui.core.RedirectServlet">
     </servlet>
   </extension>
+
+   <extension
+         point="org.eclipse.ui.presentationFactories">
+      <factory
+            class="org.netxms.webui.design.business.BusinessPresentationFactory"
+            id="org.netxms.webui.design.business.factory"
+            name="Business Presentation Factory">
+      </factory>
+   </extension>
+   <extension
+         point="org.eclipse.rap.ui.branding">
+      <branding
+            favicon="icons/favicon.png"
+            id="org.netxms.webui.design.business.branding"
+            servletName="nxmc"
+            themeId="org.netxms.webui.design.business.theme"
+            title="NetXMS Management Console">
+      </branding>
+   </extension>
+   <extension
+         point="org.eclipse.rap.ui.layouts">
+      <layout
+            id="org.netxms.webui.design.business.layout"
+            name="Business Layout Blue">
+         <layoutSet
+               class="org.netxms.webui.design.business.layoutsets.LogoInitializer"
+               id="org.netxms.webui.design.layoutset.logo"
+               name="Logo">
+         </layoutSet>
+         <layoutSet
+               class="org.netxms.webui.design.business.layoutsets.HeaderInitializer"
+               id="org.netxms.webui.design.layoutset.header"
+               name="Header">
+         </layoutSet>
+         <layoutSet
+               class="org.netxms.webui.design.business.layoutsets.FooterInitializer"
+               id="org.netxms.webui.design.layoutset.footer"
+               name="Footer">
+         </layoutSet>
+         <layoutSet
+               class="org.netxms.webui.design.business.layoutsets.MenuBarInitializer"
+               id="org.netxms.webui.design.layoutset.menubar"
+               name="MenuBar">
+         </layoutSet>
+         <layoutSet
+               class="org.netxms.webui.design.business.layoutsets.PerspectiveSwitcherInitializer"
+               id="org.netxms.webui.design.layoutset.perspective"
+               name="Perspective Switcher">
+         </layoutSet>
+         <layoutSet
+               class="org.netxms.webui.design.business.layoutsets.StackInitializer"
+               id="org.netxms.webui.design.layoutset.stack"
+               name="Business Stack">
+         </layoutSet>
+         <layoutSet
+               class="org.netxms.webui.design.business.layoutsets.ConfigDialogInitializer"
+               id="org.netxms.webui.design.layoutset.confdialog"
+               name="Config Dialog">
+         </layoutSet>
+         <layoutSet
+               class="org.netxms.webui.design.business.layoutsets.CoolbarInitializer"
+               id="org.netxms.webui.design.layoutset.coolbar"
+               name="Coolbar">
+         </layoutSet>
+         <layoutSet
+               class="org.netxms.webui.design.business.layoutsets.CoolbarOverflowInitializer"
+               id="org.netxms.webui.design.layoutset.coolbaroverflow"
+               name="Coolbar Overflow">
+         </layoutSet>
+      </layout>
+   </extension>
+   <extension
+         point="org.eclipse.rap.ui.themes">
+      <theme
+            file="theme/business.css"
+            id="org.netxms.webui.design.business.theme"
+            name="Business Theme">
+      </theme>
+   </extension>
+   <extension
+         point="org.eclipse.rap.ui.stackPresentations">
+      <stackPresentation
+            actionClass="org.netxms.webui.design.stacks.ConfigAction"
+            class="org.netxms.webui.design.stacks.ViewStackPresentation"
+            id="org.netxms.webui.design.stack.view"
+            name="Example Stack Presentation"
+            type="view">
+      </stackPresentation>
+   </extension>
 </plugin>
