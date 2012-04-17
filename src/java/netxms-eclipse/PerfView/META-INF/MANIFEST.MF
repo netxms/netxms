@@ -11,6 +11,7 @@ Require-Bundle: org.eclipse.ui,
  org.netxms.ui.eclipse.console;bundle-version="1.2.0",
  org.netxms.ui.eclipse.charts;bundle-version="1.2.0",
  org.netxms.ui.eclipse.objectview;bundle-version="1.2.0",
- org.swtchart;bundle-version="0.7.5"
+ org.swtchart;bundle-version="0.7.5",
+ org.netxms.ui.eclipse.datacollection;bundle-version="1.2.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

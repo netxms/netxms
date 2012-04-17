@@ -129,11 +129,21 @@
       </page>
       <page
             class="org.netxms.ui.eclipse.perfview.propertypages.General"
-            id="org.netxms.ui.eclipse.perfview.propertypages.General"
+            id="org.netxms.ui.eclipse.perfview.propertypages.General#0"
             name="General">
          <enabledWhen>
             <instanceof
-                  value="org.netxms.client.datacollection.GraphSettings">
+                  value="org.netxms.ui.eclipse.perfview.ChartConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.perfview.propertypages.DataSources"
+            id="org.netxms.ui.eclipse.perfview.propertypages.DataSources#10"
+            name="Data Sources">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.perfview.ChartConfig">
             </instanceof>
          </enabledWhen>
       </page>

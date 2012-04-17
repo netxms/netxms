@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.ui.eclipse.perfview.ChartConfig;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -40,7 +40,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class General extends PropertyPage
 {
-	private GraphSettings settings;
+	private ChartConfig config;
 	private LabeledText title;
 	private Button checkShowGrid;
 	private Button checkShowLegend;
@@ -59,7 +59,7 @@ public class General extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		settings = (GraphSettings)getElement().getAdapter(GraphSettings.class);
+		config = (ChartConfig)getElement().getAdapter(ChartConfig.class);
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
@@ -71,7 +71,7 @@ public class General extends PropertyPage
       
       title = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER);
       title.setLabel("Title");
-      title.setText(settings.getTitle());
+      title.setText(config.getTitle());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -93,15 +93,15 @@ public class General extends PropertyPage
       
       checkShowGrid = new Button(optionsGroup, SWT.CHECK);
       checkShowGrid.setText("Show &grid lines");
-      checkShowGrid.setSelection(settings.isGridVisible());
+      checkShowGrid.setSelection(config.isShowGrid());
 
       checkAutoScale = new Button(optionsGroup, SWT.CHECK);
       checkAutoScale.setText("&Autoscale");
-      checkAutoScale.setSelection(settings.isAutoScale());
+      //checkAutoScale.setSelection(settings.isAutoScale());
 
       checkShowLegend = new Button(optionsGroup, SWT.CHECK);
       checkShowLegend.setText("Show &legend");
-      checkShowLegend.setSelection(settings.isLegendVisible());
+      checkShowLegend.setSelection(config.isShowLegend());
 
       checkShowRuler = new Button(optionsGroup, SWT.CHECK);
       checkShowRuler.setText("Show &ruler");
@@ -109,7 +109,7 @@ public class General extends PropertyPage
 
       checkShowHostNames = new Button(optionsGroup, SWT.CHECK);
       checkShowHostNames.setText("Show &host names");
-      checkShowHostNames.setSelection(settings.isHostNamesVisible());
+      checkShowHostNames.setSelection(config.isShowHostNames());
 
       checkEnableZoom = new Button(optionsGroup, SWT.CHECK);
       checkEnableZoom.setText("Enable &zoom");
@@ -117,11 +117,11 @@ public class General extends PropertyPage
 
       checkAutoRefresh = new Button(optionsGroup, SWT.CHECK);
       checkAutoRefresh.setText("&Refresh automatically");
-      checkAutoRefresh.setSelection(settings.isAutoRefresh());
+      checkAutoRefresh.setSelection(config.isAutoRefresh());
 
       checkLogScale = new Button(optionsGroup, SWT.CHECK);
       checkLogScale.setText("L&ogaritmic scale");
-      checkLogScale.setSelection(settings.isLogScale());
+      checkLogScale.setSelection(config.isLogScale());
       
       Composite refreshIntervalGroup = new Composite(optionsGroup, SWT.NONE);
       layout = new GridLayout();
@@ -147,7 +147,7 @@ public class General extends PropertyPage
       refreshIntervalScale = new Scale(refreshIntervalGroup, SWT.HORIZONTAL);
       refreshIntervalScale.setMinimum(1);
       refreshIntervalScale.setMaximum(600);
-      refreshIntervalScale.setSelection(settings.getAutoRefreshInterval() / 1000);
+      refreshIntervalScale.setSelection(config.getRefreshRate());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -169,7 +169,7 @@ public class General extends PropertyPage
       refreshIntervalSpinner = new Spinner(refreshIntervalGroup, SWT.BORDER);
       refreshIntervalSpinner.setMinimum(1);
       refreshIntervalSpinner.setMaximum(600);
-      refreshIntervalSpinner.setSelection(settings.getAutoRefreshInterval() / 1000);
+      refreshIntervalSpinner.setSelection(config.getRefreshRate());
       refreshIntervalSpinner.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -216,16 +216,14 @@ public class General extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		settings.setTitle(title.getText());
-		settings.setGridVisible(checkShowGrid.getSelection());
-		settings.setLegendVisible(checkShowLegend.getSelection());
-		settings.setAutoScale(checkAutoScale.getSelection());
-		settings.setHostNamesVisible(checkShowHostNames.getSelection());
-		settings.setAutoRefresh(checkAutoRefresh.getSelection());
-		settings.setLogScale(checkLogScale.getSelection());
-		settings.setAutoRefreshInterval(refreshIntervalSpinner.getSelection() * 1000);
-		
-		settings.fireChangeNotification();
+		config.setTitle(title.getText());
+		config.setShowGrid(checkShowGrid.getSelection());
+		config.setShowLegend(checkShowLegend.getSelection());
+		//config.setAutoScale(checkAutoScale.getSelection());
+		config.setShowHostNames(checkShowHostNames.getSelection());
+		config.setAutoRefresh(checkAutoRefresh.getSelection());
+		config.setLogScale(checkLogScale.getSelection());
+		config.setRefreshRate(refreshIntervalSpinner.getSelection());
 	}
 	
 	/* (non-Javadoc)

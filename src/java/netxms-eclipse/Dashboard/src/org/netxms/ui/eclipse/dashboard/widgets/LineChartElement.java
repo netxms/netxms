@@ -85,6 +85,8 @@ public class LineChartElement extends ElementWidget
 		chart.setTitleVisible(true);
 		chart.setChartTitle(config.getTitle());
 		chart.setLegendVisible(config.isShowLegend());
+		chart.setLegendPosition(config.getLegendPosition());
+		chart.setGridVisible(config.isShowGrid());
 		
 		final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(config.getDciList().length);
 		int index = 0;

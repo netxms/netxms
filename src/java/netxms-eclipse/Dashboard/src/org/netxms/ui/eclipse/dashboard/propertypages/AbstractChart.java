@@ -50,6 +50,7 @@ public class AbstractChart extends PropertyPage
 	private Combo legendPosition;
 	private Button checkShowTitle;
 	private Button checkShowLegend;
+	private Button checkShowGrid;
 	private Button checkShowIn3D;
 	private Button checkTranslucent;
 	private Button checkTransposed;
@@ -143,6 +144,14 @@ public class AbstractChart extends PropertyPage
 		
 		if (config instanceof LineChartConfig)
 		{
+			checkShowGrid = new Button(optionsGroup, SWT.CHECK);
+			checkShowGrid.setText("Show &grid");
+			checkShowGrid.setSelection(((LineChartConfig)config).isShowGrid());
+			gd = new GridData();
+			gd.horizontalAlignment = SWT.FILL;
+			gd.grabExcessHorizontalSpace = true;
+			checkShowGrid.setLayoutData(gd);
+			
 			Composite timeRangeArea = new Composite(dialogArea, SWT.NONE);
 			layout = new GridLayout();
 			layout.numColumns = 2;
@@ -223,6 +232,7 @@ public class AbstractChart extends PropertyPage
 		{
 			((LineChartConfig)config).setTimeRange(timeRange.getSelection());
 			((LineChartConfig)config).setTimeUnits(timeUnits.getSelectionIndex());
+			((LineChartConfig)config).setShowGrid(checkShowGrid.getSelection());
 		}
 		return true;
 	}

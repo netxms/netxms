@@ -34,6 +34,9 @@ public class LineChartConfig extends AbstractChartConfig
 	@Element(required=false)
 	private int timeRange = 1;
 	
+	@Element(required = false)
+	private boolean showGrid = true;
+
 	/**
 	 * Create line chart settings object from XML document
 	 * 
@@ -96,5 +99,21 @@ public class LineChartConfig extends AbstractChartConfig
 				return (long)timeRange * 24L * 60L * 60L * 1000L;
 		}
 		return 0;
+	}
+
+	/**
+	 * @return the showGrid
+	 */
+	public boolean isShowGrid()
+	{
+		return showGrid;
+	}
+
+	/**
+	 * @param showGrid the showGrid to set
+	 */
+	public void setShowGrid(boolean showGrid)
+	{
+		this.showGrid = showGrid;
 	}
 }

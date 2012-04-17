@@ -21,10 +21,8 @@ package org.netxms.ui.eclipse.perfview.views;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -35,10 +33,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.ISelectionProvider;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -49,29 +43,32 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.dialogs.PropertyDialogAction;
+import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.GraphSettingsChangeListener;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
-import org.netxms.ui.eclipse.perfview.views.helpers.GraphSettingsFactory;
+import org.netxms.ui.eclipse.perfview.ChartConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * History graph view
  */
-public class HistoricalDataView extends ViewPart implements ISelectionProvider, GraphSettingsChangeListener
+@SuppressWarnings("restriction")
+public class HistoricalDataView extends ViewPart implements GraphSettingsChangeListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.perfview.views.HistoryGraph";
 	public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph";
@@ -86,23 +83,16 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	private static final String[] presetNames = { "10 minutes", "30 minutes", "hour", "2 hours", "4 hours",
 	                                              "12 hours", "day", "2 days", "5 days", "week", "month", "year" };
 
-	private static final String KEY_AUTO_REFRESH = "autoRefresh";
-	private static final String KEY_REFRESH_INTERVAL = "refreshInterval";
-	private static final String KEY_LOG_SCALE = "logScale";
-	private static final String KEY_SHOW_LEGEND = "showLegend";
-	private static final String KEY_LEGEND_POSITION = "legendPosition";
-	private static final String KEY_TITLE = "title";
-	
 	private NXCSession session;
-	private ArrayList<GraphItem> items = new ArrayList<GraphItem>(1);
-	private HistoricalDataChart chart;
+	private HistoricalDataChart chart = null;
 	private boolean updateInProgress = false;
 	private Runnable refreshTimer;
-	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
+	private Composite chartParent = null;
 	
-	private GraphSettings settings = GraphSettingsFactory.createDefault();
+	private GraphSettings settings = new GraphSettings();
+	private ChartConfig config = new ChartConfig();
 	
-	private RefreshAction actionRefresh;
+	private Action actionRefresh;
 	private Action actionAutoRefresh;
 	private Action actionZoomIn;
 	private Action actionZoomOut;
@@ -115,6 +105,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	private Action actionLegendRight;
 	private Action actionLegendTop;
 	private Action actionLegendBottom;
+	private Action actionProperties;
 	private Action[] presetActions;
 	
 	/* (non-Javadoc)
@@ -134,14 +125,14 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 					return;
 				
 				updateChart();
-				display.timerExec(settings.getAutoRefreshInterval(), this);
+				display.timerExec(config.getRefreshRate() * 1000, this);
 			}
 		};
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
-		settings.setTimeTo(new Date(System.currentTimeMillis()));
+		config.setTimeFrom(new Date(System.currentTimeMillis() - config.getTimeRangeMillis()));
+		config.setTimeTo(new Date(System.currentTimeMillis()));
 		
 		// Extract DCI ids from view id
 		// (first field will be unique view id, so we skip it)
@@ -149,6 +140,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		String[] fields = id.split("&");
 		if (!fields[0].equals(PREDEFINED_GRAPH_SUBID))
 		{
+			List<ChartDciConfig> items = new ArrayList<ChartDciConfig>();
 			for(int i = 1; i < fields.length; i++)
 			{
 				String[] subfields = fields[i].split("\\@");
@@ -156,13 +148,11 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 				{
 					try
 					{
-						items.add(new GraphItem(
-								Long.parseLong(subfields[0], 10),	// Node ID 
-								Long.parseLong(subfields[1], 10),	// DCI ID
-								Integer.parseInt(subfields[2], 10),	// source
-								Integer.parseInt(subfields[3], 10),	// data type
-								URLDecoder.decode(subfields[4], "UTF-8"),   // name
-								URLDecoder.decode(subfields[5], "UTF-8"))); // description
+						ChartDciConfig dci = new ChartDciConfig();
+						dci.nodeId = Long.parseLong(subfields[0], 10);
+						dci.dciId = Long.parseLong(subfields[1], 10);
+						dci.name = URLDecoder.decode(subfields[5], "UTF-8");
+						items.add(dci);
 					}
 					catch(NumberFormatException e)
 					{
@@ -179,18 +169,18 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			// we have only one DCI
 			if (items.size() == 1)
 			{
-				GraphItem item = items.get(0);
-				GenericObject object = session.findObjectById(item.getNodeId());
+				ChartDciConfig item = items.get(0);
+				GenericObject object = session.findObjectById(item.nodeId);
 				if (object != null)
 				{
-					setPartName(object.getObjectName() + ": " + item.getDescription());
+					setPartName(object.getObjectName() + ": " + item.name);
 				}
 			}
 			else if (items.size() > 1)
 			{
-				long nodeId = items.get(0).getNodeId();
-				for(GraphItem item : items)
-					if (item.getNodeId() != nodeId)
+				long nodeId = items.get(0).nodeId;
+				for(ChartDciConfig item : items)
+					if (item.nodeId != nodeId)
 					{
 						nodeId = -1;
 						break;
@@ -205,10 +195,9 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 					}
 				}
 			}
+			config.setTitle(getPartName());
+			config.setDciList(items.toArray(new ChartDciConfig[items.size()]));
 		}
-		
-		settings.setTitle(getPartName());
-		settings.setItems(items.toArray(new GraphItem[items.size()]));
 	}
 	
 	/* (non-Javadoc)
@@ -221,23 +210,15 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		
 		if (memento != null)
 		{
-			settings.setAutoRefresh(safeCast(memento.getBoolean(KEY_AUTO_REFRESH), settings.isAutoRefresh()));
-			settings.setAutoRefreshInterval(safeCast(memento.getInteger(KEY_REFRESH_INTERVAL), settings.getAutoRefreshInterval()));
-			settings.setLegendVisible(safeCast(memento.getBoolean(KEY_SHOW_LEGEND), settings.isLegendVisible()));
-			settings.setLegendPosition(safeCast(memento.getInteger(KEY_LEGEND_POSITION), settings.getLegendPosition()));
-			settings.setLogScale(safeCast(memento.getBoolean(KEY_LOG_SCALE), settings.isLogScale()));
-			settings.setTitle(memento.getString(KEY_TITLE));
+			try
+			{
+				config = ChartConfig.createFromXml(memento.getTextData());
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
 		}
-	}
-
-	private static int safeCast(Integer i, int defval)
-	{
-		return (i != null) ? i : defval;
-	}
-	
-	private static boolean safeCast(Boolean b, boolean defval)
-	{
-		return (b != null) ? b : defval;
 	}
 
 	/* (non-Javadoc)
@@ -246,12 +227,13 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	@Override
 	public void saveState(IMemento memento)
 	{
-		memento.putBoolean(KEY_AUTO_REFRESH, settings.isAutoRefresh());
-		memento.putInteger(KEY_REFRESH_INTERVAL, settings.getAutoRefreshInterval());
-		memento.putBoolean(KEY_SHOW_LEGEND, settings.isLegendVisible());
-		memento.putInteger(KEY_LEGEND_POSITION, settings.getLegendPosition());
-		memento.putBoolean(KEY_LOG_SCALE, settings.isLogScale());
-		memento.putString(KEY_TITLE, settings.getTitle());
+		try
+		{
+			memento.putTextData(config.createXml());
+		}
+		catch(Exception e)
+		{
+		}
 	}
 	
 	/**
@@ -271,39 +253,51 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	 */
 	private void configureGraphFromSettings()
 	{
+		if (chart != null)
+			((Widget)chart).dispose();
+		chart = ChartFactory.createLineChart(chartParent, SWT.NONE);
+		createPopupMenu();
+		
 		// General settings
-		setPartName(settings.getTitle());
-		chart.setChartTitle(settings.getTitle());
+		setPartName(config.getTitle());
+		chart.setChartTitle(config.getTitle());
 
 		// Chart visual settings
-		chart.setItemStyles(Arrays.asList(settings.getItemStyles()));
-		chart.setLogScaleEnabled(settings.isLogScale());
-		chart.setGridVisible(settings.isGridVisible());
-		chart.setLegendVisible(settings.isLegendVisible());
-		chart.setBackgroundColor(new ChartColor(settings.getBackgroundColor()));
-		chart.setPlotAreaColor(new ChartColor(settings.getPlotBackgroundColor()));
-		chart.setLegendColor(new ChartColor(settings.getLegendTextColor()), new ChartColor(settings.getLegendBackgroundColor()));
-		chart.setAxisColor(new ChartColor(settings.getAxisColor()));
-		chart.setGridColor(new ChartColor(settings.getGridColor()));
+		chart.setLogScaleEnabled(config.isLogScale());
+		chart.setGridVisible(config.isShowGrid());
+		chart.setLegendVisible(config.isShowLegend());
+		chart.setLegendPosition(config.getLegendPosition());
+		//chart.setBackgroundColor(new ChartColor(settings.getBackgroundColor()));
+		//chart.setPlotAreaColor(new ChartColor(settings.getPlotBackgroundColor()));
+		//chart.setLegendColor(new ChartColor(settings.getLegendTextColor()), new ChartColor(settings.getLegendBackgroundColor()));
+		//chart.setAxisColor(new ChartColor(settings.getAxisColor()));
+		//chart.setGridColor(new ChartColor(settings.getGridColor()));
 		
 		// Data
-		items.clear();
-		items.addAll(Arrays.asList(settings.getItems()));
-
-		for(GraphItem item : items)
-			chart.addParameter(item);
-
-		if (settings.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW)
+		final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(config.getDciList().length);
+		int index = 0;
+		for(ChartDciConfig dci : config.getDciList())
 		{
-			settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
-			settings.setTimeTo(new Date(System.currentTimeMillis()));
+			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName()));
+			int color = dci.getColorAsInt();
+			if (color == -1)
+				color = ChartColor.getDefaultColor(index).getRGB();
+			styles.add(new GraphItemStyle(GraphItemStyle.LINE, color, 2, 0));
+			index++;
+		}
+		chart.setItemStyles(styles);
+
+		if (config.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW)
+		{
+			config.setTimeFrom(new Date(System.currentTimeMillis() - config.getTimeRangeMillis()));
+			config.setTimeTo(new Date(System.currentTimeMillis()));
 		}
 		
 		getDataFromServer();
 
 		// Automatic refresh
-		actionAutoRefresh.setChecked(settings.isAutoRefresh());
-		getSite().getShell().getDisplay().timerExec(settings.isAutoRefresh() ? settings.getAutoRefreshInterval() : -1, refreshTimer);
+		actionAutoRefresh.setChecked(config.isAutoRefresh());
+		getSite().getShell().getDisplay().timerExec(config.isAutoRefresh() ? config.getRefreshRate() * 1000 : -1, refreshTimer);
 	}
 
 	/* (non-Javadoc)
@@ -312,11 +306,10 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		chart = ChartFactory.createLineChart(parent, SWT.NONE);
+		chartParent = parent;
 		
 		createActions();
 		contributeToActionBars();
-		createPopupMenu();
 		
 		configureGraphFromSettings();
 		settings.addChangeListener(this);
@@ -351,21 +344,23 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	 */
 	private void getDataFromServer()
 	{
+		final ChartDciConfig[] dciList = config.getDciList();
+		
 		// Request data from server
 		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
-			private GraphItem currentItem;
+			private ChartDciConfig currentItem;
 			
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(getName(), items.size());
-				final DciData[] data = new DciData[items.size()];
-				final Threshold[][] thresholds = new Threshold[items.size()][];
-				for(int i = 0; i < items.size(); i++)
+				monitor.beginTask(getName(), dciList.length);
+				final DciData[] data = new DciData[dciList.length];
+				final Threshold[][] thresholds = new Threshold[dciList.length][];
+				for(int i = 0; i < dciList.length; i++)
 				{
-					currentItem = items.get(i);
-					data[i] = session.getCollectedData(currentItem.getNodeId(), currentItem.getDciId(), settings.getTimeFrom(), settings.getTimeTo(), 0);
-					thresholds[i] = session.getThresholds(currentItem.getNodeId(), currentItem.getDciId());
+					currentItem = dciList[i];
+					data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, config.getTimeFrom(), config.getTimeTo(), 0);
+					thresholds[i] = session.getThresholds(currentItem.nodeId, currentItem.dciId);
 					monitor.worked(1);
 				}
 				
@@ -375,7 +370,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 					{
 						if (!((Widget)chart).isDisposed())
 						{
-							chart.setTimeRange(settings.getTimeFrom(), settings.getTimeTo());
+							chart.setTimeRange(config.getTimeFrom(), config.getTimeTo());
 							setChartData(data);
 						}
 						updateInProgress = false;
@@ -386,7 +381,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get value for DCI " + session.getObjectName(currentItem.getNodeId()) + ":\"" + currentItem.getDescription() + "\"";
+				return "Cannot get value for DCI " + session.getObjectName(currentItem.nodeId) + ":\"" + currentItem.name + "\"";
 			}
 
 			@Override
@@ -428,9 +423,6 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
@@ -438,61 +430,64 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			}
 		};
 		
-		actionAutoRefresh = new Action() {
+		actionProperties = new Action("Properties") {
 			@Override
 			public void run()
 			{
-				settings.setAutoRefresh(!settings.isAutoRefresh());
-				setChecked(settings.isAutoRefresh());
-				HistoricalDataView.this.getSite().getShell().getDisplay().timerExec(settings.isAutoRefresh() ? settings.getAutoRefreshInterval() : -1, refreshTimer);
+				PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, config);
+				if (dlg != null)
+				{
+					dlg.open();
+					configureGraphFromSettings();
+				}
 			}
 		};
-		actionAutoRefresh.setText("Refresh &automatically");
-		actionAutoRefresh.setChecked(settings.isAutoRefresh());
 		
-		actionLogScale = new Action() {
+		actionAutoRefresh = new Action("Refresh &automatically") {
+			@Override
+			public void run()
+			{
+				config.setAutoRefresh(!config.isAutoRefresh());
+				setChecked(config.isAutoRefresh());
+				HistoricalDataView.this.getSite().getShell().getDisplay().timerExec(config.isAutoRefresh() ? config.getRefreshRate() * 1000 : -1, refreshTimer);
+			}
+		};
+		actionAutoRefresh.setChecked(config.isAutoRefresh());
+		
+		actionLogScale = new Action("&Logarithmic scale") {
 			@Override
 			public void run()
 			{
 				try
 				{
-					chart.setLogScaleEnabled(!settings.isLogScale());
-					settings.setLogScale(!settings.isLogScale());
+					chart.setLogScaleEnabled(!config.isLogScale());
+					config.setLogScale(!config.isLogScale());
 				}
 				catch(IllegalStateException e)
 				{
 					MessageDialog.openError(getSite().getShell(), "Error", "Cannot switch to logarithmic scale: " + e.getLocalizedMessage());
 				}
-				setChecked(settings.isLogScale());
+				setChecked(config.isLogScale());
 			}
 		};
-		actionLogScale.setText("&Logarithmic scale");
-		actionLogScale.setChecked(settings.isLogScale());
+		actionLogScale.setChecked(config.isLogScale());
 		
-		actionZoomIn = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionZoomIn = new Action("Zoom &in") {
 			@Override
 			public void run()
 			{
 				chart.zoomIn();
 			}
 		};
-		actionZoomIn.setText("Zoom &in");
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 
-		actionZoomOut = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionZoomOut = new Action("Zoom &out") {
 			@Override
 			public void run()
 			{
 				chart.zoomOut();
 			}
 		};
-		actionZoomOut.setText("Zoom &out");
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 
 		actionAdjustX = new Action() {
@@ -539,70 +534,66 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			@Override
 			public void run()
 			{
-				settings.setLegendVisible(!settings.isLegendVisible());
-				setChecked(settings.isLegendVisible());
-				chart.setLegendVisible(settings.isLegendVisible());
+				config.setShowLegend(!config.isShowLegend());
+				setChecked(config.isShowLegend());
+				chart.setLegendVisible(config.isShowLegend());
 			}
 		};
-		actionShowLegend.setChecked(settings.isLegendVisible());
+		actionShowLegend.setChecked(config.isShowLegend());
 		
 		actionLegendLeft = new Action("Place on &left", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				settings.setLegendPosition(GraphSettings.POSITION_LEFT);
-				chart.setLegendPosition(settings.getLegendPosition());
+				config.setLegendPosition(GraphSettings.POSITION_LEFT);
+				chart.setLegendPosition(config.getLegendPosition());
 			}
 		};
-		actionLegendLeft.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_LEFT);
+		actionLegendLeft.setChecked(config.getLegendPosition() == GraphSettings.POSITION_LEFT);
 		
 		actionLegendRight = new Action("Place on &right", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				settings.setLegendPosition(GraphSettings.POSITION_RIGHT);
-				chart.setLegendPosition(settings.getLegendPosition());
+				config.setLegendPosition(GraphSettings.POSITION_RIGHT);
+				chart.setLegendPosition(config.getLegendPosition());
 			}
 		};
-		actionLegendRight.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_RIGHT);
+		actionLegendRight.setChecked(config.getLegendPosition() == GraphSettings.POSITION_RIGHT);
 		
 		actionLegendTop = new Action("Place on &top", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				settings.setLegendPosition(GraphSettings.POSITION_TOP);
-				chart.setLegendPosition(settings.getLegendPosition());
+				config.setLegendPosition(GraphSettings.POSITION_TOP);
+				chart.setLegendPosition(config.getLegendPosition());
 			}
 		};
-		actionLegendTop.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_TOP);
+		actionLegendTop.setChecked(config.getLegendPosition() == GraphSettings.POSITION_TOP);
 		
 		actionLegendBottom = new Action("Place on &bottom", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				settings.setLegendPosition(GraphSettings.POSITION_BOTTOM);
-				chart.setLegendPosition(settings.getLegendPosition());
+				config.setLegendPosition(GraphSettings.POSITION_BOTTOM);
+				chart.setLegendPosition(config.getLegendPosition());
 			}
 		};
-		actionLegendBottom.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
+		actionLegendBottom.setChecked(config.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
 
 		presetActions = new Action[presetRanges.length];
 		for(int i = 0; i < presetRanges.length; i++)
 		{
 			final Integer presetIndex = i;
-			presetActions[i] = new Action() {
-				/* (non-Javadoc)
-				 * @see org.eclipse.jface.action.Action#run()
-				 */
+			presetActions[i] = new Action("Last " + presetNames[i]) {
 				@Override
 				public void run()
 				{
-					settings.setTimeUnit(presetUnits[presetIndex]);
-					settings.setTimeFrame(presetRanges[presetIndex]);
+					config.setTimeUnits(presetUnits[presetIndex]);
+					config.setTimeRange(presetRanges[presetIndex]);
 					updateChart();
 				}
 			};
-			presetActions[i].setText("Last " + presetNames[i]);
 		}
 	}
 	
@@ -648,6 +639,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		manager.add(legend);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
+		manager.add(new Separator());
+		manager.add(actionProperties);
 	}
 
 	/**
@@ -683,7 +676,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 		manager.add(new Separator());
-		manager.add(new PropertyDialogAction(getSite(), this));
+		manager.add(actionProperties);
 	}
 
 	/**
@@ -723,8 +716,8 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			return;
 		
 		updateInProgress = true;
-		settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
-		settings.setTimeTo(new Date(System.currentTimeMillis()));
+		config.setTimeFrom(new Date(System.currentTimeMillis() - config.getTimeRangeMillis()));
+		config.setTimeTo(new Date(System.currentTimeMillis()));
 		getDataFromServer();
 	}
 
@@ -736,41 +729,6 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	{
 		getSite().getShell().getDisplay().timerExec(-1, refreshTimer);
 		super.dispose();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
-	 */
-	@Override
-	public void addSelectionChangedListener(ISelectionChangedListener listener)
-	{
-		selectionListeners.add(listener);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
-	 */
-	@Override
-	public ISelection getSelection()
-	{
-		return new StructuredSelection(settings);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
-	 */
-	@Override
-	public void removeSelectionChangedListener(ISelectionChangedListener listener)
-	{
-		selectionListeners.remove(listener);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
-	 */
-	@Override
-	public void setSelection(ISelection selection)
-	{
 	}
 
 	/* (non-Javadoc)
