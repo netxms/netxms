@@ -25,12 +25,18 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
- * Configuration for label
+ * Configuration for embedded dashboard element
  */
 public class EmbeddedDashboardConfig extends DashboardElementConfig
 {
-	@Element(required=true)
+	@Element(required=false)
 	private long objectId = 0;
+	
+	@Element(required=false)
+	private long[] dashboardObjects = new long[0];
+	
+	@Element(required=false)
+	private int displayInterval = 60;
 
 	@Element(required=false)
 	private String title = "";
@@ -45,7 +51,16 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 	public static EmbeddedDashboardConfig createFromXml(final String xml) throws Exception
 	{
 		Serializer serializer = new Persister();
-		return serializer.read(EmbeddedDashboardConfig.class, xml);
+		EmbeddedDashboardConfig config = serializer.read(EmbeddedDashboardConfig.class, xml);
+		
+		// fix configuration if it was saved in old format
+		if ((config.objectId != 0) && (config.dashboardObjects.length == 0))
+		{
+			config.dashboardObjects = new long[1];
+			config.dashboardObjects[0] = config.objectId;
+			config.objectId = 0;
+		}
+		return config;
 	}
 	
 	/* (non-Javadoc)
@@ -77,18 +92,34 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 	}
 
 	/**
-	 * @return the objectId
+	 * @return the dashboardObjects
 	 */
-	public long getObjectId()
+	public long[] getDashboardObjects()
 	{
-		return objectId;
+		return dashboardObjects;
 	}
 
 	/**
-	 * @param objectId the objectId to set
+	 * @param dashboardObjects the dashboardObjects to set
 	 */
-	public void setObjectId(long objectId)
+	public void setDashboardObjects(long[] dashboardObjects)
 	{
-		this.objectId = objectId;
+		this.dashboardObjects = dashboardObjects;
+	}
+
+	/**
+	 * @return the displayInterval
+	 */
+	public int getDisplayInterval()
+	{
+		return displayInterval;
+	}
+
+	/**
+	 * @param displayInterval the displayInterval to set
+	 */
+	public void setDisplayInterval(int displayInterval)
+	{
+		this.displayInterval = displayInterval;
 	}
 }

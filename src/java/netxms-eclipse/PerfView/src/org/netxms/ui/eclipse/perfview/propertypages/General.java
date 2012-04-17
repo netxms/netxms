@@ -37,7 +37,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * "General" property page for chart
- *
  */
 public class General extends PropertyPage
 {

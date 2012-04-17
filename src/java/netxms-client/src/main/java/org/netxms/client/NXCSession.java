@@ -1708,6 +1708,19 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 */
 	public List<GenericObject> findMultipleObjects(final long[] idList, boolean returnUnknown)
 	{
+		return findMultipleObjects(idList, null, returnUnknown);
+	}
+
+	/**
+	 * Find multiple NetXMS objects by identifiers
+	 * 
+	 * @param idList array of object identifiers
+	 * @param classFilter class filter for objects, or null to disable filtering
+	 * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
+	 * @return list of found objects
+	 */
+	public List<GenericObject> findMultipleObjects(final long[] idList, Class<? extends GenericObject> classFilter, boolean returnUnknown)
+	{
 		List<GenericObject> result = new ArrayList<GenericObject>(idList.length);
 
 		synchronized(objectList)
@@ -1715,10 +1728,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			for(int i = 0; i < idList.length; i++)
 			{
 				final GenericObject object = objectList.get(idList[i]);
-				if (object != null)
+				if ((object != null) && ((classFilter == null) || classFilter.isInstance(object)))
+				{
 					result.add(object);
+				}
 				else if (returnUnknown)
+				{
 					result.add(new UnknownObject(idList[i], this));
+				}
 			}
 		}
 
@@ -1734,6 +1751,19 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 */
 	public List<GenericObject> findMultipleObjects(final Long[] idList, boolean returnUnknown)
 	{
+		return findMultipleObjects(idList, null, returnUnknown);
+	}
+
+	/**
+	 * Find multiple NetXMS objects by identifiers
+	 * 
+	 * @param idList array of object identifiers
+	 * @param classFilter class filter for objects, or null to disable filtering
+	 * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
+	 * @return array of found objects
+	 */
+	public List<GenericObject> findMultipleObjects(final Long[] idList, Class<? extends GenericObject> classFilter, boolean returnUnknown)
+	{
 		List<GenericObject> result = new ArrayList<GenericObject>(idList.length);
 
 		synchronized(objectList)
@@ -1741,10 +1771,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			for(int i = 0; i < idList.length; i++)
 			{
 				final GenericObject object = objectList.get(idList[i]);
-				if (object != null)
+				if ((object != null) && ((classFilter == null) || classFilter.isInstance(object)))
+				{
 					result.add(object);
+				}
 				else if (returnUnknown)
+				{
 					result.add(new UnknownObject(idList[i], this));
+				}
 			}
 		}
 

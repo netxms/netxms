@@ -33,8 +33,10 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class EmbeddedDashboardElement extends ElementWidget
 {
-	private Dashboard object;
+	private Dashboard[] objects;
 	private EmbeddedDashboardConfig config;
+	private DashboardControl control = null;
+	private int current = -1;
 	
 	/**
 	 * @param parent
@@ -55,16 +57,50 @@ public class EmbeddedDashboardElement extends ElementWidget
 		}
 		
 		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		object = (Dashboard)session.findObjectById(config.getObjectId(), Dashboard.class);
+		objects = new Dashboard[config.getDashboardObjects().length];
+		for(int i = 0; i < objects.length; i++)
+			objects[i] = (Dashboard)session.findObjectById(config.getDashboardObjects()[i], Dashboard.class);
 		
 		FillLayout layout = new FillLayout();
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		setLayout(layout);
 		
-		if (object != null)
+		if (objects.length > 1)
 		{
-			new DashboardControl(this, SWT.NONE, object, viewPart, true);	/* TODO: set embedded=false if border=true */
+			nextDashboard();
 		}
+		else
+		{
+			if ((objects != null) && (objects.length > 0) && (objects[0] != null))
+				new DashboardControl(this, SWT.NONE, objects[0], viewPart, true);
+		}
+	}
+	
+	/**
+	 * Show next dashboard in chain
+	 */
+	private void nextDashboard()
+	{
+		if (control != null)
+			control.dispose();
+		current++;
+		if (current >= objects.length)
+			current = 0;
+		if (objects[current] != null)
+			control = new DashboardControl(this, SWT.NONE, objects[current], viewPart, true);	/* TODO: set embedded=false if border=true */
+		else
+			control = null;
+		getParent().layout(true, true);
+		
+		getDisplay().timerExec(config.getDisplayInterval() * 1000, new Runnable() {
+			@Override
+			public void run()
+			{
+				if (EmbeddedDashboardElement.this.isDisposed())
+					return;
+				nextDashboard();
+			}
+		});
 	}
 }
