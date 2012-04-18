@@ -244,6 +244,14 @@ public class HistoricalDataView extends ViewPart implements GraphSettingsChangeL
 	public void initPredefinedGraph(GraphSettings gs)
 	{
 		settings = gs;
+		try
+		{
+			config = ChartConfig.createFromXml(settings.getConfig());
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 		settings.addChangeListener(this);
 		configureGraphFromSettings();
 	}
