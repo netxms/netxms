@@ -33,6 +33,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
@@ -88,7 +89,6 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private int lastSelectedRule = -1;
 	private List<EventProcessingPolicyRule> clipboard = new ArrayList<EventProcessingPolicyRule>(0);
 	
-	private Font headerFont;
 	private Font normalFont;
 	private Font boldFont;
 	
@@ -166,9 +166,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		});
 
-		headerFont = new Font(parent.getDisplay(), "Verdana", 10, SWT.BOLD);
-		normalFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.NORMAL);
-		boldFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.BOLD);
+		normalFont = JFaceResources.getDefaultFont();
+		boldFont = JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT);
 		
 		sessionListener = new NXCListener() {
 			@Override
@@ -598,10 +597,6 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 				}
 			}.start();
 		}
-		
-		headerFont.dispose();
-		normalFont.dispose();
-		boldFont.dispose();
 		
 		imageStop.dispose();
 		imageAlarm.dispose();

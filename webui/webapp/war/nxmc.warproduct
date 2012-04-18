@@ -38,6 +38,8 @@
       <plugin id="org.eclipse.help"/>
       <plugin id="org.eclipse.osgi"/>
       <plugin id="org.eclipse.osgi.services"/>
+      <plugin id="org.eclipse.rap.draw2d"/>
+      <plugin id="org.eclipse.rap.draw2d.compatibility"/>
       <plugin id="org.eclipse.rap.jface"/>
       <plugin id="org.eclipse.rap.jface.databinding"/>
       <plugin id="org.eclipse.rap.rwt"/>
@@ -47,6 +49,8 @@
       <plugin id="org.eclipse.rap.ui"/>
       <plugin id="org.eclipse.rap.ui.forms"/>
       <plugin id="org.eclipse.rap.ui.workbench"/>
+      <plugin id="org.eclipse.rap.zest.core"/>
+      <plugin id="org.eclipse.rap.zest.layouts"/>
       <plugin id="org.mozilla.javascript"/>
       <plugin id="org.netxms.nebula.widgets.gallery"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
@@ -59,6 +63,8 @@
       <plugin id="org.netxms.ui.eclipse.eventmanager"/>
       <plugin id="org.netxms.ui.eclipse.filemanager"/>
       <plugin id="org.netxms.ui.eclipse.imagelibrary"/>
+      <plugin id="org.netxms.ui.eclipse.logviewer"/>
+      <plugin id="org.netxms.ui.eclipse.networkmaps"/>
       <plugin id="org.netxms.ui.eclipse.nxsl"/>
       <plugin id="org.netxms.ui.eclipse.objectbrowser"/>
       <plugin id="org.netxms.ui.eclipse.objectmanager"/>
@@ -69,6 +75,7 @@
       <plugin id="org.netxms.ui.eclipse.reporter"/>
       <plugin id="org.netxms.ui.eclipse.serverconfig"/>
       <plugin id="org.netxms.ui.eclipse.serverjobmanager"/>
+      <plugin id="org.netxms.ui.eclipse.serviceview"/>
       <plugin id="org.netxms.ui.eclipse.snmp"/>
       <plugin id="org.netxms.ui.eclipse.switchmanager"/>
       <plugin id="org.netxms.ui.eclipse.topology"/>
@@ -111,6 +118,8 @@
       <plugin id="org.eclipse.help" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.osgi" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.osgi.services" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.draw2d" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.draw2d.compatibility" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.jface" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.jface.databinding" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.rwt" autoStart="true" startLevel="0" />
@@ -120,6 +129,8 @@
       <plugin id="org.eclipse.rap.ui" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.ui.forms" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.ui.workbench" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.zest.core" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.zest.layouts" autoStart="true" startLevel="0" />
       <plugin id="org.mozilla.javascript" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.nebula.widgets.gallery" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.actionmanager" autoStart="true" startLevel="0" />
@@ -132,6 +143,8 @@
       <plugin id="org.netxms.ui.eclipse.eventmanager" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.filemanager" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.imagelibrary" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.logviewer" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.networkmaps" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.nxsl" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.objectbrowser" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.objectmanager" autoStart="true" startLevel="0" />
@@ -142,6 +155,7 @@
       <plugin id="org.netxms.ui.eclipse.reporter" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.serverconfig" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.serverjobmanager" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.serviceview" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.snmp" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.switchmanager" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.topology" autoStart="true" startLevel="0" />

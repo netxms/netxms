@@ -18,7 +18,7 @@
  */
 package org.netxms.ui.eclipse.shared;
 
-import org.eclipse.swt.SWT;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Display;
 
@@ -35,7 +35,9 @@ public class SharedFonts
 	 */
 	public static void init(Display display)
 	{
-		CONSOLE = new Font(display, "Courier New", 10, SWT.NORMAL); //$NON-NLS-1$
-		ELEMENT_TITLE = new Font(display, "Verdana", 8, SWT.BOLD); //$NON-NLS-1$
+		//CONSOLE = new Font(display, "Courier New", 10, SWT.NORMAL); //$NON-NLS-1$
+		//ELEMENT_TITLE = new Font(display, "Verdana", 8, SWT.BOLD); //$NON-NLS-1$
+		CONSOLE = JFaceResources.getTextFont();
+		ELEMENT_TITLE = JFaceResources.getBannerFont();
 	}
 }
