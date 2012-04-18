@@ -311,7 +311,7 @@ void EscapeString(String &str)
 // Check if given record exists in database
 //
 
-bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, TCHAR *table, const TCHAR *idColumn, DWORD id)
+bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, DWORD id)
 {
 	bool exist = false;
 

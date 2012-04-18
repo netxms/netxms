@@ -713,7 +713,7 @@ void QueueIDataInsert(time_t timestamp, DWORD nodeId, DWORD dciId, const TCHAR *
 void StartDBWriter();
 void StopDBWriter();
 
-bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, TCHAR *table, const TCHAR *idColumn, DWORD id);
+bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, DWORD id);
 
 void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszStr);
 

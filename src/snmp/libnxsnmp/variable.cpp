@@ -41,7 +41,7 @@ SNMP_Variable::SNMP_Variable()
 // Create variable of ASN_NULL type
 //
 
-SNMP_Variable::SNMP_Variable(TCHAR *pszName)
+SNMP_Variable::SNMP_Variable(const TCHAR *pszName)
 {
    DWORD dwLength, *pdwOid;
 
@@ -436,7 +436,7 @@ DWORD SNMP_Variable::Encode(BYTE *pBuffer, DWORD dwBufferSize)
 // Set variable from string
 //
 
-void SNMP_Variable::SetValueFromString(DWORD dwType, TCHAR *pszValue)
+void SNMP_Variable::SetValueFromString(DWORD dwType, const TCHAR *pszValue)
 {
    DWORD *pdwBuffer, dwLen;
 

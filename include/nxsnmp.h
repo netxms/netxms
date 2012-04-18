@@ -392,7 +392,7 @@ private:
 
 public:
    SNMP_Variable();
-   SNMP_Variable(TCHAR *pszName);
+   SNMP_Variable(const TCHAR *pszName);
    SNMP_Variable(DWORD *pdwName, DWORD dwNameLen);
    ~SNMP_Variable();
 
@@ -413,7 +413,7 @@ public:
    TCHAR *GetValueAsMACAddr(TCHAR *pszBuffer);
    TCHAR *GetValueAsIPAddr(TCHAR *pszBuffer);
 
-   void SetValueFromString(DWORD dwType, TCHAR *pszValue);
+   void SetValueFromString(DWORD dwType, const TCHAR *pszValue);
 };
 
 
