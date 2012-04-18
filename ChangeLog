@@ -2,13 +2,37 @@
 * 1.2.0
 *
 
-- Number of polls required for status change can be set individually
-  for each interface
-- Added new NXSL functions and object properties for accessing topology information
+- Number of polls required for status change can be set individually for each interface
+- New NXSL functions and object properties for accessing topology information
 - New NXSL function FindObject
+- New NXSL functions for object creation and binding
+- Added option to set native agent port on node creation
+- Added support for INFORM messages in SNMP trap receiver
+- Implemented automatic creation of ChildStatus DCI when Network Service object created for Node
+- Implemented concept of "expected" interface state
+- Added option to use DNS names instead of IP addresses as primary host name for discovered nodes
+- Added possibility to add parameters and/or specify entry point in scripts called via %[] macro
+- Implemented alarm comments
+- Initial support for multi-valued (tabular) DCI
 - Java console:
 	- Added alarm history log viewer
 	- Time interval for line charts on dashboards made configurable
+	- Dashboard configuration improved; all dashboard elements now can be configured from GUI
+	- New tab for container objectss where threshold violations for underlying nodes are shown
+	- Multiple dashboards can be displayed in a loop (like slide show)
+	- Fixed problems with line chart configuration saving in perspective
+	- Resolved issue: Reports not working on Windows
+	- Resolved issue: Cannot delete non-existent object from event processing policy
+	- Resolved issue: No confirmation shown for object tools with "confirm before execution" flag
+	- Resolved issue: EPP editor do not support 'Negate cell'
+- Web UI:
+	- All functionality from Java console implemented
+	- Windows installer for web interface
+	- Resolved issue: NetXMS session not closed when web session is expired
+- Resolved issue: Internal libexpat failed to compile on debian5
+- Resolved issue: Build failed on Solaris 11
+- Resolved issue: Incorrect interface status reported by agent on FreeBSD
+- Resolved issue: Database upgrade problems if SQLite used as backend database
 
 
 *
