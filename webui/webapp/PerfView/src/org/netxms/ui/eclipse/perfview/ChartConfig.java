@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.perfview;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Date;
+import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.simpleframework.xml.Element;
@@ -89,10 +90,258 @@ public class ChartConfig
 	 */
 	public static ChartConfig createFromXml(final String xml) throws Exception
 	{
+		if (xml == null)
+			return new ChartConfig();
+		
+		// Compatibility mode: decode old predefined graph configuration
+		// should be removed in 1.2.1
+		if (!xml.startsWith("<chart>"))
+		{
+			ChartConfig config = new ChartConfig();
+			config.parseLegacyConfig(xml);
+			return config;
+		}
+		
 		Serializer serializer = new Persister();
 		return serializer.read(ChartConfig.class, xml);
 	}
 
+	/**
+	 * Parse legacy predefined graph config
+	 * 
+	 * @param settings
+	 */
+	private void parseLegacyConfig(String settings)
+	{
+		autoRefresh = false;
+		showLegend = false;
+		showGrid = false;
+		
+		int dciCount = 0;
+		
+		GraphItemStyle[] itemStyles = new GraphItemStyle[GraphSettings.MAX_GRAPH_ITEM_COUNT];
+		for(int i = 0; i < itemStyles.length; i++)
+			itemStyles[i] = new GraphItemStyle();
+		
+		String[] elements = settings.split("\u007F");
+		for(int i = 0; i < elements.length; i++)
+		{
+			int index = elements[i].indexOf(':');
+			if (index == -1)
+				continue;
+			
+			final String name = elements[i].substring(0, index);
+			final String value = elements[i].substring(index + 1);
+			
+			if (name.equals("A"))
+			{
+				refreshRate = safeParseInt(value, 30);
+			}
+			else if (name.equals("F"))
+			{
+				int flags = safeParseInt(value, 0);
+				if ((flags & GraphSettings.GF_AUTO_UPDATE) != 0)
+					autoRefresh = true;
+				if ((flags & GraphSettings.GF_SHOW_GRID) != 0)
+					showGrid = true;
+				if ((flags & GraphSettings.GF_SHOW_LEGEND) != 0)
+					showLegend = true;
+				if ((flags & GraphSettings.GF_SHOW_HOST_NAMES) != 0)
+					showHostNames = true;
+				if ((flags & GraphSettings.GF_LOG_SCALE) != 0)
+					logScale = true;
+			}
+			else if (name.equals("N"))
+			{
+				dciCount = safeParseInt(value, 0);
+				dciList = new ChartDciConfig[dciCount];
+				for(int j = 0; j < dciCount; j++)
+					dciList[j] = new ChartDciConfig();
+			}
+			else if (name.equals("TFT"))
+			{
+				timeFrameType = safeParseInt(value, GraphSettings.TIME_FRAME_BACK_FROM_NOW);
+			}
+			else if (name.equals("TU"))
+			{
+				timeUnits = safeParseInt(value, GraphSettings.TIME_UNIT_HOUR);
+			}
+			else if (name.equals("NTU"))
+			{
+				timeRange = safeParseInt(value, 1);
+			}
+			else if (name.equals("TS"))
+			{
+				timeFrom = new Date((long)safeParseInt(value, 0) * 1000L);
+			}
+			else if (name.equals("TF"))
+			{
+				timeTo = new Date((long)safeParseInt(value, 0) * 1000L);
+			}
+			else if (name.equals("T"))
+			{
+				title = value;
+			}
+			else if (name.equals("S"))
+			{
+				// autoscale flag
+			}
+			else if (name.equals("G"))
+			{
+				showGrid = (safeParseInt(value, 1) != 0);
+			}
+			else if (name.equals("L"))
+			{
+				showLegend = (safeParseInt(value, 1) != 0);
+			}
+			else if (name.equals("R"))
+			{
+				// show ruler flag
+			}
+			else if (name.equals("H"))
+			{
+				showHostNames = (safeParseInt(value, 0) != 0);
+			}
+			else if (name.equals("O"))
+			{
+				logScale = (safeParseInt(value, 0) != 0);
+			}
+			else if (name.equals("CA"))
+			{
+				// axis color
+			}
+			else if (name.equals("CB"))
+			{
+				// background color
+			}
+			else if (name.equals("CG"))
+			{
+				// grid color
+			}
+			else if (name.equals("CLF"))
+			{
+				// legend text color
+			}
+			else if (name.equals("CLB"))
+			{
+				// legend background color
+			}
+			else if (name.equals("CP"))
+			{
+				// plot area color
+			}
+			else if (name.equals("CR"))
+			{
+				// ruler color
+			}
+			else if (name.equals("CS"))
+			{
+				// selection color
+			}
+			else if (name.equals("CT"))
+			{
+				// text color
+			}
+			else if (name.charAt(0) == 'C')	// Item color
+			{
+				int item = safeParseInt(name.substring(1), -1);
+				if ((item >= 0) && (item < itemStyles.length))
+					itemStyles[item].setColor(safeParseInt(value, 0));
+			}
+			else if (name.charAt(0) == 'T')	// Item type
+			{
+				int item = safeParseInt(name.substring(1), -1);
+				if ((item >= 0) && (item < itemStyles.length))
+					itemStyles[item].setType(safeParseInt(value, 0));
+			}
+			else if (name.charAt(0) == 'W')	// Item line width
+			{
+				int item = safeParseInt(name.substring(1), -1);
+				if ((item >= 0) && (item < itemStyles.length))
+					itemStyles[item].setLineWidth(safeParseInt(value, 0));
+			}
+			else if ((name.charAt(0) == 'F') && (name.charAt(1) == 'L'))	// Item flags
+			{
+				int item = safeParseInt(name.substring(2), -1);
+				if ((item >= 0) && (item < itemStyles.length))
+					itemStyles[item].setFlags(safeParseInt(value, 0));
+			}
+			else if (name.charAt(0) == 'N')	// Node ID
+			{
+				int item = safeParseInt(name.substring(1), -1);
+				if ((item >= 0) && (item < dciCount))
+					dciList[item].nodeId = safeParseLong(value, 0);
+			}
+			else if (name.charAt(0) == 'I')	// DCI information
+			{
+				if (name.charAt(1) == 'D')	// description
+				{
+					int item = safeParseInt(name.substring(2), -1);
+					if ((item >= 0) && (item < dciCount))
+						dciList[item].name = value;
+				}
+				else if (name.charAt(1) == 'N')	// name
+				{
+				}
+				else if (name.charAt(1) == 'S')	// source
+				{
+				}
+				else if (name.charAt(1) == 'T')	// data type
+				{
+				}
+				else	// assume DCI ID - Ixxx
+				{
+					int item = safeParseInt(name.substring(1), -1);
+					if ((item >= 0) && (item < dciCount))
+						dciList[item].dciId = safeParseLong(value, 0);
+				}
+			}
+		}
+		
+		// Apply item styles
+		for(int i = 0; (i < dciList.length) && (i < itemStyles.length); i++)
+		{
+			dciList[i].color = "0x" + Integer.toHexString(itemStyles[i].getColor());
+			dciList[i].lineWidth = itemStyles[i].getLineWidth();
+		}
+	}
+	
+	/**
+	 * Parse int without throwing exception
+	 * @param text text to parse
+	 * @param defVal default value to be used in case of parse error
+	 * @return parsed value
+	 */
+	static private int safeParseInt(String text, int defVal)
+	{
+		try
+		{
+			return Integer.parseInt(text);
+		}
+		catch(NumberFormatException e)
+		{
+		}
+		return defVal;
+	}
+
+	/**
+	 * Parse long without throwing exception
+	 * @param text text to parse
+	 * @param defVal default value to be used in case of parse error
+	 * @return parsed value
+	 */
+	static private long safeParseLong(String text, long defVal)
+	{
+		try
+		{
+			return Long.parseLong(text);
+		}
+		catch(NumberFormatException e)
+		{
+		}
+		return defVal;
+	}
+	
 	/**
 	 * Create XML from configuration.
 	 * 
