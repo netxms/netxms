@@ -28,8 +28,6 @@ import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -59,7 +57,6 @@ public class ExtendedGraphViewer extends GraphViewer
 	private GeoLocation backgroundLocation = null;
 	private int backgroundZoom;
 	private IFigure zestRootLayer;
-	private boolean graphControlResized = false;
 	
 	/**
 	 * @param composite
@@ -86,38 +83,9 @@ public class ExtendedGraphViewer extends GraphViewer
 					return;
 
 				if (backgroundLocation != null)
-				{
-					if (graphControlResized)
-					{
-						backgroundFigure.setSize(10, 10);
-						graphControlResized = false;
-					}
-					else
-					{
-						resizeBackground();
-					}
 					reloadMapBackground();
-				}
-				else
-				{
-					resizeBackground();
-				}
 			}
 		};
-		
-		getGraphControl().addControlListener(new ControlListener() {
-			@Override
-			public void controlResized(ControlEvent e)
-			{
-				graphControlResized = true;
-				getGraphControl().getDisplay().timerExec(1000, timer);
-			}
-			
-			@Override
-			public void controlMoved(ControlEvent e)
-			{
-			}
-		});
 		
 		zestRootLayer.addFigureListener(new FigureListener() {
 			@Override
@@ -185,18 +153,6 @@ public class ExtendedGraphViewer extends GraphViewer
 	}
 	
 	/**
-	 * Resize background figure
-	 */
-	private void resizeBackground()
-	{
-		final Rectangle controlSize = getGraphControl().getClientArea();
-		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
-		// Without the -2 for rootLayerSize background resize to root size triggers
-		// root layer size increase by 2, thus causing infinite resize loop
-		backgroundFigure.setSize(Math.max(controlSize.width, rootLayerSize.width - 4), Math.max(controlSize.height, rootLayerSize.height - 4));
-	}
-	
-	/**
 	 * Reload map background
 	 */
 	private void reloadMapBackground()
@@ -213,6 +169,9 @@ public class ExtendedGraphViewer extends GraphViewer
 					@Override
 					public void run()
 					{
+						if (backgroundLocation == null)
+							return;
+						
 						final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
 						if ((mapSize.x != rootLayerSize.width) || (mapSize.y != rootLayerSize.height))
 							return;
