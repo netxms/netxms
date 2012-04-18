@@ -153,8 +153,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		scroller.setExpandVertical(true);
 		scroller.setExpandHorizontal(true);
 		scroller.getVerticalBar().setIncrement(20);
-		scroller.addControlListener(new ControlAdapter()
-		{
+		scroller.addControlListener(new ControlAdapter() {
 			public void controlResized(ControlEvent e)
 			{
 				Rectangle r = scroller.getClientArea();
@@ -162,11 +161,18 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		});
 
-		normalFont = JFaceResources.getDefaultFont();
-		boldFont = JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT);
-
-		sessionListener = new NXCListener()
+		if (Platform.getOS().equals(Platform.OS_WIN32))
 		{
+			normalFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.NORMAL);
+			boldFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.BOLD);		
+		}
+		else
+		{
+			normalFont = JFaceResources.getDefaultFont();
+			boldFont = JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT);
+		}
+
+		sessionListener = new NXCListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
@@ -186,8 +192,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	 */
 	private void createActions()
 	{
-		actionHorizontal = new Action("&Horizontal layout", Action.AS_RADIO_BUTTON)
-		{
+		actionHorizontal = new Action("&Horizontal layout", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -198,8 +203,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionHorizontal.setChecked(!verticalLayout);
 		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/h_layout.gif"));
 
-		actionVertical = new Action("&Vertical layout", Action.AS_RADIO_BUTTON)
-		{
+		actionVertical = new Action("&Vertical layout", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -210,8 +214,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionVertical.setChecked(verticalLayout);
 		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/v_layout.gif"));
 
-		actionSave = new Action("&Save policy")
-		{
+		actionSave = new Action("&Save policy") {
 			@Override
 			public void run()
 			{
@@ -221,8 +224,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionSave.setImageDescriptor(SharedIcons.SAVE);
 		actionSave.setEnabled(false);
 
-		actionCollapseAll = new Action("&Collapse all")
-		{
+		actionCollapseAll = new Action("&Collapse all") {
 			@Override
 			public void run()
 			{
@@ -231,8 +233,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		};
 		actionCollapseAll.setImageDescriptor(SharedIcons.COLLAPSE_ALL);
 
-		actionExpandAll = new Action("&Expand all")
-		{
+		actionExpandAll = new Action("&Expand all") {
 			@Override
 			public void run()
 			{
@@ -241,8 +242,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		};
 		actionExpandAll.setImageDescriptor(SharedIcons.EXPAND_ALL);
 
-		actionDelete = new Action("&Delete")
-		{
+		actionDelete = new Action("&Delete") {
 			@Override
 			public void run()
 			{
@@ -252,8 +252,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 		actionDelete.setEnabled(false);
 
-		actionInsertBefore = new Action("Insert &before")
-		{
+		actionInsertBefore = new Action("Insert &before") {
 			@Override
 			public void run()
 			{
@@ -261,8 +260,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 
-		actionInsertAfter = new Action("Insert &after")
-		{
+		actionInsertAfter = new Action("Insert &after") {
 			@Override
 			public void run()
 			{
@@ -270,8 +268,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 
-		actionCut = new Action("Cu&t")
-		{
+		actionCut = new Action("Cu&t") {
 			@Override
 			public void run()
 			{
@@ -281,8 +278,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionCut.setImageDescriptor(SharedIcons.CUT);
 		actionCut.setEnabled(false);
 
-		actionCopy = new Action("&Copy")
-		{
+		actionCopy = new Action("&Copy") {
 			@Override
 			public void run()
 			{
@@ -292,8 +288,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionCopy.setImageDescriptor(SharedIcons.COPY);
 		actionCopy.setEnabled(false);
 
-		actionPaste = new Action("&Paste")
-		{
+		actionPaste = new Action("&Paste") {
 			@Override
 			public void run()
 			{
@@ -303,8 +298,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionPaste.setImageDescriptor(SharedIcons.PASTE);
 		actionPaste.setEnabled(false);
 
-		actionEnableRule = new Action("E&nable")
-		{
+		actionEnableRule = new Action("E&nable") {
 			@Override
 			public void run()
 			{
@@ -312,8 +306,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 
-		actionDisableRule = new Action("D&isable")
-		{
+		actionDisableRule = new Action("D&isable") {
 			@Override
 			public void run()
 			{
@@ -335,8 +328,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	/**
 	 * Fill local pull-down menu
 	 * 
-	 * @param manager
-	 *           Menu manager for pull-down menu
+	 * @param manager Menu manager for pull-down menu
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
@@ -364,8 +356,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	/**
 	 * Fill local tool bar
 	 * 
-	 * @param manager
-	 *           Menu manager for local toolbar
+	 * @param manager Menu manager for local toolbar
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
@@ -388,8 +379,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	 */
 	private void openEventProcessingPolicy()
 	{
-		ConsoleJob job = new ConsoleJob("Open event processing policy", this, Activator.PLUGIN_ID, JOB_FAMILY)
-		{
+		ConsoleJob job = new ConsoleJob("Open event processing policy", this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -410,8 +400,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
 				policy = session.openEventProcessingPolicy();
 				policyLocked = true;
-				runInUIThread(new Runnable()
-				{
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
@@ -423,8 +412,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			@Override
 			protected void jobFailureHandler()
 			{
-				runInUIThread(new Runnable()
-				{
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
@@ -470,8 +458,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	/**
 	 * Process session notifications
 	 * 
-	 * @param n
-	 *           notification
+	 * @param n notification
 	 */
 	private void processSessionNotification(SessionNotification n)
 	{
@@ -501,8 +488,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	/**
 	 * Set all rules to collapsed or expanded state
 	 * 
-	 * @param collapsed
-	 *           true to collapse all, false to expand
+	 * @param collapsed true to collapse all, false to expand
 	 */
 	private void setAllRulesCollapsed(boolean collapsed)
 	{
@@ -523,14 +509,12 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private void savePolicy()
 	{
 		actionSave.setEnabled(false);
-		new ConsoleJob("Save event processing policy", this, Activator.PLUGIN_ID, JOB_FAMILY)
-		{
+		new ConsoleJob("Save event processing policy", this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.saveEventProcessingPolicy(policy);
-				runInUIThread(new Runnable()
-				{
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
@@ -543,8 +527,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			@Override
 			protected void jobFinalize()
 			{
-				runInUIThread(new Runnable()
-				{
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
@@ -569,8 +552,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
 		if (policyLocked)
 		{
-			new ConsoleJob("Close event processing policy", null, Activator.PLUGIN_ID, JOB_FAMILY)
-			{
+			new ConsoleJob("Close event processing policy", null, Activator.PLUGIN_ID, JOB_FAMILY) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -585,8 +567,11 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}.start();
 		}
 
-		// normalFont.dispose();
-		// boldFont.dispose();
+		if (Platform.getOS().equals(Platform.OS_WIN32))
+		{
+			normalFont.dispose();
+			boldFont.dispose();
+		}
 
 		imageStop.dispose();
 		imageAlarm.dispose();
@@ -601,8 +586,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	}
 
 	/**
-	 * Update entire editor area layout after change in rule editor windget's
-	 * size
+	 * Update entire editor area layout after change in rule editor windget's size
 	 */
 	public void updateEditorAreaLayout()
 	{
@@ -614,8 +598,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	/**
 	 * Find server action by ID
 	 * 
-	 * @param id
-	 *           action id
+	 * @param id action id
 	 * @return server action object or null
 	 */
 	public ServerAction findActionById(Long id)
@@ -626,8 +609,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	/**
 	 * Find server actions for list of Ids
 	 * 
-	 * @param idList
-	 *           list of action identifiers
+	 * @param idList list of action identifiers
 	 * @return list of server actions
 	 */
 	public Map<Long, ServerAction> findServerActions(List<Long> idList)
@@ -733,8 +715,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	}
 
 	/**
-	 * @param modified
-	 *           the modified to set
+	 * @param modified the modified to set
 	 */
 	public void setModified(boolean modified)
 	{
@@ -743,6 +724,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		firePropertyChange(PROP_DIRTY);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+	 */
 	@Override
 	public void doSave(IProgressMonitor monitor)
 	{
@@ -756,23 +740,35 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+	 */
 	@Override
 	public void doSaveAs()
 	{
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#isDirty()
+	 */
 	@Override
 	public boolean isDirty()
 	{
 		return modified;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
+	 */
 	@Override
 	public boolean isSaveAsAllowed()
 	{
 		return false;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
+	 */
 	@Override
 	public boolean isSaveOnCloseNeeded()
 	{
@@ -793,8 +789,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	/**
 	 * Set selection to given rule
 	 * 
-	 * @param e
-	 *           rule editor
+	 * @param e rule editor
 	 */
 	public void setSelection(RuleEditor e)
 	{
@@ -805,8 +800,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	/**
 	 * Add rule to selection
 	 * 
-	 * @param e
-	 *           rule editor
+	 * @param e rule editor
 	 */
 	public void addToSelection(RuleEditor e, boolean allFromPrevSelection)
 	{
@@ -972,8 +966,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	/**
 	 * Fill context menu for rule
 	 * 
-	 * @param manager
-	 *           menu manager
+	 * @param manager menu manager
 	 */
 	public void fillRuleContextMenu(IMenuManager manager)
 	{
