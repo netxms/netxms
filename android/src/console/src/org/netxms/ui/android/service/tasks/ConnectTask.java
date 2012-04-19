@@ -86,7 +86,7 @@ public class ConnectTask extends Thread
 					}
 				if (session == null)	// Already null or invalidated
 				{	
-					session = new NXCSession(server, login, password);
+					session = new NXCSession(server, NXCSession.DEFAULT_CONN_PORT, login, password, encrypt);
 					try
 					{
 						Log.d(TAG, "calling session.connect()");
