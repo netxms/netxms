@@ -2258,7 +2258,6 @@ webui/webapp/Core/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/shared/ConsoleSharedData.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/shared/IActionConstants.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/shared/SharedColors.java -text
-webui/webapp/Core/src/org/netxms/ui/eclipse/shared/SharedFonts.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/shared/SharedIcons.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/tools/ColorCache.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/tools/ColorConverter.java -text
