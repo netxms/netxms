@@ -552,7 +552,7 @@ DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
 		}
    }
 
-   if (i == m_iNumParams)
+   if (dwErrorCode == ERR_UNKNOWN_PARAMETER && i == m_iNumParams)
    {
 		dwErrorCode = GetParameterValueFromExtSubagent(pszParam, pszValue);
 		if (dwErrorCode == ERR_SUCCESS)
