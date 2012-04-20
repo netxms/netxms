@@ -29,6 +29,8 @@ import org.eclipse.zest.core.viewers.internal.ZoomManager;
 @SuppressWarnings("restriction")
 public class ZoomAction extends Action implements ZoomListener
 {
+	private static final long serialVersionUID = 1L;
+
 	private double zoomLevel;
 	private ZoomManager zoomManager;
 	

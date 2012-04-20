@@ -30,6 +30,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
@@ -47,7 +48,6 @@ import org.netxms.client.NodePollListener;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedFonts;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -105,7 +105,7 @@ public class NodePollerView extends ViewPart
 	{
 		textArea = new StyledText(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		textArea.setEditable(false);
-		textArea.setFont(SharedFonts.CONSOLE);
+		textArea.setFont(JFaceResources.getTextFont());
 		
 		createActions();
 		contributeToActionBars();

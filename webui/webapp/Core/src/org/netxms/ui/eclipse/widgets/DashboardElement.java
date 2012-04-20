@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -38,7 +39,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
-import org.netxms.ui.eclipse.shared.SharedFonts;
 import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 
 /**
@@ -83,7 +83,7 @@ public abstract class DashboardElement extends Canvas
 		
 		clientArea = createClientAreaInternal();
 		
-		setFont(SharedFonts.ELEMENT_TITLE);
+		setFont(JFaceResources.getBannerFont());
 		
 		addPaintListener(new PaintListener() {
 			private static final long serialVersionUID = -5503147029441108914L;

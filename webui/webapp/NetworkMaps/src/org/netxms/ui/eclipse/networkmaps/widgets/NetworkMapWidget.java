@@ -43,6 +43,8 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
  */
 public class NetworkMapWidget extends Composite
 {
+	private static final long serialVersionUID = 1L;
+
 	protected static final int LAYOUT_SPRING = 0;
 	protected static final int LAYOUT_RADIAL = 1;
 	protected static final int LAYOUT_HTREE = 2;

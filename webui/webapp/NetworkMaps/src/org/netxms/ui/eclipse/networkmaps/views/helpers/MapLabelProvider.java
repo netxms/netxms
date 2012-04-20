@@ -26,6 +26,7 @@ import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.draw2d.TextUtilities;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -52,7 +53,6 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedFonts;
 import org.netxms.ui.eclipse.tools.ColorCache;
 
 /**
@@ -282,7 +282,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		fontTitle.dispose();
 		
 		// workaround for draw2d bug 376478
-		TextUtilities.INSTANCE.getTextExtents("", SharedFonts.CONSOLE);
+		TextUtilities.INSTANCE.getTextExtents("", JFaceResources.getTextFont());
 		
 		colors.dispose();
 		

@@ -1885,7 +1885,6 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/messages_zh_CN
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/ConsoleSharedData.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/IActionConstants.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedColors.java -text
-src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedFonts.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedIcons.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ColorCache.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ColorConverter.java -text

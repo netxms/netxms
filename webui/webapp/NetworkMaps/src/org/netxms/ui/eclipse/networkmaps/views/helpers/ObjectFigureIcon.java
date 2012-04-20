@@ -19,14 +19,12 @@
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.draw2d.BorderLayout;
-import org.eclipse.draw2d.FigureUtilities;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;

@@ -11,7 +11,6 @@ import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedColors;
-import org.netxms.ui.eclipse.shared.SharedFonts;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
@@ -38,7 +37,6 @@ public class Application implements IApplication
 
 		SharedIcons.init(display);
 		SharedColors.init(display);
-		SharedFonts.init(display);
 		StatusDisplayInfo.init(display);
 		DataCollectionDisplayInfo.init();
 		WorkbenchAdvisor advisor = new ApplicationWorkbenchAdvisor();

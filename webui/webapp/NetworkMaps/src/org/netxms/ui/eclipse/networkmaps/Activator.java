@@ -1,6 +1,5 @@
 package org.netxms.ui.eclipse.networkmaps;
 
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -27,14 +26,6 @@ public class Activator extends AbstractUIPlugin
 	{
 		super.start(context);
 		plugin = this;
-		
-	   // Set default values for preferences
-		/*
-	   IPreferenceStore ps = getPreferenceStore();
-	   ps.setDefault("NetMap.ShowStatusIcon", true);
-	   ps.setDefault("NetMap.ShowStatusFrame", false);
-	   ps.setDefault("NetMap.ShowStatusBackground", false);
-	   */
 	}
 
 	/*

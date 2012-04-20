@@ -30,6 +30,8 @@ import org.netxms.client.maps.elements.NetworkMapElement;
  */
 public class MapContentProvider implements IGraphEntityRelationshipContentProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private NetworkMapPage page;
 	
 	/* (non-Javadoc)
