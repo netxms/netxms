@@ -382,6 +382,7 @@ public class HistoricalDataView extends ViewPart implements GraphSettingsChangeL
 						{
 							chart.setTimeRange(config.getTimeFrom(), config.getTimeTo());
 							setChartData(data);
+							chart.clearErrors();
 						}
 						updateInProgress = false;
 					}

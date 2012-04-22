@@ -160,7 +160,10 @@ public class LineChartElement extends ElementWidget
 					public void run()
 					{
 						if (!((Widget)chart).isDisposed())
+						{
 							chart.refresh();
+							chart.clearErrors();
+						}
 						updateInProgress = false;
 					}
 				});

@@ -516,24 +516,4 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		// TODO Auto-generated method stub
 		
 	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#addError(java.lang.String)
-	 */
-	@Override
-	public void addError(String message)
-	{
-		// TODO Auto-generated method stub
-		
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#clearErrors()
-	 */
-	@Override
-	public void clearErrors()
-	{
-		// TODO Auto-generated method stub
-		
-	}
 }
