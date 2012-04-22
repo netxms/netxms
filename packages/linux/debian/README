@@ -16,3 +16,16 @@ Building binary packages for Debian:
 4. Run build.sh
 
 5. Resulting .deb files will be in output directory
+
+
+Updating package files on web server:
+
+1. Put .deb files into appropriate binary directory:
+	<webroot>/data/apt/dists/squeeze/main/binary-i386
+	<webroot>/data/apt/dists/squeeze/main/binary-amd64
+
+2. Run commands from <webroot>/data/apt:
+
+	dpkg-scanpackages dists/squeeze/main/binary-i386 | gzip -9c > dists/squeeze/main/binary-i386/Packages.gz
+	dpkg-scanpackages dists/squeeze/main/binary-amd64 | gzip -9c > dists/squeeze/main/binary-amd64/Packages.gz
+	
