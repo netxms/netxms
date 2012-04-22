@@ -19,6 +19,8 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
@@ -113,7 +115,10 @@ public abstract class ComparisonChartElement extends ElementWidget
 					public void run()
 					{
 						if (!((Widget)chart).isDisposed())
+						{
 							chart.refresh();
+							chart.clearErrors();
+						}
 						updateInProgress = false;
 					}
 				});
@@ -130,6 +135,19 @@ public abstract class ComparisonChartElement extends ElementWidget
 			{
 				updateInProgress = false;
 				super.jobFailureHandler();
+			}
+
+			@Override
+			protected IStatus createFailureStatus(final Exception e)
+			{
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")");
+					}
+				});
+				return Status.OK_STATUS;
 			}
 		};
 		job.setUser(false);

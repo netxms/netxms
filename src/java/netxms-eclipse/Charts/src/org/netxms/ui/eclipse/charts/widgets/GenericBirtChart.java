@@ -18,6 +18,9 @@
  */
 package org.netxms.ui.eclipse.charts.widgets;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import org.eclipse.birt.chart.api.ChartEngine;
 import org.eclipse.birt.chart.device.IDeviceRenderer;
 import org.eclipse.birt.chart.exception.ChartException;
@@ -46,7 +49,9 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.tools.ColorCache;
 
 /**
  * Abstract base class for all BIRT-based charts
@@ -61,6 +66,9 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 	private GeneratedChartState generatedChartState = null;
 	private IGenerator generator = null;
 	private Image imgChart = null;
+	private ColorCache colors;
+	private Set<String> errors = new HashSet<String>(0);
+	private Image errorImage = null;
 	
 	/**
 	 * Create chart widget
@@ -71,6 +79,8 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 	public GenericBirtChart(Composite parent, int style)
 	{
 		super(parent, style | SWT.NO_BACKGROUND);
+		
+		colors = new ColorCache(this);
 		
 		try
 		{
@@ -199,6 +209,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		}
 
 		event.gc.drawImage(imgChart, clientArea.x, clientArea.y);
+		paintErrorIndicator(event.gc);
 	}
 	
 	/* (non-Javadoc)
@@ -349,5 +360,58 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		super.setTranslucent(translucent);
 		if (chart != null)
 			recreateChart();
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#addError(java.lang.String)
+	 */
+	@Override
+	public void addError(String message)
+	{
+		if (errors.add(message))
+			redraw();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#clearErrors()
+	 */
+	@Override
+	public void clearErrors()
+	{
+		if (errors.size() > 0)
+		{
+			errors.clear();
+			redraw();
+		}
+	}
+	
+	/**
+	 * Draw error indicator if needed
+	 * 
+	 * @param gc
+	 */
+	private void paintErrorIndicator(GC gc)
+	{
+		if (errors.size() == 0)
+			return;
+
+		if (errorImage == null)
+			errorImage = Activator.getImageDescriptor("icons/chart_error.png").createImage();
+
+		gc.setAlpha(127);
+		gc.setBackground(colors.create(127, 127, 127));
+		gc.fillRectangle(getClientArea());
+		gc.setAlpha(255);
+		gc.drawImage(errorImage, 10, 10);
+		
+		gc.setForeground(colors.create(192, 0, 0));
+		Iterator<String> it = errors.iterator();
+		int y = 12;
+		int h = gc.textExtent("X").y;
+		while(it.hasNext())
+		{
+			gc.drawText(it.next(), 40, y, true);
+			y += h + 5;
+		}
 	}
 }

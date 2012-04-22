@@ -22,6 +22,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -606,8 +608,7 @@ public class DataComparisonView extends ViewPart
 			return;
 		
 		updateInProgress = true;
-		ConsoleJob job = new ConsoleJob("Get DCI values for chart", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
-		{
+		ConsoleJob job = new ConsoleJob("Get DCI values for chart", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -644,9 +645,23 @@ public class DataComparisonView extends ViewPart
 							for(int i = 0; i < thresholds.length; i++)
 								chart.updateParameterThresholds(i, thresholds[i]);
 						setChartData(values);
+						chart.clearErrors();
 						updateInProgress = false;
 					}
 				});
+			}
+
+			@Override
+			protected IStatus createFailureStatus(final Exception e)
+			{
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")");
+					}
+				});
+				return Status.OK_STATUS;
 			}
 		};
 		job.setUser(false);
