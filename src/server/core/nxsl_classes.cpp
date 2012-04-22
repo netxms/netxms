@@ -491,6 +491,75 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    return value;
 }
 
+//
+// Implementation of "SNMP_Transport" class
+//
+
+NXSL_SNMPTransportClass::NXSL_SNMPTransportClass()
+:NXSL_Class()
+{
+	_tcscpy(m_szName, _T("SNMP_Transport"));
+}
+
+NXSL_Value *NXSL_SNMPTransportClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+	NXSL_Value *value = NULL;
+	SNMP_Transport *t;
+
+	t = (SNMP_Transport*)object->getData();
+	if (!_tcscmp(attr, _T("snmpVersion")))
+	{
+		value = new NXSL_Value((LONG)t->getSnmpVersion());
+	}
+
+	return value;
+}
+
+//
+// Implementation of "SNMP_VarBind" class
+//
+
+NXSL_SNMPVarBindClass::NXSL_SNMPVarBindClass()
+:NXSL_Class()
+{
+	_tcscpy(m_szName, _T("SNMP_VarBind"));
+}
+
+NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+	NXSL_Value *value = NULL;
+	SNMP_Variable *t;
+	TCHAR strValue[1024];
+
+	t = (SNMP_Variable*)object->getData();
+	if (!_tcscmp(attr, _T("type")))
+	{
+		value = new NXSL_Value((DWORD)t->GetType());
+	}
+	else if (!_tcscmp(attr, _T("name")))
+	{
+		t->GetName()->getValueAsText();
+		value = new NXSL_Value((DWORD)t->GetName()->getValueAsText());
+	}
+	else if (!_tcscmp(attr, _T("value")))
+	{
+		bool convToHex;
+		t->getValueAsPrintableString(strValue, 1024, &convToHex);
+		value = new NXSL_Value(strValue);
+	}
+	else if (!_tcscmp(attr, _T("value_as_ip")))
+	{
+		t->GetValueAsIPAddr(strValue);
+		value = new NXSL_Value(strValue);
+	}
+	else if (!_tcscmp(attr, _T("value_as_mac")))
+	{
+		t->GetValueAsMACAddr(strValue);
+		value = new NXSL_Value(strValue);
+	}
+
+	return value;
+}
 
 //
 // Class objects
@@ -501,3 +570,5 @@ NXSL_NodeClass g_nxslNodeClass;
 NXSL_InterfaceClass g_nxslInterfaceClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_DciClass g_nxslDciClass;
+NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
+NXSL_SNMPTransportClass g_nxslSnmpTransportClass;

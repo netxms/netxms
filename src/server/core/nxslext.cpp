@@ -622,6 +622,152 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	return 0;
 }
 
+//
+// Create new SNMP transport object
+// Syntax:
+//    CreateSNMPTransport(node)
+// where:
+//     node - node to create SNMP transport for
+// Return value:
+//     new SNMP_Transport object
+//
+
+static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *obj = argv[0]->getValueAsObject();
+	if (_tcscmp(obj->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	Node *node = (Node*)obj->getData();
+	if (node != NULL)
+	{
+		SNMP_Transport *trans = node->createSnmpTransport();
+		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslSnmpTransportClass, trans));
+	}
+	else
+	{
+		*ppResult = new NXSL_Value;
+	}
+
+	return 0;
+}
+
+//
+// Do SNMP GET for the given object id
+// Syntax:
+//    SNMPGet(transport, oid)
+// where:
+//     transport - NXSL transport object
+//		 oid - SNMP object id
+// Return value:
+//     new SNMP_VarBind object
+//
+
+static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	TCHAR buffer[4096];
+	DWORD len;
+
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	NXSL_Object *obj = argv[0]->getValueAsObject();
+	if (_tcscmp(obj->getClass()->getName(), g_nxslSnmpTransportClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	SNMP_Transport *trans = (SNMP_Transport*)obj->getData();
+
+	if (SnmpGet(SNMP_VERSION_2C, trans, argv[1]->getValueAsString(&len), NULL, 0, buffer, 4096, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+	{
+		SNMP_Variable *var = new SNMP_Variable;
+		var->SetValueFromString(ASN_OCTET_STRING, buffer); // FIXME: how to get an actual type?
+		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslSnmpVarBindClass, var));
+	}
+	else
+	{
+		*ppResult = new NXSL_Value;
+	}
+
+	return 0;
+}
+
+//
+// Do SNMP GET for the given object id
+// Syntax:
+//    SNMPGetValue(transport, oid)
+// where:
+//     transport - NXSL transport object
+//		 oid - SNMP object id
+// Return value:
+//     value for the given oid
+//
+
+static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	TCHAR buffer[4096];
+	DWORD len;
+
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	NXSL_Object *obj = argv[0]->getValueAsObject();
+	if (_tcscmp(obj->getClass()->getName(), g_nxslSnmpTransportClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	SNMP_Transport *trans = (SNMP_Transport*)obj->getData();
+
+	if (SnmpGet(SNMP_VERSION_2C, trans, argv[1]->getValueAsString(&len), NULL, 0, buffer, 4096, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+	{
+		*ppResult = new NXSL_Value(buffer);
+	}
+	else
+	{
+		*ppResult = new NXSL_Value;
+	}
+
+	return 0;
+}
+
+//
+// Do SNMP SET for the given object id
+// Syntax:
+//    SNMPSet(transport, oid, value, [data_type])
+// where:
+//     transport - NXSL transport object
+//		 oid - SNMP object id
+//		 value - value to set
+//		 data_type
+// Return value:
+//     value for the given oid
+//
+
+static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	return 0;
+}
+
+//
+// Do SNMP walk starting from the given oid
+// Syntax:
+//    SNMPWalk(transport, oid)
+// where:
+//     transport - NXSL transport object
+//		 oid - SNMP object id
+// Return value:
+//     an array of VarBind objects
+//
+
+static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	return 0;
+}
 
 //
 // Additional server functions to use within all scripts
@@ -640,6 +786,11 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ _T("PostEvent"), F_PostEvent, -1 },
    { _T("SetCustomAttribute"), F_SetCustomAttribute, 3 },
    { _T("SetEventParameter"), F_SetEventParameter, 3 },
+	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, 1 },
+	{ _T("SNMPGet"), F_SNMPGet, 2 },
+	{ _T("SNMPGetValue"), F_SNMPGetValue, 2 },
+	{ _T("SNMPSet"), F_SNMPSet, -1 /* 3 or 4 */ },
+	{ _T("SNMPWalk"), F_SNMPWalk, 2 }
 };
 
 //

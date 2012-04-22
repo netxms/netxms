@@ -90,6 +90,31 @@ public:
 
 
 //
+// "SNMP_Transport" class
+//
+
+class NXSL_SNMPTransportClass : public NXSL_Class
+{
+public:
+	NXSL_SNMPTransportClass();
+
+	virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+};
+
+//
+// "SNMP_VarBind" class
+//
+
+class NXSL_SNMPVarBindClass : public NXSL_Class
+{
+public:
+	NXSL_SNMPVarBindClass();
+
+	virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+};
+
+
+//
 // Server's default script environment
 //
 
@@ -121,5 +146,7 @@ extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_InterfaceClass g_nxslInterfaceClass;
 extern NXSL_EventClass g_nxslEventClass;
 extern NXSL_DciClass g_nxslDciClass;
+extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
+extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 
 #endif
