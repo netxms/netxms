@@ -10,6 +10,9 @@ ARCH=`uname -m`
 if [ "x$ARCH" = "xx86_64" ]; then
 	ARCH="amd64"
 fi
+if [ "x$ARCH" = "xi686" ]; then
+	ARCH="i386"
+fi
 
 # netxms-base
 mkdir netxms-base

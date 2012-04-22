@@ -6,6 +6,7 @@ Building binary packages for Debian:
 1. Configure and build NetXMS as following:
 
 	./configure --prefix=/usr --with-server --with-odbc --with-sqlite --with-pgsql --with-mysql
+	make clean
 	make install
 
 2. Go to packages/linux/debian
