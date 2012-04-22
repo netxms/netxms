@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -426,6 +426,10 @@ void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args);
 
 Config *OpenRegistry();
 void CloseRegistry(bool modified);
+
+void StartPushConnector();
+BOOL PushData(const TCHAR *parameter, const TCHAR *value);
+
 
 #ifdef _WIN32
 

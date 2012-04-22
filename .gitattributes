@@ -241,6 +241,7 @@ src/agent/subagents/ups/ups.vcproj -text
 src/agent/subagents/winnt/winnt.vcproj -text
 src/agent/subagents/winperf/winperf.vcproj -text
 src/agent/subagents/wmi/wmi.vcproj -text
+src/agent/tools/nxapush/nxapush.vcproj -text
 src/client/install/nxcon.iss -text
 src/client/nxalarm/nxalarm.vcproj -text
 src/client/nxevent/nxevent.vcproj -text

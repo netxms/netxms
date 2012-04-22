@@ -391,7 +391,7 @@ static void DebugCallback(char *pMsg)
 //
 // Initialize client library and connect to the server
 //
-BOOL Startup(void)
+BOOL Startup()
 {
 	BOOL ret = FALSE;
 	DWORD dwResult;
@@ -449,7 +449,7 @@ BOOL Startup(void)
 //
 // Send all DCIs
 //
-BOOL Send(void)
+BOOL Send()
 {
 	BOOL ret = TRUE;
 	DWORD errIdx;
@@ -521,7 +521,7 @@ BOOL Send(void)
 //
 // Disconnect and cleanup
 //
-BOOL Teardown(void)
+BOOL Teardown()
 {
 	if (hSession != NULL)
 	{
@@ -543,67 +543,3 @@ BOOL Teardown(void)
 
 	return TRUE;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.14  2007/03/29 12:36:55  victor
-- Topology view show port names
-- Fixed bug in node performance view which may cause console to crash (especially on slow machines)
-- Installation updated to 0.2.16-rc8
-- Fixed incorrect calls to NXCConnect() from various tools
-
-Revision 1.13  2006/12/29 20:26:38  alk
-updated to match new NXCConnect()
-
-Revision 1.12  2006/11/21 11:35:29  victor
-Stability fixes for IPSO
-
-Revision 1.11  2006/11/15 22:42:14  victor
-Minor fixes
-
-Revision 1.10  2006/11/08 13:04:54  victor
-Minor fix
-
-Revision 1.9  2006/11/08 13:03:35  victor
-Added check for getopt_long() presense
-
-Revision 1.8  2006/11/08 11:43:15  victor
-Minor changes
-
-Revision 1.7  2006/11/08 09:05:05  victor
-- Implemented node name resolution for NXCPushDCIData
-- Help for nxpush improved
-
-Revision 1.6  2006/11/08 00:08:30  alk
-minor changes;
-error codes corected - 0=ok, 1=wrong params, 2=no valid data, 3=unable to send
-
-Revision 1.5  2006/11/07 23:54:08  alk
-fixed bug in file loader
-
-Revision 1.4  2006/11/07 23:28:06  alk
--b/--batchsize added; default is 0 (unlimited)
-
-Revision 1.3  2006/11/07 23:10:56  alk
-nxpush working(?)
-node/dci separator changed from '.' to ':'
-node id/name now required for operation
-
-Revision 1.2  2006/11/07 15:45:09  victor
-- Implemented frontend for push items
-- Other minor changes
-
-Revision 1.1  2006/11/07 11:10:32  victor
-- nxpush moved and added to common netxms.dsw file
-- unfinished discovery configurator in console
-
-Revision 1.2  2006/11/07 00:08:04  alk
-posilhed a bit; complete(?) set of command line switches;
-
-Revision 1.1  2006/11/06 22:27:33  alk
-initial import of nxpush
-
-
-*/

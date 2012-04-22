@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -59,8 +59,6 @@ void StopWatchdog();
 int WatchdogMain(DWORD pid);
 
 void InitSessionList();
-
-BOOL PushData(const TCHAR *parameter, const TCHAR *value);
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 void InitStaticSubagents();
@@ -1053,6 +1051,7 @@ BOOL Initialize()
 		m_thListener = ThreadCreateEx(ListenerThread, 0, NULL);
 		m_thSessionWatchdog = ThreadCreateEx(SessionWatchdog, 0, NULL);
 		m_thTrapSender = ThreadCreateEx(TrapSender, 0, NULL);
+		StartPushConnector();
 	}
 
 #if defined(_WIN32) || defined(_NETWARE)

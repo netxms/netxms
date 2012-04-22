@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.0], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.1-rc1], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -2015,6 +2015,8 @@ AC_CONFIG_FILES([
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/wmi/Makefile
+	src/agent/tools/Makefile
+	src/agent/tools/nxapush/Makefile
 	src/client/Makefile
 	src/client/install/Makefile
 	src/client/nxalarm/Makefile
