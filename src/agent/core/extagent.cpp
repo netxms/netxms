@@ -125,6 +125,10 @@ CSCPMessage *ReadMessageFromPipe(HANDLE hPipe, HANDLE hEvent)
 			return NULL;
 	}
 #else
+	NXCPEncryptionContext *dummyCtx = NULL;
+	CSCP_BUFFER nxcpBuffer;
+	RecvNXCPMessage(0, NULL, &nxcpBuffer, 0, NULL, NULL, 0);
+	bytes = RecvNXCPMessage((SOCKET)hPipe, (CSCP_MESSAGE *)buffer, &nxcpBuffer, 8192, &dummyCtx, NULL, 5000);
 #endif
 
 	if (bytes < CSCP_HEADER_SIZE)

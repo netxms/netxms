@@ -24,6 +24,9 @@
 
 #ifdef _WIN32
 #include <aclapi.h>
+#else
+#include <sys/socket.h>
+#include <sys/un.h>
 #endif
 
 
@@ -209,6 +212,53 @@ cleanup:
 
 static THREAD_RESULT THREAD_CALL PushConnector(void *arg)
 {
+	int len;
+
+	int hPipe = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (hPipe == -1)
+	{
+		AgentWriteDebugLog(2, _T("PushConnector: socket failed (%s)"), _tcserror(errno));
+		goto cleanup;
+	}
+	
+	struct sockaddr_un addrLocal;
+	addrLocal.sun_family = AF_UNIX;
+	strcpy(addrLocal.sun_path, "/var/run/nxagentd.push");	
+	unlink(addrLocal.sun_path);
+	len = strlen(addrLocal.sun_path) + sizeof(addrLocal.sun_family);
+	if (bind(hPipe, (struct sockaddr *)&addrLocal, len) == -1)
+	{
+		AgentWriteDebugLog(2, _T("PushConnector: bind failed (%s)"), _tcserror(errno));
+		goto cleanup;
+	}
+
+	if (listen(hPipe, 5) == -1)
+	{
+		AgentWriteDebugLog(2, _T("PushConnector: listen failed (%s)"), _tcserror(errno));
+		goto cleanup;
+	}
+	
+	while(!(g_dwFlags & AF_SHUTDOWN))
+	{
+		struct sockaddr_un addrRemote;
+		size_t size = sizeof(struct sockaddr_un);
+		int cs = accept(hPipe, (struct sockaddr *)&addrRemote, &size);
+		if (cs > 0)
+		{
+			ProcessPushRequest((HANDLE)cs);
+			shutdown(cs, 2);
+			close(cs);
+		}
+		else
+		{
+			AgentWriteDebugLog(2, _T("PushConnector: accept failed (%s)"), _tcserror(errno));
+		}
+	}
+
+cleanup:
+	if (hPipe != -1)
+		close(hPipe);
+
 	AgentWriteDebugLog(2, _T("PushConnector: listener thread stopped"));
 	return THREAD_OK;
 }

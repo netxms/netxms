@@ -28,12 +28,21 @@
 #include <getopt.h>
 #endif
 
+#ifndef _WIN32
+#include <sys/socket.h>
+#include <sys/un.h>
+#endif
+
 
 //
 // Static variables
 //
 
+#ifdef _WIN32
 static HANDLE s_hPipe = NULL;
+#else
+static int s_hPipe = -1;
+#endif
 static StringMap *s_data = new StringMap;
 
 
@@ -270,12 +279,30 @@ BOOL AddValue(char *pair)
 //
 BOOL Startup()
 {
+#ifdef _WIN32
 	s_hPipe = CreateFile(_T("\\\\.\\pipe\\nxagentd.push"), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (s_hPipe == INVALID_HANDLE_VALUE)
 		return FALSE;
 
 	DWORD pipeMode = PIPE_READMODE_MESSAGE;
 	SetNamedPipeHandleState(s_hPipe, &pipeMode, NULL, NULL);
+#else
+	s_hPipe = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (s_hPipe == -1)
+		return FALSE;
+
+	struct sockaddr_un remote;
+	remote.sun_family = AF_UNIX;
+	strcpy(remote.sun_path, "/var/run/nxagentd.push");
+	size_t size = strlen(remote.sun_path) + sizeof(remote.sun_family);
+	if (connect(s_hPipe, (struct sockaddr *)&remote, strlen(remote.sun_path) + sizeof(remote.sun_family)) == -1)
+	{
+		close(s_hPipe);
+		s_hPipe = -1;
+		return FALSE;
+	}
+#endif
+
 	if (optVerbose > 2)
 		_tprintf(_T("Connected to NetXMS agent\n"));
 
@@ -309,6 +336,9 @@ BOOL Send()
 	if (bytes != ntohl(rawMsg->dwSize))
 		goto cleanup;
 #else
+	int bytes = SendEx(s_hPipe, rawMsg, ntohl(rawMsg->dwSize), 0, NULL); 
+	if (bytes != (int)ntohl(rawMsg->dwSize))
+		goto cleanup;
 #endif
 
 	success = TRUE;
@@ -323,10 +353,17 @@ cleanup:
 //
 BOOL Teardown()
 {
+#ifdef _WIN32
 	if (s_hPipe != NULL)
 	{
 		CloseHandle(s_hPipe);
 	}
+#else
+	if (s_hPipe != -1)
+	{
+		close(s_hPipe);
+	}
+#endif
 	delete s_data;
 	return TRUE;
 }
