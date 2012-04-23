@@ -381,7 +381,7 @@ CREATE TABLE containers
 	id integer not null,
 	category integer not null,
 	object_class integer not null,
-	enable_auto_bind integer not null,
+	flags integer not null,
 	auto_bind_filter SQL_TEXT not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
@@ -428,7 +428,7 @@ CREATE TABLE templates
 (
 	id integer not null,
 	version integer not null,
-	enable_auto_apply integer not null,
+	flags integer not null,
 	apply_filter SQL_TEXT not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;

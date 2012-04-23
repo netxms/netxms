@@ -279,6 +279,71 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 
 
 //
+// Upgrade from V252 to V253
+//
+
+static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE templates ADD flags integer\n")
+		_T("UPDATE templates SET flags=enable_auto_apply\n")
+		_T("ALTER TABLE templates DROP COLUMN enable_auto_apply\n")
+		_T("ALTER TABLE containers ADD flags integer\n")
+		_T("UPDATE containers SET flags=enable_auto_bind\n")
+		_T("ALTER TABLE containers DROP COLUMN enable_auto_bind\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(CreateEventTemplate(EVENT_CONTAINER_AUTOBIND, _T("SYS_CONTAINER_AUTOBIND"), EVENT_SEVERITY_NORMAL, 1,
+	                             _T("Node %2 automatically bound to container %4"), 
+										  _T("Generated when node bound to container object by autobind rule.\r\n")
+	                             _T("Parameters:#\r\n")
+										  _T("   1) Node ID\r\n")
+										  _T("   2) Node name\r\n")
+										  _T("   3) Container ID\r\n")
+										  _T("   4) Container name")
+										  ));
+
+	CHK_EXEC(CreateEventTemplate(EVENT_CONTAINER_AUTOUNBIND, _T("SYS_CONTAINER_AUTOUNBIND"), EVENT_SEVERITY_NORMAL, 1,
+	                             _T("Node %2 automatically unbound from container %4"), 
+										  _T("Generated when node unbound from container object by autobind rule.\r\n")
+	                             _T("Parameters:#\r\n")
+										  _T("   1) Node ID\r\n")
+										  _T("   2) Node name\r\n")
+										  _T("   3) Container ID\r\n")
+										  _T("   4) Container name")
+										  ));
+
+	CHK_EXEC(CreateEventTemplate(EVENT_TEMPLATE_AUTOAPPLY, _T("SYS_TEMPLATE_AUTOAPPLY"), EVENT_SEVERITY_NORMAL, 1,
+	                             _T("Template %4 automatically applied to node %2"), 
+										  _T("Generated when template applied to node by autoapply rule.\r\n")
+	                             _T("Parameters:#\r\n")
+										  _T("   1) Node ID\r\n")
+										  _T("   2) Node name\r\n")
+										  _T("   3) Template ID\r\n")
+										  _T("   4) Template name")
+										  ));
+
+	CHK_EXEC(CreateEventTemplate(EVENT_TEMPLATE_AUTOREMOVE, _T("SYS_TEMPLATE_AUTOREMOVE"), EVENT_SEVERITY_NORMAL, 1,
+	                             _T("Template %4 automatically removed from node %2"), 
+										  _T("Generated when template removed from node by autoapply rule.\r\n")
+	                             _T("Parameters:#\r\n")
+										  _T("   1) Node ID\r\n")
+										  _T("   2) Node name\r\n")
+										  _T("   3) Template ID\r\n")
+										  _T("   4) Template name")
+										  ));
+
+	CHK_EXEC(ConvertStrings(_T("templates"), _T("id"), _T("apply_filter")));
+	CHK_EXEC(ConvertStrings(_T("containers"), _T("id"), _T("auto_bind_filter")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='253' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V251 to V252
 //
 
@@ -6241,6 +6306,7 @@ static struct
 	{ 249, 250, H_UpgradeFromV249 },
 	{ 250, 251, H_UpgradeFromV250 },
 	{ 251, 252, H_UpgradeFromV251 },
+	{ 252, 253, H_UpgradeFromV252 },
    { 0, 0, NULL }
 };
 

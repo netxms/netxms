@@ -464,6 +464,7 @@ protected:
 	ObjectArray<DCObject> *m_dcObjects;
    DWORD m_dwDCILockStatus;
    DWORD m_dwVersion;
+	DWORD m_flags;
    BOOL m_bDCIListModified;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 	TCHAR *m_applyFilterSource;
@@ -484,10 +485,10 @@ public:
 	Template(ConfigEntry *config);
    virtual ~Template();
 
-   virtual int Type(void) { return OBJECT_TEMPLATE; }
+   virtual int Type() { return OBJECT_TEMPLATE; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB(void);
+   virtual BOOL DeleteFromDB();
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1198,6 +1199,7 @@ private:
    DWORD m_dwChildIdListSize;
 
 protected:
+	DWORD m_flags;
    DWORD m_dwCategory;
 	NXSL_Program *m_bindFilter;
 	TCHAR *m_bindFilterSource;

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -248,6 +248,20 @@ typedef void * NXC_SESSION;
 #define NF_DISABLE_CONF_POLL      0x20000000
 #define NF_DISABLE_ROUTE_POLL     0x40000000
 #define NF_DISABLE_DATA_COLLECT   0x80000000
+
+
+//
+// Template flags
+//
+
+#define TF_AUTO_APPLY            0x00000001
+
+
+//
+// Container flags
+//
+
+#define CF_AUTO_BIND             0x00000001
 
 
 //

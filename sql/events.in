@@ -705,6 +705,54 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'   1) Interface index#0D#0A' CONCAT
 		'   2) Interface name'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_CONTAINER_AUTOBIND, 'SYS_CONTAINER_AUTOBIND',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Node %2 automatically bound to container %4',
+		'Generated when node bound to container object by autobind rule.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Node ID#0D#0A' CONCAT
+		'   2) Node name#0D#0A' CONCAT
+		'   3) Container ID#0D#0A' CONCAT
+		'   4) Container name'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_CONTAINER_AUTOUNBIND, 'SYS_CONTAINER_AUTOUNBIND',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Node %2 automatically unbound from container %4',
+		'Generated when node unbound from container object by autobind rule.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Node ID#0D#0A' CONCAT
+		'   2) Node name#0D#0A' CONCAT
+		'   3) Container ID#0D#0A' CONCAT
+		'   4) Container name'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_TEMPLATE_AUTOAPPLY, 'SYS_TEMPLATE_AUTOAPPLY',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Template %4 automatically applied to node %2',
+		'Generated when template applied to node by autoapply rule.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Node ID#0D#0A' CONCAT
+		'   2) Node name#0D#0A' CONCAT
+		'   3) Template ID#0D#0A' CONCAT
+		'   4) Template name'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_TEMPLATE_AUTOREMOVE, 'SYS_TEMPLATE_AUTOREMOVE',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Template %4 automatically removed from node %2',
+		'Generated when template removed from node by autoapply rule.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Node ID#0D#0A' CONCAT
+		'   2) Node name#0D#0A' CONCAT
+		'   3) Template ID#0D#0A' CONCAT
+		'   4) Template name'
+	);
 
 
 /*
