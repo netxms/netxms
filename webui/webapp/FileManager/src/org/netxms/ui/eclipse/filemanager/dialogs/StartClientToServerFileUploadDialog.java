@@ -76,7 +76,7 @@ public class StartClientToServerFileUploadDialog extends Dialog
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
 		
-		fileSelector = new LocalFileSelector(dialogArea, SWT.NONE);
+		fileSelector = new LocalFileSelector(dialogArea, SWT.NONE, false);
 		fileSelector.setLabel("Local file");
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

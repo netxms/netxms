@@ -38,9 +38,9 @@ public class LocalFileSelector extends AbstractSelector
 	 * @param parent
 	 * @param style
 	 */
-	public LocalFileSelector(Composite parent, int style)
+	public LocalFileSelector(Composite parent, int style, boolean useHyperlink)
 	{
-		super(parent, style, false);
+		super(parent, style, useHyperlink);
 
 		setImage(null);
 		setText("<none>");

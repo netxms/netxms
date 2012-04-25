@@ -32,11 +32,12 @@ import org.netxms.ui.eclipse.filemanager.widgets.LocalFileSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * Object creation dialog
- *
+ * Report object creation dialog
  */
 public class CreateReportDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private String objectName;
 	private Text textName;
 	private LocalFileSelector fileSelector;
@@ -81,7 +82,7 @@ public class CreateReportDialog extends Dialog
       textName.setTextLimit(63);
       textName.setFocus();
       
-      fileSelector = new LocalFileSelector(dialogArea, SWT.NONE);
+      fileSelector = new LocalFileSelector(dialogArea, SWT.NONE, false);
       fileSelector.setLabel("Report definition file");
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
