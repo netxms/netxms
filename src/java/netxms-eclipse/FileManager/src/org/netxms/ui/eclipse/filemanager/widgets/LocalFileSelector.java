@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,7 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
 
 /**
- * @author Victor
- *
+ * Local file selector
  */
 public class LocalFileSelector extends AbstractSelector
 {
@@ -36,9 +35,9 @@ public class LocalFileSelector extends AbstractSelector
 	 * @param parent
 	 * @param style
 	 */
-	public LocalFileSelector(Composite parent, int style)
+	public LocalFileSelector(Composite parent, int style, boolean useHyperlink)
 	{
-		super(parent, style, false);
+		super(parent, style, useHyperlink);
 
 		setImage(null);
 		setText("<none>");

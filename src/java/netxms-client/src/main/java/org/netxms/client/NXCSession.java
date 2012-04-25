@@ -4030,6 +4030,31 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/**
+	 * Find multiple event templates by event codes in event template database
+	 * internally maintained by session object. You must call
+	 * NXCSession.syncEventTemplates() first to make local copy of event template
+	 * database.
+	 * 
+	 * @param codes
+	 *           List of event codes
+	 * @return List of found event templates
+	 */
+	public List<EventTemplate> findMultipleEventTemplates(final long[] codes)
+	{
+		List<EventTemplate> list = new ArrayList<EventTemplate>();
+		synchronized(eventTemplates)
+		{
+			for(long code : codes)
+			{
+				EventTemplate e = eventTemplates.get(code);
+				if (e != null)
+					list.add(e);
+			}
+		}
+		return list;
+	}
+
+	/**
 	 * Get event templates from server
 	 * 
 	 * @return List of configured event templates
@@ -4318,10 +4343,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param nodeId
 	 *           Node ID
 	 * @return List of parameters supported by agent
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public List<AgentParameter> getSupportedParameters(long nodeId) throws IOException, NXCException
 	{
@@ -4339,6 +4362,25 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			baseId += 3;
 		}
 		return list;
+	}
+	
+	/**
+	 * Get all events used in data collection by given node, cluster, or template obejct.
+	 * 
+	 * @param objectId node, cluster, or template object ID
+	 * @return list of used event codes 
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long[] getDataCollectionEvents(long objectId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_EVENTS_LIST);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		if (response.getVariableAsInteger(NXCPCodes.VID_NUM_EVENTS) == 0)
+			return new long[0];
+		return response.getVariableAsUInt32Array(NXCPCodes.VID_EVENT_LIST); 
 	}
 
 	/**

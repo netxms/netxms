@@ -27,6 +27,14 @@
             name="Syslog Parser"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.serverconfig.views.ExportFileBuilder"
+            icon="icons/export.gif"
+            id="org.netxms.ui.eclipse.serverconfig.views.ExportFileBuilder"
+            name="Export Configuration"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -35,7 +43,7 @@
             id="org.netxms.ui.eclipse.console.category.tools">
       </category>
       <command
-            name="Export configuration..."
+            name="Export configuration"
             description="Export configuration"
             categoryId="org.netxms.ui.eclipse.console.category.tools"
             id="org.netxms.ui.eclipse.serverconfig.commands.export_configuration">
@@ -112,7 +120,7 @@
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.export_configuration"
            icon="icons/export.gif"
            id="org.netxms.ui.eclipse.serverconfig.actions.export_configuration"
-           label="Export configuration..."
+           label="Export configuration"
            menubarPath="tools/additions"
            tooltip="Export configuration">
 		   </action>

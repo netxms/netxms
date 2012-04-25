@@ -81,7 +81,7 @@ public class CreateReportDialog extends Dialog
       textName.setTextLimit(63);
       textName.setFocus();
       
-      fileSelector = new LocalFileSelector(dialogArea, SWT.NONE);
+      fileSelector = new LocalFileSelector(dialogArea, SWT.NONE, false);
       fileSelector.setLabel("Report definition file");
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

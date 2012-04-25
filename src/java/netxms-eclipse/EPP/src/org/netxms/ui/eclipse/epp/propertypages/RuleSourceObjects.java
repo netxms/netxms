@@ -136,7 +136,7 @@ public class RuleSourceObjects extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				addEvent();
+				addSourceObject();
 			}
       });
       RowData rd = new RowData();
@@ -166,9 +166,9 @@ public class RuleSourceObjects extends PropertyPage
 	}
 
 	/**
-	 * Add new event
+	 * Add new source object
 	 */
-	private void addEvent()
+	private void addSourceObject()
 	{
 		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, null);
 		dlg.enableMultiSelection(true);
