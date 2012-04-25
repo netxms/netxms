@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
-import javax.servlet.ServletContext;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
@@ -185,8 +184,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		InputStream in = null;
 		try
 		{
-			ServletContext ctx = RWT.getSessionStore().getHttpSession().getServletContext();
-			in = ctx.getResourceAsStream("/nxmc.properties");
+			in = getClass().getResourceAsStream("nxmc.properties");
 			if (in != null)
 				properties.load(in);
 		}

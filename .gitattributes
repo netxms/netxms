@@ -2298,6 +2298,7 @@ webui/webapp/Core/src/org/netxms/webui/core/dialogs/PasswordExpiredDialog.java -
 webui/webapp/Core/src/org/netxms/webui/core/messages.properties -text
 webui/webapp/Core/src/org/netxms/webui/core/messages_es.properties -text
 webui/webapp/Core/src/org/netxms/webui/core/messages_ru.properties -text
+webui/webapp/Core/src/org/netxms/webui/core/nxmc.properties -text
 webui/webapp/Core/src/org/netxms/webui/design/messages.properties -text
 webui/webapp/Core/src/org/netxms/webui/tools/RWTHelper.java -text
 webui/webapp/Core/theme/business/close.png -text
@@ -3253,5 +3254,4 @@ webui/webapp/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widg
 webui/webapp/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/gallery/RendererHelper.java -text
 webui/webapp/war/WEB-INF/launch.ini -text
 webui/webapp/war/WEB-INF/web.xml -text
-webui/webapp/war/nxmc.properties -text
 webui/webapp/war/nxmc.warproduct -text
