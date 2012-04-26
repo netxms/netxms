@@ -13,7 +13,7 @@
 	    android:gravity="center_vertical"
 	    android:text="Groups"
 	    android:textSize="17dip"
-		android:cacheColorHint="#ebeae1"
+		android:cacheColorHint="@color/item_body"
 		android:background="@drawable/explist_selection"
 	    android:textStyle="bold" >
 	</TextView>

@@ -5,8 +5,8 @@
 	<include layout="@layout/screen_header_small" />
 	<ListView android:id="@+id/ValueList" 
 		android:layout_width="fill_parent"
-		android:background="#ebeae1"
-		android:cacheColorHint="#ebeae1" 
+		android:background="@color/item_body"
+		android:cacheColorHint="@color/item_body" 
 		android:listSelector="@drawable/list_selection"
 		android:layout_height="fill_parent">
 	</ListView>

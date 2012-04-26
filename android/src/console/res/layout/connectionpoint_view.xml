@@ -3,7 +3,7 @@
 	android:orientation="vertical"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
-	android:background="#ebeae1">
+	android:background="@color/item_body">
    	<include layout="@layout/screen_header_small" />
 
 	<LinearLayout
@@ -36,8 +36,8 @@
 			android:id="@+id/ConnectionPointList" 
 			android:layout_width="fill_parent"
   			android:layout_height="fill_parent"
-			android:background="#ebeae1"
-			android:cacheColorHint="#ebeae1"
+			android:background="@color/item_body"
+			android:cacheColorHint="@color/item_body"
 			android:listSelector="@drawable/list_selection">
   	</ListView>
 </LinearLayout>
