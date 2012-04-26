@@ -2,6 +2,4 @@
 <menu
   xmlns:android="http://schemas.android.com/apk/res/android">
 	<item android:enabled="true" android:id="@+id/settings" android:title="@string/settings" android:visible="true" android:checkable="false" android:checked="false" android:icon="@drawable/ic_menu_preferences" android:showAsAction="ifRoom"></item>
-	<item android:id="@+id/disconnect" android:title="@string/disconnect" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item>
-	<item android:id="@+id/reconnect" android:enabled="true" android:visible="false" android:checked="false" android:checkable="false" android:title="@string/reconnect"></item>
 </menu>
