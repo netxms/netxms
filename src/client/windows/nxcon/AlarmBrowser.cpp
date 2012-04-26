@@ -318,8 +318,7 @@ void CAlarmBrowser::OnViewRefresh()
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
    m_dwCurrNode = 0;
-   dwRetCode = DoRequestArg4(NXCLoadAllAlarms, g_hSession, (void *)m_bShowAllAlarms, 
-                             &m_dwNumAlarms, &m_pAlarmList, _T("Loading alarms..."));
+   dwRetCode = DoRequestArg3(NXCLoadAllAlarms, g_hSession, &m_dwNumAlarms, &m_pAlarmList, _T("Loading alarms..."));
    if (dwRetCode == RCC_SUCCESS)
    {
       memset(m_iNumAlarms, 0, sizeof(int) * 5);
