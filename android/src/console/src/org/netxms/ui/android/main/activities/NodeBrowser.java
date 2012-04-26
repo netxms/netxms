@@ -76,7 +76,7 @@ public class NodeBrowser extends AbstractClientActivity
 				}
 				else if (obj.getObjectClass() == GenericObject.OBJECT_NODE)
 				{
-					showLastValues(obj.getObjectId());
+					showNodeInfo(obj.getObjectId());
 				}
 			}
 		});
@@ -101,9 +101,9 @@ public class NodeBrowser extends AbstractClientActivity
 	/**
 	 * @param objectId
 	 */
-	public void showLastValues(long objectId)
+	public void showNodeInfo(long objectId)
 	{
-		Intent newIntent = new Intent(this, LastValues.class);
+		Intent newIntent = new Intent(this, NodeInfo.class);
 		newIntent.putExtra("objectId", objectId);
 		startActivity(newIntent);
 	}
