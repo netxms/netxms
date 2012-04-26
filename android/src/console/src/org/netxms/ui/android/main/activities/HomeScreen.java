@@ -11,6 +11,8 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -25,6 +27,7 @@ import android.widget.Toast;
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
  * 
  */
+
 public class HomeScreen extends AbstractClientActivity implements OnItemClickListener
 {
 	public static final int ACTIVITY_ALARMS = 1;
@@ -67,6 +70,36 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 		super.onServiceConnected(name, binder);
 		service.registerHomeScreen(this);
 		setStatusText(service.getConnectionStatusText(), service.getConnectionStatusColor());
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
+	 */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu)
+	{
+		super.onCreateOptionsMenu(menu);
+	    menu.add(Menu.NONE, R.string.exit, Menu.NONE, getString(R.string.exit));
+	    
+	    return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
+	 */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch(item.getItemId())
+		{
+			case R.string.exit:
+				if (service != null) 
+					service.shutdown();
+				System.exit(0);
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
+		}
 	}
 
 	/* (non-Javadoc)

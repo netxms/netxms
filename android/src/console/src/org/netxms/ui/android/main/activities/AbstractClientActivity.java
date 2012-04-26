@@ -63,15 +63,6 @@ public abstract class AbstractClientActivity extends Activity implements Service
 			case R.id.settings:
 				startActivity(new Intent(this, ConsolePreferences.class));
 				return true;
-			case R.id.disconnect:
-				if (service != null) 
-				{
-					service.savePreferences();
-					service.clearNotifications();
-					service.stopSelf();
-					System.exit(0);
-				}
-				return true;
 			default:
 				return super.onOptionsItemSelected(item);
 		}
