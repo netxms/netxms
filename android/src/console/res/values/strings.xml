@@ -9,6 +9,8 @@
     <string name="pref_login">User name</string>
     <string name="pref_server_summary">Name or address of NetXMS server</string>
     <string name="pref_server">Server</string>
+    <string name="pref_port_summary">Port of NetXMS server</string>
+    <string name="pref_port">Port</string>
     <string name="pref_connection">Connection</string>
     <string name="settings">Settings</string>
     <string name="app_name">NetXMS Client</string>
@@ -29,7 +31,7 @@
 	<string name="home_screen_nodes">Nodes</string>
 	<string name="home_screen_graphs">Graphs</string>
 	<string name="alarms_title">Alarms</string>
-	<string name="disconnect">Disconnect &amp; Exit</string>
+	<string name="exit">Disconnect &amp; Exit</string>
 	<string name="alarm_terminate">Terminate alarm</string>
 	<string name="cancel">Cancel</string>
 	<string name="nodes_title">Nodes</string>
@@ -97,4 +99,17 @@
 	<string name="pref_global_notification_icon_enabled">Icon status notification enabled</string>
 	<string name="pref_global_notification_icon_disabled">Icon status notification disabled</string>
 	<string name="pref_global_notification_status">Status notification</string>
+	<string name="node_info_last_values">Last values</string>
+	<string name="node_info_overview">Overview</string>
+	<string name="node_info_alarms">Alarms</string>
+	<string name="overview_id">ID</string>
+	<string name="overview_class">Class</string>
+	<string name="overview_status">Status</string>
+	<string name="overview_primary_ip">Primary IP</string>
+	<string name="overview_system_description">System Description</string>
+	<string name="overview_netxms_agent">NetXMS Agent</string>
+	<string name="overview_agent_version">Agent Version</string>
+	<string name="overview_platform_name">Platform Name</string>
+	<string name="overview_snmp_agent">SNMP Agent</string>
+	<string name="overview_snmp_oid">SNMP OID</string>
 </resources>
