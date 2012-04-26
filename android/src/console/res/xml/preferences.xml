@@ -6,6 +6,7 @@
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/pref_connection">
 		<EditTextPreference android:title="@string/pref_server" android:summary="@string/pref_server_summary" android:enabled="true" android:key="connection.server"></EditTextPreference>
+	    <EditTextPreference android:title="@string/pref_port" android:summary="@string/pref_port_summary" android:enabled="true"  android:defaultValue="4701" android:key="connection.port" android:digits="0123456789"></EditTextPreference>
 		<EditTextPreference android:title="@string/pref_login" android:summary="@string/pref_login_summary" android:enabled="true" android:defaultValue="admin" android:key="connection.login"></EditTextPreference>
 		<EditTextPreference android:enabled="true" android:key="connection.password" android:title="@string/pref_password" android:summary="@string/pref_password_summary" android:password="true"></EditTextPreference>
 		<CheckBoxPreference android:title="@string/pref_encrypt" android:key="connection.encrypt" android:enabled="true" android:summaryOn="@string/pref_encrypt_summary_enabled" android:summaryOff="@string/pref_encrypt_summary_disabled" android:defaultValue="false"></CheckBoxPreference>

@@ -24,6 +24,7 @@ public class ConnectTask extends Thread
 
 	private ClientConnectorService service;
 	private String server;
+	private Integer port;
 	private String login;
 	private String password;
 	private Boolean encrypt;
@@ -44,9 +45,10 @@ public class ConnectTask extends Thread
 	 * @param password
 	 * @param encrypt
 	 */
-	public void execute(String server, String login, String password, Boolean encrypt)
+	public void execute(String server, Integer port, String login, String password, Boolean encrypt)
 	{
 		this.server = server;
+		this.port = port;
 		this.login = login;
 		this.password = password;
 		this.encrypt = encrypt;
@@ -86,7 +88,7 @@ public class ConnectTask extends Thread
 					}
 				if (session == null)	// Already null or invalidated
 				{	
-					session = new NXCSession(server, NXCSession.DEFAULT_CONN_PORT, login, password, encrypt);
+					session = new NXCSession(server, port, login, password, encrypt);
 					try
 					{
 						Log.d(TAG, "calling session.connect()");

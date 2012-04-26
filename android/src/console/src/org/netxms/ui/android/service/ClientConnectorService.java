@@ -19,6 +19,7 @@ import org.netxms.ui.android.main.activities.AlarmBrowser;
 import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.main.activities.NodeBrowser;
 import org.netxms.ui.android.main.activities.GraphBrowser;
+import org.netxms.ui.android.main.activities.NodeInfo;
 import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
 import org.netxms.ui.android.service.tasks.ExecActionTask;
@@ -73,9 +74,11 @@ public class ClientConnectorService extends Service implements SessionListener
 	private AlarmBrowser alarmBrowser = null;
 	private NodeBrowser nodeBrowser = null;
 	private GraphBrowser graphBrowser = null;
+	private NodeInfo nodeInfo = null;
 	private Alarm unknownAlarm = null;
 	private long lastAlarmIdNotified;
 	private List<ObjectTool> objectTools = null;
+	private BroadcastReceiver receiver = null;
 
 	/**
 	 * Class for clients to access. Because we know this service always runs in
@@ -107,7 +110,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 		lastAlarmIdNotified = PreferenceManager.getDefaultSharedPreferences(this).getInt(LASTALARM_KEY, 0);
 		
-		BroadcastReceiver receiver = new BroadcastReceiver()
+		receiver = new BroadcastReceiver()
 		{
 			@Override
 			public void onReceive(Context context, Intent intent)
@@ -158,9 +161,16 @@ public class ClientConnectorService extends Service implements SessionListener
 	public void onDestroy()
 	{
 		super.onDestroy();
-		savePreferences();
 	}
 
+	public void shutdown()
+	{
+		clearNotifications();
+		savePreferences();
+		unregisterReceiver(receiver);
+		stopSelf();
+	}
+	
 	public void savePreferences()
 	{
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this); 
@@ -282,8 +292,11 @@ public class ClientConnectorService extends Service implements SessionListener
 				setConnectionStatus(ConnectionStatus.CS_INPROGRESS, "");
 				showNotificationStatus(NOTIFY_STATUS, ConnectionStatus.CS_INPROGRESS, "");
 				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-				new ConnectTask(this).execute(sp.getString("connection.server", ""), sp.getString("connection.login", ""),
-	                                          sp.getString("connection.password", ""), sp.getBoolean("connection.encrypt", false));
+				new ConnectTask(this).execute(sp.getString("connection.server", ""),
+				                              Integer.parseInt(sp.getString("connection.port", "4701")), 
+				                              sp.getString("connection.login", ""),
+				                              sp.getString("connection.password", ""),
+				                              sp.getBoolean("connection.encrypt", false));
 			}
 		}
 	}
@@ -472,6 +485,16 @@ public class ClientConnectorService extends Service implements SessionListener
 				public void run()
 				{
 					alarmBrowser.refreshList();
+				}
+			});
+		}
+		if (nodeInfo != null)
+		{
+			nodeInfo.runOnUiThread(new Runnable()
+			{
+				public void run()
+				{
+					nodeInfo.refreshAlarms();
 				}
 			});
 		}
@@ -705,7 +728,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void registerAlarmBrowser(AlarmBrowser browser)
 	{
-		this.alarmBrowser = browser;
+		alarmBrowser = browser;
 	}
 
 	/**
@@ -713,7 +736,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void registerNodeBrowser(NodeBrowser browser)
 	{
-		this.nodeBrowser = browser;
+		nodeBrowser = browser;
 	}
 
 	/**
@@ -721,7 +744,15 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void registerGraphBrowser(GraphBrowser browser)
 	{
-		this.graphBrowser = browser;
+		graphBrowser = browser;
+	}
+
+	/**
+	 * @param browser
+	 */
+	public void registerNodeInfo(NodeInfo browser)
+	{
+		nodeInfo = browser;
 	}
 
 	/**
