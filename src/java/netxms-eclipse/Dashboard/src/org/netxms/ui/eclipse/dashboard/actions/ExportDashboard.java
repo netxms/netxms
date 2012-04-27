@@ -84,7 +84,9 @@ public class ExportDashboard implements IObjectActionDelegate
 		xml.append(dashboard.getObjectName());
 		xml.append("</name>\n\t<columns>");
 		xml.append(dashboard.getNumColumns());
-		xml.append("</columns>\n\t<elements>\n");
+		xml.append("</columns>\n\t<options>");
+		xml.append(dashboard.getOptions());
+		xml.append("</options>\n\t<elements>\n");
 		for(DashboardElement e : dashboard.getElements())
 		{
 			xml.append("\t\t<dashboardElement>\n\t\t\t<type>");

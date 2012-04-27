@@ -30,6 +30,8 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 public class LocalFileSelector extends AbstractSelector
 {
 	private File file = null;
+	private String[] filterExtensions = { "*.*" };
+	private String[] filterNames = { "All files" };
 	
 	/**
 	 * @param parent
@@ -51,8 +53,8 @@ public class LocalFileSelector extends AbstractSelector
 	{
 		FileDialog fd = new FileDialog(getShell(), SWT.OPEN);
 		fd.setText("Select File");
-		fd.setFilterExtensions(new String[] { "*.*" });
-		fd.setFilterNames(new String[] { "All files" });
+		fd.setFilterExtensions(filterExtensions);
+		fd.setFilterNames(filterNames);
 		String selected = fd.open();
 		if (selected != null)
 			setFile(new File(selected));
@@ -92,5 +94,37 @@ public class LocalFileSelector extends AbstractSelector
 			setImage(null);
 			setText("<none>");
 		}
+	}
+
+	/**
+	 * @return the filterExtensions
+	 */
+	public String[] getFilterExtensions()
+	{
+		return filterExtensions;
+	}
+
+	/**
+	 * @param filterExtensions the filterExtensions to set
+	 */
+	public void setFilterExtensions(String[] filterExtensions)
+	{
+		this.filterExtensions = filterExtensions;
+	}
+
+	/**
+	 * @return the filterNames
+	 */
+	public String[] getFilterNames()
+	{
+		return filterNames;
+	}
+
+	/**
+	 * @param filterNames the filterNames to set
+	 */
+	public void setFilterNames(String[] filterNames)
+	{
+		this.filterNames = filterNames;
 	}
 }

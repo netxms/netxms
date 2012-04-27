@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,13 +22,14 @@ import java.io.File;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.filemanager.widgets.LocalFileSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * "Import Dashboard" dialog
@@ -37,7 +38,7 @@ public class ImportDashboardDialog extends Dialog
 {
 	private String objectName;
 	private File importFile;
-	private Text textName;
+	private LabeledText textName;
 	private LocalFileSelector importFileSelector;
 
 	/**
@@ -73,14 +74,24 @@ public class ImportDashboardDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
-      		"Object name", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      textName.getShell().setMinimumSize(300, 0);
-      textName.setTextLimit(63);
-      textName.setFocus();
+      textName = new LabeledText(dialogArea, SWT.NONE);
+      textName.setLabel("Object name");
+      textName.getTextControl().setTextLimit(63);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.widthHint = 350;
+      textName.setLayoutData(gd);
       
       importFileSelector = new LocalFileSelector(dialogArea, SWT.NONE, false);
       importFileSelector.setLabel("Import file");
+      importFileSelector.setFilterExtensions(new String[] { "*.xml", "*.*" });
+      importFileSelector.setFilterNames(new String[] { "XML files", "All files" });
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.widthHint = 350;
+      importFileSelector.setLayoutData(gd);
       
 		return dialogArea;
 	}
