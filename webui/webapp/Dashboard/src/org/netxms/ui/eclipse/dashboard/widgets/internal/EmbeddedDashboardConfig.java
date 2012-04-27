@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Set;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -73,6 +74,19 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 		Writer writer = new StringWriter();
 		serializer.write(this, writer);
 		return writer.toString();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
+	 */
+	@Override
+	public Set<Long> getObjects()
+	{
+		Set<Long> objects = super.getObjects();
+		objects.add(objectId);
+		for(long id : dashboardObjects)
+			objects.add(id);
+		return objects;
 	}
 
 	/**

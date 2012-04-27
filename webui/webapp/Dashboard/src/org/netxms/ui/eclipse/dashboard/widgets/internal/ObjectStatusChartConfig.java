@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Set;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.GenericObject;
 import org.simpleframework.xml.Element;
@@ -82,6 +83,17 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 		Writer writer = new StringWriter();
 		serializer.write(this, writer);
 		return writer.toString();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
+	 */
+	@Override
+	public Set<Long> getObjects()
+	{
+		Set<Long> objects = super.getObjects();
+		objects.add(rootObject);
+		return objects;
 	}
 
 	/**

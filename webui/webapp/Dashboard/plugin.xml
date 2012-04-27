@@ -24,6 +24,14 @@
                label="Create &amp;dashboard..."
                menubarPath="objectcreation">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.dashboard.actions.ImportDashboard"
+               enablesFor="1"
+               icon="icons/import.gif"
+               id="org.netxms.ui.eclipse.dashboard.actions.ImportDashboard#DashboardRoot"
+               label="&amp;Import dashboard..."
+               menubarPath="objectcreation">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
@@ -47,6 +55,13 @@
                class="org.netxms.ui.eclipse.dashboard.actions.CloneDashboard"
                id="org.netxms.ui.eclipse.dashboard.popupActions.CloneDashboard"
                label="Clone dashboard"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.dashboard.actions.ExportDashboard"
+               icon="icons/export.gif"
+               id="org.netxms.ui.eclipse.dashboard.actions.ExportDashboard"
+               label="Export..."
                menubarPath="additions">
          </action>
       </objectContribution>
