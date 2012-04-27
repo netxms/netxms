@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.dashboard.actions;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -36,6 +38,8 @@ import org.netxms.ui.eclipse.dashboard.dialogs.ImportDashboardDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * Create dashboard object
@@ -71,11 +75,21 @@ public class ImportDashboard implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
+				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+				DocumentBuilder db = dbf.newDocumentBuilder();
+				Document dom = db.parse(dlg.getImportFile());
+				
+				Element root = dom.getDocumentElement();
+				if (!root.getNodeName().equals("dashboard"))
+					throw new Exception("Invalid import file");
 				
 				
+				
+				/*
 				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_DASHBOARD, dlg.getObjectName(), parentId);
 				session.createObject(cd);
+				*/
 			}
 
 			@Override

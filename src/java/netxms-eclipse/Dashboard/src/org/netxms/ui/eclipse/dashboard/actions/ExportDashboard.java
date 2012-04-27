@@ -146,7 +146,7 @@ public class ExportDashboard implements IObjectActionDelegate
 					xml.append(nodeList[i]);
 					xml.append("\">");
 					xml.append(names[i]);
-					xml.append("</object>\n");
+					xml.append("</dci>\n");
 				}
 				xml.append("\t</dciMap>\n</dashboard>\n");
 				

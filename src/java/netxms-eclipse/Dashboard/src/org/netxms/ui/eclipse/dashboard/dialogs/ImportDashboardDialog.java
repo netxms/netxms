@@ -113,4 +113,12 @@ public class ImportDashboardDialog extends Dialog
 	{
 		return objectName;
 	}
+
+	/**
+	 * @return the importFile
+	 */
+	public File getImportFile()
+	{
+		return importFile;
+	}
 }
