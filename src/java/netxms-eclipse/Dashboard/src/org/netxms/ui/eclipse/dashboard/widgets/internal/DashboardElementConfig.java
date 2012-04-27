@@ -20,7 +20,10 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import java.io.StringWriter;
 import java.io.Writer;
-
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -61,5 +64,25 @@ public abstract class DashboardElementConfig
 	public void setLayout(DashboardElementLayout layout)
 	{
 		this.layout = layout;
+	}
+	
+	/**
+	 * Get list of referenced object IDs
+	 * 
+	 * @return
+	 */
+	public Set<Long> getObjects()
+	{
+		return new HashSet<Long>(0);
+	}
+	
+	/**
+	 * Get list of referenced DCI IDs. Key is DCI iD and value is node ID.
+	 * 
+	 * @return
+	 */
+	public Map<Long, Long> getDataCollectionItems()
+	{
+		return new HashMap<Long, Long>(0);
 	}
 }

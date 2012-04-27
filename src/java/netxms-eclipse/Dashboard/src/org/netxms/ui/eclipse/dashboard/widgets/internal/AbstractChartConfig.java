@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
+import java.util.Map;
+import java.util.Set;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.simpleframework.xml.Element;
@@ -45,6 +47,30 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 
 	@Element(required = false)
 	private int refreshRate = 30;
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
+	 */
+	@Override
+	public Set<Long> getObjects()
+	{
+		Set<Long> objects = super.getObjects();
+		for(ChartDciConfig dci : dciList)
+			objects.add(dci.nodeId);
+		return objects;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getDataCollectionItems()
+	 */
+	@Override
+	public Map<Long, Long> getDataCollectionItems()
+	{
+		Map<Long, Long> items =  super.getDataCollectionItems();
+		for(ChartDciConfig dci : dciList)
+			items.put(dci.dciId, dci.nodeId);
+		return items;
+	}
 
 	/**
 	 * @return the title

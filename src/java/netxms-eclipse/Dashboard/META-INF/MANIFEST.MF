@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Dashboard
 Bundle-SymbolicName: org.netxms.ui.eclipse.dashboard;singleton:=true
-Bundle-Version: 1.2.0
+Bundle-Version: 1.2.1
 Bundle-Activator: org.netxms.ui.eclipse.dashboard.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui,
@@ -15,7 +15,8 @@ Require-Bundle: org.eclipse.ui,
  org.netxms.ui.eclipse.networkmaps;bundle-version="1.2.0",
  org.netxms.ui.eclipse.osm;bundle-version="1.2.0",
  org.netxms.ui.eclipse.datacollection;bundle-version="1.2.0",
- org.netxms.ui.eclipse.alarmviewer;bundle-version="1.2.0"
+ org.netxms.ui.eclipse.alarmviewer;bundle-version="1.2.0",
+ org.netxms.ui.eclipse.filemanager;bundle-version="1.2.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.dashboard.api
