@@ -886,6 +886,7 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
              (rspPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
          {
             SNMP_Variable *var = rspPDU->getVariable(0);
+				long len; TCHAR buf[1024];
 
             if ((var->GetType() != ASN_NO_SUCH_OBJECT) &&
                 (var->GetType() != ASN_NO_SUCH_INSTANCE))
@@ -904,6 +905,7 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
                memcpy(name, var->GetName()->getValue(), var->GetName()->getLength() * sizeof(DWORD));
                nameLen = var->GetName()->getLength();
 					varList->set(i++, new NXSL_Value(new NXSL_Object(&g_nxslSnmpVarBindClass, var)));
+					rspPDU->unlinkVariables();
             }
             else
             {

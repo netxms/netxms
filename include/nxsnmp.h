@@ -592,6 +592,7 @@ public:
 	int getContextEngineIdLength() { return m_contextEngineIdLen; }
 	BYTE *getContextEngineId() { return m_contextEngineId; }
 
+	void unlinkVariables() { safe_free_and_null(m_ppVarList); m_dwNumVariables = 0; }
    void bindVariable(SNMP_Variable *pVar);
 };
 

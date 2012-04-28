@@ -538,8 +538,7 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *att
 	}
 	else if (!_tcscmp(attr, _T("name")))
 	{
-		t->GetName()->getValueAsText();
-		value = new NXSL_Value((DWORD)t->GetName()->getValueAsText());
+		value = new NXSL_Value(t->GetName()->getValueAsText());
 	}
 	else if (!_tcscmp(attr, _T("value")))
 	{
