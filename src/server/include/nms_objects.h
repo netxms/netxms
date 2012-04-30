@@ -521,7 +521,8 @@ public:
 
    BOOL ApplyToNode(Node *pNode);
 	BOOL isApplicable(Node *node);
-	BOOL isAutoApplyEnabled() { return m_applyFilter != NULL; }
+	bool isAutoApplyEnabled() { return (m_flags & TF_AUTO_APPLY) ? true : false; }
+	bool isAutoRemoveEnabled() { return ((m_flags & (TF_AUTO_APPLY | TF_AUTO_REMOVE)) == (TF_AUTO_APPLY | TF_AUTO_REMOVE)) ? true : false; }
 	void setAutoApplyFilter(const TCHAR *filter);
    void queueUpdate();
    void queueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI);
@@ -1224,7 +1225,8 @@ public:
    void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
 
 	bool isSuitableForNode(Node *node);
-	bool isAutoBindEnabled() { return m_bindFilter != NULL; }
+	bool isAutoBindEnabled() { return (m_flags & CF_AUTO_BIND) ? true : false; }
+	bool isAutoUnbindEnabled() { return ((m_flags & (CF_AUTO_UNBIND | CF_AUTO_UNBIND)) == (CF_AUTO_UNBIND | CF_AUTO_UNBIND)) ? true : false; }
 
 	void setAutoBindFilter(const TCHAR *script);
 };

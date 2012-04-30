@@ -255,6 +255,7 @@ typedef void * NXC_SESSION;
 //
 
 #define TF_AUTO_APPLY            0x00000001
+#define TF_AUTO_REMOVE           0x00000002
 
 
 //
@@ -262,6 +263,7 @@ typedef void * NXC_SESSION;
 //
 
 #define CF_AUTO_BIND             0x00000001
+#define CF_AUTO_UNBIND           0x00000002
 
 
 //

@@ -2218,17 +2218,19 @@ static void ApplyTemplate(NetObj *object, void *node)
 				DbgPrintf(4, _T("Node::ApplyUserTemplates(): applying template %d \"%s\" to node %d \"%s\""),
 				          pTemplate->Id(), pTemplate->Name(), ((Node *)node)->Id(), ((Node *)node)->Name());
 				pTemplate->ApplyToNode((Node *)node);
+				PostEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", ((Node *)node)->Id(), ((Node *)node)->Name(), pTemplate->Id(), pTemplate->Name());
 			}
 		}
 		else
 		{
-			if (pTemplate->isAutoApplyEnabled() && pTemplate->IsChild(((Node *)node)->Id()))
+			if (pTemplate->isAutoRemoveEnabled() && pTemplate->IsChild(((Node *)node)->Id()))
 			{
 				DbgPrintf(4, _T("Node::ApplyUserTemplates(): removing template %d \"%s\" from node %d \"%s\""),
 				          pTemplate->Id(), pTemplate->Name(), ((Node *)node)->Id(), ((Node *)node)->Name());
 				pTemplate->DeleteChild((Node *)node);
 				((Node *)node)->DeleteParent(pTemplate);
 				pTemplate->queueRemoveFromNode(((Node *)node)->Id(), TRUE);
+				PostEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", ((Node *)node)->Id(), ((Node *)node)->Name(), pTemplate->Id(), pTemplate->Name());
 			}
 		}
    }
@@ -2257,16 +2259,18 @@ static void UpdateContainerBinding(NetObj *object, void *node)
 				          ((Node *)node)->Id(), ((Node *)node)->Name(), pContainer->Id(), pContainer->Name());
 				pContainer->AddChild((Node *)node);
 				((Node *)node)->AddParent(pContainer);
+				PostEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", ((Node *)node)->Id(), ((Node *)node)->Name(), pContainer->Id(), pContainer->Name());
 			}
 		}
 		else
 		{
-			if (pContainer->isAutoBindEnabled() && pContainer->IsChild(((Node *)node)->Id()))
+			if (pContainer->isAutoUnbindEnabled() && pContainer->IsChild(((Node *)node)->Id()))
 			{
 				DbgPrintf(4, _T("Node::UpdateContainerMembership(): removing node %d \"%s\" from container %d \"%s\""),
 				          ((Node *)node)->Id(), ((Node *)node)->Name(), pContainer->Id(), pContainer->Name());
 				pContainer->DeleteChild((Node *)node);
 				((Node *)node)->DeleteParent(pContainer);
+				PostEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", ((Node *)node)->Id(), ((Node *)node)->Name(), pContainer->Id(), pContainer->Name());
 			}
 		}
    }
