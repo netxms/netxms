@@ -765,6 +765,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Pr
 {
 	SNMP_PDU *request, *response;
 	DWORD len;
+	LONG ret = FALSE;
 
 	if (argc < 3 || argc > 4)
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -794,7 +795,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Pr
 			DWORD dataType = SNMPResolveDataType(argv[3]->getValueAsString(&len));
 			if (dataType == ASN_NULL)
 			{
-				DbgPrintf(9, _T("SNMPSet: failed to resolve data type '%s', assume string"), 
+				DbgPrintf(6, _T("SNMPSet: failed to resolve data type '%s', assume string"), 
 					argv[3]->getValueAsString(&len));
 				dataType = ASN_OCTET_STRING;
 			}
@@ -804,8 +805,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Pr
 	}
 	else
 	{
-		DbgPrintf(9, _T("Invalid OID: %s"), argv[1]->getValueAsString(&len));
-		*ppResult = new NXSL_Value;
+		DbgPrintf(6, _T("SNMPSet: Invalid OID: %s"), argv[1]->getValueAsString(&len));
 		goto finish;
 	}
 
@@ -815,19 +815,23 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Pr
 	{
 		if (response->getErrorCode() != 0)
 		{
-			DbgPrintf(9, _T("SET operation failed (error code %d)"), response->getErrorCode());
-			*ppResult = new NXSL_Value;
+			DbgPrintf(6, _T("SNMPSet: operation failed (error code %d)"), response->getErrorCode());
 			goto finish;
+		}
+		else
+		{
+			DbgPrintf(6, _T("SNMPSet: success"));
+			ret = TRUE;
 		}
 		delete response;
 	}
 	else
 	{
-		DbgPrintf(9, _T("%s"), SNMPGetErrorText(snmpResult));
-		*ppResult = new NXSL_Value;
+		DbgPrintf(6, _T("SNMPSet: %s"), SNMPGetErrorText(snmpResult));
 	}
 
 finish:
+	*ppResult = new NXSL_Value(ret);
 	return 0;
 }
 
@@ -886,8 +890,6 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
              (rspPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
          {
             SNMP_Variable *var = rspPDU->getVariable(0);
-				long len; TCHAR buf[1024];
-
             if ((var->GetType() != ASN_NO_SUCH_OBJECT) &&
                 (var->GetType() != ASN_NO_SUCH_INSTANCE))
             {
