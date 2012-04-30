@@ -542,9 +542,9 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *att
 	}
 	else if (!_tcscmp(attr, _T("value")))
 	{
-		bool convToHex;
-		t->getValueAsPrintableString(strValue, 1024, &convToHex);
-		value = new NXSL_Value(strValue);
+		//bool convToHex;
+		//t->getValueAsPrintableString(strValue, 1024, &convToHex);
+		value = new NXSL_Value(t->GetValueAsString(strValue, 1024));
 	}
 	else if (!_tcscmp(attr, _T("value_as_ip")))
 	{

@@ -916,6 +916,7 @@ src/java/netxms-eclipse/Dashboard/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/Dashboard/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/Dashboard/build.properties -text
 src/java/netxms-eclipse/Dashboard/icons/dashboard.png -text
+src/java/netxms-eclipse/Dashboard/icons/dci.png -text
 src/java/netxms-eclipse/Dashboard/icons/ep_delete.png -text
 src/java/netxms-eclipse/Dashboard/icons/ep_edit.png -text
 src/java/netxms-eclipse/Dashboard/icons/ep_left.png -text
@@ -923,6 +924,7 @@ src/java/netxms-eclipse/Dashboard/icons/ep_right.png -text
 src/java/netxms-eclipse/Dashboard/icons/export.gif -text
 src/java/netxms-eclipse/Dashboard/icons/import.gif -text
 src/java/netxms-eclipse/Dashboard/icons/server_stats.png -text
+src/java/netxms-eclipse/Dashboard/icons/sync.gif -text
 src/java/netxms-eclipse/Dashboard/plugin.xml -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/Activator.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/CloneDashboard.java -text
