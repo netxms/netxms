@@ -2465,6 +2465,7 @@ webui/webapp/Dashboard/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/Dashboard/META-INF/MANIFEST.MF -text
 webui/webapp/Dashboard/build.properties -text
 webui/webapp/Dashboard/icons/dashboard.png -text
+webui/webapp/Dashboard/icons/dci.png -text
 webui/webapp/Dashboard/icons/ep_delete.png -text
 webui/webapp/Dashboard/icons/ep_edit.png -text
 webui/webapp/Dashboard/icons/ep_left.png -text
@@ -2472,6 +2473,7 @@ webui/webapp/Dashboard/icons/ep_right.png -text
 webui/webapp/Dashboard/icons/export.gif -text
 webui/webapp/Dashboard/icons/import.gif -text
 webui/webapp/Dashboard/icons/server_stats.png -text
+webui/webapp/Dashboard/icons/sync.gif -text
 webui/webapp/Dashboard/plugin.xml -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/Activator.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/DashboardElementAdapterFactory.java -text

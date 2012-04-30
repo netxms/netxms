@@ -30,6 +30,7 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
@@ -93,7 +94,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 		
 		updateInProgress = true;
 		
-		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob("Get DCI values for chart", viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -107,7 +108,8 @@ public abstract class ComparisonChartElement extends ElementWidget
 						{
 							if (!((Widget)chart).isDisposed())
 							{
-								chart.updateParameter(index, data.getLastValue().getValueAsDouble(), false);
+								DciDataRow lastValue = data.getLastValue();
+								chart.updateParameter(index, (lastValue != null) ? lastValue.getValueAsDouble() : 0.0, false);
 							}
 						}
 					});

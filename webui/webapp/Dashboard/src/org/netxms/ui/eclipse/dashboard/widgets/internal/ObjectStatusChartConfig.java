@@ -20,9 +20,11 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Map;
 import java.util.Set;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Serializer;
@@ -94,6 +96,18 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 		Set<Long> objects = super.getObjects();
 		objects.add(rootObject);
 		return objects;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
+	 */
+	@Override
+	public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
+	{
+		super.remapObjects(remapData);
+		ObjectIdMatchingData md = remapData.get(rootObject);
+		if (md != null)
+			rootObject = md.dstId;
 	}
 
 	/**

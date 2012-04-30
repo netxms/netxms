@@ -20,7 +20,9 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Map;
 import java.util.Set;
+import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -87,6 +89,24 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 		for(long id : dashboardObjects)
 			objects.add(id);
 		return objects;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
+	 */
+	@Override
+	public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
+	{
+		super.remapObjects(remapData);
+		ObjectIdMatchingData md = remapData.get(objectId);
+		if (md != null)
+			objectId = md.dstId;
+		for(int i = 0; i < dashboardObjects.length; i++)
+		{
+			md = remapData.get(dashboardObjects[i]);
+			if (md != null)
+				dashboardObjects[i] = md.dstId;
+		}
 	}
 
 	/**

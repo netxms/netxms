@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
+import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 
@@ -70,6 +71,24 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 		for(ChartDciConfig dci : dciList)
 			items.put(dci.dciId, dci.nodeId);
 		return items;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapDataCollectionItems(java.util.Map)
+	 */
+	@Override
+	public void remapDataCollectionItems(Map<Long, DciIdMatchingData> remapData)
+	{
+		super.remapDataCollectionItems(remapData);
+		for(ChartDciConfig dci : dciList)
+		{
+			DciIdMatchingData md = remapData.get(dci.dciId);
+			if (md != null)
+			{
+				dci.dciId = md.dstDciId;
+				dci.nodeId = md.dstNodeId;
+			}
+		}
 	}
 
 	/**

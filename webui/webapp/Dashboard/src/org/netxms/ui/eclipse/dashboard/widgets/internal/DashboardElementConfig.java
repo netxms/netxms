@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
+import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -84,5 +86,23 @@ public abstract class DashboardElementConfig
 	public Map<Long, Long> getDataCollectionItems()
 	{
 		return new HashMap<Long, Long>(0);
+	}
+	
+	/**
+	 * Remap object identifiers. Remap data has source object ID as a key.
+	 * 
+	 * @param remapData
+	 */
+	public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
+	{
+	}
+	
+	/**
+	 * Remap DCI identifiers. Remap data has source DCI ID as a key.
+	 * 
+	 * @param remapData
+	 */
+	public void remapDataCollectionItems(Map<Long, DciIdMatchingData> remapData)
+	{
 	}
 }
