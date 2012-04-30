@@ -495,8 +495,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 // Implementation of "SNMP_Transport" class
 //
 
-NXSL_SNMPTransportClass::NXSL_SNMPTransportClass()
-:NXSL_Class()
+NXSL_SNMPTransportClass::NXSL_SNMPTransportClass() : NXSL_Class()
 {
 	_tcscpy(m_szName, _T("SNMP_Transport"));
 }
@@ -515,12 +514,17 @@ NXSL_Value *NXSL_SNMPTransportClass::getAttr(NXSL_Object *object, const TCHAR *a
 	return value;
 }
 
+void NXSL_SNMPTransportClass::onObjectDelete(NXSL_Object *object)
+{
+	delete (SNMP_Transport *)object->getData();
+}
+
+
 //
 // Implementation of "SNMP_VarBind" class
 //
 
-NXSL_SNMPVarBindClass::NXSL_SNMPVarBindClass()
-:NXSL_Class()
+NXSL_SNMPVarBindClass::NXSL_SNMPVarBindClass() : NXSL_Class()
 {
 	_tcscpy(m_szName, _T("SNMP_VarBind"));
 }
@@ -531,7 +535,7 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *att
 	SNMP_Variable *t;
 	TCHAR strValue[1024];
 
-	t = (SNMP_Variable*)object->getData();
+	t = (SNMP_Variable *)object->getData();
 	if (!_tcscmp(attr, _T("type")))
 	{
 		value = new NXSL_Value((DWORD)t->GetType());
@@ -542,16 +546,20 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *att
 	}
 	else if (!_tcscmp(attr, _T("value")))
 	{
-		//bool convToHex;
-		//t->getValueAsPrintableString(strValue, 1024, &convToHex);
 		value = new NXSL_Value(t->GetValueAsString(strValue, 1024));
 	}
-	else if (!_tcscmp(attr, _T("value_as_ip")))
+	else if (!_tcscmp(attr, _T("printableValue")))
+	{
+		bool convToHex = true;
+		t->getValueAsPrintableString(strValue, 1024, &convToHex);
+		value = new NXSL_Value(t->GetValueAsString(strValue, 1024));
+	}
+	else if (!_tcscmp(attr, _T("valueAsIp")))
 	{
 		t->GetValueAsIPAddr(strValue);
 		value = new NXSL_Value(strValue);
 	}
-	else if (!_tcscmp(attr, _T("value_as_mac")))
+	else if (!_tcscmp(attr, _T("valueAsMac")))
 	{
 		t->GetValueAsMACAddr(strValue);
 		value = new NXSL_Value(strValue);
@@ -559,6 +567,12 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *att
 
 	return value;
 }
+
+void NXSL_SNMPVarBindClass::onObjectDelete(NXSL_Object *object)
+{
+	delete (SNMP_Variable *)object->getData();
+}
+
 
 //
 // Class objects

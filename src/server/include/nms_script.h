@@ -99,7 +99,9 @@ public:
 	NXSL_SNMPTransportClass();
 
 	virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+	virtual void onObjectDelete(NXSL_Object *object);
 };
+
 
 //
 // "SNMP_VarBind" class
@@ -111,6 +113,7 @@ public:
 	NXSL_SNMPVarBindClass();
 
 	virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+	virtual void onObjectDelete(NXSL_Object *object);
 };
 
 

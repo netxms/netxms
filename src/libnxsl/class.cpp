@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -66,7 +66,7 @@ BOOL NXSL_Class::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value 
 
 
 //
-// Object deletion handler
+// Object deletion handler. Called by interpreter when last reference to object being deleted.
 //
 
 void NXSL_Class::onObjectDelete(NXSL_Object *object)
@@ -80,14 +80,17 @@ void NXSL_Class::onObjectDelete(NXSL_Object *object)
 
 NXSL_Object::NXSL_Object(NXSL_Class *pClass, void *pData)
 {
-   m_pClass = pClass;
-   m_pData = pData;
+   m_class = pClass;
+	m_data = (__nxsl_class_data *)malloc(sizeof(__nxsl_class_data));
+	m_data->refCount = 1;
+	m_data->data = pData;
 }
 
 NXSL_Object::NXSL_Object(NXSL_Object *pObject)
 {
-   m_pClass = pObject->m_pClass;
-   m_pData = pObject->m_pData;
+   m_class = pObject->m_class;
+   m_data = pObject->m_data;
+	m_data->refCount++;
 }
 
 
@@ -97,4 +100,10 @@ NXSL_Object::NXSL_Object(NXSL_Object *pObject)
 
 NXSL_Object::~NXSL_Object()
 {
+	m_data->refCount--;
+	if (m_data->refCount == 0)
+	{
+		m_class->onObjectDelete(this);
+		free(m_data);
+	}
 }

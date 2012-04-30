@@ -104,19 +104,25 @@ public:
 // Object instance
 //
 
+struct __nxsl_class_data
+{
+	void *data;
+	int refCount;
+};
+
 class LIBNXSL_EXPORTABLE NXSL_Object
 {
 private:
-   NXSL_Class *m_pClass;
-   void *m_pData;
+   NXSL_Class *m_class;
+   __nxsl_class_data *m_data;
 
 public:
    NXSL_Object(NXSL_Object *pObject);
    NXSL_Object(NXSL_Class *pClass, void *pData);
    ~NXSL_Object();
 
-   NXSL_Class *getClass() { return m_pClass; }
-   void *getData() { return m_pData; }
+   NXSL_Class *getClass() { return m_class; }
+	void *getData() { return m_data->data; }
 };
 
 

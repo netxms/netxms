@@ -1,4 +1,12 @@
 *
+* 1.2.1
+*
+
+- Implemented dashboard export/import
+- Fixed memory leak in NXSL functions gmtime and localtime
+
+
+*
 * 1.2.0
 *
 
