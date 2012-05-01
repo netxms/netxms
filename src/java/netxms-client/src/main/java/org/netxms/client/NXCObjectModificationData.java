@@ -44,8 +44,8 @@ public class NXCObjectModificationData
 	public static final long MODIFY_NAME               = 0x00000000000001L;
 	public static final long MODIFY_ACL                = 0x00000000000002L;
 	public static final long MODIFY_CUSTOM_ATTRIBUTES  = 0x00000000000004L;
-	public static final long MODIFY_AUTO_APPLY         = 0x00000000000008L;
-	public static final long MODIFY_AUTO_BIND          = 0x00000000000010L;
+	public static final long MODIFY_AUTOBIND_FILTER    = 0x00000000000008L;
+// unused:	public static final long MODIFY_AUTO_BIND          = 0x00000000000010L;
 	public static final long MODIFY_POLICY_CONFIG      = 0x00000000000020L;
 	public static final long MODIFY_VERSION            = 0x00000000000040L;
 	public static final long MODIFY_DESCRIPTION        = 0x00000000000080L;
@@ -82,7 +82,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_REQUIRED_POLLS     = 0x00004000000000L;
 	public static final long MODIFY_REQUEST            = 0x00008000000000L;
 	public static final long MODIFY_RESPONSE           = 0x00010000000000L;
-	public static final long MODIFY_NODE_FLAGS         = 0x00020000000000L;
+	public static final long MODIFY_OBJECT_FLAGS       = 0x00020000000000L;
 	public static final long MODIFY_IFXTABLE_POLICY    = 0x00040000000000L;
 	public static final long MODIFY_REPORT_DEFINITION  = 0x00080000000000L;
 	public static final long MODIFY_CLUSTER_RESOURCES  = 0x00100000000000L;
@@ -98,9 +98,6 @@ public class NXCObjectModificationData
 	private AccessListElement[] acl;
 	private boolean inheritAccessRights;
 	private Map<String, String> customAttributes;
-	private boolean autoApplyEnabled;
-	private String autoApplyFilter;
-	private boolean autoBindEnabled;
 	private String autoBindFilter;
 	private String configFileContent;
 	private int version;
@@ -146,7 +143,7 @@ public class NXCObjectModificationData
 	private int ipAddress;
 	private String request;
 	private String response;
-	private int nodeFlags;
+	private int objectFlags;
 	private int ifXTablePolicy;
 	private String reportDefinition;
 	private List<ClusterResource> resourceList;
@@ -262,57 +259,6 @@ public class NXCObjectModificationData
 	}
 
 	/**
-	 * @return the autoApplyEnabled
-	 */
-	public boolean isAutoApplyEnabled()
-	{
-		return autoApplyEnabled;
-	}
-
-	/**
-	 * @param autoApplyEnabled the autoApplyEnabled to set
-	 */
-	public void setAutoApplyEnabled(boolean autoApplyEnabled)
-	{
-		this.autoApplyEnabled = autoApplyEnabled;
-		flags |= MODIFY_AUTO_APPLY;
-	}
-
-	/**
-	 * @return the autoApplyFilter
-	 */
-	public String getAutoApplyFilter()
-	{
-		return autoApplyFilter;
-	}
-
-	/**
-	 * @param autoApplyFilter the autoApplyFilter to set
-	 */
-	public void setAutoApplyFilter(String autoApplyFilter)
-	{
-		this.autoApplyFilter = autoApplyFilter;
-		flags |= MODIFY_AUTO_APPLY;
-	}
-
-	/**
-	 * @return the autoApplyEnabled
-	 */
-	public boolean isAutoBindEnabled()
-	{
-		return autoBindEnabled;
-	}
-
-	/**
-	 * @param autoApplyEnabled the autoApplyEnabled to set
-	 */
-	public void setAutoBindEnabled(boolean autoBindEnabled)
-	{
-		this.autoBindEnabled = autoBindEnabled;
-		flags |= MODIFY_AUTO_BIND;
-	}
-
-	/**
 	 * @return the autoApplyFilter
 	 */
 	public String getAutoBindFilter()
@@ -326,7 +272,7 @@ public class NXCObjectModificationData
 	public void setAutoBindFilter(String autoBindFilter)
 	{
 		this.autoBindFilter = autoBindFilter;
-		flags |= MODIFY_AUTO_BIND;
+		flags |= MODIFY_AUTOBIND_FILTER;
 	}
 
 	/**
@@ -1053,27 +999,18 @@ public class NXCObjectModificationData
 	/**
 	 * @return the nodeFlags
 	 */
-	public int getNodeFlags()
+	public int getObjectFlags()
 	{
-		return nodeFlags;
+		return objectFlags;
 	}
 
 	/**
 	 * @param nodeFlags the nodeFlags to set
 	 */
-	public void setNodeFlags(int nodeFlags)
+	public void setObjectFlags(int objectFlags)
 	{
-		this.nodeFlags = nodeFlags;
-		flags |= MODIFY_NODE_FLAGS;
-	}
-
-	/**
-	 * @param nodeFlags the nodeFlags to set
-	 */
-	public void setDashboardOptions(int options)
-	{
-		this.nodeFlags = options;
-		flags |= MODIFY_NODE_FLAGS;
+		this.objectFlags = objectFlags;
+		flags |= MODIFY_OBJECT_FLAGS;
 	}
 
 	/**

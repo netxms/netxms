@@ -45,9 +45,10 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class AutoBind extends PropertyPage
 {
 	private Container object;
-	private Button checkboxEnable;
+	private Button checkboxEnableBind;
+	private Button checkboxEnableUnbind;
 	private ScriptEditor filterSource;
-	private boolean initialAutoBindFlag;
+	private int initialFlags;
 	private String initialAutoBindFilter;
 
 	/* (non-Javadoc)
@@ -62,8 +63,8 @@ public class AutoBind extends PropertyPage
 		if (object == null)	// Paranoid check
 			return dialogArea;
 		
-		initialAutoBindFlag = object.isAutoBindEnabled();
-		initialAutoBindFilter = new String(object.getAutoBindFilter());
+		initialFlags = object.getFlags();
+		initialAutoBindFilter = object.getAutoBindFilter();
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -72,10 +73,10 @@ public class AutoBind extends PropertyPage
       dialogArea.setLayout(layout);
 
       // Enable/disable check box
-      checkboxEnable = new Button(dialogArea, SWT.CHECK);
-      checkboxEnable.setText("Automatically bind nodes selected by filter to this container");
-      checkboxEnable.setSelection(object.isAutoBindEnabled());
-      checkboxEnable.addSelectionListener(new SelectionListener() {
+      checkboxEnableBind = new Button(dialogArea, SWT.CHECK);
+      checkboxEnableBind.setText("Automatically bind nodes selected by filter to this container");
+      checkboxEnableBind.setSelection(object.isAutoBindEnabled());
+      checkboxEnableBind.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -85,17 +86,24 @@ public class AutoBind extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				if (checkboxEnable.getSelection())
+				if (checkboxEnableBind.getSelection())
 				{
 					filterSource.setEnabled(true);
 					filterSource.setFocus();
+					checkboxEnableUnbind.setEnabled(true);
 				}
 				else
 				{
 					filterSource.setEnabled(false);
+					checkboxEnableUnbind.setEnabled(false);
 				}
 			}
       });
+      
+      checkboxEnableUnbind = new Button(dialogArea, SWT.CHECK);
+      checkboxEnableUnbind.setText("Automatically unbind nodes from this container when they no longer passes filter");
+      checkboxEnableUnbind.setSelection(object.isAutoUnbindEnabled());
+      checkboxEnableUnbind.setEnabled(object.isAutoBindEnabled());
       
       // Filtering script
       Label label = new Label(dialogArea, SWT.NONE);
@@ -128,27 +136,34 @@ public class AutoBind extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		final boolean isAutoBindEnabled = checkboxEnable.getSelection();
-		if ((!isAutoBindEnabled && !initialAutoBindFlag) ||
-		    (isAutoBindEnabled && initialAutoBindFlag && initialAutoBindFilter.equals(filterSource.getText())))
+		int flags = object.getFlags();
+		if (checkboxEnableBind.getSelection())
+			flags |= Container.CF_AUTO_BIND;
+		else
+			flags &= ~Container.CF_AUTO_BIND;
+		if (checkboxEnableUnbind.getSelection())
+			flags |= Container.CF_AUTO_UNBIND;
+		else
+			flags &= ~Container.CF_AUTO_UNBIND;
+			
+		if ((flags == initialFlags) && initialAutoBindFilter.equals(filterSource.getText()))
 			return;		// Nothing to apply
-		
+
 		if (isApply)
 			setValid(false);
 		
-		final String newAutoBindFilter = new String(filterSource.getText());
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		md.setAutoBindEnabled(isAutoBindEnabled);
-		md.setAutoBindFilter(newAutoBindFilter);
+		md.setObjectFlags(flags);
+		md.setAutoBindFilter(filterSource.getText());
 		
 		new ConsoleJob("Update auto-bind filter", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
-				initialAutoBindFlag = isAutoBindEnabled;
-				initialAutoBindFilter = newAutoBindFilter;
+				initialFlags = md.getObjectFlags();
+				initialAutoBindFilter = md.getAutoBindFilter();
 			}
 
 			@Override

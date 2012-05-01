@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,20 @@
  */
 package org.netxms.client.objects;
 
-import org.netxms.base.*;
+import org.netxms.base.NXCPCodes;
+import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 
 /**
  * Container object
- *
  */
 public class Container extends GenericObject
 {
+	public static final int CF_AUTO_BIND = 0x000001;
+	public static final int CF_AUTO_UNBIND = 0x000002;
+	
 	private int category;
-	private boolean autoBindEnabled;
+	private int flags;
 	private String autoBindFilter;
 	
 	/**
@@ -38,8 +41,8 @@ public class Container extends GenericObject
 	{
 		super(msg, session);
 		category = msg.getVariableAsInteger(NXCPCodes.VID_CATEGORY);
-		autoBindEnabled = msg.getVariableAsBoolean(NXCPCodes.VID_ENABLE_AUTO_BIND);
-		autoBindFilter = msg.getVariableAsString(NXCPCodes.VID_AUTO_BIND_FILTER);
+		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
+		autoBindFilter = msg.getVariableAsString(NXCPCodes.VID_AUTOBIND_FILTER);
 	}
 
 	/**
@@ -55,7 +58,15 @@ public class Container extends GenericObject
 	 */
 	public boolean isAutoBindEnabled()
 	{
-		return autoBindEnabled;
+		return (flags & CF_AUTO_BIND) != 0;
+	}
+
+	/**
+	 * @return true if automatic unbind is enabled
+	 */
+	public boolean isAutoUnbindEnabled()
+	{
+		return (flags & CF_AUTO_UNBIND) != 0;
 	}
 
 	/**
@@ -73,5 +84,13 @@ public class Container extends GenericObject
 	public String getObjectClassName()
 	{
 		return "Container";
+	}
+
+	/**
+	 * @return the flags
+	 */
+	public int getFlags()
+	{
+		return flags;
 	}
 }

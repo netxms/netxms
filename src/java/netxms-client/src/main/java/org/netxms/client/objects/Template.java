@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,14 +24,14 @@ import org.netxms.client.NXCSession;
 
 /**
  * This class represents NetXMS TEMPLATE objects.
- * 
- * @author Victor
- *
  */
 public class Template extends GenericObject
 {
+	public static final int TF_AUTO_APPLY = 0x000001;
+	public static final int TF_AUTO_REMOVE = 0x000002;
+	
 	private int version;
-	private boolean autoApplyEnabled;
+	private int flags;
 	private String autoApplyFilter;
 
 	/**
@@ -43,8 +43,8 @@ public class Template extends GenericObject
 		super(msg, session);
 		
 		version = msg.getVariableAsInteger(NXCPCodes.VID_VERSION);
-		autoApplyEnabled = msg.getVariableAsBoolean(NXCPCodes.VID_AUTO_APPLY);
-		autoApplyFilter = msg.getVariableAsString(NXCPCodes.VID_APPLY_FILTER);
+		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
+		autoApplyFilter = msg.getVariableAsString(NXCPCodes.VID_AUTOBIND_FILTER);
 	}
 
 	/**
@@ -68,7 +68,15 @@ public class Template extends GenericObject
 	 */
 	public boolean isAutoApplyEnabled()
 	{
-		return autoApplyEnabled;
+		return (flags & TF_AUTO_APPLY) != 0;
+	}
+
+	/**
+	 * @return true if automatic removal is enabled
+	 */
+	public boolean isAutoRemoveEnabled()
+	{
+		return (flags & TF_AUTO_REMOVE) != 0;
 	}
 
 	/**
@@ -86,5 +94,13 @@ public class Template extends GenericObject
 	public String getObjectClassName()
 	{
 		return "Template";
+	}
+
+	/**
+	 * @return the flags
+	 */
+	public int getFlags()
+	{
+		return flags;
 	}
 }

@@ -238,6 +238,7 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#getSelection(org.eclipse
 	 * .swt.widgets.Control)
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected Item[] getSelection(Control control) {
 		Item[] selection = ((Gallery) control).getSelection();
 		if (selection == null) {
@@ -344,6 +345,7 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * @see
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#setSelection(java.util.List)
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected void setSelection(List items) {
 		Item[] current = getSelection(getGallery());
 
@@ -479,6 +481,7 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 *            child index
 	 * @since 3.3
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void remove(final Object parentOrTreePath, final int index) {
 		// if (isBusy())
 		// return;

@@ -286,10 +286,12 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 {
 	static TCHAR batch[] = 
 		_T("ALTER TABLE templates ADD flags integer\n")
-		_T("UPDATE templates SET flags=enable_auto_apply\n")
+		_T("UPDATE templates SET flags=0 WHERE enable_auto_apply=0\n")
+		_T("UPDATE templates SET flags=3 WHERE enable_auto_apply<>0\n")
 		_T("ALTER TABLE templates DROP COLUMN enable_auto_apply\n")
 		_T("ALTER TABLE containers ADD flags integer\n")
-		_T("UPDATE containers SET flags=enable_auto_bind\n")
+		_T("UPDATE containers SET flags=0 WHERE enable_auto_bind=0\n")
+		_T("UPDATE containers SET flags=3 WHERE enable_auto_bind<>0\n")
 		_T("ALTER TABLE containers DROP COLUMN enable_auto_bind\n")
 		_T("<END>");
 

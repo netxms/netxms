@@ -324,7 +324,7 @@ public class DashboardElements extends PropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setDashboardElements(elements);
 		md.setColumnCount(numColumns);
-		md.setDashboardOptions(options);
+		md.setObjectFlags(options);
 		
 		if (isApply)
 			setValid(false);

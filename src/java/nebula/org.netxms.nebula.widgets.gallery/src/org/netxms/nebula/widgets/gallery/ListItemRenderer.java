@@ -54,6 +54,7 @@ import org.eclipse.swt.widgets.Display;
 
 public class ListItemRenderer extends AbstractGalleryItemRenderer {
 
+	@SuppressWarnings("rawtypes")
 	protected ArrayList dropShadowsColors = new ArrayList();
 
 	boolean dropShadows = false;
@@ -266,6 +267,7 @@ public class ListItemRenderer extends AbstractGalleryItemRenderer {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	private void createColors() {
 		if (dropShadowsSize > 0) {
 			int step = 125 / dropShadowsSize;
@@ -278,6 +280,7 @@ public class ListItemRenderer extends AbstractGalleryItemRenderer {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	private void freeDropShadowsColors() {
 		// Free colors :
 		{

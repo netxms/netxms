@@ -461,7 +461,7 @@ public final class NXCPCodes
 	public static final long VID_NUM_ROWS                = 167;
 	public static final long VID_TABLE_TITLE             = 168;
 	public static final long VID_EVENT_NAME              = 169;
-	public static final long VID_AUTO_APPLY              = 170;
+//	public static final long VID_AUTO_APPLY              = 170;
 	public static final long VID_LOG_NAME                = 171;
 	public static final long VID_OPERATION               = 172;
 	public static final long VID_MAX_RECORDS             = 173;
@@ -610,9 +610,9 @@ public final class NXCPCodes
 	public static final long VID_TOKEN_SOFTLIMIT         = 316;
 	public static final long VID_TOKEN_HARDLIMIT         = 317;
 	public static final long VID_USE_IFXTABLE            = 318;
-	public static final long VID_APPLY_FILTER            = 319;
-	public static final long VID_ENABLE_AUTO_BIND        = 320;
-	public static final long VID_AUTO_BIND_FILTER        = 321;
+//	public static final long VID_APPLY_FILTER            = 319;
+//	public static final long VID_ENABLE_AUTO_BIND        = 320;
+	public static final long VID_AUTOBIND_FILTER         = 321;
 	public static final long VID_BASE_UNITS              = 322;
 	public static final long VID_MULTIPLIER              = 323;
 	public static final long VID_CUSTOM_UNITS_NAME       = 324;

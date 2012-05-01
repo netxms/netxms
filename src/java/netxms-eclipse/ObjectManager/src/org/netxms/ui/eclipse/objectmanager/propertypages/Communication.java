@@ -392,7 +392,7 @@ public class Communication extends PropertyPage
 			flags |= Node.NF_FORCE_ENCRYPTION;
 		else
 			flags &= ~Node.NF_FORCE_ENCRYPTION;
-		md.setNodeFlags(flags);
+		md.setObjectFlags(flags);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Update communication settings for node " + node.getObjectName(), null, Activator.PLUGIN_ID, null) {

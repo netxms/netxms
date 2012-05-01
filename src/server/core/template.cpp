@@ -763,7 +763,7 @@ void Template::CreateMessage(CSCPMessage *pMsg)
    NetObj::CreateMessage(pMsg);
    pMsg->SetVariable(VID_TEMPLATE_VERSION, m_dwVersion);
 	pMsg->SetVariable(VID_FLAGS, m_flags);
-	pMsg->SetVariable(VID_APPLY_FILTER, CHECK_NULL_EX(m_applyFilterSource));
+	pMsg->SetVariable(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_applyFilterSource));
 }
 
 
@@ -785,11 +785,11 @@ DWORD Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_flags = pRequest->GetVariableLong(VID_FLAGS);
 
    // Change apply filter
-	if (pRequest->IsVariableExist(VID_APPLY_FILTER))
+	if (pRequest->IsVariableExist(VID_AUTOBIND_FILTER))
 	{
 		safe_free(m_applyFilterSource);
 		delete m_applyFilter;
-		m_applyFilterSource = pRequest->GetVariableStr(VID_APPLY_FILTER);
+		m_applyFilterSource = pRequest->GetVariableStr(VID_AUTOBIND_FILTER);
 		if (m_applyFilterSource != NULL)
 		{
 			TCHAR error[256];

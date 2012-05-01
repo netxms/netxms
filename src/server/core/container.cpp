@@ -274,7 +274,7 @@ void Container::CreateMessage(CSCPMessage *pMsg)
    NetObj::CreateMessage(pMsg);
    pMsg->SetVariable(VID_CATEGORY, m_dwCategory);
 	pMsg->SetVariable(VID_FLAGS, m_flags);
-	pMsg->SetVariable(VID_AUTO_BIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
+	pMsg->SetVariable(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
 }
 
 
@@ -292,9 +292,9 @@ DWORD Container::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_flags = pRequest->GetVariableLong(VID_FLAGS);
 
    // Change auto-bind filter
-	if (pRequest->IsVariableExist(VID_AUTO_BIND_FILTER))
+	if (pRequest->IsVariableExist(VID_AUTOBIND_FILTER))
 	{
-		TCHAR *script = pRequest->GetVariableStr(VID_AUTO_BIND_FILTER);
+		TCHAR *script = pRequest->GetVariableStr(VID_AUTOBIND_FILTER);
 		setAutoBindFilter(script);
 		safe_free(script);
 	}

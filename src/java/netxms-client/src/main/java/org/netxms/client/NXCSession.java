@@ -148,7 +148,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
-	public static final int CLIENT_PROTOCOL_VERSION = 32;
+	public static final int CLIENT_PROTOCOL_VERSION = 33;
 
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
@@ -3026,16 +3026,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			msg.setVariableInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES, count);
 		}
 
-		if ((flags & NXCObjectModificationData.MODIFY_AUTO_APPLY) != 0)
+		if ((flags & NXCObjectModificationData.MODIFY_AUTOBIND_FILTER) != 0)
 		{
-			msg.setVariableInt16(NXCPCodes.VID_AUTO_APPLY, data.isAutoApplyEnabled() ? 1 : 0);
-			msg.setVariable(NXCPCodes.VID_APPLY_FILTER, data.getAutoApplyFilter());
-		}
-
-		if ((flags & NXCObjectModificationData.MODIFY_AUTO_BIND) != 0)
-		{
-			msg.setVariableInt16(NXCPCodes.VID_ENABLE_AUTO_BIND, data.isAutoBindEnabled() ? 1 : 0);
-			msg.setVariable(NXCPCodes.VID_AUTO_BIND_FILTER, data.getAutoBindFilter());
+			msg.setVariable(NXCPCodes.VID_AUTOBIND_FILTER, data.getAutoBindFilter());
 		}
 
 		if ((flags & NXCObjectModificationData.MODIFY_DESCRIPTION) != 0)
@@ -3252,9 +3245,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			msg.setVariable(NXCPCodes.VID_SERVICE_RESPONSE, data.getResponse());
 		}
 		
-		if ((flags & NXCObjectModificationData.MODIFY_NODE_FLAGS) != 0)
+		if ((flags & NXCObjectModificationData.MODIFY_OBJECT_FLAGS) != 0)
 		{
-			msg.setVariableInt32(NXCPCodes.VID_FLAGS, data.getNodeFlags());
+			msg.setVariableInt32(NXCPCodes.VID_FLAGS, data.getObjectFlags());
 		}
 		
 		if ((flags & NXCObjectModificationData.MODIFY_IFXTABLE_POLICY) != 0)

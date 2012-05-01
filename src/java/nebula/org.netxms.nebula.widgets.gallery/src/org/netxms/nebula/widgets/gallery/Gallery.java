@@ -1258,6 +1258,7 @@ public class Gallery extends Canvas {
 		}
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private int[] getVisibleItems(Rectangle clipping) {
 
 		if (items == null)
