@@ -564,17 +564,29 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	{
 		double value = (225 - angle) * angleValue + minValue;
 		double absValue = Math.abs(value);
-		if (absValue >= 1000000000)
+		if (absValue >= 10000000000L)
 		{
 			return Long.toString(Math.round(value / 1000000000)) + "G";
 		}
-		else if (absValue >= 1000000)
+		else if (absValue >= 1000000000)
+		{
+			return new DecimalFormat("#.#").format(value / 1000000000) + "G";
+		}
+		else if (absValue >= 10000000)
 		{
 			return Long.toString(Math.round(value / 1000000)) + "M";
 		}
-		else if (absValue >= 1000)
+		else if (absValue >= 1000000)
+		{
+			return new DecimalFormat("#.#").format(value / 1000000) + "M";
+		}
+		else if (absValue >= 10000)
 		{
 			return Long.toString(Math.round(value / 1000)) + "K";
+		}
+		else if (absValue >= 1000)
+		{
+			return new DecimalFormat("#.#").format(value / 1000) + "K";
 		}
 		else if ((absValue >= 1) && (step >= 1))
 		{
