@@ -31,6 +31,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 
 
 /**
@@ -44,6 +45,7 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 	private Image[] severityImages = new Image[5];
 	private Image[] stateImages = new Image[3];
 	private Image commentsImage;
+	private boolean blinkState = true;
 	
 	/**
 	 * Default constructor 
@@ -76,6 +78,8 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 			case AlarmList.COLUMN_SEVERITY:
 				return severityImages[((Alarm)element).getCurrentSeverity()];
 			case AlarmList.COLUMN_STATE:
+				if (((Alarm)element).getState() == Alarm.STATE_OUTSTANDING)
+					return blinkState ? stateImages[Alarm.STATE_OUTSTANDING] : SharedIcons.IMG_EMPTY;
 				return stateImages[((Alarm)element).getState()];
 			case AlarmList.COLUMN_COMMENTS:
 				return (((Alarm)element).getCommentsCount() > 0) ? commentsImage : null;
@@ -150,5 +154,13 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 	@Override
 	public void removeListener(ILabelProviderListener listener)
 	{
+	}
+
+	/**
+	 * Toggle blink state
+	 */
+	public void toggleBlinkState()
+	{
+		blinkState = !blinkState;
 	}
 }

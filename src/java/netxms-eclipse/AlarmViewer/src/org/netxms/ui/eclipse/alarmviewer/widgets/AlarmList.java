@@ -174,6 +174,33 @@ public class AlarmList extends Composite
 					session.removeListener(clientListener);
 			}
 		});
+		
+		/*
+		final Runnable blinkTimer = new Runnable() {
+			@Override
+			public void run()
+			{
+				if (isDisposed())
+					return;
+				
+				int count = 0;
+				synchronized(alarmList)
+				{
+					for(Alarm a : alarmList.values())
+						if (a.getState() == Alarm.STATE_OUTSTANDING)
+							count++;
+				}
+				
+				if (count > 0)
+				{
+					((AlarmListLabelProvider)alarmViewer.getLabelProvider()).toggleBlinkState();
+					alarmViewer.refresh();
+				}
+				getDisplay().timerExec(500, this);
+			}
+		};
+		getDisplay().timerExec(500, blinkTimer);
+		*/
 	}
 	
 	/**

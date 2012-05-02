@@ -40,6 +40,7 @@ public class SharedIcons
 	public static ImageDescriptor CUT;
 	public static ImageDescriptor DELETE_OBJECT;
 	public static ImageDescriptor EDIT;
+	public static ImageDescriptor EMPTY;
 	public static ImageDescriptor EXECUTE;
 	public static ImageDescriptor EXPAND;
 	public static ImageDescriptor EXPAND_ALL;
@@ -66,6 +67,7 @@ public class SharedIcons
 	public static Image IMG_CUT;
 	public static Image IMG_DELETE_OBJECT;
 	public static Image IMG_EDIT;
+	public static Image IMG_EMPTY;
 	public static Image IMG_EXECUTE;
 	public static Image IMG_EXPAND;
 	public static Image IMG_EXPAND_ALL;
@@ -97,6 +99,7 @@ public class SharedIcons
 		CUT = Activator.getImageDescriptor("icons/cut.gif"); //$NON-NLS-1$
 		DELETE_OBJECT = Activator.getImageDescriptor("icons/delete_obj.gif"); //$NON-NLS-1$
 		EDIT = Activator.getImageDescriptor("icons/edit.png"); //$NON-NLS-1$
+		EMPTY = Activator.getImageDescriptor("icons/empty.png"); //$NON-NLS-1$
 		EXECUTE = Activator.getImageDescriptor("icons/execute.gif"); //$NON-NLS-1$
 		EXPAND = Activator.getImageDescriptor("icons/expand.png"); //$NON-NLS-1$
 		EXPAND_ALL = Activator.getImageDescriptor("icons/expandall.png"); //$NON-NLS-1$
@@ -123,6 +126,7 @@ public class SharedIcons
 		IMG_CUT = CUT.createImage();
 		IMG_DELETE_OBJECT = DELETE_OBJECT.createImage();
 		IMG_EDIT = EDIT.createImage();
+		IMG_EMPTY = EMPTY.createImage();
 		IMG_EXECUTE = EXECUTE.createImage();
 		IMG_EXPAND = EXPAND.createImage();
 		IMG_EXPAND_ALL = EXPAND_ALL.createImage();
