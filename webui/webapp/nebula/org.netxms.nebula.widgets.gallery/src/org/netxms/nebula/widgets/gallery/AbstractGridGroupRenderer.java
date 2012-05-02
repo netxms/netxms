@@ -258,7 +258,7 @@ public abstract class AbstractGridGroupRenderer extends
 				gallery.getItemRenderer().setSelected(selected);
 				if (Gallery.DEBUG)
 					System.out.println("itemRender.draw"); //$NON-NLS-1$
-				Rectangle oldClipping = gc.getClipping();
+				//Rectangle oldClipping = gc.getClipping();
 
 				//gc.setClipping(oldClipping.intersection(new Rectangle(xPixelPos, yPixelPos, itemWidth, itemHeight)));
 				gallery.getItemRenderer().draw(gc, gItem, index, xPixelPos,

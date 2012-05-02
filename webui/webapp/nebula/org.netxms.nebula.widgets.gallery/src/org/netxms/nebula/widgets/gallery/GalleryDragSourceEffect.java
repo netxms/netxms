@@ -30,6 +30,7 @@ import org.eclipse.swt.graphics.Image;
  * @author Nicolas Richeton (nicolas.richeton@gmail.com)
  */
 public class GalleryDragSourceEffect extends DragSourceEffect {
+	private static final long serialVersionUID = 1L;
 	Gallery g = null;
 
 	/**

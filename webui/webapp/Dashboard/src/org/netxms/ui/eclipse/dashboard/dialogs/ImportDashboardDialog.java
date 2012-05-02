@@ -36,6 +36,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class ImportDashboardDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private String objectName;
 	private File importFile;
 	private LabeledText textName;

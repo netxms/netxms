@@ -39,6 +39,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class InterfacePolling extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private Spinner pollCount;
 	private Combo expectedState;
 	private Interface object;

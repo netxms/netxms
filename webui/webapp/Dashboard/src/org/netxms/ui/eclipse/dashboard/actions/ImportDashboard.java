@@ -164,7 +164,7 @@ public class ImportDashboard implements IObjectActionDelegate
 					
 					NXCObjectModificationData md = new NXCObjectModificationData(objectId);
 					md.setColumnCount(getNodeValueAsInt(root, "columns", 1));
-					md.setDashboardOptions(getNodeValueAsInt(root, "options", 0));
+					md.setObjectFlags(getNodeValueAsInt(root, "options", 0));
 					md.setDashboardElements(dashboardElements);
 					session.modifyObject(md);
 				}

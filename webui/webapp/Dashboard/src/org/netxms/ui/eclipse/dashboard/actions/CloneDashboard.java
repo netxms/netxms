@@ -45,7 +45,7 @@ public class CloneDashboard implements IObjectActionDelegate
 					final NXCObjectModificationData md = new NXCObjectModificationData(newDashboardId);
 					md.setDashboardElements(sourceObject.getElements());
 					md.setColumnCount(sourceObject.getNumColumns());
-					md.setDashboardOptions(sourceObject.getOptions());
+					md.setObjectFlags(sourceObject.getOptions());
 
 					session.modifyObject(md);
 				}

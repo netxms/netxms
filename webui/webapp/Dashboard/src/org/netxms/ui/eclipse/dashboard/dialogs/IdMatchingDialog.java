@@ -58,6 +58,8 @@ import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
  */
 public class IdMatchingDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	public static final int COLUMN_SOURCE_ID = 0;
 	public static final int COLUMN_SOURCE_NAME = 1;
 	public static final int COLUMN_DESTINATION_ID = 2;
@@ -144,6 +146,8 @@ public class IdMatchingDialog extends Dialog
 	private void createActions()
 	{
 		actionMap = new Action("&Map to...", Activator.getImageDescriptor("icons/sync.gif")) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -169,6 +173,8 @@ public class IdMatchingDialog extends Dialog
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

@@ -208,7 +208,7 @@ public class NodePolling extends PropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		
 		md.setPollerNode(pollerNode.getObjectId());
-		md.setNodeFlags(collectNodeFlags());
+		md.setObjectFlags(collectNodeFlags());
 		md.setIfXTablePolicy(collectIfXTablePolicy());
 		
 		if (isApply)

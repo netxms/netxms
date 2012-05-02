@@ -47,9 +47,10 @@ public class AutoApply extends PropertyPage
 	private static final long serialVersionUID = 1L;
 
 	private Template object;
-	private Button checkboxEnable;
+	private Button checkboxEnableApply;
+	private Button checkboxEnableRemove;
 	private ScriptEditor filterSource;
-	private boolean initialApplyFlag;
+	private int initialFlags;
 	private String initialApplyFilter;
 
 	/* (non-Javadoc)
@@ -64,8 +65,8 @@ public class AutoApply extends PropertyPage
 		if (object == null)	// Paranoid check
 			return dialogArea;
 		
-		initialApplyFlag = object.isAutoApplyEnabled();
-		initialApplyFilter = new String(object.getAutoApplyFilter());
+		initialFlags = object.getFlags();
+		initialApplyFilter = object.getAutoApplyFilter();
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -74,10 +75,10 @@ public class AutoApply extends PropertyPage
       dialogArea.setLayout(layout);
 
       // Enable/disable check box
-      checkboxEnable = new Button(dialogArea, SWT.CHECK);
-      checkboxEnable.setText("Apply this template automatically to nodes selected by filter");
-      checkboxEnable.setSelection(object.isAutoApplyEnabled());
-      checkboxEnable.addSelectionListener(new SelectionListener() {
+      checkboxEnableApply = new Button(dialogArea, SWT.CHECK);
+      checkboxEnableApply.setText("Apply this template automatically to nodes selected by filter");
+      checkboxEnableApply.setSelection(object.isAutoApplyEnabled());
+      checkboxEnableApply.addSelectionListener(new SelectionListener() {
       	private static final long serialVersionUID = 1L;
 
 			@Override
@@ -89,17 +90,25 @@ public class AutoApply extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				if (checkboxEnable.getSelection())
+				if (checkboxEnableApply.getSelection())
 				{
 					filterSource.setEnabled(true);
 					filterSource.setFocus();
+					checkboxEnableRemove.setEnabled(true);
 				}
 				else
 				{
 					filterSource.setEnabled(false);
+					checkboxEnableRemove.setEnabled(false);
 				}
 			}
       });
+      
+      // Enable/disable check box
+      checkboxEnableRemove = new Button(dialogArea, SWT.CHECK);
+      checkboxEnableRemove.setText("Remove this template automatically when node no longer passes through filter");
+      checkboxEnableRemove.setSelection(object.isAutoRemoveEnabled());
+      checkboxEnableRemove.setEnabled(object.isAutoApplyEnabled());
       
       // Filtering script
       Label label = new Label(dialogArea, SWT.NONE);
@@ -132,27 +141,34 @@ public class AutoApply extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		final boolean isAutoApplyEnabled = checkboxEnable.getSelection();
-		if ((!isAutoApplyEnabled && !initialApplyFlag) ||
-		    (isAutoApplyEnabled && initialApplyFlag && initialApplyFilter.equals(filterSource.getText())))
+		int flags = object.getFlags();
+		if (checkboxEnableApply.getSelection())
+			flags |= Template.TF_AUTO_APPLY;
+		else
+			flags &= ~Template.TF_AUTO_APPLY;
+		if (checkboxEnableRemove.getSelection())
+			flags |= Template.TF_AUTO_REMOVE;
+		else
+			flags &= ~Template.TF_AUTO_REMOVE;
+			
+		if ((flags == initialFlags) && initialApplyFilter.equals(filterSource.getText()))
 			return;		// Nothing to apply
 		
 		if (isApply)
 			setValid(false);
 		
-		final String newApplyFilter = new String(filterSource.getText());
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		md.setAutoApplyEnabled(isAutoApplyEnabled);
-		md.setAutoApplyFilter(newApplyFilter);
+		md.setAutoBindFilter(filterSource.getText());
+		md.setObjectFlags(flags);
 		
 		new ConsoleJob("Update auto-apply filter", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
-				initialApplyFlag = isAutoApplyEnabled;
-				initialApplyFilter = newApplyFilter;
+				initialFlags = md.getObjectFlags();
+				initialApplyFilter = md.getAutoBindFilter();
 			}
 
 			@Override
