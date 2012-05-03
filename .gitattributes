@@ -2225,6 +2225,7 @@ webui/webapp/Core/icons/copy.gif -text
 webui/webapp/Core/icons/cut.gif -text
 webui/webapp/Core/icons/delete_obj.gif -text
 webui/webapp/Core/icons/edit.png -text
+webui/webapp/Core/icons/empty.png -text
 webui/webapp/Core/icons/execute.gif -text
 webui/webapp/Core/icons/expand.png -text
 webui/webapp/Core/icons/expandall.png -text
@@ -3147,6 +3148,7 @@ webui/webapp/ServerConfig/icons/server_config.png -text
 webui/webapp/ServerConfig/icons/syslog_cfg.gif -text
 webui/webapp/ServerConfig/plugin.xml -text
 webui/webapp/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/OpenSyslogParserConfig.java -text
+webui/webapp/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/SelectSnmpTrapDialog.java -text
 webui/webapp/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/SyslogParserConfigurator.java -text
 webui/webapp/ServerJobManager/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/ServerJobManager/META-INF/MANIFEST.MF -text
