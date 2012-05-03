@@ -49,7 +49,7 @@ public class AlarmNotifier
 	/**
 	 * Initialize alarm notifier
 	 */
-	public static void init()
+	public static void init(Session session)
 	{
 		listener = new NXCListener() {
 			@Override
@@ -60,7 +60,6 @@ public class AlarmNotifier
 					processNewAlarm((Alarm)n.getObject());
 			}
 		};
-		Session session = ConsoleSharedData.getSession();
 		if (session != null)
 			session.addListener(listener);
 	}
