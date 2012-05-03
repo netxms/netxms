@@ -871,14 +871,17 @@ src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmL
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmNotifier.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/LoginListener.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/Messages.java -text
+src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/PreferenceInitializer.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/AcknowledgeAlarm.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/OpenAlarmBrowser.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/TerminateAlarm.java -text
+src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/dialogs/AlarmReminderDialog.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/dialogs/EditCommentDialog.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages.properties -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages_es.properties -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages_zh_CN.properties -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/objecttabs/AlarmTab.java -text
+src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/preferencepages/Alarms.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmBrowser.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmComments.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmCommentsEditor.java -text

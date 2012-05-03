@@ -92,5 +92,19 @@
             class="org.netxms.ui.eclipse.alarmviewer.LoginListener">
       </loginlistener>
    </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.netxms.ui.eclipse.alarmviewer.PreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="org.netxms.ui.eclipse.alarmviewer.preferencepages.Alarms"
+            id="org.netxms.ui.eclipse.alarmviewer.preferencepages.Alarms"
+            name="Alarms">
+      </page>
+   </extension>
 
 </plugin>

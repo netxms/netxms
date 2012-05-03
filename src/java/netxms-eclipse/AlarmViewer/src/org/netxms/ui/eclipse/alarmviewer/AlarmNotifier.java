@@ -18,10 +18,14 @@
  */
 package org.netxms.ui.eclipse.alarmviewer;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -35,6 +39,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.alarmviewer.dialogs.AlarmReminderDialog;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -45,23 +50,90 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class AlarmNotifier
 {
 	private static NXCListener listener = null;
+	private static Map<Long, Integer> alarmStates = new HashMap<Long, Integer>();
+	private static int outstandingAlarms = 0;
+	private static long lastReminderTime = 0;
 	
 	/**
 	 * Initialize alarm notifier
 	 */
-	public static void init(Session session)
+	public static void init(NXCSession session)
 	{
+		lastReminderTime = System.currentTimeMillis();
+		
+		try
+		{
+			Map<Long, Alarm> alarms = session.getAlarms();
+			for(Alarm a : alarms.values())
+			{
+				alarmStates.put(a.getId(), a.getState());
+				if (a.getState() == Alarm.STATE_OUTSTANDING)
+					outstandingAlarms++;
+			}
+		}
+		catch(Exception e)
+		{
+		}
+		
 		listener = new NXCListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
 				if ((n.getCode() == NXCNotification.NEW_ALARM) ||
 				    (n.getCode() == NXCNotification.ALARM_CHANGED))
+				{
 					processNewAlarm((Alarm)n.getObject());
+				}
+				else if ((n.getCode() == NXCNotification.ALARM_TERMINATED) ||
+				         (n.getCode() == NXCNotification.ALARM_DELETED))
+				{
+					Integer state = alarmStates.get(((Alarm)n.getObject()).getId());
+					if (state != null)
+					{
+						if (state == Alarm.STATE_OUTSTANDING)
+							outstandingAlarms--;
+						alarmStates.remove(((Alarm)n.getObject()).getId());
+					}
+				}
 			}
 		};
-		if (session != null)
-			session.addListener(listener);
+		session.addListener(listener);
+		
+		Thread thread = new Thread(new Runnable() {
+			@Override
+			public void run()
+			{
+				while(true)
+				{
+					try
+					{
+						Thread.sleep(10000);
+					}
+					catch(InterruptedException e)
+					{
+					}
+					
+					IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+					long currTime = System.currentTimeMillis();
+					if (ps.getBoolean("OUTSTANDING_ALARMS_REMINDER") && 
+							(outstandingAlarms > 0) && 
+							(lastReminderTime + 300000 <= currTime))
+					{
+						Display.getDefault().syncExec(new Runnable() {
+							@Override
+							public void run()
+							{
+								AlarmReminderDialog dlg = new AlarmReminderDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
+								dlg.open();
+							}
+						});
+						lastReminderTime = currTime;
+					}
+				}
+			}
+		}, "AlarmReminderThread");
+		thread.setDaemon(true);
+		thread.start();
 	}
 	
 	/**
@@ -79,7 +151,22 @@ public class AlarmNotifier
 	 */
 	private static void processNewAlarm(final Alarm alarm)
 	{
+		Integer state = alarmStates.get(alarm.getId());
+		if (state != null)
+		{
+			if (state == Alarm.STATE_OUTSTANDING)
+				outstandingAlarms--;
+		}
+		alarmStates.put(alarm.getId(), alarm.getState());
+		
 		if (alarm.getState() != Alarm.STATE_OUTSTANDING)
+			return;
+
+		if (outstandingAlarms == 0)
+			lastReminderTime = System.currentTimeMillis();
+		outstandingAlarms++;
+		
+		if (!Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_POPUPS"))
 			return;
 		
 		final TrayItem trayIcon = ConsoleSharedData.getTrayIcon();

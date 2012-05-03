@@ -30,6 +30,9 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -175,7 +178,6 @@ public class AlarmList extends Composite
 			}
 		});
 		
-		/*
 		final Runnable blinkTimer = new Runnable() {
 			@Override
 			public void run()
@@ -199,8 +201,23 @@ public class AlarmList extends Composite
 				getDisplay().timerExec(500, this);
 			}
 		};
-		getDisplay().timerExec(500, blinkTimer);
-		*/
+		
+		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+		if (ps.getBoolean("BLINK_OUTSTANDING_ALARMS"))
+			getDisplay().timerExec(500, blinkTimer);
+		ps.addPropertyChangeListener(new IPropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent event)
+			{
+				if (event.getProperty().equals("BLINK_OUTSTANDING_ALARMS"))
+				{
+					if (ps.getBoolean("BLINK_OUTSTANDING_ALARMS"))
+						getDisplay().timerExec(500, blinkTimer);
+					else
+						getDisplay().timerExec(-1, blinkTimer);
+				}
+			}
+		});
 	}
 	
 	/**
@@ -411,5 +428,13 @@ public class AlarmList extends Composite
 		{
 			MessageDialog.openError(getShell(), "Error", "Unable to open alarm comments view: " + e.getLocalizedMessage());
 		}
+	}
+	
+	/**
+	 * @param filter
+	 */
+	public void setStateFilter(int filter)
+	{
+		alarmFilter.setStateFilter(filter);
 	}
 }

@@ -31,7 +31,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class AlarmListFilter extends ViewerFilter
 {
-	private long rootObject;
+	private long rootObject = 0;
+	private int stateFilter = -1;
 	
 	/**
 	 * 
@@ -47,6 +48,9 @@ public class AlarmListFilter extends ViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
+		if ((stateFilter != -1) && (((Alarm)element).getState() != stateFilter))
+			return false;
+				
 		if ((rootObject == 0) || (rootObject == ((Alarm)element).getSourceObjectId()))
 			return true;	// No filtering by object ID or root object is a source
 		
@@ -62,5 +66,13 @@ public class AlarmListFilter extends ViewerFilter
 	public final void setRootObject(long rootObject)
 	{
 		this.rootObject = rootObject;
+	}
+
+	/**
+	 * @param stateFilter the stateFilter to set
+	 */
+	public void setStateFilter(int stateFilter)
+	{
+		this.stateFilter = stateFilter;
 	}
 }
