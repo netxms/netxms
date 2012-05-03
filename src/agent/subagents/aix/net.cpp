@@ -141,7 +141,7 @@ LONG H_NetInterfaceInfo(const char *param, const char *arg, char *value)
 		}
 		if (i < s_ifaceDataSize)
 		{
-			switch((long)arg)
+			switch(CAST_FROM_POINTER(arg, int))
 			{
 				case IF_INFO_DESCRIPTION:
 					ret_string(value, s_ifaceData[i].description);
@@ -309,7 +309,7 @@ retry_ifconf:
 // Handler for Net.Interface.AdminStatus parameter
 //
 
-LONG H_NetIfAdminStatus(const char *param, const char *arg, char *value)
+LONG H_NetInterfaceStatus(const char *param, const char *arg, char *value)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char ifName[IF_NAMESIZE], *eptr;
@@ -328,6 +328,20 @@ LONG H_NetIfAdminStatus(const char *param, const char *arg, char *value)
 		}
 	}
 
+	int requestedFlag = 0;
+	switch(CAST_FROM_POINTER(arg, int))
+	{
+		case IF_INFO_ADMIN_STATUS:
+			requestedFlag = IFF_UP;
+			break;
+		case IF_INFO_OPER_STATUS:
+			requestedFlag = IFF_RUNNING;
+			break;
+		default:
+			AgentWriteDebugLog(7, "AIX: internal error in H_NetIfterfaceStatus (invalid flag requested)");
+			return SYSINFO_RC_ERROR;
+	}
+
 	int nSocket = socket(AF_INET, SOCK_DGRAM, 0);
 	if (nSocket > 0)
 	{
@@ -338,7 +352,7 @@ LONG H_NetIfAdminStatus(const char *param, const char *arg, char *value)
 		nx_strncpy(ifr.ifr_name, ifName, sizeof(ifr.ifr_name));
 		if (ioctl(nSocket, SIOCGIFFLAGS, (caddr_t)&ifr) >= 0)
 		{
-			if ((ifr.ifr_flags & IFF_UP) == IFF_UP)
+			if ((ifr.ifr_flags & requestedFlag) == requestedFlag)
 			{
 				// enabled
 				ret_int(value, 1);

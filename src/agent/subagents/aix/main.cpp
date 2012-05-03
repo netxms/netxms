@@ -36,7 +36,7 @@ LONG H_IOStats(const char *cmd, const char *arg, char *value);
 LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value);
 LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue);
 LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue);
-LONG H_NetIfAdminStatus(const char *param, const char *arg, char *value);
+LONG H_NetInterfaceStatus(const char *param, const char *arg, char *value);
 LONG H_NetInterfaceInfo(const char *param, const char *arg, char *value);
 LONG H_NetInterfaceList(const char *pszParam, const char *pArg, StringList *pValue);
 LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue);
@@ -122,14 +122,14 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "FileSystem.Used(*)", H_DiskInfo, (char *)DISK_USED, DCI_DT_UINT64, DCIDESC_FS_USED },
    { "FileSystem.UsedPerc(*)", H_DiskInfo, (char *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
 
-	{ "Net.Interface.AdminStatus(*)", H_NetIfAdminStatus, (char *)IF_INFO_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
+	{ "Net.Interface.AdminStatus(*)", H_NetInterfaceStatus, (char *)IF_INFO_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
 	{ "Net.Interface.BytesIn(*)", H_NetInterfaceInfo, (char *)IF_INFO_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
 	{ "Net.Interface.BytesOut(*)", H_NetInterfaceInfo, (char *)IF_INFO_BYTES_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
 	{ "Net.Interface.Description(*)", H_NetInterfaceInfo, (char *)IF_INFO_DESCRIPTION, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
 	{ "Net.Interface.InErrors(*)", H_NetInterfaceInfo, (char *)IF_INFO_IN_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_INERRORS },
-//	{ "Net.Interface.Link(*)", H_NetIfInfo, (char *)IF_INFO_OPER_STATUS, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+	{ "Net.Interface.Link(*)", H_NetInterfaceStatus, (char *)IF_INFO_OPER_STATUS, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+	{ "Net.Interface.OperStatus(*)", H_NetInterfaceStatus, (char *)IF_INFO_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
 	{ "Net.Interface.MTU(*)", H_NetInterfaceInfo, (char *)IF_INFO_MTU, DCI_DT_INT, DCIDESC_NET_INTERFACE_MTU },
-//	{ "Net.Interface.OperStatus(*)", H_NetIfInfo, (char *)IF_INFO_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
 	{ "Net.Interface.OutErrors(*)", H_NetInterfaceInfo, (char *)IF_INFO_OUT_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
 	{ "Net.Interface.PacketsIn(*)", H_NetInterfaceInfo, (char *)IF_INFO_PACKETS_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
 	{ "Net.Interface.PacketsOut(*)", H_NetInterfaceInfo, (char *)IF_INFO_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
