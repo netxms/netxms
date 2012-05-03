@@ -248,9 +248,6 @@ BOOL SQLBatch(const TCHAR *pszBatch)
       if (!_tcscmp(pszQuery, _T("<END>")))
          break;
 
-		if (g_bTrace)
-			ShowQuery(pszQuery);
-
 		if (_stscanf(pszQuery, _T("ALTER TABLE %128s DROP COLUMN %128s"), table, column) == 2)
 		{
 			if (!SQLDropColumn(table, column))
@@ -265,6 +262,9 @@ BOOL SQLBatch(const TCHAR *pszBatch)
 		}
 		else
 		{
+			if (g_bTrace)
+				ShowQuery(pszQuery);
+
 			if (!DBQueryEx(g_hCoreDB, pszQuery, errorText))
 			{
 				WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
