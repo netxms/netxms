@@ -14,7 +14,7 @@ Filename: {app}\WebUI\prunsrv.exe; Parameters: "//DS//nxWebUI"; WorkingDir: "{ap
 var
   DetailsPage : TInputQueryWizardPage;
 
-procedure InitializeWizard;
+Procedure InitializeWizard;
 begin
   DetailsPage := CreateInputQueryPage(wpSelectComponents,
       'Server Settings',
@@ -24,7 +24,7 @@ begin
   DetailsPage.Values[0] := '8787';
 end;
 
-procedure GetJettyPort(Param: String): String;
+Function GetJettyPort(Param: String): String;
 begin
   result := DetailsPage.Values[0];
 end;
@@ -40,7 +40,7 @@ begin
     strJvmArgument := strJvmArgument + ExpandConstant(' --Jvm="{app}\bin\jre\bin\server\jvm.dll"');
   end;
 
-  strJvmArgument := strJvmArgument + ' ++JvmOptions=-Djetty.port=' + GetJettyPort();
+  strJvmArgument := strJvmArgument + ' ++JvmOptions=-Djetty.port=' + GetJettyPort('');
 
   Result := strJvmArgument;
 
