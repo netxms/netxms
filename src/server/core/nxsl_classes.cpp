@@ -508,7 +508,8 @@ NXSL_Value *NXSL_SNMPTransportClass::getAttr(NXSL_Object *object, const TCHAR *a
 	t = (SNMP_Transport*)object->getData();
 	if (!_tcscmp(attr, _T("snmpVersion")))
 	{
-		value = new NXSL_Value((LONG)t->getSnmpVersion());
+		const TCHAR *versions[] = { _T("1"), _T("2c"), _T("3") };
+		value = new NXSL_Value((const TCHAR*)versions[t->getSnmpVersion()]);
 	}
 
 	return value;
