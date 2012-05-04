@@ -11,6 +11,24 @@ Filename: {app}\WebUI\prunsrv.exe; Parameters: "//SS//nxWebUI"; WorkingDir: "{ap
 Filename: {app}\WebUI\prunsrv.exe; Parameters: "//DS//nxWebUI"; WorkingDir: "{app}\WebUI"; StatusMsg: "Removing WebUI service..."; Flags: runhidden
 
 [Code]
+var
+  DetailsPage : TInputQueryWizardPage;
+
+procedure InitializeWizard;
+begin
+  DetailsPage := CreateInputQueryPage(wpSelectComponents,
+      'Server Settings',
+      'Web interface server server settings',
+      'Please check default settings and adjust them if required');
+  DetailsPage.Add('Port:', False);
+  DetailsPage.Values[0] := '8787';
+end;
+
+procedure GetJettyPort(Param: String): String;
+begin
+  result := DetailsPage.Values[0];
+end;
+
 Function GenerateInstallParameters(Param: String): String;
 var
   strJvmArgument: String;
@@ -19,8 +37,11 @@ begin
 
   if IsComponentSelected('jre') then
   begin
-    strJvmArgument := strJvmArgument + ExpandConstant(' --Jvm="{app}\bin\jre\bin\server\jvm.dll"')
+    strJvmArgument := strJvmArgument + ExpandConstant(' --Jvm="{app}\bin\jre\bin\server\jvm.dll"');
   end;
+
+  strJvmArgument := strJvmArgument + ' ++JvmOptions=-Djetty.port=' + GetJettyPort();
+
   Result := strJvmArgument;
 
   (* MsgBox(strJvmArgument, mbInformation, MB_OK); *)
