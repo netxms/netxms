@@ -37,6 +37,7 @@ DISABLE_ICONV="no"
 DISABLE_ENCRYPTION="no"
 ENABLE_DEBUG="no"
 STATIC_BUILD="no"
+ALL_STATIC="no"
 DBDRIVER_SELECTED="no"
 USE_PTH="no"
 BUILD_SERVER="no"
@@ -47,6 +48,7 @@ BUILD_STATIC_AGENT="no"
 NEED_ZLIB="no"
 MODULES="libnetxms tools install"
 STATIC_SUBAGENT_LIST=""
+PROPOSED_STATIC_SUBAGENTS="default"
 SUBAGENT_DIRS=""
 SUBAGENT_LIBS=""
 SERVER_TOOLS=""
@@ -146,6 +148,18 @@ AC_ARG_WITH(internal-getopt,
 [AS_HELP_STRING(--with-internal-getopt,force use of bundled getopt)],
 [
 	FORCE_INTERNAL_GETOPT="yes"
+])
+
+AC_ARG_WITH(all-static,
+[AS_HELP_STRING(--with-all-static,use -all-static flag for linking executables)],
+[
+	ALL_STATIC="yes"
+])
+
+AC_ARG_WITH(static-subagents,
+[AS_HELP_STRING(--with-static-subagents=list,define list of static subagents (separated by spaces))],
+[
+	PROPOSED_STATIC_SUBAGENTS="$withval"
 ])
 
 AC_ARG_WITH(sqlite,
@@ -360,43 +374,47 @@ if test $? = 0; then
 	MODULES="$MODULES libnxlp agent"
 	DISABLE_ICONV="yes"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
-	STATIC_SUBAGENT_LIST="ecs logwatch ping portcheck ups"
-	SUBAGENT_LIBS="../subagents/ecs/libnsm_ecs.la ../subagents/logwatch/libnsm_logwatch.la ../subagents/ping/libnsm_ping.la ../subagents/portCheck/libnsm_portCheck.la ../subagents/ups/libnsm_ups.la"
+	if test "x$PROPOSED_STATIC_SUBAGENTS" = "xdefault"; then
+		STATIC_SUBAGENT_LIST="ecs logwatch ping portcheck ups"
+	else
+		STATIC_SUBAGENT_LIST="$PROPOSED_STATIC_SUBAGENTS"
+	fi
+	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
 
 	case "$PLATFORM" in
 		Linux)
 			SUBAGENT_DIRS="linux"
-			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/linux/libnsm_linux.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/linux/linux.la"
 			STATIC_SUBAGENT_LIST="linux $STATIC_SUBAGENT_LIST"
 			;;
 		FreeBSD)
 			SUBAGENT_DIRS="freebsd"
-			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/freebsd/libnsm_freebsd.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/freebsd/freebsd.la"
 			STATIC_SUBAGENT_LIST="freebsd $STATIC_SUBAGENT_LIST"
 			;;
 		OpenBSD)
 			SUBAGENT_DIRS="openbsd"
-			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/openbsd/libnsm_openbsd.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/openbsd/openbsd.la"
 			STATIC_SUBAGENT_LIST="openbsd $STATIC_SUBAGENT_LIST"
 			;;
 		NetBSD)
 			SUBAGENT_DIRS="netbsd"
-			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/netbsd/libnsm_netbsd.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/netbsd/netbsd.la"
 			STATIC_SUBAGENT_LIST="netbsd $STATIC_SUBAGENT_LIST"
 			;;
 		SunOS)
 			SUBAGENT_DIRS="sunos"
-			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/sunos/libnsm_sunos.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/sunos/sunos.la"
 			STATIC_SUBAGENT_LIST="sunos $STATIC_SUBAGENT_LIST"
 			;;
 		AIX)
 			SUBAGENT_DIRS="aix"
-			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/aix/libnsm_aix.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/aix/aix.la"
 			STATIC_SUBAGENT_LIST="aix $STATIC_SUBAGENT_LIST"
 			;;
 		HP-UX)
 			SUBAGENT_DIRS="hpux"
-			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/hpux/libnsm_hpux.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/hpux/hpux.la"
 			STATIC_SUBAGENT_LIST="hpux $STATIC_SUBAGENT_LIST"
 			;;
 		*)
@@ -419,7 +437,7 @@ if test $? = 0; then
 	LDFLAGS="$LDFLAGS -all-static"
 	STATIC_SUBAGENT_LIST="ecs ipso logwatch ping portcheck ups"
 	SUBAGENT_DIRS="ipso"
-	SUBAGENT_LIBS="../subagents/ecs/libnsm_ecs.la ../subagents/ipso/libnsm_ipso.la ../subagents/logwatch/libnsm_logwatch.la ../subagents/ping/libnsm_ping.la ../subagents/portCheck/libnsm_portCheck.la ../subagents/ups/libnsm_ups.la"
+	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/ipso/ipso.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
 fi
 
 check_substr "$COMPONENTS" "snmp"
@@ -1907,6 +1925,8 @@ LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $LDFLAGS_SUFFIX"
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$NEED_ZLIB/$HAVE_ZLIB" = "yes/no"])
+AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
+AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 
 
 #--------------------------------------------------------------------

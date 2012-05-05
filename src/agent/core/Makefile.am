@@ -11,6 +11,13 @@ nxagentd_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/db/lib
 else
 nxagentd_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/db/libnxdb/libnxdb.la @SUBAGENT_LIBS@
 endif
+if STATIC_BUILD
+if ALL_STATIC
+nxagentd_LDFLAGS = -all-static
+else
+nxagentd_LDFLAGS = -static
+endif
+endif
 AM_CPPFLAGS = $(all_includes) -DPREFIX=\"@prefix@\"
 CLEANFILES = messages.c messages.h static_subagents.cpp
 

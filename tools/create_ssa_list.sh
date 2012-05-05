@@ -12,13 +12,13 @@ extern "C"
 EOT
 
 for sa in $LIST; do
-   echo "   BOOL NxSubAgentRegister_$sa(NETXMS_SUBAGENT_INFO **, TCHAR *);"
+   echo "   BOOL NxSubAgentRegister_$sa(NETXMS_SUBAGENT_INFO **, Config *);"
 done
 
 cat << EOT
 }
 
-void InitStaticSubagents(void)
+void InitStaticSubagents()
 {
 EOT
 

@@ -41,9 +41,9 @@ static SUBAGENT *m_pSubAgentList = NULL;
 // Note: pszEntryPoint ignored on all pltforms except NetWare
 //
 
-BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
+BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
                   BOOL (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *),
-                  TCHAR *pszEntryPoint)
+                  const TCHAR *pszEntryPoint)
 {
    NETXMS_SUBAGENT_INFO *pInfo;
    BOOL bSuccess = FALSE, bInitOK;

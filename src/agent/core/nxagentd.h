@@ -392,9 +392,9 @@ DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue);
 void GetParameterList(CSCPMessage *pMsg);
 BOOL LoadSubAgent(TCHAR *szModuleName);
 void UnloadAllSubAgents();
-BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
-                  BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *),
-                  TCHAR *pszEntryPoint);
+BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
+                  BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, Config *),
+                  const TCHAR *pszEntryPoint);
 BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session);
 BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg, 
                LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
