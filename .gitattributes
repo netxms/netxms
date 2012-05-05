@@ -1321,6 +1321,7 @@ src/java/netxms-eclipse/OSM/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/OSM/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/OSM/build.properties -text
 src/java/netxms-eclipse/OSM/icons/border_tile.png -text
+src/java/netxms-eclipse/OSM/icons/loading_tile.png -text
 src/java/netxms-eclipse/OSM/icons/map.png -text
 src/java/netxms-eclipse/OSM/icons/missing_tile.png -text
 src/java/netxms-eclipse/OSM/plugin.xml -text
@@ -1334,6 +1335,7 @@ src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/Area.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/MapAccessor.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/MapLoader.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/QuadTree.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/Tile.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/TileSet.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/views/AbstractGeolocationView.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/views/LocationMap.java -text

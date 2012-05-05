@@ -18,28 +18,33 @@
  */
 package org.netxms.ui.eclipse.osm.tools;
 
-import org.eclipse.swt.graphics.Image;
-
 /**
  * Tile set
  */
 public class TileSet
 {
-	public Image[][] tiles;
+	public Tile[][] tiles;
 	public int xOffset;
 	public int yOffset;
+	public int zoom;
+	public int missingTiles;
 	
 	/**
 	 * @param tiles
 	 * @param xOffset
 	 * @param yOffset
 	 */
-	public TileSet(Image[][] tiles, int xOffset, int yOffset)
+	public TileSet(Tile[][] tiles, int xOffset, int yOffset, int zoom)
 	{
-		super();
 		this.tiles = tiles;
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
+		this.zoom = zoom;
+		missingTiles = 0;
+		for(int i = 0; i < tiles.length; i++)
+			for(int j = 0; j < tiles[i].length; j++)
+				if (!tiles[i][j].isLoaded())
+					missingTiles++;
 	}
 	
 	/**
@@ -51,8 +56,7 @@ public class TileSet
 		{
 			for(int i = 0; i < tiles.length; i++)
 				for(int j = 0; j < tiles[i].length; j++)
-					if (!MapLoader.isInternalImage(tiles[i][j]))
-							tiles[i][j].dispose();
+					tiles[i][j].dispose();
 		}
 	}
 }

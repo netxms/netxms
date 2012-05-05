@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.osm.widgets;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -58,10 +56,10 @@ import org.netxms.ui.eclipse.osm.GeoLocationCacheListener;
 import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
+import org.netxms.ui.eclipse.osm.tools.Tile;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
 import org.netxms.ui.eclipse.shared.SharedColors;
-import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
  * This widget shows map retrieved via OpenStreetMap Static Map API
@@ -93,17 +91,17 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private Area coverage = null;
 	private List<GenericObject> objects = new ArrayList<GenericObject>();
 	private MapAccessor accessor;
+	private MapLoader mapLoader;
 	private IViewPart viewPart = null;
-	private AnimatedImage waitingImage = null;
 	private Point currentPoint;
 	private Point dragStartPoint = null;
 	private Point selectionStartPoint = null;
 	private Point selectionEndPoint = null; 
-	private boolean loading = false;
 	private Set<GeoMapListener> mapListeners = new HashSet<GeoMapListener>(0);
 	private String title = null;
 	private int offsetX;
 	private int offsetY;
+	private TileSet currentTileSet = null;
 
 	/**
 	 * @param parent
@@ -114,6 +112,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		super(parent, style | SWT.NO_BACKGROUND);
 
 		labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
+		mapLoader = new MapLoader(getDisplay());
 
 		setBackground(MAP_BACKGROUND);
 		addPaintListener(this);
@@ -136,12 +135,9 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			{
 				getDisplay().timerExec(1000, timer);
 
-				Rectangle rect = getClientArea();
-				Point size = waitingImage.getSize();
-				waitingImage.setLocation(rect.x + rect.width / 2 - size.x, rect.y + rect.height / 2 - size.y);
-				
 				if (bufferImage != null)
 					bufferImage.dispose();
+				Rectangle rect = getClientArea();
 				bufferImage = new Image(getDisplay(), rect.width, rect.height);
 			}
 		});
@@ -156,15 +152,13 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 					bufferImage.dispose();
 				if (currentImage != null)
 					currentImage.dispose();
+				mapLoader.dispose();
 			}
 		});
 
 		addMouseListener(this);
 		addMouseMoveListener(this);
 		addMouseWheelListener(this);
-
-		waitingImage = new AnimatedImage(this, SWT.NONE);
-		waitingImage.setVisible(false);
 
 		GeoLocationCache.getInstance().addListener(this);
 	}
@@ -241,18 +235,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			currentImage.dispose();
 		currentImage = null;
 		
-		loading = true;
-
-		redraw();
-		waitingImage.setVisible(true);
-		try
-		{
-			waitingImage.setImage(new URL("platform:/plugin/org.netxms.ui.eclipse.library/icons/loading.gif"));
-		}
-		catch(MalformedURLException e)
-		{
-		}
-
 		if (!accessor.isValid())
 			return;
 
@@ -262,28 +244,69 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final TileSet tiles = MapLoader.getAllTiles(mapSize, centerPoint, MapLoader.CENTER, accessor.getZoom());
+				final TileSet tiles = mapLoader.getAllTiles(mapSize, centerPoint, MapLoader.CENTER, accessor.getZoom(), true);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
+						currentTileSet = null;
 						if (tiles != null)
 						{
 							drawTiles(tiles);
-							tiles.dispose();
+							if (tiles.missingTiles > 0)
+							{
+								currentTileSet = tiles;
+								loadMissingTiles(tiles);
+							}
+							else
+							{
+								tiles.dispose();
+							}
 						}
 						
 						Point mapSize = new Point(currentImage.getImageData().width, currentImage.getImageData().height);
 						coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, accessor.getZoom());
 						objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
-						waitingImage.setImage(null);
-						waitingImage.setVisible(false);
 						GeoMapViewer.this.redraw();
-						loading = false;
 					}
 				});
 			}
 
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot download map image";
+			}
+		};
+		job.setUser(false);
+		job.start();
+	}
+	
+	/**
+	 * Load missing tiles in tile set
+	 * 
+	 * @param tiles
+	 */
+	private void loadMissingTiles(final TileSet tiles)
+	{
+		ConsoleJob job = new ConsoleJob("Load missing map tiles", viewPart, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				mapLoader.loadMissingTiles(tiles, new Runnable() {
+					@Override
+					public void run()
+					{
+						if (!GeoMapViewer.this.isDisposed() && (currentTileSet == tiles))
+						{
+							drawTiles(tiles);
+							GeoMapViewer.this.redraw();
+						}
+						tiles.dispose();
+					}
+				});
+			}
+			
 			@Override
 			protected String getErrorMessage()
 			{
@@ -308,7 +331,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			return;
 		}
 
-		final Image[][] tiles = tileSet.tiles;
+		final Tile[][] tiles = tileSet.tiles;
 
 		Point size = getSize();
 		currentImage = new Image(getDisplay(), size.x, size.y);
@@ -320,7 +343,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		{
 			for(int j = 0; j < tiles[i].length; j++)
 			{
-				gc.drawImage(tiles[i][j], x, y);
+				gc.drawImage(tiles[i][j].getImage(), x, y);
 				x += 256;
 				if (x >= size.x)
 				{
@@ -359,7 +382,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 
 		// Draw objects and decorations if user is not dragging map
 		// and map is not currently loading
-		if ((dragStartPoint == null) && !loading)
+		if (dragStartPoint == null)
 		{
 			gc.setAntialias(SWT.ON);
 			gc.setTextAntialias(SWT.ON);
@@ -522,9 +545,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	@Override
 	public void mouseScrolled(MouseEvent event)
 	{
-		if (loading)
-			return;
-		
 		int zoom = accessor.getZoom();
 		if (event.count > 0)
 		{
@@ -559,7 +579,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	@Override
 	public void mouseDown(MouseEvent e)
 	{
-		if ((e.button == 1) && !loading) // left button, ignore if map is currently loading
+		if (e.button == 1) // left button, ignore if map is currently loading
 		{
 			if ((e.stateMask & SWT.SHIFT) != 0)
 			{

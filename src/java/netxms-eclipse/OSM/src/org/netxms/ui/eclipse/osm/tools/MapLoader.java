@@ -48,8 +48,22 @@ public class MapLoader
 	public static final int TOP_LEFT = GeoLocationCache.TOP_LEFT;
 	public static final int BOTTOM_RIGHT = GeoLocationCache.BOTTOM_RIGHT;
 	
-	private static Image missingTile = null; 
-	private static Image borderTile = null; 
+	private static String CACHE_MUTEX = "cache_mutex";
+
+	private Display display;
+	private Image missingTile = null; 
+	private Image loadingTile = null; 
+	private Image borderTile = null;
+	
+	/**
+	 * Create map loader
+	 * 
+	 * @param display
+	 */
+	public MapLoader(Display display)
+	{
+		this.display = display;
+	}
 	
 	/**
 	 * @param location
@@ -89,7 +103,7 @@ public class MapLoader
 	 * 
 	 * @return
 	 */
-	private static Image getMissingTileImage()
+	private Image getMissingTileImage()
 	{
 		if (missingTile == null)
 			missingTile = Activator.getImageDescriptor("icons/missing_tile.png").createImage();
@@ -97,11 +111,23 @@ public class MapLoader
 	}
 	
 	/**
+	 * get image for tile being loaded
+	 * 
+	 * @return
+	 */
+	private Image getLoadingTileImage()
+	{
+		if (loadingTile == null)
+			loadingTile = Activator.getImageDescriptor("icons/loading_tile.png").createImage();
+		return loadingTile;
+	}
+	
+	/**
 	 * get image for border tile (tile out of map boundaries)
 	 * 
 	 * @return
 	 */
-	private static Image getBorderTileImage()
+	private Image getBorderTileImage()
 	{
 		if (borderTile == null)
 			borderTile = Activator.getImageDescriptor("icons/border_tile.png").createImage();
@@ -114,7 +140,7 @@ public class MapLoader
 	 * @param y
 	 * @return
 	 */
-	private static Image loadTile(int zoom, int x, int y)
+	private Image loadTile(int zoom, int x, int y)
 	{
 		// check x and y for validity
 		int maxTileNum = (1 << zoom) - 1;
@@ -135,15 +161,18 @@ public class MapLoader
 		}
 		
 		final ImageDescriptor id = ImageDescriptor.createFromURL(url);
-		final Image image = id.createImage(false);
+		final Image image = id.createImage(false, display);
 		if (image != null)
 		{
 			// save to cache
-			File imageFile = buildCacheFileName(zoom, x, y);
-			imageFile.getParentFile().mkdirs();
-			ImageLoader imageLoader = new ImageLoader();
-			imageLoader.data = new ImageData[] { image.getImageData() };
-			imageLoader.save(imageFile.getAbsolutePath(), SWT.IMAGE_PNG);
+			synchronized(CACHE_MUTEX)
+			{
+				File imageFile = buildCacheFileName(zoom, x, y);
+				imageFile.getParentFile().mkdirs();
+				ImageLoader imageLoader = new ImageLoader();
+				imageLoader.data = new ImageData[] { image.getImageData() };
+				imageLoader.save(imageFile.getAbsolutePath(), SWT.IMAGE_PNG);
+			}
 		}
 		
 		return image;
@@ -186,14 +215,17 @@ public class MapLoader
 	 * @param y
 	 * @return
 	 */
-	private static Image loadTileFromCache(int zoom, int x, int y)
+	private Image loadTileFromCache(int zoom, int x, int y)
 	{
 		try
 		{
 			File imageFile = buildCacheFileName(zoom, x, y);
-			if (imageFile.canRead())
+			synchronized(CACHE_MUTEX)
 			{
-				return new Image(Display.getDefault(), imageFile.getAbsolutePath());
+				if (imageFile.canRead())
+				{
+					return new Image(display, imageFile.getAbsolutePath());
+				}
 			}
 			return null;
 		}
@@ -210,14 +242,21 @@ public class MapLoader
 	 * @param y
 	 * @return
 	 */
-	public static Image getTile(int zoom, int x, int y)
+	public Tile getTile(int zoom, int x, int y, boolean cachedOnly)
 	{
-		Image tile = loadTileFromCache(zoom, x, y);
-		if (tile == null)
+		// check x and y for validity
+		int maxTileNum = (1 << zoom) - 1;
+		if ((x < 0) || (y < 0) || (x > maxTileNum) || (y > maxTileNum))
+			return new Tile(x, y, getBorderTileImage(), true, true);
+		
+		Image tileImage = loadTileFromCache(zoom, x, y);
+		if (tileImage == null)
 		{
-			tile = loadTile(zoom, x, y);
+			if (cachedOnly)
+				return new Tile(x, y, getLoadingTileImage(), false, true);
+			tileImage = loadTile(zoom, x, y);
 		}
-		return (tile != null) ? tile : getMissingTileImage();
+		return (tileImage != null) ? new Tile(x, y, tileImage, true, false) : new Tile(x, y, getMissingTileImage(), true, true);
 	}
 	
 	/**
@@ -238,9 +277,10 @@ public class MapLoader
 	 * @param mapSize
 	 * @param basePoint
 	 * @param zoom
+	 * @param cachedOnly if true, only locally cached tiles will be returned (missing tiles will be replaced by placeholder image)
 	 * @return
 	 */
-	public static TileSet getAllTiles(Point mapSize, GeoLocation basePoint, int pointLocation, int zoom)
+	public TileSet getAllTiles(Point mapSize, GeoLocation basePoint, int pointLocation, int zoom, boolean cachedOnly)
 	{
 		if ((mapSize.x < 32) || (mapSize.y < 32))
 			return null;
@@ -249,14 +289,14 @@ public class MapLoader
 		Point bottomLeft = tileFromLocation(coverage.getxLow(), coverage.getyLow(), zoom);
 		Point topRight = tileFromLocation(coverage.getxHigh(), coverage.getyHigh(), zoom);
 		
-		Image[][] tiles = new Image[bottomLeft.y - topRight.y + 1][topRight.x - bottomLeft.x + 1];
+		Tile[][] tiles = new Tile[bottomLeft.y - topRight.y + 1][topRight.x - bottomLeft.x + 1];
 		
 		int x = bottomLeft.x;
 		int y = topRight.y;
 		int l = (bottomLeft.y - topRight.y + 1) * (topRight.x - bottomLeft.x + 1);
 		for(int i = 0; i < l; i++)
 		{
-			tiles[y - topRight.y][x - bottomLeft.x] = getTile(zoom, x, y);
+			tiles[y - topRight.y][x - bottomLeft.x] = getTile(zoom, x, y, cachedOnly);
 			x++;
 			if (x > topRight.x)
 			{
@@ -270,7 +310,31 @@ public class MapLoader
 		Point realTopLeft = GeoLocationCache.coordinateToDisplay(new GeoLocation(lat, lon), zoom);
 		Point reqTopLeft = GeoLocationCache.coordinateToDisplay(new GeoLocation(coverage.getxHigh(), coverage.getyLow()), zoom);
 		
-		return new TileSet(tiles, realTopLeft.x - reqTopLeft.x, realTopLeft.y - reqTopLeft.y);
+		return new TileSet(tiles, realTopLeft.x - reqTopLeft.x, realTopLeft.y - reqTopLeft.y, zoom);
+	}
+	
+	/**
+	 * Load missing tiles in tile set
+	 * 
+	 * @param tiles
+	 */
+	public void loadMissingTiles(TileSet tiles, Runnable completionHandler)
+	{
+		for(int i = 0; i < tiles.tiles.length; i++)
+			for(int j = 0; j < tiles.tiles[i].length; j++)
+			{
+				Tile tile = tiles.tiles[i][j];
+				if (!tile.isLoaded())
+				{
+					tile = getTile(tiles.zoom, tile.getX(), tile.getY(), false);
+					if (tile != null)
+					{
+						tiles.tiles[i][j] = tile;
+						tiles.missingTiles--;
+					}
+				}
+			}
+		display.asyncExec(completionHandler);
 	}
 	
 	/**
@@ -279,8 +343,21 @@ public class MapLoader
 	 * @param image
 	 * @return
 	 */
-	static boolean isInternalImage(Image image)
+	protected boolean isInternalImage(Image image)
 	{
-		return (image == missingTile) || (image == borderTile);
+		return (image == missingTile) || (image == borderTile) || (image == loadingTile);
+	}
+	
+	/**
+	 * Dispose map loader
+	 */
+	public void dispose()
+	{
+		if (loadingTile != null)
+			loadingTile.dispose();
+		if (missingTile != null)
+			missingTile.dispose();
+		if (borderTile != null)
+			borderTile.dispose();
 	}
 }
