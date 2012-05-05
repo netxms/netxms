@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,20 @@
  */
 package org.netxms.ui.eclipse.osm.widgets;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DragSource;
+import org.eclipse.swt.dnd.DragSourceEvent;
+import org.eclipse.swt.dnd.DragSourceListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -45,8 +50,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.eclipse.ui.presentations.PresentationUtil;
 import org.netxms.client.GeoLocation;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -57,16 +64,18 @@ import org.netxms.ui.eclipse.osm.GeoLocationCacheListener;
 import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
+import org.netxms.ui.eclipse.osm.tools.Tile;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
 import org.netxms.ui.eclipse.shared.SharedColors;
-import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
  * This widget shows map retrieved via OpenStreetMap Static Map API
  */
 public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCacheListener, MouseListener, MouseMoveListener
 {
+	private static final long serialVersionUID = 1L;
+
 	private static final Color MAP_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
 	private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 150, 240, 88);
 	private static final Color INFO_BLOCK_BORDER = new Color(Display.getCurrent(), 0, 0, 0);
@@ -87,22 +96,21 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private static final int DRAG_JITTER = 8;
 
 	private ILabelProvider labelProvider;
-	private Image currentImage = null;
-	private Image bufferImage = null;
 	private Area coverage = null;
 	private List<GenericObject> objects = new ArrayList<GenericObject>();
 	private MapAccessor accessor;
+	private MapLoader mapLoader;
 	private IViewPart viewPart = null;
-	private AnimatedImage waitingImage = null;
 	private Point currentPoint;
 	private Point dragStartPoint = null;
 	private Point selectionStartPoint = null;
 	private Point selectionEndPoint = null; 
-	private boolean loading = false;
 	private Set<GeoMapListener> mapListeners = new HashSet<GeoMapListener>(0);
 	private String title = null;
 	private int offsetX;
 	private int offsetY;
+	private TileSet currentTileSet = null;
+	private RAPDragTracker tracker;
 
 	/**
 	 * @param parent
@@ -110,15 +118,15 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 */
 	public GeoMapViewer(Composite parent, int style)
 	{
-		super(parent, style | SWT.NO_BACKGROUND);
+		super(parent, style | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
 
 		labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
+		mapLoader = new MapLoader(getDisplay());
 
 		setBackground(MAP_BACKGROUND);
 		addPaintListener(this);
 
-		final Runnable timer = new Runnable()
-		{
+		final Runnable timer = new Runnable() {
 			@Override
 			public void run()
 			{
@@ -130,40 +138,77 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		};
 
 		addListener(SWT.Resize, new Listener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void handleEvent(Event event)
 			{
 				getDisplay().timerExec(1000, timer);
-
-				Rectangle rect = getClientArea();
-				Point size = waitingImage.getSize();
-				waitingImage.setLocation(rect.x + rect.width / 2 - size.x, rect.y + rect.height / 2 - size.y);
-				
-				if (bufferImage != null)
-					bufferImage.dispose();
-				bufferImage = new Image(getDisplay(), rect.width, rect.height);
 			}
 		});
 
 		addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
 				labelProvider.dispose();
 				GeoLocationCache.getInstance().removeListener(GeoMapViewer.this);
-				if (bufferImage != null)
-					bufferImage.dispose();
-				if (currentImage != null)
-					currentImage.dispose();
+				mapLoader.dispose();
+				if (currentTileSet != null)
+				{
+					currentTileSet.dispose();
+					currentTileSet = null;
+				}
 			}
 		});
-
+		
 		addMouseListener(this);
-		//addMouseMoveListener(this);
-		//addMouseWheelListener(this);
 
-		waitingImage = new AnimatedImage(this, SWT.NONE);
-		waitingImage.setVisible(false);
+		/* the following code is a hack for adding
+		 * mouse drag support in RAP. Copied from draw2d
+		 * with slight modifications
+		 */
+		PresentationUtil.addDragListener(this, new Listener() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void handleEvent(Event event)
+			{
+				if (event.type == SWT.DragDetect) 
+				{
+					MouseEvent me = new MouseEvent(event);
+					me.stateMask = SWT.BUTTON1;
+					GeoMapViewer.this.mouseDown(me);
+				}			
+			}
+		});
+		DragSource dragSource = new DragSource(this, DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK);
+		final DragSourceListener listener = new DragSourceListener() {
+			private static final long serialVersionUID = 1L;
+
+			public void dragStart(DragSourceEvent event)
+			{
+				tracker = new RAPDragTracker(GeoMapViewer.this, GeoMapViewer.this);
+				tracker.open();
+			}
+
+			public void dragSetData(DragSourceEvent event)
+			{
+			}
+
+			public void dragFinished(DragSourceEvent event)
+			{
+				if (tracker != null)
+				{
+					tracker.close();
+					tracker = null;
+				}
+			}
+		};
+		dragSource.addDragListener(listener);
+		/* end of mouse drag hack */
 
 		GeoLocationCache.getInstance().addListener(this);
 	}
@@ -236,22 +281,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		accessor.setMapWidth(rect.width);
 		accessor.setMapHeight(rect.height);
 
-		if (currentImage != null)
-			currentImage.dispose();
-		currentImage = null;
-		
-		loading = true;
-
-		redraw();
-		waitingImage.setVisible(true);
-		try
-		{
-			waitingImage.setImage(new URL("platform:/plugin/org.netxms.ui.eclipse.library/icons/loading.gif"));
-		}
-		catch(MalformedURLException e)
-		{
-		}
-
 		if (!accessor.isValid())
 			return;
 
@@ -261,24 +290,22 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final TileSet tiles = MapLoader.getAllTiles(mapSize, centerPoint, MapLoader.CENTER, accessor.getZoom());
+				final TileSet tiles = mapLoader.getAllTiles(mapSize, centerPoint, MapLoader.CENTER, accessor.getZoom(), true);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						if (tiles != null)
-						{
-							drawTiles(tiles);
-							tiles.dispose();
-						}
+						if (currentTileSet != null)
+							currentTileSet.dispose();
+						currentTileSet = tiles;
+						if ((tiles != null) && (tiles.missingTiles > 0))
+							loadMissingTiles(tiles);
 						
-						Point mapSize = new Point(currentImage.getImageData().width, currentImage.getImageData().height);
+						Rectangle clientArea = getClientArea();
+						Point mapSize = new Point(clientArea.width, clientArea.height);
 						coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, accessor.getZoom());
 						objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
-						waitingImage.setImage(null);
-						waitingImage.setVisible(false);
 						GeoMapViewer.this.redraw();
-						loading = false;
 					}
 				});
 			}
@@ -292,27 +319,55 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		job.setUser(false);
 		job.start();
 	}
+	
+	/**
+	 * Load missing tiles in tile set
+	 * 
+	 * @param tiles
+	 */
+	private void loadMissingTiles(final TileSet tiles)
+	{
+		ConsoleJob job = new ConsoleJob("Load missing map tiles", viewPart, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				mapLoader.loadMissingTiles(tiles, new Runnable() {
+					@Override
+					public void run()
+					{
+						if (!GeoMapViewer.this.isDisposed() && (currentTileSet == tiles))
+						{
+							GeoMapViewer.this.redraw();
+						}
+					}
+				});
+			}
+			
+
+			@Override
+			protected IStatus createFailureStatus(Exception e)
+			{
+				e.printStackTrace();
+				return super.createFailureStatus(e);
+			}
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot download map image";
+			}
+		};
+		job.setUser(false);
+		job.start();
+	}
 
 	/**
 	 * @param tiles
 	 */
-	private void drawTiles(TileSet tileSet)
+	private void drawTiles(GC gc, TileSet tileSet)
 	{
-		if (currentImage != null)
-			currentImage.dispose();
-
-		if ((tileSet == null) || (tileSet.tiles == null) || (tileSet.tiles.length == 0))
-		{
-			currentImage = null;
-			return;
-		}
-
-		final Image[][] tiles = tileSet.tiles;
+		final Tile[][] tiles = tileSet.tiles;
 
 		Point size = getSize();
-		currentImage = new Image(getDisplay(), size.x, size.y);
-		/*
-		GC gc = new GC(currentImage);
 
 		int x = tileSet.xOffset;
 		int y = tileSet.yOffset;
@@ -320,7 +375,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		{
 			for(int j = 0; j < tiles[i].length; j++)
 			{
-				gc.drawImage(tiles[i][j], x, y);
+				gc.drawImage(tiles[i][j].getImage(), x, y);
 				x += 256;
 				if (x >= size.x)
 				{
@@ -329,9 +384,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 				}
 			}
 		}
-
-		gc.dispose();
-		*/
 	}
 
 	/*
@@ -341,45 +393,33 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	@Override
 	public void paintControl(PaintEvent e)
 	{
-		/*
-		final GC gc = new GC(bufferImage);
+		final GC gc = e.gc;
+
+		if (currentTileSet != null)
+			drawTiles(gc, currentTileSet);
 		
-		gc.fillRectangle(bufferImage.getBounds());
-
-		int imgW, imgH;
-		if (currentImage != null)
-		{
-			gc.drawImage(currentImage, -offsetX, -offsetY);
-			imgW = currentImage.getImageData().width;
-			imgH = currentImage.getImageData().height;
-		}
-		else
-		{
-			imgW = -1;
-			imgH = -1;
-		}
-
 		// Draw objects and decorations if user is not dragging map
 		// and map is not currently loading
-		if ((dragStartPoint == null) && !loading)
+		if (dragStartPoint == null)
 		{
 			gc.setAntialias(SWT.ON);
 			gc.setTextAntialias(SWT.ON);
 
+			Rectangle rect = getClientArea();
+			
 			final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
 			for(GenericObject object : objects)
 			{
 				final Point virtualXY = GeoLocationCache.coordinateToDisplay(object.getGeolocation(), accessor.getZoom());
 				final int dx = virtualXY.x - centerXY.x;
 				final int dy = virtualXY.y - centerXY.y;
-				drawObject(gc, imgW / 2 + dx, imgH / 2 + dy, object);
+				drawObject(gc, rect.width / 2 + dx, rect.height / 2 + dy, object);
 			}
 	
 			final GeoLocation gl = new GeoLocation(accessor.getLatitude(), accessor.getLongitude());
 			final String text = gl.toString();
 			final Point textSize = gc.textExtent(text);
 	
-			Rectangle rect = getClientArea();
 			rect.x = 10;
 			// rect.x = rect.width - textSize.x - 20;
 			rect.y += 10;
@@ -424,10 +464,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			gc.setForeground(SharedColors.BLACK);
 			gc.drawText(title, x, 10, true);
 		}
-		
-		gc.dispose();
-		e.gc.drawImage(bufferImage, 0, 0);
-		*/
 	}
 
 	/**
@@ -473,7 +509,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		gc.drawLine(arrow[0], arrow[1], arrow[4], arrow[5]);
 		gc.setForeground(StatusDisplayInfo.getStatusColor(object.getStatus()));
 		gc.drawPolyline(arrow);
-
 
 		gc.setForeground(LABEL_TEXT);
 		gc.drawImage(image, rect.x + LABEL_X_MARGIN, rect.y + LABEL_Y_MARGIN);
@@ -533,7 +568,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	@Override
 	public void mouseDown(MouseEvent e)
 	{
-		if ((e.button == 1) && !loading) // left button, ignore if map is currently loading
+		if (e.button == 1) // left button, ignore if map is currently loading
 		{
 			if ((e.stateMask & SWT.SHIFT) != 0)
 			{
@@ -695,5 +730,101 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	public void setTitle(String title)
 	{
 		this.title = title;
+	}
+	
+	/**
+	 * Drag tracker - copied from draw2d
+	 *
+	 */
+	protected class RAPDragTracker
+	{
+		public boolean cancelled;
+		public boolean tracking;
+		private final MouseMoveListener listener;
+		private final Widget widget;
+
+		public RAPDragTracker(final MouseMoveListener listener, final Widget widget)
+		{
+			this.listener = listener;
+			this.widget = widget;
+		}
+
+		public void open()
+		{
+			Job dragJob = new Job("Drag-Job")
+			{
+				protected IStatus run(IProgressMonitor monitor)
+				{
+					// Run tracker until mouse up occurs or escape key pressed.
+					final Display display = widget.getDisplay();
+					cancelled = false;
+					tracking = true;
+
+					try
+					{
+						long timeout = 0;
+						long refreshRate = 200;
+						while(tracking && !cancelled)
+						{
+							if (display != null && !display.isDisposed())
+							{
+								display.syncExec(new Runnable()
+								{
+									public void run()
+									{
+										if (GeoMapViewer.this.isDisposed())
+										{
+											tracking = false;
+											cancelled = true;
+											return;
+										}
+										Event ev = new Event();
+										ev.display = display;
+										Point loc = GeoMapViewer.this.toControl(display.getCursorLocation());
+										ev.type = SWT.DragDetect;
+										ev.widget = widget;
+										ev.button = 1;
+										ev.x = loc.x;
+										ev.y = loc.y;
+										MouseEvent me = new MouseEvent(ev);
+										me.stateMask = SWT.BUTTON1;
+										listener.mouseMove(me);
+									}
+								});
+								timeout += refreshRate;
+								if (timeout >= 60000)
+								{
+									cancelled = true;
+								}
+								Thread.sleep(refreshRate);
+							}
+
+						}
+					}
+					catch(InterruptedException e)
+					{
+						e.printStackTrace();
+					}
+					finally
+					{
+						display.syncExec(new Runnable()
+						{
+							public void run()
+							{
+								close();
+							}
+						});
+					}
+					return Status.OK_STATUS;
+				}
+			};
+			dragJob.setSystem(true);
+			dragJob.schedule();
+		}
+
+		public void close()
+		{
+			tracking = false;
+		}
 	}
 }

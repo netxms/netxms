@@ -105,6 +105,8 @@ public class WorldMap extends AbstractGeolocationView
 		super.createActions();
 		
 		actionPlaceObject = new Action("Place object here...") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

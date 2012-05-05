@@ -27,6 +27,9 @@ import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -38,6 +41,7 @@ import org.netxms.client.GeoLocation;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
+import org.netxms.ui.eclipse.osm.tools.Tile;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
 
 /**
@@ -56,6 +60,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	private GeoLocation backgroundLocation = null;
 	private int backgroundZoom;
 	private IFigure zestRootLayer;
+	private MapLoader mapLoader;
 	
 	/**
 	 * @param composite
@@ -64,6 +69,16 @@ public class ExtendedGraphViewer extends GraphViewer
 	public ExtendedGraphViewer(Composite composite, int style)
 	{
 		super(composite, style);
+		
+		mapLoader = new MapLoader(composite.getDisplay());
+		getControl().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				mapLoader.dispose();
+			}
+		});
+		
 		getZoomManager().setZoomLevels(zoomLevels);
 		backgroundFigure = new BackgroundFigure();
 		backgroundFigure.setSize(10, 10);
@@ -163,7 +178,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final TileSet tiles = MapLoader.getAllTiles(mapSize, backgroundLocation, MapLoader.TOP_LEFT, backgroundZoom);
+				final TileSet tiles = mapLoader.getAllTiles(mapSize, backgroundLocation, MapLoader.TOP_LEFT, backgroundZoom, false);
 				Display.getDefault().asyncExec(new Runnable() {
 					@Override
 					public void run()
@@ -207,7 +222,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			return;
 		}
 
-		final Image[][] tiles = tileSet.tiles;
+		final Tile[][] tiles = tileSet.tiles;
 
 		Dimension size = backgroundFigure.getSize();
 		backgroundImage = new Image(getGraphControl().getDisplay(), size.width, size.height);
@@ -219,7 +234,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		{
 			for(int j = 0; j < tiles[i].length; j++)
 			{
-				gc.drawImage(tiles[i][j], x, y);
+				gc.drawImage(tiles[i][j].getImage(), x, y);
 				x += 256;
 				if (x >= size.width)
 				{

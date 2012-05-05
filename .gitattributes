@@ -2838,6 +2838,7 @@ webui/webapp/OSM/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/OSM/META-INF/MANIFEST.MF -text
 webui/webapp/OSM/build.properties -text
 webui/webapp/OSM/icons/border_tile.png -text
+webui/webapp/OSM/icons/loading_tile.png -text
 webui/webapp/OSM/icons/map.png -text
 webui/webapp/OSM/icons/missing_tile.png -text
 webui/webapp/OSM/plugin.xml -text
@@ -2851,6 +2852,7 @@ webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/tools/Area.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/tools/MapAccessor.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/tools/MapLoader.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/tools/QuadTree.java -text
+webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/tools/Tile.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/tools/TileSet.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/views/AbstractGeolocationView.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/views/LocationMap.java -text

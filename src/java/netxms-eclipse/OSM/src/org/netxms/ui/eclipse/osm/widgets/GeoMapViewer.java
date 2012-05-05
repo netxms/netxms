@@ -117,8 +117,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		setBackground(MAP_BACKGROUND);
 		addPaintListener(this);
 
-		final Runnable timer = new Runnable()
-		{
+		final Runnable timer = new Runnable() {
 			@Override
 			public void run()
 			{

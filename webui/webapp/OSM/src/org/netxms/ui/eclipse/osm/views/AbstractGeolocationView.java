@@ -130,6 +130,8 @@ public abstract class AbstractGeolocationView extends ViewPart
 	protected void createActions()
 	{
 		actionZoomIn = new Action("Zoom &in") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -139,6 +141,8 @@ public abstract class AbstractGeolocationView extends ViewPart
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 	
 		actionZoomOut = new Action("Zoom &out") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -188,8 +192,9 @@ public abstract class AbstractGeolocationView extends ViewPart
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
