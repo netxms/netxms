@@ -127,7 +127,7 @@ BOOL InitSender(const TCHAR *pszInitArgs)
 	AgentWriteDebugLog(1, "SMS init: port={%s}, speed=%d, data=%d, parity=%s, stop=%d",
 	                portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1);
 	
-	bRet = m_serial.Open(pszInitArgs);
+	bRet = m_serial.Open(portName);
 	if (bRet)
 	{
 		AgentWriteDebugLog(5, "SMS Sender: port opened");
