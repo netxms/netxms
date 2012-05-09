@@ -141,6 +141,11 @@
             id="org.netxms.ui.eclipse.console.commands.full_screen"
             name="%action.FullScreen">
       </command>
+      <command
+            description="%actionDescription.SendSMS"
+            id="org.netxms.ui.eclipse.console.commands.send_sms"
+            name="%action.SendSMS">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -156,6 +161,13 @@
                label="%action.OpenServerConsole"
                menubarPath="tools/additions">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.console.actions.SendSMS"
+               definitionId="org.netxms.ui.eclipse.console.commands.send_sms"
+               id="org.netxms.ui.eclipse.console.actions.send_sms"
+               label="%action.SendSMS"
+               menubarPath="tools/additions">
+         </action>
       </actionSet>
    </extension>
    <extension
@@ -164,6 +176,11 @@
             commandId="org.netxms.ui.eclipse.console.commands.full_screen"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="F11">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.console.commands.send_sms"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+Alt+S">
       </key>
    </extension>
 
