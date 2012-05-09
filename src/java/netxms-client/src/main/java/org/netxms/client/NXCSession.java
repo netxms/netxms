@@ -5865,4 +5865,21 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+	
+	/**
+	 * Send SMS via server. User should have appropriate rights to execute this command.
+	 * 
+	 * @param phoneNumber target phone number
+	 * @param message message text
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void sendSMS(String phoneNumber, String message) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_SEND_SMS);
+		msg.setVariable(NXCPCodes.VID_RCPT_ADDR, phoneNumber);
+		msg.setVariable(NXCPCodes.VID_MESSAGE, message);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 }
