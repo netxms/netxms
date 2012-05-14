@@ -241,7 +241,7 @@ static THREAD_RESULT THREAD_CALL PushConnector(void *arg)
 	while(!(g_dwFlags & AF_SHUTDOWN))
 	{
 		struct sockaddr_un addrRemote;
-		size_t size = sizeof(struct sockaddr_un);
+		socklen_t size = sizeof(struct sockaddr_un);
 		SOCKET cs = accept(hPipe, (struct sockaddr *)&addrRemote, &size);
 		if (cs > 0)
 		{
