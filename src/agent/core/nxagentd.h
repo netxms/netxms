@@ -198,7 +198,20 @@
 
 #define AGENT_ACTION_EXEC        1
 #define AGENT_ACTION_SUBAGENT    2
-#define AGENT_ACTION_SHELLEXEC	 3
+#define AGENT_ACTION_SHELLEXEC	3
+
+
+//
+// Pipe handle
+//
+
+#ifdef _WIN32
+#define HPIPE HANDLE
+#define INVALID_PIPE_HANDLE INVALID_HANDLE_VALUE
+#else
+#define HPIPE SOCKET
+#define INVALID_PIPE_HANDLE (-1)
+#endif
 
 
 //
@@ -247,7 +260,7 @@ class ExternalSubagent
 private:
 	TCHAR m_name[MAX_SUBAGENT_NAME];
 	TCHAR m_user[MAX_ESA_USER_NAME];
-	HANDLE m_pipe;
+	HPIPE m_pipe;
 #ifdef _WIN32
 	HANDLE m_readEvent;
 #endif
@@ -265,7 +278,7 @@ public:
 	ExternalSubagent(const TCHAR *name, const TCHAR *user);
 	~ExternalSubagent();
 
-	void connect(HANDLE hPipe);
+	void connect(HPIPE hPipe);
 
 	bool isConnected() { return m_connected; }
 	const TCHAR *getName() { return m_name; }
@@ -414,7 +427,7 @@ bool AddExternalSubagent(const TCHAR *config);
 DWORD GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer);
 void ListParametersFromExtSubagents(CSCPMessage *msg, DWORD *baseId, DWORD *count);
 void ListParametersFromExtSubagents(StringList *list);
-CSCPMessage *ReadMessageFromPipe(HANDLE hPipe, HANDLE hEvent);
+CSCPMessage *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent);
 
 BOOL WaitForProcess(const TCHAR *name);
 

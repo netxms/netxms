@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user)
 	nx_strncpy(m_name, name, MAX_SUBAGENT_NAME);
 	nx_strncpy(m_user, user, MAX_ESA_USER_NAME);
 	m_connected = false;
-	m_pipe = NULL;
+	m_pipe = INVALID_PIPE_HANDLE;
 	m_msgQueue = new MsgWaitQueue();
 	m_requestId = 1;
 	m_mutexPipeWrite = MutexCreate();
@@ -97,7 +97,7 @@ CSCPMessage *ExternalSubagent::waitForMessage(WORD code, DWORD id)
 /**
  * Read NXCP message from pipe
  */
-CSCPMessage *ReadMessageFromPipe(HANDLE hPipe, HANDLE hEvent)
+CSCPMessage *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent)
 {
 	BYTE buffer[8192];
 	DWORD bytes;
@@ -128,7 +128,7 @@ CSCPMessage *ReadMessageFromPipe(HANDLE hPipe, HANDLE hEvent)
 	NXCPEncryptionContext *dummyCtx = NULL;
 	CSCP_BUFFER nxcpBuffer;
 	RecvNXCPMessage(0, NULL, &nxcpBuffer, 0, NULL, NULL, 0);
-	bytes = RecvNXCPMessage((SOCKET)hPipe, (CSCP_MESSAGE *)buffer, &nxcpBuffer, 8192, &dummyCtx, NULL, 5000);
+	bytes = RecvNXCPMessage(hPipe, (CSCP_MESSAGE *)buffer, &nxcpBuffer, 8192, &dummyCtx, NULL, 5000);
 #endif
 
 	if (bytes < CSCP_HEADER_SIZE)
@@ -143,7 +143,7 @@ CSCPMessage *ReadMessageFromPipe(HANDLE hPipe, HANDLE hEvent)
 /**
  * Main connection thread
  */
-void ExternalSubagent::connect(HANDLE hPipe)
+void ExternalSubagent::connect(HPIPE hPipe)
 {
 	TCHAR buffer[256];
 

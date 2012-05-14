@@ -60,7 +60,7 @@ BOOL PushData(const TCHAR *parameter, const TCHAR *value)
 /**
  * Process push request
  */
-static void ProcessPushRequest(HANDLE hPipe)
+static void ProcessPushRequest(HPIPE hPipe)
 {
 	TCHAR buffer[256];
 
@@ -214,7 +214,7 @@ static THREAD_RESULT THREAD_CALL PushConnector(void *arg)
 {
 	int len;
 
-	int hPipe = socket(AF_UNIX, SOCK_STREAM, 0);
+	SOCKET hPipe = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (hPipe == -1)
 	{
 		AgentWriteDebugLog(2, _T("PushConnector: socket failed (%s)"), _tcserror(errno));
@@ -242,10 +242,10 @@ static THREAD_RESULT THREAD_CALL PushConnector(void *arg)
 	{
 		struct sockaddr_un addrRemote;
 		size_t size = sizeof(struct sockaddr_un);
-		int cs = accept(hPipe, (struct sockaddr *)&addrRemote, &size);
+		SOCKET cs = accept(hPipe, (struct sockaddr *)&addrRemote, &size);
 		if (cs > 0)
 		{
-			ProcessPushRequest((HANDLE)cs);
+			ProcessPushRequest(cs);
 			shutdown(cs, 2);
 			close(cs);
 		}
