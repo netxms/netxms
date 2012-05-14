@@ -314,13 +314,13 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          break;
       case OBJECT_CONTAINER:
          pObject->container.dwCategory = pMsg->GetVariableLong(VID_CATEGORY);
-			pObject->container.isAutoBindEnabled = pMsg->GetVariableShort(VID_ENABLE_AUTO_BIND);
-			pObject->container.pszAutoBindFilter = pMsg->GetVariableStr(VID_AUTO_BIND_FILTER);
+			pObject->container.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
+			pObject->container.pszAutoBindFilter = pMsg->GetVariableStr(VID_AUTOBIND_FILTER);
          break;
       case OBJECT_TEMPLATE:
          pObject->dct.dwVersion = pMsg->GetVariableLong(VID_TEMPLATE_VERSION);
-			pObject->dct.isAutoApplyEnabled = pMsg->GetVariableShort(VID_AUTO_APPLY);
-			pObject->dct.pszAutoApplyFilter = pMsg->GetVariableStr(VID_APPLY_FILTER);
+			pObject->dct.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
+			pObject->dct.pszAutoApplyFilter = pMsg->GetVariableStr(VID_AUTOBIND_FILTER);
          break;
       case OBJECT_NETWORKSERVICE:
          pObject->netsrv.iServiceType = (int)pMsg->GetVariableShort(VID_SERVICE_TYPE);
@@ -917,8 +917,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_IP_ADDRESS, pUpdate->dwIpAddr);
    if (pUpdate->qwFlags & OBJ_UPDATE_PEER_GATEWAY)
       msg.SetVariable(VID_PEER_GATEWAY, pUpdate->dwPeerGateway);
-   if (pUpdate->qwFlags & OBJ_UPDATE_NODE_FLAGS)
-      msg.SetVariable(VID_FLAGS, pUpdate->dwNodeFlags);
+   if (pUpdate->qwFlags & OBJ_UPDATE_FLAGS)
+      msg.SetVariable(VID_FLAGS, pUpdate->dwObjectFlags);
    if (pUpdate->qwFlags & OBJ_UPDATE_ACT_EVENT)
       msg.SetVariable(VID_ACTIVATION_EVENT, pUpdate->dwActivationEvent);
    if (pUpdate->qwFlags & OBJ_UPDATE_DEACT_EVENT)
@@ -1020,15 +1020,9 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
          msg.SetVariable(dwId1++, pUpdate->pCustomAttrs->getValueByIndex(i));
       }
    }
-   if (pUpdate->qwFlags & OBJ_UPDATE_AUTO_APPLY)
+   if (pUpdate->qwFlags & OBJ_UPDATE_AUTOBIND)
    {
-      msg.SetVariable(VID_AUTO_APPLY, (WORD)pUpdate->isAutoApplyEnabled);
-		msg.SetVariable(VID_APPLY_FILTER, CHECK_NULL_EX(pUpdate->pszAutoApplyFilter));
-   }
-   if (pUpdate->qwFlags & OBJ_UPDATE_AUTO_BIND)
-   {
-      msg.SetVariable(VID_ENABLE_AUTO_BIND, (WORD)pUpdate->isAutoBindEnabled);
-		msg.SetVariable(VID_AUTO_BIND_FILTER, CHECK_NULL_EX(pUpdate->pszAutoBindFilter));
+		msg.SetVariable(VID_AUTOBIND_FILTER, CHECK_NULL_EX(pUpdate->pszAutoBindFilter));
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_GEOLOCATION)
    {

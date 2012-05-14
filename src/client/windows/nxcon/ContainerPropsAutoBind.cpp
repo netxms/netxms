@@ -86,8 +86,11 @@ void CContainerPropsAutoBind::OnOK()
    {
 		m_wndEditor.GetText(m_strFilterScript);
 
-		m_pUpdate->qwFlags |= OBJ_UPDATE_AUTO_BIND;
-		m_pUpdate->isAutoBindEnabled = m_bEnableAutoBind;
+		m_pUpdate->qwFlags |= OBJ_UPDATE_AUTOBIND | OBJ_UPDATE_FLAGS;
+		if (m_bEnableAutoBind)
+			m_pUpdate->dwObjectFlags |= CF_AUTO_BIND;
+		else
+			m_pUpdate->dwObjectFlags &= ~CF_AUTO_BIND;
 		m_pUpdate->pszAutoBindFilter = m_bEnableAutoBind ? (LPCTSTR)m_strFilterScript : _T("");
 	}
 }

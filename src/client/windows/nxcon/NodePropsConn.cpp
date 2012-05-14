@@ -206,9 +206,9 @@ void CNodePropsConn::OnOK()
    m_pUpdate->dwProxyNode = m_dwProxyNode;
    m_pUpdate->dwSNMPProxy = m_dwSNMPProxy;
    if (m_bForceEncryption)
-      m_pUpdate->dwNodeFlags |= NF_FORCE_ENCRYPTION;
+      m_pUpdate->dwObjectFlags |= NF_FORCE_ENCRYPTION;
    else
-      m_pUpdate->dwNodeFlags &= ~NF_FORCE_ENCRYPTION;
+      m_pUpdate->dwObjectFlags &= ~NF_FORCE_ENCRYPTION;
 
    // Authentication type
    m_wndAuthList.GetWindowText(szBuffer, 255);

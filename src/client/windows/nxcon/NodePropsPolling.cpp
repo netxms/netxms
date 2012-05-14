@@ -155,39 +155,39 @@ void CNodePropsPolling::OnOK()
    m_pUpdate->dwPollerNode = m_dwPollerNode;
 	m_pUpdate->nUseIfXTable = m_nUseIfXTable;
    if (m_bDisableAgent)
-      m_pUpdate->dwNodeFlags |= NF_DISABLE_NXCP;
+      m_pUpdate->dwObjectFlags |= NF_DISABLE_NXCP;
    else
-      m_pUpdate->dwNodeFlags &= ~NF_DISABLE_NXCP;
+      m_pUpdate->dwObjectFlags &= ~NF_DISABLE_NXCP;
 
    if (m_bDisableSNMP)
-      m_pUpdate->dwNodeFlags |= NF_DISABLE_SNMP;
+      m_pUpdate->dwObjectFlags |= NF_DISABLE_SNMP;
    else
-      m_pUpdate->dwNodeFlags &= ~NF_DISABLE_SNMP;
+      m_pUpdate->dwObjectFlags &= ~NF_DISABLE_SNMP;
 
    if (m_bDisableICMP)
-      m_pUpdate->dwNodeFlags |= NF_DISABLE_ICMP;
+      m_pUpdate->dwObjectFlags |= NF_DISABLE_ICMP;
    else
-      m_pUpdate->dwNodeFlags &= ~NF_DISABLE_ICMP;
+      m_pUpdate->dwObjectFlags &= ~NF_DISABLE_ICMP;
 
    if (m_bDisableStatusPolls)
-      m_pUpdate->dwNodeFlags |= NF_DISABLE_STATUS_POLL;
+      m_pUpdate->dwObjectFlags |= NF_DISABLE_STATUS_POLL;
    else
-      m_pUpdate->dwNodeFlags &= ~NF_DISABLE_STATUS_POLL;
+      m_pUpdate->dwObjectFlags &= ~NF_DISABLE_STATUS_POLL;
 
    if (m_bDisableConfPolls)
-      m_pUpdate->dwNodeFlags |= NF_DISABLE_CONF_POLL;
+      m_pUpdate->dwObjectFlags |= NF_DISABLE_CONF_POLL;
    else
-      m_pUpdate->dwNodeFlags &= ~NF_DISABLE_CONF_POLL;
+      m_pUpdate->dwObjectFlags &= ~NF_DISABLE_CONF_POLL;
 
    if (m_bDisableRoutePolls)
-      m_pUpdate->dwNodeFlags |= NF_DISABLE_ROUTE_POLL;
+      m_pUpdate->dwObjectFlags |= NF_DISABLE_ROUTE_POLL;
    else
-      m_pUpdate->dwNodeFlags &= ~NF_DISABLE_ROUTE_POLL;
+      m_pUpdate->dwObjectFlags &= ~NF_DISABLE_ROUTE_POLL;
 
    if (m_bDisableDataCollection)
-      m_pUpdate->dwNodeFlags |= NF_DISABLE_DATA_COLLECT;
+      m_pUpdate->dwObjectFlags |= NF_DISABLE_DATA_COLLECT;
    else
-      m_pUpdate->dwNodeFlags &= ~NF_DISABLE_DATA_COLLECT;
+      m_pUpdate->dwObjectFlags &= ~NF_DISABLE_DATA_COLLECT;
 }
 
 
@@ -197,37 +197,37 @@ void CNodePropsPolling::OnOK()
 
 void CNodePropsPolling::OnCheckDisableAgent() 
 {
-   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_FLAGS;
 }
 
 void CNodePropsPolling::OnCheckDisableIcmp() 
 {
-   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_FLAGS;
 }
 
 void CNodePropsPolling::OnCheckDisableSnmp() 
 {
-   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_FLAGS;
 }
 
 void CNodePropsPolling::OnCheckDisableConfPolls() 
 {
-   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_FLAGS;
 }
 
 void CNodePropsPolling::OnCheckDisableDatacoll() 
 {
-   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_FLAGS;
 }
 
 void CNodePropsPolling::OnCheckDisableRoutePolls() 
 {
-   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_FLAGS;
 }
 
 void CNodePropsPolling::OnCheckDisableStatusPoll() 
 {
-   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_FLAGS;
 }
 
 void CNodePropsPolling::OnRadioDefault() 

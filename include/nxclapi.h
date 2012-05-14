@@ -564,7 +564,7 @@ enum
 #define OBJ_UPDATE_NETWORK_LIST     ((QWORD)_ULL(0x0000020000))
 #define OBJ_UPDATE_STATUS_ALG       ((QWORD)_ULL(0x0000040000))
 #define OBJ_UPDATE_PROXY_NODE       ((QWORD)_ULL(0x0000080000))
-#define OBJ_UPDATE_NODE_FLAGS       ((QWORD)_ULL(0x0000100000))
+#define OBJ_UPDATE_FLAGS            ((QWORD)_ULL(0x0000100000))
 #define OBJ_UPDATE_ACT_EVENT        ((QWORD)_ULL(0x0000200000))
 #define OBJ_UPDATE_DEACT_EVENT      ((QWORD)_ULL(0x0000400000))
 #define OBJ_UPDATE_SOURCE_OBJECT    ((QWORD)_ULL(0x0000800000))
@@ -579,8 +579,7 @@ enum
 #define OBJ_UPDATE_TRUSTED_NODES    ((QWORD)_ULL(0x0100000000))
 #define OBJ_UPDATE_CUSTOM_ATTRS     ((QWORD)_ULL(0x0200000000))
 #define OBJ_UPDATE_USE_IFXTABLE     ((QWORD)_ULL(0x0400000000))
-#define OBJ_UPDATE_AUTO_APPLY       ((QWORD)_ULL(0x0800000000))
-#define OBJ_UPDATE_AUTO_BIND        ((QWORD)_ULL(0x1000000000))
+#define OBJ_UPDATE_AUTOBIND         ((QWORD)_ULL(0x1000000000))
 #define OBJ_UPDATE_SNMP_PORT        ((QWORD)_ULL(0x2000000000))
 #define OBJ_UPDATE_PRIMARY_NAME     ((QWORD)_ULL(0x4000000000))
 
@@ -1238,14 +1237,14 @@ struct __nxc_object_subnet
 struct __nxc_object_container
 {
    DWORD dwCategory;
-	BOOL isAutoBindEnabled;
+	DWORD dwFlags;
 	TCHAR *pszAutoBindFilter;
 };
 
 struct __nxc_object_dct
 {
    DWORD dwVersion;
-	BOOL isAutoApplyEnabled;
+	DWORD dwFlags;
 	TCHAR *pszAutoApplyFilter;
 };
 
@@ -1397,7 +1396,7 @@ typedef struct
    int iStatusThresholds[4];
    DWORD dwProxyNode;
 	DWORD dwSNMPProxy;
-   DWORD dwNodeFlags;
+   DWORD dwObjectFlags;
    DWORD dwActivationEvent;
    DWORD dwDeactivationEvent;
    DWORD dwSourceObject;
@@ -1415,9 +1414,6 @@ typedef struct
 	DWORD dwNumTrustedNodes;
 	DWORD *pdwTrustedNodes;
 	int nUseIfXTable;
-	BOOL isAutoApplyEnabled;
-	const TCHAR *pszAutoApplyFilter;
-	BOOL isAutoBindEnabled;
 	const TCHAR *pszAutoBindFilter;
 	struct __nxc_geolocation geolocation;
 #ifdef __cplusplus

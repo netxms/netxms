@@ -82,9 +82,12 @@ void CTemplatePropsAutoApply::OnOK()
    {
 		m_wndEditor.GetText(m_strFilterScript);
 
-		m_pUpdate->qwFlags |= OBJ_UPDATE_AUTO_APPLY;
-		m_pUpdate->isAutoApplyEnabled = m_bEnableAutoApply;
-		m_pUpdate->pszAutoApplyFilter = m_bEnableAutoApply ? (LPCTSTR)m_strFilterScript : _T("");
+		m_pUpdate->qwFlags |= OBJ_UPDATE_AUTOBIND | OBJ_UPDATE_FLAGS;
+		if (m_bEnableAutoApply)
+			m_pUpdate->dwObjectFlags |= TF_AUTO_APPLY;
+		else
+			m_pUpdate->dwObjectFlags &= ~TF_AUTO_APPLY;
+		m_pUpdate->pszAutoBindFilter = m_bEnableAutoApply ? (LPCTSTR)m_strFilterScript : _T("");
 	}
 }
 

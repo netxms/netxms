@@ -1508,7 +1508,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndObjectGeneral.m_strName = pObject->szName;
             wndPropSheet.AddPage(&wndObjectGeneral);
 
-				wndTemplateAutoApply.m_bEnableAutoApply = pObject->dct.isAutoApplyEnabled;
+				wndTemplateAutoApply.m_bEnableAutoApply = (pObject->dct.dwFlags & TF_AUTO_APPLY) ? TRUE : FALSE;
 				wndTemplateAutoApply.m_strFilterScript = CHECK_NULL_EX(pObject->dct.pszAutoApplyFilter);
             wndPropSheet.AddPage(&wndTemplateAutoApply);
 				break;
@@ -1518,7 +1518,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndObjectGeneral.m_strName = pObject->szName;
             wndPropSheet.AddPage(&wndObjectGeneral);
 
-				wndContainerAutoBind.m_bEnableAutoBind = pObject->container.isAutoBindEnabled;
+				wndContainerAutoBind.m_bEnableAutoBind = (pObject->container.dwFlags & CF_AUTO_BIND) ? TRUE : FALSE;
 				wndContainerAutoBind.m_strFilterScript = CHECK_NULL_EX(pObject->container.pszAutoBindFilter);
             wndPropSheet.AddPage(&wndContainerAutoBind);
 				break;

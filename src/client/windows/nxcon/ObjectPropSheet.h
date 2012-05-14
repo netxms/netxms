@@ -35,9 +35,9 @@ public:
 public:
 	virtual ~CObjectPropSheet();
 
-   NXC_OBJECT_UPDATE *GetUpdateStruct(void) { return &m_update; }
+   NXC_OBJECT_UPDATE *GetUpdateStruct() { return &m_update; }
    void SetObject(NXC_OBJECT *pObject) { if (pObject != NULL) m_update.dwObjectId = pObject->dwId; }
-	void SaveObjectChanges(void);
+	void SaveObjectChanges();
 
 	// Generated message map functions
 protected:
