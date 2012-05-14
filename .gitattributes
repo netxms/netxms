@@ -1556,6 +1556,7 @@ src/java/netxms-eclipse/PerfView/icons/chart_pie.png -text
 src/java/netxms-eclipse/PerfView/icons/chart_scatter.gif -text
 src/java/netxms-eclipse/PerfView/icons/chart_status.png -text
 src/java/netxms-eclipse/PerfView/icons/chart_tube.png -text
+src/java/netxms-eclipse/PerfView/icons/data_history.gif -text
 src/java/netxms-eclipse/PerfView/icons/folder.png -text
 src/java/netxms-eclipse/PerfView/icons/graph.png -text
 src/java/netxms-eclipse/PerfView/icons/graph_tree.png -text
@@ -1566,8 +1567,12 @@ src/java/netxms-eclipse/PerfView/icons/status_view.png -text
 src/java/netxms-eclipse/PerfView/icons/table.gif -text
 src/java/netxms-eclipse/PerfView/icons/view3d.png -text
 src/java/netxms-eclipse/PerfView/plugin.xml -text
+src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowHistoryData.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowTableLastValues.java -text
+src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/dialogs/HistoricalDataSelectionDialog.java -text
+src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/HistoricalGraphView.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/TableLastValues.java -text
+src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/HistoricalDataLabelProvider.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/TableContentProvider.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/TableItemComparator.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/TableLabelProvider.java -text

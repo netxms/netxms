@@ -274,10 +274,10 @@ public class PredefinedGraphTree extends ViewPart
 		{
 			encodedName = "___ERROR___";
 		}
-		String id = HistoricalDataView.PREDEFINED_GRAPH_SUBID + "&" + encodedName;
+		String id = HistoricalGraphView.PREDEFINED_GRAPH_SUBID + "&" + encodedName;
 		try
 		{
-			HistoricalDataView g = (HistoricalDataView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(HistoricalDataView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+			HistoricalGraphView g = (HistoricalGraphView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(HistoricalGraphView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
 			if (g != null)
 				g.initPredefinedGraph(gs);
 		}

@@ -32,7 +32,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.ui.eclipse.perfview.views.HistoricalDataView;
+import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
 
 /**
  * Show line graph for selected DCI(s)
@@ -100,7 +100,7 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 			
 			try
 			{
-				window.getActivePage().showView(HistoricalDataView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+				window.getActivePage().showView(HistoricalGraphView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
 			}
 			catch(PartInitException e)
 			{
