@@ -1924,6 +1924,7 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/AnimatedImage.
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/CommandBox.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/DashboardComposite.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/DashboardElement.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/DateTimeSelector.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/ImageCombo.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/LabeledText.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/SortableTableViewer.java -text

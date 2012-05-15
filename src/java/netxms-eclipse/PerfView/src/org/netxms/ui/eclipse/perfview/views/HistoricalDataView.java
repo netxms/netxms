@@ -28,6 +28,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -42,6 +43,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
+import org.netxms.ui.eclipse.perfview.dialogs.HistoricalDataSelectionDialog;
 import org.netxms.ui.eclipse.perfview.views.helpers.HistoricalDataLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -58,11 +60,12 @@ public class HistoricalDataView extends ViewPart
 	private long dciId;
 	private String nodeName;
 	private SortableTableViewer viewer;
-	private Action actionRefresh;
 	private Date timeFrom = null;
 	private Date timeTo = null;
 	private int recordLimit = 4096;
 	private boolean updateInProgress = false;
+	private Action actionRefresh;
+	private Action actionSelectRange;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -121,6 +124,14 @@ public class HistoricalDataView extends ViewPart
 				refreshData();
 			}
 		};
+		
+		actionSelectRange = new Action("Select data &range...") {
+			@Override
+			public void run()
+			{
+				selectRange();
+			}
+		};
 	}
 
 	/**
@@ -141,6 +152,8 @@ public class HistoricalDataView extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionSelectRange);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -184,6 +197,7 @@ public class HistoricalDataView extends ViewPart
 	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
+		manager.add(actionSelectRange);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
@@ -227,5 +241,20 @@ public class HistoricalDataView extends ViewPart
 				return "Cannot get data for DCI " + nodeName + ":[" + Long.toString(dciId) + "]";
 			}
 		}.start();
+	}
+	
+	/**
+	 * Select data range for display
+	 */
+	private void selectRange()
+	{
+		HistoricalDataSelectionDialog dlg = new HistoricalDataSelectionDialog(getSite().getShell(), recordLimit, timeFrom, timeTo);
+		if (dlg.open() == Window.OK)
+		{
+			recordLimit = dlg.getMaxRecords();
+			timeFrom = dlg.getTimeFrom();
+			timeTo = dlg.getTimeTo();
+			refreshData();
+		}
 	}
 }
