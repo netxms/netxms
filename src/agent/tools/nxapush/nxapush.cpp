@@ -294,8 +294,7 @@ BOOL Startup()
 	struct sockaddr_un remote;
 	remote.sun_family = AF_UNIX;
 	strcpy(remote.sun_path, "/tmp/.nxagentd.push");
-	size_t size = strlen(remote.sun_path) + sizeof(remote.sun_family);
-	if (connect(s_hPipe, (struct sockaddr *)&remote, strlen(remote.sun_path) + sizeof(remote.sun_family)) == -1)
+	if (connect(s_hPipe, (struct sockaddr *)&remote, SUN_LEN(&remote)) == -1)
 	{
 		close(s_hPipe);
 		s_hPipe = -1;

@@ -212,8 +212,6 @@ cleanup:
 
 static THREAD_RESULT THREAD_CALL PushConnector(void *arg)
 {
-	int len;
-
 	SOCKET hPipe = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (hPipe == -1)
 	{
@@ -225,8 +223,7 @@ static THREAD_RESULT THREAD_CALL PushConnector(void *arg)
 	addrLocal.sun_family = AF_UNIX;
 	strcpy(addrLocal.sun_path, "/tmp/.nxagentd.push");	
 	unlink(addrLocal.sun_path);
-	len = strlen(addrLocal.sun_path) + sizeof(addrLocal.sun_family);
-	if (bind(hPipe, (struct sockaddr *)&addrLocal, len) == -1)
+	if (bind(hPipe, (struct sockaddr *)&addrLocal, SUN_LEN(&addrLocal)) == -1)
 	{
 		AgentWriteDebugLog(2, _T("PushConnector: bind failed (%s)"), _tcserror(errno));
 		goto cleanup;
