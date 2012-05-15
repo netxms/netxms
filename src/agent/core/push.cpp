@@ -223,7 +223,7 @@ static THREAD_RESULT THREAD_CALL PushConnector(void *arg)
 	
 	struct sockaddr_un addrLocal;
 	addrLocal.sun_family = AF_UNIX;
-	strcpy(addrLocal.sun_path, "/var/run/nxagentd.push");	
+	strcpy(addrLocal.sun_path, "/tmp/.nxagentd.push");	
 	unlink(addrLocal.sun_path);
 	len = strlen(addrLocal.sun_path) + sizeof(addrLocal.sun_family);
 	if (bind(hPipe, (struct sockaddr *)&addrLocal, len) == -1)
