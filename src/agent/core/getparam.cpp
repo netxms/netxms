@@ -311,26 +311,35 @@ static NETXMS_SUBAGENT_TABLE m_stdTables[] =
 
 BOOL InitParameterList()
 {
-   if ((m_pParamList != NULL) || (m_pEnumList != NULL))
+   if ((m_pParamList != NULL) || (m_pEnumList != NULL) || (m_pTableList != NULL))
       return FALSE;
 
    m_iNumParams = sizeof(m_stdParams) / sizeof(NETXMS_SUBAGENT_PARAM);
-   m_pParamList = (NETXMS_SUBAGENT_PARAM *)malloc(sizeof(NETXMS_SUBAGENT_PARAM) * m_iNumParams);
-   if (m_pParamList == NULL)
-      return FALSE;
-   memcpy(m_pParamList, m_stdParams, sizeof(NETXMS_SUBAGENT_PARAM) * m_iNumParams);
+	if (m_iNumParams > 0)
+	{
+		m_pParamList = (NETXMS_SUBAGENT_PARAM *)malloc(sizeof(NETXMS_SUBAGENT_PARAM) * m_iNumParams);
+		if (m_pParamList == NULL)
+			return FALSE;
+		memcpy(m_pParamList, m_stdParams, sizeof(NETXMS_SUBAGENT_PARAM) * m_iNumParams);
+	}
 
    m_iNumEnums = sizeof(m_stdLists) / sizeof(NETXMS_SUBAGENT_LIST);
-   m_pEnumList = (NETXMS_SUBAGENT_LIST *)malloc(sizeof(NETXMS_SUBAGENT_LIST) * m_iNumEnums);
-   if (m_pEnumList == NULL)
-      return FALSE;
-   memcpy(m_pEnumList, m_stdLists, sizeof(NETXMS_SUBAGENT_LIST) * m_iNumEnums);
+	if (m_iNumEnums > 0)
+	{
+		m_pEnumList = (NETXMS_SUBAGENT_LIST *)malloc(sizeof(NETXMS_SUBAGENT_LIST) * m_iNumEnums);
+		if (m_pEnumList == NULL)
+			return FALSE;
+		memcpy(m_pEnumList, m_stdLists, sizeof(NETXMS_SUBAGENT_LIST) * m_iNumEnums);
+	}
 
    m_iNumTables = sizeof(m_stdTables) / sizeof(NETXMS_SUBAGENT_TABLE);
-	m_pTableList = (NETXMS_SUBAGENT_TABLE *)malloc(sizeof(NETXMS_SUBAGENT_TABLE) * m_iNumTables);
-	if (m_pTableList == NULL)
-      return FALSE;
-	memcpy(m_pTableList, m_stdTables, sizeof(NETXMS_SUBAGENT_TABLE) * m_iNumTables);
+	if (m_iNumTables > 0)
+	{
+		m_pTableList = (NETXMS_SUBAGENT_TABLE *)malloc(sizeof(NETXMS_SUBAGENT_TABLE) * m_iNumTables);
+		if (m_pTableList == NULL)
+			return FALSE;
+		memcpy(m_pTableList, m_stdTables, sizeof(NETXMS_SUBAGENT_TABLE) * m_iNumTables);
+	}
 
    return TRUE;
 }
