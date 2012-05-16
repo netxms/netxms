@@ -1144,7 +1144,6 @@ void DCItem::updateCacheSize(DWORD dwCondId)
       // Load missing values from database
       if (m_pNode != NULL)
       {
-         DB_ASYNC_RESULT hResult;
          TCHAR szBuffer[MAX_DB_STRING];
          BOOL bHasData;
 
@@ -1173,7 +1172,8 @@ void DCItem::updateCacheSize(DWORD dwCondId)
                        m_pNode->Id(), m_dwId);
                break;
          }
-         hResult = DBAsyncSelect(g_hCoreDB, szBuffer);
+			DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         DB_ASYNC_RESULT hResult = DBAsyncSelect(hdb, szBuffer);
          if (hResult != NULL)
          {
             // Skip already cached values
@@ -1207,6 +1207,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
             for(i = m_dwCacheSize; i < dwRequiredSize; i++)
                m_ppValueCache[i] = new ItemValue(_T(""), 1);
          }
+			DBConnectionPoolReleaseConnection(hdb);
       }
       m_dwCacheSize = dwRequiredSize;
    }
