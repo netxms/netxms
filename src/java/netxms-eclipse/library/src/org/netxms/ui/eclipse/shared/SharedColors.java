@@ -29,7 +29,9 @@ public class SharedColors
 	public static Color BLACK;
 	public static Color RED;
 	public static Color WHITE;
-	
+
+	public static Color BORDER;
+
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
 	 */
@@ -40,5 +42,7 @@ public class SharedColors
 		BLACK = new Color(display, 0, 0, 0);
 		RED = new Color(display, 255, 0, 0);
 		WHITE = new Color(display, 255, 255, 255);
+
+		BORDER = new Color(display, 153, 180, 209);
 	}
 }
