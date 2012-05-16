@@ -8,7 +8,7 @@
             name="Historical Data Chart"
             allowMultiple="true"
             icon="icons/chart_line.png"
-            class="org.netxms.ui.eclipse.perfview.views.HistoricalDataView"
+            class="org.netxms.ui.eclipse.perfview.views.HistoricalGraphView"
             id="org.netxms.ui.eclipse.perfview.views.HistoryGraph">
       </view>
       <view
@@ -35,6 +35,14 @@
             name="Table Last Values"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.perfview.views.HistoricalDataView"
+            icon="icons/data_history.gif"
+            id="org.netxms.ui.eclipse.perfview.views.HistoricalDataView"
+            name="Historical Data"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -45,22 +53,29 @@
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowPieChart"
                icon="icons/chart_pie.png"
-               id="org.netxms.ui.eclipse.perfview.popupActions.ShowPieChart"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowPieChart_SimpleDciValue"
                label="Pie Chart"
                menubarPath="additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowBarChart"
                icon="icons/chart_bar.png"
-               id="org.netxms.ui.eclipse.perfview.popupActions.ShowBarChart"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowBarChart_SimpleDciValue"
                label="Bar Chart"
                menubarPath="additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowHistoryGraph"
-               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph_SimpleDciValue"
                label="Line Chart"
                icon="icons/chart_line.png"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowHistoryData"
+               icon="icons/data_history.gif"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryData_SimpleDciValue"
+               label="History"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -82,22 +97,29 @@
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowPieChart"
                icon="icons/chart_pie.png"
-               id="org.netxms.ui.eclipse.perfview.popupActions.ShowPieChart"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowPieChart_DataCollectionItem"
                label="Pie Chart"
                menubarPath="additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowBarChart"
                icon="icons/chart_bar.png"
-               id="org.netxms.ui.eclipse.perfview.popupActions.ShowBarChart"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowBarChart_DataCollectionItem"
                label="Bar Chart"
                menubarPath="additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowHistoryGraph"
-               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph_DataCollectionItem"
                label="Line Chart"
                icon="icons/chart_line.png"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowHistoryData"
+               icon="icons/data_history.gif"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryData_DataCollectionItem"
+               label="History"
                menubarPath="additions">
          </action>
       </objectContribution>

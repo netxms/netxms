@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -130,8 +130,6 @@ public class PredefinedGraphTree extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -143,8 +141,6 @@ public class PredefinedGraphTree extends ViewPart
 		};
 		
 		actionOpen = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
@@ -175,9 +171,8 @@ public class PredefinedGraphTree extends ViewPart
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
+		menuMgr.addMenuListener(new IMenuListener()
+		{
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -279,10 +274,10 @@ public class PredefinedGraphTree extends ViewPart
 		{
 			encodedName = "___ERROR___";
 		}
-		String id = HistoricalDataView.PREDEFINED_GRAPH_SUBID + "&" + encodedName;
+		String id = HistoricalGraphView.PREDEFINED_GRAPH_SUBID + "&" + encodedName;
 		try
 		{
-			HistoricalDataView g = (HistoricalDataView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(HistoricalDataView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+			HistoricalGraphView g = (HistoricalGraphView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(HistoricalGraphView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
 			if (g != null)
 				g.initPredefinedGraph(gs);
 		}

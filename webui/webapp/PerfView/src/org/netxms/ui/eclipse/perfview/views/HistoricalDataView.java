@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,95 +18,54 @@
  */
 package org.netxms.ui.eclipse.perfview.views;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.datacollection.GraphItemStyle;
-import org.netxms.client.datacollection.GraphSettings;
-import org.netxms.client.datacollection.GraphSettingsChangeListener;
-import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
-import org.netxms.ui.eclipse.charts.api.ChartFactory;
-import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
-import org.netxms.ui.eclipse.perfview.ChartConfig;
+import org.netxms.ui.eclipse.perfview.dialogs.HistoricalDataSelectionDialog;
+import org.netxms.ui.eclipse.perfview.views.helpers.HistoricalDataLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * History graph view
+ * Historical data view
  */
-@SuppressWarnings("restriction")
-public class HistoricalDataView extends ViewPart implements GraphSettingsChangeListener
+public class HistoricalDataView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.perfview.views.HistoryGraph";
-	public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph";
+	public static final String ID = "org.netxms.ui.eclipse.perfview.views.HistoricalDataView";
 	
-	private static final int[] presetUnits = { GraphSettings.TIME_UNIT_MINUTE, GraphSettings.TIME_UNIT_MINUTE,
-		GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR,
-		GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, 
-		GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, 
-		GraphSettings.TIME_UNIT_DAY
-	};
-	private static final int[] presetRanges = { 10, 30, 1, 2, 4, 12, 1, 2, 5, 7, 31, 365 };
-	private static final String[] presetNames = { "10 minutes", "30 minutes", "hour", "2 hours", "4 hours",
-	                                              "12 hours", "day", "2 days", "5 days", "week", "month", "year" };
-
 	private NXCSession session;
-	private HistoricalDataChart chart = null;
+	private long nodeId;
+	private long dciId;
+	private String nodeName;
+	private SortableTableViewer viewer;
+	private Date timeFrom = null;
+	private Date timeTo = null;
+	private int recordLimit = 4096;
 	private boolean updateInProgress = false;
-	private Runnable refreshTimer;
-	private Composite chartParent = null;
-	
-	private GraphSettings settings = new GraphSettings();
-	private ChartConfig config = new ChartConfig();
-	
 	private Action actionRefresh;
-	private Action actionAutoRefresh;
-	private Action actionZoomIn;
-	private Action actionZoomOut;
-	private Action actionAdjustX;
-	private Action actionAdjustY;
-	private Action actionAdjustBoth;
-	private Action actionLogScale;
-	private Action actionShowLegend;
-	private Action actionLegendLeft;
-	private Action actionLegendRight;
-	private Action actionLegendTop;
-	private Action actionLegendBottom;
-	private Action actionProperties;
-	private Action[] presetActions;
+	private Action actionSelectRange;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -115,197 +74,23 @@ public class HistoricalDataView extends ViewPart implements GraphSettingsChangeL
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-
-		final Display display = site.getShell().getDisplay();
-		refreshTimer = new Runnable() {
-			@Override
-			public void run()
-			{
-				if (((Widget)chart).isDisposed())
-					return;
-				
-				updateChart();
-				display.timerExec(config.getRefreshRate() * 1000, this);
-			}
-		};
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		config.setTimeFrom(new Date(System.currentTimeMillis() - config.getTimeRangeMillis()));
-		config.setTimeTo(new Date(System.currentTimeMillis()));
+		// Secondary ID must by in form nodeId&dciId
+		String[] parts = site.getSecondaryId().split("&");
+		if (parts.length != 2)
+			throw new PartInitException("Internal error");
 		
-		// Extract DCI ids from view id
-		// (first field will be unique view id, so we skip it)
-		String id = site.getSecondaryId();
-		String[] fields = id.split("&");
-		if (!fields[0].equals(PREDEFINED_GRAPH_SUBID))
-		{
-			List<ChartDciConfig> items = new ArrayList<ChartDciConfig>();
-			for(int i = 1; i < fields.length; i++)
-			{
-				String[] subfields = fields[i].split("\\@");
-				if (subfields.length == 6)
-				{
-					try
-					{
-						ChartDciConfig dci = new ChartDciConfig();
-						dci.nodeId = Long.parseLong(subfields[0], 10);
-						dci.dciId = Long.parseLong(subfields[1], 10);
-						dci.name = URLDecoder.decode(subfields[5], "UTF-8");
-						items.add(dci);
-					}
-					catch(NumberFormatException e)
-					{
-						e.printStackTrace();
-					}
-					catch(UnsupportedEncodingException e)
-					{
-						e.printStackTrace();
-					}
-				}
-			}
-			
-			// Set view title to "host name: dci description" if
-			// we have only one DCI
-			if (items.size() == 1)
-			{
-				ChartDciConfig item = items.get(0);
-				GenericObject object = session.findObjectById(item.nodeId);
-				if (object != null)
-				{
-					setPartName(object.getObjectName() + ": " + item.name);
-				}
-			}
-			else if (items.size() > 1)
-			{
-				long nodeId = items.get(0).nodeId;
-				for(ChartDciConfig item : items)
-					if (item.nodeId != nodeId)
-					{
-						nodeId = -1;
-						break;
-					}
-				if (nodeId != -1)
-				{
-					// All DCIs from same node, set title to "host name"
-					GenericObject object = session.findObjectById(nodeId);
-					if (object != null)
-					{
-						setPartName(object.getObjectName() + ": historical data");
-					}
-				}
-			}
-			config.setTitle(getPartName());
-			config.setDciList(items.toArray(new ChartDciConfig[items.size()]));
-		}
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
-	 */
-	@Override
-	public void init(IViewSite site, IMemento memento) throws PartInitException
-	{
-		init(site);
+		nodeId = Long.parseLong(parts[0]);
+		GenericObject object = session.findObjectById(nodeId);
+		if ((object == null) || (object.getObjectClass() != GenericObject.OBJECT_NODE))
+			throw new PartInitException("Invalid object ID");
+		nodeName = object.getObjectName();
 		
-		if (memento != null)
-		{
-			try
-			{
-				config = ChartConfig.createFromXml(memento.getTextData());
-			}
-			catch(Exception e)
-			{
-				e.printStackTrace();
-			}
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
-	 */
-	@Override
-	public void saveState(IMemento memento)
-	{
-		try
-		{
-			memento.putTextData(config.createXml());
-		}
-		catch(Exception e)
-		{
-		}
-	}
-	
-	/**
-	 * Initialize this view with predefined graph settings
-	 * 
-	 * @param gs graph settings
-	 */
-	public void initPredefinedGraph(GraphSettings gs)
-	{
-		settings = gs;
-		try
-		{
-			config = ChartConfig.createFromXml(settings.getConfig());
-		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-		}
-		settings.addChangeListener(this);
-		configureGraphFromSettings();
-	}
-	
-	/**
-	 * Configure graph from graph settings
-	 */
-	private void configureGraphFromSettings()
-	{
-		if (chart != null)
-			((Widget)chart).dispose();
-		chart = ChartFactory.createLineChart(chartParent, SWT.NONE);
-		createPopupMenu();
+		dciId = Long.parseLong(parts[1]);
 		
-		// General settings
-		setPartName(config.getTitle());
-		chart.setChartTitle(config.getTitle());
-
-		// Chart visual settings
-		chart.setLogScaleEnabled(config.isLogScale());
-		chart.setGridVisible(config.isShowGrid());
-		chart.setLegendVisible(config.isShowLegend());
-		chart.setLegendPosition(config.getLegendPosition());
-		//chart.setBackgroundColor(new ChartColor(settings.getBackgroundColor()));
-		//chart.setPlotAreaColor(new ChartColor(settings.getPlotBackgroundColor()));
-		//chart.setLegendColor(new ChartColor(settings.getLegendTextColor()), new ChartColor(settings.getLegendBackgroundColor()));
-		//chart.setAxisColor(new ChartColor(settings.getAxisColor()));
-		//chart.setGridColor(new ChartColor(settings.getGridColor()));
-		
-		// Data
-		final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(config.getDciList().length);
-		int index = 0;
-		for(ChartDciConfig dci : config.getDciList())
-		{
-			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName()));
-			int color = dci.getColorAsInt();
-			if (color == -1)
-				color = ChartColor.getDefaultColor(index).getRGB();
-			styles.add(new GraphItemStyle(GraphItemStyle.LINE, color, 2, 0));
-			index++;
-		}
-		chart.setItemStyles(styles);
-
-		if (config.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW)
-		{
-			config.setTimeFrom(new Date(System.currentTimeMillis() - config.getTimeRangeMillis()));
-			config.setTimeTo(new Date(System.currentTimeMillis()));
-		}
-		
-		getDataFromServer();
-
-		// Automatic refresh
-		actionAutoRefresh.setChecked(config.isAutoRefresh());
-		getSite().getShell().getDisplay().timerExec(config.isAutoRefresh() ? config.getRefreshRate() * 1000 : -1, refreshTimer);
+		setPartName(nodeName + ": [" + Long.toString(dciId) + "]");
 	}
 
 	/* (non-Javadoc)
@@ -314,13 +99,73 @@ public class HistoricalDataView extends ViewPart implements GraphSettingsChangeL
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		chartParent = parent;
-		
+		final String[] names = { "Timestamp", "Value" };
+		final int[] widths = { 150, 400 };
+		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
+		viewer.setContentProvider(new ArrayContentProvider());
+		viewer.setLabelProvider(new HistoricalDataLabelProvider());
+
 		createActions();
 		contributeToActionBars();
+		createPopupMenu();
 		
-		configureGraphFromSettings();
-		settings.addChangeListener(this);
+		refreshData();
+	}
+
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionRefresh = new RefreshAction() {
+			@Override
+			public void run()
+			{
+				refreshData();
+			}
+		};
+		
+		actionSelectRange = new Action("Select data &range...") {
+			@Override
+			public void run()
+			{
+				selectRange();
+			}
+		};
+	}
+
+	/**
+	 * Contribute actions to action bar
+	 */
+	private void contributeToActionBars()
+	{
+		IActionBars bars = getViewSite().getActionBars();
+		fillLocalPullDown(bars.getMenuManager());
+		fillLocalToolBar(bars.getToolBarManager());
+	}
+
+	/**
+	 * Fill local pull-down menu
+	 * 
+	 * @param manager
+	 *           Menu manager for pull-down menu
+	 */
+	private void fillLocalPullDown(IMenuManager manager)
+	{
+		manager.add(actionSelectRange);
+		manager.add(new Separator());
+		manager.add(actionRefresh);
+	}
+
+	/**
+	 * Fill local tool bar
+	 * 
+	 * @param manager
+	 *           Menu manager for local toolbar
+	 */
+	private void fillLocalToolBar(IToolBarManager manager)
+	{
+		manager.add(actionRefresh);
 	}
 
 	/**
@@ -332,8 +177,6 @@ public class HistoricalDataView extends ViewPart implements GraphSettingsChangeL
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -341,338 +184,11 @@ public class HistoricalDataView extends ViewPart implements GraphSettingsChangeL
 		});
 
 		// Create menu.
-		Menu menu = menuMgr.createContextMenu((Control)chart);
-		((Control)chart).setMenu(menu);
-		for(Control ch : ((Composite)chart).getChildren())
-		{
-			ch.setMenu(menu);
-		}
-	}
+		Menu menu = menuMgr.createContextMenu(viewer.getControl());
+		viewer.getControl().setMenu(menu);
 
-	/**
-	 * Get DCI data from server
-	 */
-	private void getDataFromServer()
-	{
-		final ChartDciConfig[] dciList = config.getDciList();
-		
-		// Request data from server
-		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
-			private ChartDciConfig currentItem;
-			
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				monitor.beginTask(getName(), dciList.length);
-				final DciData[] data = new DciData[dciList.length];
-				final Threshold[][] thresholds = new Threshold[dciList.length][];
-				for(int i = 0; i < dciList.length; i++)
-				{
-					currentItem = dciList[i];
-					data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, config.getTimeFrom(), config.getTimeTo(), 0);
-					thresholds[i] = session.getThresholds(currentItem.nodeId, currentItem.dciId);
-					monitor.worked(1);
-				}
-				
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						if (!((Widget)chart).isDisposed())
-						{
-							chart.setTimeRange(config.getTimeFrom(), config.getTimeTo());
-							setChartData(data);
-							chart.clearErrors();
-						}
-						updateInProgress = false;
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return "Cannot get value for DCI " + session.getObjectName(currentItem.nodeId) + ":\"" + currentItem.name + "\"";
-			}
-
-			@Override
-			protected void jobFailureHandler()
-			{
-				updateInProgress = false;
-				super.jobFailureHandler();
-			}
-
-			@Override
-			protected IStatus createFailureStatus(final Exception e)
-			{
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")");
-					}
-				});
-				return Status.OK_STATUS;
-			}
-		};
-		job.setUser(false);
-		job.start();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
-	@Override
-	public void setFocus()
-	{
-		((Composite)chart).setFocus();
-	}
-	
-	/**
-	 * Create actions
-	 */
-	private void createActions()
-	{
-		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				updateChart();
-			}
-		};
-		
-		actionProperties = new Action("Properties") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, config);
-				if (dlg != null)
-				{
-					dlg.open();
-					configureGraphFromSettings();
-				}
-			}
-		};
-		
-		actionAutoRefresh = new Action("Refresh &automatically") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				config.setAutoRefresh(!config.isAutoRefresh());
-				setChecked(config.isAutoRefresh());
-				HistoricalDataView.this.getSite().getShell().getDisplay().timerExec(config.isAutoRefresh() ? config.getRefreshRate() * 1000 : -1, refreshTimer);
-			}
-		};
-		actionAutoRefresh.setChecked(config.isAutoRefresh());
-		
-		actionLogScale = new Action("&Logarithmic scale") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				try
-				{
-					chart.setLogScaleEnabled(!config.isLogScale());
-					config.setLogScale(!config.isLogScale());
-				}
-				catch(IllegalStateException e)
-				{
-					MessageDialog.openError(getSite().getShell(), "Error", "Cannot switch to logarithmic scale: " + e.getLocalizedMessage());
-				}
-				setChecked(config.isLogScale());
-			}
-		};
-		actionLogScale.setChecked(config.isLogScale());
-		
-		actionZoomIn = new Action("Zoom &in") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				chart.zoomIn();
-			}
-		};
-		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
-
-		actionZoomOut = new Action("Zoom &out") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				chart.zoomOut();
-			}
-		};
-		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
-
-		actionAdjustX = new Action() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				chart.adjustXAxis(true);
-			}
-		};
-		actionAdjustX.setText("Adjust &X axis");
-		actionAdjustX.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_x.png"));
-
-		actionAdjustY = new Action() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				chart.adjustYAxis(true);
-			}
-		};
-		actionAdjustY.setText("Adjust &Y axis");
-		actionAdjustY.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_y.png"));
-
-		actionAdjustBoth = new Action() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				chart.adjustXAxis(false);
-				chart.adjustYAxis(true);
-			}
-		};
-		actionAdjustBoth.setText("&Adjust");
-		actionAdjustBoth.setImageDescriptor(Activator.getImageDescriptor("icons/adjust.png"));
-
-		actionShowLegend = new Action("&Show legend") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				config.setShowLegend(!config.isShowLegend());
-				setChecked(config.isShowLegend());
-				chart.setLegendVisible(config.isShowLegend());
-			}
-		};
-		actionShowLegend.setChecked(config.isShowLegend());
-		
-		actionLegendLeft = new Action("Place on &left", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				config.setLegendPosition(GraphSettings.POSITION_LEFT);
-				chart.setLegendPosition(config.getLegendPosition());
-			}
-		};
-		actionLegendLeft.setChecked(config.getLegendPosition() == GraphSettings.POSITION_LEFT);
-		
-		actionLegendRight = new Action("Place on &right", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				config.setLegendPosition(GraphSettings.POSITION_RIGHT);
-				chart.setLegendPosition(config.getLegendPosition());
-			}
-		};
-		actionLegendRight.setChecked(config.getLegendPosition() == GraphSettings.POSITION_RIGHT);
-		
-		actionLegendTop = new Action("Place on &top", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				config.setLegendPosition(GraphSettings.POSITION_TOP);
-				chart.setLegendPosition(config.getLegendPosition());
-			}
-		};
-		actionLegendTop.setChecked(config.getLegendPosition() == GraphSettings.POSITION_TOP);
-		
-		actionLegendBottom = new Action("Place on &bottom", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				config.setLegendPosition(GraphSettings.POSITION_BOTTOM);
-				chart.setLegendPosition(config.getLegendPosition());
-			}
-		};
-		actionLegendBottom.setChecked(config.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
-
-		presetActions = new Action[presetRanges.length];
-		for(int i = 0; i < presetRanges.length; i++)
-		{
-			final Integer presetIndex = i;
-			presetActions[i] = new Action("Last " + presetNames[i]) {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void run()
-				{
-					config.setTimeUnits(presetUnits[presetIndex]);
-					config.setTimeRange(presetRanges[presetIndex]);
-					updateChart();
-				}
-			};
-		}
-	}
-	
-	/**
-	 * Fill action bars
-	 */
-	private void contributeToActionBars()
-	{
-		IActionBars bars = getViewSite().getActionBars();
-		fillLocalPullDown(bars.getMenuManager());
-		fillLocalToolBar(bars.getToolBarManager());
-	}
-
-	/**
-	 * Fill local pull-down menu
-	 * @param manager
-	 */
-	private void fillLocalPullDown(IMenuManager manager)
-	{
-		MenuManager presets = new MenuManager("&Presets");
-		for(int i = 0; i < presetActions.length; i++)
-			presets.add(presetActions[i]);
-		
-		MenuManager legend = new MenuManager("&Legend");
-		legend.add(actionShowLegend);
-		legend.add(new Separator());
-		legend.add(actionLegendLeft);
-		legend.add(actionLegendRight);
-		legend.add(actionLegendTop);
-		legend.add(actionLegendBottom);		
-		
-		manager.add(presets);
-		manager.add(new Separator());
-		manager.add(actionAdjustBoth);
-		manager.add(actionAdjustX);
-		manager.add(actionAdjustY);
-		manager.add(new Separator());
-		manager.add(actionZoomIn);
-		manager.add(actionZoomOut);
-		manager.add(new Separator());
-		manager.add(actionLogScale);
-		manager.add(actionAutoRefresh);
-		manager.add(legend);
-		manager.add(new Separator());
-		manager.add(actionRefresh);
-		manager.add(new Separator());
-		manager.add(actionProperties);
+		// Register menu for extension.
+		getSite().registerContextMenu(menuMgr, viewer);
 	}
 
 	/**
@@ -681,95 +197,64 @@ public class HistoricalDataView extends ViewPart implements GraphSettingsChangeL
 	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
-		MenuManager presets = new MenuManager("&Presets");
-		for(int i = 0; i < presetActions.length; i++)
-			presets.add(presetActions[i]);
-
-		MenuManager legend = new MenuManager("&Legend");
-		legend.add(actionShowLegend);
-		legend.add(new Separator());
-		legend.add(actionLegendLeft);
-		legend.add(actionLegendRight);
-		legend.add(actionLegendTop);
-		legend.add(actionLegendBottom);
-		
-		manager.add(presets);
+		manager.add(actionSelectRange);
 		manager.add(new Separator());
-		manager.add(actionAdjustBoth);
-		manager.add(actionAdjustX);
-		manager.add(actionAdjustY);
-		manager.add(new Separator());
-		manager.add(actionZoomIn);
-		manager.add(actionZoomOut);
-		manager.add(new Separator());
-		manager.add(actionLogScale);
-		manager.add(actionAutoRefresh);
-		manager.add(legend);
-		manager.add(new Separator());
-		manager.add(actionRefresh);
-		manager.add(new Separator());
-		manager.add(actionProperties);
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
-	/**
-	 * Fill local tool bar
-	 * @param manager
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
-	private void fillLocalToolBar(IToolBarManager manager)
+	@Override
+	public void setFocus()
 	{
-		manager.add(actionAdjustBoth);
-		manager.add(actionAdjustX);
-		manager.add(actionAdjustY);
-		manager.add(new Separator());
-		manager.add(actionZoomIn);
-		manager.add(actionZoomOut);
-		manager.add(new Separator());
-		manager.add(actionRefresh);
+		viewer.getControl().setFocus();
 	}
 
 	/**
-	 * Set chart data
-	 * 
-	 * @param data Retrieved DCI data
+	 * Refresh data
 	 */
-	private void setChartData(final DciData[] data)
-	{
-		for(int i = 0; i < data.length; i++)
-			chart.updateParameter(i, data[i], false);
-		chart.refresh();
-	}
-	
-	/**
-	 * Update chart
-	 */
-	private void updateChart()
+	private void refreshData()
 	{
 		if (updateInProgress)
 			return;
-		
 		updateInProgress = true;
-		config.setTimeFrom(new Date(System.currentTimeMillis() - config.getTimeRangeMillis()));
-		config.setTimeTo(new Date(System.currentTimeMillis()));
-		getDataFromServer();
+		
+		new ConsoleJob("Read DCI data from server", this, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final DciData data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit);
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						viewer.setInput(data.getValues());
+						updateInProgress = false;
+					}
+				});
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot get data for DCI " + nodeName + ":[" + Long.toString(dciId) + "]";
+			}
+		}.start();
 	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	
+	/**
+	 * Select data range for display
 	 */
-	@Override
-	public void dispose()
+	private void selectRange()
 	{
-		getSite().getShell().getDisplay().timerExec(-1, refreshTimer);
-		super.dispose();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.client.datacollection.GraphSettingsChangeListener#onGraphSettingsChange(org.netxms.client.datacollection.GraphSettings)
-	 */
-	@Override
-	public void onGraphSettingsChange(GraphSettings settings)
-	{
-		if (this.settings == settings)
-			configureGraphFromSettings();
+		HistoricalDataSelectionDialog dlg = new HistoricalDataSelectionDialog(getSite().getShell(), recordLimit, timeFrom, timeTo);
+		if (dlg.open() == Window.OK)
+		{
+			recordLimit = dlg.getMaxRecords();
+			timeFrom = dlg.getTimeFrom();
+			timeTo = dlg.getTimeTo();
+			refreshData();
+		}
 	}
 }

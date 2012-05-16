@@ -96,7 +96,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 					return "<< TABLE >>";
 				return useMultipliers ? getValue((DciValue)element) : ((DciValue)element).getValue();
 			case LastValuesWidget.COLUMN_TIMESTAMP:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((DciValue)element).getTimestamp());
+				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(((DciValue)element).getTimestamp());
 			case LastValuesWidget.COLUMN_THRESHOLD:
 				return formatThreshold(((DciValue)element).getActiveThreshold());
 		}
