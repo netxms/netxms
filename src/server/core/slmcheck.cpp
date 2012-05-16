@@ -567,7 +567,7 @@ NXSL_Value *SlmCheck::getNodeObjectForNXSL()
 	if (nodeId != 0)
 	{
 		NetObj *node = FindObjectById(nodeId);
-		if (node->Type() == OBJECT_NODE)
+		if ((node != NULL) && (node->Type() == OBJECT_NODE))
 		{
 			value = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
 		}
