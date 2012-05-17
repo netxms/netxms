@@ -35,5 +35,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 	{
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		ps.setDefault("SHOW_COMMENTS", false); //$NON-NLS-1$
+		
+		ps.setDefault("ObjectStatusIndicator.showIcons", false); //$NON-NLS-1$
+		ps.setDefault("ObjectStatusIndicator.hideNormal", true); //$NON-NLS-1$
+		ps.setDefault("ObjectStatusIndicator.hideUnmanaged", true); //$NON-NLS-1$
+		ps.setDefault("ObjectStatusIndicator.hideUnknown", true); //$NON-NLS-1$
+		ps.setDefault("ObjectStatusIndicator.hideDisabled", true); //$NON-NLS-1$
 	}
 }

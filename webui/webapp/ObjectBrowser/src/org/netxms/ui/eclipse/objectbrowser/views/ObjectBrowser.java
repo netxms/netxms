@@ -80,6 +80,7 @@ public class ObjectBrowser extends ViewPart
 	
 	private ObjectTree objectTree;
 	private Action actionShowFilter;
+	private Action actionShowStatusIndicator;
 	private Action actionHideUnmanaged;
 	private Action actionHideTemplateChecks;
 	private Action actionMoveObject;
@@ -90,6 +91,7 @@ public class ObjectBrowser extends ViewPart
 	private boolean initHideUnmanaged = false;
 	private boolean initHideTemplateChecks = false;
 	private boolean initShowFilter = true;
+	private boolean initShowStatus = true;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
@@ -103,6 +105,7 @@ public class ObjectBrowser extends ViewPart
 			initHideUnmanaged = safeCast(memento.getBoolean("ObjectBrowser.hideUnmanaged"), false);
 			initHideTemplateChecks = safeCast(memento.getBoolean("ObjectBrowser.hideTemplateChecks"), false);
 			initShowFilter = safeCast(memento.getBoolean("ObjectBrowser.showFilter"), true);
+			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), true);
 		}
 	}
 
@@ -121,6 +124,7 @@ public class ObjectBrowser extends ViewPart
 		memento.putBoolean("ObjectBrowser.hideUnmanaged", objectTree.isHideUnmanaged());
 		memento.putBoolean("ObjectBrowser.hideTemplateChecks", objectTree.isHideTemplateChecks());
 		memento.putBoolean("ObjectBrowser.showFilter", objectTree.isFilterEnabled());
+		memento.putBoolean("ObjectBrowser.showStatusIndicator", objectTree.isStatusIndicatorEnabled());
 	}
 
 	/* (non-Javadoc)
@@ -153,6 +157,7 @@ public class ObjectBrowser extends ViewPart
 		objectTree.setHideTemplateChecks(initHideTemplateChecks);
 		objectTree.setHideUnmanaged(initHideUnmanaged);
 		objectTree.enableFilter(initShowFilter);
+		objectTree.enableStatusIndicator(initShowStatus);
 		
 		createActions();
 		createMenu();
@@ -235,8 +240,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-      actionHideUnmanaged = new Action("&Hide unmanaged objects", Action.AS_CHECK_BOX)
-      {
+      actionHideUnmanaged = new Action("&Hide unmanaged objects", Action.AS_CHECK_BOX) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -248,8 +252,7 @@ public class ObjectBrowser extends ViewPart
       };
       actionHideUnmanaged.setChecked(objectTree.isHideUnmanaged());
 
-      actionHideTemplateChecks = new Action("Hide check templates", Action.AS_CHECK_BOX)
-      {
+      actionHideTemplateChecks = new Action("Hide check templates", Action.AS_CHECK_BOX) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -261,8 +264,7 @@ public class ObjectBrowser extends ViewPart
       };
       actionHideTemplateChecks.setChecked(objectTree.isHideTemplateChecks());
 
-      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX)
-      {
+      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -277,6 +279,20 @@ public class ObjectBrowser extends ViewPart
 		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
       
+      actionShowStatusIndicator = new Action("Show &status indicator", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void run()
+			{
+				objectTree.enableStatusIndicator(actionShowStatusIndicator.isChecked());
+			}
+      };
+      actionShowStatusIndicator.setChecked(objectTree.isStatusIndicatorEnabled());
+      actionShowStatusIndicator.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.show_status_indicator");
+		final ActionHandler showStatusIndicatorHandler = new ActionHandler(actionShowStatusIndicator);
+		handlerService.activateHandler(actionShowStatusIndicator.getActionDefinitionId(), showStatusIndicatorHandler);
+
       actionProperties = new PropertyDialogAction(getSite(), objectTree.getTreeViewer());
 	}
 
@@ -287,6 +303,7 @@ public class ObjectBrowser extends ViewPart
    {
       IMenuManager manager = getViewSite().getActionBars().getMenuManager();
       manager.add(actionShowFilter);
+      manager.add(actionShowStatusIndicator);
       manager.add(actionHideUnmanaged);
       manager.add(actionHideTemplateChecks);
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));

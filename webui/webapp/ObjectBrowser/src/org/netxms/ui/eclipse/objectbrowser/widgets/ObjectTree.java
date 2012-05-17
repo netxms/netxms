@@ -39,6 +39,10 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.TreeEvent;
+import org.eclipse.swt.events.TreeListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -57,6 +61,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeContentProvider;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeFilter;
+import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeViewer;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.FilterText;
 
@@ -73,7 +78,8 @@ public class ObjectTree extends Composite
 	public static final int MULTI = 0x02;
 
 	private boolean filterEnabled = true;
-	private TreeViewer objectTree;
+	private boolean statusIndicatorEnabled = false;
+	private ObjectTreeViewer objectTree;
 	private FilterText filterText;
 	private ObjectTreeFilter filter;
 	private Set<Long> checkedObjects = new HashSet<Long>(0);
@@ -81,6 +87,9 @@ public class ObjectTree extends Composite
 	private NXCSession session = null;
 	private long[] expandedElements = null;
 	private int changeCount = 0;
+	private ObjectStatusIndicator statusIndicator = null;
+	private SelectionListener statusIndicatorSelectionListener = null;
+	private TreeListener statusIndicatorTreeListener;
 	
 	/**
 	 * @param parent
@@ -117,7 +126,7 @@ public class ObjectTree extends Composite
 		});
 		
 		// Create object tree control
-		objectTree = new TreeViewer(this, SWT.VIRTUAL | (((options & MULTI) == MULTI) ? SWT.MULTI : SWT.SINGLE) | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
+		objectTree = new ObjectTreeViewer(this, SWT.VIRTUAL | (((options & MULTI) == MULTI) ? SWT.MULTI : SWT.SINGLE) | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
 		objectTree.setContentProvider(new ObjectTreeContentProvider(rootObjects));
 		objectTree.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
 		objectTree.setComparator(new ObjectTreeComparator());
@@ -260,6 +269,8 @@ public class ObjectTree extends Composite
 			filterText.setFocus();
 		else
 			enableFilter(false);	// Will hide filter area correctly
+		
+		enableStatusIndicator(statusIndicatorEnabled);
 	}
 	
 	/**
@@ -318,6 +329,11 @@ public class ObjectTree extends Composite
 		filterText.setVisible(filterEnabled);
 		FormData fd = (FormData)objectTree.getTree().getLayoutData();
 		fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+		if (statusIndicatorEnabled)
+		{
+			fd = (FormData)statusIndicator.getLayoutData();
+			fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+		}
 		layout();
 		if (enable)
 			filterText.setFocus();
@@ -508,5 +524,93 @@ public class ObjectTree extends Composite
 	public void setFilterCloseAction(Action action)
 	{
 		filterText.setCloseAction(action);
+	}
+	
+	/**
+	 * @param enabled
+	 */
+	public void enableStatusIndicator(boolean enabled)
+	{
+		if (statusIndicatorEnabled == enabled)
+			return;
+		
+		statusIndicatorEnabled = enabled;
+		if (enabled)
+		{
+			statusIndicator = new ObjectStatusIndicator(this, SWT.NONE);
+			FormData fd = new FormData();
+			fd.left = new FormAttachment(0, 0);
+			fd.top = filterEnabled ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+			fd.bottom = new FormAttachment(100, 0);
+			statusIndicator.setLayoutData(fd);
+			
+			fd = (FormData)objectTree.getTree().getLayoutData();
+			fd.left = new FormAttachment(statusIndicator);
+			
+			statusIndicatorSelectionListener = new SelectionListener() {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void widgetSelected(SelectionEvent e)
+				{
+					updateStatusIndicator();
+				}
+				
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e)
+				{
+					updateStatusIndicator();
+				}
+			};
+			objectTree.getTree().getVerticalBar().addSelectionListener(statusIndicatorSelectionListener);
+			
+			statusIndicatorTreeListener = new TreeListener() {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void treeCollapsed(TreeEvent e)
+				{
+					updateStatusIndicator();
+				}
+
+				@Override
+				public void treeExpanded(TreeEvent e)
+				{
+					updateStatusIndicator();
+				}
+			};
+			objectTree.getTree().addTreeListener(statusIndicatorTreeListener);
+			
+			updateStatusIndicator();
+		}
+		else
+		{
+			objectTree.getTree().getVerticalBar().removeSelectionListener(statusIndicatorSelectionListener);
+			objectTree.getTree().removeTreeListener(statusIndicatorTreeListener);
+			statusIndicator.dispose();
+			statusIndicator = null;
+			statusIndicatorSelectionListener = null;
+			statusIndicatorTreeListener = null;
+
+			FormData fd = (FormData)objectTree.getTree().getLayoutData();
+			fd.left = new FormAttachment(0, 0);
+		}
+		layout(true, true);
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isStatusIndicatorEnabled()
+	{
+		return statusIndicatorEnabled;
+	}
+
+	/**
+	 * Update status indicator
+	 */
+	private void updateStatusIndicator()
+	{
+		statusIndicator.refresh(objectTree);
 	}
 }
