@@ -161,10 +161,7 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
    DbgPrintf(1, _T("Started caching of DCI values"));
 	ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects();
    for(int i = 0; i < nodes->size(); i++)
-	{
 		((Node *)nodes->get(i))->updateDciCache();
-//      ThreadSleepMs(50);  // Give a chance to other threads to do something with database
-	}
 	delete nodes;
    DbgPrintf(1, _T("Finished caching of DCI values"));
    return THREAD_OK;
