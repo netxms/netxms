@@ -18,8 +18,16 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.widgets;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ViewerRow;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.GC;
@@ -30,6 +38,7 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeViewer;
 import org.netxms.ui.eclipse.shared.SharedColors;
 
@@ -40,10 +49,15 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 {
 	private ObjectTreeViewer objectTree = null;
 	private boolean showIcons = false;
-	private boolean showNormal = false;
-	private boolean showUnmanaged = false;
-	private boolean showUnknown = false;
-	private boolean showDisabled = false;
+	private boolean hideNormal = true;
+	private boolean hideUnmanaged = true;
+	private boolean hideUnknown = true;
+	private boolean hideDisabled = true;
+	private Action actionShowIcons;
+	private Action actionHideNormal;
+	private Action actionHideUnmanaged;
+	private Action actionHideUnknown;
+	private Action actionHideDisabled;
 	
 	/**
 	 * @param parent
@@ -54,6 +68,106 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		super(parent, style | SWT.DOUBLE_BUFFERED);
 		addPaintListener(this);
 		setBackground(SharedColors.WHITE);
+		
+		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+		showIcons = ps.getBoolean("ObjectStatusIndicator.showIcons"); //$NON-NLS-1$
+		hideNormal = ps.getBoolean("ObjectStatusIndicator.hideNormal"); //$NON-NLS-1$
+		hideUnmanaged = ps.getBoolean("ObjectStatusIndicator.hideUnmanaged"); //$NON-NLS-1$
+		hideUnknown = ps.getBoolean("ObjectStatusIndicator.hideUnknown"); //$NON-NLS-1$
+		hideDisabled = ps.getBoolean("ObjectStatusIndicator.hideDisabled"); //$NON-NLS-1$
+		
+		addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				ps.setValue("ObjectStatusIndicator.showIcons", showIcons); //$NON-NLS-1$
+				ps.setValue("ObjectStatusIndicator.hideNormal", hideNormal); //$NON-NLS-1$
+				ps.setValue("ObjectStatusIndicator.hideUnmanaged", hideUnmanaged); //$NON-NLS-1$
+				ps.setValue("ObjectStatusIndicator.hideUnknown", hideUnknown); //$NON-NLS-1$
+				ps.setValue("ObjectStatusIndicator.hideDisabled", hideDisabled); //$NON-NLS-1$
+			}
+		});
+		
+		createActions();
+		
+		MenuManager manager = new MenuManager();
+		manager.setRemoveAllWhenShown(true);
+		manager.addMenuListener(new IMenuListener() {
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+		setMenu(manager.createContextMenu(this));
+	}
+	
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionShowIcons = new Action("Show status &icons", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				showIcons = actionShowIcons.isChecked();
+				redraw();
+			}
+		};
+		actionShowIcons.setChecked(showIcons);
+
+		actionHideDisabled = new Action("Hide &disabled objects", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				hideDisabled = actionHideDisabled.isChecked();
+				redraw();
+			}
+		};
+		actionHideDisabled.setChecked(hideDisabled);
+
+		actionHideNormal = new Action("Hide &normal objects", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				hideNormal = actionHideNormal.isChecked();
+				redraw();
+			}
+		};
+		actionHideNormal.setChecked(hideNormal);
+
+		actionHideUnknown = new Action("Hide &unknown objects", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				hideUnknown = actionHideUnknown.isChecked();
+				redraw();
+			}
+		};
+		actionHideUnknown.setChecked(hideUnknown);
+
+		actionHideUnmanaged = new Action("Hide un&managed objects", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				hideUnmanaged = actionHideUnmanaged.isChecked();
+				redraw();
+			}
+		};
+		actionHideUnmanaged.setChecked(hideUnmanaged);
+	}
+	
+	/**
+	 * @param manager
+	 */
+	private void fillContextMenu(IMenuManager manager)
+	{
+		manager.add(actionShowIcons);
+		manager.add(new Separator());
+		manager.add(actionHideNormal);
+		manager.add(actionHideUnknown);
+		manager.add(actionHideUnmanaged);
+		manager.add(actionHideDisabled);
 	}
 
 	/* (non-Javadoc)
@@ -62,7 +176,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
-		return new Point(20, 10);
+		return new Point(21, 10);
 	}
 
 	/* (non-Javadoc)
@@ -106,13 +220,13 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 	{
 		final int status = object.getStatus();
 		
-		if ((status == Severity.NORMAL) && !showNormal)
+		if ((status == Severity.NORMAL) && hideNormal)
 			return;
-		if ((status == Severity.UNMANAGED) && !showUnmanaged)
+		if ((status == Severity.UNMANAGED) && hideUnmanaged)
 			return;
-		if ((status == Severity.UNKNOWN) && !showUnknown)
+		if ((status == Severity.UNKNOWN) && hideUnknown)
 			return;
-		if ((status == Severity.DISABLED) && !showDisabled)
+		if ((status == Severity.DISABLED) && hideDisabled)
 			return;
 		
 		if (showIcons)
@@ -122,7 +236,12 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		else
 		{
 			gc.setBackground(StatusDisplayInfo.getStatusColor(status));
-			gc.fillOval(4, y + 4, width - 8, height - 8);
+			gc.setForeground(StatusDisplayInfo.getStatusColor(status));
+			int size = Math.min(width - 8, height - 8);
+			gc.setAlpha(127);
+			gc.fillOval((width - size) / 2, y + (height - size) / 2, size, size);
+			gc.setAlpha(255);
+			gc.drawOval((width - size) / 2, y + (height - size) / 2, size, size);
 		}
 	}
 

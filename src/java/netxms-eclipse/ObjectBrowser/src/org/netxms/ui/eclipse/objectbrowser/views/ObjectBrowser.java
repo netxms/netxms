@@ -271,6 +271,9 @@ public class ObjectBrowser extends ViewPart
 			}
       };
       actionShowStatusIndicator.setChecked(objectTree.isStatusIndicatorEnabled());
+      actionShowStatusIndicator.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.show_status_indicator");
+		final ActionHandler showStatusIndicatorHandler = new ActionHandler(actionShowStatusIndicator);
+		handlerService.activateHandler(actionShowStatusIndicator.getActionDefinitionId(), showStatusIndicatorHandler);
 
       actionProperties = new PropertyDialogAction(getSite(), objectTree.getTreeViewer());
 	}

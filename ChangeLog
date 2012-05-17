@@ -4,6 +4,8 @@
 
 - Implemented dashboard export/import
 - Fixed memory leak in NXSL functions gmtime and localtime
+- Java console:
+	- Added object status indication bar in object browser
 
 
 *

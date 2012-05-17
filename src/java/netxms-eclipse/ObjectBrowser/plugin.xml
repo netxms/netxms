@@ -29,6 +29,11 @@
             id="org.netxms.ui.eclipse.objectbrowser.commands.show_object_filter"
             name="Toggle Object Filter">
       </command>
+      <command
+            description="Toggle Object Status Indicator"
+            id="org.netxms.ui.eclipse.objectbrowser.commands.show_status_indicator"
+            name="Toggle Object Status Indicator">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -59,6 +64,12 @@
             contextId="org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="Ctrl+F2">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objectbrowser.commands.show_status_indicator"
+            contextId="org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+F3">
       </key>
    </extension>
 
