@@ -81,6 +81,20 @@ public class SnmpTrap
 	}
 	
 	/**
+	 * Create SNMP trap configuration object from summary NXCP message
+	 * 
+	 * @param msg NXCP message
+	 */
+	public SnmpTrap(NXCPMessage msg, long baseId)
+	{
+		id = msg.getVariableAsInt64(baseId);
+		description = msg.getVariableAsString(baseId + 4);
+		objectId = new SnmpObjectId(msg.getVariableAsUInt32Array(baseId + 2));
+		eventCode = msg.getVariableAsInteger(baseId + 3);
+		parameterMapping = new ArrayList<SnmpTrapParameterMapping>(0);
+	}
+	
+	/**
 	 * Fill NXCP message with trap configuration data.
 	 * 
 	 * @param msg NXCP message

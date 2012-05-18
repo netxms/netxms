@@ -4715,15 +4715,38 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
-
+	
+	/**
+	 * Get summary of SNMP trap mapping. Trap configurations returned without parameter mapping.
+	 * 
+	 * @return
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<SnmpTrap> getSnmpTrapsConfigurationSummary() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_TRAP_CFG_RO);
+		sendMessage(msg);
+		
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_TRAPS);
+		List<SnmpTrap> list = new ArrayList<SnmpTrap>(count);
+		
+		long varId = NXCPCodes.VID_TRAP_INFO_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			list.add(new SnmpTrap(response, varId));
+			varId += 10;
+		}
+		return list;
+	}
+	
 	/**
 	 * Get list of configured SNMP traps
 	 * 
 	 * @return List of configured SNMP traps.
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public List<SnmpTrap> getSnmpTrapsConfiguration() throws IOException, NXCException
 	{

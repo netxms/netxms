@@ -1673,6 +1673,8 @@ src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dial
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/ConfigurationImportDialog.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/LogMacroEditDialog.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/VariableEditDialog.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/helpers/SnmpTrapComparator.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/helpers/TrapListLabelProvider.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/NetworkDiscoveryConfigurator.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/ServerConfigurationEditor.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/SyslogParserConfigurator.java -text

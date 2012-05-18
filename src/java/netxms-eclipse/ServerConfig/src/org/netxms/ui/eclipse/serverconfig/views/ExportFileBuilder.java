@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.serverconfig.views;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
@@ -53,11 +54,14 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Template;
+import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
 import org.netxms.ui.eclipse.filemanager.widgets.LocalFileSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.Activator;
+import org.netxms.ui.eclipse.serverconfig.dialogs.SelectSnmpTrapDialog;
+import org.netxms.ui.eclipse.serverconfig.dialogs.helpers.TrapListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
@@ -81,7 +85,9 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private Action actionSave;
 	private Set<EventTemplate> events = new HashSet<EventTemplate>();
 	private Set<Template> templates = new HashSet<Template>();
+	private Set<SnmpTrap> traps = new HashSet<SnmpTrap>();
 	private boolean modified = false;
+	private List<SnmpTrap> snmpTrapCache = null;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -306,6 +312,10 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		gd.heightHint = 200;
 		gd.verticalSpan = 2;
 		trapViewer.getTable().setLayoutData(gd);
+		trapViewer.setContentProvider(new ArrayContentProvider());
+		trapViewer.setLabelProvider(new TrapListLabelProvider());
+		trapViewer.setComparator(new ObjectLabelComparator((ILabelProvider)eventViewer.getLabelProvider()));
+		trapViewer.getTable().setSortDirection(SWT.UP);
 
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		linkAdd.setText("Add...");
@@ -317,6 +327,33 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
+				if (snmpTrapCache == null)
+				{
+					new ConsoleJob("Loading SNMP trap configuration", ExportFileBuilder.this, Activator.PLUGIN_ID, null) {
+						@Override
+						protected void runInternal(IProgressMonitor monitor) throws Exception
+						{
+							snmpTrapCache = session.getSnmpTrapsConfigurationSummary();
+							runInUIThread(new Runnable() {
+								@Override
+								public void run()
+								{
+									addTraps();
+								}
+							});
+						}
+
+						@Override
+						protected String getErrorMessage()
+						{
+							return "Cannot load SNMP trap configuration";
+						}
+					}.start();
+				}
+				else
+				{
+					addTraps();
+				}
 			}
 		});
 		
@@ -330,6 +367,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
+				removeTraps();
 			}
 		});
 	}
@@ -423,13 +461,18 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		for(Template t : templates)
 			templateList[i++] = t.getObjectId();
 		
+		final long[] trapList = new long[traps.size()];
+		i = 0;
+		for(SnmpTrap t : traps)
+			trapList[i++] = t.getId();
+		
 		final String descriptionText = description.getText();
 		
 		new ConsoleJob("Exporting and saving configuration", this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				String xml = session.exportConfiguration(descriptionText, eventList, new long[0], templateList);
+				String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList);
 				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(exportFile.getFile()), "UTF-8");
 				try
 				{
@@ -591,6 +634,48 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			for(Object o : selection.toList())
 				templates.remove(o);
 			templateViewer.setInput(templates.toArray());
+			setModified();
+		}
+	}
+	
+	/**
+	 * Add traps to list
+	 */
+	private void addTraps()
+	{
+		SelectSnmpTrapDialog dlg = new SelectSnmpTrapDialog(getSite().getShell(), snmpTrapCache);
+		if (dlg.open() == Window.OK)
+		{
+			final Set<Long> eventCodes = new HashSet<Long>();
+			for(SnmpTrap t : dlg.getSelection())
+			{
+				traps.add(t);
+				if (t.getEventCode() >= 100000)
+				{
+					eventCodes.add((long)t.getEventCode());
+				}
+			}
+			trapViewer.setInput(traps.toArray());
+			setModified();
+			if (eventCodes.size() > 0)
+			{
+				events.addAll(session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()])));
+				eventViewer.setInput(events.toArray());
+			};
+		}
+	}
+	
+	/**
+	 * Remove traps from list
+	 */
+	private void removeTraps()
+	{
+		IStructuredSelection selection = (IStructuredSelection)eventViewer.getSelection();
+		if (selection.size() > 0)
+		{
+			for(Object o : selection.toList())
+				traps.remove(o);
+			trapViewer.setInput(traps.toArray());
 			setModified();
 		}
 	}
