@@ -297,6 +297,7 @@ public:
 struct SERVER_INFO
 {
    DWORD dwIpAddr;
+	DWORD dwNetMask;
    BOOL bMasterServer;
    BOOL bControlServer;
 };

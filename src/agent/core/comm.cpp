@@ -64,12 +64,14 @@ static BOOL IsValidServerAddr(DWORD dwAddr, BOOL *pbMasterServer, BOOL *pbContro
    DWORD i;
 
    for(i=0; i < g_dwServerCount; i++)
-      if (dwAddr == g_pServerList[i].dwIpAddr)
+	{
+      if ((dwAddr & g_pServerList[i].dwNetMask) == g_pServerList[i].dwIpAddr)
       {
          *pbMasterServer = g_pServerList[i].bMasterServer;
          *pbControlServer = g_pServerList[i].bControlServer;
          return TRUE;
       }
+	}
    return FALSE;
 }
 

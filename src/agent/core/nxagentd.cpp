@@ -26,9 +26,6 @@
 #if defined(_WIN32)
 #include <conio.h>
 #include <locale.h>
-#elif defined(_NETWARE)
-#include <screen.h>
-#include <library.h>
 #else
 #include <signal.h>
 #include <sys/wait.h>
@@ -60,7 +57,7 @@ int WatchdogMain(DWORD pid);
 
 void InitSessionList();
 
-#if !defined(_WIN32) && !defined(_NETWARE)
+#if !defined(_WIN32)
 void InitStaticSubagents();
 #endif
 
@@ -86,8 +83,6 @@ extern const TCHAR *g_szMessages[];
 
 #if defined(_WIN32)
 #define VALID_OPTIONS   "c:CdD:e:EfhHiIM:n:N:P:r:RsSUvX:W:Z:"
-#elif defined(_NETWARE)
-#define VALID_OPTIONS   "c:CD:fhM:P:r:vZ:"
 #else
 #define VALID_OPTIONS   "c:CdD:fhM:p:P:r:vX:W:Z:"
 #endif
@@ -143,17 +138,13 @@ DWORD g_dwIdleTimeout = 60;   // Session idle timeout
 DWORD g_dwIdleTimeout = 120;   // Session idle timeout
 #endif
 
-#if !defined(_WIN32) && !defined(_NETWARE)
+#if !defined(_WIN32)
 TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxagentd.pid");
 #endif
 
 #ifdef _WIN32
 DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
 #endif   /* _WIN32 */
-
-#ifdef _NETWARE
-int g_nThreadCount = 0;
-#endif
 
 
 //
@@ -183,11 +174,11 @@ static DWORD m_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
 static TCHAR m_szDailyLogFileSuffix[64] = _T("");
 static Config *s_registry = NULL;
 
-#if defined(_WIN32) || defined(_NETWARE)
+#if defined(_WIN32)
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
 #endif
 
-#if !defined(_WIN32) && !defined(_NETWARE)
+#if !defined(_WIN32)
 static pid_t m_pid;
 #endif
 
@@ -253,9 +244,7 @@ static char m_szHelpText[] =
    "Where valid options are:\n"
    "   -c <file>  : Use configuration file <file> (default " AGENT_DEFAULT_CONFIG ")\n"
    "   -C         : Check configuration file and exit\n"
-#ifndef _NETWARE
    "   -d         : Run as daemon/service\n"
-#endif
 	"   -D <level> : Set debug level (0..9)\n"
 #ifdef _WIN32
    "   -e <name>  : Windows event source name\n"
@@ -272,7 +261,7 @@ static char m_szHelpText[] =
    "   -n <name>  : Service name\n"
    "   -N <name>  : Service display name\n"
 #endif
-#if !defined(_WIN32) && !defined(_NETWARE)
+#if !defined(_WIN32)
    "   -p         : Path to pid file (default: /var/run/nxagentd.pid)\n"
 #endif
    "   -P <text>  : Set platform suffix to <text>\n"
@@ -423,9 +412,6 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 {
 	DebugPrintf(INVALID_INDEX, 1, _T("H_RestartAgent() called"));
 
-#ifdef _NETWARE
-   return ERR_NOT_IMPLEMENTED;
-#else
    TCHAR szCmdLine[4096], szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
 #ifdef _WIN32
    TCHAR szExecName[MAX_PATH];
@@ -501,7 +487,6 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 	DebugPrintf(INVALID_INDEX, 1, _T("Restarting agent with command line '%s'"), szCmdLine);
    return ExecuteCommand(szCmdLine, NULL, NULL);
 #endif
-#endif  /* _NETWARE */
 }
 
 
@@ -527,7 +512,7 @@ static void WriteSubAgentMsg(int logLevel, int debugLevel, const TCHAR *pszMsg)
 // Signal handler for UNIX platforms
 //
 
-#if !defined(_WIN32) && !defined(_NETWARE)
+#if !defined(_WIN32)
 
 static THREAD_RESULT THREAD_CALL SignalHandler(void *pArg)
 {
@@ -610,9 +595,7 @@ void LoadWindowsSubagent()
 
 void LoadPlatformSubagent()
 {
-#if defined(_NETWARE)
-   LoadSubAgent("NETWARE.NSM");
-#elif HAVE_SYS_UTSNAME_H && !defined(_STATIC_AGENT)
+#if HAVE_SYS_UTSNAME_H && !defined(_STATIC_AGENT)
    struct utsname un;
    char szName[MAX_PATH];
    int i;
@@ -663,6 +646,76 @@ static void DBLibraryDebugCallback(int level, const TCHAR *format, va_list args)
 
 
 //
+// Parser server list
+//
+
+static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
+{
+	TCHAR *pItem, *pEnd;
+
+	for(pItem = pEnd = serverList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+	{
+		pEnd = strchr(pItem, ',');
+		if (pEnd != NULL)
+			*pEnd = 0;
+		StrStrip(pItem);
+
+		DWORD ipAddr, netMask;
+
+		TCHAR *mask = _tcschr(pItem, _T('/'));
+		if (mask != NULL)
+		{
+			*mask = 0;
+			mask++;
+			ipAddr = inet_addr(pItem);
+
+			TCHAR *eptr;
+			int bits = _tcstol(mask, &eptr, 10);
+			if ((*eptr == 0) && (bits >= 0) && (bits <= 32))
+			{
+				netMask = htonl(0xFFFFFFFF << (32 - bits));
+			}
+			else
+			{
+				ipAddr = INADDR_NONE;
+				if (!(g_dwFlags & AF_DAEMON))
+					printf("Invalid network mask %s\n", mask);
+			}
+		}
+		else
+		{
+			ipAddr = ResolveHostName(pItem);
+			if (ipAddr == INADDR_ANY)
+				ipAddr = INADDR_NONE;
+			netMask = 0xFFFFFFFF;
+		}
+		if (g_pServerList[g_dwServerCount].dwIpAddr == INADDR_NONE)
+		{
+			if (!(g_dwFlags & AF_DAEMON))
+				printf("Invalid server address '%s'\n", pItem);
+		}
+		else
+		{
+			DWORD i;
+
+			for(i = 0; i < g_dwServerCount; i++)
+				if ((g_pServerList[i].dwIpAddr == ipAddr) && (g_pServerList[i].dwNetMask == netMask))
+					break;
+			if (i == g_dwServerCount)
+			{
+				g_dwServerCount++;
+				g_pServerList[i].dwIpAddr = ipAddr;
+				g_pServerList[i].dwNetMask = netMask;
+			}
+			g_pServerList[i].bMasterServer = isMaster;
+			g_pServerList[i].bControlServer = isControl;
+		}
+	}
+	free(serverList);
+}
+
+
+//
 // Initialization routine
 //
 
@@ -670,9 +723,6 @@ BOOL Initialize()
 {
    TCHAR *pItem, *pEnd;
 	TCHAR regPath[MAX_PATH];
-#ifdef _NETWARE
-   char szLoadPath[1024], szSearchPath[1024];
-#endif
 
    // Open log file
 	if (!(g_dwFlags & AF_USE_SYSLOG))
@@ -726,29 +776,6 @@ BOOL Initialize()
    }
 #endif
 
-   // Add NLM load path to search list
-#ifdef _NETWARE
-   if (getnlmloadpath(szLoadPath) != NULL)
-   {
-      int i, nIsDOS;
-      BOOL bExist = FALSE;
-
-      for(i = 0; ; i++)
-      {
-         if (GetSearchPathElement(i, &nIsDOS, szSearchPath) != 0)
-            break;
-         if (strlen(szLoadPath) == szSearchPath[0])
-            if (!strncasecmp(&szSearchPath[1], szLoadPath, szSearchPath[0]))
-            {
-               bExist = TRUE;
-               break;
-            }
-      }
-      if (!bExist)
-         InsertSearchPath(getnetwarelogger(), 0, szLoadPath);
-   }
-#endif
-
    // Initialize API for subagents
    InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, SendFileToServer, PushData);
    DebugPrintf(INVALID_INDEX, 1, _T("Subagent API initialized"));
@@ -773,120 +800,19 @@ BOOL Initialize()
 		ImportSymbols();
 #endif
 
-		// Parse server list
+		// Parse server lists
 		if (m_pszServerList != NULL)
-		{
-			for(pItem = pEnd = m_pszServerList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
-			{
-				pEnd = strchr(pItem, ',');
-				if (pEnd != NULL)
-					*pEnd = 0;
-				StrStrip(pItem);
-				g_pServerList[g_dwServerCount].dwIpAddr = ResolveHostName(pItem);
-				if ((g_pServerList[g_dwServerCount].dwIpAddr == INADDR_NONE) ||
-					 (g_pServerList[g_dwServerCount].dwIpAddr == INADDR_ANY))
-				{
-					if (!(g_dwFlags & AF_DAEMON))
-						printf("Invalid server address '%s'\n", pItem);
-				}
-				else
-				{
-					g_pServerList[g_dwServerCount].bMasterServer = FALSE;
-					g_pServerList[g_dwServerCount].bControlServer = FALSE;
-					g_dwServerCount++;
-				}
-			}
-			free(m_pszServerList);
-		}
-
-		// Parse master server list
-		if (m_pszMasterServerList != NULL)
-		{
-			DWORD i, dwAddr;
-
-			for(pItem = pEnd = m_pszMasterServerList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
-			{
-				pEnd = strchr(pItem, ',');
-				if (pEnd != NULL)
-					*pEnd = 0;
-				StrStrip(pItem);
-
-				dwAddr = ResolveHostName(pItem);
-				if ((dwAddr == INADDR_NONE) ||
-					 (dwAddr == INADDR_ANY))
-				{
-					if (!(g_dwFlags & AF_DAEMON))
-						_tprintf(_T("Invalid server address '%s'\n"), pItem);
-				}
-				else
-				{
-					for(i = 0; i < g_dwServerCount; i++)
-						if (g_pServerList[i].dwIpAddr == dwAddr)
-							break;
-
-					if (i == g_dwServerCount)
-					{
-						g_pServerList[g_dwServerCount].dwIpAddr = dwAddr;
-						g_pServerList[g_dwServerCount].bMasterServer = TRUE;
-						g_pServerList[g_dwServerCount].bControlServer = TRUE;
-						g_dwServerCount++;
-					}
-					else
-					{
-						g_pServerList[i].bMasterServer = TRUE;
-						g_pServerList[i].bControlServer = TRUE;
-					}
-				}
-			}
-			free(m_pszMasterServerList);
-		}
-
-		// Parse control server list
+			ParseServerList(m_pszServerList, FALSE, FALSE);
 		if (m_pszControlServerList != NULL)
-		{
-			DWORD i, dwAddr;
-
-			for(pItem = pEnd = m_pszControlServerList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
-			{
-				pEnd = strchr(pItem, ',');
-				if (pEnd != NULL)
-					*pEnd = 0;
-				StrStrip(pItem);
-
-				dwAddr = ResolveHostName(pItem);
-				if ((dwAddr == INADDR_NONE) ||
-					 (dwAddr == INADDR_ANY))
-				{
-					if (!(g_dwFlags & AF_DAEMON))
-						_tprintf(_T("Invalid server address '%s'\n"), pItem);
-				}
-				else
-				{
-					for(i = 0; i < g_dwServerCount; i++)
-						if (g_pServerList[i].dwIpAddr == dwAddr)
-							break;
-
-					if (i == g_dwServerCount)
-					{
-						g_pServerList[g_dwServerCount].dwIpAddr = dwAddr;
-						g_pServerList[g_dwServerCount].bMasterServer = FALSE;
-						g_pServerList[g_dwServerCount].bControlServer = TRUE;
-						g_dwServerCount++;
-					}
-					else
-					{
-						g_pServerList[i].bControlServer = TRUE;
-					}
-				}
-			}
-			free(m_pszControlServerList);
-		}
+			ParseServerList(m_pszControlServerList, TRUE, FALSE);
+		if (m_pszMasterServerList != NULL)
+			ParseServerList(m_pszMasterServerList, TRUE, TRUE);
 
 		// Add built-in actions
 		AddAction("Agent.Restart", AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, "CORE", "Restart agent");
 
 	   // Load platform subagents
-#if !defined(_WIN32) && !defined(_NETWARE)
+#if !defined(_WIN32)
 		InitStaticSubagents();
 #endif
 		if (g_dwFlags & AF_ENABLE_AUTOLOAD)
@@ -1054,7 +980,7 @@ BOOL Initialize()
 		StartPushConnector();
 	}
 
-#if defined(_WIN32) || defined(_NETWARE)
+#if defined(_WIN32)
    m_hCondShutdown = ConditionCreate(TRUE);
 #endif
    ThreadSleep(1);
@@ -1107,7 +1033,7 @@ void Shutdown()
 #endif
    
    // Remove PID file
-#if !defined(_WIN32) && !defined(_NETWARE)
+#if !defined(_WIN32)
    remove(g_szPidFile);
 #endif
 }
@@ -1123,7 +1049,7 @@ void Main()
 
    if (g_dwFlags & AF_DAEMON)
    {
-#if defined(_WIN32) || defined(_NETWARE)
+#if defined(_WIN32)
       ConditionWait(m_hCondShutdown, INFINITE);
 #else
       StartMainLoop(SignalHandler, NULL);
@@ -1153,9 +1079,6 @@ void Main()
          printf("Agent shutting down...\n");
          Shutdown();
       }
-#elif defined(_NETWARE)
-      printf("Agent running. Type UNLOAD NXAGENTD on the system console for shutdown.\n");
-      ConditionWait(m_hCondShutdown, INFINITE);
 #else
       printf("Agent running. Press Ctrl+C to shutdown.\n");
       StartMainLoop(SignalHandler, NULL);
@@ -1194,8 +1117,6 @@ static void DoRestartActions(DWORD dwOldPID)
          CloseHandle(hProcess);
       }
    }
-#elif defined(_NETWARE)
-   /* TODO: implement restart for NetWare */
 #else
    int i;
 
@@ -1212,23 +1133,6 @@ static void DoRestartActions(DWORD dwOldPID)
       kill(dwOldPID, SIGKILL);
 #endif
 }
-
-
-//
-// NetWare exit handler
-//
-
-#ifdef _NETWARE
-
-static void ExitHandler(int nSig)
-{
-   printf("\n*** Unloading NetXMS agent ***\n");
-   ConditionSet(m_hCondShutdown);
-   while(g_nThreadCount > 0)
-      pthread_yield();
-}
-
-#endif
 
 
 //
@@ -1296,11 +1200,6 @@ int main(int argc, char *argv[])
 	InitMemoryDebugger();
 #endif
    
-#ifdef _NETWARE
-   g_nThreadCount++;
-   setscreenmode(SCR_AUTOCLOSE_ON_EXIT | SCR_COLOR_ATTRS);
-#endif
-
    // Set locale to C. It shouldn't be needed, according to
    // documentation, but I've seen the cases when agent formats
    // floating point numbers by sprintf inserting comma in place
@@ -1358,7 +1257,7 @@ int main(int argc, char *argv[])
          case 'c':   // Configuration file
             nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
             break;
-#if !defined(_WIN32) && !defined(_NETWARE)
+#if !defined(_WIN32)
          case 'p':   // PID file
             nx_strncpy(g_szPidFile, optarg, MAX_PATH);
             break;
@@ -1437,7 +1336,7 @@ int main(int argc, char *argv[])
       }
    }
 
-#if !defined(_WIN32) && !defined(_NETWARE)
+#if !defined(_WIN32)
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
 	{
 		if (access(PREFIX "/etc/nxagentd.conf", 4) == 0)
@@ -1548,24 +1447,17 @@ int main(int argc, char *argv[])
 						}
 					}
 #else    /* _WIN32 */
-#ifndef _NETWARE
 					if (g_dwFlags & AF_DAEMON)
 						if (daemon(0, 0) == -1)
 						{
 							perror("Unable to setup itself as a daemon");
 							iExitCode = 4;
 						}
-#endif
 					if (iExitCode == 0)
             {
-#ifndef _NETWARE
 						m_pid = getpid();
-#endif
 						if (Initialize())
 						{
-#ifdef _NETWARE
-							signal(SIGTERM, ExitHandler);
-#else
 							FILE *fp;
 
 							// Write PID file
@@ -1575,7 +1467,6 @@ int main(int argc, char *argv[])
 								fprintf(fp, "%d", m_pid);
 								fclose(fp);
 							}   
-#endif
 							Main();
 							Shutdown();
 						}
@@ -1588,7 +1479,7 @@ int main(int argc, char *argv[])
 	            }
 #endif   /* _WIN32 */
 
-#if defined(_WIN32) || defined(_NETWARE)
+#if defined(_WIN32)
 					if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
 						ConditionDestroy(m_hCondShutdown);
 #endif
@@ -1651,13 +1542,6 @@ int main(int argc, char *argv[])
       default:
          break;
    }
-
-#ifdef _NETWARE
-   if ((iExitCode != 0) || (iAction == ACTION_NONE) || 
-       (iAction == ACTION_CHECK_CONFIG))
-      setscreenmode(SCR_NO_MODE);
-   g_nThreadCount--;
-#endif
 
    return iExitCode;
 }
