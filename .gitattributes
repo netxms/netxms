@@ -3170,6 +3170,8 @@ webui/webapp/ServerConfig/icons/syslog_cfg.gif -text
 webui/webapp/ServerConfig/plugin.xml -text
 webui/webapp/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/OpenSyslogParserConfig.java -text
 webui/webapp/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/SelectSnmpTrapDialog.java -text
+webui/webapp/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/helpers/SnmpTrapComparator.java -text
+webui/webapp/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/helpers/TrapListLabelProvider.java -text
 webui/webapp/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/SyslogParserConfigurator.java -text
 webui/webapp/ServerJobManager/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/ServerJobManager/META-INF/MANIFEST.MF -text
