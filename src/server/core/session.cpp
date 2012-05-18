@@ -2994,7 +2994,7 @@ void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
             {
                DWORD i, dwItemId, dwNumMaps, *pdwMapId, *pdwMapIndex;
                DCObject *dcObject;
-               BOOL bSuccess;
+               BOOL bSuccess = FALSE;
 
 					int dcObjectType = (int)pRequest->GetVariableShort(VID_DCOBJECT_TYPE);
                switch(pRequest->GetCode())

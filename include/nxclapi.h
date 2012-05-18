@@ -710,6 +710,15 @@ enum
 
 
 //
+// Data collection object types
+//
+
+#define DCO_TYPE_GENERIC   0
+#define DCO_TYPE_ITEM      1
+#define DCO_TYPE_TABLE     2
+
+
+//
 // DCI flags
 //
 

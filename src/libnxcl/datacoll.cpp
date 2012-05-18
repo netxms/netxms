@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -77,8 +77,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_SESSION hSession, NXC_DCI_LIST 
 // Create new data collection item
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemList, 
-                                         DWORD *pdwItemId)
+DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemList, DWORD *pdwItemId)
 {
    DWORD dwRetCode, dwRqId;
    CSCPMessage msg, *pResponse;
@@ -90,6 +89,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_SESSION hSession, NXC_DCI_LIST *pIt
    msg.SetCode(CMD_CREATE_NEW_DCI);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_OBJECT_ID, pItemList->dwNodeId);
+	msg.SetVariable(VID_DCOBJECT_TYPE, (WORD)DCO_TYPE_ITEM);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
@@ -144,6 +144,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
    msg.SetId(dwRqId);
    msg.SetVariable(VID_OBJECT_ID, dwNodeId);
    msg.SetVariable(VID_DCI_ID, pItem->dwId);
+	msg.SetVariable(VID_DCOBJECT_TYPE, (WORD)DCO_TYPE_ITEM);
    msg.SetVariable(VID_DCI_DATA_TYPE, (WORD)pItem->iDataType);
    msg.SetVariable(VID_POLLING_INTERVAL, (DWORD)pItem->iPollingInterval);
    msg.SetVariable(VID_RETENTION_TIME, (DWORD)pItem->iRetentionTime);
@@ -228,8 +229,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
 // Delete data collection item
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemList, 
-                                      DWORD dwItemId)
+DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemList, DWORD dwItemId)
 {
    DWORD i, j, dwRqId, dwResult = RCC_INVALID_DCI_ID;
    CSCPMessage msg;
