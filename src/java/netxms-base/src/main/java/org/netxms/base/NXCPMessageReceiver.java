@@ -18,11 +18,11 @@
  */
 package org.netxms.base;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Message receiver for NXCP protocol
- *
  */
 public class NXCPMessageReceiver
 {
@@ -59,7 +59,7 @@ public class NXCPMessageReceiver
 	 * @throws IOException
 	 * @throws NXCPException
 	 */
-	private NXCPMessage getMessageFromBuffer() throws IOException, NXCPException
+	private NXCPMessage getMessageFromBuffer(EncryptionContext ectx) throws IOException, NXCPException
 	{
 		NXCPMessage msg = null;
 
@@ -69,13 +69,19 @@ public class NXCPMessageReceiver
 			if (size <= bufferPos)
 			{
 				// Entire message in buffer, create new message object
-				msg = new NXCPMessage(recvBuffer);
-				System.arraycopy(recvBuffer, (int)size, recvBuffer, 0, bufferPos - (int)size);
-				bufferPos -= size;
+				try
+				{
+					msg = new NXCPMessage(recvBuffer, ectx);
+				}
+				finally
+				{
+					System.arraycopy(recvBuffer, (int)size, recvBuffer, 0, bufferPos - (int)size);
+					bufferPos -= size;
+				}
 			}
 			else if (size > recvBuffer.length)
 			{
-				throw new NXCPException(NXCPCodes.ERR_MESSAGE_TOO_LARGE);
+				throw new NXCPException(NXCPException.MESSAGE_TOO_LARGE);
 			}
 		}
 		return msg;
@@ -89,19 +95,19 @@ public class NXCPMessageReceiver
 	 * @throws IOException
 	 * @throws NXCPException
 	 */
-	public NXCPMessage receiveMessage(final InputStream in) throws IOException, NXCPException
+	public NXCPMessage receiveMessage(final InputStream in, EncryptionContext ectx) throws IOException, NXCPException
 	{
 		NXCPMessage msg = null;
 		
 		// Receive bytes from network if we don't have full message in buffer 
 		while(true)
 		{
-			msg = getMessageFromBuffer();
+			msg = getMessageFromBuffer(ectx);
 			if (msg != null)
 				break;
 			final int bytes = in.read(recvBuffer, bufferPos, recvBuffer.length - bufferPos);
 			if (bytes == -1)
-				throw new NXCPException(NXCPCodes.ERR_CONNECTION_CLOSED);
+				throw new NXCPException(NXCPException.SESSION_CLOSED);
 			bufferPos += bytes;
 		}
 		

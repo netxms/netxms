@@ -20,7 +20,6 @@ package org.netxms.base;
 
 /**
  * Glob matcher
- *
  */
 public class Glob
 {

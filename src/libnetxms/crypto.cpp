@@ -41,6 +41,7 @@ static DWORD m_dwSupportedCiphers =
 #ifdef _WITH_ENCRYPTION
 #ifndef OPENSSL_NO_AES
    CSCP_SUPPORT_AES_256 |
+   CSCP_SUPPORT_AES_128 |
 #endif
 #ifndef OPENSSL_NO_BF
    CSCP_SUPPORT_BLOWFISH |
@@ -61,7 +62,7 @@ static DWORD m_dwSupportedCiphers =
 
 #ifdef _WITH_ENCRYPTION
 
-typedef OPENSSL_CONST EVP_CIPHER * (*CIPHER_FUNC)(void);
+typedef OPENSSL_CONST EVP_CIPHER * (*CIPHER_FUNC)();
 static CIPHER_FUNC m_pfCipherList[NETXMS_MAX_CIPHERS] =
 {
 #ifndef OPENSSL_NO_AES
@@ -80,7 +81,12 @@ static CIPHER_FUNC m_pfCipherList[NETXMS_MAX_CIPHERS] =
    NULL,
 #endif
 #ifndef OPENSSL_NO_DES
-   EVP_des_ede3_cbc
+   EVP_des_ede3_cbc,
+#else
+   NULL,
+#endif
+#ifndef OPENSSL_NO_AES
+   EVP_aes_128_cbc
 #else
    NULL
 #endif
@@ -108,7 +114,7 @@ static void CryptoLockingCallback(int nMode, int nLock, const char *pszFile, int
 
 #ifndef _WIN32
 
-static unsigned long CryptoIdCallback(void)
+static unsigned long CryptoIdCallback()
 {
    return (unsigned long)GetCurrentThreadId();
 }
@@ -150,7 +156,7 @@ BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(DWORD dwEnabledCiphers)
 // Get supported ciphers
 //
 
-DWORD LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers(void)
+DWORD LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers()
 {
    return m_dwSupportedCiphers;
 }
@@ -355,7 +361,7 @@ DWORD LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
 // Prepare session key request message
 //
 
-void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKey)
+void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKey, bool useX509Format)
 {
 #ifdef _WITH_ENCRYPTION
    int iLen;
@@ -364,11 +370,21 @@ void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKe
    pMsg->SetCode(CMD_REQUEST_SESSION_KEY);
    pMsg->SetVariable(VID_SUPPORTED_ENCRYPTION, m_dwSupportedCiphers);
 
-   iLen = i2d_RSAPublicKey(pServerKey, NULL);
-   pKeyBuffer = (BYTE *)malloc(iLen);
-   pBufPos = pKeyBuffer;
-   i2d_RSAPublicKey(pServerKey, &pBufPos);
-   pMsg->SetVariable(VID_PUBLIC_KEY, pKeyBuffer, iLen);
+	if (useX509Format)
+	{
+		iLen = i2d_RSA_PUBKEY(pServerKey, NULL);
+		pKeyBuffer = (BYTE *)malloc(iLen);
+		pBufPos = pKeyBuffer;
+		i2d_RSA_PUBKEY(pServerKey, &pBufPos);
+	}
+	else
+	{
+		iLen = i2d_RSAPublicKey(pServerKey, NULL);
+		pKeyBuffer = (BYTE *)malloc(iLen);
+		pBufPos = pKeyBuffer;
+		i2d_RSAPublicKey(pServerKey, &pBufPos);
+	}
+	pMsg->SetVariable(VID_PUBLIC_KEY, pKeyBuffer, iLen);
    free(pKeyBuffer);
 #endif
 }
@@ -616,6 +632,11 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(DWORD ciphers)
    {
       ctx->m_cipher = CSCP_CIPHER_BLOWFISH;
       ctx->m_keyLength = 32;
+   }
+   else if (ciphers & CSCP_SUPPORT_AES_128)
+   {
+      ctx->m_cipher = CSCP_CIPHER_AES_128;
+      ctx->m_keyLength = 16;
    }
    else if (ciphers & CSCP_SUPPORT_IDEA)
    {

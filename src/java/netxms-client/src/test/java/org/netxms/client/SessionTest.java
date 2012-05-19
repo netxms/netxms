@@ -30,13 +30,19 @@ import junit.framework.TestCase;
 public class SessionTest extends TestCase
 {
 	private static final String serverAddress = "127.0.0.1";
+	private static final int serverPort = NXCSession.DEFAULT_CONN_PORT;
 	private static final String loginName = "admin";
 	private static final String password = "";
-	
-	protected NXCSession connect() throws Exception
+
+	protected NXCSession connect(boolean useEncryption) throws Exception
 	{
-		NXCSession session = new NXCSession(serverAddress, loginName, password);
+		NXCSession session = new NXCSession(serverAddress, serverPort, loginName, password, useEncryption);
 		session.connect();
 		return session;
+	}
+
+	protected NXCSession connect() throws Exception
+	{
+		return connect(false);
 	}
 }

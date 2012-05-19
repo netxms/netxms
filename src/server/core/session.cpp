@@ -492,6 +492,7 @@ void ClientSession::readThread()
          pMsg = new CSCPMessage(pRawMsg);
          if ((pMsg->GetCode() == CMD_SESSION_KEY) && (pMsg->GetId() == m_dwEncryptionRqId))
          {
+		      DebugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
             m_dwEncryptionResult = SetupEncryptionContext(pMsg, &m_pCtx, NULL, g_pServerKey, NXCP_VERSION);
             ConditionSet(m_condEncryptionSetup);
             m_dwEncryptionRqId = 0;
@@ -995,7 +996,7 @@ void ClientSession::processingThread()
             changeObjectZone(pMsg);
             break;
          case CMD_REQUEST_ENCRYPTION:
-            setupEncryption(pMsg->GetId());
+            setupEncryption(pMsg);
             break;
          case CMD_GET_AGENT_CONFIG:
             getAgentConfig(pMsg);
@@ -6437,19 +6438,19 @@ void ClientSession::changeObjectZone(CSCPMessage *pRequest)
 // Setup encryption with client
 //
 
-void ClientSession::setupEncryption(DWORD dwRqId)
+void ClientSession::setupEncryption(CSCPMessage *request)
 {
    CSCPMessage msg;
 
 #ifdef _WITH_ENCRYPTION
-   m_dwEncryptionRqId = dwRqId;
+	m_dwEncryptionRqId = request->GetId();
    m_dwEncryptionResult = RCC_TIMEOUT;
    if (m_condEncryptionSetup == INVALID_CONDITION_HANDLE)
       m_condEncryptionSetup = ConditionCreate(FALSE);
 
    // Send request for session key
-   PrepareKeyRequestMsg(&msg, g_pServerKey);
-   msg.SetId(dwRqId);
+	PrepareKeyRequestMsg(&msg, g_pServerKey, request->GetVariableShort(VID_USE_X509_KEY_FORMAT) != 0);
+	msg.SetId(request->GetId());
    sendMessage(&msg);
    msg.DeleteAllVariables();
 
@@ -6458,7 +6459,7 @@ void ClientSession::setupEncryption(DWORD dwRqId)
 
    // Send response
    msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(dwRqId);
+	msg.SetId(request->GetId());
    msg.SetVariable(VID_RCC, m_dwEncryptionResult);
 #else    /* _WITH_ENCRYPTION not defined */
    msg.SetCode(CMD_REQUEST_COMPLETED);

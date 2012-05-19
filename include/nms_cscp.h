@@ -61,11 +61,13 @@
 #define CSCP_CIPHER_BLOWFISH     1
 #define CSCP_CIPHER_IDEA         2
 #define CSCP_CIPHER_3DES         3
+#define CSCP_CIPHER_AES_128      4
 
 #define CSCP_SUPPORT_AES_256     0x01
 #define CSCP_SUPPORT_BLOWFISH    0x02
 #define CSCP_SUPPORT_IDEA        0x04
 #define CSCP_SUPPORT_3DES        0x08
+#define CSCP_SUPPORT_AES_128     0x10
 
 
 //
@@ -793,7 +795,7 @@ typedef struct
 #define VID_TOKEN_SOFTLIMIT         ((DWORD)316)
 #define VID_TOKEN_HARDLIMIT         ((DWORD)317)
 #define VID_USE_IFXTABLE            ((DWORD)318)
-//#define VID_APPLY_FILTER            ((DWORD)319)
+#define VID_USE_X509_KEY_FORMAT     ((DWORD)319)
 //#define VID_ENABLE_AUTO_BIND        ((DWORD)320)
 #define VID_AUTOBIND_FILTER         ((DWORD)321)
 #define VID_BASE_UNITS              ((DWORD)322)

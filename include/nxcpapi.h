@@ -244,7 +244,7 @@ DWORD LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
                                                   NXCPEncryptionContext **ppCtx,
                                                   CSCPMessage **ppResponse,
                                                   RSA *pPrivateKey, int nNXCPVersion);
-void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKey);
+void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKey, bool useX509Format);
 RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile);
 
 #ifdef _WIN32

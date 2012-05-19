@@ -503,7 +503,7 @@ DWORD ISC::SetupEncryption(RSA *pServerKey)
 
    dwRqId = m_requestId++;
 
-   PrepareKeyRequestMsg(&msg, pServerKey);
+   PrepareKeyRequestMsg(&msg, pServerKey, false);
    msg.SetId(dwRqId);
    if (SendMessage(&msg))
    {

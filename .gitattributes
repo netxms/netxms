@@ -599,6 +599,7 @@ src/java/netxms-agent/src/main/java/org/netxms/agent/transport/PipeConnector.jav
 src/java/netxms-agent/src/main/java/org/netxms/agent/transport/SocketConnector.java -text
 src/java/netxms-base/pom.xml -text
 src/java/netxms-base/src/main/java/org/netxms/base/CompatTools.java -text
+src/java/netxms-base/src/main/java/org/netxms/base/EncryptionContext.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/Glob.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/Logger.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/LoggingFacility.java -text

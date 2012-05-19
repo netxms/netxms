@@ -29,6 +29,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -60,6 +61,7 @@ import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserGroup;
 import org.netxms.api.client.users.UserManager;
 import org.netxms.base.CompatTools;
+import org.netxms.base.EncryptionContext;
 import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPDataInputStream;
@@ -184,7 +186,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private static final int MAX_DCI_STRING_VALUE_LENGTH = 256;
 	private static final int RECEIVED_FILE_TTL = 300000; // 300 seconds
 	private static final int FILE_BUFFER_SIZE = 128 * 1024; // 128k
-
+	
 	// Internal synchronization objects
 	private final Semaphore syncObjects = new Semaphore(1);
 	private final Semaphore syncUserDB = new Semaphore(1);
@@ -210,6 +212,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private AtomicLong requestId = new AtomicLong(1);
 	private boolean isConnected = false;
 	private boolean serverConsoleConnected = false;
+	private EncryptionContext encryptionContext = null;
 
 	// Communication parameters
 	private int recvBufferSize = 4194304; // Default is 4MB
@@ -361,7 +364,37 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
 		return object;
 	}
+	
+	/**
+	 * Setup encryption
+	 * 
+	 * @param msg CMD_REQUEST_SESSION_KEY message
+	 * @throws IOException 
+	 * @throws NXCException 
+	 */
+	private void setupEncryption(NXCPMessage msg) throws IOException, NXCException
+	{
+		final NXCPMessage response = new NXCPMessage(NXCPCodes.CMD_SESSION_KEY, msg.getMessageId());
+		response.setEncryptionDisabled(true);
 
+		try
+		{
+			encryptionContext = EncryptionContext.createInstance(msg);
+			response.setVariable(NXCPCodes.VID_SESSION_KEY, encryptionContext.getEncryptedSessionKey(msg));
+			response.setVariable(NXCPCodes.VID_SESSION_IV, encryptionContext.getEncryptedIv(msg));
+			response.setVariableInt16(NXCPCodes.VID_CIPHER, encryptionContext.getCipher());
+			response.setVariableInt16(NXCPCodes.VID_KEY_LENGTH, encryptionContext.getKeyLength());
+			response.setVariableInt16(NXCPCodes.VID_IV_LENGTH, encryptionContext.getIvLength());
+			response.setVariableInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
+		}
+		catch(Exception e)
+		{
+			response.setVariableInt32(NXCPCodes.VID_RCC, RCC.NO_CIPHERS);
+		}
+		
+		sendMessage(response);
+	}
+	
 	/**
 	 * Receiver thread for NXCSession
 	 */
@@ -392,9 +425,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			{
 				try
 				{
-					final NXCPMessage msg = receiver.receiveMessage(in);
+					final NXCPMessage msg = receiver.receiveMessage(in, encryptionContext);
 					switch(msg.getMessageCode())
 					{
+						case NXCPCodes.CMD_REQUEST_SESSION_KEY:
+							setupEncryption(msg);
+							break;
 						case NXCPCodes.CMD_OBJECT:
 						case NXCPCodes.CMD_OBJECT_UPDATE:
 							final GenericObject obj = createObjectFromMessage(msg);
@@ -496,7 +532,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				}
 				catch(NXCPException e)
 				{
-					if (e.getErrorCode() == NXCPCodes.ERR_CONNECTION_CLOSED)
+					if (e.getErrorCode() == NXCPException.SESSION_CLOSED)
+						break;
+				}
+				catch(NXCException e)
+				{
+					if (e.getErrorCode() == RCC.ENCRYPTION_ERROR)
 						break;
 				}
 			}
@@ -1000,17 +1041,32 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * 
 	 * @param msg
 	 *           Message to sent
-	 * @throws IOException
-	 *            if case of socket communication failure
+	 * @throws IOException in case of socket communication failure
+	 * @throws NXCException in case of encryption error
 	 */
-	public synchronized void sendMessage(final NXCPMessage msg) throws IOException
+	public synchronized void sendMessage(final NXCPMessage msg) throws IOException, NXCException
 	{
 		if (connSocket == null)
 		{
 			throw new IllegalStateException("Not connected to the server. Did you forgot to call connect() first?");
 		}
 		final OutputStream outputStream = connSocket.getOutputStream();
-		final byte[] message = msg.createNXCPMessage();
+		byte[] message;
+		if ((encryptionContext != null) && !msg.isEncryptionDisabled())
+		{
+			try
+			{
+				message = encryptionContext.encryptMessage(msg);
+			}
+			catch(GeneralSecurityException e)
+			{
+				throw new NXCException(RCC.ENCRYPTION_ERROR);
+			}
+		}
+		else
+		{
+			message = msg.createNXCPMessage();
+		}
 		outputStream.write(message);
 	}
 
@@ -1302,7 +1358,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			// Setup encryption if required
 			if (connUseEncryption)
 			{
-				/* TODO: implement encryption setup */
+				request = newMessage(NXCPCodes.CMD_REQUEST_ENCRYPTION);
+				request.setVariableInt16(NXCPCodes.VID_USE_X509_KEY_FORMAT, 1);
+				sendMessage(request);
+				waitForRCC(request.getMessageId());
 			}
 
 			// Login to server

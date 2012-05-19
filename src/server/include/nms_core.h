@@ -408,7 +408,7 @@ private:
    void updateThread();
    void pollerThread(Node *pNode, int iPollType, DWORD dwRqId);
 
-   void setupEncryption(DWORD dwRqId);
+   void setupEncryption(CSCPMessage *request);
    void respondToKeepalive(DWORD dwRqId);
    void onFileUpload(BOOL bSuccess);
    void DebugPrintf(int level, const TCHAR *format, ...);

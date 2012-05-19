@@ -23,18 +23,22 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.security.GeneralSecurityException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.zip.CRC32;
 
 public class NXCPMessage
 {
 	public static final int HEADER_SIZE = 16;
+	public static final int ENCRYPTION_HEADER_SIZE = 8;
 
 	// Message flags
 	public static final int MF_BINARY = 0x0001;
 	public static final int MF_END_OF_FILE = 0x0002;
+	public static final int MF_DONT_ENCRYPT = 0x0004;
 	public static final int MF_END_OF_SEQUENCE = 0x0008;
 	public static final int MF_REVERSE_ORDER = 0x0010;
 	public static final int MF_CONTROL = 0x0020;
@@ -73,14 +77,59 @@ public class NXCPMessage
 	 *
 	 * @param nxcpMessage binary NXCP message
 	 * @throws java.io.IOException
+	 * @throws GeneralSecurityException 
+	 * @throws NXCPException 
 	 */
-	public NXCPMessage(final byte[] nxcpMessage) throws IOException
+	public NXCPMessage(final byte[] nxcpMessage, EncryptionContext ectx) throws IOException, NXCPException
 	{
 		final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nxcpMessage);
-		//noinspection IOResourceOpenedButNotSafelyClosed
 		final NXCPDataInputStream inputStream = new NXCPDataInputStream(byteArrayInputStream);
 
 		messageCode = inputStream.readUnsignedShort();
+		if (messageCode == NXCPCodes.CMD_ENCRYPTED_MESSAGE)
+		{
+			if (ectx == null)
+				throw new NXCPException(NXCPException.DECRYPTION_ERROR);
+			
+			int padding = inputStream.readByte();
+			inputStream.skipBytes(1);
+			int msgLen = inputStream.readInt();
+			byte[] payload;
+			try
+			{
+				payload = ectx.decryptMessage(inputStream, msgLen - padding - ENCRYPTION_HEADER_SIZE);
+			}
+			catch(GeneralSecurityException e)
+			{
+				throw new NXCPException(NXCPException.DECRYPTION_ERROR, e);
+			}
+
+			final ByteArrayInputStream payloadByteArrayInputStream = new ByteArrayInputStream(payload);
+			final NXCPDataInputStream payloadInputStream = new NXCPDataInputStream(payloadByteArrayInputStream);
+			
+			CRC32 crc32 = new CRC32();
+			crc32.update(payload, 8, payload.length - 8);
+			if (payloadInputStream.readUnsignedInt() != crc32.getValue())
+				throw new NXCPException(NXCPException.DECRYPTION_ERROR);
+			
+			payloadInputStream.skip(4);
+			messageCode = payloadInputStream.readUnsignedShort();
+			createFromStream(payloadInputStream, payloadByteArrayInputStream);
+		}
+		else
+		{
+			createFromStream(inputStream, byteArrayInputStream);
+		}
+	}
+	
+	/**
+	 * Create NXCPMessage from prepared input byte stream
+	 *
+	 * @param nxcpMessage binary NXCP message
+	 * @throws java.io.IOException
+	 */
+	private void createFromStream(NXCPDataInputStream inputStream, ByteArrayInputStream byteArrayInputStream) throws IOException
+	{
 		messageFlags = inputStream.readUnsignedShort();
 		inputStream.skipBytes(4);	// Message size
 		messageId = (long)inputStream.readInt();
@@ -320,7 +369,6 @@ public class NXCPMessage
 		final NXCPVariable var = findVariable(varId);
 		return (var != null) ? new Date(var.getAsInteger() * 1000) : null;
 	}
-	
 
 	/**
 	 * Create binary NXCP message
@@ -330,7 +378,6 @@ public class NXCPMessage
 	public byte[] createNXCPMessage() throws IOException
 	{
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-		//noinspection IOResourceOpenedButNotSafelyClosed
 		DataOutputStream outputStream = new DataOutputStream(byteStream);
 
 		if ((messageFlags & MF_CONTROL) == MF_CONTROL)
@@ -352,9 +399,8 @@ public class NXCPMessage
 			outputStream.writeInt((int)messageId); // dwId
 			outputStream.writeInt(length); // dwNumVars, here used for real size of the payload (w/o headers and padding)
 			outputStream.write(binaryData);
-			for (int i = 0; i < padding; i++) {
+			for (int i = 0; i < padding; i++)
 				outputStream.writeByte(0);
-			}
 		}
 		else
 		{
@@ -492,6 +538,28 @@ public class NXCPMessage
 			messageFlags |= MF_END_OF_SEQUENCE;
 		else
 			messageFlags &= ~MF_END_OF_SEQUENCE;
+	}
+
+	/**
+	 * Return true if message has "don't encrypt" flag set
+	 * @return "don't encrypr" flag
+	 */
+	public boolean isEncryptionDisabled()
+	{
+		return (messageFlags & MF_DONT_ENCRYPT) == MF_DONT_ENCRYPT;
+	}
+
+	/**
+	 * Set "don't encrypt" message flag
+	 * 
+	 * @param disabled true to set "don't encrypt" message flag
+	 */
+	public void setEncryptionDisabled(boolean disabled)
+	{
+		if (disabled)
+			messageFlags |= MF_DONT_ENCRYPT;
+		else
+			messageFlags &= ~MF_DONT_ENCRYPT;
 	}
 
 	/**

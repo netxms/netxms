@@ -28,14 +28,13 @@ import org.netxms.api.client.SessionNotification;
 import org.netxms.client.events.Alarm;
 
 /**
- * @author Victor
- *
+ * Alarm management tests
  */
 public class AlarmTest extends SessionTest
 {
 	public void testGetAlarms() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connect(true);
 		
 		final Map<Long, Alarm> alarms = session.getAlarms();
 		for(final Entry<Long, Alarm> e : alarms.entrySet())

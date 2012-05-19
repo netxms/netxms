@@ -85,7 +85,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('DefaultEncryptionPolicy','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('AllowedCiphers','15',1,1);
+	VALUES ('AllowedCiphers','31',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('EnableMultipleDBConnections','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)

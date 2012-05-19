@@ -126,7 +126,8 @@ public class NXCException extends NetXMSClientException
 		"Invalid zone ID",
 		"Cannot delete non-empty zone object",
 		"No physical component data",
-		"Invalid alarm note ID"
+		"Invalid alarm note ID",
+		"Encryption error"
 	};
 	private static final String[] extendedErrorTexts =
 	{

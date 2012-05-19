@@ -32,7 +32,7 @@ public class ObjectTest extends SessionTest
 {
 	public void testObjectSync() throws Exception
 	{
-		final NXCSession session = connect();
+		final NXCSession session = connect(true);
 		
 		session.syncObjects();
 		final GenericObject obj = session.findObjectById(1);
@@ -69,7 +69,7 @@ public class ObjectTest extends SessionTest
 		GenericObject object = session.findObjectById(2);
 		assertEquals(false, object.isChildOf(1));
 		
-		object = session.findObjectById(12);
+		object = session.findObjectById(102);
 		assertEquals(true, object.isChildOf(1));
 		
 		session.disconnect();

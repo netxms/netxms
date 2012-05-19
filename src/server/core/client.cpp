@@ -314,7 +314,7 @@ void DumpSessions(CONSOLE_CTX pCtx)
    int i, iCount;
    TCHAR szBuffer[256];
    static const TCHAR *pszStateName[] = { _T("init"), _T("idle"), _T("processing") };
-   static const TCHAR *pszCipherName[] = { _T("NONE"), _T("AES-256"), _T("BLOWFISH"), _T("IDEA"), _T("3DES") };
+   static const TCHAR *pszCipherName[] = { _T("NONE"), _T("AES-256"), _T("BLOWFISH"), _T("IDEA"), _T("3DES"), _T("AES-128") };
 
    ConsolePrintf(pCtx, _T("ID  STATE                    CIPHER   USER [CLIENT]\n"));
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);

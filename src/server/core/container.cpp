@@ -182,8 +182,8 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwCategory);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)Type());
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_flags);
-	DBBind(hStmt, 3, DB_SQLTYPE_TEXT, m_bindFilterSource, DB_BIND_STATIC);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 4, DB_SQLTYPE_TEXT, m_bindFilterSource, DB_BIND_STATIC);
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_dwId);
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 

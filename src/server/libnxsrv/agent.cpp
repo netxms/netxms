@@ -1256,7 +1256,7 @@ DWORD AgentConnection::setupEncryption(RSA *pServerKey)
 
    dwRqId = m_dwRequestId++;
 
-   PrepareKeyRequestMsg(&msg, pServerKey);
+   PrepareKeyRequestMsg(&msg, pServerKey, false);
    msg.SetId(dwRqId);
    if (sendMessage(&msg))
    {

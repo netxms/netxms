@@ -39,7 +39,7 @@ public class NXCPMessageTest extends TestCase
 		final byte[] bytes = msg1.createNXCPMessage();
 		assertEquals(120, bytes.length);
 		
-		final NXCPMessage msg2 = new NXCPMessage(bytes);
+		final NXCPMessage msg2 = new NXCPMessage(bytes, null);
 		
 		assertEquals(1, msg2.getMessageCode());
 		assertEquals(2L, msg2.getMessageId());

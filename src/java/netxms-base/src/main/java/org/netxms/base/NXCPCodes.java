@@ -23,10 +23,6 @@ package org.netxms.base;
  */
 public final class NXCPCodes
 {
-	// Error codes for NXCPException
-	public static final int ERR_MESSAGE_TOO_LARGE = 1;
-	public static final int ERR_CONNECTION_CLOSED = 2;
-
 	// NXCP command codes
 	public static final int CMD_LOGIN                    = 0x0001;
 	public static final int CMD_LOGIN_RESP               = 0x0002;
@@ -610,7 +606,7 @@ public final class NXCPCodes
 	public static final long VID_TOKEN_SOFTLIMIT         = 316;
 	public static final long VID_TOKEN_HARDLIMIT         = 317;
 	public static final long VID_USE_IFXTABLE            = 318;
-//	public static final long VID_APPLY_FILTER            = 319;
+	public static final long VID_USE_X509_KEY_FORMAT     = 319;
 //	public static final long VID_ENABLE_AUTO_BIND        = 320;
 	public static final long VID_AUTOBIND_FILTER         = 321;
 	public static final long VID_BASE_UNITS              = 322;

@@ -526,6 +526,7 @@ enum
 #define RCC_ZONE_NOT_EMPTY          ((DWORD)95)
 #define RCC_NO_COMPONENT_DATA       ((DWORD)96)
 #define RCC_INVALID_ALARM_NOTE_ID   ((DWORD)97)
+#define RCC_ENCRYPTION_ERROR        ((DWORD)98)
 
 
 //

@@ -364,7 +364,7 @@ static BOOL InitCryptografy()
 	DWORD dwLen;
 	BYTE *pBufPos, *pKeyBuffer, hash[SHA1_DIGEST_SIZE];
 
-	if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 15)))
+	if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 0x1F)))
 		return FALSE;
 
 	_tcscpy(szKeyFile, g_szDataDir);

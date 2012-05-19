@@ -94,6 +94,7 @@ public final class RCC extends CommonRCC
 	public static final int ZONE_NOT_EMPTY = 95;
 	public static final int NO_COMPONENT_DATA = 96;
 	public static final int INVALID_ALARM_NOTE_ID = 97;
+	public static final int ENCRYPTION_ERROR = 98;
 	
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;
