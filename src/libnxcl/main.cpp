@@ -410,9 +410,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Invalid zone ID"),
 		_T("Cannot delete non-empty zone object"),
 		_T("No physical component data"),
-		_T("Invalid alarm note ID")
+		_T("Invalid alarm note ID"),
+		_T("Encryption error")
    };
-	return (dwError <= RCC_INVALID_ALARM_NOTE_ID) ? pszErrorText[dwError] : _T("No text message for this error");
+	return (dwError <= RCC_ENCRYPTION_ERROR) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 
