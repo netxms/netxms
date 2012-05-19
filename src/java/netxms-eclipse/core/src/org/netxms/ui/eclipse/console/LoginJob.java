@@ -58,6 +58,7 @@ public class LoginJob implements IRunnableWithProgress
 	private String server;
 	private String loginName;
 	private String password;
+	private boolean encryptSession;
 
 	/**
 	 * @param display
@@ -65,12 +66,13 @@ public class LoginJob implements IRunnableWithProgress
 	 * @param loginName
 	 * @param password
 	 */
-	public LoginJob(final Display display, final String server, final String loginName, final String password)
+	public LoginJob(Display display, String server, String loginName, String password, boolean encryptSession)
 	{
 		this.display = display;
 		this.server = server;
 		this.loginName = loginName;
 		this.password = password;
+		this.encryptSession = encryptSession;
 	}
 
 	/* (non-Javadoc)
@@ -102,7 +104,7 @@ public class LoginJob implements IRunnableWithProgress
 				hostName = server;
 			}
 
-			NXCSession session = new NXCSession(hostName, port, loginName, password);
+			NXCSession session = new NXCSession(hostName, port, loginName, password, encryptSession);
 			monitor.worked(10);
 
 			session.connect();

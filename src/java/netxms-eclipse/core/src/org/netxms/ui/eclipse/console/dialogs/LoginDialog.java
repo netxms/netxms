@@ -64,12 +64,18 @@ public class LoginDialog extends Dialog
 	private boolean isOk = false;
 	private Color labelColor;
 	
+	/**
+	 * @param parentShell
+	 */
 	public LoginDialog(Shell parentShell)
 	{
 		super(parentShell);
 		loginImage = Activator.getImageDescriptor("icons/login.png"); //$NON-NLS-1$
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+	 */
 	@Override
 	protected void configureShell(Shell newShell)
 	{

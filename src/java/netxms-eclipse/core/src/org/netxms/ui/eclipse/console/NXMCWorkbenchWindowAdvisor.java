@@ -111,7 +111,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			try
 			{
 				LoginJob job = new LoginJob(display, settings.get("Connect.Server"), //$NON-NLS-1$ 
-				                            settings.get("Connect.Login"), loginDialog.getPassword());//$NON-NLS-1$
+				                            settings.get("Connect.Login"), loginDialog.getPassword(), //$NON-NLS-1$
+				                            settings.getBoolean("Connect.Encrypt")); //$NON-NLS-1$
 
 				new ProgressMonitorDialog(shell).run(true, true, job);
 				success = true;
