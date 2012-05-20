@@ -343,6 +343,10 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 	CHK_EXEC(SetColumnNullable(_T("containers"), _T("auto_bind_filter"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
 	CHK_EXEC(ConvertStrings(_T("containers"), _T("id"), _T("auto_bind_filter")));
 
+	TCHAR buffer[64];
+	_sntprintf(buffer, 64, _T("%d"), ConfigReadInt(_T("AllowedCiphers"), 15) + 16);
+	CreateConfigParam(_T("AllowedCiphers"), buffer, 1, 1, TRUE);
+
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='253' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
