@@ -189,6 +189,102 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 	return 0;
 }
 
+//
+// Get min, max or average of DCI values for a period
+//
+
+typedef enum { DCI_MIN, DCI_MAX, DCI_AVG } DciSqlFunc_t;
+
+static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program, DciSqlFunc_t sqlFunc)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isInteger() || !argv[2]->isInteger() || !argv[3]->isInteger())
+		return NXSL_ERR_NOT_INTEGER;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+	
+	Node *node = (Node *)object->getData();
+	DWORD nodeId = node->Id();
+	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
+	if (dci == NULL || dci->getType() != DCO_TYPE_ITEM)
+	{
+		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
+	}
+	else
+	{
+		*ppResult = NULL;
+
+		double result = 0.;
+		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		TCHAR query[1024];
+
+		_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u ")
+			_T("WHERE item_id=? and idata_timestamp between ? and ?"), sqlFunc == DCI_MAX ? _T("max"): (sqlFunc == DCI_MIN ? _T("min") : _T("avg")),
+			node->Id());
+
+		DB_STATEMENT hStmt = DBPrepare(hdb, query);
+		if (hStmt != NULL)
+		{
+			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
+			DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt32());
+			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, argv[3]->getValueAsInt32());
+			DB_RESULT hResult = DBSelectPrepared(hStmt);
+			if (hResult != NULL)
+			{
+				if (DBGetNumRows(hResult) == 1)
+				{
+					result = DBGetFieldDouble(hResult, 0, 0);
+				}
+				*ppResult = new NXSL_Value(result);
+				DBFreeResult(hResult);
+			}
+			else
+			{
+				*ppResult = new NXSL_Value;	// Return NULL if prepared select failed
+			}
+			DBFreeStatement(hStmt);
+		}
+		else
+		{
+			*ppResult = new NXSL_Value;	// Return NULL if prepare failed
+		}
+
+		DBConnectionPoolReleaseConnection(hdb);
+	}
+
+	return 0;
+}
+
+//
+// Get min of DCI values for a period
+//
+
+static int F_GetMinDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	return F_GetDCIValueStat(argc, argv, ppResult, program, DCI_MIN);
+}
+
+//
+// Get max of DCI values for a period
+//
+
+static int F_GetMaxDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	return F_GetDCIValueStat(argc, argv, ppResult, program, DCI_MAX);
+}
+
+//
+// Get average of DCI values for a period
+//
+
+static int F_GetAvgDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	return F_GetDCIValueStat(argc, argv, ppResult, program, DCI_AVG);
+}
 
 //
 // Additional functions or use within transformation scripts
@@ -201,7 +297,10 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
    { _T("GetDCIObject"), F_GetDCIObject, 2 },
    { _T("GetDCIValue"), F_GetDCIValue, 2 },
    { _T("GetDCIValueByName"), F_GetDCIValueByName, 2 },
-   { _T("GetDCIValueByDescription"), F_GetDCIValueByDescription, 2 }
+   { _T("GetDCIValueByDescription"), F_GetDCIValueByDescription, 2 },
+	{ _T("GetMaxDCIValue"), F_GetMaxDCIValue, 4 },
+	{ _T("GetMinDCIValue"), F_GetMinDCIValue, 4 },
+	{ _T("GetAvgDCIValue"), F_GetAvgDCIValue, 4 }
 };
 
 void RegisterDCIFunctions(NXSL_Environment *pEnv)
