@@ -29,6 +29,10 @@
 #include <sys/un.h>
 #endif
 
+#ifndef SUN_LEN
+#define SUN_LEN(su) (sizeof(*(su)) - sizeof((su)->sun_path) + strlen((su)->sun_path))
+#endif
+
 
 /**
  * Push parameter's data
