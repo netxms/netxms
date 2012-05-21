@@ -20,9 +20,7 @@ import android.widget.TextView;
 
 /**
  * Adapter for alarm list
- * 
  */
-
 public class OverviewAdapter extends BaseAdapter
 {
 	private Context context;
@@ -57,19 +55,19 @@ public class OverviewAdapter extends BaseAdapter
 		values.add(node.getPrimaryIP().getHostAddress().toString());
 		labels.add(r.getString(R.string.overview_system_description));
 		values.add(node.getSystemDescription());
-		if (!node.getAgentVersion().isEmpty())
+		if (node.getAgentVersion().length() != 0)
 		{
 			labels.add(r.getString(R.string.overview_netxms_agent));
 			values.add(node.getAgentVersion());
 			labels.add(r.getString(R.string.overview_agent_version));
 			values.add(node.getAgentVersion());
 		}
-		if (!node.getPlatformName().isEmpty())
+		if (node.getPlatformName().length() != 0)
 		{
 			labels.add(r.getString(R.string.overview_platform_name));
 			values.add(node.getPlatformName());
 		}
-		if (!node.getSnmpSysName().isEmpty())
+		if (node.getSnmpSysName().length() != 0)
 		{
 			labels.add(r.getString(R.string.overview_snmp_agent));
 			values.add(node.getSnmpSysName());

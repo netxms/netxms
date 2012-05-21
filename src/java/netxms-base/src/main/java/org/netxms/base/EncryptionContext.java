@@ -155,7 +155,7 @@ public final class EncryptionContext
 	 * Create and encrypt payload header for encrypted message
 	 * 
 	 * @param msgBytes original message
-	 * @return
+	 * @return encrypted data block or null if there are not enough data to produce complete encrypted block
 	 * @throws IOException
 	 */
 	private byte[] encryptPayloadHeader(byte[] msgBytes) throws IOException
@@ -193,7 +193,9 @@ public final class EncryptionContext
 		outputStream.writeInt(0);		// length
 		
 		encryptor.init(Cipher.ENCRYPT_MODE, key, iv);
-		outputStream.write(encryptPayloadHeader(msgBytes));
+		byte[] ph = encryptPayloadHeader(msgBytes);
+		if (ph != null)
+			outputStream.write(ph);
 		
 		outputStream.write(encryptor.update(msgBytes));
 		outputStream.write(encryptor.doFinal());

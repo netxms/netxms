@@ -4,9 +4,9 @@
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
-	<classpathentry exported="true" kind="lib" path="jar/netxms-base-1.2.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="jar/netxms-client-1.2.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="jar/netxms-client-api-1.2.0.jar"/>
-	<classpathentry kind="lib" path="jar/simple-xml-2.4.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/netxms-base-1.2.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/netxms-client-api-1.2.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/netxms-client-1.2.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/simple-xml-2.4.1.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

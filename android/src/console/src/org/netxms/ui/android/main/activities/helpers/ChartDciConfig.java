@@ -112,6 +112,6 @@ public class ChartDciConfig
 	 */
 	public String getName()
 	{
-		return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]");
+		return ((name != null) && (name.length() != 0)) ? name : ("[" + Long.toString(dciId) + "]");
 	}
 }
