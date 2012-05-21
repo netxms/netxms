@@ -1,0 +1,34 @@
+#!/sbin/sh
+#
+# Copyright (c) 2012 Raden Solutions.  All rights reserved.
+# Use is subject to license terms.
+
+NETXMS_BINDIR="~BINDIR~"
+NETXMS_LIBDIR="~LIBDIR~"
+
+NXAGENTD_PID_FILE="/var/run/nxagentd.pid"
+
+LD_LIBRARY_PATH="$NETXMS_LIBDIR:$LD_LIBRARY_PATH"
+
+case "$1" in
+'start')
+	if [ -f /etc/nxagentd.conf -a -f $NETXMS_BINDIR/nxagentd ]; then
+		echo 'NetXMS agent starting.'
+		$NETXMS_BINDIR/nxagentd -d -p "$NXAGENTD_PID_FILE"
+	fi
+	;;
+
+'stop')
+	kill `cat $NXAGENTD_PID_FILE 2>/dev/null` 2> /dev/null
+	;;
+'restart')
+        $0 stop
+        $0 start
+        ;;
+*)
+	echo "Usage: $0 { start | stop | restart }"
+	exit 1
+	;;
+
+esac
+exit 0
