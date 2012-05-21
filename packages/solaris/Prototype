@@ -3,45 +3,39 @@ i preinstall
 i postinstall
 f none /etc/init.d/nxagentd 0755 root root
 d none /opt/netxms 0755 root root
-d none /opt/netxms/bin 0755 root root
-f none /opt/netxms/bin/nxcptest 0755 root root
-f none /opt/netxms/bin/nxagentd 0755 root root
 d none /opt/netxms/lib 0755 root root
-s none /opt/netxms/lib/libnxzlib.so=libnxzlib.so.1.0.0
 s none /opt/netxms/lib/libnxtre.so.5=libnxtre.so.5.0.0
-s none /opt/netxms/lib/libnxcl.so=libnxcl.so.1.0.0
-f none /opt/netxms/lib/libnxcl.so.1.0.0 0755 root root
-d none /opt/netxms/lib/netxms 0755 root root
-f none /opt/netxms/lib/netxms/portcheck.nsm 0755 root root
-f none /opt/netxms/lib/netxms/sms.nsm 0755 root root
-f none /opt/netxms/lib/netxms/sunos.nsm 0755 root root
-f none /opt/netxms/lib/netxms/logwatch.nsm 0755 root root
-f none /opt/netxms/lib/netxms/ping.nsm 0755 root root
-f none /opt/netxms/lib/netxms/ecs.nsm 0755 root root
-f none /opt/netxms/lib/netxms/ups.nsm 0755 root root
-s none /opt/netxms/lib/libnetxms.so=libnetxms.so.1.0.0
-s none /opt/netxms/lib/libnsm_portcheck.so=/opt/netxms/lib/netxms/portcheck.nsm
-s none /opt/netxms/lib/libnxzlib.so.1=libnxzlib.so.1.0.0
-s none /opt/netxms/lib/libnsm_ups.so=/opt/netxms/lib/netxms/ups.nsm
-s none /opt/netxms/lib/libnsm_ping.so=/opt/netxms/lib/netxms/ping.nsm
+f none /opt/netxms/lib/libnxtre.so.5.0.0 0755 root root
+s none /opt/netxms/lib/libnxtre.so=libnxtre.so.5.0.0
 s none /opt/netxms/lib/libnetxms.so.1=libnetxms.so.1.0.0
 f none /opt/netxms/lib/libnetxms.so.1.0.0 0755 root root
-f none /opt/netxms/lib/libnxzlib.so.1.0.0 0755 root root
-s none /opt/netxms/lib/libnsm_ecs.so=/opt/netxms/lib/netxms/ecs.nsm
-s none /opt/netxms/lib/libnxlp.so.1=libnxlp.so.1.0.0
-s none /opt/netxms/lib/libnxdb.so.1=libnxdb.so.1.0.0
-s none /opt/netxms/lib/libnsm_sunos.so=/opt/netxms/lib/netxms/sunos.nsm
-f none /opt/netxms/lib/libnxdb.so.1.0.0 0755 root root
-s none /opt/netxms/lib/libnxlp.so=libnxlp.so.1.0.0
+s none /opt/netxms/lib/libnetxms.so=libnetxms.so.1.0.0
 s none /opt/netxms/lib/libnxsqlite.so=libnxsqlite.so.1.0.0
-s none /opt/netxms/lib/libnxdb.so=libnxdb.so.1.0.0
-s none /opt/netxms/lib/libnxexpat.so.1=libnxexpat.so.1.0.0
-f none /opt/netxms/lib/libnxtre.so.5.0.0 0755 root root
 f none /opt/netxms/lib/libnxsqlite.so.1.0.0 0755 root root
-f none /opt/netxms/lib/libnxlp.so.1.0.0 0755 root root
-s none /opt/netxms/lib/libnsm_logwatch.so=/opt/netxms/lib/netxms/logwatch.nsm
-s none /opt/netxms/lib/libnxtre.so=libnxtre.so.5.0.0
-s none /opt/netxms/lib/libnsm_sms.so=/opt/netxms/lib/netxms/sms.nsm
-f none /opt/netxms/lib/libnxexpat.so.1.0.0 0755 root root
-s none /opt/netxms/lib/libnxexpat.so=libnxexpat.so.1.0.0
 s none /opt/netxms/lib/libnxsqlite.so.1=libnxsqlite.so.1.0.0
+s none /opt/netxms/lib/libnxlp.so.1=libnxlp.so.1.0.0
+f none /opt/netxms/lib/libnxlp.so.1.0.0 0755 root root
+s none /opt/netxms/lib/libnxlp.so=libnxlp.so.1.0.0
+s none /opt/netxms/lib/libnxdb.so.1=libnxdb.so.1.0.0
+f none /opt/netxms/lib/libnxdb.so.1.0.0 0755 root root
+s none /opt/netxms/lib/libnxdb.so=libnxdb.so.1.0.0
+d none /opt/netxms/lib/netxms 0755 root root
+f none /opt/netxms/lib/netxms/portcheck.nsm 0755 root root
+f none /opt/netxms/lib/netxms/ping.nsm 0755 root root
+f none /opt/netxms/lib/netxms/sms.nsm 0755 root root
+f none /opt/netxms/lib/netxms/ups.nsm 0755 root root
+f none /opt/netxms/lib/netxms/ecs.nsm 0755 root root
+f none /opt/netxms/lib/netxms/logwatch.nsm 0755 root root
+f none /opt/netxms/lib/netxms/sunos.nsm 0755 root root
+s none /opt/netxms/lib/libnsm_portcheck.so=/opt/netxms/lib/netxms/portcheck.nsm
+s none /opt/netxms/lib/libnsm_ping.so=/opt/netxms/lib/netxms/ping.nsm
+s none /opt/netxms/lib/libnsm_sms.so=/opt/netxms/lib/netxms/sms.nsm
+s none /opt/netxms/lib/libnsm_ups.so=/opt/netxms/lib/netxms/ups.nsm
+s none /opt/netxms/lib/libnsm_ecs.so=/opt/netxms/lib/netxms/ecs.nsm
+s none /opt/netxms/lib/libnsm_logwatch.so=/opt/netxms/lib/netxms/logwatch.nsm
+s none /opt/netxms/lib/libnsm_sunos.so=/opt/netxms/lib/netxms/sunos.nsm
+d none /opt/netxms/bin 0755 root root
+f none /opt/netxms/bin/nxcptest 0755 root root
+f none /opt/netxms/bin/nxdevcfg 0755 root root
+f none /opt/netxms/bin/nxagentd 0755 root root
+f none /opt/netxms/bin/nxapush 0755 root root
