@@ -207,7 +207,6 @@ packages/linux/debian/netxms-server.preinst -text
 packages/linux/debian/netxms-server.prerm -text
 packages/solaris/Prototype -text
 packages/solaris/files -text
-packages/solaris/pkginfo -text
 packages/solaris/postinstall -text
 packages/solaris/preinstall -text
 reports/IP[!!-~]Inventory.jrxml -text
