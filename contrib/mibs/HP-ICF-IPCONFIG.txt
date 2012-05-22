@@ -1,7 +1,7 @@
 HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
 
     IMPORTS
-        OBJECT-TYPE, MODULE-IDENTITY
+        OBJECT-TYPE, MODULE-IDENTITY, Unsigned32, Integer32
             FROM SNMPv2-SMI
         RowStatus
             FROM SNMPv2-TC
@@ -21,7 +21,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
             FROM TUNNEL-MIB;
         
     hpicfIpConfig MODULE-IDENTITY
-        LAST-UPDATED "200702020000Z"  -- JUNE 06,2007
+        LAST-UPDATED "200812090000Z"  -- Dec 09, 2008
         ORGANIZATION "Hewlett Packard Company,
                       ProCurve Networking Business"
         CONTACT-INFO "Hewlett Packard Company
@@ -31,6 +31,13 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
                       IP address configuration and interface configuration
                       for devices in the HP Integrated Communication Facility
                       product line."
+
+        REVISION     "200812090000Z"  -- Dec 09, 2008
+        DESCRIPTION  "Updated Description of
+	              hpicfIpv4InterfaceBootpGateway"
+
+        REVISION     "200810010000Z"  -- Oct 01, 2008
+        DESCRIPTION  "Move ipNetToPhysicalEntry to correct IMPORT."
 
         REVISION     "200702020000Z"  -- JUNE 06, 2007
         DESCRIPTION  "Added hpicfIpv6NDDadAttempts to augment the 
@@ -324,17 +331,17 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
     ::= { hpicfSwitchIpAddressEntry 8 }   
 
     hpicfSwitchIpAddressExtendedType OBJECT-TYPE
-    SYNTAX      INTEGER {
+     SYNTAX      INTEGER {
                      none(0),
                      eui64(1),
                      linkLocal(2)
                  }
-    MAX-ACCESS  read-only
-    STATUS      current
-    DESCRIPTION "IP address type. For V4 addresses the value will be 
+     MAX-ACCESS  read-only
+     STATUS      current
+     DESCRIPTION "IP address type. For V4 addresses the value will be 
                   none. For V6 address it can be eui64 and linkLocal also."
-    DEFVAL { none }
-    ::= { hpicfSwitchIpAddressEntry 9 }
+     DEFVAL { none }
+     ::= { hpicfSwitchIpAddressEntry 9 }
 
     hpicfIpNetToPhysicalTable OBJECT-TYPE
     SYNTAX     SEQUENCE OF HpicfIpNetToPhysicalEntry
@@ -485,8 +492,13 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         SYNTAX      InetAddressIPv4
         MAX-ACCESS  read-write
         STATUS      current
-        DESCRIPTION "This entry will contain the IP address of the 
-                     BOOTP gateway for the interface."
+        DESCRIPTION "This entry will specify the IP address to be used 
+	             as the BOOTP gateway for this interface. Note that 
+		     this IP address will be used as the BOOTP gateway 
+		     only when it is configured as an IP address on this
+		     interface. Otherwise, the lowest IP address 
+		     configured on the interface will be used as the
+		     gateway address."
         ::= { hpicfIpv4InterfaceEntry 5 }
 
     -- V6 Global Objects 

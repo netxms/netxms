@@ -1,0 +1,74 @@
+HP-ICF-USBPORT DEFINITIONS ::= BEGIN
+
+   IMPORTS
+      OBJECT-TYPE, MODULE-IDENTITY
+         FROM SNMPv2-SMI
+      TruthValue
+         FROM SNMPv2-TC
+      hpSwitch
+         FROM HP-ICF-OID;
+
+   hpicfUSBPortMIB MODULE-IDENTITY
+      LAST-UPDATED "200806250000Z"
+      ORGANIZATION "Hewlett-Packard Company,
+                    Workgroup Networks Division"
+      CONTACT-INFO "Hewlett Packard Company
+                    8000 Foothills Blvd.
+                    Roseville, CA 95747"
+      DESCRIPTION "This MIB module manages the USB Port."
+      ::= { hpSwitch 53 }
+
+   -- USBPort Configuration
+
+   hpicfUSBPortConfig    OBJECT IDENTIFIER ::= { hpicfUSBPortMIB 1 }
+
+   hpicfUSBPortStatus OBJECT-TYPE
+      SYNTAX      INTEGER {
+                       notPresent(0),
+                       enabled(1),
+                       disabled(2) }
+
+      MAX-ACCESS  read-write
+      STATUS      current
+      DESCRIPTION "hpicfUSBPortStatus control whether of not
+                   the USB port is enabled.
+                      notPresent(0)  - USBPort is not present 
+                      enabled(1)  - USBPort Enabled.
+                      disabled(2) - USBPort Disabled.
+                  "
+      DEFVAL { enabled }
+      ::= { hpicfUSBPortConfig 1 }
+
+   -- USBPort conformance information
+
+   hpicfUSBPortConformance
+      OBJECT IDENTIFIER ::= { hpicfUSBPortMIB 2 }
+
+   hpicfUSBPortGroups
+     OBJECT IDENTIFIER ::= { hpicfUSBPortConformance 1 }
+
+   hpicfUSBPortBaseGroup OBJECT-GROUP
+      OBJECTS     { 
+                   hpicfUSBPortStatus
+                  }
+      STATUS      current
+      DESCRIPTION "A mandatory group with an object to enable
+                   or disable the USB port."
+      ::= { hpicfUSBPortGroups 1 }
+
+   -- USBPort conformance statements
+
+   hpicfUSBPortCompliances
+      OBJECT IDENTIFIER ::= { hpicfUSBPortConformance 2 }
+
+   hpicfUSBPortCompliance MODULE-COMPLIANCE
+      STATUS      current
+      DESCRIPTION "Compliance statement for HP ICF USBPort
+                   configuration"
+      MODULE
+         MANDATORY-GROUPS { hpicfUSBPortBaseGroup }
+      ::= { hpicfUSBPortCompliances 1 }
+
+   
+
+   END

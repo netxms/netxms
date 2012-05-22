@@ -1,0 +1,360 @@
+SAVEPOWER-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, Unsigned32 
+        FROM SNMPv2-SMI
+
+    MODULE-COMPLIANCE, OBJECT-GROUP
+        FROM SNMPv2-CONF
+
+    TEXTUAL-CONVENTION, DisplayString, DateAndTime, TruthValue
+        FROM SNMPv2-TC
+
+    hpSwitch
+        FROM HP-ICF-OID
+
+    entPhysicalIndex
+	FROM ENTITY-MIB;
+
+hpicfSavepowerMIB MODULE-IDENTITY
+    LAST-UPDATED "200810171430Z"   --October 22, 2008 14:30 GMT
+    ORGANIZATION "Hewitt-Packard"
+    CONTACT-INFO "k-p-rama.murthy@hp.com"
+    DESCRIPTION  "The MIB module is for saving power in blocks
+                  that control the physical ports."
+    REVISION     "200810171430Z"   --October 22, 2008 14:30 GMT
+    DESCRIPTION  "Initial revision 01."
+    ::= { hpSwitch 56 }
+
+
+hpicfSavepowerScalars OBJECT IDENTIFIER ::= { hpicfSavepowerMIB 1 }
+hpicfSavepowerLEDScalars OBJECT IDENTIFIER ::= { hpicfSavepowerScalars 3 }
+-- ********************************************************************
+--  SAVEPOWER MIB Textual Conventions
+-- ********************************************************************
+SavepowerBlockIndex ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT "d"   
+    STATUS       current
+    DESCRIPTION  "A unique value that serves as an index to identify the 
+                  Power block ID that controls power distribution to a 
+                  group of ports associated with the block-id." 
+    SYNTAX       Unsigned32
+
+SavepowerControl ::= TEXTUAL-CONVENTION
+    STATUS        current
+    DESCRIPTION   "An enumerated value which provides an indication of the
+                   state of the power block. If power to the block is ON
+                   the state would be powerOn and if power to the block
+                   is OFF the state would be powerOff."
+    SYNTAX        INTEGER  {
+       powerOn(1),
+       powerOff(2)
+    }
+      
+-- ********************************************************************
+-- Savepower Scalars
+-- ********************************************************************
+      
+      hpicfSavepowerMaxBlocks   OBJECT-TYPE
+      SYNTAX        Unsigned32 
+      MAX-ACCESS    read-only
+      STATUS        current
+      DESCRIPTION   "The maximum number of Power blocks in the switch which
+                     are associated to a group of ports to power on/off.
+                     The number of power blocks and ports associated with
+                     a block are platform dependent."
+      ::= { hpicfSavepowerScalars 1 }
+
+      hpicfSavepowerEnabledPorts   OBJECT-TYPE
+      SYNTAX        Unsigned32 
+      MAX-ACCESS    read-only
+      STATUS        current
+      DESCRIPTION   "This indicates the total number of ports in the switch
+                     that are powered off."
+      DEFVAL         { 0 } 
+      ::= { hpicfSavepowerScalars 2 }
+
+      hpicfSavePowerLEDOffAlarmStartTime OBJECT-TYPE
+      SYNTAX 		DateAndTime
+      MAX-ACCESS	read-write
+      STATUS		current
+      DESCRIPTION	"This is the scheduled time at which the all the switch
+			 LEDs would be turned off."
+      ::= { hpicfSavepowerLEDScalars 1 }
+
+      hpicfSavePowerLEDOffAlarmDuration OBJECT-TYPE
+      SYNTAX 		Unsigned32
+      MAX-ACCESS	read-write
+      STATUS		current
+      DESCRIPTION	"This is the duration of the alarm time during which the
+			switch would be in LED power save mode, and the switch
+			LEDs would be turned off."
+      ::= { hpicfSavepowerLEDScalars 2 }
+
+      hpicfSavePowerLEDOffAlarmRecur OBJECT-TYPE
+      SYNTAX 		TruthValue
+      MAX-ACCESS	read-write
+      STATUS		current
+      DESCRIPTION       "The truth value used to indicate if the timer for LED
+			off will be recurring."
+      ::= { hpicfSavepowerLEDScalars 3 }
+
+
+-- ********************************************************************
+-- SAVEPOWER TABLE entry 
+-- ********************************************************************
+
+hpicfEntitySavepower  OBJECT IDENTIFIER ::= { hpicfSavepowerMIB 2 }
+
+hpicfSavepowerTable   OBJECT-TYPE
+    SYNTAX        SEQUENCE OF HpicfSavepowerEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION   "This table contains one row for every power block that
+                   controls a group of physical ports."
+    ::= { hpicfEntitySavepower 1 }
+
+hpicfSavepowerEntry   OBJECT-TYPE
+    SYNTAX      HpicfSavepowerEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Information about Savepower table."
+    INDEX       { hpicfSavepowerBlockID }
+    ::= { hpicfSavepowerTable 1 }
+
+HpicfSavepowerEntry ::= SEQUENCE {
+      hpicfSavepowerBlockID     SavepowerBlockIndex,
+      hpicfSavepowerControl     SavepowerControl, 
+      hpicfSavepowerBlockPorts  DisplayString
+}
+
+hpicfSavepowerBlockID    OBJECT-TYPE
+    SYNTAX       SavepowerBlockIndex
+    MAX-ACCESS   not-accessible
+    STATUS       current
+    DESCRIPTION  "The index that is used to access the power block entry
+                  table."
+    ::= { hpicfSavepowerEntry 1 }
+
+hpicfSavepowerControl OBJECT-TYPE
+    SYNTAX       SavepowerControl 
+    MAX-ACCESS   read-write
+    STATUS       current
+    DESCRIPTION  "This indicates if the power to the block is powerOn (1)
+                  or powerOff (2)."
+    ::= { hpicfSavepowerEntry 2 }
+
+hpicfSavepowerBlockPorts OBJECT-TYPE
+    SYNTAX       DisplayString
+    MAX-ACCESS   read-only
+    STATUS       current
+    DESCRIPTION  "This indicates the port-range associated to the 
+                  hpisfSavepowerBlockID."
+    ::= { hpicfSavepowerEntry 3 }
+
+-- ********************************************************************
+-- SAVEPOWER Green Features TABLE entry
+-- ********************************************************************
+
+hpicfSavepowerGreenFeaturesTable   OBJECT-TYPE
+    SYNTAX        SEQUENCE OF HpicfSavepowerGreenFeaturesEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION   "This table contains a row for different entities and
+		  shows the admin status and operational status of the
+		   power and LED for that entity."
+    ::= { hpicfEntitySavepower 2 }
+
+hpicfSavepowerGreenFeaturesEntry   OBJECT-TYPE
+    SYNTAX      	HpicfSavepowerGreenFeaturesEntry
+    MAX-ACCESS  	not-accessible
+    STATUS      	current
+    DESCRIPTION 	"Information about SavepowerGreenFeatures table."
+    INDEX       {  entPhysicalIndex }
+    ::= { hpicfSavepowerGreenFeaturesTable 1 }
+
+HpicfSavepowerGreenFeaturesEntry ::= SEQUENCE {
+      hpicfSavepowerEntityPowerAdminStatus	TruthValue,
+      hpicfSavepowerEntityPowerOperStatus	SavepowerControl,
+      hpicfSavepowerEntityLEDAdminStatus	TruthValue,   
+      hpicfSavepowerEntityLEDOperStatus		SavepowerControl
+      }
+
+
+hpicfSavepowerEntityPowerAdminStatus OBJECT-TYPE
+    SYNTAX	TruthValue
+    MAX-ACCESS	read-write
+    STATUS	current
+    DESCRIPTION	"The truth value indicates the configured status of the
+		 entity power."
+    ::= { hpicfSavepowerGreenFeaturesEntry 1 }
+
+hpicfSavepowerEntityPowerOperStatus OBJECT-TYPE
+    SYNTAX	SavepowerControl
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	"This indicates the operational status of the entity as powerOn(1)
+		 if turned on or powerOff(2) if turned off."
+    ::= { hpicfSavepowerGreenFeaturesEntry 2 }
+
+hpicfSavepowerEntityLEDAdminStatus OBJECT-TYPE
+    SYNTAX	TruthValue
+    MAX-ACCESS	read-write
+    STATUS	current
+    DESCRIPTION	" The truth value indicates the configured status of the entity's
+		 LED power status."
+    ::= { hpicfSavepowerGreenFeaturesEntry 3 }
+
+hpicfSavepowerEntityLEDOperStatus OBJECT-TYPE
+    SYNTAX	SavepowerControl
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	" This indicates if the operational status of the entity's LED power
+		 is powerOn (1) or powerOff (2)."
+    ::= { hpicfSavepowerGreenFeaturesEntry 4 }
+
+-- ********************************************************************
+-- PHY Table
+--********************************************************************
+
+hpicfSavepowerPHYTable   OBJECT-TYPE
+    SYNTAX        SEQUENCE OF HpicfSavepowerPHYEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION   " This table contains a row for every port for which
+		    the PHY will be put to auto low power mode or normal
+		     power mode and contains the admin status and operational status of the PHY ."
+    ::= { hpicfEntitySavepower 3 }
+
+hpicfSavepowerPHYEntry   OBJECT-TYPE
+    SYNTAX      	HpicfSavepowerPHYEntry
+    MAX-ACCESS  	not-accessible
+    STATUS      	current
+    DESCRIPTION 	"Information about PHY power status for ports."
+    INDEX       {  hpicfSavepowerSlotNum, hpicfSavepowerPortNum }
+    ::= { hpicfSavepowerPHYTable 1 }
+
+HpicfSavepowerPHYEntry ::= SEQUENCE {
+      hpicfSavepowerSlotNum				Unsigned32,
+      hpicfSavepowerPortNum				Unsigned32,
+      hpicfSavepowerPHYAdminStatus			TruthValue,
+      hpicfSavepowerPHYOperStatus	            	SavepowerControl
+      }
+
+hpicfSavepowerSlotNum OBJECT-TYPE
+    SYNTAX	Unsigned32
+    MAX-ACCESS	not-accessible
+    STATUS	current
+    DESCRIPTION	"This value serves as an index to identify the slot no. for the PHY."
+    ::= { hpicfSavepowerPHYEntry 1 }
+
+hpicfSavepowerPortNum OBJECT-TYPE
+    SYNTAX	Unsigned32
+    MAX-ACCESS	not-accessible
+    STATUS	current
+    DESCRIPTION	"This value serves as an index to identify the port no. for the PHY."
+    ::= { hpicfSavepowerPHYEntry 2 }
+
+hpicfSavepowerPHYAdminStatus OBJECT-TYPE
+    SYNTAX	TruthValue
+    MAX-ACCESS	read-write
+    STATUS	current
+    DESCRIPTION	"The truth value indicates the configured status of the auto low power mode for the PHY."
+    ::= { hpicfSavepowerPHYEntry 3 }
+
+hpicfSavepowerPHYOperStatus OBJECT-TYPE
+    SYNTAX	SavepowerControl
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	"This indicates if the operational status of the PHY power is auto low power mode i.e. powerOff(2) or normal power mode i.e. or powerOn(1)."
+    ::= { hpicfSavepowerPHYEntry 4 }
+
+
+
+-- ********************************************************************
+-- SAVEPOWER Conformance
+--********************************************************************
+
+   hpicfSavepowerConformance OBJECT IDENTIFIER ::= { hpicfSavepowerMIB 3 }
+   hpicfSavepowerCompliance  OBJECT IDENTIFIER ::= { hpicfSavepowerConformance 1 }
+   hpicfSavepowerGroups      OBJECT IDENTIFIER ::= { hpicfSavepowerConformance 2 }
+
+-- ********************************************************************
+-- SAVEPOWER Complicance
+-- ********************************************************************
+   hpicfSavepowerComplianceInfo MODULE-COMPLIANCE
+      STATUS       current
+      DESCRIPTION  "The compliance statement for entries which implement 
+                    the SAVEPOWER MIB."
+      MODULE        -- This module
+      MANDATORY-GROUPS
+      {
+          hpicfSavepowerScalarsGroup,
+	  hpicfSavepowerLEDScalarsGroup,
+	  hpicfSavepowerGreenFeaturesGroup,
+	  hpicfSavepowerPHYGroup,
+          hpicfSavepowerGroup
+      }
+      GROUP        hpicfSavepowerGroup
+      DESCRIPTION  "Objects associated with switch entity SAVEPOWER."
+      ::= { hpicfSavepowerCompliance 1 } 
+
+--
+-- SAVEPOWER Groups
+--
+   hpicfSavepowerScalarsGroup OBJECT-GROUP
+      OBJECTS
+      {
+           hpicfSavepowerMaxBlocks,
+           hpicfSavepowerEnabledPorts
+
+      }
+      STATUS      current
+      DESCRIPTION "Basic Scalars required in SAVEPOWER MIB implementation."
+      ::= { hpicfSavepowerGroups 1 }
+
+   hpicfSavepowerLEDScalarsGroup OBJECT-GROUP
+      OBJECTS
+      {
+           hpicfSavePowerLEDOffAlarmStartTime,
+           hpicfSavePowerLEDOffAlarmDuration,
+           hpicfSavePowerLEDOffAlarmRecur
+      }
+      STATUS      current
+      DESCRIPTION "Scalars required for LED turn off feature."
+      ::= { hpicfSavepowerGroups 2 }
+
+   hpicfSavepowerGreenFeaturesGroup OBJECT-GROUP
+      OBJECTS
+      {
+           hpicfSavepowerEntityPowerAdminStatus,
+	   hpicfSavepowerEntityPowerOperStatus,
+	   hpicfSavepowerEntityLEDAdminStatus,
+           hpicfSavepowerEntityLEDOperStatus
+      }
+      STATUS      current
+      DESCRIPTION "SAVEPOWER Green Features parameters"
+      ::= { hpicfSavepowerGroups 3 }
+
+    hpicfSavepowerPHYGroup OBJECT-GROUP
+      OBJECTS
+      {
+--          hpicfSavepowerSlotNum,
+--          hpicfSavepowerPortNum,
+	  hpicfSavepowerPHYAdminStatus,
+	  hpicfSavepowerPHYOperStatus
+      }
+      STATUS      current
+      DESCRIPTION "SAVEPOWER MIB parameters "
+      ::= { hpicfSavepowerGroups 4 }
+
+    hpicfSavepowerGroup OBJECT-GROUP
+      OBJECTS
+      {
+          hpicfSavepowerControl,
+	  hpicfSavepowerBlockPorts
+      }
+      STATUS      current
+      DESCRIPTION "SAVEPOWER MIB parameters "
+      ::= { hpicfSavepowerGroups 5 }
+END

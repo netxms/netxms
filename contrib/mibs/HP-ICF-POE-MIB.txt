@@ -1,0 +1,276 @@
+HP-ICF-POE-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, Integer32 
+            FROM SNMPv2-SMI
+        TruthValue
+            FROM SNMPv2-TC
+        MODULE-COMPLIANCE, OBJECT-GROUP
+            FROM SNMPv2-CONF
+        hpicfCommon 
+            FROM HP-ICF-OID
+        pethPsePortEntry
+            FROM POWER-ETHERNET-MIB;
+
+hpicfPOE        OBJECT IDENTIFIER ::= { hpicfCommon 9 } 
+
+hpicfPoe MODULE-IDENTITY
+   LAST-UPDATED "200702010000Z"  -- February 01, 2007
+   ORGANIZATION "Hewlett Packard Company,
+                 Procurve Networking Business"
+   CONTACT-INFO " Postal: Hewlett Packard Company
+                  8000 Foothills Blvd.
+                  Roseville, CA 95747"
+   DESCRIPTION
+          "This MIB module describes management objects
+           used to manage Power Source Equipment (PSE)."
+
+   REVISION     "200702010000Z"  -- February 01, 2007
+   DESCRIPTION  "Add objects to support POE allocation."                    
+
+   REVISION     "200506060000Z"  -- June 06, 2005
+   DESCRIPTION  "Add objects to support POE global characteristics."                    
+
+   REVISION     "200407070000Z"  -- July 07, 2004
+   DESCRIPTION  "Original creation of mib module."  
+
+::= { hpicfPOE 1 }
+
+
+-- ------------------------------------------------------------
+-- PSE Objects extension 
+-- (AUGMENTS pethPsePortTable )
+-- ------------------------------------------------------------
+hpicfPoePethPsePortTable OBJECT-TYPE
+     SYNTAX      SEQUENCE OF HpicfPoePethPsePortEntry
+     MAX-ACCESS  not-accessible
+     STATUS      current
+     DESCRIPTION "This table suplements the table 'pethPsePortTable'
+                  in ieee802af.mib."
+::= { hpicfPoe 1 }
+
+hpicfPoePethPsePortEntry OBJECT-TYPE
+     SYNTAX      HpicfPoePethPsePortEntry 
+     MAX-ACCESS  not-accessible
+     STATUS      current
+     DESCRIPTION "The fields in these entries will be used to supplement
+                  fields in 'pethPsePortEntry in ieee802af.mib."
+     AUGMENTS { pethPsePortEntry }
+::= { hpicfPoePethPsePortTable 1 }
+
+
+HpicfPoePethPsePortEntry ::=
+     SEQUENCE {
+         hpicfPoePethPsePortCurrent                INTEGER,
+         hpicfPoePethPsePortVoltage                INTEGER,
+         hpicfPoePethPsePortPower                  INTEGER,
+         hpicfPoePethPsePortPowerAllocateBy        INTEGER,
+         hpicfPoePethPsePortPowerValue             INTEGER,
+         hpicfPoePethPsePortLLDPDetect             INTEGER,
+         hpicfPoePethPsePortPoePlusPowerValue      INTEGER
+     }
+
+hpicfPoePethPsePortCurrent OBJECT-TYPE
+     SYNTAX      INTEGER (0..65535)
+     MAX-ACCESS  read-only
+     STATUS      current
+     DESCRIPTION "This field specifies the current supplied at this port.
+                  This value is specified in milli amperes(mA)."
+     REFERENCE  ""
+     DEFVAL     { 0 }
+::= { hpicfPoePethPsePortEntry 1 }
+
+hpicfPoePethPsePortVoltage OBJECT-TYPE
+     SYNTAX      INTEGER (0..65535)
+     MAX-ACCESS  read-only
+     STATUS      current
+     DESCRIPTION "This field specifies the Voltage supplied at this port.
+                  This value is specified in 10's of volts (dV)"
+     REFERENCE  ""
+     DEFVAL     { 0 }
+::= { hpicfPoePethPsePortEntry 2 }
+
+hpicfPoePethPsePortPower OBJECT-TYPE
+     SYNTAX      INTEGER (0..65535)
+     MAX-ACCESS  read-only
+     STATUS      current
+     DESCRIPTION "This field specifies the Power supplied at this port.
+                  This value is specified in milliwatts (mW)."
+     REFERENCE  ""
+     DEFVAL     { 0 } 
+::= { hpicfPoePethPsePortEntry 3 }
+
+hpicfPoePethPsePortPowerAllocateBy OBJECT-TYPE
+     SYNTAX      INTEGER {
+                 usage(1),
+                 class(2),
+                 value(3)
+     }
+     MAX-ACCESS  read-write
+     STATUS      current
+     DESCRIPTION "This field specifies the power allocation method for this port.
+                  The default value is usage."
+     REFERENCE  ""
+     DEFVAL     { 1 } 
+::= { hpicfPoePethPsePortEntry 4 }
+
+hpicfPoePethPsePortPowerValue OBJECT-TYPE
+     SYNTAX      INTEGER (0..17)
+     MAX-ACCESS  read-write
+     STATUS      current
+     DESCRIPTION "This field specifies the power allocation defined for this port.
+                  This value is specified in Watts (W)."
+     REFERENCE  ""
+     DEFVAL     { 17 } 
+::= { hpicfPoePethPsePortEntry 5 }
+
+hpicfPoePethPsePortLLDPDetect OBJECT-TYPE
+     SYNTAX      INTEGER {
+                        disabled(1),
+                        enabled(2)
+                 }
+     MAX-ACCESS  read-write
+     STATUS      current
+     DESCRIPTION "This field specifies if power should be allocated using
+                  LLDP advertised information regarding the PD." 
+     REFERENCE  ""
+     DEFVAL     { 1 } 
+::= { hpicfPoePethPsePortEntry 6 }
+
+hpicfPoePethPsePortPoePlusPowerValue OBJECT-TYPE
+     SYNTAX      INTEGER (0..255)
+     MAX-ACCESS  read-write
+     STATUS      current
+     DESCRIPTION "This field specifies the power allocation defined for this port.
+                  Use this object for equipment supporting high power, i.e, greater
+                  than 15 Watts. This value is specified in Watts (W). 
+                  Maximum supported is 33W"
+     REFERENCE  ""
+     DEFVAL     { 17 } 
+::= { hpicfPoePethPsePortEntry 7 }
+
+-- ------------------------------------------------------------
+-- Power Over Ethernet (POE) Global information - applies to 
+-- the entire chassis 
+-- ------------------------------------------------------------
+
+hpicfPoeAllowPreStdDetect   OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "This object is used to configure the default
+                     POE power detection mode.
+                     A value of TRUE - indicates that power 
+                     pre-802.3af-standard devices.
+                     A value of FALSE - indicates that only 
+                     pre-802.3af compliant devices are allowed.
+                     The default value is true."                  
+        ::= { hpicfPoe 3 }
+
+hpicfPoePowerRedundancy   OBJECT-TYPE
+        SYNTAX INTEGER   {
+                  none(1),
+                  nPlus1(2),
+                  full(3)
+        }     
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "This object is used to configure the
+                     POE power redundancy mode.
+                     A value of none(1) - means that all available power
+                     can be allocated to powered devices.
+                     A value of nPlus1(2) - means that one of the highest
+                     power supplies is held in reserve and that in
+                     the event of a single power supply failure, no 
+                     no powered devices will be shut down.
+                     A value of full(3) - means that half of the available
+                     power supplies are held in reserve.
+                     The default value is none(1)."                     
+        ::= { hpicfPoe 4 }
+
+hpicfPoeExtPwrSupplyCount  OBJECT-TYPE
+        SYNTAX Integer32 (1..2147483647)
+        MAX-ACCESS  read-write
+        STATUS      current  
+        DESCRIPTION "This object is used to configure the number
+                     of external power supplies expected to
+                     be connected to the chassis.  
+                     The default value is 1."                     
+        ::= { hpicfPoe 5 }
+
+
+-- ------------------------------------------------------------
+-- Conformance information
+-- ------------------------------------------------------------
+
+hpicfPoeConformance OBJECT IDENTIFIER ::= { hpicfPoe  2 }
+
+hpicfPoeCompliances OBJECT IDENTIFIER ::= { hpicfPoeConformance 1 }
+hpicfPoeGroups      OBJECT IDENTIFIER ::= { hpicfPoeConformance 2 }
+
+-- ------------------------------------------------------------
+-- compliance statements
+-- ------------------------------------------------------------
+
+hpicfPoeCompliance MODULE-COMPLIANCE
+        STATUS      deprecated
+        DESCRIPTION "
+                A compliance statement for HP Routing switches with PoE 
+                capability"
+        MODULE
+        MANDATORY-GROUPS {  hpicfPoePethPsePortTableGroup }
+
+        GROUP       hpicfPoePethPsePortTableGroup
+        DESCRIPTION "A Collection of Object(s) that display
+                     the current poe port status information."
+                
+        ::= { hpicfPoeCompliances 1 }
+
+hpicfPoeCompliance1 MODULE-COMPLIANCE
+        STATUS      current
+        DESCRIPTION "
+                A compliance statement for HP Routing switches with PoE 
+                capability"
+        MODULE
+        MANDATORY-GROUPS {  hpicfPoePethPsePortTableGroup,
+                            hpicfPoeGlobalGroup }
+
+        GROUP       hpicfPoePethPsePortTableGroup
+        DESCRIPTION "A Collection of Object(s) that display
+                     the current poe port status information."
+                     
+        GROUP       hpicfPoeGlobalGroup
+        DESCRIPTION "A Collection of Object(s) that control
+                     the global (entire chassis) poe 
+                     configuration."
+         
+        ::= { hpicfPoeCompliances 2 }
+
+
+hpicfPoePethPsePortTableGroup OBJECT-GROUP
+        OBJECTS     { 
+                      hpicfPoePethPsePortCurrent,
+                      hpicfPoePethPsePortVoltage,
+                      hpicfPoePethPsePortPower, 
+                      hpicfPoePethPsePortPowerAllocateBy,
+                      hpicfPoePethPsePortPowerValue,
+                      hpicfPoePethPsePortLLDPDetect
+                    }
+        STATUS      current
+        DESCRIPTION "A collection of objects allowing configuration of
+                    PoE PSE Port table"
+        ::= { hpicfPoeGroups 1 }
+
+
+hpicfPoeGlobalGroup OBJECT-GROUP
+        OBJECTS     { 
+                      hpicfPoeAllowPreStdDetect,
+                      hpicfPoePowerRedundancy,
+                      hpicfPoeExtPwrSupplyCount}
+        STATUS      current
+        DESCRIPTION "A collection of objects related to the global 
+                     configuration of POE on a given chassis"
+        ::= { hpicfPoeGroups 2 }
+
+END
+

@@ -5,7 +5,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         NOTIFICATION-TYPE
             FROM SNMPv2-SMI
         MacAddress, TruthValue, RowStatus, DisplayString,
-        TDomain, TAddress, StorageType, TimeStamp
+        TDomain, TAddress, StorageType, TimeStamp, TimeInterval
             FROM SNMPv2-TC
         MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
             FROM SNMPv2-CONF
@@ -24,7 +24,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
             FROM SNMP-TARGET-MIB;
 
     hpicfBasicMib MODULE-IDENTITY
-        LAST-UPDATED "200706070000Z"  -- June 7, 2007
+        LAST-UPDATED "200902101539Z"  -- February 10, 2009
         ORGANIZATION "Hewlett Packard Company,
                      Network Infrastructure Solutions"
         CONTACT-INFO "Hewlett Packard Company
@@ -33,6 +33,13 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         DESCRIPTION  "This MIB module describes objects for basic
                      management of devices in the HP Integrated
                      Communication Facility product line."
+
+        REVISION     "200902101539Z"  -- February 10, 2009
+        DESCRIPTION  "Added 'hpicfInetDNSNameServerEntryIsOobm' MIB object
+                      in 'hpicfInetDNSNameServersTable' table."
+
+        REVISION     "200804040000Z"  -- April 04, 2008
+        DESCRIPTION  "Deprecated object hpicfTelnet6Enable" 
 
         REVISION     "200709130000Z"  -- Sept 13, 2007
         DESCRIPTION  "Limit the size to 1300 for the hpicfBannerMOTD."
@@ -879,7 +886,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
             hpicfTrapDestFilter             Integer32,
             hpicfTrapDestStatus             RowStatus,
 	    hpicfTrapDestNotifyType         INTEGER,
-	    hpicfTrapDestRetries            Interger32,
+	    hpicfTrapDestRetries            Integer32,
 	    hpicfTrapDestTimeout            TimeInterval
         }
 
@@ -1185,7 +1192,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         ::= { hpicfSnmpTargetAddrLogFilterTable 1 }
 
     HpicfSnmpTargetAddrLogFilterEntry ::= SEQUENCE {
-        hpicfSnmpTargetAddrLogFilter Integer32 (0..31)
+        hpicfSnmpTargetAddrLogFilter Integer32
     }
 
     hpicfSnmpTargetAddrLogFilter OBJECT-TYPE
@@ -1307,7 +1314,8 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
 				hpicfInetDNSNameServerAddrIndex	 INTEGER, 
             hpicfInetDNSNameServerAddrType    InetAddressType,
             hpicfInetDNSNameServerAddress     InetAddress,
-            hpicfInetDNSNameServerEntryStatus RowStatus 
+            hpicfInetDNSNameServerEntryStatus RowStatus,
+            hpicfInetDNSNameServerEntryIsOobm TruthValue
         }
 
 	 hpicfInetDNSNameServerAddrIndex OBJECT-TYPE
@@ -1342,6 +1350,18 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION "The row status of a given name server entry."
         ::= { hpicfInetDNSNameServerEntry 4 }
+
+   hpicfInetDNSNameServerEntryIsOobm OBJECT-TYPE
+      SYNTAX      TruthValue
+      MAX-ACCESS  read-create
+      STATUS      current
+      DESCRIPTION "This object indicates whether this DNS Server
+                  is reachable over OOBM (Out Of Band Management)
+                  interface or not. This mib object will be applicable
+                  only if there is a physical OOBM port on the device."
+      DEFVAL      {false}
+      ::= {  hpicfInetDNSNameServerEntry 5 }
+
     -- HP ICF BASIC Banner 
 
     hpicfBannerStatus OBJECT-TYPE
@@ -1389,8 +1409,9 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
 			disabled(2)
 		    }
         MAX-ACCESS  read-write
-	STATUS      current
-	DESCRIPTION "When the value of this object is 'enabled(1)', the
+	STATUS      deprecated
+	DESCRIPTION "********* THIS OBJECT IS DEPRECATED *********
+                     When the value of this object is 'enabled(1)', the
 	             telnet6 server on this agent is running and allowed to
 		     accept connections.  When the value of this object is
 		     'disabled(2)', no incoming telnet6 connections will be
@@ -1767,6 +1788,16 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
 
         ::= { hpicfBasicCompliances 7 }
 
+    hpicfBasicComplianceOobm    MODULE-COMPLIANCE
+        STATUS         current
+        DESCRIPTION    "The compliance statement for devices implementing the
+                       HP DNS server Mib with OOBM support"
+        MODULE
+
+            GROUP             hpicfInetDNSNameServerOobmGroup
+            DESCRIPTION       "A collection of objects for configuring
+                              DNS with OOBM."
+        ::= { hpicfBasicCompliances 10 }
 
 
     -- units of conformance
@@ -1986,6 +2017,16 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         DESCRIPTION "A collection of objects for basic management of
                     ICF devices."
         ::= { hpicfBasicGroups 20 }
+
+    hpicfInetDNSNameServerOobmGroup OBJECT-GROUP
+        OBJECTS     { hpicfInetDNSNameServerEntryIsOobm,
+                      hpicfInetDNSNameServerAddress }
+        STATUS      current
+        DESCRIPTION "A collection of objects for configuring the
+                    DNS server entry with support for OOBM
+                    (Out of Band Management) interface."
+        ::= { hpicfBasicGroups 23 }
+
 
 END
 

@@ -1,9 +1,10 @@
 HP-ICF-BRIDGE DEFINITIONS ::= BEGIN
 
     IMPORTS
-        OBJECT-TYPE, MODULE-IDENTITY, NOTIFICATION-TYPE, Integer32
+        OBJECT-TYPE, MODULE-IDENTITY, NOTIFICATION-TYPE, Integer32,
+        Counter32
             FROM SNMPv2-SMI
-        TruthValue, TimeStamp, TimeInterval
+        TruthValue, TimeStamp, TEXTUAL-CONVENTION
             FROM SNMPv2-TC
         MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
             FROM SNMPv2-CONF
@@ -15,18 +16,12 @@ HP-ICF-BRIDGE DEFINITIONS ::= BEGIN
             FROM HP-ICF-OID
         ConfigStatus
             FROM HP-ICF-TC
-        hpSwitchStpPortEntry
+       hpSwitchStpPortEntry
             FROM CONFIG-MIB
         ifIndex
             FROM IF-MIB
         portCopyEntry
             FROM SMON-MIB;
-
-    BridgeId ::= TEXTUAL-CONVENTION
-        STATUS       current
-        DESCRIPTION  "The Bridge Identifier as used in the Spanning Tree
-                      Protocol to uniquely identify a bridge."
-        SYNTAX OCTET STRING (SIZE (8))
 
 
     hpicfBridge MODULE-IDENTITY
@@ -68,6 +63,12 @@ HP-ICF-BRIDGE DEFINITIONS ::= BEGIN
         DESCRIPTION  "Initial revision."
         ::= { hpSwitch 12 }
 
+    BridgeId ::= TEXTUAL-CONVENTION
+        STATUS       current
+        DESCRIPTION  "The Bridge Identifier as used in the Spanning Tree
+                      Protocol to uniquely identify a bridge."
+        SYNTAX OCTET STRING (SIZE (8))
+
     hpicfBridgeObjects 
         OBJECT IDENTIFIER ::= { hpicfBridge 1 }
     hpicfBridgeBase 
@@ -77,7 +78,7 @@ HP-ICF-BRIDGE DEFINITIONS ::= BEGIN
 -- **********************************************************************
 
     hpicfBridgeMaxVlans OBJECT-TYPE
-        SYNTAX      INTEGER (1..4094)
+        SYNTAX      Integer32 (1..4094)
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION "Defines the number of VLANs that the switch will
@@ -112,6 +113,7 @@ HP-ICF-BRIDGE DEFINITIONS ::= BEGIN
                     as to require a reboot to take effect, the value
                     of this variable will be set to 'notInService'."
         ::= { hpicfBridgeBase 4 }
+
 
 -- **********************************************************************
 -- GVRP Objects
@@ -230,19 +232,19 @@ HP-ICF-BRIDGE DEFINITIONS ::= BEGIN
 
     HpicfBridgeRstpPortEntry ::=
         SEQUENCE {
-            hpicfBridgeRstpPortIndex                    INTEGER,
+            hpicfBridgeRstpPortIndex                    Integer32,
             hpicfBridgeRstpAdminEdgePort                INTEGER,
             hpicfBridgeRstpOperEdgePort                 INTEGER,
             hpicfBridgeRstpAdminPointToPointMac         INTEGER,
             hpicfBridgeRstpOperPointToPointMac          TruthValue,
-            hpicfBridgeRstpPortPathCost                 INTEGER,
+            hpicfBridgeRstpPortPathCost                 Integer32,
             hpicfBridgeRstpForceBpduMigrationCheck      TruthValue,
             hpicfBridgeRstpAutoEdgePort	                TruthValue,
             hpicfBridgeRstpPortBpduFiltering            TruthValue
         }
 
     hpicfBridgeRstpPortIndex OBJECT-TYPE
-        SYNTAX      INTEGER (1..65535)
+        SYNTAX      Integer32 (1..65535)
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION "The port number of the port for which this entry
@@ -326,7 +328,7 @@ HP-ICF-BRIDGE DEFINITIONS ::= BEGIN
         ::= { hpicfBridgeRstpPortEntry 5 }
 
     hpicfBridgeRstpPortPathCost OBJECT-TYPE
-        SYNTAX      INTEGER (1..200000000)
+        SYNTAX      Integer32 (1..200000000)
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION "Rapid Reconfiguration Port Path Cost - 32 bit values"
@@ -376,7 +378,7 @@ HP-ICF-BRIDGE DEFINITIONS ::= BEGIN
 -- **********************************************************************
 
 -- Port Remediation Textual Convention
-    LoopProtectReceiverAction::= TEXTUAL-CONVENTION
+    LoopProtectReceiverAction ::= TEXTUAL-CONVENTION
     STATUS      current
     DESCRIPTION
             " This TC describes the actions a port that receives a loop
@@ -562,7 +564,8 @@ HP-ICF-BRIDGE DEFINITIONS ::= BEGIN
 
     HpicfBridgeMirrorSessionEntry ::=
         SEQUENCE {
-            hpicfBridgeMirrorSessionID                Integer32
+            hpicfBridgeMirrorSessionID                Integer32,
+	    hpicfBridgeDontTagWithVlan                INTEGER
         }
 
     hpicfBridgeMirrorSessionID OBJECT-TYPE
@@ -582,6 +585,25 @@ HP-ICF-BRIDGE DEFINITIONS ::= BEGIN
                      be set to 0. "
         DEFVAL { 1 }
         ::= { hpicfBridgeMirrorSessionEntry 1 }
+
+  hpicfBridgeDontTagWithVlan OBJECT-TYPE
+        SYNTAX INTEGER
+            {
+            enabled(1),
+            disabled(2)
+            }
+       MAX-ACCESS   read-write
+       STATUS       current
+       DESCRIPTION
+          "This oid mentions whether VLAN tag is to part of the 
+	   mirror'ed copy of the packet. The value 'enabled'  
+           denotes that the VLAN tag shouldnt be part of the 
+	   mirror'ed copy; 'disabled' does put the VLAN tag in the 
+	   mirror'ed copy. Only one logical port is allowed.
+           This object is persistent and when written the entity 
+	   SHOULD save the change to non-volatile storage."
+        DEFVAL { 2 }
+       ::= { hpicfBridgeMirrorSessionEntry 2 }
 
 -- **********************************************************************
 -- Conformance information
@@ -618,8 +640,8 @@ HP-ICF-BRIDGE DEFINITIONS ::= BEGIN
         OBJECTS     { hpicfBridgeRstpForceVersion,
                       hpicfBridgeRstpConfigStatus,
                       hpicfBridgeRstpProtocolVersion,
-                      hpicfBridgeRstpAdminStatus,
-                      hpicfBridgeRstpPortTable }
+                      hpicfBridgeRstpAdminStatus
+                      }
         STATUS      current
         DESCRIPTION "Rapid Spanning Tree Protocol (RSTP) configuration
                     information that is in neither the standard 802.1w
@@ -766,4 +788,6 @@ HP-ICF-BRIDGE DEFINITIONS ::= BEGIN
                          for switches that implement the loop protection
                          feature."
         ::= { hpicfBridgeCompliances 5 }
+
+   
 END

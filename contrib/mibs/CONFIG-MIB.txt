@@ -13,13 +13,13 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         dot1dStpPortState, dot1dStpPortDesignatedBridge,
         dot1dStpPortDesignatedPort
             FROM BRIDGE-MIB -- RFC-1493
-        DisplayString, RowStatus, MacAddress, TimeStamp
+        DisplayString, RowStatus, MacAddress, TimeStamp,TruthValue
             FROM SNMPv2-TC
         HpSwitchPortType, ConfigStatus
             FROM HP-ICF-TC
         hpSwitch
             FROM HP-ICF-OID
-        InetAddressType, InetAddress
+        InetAddressType, InetAddress, InetAddressPrefixLength
             FROM INET-ADDRESS-MIB;
 
     -- type.
@@ -429,7 +429,8 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                         fecAuto(2),
                         saTrunk(3),
                         lacpTrk(4),
-                        none(5)
+                        none(5),
+                        dtLacpTrk(6)
                     }
         ACCESS      read-write
         STATUS      mandatory
@@ -497,6 +498,15 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     notInService."
         ::= { hpSwitchPortConfig 2 }
 
+	hpSwitchLinkUpDownTrapAllPortsStatus OBJECT-TYPE
+	    SYNTAX       INTEGER {
+                             enable(1),
+			     disable(2)
+			 }
+	    ACCESS       read-write
+	    STATUS       mandatory
+	    DESCRIPTION "Used to either enable/disable the Link Up/Link Down traps for all the ports."
+	    ::= { hpSwitchPortConfig 3 }
 
     hpSwitchIpxConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 4 }
 
@@ -571,6 +581,17 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     the context of hpSwitchIpTimepInetServerAddrType."
         ::= { hpSwitchIpConfig 8 }
 
+
+    hpSwitchIpTimepIsOobm OBJECT-TYPE
+        SYNTAX      TruthValue
+        ACCESS      read-write
+        STATUS      mandatory
+        DESCRIPTION "This object indicates whether this TIMEP Server
+                    is reachable over OOBM (Out Of Band Management)
+                    interface or not. This mib object will be applicable
+                    only if there is a physical OOBM port on the device."
+	DEFVAL      {false}
+        ::= { hpSwitchIpConfig 9 }
 
     hpSwitchSerialLinkConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 6 }
 
@@ -1864,7 +1885,10 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
             hpSwitchCosAddressStatus           RowStatus,
             hpSwitchCosAddressDSCPPolicy       INTEGER,
             hpSwitchCosAddressResolvedPriority INTEGER,
-            hpSwitchCosAddressApplyPolicy      INTEGER
+            hpSwitchCosAddressApplyPolicy      INTEGER,
+            hpSwitchCosIpv4AddressMask         IpAddress,
+            hpSwitchCosAddressIpv6             InetAddress,
+            hpSwitchCosAddressIpv6PrefixLength InetAddressPrefixLength
         }
 
     hpSwitchCosAddressIndex OBJECT-TYPE
@@ -1878,20 +1902,24 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
 
     hpSwitchCosAddressType OBJECT-TYPE
         SYNTAX      INTEGER {
-                        ip(1)
+                        ip(1),
+                        ipv6(2)
                     }
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "The type of address to configure."
+        DESCRIPTION "The type of address to configure. Default is ip 
+                    (IPv4).  This field indicates which of the other
+                    address fields must be configured for this table 
+                    entry. "
         ::= { hpSwitchCosAddressConfigEntry 2 }
 
     hpSwitchCosAddressIp OBJECT-TYPE
         SYNTAX      IpAddress
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "This variable is valid only if an IP CoS
+        DESCRIPTION "This variable is valid only if an IPv4 CoS
                     configuration was defined.  It will be ignored
-                    otherwise.  Packets with this IP address as a source
+                    otherwise.  Packets with this IPv4 address as a source
                     or destination will receive the new priority value."
         ::= { hpSwitchCosAddressConfigEntry 3 }
 
@@ -1953,6 +1981,45 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     one another."
         DEFVAL      { applyHpSwitchCosAddressPriority }
         ::= { hpSwitchCosAddressConfigEntry 8 }
+
+    hpSwitchCosIpv4AddressMask OBJECT-TYPE
+        SYNTAX      IpAddress
+        ACCESS      read-write
+        STATUS      mandatory
+        DESCRIPTION "This value is applied as a direct IPv4-address mask
+                    when an IPv4 CoS configuration is defined for this 
+                    table entry.  It will be ignored otherwise.  The 
+                    default mask value is 255.255.255.255, which 
+                    specifies the exact IPv4 address defined in 
+                    hpSwitchCosAddressIp (i.e., no subnet-masking is
+                    performed)." 
+        ::= { hpSwitchCosAddressConfigEntry 9 }
+
+    hpSwitchCosAddressIpv6 OBJECT-TYPE
+        SYNTAX      InetAddress
+        ACCESS      read-write
+        STATUS      mandatory
+        DESCRIPTION "This variable is valid only if an IPv6 CoS
+                    configuration was defined.  It will be ignored
+                    otherwise.  Packets with this IPv6 address as a source
+                    or destination will receive the new priority value."
+        ::= { hpSwitchCosAddressConfigEntry 10 }
+
+    hpSwitchCosAddressIpv6PrefixLength OBJECT-TYPE
+        SYNTAX      InetAddressPrefixLength
+        ACCESS      read-write
+        STATUS      mandatory
+        DESCRIPTION "The prefix length associated with the 
+                    hpSwitchCosAddressIpv6 object, if an IPv6 CoS 
+                    configuration is valid and hpSwitchCosAddressType is
+                    type ipv6.  This variable will otherwise be ignored.
+                    The prefix length for an IPv6 entry functions in the 
+                    same way as an address mask for an IPv4 entry. The 
+                    default value of this object is 128, which specifies
+                    the exact IPv6 address defined in 
+                    hpSwitchCosAddressIpv6 (i.e., no subnet-masking is
+                    performed)."  
+        ::= { hpSwitchCosAddressConfigEntry 11 }
 
 
     hpSwitchCosTosConfig OBJECT IDENTIFIER ::= { hpSwitchCosConfig 5 }
@@ -2153,7 +2220,8 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
             hpSwitchCosAppTypeApplyPolicy        INTEGER,
             hpSwitchCosAppTypeStatus             RowStatus,
             hpSwitchCosAppTypeMaxSrcPort         INTEGER,
-            hpSwitchCosAppTypeMaxDestPort        INTEGER
+            hpSwitchCosAppTypeMaxDestPort        INTEGER,
+            hpSwitchCosAppTypeIpPacketType       INTEGER
         } 
 
     hpSwitchCosAppTypeConfigIndex OBJECT-TYPE
@@ -2277,6 +2345,19 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     single, specific port is being used and not a range, 
                     then value of this object is zero."
         ::= { hpSwitchCosAppTypeConfigEntry 11 }
+
+    hpSwitchCosAppTypeIpPacketType OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        ipv4PacketsOnly(1),
+                        ipv6PacketsOnly(2),
+                        ipv4AndIpv6Packets(3)
+                    }
+        ACCESS      read-write
+        STATUS      mandatory
+        DESCRIPTION "This object represents the type of IP packet for which
+                    this TCP and/or UDP application QoS will apply. The 
+                    default is IPv4." 
+        ::= { hpSwitchCosAppTypeConfigEntry 12 }
 
 
     hpSwitchCosLastChange OBJECT-TYPE
@@ -2487,8 +2568,9 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                         ipv4or6(3)
                     }
         ACCESS      read-write
-        STATUS      mandatory
-        DESCRIPTION "The types of IP connections SSH will support. 
+        STATUS      deprecated 
+        DESCRIPTION "#### THIS OBJECT IS DEPRECATED ####
+                     The types of IP connections SSH will support. 
                      'ipv4' will accept connections from
                      Ipv4 clients. 'ipv6' will accept 
                      connections only from ipv6 clients.
@@ -2793,6 +2875,20 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     the value of this object."
         ::= { hpSwitchProtectedPortsConfig 1 }
 
+     hpSwitchLACPConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 28 }
+
+     hpSwitchLACPAllPortsStatus OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        disabled(1), 
+                        active(2),
+                        passive(3)
+                    }
+      ACCESS      read-write
+      STATUS      mandatory
+      DESCRIPTION "Used to set administrative status of LACP on all the ports.
+                   A Port can have one of the three administrative status of 
+		   LACP. Active/Passive/Disabled are the three states. "
+      ::= { hpSwitchLACPConfig 1 }
 
     -- **********************************************************
     -- Trap Definitions

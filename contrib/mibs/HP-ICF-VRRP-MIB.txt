@@ -1,19 +1,23 @@
 HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
 
     IMPORTS
-        MODULE-IDENTITY, OBJECT-TYPE, IpAddress
+        MODULE-IDENTITY, OBJECT-TYPE, IpAddress, Integer32, Counter32
             FROM SNMPv2-SMI
         MODULE-COMPLIANCE, OBJECT-GROUP
             FROM SNMPv2-CONF
-        vrrpOperEntry, vrrpAssoIpAddrEntry
+        ifIndex
+            FROM IF-MIB
+        SnmpAdminString
+            FROM SNMP-FRAMEWORK-MIB
+        vrrpOperEntry, vrrpAssoIpAddrEntry, vrrpOperVrId
             FROM VRRP-MIB
-        TruthValue
+        TruthValue, RowStatus
             FROM SNMPv2-TC
         hpSwitch
             FROM HP-ICF-OID;
 
     hpicfVrrpMIB MODULE-IDENTITY 
-        LAST-UPDATED "200708220000Z"  -- AUGUST 22, 2007
+        LAST-UPDATED "200802200000Z"  -- February 22, 2008
 	ORGANIZATION "Hewlett Packard Company,
                       Procurve Networking Business"
         CONTACT-INFO "Hewlett Packard Company
@@ -21,6 +25,16 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
                       Roseville, CA 95747"
         DESCRIPTION  "This MIB module contains HP proprietary
                      extensions to the standard VRRP MIB (RFC 2787)."
+
+        REVISION     "200802200000Z"  -- February 22, 2008
+        DESCRIPTION  "Added hpicfVrrpVrControl, to the
+                      hpicfVrrpOperEntry object.
+                      Added hpicfVrrpTrackTable containing
+                      hpicfVrrpTrackEntry to hpicfVrrpOperations."
+
+        REVISION     "200712120000Z"  -- December 12, 2007
+        DESCRIPTION  "Added hpicfVrrpStatsTable, which contains
+                      hpicfVrrpStatsNearFailovers."
 
         REVISION     "200708220000Z"  -- AUGUST 22, 2007
         DESCRIPTION  "Added hpicfVrrpVrPreemptDelayTime to the 
@@ -76,7 +90,8 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
             hpicfVrrpVrMode             INTEGER,
             hpicfVrrpVrMasterPreempt    TruthValue,
             hpicfVrrpVrTransferControl  TruthValue,
-            hpicfVrrpVrPreemptDelayTime Integer32
+            hpicfVrrpVrPreemptDelayTime Integer32,
+            hpicfVrrpVrControl          INTEGER
         }
 
     hpicfVrrpVrMode OBJECT-TYPE
@@ -128,6 +143,31 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
         DEFVAL      { 0 }
         ::= { hpicfVrrpOperEntry 4 }
 
+    hpicfVrrpVrControl OBJECT-TYPE
+        SYNTAX       INTEGER {
+                        failback(1),
+                        failover(2),
+                        failoverWithMonitoring(3),
+                        invalid(4)
+                     }
+        MAX-ACCESS   read-create
+        STATUS       current
+        DESCRIPTION  "When this object is set to failback (1), it acts
+                     as a trigger to intimate VRRP to failback
+                     to this router from another.
+                     When this object is set to failover (2), it acts
+                     as a trigger to intimate VRRP to failover
+                     from this router to another.
+                     When this object is set to
+                     failoverWithMonitoring (3), in addition to
+                     triggering VRRP to failover, it triggers VR to
+                     monitor for presence of a master.
+                     When read, this object always returns
+                     invalid (4)."
+        DEFVAL      { invalid }
+        ::= { hpicfVrrpOperEntry 5 }
+
+
 -- **********************************************************************
 -- Extensions to the VRRP Associated IP Address Table (RFC 2787)
 -- **********************************************************************
@@ -162,6 +202,105 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
 	DEFVAL      { '00000000'H } -- 0.0.0.0
         ::= { hpicfVrrpAssoIpAddrEntry 1 }
 
+    hpicfVrrpTrackTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF HpicfVrrpTrackEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "HP extensions for supporting tracking."
+        ::= { hpicfVrrpOperations 5 }
+
+    hpicfVrrpTrackEntry OBJECT-TYPE
+        SYNTAX      HpicfVrrpTrackEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "HP extensions for supporting tracking."
+        INDEX       { ifIndex, vrrpOperVrId,
+                      hpicfVrrpVrTrackType, hpicfVrrpVrTrackEntity }
+        ::= { hpicfVrrpTrackTable 1 }
+
+    HpicfVrrpTrackEntry ::=
+        SEQUENCE {
+            hpicfVrrpVrTrackType        INTEGER,
+            hpicfVrrpVrTrackEntity      SnmpAdminString,
+            hpicfVrrpTrackRowStatus     RowStatus
+        }
+
+    hpicfVrrpVrTrackType OBJECT-TYPE
+        SYNTAX       INTEGER {
+            port(1),
+            trunk(2),
+            vlan(3)
+        }
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION
+            "This object specifies the type of interface specified by
+            'hpicfVrrpVrTrackEntity'."
+        ::= { hpicfVrrpTrackEntry 1 }
+
+    hpicfVrrpVrTrackEntity OBJECT-TYPE
+        SYNTAX       SnmpAdminString (SIZE (1..255))
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION
+            "This object specifies interface details. Interface detail
+            is interpreted Based on type specified by
+            'hpicfVrrpVrTrackType'. Valid values for different track
+            types are -
+            ------------------------------------
+            hpicfVrrpVrTrackType    range
+            ------------------------------------
+            port                    '1'..'65535'
+            trunk                   '1'..'65535'
+            vlan                    '1'..'65535'
+            ------------------------------------"
+        ::= { hpicfVrrpTrackEntry 2 }
+
+    hpicfVrrpTrackRowStatus OBJECT-TYPE
+        SYNTAX       RowStatus
+        MAX-ACCESS   read-create
+        STATUS       current
+        DESCRIPTION
+            "The row status of given track entity."
+        ::= { hpicfVrrpTrackEntry 3 }
+
+-- **********************************************************************
+-- Extensions to the VRRP Router Statistics Table (RFC 2787)
+-- **********************************************************************
+
+    hpicfVrrpStatsTable OBJECT-TYPE
+        SYNTAX       SEQUENCE OF HpicfVrrpStatsEntry
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION "Table of virtual router statistics."
+        ::= { hpicfVrrpOperations 6 }
+
+    hpicfVrrpStatsEntry OBJECT-TYPE
+        SYNTAX       HpicfVrrpStatsEntry
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION "An entry in the table, containing statistics information
+                     about a given virtual router."
+        AUGMENTS    { vrrpOperEntry }
+        ::= { hpicfVrrpStatsTable 1 }
+
+    HpicfVrrpStatsEntry ::=
+        SEQUENCE {
+            hpicfVrrpStatsNearFailovers     Counter32
+        }
+
+    hpicfVrrpStatsNearFailovers OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION "This object reports the number of near failovers
+                     for backup virtual routers.  A near failover occurs
+                     when a backup virtual router has not received an 
+                     advertisement packet from the master virtual router
+                     for two advertisement intervals."
+        DEFVAL      { 0 }
+        ::= { hpicfVrrpStatsEntry 1 }
+
 -- **********************************************************************
 -- Conformance Information
 -- **********************************************************************
@@ -174,7 +313,7 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
 -- ......................................................................
 
     hpicfVrrpMIBCompliance MODULE-COMPLIANCE
-        STATUS      current
+        STATUS      deprecated
         DESCRIPTION "The compliance statement for HP routers running
                     VRRP (RFC 3768) and implementing the HP-ICF-VRRP-MIB."
         MODULE  -- this module
@@ -185,6 +324,23 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
                         that support VRRP (RFC 3768)."
         ::= { hpicfVrrpMIBCompliances 1 }
 
+    hpicfVrrpMIBCompliance1 MODULE-COMPLIANCE
+        STATUS      current
+        DESCRIPTION "The compliance statement for HP routers running
+                    VRRP (RFC 3768) and implementing the HP-ICF-VRRP-MIB."
+        MODULE  -- this module
+            MANDATORY-GROUPS { hpicfVrrpOperGroup,
+                               hpicfVrrpTrackGroup }
+
+            GROUP       hpicfVrrpOperGroup
+            DESCRIPTION "Support for this group is required for HP routers
+                        that support VRRP (RFC 3768)."
+
+            GROUP       hpicfVrrpTrackGroup
+            DESCRIPTION "Support for this group is required for HP routers
+                        that support Tracking in VRRP."
+
+        ::= { hpicfVrrpMIBCompliances 2 }
 -- ......................................................................
 -- Conformance Groups
 -- ......................................................................
@@ -201,4 +357,11 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
                     VRRP configuration on HP routers."
         ::= { hpicfVrrpMIBGroups 1 }
 
+    hpicfVrrpTrackGroup OBJECT-GROUP
+        OBJECTS     { hpicfVrrpTrackRowStatus,
+                      hpicfVrrpVrControl }
+        STATUS      current
+        DESCRIPTION "A collection of HP proprietary objects to support 
+                    VRRP configuration on HP routers."
+        ::= { hpicfVrrpMIBGroups 2 }
 END

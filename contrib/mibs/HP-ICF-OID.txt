@@ -5,7 +5,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
             FROM SNMPv2-SMI;
 
     icf MODULE-IDENTITY
-         LAST-UPDATED "200607271200Z"  -- July 27, 2006
+         LAST-UPDATED "200904080000Z" -- Apr 08, 2009
          ORGANIZATION "Hewlett Packard Company,
                        Procurve Networking Business"
          CONTACT-INFO "Hewlett Packard Company
@@ -14,6 +14,62 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
          DESCRIPTION  "This MIB module describes devices in the HP 
                       Integrated Communication Facility product 
                       line."
+
+         REVISION     "200904080000Z" -- Apr 08, 2009
+         DESCRIPTION  "Added hpSwitchModuleJ9477A, hpSwitchModuleJ9310A
+                       and hpSwitchModuleJ9311A"
+
+         REVISION     "200902170000Z" -- Feb 17, 2009
+         DESCRIPTION  "Added definitions for 3500 10/100 family"
+
+         REVISION     "200902040000Z" -- Feb 4, 2009
+         DESCRIPTION  "Added hpSwitchModuleJ9307A, hpSwitchModuleJ9308A
+                       hpSwitchModuleJ9478A and hpSwitchModuleJ9309A"
+
+	 REVISION     "200902020000Z" -- Feb 02. 2009
+         DESCRIPTION  "Added definition for 1810-8(J9449A) and 1810-24(J9450A)"
+
+         REVISION     "200812150000Z" -- Dec 15, 2008
+         DESCRIPTION  "Added hpicfOobmMIB"
+
+         REVISION     "200810300000Z" -- Oct 30, 2008
+         DESCRIPTION  "Added hpicfSysMgmt and hpicfSecurityDevice"
+
+         REVISION     "200810240000Z" -- Oct 24, 2008
+         DESCRIPTION  "Added hpicfDhcpClient"
+
+         REVISION     "200810210000Z" -- Oct 21, 2008
+         DESCRIPTION  "Updated official name for 2910al family"
+
+         REVISION     "200810020000Z" -- Oct 2, 2008
+         DESCRIPTION  "Added 2520G-24-PoE(J9299A) and 2520G-8-PoE(J9298A)"
+
+         REVISION     "200808060000Z" -- Aug 6, 2008
+         DESCRIPTION  "Added 2520-24-PoE(J9138A) and 2520-8-PoE(J9137A)"
+
+         REVISION     "200805120000Z" -- May 12, 2008
+         DESCRIPTION  "Added 1800-24G-B(J9028B) and changed 2510-24-B(J9019B)"
+
+
+         REVISION     "200803100000Z"  -- Mar 10, 2008
+         DESCRIPTION  "Added hpicfSyslog "
+
+         REVISION     "200803060000Z"  -- Mar 6, 2008
+         DESCRIPTION  "Added definitions for Heinekens ET switches:
+                       2510G-24 (J9279A) and 2510G-48 (J9280A)"
+
+         REVISION     "200802150000Z"  -- Feb 15, 2008
+         DESCRIPTION  "Added definitions for 2910"
+
+         REVISION     "200802041525Z"  -- February 04, 2008
+         DESCRIPTION  "Added definitions for transceivers."
+
+         REVISION     "200710230001Z"  -- Oct 23, 2007
+         DESCRIPTION  "Added definitions for 2510B"
+
+         REVISION     "200710230000Z"  -- Oct 23, 2007
+         DESCRIPTION  "Added definitions for 2626C and 2650C"
+
 
          REVISION     "200705210000Z"  -- May 21, 2007 
          DESCRIPTION  "Revised definitions for J8766A and 
@@ -65,10 +121,10 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
 
          REVISION     "200508041619Z"  -- August 4, 2005
          DESCRIPTION  "Added definitions for hpSwitchAuthenticationMIB,
-                      hpSwitchAccountingMIB, hpicfXrrpMIB, hpicfUsrAuthMIB,
-                      hpicfPimMIB, hpicfMstpMIB, hpicfUdpFwd,
+                      hpicfXrrpMIB, hpicfUsrAuthMIB,
+                      hpicfPimMIB,hpicfUdpFwd,
                       hpicfConnectionRateFilter, hpicfDot1xMIB,
-                      hpicfLldpMIB, hpicfVrrpMIB."
+                      hpicfVrrpMIB."
 
          REVISION     "200506081244Z"  -- June 8, 2005
          DESCRIPTION  "Added definition for hpicFrabric."
@@ -111,7 +167,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
          REVISION     "200407282043Z"  -- July 28, 2004
          DESCRIPTION  "Added definitions for J8718A and J8719A."
 
-         REVISION     "200403310050Z"  -- March 31, 2004
+         REVISION     "200403310051Z"  -- March 31, 2004
          DESCRIPTION  "Added definitions for 10Gig SR, LR, and ER."
 
 
@@ -211,6 +267,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpicfOEMs         OBJECT IDENTIFIER ::= { icf 13 }
     hpicfFEHub        OBJECT IDENTIFIER ::= { hpicfOEMs 1 }
 
+    hpicfSyslog       OBJECT IDENTIFIER ::= { icf 14 }
 
     -- HP defined transport domains
 
@@ -273,6 +330,9 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpicfAccess       OBJECT IDENTIFIER ::= { hpicfObjects 6 }
     hpicfWAN          OBJECT IDENTIFIER ::= { hpicfObjects 7 }
     hpicfFabric       OBJECT IDENTIFIER ::= { hpicfObjects 8 }
+    hpicfSecurityDevice  OBJECT IDENTIFIER ::= { hpicfObjects 9 }
+    hpicfSysMgmt      OBJECT IDENTIFIER ::= { hpicfObjects 10 }
+
     -- Branches under the hpicfSwitch node
     hpSwitch          OBJECT IDENTIFIER ::= { hpicfSwitch 1 }
 
@@ -289,15 +349,12 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpicfOspf                 OBJECT IDENTIFIER ::= { hpSwitch 14 }
     hpicfIpRouting            OBJECT IDENTIFIER ::= { hpSwitch 15 }
     hpSwitchAuthenticationMIB OBJECT IDENTIFIER ::= { hpSwitch 16 }
-    hpSwitchAccountingMIB     OBJECT IDENTIFIER ::= { hpSwitch 17 }
     hpicfXrrpMIB              OBJECT IDENTIFIER ::= { hpSwitch 18 }
     hpicfUsrAuthMIB           OBJECT IDENTIFIER ::= { hpSwitch 19 }
     hpicfPimMIB               OBJECT IDENTIFIER ::= { hpSwitch 20 }
-    hpicfMstpMIB              OBJECT IDENTIFIER ::= { hpSwitch 21 }
     hpicfUdpFwd               OBJECT IDENTIFIER ::= { hpSwitch 23 }
     hpicfConnectionRateFilter OBJECT IDENTIFIER ::= { hpSwitch 24 }
     hpicfDot1xMIB             OBJECT IDENTIFIER ::= { hpSwitch 25 }
-    hpicfLldpMIB              OBJECT IDENTIFIER ::= { hpSwitch 30 }
     hpicfVrrpMIB              OBJECT IDENTIFIER ::= { hpSwitch 31 }
     hpSwitchAuthorizationMIB  OBJECT IDENTIFIER ::= { hpSwitch 32 }
     hpicfIpDhcpSnoop          OBJECT IDENTIFIER ::= { hpSwitch 34 }
@@ -306,8 +363,16 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpicfArpProtect           OBJECT IDENTIFIER ::= { hpSwitch 37 }
     hpicfProviderBridge       OBJECT IDENTIFIER ::= { hpSwitch 40 }
     hpicfGppcMIB              OBJECT IDENTIFIER ::= { hpSwitch 41 }
+    hpicfFtrCo                OBJECT IDENTIFIER ::= { hpSwitch 46 }
     hpicfMldMIB               OBJECT IDENTIFIER ::= { hpSwitch 48 }
-
+    hpicfScriptMIB            OBJECT IDENTIFIER ::= { hpSwitch 51 }
+    hpicfUSBPortMIB           OBJECT IDENTIFIER ::= { hpSwitch 53 }  
+    hpicfFanMIB               OBJECT IDENTIFIER ::= { hpSwitch 54 }
+    hpicfPsMIB                OBJECT IDENTIFIER ::= { hpSwitch 55 }
+    hpicfSavepowerMIB         OBJECT IDENTIFIER ::= { hpSwitch 56 }
+    hpicfDhcpClient           OBJECT IDENTIFIER ::= { hpSwitch 57 }
+    hpicfOobmMIB              OBJECT IDENTIFIER ::= { hpSwitch 58 }
+    hpicfDosFilterMib         OBJECT IDENTIFIER ::= { hpSwitch 60 }
 
     -- Branches under the hpicfCommon node
     hpicfChain        OBJECT IDENTIFIER ::= { hpicfCommon 1 }
@@ -319,6 +384,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpicfFaultFinder  OBJECT IDENTIFIER ::= { hpicfCommon 7 }
     hpicfPOE          OBJECT IDENTIFIER ::= { hpicfCommon 9 }
     hpicfCommonSecurity    OBJECT IDENTIFIER ::= { hpicfCommon 12 }
+    hpicfSrcIpMIB     OBJECT IDENTIFIER ::= { hpicfCommon 13 }
 
 
     -- Branches for registering HP ICF notifications
@@ -338,6 +404,9 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
 
     hpicfRateLimitTraps OBJECT IDENTIFIER ::= { hpicfNotifications 5 }
     hpicfRateLimitTrapsPrefix OBJECT IDENTIFIER ::= { hpicfRateLimitTraps 0 }
+
+    hpicfSecLoggingTraps OBJECT IDENTIFIER ::= { hpicfNotifications 6 }
+    hpicfSecLoggingTrapsPrefix OBJECT IDENTIFIER ::= { hpicfSecLoggingTraps 0 }
 
     -- HP ICF Device Identifiers
 
@@ -988,6 +1057,52 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
                     2610-24/12PWR."
         ::= { hpicfSlots 30 }
 
+    hpSwitch2510BPortSlot OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a port
+                    module slot in an HP Switch 2510B-24."
+        ::= { hpicfSlots 31 }
+
+    hpSwitch2626CPortSlot OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a port
+                    module slot in an HP Switch 2626C."
+        ::= { hpicfSlots 32 }
+
+    hpSwitch2650CPortSlot OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a port
+                    module slot in an HP Switch 2650C."
+        ::= { hpicfSlots 33 }
+
+    hpSwitch2910PortSlot OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a port
+                    module slot in an HP ProCurve 2910al-24G Switch or
+		    HP ProCurve 2910al-48G Switch."
+        ::= { hpicfSlots 34 }
+
+    hpSwitch2510GPortSlot OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a port
+                    module slot in an HP Switch 2510G-24 or
+                    HP Switch 2510G-48."
+        ::= { hpicfSlots 35 }
+
+    hpSwitch2520PortSlot OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a port
+                    module slot in an HP Switch 2520-24 or
+                    HP Switch 2520-8."
+        ::= { hpicfSlots 36 }
+
+    hpSwitch2520GPortSlot OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a port
+                    module slot in an HP Switch 2520G-24 or
+                    HP Switch 2520G-8."
+        ::= { hpicfSlots 37 }
+
     hpicfHubPorts     OBJECT IDENTIFIER ::= { chassis 8 }
 
     hpAdvStkEnetSHExtPort OBJECT-IDENTITY
@@ -1152,7 +1267,154 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         DESCRIPTION "The authoritative identifier for an IEEE
                     802.3 10GIGBASE-LR port on an HP switch."
         ::= { hpicfSwitchPorts 14 }
-	
+
+
+
+    hpicfSwitchPort100GEN OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+                     generic 100BASE port on an HP switch."
+        ::= { hpicfSwitchPorts 15 }
+
+    hpicfSwitchPort1000GEN OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+                     generic 1000BASE port on an HP switch."
+        ::= { hpicfSwitchPorts 16 }
+
+    hpicfSwitchPort10GigBaseGEN OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+                    generic 10Gig port on an HP switch."
+        ::= { hpicfSwitchPorts 17 }
+
+    hpicfSwitchPort100BXD OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for an IEEE
+                     802.3 100BASE-BX downstream port on an HP switch."
+        ::= { hpicfSwitchPorts 18 }
+
+    hpicfSwitchPort100BXU OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for an IEEE
+                     802.3 100BASE-BX upstream port on an HP switch."
+        ::= { hpicfSwitchPorts 19 }
+
+    hpicfSwitchPort1000BXD OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for an IEEE
+                     802.3 1000BASE-BX downstream port on an HP switch."
+        ::= { hpicfSwitchPorts 20 }
+
+    hpicfSwitchPort1000BXU OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for an IEEE
+                     802.3 1000BASE-BX upstream port on an HP switch."
+        ::= { hpicfSwitchPorts 21 }
+
+    hpicfSwitchPort10GigBaseLRM OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for an IEEE
+                    802.3 10GIGBASE-LRM port on an HP switch."
+        ::= { hpicfSwitchPorts 22 }
+
+    hpicfSwitchPortSFPplusSR OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for an IEEE
+                    802.3 10GIGBASE-SR SFP+ port on an HP switch."
+        ::= { hpicfSwitchPorts 23 }
+
+    hpicfSwitchPortSFPplusLR OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for an IEEE
+                    802.3 10GIGBASE-LR SFP+ port on an HP switch."
+        ::= { hpicfSwitchPorts 24 }
+
+    hpicfSwitchPortSFPplusLRM OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for an IEEE
+                    802.3 10GIGBASE-LRM SFP+ port on an HP switch."
+        ::= { hpicfSwitchPorts 25 }
+
+    hpicfSwitchPortSFPplusDAC OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+	            10 GIG DAC SFP+ port on an HP switch."
+        ::= { hpicfSwitchPorts 26 }
+
+    hpicfSwitchPortSFPplusDA1 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+	            1 meter 10 GIG DAC SFP+ port on an HP switch."
+        ::= { hpicfSwitchPorts 27 }
+
+    hpicfSwitchPortSFPplusDA2 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+	            2 meter 10 GIG DAC SFP+ port on an HP switch."
+        ::= { hpicfSwitchPorts 28 }
+
+    hpicfSwitchPortSFPplusDA3 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+	            3 meter 10 GIG DAC SFP+ port on an HP switch."
+        ::= { hpicfSwitchPorts 29 }
+
+    hpicfSwitchPortSFPplusDA5 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+	            5 meter 10 GIG DAC SFP+ port on an HP switch."
+        ::= { hpicfSwitchPorts 30 }
+
+    hpicfSwitchPortSFPplusDA7 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+	            7 meter 10 GIG DAC SFP+ port on an HP switch."
+        ::= { hpicfSwitchPorts 31 }
+
+    hpicfSwitchPortSFPplusDA10 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+	            10 meter 10 GIG DAC SFP+ port on an HP switch."
+        ::= { hpicfSwitchPorts 32 }
+
+    hpicfSwitchPortSFPplusDA15 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+	            15 meter 10 GIG DAC SFP+ port on an HP switch."
+        ::= { hpicfSwitchPorts 33 }
+
+    hpicfSwitchPortSFPplusDA20 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+	            20 meter 10 GIG DAC SFP+ port on an HP switch."
+        ::= { hpicfSwitchPorts 34 }
+
+    hpicfSwitchPort10GigBaseT OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+	            10 GIG T port on an HP switch."
+        ::= { hpicfSwitchPorts 35 }
+
+    hpicfSwitchPort10GigBaseTSH OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+	            10 GIG TSH port on an HP switch."
+        ::= { hpicfSwitchPorts 36 }
+
+    hpicfSwitchPort10GigBaseTLH OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+	            10 GIG TLH port on an HP switch."
+        ::= { hpicfSwitchPorts 37 }
+
+    hpicfSwitchPort10GigBaseSTK OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for a
+	            10 GIG stacking port on an HP switch."
+        ::= { hpicfSwitchPorts 38 }
+
+
 
     -- Temporary assignments for IEEE 802.3 MAU types.  These are only used
     -- for MAUs that are not yet defined in the standard MAU MIB at the
@@ -1243,6 +1505,127 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION "Proprietary 10Gig LR, full-duplex."
         ::= { hpicfMAUTypes 15 }
+
+    hpicfMauType100BaseGEN OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 100Base Generic, full-duplex."
+        ::= { hpicfMAUTypes 16 }
+
+    hpicfMauType1000BaseGEN OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 1000Base Generic, full-duplex."
+        ::= { hpicfMAUTypes 17 }
+    
+    hpicfMauType10GigBaseGEN OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 10Gig Generic, full-duplex."
+        ::= { hpicfMAUTypes 18 }
+
+    hpicfMauType100BaseBXD OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 100Base BX downstream, full-duplex."
+        ::= { hpicfMAUTypes 19 }
+
+    hpicfMauType100BaseBXU OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 100Base BX upstream, full-duplex."
+        ::= { hpicfMAUTypes 20 }
+
+    hpicfMauType1000BaseBXD OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 1000Base BX downstream, full-duplex."
+        ::= { hpicfMAUTypes 21 }
+
+    hpicfMauType1000BaseBXU OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 1000Base BX upstream, full-duplex."
+        ::= { hpicfMAUTypes 22 }
+
+    hpicfMauType10GigBaseLRM OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 10Gig LRM, full-duplex."
+        ::= { hpicfMAUTypes 23 }
+
+    hpicfMauTypeSFPplusSR OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 10Gig SR SFP+, full-duplex."
+        ::= { hpicfMAUTypes 24 }
+
+    hpicfMauTypeSFPplusLR OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 10Gig LR SFP+, full-duplex."
+        ::= { hpicfMAUTypes 25 }
+
+    hpicfMauTypeSFPplusLRM OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 10Gig LRM SFP+, full-duplex."
+        ::= { hpicfMAUTypes 26 }
+
+    hpicfMauTypeSFPplusDAC OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 10Gig DAC SFP+, full-duplex."
+        ::= { hpicfMAUTypes 27 }
+
+    hpicfMauTypeSFPplusDA1 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 1 meter 10Gig DAC SFP+, full-duplex."
+        ::= { hpicfMAUTypes 28 }
+
+    hpicfMauTypeSFPplusDA2 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 2 meter 10Gig DAC SFP+, full-duplex."
+        ::= { hpicfMAUTypes 29 }
+
+    hpicfMauTypeSFPplusDA3 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 3 meter 10Gig DAC SFP+, full-duplex."
+        ::= { hpicfMAUTypes 30 }
+
+    hpicfMauTypeSFPplusDA5 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 5 meter 10Gig DAC SFP+, full-duplex."
+        ::= { hpicfMAUTypes 31 }
+
+    hpicfMauTypeSFPplusDA7 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 7 meter 10Gig DAC SFP+, full-duplex."
+        ::= { hpicfMAUTypes 32 }
+
+    hpicfMauTypeSFPplusDA10 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 10 meter 10Gig DAC SFP+, full-duplex."
+        ::= { hpicfMAUTypes 33 }
+
+    hpicfMauTypeSFPplusDA15 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 15 meter 10Gig DAC SFP+, full-duplex."
+        ::= { hpicfMAUTypes 34 }
+
+    hpicfMauTypeSFPplusDA20 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 20 meter 10Gig DAC SFP+, full-duplex."
+        ::= { hpicfMAUTypes 35 }
+
+    hpicfMauType10GigBaseT OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 10Gig T, full-duplex."
+        ::= { hpicfMAUTypes 36 }
+
+    hpicfMauType10GigBaseTSH OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 10Gig TSH, full-duplex."
+        ::= { hpicfMAUTypes 37 }
+
+    hpicfMauType10GigBaseTLH OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 10Gig TLH, full-duplex."
+        ::= { hpicfMAUTypes 38 }
+
+    hpicfMauType10GigBaseSTK OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "Proprietary 10Gig STK, full-duplex."
+        ::= { hpicfMAUTypes 39 }
+
 
     -- Ethernet switches
 
@@ -1619,6 +2002,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         DESCRIPTION "The authoritative identifier for the
                     HP J8992A Switch 6200yl-24G."
         ::= { hpEtherSwitch 60 }
+
     hpSwitchJ9019A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
@@ -1679,6 +2063,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
                     ProCurve J9032A Switch 4202vl-68G."
         ::= { hpEtherSwitch 70 }
 
+
     hpSwitchJ9091A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
@@ -1732,6 +2117,180 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         DESCRIPTION "The authoritative identifier for the
 		    ProCurve J9086A Switch 2610-24/12PWR. "
         ::= { hpEtherSwitch 80 }
+
+    hpSwitchJ9028B OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+        ProCurve J9028B Switch 1800-24G-B."
+        ::= { hpEtherSwitch 81 }
+
+    hpSwitchJ4900C OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+        ProCurve J4900C Switch 2626C."
+        ::= { hpEtherSwitch 82 }
+
+    hpSwitchJ4899C OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+        ProCurve J4899C Switch 2650C."
+        ::= { hpEtherSwitch 83 }
+
+    hpSwitchJ9146A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    J9146A HP ProCurve 2910al-24G-PoE+ Switch."
+        ::= { hpEtherSwitch 84 }
+
+    hpSwitchJ9148A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    J9148A HP ProCurve 2910al-48G-PoE+ Switch."
+        ::= { hpEtherSwitch 85 }
+
+    hpSwitchJ9145A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    J9145A HP ProCurve 2910al-24G Switch."
+        ::= { hpEtherSwitch 86 }
+
+    hpSwitchJ9147A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    J9147A HP ProCurve 2910al-48G Switch."
+        ::= { hpEtherSwitch 87 }
+
+    hpSwitchJ9279A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9279A Switch 2510G-24. "
+        ::= { hpEtherSwitch 88 }
+
+    hpSwitchJ9280A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9280A Switch 2510G-48. "
+        ::= { hpEtherSwitch 89 }
+
+    hpSwitchJ9019B OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+        ProCurve J9019B Switch 2510-24B."
+        ::= { hpEtherSwitch 90 }
+
+    hpSwitchJ9137A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9137A Switch 2520-8. "
+        ::= { hpEtherSwitch 94 }
+
+    hpSwitchJ9138A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9138A Switch 2520-24. "
+        ::= { hpEtherSwitch 95 }
+
+    hpSwitchJ9298A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9298A Switch 2520G-8. "
+        ::= { hpEtherSwitch 96 }
+
+    hpSwitchJ9299A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9299A Switch 2520G-24. "
+        ::= { hpEtherSwitch 97 }
+
+    hpSwitchJ9265A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9265A Switch 6600ml-24XG. "
+        ::= { hpEtherSwitch 98 }
+
+    hpSwitchJ9263A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9263A Switch 6600ml-24G. "
+        ::= { hpEtherSwitch 100 }
+
+    hpSwitchJ9264A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9264A Switch 6600ml-24G-4XG. "
+        ::= { hpEtherSwitch 101 }
+
+    hpSwitchJ9445A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9445A DCM Controller. "
+        ::= { hpEtherSwitch 102 }
+
+    hpSwitchJ9449A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    ProCurve J9449A Switch 1810-8G."
+        ::= { hpEtherSwitch 103 }
+
+    hpSwitchJ9450A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    ProCurve J9450A Switch 1810-24G."
+        ::= { hpEtherSwitch 104 }
+
+    hpSwitchJ9452A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    ProCurve J9452A Switch 6600 48G-4XG."
+        ::= { hpEtherSwitch 105 }
+
+    hpSwitchJ9451A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    ProCurve J9451A Switch 6600 48G."
+        ::= { hpEtherSwitch 106 }
+
+    hpSwitch516733-B21 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    ProCurve 516733-B21 Switch 6120 XG."
+        ::= { hpEtherSwitch 107 }
+
+    hpSwitch498358-B21 OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    ProCurve 498358-B21 Switch 6120 GXG."
+        ::= { hpEtherSwitch 108 }
+
+    hpSwitchJ9471A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J9471A Switch 3500-24-PoE."
+        ::= { hpEtherSwitch 109 }
+
+    hpSwitchJ9473A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J9473A Switch 3500-48-PoE."
+        ::= { hpEtherSwitch 110 }
+
+    hpSwitchJ9470A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J9470A Switch 3500-24."
+        ::= { hpEtherSwitch 111 }
+
+    hpSwitchJ9472A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J9472A Switch 3500-48."
+        ::= { hpEtherSwitch 112 }
+
+    hpSwitchJ9477A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    HP J9477A Switch 8206zl."
+        ::= { hpEtherSwitch 113 }
 
     -- different cards for Switch 2000
 
@@ -2104,6 +2663,48 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
                     HP J9052A Redundant Wireless Services zl Module."
         ::= { hpSwitchJ8697A 15 }
 
+   hpSwitchModuleJ9154A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J9154A Services zl Module."
+        ::= { hpSwitchJ8697A 16 }
+
+   hpSwitchModuleJ9155A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J9155A zl Threat Management Services Module."
+        ::= { hpSwitchJ8697A 17 }
+
+   hpSwitchModuleJ9446A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J9446A zl Data Center Connection Manager ONE Module."
+        ::= { hpSwitchJ8697A 18 }
+
+   hpSwitchModuleJ9307A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J9307A 24-Port 10/100/1000 PoE+ zl Module."                    
+        ::= { hpSwitchJ8697A 19 }
+
+   hpSwitchModuleJ9308A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J9308A 20-Port 10/100/1000 PoE+ with
+                    4-Port SFP zl Module."
+        ::= { hpSwitchJ8697A 20 }
+ 
+   hpSwitchModuleJ9478A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J9478A 24-Port 10/100 PoE+ zl Module."                    
+        ::= { hpSwitchJ8697A 21 }
+
+   hpSwitchModuleJ9309A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J9309A 4-Port 10-GbE SFP+ zl Module."
+        ::= { hpSwitchJ8697A 22 }
 
     -- different cards for the 4200 family
 
@@ -2203,6 +2804,112 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         DESCRIPTION "The authoritative identifier for the
 		    ProCurve J9086A Switch 2610-24/12PWR."
         ::= { hpSwitchJ9086A 1 }
+
+    hpSwitchModuleJ9279A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9279A Switch 2510G-24."
+        ::= { hpSwitchJ9279A 1 }
+
+    hpSwitchModuleJ9280A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9280A Switch 2510G-48."
+        ::= { hpSwitchJ9280A 1 }
+
+    -- psuedo cards for the 2910 family
+
+    hpSwitchModuleJ9147A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    J9147A HP ProCurve 2910al-48G Switch" 
+        ::= { hpSwitchJ9147A 1 }
+
+    hpSwitchModuleJ9145A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    J9145A HP ProCurve 2910al-24G Switch" 
+        ::= { hpSwitchJ9145A 1 }
+
+    hpSwitchModuleJ9148A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    J9148A HP ProCurve 2910al-48G-PoE+ Switch" 
+        ::= { hpSwitchJ9148A 1 }
+
+    hpSwitchModuleJ9146A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    J9146A HP ProCurve 2910al-24G-PoE+ Switch" 
+        ::= { hpSwitchJ9146A 1 }
+
+    hpSwitchModuleJ9149A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    ProCurve J9149A 10-GbE 2-port CX4" 
+        ::= { hpSwitchJ9146A 2 }
+
+    hpSwitchModuleJ9008A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    ProCurve J9008A 10-GbE 2-port SFP+"
+        ::= { hpSwitchJ9146A 3 }
+
+    hpSwitchModuleJ9165A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    ProCurve J9165A 10-GbE 1-port passive CX4" 
+        ::= { hpSwitchJ9146A 4 }
+    
+    hpSwitchModuleJ9137A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9137A Switch 2520-8."
+        ::= { hpSwitchJ9137A 1 }
+
+    hpSwitchModuleJ9138A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9138A Switch 2520-24."
+        ::= { hpSwitchJ9138A 1 }
+
+    hpSwitchModuleJ9298A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9298A Switch 2520G-8."
+        ::= { hpSwitchJ9298A 1 }
+
+    hpSwitchModuleJ9299A OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+		    ProCurve J9299A Switch 2520G-24."
+        ::= { hpSwitchJ9299A 1 }
+
+   -- psuedo cards for the 3500 10/100 products
+
+   hpSwitchModuleJ94xxA OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J94xxA Fixed 10/100Base-TX/SFP."
+        ::= { hpSwitchJ9472A 1 }
+
+   hpSwitchModuleJ94xyA OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J94xyA Fixed 24p 10/100Base-TX."
+        ::= { hpSwitchJ9472A 2 }
+
+   hpSwitchModuleJ94yxA OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J94yxA Fixed 10/100Base-TX/SFP PoE."
+        ::= { hpSwitchJ9473A 1 }
+
+   hpSwitchModuleJ94yyA OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J94yyA Fixed 24p 10/100Base-TX PoE."
+        ::= { hpSwitchJ9473A 2 }
 
     -- WAN Products
 
@@ -2371,7 +3078,44 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         DESCRIPTION "The authoritative identifier for the
                     HP J8784A 8212zl System Support Module." 
         ::= { hpSwitchJ9091A 3 }    
-   
+
+    -- different cards for the 6600 family
+
+   hpSwitchModuleJ92yyA OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J92yyA ml Fixed 4p SFP+."
+        ::= { hpSwitchJ9265A 1 }
+
+   hpSwitchModuleJ92xxA OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J92xxA ml Fixed Gig-T/SFP."
+        ::= { hpSwitchJ9265A 2 }
+
+   hpSwitchModuleJ92wwA OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J92wwA ml Fixed 24 Gig."
+        ::= { hpSwitchJ9265A 3 }
+
+   hpSwitchModuleJ92vvA OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J92vvA ml Fixed 24 Gig DP."
+        ::= { hpSwitchJ9265A 4 }
+
+   hpSwitchModuleJ92uuA OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J92uuA ml Fixed 24 Gig Non DP."
+        ::= { hpSwitchJ9265A 5 }
+
+   hpSwitchModuleJ92ttA OBJECT-IDENTITY
+        STATUS      current
+        DESCRIPTION "The authoritative identifier for the
+                    HP J92ttA ml Fixed 2 10Gig."
+        ::= { hpSwitchJ9265A 6 }
 
 END
 

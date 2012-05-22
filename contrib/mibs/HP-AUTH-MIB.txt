@@ -1,0 +1,1565 @@
+HP-AUTH-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        OBJECT-TYPE, MODULE-IDENTITY, Integer32, Counter32, IpAddress,
+        Gauge32, Unsigned32
+             FROM SNMPv2-SMI
+        RowStatus, DisplayString, TruthValue, DateAndTime
+            FROM SNMPv2-TC
+        OBJECT-GROUP, MODULE-COMPLIANCE
+            FROM SNMPv2-CONF
+        hpSwitch
+            FROM HP-ICF-OID
+        VlanIndex
+            FROM Q-BRIDGE-MIB
+        ospfIfEntry, ospfVirtIfEntry
+            FROM OSPF-MIB
+        InetAddress, InetAddressType
+            FROM INET-ADDRESS-MIB;
+
+    hpSwitchAuthenticationMIB MODULE-IDENTITY
+        LAST-UPDATED "200901290000Z"  -- January 29, 2009
+        ORGANIZATION "Procurve Networking Business,
+                      Network Infrastructure Solutions"
+        CONTACT-INFO "Hewlett Packard Company
+                      8000 Foothills Blvd.
+                      Roseville, CA 95747"
+        DESCRIPTION  "This MIB module describes objects for managing
+                     the Authentication features of devices in the HP
+                     Integrated Communication Facility product line."
+
+        REVISION     "200901290000Z"  -- January 29, 2009
+        DESCRIPTION  "Added 'hpSwitchTacacsServerIsOobm' MIB object 
+                      in 'hpSwitchTacacsServersTable' table and
+                      'hpSwitchRadiusServerIsOobm' MIB object
+                      in 'hpSwitchRadiusServerTable' table."
+
+        REVISION     "200807110000Z"  -- July 11, 2008
+        DESCRIPTION  "Added 'hpSwitchAuthenLoginServerGroupName',
+                     'hpSwitchAuthenEnableServerGroupName' MIB objects.
+                      Added hpSwitchAAAServerGroupTable."
+
+        REVISION     "200806110000Z"  -- June 11, 2008
+        DESCRIPTION  "Added radiusPeapMSChapv2 to                       
+                     'hpSwitchAuthenEnablePrimary' values."
+
+	REVISION     "200709210000Z"  -- September 21, 2007
+	DESCRIPTION  "Added 'hpSwitchRadiusDynAutzPortNumber',
+                     'hpSwitchRadiusServerDynAutzEnabled',
+                     'hpSwitchRadiusServerDynAutzTimeWindow' MIB objects.
+                     'hpSwitchRadiusAuthPortNumber' MIB object renamed to
+                     'hpSwitchRadiusServerAuthPortNumber',
+                     'hpSwitchRadiusAcctPortNumber' MIB object renamed to
+                     'hpSwitchRadiusServerAcctPortNumber'."
+
+	REVISION     "200610050000Z"  -- October 5, 2006
+	DESCRIPTION  "Added 'hpicfSwitchUserConfigTable' MIB object."
+
+        REVISION     "200409120000Z"  -- September 12, 2004
+        DESCRIPTION  "Moved 802.1x objects to separate module."
+
+        REVISION     "200403310012Z"  -- March 31, 2004
+        DESCRIPTION  "Revised version of this MIB module."
+
+        REVISION     "200108100238Z"  -- August 10, 2001
+        DESCRIPTION  "Initial version of this MIB module."
+        
+
+        ::= { hpSwitch 16 }
+            
+-- ------------------------------------------------------------
+    -- Configuration support for Authentication
+-- ------------------------------------------------------------
+
+    hpSwitchAuthenticationConfig
+        OBJECT IDENTIFIER ::= { hpSwitchAuthenticationMIB 1 }
+
+    hpSwitchNumLoginAttempts OBJECT-TYPE
+        SYNTAX      Integer32 (1..10)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "The number of login attempts allowed."
+        DEFVAL      { 3 }
+        ::= { hpSwitchAuthenticationConfig 1 }
+
+    hpSwitchAuthRespectPriv OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        disabled(1),
+                        enabled(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "This object allows switch to set privilege level
+                     of session based on the received configuration
+                     variable from authentication server. For RADIUS, the
+                     Service-Type attribute's configured value on the server
+                     should be 6-Administrative for manager's privilege level,
+                     or 7-NAS-prompt for the user/operator privilege level."
+        DEFVAL    {1}
+        ::= { hpSwitchAuthenticationConfig 2 }
+
+    hpSwitchAuthenTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF HpSwitchAuthenEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "This table lists the authentication methods to be
+                    tried for granting different access levels through
+                    various access tasks"
+        ::= { hpSwitchAuthenticationMIB 2 }
+
+    hpSwitchAuthenEntry OBJECT-TYPE 
+        SYNTAX      HpSwitchAuthenEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "An Authentication Method Table Entry"
+        INDEX       { hpSwitchAuthenIndex }
+        ::= {hpSwitchAuthenTable 1}
+
+    HpSwitchAuthenEntry ::=
+        SEQUENCE {
+            hpSwitchAuthenIndex                  INTEGER,
+            hpSwitchAuthenLoginPrimary           INTEGER,
+            hpSwitchAuthenLoginSecondary         INTEGER,
+            hpSwitchAuthenEnablePrimary          INTEGER,
+            hpSwitchAuthenEnableSecondary        INTEGER,
+            hpSwitchAuthenLoginServerGroupName   OCTET STRING,
+            hpSwitchAuthenEnableServerGroupName  OCTET STRING
+        }
+
+    hpSwitchAuthenIndex OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        console(1),
+                        telnet(2),
+                        ieee8021X(3),
+                        webui(4),
+                        ssh(5),
+                        webauth(6),
+                        macauth(7)
+                    }
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "Signifies the access task for which authentication
+                    methods are listed in this entry"
+        ::= {hpSwitchAuthenEntry 1}
+
+    hpSwitchAuthenLoginPrimary OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        local(1),
+                        tacacs(2),
+                        radius(3),
+                        radiusEap(4),
+                        radiusChap(5),
+                        sshRsa(6),
+                        radiusPeapMSChapv2(7)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "Indicates the primary login authentication mechanism,
+                    i.e whether TACACS+/Radius/Local will be tried first
+                    for a log into a session. "
+        ::= { hpSwitchAuthenEntry 2 }
+
+    hpSwitchAuthenLoginSecondary OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        local(1),
+                        none(2),
+                        authorized(3)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "Indicates the secondary login authentication
+                    mechanism, i.e whether Local or Authorized will be tried
+                    in case the primary authentication results in an error.
+                    The Local authentication method used the credential
+                    database on the switch.  The Authorized authentication
+                    method will granted access without authenticating."
+        ::= { hpSwitchAuthenEntry 3 }
+
+    hpSwitchAuthenEnablePrimary OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        local(1),
+                        tacacs(2),
+                        radius(3),
+                        sshPubkey(6),
+                        radiusPeapMSChapv2(7)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "Indicates the primary authentication mechanism,
+                    i.e whether local, TACACS, Radius, ssh or Radius
+                    with Peap using MS chapv2 will be tried first 
+                    for a change of a privilege level of session. "
+        ::= { hpSwitchAuthenEntry 4 }
+
+    hpSwitchAuthenEnableSecondary OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        local(1),
+                        none(2),
+                        authorized(3)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "Indicates the secondary login authentication
+                    mechanism, i.e whether Local or Authorized will be tried
+                    in case the primary authentication results in an error.
+                    The Local authentication method used the credential
+                    database on the switch.  The Authorized authentication
+                    method will granted access without authenticating."
+        ::= { hpSwitchAuthenEntry 5 }
+
+    hpSwitchAuthenLoginServerGroupName OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(0..255))
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "The name that defines the RADIUS server group that this
+                     authentication method is associated with.  See the
+                     documentation for the maximum length of the group name."
+        ::= { hpSwitchAuthenEntry 6 }
+
+    hpSwitchAuthenEnableServerGroupName OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(0..255))
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "The name that defines the RADIUS server group that this
+                     authentication method is associated with.  See the
+                     documentation for the maximum length of the group name."
+        ::= { hpSwitchAuthenEntry 7 }
+
+-- ------------------------------------------------------------
+    -- Configuration support for TACACS+ Protocol
+-- ------------------------------------------------------------
+
+    hpSwitchTacacsConfig 
+        OBJECT IDENTIFIER ::= { hpSwitchAuthenticationMIB 3 }
+
+    hpSwitchTacacsTimeout OBJECT-TYPE
+        SYNTAX      Integer32 (1..255)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "The duration in seconds to wait for a response from 
+                    the TACACS+ server host."
+        DEFVAL { 5 }
+        ::= { hpSwitchTacacsConfig 1 }
+
+    hpSwitchTacacsAuthKey OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(0..100))
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "The key used in encrypting the packets passed between
+                    the TACACS+ server and the client. This key must match
+                    the one configured on the server."
+        ::= { hpSwitchTacacsConfig 2 }
+
+    hpSwitchTacacsServersTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF HpSwitchTacacsServersEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "This table lists a maximum of 3 TACACS+ servers."
+        ::= { hpSwitchAuthenticationMIB 4 }
+
+    hpSwitchTacacsServersEntry OBJECT-TYPE
+        SYNTAX      HpSwitchTacacsServersEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "A TACACS+ server table entry."
+        INDEX       { hpSwitchTacacsServerIndex }
+        ::= { hpSwitchTacacsServersTable 1 }
+
+    HpSwitchTacacsServersEntry ::=
+        SEQUENCE {
+            hpSwitchTacacsServerIndex      Integer32,
+            hpSwitchTacacsServerIpAddr     IpAddress,
+            hpSwitchTacacsServerKey        OCTET STRING,
+            hpSwitchTacacsServerStatus     RowStatus,
+            hpSwitchTacacsServerIsOobm     TruthValue
+        }
+
+    hpSwitchTacacsServerIndex OBJECT-TYPE
+        SYNTAX      Integer32 (1..65535)
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "The index value which uniquely identifies a row in
+                    the TACACS+ Servers Table."
+        ::= { hpSwitchTacacsServersEntry 1 }
+
+    hpSwitchTacacsServerIpAddr OBJECT-TYPE
+        SYNTAX      IpAddress
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "The IP address of a TACACS+ Server."
+        ::= { hpSwitchTacacsServersEntry 2 }
+
+    hpSwitchTacacsServerKey OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(0..100))
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "The key used in encrypting the packets passed between
+                    the TACACS+ server and the client. This key must match
+                    the one configured on the server."
+        ::= { hpSwitchTacacsServersEntry 3 }
+
+    hpSwitchTacacsServerStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "Status of Servers Table row"
+        ::= { hpSwitchTacacsServersEntry 4 }
+
+    hpSwitchTacacsServerIsOobm OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "This object indicates whether this TACACS+ Server
+                    is reachable over OOBM (Out Of Band Management) 
+                    interface or not. This mib object will be applicable
+                    only if there is a physical OOBM port on the device."
+       DEFVAL      {false}
+        ::= { hpSwitchTacacsServersEntry 5 }
+
+-- ------------------------------------------------------------
+    -- Status support for TACACS+ Protocol
+-- ------------------------------------------------------------
+
+    hpTacacsStatsServersTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF HpTacacsStatsServersEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "A table containing statistics for the configured
+                    TACACS+ servers."
+        ::= { hpSwitchAuthenticationMIB 5 }
+
+    hpTacacsStatsServersEntry OBJECT-TYPE
+        SYNTAX      HpTacacsStatsServersEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "The information assosiated with each row in the
+                    TACACS+ servers table."
+        INDEX       { hpTacacsStatsServerIndex }
+        ::= { hpTacacsStatsServersTable 1 }
+
+    HpTacacsStatsServersEntry ::=
+        SEQUENCE {
+            hpTacacsStatsServerIndex          Integer32,
+            hpTacacsStatsTacacsServerIpAddr   IpAddress,
+            hpTacacsStatsNumSessOpened        Counter32,
+            hpTacacsStatsNumSessClosed        Counter32,
+            hpTacacsStatsNumSessAborted       Counter32,
+            hpTacacsStatsNumSessErrors        Counter32,
+            hpTacacsStatsNumPktsIn            Counter32,
+            hpTacacsStatsNumPktsOut           Counter32
+        }
+
+    hpTacacsStatsServerIndex OBJECT-TYPE
+        SYNTAX      Integer32 (1..65535)
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "The index identifying the row in the table."
+        ::= { hpTacacsStatsServersEntry 1 }
+
+    hpTacacsStatsTacacsServerIpAddr OBJECT-TYPE
+        SYNTAX      IpAddress
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION "The IP address of a TACACS+ Server."
+        ::= { hpTacacsStatsServersEntry 2 }
+
+    hpTacacsStatsNumSessOpened OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION "The number of authentication sessions opened with
+                    this server"
+        ::= { hpTacacsStatsServersEntry 3 }
+
+    hpTacacsStatsNumSessClosed OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION "The number of authentication sessions closed
+                    (i.e. Passed/Failed) with this server"
+        ::= { hpTacacsStatsServersEntry 4 }
+
+    hpTacacsStatsNumSessAborted OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION "The number of authentication sessions aborted with
+                    this server"
+        ::= { hpTacacsStatsServersEntry 5 }
+
+    hpTacacsStatsNumSessErrors OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION "The number of authentication sessions with this
+                    server that ended in an error"
+        ::= { hpTacacsStatsServersEntry 6 }
+
+    hpTacacsStatsNumPktsIn OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION "The number of packets received from this server"
+        ::= { hpTacacsStatsServersEntry 7 }
+
+    hpTacacsStatsNumPktsOut OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION "The number of packets sent to this server"
+        ::= { hpTacacsStatsServersEntry 8 }
+
+-- ------------------------------------------------------------
+    -- Configuration support for RADIUS Protocol
+-- ------------------------------------------------------------
+
+    hpSwitchRadiusConfig OBJECT IDENTIFIER ::= { hpSwitchAuthenticationMIB 6 }
+
+    hpSwitchRadiusDeadTime OBJECT-TYPE
+        SYNTAX      Integer32 (0..1440)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "The length of time in minutes a RADIUS server is skipped
+                    over by transaction requests (from 0 up to 24 hours). 
+                    Used to improve RADIUS response times when some servers might
+                    be unavailable."
+        DEFVAL { 0 }
+        ::= { hpSwitchRadiusConfig 1 }
+
+    hpSwitchRadiusTimeout OBJECT-TYPE
+        SYNTAX      Integer32 (1..15)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "The duration in seconds to wait for a response from 
+                    the RADIUS server host."
+        DEFVAL { 5 }
+        ::= { hpSwitchRadiusConfig 2 }
+
+    hpSwitchRadiusRetransmitAttempts OBJECT-TYPE
+        SYNTAX      Integer32 (1..5)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "Maximum number of retransmission attempts."
+        DEFVAL { 3 }
+        ::= { hpSwitchRadiusConfig 3 }
+
+    hpSwitchRadiusAuthKey OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(0..100))
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "The key used in encrypting the packets passed between
+                    the RADIUS server and the client. This key must match
+                    the one configured on the server."
+        ::= { hpSwitchRadiusConfig 4 }
+
+    hpSwitchRadiusDynAutzPortNumber OBJECT-TYPE
+        SYNTAX      Integer32 (1..65535)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "The UDP port number to listen for Disconnect and 
+                    Change-of-Authorization messages."
+        REFERENCE  "RFC 3576"
+        DEFVAL    {3799}
+        ::= { hpSwitchRadiusConfig 5 }
+
+    hpSwitchRadiusServerTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF HpSwitchRadiusServerEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "This table lists a maximum of 3 RADIUS servers."
+        ::= { hpSwitchAuthenticationMIB 7 }
+
+    hpSwitchRadiusServerEntry OBJECT-TYPE
+        SYNTAX      HpSwitchRadiusServerEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "A RADIUS server table entry."
+        INDEX       { hpSwitchRadiusServerIndex }
+        ::= { hpSwitchRadiusServerTable 1 }
+
+    HpSwitchRadiusServerEntry ::=
+        SEQUENCE {
+            hpSwitchRadiusServerIndex             Integer32,
+            hpSwitchRadiusServerIpAddr            IpAddress,
+            hpSwitchRadiusServerKey               OCTET STRING,
+            hpSwitchRadiusServerAuthPortNumber    Integer32,
+            hpSwitchRadiusServerAcctPortNumber    Integer32,
+            hpSwitchRadiusServerDynAutzEnabled    TruthValue,
+            hpSwitchRadiusServerDynAutzTimeWindow Integer32,
+            hpSwitchRadiusServerStatus            RowStatus,
+            hpSwitchRadiusServerIsOobm            TruthValue
+        }
+
+    hpSwitchRadiusServerIndex OBJECT-TYPE
+        SYNTAX      Integer32 (1..65535)
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "The index value which uniquely identifies a row in
+                    the RADIUS Servers Table."
+        ::= { hpSwitchRadiusServerEntry 1 }
+
+    hpSwitchRadiusServerIpAddr OBJECT-TYPE
+        SYNTAX      IpAddress
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "The IP address of a RADIUS Server."
+        ::= { hpSwitchRadiusServerEntry 2 }
+
+    hpSwitchRadiusServerKey OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(0..100))
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "The key used in encrypting the packets passed between
+                    the RADIUS server and the client. This key must match
+                    the one configured on the server."
+        ::= { hpSwitchRadiusServerEntry 3 }
+
+    hpSwitchRadiusServerAuthPortNumber OBJECT-TYPE
+        SYNTAX      Integer32 (1..65535)
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "The UDP destination port number to use for sending
+                    authentication requests to this RADIUS Server."
+        ::= { hpSwitchRadiusServerEntry 4 }
+
+    hpSwitchRadiusServerAcctPortNumber OBJECT-TYPE
+        SYNTAX      Integer32 (1..65535)
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "The UDP destination port number to use for sending
+                    accounting requests to this RADIUS server."
+        ::= { hpSwitchRadiusServerEntry 5 }
+
+    hpSwitchRadiusServerDynAutzEnabled OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "This object indicates whether Dynamic Authorization
+                    messages (Disconnect-Requests and CoA-Requests) are
+                    authorized for processing from this RADIUS Server."
+        DEFVAL    {false}
+        ::= { hpSwitchRadiusServerEntry 6 }
+
+    hpSwitchRadiusServerDynAutzTimeWindow OBJECT-TYPE
+        SYNTAX      Integer32 (0..65535)
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "A non-zero value indicates that the Event-Timestamp
+                    attribute must be used in the dynamic authorization
+                    communication exchange between the NAS and the RADIUS
+                    server. Such a value determines the time window (in
+                    seconds) within which RADIUS packets carrying the 
+                    Event-Timestamp attribute will be considered as current
+                    and accepted for processing by the NAS and the RADIUS 
+                    Server. Zero value disables checking for the 
+                    Event-Timestamp attribute. The default time window 
+                    is 300 seconds."
+        REFERENCE  "RFC 3576"
+        DEFVAL    {300}
+        ::= { hpSwitchRadiusServerEntry 7 }
+
+    hpSwitchRadiusServerStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "Status of Servers Table row."
+        ::= { hpSwitchRadiusServerEntry 8 }
+
+    hpSwitchRadiusServerIsOobm OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "This object indicates whether this RADIUS Server
+                    is reachable over OOBM (Out Of Band Management) 
+                    interface or not. This mib object will be applicable
+                    only if there is a physical OOBM port on the device."
+        DEFVAL    {false}
+        ::= { hpSwitchRadiusServerEntry 9 }
+
+-- The 802.1X tables are deprecated
+
+-- ------------------------------------------------------------
+-- Key Management Subsystem chain configuration table
+-- ------------------------------------------------------------
+
+    hpSwitchKmsChainConfigTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HpSwitchKmsChainConfigEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION "This table contains configuration objects for
+                      Key Management Subsystem chains."
+    ::= { hpSwitchAuthenticationMIB 15 }
+ 
+-- ------------------------------------------------------------
+-- Key Management Subsystem chain configuration entry
+-- ------------------------------------------------------------
+
+    hpSwitchKmsChainConfigEntry OBJECT-TYPE
+         SYNTAX      HpSwitchKmsChainConfigEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION "KMS chain configuration table entry."
+         INDEX { hpSwitchKmsChainId }
+    ::= { hpSwitchKmsChainConfigTable 1 }
+ 
+    HpSwitchKmsChainConfigEntry ::=
+         SEQUENCE {
+            hpSwitchKmsChainId         Integer32,
+            hpSwitchKmsChainName       DisplayString,
+            hpSwitchKmsChainKeys       Gauge32,
+            hpSwitchKmsChainActiveKeys Gauge32,
+            hpSwitchKmsChainExpKeys    Gauge32,
+            hpSwitchKmsChainStatus     RowStatus
+         }
+
+    hpSwitchKmsChainId OBJECT-TYPE
+         SYNTAX      Integer32 (0..32767)
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION "This object is KMS chain index. Do not rely
+                      on it since it may be removed in future, when
+                      it is possible to use hpSwitchKmsChainName for
+                      index."
+    ::= { hpSwitchKmsChainConfigEntry 1 }
+
+    hpSwitchKmsChainName OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE(1..32))
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION "This object configures KMS chain name." 
+    ::= { hpSwitchKmsChainConfigEntry 2 }
+
+    hpSwitchKmsChainKeys OBJECT-TYPE
+         SYNTAX      Gauge32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION "Returns number of keys in chain." 
+    ::= { hpSwitchKmsChainConfigEntry 4 }
+
+    hpSwitchKmsChainActiveKeys OBJECT-TYPE
+         SYNTAX      Gauge32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION "Returns number of active keys in chain."
+    ::= { hpSwitchKmsChainConfigEntry 5 }
+
+    hpSwitchKmsChainExpKeys OBJECT-TYPE
+         SYNTAX      Gauge32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION "Returns number of expired keys in chain."
+    ::= { hpSwitchKmsChainConfigEntry 6 }
+
+    hpSwitchKmsChainStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "Status of the KMS chain configuration table
+                     status row."
+    ::= { hpSwitchKmsChainConfigEntry 7 }
+
+-- ------------------------------------------------------------
+-- Key Management Subsystem key configuration table
+-- ------------------------------------------------------------
+
+    hpSwitchKmsKeyConfigTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HpSwitchKmsKeyConfigEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION "This table contains configuration objects for
+                      Key Management Subsystem."
+    ::= { hpSwitchAuthenticationMIB 16 }
+ 
+-- ------------------------------------------------------------
+-- Key Management Subsystem key configuration entry
+-- ------------------------------------------------------------
+
+    hpSwitchKmsKeyConfigEntry OBJECT-TYPE
+         SYNTAX      HpSwitchKmsKeyConfigEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION "KMS configuration table entry."
+         INDEX { hpSwitchKmsKeyChainId, hpSwitchKmsKeyId }
+    ::= { hpSwitchKmsKeyConfigTable 1 }
+ 
+    HpSwitchKmsKeyConfigEntry ::=
+         SEQUENCE {
+            hpSwitchKmsKeyChainId      Integer32,
+            hpSwitchKmsKeyId           Integer32,
+            hpSwitchKmsKeyStr          OCTET STRING,
+            hpSwitchKmsKeyStartTime    Unsigned32,
+            hpSwitchKmsKeyStopTime     Unsigned32,
+            hpSwitchKmsKeyTxStartTime  Unsigned32,
+            hpSwitchKmsKeyTxStopTime   Unsigned32,
+            hpSwitchKmsKeyStatus       RowStatus
+         }
+
+    hpSwitchKmsKeyChainId OBJECT-TYPE
+         SYNTAX      Integer32 (0..32767)
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION "This object is KMS chain index. Do not rely
+                      on it since it may be removed in future, when
+                      it is possible to use hpSwitchKmsChainName for
+                      index."
+    ::= { hpSwitchKmsKeyConfigEntry 1 }
+
+    hpSwitchKmsKeyId OBJECT-TYPE
+         SYNTAX      Integer32 (0..255)
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION "This object is key index."
+    ::= { hpSwitchKmsKeyConfigEntry 2 }
+
+    hpSwitchKmsKeyStr OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE(0..16))
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION "This object configures key chain name." 
+    ::= { hpSwitchKmsKeyConfigEntry 3 }
+
+    hpSwitchKmsKeyStartTime OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION "Key accept start time." 
+    ::= { hpSwitchKmsKeyConfigEntry 4 }
+
+    hpSwitchKmsKeyStopTime OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION "Key accept stop time." 
+    ::= { hpSwitchKmsKeyConfigEntry 5 }
+
+    hpSwitchKmsKeyTxStartTime OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION "Key transmit start time." 
+    ::= { hpSwitchKmsKeyConfigEntry 6 }
+
+    hpSwitchKmsKeyTxStopTime OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION "Key transmit stop time." 
+    ::= { hpSwitchKmsKeyConfigEntry 7 }
+
+    hpSwitchKmsKeyStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "Status of the KMS chain configuration table
+                     status row."
+    ::= { hpSwitchKmsKeyConfigEntry 8 }
+
+-- ------------------------------------------------------------
+-- OSPF Interface authentication configuration table
+-- ------------------------------------------------------------
+
+    hpSwitchOspfIfAuthTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HpSwitchOspfIfAuthEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION "This table supplements OSPF interface 
+                      configuration table."
+    ::= { hpSwitchAuthenticationMIB 17 }
+ 
+    hpSwitchOspfIfAuthEntry OBJECT-TYPE
+         SYNTAX      HpSwitchOspfIfAuthEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION "OSPF interface authentication 
+                      configuration table entry."
+         AUGMENTS { ospfIfEntry }
+    ::= { hpSwitchOspfIfAuthTable 1 }
+ 
+    HpSwitchOspfIfAuthEntry ::=
+         SEQUENCE {
+            hpSwitchOspfIfAuthChain DisplayString
+         }
+
+    hpSwitchOspfIfAuthChain OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE(0..32))
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION "This object configures KMS chain name for
+                      OSPF interface." 
+    ::= { hpSwitchOspfIfAuthEntry 1 }
+
+-- ------------------------------------------------------------
+-- OSPF Virtual Interface authentication configuration table
+-- ------------------------------------------------------------
+
+    hpSwitchOspfVirtIfAuthTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HpSwitchOspfVirtIfAuthEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION "This table supplements OSPF virtual 
+                      interface configuration table."
+    ::= { hpSwitchAuthenticationMIB 18 }
+ 
+    hpSwitchOspfVirtIfAuthEntry OBJECT-TYPE
+         SYNTAX      HpSwitchOspfVirtIfAuthEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION "OSPF virtual interface authentication 
+                      configuration table entry."
+         AUGMENTS { ospfVirtIfEntry }
+    ::= { hpSwitchOspfVirtIfAuthTable 1 }
+ 
+    HpSwitchOspfVirtIfAuthEntry ::=
+         SEQUENCE {
+            hpSwitchOspfVirtIfAuthChain DisplayString
+         }
+
+    hpSwitchOspfVirtIfAuthChain OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE(0..32))
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION "This object configures KMS chain name for
+                      OSPF virtual interface." 
+    ::= { hpSwitchOspfVirtIfAuthEntry 1 }
+
+-- ------------------------------------------------------------
+-- Conformance    
+-- ------------------------------------------------------------
+
+    hpSwitchAuthenticationMIBConformance
+        OBJECT IDENTIFIER ::= { hpSwitchAuthenticationMIB 11 }
+
+    hpSwitchAuthenticationMIBCompliances
+        OBJECT IDENTIFIER ::= { hpSwitchAuthenticationMIBConformance 1}
+
+    hpSwitchAuthenticationMIBGroups
+        OBJECT IDENTIFIER ::= { hpSwitchAuthenticationMIBConformance 2}
+
+
+    hpSwitchAuthenticationMIBCompliance MODULE-COMPLIANCE 
+        STATUS      deprecated
+        DESCRIPTION "The compliance statement for devices implementing the
+                     HP Authentication Mib."
+        MODULE
+            MANDATORY-GROUPS { hpSwitchAuthenticationConfigGroup,
+                               hpSwitchTacacsConfigGroup,
+                               hpSwitchTacacsStatsGroup }
+        ::= { hpSwitchAuthenticationMIBCompliances 1 }
+
+    hpSwitchAuthenticationMIBCompliance1 MODULE-COMPLIANCE 
+        STATUS      deprecated 
+        DESCRIPTION "The compliance statement for devices implementing the
+                     HP Authentication Mib."
+        MODULE
+            MANDATORY-GROUPS { hpSwitchAuthenticationConfigGroup,
+                               hpSwitchTacacsConfigGroup,
+                               hpSwitchTacacsStatsGroup,
+                               hpSwitchRadiusConfigGroup }
+        ::= { hpSwitchAuthenticationMIBCompliances 2 }
+
+   hpSwitchAuthenticationMIBCompliance2 MODULE-COMPLIANCE
+        STATUS      current
+        DESCRIPTION "The compliance statement for devices implementing the
+                     HP Authentication Mib."
+        MODULE
+            MANDATORY-GROUPS { hpSwitchAuthenticationConfigGroup1,
+                               hpSwitchTacacsConfigGroup,
+                               hpSwitchTacacsStatsGroup,
+                               hpSwitchRadiusConfigGroup }
+            GROUP   hpSwitchKmsGroup
+            DESCRIPTION "A collection of objects for configuring
+                         KMS fuctionality."
+            GROUP   hpSwitchOspfAuthGroup
+            DESCRIPTION "A collection of objects for configuring
+                     OSPF authentication."
+            GROUP   hpSwitchSslGroup
+            DESCRIPTION "A collection of objects for configuring
+                         SSL Server."
+            GROUP   hpSwitchCertGroup
+            DESCRIPTION "A collection of objects for configuring
+                         Certificate."
+            GROUP   hpSwitchCertStatusGroup
+            DESCRIPTION "A collection of objects for configuring
+                         Certificate Status." 
+        ::= { hpSwitchAuthenticationMIBCompliances 3 }
+
+   hpSwitchAuthenticationMIBComplianceOobm MODULE-COMPLIANCE
+        STATUS      current
+        DESCRIPTION "The compliance statement for devices implementing the
+                     HP Authentication Mib with OOBM support"
+        MODULE
+
+            GROUP   hpSwitchRadiusOobmGroup
+            DESCRIPTION "A collection of objects for configuring
+                         Radius with OOBM."
+
+            GROUP   hpSwitchTacacsOobmGroup
+            DESCRIPTION "A collection of objects for configuring
+                         Tacacs with OOBM."
+
+        ::= { hpSwitchAuthenticationMIBCompliances 4 }
+
+    hpSwitchAuthenticationConfigGroup OBJECT-GROUP
+        OBJECTS     { hpSwitchNumLoginAttempts,
+                      hpSwitchAuthenLoginPrimary,
+                      hpSwitchAuthenLoginSecondary,
+                      hpSwitchAuthenEnablePrimary,
+                      hpSwitchAuthenEnableSecondary
+                    }
+        STATUS      deprecated 
+        DESCRIPTION "A collection of objects for configuring the
+                    authentication features."
+        ::= { hpSwitchAuthenticationMIBGroups 1 }
+
+    hpSwitchTacacsConfigGroup OBJECT-GROUP
+        OBJECTS     { hpSwitchTacacsTimeout,
+                      hpSwitchTacacsAuthKey,
+                      hpSwitchTacacsServerIpAddr,
+                      hpSwitchTacacsServerKey,
+                      hpSwitchTacacsServerStatus                      
+                    }
+        STATUS      current
+        DESCRIPTION "A collection of objects for configuring the 
+                    state of the TACACS+ protocol."
+        ::= { hpSwitchAuthenticationMIBGroups 2 }
+
+    hpSwitchTacacsStatsGroup OBJECT-GROUP
+        OBJECTS     { hpTacacsStatsTacacsServerIpAddr,
+                      hpTacacsStatsNumSessOpened,
+                      hpTacacsStatsNumSessClosed,
+                      hpTacacsStatsNumSessAborted,
+                      hpTacacsStatsNumSessErrors,
+                      hpTacacsStatsNumPktsIn,
+                      hpTacacsStatsNumPktsOut
+                    }
+        STATUS      current
+        DESCRIPTION "A collection of objects for viewing the
+                    status information of the TACACS+ protocol."
+        ::= { hpSwitchAuthenticationMIBGroups 3 }        
+
+    hpSwitchRadiusConfigGroup OBJECT-GROUP
+        OBJECTS     { hpSwitchRadiusDeadTime,
+                      hpSwitchRadiusTimeout,
+                      hpSwitchRadiusRetransmitAttempts,
+                      hpSwitchRadiusAuthKey,
+                      hpSwitchRadiusDynAutzPortNumber,
+                      hpSwitchRadiusServerIpAddr,
+                      hpSwitchRadiusServerKey,
+                      hpSwitchRadiusServerAuthPortNumber,
+                      hpSwitchRadiusServerAcctPortNumber,
+                      hpSwitchRadiusServerDynAutzEnabled,
+                      hpSwitchRadiusServerDynAutzTimeWindow,
+                      hpSwitchRadiusServerStatus
+                    }
+        STATUS      current
+        DESCRIPTION "A collection of objects for configuring the 
+                    state of the RADIUS protocol."
+        ::= { hpSwitchAuthenticationMIBGroups 4 }
+
+    hpSwitchKmsGroup OBJECT-GROUP
+        OBJECTS     { hpSwitchKmsChainName,
+                      hpSwitchKmsChainKeys,
+                      hpSwitchKmsChainActiveKeys,
+                      hpSwitchKmsChainExpKeys,
+                      hpSwitchKmsChainStatus,
+                      hpSwitchKmsKeyStr,
+                      hpSwitchKmsKeyStartTime,
+                      hpSwitchKmsKeyStopTime,
+                      hpSwitchKmsKeyTxStartTime,
+                      hpSwitchKmsKeyTxStopTime,
+                      hpSwitchKmsChainStatus,
+                      hpSwitchKmsKeyStatus
+                    }
+        STATUS      current
+        DESCRIPTION "A collection of objects for configuring
+                     KMS fuctionality."
+        ::= { hpSwitchAuthenticationMIBGroups 6 }        
+
+    hpSwitchOspfAuthGroup OBJECT-GROUP
+        OBJECTS     { hpSwitchOspfVirtIfAuthChain,
+                      hpSwitchOspfIfAuthChain
+                    }
+        STATUS      current
+        DESCRIPTION "A collection of objects for configuring
+                     OSPF authentication."
+        ::= { hpSwitchAuthenticationMIBGroups 7 }        
+
+    hpSwitchAuthenticationConfigGroup1 OBJECT-GROUP
+        OBJECTS     { hpSwitchNumLoginAttempts,
+                      hpSwitchAuthenLoginPrimary,
+                      hpSwitchAuthenLoginSecondary,
+                      hpSwitchAuthenEnablePrimary,
+                      hpSwitchAuthenEnableSecondary,
+                      hpSwitchAuthRespectPriv
+                    }
+        STATUS      current
+        DESCRIPTION "A collection of objects for configuring the
+                    authentication features."
+        ::= { hpSwitchAuthenticationMIBGroups 8 }
+    hpSwitchSslGroup  OBJECT-GROUP
+        OBJECTS     { hpSwitchSslAdminStatus,
+                      hpSwitchSslPortNumber
+                    }
+        STATUS      current
+        DESCRIPTION "A collection of objects for configuring SSL
+                    Servers."
+        ::= { hpSwitchAuthenticationMIBGroups 9 }
+
+    hpSwitchCertGroup   OBJECT-GROUP
+        OBJECTS     { hpSwitchServerCertificateType,
+                      hpSwitchServerCertificateRSAKeySize,
+                      hpSwitchServerCertificateSerialNumber,
+                      hpSwitchServerCertificateStartDate,
+                      hpSwitchServerCertificateEndDate,
+                      hpSwitchServerCertificateCommonName,
+                      hpSwitchServerCertificateOrgUnit,
+                      hpSwitchServerCertificateOrgName,
+                      hpSwitchServerCertificateCityName,
+                      hpSwitchServerCertificateStateName,
+                      hpSwitchServerCertificateCountryCode,
+                      hpSwitchServerCertificateFingerprintMD5,
+                      hpSwitchServerCertificateFingerprintSHA1
+                    }
+        STATUS      current
+        DESCRIPTION "A collection of objects for configuring Certificates."
+        ::= { hpSwitchAuthenticationMIBGroups 10 }
+
+    hpSwitchCertStatusGroup  OBJECT-GROUP
+        OBJECTS   { hpSwitchServerCertificateOperation,
+                    hpSwitchServerNewRSAKeyOperation,
+                    hpSwitchServerNewCertificateStartDate,
+                    hpSwitchServerNewCertificateEndDate,
+                    hpSwitchServerNewCertificateCommonName,
+                    hpSwitchServerNewCertificateOrgUnit,
+                    hpSwitchServerNewCertificateOrgName,
+                    hpSwitchServerNewCertificateCityName,
+                    hpSwitchServerNewCertificateStateName,
+                    hpSwitchServerNewCertificateCountryCode
+                  }
+        STATUS    current
+        DESCRIPTION "A collection of objects for configuring Certificate Status."
+       ::= { hpSwitchAuthenticationMIBGroups 11 }
+
+    hpSwitchTacacsOobmGroup OBJECT-GROUP
+        OBJECTS     { hpSwitchTacacsServerIpAddr,
+                      hpSwitchTacacsServerIsOobm                     
+                    }
+        STATUS      current
+        DESCRIPTION "A collection of objects for configuring the 
+                    TACACS+ server entry with support for OOBM 
+                    (Out of Band Management) interface."
+        ::= { hpSwitchAuthenticationMIBGroups 12 }
+
+    hpSwitchRadiusOobmGroup OBJECT-GROUP
+        OBJECTS     { hpSwitchRadiusServerIpAddr,
+                      hpSwitchRadiusServerIsOobm
+                    }
+        STATUS      current
+        DESCRIPTION "A collection of objects for configuring the 
+                    RADIUS server entry with support for OOBM 
+                    (Out of Band Management) interface."
+        ::= { hpSwitchAuthenticationMIBGroups 13 }
+-- ------------------------------------------------------------
+    -- Configuration support for SSL server
+-- ------------------------------------------------------------
+
+    hpSwitchSslConfig OBJECT IDENTIFIER ::= { hpSwitchAuthenticationMIB 12 }        
+    
+    hpSwitchSslAdminStatus OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        disabled(1),
+                        enabled(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "This objects specifies the desired operational 
+                     status of SSL."
+        DEFVAL	  {1}	
+        ::= { hpSwitchSslConfig 1 }   
+        
+
+   hpSwitchSslPortNumber OBJECT-TYPE
+        SYNTAX      Integer32 (1..65535)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "The port number on which SSL server should listen 
+                     for connection requests."
+        DEFVAL { 443 }
+        ::= { hpSwitchSslConfig 2 } 
+
+-- ------------------------------------------------------------
+    -- Configuration support for Certificates 
+-- ------------------------------------------------------------
+                
+    hpSwitchCertConfig OBJECT IDENTIFIER ::= { hpSwitchAuthenticationMIB 13 }        
+        
+    hpSwitchServerCertificateOperation OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        none(1),
+                        useInstalled(2),
+                        createAndUseSelfSigned(3),
+                        createCACertReq(4),
+                        applyCASignedCert(5),
+                        abortCASignedRequest(6)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "This object when read returns the last write value. If
+                     no previous write value exists, then returns 'none'.
+                     When written, each value causes the following action:
+                     
+                     'none' - no action is taken, null operation.
+                     
+                     'useInstalled' - causes the switch to use a previously
+                     installed server certificate, if one is present. 
+			  
+		     'createAndUseSelfSigned' - causes the switch to 
+                     create a new self-signed certificate based on the
+                     hpSwitchServerNewCertificateXXX parameters and use it.
+
+                     'createCACertReq' - causes the switch to create
+                     a certificate request, which is to be signed by a CA
+                     authority, based on the hpSwitchServerNewCertificateXXX.  
+                     Parameters. The user must subsequently download the signed 
+                     certificate to complete certificate creation process.
+
+                     'applyCASignedCert' - causes the switch to process the
+                     user's response (signed certificate from CA) to complete
+                     the certificate creation process. 
+
+                     'abortCASignedRequest' - causes the switch to abort
+                     the certificate request procedure, which was initiated on
+                     createAndUseCASigned set."
+
+        ::= { hpSwitchCertConfig 1 }
+        
+    hpSwitchServerNewRSAKeyOperation OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        useInstalled(1),
+                        createBits512(2),
+                        createBits768(3),
+                        createBits1024(4)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "This object when read returns either 'useInstalled' or 
+                     'createBits512'. 'useInstalled' is returned when an 
+                     a certificate RSA key already exists on switch. 
+                     'createBits512' is returned when no certificate RSA key
+                     exists on switch. 
+
+                     When written, each value causes the following action:
+                     
+                     'useInstalled' - uses currently configured RSA key
+                     already present on the switch.
+                     
+                     'createBits512' - specifies the creation of a new RSA 
+                     key of 512-bit length.
+                     
+                     'createBits768' - specifies the creation of a new RSA 
+                     key of 768-bit length.
+                     
+                     'createBits1024' - specifies the creation of a new RSA 
+                     key of 1024-bit length."
+        ::= { hpSwitchCertConfig 2 }
+
+    hpSwitchServerNewCertificateStartDate OBJECT-TYPE
+        SYNTAX      DateAndTime
+	MAX-ACCESS  read-write
+	STATUS 	    current
+        DESCRIPTION "Specifies the start date of validity for a new server 
+                     certificate."
+        ::= { hpSwitchCertConfig 3 }
+
+    hpSwitchServerNewCertificateEndDate OBJECT-TYPE
+        SYNTAX      DateAndTime
+	MAX-ACCESS  read-write
+	STATUS 	    current
+        DESCRIPTION "Specifies the end date of validity for a new server 
+                     certificate."
+        ::= { hpSwitchCertConfig 4 }
+
+    hpSwitchServerNewCertificateCommonName OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(1..40))
+        MAX-ACCESS  read-write
+	STATUS 	    current
+        DESCRIPTION "Specifies the common name for a new server 
+                     certificate."
+        ::= { hpSwitchCertConfig 5 }
+
+    hpSwitchServerNewCertificateOrgUnit OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(1..40))
+	MAX-ACCESS  read-write
+	STATUS 	    current
+        DESCRIPTION "Specifies the organization for a new server
+                     certificate."
+        ::= { hpSwitchCertConfig 6 }
+
+    hpSwitchServerNewCertificateOrgName OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(1..40))
+	MAX-ACCESS  read-write
+	STATUS 	    current
+        DESCRIPTION "Specifies the organization name for a new server
+                     certificate."
+        ::= { hpSwitchCertConfig 7 }
+
+    hpSwitchServerNewCertificateCityName OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(1..40))
+	MAX-ACCESS  read-write
+	STATUS 	    current
+        DESCRIPTION "Specifies the city for a new server certificate."
+        ::= { hpSwitchCertConfig 8 }
+
+    hpSwitchServerNewCertificateStateName OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(1..40))
+	MAX-ACCESS  read-write
+	STATUS 	    current
+        DESCRIPTION "Specifies the state for a new server certificate."
+        ::= { hpSwitchCertConfig 9 }
+
+    hpSwitchServerNewCertificateCountryCode OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(2))
+	MAX-ACCESS  read-write
+	STATUS 	    current
+        DESCRIPTION "Specifies the 2-letter ISO country code of the server certificate."
+        ::= { hpSwitchCertConfig 10 }
+    hpSwitchServerNewCertCommonName OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(1..200))
+        MAX-ACCESS  read-write
+	STATUS 	    current
+	DESCRIPTION "Specifies the common name for a new server 
+                     certificate."
+        ::= { hpSwitchCertConfig 11 }
+
+    hpSwitchServerNewCertOrgUnit OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(1..200))
+	MAX-ACCESS  read-write
+	STATUS 	    current
+	DESCRIPTION "Specifies the organization for a new server
+                     certificate."
+        ::= { hpSwitchCertConfig 12 }
+
+    hpSwitchServerNewCertOrgName OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(1..200))
+	MAX-ACCESS  read-write
+	STATUS 	    current
+	DESCRIPTION "Specifies the organization name for a new server
+                     certificate."
+        ::= { hpSwitchCertConfig 13 }
+
+    hpSwitchServerNewCertCityName OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(1..200))
+	MAX-ACCESS  read-write
+	STATUS 	    current
+        DESCRIPTION "Specifies the city for a new server certificate."
+        ::= { hpSwitchCertConfig 14 }
+
+    hpSwitchServerNewCertStateName OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE(1..200))
+	MAX-ACCESS  read-write
+	STATUS 	    current
+	DESCRIPTION "Specifies the state for a new server certificate."
+        ::= { hpSwitchCertConfig 15 }
+
+
+-- ------------------------------------------------------------
+    -- Certificate Status
+-- ------------------------------------------------------------
+    hpSwitchCertStatus OBJECT IDENTIFIER ::= { hpSwitchAuthenticationMIB  14}
+
+    hpSwitchServerCertificateType OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        none(1),
+		        pendCaSigned(2),
+		        selfSigned(3),
+		        caSigned(4)			      
+                    }
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION "Specifies the type of server certificate the switch is 
+                     currently using as follows:
+                     
+                    'none' - no server certificate is present.
+                    
+                    'pendCaSigned' - switch is waiting for user to offer 
+                    CA-signed certificate request.
+                    
+                    'selfSigned' - a self-signed server certificate is being 
+                    used.
+                    
+                    'caSigned' - a CA-signed server certificate is being 
+                    used."
+        ::= { hpSwitchCertStatus 1 }
+    
+    hpSwitchServerCertificateRSAKeySize OBJECT-TYPE
+        SYNTAX       INTEGER {
+                         none(0),
+                         bits512(1),
+                         bits768(2),
+                         bits1024(3)
+                     }
+        MAX-ACCESS   read-only
+        STATUS       current
+        DESCRIPTION  "Specifies the RSA key length of the public key contained 
+                      in the certificate as follows:
+                      
+                      'none'     - no certificate is present
+                      'Bits512'  - certificate has a 512-bit public key
+                      'Bits768'  - certificate has a 768-bit public key 
+                      'Bits1024' - certificate has a 1024-bit public key"
+        ::= { hpSwitchCertStatus 2 }                      
+        
+    hpSwitchServerCertificateSerialNumber  OBJECT-TYPE
+        SYNTAX       OCTET STRING (SIZE(0..40))
+	MAX-ACCESS   read-only 
+	STATUS       current
+        DESCRIPTION  "Specifies the serial number of installed server 
+                     certificate."
+        ::= { hpSwitchCertStatus 3 }
+
+    hpSwitchServerCertificateStartDate OBJECT-TYPE
+        SYNTAX       DateAndTime
+	MAX-ACCESS   read-only 
+	STATUS       current
+        DESCRIPTION  "Specifies the start date of validity of installed server 
+                     certificate."
+        ::= { hpSwitchCertStatus 4 }
+
+    hpSwitchServerCertificateEndDate OBJECT-TYPE
+        SYNTAX       DateAndTime
+	MAX-ACCESS   read-only
+	STATUS       current
+        DESCRIPTION  "Specifies the end date of validity of installed server 
+                     server certificate."
+        ::= { hpSwitchCertStatus 5 }
+
+    hpSwitchServerCertificateCommonName OBJECT-TYPE
+        SYNTAX       OCTET STRING (SIZE(0..40))
+	MAX-ACCESS   read-only
+	STATUS       current
+        DESCRIPTION  "Specifies the common name of installed server 
+                     certificate."
+        ::= { hpSwitchCertStatus 6 }
+
+    hpSwitchServerCertificateOrgUnit OBJECT-TYPE
+        SYNTAX       OCTET STRING (SIZE(0..40))
+	MAX-ACCESS   read-only
+	STATUS 	     current
+        DESCRIPTION  "Specifies the organization of installed server                    
+                     certificate."
+        ::= { hpSwitchCertStatus 7 }
+
+    hpSwitchServerCertificateOrgName OBJECT-TYPE
+        SYNTAX       OCTET STRING (SIZE(0..40))
+	MAX-ACCESS   read-only
+	STATUS 	     current
+        DESCRIPTION  "Specifies the organization name of installed server                    
+                     certificate."
+        ::= { hpSwitchCertStatus 8 }
+
+    hpSwitchServerCertificateCityName OBJECT-TYPE
+        SYNTAX       OCTET STRING (SIZE(0..40))
+	MAX-ACCESS   read-only
+	STATUS       current
+        DESCRIPTION  "Specifies the city of installed server certificate."
+        ::= { hpSwitchCertStatus 9 }
+
+    hpSwitchServerCertificateStateName OBJECT-TYPE
+        SYNTAX       OCTET STRING (SIZE(0..40))
+	MAX-ACCESS   read-only 
+	STATUS 	     current
+        DESCRIPTION  "Specifies the state of installed server certificate."
+        ::= { hpSwitchCertStatus 10 }
+
+    hpSwitchServerCertificateCountryCode OBJECT-TYPE
+        SYNTAX       OCTET STRING (SIZE(0..40))
+	MAX-ACCESS   read-only
+	STATUS       current
+        DESCRIPTION  "Specifies the 2-letter ISO country code of installed 
+                     server certificate."
+        ::= { hpSwitchCertStatus 11 }
+        
+    hpSwitchServerCertificateFingerprintMD5 OBJECT-TYPE
+        SYNTAX       OCTET STRING (SIZE(0..48))
+        MAX-ACCESS   read-only
+	STATUS       current
+        DESCRIPTION  "Specifies the MD5 fingerprint of installed server 
+                     certificate."
+        ::= { hpSwitchCertStatus 12 }
+
+    hpSwitchServerCertificateFingerprintSHA1 OBJECT-TYPE
+        SYNTAX       OCTET STRING (SIZE(0..51))
+        MAX-ACCESS   read-only
+	STATUS       current
+        DESCRIPTION  "Specifies the SHA1 fingerprint of installed server 
+                     certificate."
+        ::= { hpSwitchCertStatus 13 }        
+
+-- ------------------------------------------------------------
+-- User Config Table
+-- ------------------------------------------------------------
+
+    hpicfSwitchUserConfigTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF HpicfSwitchUserConfigEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION "This table supplements the manager/operator name/password. The manager/operator password are limited to the CLI interface through Console and Menu interface, and web."
+    ::= { hpSwitchAuthenticationMIB 19 }
+
+    hpicfSwitchUserConfigEntry OBJECT-TYPE
+         SYNTAX      HpicfSwitchUserConfigEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION "Manager/operator name/password table entry."
+         INDEX { hpicfSwitchUserConfigIndex }
+    ::= { hpicfSwitchUserConfigTable 1 }
+
+    HpicfSwitchUserConfigEntry ::=
+        SEQUENCE {
+            hpicfSwitchUserConfigIndex      Integer32,
+            hpicfSwitchUserName             OCTET STRING,
+            hpicfSwitchOperatorName         OCTET STRING,
+            hpicfSwitchUserPassword         OCTET STRING,
+            hpicfSwitchOperatorPassword     OCTET STRING,
+            hpicfSwitchUserConfigStatus     RowStatus
+        }
+
+    hpicfSwitchUserConfigIndex OBJECT-TYPE
+        SYNTAX      Integer32 (1..65535)
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "The index value uniquely identifies a row in the User Config table, currently limited to a value of 1."
+        ::= { hpicfSwitchUserConfigEntry 1 }
+
+    hpicfSwitchUserName OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE (0..16))
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "The User Name, up to 16 ASCII characters with no spaces."
+        ::= { hpicfSwitchUserConfigEntry 2 }
+
+    hpicfSwitchOperatorName OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE (0..16))
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "The Operator Name, up to 16 ASCII characters with no spaces."
+        ::= { hpicfSwitchUserConfigEntry 3 }  
+
+    hpicfSwitchUserPassword OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE (0..16))
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "The User Password, up to 16 ASCII characters."
+        ::= { hpicfSwitchUserConfigEntry 4 }
+
+    hpicfSwitchOperatorPassword OBJECT-TYPE
+        SYNTAX      OCTET STRING (SIZE (0..16))
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "The Operator Password, up to 16 ASCII characters."
+        ::= { hpicfSwitchUserConfigEntry 5 }
+
+    hpicfSwitchUserConfigStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "Status of User Config Table row."
+        ::= { hpicfSwitchUserConfigEntry 6 }
+
+-- ------------------------------------------------------------
+-- AAA Server Group Table
+-- ------------------------------------------------------------
+
+    hpSwitchAAAServerGroupTable OBJECT-TYPE
+  	     SYNTAX      SEQUENCE OF HpSwitchAAAServerGroupEntry
+	     MAX-ACCESS  not-accessible
+	     STATUS      current
+	     DESCRIPTION "This table lists the RADIUS server groups."
+	     ::= { hpSwitchAuthenticationMIB 20 }
+
+	hpSwitchAAAServerGroupEntry OBJECT-TYPE
+	    SYNTAX      HpSwitchAAAServerGroupEntry
+	    MAX-ACCESS  not-accessible
+	    STATUS      current
+	    DESCRIPTION "RADIUS server group entry."
+          INDEX { hpSwitchAAAServerGroupProtocolType,
+                  hpSwitchAAAServerGroupIndex,
+                  hpSwitchAAAServerGroupServerIndex }
+   ::= { hpSwitchAAAServerGroupTable 1 }
+
+    HpSwitchAAAServerGroupEntry ::=
+	     SEQUENCE {
+            hpSwitchAAAServerGroupProtocolType    INTEGER,
+	         hpSwitchAAAServerGroupIndex           Integer32,
+            hpSwitchAAAServerGroupServerIndex     Integer32,
+	         hpSwitchAAAServerGroupName            OCTET STRING,
+            hpSwitchAAAServerGroupServerInetType  InetAddressType,
+            hpSwitchAAAServerGroupServerInetAddr  InetAddress,
+	         hpSwitchAAAServerGroupStatus          RowStatus
+	     }
+
+    hpSwitchAAAServerGroupProtocolType OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        radius(1),
+                        tacacs(2)
+                    }
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION "This part of the index indicates which protocol
+                     server the server group is for.  See the documentation
+                     protocols supported."
+        ::= { hpSwitchAAAServerGroupEntry 1 }
+
+  	 hpSwitchAAAServerGroupIndex OBJECT-TYPE
+        SYNTAX      Integer32
+	     MAX-ACCESS  not-accessible
+	     STATUS      current
+	     DESCRIPTION "The index value which uniquely identifies a row
+                     in the AAA server group table.  See the documentation
+                     for the number of groups allowed."
+	     ::= { hpSwitchAAAServerGroupEntry 2 }
+
+  	 hpSwitchAAAServerGroupServerIndex OBJECT-TYPE
+	     SYNTAX      Integer32 
+	     MAX-ACCESS  not-accessible
+	     STATUS      current
+	     DESCRIPTION "The index value which identifies the server entry
+                     in a server group.  See the documentation for the
+                     number of servers allowed in a group."
+	     ::= { hpSwitchAAAServerGroupEntry 3 }
+
+    hpSwitchAAAServerGroupName OBJECT-TYPE
+        SYNTAX      OCTET STRING  (SIZE(0..255))
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION "The name of a given AAA server group.  See the
+                     documentation for the maximum length of the group name."
+        ::= { hpSwitchAAAServerGroupEntry 4 }
+
+     hpSwitchAAAServerGroupServerInetType OBJECT-TYPE
+         SYNTAX      InetAddressType
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION "A reference to the AAA protocol server table
+                      which indicates the server that is part of the
+                      server group. This indicates the IP Address type.
+                      Currently only Ipv4 is supported."
+         ::= { hpSwitchAAAServerGroupEntry 5 } 
+
+     hpSwitchAAAServerGroupServerInetAddr OBJECT-TYPE
+         SYNTAX      InetAddress
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION "A reference to the AAA protocol server table
+                      which indicates the server that is part of the
+                      server group."
+         ::= { hpSwitchAAAServerGroupEntry 6 } 
+
+     hpSwitchAAAServerGroupStatus OBJECT-TYPE
+         SYNTAX      RowStatus
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION "The status of the AAA server group row."
+	      ::= { hpSwitchAAAServerGroupEntry 7 }
+
+END

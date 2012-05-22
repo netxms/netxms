@@ -9,7 +9,7 @@ HP-ICF-TC DEFINITIONS ::= BEGIN
             FROM HP-ICF-OID;
 
     hpicfTextualConventions MODULE-IDENTITY
-        LAST-UPDATED "200402182305Z"  -- February 18, 2004
+        LAST-UPDATED "200902101800Z"  -- February 10, 2009
         ORGANIZATION "Hewlett Packard Company,
                       Network Infrastructure Solutions"
         CONTACT-INFO "Hewlett-Packard Company
@@ -17,6 +17,15 @@ HP-ICF-TC DEFINITIONS ::= BEGIN
                       Roseville, CA 95747"
         DESCRIPTION  "This module contains common textual convention
                      definitons used by various HP ICF MIB modules."
+
+        REVISION     "200902101800Z"  -- February 10, 2009
+        DESCRIPTION  "Added 10GbE-K for 802.3ap (clauses 69-74)"
+
+        REVISION     "200808190905Z"  -- August 19, 2008
+        DESCRIPTION  "Added XFP-SFP+ DAC types for HpSwitchPortType."
+
+        REVISION     "200802041536Z"  -- February 04, 2008
+        DESCRIPTION  "Added multiple transceiver types."
 
         REVISION     "200402182305Z"  -- February 18, 2004
         DESCRIPTION  "Added gigabitEthernetESP and tenGigabitEthernetCX 
@@ -58,17 +67,53 @@ HP-ICF-TC DEFINITIONS ::= BEGIN
                         fastEther(62),
                         fastEtherFX(69),
                         fastEtherFX-sfp(70),
+                        tenGSFP-SR (112),
+                        tenGSFP-LR (113),
+                        tenGSFP-ER (114),
+                        tenGSFP-LRM (115),
+                        tenGSFP-LX4 (116),
                         gigabitEthernetSX (117),
-		        gigabitEthernetLX (118),
-		        gigabitEthernetT (119),
-		        gigabitEthernetStk (120),
-		        gigabitEthernetLH (121),
+                        gigabitEthernetLX (118),
+                        gigabitEthernetT (119),
+                        gigabitEthernetStk (120),
+                        gigabitEthernetLH (121),
                         tenGbE-CX4 (122),
                         gigabitEthernetESP (123),
                         tenGbE-SR (124),
                         tenGbE-ER (125),
                         tenGbE-LR (126),
-		        gigabitEthernetT-sfp (127)
+                        gigabitEthernetT-sfp (127),
+                        fastEtherGEN (128),
+                        gigabitEthernetGEN (129),
+                        tenGbE-GEN (130),
+                        fastEtherBX-D (131),
+                        fastEtherBX-U (132),
+                        gigabitEthernetBX-D (133),
+                        gigabitEthernetBX-U (134),
+                        tenGbE-LRM (135),
+                        sFP-PLUS-SR (136),
+                        sFP-PLUS-LR (137),
+                        sFP-PLUS-LRM (138),
+                        sFP-PLUS-DAC (139),
+                        sFP-PLUS-DA1 (140),
+                        sFP-PLUS-DA2 (141),
+                        sFP-PLUS-DA3 (142),
+                        sFP-PLUS-DA5 (143),
+                        sFP-PLUS-DA7 (144),
+                        sFP-PLUS-DA10 (145),
+                        sFP-PLUS-DA15 (146),
+                        sFP-PLUS-DA20 (147),
+                        tenGbE-T (148),
+                        tenGbE-TSH (149),
+                        tenGbE-TLH (150),
+                        tenGbE-STK (151),
+                        xFP-SFP-PLUS-DAC  (152),
+                        xFP-SFP-PLUS-DA1  (153),
+                        xFP-SFP-PLUS-DA3  (154),
+                        xFP-SFP-PLUS-DA5  (155),
+                        xFP-SFP-PLUS-DA7  (156),
+                        xFP-SFP-PLUS-DA10 (157),
+                        tenGbE-K (158) 
                     }
 
 END
