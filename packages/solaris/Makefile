@@ -1,4 +1,4 @@
-NX_VERSION=$(shell grep AC_INIT ../../configure.ac | awk -F '[\]\[]' '{ print $$4; }')
+NX_VERSION=$(shell grep AC_INIT ../../configure.ac | awk -F '[][]' '{ print $$4; }')
 PLATFORM=$(shell uname -p)
 
 ifdef SUFIX
@@ -7,12 +7,18 @@ else
 	_SUFIX=
 endif
 
-all:
+all: prereq package
+
+prereq: /opt/netxms/lib/libcrypto.so.0.9.8
+	cp /opt/csw/lib/libcrypto.so.0.9.8 /opt/netxms/lib
+	cp /opt/csw/lib/libgcc_s.so.1 /opt/netxms/lib
+	cp /opt/csw/lib/libstdc++.so.6 /opt/netxms/lib
+
+package:
 	sed 's,@version@,$(NX_VERSION),' < pkginfo.in > pkginfo
 	rm -rf /tmp/RADnxagent
 	pkgmk -o -r / -d /tmp -f Prototype
-	cd /tmp
-	tar -cf - RADnxagent | gzip -9 -c > RADnxagent.$(NX_VERSION).$(_SUFIX)$(PLATFORM).pkg.tar.gz
-	cd -
+	pkgtrans /tmp /tmp/RADnxagent.$(NX_VERSION).$(_SUFIX)$(PLATFORM).pkg RADnxagent
+	gzip -f9 /tmp/RADnxagent.$(NX_VERSION).$(_SUFIX)$(PLATFORM).pkg
 	rm -rf /tmp/RADnxagent
 	rm pkginfo
