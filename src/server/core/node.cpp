@@ -3966,7 +3966,8 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 		LockChildList(FALSE);
 		for(i = 0; i < m_dwChildCount; i++)
 		{
-			if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+			if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
+			    !((Interface *)m_pChildList[i])->isLoopback())
 			{
 				dwAddr = htonl(m_pChildList[i]->IpAddr());
 				if (dwAddr != 0)
