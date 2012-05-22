@@ -2003,6 +2003,7 @@ AC_CONFIG_FILES([
 	contrib/startup/redhat/Makefile
 	contrib/startup/suse/Makefile
 	contrib/startup/ubuntu/Makefile
+	contrib/startup/solaris/Makefile
 	doc/Makefile
 	doc/internal/Makefile
 	doc/manuals/Makefile
