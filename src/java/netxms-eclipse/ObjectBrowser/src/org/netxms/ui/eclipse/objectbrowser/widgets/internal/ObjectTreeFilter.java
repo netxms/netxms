@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,10 +34,14 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Filter for object tree
- *
  */
 public class ObjectTreeFilter extends ViewerFilter
 {
+	private static final int NONE = 0;
+	private static final int NAME = 1;
+	private static final int COMMENTS = 2;
+	private static final int IP_ADDRESS = 3;
+	
 	private String filterString = null;
 	private boolean hideUnmanaged = false;
 	private boolean hideTemplateChecks = false;
@@ -46,6 +50,7 @@ public class ObjectTreeFilter extends ViewerFilter
 	private long[] rootObjects = null;
 	private Set<Integer> classFilter = null;
 	private boolean usePatternMatching = false;
+	private int mode = NAME;
 	
 	/**
 	 * Constructor
@@ -61,17 +66,27 @@ public class ObjectTreeFilter extends ViewerFilter
 	}
 	
 	/**
-	 * Match given value to curtrent filter string
+	 * Match given value to current filter string
 	 * 
-	 * @param value value to match
-	 * @return true if value matched to current filter string
+	 * @param object object to match
+	 * @return true if object matched to current filter string
 	 */
-	private boolean matchFilterString(String value)
+	private boolean matchFilterString(GenericObject object)
 	{
-		if (filterString == null)
+		if ((mode == NONE) || (filterString == null))
 			return true;
-
-		return usePatternMatching ? Glob.matchIgnoreCase(filterString, value) : value.toLowerCase().startsWith(filterString);
+		
+		switch(mode)
+		{
+			case NAME:
+				return usePatternMatching ? Glob.matchIgnoreCase(filterString, object.getObjectName()) : object.getObjectName().toLowerCase().startsWith(filterString);
+			case IP_ADDRESS:
+				return object.getPrimaryIP().getHostAddress().startsWith(filterString);
+			case COMMENTS:
+				return object.getComments().toLowerCase().contains(filterString);
+		}
+		
+		return false;
 	}
 	
 	/* (non-Javadoc)
@@ -122,24 +137,39 @@ public class ObjectTreeFilter extends ViewerFilter
 		boolean fullSearch = true;
 		if ((filterString != null) && !filterString.isEmpty())
 		{
-			usePatternMatching = filterString.contains("*") || filterString.contains("?");
-			if (usePatternMatching)
+			if (filterString.charAt(0) == '/')
 			{
-				this.filterString = filterString.toLowerCase() + "*";
+				mode = COMMENTS;
+				this.filterString = filterString.substring(1);
+			}
+			else if (filterString.charAt(0) == '>')
+			{
+				mode = IP_ADDRESS;
+				this.filterString = filterString.substring(1);
 			}
 			else
 			{
-				String newFilterString = filterString.toLowerCase();
-				if (this.filterString != null)
-					if (newFilterString.startsWith(this.filterString))
-						fullSearch = false;
-				this.filterString = newFilterString;
+				mode = NAME;
+				usePatternMatching = filterString.contains("*") || filterString.contains("?");
+				if (usePatternMatching)
+				{
+					this.filterString = filterString.toLowerCase() + "*";
+				}
+				else
+				{
+					String newFilterString = filterString.toLowerCase();
+					if (this.filterString != null)
+						if (newFilterString.startsWith(this.filterString))
+							fullSearch = false;
+					this.filterString = newFilterString;
+				}
 			}
 		}
 		else
 		{
 			this.filterString = null;
 			usePatternMatching = false;
+			mode = NONE;
 		}
 		updateObjectList(fullSearch);
 	}
@@ -156,7 +186,7 @@ public class ObjectTreeFilter extends ViewerFilter
 				GenericObject[] fullList = ((NXCSession)ConsoleSharedData.getSession()).getAllObjects();
 				objectList = new HashMap<Long, GenericObject>();
 				for(int i = 0; i < fullList.length; i++)
-					if (matchFilterString(fullList[i].getObjectName()) &&
+					if (matchFilterString(fullList[i]) &&
 					    ((rootObjects == null) || fullList[i].isChildOf(rootObjects)))
 					{
 						objectList.put(fullList[i].getObjectId(), fullList[i]);
@@ -170,7 +200,7 @@ public class ObjectTreeFilter extends ViewerFilter
 				while(it.hasNext())
 				{
 					GenericObject obj = it.next();
-					if (!matchFilterString(obj.getObjectName()))
+					if (!matchFilterString(obj))
 						it.remove();
 					else
 						lastMatch = obj;
