@@ -10,7 +10,7 @@
 
 
 EXTRA_DIST = \
-	netxmsd.conf-dist nxagentd.conf-dist nxhttpd.conf-dist \
+	netxmsd.conf-dist nxagentd.conf-dist \
 	installAgent.sh installBinaryAgent.sh
 SUBDIRS = integration startup
 SUBDIRS += @CONTRIB_MODULES@

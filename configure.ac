@@ -43,7 +43,6 @@ USE_PTH="no"
 BUILD_SERVER="no"
 BUILD_AGENT="no"
 BUILD_CLIENT="no"
-BUILD_NXHTTPD="no"
 BUILD_STATIC_AGENT="no"
 NEED_ZLIB="no"
 MODULES="libnetxms tools install"
@@ -2174,11 +2173,6 @@ if test "x${BUILD_CLIENT}" = "xyes"; then
 	echo "Build Clients           : YES"
 else
 	echo "Build Clients           : NO"
-fi
-if test "x${BUILD_NXHTTPD}" = "xyes"; then
-	echo "Build Web Interface     : YES"
-else
-	echo "Build Web Interface     : NO"
 fi
 if test "x${BUILD_AGENT}" = "xyes"; then
 	echo "Build Agent             : YES"

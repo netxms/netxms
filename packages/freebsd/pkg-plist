@@ -7,7 +7,6 @@
 %%SERVER%%bin/nxdbmgr
 %%CLIENT%%bin/nxevent
 %%SERVER%%bin/nxget
-%%NXHTTPD%%bin/nxhttpd
 %%SERVER%%bin/nxmibc
 %%CLIENT%%bin/nxpush
 %%CLIENT%%bin/nxreport
@@ -19,7 +18,6 @@
 %%SERVER%%etc/netxmsd.conf-dist
 %%SERVER%%etc/nxagentd.conf-dist
 %%AGENT%%etc/nxagentd.conf-dist
-%%NXHTTPD%%etc/nxhttpd.conf-dist
 lib/libnetxms.la
 lib/libnetxms.so
 lib/libnetxms.so.0
@@ -227,99 +225,12 @@ lib/libnetxms.so.0
 %%SERVER%%%%DATADIR%%/mibs/WF-COM.txt
 %%SERVER%%%%DATADIR%%/mibs/WWW-MIB.txt
 %%SERVER%%%%DATADIR%%/mibs/netxms.mib
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/alarms.js
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/common.js
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/ctrlpanel.js
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/I.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/L.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/Lminus.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/Lplus.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/T.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/Tminus.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/Tplus.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ack.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/blank.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/normal/ack.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/normal/add.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/normal/cancel.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/normal/delete.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/normal/login.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/normal/ok.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/normal/terminate.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/pressed/ack.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/pressed/add.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/pressed/cancel.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/pressed/delete.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/pressed/login.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/pressed/ok.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/buttons/pressed/terminate.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/checkbox_off.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/checkbox_on.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/actions.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/cert.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/cfgvar.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/ctrlpanel.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/discovery.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/epp.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/group.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/module.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/objtools.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/package.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/scripts.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/servercfg.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/snmptrap.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/user.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/ctrlpanel/users.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/delete.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/document.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/edit.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/file.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/foldericon.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/graph.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/login.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/new.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/objects/cluster.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/objects/container.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/objects/interface.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/objects/network.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/objects/node.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/objects/service.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/objects/subnet.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/objects/template.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/objects/template_group.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/objects/template_root.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/openfoldericon.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/sort_down.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/sort_up.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/status/critical.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/status/disabled.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/status/major.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/status/minor.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/status/normal.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/status/testing.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/status/unknown.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/status/unmanaged.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/status/warning.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/images/terminate.png
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/netxms.css
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/pngfix.js
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/xloadtree.js
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/xmlextras.js
-%%NXHTTPD%%%%DATADIR%%/nxhttpd/xtree.js
 %%SERVER%%%%DATADIR%%/sql/dbinit_mssql.sql
 %%SERVER%%%%DATADIR%%/sql/dbinit_mysql.sql
 %%SERVER%%%%DATADIR%%/sql/dbinit_oracle.sql
 %%SERVER%%%%DATADIR%%/sql/dbinit_pgsql.sql
 %%SERVER%%%%DATADIR%%/sql/dbinit_sqlite.sql
 %%SERVER%%@dirrmtry %%DATADIR%%/sql
-%%NXHTTPD%%@dirrmtry %%DATADIR%%/nxhttpd/images/status
-%%NXHTTPD%%@dirrmtry %%DATADIR%%/nxhttpd/images/objects
-%%NXHTTPD%%@dirrmtry %%DATADIR%%/nxhttpd/images/ctrlpanel
-%%NXHTTPD%%@dirrmtry %%DATADIR%%/nxhttpd/images/buttons/pressed
-%%NXHTTPD%%@dirrmtry %%DATADIR%%/nxhttpd/images/buttons/normal
-%%NXHTTPD%%@dirrmtry %%DATADIR%%/nxhttpd/images/buttons
-%%NXHTTPD%%@dirrmtry %%DATADIR%%/nxhttpd/images
-%%NXHTTPD%%@dirrmtry %%DATADIR%%/nxhttpd
 %%SERVER%%@dirrmtry %%DATADIR%%/mibs
 %%SERVER%%@dirrmtry %%DATADIR%%/images
 %%SERVER%%@dirrmtry %%DATADIR%%/backgrounds

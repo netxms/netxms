@@ -77,7 +77,6 @@ Var
   iResult: Integer;
 Begin
   Exec('net.exe', 'stop NetXMSCore', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
-  Exec('net.exe', 'stop nxhttpd', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
   Exec('net.exe', 'stop NetXMSAgentdW32', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
 End;
 

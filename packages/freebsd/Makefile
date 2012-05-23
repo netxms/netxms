@@ -30,7 +30,6 @@ LDFLAGS+=	-L${OPENSSLLIB} -lcrypto -lssl
 OPTIONS=	SERVER          "Install NetXMS server & agent" off\
 		CLIENT             "Install NetXMS client" off \
 		AGENT             "Install NetXMS agent" off \
-		NXHTTPD             "Install web-interface" off \
 		MYSQL             "Enable MySQL support" off \
 		PGSQL             "Enable PostgreSQL support" off
 
@@ -74,15 +73,6 @@ PLIST_SUB+=	AGENT=""
 PLIST_SUB+=	AGENT="@comment "
 .endif
 
-.if defined(WITH_NXHTTPD)
-USE_RC_SUBR+=	nxhttpd
-CONFIGURE_ARGS+=	--with-nxhttpd
-PLIST_SUB+=	NXHTTPD=""
-LIB_DEPENDS=	gd.4:${PORTSDIR}/graphics/gd
-.else
-PLIST_SUB+=	NXHTTPD="@comment "
-.endif
-
 .if defined(WITH_MYSQL)
 CONFIGURE_ARGS+=	--with-mysql
 PLIST_SUB+=	MYSQL=""
@@ -112,11 +102,6 @@ pre-install:
 	        ${CP} -p ${WRKSRC}/contrib/nxagentd.conf-dist ${PREFIX}/etc/nxagentd.conf-dist ; \
 	fi
 .endif
-.if defined(WITH_NXHTTPD)
-	@if [ ! -f ${PREFIX}/etc/nxhttpd.conf-dist ]; then \
-	        ${CP} -p ${WRKSRC}/contrib/nxhttpd.conf-dist ${PREFIX}/etc/nxhttpd.conf-dist ; \
-	fi
-.endif
 
 post-install:
 	@${SETENV} PKG_PREFIX=${PREFIX} \
@@ -127,9 +112,6 @@ post-install:
 .endif
 .if defined(WITH_AGENT)
 			${CHOWN} ${NETXMS_OWN}:${NETXMS_GRP} ${PREFIX}/etc/nxagentd.conf-dist
-.endif
-.if defined(WITH_NXHTTPD)
-			${CHOWN} ${NETXMS_OWN}:${NETXMS_GRP} ${PREFIX}/etc/nxhttpd.conf-dist
 .endif
 
 post-deinstall:

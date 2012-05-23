@@ -151,7 +151,6 @@ contrib/mibs/S5-AGENT-MIB.txt -text
 contrib/startup/debian/Makefile.am -text
 contrib/startup/debian/netxmsd.in -text
 contrib/startup/debian/nxagentd.in -text
-contrib/startup/debian/nxhttpd.in -text
 doc/RadenSolutions.xml -text
 doc/comparison_netxms_nnm.doc -text
 doc/integration/HPOM_Integration.docx -text
