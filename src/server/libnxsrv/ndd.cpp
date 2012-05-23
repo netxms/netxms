@@ -23,19 +23,16 @@
 #include <nddrv.h>
 
 
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 NetworkDeviceDriver::NetworkDeviceDriver()
 {
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 NetworkDeviceDriver::~NetworkDeviceDriver()
 {
 }
