@@ -34,7 +34,7 @@ static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 /**
  * Get driver name
  */
-const TCHAR *ProcurveDriver::getName()
+const TCHAR *ProCurveDriver::getName()
 {
 	return s_driverName;
 }
@@ -42,7 +42,7 @@ const TCHAR *ProcurveDriver::getName()
 /**
  * Get driver version
  */
-const TCHAR *ProcurveDriver::getVersion()
+const TCHAR *ProCurveDriver::getVersion()
 {
 	return s_driverVersion;
 }
@@ -52,7 +52,7 @@ const TCHAR *ProcurveDriver::getVersion()
  *
  * @param oid Device OID
  */
-int ProcurveDriver::isPotentialDevice(const TCHAR *oid)
+int ProCurveDriver::isPotentialDevice(const TCHAR *oid)
 {
 	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.11.2.3.7.11"), 24) == 0) ? 127 : 0;
 }
@@ -63,7 +63,7 @@ int ProcurveDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool ProcurveDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool ProCurveDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
 	return true;
 }
@@ -76,8 +76,16 @@ bool ProcurveDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-void ProcurveDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes)
+void ProCurveDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes)
 {
+	int model = _tcstol(&oid[25], NULL, 10);
+	
+	// modulear switches
+	if ((model == 7) || (model == 9) || (model == 13) || (model == 14) || (model == 23) || (model == 27))
+	{
+		attributes->set(_T(".procurve.isModular"), _T("1"));
+		attributes->set(_T(".procurve.slotSize"), _T("24"));
+	}
 }
 
 /**
@@ -86,14 +94,35 @@ void ProcurveDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *ProcurveDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable)
+InterfaceList *ProCurveDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 
+	bool isModular = attributes->getBoolean(_T(".procurve.isModular"), false);
+	DWORD slotSize = attributes->getULong(_T(".procurve.slotSize"), 24);
+
 	// Find physical ports
+	for(int i = 0; i < ifList->getSize(); i++)
+	{
+		NX_INTERFACE_INFO *iface = ifList->get(i);
+		if (iface->dwType == IFTYPE_ETHERNET_CSMACD)
+		{
+			iface->isPhysicalPort = true;
+			if (isModular)
+			{
+				iface->dwSlotNumber = (iface->dwIndex / slotSize) + 1;
+				iface->dwPortNumber = iface->dwIndex % slotSize;
+			}
+			else
+			{
+				iface->dwSlotNumber = 1;
+				iface->dwPortNumber = iface->dwIndex;
+			}
+		}
+	}
 
 	return ifList;
 }
@@ -101,7 +130,7 @@ InterfaceList *ProcurveDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, ProcurveDriver);
+DECLARE_NDD_ENTRY_POINT(s_driverName, ProCurveDriver);
 
 /**
  * DLL entry point

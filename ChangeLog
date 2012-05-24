@@ -4,6 +4,7 @@
 
 - Implemented dashboard export/import
 - Fixed memory leak in NXSL functions gmtime and localtime
+- Added driver for HP E-series (ProCurve) switches
 - Java console:
 	- Added object status indication bar in object browser
 	- Added filtering by IP address and comments in object browser

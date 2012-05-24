@@ -255,6 +255,7 @@ public:
 
 #define VLAN_PRM_IFINDEX   0
 #define VLAN_PRM_SLOTPORT  1
+#define VLAN_PRM_BPORT     2
 
 class LIBNXSRV_EXPORTABLE VlanInfo
 {

@@ -124,6 +124,8 @@ public class Glob
 	 */
 	public static boolean match(String pattern, String string)
 	{
+		if (string.length() == 0)
+			return pattern.equals("*");
 		return matchInternal(pattern.toCharArray(), string.toCharArray());
 	}
 
@@ -136,6 +138,8 @@ public class Glob
 	 */
 	public static boolean matchIgnoreCase(String pattern, String string)
 	{
+		if (string.length() == 0)
+			return pattern.equals("*");
 		return matchInternal(pattern.toUpperCase().toCharArray(), string.toUpperCase().toCharArray());
 	}
 }

@@ -1,7 +1,7 @@
 [Setup]
 AppName=NetXMS WebUI
-AppVerName=NetXMS WebUI 1.2.0
-AppVersion=1.2.0
+AppVerName=NetXMS WebUI 1.2.1
+AppVersion=1.2.1
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org

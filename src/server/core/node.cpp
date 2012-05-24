@@ -4362,10 +4362,13 @@ void Node::resolveVlanPorts(VlanList *vlanList)
 			Interface *iface = NULL;
 			switch(vlan->getPortReferenceMode())
 			{
-				case VLAN_PRM_IFINDEX:
+				case VLAN_PRM_IFINDEX:	// interface index
 					iface = findInterface(portId, INADDR_ANY);
 					break;
-				case VLAN_PRM_SLOTPORT:
+				case VLAN_PRM_BPORT:		// bridge port number
+					iface = findBridgePort(portId);
+					break;
+				case VLAN_PRM_SLOTPORT:	// slot/port pair
 					iface = findInterfaceBySlotAndPort(portId >> 16, portId & 0xFFFF);
 					break;
 			}

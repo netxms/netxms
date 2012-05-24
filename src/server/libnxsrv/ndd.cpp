@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -323,6 +323,78 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 }
 
 /**
+ * Handler for VLAN enumeration
+ */
+static DWORD HandlerVlanList(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   VlanList *vlanList = (VlanList *)arg;
+
+	VlanInfo *vlan = new VlanInfo(var->GetName()->getValue()[var->GetName()->getLength() - 1], VLAN_PRM_BPORT);
+
+	TCHAR buffer[256];
+	vlan->setName(var->GetValueAsString(buffer, 256));
+
+	vlanList->add(vlan);
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Parse VLAN membership bit map
+ *
+ * @param vlanList VLAN list
+ * @param ifIndex interface index for current interface
+ * @param map VLAN membership map
+ * @param offset VLAN ID offset from 0
+ */
+static void ParseVlanPorts(VlanList *vlanList, VlanInfo *vlan, BYTE map, int offset)
+{
+	// VLAN egress port map description from Q-BRIDGE-MIB:
+	// ===================================================
+	// Each octet within this value specifies a set of eight
+	// ports, with the first octet specifying ports 1 through
+	// 8, the second octet specifying ports 9 through 16, etc.
+	// Within each octet, the most significant bit represents
+	// the lowest numbered port, and the least significant bit
+	// represents the highest numbered port.  Thus, each port
+	// of the bridge is represented by a single bit within the
+	// value of this object.  If that bit has a value of '1'
+	// then that port is included in the set of ports; the port
+	// is not included if its bit has a value of '0'.
+
+	int port = offset;
+	BYTE mask = 0x80;
+	while(mask > 0)
+	{
+		if (map & mask)
+		{
+			vlan->add((DWORD)port);
+		}
+		mask >>= 1;
+		port++;
+	}
+}
+
+/**
+ * Handler for VLAN egress port enumeration
+ */
+static DWORD HandlerVlanEgressPorts(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   VlanList *vlanList = (VlanList *)arg;
+	DWORD vlanId = var->GetName()->getValue()[var->GetName()->getLength() - 1];
+	VlanInfo *vlan = vlanList->findById(vlanId);
+	if (vlan != NULL)
+	{
+		BYTE buffer[4096];
+		size_t size = var->getRawValue(buffer, 4096);
+		for(int i = 0; i < (int)size; i++)
+		{
+			ParseVlanPorts(vlanList, vlan, buffer[i], i * 8 + 1);
+		}
+	}
+	return SNMP_ERR_SUCCESS;
+}
+
+/**
  * Get list of VLANs on given node
  *
  * @param snmp SNMP transport
@@ -331,5 +403,17 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
  */
 VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes)
 {
+	VlanList *list = new VlanList();
+	
+	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
+		goto failure;
+
+	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.17.7.1.4.2.1.4"), HandlerVlanEgressPorts, list, FALSE) != SNMP_ERR_SUCCESS)
+		goto failure;
+
+	return list;
+
+failure:
+	delete list;
 	return NULL;
 }

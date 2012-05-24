@@ -608,6 +608,7 @@ src/java/netxms-base/src/main/java/org/netxms/base/NXCPMessageReceiver.java -tex
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPMsgWaitQueue.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPVariable.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCommon.java -text
+src/java/netxms-base/src/test/java/org/netxms/base/GlobTest.java -text
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPMessageTest.java -text
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPMsgWaitQueueTest.java -text
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPVariableTest.java -text
