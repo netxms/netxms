@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2004-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -203,9 +203,23 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 
    if ((rc = PdhAddCounter(hQuery, szCounter, 0, &hCounter)) != ERROR_SUCCESS)
    {
-      ReportPdhError(szFName, _T("PdhAddCounter"), rc);
-      PdhCloseQuery(hQuery);
-      return SYSINFO_RC_UNSUPPORTED;
+		// Attempt to translate counter name
+		if ((rc == PDH_CSTATUS_NO_COUNTER) || (rc == PDH_CSTATUS_NO_OBJECT))
+		{
+			TCHAR *newName = (TCHAR *)malloc(_tcslen(szCounter) * sizeof(TCHAR) * 4);
+			if (TranslateCounterName(szCounter, newName))
+			{
+				AgentWriteDebugLog(2, _T("WINPERF: Counter translated: %s ==> %s"), szCounter, newName);
+				rc = PdhAddCounter(hQuery, newName, 0, &hCounter);
+			}
+			free(newName);
+		}
+	   if (rc != ERROR_SUCCESS)
+		{
+			ReportPdhError(szFName, _T("PdhAddCounter"), rc);
+			PdhCloseQuery(hQuery);
+	      return SYSINFO_RC_UNSUPPORTED;
+		}
    }
 
    // Get first sample
