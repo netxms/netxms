@@ -1,6 +1,8 @@
 package org.netxms.ui.android.main.adapters;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.android.R;
@@ -45,10 +47,18 @@ public class GraphAdapter extends BaseExpandableListAdapter
 	public void setGraphs(List<GraphSettings> graphs)
 	{
 		graphList = graphs;
+		Collections.sort(this.graphList, new Comparator<GraphSettings>()
+		{
+			@Override
+			public int compare(GraphSettings object1, GraphSettings object2)
+			{
+				return object1.getName().compareTo(object2.getName());
+			}
+		});
+		
 		groups.clear();
 		children.clear();
-		groups.add(context.getString(R.string.graph_uncategorized)); // To have it
-																							// on top
+		groups.add(context.getString(R.string.graph_uncategorized)); // To have it on top
 		children.add(new ArrayList<GraphSettings>());
 		for(int i = 0; i < graphList.size(); i++)
 		{
