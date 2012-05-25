@@ -679,6 +679,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollec
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionTable.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciDataRow.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciPushData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciValue.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/GraphItem.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/GraphItemStyle.java -text

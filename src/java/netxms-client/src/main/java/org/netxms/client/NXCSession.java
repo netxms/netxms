@@ -77,6 +77,7 @@ import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.client.datacollection.DciPushData;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.PerfTabDci;
@@ -5963,5 +5964,60 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariable(NXCPCodes.VID_MESSAGE, message);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Push data to server.
+	 * 
+	 * @param data push data 
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void pushDciData(DciPushData[] data) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_PUSH_DCI_DATA);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, data.length);
+		long varId = NXCPCodes.VID_PUSH_DCI_DATA_BASE;
+		for(DciPushData d : data)
+		{
+			msg.setVariableInt32(varId++, (int)d.nodeId);
+			if (d.nodeId == 0)
+				msg.setVariable(varId++, d.nodeName);
+			msg.setVariableInt32(varId++, (int)d.dciId);
+			if (d.dciId == 0)
+				msg.setVariable(varId++, d.dciName);
+			msg.setVariable(varId++, d.value);
+		}
+		
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	/**
+	 * Push value for single DCI.
+	 * 
+	 * @param nodeId node ID
+	 * @param dciId DCI ID
+	 * @param value value to push
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void pushDciData(long nodeId, long dciId, String value) throws IOException, NXCException
+	{
+		pushDciData(new DciPushData[] { new DciPushData(nodeId, dciId, value) });
+	}
+
+	/**
+	 * Push value for single DCI.
+	 * 
+	 * @param nodeName node name
+	 * @param dciName DCI name
+	 * @param value value to push
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void pushDciData(String nodeName, String dciName, String value) throws IOException, NXCException
+	{
+		pushDciData(new DciPushData[] { new DciPushData(nodeName, dciName, value) });
 	}
 }
