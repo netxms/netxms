@@ -9300,6 +9300,7 @@ void ClientSession::DefineGraph(CSCPMessage *pRequest)
 			{
 				DBCommit(g_hCoreDB);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				msg.SetVariable(VID_GRAPH_ID, dwGraphId);
 				notify(NX_NOTIFY_GRAPHS_CHANGED);
 			}
 			else

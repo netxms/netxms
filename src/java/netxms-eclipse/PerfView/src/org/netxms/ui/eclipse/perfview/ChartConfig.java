@@ -94,7 +94,7 @@ public class ChartConfig
 			return new ChartConfig();
 		
 		// Compatibility mode: decode old predefined graph configuration
-		// should be removed in 1.2.1
+		// should be removed in 1.2.2
 		if (!xml.startsWith("<chart>"))
 		{
 			ChartConfig config = new ChartConfig();

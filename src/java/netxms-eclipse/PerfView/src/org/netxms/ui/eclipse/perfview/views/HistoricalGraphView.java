@@ -106,6 +106,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 	private Action actionLegendTop;
 	private Action actionLegendBottom;
 	private Action actionProperties;
+	private Action actionSave;
 	private Action[] presetActions;
 	
 	/* (non-Javadoc)
@@ -275,11 +276,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		chart.setGridVisible(config.isShowGrid());
 		chart.setLegendVisible(config.isShowLegend());
 		chart.setLegendPosition(config.getLegendPosition());
-		//chart.setBackgroundColor(new ChartColor(settings.getBackgroundColor()));
-		//chart.setPlotAreaColor(new ChartColor(settings.getPlotBackgroundColor()));
-		//chart.setLegendColor(new ChartColor(settings.getLegendTextColor()), new ChartColor(settings.getLegendBackgroundColor()));
-		//chart.setAxisColor(new ChartColor(settings.getAxisColor()));
-		//chart.setGridColor(new ChartColor(settings.getGridColor()));
 		
 		// Data
 		final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(config.getDciList().length);
@@ -589,6 +585,14 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 			}
 		};
 		actionLegendBottom.setChecked(config.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
+		
+		actionSave = new Action("&Save as predefined...", SharedIcons.SAVE) {
+			@Override
+			public void run()
+			{
+				saveGraph();
+			}
+		};
 
 		presetActions = new Action[presetRanges.length];
 		for(int i = 0; i < presetRanges.length; i++)
@@ -649,6 +653,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 		manager.add(new Separator());
+		manager.add(actionSave);
 		manager.add(actionProperties);
 	}
 
@@ -701,6 +706,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		manager.add(actionZoomIn);
 		manager.add(actionZoomOut);
 		manager.add(new Separator());
+		manager.add(actionSave);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -748,5 +755,13 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 	{
 		if (this.settings == settings)
 			configureGraphFromSettings();
+	}
+	
+	/**
+	 * Save this graph as predefined
+	 */
+	private void saveGraph()
+	{
+		
 	}
 }

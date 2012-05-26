@@ -29,6 +29,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -45,12 +46,14 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
+import org.netxms.ui.eclipse.perfview.ChartConfig;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeContentProvider;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -67,6 +70,7 @@ public class PredefinedGraphTree extends ViewPart
 	private NXCSession session;
 	private RefreshAction actionRefresh;
 	private Action actionOpen; 
+	private Action actionProperties; 
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -161,6 +165,14 @@ public class PredefinedGraphTree extends ViewPart
 			}
 		};
 		actionOpen.setText("&Open");
+
+		actionProperties = new Action("Properties") {
+			@Override
+			public void run()
+			{
+				editPredefinedGraph();
+			}
+		};
 	}
 	
 	/**
@@ -196,6 +208,8 @@ public class PredefinedGraphTree extends ViewPart
 	{
 		mgr.add(actionOpen);
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		mgr.add(new Separator());
+		mgr.add(actionProperties);
 	}
 
 	/**
@@ -218,6 +232,8 @@ public class PredefinedGraphTree extends ViewPart
 	{
 		manager.add(actionOpen);
 		manager.add(actionRefresh);
+		manager.add(new Separator());
+		manager.add(actionProperties);
 	}
 
 	/**
@@ -284,6 +300,33 @@ public class PredefinedGraphTree extends ViewPart
 		catch(PartInitException e)
 		{
 			MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Error opening graph view: " + e.getMessage());
+		}
+	}
+	
+	/**
+	 * Edit predefined graph
+	 */
+	@SuppressWarnings("restriction")
+	private void editPredefinedGraph()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		GraphSettings settings = (GraphSettings)selection.getFirstElement();
+		ChartConfig config;
+		try
+		{
+			config = ChartConfig.createFromXml(settings.getConfig());
+		}
+		catch(Exception e)
+		{
+			config = new ChartConfig();
+		}
+		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, config);
+		if (dlg != null)
+		{
+			dlg.open();
 		}
 	}
 }

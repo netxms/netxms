@@ -4899,10 +4899,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * Download MIB file from server.
 	 * 
 	 * @return file handle for temporary file on local file system
-	 * @throws IOException
-	 *            if socket or file I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public File downloadMibFile() throws IOException, NXCException
 	{
@@ -4946,10 +4944,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * Get list of predefined graphs.
 	 * 
 	 * @return list of predefined graphs
-	 * @throws IOException
-	 *            if socket or file I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public List<GraphSettings> getPredefinedGraphs() throws IOException, NXCException
 	{
@@ -4965,6 +4961,48 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			varId += 10;
 		}
 		return list;
+	}
+	
+	/**
+	 * Create or modify predefined graph. If graph ID in GraphSettings object
+	 * set to 0, new predefined graph will be created on server, and ID assigned to it will be returned. 
+	 * 
+	 * @param graph predefined graph configuration
+	 * @return ID of predefined graph object
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long modifyPredefinedGraph(GraphSettings graph) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_GRAPH_LIST);
+		msg.setVariableInt32(NXCPCodes.VID_GRAPH_ID, (int)graph.getId());
+		msg.setVariable(NXCPCodes.VID_NAME, graph.getName());
+		msg.setVariable(NXCPCodes.VID_GRAPH_CONFIG, graph.getConfig());
+		msg.setVariableInt32(NXCPCodes.VID_ACL_SIZE, graph.getAccessList().size());
+		long varId = NXCPCodes.VID_GRAPH_ACL_BASE;
+		for(AccessListElement e : graph.getAccessList())
+		{
+			msg.setVariableInt32(varId++, (int)e.getUserId());
+			msg.setVariableInt32(varId++, e.getAccessRights());
+		}
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsInt64(NXCPCodes.VID_GRAPH_ID);
+	}
+	
+	/**
+	 * Delete predefined graph.
+	 * 
+	 * @param graphId predefined graph object ID
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void deletePredefinedGraph(long graphId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_GRAPH_LIST);
+		msg.setVariableInt32(NXCPCodes.VID_GRAPH_ID, (int)graphId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
 	}
 
 	/*
