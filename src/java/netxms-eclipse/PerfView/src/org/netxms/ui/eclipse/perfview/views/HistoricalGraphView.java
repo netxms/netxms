@@ -33,6 +33,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -45,6 +46,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
@@ -61,6 +63,7 @@ import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.ChartConfig;
+import org.netxms.ui.eclipse.perfview.dialogs.SaveGraphDlg;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
@@ -762,6 +765,32 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 	 */
 	private void saveGraph()
 	{
-		
+		SaveGraphDlg dlg = new SaveGraphDlg(getSite().getShell(), config.getTitle());
+		if (dlg.open() != Window.OK)
+			return;
+
+		try
+		{
+			final GraphSettings gs = new GraphSettings(0, session.getUserId(), new ArrayList<AccessListElement>(0));
+			gs.setName(dlg.getName());
+			gs.setConfig(config.createXml());
+			new ConsoleJob("Save graph settings", this, Activator.PLUGIN_ID, null) {
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					session.modifyPredefinedGraph(gs);
+				}
+				
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot save graph settings as predefined graph";
+				}
+			}.start();
+		}
+		catch(Exception e)
+		{
+			MessageDialog.openError(getSite().getShell(), "Internal Error", "Enexpected exception: " + e.getLocalizedMessage());
+		}
 	}
 }

@@ -8,6 +8,7 @@
 - Java console:
 	- Added object status indication bar in object browser
 	- Added filtering by IP address and comments in object browser
+- Fixed issues: #333, #340, #343, #353
 
 
 *

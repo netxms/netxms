@@ -64,6 +64,14 @@ INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,al
 	VALUES (14,7944,'Acknowlege DCI status alarms when DCI status returns to ACTIVE',
 		'%m',6,'DCI_STATUS_%i_%1','#00',0,EVENT_ALARM_TIMEOUT,0,'#00');
 
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+	VALUES (15,7944,'Generate alarm on threshold violation',
+		'%m',5,'DC_THRESHOLD_%i_%5','#00',0,EVENT_ALARM_TIMEOUT,0,'#00');
+		
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+	VALUES (16,7944,'Acknowlege threshold violation alarm',
+		'%m',6,'DC_THRESHOLD_%i_%3','#00',0,EVENT_ALARM_TIMEOUT,0,'#00');
+
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (2,EVENT_SERVICE_DOWN);
@@ -81,3 +89,5 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (12,EVENT_DB_CONNECTIO
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (13,EVENT_DCI_DISABLED);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (13,EVENT_DCI_UNSUPPORTED);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (14,EVENT_DCI_ACTIVE);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (15,EVENT_THRESHOLD_REACHED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (16,EVENT_THRESHOLD_REARMED);
