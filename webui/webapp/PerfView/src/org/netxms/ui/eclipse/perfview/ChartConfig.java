@@ -92,18 +92,30 @@ public class ChartConfig
 	{
 		if (xml == null)
 			return new ChartConfig();
-		
+		return internalCreate(ChartConfig.class, xml);
+	}
+	
+	/**
+	 * Internal creation method.
+	 * 
+	 * @param objectClass
+	 * @param xml
+	 * @return
+	 * @throws Exception
+	 */
+	protected static ChartConfig internalCreate(Class<? extends ChartConfig> objectClass, final String xml) throws Exception
+	{
 		// Compatibility mode: decode old predefined graph configuration
-		// should be removed in 1.2.1
+		// should be removed in 1.2.2
 		if (!xml.startsWith("<chart>"))
 		{
-			ChartConfig config = new ChartConfig();
+			ChartConfig config = objectClass.newInstance();
 			config.parseLegacyConfig(xml);
 			return config;
 		}
 		
 		Serializer serializer = new Persister();
-		return serializer.read(ChartConfig.class, xml);
+		return serializer.read(objectClass, xml);
 	}
 
 	/**

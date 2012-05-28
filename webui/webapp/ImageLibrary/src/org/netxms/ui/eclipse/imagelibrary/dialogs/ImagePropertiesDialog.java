@@ -19,6 +19,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 public class ImagePropertiesDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private String name;
 	private String category;
 	private String fileName;

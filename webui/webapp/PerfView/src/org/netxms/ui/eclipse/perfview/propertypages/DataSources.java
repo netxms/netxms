@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -42,13 +43,18 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.ChartConfig;
+import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.perfview.dialogs.DataSourceEditDlg;
 import org.netxms.ui.eclipse.perfview.propertypages.helpers.DciListLabelProvider;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -359,13 +365,62 @@ public class DataSources extends PropertyPage
 		}
 	}
 
+	/**
+	 * Apply changes
+	 * 
+	 * @param isApply true if update operation caused by "Apply" button
+	 */
+	protected void applyChanges(final boolean isApply)
+	{
+		config.setDciList(dciList.toArray(new ChartDciConfig[dciList.size()]));
+		if (isApply)
+		{
+			setValid(false);
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			new ConsoleJob("Update data sources for predefined graph", null, Activator.PLUGIN_ID, null) {
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					session.modifyPredefinedGraph(((PredefinedChartConfig)config).createServerSettings());
+				}
+	
+				@Override
+				protected void jobFinalize()
+				{
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
+						{
+							DataSources.this.setValid(true);
+						}
+					});
+				}
+	
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot change access control list";
+				}
+			}.start();
+		}
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
 	 */
 	@Override
 	public boolean performOk()
 	{
-		config.setDciList(dciList.toArray(new ChartDciConfig[dciList.size()]));
+		applyChanges(false);
 		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
+	 */
+	@Override
+	protected void performApply()
+	{
+		applyChanges(true);
 	}
 }

@@ -29,6 +29,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -36,6 +37,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -45,12 +47,14 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
+import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeContentProvider;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -59,6 +63,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  * Navigation view for predefined graphs
  *
  */
+@SuppressWarnings("restriction")
 public class PredefinedGraphTree extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.perfview.views.PredefinedGraphTree";
@@ -67,6 +72,7 @@ public class PredefinedGraphTree extends ViewPart
 	private NXCSession session;
 	private RefreshAction actionRefresh;
 	private Action actionOpen; 
+	private Action actionProperties; 
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -130,9 +136,8 @@ public class PredefinedGraphTree extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -141,9 +146,8 @@ public class PredefinedGraphTree extends ViewPart
 		};
 		
 		actionOpen = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@SuppressWarnings("rawtypes")
 			@Override
 			public void run()
@@ -161,6 +165,16 @@ public class PredefinedGraphTree extends ViewPart
 			}
 		};
 		actionOpen.setText("&Open");
+
+		actionProperties = new Action("Properties") {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void run()
+			{
+				editPredefinedGraph();
+			}
+		};
 	}
 	
 	/**
@@ -171,8 +185,9 @@ public class PredefinedGraphTree extends ViewPart
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -196,6 +211,8 @@ public class PredefinedGraphTree extends ViewPart
 	{
 		mgr.add(actionOpen);
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		mgr.add(new Separator());
+		mgr.add(actionProperties);
 	}
 
 	/**
@@ -218,6 +235,8 @@ public class PredefinedGraphTree extends ViewPart
 	{
 		manager.add(actionOpen);
 		manager.add(actionRefresh);
+		manager.add(new Separator());
+		manager.add(actionProperties);
 	}
 
 	/**
@@ -284,6 +303,67 @@ public class PredefinedGraphTree extends ViewPart
 		catch(PartInitException e)
 		{
 			MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Error opening graph view: " + e.getMessage());
+		}
+	}
+	
+	/**
+	 * Edit predefined graph
+	 */
+	private void editPredefinedGraph()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		GraphSettings settings = (GraphSettings)selection.getFirstElement();
+		PredefinedChartConfig config;
+		try
+		{
+			config = PredefinedChartConfig.createFromServerConfig(settings);
+		}
+		catch(Exception e)
+		{
+			config = new PredefinedChartConfig();
+		}
+		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, config);
+		if (dlg != null)
+		{
+			if (dlg.open() == Window.OK)
+			{
+				try
+				{
+					final GraphSettings s = config.createServerSettings();
+					new ConsoleJob("Update predefined graph", null, Activator.PLUGIN_ID, null) {
+						@Override
+						protected void runInternal(IProgressMonitor monitor) throws Exception
+						{
+							session.modifyPredefinedGraph(s);
+						}
+						
+						@Override
+						protected String getErrorMessage()
+						{
+							return "Cannot update predefined graph";
+						}
+					}.start();
+				}
+				catch(Exception e)
+				{
+					MessageDialog.openError(getSite().getShell(), "Internal Error", "Unexpected exception: " + e.getLocalizedMessage());
+				}
+			}
+			settings.setName(config.getName());
+			settings.getAccessList().clear();
+			settings.getAccessList().addAll(config.getAccessList());
+			try
+			{
+				settings.setConfig(config.createXml());
+			}
+			catch(Exception e)
+			{
+				MessageDialog.openError(getSite().getShell(), "Internal Error", "Unexpected exception: " + e.getLocalizedMessage());
+			}
+			viewer.update(settings, null);
 		}
 	}
 }

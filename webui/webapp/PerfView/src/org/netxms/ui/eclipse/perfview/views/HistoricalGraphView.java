@@ -106,6 +106,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 	private Action actionLegendTop;
 	private Action actionLegendBottom;
 	private Action actionProperties;
+	private Action actionSave;
 	private Action[] presetActions;
 	
 	/* (non-Javadoc)
@@ -275,11 +276,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		chart.setGridVisible(config.isShowGrid());
 		chart.setLegendVisible(config.isShowLegend());
 		chart.setLegendPosition(config.getLegendPosition());
-		//chart.setBackgroundColor(new ChartColor(settings.getBackgroundColor()));
-		//chart.setPlotAreaColor(new ChartColor(settings.getPlotBackgroundColor()));
-		//chart.setLegendColor(new ChartColor(settings.getLegendTextColor()), new ChartColor(settings.getLegendBackgroundColor()));
-		//chart.setAxisColor(new ChartColor(settings.getAxisColor()));
-		//chart.setGridColor(new ChartColor(settings.getGridColor()));
 		
 		// Data
 		final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(config.getDciList().length);
@@ -332,6 +328,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -432,6 +430,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -440,6 +440,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		};
 		
 		actionProperties = new Action("Properties") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -453,6 +455,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		};
 		
 		actionAutoRefresh = new Action("Refresh &automatically") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -464,6 +468,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionAutoRefresh.setChecked(config.isAutoRefresh());
 		
 		actionLogScale = new Action("&Logarithmic scale") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -482,6 +488,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionLogScale.setChecked(config.isLogScale());
 		
 		actionZoomIn = new Action("Zoom &in") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -491,6 +499,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 
 		actionZoomOut = new Action("Zoom &out") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -500,9 +510,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 
 		actionAdjustX = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -513,9 +522,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionAdjustX.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_x.png"));
 
 		actionAdjustY = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -526,9 +534,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionAdjustY.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_y.png"));
 
 		actionAdjustBoth = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -540,6 +547,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionAdjustBoth.setImageDescriptor(Activator.getImageDescriptor("icons/adjust.png"));
 
 		actionShowLegend = new Action("&Show legend") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -551,6 +560,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionShowLegend.setChecked(config.isShowLegend());
 		
 		actionLegendLeft = new Action("Place on &left", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -561,6 +572,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionLegendLeft.setChecked(config.getLegendPosition() == GraphSettings.POSITION_LEFT);
 		
 		actionLegendRight = new Action("Place on &right", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -571,6 +584,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionLegendRight.setChecked(config.getLegendPosition() == GraphSettings.POSITION_RIGHT);
 		
 		actionLegendTop = new Action("Place on &top", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -581,6 +596,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionLegendTop.setChecked(config.getLegendPosition() == GraphSettings.POSITION_TOP);
 		
 		actionLegendBottom = new Action("Place on &bottom", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -589,12 +606,24 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 			}
 		};
 		actionLegendBottom.setChecked(config.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
+		
+		actionSave = new Action("&Save as predefined...", SharedIcons.SAVE) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void run()
+			{
+				saveGraph();
+			}
+		};
 
 		presetActions = new Action[presetRanges.length];
 		for(int i = 0; i < presetRanges.length; i++)
 		{
 			final Integer presetIndex = i;
 			presetActions[i] = new Action("Last " + presetNames[i]) {
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void run()
 				{
@@ -649,6 +678,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 		manager.add(new Separator());
+		manager.add(actionSave);
 		manager.add(actionProperties);
 	}
 
@@ -701,6 +731,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		manager.add(actionZoomIn);
 		manager.add(actionZoomOut);
 		manager.add(new Separator());
+		manager.add(actionSave);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -748,5 +780,13 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 	{
 		if (this.settings == settings)
 			configureGraphFromSettings();
+	}
+	
+	/**
+	 * Save this graph as predefined
+	 */
+	private void saveGraph()
+	{
+		
 	}
 }

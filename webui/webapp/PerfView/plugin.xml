@@ -151,7 +151,7 @@
       </page>
       <page
             class="org.netxms.ui.eclipse.perfview.propertypages.General"
-            id="org.netxms.ui.eclipse.perfview.propertypages.General#0"
+            id="org.netxms.ui.eclipse.perfview.propertypages.General#1"
             name="General">
          <enabledWhen>
             <instanceof
@@ -166,6 +166,16 @@
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.perfview.ChartConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.perfview.propertypages.PredefinedGraph"
+            id="org.netxms.ui.eclipse.perfview.propertypages.PredefinedGraph#0"
+            name="Predefined Graph">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.perfview.PredefinedChartConfig">
             </instanceof>
          </enabledWhen>
       </page>
