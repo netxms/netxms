@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.perfview.propertypages;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -31,7 +32,12 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.ChartConfig;
+import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -224,6 +230,36 @@ public class General extends PropertyPage
 		config.setAutoRefresh(checkAutoRefresh.getSelection());
 		config.setLogScale(checkLogScale.getSelection());
 		config.setRefreshRate(refreshIntervalSpinner.getSelection());
+		
+		if (config instanceof PredefinedChartConfig)
+		{
+			if (isApply)
+				setValid(false);
+
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			new ConsoleJob("Update predefined graph", null, Activator.PLUGIN_ID, null) {
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					setPrintException(true);
+					session.modifyPredefinedGraph(((PredefinedChartConfig)config).createServerSettings());
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
+						{
+							if (isApply)
+								General.this.setValid(true);
+						}
+					});
+				}
+				
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot update predefined graph";
+				}
+			}.start();
+		}
 	}
 	
 	/* (non-Javadoc)

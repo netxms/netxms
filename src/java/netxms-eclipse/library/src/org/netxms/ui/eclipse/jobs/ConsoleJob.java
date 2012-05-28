@@ -45,6 +45,7 @@ public abstract class ConsoleJob extends Job
 	private String pluginId;
 	private Object jobFamily;
 	private boolean passException = false;
+	private boolean printException = false;
 	
 	/**
 	 * Constructor for console job object
@@ -86,6 +87,8 @@ public abstract class ConsoleJob extends Job
 		}
 		catch(Exception e)
 		{
+			if (printException)
+				e.printStackTrace();
 			jobFailureHandler();
 			status = createFailureStatus(e);
 		}
@@ -210,5 +213,21 @@ public abstract class ConsoleJob extends Job
 	protected Display getDisplay()
 	{
 		return PlatformUI.getWorkbench().getDisplay();
+	}
+
+	/**
+	 * @return the printException
+	 */
+	public boolean isPrintException()
+	{
+		return printException;
+	}
+
+	/**
+	 * @param printException the printException to set
+	 */
+	public void setPrintException(boolean printException)
+	{
+		this.printException = printException;
 	}
 }

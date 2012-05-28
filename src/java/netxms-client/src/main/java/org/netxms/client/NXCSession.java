@@ -4974,7 +4974,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 */
 	public long modifyPredefinedGraph(GraphSettings graph) throws IOException, NXCException
 	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_GRAPH_LIST);
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DEFINE_GRAPH);
 		msg.setVariableInt32(NXCPCodes.VID_GRAPH_ID, (int)graph.getId());
 		msg.setVariable(NXCPCodes.VID_NAME, graph.getName());
 		msg.setVariable(NXCPCodes.VID_GRAPH_CONFIG, graph.getConfig());
@@ -4999,7 +4999,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 */
 	public void deletePredefinedGraph(long graphId) throws IOException, NXCException
 	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_GRAPH_LIST);
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_GRAPH);
 		msg.setVariableInt32(NXCPCodes.VID_GRAPH_ID, (int)graphId);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());

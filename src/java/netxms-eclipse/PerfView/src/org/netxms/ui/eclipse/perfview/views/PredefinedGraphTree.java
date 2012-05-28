@@ -53,7 +53,7 @@ import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
-import org.netxms.ui.eclipse.perfview.ChartConfig;
+import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeContentProvider;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -62,6 +62,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  * Navigation view for predefined graphs
  *
  */
+@SuppressWarnings("restriction")
 public class PredefinedGraphTree extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.perfview.views.PredefinedGraphTree";
@@ -306,7 +307,6 @@ public class PredefinedGraphTree extends ViewPart
 	/**
 	 * Edit predefined graph
 	 */
-	@SuppressWarnings("restriction")
 	private void editPredefinedGraph()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
@@ -314,14 +314,14 @@ public class PredefinedGraphTree extends ViewPart
 			return;
 		
 		GraphSettings settings = (GraphSettings)selection.getFirstElement();
-		ChartConfig config;
+		PredefinedChartConfig config;
 		try
 		{
-			config = ChartConfig.createFromXml(settings.getConfig());
+			config = PredefinedChartConfig.createFromServerConfig(settings);
 		}
 		catch(Exception e)
 		{
-			config = new ChartConfig();
+			config = new PredefinedChartConfig();
 		}
 		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, config);
 		if (dlg != null)

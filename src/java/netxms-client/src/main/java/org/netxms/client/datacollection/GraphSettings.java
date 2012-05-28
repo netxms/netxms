@@ -19,6 +19,7 @@
 package org.netxms.client.datacollection;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,6 +55,9 @@ public class GraphSettings
 	public static final int POSITION_TOP = 4;
 	public static final int POSITION_BOTTOM = 8;
 	
+	public static final int ACCESS_READ  = 0x01;
+	public static final int ACCESS_WRITE = 0x02;
+	
 	private long id;
 	private long ownerId;
 	private String name;
@@ -72,6 +76,20 @@ public class GraphSettings
 		name = "noname";
 		shortName = "noname";
 		accessList = new ArrayList<AccessListElement>(0);
+		config = "<chart></chart>";
+	}
+	
+	/**
+	 * Create settings
+	 */
+	public GraphSettings(long id, long ownerId, Collection<AccessListElement> accessList)
+	{
+		this.id = id;
+		this.ownerId = ownerId;
+		name = "noname";
+		shortName = "noname";
+		this.accessList = new ArrayList<AccessListElement>(accessList.size());
+		this.accessList.addAll(accessList);
 		config = "<chart></chart>";
 	}
 	
