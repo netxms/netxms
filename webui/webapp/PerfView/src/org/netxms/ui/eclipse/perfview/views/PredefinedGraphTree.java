@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.perfview.views;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -58,10 +59,10 @@ import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeContentProvider;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Navigation view for predefined graphs
- *
  */
 @SuppressWarnings("restriction")
 public class PredefinedGraphTree extends ViewPart
@@ -73,6 +74,7 @@ public class PredefinedGraphTree extends ViewPart
 	private RefreshAction actionRefresh;
 	private Action actionOpen; 
 	private Action actionProperties; 
+	private Action actionDelete; 
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -111,6 +113,8 @@ public class PredefinedGraphTree extends ViewPart
 					}
 				}
 				actionOpen.setEnabled(enabled);
+				actionDelete.setEnabled(enabled);
+				actionProperties.setEnabled(enabled);
 			}
 		});
 
@@ -142,6 +146,14 @@ public class PredefinedGraphTree extends ViewPart
 			public void run()
 			{
 				reloadGraphList();
+			}
+		};
+		
+		actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+			@Override
+			public void run()
+			{
+				deletePredefinedGraph();
 			}
 		};
 		
@@ -364,6 +376,49 @@ public class PredefinedGraphTree extends ViewPart
 				MessageDialog.openError(getSite().getShell(), "Internal Error", "Unexpected exception: " + e.getLocalizedMessage());
 			}
 			viewer.update(settings, null);
+		}
+	}
+
+	
+	/**
+	 * Delete predefined graph(s)
+	 */
+	private void deletePredefinedGraph()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() == 0)
+			return;
+		
+		if (!MessageDialog.openQuestion(getSite().getShell(), "Delete Predefined Graphs", "Selected predefined graphs will be deleted. Are you sure?"))
+			return;
+		
+		final List<GraphSettings> list = Arrays.asList((GraphSettings[])viewer.getInput());
+		for(final Object o : selection.toList())
+		{
+			if (!(o instanceof GraphSettings))
+				continue;
+			
+			new ConsoleJob("Delete predefined graph \"" + ((GraphSettings)o).getShortName() + "\"", null, Activator.PLUGIN_ID, null) {
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					session.deletePredefinedGraph(((GraphSettings)o).getId());
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
+						{
+							list.remove(o);
+							viewer.setInput(list.toArray());
+						}
+					});
+				}
+				
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot update predefined graph";
+				}
+			}.start();
 		}
 	}
 }
