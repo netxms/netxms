@@ -37,6 +37,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -326,7 +327,42 @@ public class PredefinedGraphTree extends ViewPart
 		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, config);
 		if (dlg != null)
 		{
-			dlg.open();
+			if (dlg.open() == Window.OK)
+			{
+				try
+				{
+					final GraphSettings s = config.createServerSettings();
+					new ConsoleJob("Update predefined graph", null, Activator.PLUGIN_ID, null) {
+						@Override
+						protected void runInternal(IProgressMonitor monitor) throws Exception
+						{
+							session.modifyPredefinedGraph(s);
+						}
+						
+						@Override
+						protected String getErrorMessage()
+						{
+							return "Cannot update predefined graph";
+						}
+					}.start();
+				}
+				catch(Exception e)
+				{
+					MessageDialog.openError(getSite().getShell(), "Internal Error", "Unexpected exception: " + e.getLocalizedMessage());
+				}
+			}
+			settings.setName(config.getName());
+			settings.getAccessList().clear();
+			settings.getAccessList().addAll(config.getAccessList());
+			try
+			{
+				settings.setConfig(config.createXml());
+			}
+			catch(Exception e)
+			{
+				MessageDialog.openError(getSite().getShell(), "Internal Error", "Unexpected exception: " + e.getLocalizedMessage());
+			}
+			viewer.update(settings, null);
 		}
 	}
 }

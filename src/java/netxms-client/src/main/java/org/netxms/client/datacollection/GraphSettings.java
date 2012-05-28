@@ -166,16 +166,10 @@ public class GraphSettings
 	public void setName(String name)
 	{
 		this.name = name;
+		String[] parts = name.split("->");
+		shortName = (parts.length > 1) ? parts[parts.length - 1] : name;
 	}
 
-	/**
-	 * @param shortName the shortName to set
-	 */
-	public void setShortName(String shortName)
-	{
-		this.shortName = shortName;
-	}
-	
 	/**
 	 * Add change listener
 	 * 

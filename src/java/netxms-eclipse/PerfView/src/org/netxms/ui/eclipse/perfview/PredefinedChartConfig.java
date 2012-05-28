@@ -16,7 +16,6 @@ public class PredefinedChartConfig extends ChartConfig
 	private long id;
 	private long ownerId;
 	private String name;
-	private String shortName;
 	private List<AccessListElement> accessList;
 	
 	/**
@@ -32,7 +31,6 @@ public class PredefinedChartConfig extends ChartConfig
 		config.id = serverConfig.getId();
 		config.ownerId = serverConfig.getOwnerId();
 		config.name = serverConfig.getName();
-		config.shortName = serverConfig.getShortName();
 		config.accessList.addAll(serverConfig.getAccessList());
 		return config;
 	}
@@ -45,7 +43,6 @@ public class PredefinedChartConfig extends ChartConfig
 		id = 0;
 		ownerId = 0;
 		name = "unnamed";
-		shortName = "unnamed";
 		accessList = new ArrayList<AccessListElement>();
 	}
 
@@ -59,7 +56,6 @@ public class PredefinedChartConfig extends ChartConfig
 	{
 		GraphSettings settings = new GraphSettings(id, ownerId, accessList);
 		settings.setName(name);
-		settings.setShortName(shortName);
 		settings.setConfig(createXml());
 		return settings;
 	}
@@ -110,22 +106,6 @@ public class PredefinedChartConfig extends ChartConfig
 	public void setName(String name)
 	{
 		this.name = name;
-	}
-
-	/**
-	 * @return the shortName
-	 */
-	public String getShortName()
-	{
-		return shortName;
-	}
-
-	/**
-	 * @param shortName the shortName to set
-	 */
-	public void setShortName(String shortName)
-	{
-		this.shortName = shortName;
 	}
 
 	/**

@@ -179,16 +179,6 @@
             </instanceof>
          </enabledWhen>
       </page>
-      <page
-            class="org.netxms.ui.eclipse.perfview.propertypages.AccessControl"
-            id="org.netxms.ui.eclipse.perfview.propertypages.AccessControl#30"
-            name="Access Control">
-         <enabledWhen>
-            <instanceof
-                  value="org.netxms.ui.eclipse.perfview.PredefinedChartConfig">
-            </instanceof>
-         </enabledWhen>
-      </page>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

@@ -231,24 +231,20 @@ public class General extends PropertyPage
 		config.setLogScale(checkLogScale.getSelection());
 		config.setRefreshRate(refreshIntervalSpinner.getSelection());
 		
-		if (config instanceof PredefinedChartConfig)
+		if ((config instanceof PredefinedChartConfig) && isApply)
 		{
-			if (isApply)
-				setValid(false);
-
+			setValid(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			new ConsoleJob("Update predefined graph", null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					setPrintException(true);
 					session.modifyPredefinedGraph(((PredefinedChartConfig)config).createServerSettings());
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{
-							if (isApply)
-								General.this.setValid(true);
+							General.this.setValid(true);
 						}
 					});
 				}
