@@ -602,6 +602,20 @@ typedef struct _dir_struc_w
 
 #endif
 
+#else	/* not _WIN32 */
+
+typedef struct dirent_w
+{
+   long            d_ino;  /* inode number */
+   WCHAR           d_name[257];    /* file name */
+} _DIRECTW;
+
+typedef struct _dir_struc_w
+{
+   DIR *dir;               /* Original non-unicode structure */
+   struct dirent_w dirstr; /* Directory structure to return */
+} DIRW;
+
 #endif   /* _WIN32 */
 
 
@@ -812,12 +826,10 @@ extern "C"
 	UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2__tcsdup(const UCS2CHAR *pStr);
 #endif
 
-#ifndef UNICODE
 	size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
 	size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen);
 	UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromMBString(const char *pszString);
 	char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *pszString);
-#endif
 
 #ifdef UNICODE
 	int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...);
@@ -916,6 +928,12 @@ extern "C"
     DIR LIBNETXMS_EXPORTABLE *opendir(const char *filename);
     struct dirent LIBNETXMS_EXPORTABLE *readdir(DIR *dirp);
     int LIBNETXMS_EXPORTABLE closedir(DIR *dirp);
+
+#else	/* not _WIN32 */
+
+    DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *filename);
+    struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *dirp);
+    int LIBNETXMS_EXPORTABLE wclosedir(DIRW *dirp);
 
 #endif
 

@@ -1765,7 +1765,7 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 		}
 	}
 #else
-	fputs(text, stdout);
+	_fputts(text, stdout);
 #endif
 }
 

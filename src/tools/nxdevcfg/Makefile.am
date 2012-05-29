@@ -13,3 +13,7 @@ INCLUDES=-I@top_srcdir@/include
 bin_PROGRAMS = nxdevcfg
 nxdevcfg_SOURCES = nxdevcfg.cpp
 nxdevcfg_LDADD = ../../libnetxms/libnetxms.la
+
+if USE_INTERNAL_LIBTRE
+nxdevcfg_LDADD += ../../libtre/libnxtre.la
+endif

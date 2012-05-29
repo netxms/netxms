@@ -14,4 +14,8 @@ bin_PROGRAMS = nxscript
 nxscript_SOURCES = class.cpp nxscript.cpp
 nxscript_LDADD = ../libnetxms/libnetxms.la ../libnxsl/libnxsl.la
 
+if USE_INTERNAL_LIBTRE
+nxscript_LDADD += ../libtre/libnxtre.la
+endif
+
 EXTRA_DIST = nxscript.vcproj nxscript.h

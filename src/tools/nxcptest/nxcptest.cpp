@@ -36,16 +36,16 @@
 // Help text
 //
 
-static char m_szHelpText[] =
-   "NetXMS Communication Protocol Tester  Version " NETXMS_VERSION_STRING "\n"
-   "Copyright (c) 2008 Victor Kirhenshtein\n\n"
-   "Usage:\n"
-   "   nxcptest [options] host\n\n"
-   "Where valid options are:\n"
-   "   -h         : Show this help\n"
-	"   -p port    : Port to connect (default 4700)\n"
-   "   -v         : Show version and exit\n"
-   "\n";
+static TCHAR m_szHelpText[] =
+   _T("NetXMS Communication Protocol Tester  Version ") NETXMS_VERSION_STRING _T("\n")
+   _T("Copyright (c) 2008 Victor Kirhenshtein\n\n")
+   _T("Usage:\n")
+   _T("   nxcptest [options] host\n\n")
+   _T("Where valid options are:\n")
+   _T("   -h         : Show this help\n")
+	_T("   -p port    : Port to connect (default 4700)\n")
+   _T("   -v         : Show version and exit\n")
+   _T("\n");
 
 
 //
@@ -96,7 +96,7 @@ static THREAD_RESULT THREAD_CALL RecvThread(void *arg)
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
       {
-         printf("RECV ERROR: Actual message size doesn't match wSize value (%d,%d)\n", iErr, ntohl(pRawMsg->dwSize));
+         _tprintf(_T("RECV ERROR: Actual message size doesn't match wSize value (%d,%d)\n"), iErr, ntohl(pRawMsg->dwSize));
          continue;   // Bad packet, wait for next
       }
 
@@ -118,9 +118,9 @@ static THREAD_RESULT THREAD_CALL RecvThread(void *arg)
       }
    }
    if (iErr < 0)
-      printf("Session terminated (socket error %d)\n", WSAGetLastError());
+      _tprintf(_T("Session terminated (socket error %d)\n"), WSAGetLastError());
 	else
-		printf("Session closed\n");
+		_tprintf(_T("Session closed\n"));
 	free(pMsgBuffer);
 	free(pRawMsg);
 #ifdef _WITH_ENCRYPTION
@@ -139,7 +139,7 @@ static BOOL ReadXML(String &xml)
 {
 	char buffer[8192];
 
-	xml = "";
+	xml = _T("");
 	while(1)
 	{
 		fgets(buffer, 8192, stdin);
@@ -164,7 +164,7 @@ static void Exchange(SOCKET hSocket)
 	CSCP_MESSAGE *rawMsg;
 
 	ThreadCreate(RecvThread, 0, (void *)hSocket);
-	printf("Enter XML messages separated by %%%% string\n");
+	_tprintf(_T("Enter XML messages separated by %%%% string\n"));
 	while(1)
 	{
 		if (!ReadXML(xml))
@@ -174,7 +174,7 @@ static void Exchange(SOCKET hSocket)
 		delete msg;
 		if ((DWORD)SendEx(hSocket, rawMsg, ntohl(rawMsg->dwSize), 0, NULL) != ntohl(rawMsg->dwSize))
 		{
-			printf("Error sending message\n");
+			_tprintf(_T("Error sending message\n"));
 			free(rawMsg);
 			break;
 		}
@@ -201,11 +201,11 @@ int main(int argc, char *argv[])
       switch(ch)
       {
          case 'h':
-				printf(m_szHelpText);
+				_tprintf(m_szHelpText);
             return 0;
          case 'v':
-				printf("NetXMS Communication Protocol Tester  Version " NETXMS_VERSION_STRING "\n"
-				       "Copyright (c) 2008 Victor Kirhenshtein\n\n");
+				_tprintf(_T("NetXMS Communication Protocol Tester  Version ") NETXMS_VERSION_STRING _T("\n")
+				       _T("Copyright (c) 2008 Victor Kirhenshtein\n\n"));
             return 0;
 			case 'p':
 				port = strtol(optarg, NULL, 0);
@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
    // Fill in address structure
    memset(&sa, 0, sizeof(sa));
    sa.sin_family = AF_INET;
-   sa.sin_addr.s_addr = ResolveHostName(argv[optind]);
+   sa.sin_addr.s_addr = ResolveHostNameA(argv[optind]);
    sa.sin_port = htons((WORD)port);
 	if ((sa.sin_addr.s_addr == INADDR_ANY) || (sa.sin_addr.s_addr == INADDR_NONE))
 	{

@@ -26,6 +26,14 @@
 
 static const double ROUND_OFF = 0.00000001;
 
+#ifdef UNICODE
+#define DEGREE_SIGN_CHR L'\x00B0'
+#define DEGREE_SIGN_STR L"\x00B0"
+#else
+#define DEGREE_SIGN_CHR '\xF8'
+#define DEGREE_SIGN_STR "\xF8"
+#endif
+
 
 //
 // Default constructor - create location of type UNSET
@@ -167,7 +175,7 @@ void GeoLocation::posToString(bool isLat, double pos)
 {
 	TCHAR *buffer = isLat ? m_latStr : m_lonStr;
 
-	// Chack range
+	// Check range
 	if ((pos < -180.0) || (pos > 180.0))
 	{
 		_tcscpy(buffer, _T("<invalid>"));
@@ -186,7 +194,7 @@ void GeoLocation::posToString(bool isLat, double pos)
 	buffer++;
 	*buffer++ = _T(' ');
 
-	_sntprintf(buffer, 18, _T("%02d° %02d' %02.3f\""), getIntegerDegree(pos), getIntegerMinutes(pos), getDecimalSeconds(pos));
+	_sntprintf(buffer, 18, _T("%02d") DEGREE_SIGN_STR _T(" %02d' %02.3f\""), getIntegerDegree(pos), getIntegerMinutes(pos), getDecimalSeconds(pos));
 }
 
 
@@ -212,7 +220,7 @@ double GeoLocation::parse(const TCHAR *str, bool isLat, bool *isValid)
 	else   // If not a valid double, check if it's in DMS form
 	{
 		// Check for invalid characters
-		if (_tcsspn(in, isLat ? _T("0123456789.°'\" NS") : _T("0123456789.°'\" EW")) == _tcslen(in))
+		if (_tcsspn(in, isLat ? _T("0123456789.'\" NS") DEGREE_SIGN_STR : _T("0123456789.'\" EW") DEGREE_SIGN_STR) == _tcslen(in))
 		{
 			TCHAR *curr = in;
 
@@ -236,7 +244,7 @@ double GeoLocation::parse(const TCHAR *str, bool isLat, bool *isValid)
 			deg = _tcstod(curr, &eptr);
 			if (*eptr == 0)	// End of string
 				goto finish_parsing;
-			if ((*eptr != _T('°')) && (*eptr != _T(' ')))
+			if ((*eptr != DEGREE_SIGN_CHR) && (*eptr != _T(' ')))
 				goto cleanup;	// Unexpected character
 			curr = eptr + 1;
 			while(*curr == _T(' '))

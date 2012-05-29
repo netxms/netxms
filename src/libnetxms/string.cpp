@@ -139,10 +139,10 @@ void String::addFormattedStringV(const TCHAR *format, va_list args)
    va_end(argsCopy);
 #else
 	// No way to determine required buffer size, guess
-	len = wcslen(format) + CharCount(format, L'%') * 1000 + 1;
+	len = wcslen(format) + NumCharsW(format, L'%') * 1000 + 1;
    buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
 
-   vsnwprintf(buffer, len, format, args);
+   vswprintf(buffer, len, format, args);
 #endif
 
 #else		/* UNICODE */

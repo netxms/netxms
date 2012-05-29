@@ -719,7 +719,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *
 #endif	/* UNICODE_UCS4 */
 
 
-#if !defined(_WIN32) && !defined(UNICODE)
+#if !defined(_WIN32)
 
 //
 // Convert UCS-2 to multibyte
@@ -885,7 +885,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *pszString)
 }
 #endif
 
-#endif	/* !defined(_WIN32) && !defined(UNICODE) */
+#endif	/* !defined(_WIN32) */
 
 
 //
