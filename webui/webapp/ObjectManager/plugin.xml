@@ -460,6 +460,17 @@
                menubarPath="objectcreation">
          </action>
       </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Interface"
+            objectClass="org.netxms.client.objects.Interface">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.ChangeInterfaceExpectedState"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.changeInterfaceExpectedState"
+               label="Change interface e&amp;xpected state..."
+               menubarPath="objectmgmt">
+         </action>
+      </objectContribution>
    </extension>
    <extension
          point="org.eclipse.ui.views">

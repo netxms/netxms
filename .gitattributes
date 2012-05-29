@@ -2942,6 +2942,7 @@ webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/Activator.jav
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/AbstractNodePoll.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/AddClusterNode.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/BindObject.java -text
+webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/ChangeInterfaceExpectedState.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/ChangeZone.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/ConfigurationPoll.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateCluster.java -text
@@ -2968,6 +2969,7 @@ webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/Creat
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateNodeDialog.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateZoneDialog.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/EditClusterResourceDialog.java -text
+webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/SetInterfaceExpStateDlg.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/ZoneSelectionDialog.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AccessControl.java -text
 webui/webapp/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AutoApply.java -text
