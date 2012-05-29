@@ -46,6 +46,16 @@ public class SetInterfaceExpStateDlg extends Dialog
 	}
 
 	/* (non-Javadoc)
+	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+	 */
+	@Override
+	protected void configureShell(Shell newShell)
+	{
+		super.configureShell(newShell);
+		newShell.setText("Set Interface Expected State");
+	}
+
+	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override

@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.console.preferencepages;
 
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -64,6 +66,30 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 		cbHideWhenMinimized = new Button(dialogArea, SWT.CHECK);
 		cbHideWhenMinimized.setText(Messages.getString("WorkbenchGeneralPrefs.HideWhenMinimized")); //$NON-NLS-1$
 		cbHideWhenMinimized.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WHEN_MINIMIZED")); //$NON-NLS-1$
+		cbHideWhenMinimized.setEnabled(cbShowTrayIcon.getSelection());
+		
+		cbShowTrayIcon.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				if (cbShowTrayIcon.getSelection())
+				{
+					cbHideWhenMinimized.setEnabled(true);
+				}
+				else
+				{
+					cbHideWhenMinimized.setEnabled(false);
+					cbHideWhenMinimized.setSelection(false);
+				}
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
+		
 		
 		return dialogArea;
 	}
@@ -98,7 +124,7 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 	{
 		getPreferenceStore().setValue("SHOW_MEMORY_MONITOR", cbShowHeapMonitor.getSelection()); //$NON-NLS-1$
 		Activator.getDefault().getPreferenceStore().setValue("SHOW_TRAY_ICON", cbShowTrayIcon.getSelection()); //$NON-NLS-1$
-		Activator.getDefault().getPreferenceStore().setValue("HIDE_WHEN_MINIMIZED", cbHideWhenMinimized.getSelection()); //$NON-NLS-1$
+		Activator.getDefault().getPreferenceStore().setValue("HIDE_WHEN_MINIMIZED", cbHideWhenMinimized.getSelection() && cbShowTrayIcon.getSelection()); //$NON-NLS-1$
 		
 		if (cbShowTrayIcon.getSelection())
 			Activator.showTrayIcon();
