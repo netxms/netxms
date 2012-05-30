@@ -1994,6 +1994,7 @@ src/libexpat/expat_config.h -text
 src/libexpat/libexpat/Makefile.am -text
 src/libexpat/libexpat/libexpat.vcproj -text
 src/libexpat/vms/descrip.mms -text
+src/libnetxms/dirw_unix.c -text
 src/libnetxms/libnetxms.vcproj -text
 src/libnetxms/libnetxmsw.vcproj -text
 src/libnxcl/libnxcl.vcp eol=crlf
