@@ -91,6 +91,9 @@ public class AlarmList extends Composite
 	private Action actionCopy;
 	private Action actionCopyMessage;
 	private Action actionComments;
+	private Action actionAcknowledge;
+	private Action actionStickyAcknowledge;
+	private Action actionTerminate;
 	
 	/**
 	 * Create alarm list widget
@@ -303,6 +306,30 @@ public class AlarmList extends Composite
 				openComments();
 			}
 		};
+
+		actionAcknowledge = new Action("&Acknowledge", Activator.getImageDescriptor("icons/acknowledged.png")) {
+			@Override
+			public void run()
+			{
+				acknowledgeAlarms(false);
+			}
+		};
+
+		actionStickyAcknowledge = new Action("&Sticky acknowledge") {
+			@Override
+			public void run()
+			{
+				acknowledgeAlarms(true);
+			}
+		};
+
+		actionTerminate = new Action("&Terminate", Activator.getImageDescriptor("icons/terminated.png")) {
+			@Override
+			public void run()
+			{
+				terminateAlarms();
+			}
+		};
 	}
 
 	/**
@@ -313,8 +340,7 @@ public class AlarmList extends Composite
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
 			private static final long serialVersionUID = 1L;
 
 			public void menuAboutToShow(IMenuManager mgr)
@@ -338,6 +364,10 @@ public class AlarmList extends Composite
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
+		manager.add(actionAcknowledge);
+		manager.add(actionStickyAcknowledge);
+		manager.add(actionTerminate);
+		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
 
@@ -426,5 +456,75 @@ public class AlarmList extends Composite
 		{
 			MessageDialog.openError(getShell(), "Error", "Unable to open alarm comments view: " + e.getLocalizedMessage());
 		}
+	}
+	
+	/**
+	 * Acknowledge selected alarms
+	 * 
+	 * @param sticky
+	 */
+	private void acknowledgeAlarms(final boolean sticky)
+	{
+		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+		if (selection.size() == 0)
+			return;
+		
+		final Object[] alarms = selection.toArray();
+		new ConsoleJob(Messages.AcknowledgeAlarm_JobName, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				monitor.beginTask(Messages.AcknowledgeAlarm_TaskName, alarms.length);
+				for(Object o : alarms)
+				{
+					if (monitor.isCanceled())
+						break;
+					if (o instanceof Alarm)
+						session.acknowledgeAlarm(((Alarm)o).getId(), sticky);
+					monitor.worked(1);
+				}
+				monitor.done();
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return Messages.AcknowledgeAlarm_ErrorMessage;
+			}
+		}.start();
+	}
+	
+	/**
+	 * Terminate selected alarms
+	 */
+	private void terminateAlarms()
+	{
+		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+		if (selection.size() == 0)
+			return;
+		
+		final Object[] alarms = selection.toArray();
+		new ConsoleJob(Messages.TerminateAlarm_JobTitle, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				monitor.beginTask(Messages.TerminateAlarm_TaskName, alarms.length);
+				for(Object o : alarms)
+				{
+					if (monitor.isCanceled())
+						break;
+					if (o instanceof Alarm)
+						session.terminateAlarm(((Alarm)o).getId());
+					monitor.worked(1);
+				}
+				monitor.done();
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return Messages.TerminateAlarm_ErrorMessage;
+			}
+		}.start();
 	}
 }
