@@ -198,9 +198,11 @@ typedef void * NXC_SESSION;
 // Alarm states
 //
 
-#define ALARM_STATE_OUTSTANDING  0
-#define ALARM_STATE_ACKNOWLEDGED 1
-#define ALARM_STATE_TERMINATED   2
+#define ALARM_STATE_OUTSTANDING  0x00
+#define ALARM_STATE_ACKNOWLEDGED 0x01
+#define ALARM_STATE_TERMINATED   0x02
+#define ALARM_STATE_MASK         0x0F		/* mask for selecting alarm state */
+#define ALARM_STATE_STICKY       0x10		/* bit flag indicating sticky state */
 
 
 //

@@ -796,7 +796,7 @@ typedef struct
 #define VID_TOKEN_HARDLIMIT         ((DWORD)317)
 #define VID_USE_IFXTABLE            ((DWORD)318)
 #define VID_USE_X509_KEY_FORMAT     ((DWORD)319)
-//#define VID_ENABLE_AUTO_BIND        ((DWORD)320)
+#define VID_STICKY_FLAG             ((DWORD)320)
 #define VID_AUTOBIND_FILTER         ((DWORD)321)
 #define VID_BASE_UNITS              ((DWORD)322)
 #define VID_MULTIPLIER              ((DWORD)323)

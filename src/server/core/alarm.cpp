@@ -46,7 +46,7 @@ void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
    pMsg->SetVariable(VID_LAST_CHANGE_TIME, pAlarm->dwLastChangeTime);
    pMsg->SetVariable(VID_ALARM_KEY, pAlarm->szKey);
    pMsg->SetVariable(VID_ALARM_MESSAGE, pAlarm->szMessage);
-   pMsg->SetVariable(VID_STATE, (WORD)pAlarm->nState);
+   pMsg->SetVariable(VID_STATE, (WORD)(pAlarm->nState & ALARM_STATE_MASK));	// send only state to client, without flags
    pMsg->SetVariable(VID_CURRENT_SEVERITY, (WORD)pAlarm->nCurrentSeverity);
    pMsg->SetVariable(VID_ORIGINAL_SEVERITY, (WORD)pAlarm->nOriginalSeverity);
    pMsg->SetVariable(VID_HELPDESK_STATE, (WORD)pAlarm->nHelpDeskState);
@@ -193,17 +193,18 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
    pszExpKey = pEvent->expandText(pszKey);
 
    // Check if we have a duplicate alarm
-   if ((nState != ALARM_STATE_TERMINATED) && (*pszExpKey != 0))
+   if (((nState & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED) && (*pszExpKey != 0))
    {
       lock();
 
       for(i = 0; i < m_dwNumAlarms; i++)
-         if (!_tcscmp(pszExpKey, m_pAlarmList[i].szKey))
+			if (!_tcscmp(pszExpKey, m_pAlarmList[i].szKey))
          {
             m_pAlarmList[i].dwRepeatCount++;
             m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
             m_pAlarmList[i].dwSourceObject = pEvent->getSourceId();
-            m_pAlarmList[i].nState = nState;
+				if ((m_pAlarmList[i].nState & ALARM_STATE_STICKY) == 0)
+					m_pAlarmList[i].nState = nState;
             m_pAlarmList[i].nCurrentSeverity = iSeverity;
 				m_pAlarmList[i].dwTimeout = dwTimeout;
 				m_pAlarmList[i].dwTimeoutEvent = dwTimeoutEvent;
@@ -241,7 +242,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
       nx_strncpy(alarm.szKey, pszExpKey, MAX_DB_STRING);
 
       // Add new alarm to active alarm list if needed
-      if (alarm.nState != ALARM_STATE_TERMINATED)
+		if ((alarm.nState & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
       {
          lock();
 
@@ -277,7 +278,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
    }
 
    // Update status of related object if needed
-   if ((dwObjectId != 0) && (alarm.nState != ALARM_STATE_TERMINATED))
+   if ((dwObjectId != 0) && ((alarm.nState & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED))
       updateObjectStatus(dwObjectId);
 
 	free(pszExpMsg);
@@ -289,7 +290,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 // Acknowledge alarm with given ID
 //
 
-DWORD AlarmManager::ackById(DWORD dwAlarmId, DWORD dwUserId)
+DWORD AlarmManager::ackById(DWORD dwAlarmId, DWORD dwUserId, bool sticky)
 {
    DWORD i, dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
@@ -297,9 +298,11 @@ DWORD AlarmManager::ackById(DWORD dwAlarmId, DWORD dwUserId)
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
-         if (m_pAlarmList[i].nState == ALARM_STATE_OUTSTANDING)
+         if ((m_pAlarmList[i].nState & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING)
          {
             m_pAlarmList[i].nState = ALARM_STATE_ACKNOWLEDGED;
+				if (sticky)
+	            m_pAlarmList[i].nState |= ALARM_STATE_STICKY;
             m_pAlarmList[i].dwAckByUser = dwUserId;
             m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
             dwObject = m_pAlarmList[i].dwSourceObject;
@@ -662,7 +665,7 @@ void AlarmManager::watchdogThread()
 	   for(i = 0; i < m_dwNumAlarms; i++)
 		{
 			if ((m_pAlarmList[i].dwTimeout > 0) &&
-				 (m_pAlarmList[i].nState == ALARM_STATE_OUTSTANDING) &&
+				 ((m_pAlarmList[i].nState & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING) &&
 				 (((time_t)m_pAlarmList[i].dwLastChangeTime + (time_t)m_pAlarmList[i].dwTimeout) < now))
 			{
 				DbgPrintf(5, _T("Alarm timeout: alarm_id=%d, last_change=%d, timeout=%d, now=%d"),

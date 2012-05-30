@@ -55,27 +55,6 @@
       </key>
    </extension>
 
-   <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.Alarm"
-            objectClass="org.netxms.client.events.Alarm">
-         <action
-               class="org.netxms.ui.eclipse.alarmviewer.actions.TerminateAlarm"
-               id="org.netxms.ui.eclipse.alarmviewer.popupActions.TerminateAlarm"
-               label="%action.terminate"
-   		       icon="icons/terminated.png"
-               menubarPath="additions">
-         </action>
-         <action
-               class="org.netxms.ui.eclipse.alarmviewer.actions.AcknowledgeAlarm"
-               icon="icons/acknowledged.png"
-               id="org.netxms.ui.eclipse.alarmviewer.popupActions.AcknowledgeAlarm"
-               label="%action.acknowledge"
-               menubarPath="additions">
-         </action>
-      </objectContribution>
-   </extension>
 
    <extension
          point="org.netxms.ui.eclipse.objectview.tabs">

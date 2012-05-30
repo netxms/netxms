@@ -2036,15 +2036,29 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * Acknowledge alarm.
 	 * 
 	 * @param alarmId Identifier of alarm to be acknowledged.
+	 * @param sticky if set to true, acknowledged state will be made "sticky" (duplicate alarms with same key will not revert it back to outstanding)
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void acknowledgeAlarm(final long alarmId, boolean sticky) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_ACK_ALARM);
+		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+		msg.setVariableInt16(NXCPCodes.VID_STICKY_FLAG, sticky ? 1 : 0);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	/**
+	 * Acknowledge alarm.
+	 * 
+	 * @param alarmId Identifier of alarm to be acknowledged.
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void acknowledgeAlarm(final long alarmId) throws IOException, NXCException
 	{
-		NXCPMessage msg = newMessage(NXCPCodes.CMD_ACK_ALARM);
-		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
-		sendMessage(msg);
-		waitForRCC(msg.getMessageId());
+		acknowledgeAlarm(alarmId, false);
 	}
 
 	/**

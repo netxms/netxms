@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Alarm Viewer Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.alarmviewer;singleton:=true
-Bundle-Version: 1.2.0
+Bundle-Version: 1.2.1
 Bundle-Activator: org.netxms.ui.eclipse.alarmviewer.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui,

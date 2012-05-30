@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ public:
    BOOL init();
    void newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 	              int iSeverity, DWORD dwTimeout, DWORD dwTimeoutEvent, Event *pEvent);
-   DWORD ackById(DWORD dwAlarmId, DWORD dwUserId);
+   DWORD ackById(DWORD dwAlarmId, DWORD dwUserId, bool sticky);
    DWORD terminateById(DWORD dwAlarmId, DWORD dwUserId);
    void terminateByKey(const TCHAR *key, bool useRegexp);
    void deleteAlarm(DWORD dwAlarmId);
