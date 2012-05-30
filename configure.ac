@@ -300,16 +300,6 @@ AC_ARG_WITH(openssl,
 	REQUIRE_ENCRYPTION="yes"
 ])
 
-AC_ARG_WITH(gd,
-[AS_HELP_STRING(--with-gd,specify GD location)],
-[
-	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"    
-		LDFLAGS="$LDFLAGS -L${withval}/lib"
-		CPPFLAGS="$CPPFLAGS -I${withval}/include"
-	fi
-])
-
 AC_ARG_ENABLE(iconv,
 [AS_HELP_STRING(--disable-iconv,do not use iconv() for text conversions)],
 [
