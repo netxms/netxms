@@ -336,7 +336,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools"
-	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle"
+	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
 	CONTRIB_MODULES="mibs backgrounds"
@@ -1078,6 +1078,15 @@ if test "x$HAVE_LIBTRE" = "xno"; then
 
 	AC_DEFINE(TRE_REGEX_T_FIELD,value,[Define to a field in the regex_t struct where TRE should store a pointer to the internal tre_tnfa_t structure])
 	AC_DEFINE(TRE_APPROX, 1, [ Define if you want to enable approximate matching functionality. ])
+fi
+
+HAVE_LMSENSORS=yes
+AC_CHECK_HEADER(sensors/sensors.h,,HAVE_LMSENSORS=no)
+if test "x$HAVE_LMSENSORS" = "xyes"; then
+   AC_CHECK_LIB(sensors, sensors_init, [ DUMMY="" ], [ HAVE_LMSENSORS=no ])
+fi
+if test "x$HAVE_LMSENSORS" = "xyes"; then
+	SUBAGENT_DIRS="$SUBAGENT_DIRS lmsensors"
 fi
 
 #--------------------------------------------------------------------
@@ -2026,6 +2035,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/wmi/Makefile
+	src/agent/subagents/lmsensors/Makefile
 	src/agent/tools/Makefile
 	src/agent/tools/nxapush/Makefile
 	src/client/Makefile
