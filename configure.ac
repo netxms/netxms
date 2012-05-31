@@ -2116,7 +2116,6 @@ AC_CONFIG_FILES([
 	src/snmp/nxsnmpwalk/Makefile
 	src/sqlite/Makefile
 	src/tools/Makefile
-	src/tools/nxcptest/Makefile
 	src/tools/nxdevcfg/Makefile
 	src/zlib/Makefile
 	sql/Makefile

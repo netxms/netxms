@@ -9,4 +9,4 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
-EXTRA_DIST = netxmsd nxagentd nxhttpd
+EXTRA_DIST = netxmsd nxagentd
