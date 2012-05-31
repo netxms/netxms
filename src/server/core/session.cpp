@@ -10618,10 +10618,10 @@ void ClientSession::sendUsmCredentials(DWORD dwRqId)
 				msg.SetVariable(id++, (WORD)DBGetFieldLong(hResult, i, 1));	// auth method
 				msg.SetVariable(id++, (WORD)DBGetFieldLong(hResult, i, 2));	// priv method
 
-				DBGetField(hResult, i, 0, buffer, MAX_DB_STRING);	// auth password
+				DBGetField(hResult, i, 3, buffer, MAX_DB_STRING);	// auth password
 				msg.SetVariable(id++, buffer);
 
-				DBGetField(hResult, i, 0, buffer, MAX_DB_STRING);	// priv password
+				DBGetField(hResult, i, 4, buffer, MAX_DB_STRING);	// priv password
 				msg.SetVariable(id++, buffer);
 			}
 			DBFreeResult(hResult);

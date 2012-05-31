@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SMS driver for Portech MV-37x VoIP GSM gateways
-** Copyright (C) 2011 Victor Kirhenshtein
+** Copyright (C) 2011-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -92,19 +92,19 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *options)
 
 static bool DoLogin(SocketConnection *conn)
 {
-	if (!conn->waitForText("username: ", 2000))
+	if (!conn->waitForText("username: ", 5000))
 		return false;
 
 	if (!conn->writeLine(s_login))
 		return false;
 
-	if (!conn->waitForText("password: ", 2000))
+	if (!conn->waitForText("password: ", 5000))
 		return false;
 
 	if (!conn->writeLine(s_password))
 		return false;
 
-	if (!conn->waitForText("]", 2000))
+	if (!conn->waitForText("]", 5000))
 		return false;
 
 	if (!conn->writeLine("module"))
@@ -144,30 +144,30 @@ static BOOL SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const 
 	DbgPrintf(3, _T("Sending SMS (text mode): rcpt=\"%s\" text=\"%s\""), pszPhoneNumber, pszText);
 	
 	__chk(conn->writeLine("ATZ"));	// init modem
-	__chk(conn->waitForText("OK", 2000));
+	__chk(conn->waitForText("OK", 5000));
 	DbgPrintf(4, _T("SMS: ATZ sent"));
 
 	ThreadSleep(1);
 	__chk(conn->write("\r\n", 2));		// empty string, otherwise ATE0 may fail
 	__chk(conn->writeLine("ATE0"));	// disable echo
-	__chk(conn->waitForText("OK", 2000));
+	__chk(conn->waitForText("OK", 5000));
 	DbgPrintf(4, _T("SMS: ATE0 sent"));
 
 	ThreadSleep(1);
 	__chk(conn->writeLine("AT+CMGF=1"));	// text mode
-	__chk(conn->waitForText("OK", 2000));
+	__chk(conn->waitForText("OK", 5000));
 	DbgPrintf(4, _T("SMS: AT+CMGF=1 sent"));
 
 #ifdef UNICODE
 	char mbPhoneNumber[256];
 	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszPhoneNumber, -1, mbPhoneNumber, 256, NULL, NULL);
 	mbPhoneNumber[255] = 0;
-	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=\"%s\"\r\n", mbPhoneNumber);
+	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%s\r\n", mbPhoneNumber);
 #else
-	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
+	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%s\r\n", pszPhoneNumber);
 #endif
 	__chk(conn->writeLine(szTmp));	// set number
-	__chk(conn->waitForText(">", 2000));
+	__chk(conn->waitForText(">", 5000));
 
 #ifdef UNICODE
 	char mbText[161];
@@ -178,7 +178,7 @@ static BOOL SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const 
 	snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pszText, 0x1A);
 #endif
 	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0); // send text, end with ^Z
-	__chk(conn->waitForText("+CMGS", 5000));
+	__chk(conn->waitForText("+CMGS", 10000));
 	__chk(conn->waitForText("OK", 2000));
 	DbgPrintf(4, _T("SMS sent successfully"));
 
@@ -211,18 +211,18 @@ static BOOL SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const T
 #endif
 
 	__chk(conn->writeLine("ATZ"));	// init modem
-	__chk(conn->waitForText("OK", 2000));
+	__chk(conn->waitForText("OK", 5000));
 	DbgPrintf(4, _T("SMS: ATZ sent"));
 
 	ThreadSleep(1);
 	__chk(conn->write("\r\n", 2));		// empty string, otherwise ATE0 may fail
 	__chk(conn->writeLine("ATE0"));	// disable echo
-	__chk(conn->waitForText("OK", 2000));
+	__chk(conn->waitForText("OK", 5000));
 	DbgPrintf(4, _T("SMS: ATE0 sent"));
 
 	ThreadSleep(1);
 	__chk(conn->writeLine("AT+CMGF=0"));	// text mode
-	__chk(conn->waitForText("OK", 2000));
+	__chk(conn->waitForText("OK", 5000));
 	DbgPrintf(4, _T("SMS: AT+CMGF=0 sent"));
 
 	char pduBuffer[bufferSize];
@@ -257,6 +257,7 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 	conn = SocketConnection::createTCPConnection(s_hostName, 23, 10000);
 	if (conn != NULL)
 	{
+		conn->write("\xFF\xFE\x01\xFF\xFC\x01", 6);
 		if (DoLogin(conn))
 		{
 			success = (s_mode == OM_PDU) ? SendPDU(conn, pszPhoneNumber, pszText) : SendText(conn, pszPhoneNumber, pszText);

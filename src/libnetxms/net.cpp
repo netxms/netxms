@@ -159,12 +159,12 @@ bool SocketConnection::waitForText(const char *text, int timeout)
 	{
 		int index = (int)(p - m_data);
 		m_dataPos = bufLen - (index + textLen);
-		memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos);
+		memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos + 1);
 		return true;
 	}
 
 	m_dataPos = min(bufLen, textLen - 1);
-	memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos);
+	memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos + 1);
 
 	while(1)
 	{
