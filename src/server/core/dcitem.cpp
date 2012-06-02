@@ -222,9 +222,18 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		TCHAR query[1024];
 
-		_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u ")
-			_T("WHERE item_id=? and idata_timestamp between ? and ?"), sqlFunc == DCI_MAX ? _T("max"): (sqlFunc == DCI_MIN ? _T("min") : _T("avg")),
-			node->Id());
+		if (g_nDBSyntax == DB_SYNTAX_ORACLE)
+		{
+			_sntprintf(query, 1024, _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u ")
+				_T("WHERE item_id=? and idata_timestamp between ? and ?"), 
+				sqlFunc == DCI_MAX ? _T("max"): (sqlFunc == DCI_MIN ? _T("min") : _T("avg")), node->Id());
+		}
+		else
+		{
+			_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u ")
+				_T("WHERE item_id=? and idata_timestamp between ? and ?"), 
+				sqlFunc == DCI_MAX ? _T("max"): (sqlFunc == DCI_MIN ? _T("min") : _T("avg")),	node->Id());
+		}
 
 		DB_STATEMENT hStmt = DBPrepare(hdb, query);
 		if (hStmt != NULL)
