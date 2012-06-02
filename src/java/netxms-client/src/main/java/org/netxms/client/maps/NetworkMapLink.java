@@ -28,6 +28,7 @@ public class NetworkMapLink
 	// Link types
 	public static final int NORMAL = 0;
 	public static final int VPN = 1;
+	public static final int MULTILINK = 2;
 	
 	private String name;
 	private int type;

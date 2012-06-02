@@ -32,27 +32,30 @@ void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth)
 	topology.AddObject(root->Id());
 
 	LinkLayerNeighbors *nbs = root->getLinkLayerNeighbors();
-	if (nbs != NULL)
+	if (nbs == NULL)
+		return;
+
+	for(int i = 0; i < nbs->getSize(); i++)
 	{
-		for(int i = 0; i < nbs->getSize(); i++)
+		LL_NEIGHBOR_INFO *info = nbs->getConnection(i);
+		if (info != NULL)
 		{
-			LL_NEIGHBOR_INFO *info = nbs->getConnection(i);
-			if (info != NULL)
+			Node *node = (Node *)FindObjectById(info->objectId);
+			if ((node != NULL) && (nDepth > 0))
 			{
-				Node *node = (Node *)FindObjectById(info->objectId);
-				if ((node != NULL) && (nDepth > 0))
-				{
-					BuildL2Topology(topology, node, nDepth - 1);
-					Interface *ifLocal = root->findInterface(info->ifLocal, INADDR_ANY);
-					Interface *ifRemote = node->findInterface(info->ifRemote, INADDR_ANY);
-					topology.LinkObjectsEx(root->Id(), node->Id(),
-						(ifLocal != NULL) ? ifLocal->Name() : _T("N/A"),
-						(ifRemote != NULL) ? ifRemote->Name() : _T("N/A"));
-				}
+				BuildL2Topology(topology, node, nDepth - 1);
+				Interface *ifLocal = root->findInterface(info->ifLocal, INADDR_ANY);
+				Interface *ifRemote = node->findInterface(info->ifRemote, INADDR_ANY);
+				DbgPrintf(5, _T("BuildL2Topology: root=%s [%d], node=%s [%d], ifLocal=%d %p, ifRemote=%d %p"),
+				          root->Name(), root->Id(), node->Name(), node->Id(), info->ifLocal, ifLocal, info->ifRemote, ifRemote);
+				topology.LinkObjectsEx(root->Id(), node->Id(),
+					(ifLocal != NULL) ? ifLocal->Name() : _T("N/A"),
+					(ifRemote != NULL) ? ifRemote->Name() : _T("N/A"),
+					info->ifLocal, info->ifRemote);
 			}
 		}
-		nbs->decRefCount();
 	}
+	nbs->decRefCount();
 }
 
 

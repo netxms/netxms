@@ -152,10 +152,23 @@ void nxmap_ObjList::LinkObjects(DWORD dwId1, DWORD dwId2)
 
 
 //
+// Update port names on connector
+//
+
+static void UpdatePortNames(OBJLINK *link, const TCHAR *port1, const TCHAR *port2)
+{
+	_tcscat_s(link->szPort1, MAX_CONNECTOR_NAME, _T(", "));
+	_tcscat_s(link->szPort1, MAX_CONNECTOR_NAME, port1);
+	_tcscat_s(link->szPort2, MAX_CONNECTOR_NAME, _T(", "));
+	_tcscat_s(link->szPort2, MAX_CONNECTOR_NAME, port2);
+}
+
+
+//
 // Link two objects with named links
 //
 
-void nxmap_ObjList::LinkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2)
+void nxmap_ObjList::LinkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2, DWORD portId1, DWORD portId2)
 {
    DWORD i;
    int nCount;
@@ -173,11 +186,44 @@ void nxmap_ObjList::LinkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort
       // Check for duplicate links
       for(i = 0; i < m_dwNumLinks; i++)
       {
-         if (((m_pLinkList[i].dwId1 == dwId1) && (m_pLinkList[i].dwId2 == dwId2) &&
-				  (!_tcsicmp(m_pLinkList[i].szPort1, pszPort1)) && (!_tcsicmp(m_pLinkList[i].szPort2, pszPort2))) ||
-             ((m_pLinkList[i].dwId2 == dwId1) && (m_pLinkList[i].dwId1 == dwId2) &&
-				  (!_tcsicmp(m_pLinkList[i].szPort2, pszPort1)) && (!_tcsicmp(m_pLinkList[i].szPort1, pszPort2))))
-            break;
+			if ((m_pLinkList[i].dwId1 == dwId1) && (m_pLinkList[i].dwId2 == dwId2))
+			{
+				int j;
+				for(j = 0; j < m_pLinkList[i].portIdCount; j++)
+				{
+					// assume point-to-point interfaces, therefore or is enough
+					if ((m_pLinkList[i].portId1[j] == portId1) || (m_pLinkList[i].portId2[j] == portId2))
+						break;
+				}
+				if ((j == m_pLinkList[i].portIdCount) && (j < MAX_PORT_COUNT))
+				{
+					m_pLinkList[i].portId1[j] = portId1;
+					m_pLinkList[i].portId2[j] = portId2;
+					m_pLinkList[i].portIdCount++;
+					UpdatePortNames(&m_pLinkList[i], pszPort1, pszPort2);
+					m_pLinkList[i].nType = LINK_TYPE_MULTILINK;
+				}
+				break;
+			}
+			if ((m_pLinkList[i].dwId1 == dwId2) && (m_pLinkList[i].dwId2 == dwId1))
+			{
+				int j;
+				for(j = 0; j < m_pLinkList[i].portIdCount; j++)
+				{
+					// assume point-to-point interfaces, therefore or is enough
+					if ((m_pLinkList[i].portId1[j] == portId2) || (m_pLinkList[i].portId2[j] == portId1))
+						break;
+				}
+				if ((j == m_pLinkList[i].portIdCount) && (j < MAX_PORT_COUNT))
+				{
+					m_pLinkList[i].portId1[j] = portId2;
+					m_pLinkList[i].portId2[j] = portId1;
+					m_pLinkList[i].portIdCount++;
+					UpdatePortNames(&m_pLinkList[i], pszPort2, pszPort1);
+					m_pLinkList[i].nType = LINK_TYPE_MULTILINK;
+				}
+				break;
+			}
       }
       if (i == m_dwNumLinks)
       {
@@ -186,6 +232,9 @@ void nxmap_ObjList::LinkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort
          m_pLinkList[i].dwId1 = dwId1;
          m_pLinkList[i].dwId2 = dwId2;
          m_pLinkList[i].nType = LINK_TYPE_NORMAL;
+			m_pLinkList[i].portIdCount = 1;
+			m_pLinkList[i].portId1[0] = portId1;
+			m_pLinkList[i].portId2[0] = portId2;
 			nx_strncpy(m_pLinkList[i].szPort1, pszPort1, MAX_CONNECTOR_NAME);
 			nx_strncpy(m_pLinkList[i].szPort2, pszPort2, MAX_CONNECTOR_NAME);
       }

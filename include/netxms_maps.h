@@ -49,7 +49,8 @@
 #define MAP_LEFT_MARGIN       20
 #define MAP_BOTTOM_MARGIN     10
 #define MAP_RIGHT_MARGIN      20
-#define MAX_CONNECTOR_NAME		64
+#define MAX_CONNECTOR_NAME		128
+#define MAX_PORT_COUNT			16
 
 
 //
@@ -86,6 +87,7 @@
 
 #define LINK_TYPE_NORMAL      0
 #define LINK_TYPE_VPN         1
+#define LINK_TYPE_MULTILINK   2
 
 
 //
@@ -112,6 +114,9 @@ struct OBJLINK
    LONG nType;
 	TCHAR szPort1[MAX_CONNECTOR_NAME];
 	TCHAR szPort2[MAX_CONNECTOR_NAME];
+	int portIdCount;
+	DWORD portId1[MAX_PORT_COUNT];
+	DWORD portId2[MAX_PORT_COUNT];
 };
 
 
@@ -146,7 +151,7 @@ public:
 
    void AddObject(DWORD dwId);
    void LinkObjects(DWORD dwId1, DWORD dwId2);
-   void LinkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2);
+   void LinkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2, DWORD portId1, DWORD portId2);
    void Clear(void);
 
    DWORD GetNumObjects(void) { return m_dwNumObjects; }

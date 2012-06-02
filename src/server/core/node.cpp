@@ -4334,14 +4334,18 @@ void Node::addExistingConnections(LinkLayerNeighbors *nbs)
 		Interface *ifLocal = (Interface *)m_pChildList[i];
 		if ((ifLocal->getPeerNodeId() != 0) && (ifLocal->getPeerInterfaceId() != 0))
 		{
-			LL_NEIGHBOR_INFO info;
+			Interface *ifRemote = (Interface *)FindObjectById(ifLocal->getPeerInterfaceId(), OBJECT_INTERFACE);
+			if (ifRemote != NULL)
+			{
+				LL_NEIGHBOR_INFO info;
 
-			info.ifLocal = ifLocal->getIfIndex();
-			info.ifRemote = ifLocal->getPeerInterfaceId();
-			info.objectId = ifLocal->getPeerNodeId();
-			info.isPtToPt = true;
-			info.protocol = LL_PROTO_FDB;
-			nbs->addConnection(&info);
+				info.ifLocal = ifLocal->getIfIndex();
+				info.ifRemote = ifRemote->getIfIndex();
+				info.objectId = ifLocal->getPeerNodeId();
+				info.isPtToPt = true;
+				info.protocol = LL_PROTO_FDB;
+				nbs->addConnection(&info);
+			}
 		}
 	}
 	UnlockChildList();
