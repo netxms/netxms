@@ -155,15 +155,18 @@ void ForwardingDatabase::sort()
 static DWORD FDBHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
    SNMP_ObjectId *pOid = pVar->GetName();
-   TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4];
-   SNMPConvertOIDToText(pOid->getLength() - 11, (DWORD *)&(pOid->getValue())[11], szSuffix, MAX_OID_LEN * 4);
+	DWORD oidLen = pOid->getLength();
+	DWORD oid[MAX_OID_LEN];
+	memcpy(oid, pOid->getValue(), oidLen * sizeof(DWORD));
 
-	// Get port number
+	// Get port number and status
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
 
-	_tcscpy(szOid, _T(".1.3.6.1.2.1.17.4.3.1.2"));	// Port number
-   _tcscat(szOid, szSuffix);
-	pRqPDU->bindVariable(new SNMP_Variable(szOid));
+	oid[10] = 2;	// .1.3.6.1.2.1.17.4.3.1.2 - port number
+	pRqPDU->bindVariable(new SNMP_Variable(oid, oidLen));
+
+	oid[10] = 3;	// .1.3.6.1.2.1.17.4.3.1.3 - status
+	pRqPDU->bindVariable(new SNMP_Variable(oid, oidLen));
 
    SNMP_PDU *pRespPDU;
    DWORD rcc = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
@@ -172,7 +175,8 @@ static DWORD FDBHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pT
 	if (rcc == SNMP_ERR_SUCCESS)
    {
 		int port = pRespPDU->getVariable(0)->GetValueAsInt();
-		if (port > 0)
+		int status = pRespPDU->getVariable(1)->GetValueAsInt();
+		if ((port > 0) && (status == 3))		// status 3 == learned
 		{
 			FDB_ENTRY entry;
 

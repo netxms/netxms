@@ -4283,6 +4283,8 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
 	if (fdb == NULL)
 		return;
 
+	DbgPrintf(5, _T("Node::addHostConnections(%s [%d]): FDB retrieved"), m_szName, (int)m_dwId);
+
 	LockChildList(FALSE);
 	for(int i = 0; i < (int)m_dwChildCount; i++)
 	{
