@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.geometry.Dimension;
+import org.eclipse.draw2d.geometry.Insets;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
@@ -82,7 +83,7 @@ public class ConnectorLabel extends Label
 
 		gc.translate(bounds.x, bounds.y);
 		final Point pos = getTextLocation();
-		gc.drawText(getSubStringText(), pos.x + 2, pos.y);
+		gc.drawText(getSubStringText(), pos.x + 3, pos.y);
 		gc.translate(-bounds.x, -bounds.y);
 	}
 
@@ -92,9 +93,14 @@ public class ConnectorLabel extends Label
 	@Override
 	public Dimension getPreferredSize(int wHint, int hHint)
 	{
-		Dimension d = super.getPreferredSize(wHint, hHint);
-		d.height += 2;
-		d.width += 4;
+		Dimension d = calculateLabelSize(getTextSize());;
+		Insets insets = getInsets();
+		d.expand(insets.getWidth(), insets.getHeight());
+		if (getLayoutManager() != null)
+			d.union(getLayoutManager().getPreferredSize(this, wHint,
+					hHint));
+		d.height += 4;
+		d.width += 6;
 		return d;
 	}
 }
