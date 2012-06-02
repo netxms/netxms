@@ -194,6 +194,34 @@ static double CalculateAverage32(DWORD *series)
 
 
 //
+// Calculate min value for 32bit series
+//
+
+static DWORD CalculateMin32(DWORD *series)
+{
+	DWORD val = series[0];
+	for(int i = 1; i < HISTORY_SIZE; i++)
+		if (series[i] < val)
+			val = series[i];
+	return val;
+}
+
+
+//
+// Calculate max value for 32bit series
+//
+
+static DWORD CalculateMax32(DWORD *series)
+{
+	DWORD val = series[0];
+	for(int i = 1; i < HISTORY_SIZE; i++)
+		if (series[i] > val)
+			val = series[i];
+	return val;
+}
+
+
+//
 // Calculate average value for 64bit series
 //
 
@@ -203,6 +231,34 @@ static QWORD CalculateAverage64(QWORD *series)
 	for(int i = 0; i < HISTORY_SIZE; i++)
 		sum += series[i];
 	return sum / HISTORY_SIZE;
+}
+
+
+//
+// Calculate min value for 64bit series
+//
+
+static QWORD CalculateMin64(QWORD *series)
+{
+	QWORD val = series[0];
+	for(int i = 1; i < HISTORY_SIZE; i++)
+		if (series[i] < val)
+			val = series[i];
+	return val;
+}
+
+
+//
+// Calculate max value for 64bit series
+//
+
+static QWORD CalculateMax64(QWORD *series)
+{
+	QWORD val = series[0];
+	for(int i = 1; i < HISTORY_SIZE; i++)
+		if (series[i] > val)
+			val = series[i];
+	return val;
 }
 
 
@@ -219,17 +275,47 @@ LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value)
 		case IOSTAT_NUM_READS:
 			ret_double(value, CalculateAverage32(s_data[0].histReadOps));
 			break;
+		case IOSTAT_NUM_READS_MIN:
+			ret_uint(value, CalculateMin32(s_data[0].histReadOps));
+			break;
+		case IOSTAT_NUM_READS_MAX:
+			ret_uint(value, CalculateMax32(s_data[0].histReadOps));
+			break;
 		case IOSTAT_NUM_WRITES:
 			ret_double(value, CalculateAverage32(s_data[0].histWriteOps));
+			break;
+		case IOSTAT_NUM_WRITES_MIN:
+			ret_uint(value, CalculateMin32(s_data[0].histWriteOps));
+			break;
+		case IOSTAT_NUM_WRITES_MAX:
+			ret_uint(value, CalculateMax32(s_data[0].histWriteOps));
 			break;
 		case IOSTAT_QUEUE:
 			ret_double(value, CalculateAverage32(s_data[0].histQueue));
 			break;
+		case IOSTAT_QUEUE_MIN:
+			ret_uint(value, CalculateMin32(s_data[0].histQueue));
+			break;
+		case IOSTAT_QUEUE_MAX:
+			ret_uint(value, CalculateMax32(s_data[0].histQueue));
+			break;
 		case IOSTAT_NUM_RBYTES:
 			ret_uint64(value, CalculateAverage64(s_data[0].histBytesRead));
 			break;
+		case IOSTAT_NUM_RBYTES_MIN:
+			ret_uint64(value, CalculateMin64(s_data[0].histBytesRead));
+			break;
+		case IOSTAT_NUM_RBYTES_MAX:
+			ret_uint64(value, CalculateMax64(s_data[0].histBytesRead));
+			break;
 		case IOSTAT_NUM_WBYTES:
 			ret_uint64(value, CalculateAverage64(s_data[0].histBytesWritten));
+			break;
+		case IOSTAT_NUM_WBYTES_MIN:
+			ret_uint64(value, CalculateMin64(s_data[0].histBytesWritten));
+			break;
+		case IOSTAT_NUM_WBYTES_MAX:
+			ret_uint64(value, CalculateMax64(s_data[0].histBytesWritten));
 			break;
 		default:
 			rc = SYSINFO_RC_UNSUPPORTED;
@@ -264,17 +350,47 @@ LONG H_IOStats(const char *cmd, const char *arg, char *value)
 		case IOSTAT_NUM_READS:
 			ret_double(value, CalculateAverage32(s_data[i].histReadOps));
 			break;
+		case IOSTAT_NUM_READS_MIN:
+			ret_uint(value, CalculateMin32(s_data[i].histReadOps));
+			break;
+		case IOSTAT_NUM_READS_MAX:
+			ret_uint(value, CalculateMax32(s_data[i].histReadOps));
+			break;
 		case IOSTAT_NUM_WRITES:
 			ret_double(value, CalculateAverage32(s_data[i].histWriteOps));
+			break;
+		case IOSTAT_NUM_WRITES_MIN:
+			ret_uint(value, CalculateMin32(s_data[i].histWriteOps));
+			break;
+		case IOSTAT_NUM_WRITES_MAX:
+			ret_uint(value, CalculateMax32(s_data[i].histWriteOps));
 			break;
 		case IOSTAT_QUEUE:
 			ret_double(value, CalculateAverage32(s_data[i].histQueue));
 			break;
+		case IOSTAT_QUEUE_MIN:
+			ret_uint(value, CalculateMin32(s_data[i].histQueue));
+			break;
+		case IOSTAT_QUEUE_MAX:
+			ret_uint(value, CalculateMax32(s_data[i].histQueue));
+			break;
 		case IOSTAT_NUM_RBYTES:
 			ret_uint64(value, CalculateAverage64(s_data[i].histBytesRead));
 			break;
+		case IOSTAT_NUM_RBYTES_MIN:
+			ret_uint64(value, CalculateMin64(s_data[i].histBytesRead));
+			break;
+		case IOSTAT_NUM_RBYTES_MAX:
+			ret_uint64(value, CalculateMax64(s_data[i].histBytesRead));
+			break;
 		case IOSTAT_NUM_WBYTES:
 			ret_uint64(value, CalculateAverage64(s_data[i].histBytesWritten));
+			break;
+		case IOSTAT_NUM_WBYTES_MIN:
+			ret_uint64(value, CalculateMin64(s_data[i].histBytesWritten));
+			break;
+		case IOSTAT_NUM_WBYTES_MAX:
+			ret_uint64(value, CalculateMax64(s_data[i].histBytesWritten));
 			break;
 		default:
 			rc = SYSINFO_RC_UNSUPPORTED;

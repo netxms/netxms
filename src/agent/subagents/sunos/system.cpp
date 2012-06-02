@@ -82,12 +82,12 @@ LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
 	if (kc != NULL)
 	{
 		// read uptime counter
-		kp = kstat_lookup(kc, "unix", 0, "system_misc");
+		kp = kstat_lookup(kc, (char *)"unix", 0, (char *)"system_misc");
 		if (kp != NULL)
 		{
 			if(kstat_read(kc, kp, 0) != -1)
 			{
-				kn = (kstat_named_t *)kstat_data_lookup(kp, "clk_intr");
+				kn = (kstat_named_t *)kstat_data_lookup(kp, (char *)"clk_intr");
 				if (kn != NULL)
 				{
 					secs = kn->value.ul / hz;
@@ -124,13 +124,13 @@ LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue)
 	kstat_t *kp;
 	kstat_named_t *kn;
 	LONG nRet = SYSINFO_RC_ERROR;
-	static char *szParam[] = { "avenrun_1min", "avenrun_5min", "avenrun_15min" };
+	static char *szParam[] = { (char *)"avenrun_1min", (char *)"avenrun_5min", (char *)"avenrun_15min" };
 
 	kstat_lock();
 	kc = kstat_open();
 	if (kc != NULL)
 	{
-		kp = kstat_lookup(kc, "unix", 0, "system_misc");
+		kp = kstat_lookup(kc, (char *)"unix", 0, (char *)"system_misc");
 		if (kp != NULL)
 		{
 			if(kstat_read(kc, kp, 0) != -1)
@@ -196,8 +196,8 @@ LONG H_CPUCount(const char *pszParam, const char *pArg, char *pValue)
 // Handler for generic kstat parameter
 //
 
-LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
-		char *pszStat, char *pValue, kstat_named_t *pRawValue)
+LONG ReadKStatValue(const char *pszModule, LONG nInstance, const char *pszName,
+		const char *pszStat, char *pValue, kstat_named_t *pRawValue)
 {
 	kstat_ctl_t *kc;
 	kstat_t *kp;
@@ -208,12 +208,12 @@ LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
 	kc = kstat_open();
 	if (kc != NULL)
 	{
-		kp = kstat_lookup(kc, pszModule, nInstance, pszName);
+		kp = kstat_lookup(kc, (char *)pszModule, nInstance, (char *)pszName);
 		if (kp != NULL)
 		{
 			if(kstat_read(kc, kp, 0) != -1)
 			{
-				kn = (kstat_named_t *)kstat_data_lookup(kp, pszStat);
+				kn = (kstat_named_t *)kstat_data_lookup(kp, (char *)pszStat);
 				if (kn != NULL)
 				{
 					if (pValue != NULL)

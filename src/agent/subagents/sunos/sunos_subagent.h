@@ -95,11 +95,21 @@ enum
 enum
 {	
 	IOSTAT_NUM_READS,
+	IOSTAT_NUM_READS_MIN,
+	IOSTAT_NUM_READS_MAX,
 	IOSTAT_NUM_WRITES,
+	IOSTAT_NUM_WRITES_MIN,
+	IOSTAT_NUM_WRITES_MAX,
 	IOSTAT_NUM_RBYTES,
+	IOSTAT_NUM_RBYTES_MIN,
+	IOSTAT_NUM_RBYTES_MAX,
 	IOSTAT_NUM_WBYTES,
+	IOSTAT_NUM_WBYTES_MIN,
+	IOSTAT_NUM_WBYTES_MAX,
 	IOSTAT_IO_TIME,
-	IOSTAT_QUEUE
+	IOSTAT_QUEUE,
+	IOSTAT_QUEUE_MIN,
+	IOSTAT_QUEUE_MAX
 };
 
 
@@ -119,8 +129,8 @@ typedef struct t_ProcEnt
 //
 
 int mac_addr_dlpi(char *pszIfName, u_char *pMacAddr);
-LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
-		char *pszStat, char *pValue, kstat_named_t *pRawValue);
+LONG ReadKStatValue(const char *pszModule, LONG nInstance, const char *pszName,
+		    const char *pszStat, char *pValue, kstat_named_t *pRawValue);
 
 THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg);
 THREAD_RESULT THREAD_CALL IOStatCollector(void *arg);

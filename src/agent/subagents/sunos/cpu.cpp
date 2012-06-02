@@ -55,7 +55,7 @@ static void ReadCPUTimes(kstat_ctl_t *kc, uint_t *pValues)
 	kstat_lock();
 	for(i = 0, pData = pValues; i < m_nCPUCount; i++, pData += CPU_STATES)
 	{
-		kp = kstat_lookup(kc, "cpu_stat", m_nInstanceMap[i], NULL);
+		kp = kstat_lookup(kc, (char *)"cpu_stat", m_nInstanceMap[i], NULL);
 		if (kp != NULL)
 		{
 			if (kstat_read(kc, kp, NULL) != -1)
@@ -100,12 +100,12 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 	}
 
 	// Read number of CPUs
-	kp = kstat_lookup(kc, "unix", 0, "system_misc");
+	kp = kstat_lookup(kc, (char *)"unix", 0, (char *)"system_misc");
 	if (kp != NULL)
 	{
 		if(kstat_read(kc, kp, 0) != -1)
 		{
-			kn = (kstat_named_t *)kstat_data_lookup(kp, "ncpus");
+			kn = (kstat_named_t *)kstat_data_lookup(kp, (char *)"ncpus");
 			if (kn != NULL)
 			{
 				m_nCPUCount = kn->value.ui32;
@@ -117,7 +117,7 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 	memset(m_nInstanceMap, 0xFF, sizeof(int) * MAX_CPU_COUNT);
 	for(i = 0, j = 0; i < m_nCPUCount; i++)
 	{
-		while(kstat_lookup(kc, "cpu_stat", j, NULL) == NULL)
+		while(kstat_lookup(kc, (char *)"cpu_stat", j, NULL) == NULL)
 			j++;
 		m_nInstanceMap[i] = j++;
 	}

@@ -235,7 +235,7 @@ LONG H_SysProcCount(const char *pszParam, const char *pArg, char *pValue)
 // Read process information file from /proc file system
 //
 
-static BOOL ReadProcFile(pid_t nPid, char *pszFile, void *pData, size_t nDataLen)
+static BOOL ReadProcFile(pid_t nPid, const char *pszFile, void *pData, size_t nDataLen)
 {
 	char szFileName[256];
 	int hFile;
@@ -412,7 +412,7 @@ LONG H_ProcessInfo(const char *param, const char *arg, char *value)
 	int i, nCount, nType;
 	PROC_ENT *pList;
 	QWORD qwValue;
-	static char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
+	static const char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
 
 	// Get parameter type arguments
 	AgentGetParameterArg(param, 2, szBuffer, sizeof(szBuffer));
