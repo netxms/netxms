@@ -3390,6 +3390,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			msg.setVariableInt16(NXCPCodes.VID_EXPECTED_STATE, data.getExpectedState());
 		}
 		
+		if ((flags & NXCObjectModificationData.MODIFY_LINK_COLOR) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_LINK_COLOR, data.getLinkColor());
+		}
+
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}

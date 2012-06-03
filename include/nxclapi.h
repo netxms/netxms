@@ -848,6 +848,15 @@ enum
 
 
 //
+// Network map flags
+//
+
+#define MF_SHOW_STATUS_ICON      0x00000001
+#define MF_SHOW_STATUS_FRAME     0x00000002
+#define MF_SHOW_STATUS_BKGND     0x00000004
+
+
+//
 // Network map layouts
 //
 

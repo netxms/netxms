@@ -45,12 +45,18 @@ public class NetworkMap extends GenericObject
 	public static final int LAYOUT_VTREE = 3;
 	public static final int LAYOUT_SPARSE_VTREE = 4;
 	
+	public static final int MF_SHOW_STATUS_ICON  = 0x000001;
+	public static final int MF_SHOW_STATUS_FRAME = 0x000002;
+	public static final int MF_SHOW_STATUS_BKGND = 0x000004;
+	
 	private int mapType;
 	private int layout;
+	private int flags;
 	private UUID background;
 	private GeoLocation backgroundLocation;
 	private int backgroundZoom;
 	private long seedObjectId;
+	private int defaultLinkColor;
 	private List<NetworkMapElement> elements;
 	private List<NetworkMapLink> links;
 	
@@ -63,10 +69,12 @@ public class NetworkMap extends GenericObject
 		super(msg, session);
 		mapType = msg.getVariableAsInteger(NXCPCodes.VID_MAP_TYPE);
 		layout = msg.getVariableAsInteger(NXCPCodes.VID_LAYOUT);
+		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
 		background = msg.getVariableAsUUID(NXCPCodes.VID_BACKGROUND);
 		backgroundLocation = new GeoLocation(msg.getVariableAsReal(NXCPCodes.VID_BACKGROUND_LATITUDE), msg.getVariableAsReal(NXCPCodes.VID_BACKGROUND_LONGITUDE));
 		backgroundZoom = msg.getVariableAsInteger(NXCPCodes.VID_BACKGROUND_ZOOM);
 		seedObjectId = msg.getVariableAsInt64(NXCPCodes.VID_SEED_OBJECT);
+		defaultLinkColor = msg.getVariableAsInteger(NXCPCodes.VID_LINK_COLOR);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<NetworkMapElement>(count);
@@ -155,5 +163,21 @@ public class NetworkMap extends GenericObject
 	public int getBackgroundZoom()
 	{
 		return backgroundZoom;
+	}
+
+	/**
+	 * @return the flags
+	 */
+	public int getFlags()
+	{
+		return flags;
+	}
+
+	/**
+	 * @return the defaultLinkColor
+	 */
+	public int getDefaultLinkColor()
+	{
+		return defaultLinkColor;
 	}
 }

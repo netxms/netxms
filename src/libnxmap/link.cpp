@@ -36,6 +36,8 @@ NetworkMapLink::NetworkMapLink(DWORD e1, DWORD e2, int type)
 	m_name = NULL;
 	m_connectorName1 = NULL;
 	m_connectorName2 = NULL;
+	m_color = 0xFFFFFFFF;
+	m_statusObject = 0;
 }
 
 
@@ -51,6 +53,8 @@ NetworkMapLink::NetworkMapLink(CSCPMessage *msg, DWORD baseId)
 	m_connectorName2 = msg->GetVariableStr(baseId + 3);
 	m_element1 = msg->GetVariableLong(baseId + 4);
 	m_element2 = msg->GetVariableLong(baseId + 5);
+	m_color = msg->GetVariableLong(baseId + 6);
+	m_statusObject = msg->GetVariableLong(baseId + 7);
 }
 
 
@@ -111,4 +115,6 @@ void NetworkMapLink::fillMessage(CSCPMessage *msg, DWORD baseId)
 	msg->SetVariable(baseId + 3, getConnector2Name());
 	msg->SetVariable(baseId + 4, m_element1);
 	msg->SetVariable(baseId + 5, m_element2);
+	msg->SetVariable(baseId + 6, m_color);
+	msg->SetVariable(baseId + 7, m_statusObject);
 }

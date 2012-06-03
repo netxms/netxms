@@ -1503,6 +1503,8 @@ protected:
 	int m_mapType;
 	DWORD m_seedObject;
 	int m_layout;
+	DWORD m_flags;
+	DWORD m_defaultLinkColor;
 	uuid_t m_background;
 	double m_backgroundLatitude;
 	double m_backgroundLongitude;

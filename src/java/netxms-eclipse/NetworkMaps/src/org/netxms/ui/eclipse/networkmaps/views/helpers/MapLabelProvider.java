@@ -40,6 +40,7 @@ import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphNode;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
@@ -52,6 +53,7 @@ import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorCache;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Label provider for map
@@ -381,6 +383,23 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			final Label label = new ConnectorLabel(link.getName());
 			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, nameLocator);
+		}
+
+		if (link.getStatusObject() != 0)
+		{
+			GenericObject object = session.findObjectById(link.getStatusObject());
+			if (object != null)
+			{
+				connection.setLineColor(StatusDisplayInfo.getStatusColor(object.getStatus()));
+			}
+			else
+			{
+				connection.setLineColor(StatusDisplayInfo.getStatusColor(Severity.UNKNOWN));
+			}
+		}
+		else if (link.getColor() >= 0)
+		{
+			connection.setLineColor(colors.create(ColorConverter.rgbFromInt(link.getColor())));
 		}
 		
 		connection.setLineWidth(2);

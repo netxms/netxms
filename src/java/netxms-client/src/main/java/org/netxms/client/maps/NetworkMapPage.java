@@ -18,10 +18,12 @@
  */
 package org.netxms.client.maps;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -218,6 +220,28 @@ public class NetworkMapPage
 			if ((l.getElement1() == source.getId()) && (l.getElement2() == destination.getId()))
 				return l;
 		return null;
+	}
+	
+	/**
+	 * Find all links using given object as status source
+	 * 
+	 * @param source source element
+	 * @param destination destination element
+	 * @return link between source and destination or null if there are no such link 
+	 */
+	public List<NetworkMapLink> findLinksWithStatusObject(long objectId)
+	{
+		List<NetworkMapLink> list = null;
+		for(NetworkMapLink l : links)
+		{
+			if (l.getStatusObject() == objectId)
+			{
+				if (list == null)
+					list = new ArrayList<NetworkMapLink>();
+				list.add(l);
+			}
+		}
+		return list;
 	}
 	
 	/**

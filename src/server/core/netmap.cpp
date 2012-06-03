@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ NetworkMap::NetworkMap() : NetObj()
 {
 	m_mapType = NETMAP_USER_DEFINED;
 	m_seedObject = 0;
+	m_flags = MF_SHOW_STATUS_ICON;
 	m_layout = MAP_LAYOUT_MANUAL;
 	uuid_clear(m_background);
 	m_numElements = 0;
@@ -51,6 +52,7 @@ NetworkMap::NetworkMap() : NetObj()
 	m_backgroundLatitude = 0;
 	m_backgroundLongitude = 0;
 	m_backgroundZoom = 1;
+	m_defaultLinkColor = 0xFFFFFFFF;
 }
 
 
@@ -62,6 +64,7 @@ NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
 {
 	m_mapType = type;
 	m_seedObject = seed;
+	m_flags = MF_SHOW_STATUS_ICON;
 	m_layout = MAP_LAYOUT_RADIAL;
 	uuid_clear(m_background);
 	m_numElements = 0;
@@ -72,6 +75,7 @@ NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
 	m_backgroundLatitude = 0;
 	m_backgroundLongitude = 0;
 	m_backgroundZoom = 1;
+	m_defaultLinkColor = 0xFFFFFFFF;
 	m_bIsHidden = TRUE;
 }
 
@@ -111,34 +115,38 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 
 	LockData();
 
-	bool isNewObject = true;
-   DB_RESULT hResult = NULL;
-
 	if (!saveCommonProperties(hdb))
 		goto fail;
 
-	// Check for object's existence in database
-   _sntprintf(query, 256, _T("SELECT id FROM network_maps WHERE id=%d"), m_dwId);
-   hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         isNewObject = false;
-      DBFreeResult(hResult);
-   }
-
-	if (isNewObject)
-      _sntprintf(query, 1024,
-                 _T("INSERT INTO network_maps (id,map_type,layout,seed,background,bg_latitude,bg_longitude,bg_zoom) VALUES (%d,%d,%d,%d,'%s','%f','%f',%d)"),
-                 m_dwId, m_mapType, m_layout, m_seedObject, uuid_to_string(m_background, temp),
-					  m_backgroundLatitude, m_backgroundLongitude, m_backgroundZoom);
-   else
-      _sntprintf(query, 1024,
-                 _T("UPDATE network_maps SET map_type=%d,layout=%d,seed=%d,background='%s',bg_latitude='%f',bg_longitude='%f',bg_zoom=%d WHERE id=%d"),
-                 m_mapType, m_layout, m_seedObject, uuid_to_string(m_background, temp),
-					  m_backgroundLatitude, m_backgroundLongitude, m_backgroundZoom, m_dwId);
-   if (!DBQuery(hdb, query))
+	DB_STATEMENT hStmt;
+	if (IsDatabaseRecordExist(hdb, _T("network_maps"), _T("id"), m_dwId))
+	{
+		hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,seed=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,flags=?,link_color=? WHERE id=?"));
+	}
+	else
+	{
+		hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,seed,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,id) VALUES (?,?,?,?,?,?,?,?,?,?)"));
+	}
+	if (hStmt == NULL)
 		goto fail;
+
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)m_mapType);
+	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_layout);
+	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_seedObject);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, uuid_to_string(m_background, temp), DB_BIND_STATIC);
+	DBBind(hStmt, 5, DB_SQLTYPE_DOUBLE, m_backgroundLatitude);
+	DBBind(hStmt, 6, DB_SQLTYPE_DOUBLE, m_backgroundLongitude);
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_backgroundZoom);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_flags);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_defaultLinkColor);
+	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_dwId);
+
+	if (!DBExecute(hStmt))
+	{
+		DBFreeStatement(hStmt);
+		goto fail;
+	}
+	DBFreeStatement(hStmt);
 
 	if (!saveACLToDB(hdb))
 		goto fail;
@@ -168,11 +176,12 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 		goto fail;
    for(int i = 0; i < m_numLinks; i++)
    {
-      _sntprintf(query, 1024, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2) VALUES (%d,%d,%d,%d,%s,%s,%s)"),
+      _sntprintf(query, 1024, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,color,status_object) VALUES (%d,%d,%d,%d,%s,%s,%s,%d,%d)"),
 		           (int)m_dwId, (int)m_links[i]->getElement1(), (int)m_links[i]->getElement2(),
 					  m_links[i]->getType(), (const TCHAR *)DBPrepareString(hdb, m_links[i]->getName(), 255),
 					  (const TCHAR *)DBPrepareString(hdb, m_links[i]->getConnector1Name(), 63),
-					  (const TCHAR *)DBPrepareString(hdb, m_links[i]->getConnector2Name(), 63));
+					  (const TCHAR *)DBPrepareString(hdb, m_links[i]->getConnector2Name(), 63),
+					  (int)m_links[i]->getColor(), (int)m_links[i]->getStatusObject());
       DBQuery(hdb, query);
    }
 
@@ -223,7 +232,7 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 
 	   loadACLFromDB();
 
-		_sntprintf(query, 256, _T("SELECT map_type,layout,seed,background,bg_latitude,bg_longitude,bg_zoom FROM network_maps WHERE id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT map_type,layout,seed,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color FROM network_maps WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 		if (hResult == NULL)
 			return FALSE;
@@ -235,6 +244,8 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 		m_backgroundLatitude = DBGetFieldDouble(hResult, 0, 4);
 		m_backgroundLongitude = DBGetFieldDouble(hResult, 0, 5);
 		m_backgroundZoom = (int)DBGetFieldLong(hResult, 0, 6);
+		m_flags = DBGetFieldULong(hResult, 0, 7);
+		m_defaultLinkColor = DBGetFieldULong(hResult, 0, 8);
 		DBFreeResult(hResult);
 
 	   // Load elements
@@ -285,7 +296,7 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
       }
 
 		// Load links
-      _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2 FROM network_map_links WHERE map_id=%d"), m_dwId);
+      _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2,color,status_object FROM network_map_links WHERE map_id=%d"), m_dwId);
       hResult = DBSelect(g_hCoreDB, query);
       if (hResult != NULL)
       {
@@ -301,6 +312,8 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 					m_links[i]->setName(DBGetField(hResult, i, 3, buffer, 256));
 					m_links[i]->setConnector1Name(DBGetField(hResult, i, 4, buffer, 256));
 					m_links[i]->setConnector2Name(DBGetField(hResult, i, 5, buffer, 256));
+					m_links[i]->setColor(DBGetFieldULong(hResult, i, 6));
+					m_links[i]->setStatusObject(DBGetFieldULong(hResult, i, 7));
 				}
 			}
          DBFreeResult(hResult);
@@ -323,11 +336,13 @@ void NetworkMap::CreateMessage(CSCPMessage *msg)
 
 	msg->SetVariable(VID_MAP_TYPE, (WORD)m_mapType);
 	msg->SetVariable(VID_LAYOUT, (WORD)m_layout);
+	msg->SetVariable(VID_FLAGS, m_flags);
 	msg->SetVariable(VID_SEED_OBJECT, m_seedObject);
 	msg->SetVariable(VID_BACKGROUND, m_background, UUID_LENGTH);
 	msg->SetVariable(VID_BACKGROUND_LATITUDE, m_backgroundLatitude);
 	msg->SetVariable(VID_BACKGROUND_LONGITUDE, m_backgroundLongitude);
 	msg->SetVariable(VID_BACKGROUND_ZOOM, (WORD)m_backgroundZoom);
+	msg->SetVariable(VID_LINK_COLOR, m_defaultLinkColor);
 
 	msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)m_numElements);
 	DWORD varId = VID_ELEMENT_LIST_BASE;
@@ -362,8 +377,14 @@ DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 	if (request->IsVariableExist(VID_LAYOUT))
 		m_layout = (int)request->GetVariableShort(VID_LAYOUT);
 
+	if (request->IsVariableExist(VID_FLAGS))
+		m_flags = request->GetVariableShort(VID_FLAGS);
+
 	if (request->IsVariableExist(VID_SEED_OBJECT))
 		m_seedObject = request->GetVariableLong(VID_SEED_OBJECT);
+
+	if (request->IsVariableExist(VID_LINK_COLOR))
+		m_defaultLinkColor = request->GetVariableShort(VID_LINK_COLOR);
 
 	if (request->IsVariableExist(VID_BACKGROUND))
 	{

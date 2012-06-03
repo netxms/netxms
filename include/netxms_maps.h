@@ -354,7 +354,7 @@ public:
 };
 
 
-/********** 1.1.x Map API ********/
+/********** 1.2.x Map API ********/
 
 
 //
@@ -470,6 +470,8 @@ protected:
 	TCHAR *m_name;
 	TCHAR *m_connectorName1;
 	TCHAR *m_connectorName2;
+	DWORD m_color;
+	DWORD m_statusObject;
 
 public:
 	NetworkMapLink(DWORD e1, DWORD e2, int type);
@@ -485,10 +487,14 @@ public:
 	const TCHAR *getConnector1Name() { return CHECK_NULL_EX(m_connectorName1); }
 	const TCHAR *getConnector2Name() { return CHECK_NULL_EX(m_connectorName2); }
 	int getType() { return m_type; }
+	DWORD getColor() { return m_color; }
+	DWORD getStatusObject() { return m_statusObject; }
 
 	void setName(const TCHAR *name);
 	void setConnector1Name(const TCHAR *name);
 	void setConnector2Name(const TCHAR *name);
+	void setColor(DWORD color) { m_color = color; }
+	void setStatusObject(DWORD object) { m_statusObject = object; }
 };
 
 

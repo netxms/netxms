@@ -45,7 +45,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_ACL                = 0x00000000000002L;
 	public static final long MODIFY_CUSTOM_ATTRIBUTES  = 0x00000000000004L;
 	public static final long MODIFY_AUTOBIND_FILTER    = 0x00000000000008L;
-// unused:	public static final long MODIFY_AUTO_BIND          = 0x00000000000010L;
+	public static final long MODIFY_LINK_COLOR         = 0x00000000000010L;
 	public static final long MODIFY_POLICY_CONFIG      = 0x00000000000020L;
 	public static final long MODIFY_VERSION            = 0x00000000000040L;
 	public static final long MODIFY_DESCRIPTION        = 0x00000000000080L;
@@ -156,6 +156,7 @@ public class NXCObjectModificationData
 	private int statusSingleThreshold;
 	private int[] statusThresholds;
 	private int expectedState;
+	private int linkColor;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1255,5 +1256,22 @@ public class NXCObjectModificationData
 	{
 		this.expectedState = expectedState;
 		flags |= MODIFY_EXPECTED_STATE;
+	}
+
+	/**
+	 * @return the linkColor
+	 */
+	public int getLinkColor()
+	{
+		return linkColor;
+	}
+
+	/**
+	 * @param linkColor the linkColor to set
+	 */
+	public void setLinkColor(int linkColor)
+	{
+		this.linkColor = linkColor;
+		flags |= MODIFY_LINK_COLOR;
 	}
 }

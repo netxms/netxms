@@ -1210,6 +1210,8 @@ CREATE TABLE network_maps
 	bg_latitude varchar(20) null,
 	bg_longitude varchar(20) null,
 	bg_zoom integer null,
+	flags integer not null,
+	link_color integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1238,6 +1240,8 @@ CREATE TABLE network_map_links
 	link_name varchar(255) null,
 	connector_name1 varchar(63) null,
 	connector_name2 varchar(63) null,
+	color integer not null,
+	status_object integer not null,
 	PRIMARY KEY(map_id,element1,element2)
 ) TABLE_TYPE;
 

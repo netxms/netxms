@@ -36,6 +36,8 @@ public class NetworkMapLink
 	private long element2;
 	private String connectorName1;
 	private String connectorName2;
+	private int color;
+	private long statusObject;
 
 	/**
 	 * @param name
@@ -53,6 +55,8 @@ public class NetworkMapLink
 		this.element2 = element2;
 		this.connectorName1 = connectorName1;
 		this.connectorName2 = connectorName2;
+		this.color = -1;
+		this.statusObject = 0;
 	}
 
 	/**
@@ -70,6 +74,8 @@ public class NetworkMapLink
 		this.element2 = element2;
 		this.connectorName1 = "";
 		this.connectorName2 = "";
+		this.color = -1;
+		this.statusObject = 0;
 	}
 	
 	/**
@@ -86,6 +92,8 @@ public class NetworkMapLink
 		element2 = msg.getVariableAsInt64(baseId + 5);
 		connectorName1 = msg.getVariableAsString(baseId + 2);
 		connectorName2 = msg.getVariableAsString(baseId + 3);
+		color = msg.getVariableAsInteger(baseId + 6);
+		statusObject = msg.getVariableAsInt64(baseId + 7);
 	}
 	
 	/**
@@ -102,6 +110,8 @@ public class NetworkMapLink
 		msg.setVariable(baseId + 3, connectorName2);
 		msg.setVariableInt32(baseId + 4, (int)element1);
 		msg.setVariableInt32(baseId + 5, (int)element2);
+		msg.setVariableInt32(baseId + 6, color);
+		msg.setVariableInt32(baseId + 7, (int)statusObject);
 	}
 
 	/**
@@ -245,5 +255,37 @@ public class NetworkMapLink
 	public int hashCode()
 	{
 		return (int)((element1 << 16) | (element2 & 0xFFFF));
+	}
+
+	/**
+	 * @return the color
+	 */
+	public int getColor()
+	{
+		return color;
+	}
+
+	/**
+	 * @param color the color to set
+	 */
+	public void setColor(int color)
+	{
+		this.color = color;
+	}
+
+	/**
+	 * @return the statusObject
+	 */
+	public long getStatusObject()
+	{
+		return statusObject;
+	}
+
+	/**
+	 * @param statusObject the statusObject to set
+	 */
+	public void setStatusObject(long statusObject)
+	{
+		this.statusObject = statusObject;
 	}
 }

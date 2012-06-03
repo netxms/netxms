@@ -893,6 +893,7 @@ typedef struct
 #define VID_ADMIN_STATE             ((DWORD)414)
 #define VID_OPER_STATE              ((DWORD)415)
 #define VID_EXPECTED_STATE          ((DWORD)416)
+#define VID_LINK_COLOR              ((DWORD)417)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

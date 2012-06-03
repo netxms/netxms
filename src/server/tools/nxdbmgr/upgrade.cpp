@@ -278,6 +278,30 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 
+
+
+//
+// Upgrade from V253 to V254
+//
+
+static BOOL H_UpgradeFromV253(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE network_maps ADD flags integer\n")
+		_T("ALTER TABLE network_maps ADD link_color integer\n")
+		_T("UPDATE network_maps SET flags=1,link_color=-1\n")
+		_T("ALTER TABLE network_map_links ADD color integer\n")
+		_T("ALTER TABLE network_map_links ADD status_object integer\n")
+		_T("UPDATE network_map_links SET color=-1,status_object=0\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='254' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
 //
 // Upgrade from V252 to V253
 //
@@ -6316,6 +6340,7 @@ static struct
 	{ 250, 251, H_UpgradeFromV250 },
 	{ 251, 252, H_UpgradeFromV251 },
 	{ 252, 253, H_UpgradeFromV252 },
+	{ 253, 254, H_UpgradeFromV253 },
    { 0, 0, NULL }
 };
 

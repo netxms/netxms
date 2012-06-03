@@ -806,6 +806,12 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				NetworkMapObject element = mapPage.findObjectElement(object.getObjectId());
 				if (element != null)
 					viewer.refresh(element, true);
+				
+				List<NetworkMapLink> links = mapPage.findLinksWithStatusObject(object.getObjectId());
+				if (links != null)
+					for(NetworkMapLink l : links)
+						viewer.refresh(l);
+				
 				if (object.getObjectId() == rootObject.getObjectId())
 					rootObject = object;
 				return Status.OK_STATUS;
