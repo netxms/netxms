@@ -33,6 +33,8 @@ public class LinkEditor
 	private int type;
 	private String connectorName1;
 	private String connectorName2;
+	private int color;
+	private long statusObject;
 	private boolean modified = false;
 	
 	/**
@@ -47,6 +49,8 @@ public class LinkEditor
 		type = link.getType();
 		connectorName1 = link.getConnectorName1();
 		connectorName2 = link.getConnectorName2();
+		color = link.getColor();
+		statusObject = link.getStatusObject();
 	}
 	
 	/**
@@ -56,6 +60,8 @@ public class LinkEditor
 	{
 		mapPage.removeLink(link);
 		link = new NetworkMapLink(name, type, link.getElement1(), link.getElement2(), connectorName1, connectorName2);
+		link.setColor(color);
+		link.setStatusObject(statusObject);
 		mapPage.addLink(link);
 		modified = true;
 	}
@@ -122,6 +128,38 @@ public class LinkEditor
 	public void setConnectorName2(String connectorName2)
 	{
 		this.connectorName2 = connectorName2;
+	}
+
+	/**
+	 * @return the color
+	 */
+	public int getColor()
+	{
+		return color;
+	}
+
+	/**
+	 * @param color the color to set
+	 */
+	public void setColor(int color)
+	{
+		this.color = color;
+	}
+
+	/**
+	 * @return the statusObject
+	 */
+	public long getStatusObject()
+	{
+		return statusObject;
+	}
+
+	/**
+	 * @param statusObject the statusObject to set
+	 */
+	public void setStatusObject(long statusObject)
+	{
+		this.statusObject = statusObject;
 	}
 
 	/**
