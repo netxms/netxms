@@ -1844,3 +1844,29 @@ int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *tmpl)
 }
 
 #endif
+
+
+//
+// strcat_s/wcscat_s implementation
+//
+
+#ifndef _WIN32
+
+int LIBNETXMS_EXPORTABLE strcat_s(char *dst, size_t dstSize, const char *src)
+{
+	if (strlen(dst) + strlen(src) + 1 >= dstSize)
+		return EINVAL;
+	strcat(dst, src);
+	return 0;
+}
+
+int LIBNETXMS_EXPORTABLE wcscat_s(WCHAR *dst, size_t dstSize, const WCHAR *src)
+{
+	if (wcslen(dst) + wcslen(src) + 1 >= dstSize)
+		return EINVAL;
+	wcscat(dst, src);
+	return 0;
+}
+
+#endif
+

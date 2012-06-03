@@ -971,6 +971,11 @@ int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *tmpl);
 #endif
 #endif
 
+#ifndef _WIN32
+int strcat_s(char *dst, size_t dstSize, const char *src);
+int wcscat_s(WCHAR *dst, size_t dstSize, const WCHAR *src);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

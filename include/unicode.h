@@ -213,6 +213,7 @@
 #define _tcscspn  wcscspn
 #define _tcsstr   wcsstr
 #define _tcscat   wcscat
+#define _tcscat_s wcscat_s
 #define _tcsncat  wcsncat
 #define _tcspbrk  wcspbrk
 #define _tcstok   wcstok
@@ -284,6 +285,7 @@
 #define _tcscspn  strcspn
 #define _tcsstr   strstr
 #define _tcscat   strcat
+#define _tcscat_s strcat_s
 #define _tcsncat  strncat
 #define _tcspbrk  strpbrk
 #define _tcstok   strtok
