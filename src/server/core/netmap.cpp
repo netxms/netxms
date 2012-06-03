@@ -52,7 +52,7 @@ NetworkMap::NetworkMap() : NetObj()
 	m_backgroundLatitude = 0;
 	m_backgroundLongitude = 0;
 	m_backgroundZoom = 1;
-	m_defaultLinkColor = 0xFFFFFFFF;
+	m_defaultLinkColor = -1;
 }
 
 
@@ -75,7 +75,7 @@ NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
 	m_backgroundLatitude = 0;
 	m_backgroundLongitude = 0;
 	m_backgroundZoom = 1;
-	m_defaultLinkColor = 0xFFFFFFFF;
+	m_defaultLinkColor = -1;
 	m_bIsHidden = TRUE;
 }
 
@@ -138,7 +138,7 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 6, DB_SQLTYPE_DOUBLE, m_backgroundLongitude);
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_backgroundZoom);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_flags);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_defaultLinkColor);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_defaultLinkColor);
 	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_dwId);
 
 	if (!DBExecute(hStmt))
@@ -245,7 +245,7 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 		m_backgroundLongitude = DBGetFieldDouble(hResult, 0, 5);
 		m_backgroundZoom = (int)DBGetFieldLong(hResult, 0, 6);
 		m_flags = DBGetFieldULong(hResult, 0, 7);
-		m_defaultLinkColor = DBGetFieldULong(hResult, 0, 8);
+		m_defaultLinkColor = DBGetFieldLong(hResult, 0, 8);
 		DBFreeResult(hResult);
 
 	   // Load elements
@@ -342,7 +342,7 @@ void NetworkMap::CreateMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_BACKGROUND_LATITUDE, m_backgroundLatitude);
 	msg->SetVariable(VID_BACKGROUND_LONGITUDE, m_backgroundLongitude);
 	msg->SetVariable(VID_BACKGROUND_ZOOM, (WORD)m_backgroundZoom);
-	msg->SetVariable(VID_LINK_COLOR, m_defaultLinkColor);
+	msg->SetVariable(VID_LINK_COLOR, (DWORD)m_defaultLinkColor);
 
 	msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)m_numElements);
 	DWORD varId = VID_ELEMENT_LIST_BASE;
@@ -378,13 +378,13 @@ DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 		m_layout = (int)request->GetVariableShort(VID_LAYOUT);
 
 	if (request->IsVariableExist(VID_FLAGS))
-		m_flags = request->GetVariableShort(VID_FLAGS);
+		m_flags = request->GetVariableLong(VID_FLAGS);
 
 	if (request->IsVariableExist(VID_SEED_OBJECT))
 		m_seedObject = request->GetVariableLong(VID_SEED_OBJECT);
 
 	if (request->IsVariableExist(VID_LINK_COLOR))
-		m_defaultLinkColor = request->GetVariableShort(VID_LINK_COLOR);
+		m_defaultLinkColor = (int)request->GetVariableLong(VID_LINK_COLOR);
 
 	if (request->IsVariableExist(VID_BACKGROUND))
 	{
