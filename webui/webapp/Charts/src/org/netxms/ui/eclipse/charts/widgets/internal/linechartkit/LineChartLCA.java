@@ -2,6 +2,9 @@ package org.netxms.ui.eclipse.charts.widgets.internal.linechartkit;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.eclipse.rwt.lifecycle.AbstractWidgetLCA;
 import org.eclipse.rwt.lifecycle.ControlLCAUtil;
@@ -11,8 +14,14 @@ import org.eclipse.rwt.lifecycle.WidgetLCAUtil;
 import org.eclipse.rwt.lifecycle.WidgetUtil;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Widget;
+import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.ui.eclipse.charts.widgets.LineChart;
 
+/**
+ * @deprecated this whole Flot integration is a weird hack which should be replaced ASAP
+ * @author alk
+ *
+ */
 @SuppressWarnings("deprecation")
 public class LineChartLCA extends AbstractWidgetLCA {
 
@@ -53,8 +62,17 @@ public class LineChartLCA extends AbstractWidgetLCA {
 		double[][] xyData = chart.getFlatXYData();
 		if (xyData.length > 0) {
 			DecimalFormat format = new DecimalFormat("###.###");
-			Object[] arguments = new Object[xyData.length + 1];
+			Object[] arguments = new Object[xyData.length + 2];
 			arguments[0] = chart.getLegends().toArray();
+			List<GraphItemStyle> itemStyles = chart.getItemStyles();
+			List<String> colors = new ArrayList<String>(itemStyles.size());
+			for (GraphItemStyle itemStyle : itemStyles) {
+				int color = itemStyle.getColor();
+				String textColor = "rgb(" + (color & 0xff) + "," + ((color & 0xff00) >> 8) + "," + ((color & 0xff0000) >> 16) + ")";
+				colors.add(textColor);
+			}
+			arguments[1] = colors.toArray();
+			
 			for (int i = 0; i < xyData.length; i++) {
 				final StringBuilder builder = new StringBuilder();
 				double[] dciData = xyData[i];
@@ -64,7 +82,7 @@ public class LineChartLCA extends AbstractWidgetLCA {
 					}
 					builder.append(format.format(dciData[j]));
 				}
-				arguments[i + 1] = builder.toString();
+				arguments[i + 2] = builder.toString();
 			}
 			writer.call("update", arguments);
 			// writer.call("update", null);

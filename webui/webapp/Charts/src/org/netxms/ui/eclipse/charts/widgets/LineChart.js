@@ -70,14 +70,14 @@ qx.Class.define("org.netxms.ui.eclipse.charts.widgets.LineChart", {
 			qx.ui.core.Widget.flushGlobalQueues();
 			var plotData = [];
 			
-			for (var i = 1; i < arguments.length; i++) {
+			for (var i = 2; i < arguments.length; i++) {
 				elements = arguments[i].split("|");
 				var dciPoints = [];
 				for (var j = 0; j < elements.length; j += 2) {
 					var point = [elements[j], elements[j + 1]];
 					dciPoints.push(point);
 				}
-				plotData.push({ label : arguments[0][i - 1], data : dciPoints, color: this._defaultColors[i - 1] });
+				plotData.push({ label : arguments[0][i - 2], data : dciPoints, color: arguments[1][i - 2] });
 			}
 			//console.log(arguments);
 			//console.log(plotData);

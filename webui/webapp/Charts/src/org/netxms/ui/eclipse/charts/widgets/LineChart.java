@@ -39,17 +39,14 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 
 	@Override
 	public void initializationComplete() {
-		System.out.println("initializationComplete");
 	}
 
 	@Override
 	public void setChartTitle(String title) {
-		System.out.println("setChartTitle");
 	}
 
 	@Override
 	public void setTitleVisible(boolean visible) {
-		System.out.println("");
 	}
 
 	@Override
@@ -69,12 +66,10 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 
 	@Override
 	public void set3DModeEnabled(boolean enabled) {
-		System.out.println("set3DModeEnabled");
 	}
 
 	@Override
 	public void setLogScaleEnabled(boolean enabled) {
-		System.out.println("setLogScaleEnabled");
 	}
 
 	@Override
@@ -89,32 +84,26 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 
 	@Override
 	public void setBackgroundColor(ChartColor color) {
-		System.out.println("setBackgroundColor");
 	}
 
 	@Override
 	public void setPlotAreaColor(ChartColor color) {
-		System.out.println("setPlotAreaColor");
 	}
 
 	@Override
 	public void setLegendColor(ChartColor foreground, ChartColor background) {
-		System.out.println("setLegendColor");
 	}
 
 	@Override
 	public void setAxisColor(ChartColor color) {
-		System.out.println("setAxisColor");
 	}
 
 	@Override
 	public void setGridColor(ChartColor color) {
-		System.out.println("setGridColor");
 	}
 
 	@Override
 	public void setTimeRange(Date from, Date to) {
-		System.out.println("");
 	}
 
 	@Override
@@ -129,7 +118,6 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 
 	@Override
 	public List<GraphItemStyle> getItemStyles() {
-		System.out.println("getItemStyles");
 		return itemStyles;
 	}
 
@@ -189,22 +177,18 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 	@Override
 	public void adjustXAxis(boolean repaint) 
 	{
-		System.out.println("adjustXAxis");
 	}
 
 	@Override
 	public void adjustYAxis(boolean repaint) {
-		System.out.println("adjustYAxis");
 	}
 
 	@Override
 	public void zoomIn() {
-		System.out.println("zoomIn");
 	}
 
 	@Override
 	public void zoomOut() {
-		System.out.println("zoomOut");
 	}
 
 	@Override
