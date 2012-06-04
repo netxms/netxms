@@ -35,6 +35,7 @@ Array::Array(int initial, int grow, bool owner)
 	m_allocated = (initial >= 0) ? initial : 16;
 	m_data = (m_allocated > 0) ? (void **)malloc(sizeof(void *) * m_allocated) : NULL;
 	m_objectOwner = owner;
+	m_objectDestructor = free;
 }
 
 
@@ -131,16 +132,6 @@ void Array::internalRemove(int index, bool allowDestruction)
 		destroyObject(m_data[index]);
 	m_size--;
 	memmove(&m_data[index], &m_data[index + 1], sizeof(void *) * (m_size - index));
-}
-
-
-//
-// Default object destructor
-//
-
-void Array::destroyObject(void *object)
-{
-	safe_free(object);
 }
 
 

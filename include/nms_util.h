@@ -389,9 +389,10 @@ private:
 	bool m_objectOwner;
 
 	void internalRemove(int index, bool allowDestruction);
+	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
 
 protected:
-	virtual void destroyObject(void *object);
+	void (*m_objectDestructor)(void *);
 
 public:
 	Array(int initial = 0, int grow = 16, bool owner = false);
@@ -413,11 +414,11 @@ public:
 
 template <class T> class ObjectArray : public Array
 {
-protected:
-	virtual void destroyObject(void *object) { delete (T*)object; }
+private:
+	static void destructor(void *object) { delete (T*)object; }
 
 public:
-	ObjectArray(int initial = 0, int grow = 16, bool owner = false) : Array(initial, grow, owner) { }
+	ObjectArray(int initial = 0, int grow = 16, bool owner = false) : Array(initial, grow, owner) { m_objectDestructor = destructor; }
 	virtual ~ObjectArray() { }
 
 	int add(T *object) { return Array::add((void *)object); }
