@@ -8,4 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = lib baystack cat2900xl catalyst ers8000 netscreen
+SUBDIRS = lib baystack cat2900xl catalyst ers8000 netscreen procurve
