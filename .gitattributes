@@ -2120,7 +2120,6 @@ src/snmp/nxsnmpwalk/nxsnmpwalk.vcproj -text
 src/sqlite/dllmain.c -text
 src/sqlite/nxsqlite.vcproj -text
 src/tools/Makefile.am -text
-src/tools/nxcptest/nxcptest.vcproj -text
 src/tools/nxdevcfg/Makefile.am -text
 src/tools/nxdevcfg/nxdevcfg.cpp -text
 src/zlib/Makefile.am -text

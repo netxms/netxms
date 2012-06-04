@@ -403,11 +403,6 @@ src/sqlite/Makefile
 src/sqlite/Makefile.in
 src/tools/Makefile
 src/tools/Makefile.in
-src/tools/nxcptest/.deps
-src/tools/nxcptest/.libs
-src/tools/nxcptest/Makefile
-src/tools/nxcptest/Makefile.in
-src/tools/nxcptest/nxcptest
 src/tools/nxdevcfg/.deps
 src/tools/nxdevcfg/.libs
 src/tools/nxdevcfg/Makefile
