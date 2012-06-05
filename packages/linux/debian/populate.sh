@@ -21,7 +21,6 @@ mkdir netxms-base/usr
 mkdir netxms-base/usr/bin
 mkdir netxms-base/usr/lib
 cat netxms-base.control | sed "s/@arch@/$ARCH/" | sed "s/@version@/$VERSION/" > netxms-base/DEBIAN/control
-cp /usr/bin/nxcptest netxms-base/usr/bin/
 cp -P /usr/lib/libnetxms.so* netxms-base/usr/lib/
 cp -P /usr/lib/libnxsqlite.so* netxms-base/usr/lib/
 

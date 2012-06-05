@@ -7,6 +7,7 @@ Building binary packages for Debian:
 
 	./configure --prefix=/usr --with-server --with-odbc --with-sqlite --with-pgsql --with-mysql
 	make clean
+	make
 	make install
 
 2. Go to packages/linux/debian
@@ -28,4 +29,3 @@ Updating package files on web server:
 
 	dpkg-scanpackages dists/squeeze/main/binary-i386 | gzip -9c > dists/squeeze/main/binary-i386/Packages.gz
 	dpkg-scanpackages dists/squeeze/main/binary-amd64 | gzip -9c > dists/squeeze/main/binary-amd64/Packages.gz
-	
