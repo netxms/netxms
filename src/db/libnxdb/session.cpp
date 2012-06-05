@@ -1142,11 +1142,6 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
    if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
 	hResult = hConn->m_driver->m_fpDrvSelectPrepared(hConn->m_connection, hStmt->m_statement, &dwError, wcErrorText);
-   if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
-   {
-      DBReconnect(hConn);
-		hResult = hConn->m_driver->m_fpDrvSelectPrepared(hConn->m_connection, hStmt->m_statement, &dwError, wcErrorText);
-   }
 
    if (hConn->m_driver->m_dumpSql)
    {
