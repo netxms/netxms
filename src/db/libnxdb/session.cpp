@@ -931,7 +931,17 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
 
-	DBDRV_STATEMENT stmt = hConn->m_driver->m_fpDrvPrepare(hConn->m_connection, pwszQuery, wcErrorText);
+	MutexLock(hConn->m_mutexTransLock);
+
+	DWORD errorCode;
+	DBDRV_STATEMENT stmt = hConn->m_driver->m_fpDrvPrepare(hConn->m_connection, pwszQuery, &errorCode, wcErrorText);
+   if ((stmt == NULL) && (errorCode == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
+   {
+      DBReconnect(hConn);
+		stmt = hConn->m_driver->m_fpDrvPrepare(hConn->m_connection, pwszQuery, &errorCode, wcErrorText);
+	}
+   MutexUnlock(hConn->m_mutexTransLock);
+
 	if (stmt != NULL)
 	{
 		result = (DB_STATEMENT)malloc(sizeof(db_statement_t));
@@ -1071,12 +1081,6 @@ BOOL LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
       ms = GetCurrentTimeMs();
 
 	DWORD dwResult = hConn->m_driver->m_fpDrvExecute(hConn->m_connection, hStmt->m_statement, wcErrorText);
-   if ((dwResult == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
-   {
-      DBReconnect(hConn);
-      dwResult = hConn->m_driver->m_fpDrvExecute(hStmt->m_connection, hStmt->m_statement, wcErrorText);
-   }
-
    if (hConn->m_driver->m_dumpSql)
    {
       ms = GetCurrentTimeMs() - ms;

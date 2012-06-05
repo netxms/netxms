@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -30,7 +30,7 @@
 // API version
 //
 
-#define DBDRV_API_VERSION           13
+#define DBDRV_API_VERSION           14
 
 
 //

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -52,7 +52,7 @@ struct db_driver_t
 	void *m_userArg;
 	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *, const char *, WCHAR *);
 	void (* m_fpDrvDisconnect)(DBDRV_CONNECTION);
-	DBDRV_STATEMENT (* m_fpDrvPrepare)(DBDRV_CONNECTION, const WCHAR *, WCHAR *);
+	DBDRV_STATEMENT (* m_fpDrvPrepare)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
 	void (* m_fpDrvFreeStatement)(DBDRV_STATEMENT);
 	void (* m_fpDrvBind)(DBDRV_STATEMENT, int, int, int, void *, int);
 	DWORD (* m_fpDrvExecute)(DBDRV_CONNECTION, DBDRV_STATEMENT, WCHAR *);

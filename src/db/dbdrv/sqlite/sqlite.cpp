@@ -1,6 +1,6 @@
 /* 
 ** SQLite Database Driver
-** Copyright (C) 2005-2011 Victor Kirhenshtein
+** Copyright (C) 2005-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -185,7 +185,7 @@ extern "C" void EXPORT DrvDisconnect(SQLITE_CONN *hConn)
 // Prepare statement
 //
 
-extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(SQLITE_CONN *hConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(hConn->mutexQueryLock);
@@ -194,6 +194,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(SQLITE_CONN *hConn, WCHAR *pwszQuer
    {
 		GetErrorMessage(hConn->pdb, errorText);
 		stmt = NULL;
+		*pdwError = DBERR_OTHER_ERROR;
    }
    MutexUnlock(hConn->mutexQueryLock);
    free(pszQueryUTF8);

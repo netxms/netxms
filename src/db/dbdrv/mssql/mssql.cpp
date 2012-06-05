@@ -1,6 +1,6 @@
 /* 
 ** MS SQL Database Driver
-** Copyright (C) 2004-2011 Victor Kirhenshtein
+** Copyright (C) 2004-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -290,7 +290,7 @@ extern "C" void EXPORT DrvDisconnect(MSSQL_CONN *pConn)
 // Prepare statement
 //
 
-extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MSSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MSSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    long iResult;
 	SQLHSTMT stmt;
@@ -311,17 +311,18 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MSSQL_CONN *pConn, WCHAR *pwszQuery
 			result->handle = stmt;
 			result->buffers = new Array(0, 16, true);
 			result->connection = pConn;
+			*pdwError = DBERR_SUCCESS;
 		}
 		else
       {
-         GetSQLErrorInfo(SQL_HANDLE_STMT, stmt, errorText);
+         *pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, stmt, errorText);
 	      SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 			result = NULL;
       }
    }
    else
    {
-      GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
+      *pdwError = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
 		result = NULL;
    }
 

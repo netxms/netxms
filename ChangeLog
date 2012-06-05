@@ -3,11 +3,26 @@
 *
 
 - Implemented dashboard export/import
+- New NXSL functions for direct SNMP access
+- New NXSL functions for getting min, max, and average DCI value for period
 - Fixed memory leak in NXSL functions gmtime and localtime
+- Fixed memory leak in configuration poller
 - Added driver for HP E-series (ProCurve) switches
+- Implemented "sticky" alarm acknowledgements
+- Added option to disable automatic node unbinding from containers
+- Added option to disable automatic template removal
+- Added events for automatic container binding and unbinding
+- Added events for automatic template apply and remove
 - Java console:
+	- Configuration export implemented
 	- Added object status indication bar in object browser
 	- Added filtering by IP address and comments in object browser
+- Web UI:
+	- Windows installer improved
+	- Line charts improved
+- Agent now allows to define management server address as subnet
+- Additional I/O parameters in Solaris agent
+- Fixed bugs with static agent build
 - Fixed issues: #333, #340, #343, #353
 
 

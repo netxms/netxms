@@ -178,7 +178,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    fpDrvInit = (BOOL (*)(const char *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvInit"));
    driver->m_fpDrvConnect = (DBDRV_CONNECTION (*)(const char *, const char *, const char *, const char *, const char *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvConnect"));
    driver->m_fpDrvDisconnect = (void (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, _T("DrvDisconnect"));
-	driver->m_fpDrvPrepare = (DBDRV_STATEMENT (*)(DBDRV_CONNECTION, const WCHAR *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvPrepare"));
+	driver->m_fpDrvPrepare = (DBDRV_STATEMENT (*)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvPrepare"));
 	driver->m_fpDrvFreeStatement = (void (*)(DBDRV_STATEMENT))DLGetSymbolAddrEx(driver->m_handle, _T("DrvFreeStatement"));
 	driver->m_fpDrvBind = (void (*)(DBDRV_STATEMENT, int, int, int, void *, int))DLGetSymbolAddrEx(driver->m_handle, _T("DrvBind"));
 	driver->m_fpDrvExecute = (DWORD (*)(DBDRV_CONNECTION, DBDRV_STATEMENT, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvExecute"));

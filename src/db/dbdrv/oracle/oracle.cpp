@@ -1,6 +1,6 @@
 /* 
 ** Oracle Database Driver
-** Copyright (C) 2007-2011 Victor Kirhenshtein
+** Copyright (C) 2007-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -365,7 +365,7 @@ static UCS2CHAR *ConvertQuery(WCHAR *query)
 // Prepare statement
 //
 
-extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	ORACLE_STATEMENT *stmt = NULL;
 	OCIStmt *handleStmt;
@@ -382,10 +382,12 @@ extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQu
 		stmt->bindings = new Array(8, 8, false);
 		stmt->buffers = new Array(8, 8, true);
 		OCIHandleAlloc(pConn->handleEnv, (void **)&stmt->handleError, OCI_HTYPE_ERROR, 0, NULL);
+		*pdwError = DBERR_SUCCESS;
 	}
 	else
 	{
 		SetLastErrorText(pConn);
+		*pdwError = IsConnectionError(pConn);
 	}
 
 	if (errorText != NULL)

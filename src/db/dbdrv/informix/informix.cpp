@@ -1,6 +1,6 @@
 /* 
 ** Informix Database Driver
-** Copyright (C) 2010, 2011 Raden Solutinos
+** Copyright (C) 2010-2012 Raden Solutinos
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -282,7 +282,7 @@ extern "C" void EXPORT DrvDisconnect(INFORMIX_CONN *pConn)
 // Prepare statement
 //
 
-extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(INFORMIX_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	long iResult;
 	SQLHSTMT statement;
@@ -302,17 +302,18 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(INFORMIX_CONN *pConn, WCHAR *pwszQu
 			result->handle = statement;
 			result->buffers = new Array(0, 16, true);
 			result->connection = pConn;
+			*pdwError = DBERR_SUCCESS;
 		}
 		else
 		{
-			GetSQLErrorInfo(SQL_HANDLE_STMT, statement, errorText);
+			*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, statement, errorText);
 			SQLFreeHandle(SQL_HANDLE_STMT, statement);
 			result = NULL;
 		}
 	}
 	else
 	{
-		GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
+		*pdwError = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
 		result = NULL;
 	}
 

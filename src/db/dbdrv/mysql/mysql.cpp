@@ -1,6 +1,6 @@
 /* 
 ** MySQL Database Driver
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -272,7 +272,7 @@ extern "C" void EXPORT DrvDisconnect(MYSQL_CONN *pConn)
 // Prepare statement
 //
 
-extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	MYSQL_STATEMENT *result = NULL;
 
@@ -293,9 +293,19 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQuery
 			result->lengthFields = (unsigned long *)malloc(sizeof(unsigned long) * result->paramCount);
 			memset(result->lengthFields, 0, sizeof(unsigned long) * result->paramCount);
 			result->buffers = new Array(result->paramCount, 16, true);
+			*pdwError = DBERR_SUCCESS;
 		}
 		else
 		{
+			int nErr = mysql_errno(pConn->pMySQL);
+			if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR)
+			{
+				*pdwError = DBERR_CONNECTION_LOST;
+			}
+			else
+			{
+				*pdwError = DBERR_OTHER_ERROR;
+			}
 			UpdateErrorMessage(mysql_stmt_error(stmt), errorText);
 			mysql_stmt_close(stmt);
 		}
@@ -303,6 +313,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQuery
 	}
 	else
 	{
+		*pdwError = DBERR_OTHER_ERROR;
 		UpdateErrorMessage("Call to mysql_stmt_init failed", errorText);
 	}
 	MutexUnlock(pConn->mutexQueryLock);

@@ -1,6 +1,6 @@
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003 - 2011 Victor Kirhenshtein and Alex Kirhenshtein
+** Copyright (C) 2003 - 2012 Victor Kirhenshtein and Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -316,7 +316,7 @@ static char *ConvertQuery(WCHAR *query)
 // Prepare statement
 //
 
-extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	char *pszQueryUTF8 = ConvertQuery(pwszQuery);
 	PG_STATEMENT *hStmt = (PG_STATEMENT *)malloc(sizeof(PG_STATEMENT));
@@ -330,6 +330,8 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery, W
 		free(hStmt);
 		hStmt = NULL;
 
+		*pdwError = (PQstatus(pConn->pHandle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+
 		if (errorText != NULL)
 		{
 			MultiByteToWideChar(CP_UTF8, 0, PQerrorMessage(pConn->pHandle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
@@ -342,6 +344,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery, W
 		hStmt->allocated = 0;
 		hStmt->pcount = 0;
 		hStmt->buffers = NULL;
+		*pdwError = DBERR_SUCCESS;
 	}
 	MutexUnlock(pConn->mutexQueryLock);
 	if (pResult != NULL)
