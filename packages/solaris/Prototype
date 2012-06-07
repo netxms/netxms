@@ -8,7 +8,6 @@ d none /opt/netxms/lib 0755 root root
 d none /opt/netxms/lib/netxms 0755 root root
 f none /opt/netxms/bin/nxagentd 0755 root root
 f none /opt/netxms/bin/nxapush 0755 root root
-f none /opt/netxms/bin/nxcptest 0755 root root
 f none /opt/netxms/bin/nxdevcfg 0755 root root
 f none /opt/netxms/lib/libcrypto.so.0.9.8 0555 root root
 f none /opt/netxms/lib/libgcc_s.so.1 0644 root root

@@ -9,7 +9,7 @@ endif
 
 all: prereq package
 
-prereq: /opt/netxms/lib/libcrypto.so.0.9.8
+prereq:
 	cp /opt/csw/lib/libcrypto.so.0.9.8 /opt/netxms/lib
 	cp /opt/csw/lib/libgcc_s.so.1 /opt/netxms/lib
 	cp /opt/csw/lib/libstdc++.so.6 /opt/netxms/lib
