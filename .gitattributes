@@ -204,6 +204,11 @@ packages/linux/debian/netxms-server.postinst -text
 packages/linux/debian/netxms-server.postrm -text
 packages/linux/debian/netxms-server.preinst -text
 packages/linux/debian/netxms-server.prerm -text
+packages/osx/Info.plist -text
+packages/osx/dmg-background.png -text svneol=unset#unset
+packages/osx/dmg-background.psd -text svneol=unset#unset
+packages/osx/dmg-icon.icns -text svneol=unset#unset
+packages/osx/dmg-icon.psd -text svneol=unset#unset
 packages/solaris/Prototype -text
 packages/solaris/postinstall -text
 packages/solaris/preinstall -text
