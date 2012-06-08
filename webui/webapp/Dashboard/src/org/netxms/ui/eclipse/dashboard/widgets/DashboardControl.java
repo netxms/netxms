@@ -32,7 +32,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.client.NXCObjectModificationData;
@@ -526,7 +525,7 @@ public class DashboardControl extends Composite
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
-				Display.getDefault().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{

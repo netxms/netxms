@@ -235,12 +235,12 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 
 	if (!strcmp(login, "*"))
 	{
-		snprintf(connectString, 1024, "DRIVER={SQL Server Native Client};SERVER=%s;Trusted_Connection=yes;Database=%s;APP=NetXMS",
+		snprintf(connectString, 1024, "DRIVER={SQL Native Client};Server=%s;Trusted_Connection=yes;Database=%s;APP=NetXMS",
 			      host, database);
 	}
 	else
 	{
-		snprintf(connectString, 1024, "DRIVER={SQL Server Native Client 10.0};SERVER=%s;UID=%s;PWD=%s;Database=%s;APP=NetXMS",
+		snprintf(connectString, 1024, "DRIVER={SQL Server Native Client 10.0};Server=%s;UID=%s;PWD=%s;Database=%s;APP=NetXMS",
 		         host, login, password, database);
 	}
 	iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);

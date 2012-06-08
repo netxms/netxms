@@ -37,14 +37,13 @@ import org.netxms.webui.core.Messages;
 
 /**
  * Tailored Job class for NetXMS console. Callers must call start() instead of schedule() for correct execution.
- *
  */
 public abstract class ConsoleJob extends Job
 {
 	private IWorkbenchSiteProgressService siteService;
 	private String pluginId;
 	private Object jobFamily;
-	private boolean passException = false;
+	private boolean passException = true;
 	private Display display;
 	
 	/**
