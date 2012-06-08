@@ -6,7 +6,7 @@ android/src/console/.externalToolBuilders/generate_build_number.xml -text
 android/src/console/.externalToolBuilders/run.exe -text
 android/src/console/AndroidManifest.xml -text
 android/src/console/default.properties -text
-android/src/console/libs/simple-xml-2.4.1.jar -text
+android/src/console/libs/simple-xml-2.6.4.jar -text
 android/src/console/lint.xml -text
 android/src/console/project.properties -text
 android/src/console/res/drawable-hdpi-v11/ic_stat_connected.png -text
@@ -120,6 +120,7 @@ android/src/console/src/org/netxms/ui/android/main/activities/HomeScreen.java -t
 android/src/console/src/org/netxms/ui/android/main/activities/LastValues.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/NodeBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/NodeInfo.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/helpers/XmlDateConverter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/ActivityListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/AlarmListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/ConnectionPointListAdapter.java -text

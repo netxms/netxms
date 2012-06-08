@@ -27,6 +27,8 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.convert.AnnotationStrategy;
+import org.simpleframework.xml.convert.Convert;
 import org.simpleframework.xml.core.Persister;
 
 /**
@@ -75,9 +77,11 @@ public class ChartConfig
 	private int timeFrameType = GraphSettings.TIME_FRAME_BACK_FROM_NOW;
 	
 	@Element(required=false)
+	@Convert(XmlDateConverter.class)
 	private Date timeFrom;
 	
 	@Element(required=false)
+	@Convert(XmlDateConverter.class)
 	private Date timeTo;
 	
 	/**
@@ -101,7 +105,7 @@ public class ChartConfig
 			return config;
 		}
 		
-		Serializer serializer = new Persister();
+		Serializer serializer = new Persister(new AnnotationStrategy());
 		return serializer.read(ChartConfig.class, xml);
 	}
 
@@ -349,7 +353,7 @@ public class ChartConfig
 	 */
 	public String createXml() throws Exception
 	{
-		Serializer serializer = new Persister();
+		Serializer serializer = new Persister(new AnnotationStrategy());
 		Writer writer = new StringWriter();
 		serializer.write(this, writer);
 		return writer.toString();

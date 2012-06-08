@@ -29,6 +29,8 @@ import android.widget.TextView;
  */
 public class GraphBrowser extends AbstractClientActivity
 {
+	private static final String LOG_TAG = "org.netxms.ui.android.main.activities.GraphBrowser";
+	
 	private ExpandableListView listView;
 	private GraphAdapter adapter;
 	ProgressDialog dialog;
@@ -111,7 +113,7 @@ public class GraphBrowser extends AbstractClientActivity
 			}
 			catch(Exception e)
 			{
-				// TODO: notify user about error??
+				Log.w(LOG_TAG, "ChartConfig.createFromXml", e);
 				config = new ChartConfig();
 			}
 			
