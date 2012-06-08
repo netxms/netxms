@@ -1575,6 +1575,7 @@ src/java/netxms-eclipse/PerfView/icons/status_view.png -text
 src/java/netxms-eclipse/PerfView/icons/table.gif -text
 src/java/netxms-eclipse/PerfView/icons/view3d.png -text
 src/java/netxms-eclipse/PerfView/plugin.xml -text
+src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/XmlDateConverter.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowHistoryData.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowTableLastValues.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/dialogs/HistoricalDataSelectionDialog.java -text
@@ -1904,7 +1905,7 @@ src/java/netxms-eclipse/library/icons/unknown_obj.gif -text
 src/java/netxms-eclipse/library/icons/xml.gif -text
 src/java/netxms-eclipse/library/icons/zoom_in.png -text
 src/java/netxms-eclipse/library/icons/zoom_out.png -text
-src/java/netxms-eclipse/library/jar/simple-xml-2.4.1.jar -text
+src/java/netxms-eclipse/library/jar/simple-xml-2.6.4.jar -text
 src/java/netxms-eclipse/library/plugin.xml -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -text
