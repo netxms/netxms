@@ -543,7 +543,7 @@ void NetObj::OnObjectDelete(DWORD dwObjectId)
 // Print childs IDs
 //
 
-const TCHAR *NetObj::ChildList(TCHAR *szBuffer)
+const TCHAR *NetObj::getChildList(TCHAR *szBuffer)
 {
    DWORD i;
    TCHAR *pBuf = szBuffer;
@@ -567,7 +567,7 @@ const TCHAR *NetObj::ChildList(TCHAR *szBuffer)
 // Print parents IDs
 //
 
-const TCHAR *NetObj::ParentList(TCHAR *szBuffer)
+const TCHAR *NetObj::getParentList(TCHAR *szBuffer)
 {
    DWORD i;
    TCHAR *pBuf = szBuffer;

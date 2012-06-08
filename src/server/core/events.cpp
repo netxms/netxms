@@ -455,7 +455,7 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
 						{
 							scriptName[i] = 0;
 							StrStrip(scriptName);
-							const TCHAR *temp = pObject->GetCustomAttribute(scriptName);
+							const TCHAR *temp = pObject->getCustomAttribute(scriptName);
 							if (temp != NULL)
 							{
 								dwSize += (DWORD)_tcslen(temp);

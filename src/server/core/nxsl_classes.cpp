@@ -67,7 +67,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
    }
 	else
 	{
-		const TCHAR *attrValue = object->GetCustomAttribute(pszAttr);
+		const TCHAR *attrValue = object->getCustomAttribute(pszAttr);
 		if (attrValue != NULL)
 		{
 			pValue = new NXSL_Value(attrValue);
@@ -177,7 +177,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    }
 	else
 	{
-		const TCHAR *attrValue = pNode->GetCustomAttribute(pszAttr);
+		const TCHAR *attrValue = pNode->getCustomAttribute(pszAttr);
 		if (attrValue != NULL)
 		{
 			pValue = new NXSL_Value(attrValue);
@@ -366,7 +366,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    }
 	else
 	{
-		const TCHAR *attrValue = iface->GetCustomAttribute(pszAttr);
+		const TCHAR *attrValue = iface->getCustomAttribute(pszAttr);
 		if (attrValue != NULL)
 		{
 			pValue = new NXSL_Value(attrValue);

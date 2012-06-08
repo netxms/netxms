@@ -413,14 +413,14 @@ public:
 
    void addChildNodesToList(ObjectArray<Node> *nodeList, DWORD dwUserId);
    
-   const TCHAR *GetCustomAttribute(const TCHAR *name) { return m_customAttributes.get(name); }
-   void SetCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); Modify(); }
-   void SetCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); Modify(); }
-   void DeleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
+   const TCHAR *getCustomAttribute(const TCHAR *name) { return m_customAttributes.get(name); }
+   void setCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); Modify(); }
+   void setCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); Modify(); }
+   void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
 
    // Debug methods
-   const TCHAR *ParentList(TCHAR *szBuffer);
-   const TCHAR *ChildList(TCHAR *szBuffer);
+   const TCHAR *getParentList(TCHAR *szBuffer);
+   const TCHAR *getChildList(TCHAR *szBuffer);
 };
 
 

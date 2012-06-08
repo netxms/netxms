@@ -4827,7 +4827,7 @@ TCHAR *Node::expandText(const TCHAR *pszTemplate)
 						{
 							scriptName[i] = 0;
 							StrStrip(scriptName);
-							const TCHAR *temp = GetCustomAttribute(scriptName);
+							const TCHAR *temp = getCustomAttribute(scriptName);
 							if (temp != NULL)
 							{
 								dwSize += (DWORD)_tcslen(temp);

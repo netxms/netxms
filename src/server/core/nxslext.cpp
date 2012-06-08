@@ -40,7 +40,6 @@ void RegisterDCIFunctions(NXSL_Environment *pEnv);
 static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	NXSL_Object *object;
-	Node *node;
 	const TCHAR *value;
 
 	if (!argv[0]->isObject())
@@ -50,11 +49,13 @@ static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 		return NXSL_ERR_NOT_STRING;
 
 	object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
+	    _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	node = (Node *)object->getData();
-	value = node->GetCustomAttribute(argv[1]->getValueAsCString());
+	NetObj *netxmsObject = (NetObj *)object->getData();
+	value = netxmsObject->getCustomAttribute(argv[1]->getValueAsCString());
 	if (value != NULL)
 	{
 		*ppResult = new NXSL_Value(value);
@@ -77,7 +78,6 @@ static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	NXSL_Object *object;
-	Node *node;
 	const TCHAR *value;
 
 	if (!argv[0]->isObject())
@@ -87,11 +87,13 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 		return NXSL_ERR_NOT_STRING;
 
 	object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
+	    _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	node = (Node *)object->getData();
-	value = node->GetCustomAttribute(argv[1]->getValueAsCString());
+	NetObj *netxmsObject = (NetObj *)object->getData();
+	value = netxmsObject->getCustomAttribute(argv[1]->getValueAsCString());
 	if (value != NULL)
 	{
 		*ppResult = new NXSL_Value(value);
@@ -101,7 +103,7 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 		*ppResult = new NXSL_Value;	// Return NULL if attribute not found
 	}
 
-	node->SetCustomAttribute(argv[1]->getValueAsCString(), argv[2]->getValueAsCString());
+	netxmsObject->setCustomAttribute(argv[1]->getValueAsCString(), argv[2]->getValueAsCString());
 
 	return 0;
 }
