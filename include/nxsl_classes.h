@@ -494,6 +494,7 @@ protected:
    void error(int nError);
    NXSL_Value *matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase);
 
+   NXSL_Variable *findVariable(const TCHAR *pszName);
    NXSL_Variable *findOrCreateVariable(const TCHAR *pszName);
 	NXSL_Variable *createVariable(const TCHAR *pszName);
 

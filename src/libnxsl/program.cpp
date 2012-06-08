@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -563,10 +563,10 @@ void NXSL_Program::setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue)
 
 
 //
-// Find variable or create if does not exist
+// Find variable
 //
 
-NXSL_Variable *NXSL_Program::findOrCreateVariable(const TCHAR *pszName)
+NXSL_Variable *NXSL_Program::findVariable(const TCHAR *pszName)
 {
    NXSL_Variable *pVar;
 
@@ -577,11 +577,22 @@ NXSL_Variable *NXSL_Program::findOrCreateVariable(const TCHAR *pszName)
       if (pVar == NULL)
       {
          pVar = m_pLocals->find(pszName);
-         if (pVar == NULL)
-         {
-            pVar = m_pLocals->create(pszName);
-         }
       }
+   }
+   return pVar;
+}
+
+
+//
+// Find variable or create if does not exist
+//
+
+NXSL_Variable *NXSL_Program::findOrCreateVariable(const TCHAR *pszName)
+{
+   NXSL_Variable *pVar = findVariable(pszName);
+   if (pVar == NULL)
+   {
+      pVar = m_pLocals->create(pszName);
    }
    return pVar;
 }
@@ -660,14 +671,28 @@ void NXSL_Program::execute()
 			}
          break;
 		case OPCODE_ARRAY:
-         pVar = createVariable(cp->m_operand.m_pszString);
+			// Check if variable already exist
+			pVar = findVariable(cp->m_operand.m_pszString);
 			if (pVar != NULL)
 			{
-				pVar->setValue(new NXSL_Value(new NXSL_Array));
+				// only raise error if variable with given name already exist
+				// and is not an array
+				if (!pVar->getValue()->isArray())
+				{
+					error(NXSL_ERR_VARIABLE_ALREADY_EXIST);
+				}
 			}
 			else
 			{
-				error(NXSL_ERR_VARIABLE_ALREADY_EXIST);
+				pVar = createVariable(cp->m_operand.m_pszString);
+				if (pVar != NULL)
+				{
+					pVar->setValue(new NXSL_Value(new NXSL_Array));
+				}
+				else
+				{
+					error(NXSL_ERR_VARIABLE_ALREADY_EXIST);
+				}
 			}
 			break;
 		case OPCODE_SET_ELEMENT:	// Set array element; stack should contain: array index value (top)
