@@ -2276,7 +2276,7 @@ webui/webapp/Core/icons/unknown_obj.gif -text
 webui/webapp/Core/icons/xml.gif -text
 webui/webapp/Core/icons/zoom_in.png -text
 webui/webapp/Core/icons/zoom_out.png -text
-webui/webapp/Core/jar/simple-xml-2.4.1.jar -text
+webui/webapp/Core/jar/simple-xml-2.6.4.jar -text
 webui/webapp/Core/plugin.xml -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.loginlisteners.exsd -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
@@ -3102,6 +3102,7 @@ webui/webapp/PerfView/icons/view3d.png -text
 webui/webapp/PerfView/plugin.xml -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/Activator.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/PerfTabGraphSettings.java -text
+webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/XmlDateConverter.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/OpenPredefinedGraphsTree.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowBarChart.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowDataComparisonChart.java -text

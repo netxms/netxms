@@ -407,6 +407,11 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	protected void createActions()
 	{
 		actionRefresh = new RefreshAction() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -415,6 +420,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		};
 		
 		actionShowStatusBackground = new Action("Show status &background", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -427,6 +434,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionShowStatusBackground.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 	
 		actionShowStatusIcon = new Action("Show status &icon", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -439,6 +448,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionShowStatusIcon.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 		
 		actionShowStatusFrame = new Action("Show status &frame", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -451,6 +462,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionShowStatusFrame.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 	
 		actionZoomIn = new Action("Zoom &in") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -460,6 +473,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 
 		actionZoomOut = new Action("Zoom &out") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -475,6 +490,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		{
 			final int alg = i;
 			actionSetAlgorithm[i] = new Action(layoutAlgorithmNames[i], Action.AS_RADIO_BUTTON) {
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void run()
 				{
@@ -486,6 +503,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		}
 		
 		actionEnableAutomaticLayout = new Action("Enable &automatic layout", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -503,6 +522,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
 		
 		actionSaveLayout = new Action("&Save layout") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -514,6 +535,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionSaveLayout.setEnabled(!automaticLayoutEnabled);
 		
 		actionOpenSubmap = new Action("Open s&ubmap") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -523,6 +546,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionOpenSubmap.setEnabled(false);
 		
 		actionFiguresIcons = new Action("&Icons", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -536,6 +561,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionFiguresIcons.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 		
 		actionFiguresSmallLabels = new Action("&Small labels", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -549,6 +576,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionFiguresSmallLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.SMALL_LABEL);
 		
 		actionFiguresLargeLabels = new Action("&Large labels", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -646,6 +675,11 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener()
 		{
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager manager)
 			{
 				int selType = analyzeSelection(currentSelection);

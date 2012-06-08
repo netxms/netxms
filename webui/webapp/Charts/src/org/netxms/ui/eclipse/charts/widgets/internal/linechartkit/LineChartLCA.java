@@ -3,7 +3,6 @@ package org.netxms.ui.eclipse.charts.widgets.internal.linechartkit;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.rwt.lifecycle.AbstractWidgetLCA;

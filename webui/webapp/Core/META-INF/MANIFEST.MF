@@ -2,12 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NetXMS WebUI Core
 Bundle-SymbolicName: org.netxms.webui.core; singleton:=true
-Bundle-Version: 1.2.1
+Bundle-Version: 1.2.2
 Bundle-Activator: org.netxms.webui.core.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.eclipse.core.runtime,
- org.eclipse.rap.ui,
- org.eclipse.rap.ui.forms;bundle-version="1.4.1"
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",
+ org.eclipse.rap.ui;bundle-version="1.5.0",
+ org.eclipse.rap.ui.forms;bundle-version="1.5.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Import-Package: javax.servlet;version="2.5.0",
@@ -16,7 +16,7 @@ Bundle-ClassPath: .,
  jar/netxms-base-1.2.1.jar,
  jar/netxms-client-1.2.1.jar,
  jar/netxms-client-api-1.2.1.jar,
- jar/simple-xml-2.4.1.jar
+ jar/simple-xml-2.6.4.jar
 Export-Package: org.netxms.api.client,
  org.netxms.api.client.constants,
  org.netxms.api.client.images,
@@ -52,4 +52,6 @@ Export-Package: org.netxms.api.client,
  org.netxms.ui.eclipse.widgets.helpers,
  org.netxms.webui.tools,
  org.simpleframework.xml,
- org.simpleframework.xml.core
+ org.simpleframework.xml.convert,
+ org.simpleframework.xml.core,
+ org.simpleframework.xml.stream
