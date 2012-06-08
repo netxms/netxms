@@ -705,10 +705,18 @@ Default:
 
 ArrayStatement:
 	T_ARRAY { pCompiler->setIdentifierOperation(OPCODE_ARRAY); } IdentifierList ';'
+|	T_GLOBAL T_ARRAY { pCompiler->setIdentifierOperation(OPCODE_GLOBAL_ARRAY); } IdentifierList ';'
 ;
 
 GlobalStatement:
-	T_GLOBAL { pCompiler->setIdentifierOperation(OPCODE_GLOBAL); } IdentifierList ';'
+	T_GLOBAL T_IDENTIFIER ';'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GLOBAL, $2, 0));
+}
+|	T_GLOBAL T_IDENTIFIER '=' Expression ';'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GLOBAL, $2, 1));
+}
 ;
 
 FunctionCall:

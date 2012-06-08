@@ -51,7 +51,7 @@ static const char *m_szCommandMnemonic[] =
    "JNZ", "LIKE", "ILIKE", "MATCH",
    "IMATCH", "CASE", "ARRAY", "EGET",
 	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
-	"GLOBAL"
+	"GLOBAL", "GARRAY"
 };
 
 
@@ -348,6 +348,7 @@ void NXSL_Program::dump(FILE *pFile)
       switch(m_ppInstructionSet[i]->m_nOpCode)
       {
          case OPCODE_CALL_EXTERNAL:
+         case OPCODE_GLOBAL:
             _ftprintf(pFile, _T("%s, %d\n"), m_ppInstructionSet[i]->m_operand.m_pszString,
                       m_ppInstructionSet[i]->m_nStackItems);
             break;
@@ -364,7 +365,7 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_SET:
          case OPCODE_BIND:
          case OPCODE_ARRAY:
-         case OPCODE_GLOBAL:
+         case OPCODE_GLOBAL_ARRAY:
          case OPCODE_INC:
          case OPCODE_DEC:
          case OPCODE_INCP:
@@ -697,6 +698,29 @@ void NXSL_Program::execute()
 				}
 			}
 			break;
+		case OPCODE_GLOBAL_ARRAY:
+			// Check if variable already exist
+			pVar = m_pGlobals->find(cp->m_operand.m_pszString);
+			if (pVar == NULL)
+			{
+				// raise error if variable with given name already exist and is not global
+				if (findVariable(cp->m_operand.m_pszString) != NULL)
+				{
+					error(NXSL_ERR_VARIABLE_ALREADY_EXIST);
+				}
+				else
+				{
+					m_pGlobals->create(cp->m_operand.m_pszString, new NXSL_Value(new NXSL_Array));
+				}
+			}
+			else
+			{
+				if (!pVar->getValue()->isArray())
+				{
+					error(NXSL_ERR_VARIABLE_ALREADY_EXIST);
+				}
+			}
+			break;
 		case OPCODE_GLOBAL:
 			// Check if variable already exist
 			pVar = m_pGlobals->find(cp->m_operand.m_pszString);
@@ -709,7 +733,22 @@ void NXSL_Program::execute()
 				}
 				else
 				{
-					m_pGlobals->create(cp->m_operand.m_pszString, new NXSL_Value);
+					if (cp->m_nStackItems > 0)	// with initialization
+					{
+						pValue = (NXSL_Value *)m_pDataStack->pop();
+						if (pValue != NULL)
+						{
+							m_pGlobals->create(cp->m_operand.m_pszString, pValue);
+						}
+						else
+						{
+			            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+						}
+					}
+					else
+					{
+						m_pGlobals->create(cp->m_operand.m_pszString, new NXSL_Value);
+					}
 				}
 			}
 			break;
