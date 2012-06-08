@@ -1394,3 +1394,28 @@ BOOL NetObj::IsTrustedNode(DWORD id)
 	}
 	return rc;
 }
+
+
+//
+// Get list of parent objects for NXSL script
+//
+
+NXSL_Array *NetObj::getParentsForNXSL()
+{
+	NXSL_Array *parents = new NXSL_Array;
+	int index = 0;
+
+	LockParentList(FALSE);
+	for(DWORD i = 0; i < m_dwParentCount; i++)
+	{
+		if ((m_pParentList[i]->Type() == OBJECT_CONTAINER) ||
+			 (m_pParentList[i]->Type() == OBJECT_SERVICEROOT) ||
+			 (m_pParentList[i]->Type() == OBJECT_NETWORK))
+		{
+			parents->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pParentList[i])));
+		}
+	}
+	UnlockParentList();
+
+	return parents;
+}

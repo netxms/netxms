@@ -335,6 +335,29 @@ static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 
 //
+// Get object's parents
+// First argument: NetXMS object (NetObj, Node, or Interface)
+// Returns array of accessible parent objects
+//
+
+static int F_GetObjectParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
+	    _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	NetObj *netobj = (NetObj *)object->getData();
+	*ppResult = new NXSL_Value(netobj->getParentsForNXSL());
+	return 0;
+}
+
+
+//
 // Get node's interfaces
 // First argument: node object
 // Returns array of interface objects
@@ -947,29 +970,32 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
 	return 0;
 }
 
+
 //
 // Additional server functions to use within all scripts
 //
 
 static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
+	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, 1 },
    { _T("GetCustomAttribute"), F_GetCustomAttribute, 2 },
    { _T("GetEventParameter"), F_GetEventParameter, 2 },
    { _T("GetInterfaceName"), F_GetInterfaceName, 2 },
    { _T("GetInterfaceObject"), F_GetInterfaceObject, 2 },
    { _T("GetNodeInterfaces"), F_GetNodeInterfaces, 1 },
    { _T("GetNodeParents"), F_GetNodeParents, 1 },
+   { _T("GetObjectParents"), F_GetObjectParents, 1 },
 	{ _T("FindNodeObject"), F_FindNodeObject, 2 },
 	{ _T("FindObject"), F_FindObject, -1 },
 	{ _T("PostEvent"), F_PostEvent, -1 },
    { _T("SetCustomAttribute"), F_SetCustomAttribute, 3 },
    { _T("SetEventParameter"), F_SetEventParameter, 3 },
-	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, 1 },
 	{ _T("SNMPGet"), F_SNMPGet, 2 },
 	{ _T("SNMPGetValue"), F_SNMPGetValue, 2 },
 	{ _T("SNMPSet"), F_SNMPSet, -1 /* 3 or 4 */ },
 	{ _T("SNMPWalk"), F_SNMPWalk, 2 }
 };
+
 
 //
 // Additional server functions to manage containers (disabled by default)
@@ -977,12 +1003,11 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 
 static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 {
+	{ _T("BindObject"), F_BindObject, 2 },
 	{ _T("CreateContainer"), F_CreateContainer, 2 },
 	{ _T("RemoveContainer"), F_RemoveContainer, 1 },
-	{ _T("BindObject"), F_BindObject, 2 },
 	{ _T("UnbindObject"), F_UnbindObject, 2 },
 };
-
 
 
 //

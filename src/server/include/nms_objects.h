@@ -418,6 +418,8 @@ public:
    void setCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); Modify(); }
    void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
 
+	virtual NXSL_Array *getParentsForNXSL();
+
    // Debug methods
    const TCHAR *getParentList(TCHAR *szBuffer);
    const TCHAR *getChildList(TCHAR *szBuffer);
@@ -952,7 +954,7 @@ public:
    void unbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
    void updateDciCache();
 	DWORD getPerfTabDCIList(CSCPMessage *pMsg);
-	NXSL_Array *getParentsForNXSL();
+	virtual NXSL_Array *getParentsForNXSL();
 	NXSL_Array *getInterfacesForNXSL();
 
 	bool checkAgentTrapId(QWORD id);
