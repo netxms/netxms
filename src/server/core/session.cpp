@@ -6463,7 +6463,7 @@ void ClientSession::setupEncryption(CSCPMessage *request)
    msg.SetVariable(VID_RCC, m_dwEncryptionResult);
 #else    /* _WITH_ENCRYPTION not defined */
    msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(dwRqId);
+   msg.SetId(request->GetId());
    msg.SetVariable(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
 #endif
 
