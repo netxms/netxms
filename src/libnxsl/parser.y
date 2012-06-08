@@ -709,13 +709,22 @@ ArrayStatement:
 ;
 
 GlobalStatement:
-	T_GLOBAL T_IDENTIFIER ';'
+	T_GLOBAL GlobalVariableList ';'
+;
+
+GlobalVariableList:
+	GlobalVariableDeclaration ',' GlobalVariableList
+|	GlobalVariableDeclaration
+;
+
+GlobalVariableDeclaration:
+	T_IDENTIFIER
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GLOBAL, $2, 0));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GLOBAL, $1, 0));
 }
-|	T_GLOBAL T_IDENTIFIER '=' Expression ';'
+|	T_IDENTIFIER '=' Expression
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GLOBAL, $2, 1));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GLOBAL, $1, 1));
 }
 ;
 

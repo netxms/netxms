@@ -2,7 +2,9 @@
 * 1.2.2
 *
 
-- New NXSL function: GetObjectParents
+- NXSL:
+	- Global variables can be declared in script code
+	- New function: GetObjectParents
 
 
 *
