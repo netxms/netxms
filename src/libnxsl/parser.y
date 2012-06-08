@@ -47,6 +47,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_FALSE
 %token T_FOR
 %token T_FOREACH
+%token T_GLOBAL
 %token T_IF
 %token T_NULL
 %token T_PRINT
@@ -481,6 +482,7 @@ BuiltinStatement:
 |	ForEachStatement
 |	SwitchStatement
 |	ArrayStatement
+|	GlobalStatement
 |	T_BREAK ';'
 {
 	if (pCompiler->canUseBreak())
@@ -703,6 +705,10 @@ Default:
 
 ArrayStatement:
 	T_ARRAY { pCompiler->setIdentifierOperation(OPCODE_ARRAY); } IdentifierList ';'
+;
+
+GlobalStatement:
+	T_GLOBAL { pCompiler->setIdentifierOperation(OPCODE_GLOBAL); } IdentifierList ';'
 ;
 
 FunctionCall:

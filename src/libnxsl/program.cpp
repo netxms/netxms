@@ -50,7 +50,8 @@ static const char *m_szCommandMnemonic[] =
    "BITNOT", "CAST", "AGET", "INCP", "DECP",
    "JNZ", "LIKE", "ILIKE", "MATCH",
    "IMATCH", "CASE", "ARRAY", "EGET",
-	"ESET", "ASET", "NAME", "FOREACH", "NEXT"
+	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
+	"GLOBAL"
 };
 
 
@@ -363,6 +364,7 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_SET:
          case OPCODE_BIND:
          case OPCODE_ARRAY:
+         case OPCODE_GLOBAL:
          case OPCODE_INC:
          case OPCODE_DEC:
          case OPCODE_INCP:
@@ -692,6 +694,22 @@ void NXSL_Program::execute()
 				else
 				{
 					error(NXSL_ERR_VARIABLE_ALREADY_EXIST);
+				}
+			}
+			break;
+		case OPCODE_GLOBAL:
+			// Check if variable already exist
+			pVar = m_pGlobals->find(cp->m_operand.m_pszString);
+			if (pVar == NULL)
+			{
+				// raise error if variable with given name already exist and is not global
+				if (findVariable(cp->m_operand.m_pszString) != NULL)
+				{
+					error(NXSL_ERR_VARIABLE_ALREADY_EXIST);
+				}
+				else
+				{
+					m_pGlobals->create(cp->m_operand.m_pszString, new NXSL_Value);
 				}
 			}
 			break;
