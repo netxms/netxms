@@ -9,6 +9,9 @@ android/src/console/default.properties -text
 android/src/console/libs/simple-xml-2.6.4.jar -text
 android/src/console/lint.xml -text
 android/src/console/project.properties -text
+android/src/console/res/drawable-hdpi-v11/ic_menu_bar_chart.png -text
+android/src/console/res/drawable-hdpi-v11/ic_menu_line_chart.png -text
+android/src/console/res/drawable-hdpi-v11/ic_menu_pie_chart.png -text
 android/src/console/res/drawable-hdpi-v11/ic_stat_connected.png -text
 android/src/console/res/drawable-hdpi-v11/ic_stat_disconnected.png -text
 android/src/console/res/drawable-hdpi-v9/ic_stat_connected.png -text

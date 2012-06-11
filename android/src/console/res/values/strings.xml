@@ -128,4 +128,5 @@
 	<string name="ts_op_unlike">!like</string>
 	<string name="ts_ok">OK</string>
 	<string name="home">Home</string>
+	<string name="line_chart">Line Chart</string>
 </resources>
