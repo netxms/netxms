@@ -112,4 +112,19 @@
 	<string name="overview_platform_name">Platform Name</string>
 	<string name="overview_snmp_agent">SNMP Agent</string>
 	<string name="overview_snmp_oid">SNMP OID</string>
+	<string name="ts_fn_last">last</string>
+	<string name="ts_fn_average">average</string>
+	<string name="ts_fn_deviation">deviation</string>
+	<string name="ts_fn_diff">diff</string>
+	<string name="ts_fn_error">error</string>
+	<string name="ts_fn_sum">sum</string>
+	<string name="ts_op_less">&lt;</string>
+	<string name="ts_op_lessequal">&lt;=</string>
+	<string name="ts_op_equal">==</string>
+	<string name="ts_op_greatherequal">&gt;=</string>
+	<string name="ts_op_greather">&gt;</string>
+	<string name="ts_op_different">!=</string>
+	<string name="ts_op_like">like</string>
+	<string name="ts_op_unlike">!like</string>
+	<string name="ts_ok">OK</string>
 </resources>
