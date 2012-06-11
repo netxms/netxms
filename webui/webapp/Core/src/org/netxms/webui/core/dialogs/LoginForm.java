@@ -183,9 +183,9 @@ public class LoginForm extends Window
 		gd.verticalIndent = 5;
 		okButton.setLayoutData(gd);
 		
+		final Image setupImage = Activator.getImageDescriptor("icons/app_settings.png").createImage();
 		ImageHyperlink setupLink = new ImageHyperlink(loginArea, SWT.NONE);
 		setupLink.setText("Options");
-		final Image setupImage = Activator.getImageDescriptor("icons/app_settings.png").createImage();
 		setupLink.setImage(setupImage);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.RIGHT;
