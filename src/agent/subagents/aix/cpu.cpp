@@ -33,15 +33,26 @@
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
 static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
 static bool volatile m_stopCollectorThread = false;
-static uint64_t m_user[MAX_CPU];
-static uint64_t m_system[MAX_CPU];
-static uint64_t m_idle[MAX_CPU];
-static uint64_t m_iowait[MAX_CPU];
-static float *m_cpuUsage;
-static float *m_cpuUsageUser;
-static float *m_cpuUsageSystem;
-static float *m_cpuUsageIdle;
-static float *m_cpuUsageIoWait;
+static uint64_t m_lastUser[MAX_CPU];
+static uint64_t m_lastSystem[MAX_CPU];
+static uint64_t m_lastIdle[MAX_CPU];
+static uint64_t m_lastIoWait[MAX_CPU];
+static double *m_cpuUsage;
+static double *m_cpuUsageUser;
+static double *m_cpuUsageSystem;
+static double *m_cpuUsageIdle;
+static double *m_cpuUsageIoWait;
+
+static u_longlong_t m_lastPhysicalUser;
+static u_longlong_t m_lastPhysicalSystem;
+static u_longlong_t m_lastPhysicalIdle;
+static u_longlong_t m_lastPhysicalIoWait;
+static double *m_cpuPhysicalUsage;
+static double *m_cpuPhysicalUsageUser;
+static double *m_cpuPhysicalUsageSystem;
+static double *m_cpuPhysicalUsageIdle;
+static double *m_cpuPhysicalUsageIoWait;
+
 static int m_currentSlot = 0;
 static int m_maxCPU = 0;
 
@@ -98,13 +109,13 @@ static void CpuUsageCollector()
 				iowait = cpuStats[cpu - 1].wait;
 			}
 			
-			uint64_t userDelta = user - m_user[cpu];
-			uint64_t systemDelta = system - m_system[cpu];
-			uint64_t idleDelta = idle - m_idle[cpu];
-			uint64_t iowaitDelta = iowait - m_iowait[cpu];
+			uint64_t userDelta = user - m_lastUser[cpu];
+			uint64_t systemDelta = system - m_lastSystem[cpu];
+			uint64_t idleDelta = idle - m_lastIdle[cpu];
+			uint64_t iowaitDelta = iowait - m_lastIoWait[cpu];
 			uint64_t totalDelta = userDelta + systemDelta + idleDelta + iowaitDelta;
 			
-			float onePercent = (float)totalDelta / 100.0; // 1% of total
+			double onePercent = (double)totalDelta / 100.0; // 1% of total
 			if (onePercent == 0)
 			{
 				onePercent = 1; // TODO: why 1?
@@ -112,7 +123,7 @@ static void CpuUsageCollector()
 
 			// update detailed stats
 #define UPDATE(delta, target) { \
-				if (delta > 0) { *(target + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = (float)delta / onePercent; } \
+				if (delta > 0) { *(target + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = (double)delta / onePercent; } \
 				else { *(target + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0; } \
 			}
 
@@ -124,17 +135,17 @@ static void CpuUsageCollector()
 			// update overal cpu usage
 			if (totalDelta > 0)
 			{
-				*(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 100.0 - ((float)idleDelta / onePercent);
+				*(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 100.0 - ((double)idleDelta / onePercent);
 			}
 			else
 			{
 				*(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0;
 			}
 
-			m_user[cpu] = user;
-			m_system[cpu] = system;
-			m_idle[cpu] = idle;
-			m_iowait[cpu] = iowait;
+			m_lastUser[cpu] = user;
+			m_lastSystem[cpu] = system;
+			m_lastIdle[cpu] = idle;
+			m_lastIoWait[cpu] = iowait;
 		}
 		free(cpuStats);
 	}
@@ -142,6 +153,38 @@ static void CpuUsageCollector()
 	{
 		AgentWriteDebugLog(4, "AIX: call to perfstat_cpu_total failed (%s)", strerror(errno));
 	}
+
+   perfstat_partition_total_t lparstats;
+   if (perfstat_partition_total(NULL, &lparstats, sizeof(perfstat_partition_total_t), 1))
+   {
+      u_longlong_t deltaUser, deltaSystem, deltaIdle, deltaIoWait, deltaTotal;
+
+      deltaUser = lparstats.puser - m_lastPhysicalUser;
+      deltaSystem = lparstats.psys - m_lastPhysicalSystem;
+      deltaIdle = lparstats.pidle - m_lastPhysicalIdle;
+      deltaIoWait = lparstats.pwait - m_lastPhysicalIoWait;
+      deltaTotal = deltaUser + deltaSystem + deltaIdle + deltaIoWait;
+
+      m_lastPhysicalUser = lparstats.puser;
+      m_lastPhysicalSystem = lparstats.psys;
+      m_lastPhysicalIdle = lparstats.pidle;
+      m_lastPhysicalIoWait = lparstats.pwait;
+
+      m_cpuPhysicalUsageUser[m_currentSlot] = (double)deltaUser * 100.0 / (double)deltaTotal;
+      m_cpuPhysicalUsageSystem[m_currentSlot] = (double)deltaSystem * 100.0 / (double)deltaTotal;
+      m_cpuPhysicalUsageIdle[m_currentSlot] = (double)deltaIdle * 100.0 / (double)deltaTotal;
+      m_cpuPhysicalUsageIoWait[m_currentSlot] = (double)deltaIoWait * 100.0 / (double)deltaTotal;
+
+      m_cpuPhysicalUsage[m_currentSlot] = 
+         100 - m_cpuPhysicalUsageUser[m_currentSlot]
+         - m_cpuPhysicalUsageSystem[m_currentSlot]
+         - m_cpuPhysicalUsageIdle[m_currentSlot]
+         - m_cpuPhysicalUsageIoWait[m_currentSlot];
+   }
+   else
+   {
+		AgentWriteDebugLog(4, "AIX: call to perfstat_partition_total failed (%s)", strerror(errno));
+   }
 
 	// go to the next slot
 	m_currentSlot++;
@@ -176,8 +219,8 @@ void StartCpuUsageCollector()
 
 	m_cpuUsageMutex = MutexCreate();
 
-#define SIZE sizeof(float) * CPU_USAGE_SLOTS * MAX_CPU
-#define ALLOCATE_AND_CLEAR(x) x = (float *)malloc(SIZE); memset(x, 0, SIZE);
+#define SIZE sizeof(double) * CPU_USAGE_SLOTS * MAX_CPU
+#define ALLOCATE_AND_CLEAR(x) x = (double *)malloc(SIZE); memset(x, 0, SIZE);
 	ALLOCATE_AND_CLEAR(m_cpuUsage);
 	ALLOCATE_AND_CLEAR(m_cpuUsageUser);
 	ALLOCATE_AND_CLEAR(m_cpuUsageSystem);
@@ -186,11 +229,21 @@ void StartCpuUsageCollector()
 #undef ALLOCATE_AND_CLEAR
 #undef SIZE
 
+#define SIZE sizeof(double) * CPU_USAGE_SLOTS
+#define ALLOCATE_AND_CLEAR(x) x = (double *)malloc(SIZE); memset(x, 0, SIZE);
+	ALLOCATE_AND_CLEAR(m_cpuPhysicalUsage);
+	ALLOCATE_AND_CLEAR(m_cpuPhysicalUsageUser);
+	ALLOCATE_AND_CLEAR(m_cpuPhysicalUsageSystem);
+	ALLOCATE_AND_CLEAR(m_cpuPhysicalUsageIoWait);
+	ALLOCATE_AND_CLEAR(m_cpuPhysicalUsageIdle);
+#undef ALLOCATE_AND_CLEAR
+#undef SIZE
+
 #define CLEAR(x) memset(x, 0, sizeof(uint64_t) * MAX_CPU);
-	CLEAR(m_user)
-	CLEAR(m_system)
-	CLEAR(m_idle)
-	CLEAR(m_iowait)
+	CLEAR(m_lastUser)
+	CLEAR(m_lastSystem)
+	CLEAR(m_lastIdle)
+	CLEAR(m_lastIoWait)
 #undef CLEAR
 
 	// get initial count of user/system/idle time
@@ -204,16 +257,22 @@ void StartCpuUsageCollector()
 	CpuUsageCollector();
 
 	// fill all slots with current cpu usage
-#define FILL(x) memcpy(x + i, x, sizeof(float));
-	for (i = 0; i < (CPU_USAGE_SLOTS * MAX_CPU) - 1; i++)
-	{
-		FILL(m_cpuUsage);
-		FILL(m_cpuUsageUser);
-		FILL(m_cpuUsageSystem);
-		FILL(m_cpuUsageIdle);
-		FILL(m_cpuUsageIoWait);
-	}
-#undef FILL
+   for (i = 1; i < (CPU_USAGE_SLOTS * MAX_CPU); i++)
+   {
+      m_cpuUsage[i] = m_cpuUsage[0];
+      m_cpuUsageUser[i] = m_cpuUsageUser[0];
+      m_cpuUsageSystem[i] = m_cpuUsageSystem[0];
+      m_cpuUsageIdle[i] = m_cpuUsageIdle[0];
+      m_cpuUsageIoWait[i] = m_cpuUsageIoWait[0];
+   }
+   for (i = 1; i < CPU_USAGE_SLOTS; i++)
+   {
+      m_cpuPhysicalUsage[i] = m_cpuPhysicalUsage[0];
+      m_cpuPhysicalUsageUser[i] = m_cpuPhysicalUsageUser[0];
+      m_cpuPhysicalUsageSystem[i] = m_cpuPhysicalUsageSystem[0];
+      m_cpuPhysicalUsageIdle[i] = m_cpuPhysicalUsageIdle[0];
+      m_cpuPhysicalUsageIoWait[i] = m_cpuPhysicalUsageIoWait[0];
+   }
 
 	// start collector
 	m_cpuUsageCollector = ThreadCreateEx(CpuUsageCollectorThread, 0, NULL);
@@ -235,6 +294,12 @@ void ShutdownCpuUsageCollector()
 	free(m_cpuUsageSystem);
 	free(m_cpuUsageIdle);
 	free(m_cpuUsageIoWait);
+
+	free(m_cpuPhysicalUsage);
+	free(m_cpuPhysicalUsageUser);
+	free(m_cpuPhysicalUsageSystem);
+	free(m_cpuPhysicalUsageIoWait);
+	free(m_cpuPhysicalUsageIdle);
 }
 
 
@@ -244,33 +309,48 @@ void ShutdownCpuUsageCollector()
 
 static void GetUsage(int source, int cpu, int count, char *value)
 {
-	float *table;
+	double *table;
 	switch (source)
 	{
 		case CPU_USAGE_OVERAL:
-			table = (float *)m_cpuUsage;
+			table = m_cpuUsage;
 			break;
 		case CPU_USAGE_USER:
-			table = (float *)m_cpuUsageUser;
+			table = m_cpuUsageUser;
 			break;
 		case CPU_USAGE_SYSTEM:
-			table = (float *)m_cpuUsageSystem;
+			table = m_cpuUsageSystem;
 			break;
 		case CPU_USAGE_IDLE:
-			table = (float *)m_cpuUsageIdle;
+			table = m_cpuUsageIdle;
 			break;
 		case CPU_USAGE_IOWAIT:
-			table = (float *)m_cpuUsageIoWait;
+			table = m_cpuUsageIoWait;
 			break;
+      case CPU_PA_OVERAL:
+         table = m_cpuPhysicalUsage;
+         break;
+      case CPU_PA_USER:
+         table = m_cpuPhysicalUsageUser;
+         break;
+      case CPU_PA_SYSTEM:
+         table = m_cpuPhysicalUsageSystem;
+         break;
+      case CPU_PA_IDLE:
+         table = m_cpuPhysicalUsageIdle;
+         break;
+      case CPU_PA_IOWAIT:
+         table = m_cpuPhysicalUsageIoWait;
+         break;
 		default:
-			table = (float *)m_cpuUsage;
+			table = m_cpuUsage;
 			break;
 	}
 
 	table += cpu * CPU_USAGE_SLOTS;
 
-	float usage = 0;
-	float *p = table + m_currentSlot - 1;
+	double usage = 0;
+	double *p = table + m_currentSlot - 1;
 
 	MutexLock(m_cpuUsageMutex);
 	for (int i = 0; i < count; i++)
