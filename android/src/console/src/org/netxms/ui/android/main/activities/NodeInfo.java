@@ -308,4 +308,23 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			}
 		}
 	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
+	 */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch(item.getItemId())
+		{
+			case android.R.id.home:
+				startActivity(new Intent(this, HomeScreen.class));
+				return true;
+			case R.id.settings:
+				startActivity(new Intent(this, ConsolePreferences.class));
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
+		}
+	}
 }

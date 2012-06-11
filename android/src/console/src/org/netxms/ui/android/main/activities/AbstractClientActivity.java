@@ -60,6 +60,9 @@ public abstract class AbstractClientActivity extends Activity implements Service
 	{
 		switch(item.getItemId())
 		{
+			case android.R.id.home:
+				startActivity(new Intent(this, HomeScreen.class));
+				return true;
 			case R.id.settings:
 				startActivity(new Intent(this, ConsolePreferences.class));
 				return true;
