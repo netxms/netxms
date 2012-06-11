@@ -28,7 +28,7 @@
 //
 
 #define CPU_USAGE_SLOTS			900 		/* 60 sec * 15 min => 900 sec */
-#define MAX_CPU					(64 + 1)	/* 64 + 1 for overal */
+#define MAX_CPU					(64 + 1)	/* 64 + 1 for overall */
 
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
 static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
@@ -132,7 +132,7 @@ static void CpuUsageCollector()
 			UPDATE(idleDelta, m_cpuUsageIdle);
 			UPDATE(iowaitDelta, m_cpuUsageIoWait);
 
-			// update overal cpu usage
+			// update overall cpu usage
 			if (totalDelta > 0)
 			{
 				*(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 100.0 - ((double)idleDelta / onePercent);
@@ -312,7 +312,7 @@ static void GetUsage(int source, int cpu, int count, char *value)
 	double *table;
 	switch (source)
 	{
-		case CPU_USAGE_OVERAL:
+		case CPU_USAGE_OVERALL:
 			table = m_cpuUsage;
 			break;
 		case CPU_USAGE_USER:
@@ -327,7 +327,7 @@ static void GetUsage(int source, int cpu, int count, char *value)
 		case CPU_USAGE_IOWAIT:
 			table = m_cpuUsageIoWait;
 			break;
-      case CPU_PA_OVERAL:
+      case CPU_PA_OVERALL:
          table = m_cpuPhysicalUsage;
          break;
       case CPU_PA_USER:
