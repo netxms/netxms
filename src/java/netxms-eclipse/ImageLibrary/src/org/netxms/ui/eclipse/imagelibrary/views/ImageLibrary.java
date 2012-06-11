@@ -30,7 +30,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.ProgressListener;
@@ -498,8 +497,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 						}
 					}
 				}
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable()
-				{
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{

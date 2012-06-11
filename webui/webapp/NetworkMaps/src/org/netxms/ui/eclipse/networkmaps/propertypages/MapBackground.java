@@ -52,6 +52,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class MapBackground extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private NetworkMap object;
 	private Button radioTypeNone;
 	private Button radioTypeImage;
@@ -90,6 +92,8 @@ public class MapBackground extends PropertyPage
       typeGroup.setLayout(layout);
       
       final SelectionListener listener = new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -183,6 +187,8 @@ public class MapBackground extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       zoomScale.setLayoutData(gd);
       zoomScale.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -201,6 +207,8 @@ public class MapBackground extends PropertyPage
       zoomSpinner.setMaximum(18);
       zoomSpinner.setSelection(object.getBackgroundZoom());
       zoomSpinner.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -267,11 +275,12 @@ public class MapBackground extends PropertyPage
 		if (isApply)
 			setValid(false);
 
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Update map background for map object " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
+				session.modifyObject(md);
 			}
 
 			@Override

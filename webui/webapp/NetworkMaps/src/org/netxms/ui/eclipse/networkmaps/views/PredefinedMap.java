@@ -41,7 +41,6 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -160,8 +159,9 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	private void addDropSupport()
 	{
 		final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
-		viewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(viewer)
-		{
+		viewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(viewer) {
+			private static final long serialVersionUID = 1L;
+
 			private int x;
 			private int y;
 
@@ -232,8 +232,9 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		super.createActions();
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 
-		actionAddObject = new Action("&Add object...")
-		{
+		actionAddObject = new Action("&Add object...") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -246,6 +247,8 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		handlerService.activateHandler(actionAddObject.getActionDefinitionId(), addObjectHandler);
 
 		actionAddGroupBox = new Action("&Group box...") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -254,6 +257,8 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		};
 
 		actionAddImage = new Action("&Image...") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -262,6 +267,8 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		};
 
 		actionLinkObjects = new Action("&Link selected objects", Activator.getImageDescriptor("icons/link_add.png")) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -274,6 +281,8 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		handlerService.activateHandler(actionLinkObjects.getActionDefinitionId(), linkObjectHandler);
 
 		actionRemove = new Action("&Remove from map", SharedIcons.DELETE_OBJECT) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -286,6 +295,8 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		handlerService.activateHandler(actionRemove.getActionDefinitionId(), removeHandler);
 
 		actionMapProperties = new Action("Map &properties") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -294,6 +305,8 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		};
 
 		actionLinkProperties = new Action("&Properties") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -634,7 +647,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	protected void onObjectChange(final GenericObject object)
 	{
 		super.onObjectChange(object);
-		Display.getDefault().asyncExec(new Runnable() {
+		getSite().getShell().getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run()
 			{

@@ -27,7 +27,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.ProgressListener;
@@ -38,6 +37,7 @@ import org.netxms.nebula.widgets.gallery.DefaultGalleryGroupRenderer;
 import org.netxms.nebula.widgets.gallery.DefaultGalleryItemRenderer;
 import org.netxms.nebula.widgets.gallery.Gallery;
 import org.netxms.nebula.widgets.gallery.GalleryItem;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImagePropertiesDialog;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
@@ -101,8 +101,8 @@ public class ImageLibrary extends ViewPart
 		createPopupMenu();
 		contributeToActionBars();
 
-		gallery.addMenuDetectListener(new MenuDetectListener()
-		{
+		gallery.addMenuDetectListener(new MenuDetectListener() {
+			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void menuDetected(MenuDetectEvent e)
@@ -134,8 +134,9 @@ public class ImageLibrary extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionNew = new Action("&Upload New Image")
-		{
+		actionNew = new Action("&Upload New Image") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -155,8 +156,9 @@ public class ImageLibrary extends ViewPart
 		};
 		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
 
-		actionEdit = new Action("&Edit")
-		{
+		actionEdit = new Action("&Edit") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -176,8 +178,9 @@ public class ImageLibrary extends ViewPart
 		};
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 
-		actionDelete = new Action("&Delete")
-		{
+		actionDelete = new Action("&Delete") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -187,8 +190,9 @@ public class ImageLibrary extends ViewPart
 		};
 		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 
-		actionRefresh = new Action("&Refresh")
-		{
+		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -202,10 +206,10 @@ public class ImageLibrary extends ViewPart
 				}
 			}
 		};
-		actionRefresh.setImageDescriptor(SharedIcons.REFRESH);
 
-		actionZoomIn = new Action("Zoom In")
-		{
+		actionZoomIn = new Action("Zoom In") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -219,8 +223,10 @@ public class ImageLibrary extends ViewPart
 			}
 		};
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
-		actionZoomOut = new Action("Zoom Out")
-		{
+		
+		actionZoomOut = new Action("Zoom Out") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -389,8 +395,9 @@ public class ImageLibrary extends ViewPart
 	{
 		MenuManager menuManager = new MenuManager();
 		menuManager.setRemoveAllWhenShown(true);
-		menuManager.addMenuListener(new IMenuListener()
-		{
+		menuManager.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager manager)
 			{
 				fillContextMenu(manager);
@@ -452,8 +459,7 @@ public class ImageLibrary extends ViewPart
 	 */
 	private void refreshImages() throws NetXMSClientException, IOException
 	{
-		final Display display = PlatformUI.getWorkbench().getDisplay();
-		new ConsoleJob("Reload image library", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Reload image library", this, Activator.PLUGIN_ID, null, getSite().getShell().getDisplay()) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -474,7 +480,7 @@ public class ImageLibrary extends ViewPart
 						}
 					}
 				}
-				display.asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{

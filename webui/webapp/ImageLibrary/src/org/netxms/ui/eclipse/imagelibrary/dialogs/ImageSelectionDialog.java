@@ -34,6 +34,8 @@ import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 
 public class ImageSelectionDialog extends Dialog implements SelectionListener, MouseListener, ImageUpdateListener
 {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * Zero
 	 */
@@ -79,6 +81,9 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		this.flags = flags;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+	 */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -95,6 +100,9 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#close()
+	 */
 	@Override
 	public boolean close()
 	{
@@ -102,6 +110,9 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		return super.close();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -133,6 +144,9 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		return dialogArea;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+	 */
 	@Override
 	protected void cancelPressed()
 	{

@@ -68,8 +68,7 @@ public class ImagePropertiesDialog extends Dialog
 				fileNameInputField.setLayoutData(gd);
 
 				final Button button = new Button(composite, SWT.NONE);
-				button.addSelectionListener(new SelectionListener()
-				{
+				button.addSelectionListener(new SelectionListener() {
 					@Override
 					public void widgetSelected(SelectionEvent e)
 					{
@@ -99,6 +98,7 @@ public class ImagePropertiesDialog extends Dialog
 					@Override
 					public void widgetDefaultSelected(SelectionEvent e)
 					{
+						widgetSelected(e);
 					}
 				});
 				button.setText("...");

@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
@@ -31,6 +32,10 @@ public class ImagePropertiesDialog extends Dialog
 	private Set<String> categories;
 	private Shell shell;
 
+	/**
+	 * @param parentShell
+	 * @param knownCategories
+	 */
 	public ImagePropertiesDialog(Shell parentShell, Set<String> knownCategories)
 	{
 		super(parentShell);
@@ -38,6 +43,9 @@ public class ImagePropertiesDialog extends Dialog
 		this.categories = knownCategories;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -48,8 +56,7 @@ public class ImagePropertiesDialog extends Dialog
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		dialogArea.setLayout(layout);
 
-		WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, new WidgetFactory()
-		{
+		WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, new WidgetFactory() {
 			@Override
 			public Control createControl(Composite parent, int style)
 			{
@@ -69,27 +76,45 @@ public class ImagePropertiesDialog extends Dialog
 				fileNameInputField.setLayoutData(gd);
 
 				final Button button = new Button(composite, SWT.NONE);
-				button.addSelectionListener(new SelectionListener()
-				{
+				button.addSelectionListener(new SelectionListener() {
+					private static final long serialVersionUID = 1L;
+
 					@Override
 					public void widgetSelected(SelectionEvent e)
 					{
+						FileDialog dialog = new FileDialog(shell, SWT.OPEN);
+						dialog.setText("Select Image");
+						dialog.setFilterNames(new String[] { "Image Files (*.jpg;*.png;*.bmp)", "All Files (*.*)" });
+						dialog.setFilterExtensions(new String[] { "*.jpg;*.png;*.bmp", "*.*" });
+						final String selectedFile = dialog.open();
+						if (selectedFile != null)
+						{
+							fileName = selectedFile;
+							fileNameInputField.setText(selectedFile);
+
+							if (nameInputField.getText().length() == 0)
+							{
+								String imageName = new File(fileName).getName();
+								final int lastIndexOf = imageName.lastIndexOf('.');
+								if (lastIndexOf != -1)
+								{
+									imageName = imageName.substring(0, lastIndexOf);
+								}
+								nameInputField.setText(imageName);
+							}
+						}
 					}
 
 					@Override
 					public void widgetDefaultSelected(SelectionEvent e)
 					{
+						widgetSelected(e);
 					}
 				});
 				button.setText("...");
 				return composite;
 			}
 		}, "Image File", WidgetHelper.DEFAULT_LAYOUT_DATA);
-
-		// nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE
-		// | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "File Name",
-		// fileName == null ? "n/a" : fileName, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		// nameInputField.getShell().setMinimumSize(300, 0);
 
 		nameInputField = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Image name",
 				name == null ? "" : name, WidgetHelper.DEFAULT_LAYOUT_DATA);
