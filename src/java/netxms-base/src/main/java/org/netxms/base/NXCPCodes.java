@@ -457,7 +457,7 @@ public final class NXCPCodes
 	public static final long VID_NUM_ROWS                = 167;
 	public static final long VID_TABLE_TITLE             = 168;
 	public static final long VID_EVENT_NAME              = 169;
-//	public static final long VID_AUTO_APPLY              = 170;
+	public static final long VID_CLIENT_TYPE             = 170;
 	public static final long VID_LOG_NAME                = 171;
 	public static final long VID_OPERATION               = 172;
 	public static final long VID_MAX_RECORDS             = 173;

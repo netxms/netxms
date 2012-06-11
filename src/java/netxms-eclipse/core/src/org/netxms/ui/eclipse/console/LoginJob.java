@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.api.client.Session;
+import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -105,6 +106,7 @@ public class LoginJob implements IRunnableWithProgress
 			}
 
 			NXCSession session = new NXCSession(hostName, port, loginName, password, encryptSession);
+			session.setConnClientInfo("nxmc/" + NXCommon.VERSION);
 			monitor.worked(10);
 
 			session.connect();

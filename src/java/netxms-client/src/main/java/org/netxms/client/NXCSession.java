@@ -180,6 +180,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	
 	// Server components
 	public static final int SERVER_COMPONENT_DISCOVERY_MANAGER = 1;
+	
+	// Client types
+	public static final int DESKTOP_CLIENT = 0;
+	public static final int WEB_CLIENT = 1;
+	public static final int MOBILE_CLIENT = 2;
+	public static final int TABLET_CLIENT = 3;
 
 	// Private constants
 	private static final int CLIENT_CHALLENGE_SIZE = 256;
@@ -199,6 +205,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private String connPassword;
 	private boolean connUseEncryption;
 	private String connClientInfo = "nxjclient/" + NXCommon.VERSION;
+	private int clientType = DESKTOP_CLIENT;
 
 	// Information about logged in user
 	private int userId;
@@ -1374,6 +1381,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			request.setVariable(NXCPCodes.VID_LIBNXCL_VERSION, NXCommon.VERSION);
 			request.setVariable(NXCPCodes.VID_CLIENT_INFO, connClientInfo);
 			request.setVariable(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
+			request.setVariableInt16(NXCPCodes.VID_CLIENT_TYPE, clientType);
 			sendMessage(request);
 			response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
 			int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
@@ -6076,5 +6084,28 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	public void pushDciData(String nodeName, String dciName, String value) throws IOException, NXCException
 	{
 		pushDciData(new DciPushData[] { new DciPushData(nodeName, dciName, value) });
+	}
+
+	/**
+	 * @return the clientType
+	 */
+	public int getClientType()
+	{
+		return clientType;
+	}
+
+	/**
+	 * Set client type. Can be one of the following:
+	 * 	DESKTOP_CLIENT
+	 * 	WEB_CLIENT
+	 * 	MOBILE_CLIENT
+	 * 	TABLET_CLIENT
+	 * Must be called before connect(), otherwise will not have any effect. Ignored by servers prior to 1.2.2.
+	 * 
+	 * @param clientType the clientType to set
+	 */
+	public void setClientType(int clientType)
+	{
+		this.clientType = clientType;
 	}
 }
