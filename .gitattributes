@@ -97,6 +97,7 @@ android/src/console/res/layout/node_info.xml -text
 android/src/console/res/layout/node_view.xml -text
 android/src/console/res/layout/screen_header_full.xml -text
 android/src/console/res/layout/screen_header_small.xml -text
+android/src/console/res/menu-v11/main_menu.xml -text
 android/src/console/res/menu/alarm_actions.xml -text
 android/src/console/res/menu/connectionpoint_actions.xml -text
 android/src/console/res/menu/last_values_actions.xml -text
@@ -132,6 +133,7 @@ android/src/console/src/org/netxms/ui/android/main/adapters/LastValuesAdapter.ja
 android/src/console/src/org/netxms/ui/android/main/adapters/NodeListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/OverviewAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/views/ActivityListElement.java -text
+android/src/console/src/org/netxms/ui/android/main/views/CheckableLinearLayout.java -text
 android/src/console/src/org/netxms/ui/android/receiver/BootCompletedIntentReceiver.java -text
 android/src/console/src/org/netxms/ui/android/receiver/ConnectivityChangeIntentReceiver.java -text
 android/src/console/src/org/netxms/ui/android/service/ClientConnectorService.java -text

@@ -11,6 +11,7 @@ import java.util.List;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.android.R;
+import org.netxms.ui.android.main.views.CheckableLinearLayout;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -18,6 +19,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -105,7 +107,8 @@ public class LastValuesAdapter extends BaseAdapter
 	public View getView(int position, View convertView, ViewGroup parent)
 	{
 		TextView threshold, date, name, value;
-		LinearLayout view, texts, info, info2, icons;
+		CheckableLinearLayout view;
+		LinearLayout texts, info, info2, icons;
 		ImageView severity, state;
 		Resources r = context.getResources();
 
@@ -157,18 +160,18 @@ public class LastValuesAdapter extends BaseAdapter
 			texts.addView(info);
 			texts.addView(info2);
 
-			view = new LinearLayout(context);
+			view = new CheckableLinearLayout(context);
 			view.addView(icons);
 			view.addView(texts);
 		}
 		else
 		{ 
 			// get reference to existing alarm
-			view = (LinearLayout)convertView;
-			icons = (LinearLayout)view.getChildAt(0);
+			view = (CheckableLinearLayout)convertView;
+			icons = (LinearLayout)view.getChildAt(1);
 			severity = (ImageView)icons.getChildAt(0);
 			state = (ImageView)icons.getChildAt(1);
-			texts = (LinearLayout)view.getChildAt(1);
+			texts = (LinearLayout)view.getChildAt(2);
 			info = (LinearLayout)texts.getChildAt(0);
 			threshold = (TextView)info.getChildAt(0);
 			date = (TextView)info.getChildAt(1);

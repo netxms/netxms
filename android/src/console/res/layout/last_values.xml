@@ -3,11 +3,15 @@
 	android:orientation="vertical" android:layout_width="fill_parent"
 	android:layout_height="fill_parent">
 	<include layout="@layout/screen_header_small" />
-	<ListView android:id="@+id/ValueList" 
-		android:layout_width="fill_parent"
-		android:background="@color/item_body"
-		android:cacheColorHint="@color/item_body" 
-		android:listSelector="@drawable/list_selection"
-		android:layout_height="fill_parent">
+
+	<ListView
+	    android:id="@+id/ValueList"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent"
+	    android:background="@color/item_body"
+	    android:cacheColorHint="@color/item_body"
+	    android:choiceMode="multipleChoice"
+	    android:listSelector="@drawable/list_selection" >
+
 	</ListView>
 </LinearLayout>

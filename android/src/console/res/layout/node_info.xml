@@ -30,6 +30,7 @@
 				android:background="@color/item_body"
 				android:cacheColorHint="@color/item_body" 
 			    android:listSelector="@drawable/list_selection"
+	    		android:choiceMode="multipleChoice"
 				android:layout_height="wrap_content"
 				android:layout_weight="0">
 			</ListView>

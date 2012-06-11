@@ -127,4 +127,5 @@
 	<string name="ts_op_like">like</string>
 	<string name="ts_op_unlike">!like</string>
 	<string name="ts_ok">OK</string>
+	<string name="home">Home</string>
 </resources>

@@ -163,6 +163,9 @@ public class ClientConnectorService extends Service implements SessionListener
 		super.onDestroy();
 	}
 
+	/**
+	 * 
+	 */
 	public void shutdown()
 	{
 		clearNotifications();
@@ -171,6 +174,9 @@ public class ClientConnectorService extends Service implements SessionListener
 		stopSelf();
 	}
 	
+	/**
+	 * 
+	 */
 	public void savePreferences()
 	{
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this); 

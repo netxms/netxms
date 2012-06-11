@@ -5,8 +5,10 @@ package org.netxms.ui.android.service.tasks;
 
 import java.io.IOException;
 
+import org.netxms.base.NXCommon;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
 import org.netxms.ui.android.service.ClientConnectorService.ConnectionStatus;
 
@@ -89,6 +91,7 @@ public class ConnectTask extends Thread
 				if (session == null)	// Already null or invalidated
 				{	
 					session = new NXCSession(server, port, login, password, encrypt);
+					session.setConnClientInfo("nxmc-android/" + NXCommon.VERSION + "." + service.getString(R.string.build_number));
 					try
 					{
 						Log.d(TAG, "calling session.connect()");
