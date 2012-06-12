@@ -373,7 +373,7 @@ public class DataSources extends PropertyPage
 	protected void applyChanges(final boolean isApply)
 	{
 		config.setDciList(dciList.toArray(new ChartDciConfig[dciList.size()]));
-		if (isApply)
+		if ((config instanceof PredefinedChartConfig) && isApply)
 		{
 			setValid(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
