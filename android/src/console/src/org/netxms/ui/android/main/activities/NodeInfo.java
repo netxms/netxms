@@ -56,6 +56,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	private String TAB_ALARMS = "";
 	private long nodeId = 0;
 	private Node node = null;
+	private boolean recreateOptionsMenu = true;
 
 	/* (non-Javadoc)
 	 * @see android.app.ActivityGroup#onCreate(android.os.Bundle)
@@ -146,27 +147,40 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		else if (tabId.equals(TAB_ALARMS))
 			alarmsAdapter.notifyDataSetChanged();
 		
-		invalidateOptionsMenu();
+		recreateOptionsMenu = true;
 	}
 
 	/* (non-Javadoc)
-	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
+	 * @see android.app.Activity#onPrepareOptionsMenu(android.view.Menu)
 	 */
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) 
+	public boolean onPrepareOptionsMenu(Menu menu)
 	{
-		super.onCreateOptionsMenu(menu);
+		super.onPrepareOptionsMenu(menu);
+
+		if (!recreateOptionsMenu)
+			return true;
 		
 		if (tabHost.getCurrentTab() == 1)	// FIXME: use tab ID?
 		{
 			menu.add(Menu.NONE, R.id.graph_half_hour, Menu.NONE, getString(R.string.last_values_graph_half_hour));
-			menu.add(Menu.NONE, R.id.graph_one_hour, Menu.NONE, getString(R.string.last_values_graph_one_hour)).setIcon(R.drawable.ic_menu_line_chart);
+			menu.add(Menu.NONE, R.id.graph_one_hour, Menu.NONE, getString(R.string.last_values_graph_one_hour));//.setIcon(R.drawable.ic_menu_line_chart);
 			menu.add(Menu.NONE, R.id.graph_two_hours, Menu.NONE, getString(R.string.last_values_graph_two_hours));
 			menu.add(Menu.NONE, R.id.graph_four_hours, Menu.NONE, getString(R.string.last_values_graph_four_hours));
 			menu.add(Menu.NONE, R.id.graph_one_day, Menu.NONE, getString(R.string.last_values_graph_one_day));
 			menu.add(Menu.NONE, R.id.graph_one_week, Menu.NONE, getString(R.string.last_values_graph_one_week));
 		}
+		else
+		{
+			menu.removeItem(R.id.graph_half_hour);
+			menu.removeItem(R.id.graph_one_hour);
+			menu.removeItem(R.id.graph_two_hours);
+			menu.removeItem(R.id.graph_four_hours);
+			menu.removeItem(R.id.graph_one_day);
+			menu.removeItem(R.id.graph_one_week);
+		}
 		
+		recreateOptionsMenu = false;
 		return true;
 	}
 
