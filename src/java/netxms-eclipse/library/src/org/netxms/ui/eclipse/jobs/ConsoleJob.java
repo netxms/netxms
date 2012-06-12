@@ -45,7 +45,7 @@ public abstract class ConsoleJob extends Job
 	private String pluginId;
 	private Object jobFamily;
 	private boolean passException = false;
-	private boolean printException = false;
+	private boolean printException = true;
 	
 	/**
 	 * Constructor for console job object
