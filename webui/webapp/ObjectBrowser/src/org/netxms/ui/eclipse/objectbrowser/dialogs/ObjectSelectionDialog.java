@@ -48,6 +48,7 @@ public class ObjectSelectionDialog extends Dialog
 {
 	private static final long serialVersionUID = 1L;
 
+	private NXCSession session;
 	private ObjectTree objectTree;
 	private long[] rootObjects;
 	private long[] selectedObjects;
@@ -163,6 +164,7 @@ public class ObjectSelectionDialog extends Dialog
 		this.rootObjects = rootObjects;
 		this.classFilter = classFilter;
 		multiSelection = true;
+		session = (NXCSession)ConsoleSharedData.getSession();
 	}
 
 	/*
@@ -282,7 +284,7 @@ public class ObjectSelectionDialog extends Dialog
 		if (selectedObjects == null)
 			return new ArrayList<GenericObject>(0);
 
-		return ((NXCSession)ConsoleSharedData.getSession()).findMultipleObjects(selectedObjects, false);
+		return session.findMultipleObjects(selectedObjects, false);
 	}
 
 	/**
@@ -296,7 +298,6 @@ public class ObjectSelectionDialog extends Dialog
 		if (selectedObjects == null)
 			return new GenericObject[0];
 
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final Set<GenericObject> resultSet = new HashSet<GenericObject>(selectedObjects.length);
 		for(int i = 0; i < selectedObjects.length; i++)
 		{
