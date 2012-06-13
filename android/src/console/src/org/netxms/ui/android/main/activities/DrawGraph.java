@@ -70,7 +70,7 @@ public class DrawGraph extends AbstractClientActivity
 				items[i].setDciId(dciIdList.get(i));
 				items[i].setDescription(nameList.get(i));
 				itemStyles[i] = new GraphItemStyle();
-				itemStyles[i].setColor(toAndroidColor(colorList.get(i)));
+				itemStyles[i].setColor(colorList.get(i) | 0xFF000000);
 				itemStyles[i].setLineWidth(lineWidthList.get(i));
 			}
 			timeFrom = getIntent().getLongExtra("timeFrom", 0);
@@ -233,13 +233,5 @@ public class DrawGraph extends AbstractClientActivity
 			}
 			dialog.cancel();
 		}
-	}
-
-	/**
-	 * Convert to Android color format (swap RGB and add alpha)
-	 */
-	private int toAndroidColor(int color)
-	{
-		return 0xFF000000 | ((color & 0x0000FF) << 16) | (color & 0x00FF00) | ((color & 0xFF0000) >> 16);	// Alpha | R | G | B
 	}
 }

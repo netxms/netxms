@@ -1,5 +1,6 @@
 package org.netxms.ui.android.main.activities;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
@@ -9,6 +10,7 @@ import org.netxms.ui.android.main.adapters.AlarmListAdapter;
 import org.netxms.ui.android.main.adapters.LastValuesAdapter;
 import org.netxms.ui.android.main.adapters.OverviewAdapter;
 import org.netxms.ui.android.service.ClientConnectorService;
+import android.app.Activity;
 import android.app.TabActivity;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -39,8 +41,23 @@ import android.widget.TabHost.OnTabChangeListener;
  */
 public class NodeInfo extends TabActivity implements OnTabChangeListener, ServiceConnection
 {
-	private static final Integer[] DEFAULT_COLORS = { 0x00FF00, 0x00FFFF, 0xFF0000, 0xCCCCCC, 0x0000FF, 0xFF00FF, 0xFFFF00, 0x0EC9FF };
+	private static final Integer[] DEFAULT_COLORS = { 0x40699C, 0x9E413E, 0x7F9A48, 0x695185, 0x3C8DA3, 0xCC7B38, 0x4F81BD, 0xC0504D,
+	                                                  0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9 };
 	
+	private static Method method_invalidateOptionsMenu;
+	
+	static
+	{
+		try
+		{
+			method_invalidateOptionsMenu = Activity.class.getMethod("invalidateOptionsMenu", new Class[0]);
+		}
+		catch(NoSuchMethodException e)
+		{
+			method_invalidateOptionsMenu = null;
+		}
+	}
+
 	protected ClientConnectorService service;
 
 	private TabHost tabHost;
@@ -55,7 +72,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	private String TAB_ALARMS = "";
 	private long nodeId = 0;
 	private Node node = null;
-	private boolean recreateOptionsMenu = true;
+	private boolean recreateOptionsMenu = false;
 
 	/* (non-Javadoc)
 	 * @see android.app.ActivityGroup#onCreate(android.os.Bundle)
@@ -146,7 +163,63 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		else if (tabId.equals(TAB_ALARMS))
 			alarmsAdapter.notifyDataSetChanged();
 		
-		recreateOptionsMenu = true;
+		if (method_invalidateOptionsMenu != null)
+		{
+			try
+			{
+				method_invalidateOptionsMenu.invoke(this);
+			}
+			catch(Exception e)
+			{
+				Log.w("NodeInfo", e);
+			}
+		}
+		else
+		{
+			recreateOptionsMenu = true;
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.app.Activity#onCreateContextMenu(android.view.ContextMenu, android.view.View,
+	 * android.view.ContextMenu.ContextMenuInfo)
+	 */
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
+	{
+		android.view.MenuInflater inflater = getMenuInflater();
+		if (v == lastValuesListView)
+			inflater.inflate(R.menu.last_values_actions, menu);
+		else if (v == alarmsListView)
+		{
+			inflater.inflate(R.menu.alarm_actions, menu);
+			menu.getItem(2).setVisible(false);
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
+	 */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu)
+	{
+		if (method_invalidateOptionsMenu != null)
+		{
+			android.view.MenuInflater inflater = getMenuInflater();
+			
+			if (tabHost.getCurrentTab() == 1)
+			{
+				inflater.inflate(R.menu.last_values_actions, menu);
+			}
+			else if (tabHost.getCurrentTab() == 2)
+			{
+				inflater.inflate(R.menu.alarm_actions, menu);
+				menu.getItem(2).setVisible(false);
+			}
+		}
+		return super.onCreateOptionsMenu(menu);
 	}
 
 	/* (non-Javadoc)
@@ -248,25 +321,6 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	@Override
 	public void onServiceDisconnected(ComponentName name)
 	{
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see android.app.Activity#onCreateContextMenu(android.view.ContextMenu, android.view.View,
-	 * android.view.ContextMenu.ContextMenuInfo)
-	 */
-	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
-	{
-		android.view.MenuInflater inflater = getMenuInflater();
-		if (v == lastValuesListView)
-			inflater.inflate(R.menu.last_values_actions, menu);
-		else if (v == alarmsListView)
-		{
-			inflater.inflate(R.menu.alarm_actions, menu);
-			menu.getItem(2).setVisible(false);
-		}
 	}
 
 	/*

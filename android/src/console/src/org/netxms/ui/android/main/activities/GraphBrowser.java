@@ -54,8 +54,7 @@ public class GraphBrowser extends AbstractClientActivity
 		// keeps current list of graphs as datasource for listview
 		adapter = new GraphAdapter(this, new ArrayList<String>(), new ArrayList<ArrayList<GraphSettings>>());
 		listView = (ExpandableListView)findViewById(R.id.GraphList);
-		listView.setOnChildClickListener(new ExpandableListView.OnChildClickListener()
-		{
+		listView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
 			@Override
 			public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id)
 			{
@@ -123,16 +122,18 @@ public class GraphBrowser extends AbstractClientActivity
 			ArrayList<Integer> colorList = new ArrayList<Integer>();
 			ArrayList<Integer> lineWidthList = new ArrayList<Integer>();
 			ArrayList<String> nameList = new ArrayList<String>();
+			
 			// Set values
 			ChartDciConfig[] items = config.getDciList();
 			for(int i = 0; i < items.length; i++)
 			{
 				nodeIdList.add((int)items[i].nodeId);
 				dciIdList.add((int)items[i].dciId);
-				colorList.add(items[i].getColorAsInt());
+				colorList.add(swapRGB(items[i].getColorAsInt()));
 				lineWidthList.add(items[i].lineWidth);
 				nameList.add(items[i].name);
 			}
+			
 			// Pass them to activity
 			newIntent.putExtra("numGraphs", items.length);
 			newIntent.putIntegerArrayListExtra("nodeIdList", nodeIdList);
@@ -154,6 +155,14 @@ public class GraphBrowser extends AbstractClientActivity
 			}
 			startActivity(newIntent);
 		}
+	}
+
+	/**
+	 * Swap RGB color (R <--> B)
+	 */
+	private int swapRGB(int color)
+	{
+		return ((color & 0x0000FF) << 16) | (color & 0x00FF00) | ((color & 0xFF0000) >> 16);	// R | G | B
 	}
 
 	/*

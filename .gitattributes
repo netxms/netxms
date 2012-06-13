@@ -50,6 +50,7 @@ android/src/console/res/drawable-mdpi/ic_stat_disconnected.png -text
 android/src/console/res/drawable-mdpi/icon.png -text
 android/src/console/res/drawable-mdpi/macaddress.png -text
 android/src/console/res/drawable-mdpi/nodes.png -text
+android/src/console/res/drawable-v11/list_selection.xml -text
 android/src/console/res/drawable-xhdpi-v11/ic_stat_connected.png -text
 android/src/console/res/drawable-xhdpi-v11/ic_stat_disconnected.png -text
 android/src/console/res/drawable-xhdpi-v9/ic_stat_connected.png -text
@@ -102,6 +103,7 @@ android/src/console/res/layout/node_info.xml -text
 android/src/console/res/layout/node_view.xml -text
 android/src/console/res/layout/screen_header_full.xml -text
 android/src/console/res/layout/screen_header_small.xml -text
+android/src/console/res/menu-v11/last_values_actions.xml -text
 android/src/console/res/menu-v11/main_menu.xml -text
 android/src/console/res/menu/alarm_actions.xml -text
 android/src/console/res/menu/connectionpoint_actions.xml -text
