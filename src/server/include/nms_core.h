@@ -336,6 +336,7 @@ private:
    DWORD m_dwUserId;
    DWORD m_dwSystemAccess;    // User's system access rights
    DWORD m_dwFlags;           // Session flags
+	int m_clientType;				// Client system type - desktop, web, mobile, etc.
    CSCP_BUFFER *m_pMsgBuffer;
    NXCPEncryptionContext *m_pCtx;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
@@ -614,6 +615,7 @@ public:
    bool isSubscribed(DWORD dwChannel) { return (m_dwActiveChannels & dwChannel) ? true : false; }
    WORD getCurrentCmd() { return m_wCurrentCmd; }
    int getCipher() { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
+	int getClientType() { return m_clientType; }
 
 	bool checkSysAccessRights(DWORD requiredAccess) 
    { 

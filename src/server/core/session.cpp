@@ -263,6 +263,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_mutexSendSituations = MutexCreate();
    m_mutexPollerInit = MutexCreate();
    m_dwFlags = 0;
+	m_clientType = CLIENT_TYPE_DESKTOP;
 	m_clientAddr = (struct sockaddr *)nx_memdup(addr, (addr->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6));
 	if (addr->sa_family == AF_INET)
 		IpToStr(ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr), m_szWorkstation);
@@ -1578,6 +1579,10 @@ void ClientSession::login(CSCPMessage *pRequest)
       _sntprintf(m_szClientInfo, 96, _T("%s (%s; libnxcl %s)"),
                  szClientInfo, szOSInfo, szLibVersion);
    }
+
+	m_clientType = pRequest->GetVariableShort(VID_CLIENT_TYPE);
+	if ((m_clientType < 0) || (m_clientType > CLIENT_TYPE_APPLICATION))
+		m_clientType = CLIENT_TYPE_DESKTOP;
 
    if (!(m_dwFlags & CSF_AUTHENTICATED))
    {

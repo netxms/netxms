@@ -186,6 +186,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	public static final int WEB_CLIENT = 1;
 	public static final int MOBILE_CLIENT = 2;
 	public static final int TABLET_CLIENT = 3;
+	public static final int APPLICATION_CLIENT = 4;
 
 	// Private constants
 	private static final int CLIENT_CHALLENGE_SIZE = 256;
@@ -6100,6 +6101,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * 	WEB_CLIENT
 	 * 	MOBILE_CLIENT
 	 * 	TABLET_CLIENT
+	 *    APPLICATION_CLIENT
 	 * Must be called before connect(), otherwise will not have any effect. Ignored by servers prior to 1.2.2.
 	 * 
 	 * @param clientType the clientType to set

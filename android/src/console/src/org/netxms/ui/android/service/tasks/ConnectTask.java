@@ -15,7 +15,9 @@ import org.netxms.ui.android.service.ClientConnectorService.ConnectionStatus;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.WindowManager;
 
 /**
  * Connect task
@@ -90,8 +92,13 @@ public class ConnectTask extends Thread
 					}
 				if (session == null)	// Already null or invalidated
 				{	
+					DisplayMetrics metrics = new DisplayMetrics();
+					WindowManager wm = (WindowManager)service.getSystemService(Context.WINDOW_SERVICE);
+					wm.getDefaultDisplay().getMetrics(metrics);
+					
 					session = new NXCSession(server, port, login, password, encrypt);
 					session.setConnClientInfo("nxmc-android/" + NXCommon.VERSION + "." + service.getString(R.string.build_number));
+					session.setClientType((metrics.densityDpi >= DisplayMetrics.DENSITY_HIGH) ? NXCSession.TABLET_CLIENT : NXCSession.MOBILE_CLIENT);
 					try
 					{
 						Log.d(TAG, "calling session.connect()");

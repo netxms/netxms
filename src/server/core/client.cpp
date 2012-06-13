@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -315,17 +315,19 @@ void DumpSessions(CONSOLE_CTX pCtx)
    TCHAR szBuffer[256];
    static const TCHAR *pszStateName[] = { _T("init"), _T("idle"), _T("processing") };
    static const TCHAR *pszCipherName[] = { _T("NONE"), _T("AES-256"), _T("BLOWFISH"), _T("IDEA"), _T("3DES"), _T("AES-128") };
+	static const TCHAR *pszClientType[] = { _T("DESKTOP"), _T("WEB"), _T("MOBILE"), _T("TABLET"), _T("APP") };
 
-   ConsolePrintf(pCtx, _T("ID  STATE                    CIPHER   USER [CLIENT]\n"));
+   ConsolePrintf(pCtx, _T("ID  STATE                    CIPHER   CLTYPE  USER [CLIENT]\n"));
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0, iCount = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
       {
-         ConsolePrintf(pCtx, _T("%-3d %-24s %-8s %s [%s]\n"), i, 
+         ConsolePrintf(pCtx, _T("%-3d %-24s %-8s %-7s %s [%s]\n"), i, 
                        (m_pSessionList[i]->getState() != SESSION_STATE_PROCESSING) ?
                          pszStateName[m_pSessionList[i]->getState()] :
                          NXCPMessageCodeName(m_pSessionList[i]->getCurrentCmd(), szBuffer),
 					        pszCipherName[m_pSessionList[i]->getCipher() + 1],
+							  pszClientType[m_pSessionList[i]->getClientType()],
                        m_pSessionList[i]->getUserName(),
                        m_pSessionList[i]->getClientInfo());
          iCount++;

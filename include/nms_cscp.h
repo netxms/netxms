@@ -646,7 +646,7 @@ typedef struct
 #define VID_NUM_ROWS                ((DWORD)167)
 #define VID_TABLE_TITLE             ((DWORD)168)
 #define VID_EVENT_NAME              ((DWORD)169)
-//#define VID_AUTO_APPLY              ((DWORD)170)
+#define VID_CLIENT_TYPE             ((DWORD)170)
 #define VID_LOG_NAME                ((DWORD)171)
 #define VID_OPERATION               ((DWORD)172)
 #define VID_MAX_RECORDS             ((DWORD)173)

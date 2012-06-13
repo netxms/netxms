@@ -120,6 +120,17 @@ typedef void * NXC_SESSION;
 
 
 //
+// Client type
+//
+
+#define CLIENT_TYPE_DESKTOP      0
+#define CLIENT_TYPE_WEB          1
+#define CLIENT_TYPE_MOBILE       2
+#define CLIENT_TYPE_TABLET       3
+#define CLIENT_TYPE_APPLICATION  4
+
+
+//
 // Forced poll types
 //
 
