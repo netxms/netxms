@@ -53,6 +53,7 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 
 	@Override
 	public void setTitleVisible(boolean visible) {
+		System.out.println("titleVisible == " + visible);
 		this.titleVisible = visible;
 	}
 

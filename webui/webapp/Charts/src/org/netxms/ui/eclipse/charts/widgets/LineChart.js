@@ -80,6 +80,7 @@ qx.Class.define("org.netxms.ui.eclipse.charts.widgets.LineChart", {
         
         _applyTitleVisible : function() {
 			qx.ui.core.Widget.flushGlobalQueues();
+			this._titleVisible = this.getTitleVisible();
         },
 
         _applyTitle : function() {
@@ -113,6 +114,12 @@ qx.Class.define("org.netxms.ui.eclipse.charts.widgets.LineChart", {
 			try {
 				$("#" + this._id).empty();
 				$("#" + this._id).append('<div style="font-size: -1; text-align: center; background-color: ' + this._bgColor + '; padding: 0px;" id="_title_' + this._id + '" /><div style="width: 100%; height: 100%; padding: 0px;background-color: ' + this._bgColor + '" id="_chart_' + this._id + '" />');
+				if (this._titleVisible) {
+					$("#_title_" + this._id).show();
+				}
+				else {
+					$("#_title_" + this._id).hide();
+				}
 
 				console.debug($("#" + this._id));
 			
