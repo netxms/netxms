@@ -6,6 +6,8 @@ qx.Class.define("org.netxms.ui.eclipse.charts.widgets.LineChart", {
 		this.setHtmlAttribute("id", id);
 		this._id = id;
 		this._plot = null;
+		this._title = "Chart";
+		this._bgColor = "#ffffff";
 		
 		this._defaultColors = [
                 "rgb(64,105,156)",
@@ -40,6 +42,16 @@ qx.Class.define("org.netxms.ui.eclipse.charts.widgets.LineChart", {
 			"check" : "Array",
 			"apply" : "_applyLegend"
 		},
+		titleVisible : {
+			"check" : "Boolean",
+			"apply" : "_applyTitleVisible"
+		},
+		title : {
+			"apply" : "_applyTitle"
+		},
+		bgColor : {
+			"apply" : "_applyBgColor"
+		},
 	},
 
     members : {
@@ -66,6 +78,22 @@ qx.Class.define("org.netxms.ui.eclipse.charts.widgets.LineChart", {
         	//alert(this.getLegend());
         },
         
+        _applyTitleVisible : function() {
+			qx.ui.core.Widget.flushGlobalQueues();
+        },
+
+        _applyTitle : function() {
+			qx.ui.core.Widget.flushGlobalQueues();
+			this._title = this.getTitle();
+        },
+
+        _applyBgColor : function() {
+			qx.ui.core.Widget.flushGlobalQueues();
+			console.debug('111');
+			this._bgColor = this.getBgColor();
+			console.debug('222');
+        },
+        
 		update : function() {
 			qx.ui.core.Widget.flushGlobalQueues();
 			var plotData = [];
@@ -83,29 +111,19 @@ qx.Class.define("org.netxms.ui.eclipse.charts.widgets.LineChart", {
 			//console.log(plotData);
 			
 			try {
-	    		$.plot($("#" + this._id), plotData, { xaxis: { mode: "time" } });
+				$("#" + this._id).empty();
+				$("#" + this._id).append('<div style="font-size: -1; text-align: center; background-color: ' + this._bgColor + '; padding: 0px;" id="_title_' + this._id + '" /><div style="width: 100%; height: 100%; padding: 0px;background-color: ' + this._bgColor + '" id="_chart_' + this._id + '" />');
+
+				console.debug($("#" + this._id));
+			
+				$("#_title_" + this._id).text(this._title);
+	    		$.plot($("#_chart_" + this._id), plotData, { xaxis: { mode: "time" } });
+				console.debug('All Done');
 	    	}
 	    	catch(e) {
+	    		console.error(e);
 	    	}
 
-			//$.plot($("#" + this._id), plotData);
-			//plot = this._getPlot();
-			//plot.setData(plotData);
-			//plot.setupGrid();
-			//plot.draw();
-			
-			//var labels = arguments[0];
-			//var data = arguments[1];
-			
-			//alert(data[0][0]);
-			//alert(data[0][1]);
-			//alert(data[1][0]);
-			//alert(data[1][1]);
-			
-			//plot = this._getPlot()
-			//plot.setData([[0, 3], [4, 8], [8, 5], [9, 13]]);
-			//plot.setupGrid();
-			//plot.draw();
         },
     },
 

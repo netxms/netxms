@@ -57,7 +57,10 @@ public class LineChartLCA extends AbstractWidgetLCA {
 		JSWriter writer = JSWriter.getWriterFor(widget);
 		writer.set("gridVisible", chart.isGridVisible());
 		writer.set("legendVisible", chart.isLegendVisible());
-		// writer.set("legend", chart.getLegends().toArray());
+		writer.set("titleVisible", chart.isTitleVisible());
+		writer.set("bgColor", chart.getBackgroundColor());
+		writer.set("title", chart.getChartTitle());
+
 		double[][] xyData = chart.getFlatXYData();
 		if (xyData.length > 0) {
 			DecimalFormat format = new DecimalFormat("###.###");

@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.eclipse.jface.preference.PreferenceConverter;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
@@ -29,12 +31,15 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 	private List<GraphItem> items = new ArrayList<GraphItem>();
 	private boolean showToolTips;
 	private Map<Integer, double[]> data = new TreeMap<Integer, double[]>();
+	private ChartColor backgroundColor;
 
 	public LineChart(Composite parent, int style) {
 		super(parent, style);
 		preferenceStore = Activator.getDefault().getPreferenceStore();
 		showToolTips = preferenceStore.getBoolean("Chart.ShowToolTips");
 		zoomEnabled = preferenceStore.getBoolean("Chart.EnableZoom");
+		RGB color = PreferenceConverter.getColor(preferenceStore, "Chart.Colors.Background");
+		setBackgroundColor(new ChartColor(color));
 	}
 
 	@Override
@@ -43,10 +48,12 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 
 	@Override
 	public void setChartTitle(String title) {
+		this.title = title;
 	}
 
 	@Override
 	public void setTitleVisible(boolean visible) {
+		this.titleVisible = visible;
 	}
 
 	@Override
@@ -84,6 +91,7 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 
 	@Override
 	public void setBackgroundColor(ChartColor color) {
+		this.backgroundColor = color;
 	}
 
 	@Override
@@ -227,5 +235,9 @@ public class LineChart extends GenericChart implements HistoricalDataChart {
 	{
 		// TODO Auto-generated method stub
 		
+	}
+
+	public String getBackgroundColor() {
+		return "rgb(" + backgroundColor.red + "," + backgroundColor.green + "," + backgroundColor.blue + ")";
 	}
 }
