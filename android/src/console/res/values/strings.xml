@@ -129,4 +129,6 @@
 	<string name="ts_ok">OK</string>
 	<string name="home">Home</string>
 	<string name="line_chart">Line Chart</string>
+	<string name="last_values_pie_chart">Pie Chart</string>
+	<string name="last_values_bar_chart">Bar Chart</string>
 </resources>

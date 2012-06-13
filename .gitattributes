@@ -4,8 +4,10 @@ android/src/console/.externalToolBuilders/Generate[!!-~]build_number.xml[!!-~]fr
 android/src/console/.externalToolBuilders/build_number.xml -text
 android/src/console/.externalToolBuilders/generate_build_number.xml -text
 android/src/console/.externalToolBuilders/run.exe -text
+android/src/console/.settings/org.eclipse.jdt.core.prefs -text
 android/src/console/AndroidManifest.xml -text
 android/src/console/default.properties -text
+android/src/console/libs/achartengine-1.0.0.jar -text
 android/src/console/libs/simple-xml-2.6.4.jar -text
 android/src/console/lint.xml -text
 android/src/console/project.properties -text
@@ -118,10 +120,13 @@ android/src/console/src/com/jjoe64/graphview/GraphViewDemo.java -text
 android/src/console/src/com/jjoe64/graphview/LineGraphView.java -text
 android/src/console/src/com/jjoe64/graphview/compatible/RealScaleGestureDetector.java -text
 android/src/console/src/com/jjoe64/graphview/compatible/ScaleGestureDetector.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/AbstractComparisonChart.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/AlarmBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/ConnectionPointBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/ConsolePreferences.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/DrawBarChart.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/DrawGraph.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/DrawPieChart.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/GraphBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/HomeScreen.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/LastValues.java -text

@@ -200,12 +200,20 @@ public class LastValuesAdapter extends BaseAdapter
 		return view;
 	}
 	
+	/**
+	 * @param t
+	 * @return
+	 */
 	private int getThresholdIcon(Threshold t)
 	{
 		int s = t != null ? t.getCurrentSeverity() : 0;
 		return severityImageId[s < severityImageId.length ? s : 0];
 	}
 	
+	/**
+	 * @param t
+	 * @return
+	 */
 	private String getThresholdText(Threshold t)
 	{
 		final int[] fns = { R.string.ts_fn_last, R.string.ts_fn_average, R.string.ts_fn_deviation, 

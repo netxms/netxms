@@ -22,15 +22,12 @@ public class CheckableLinearLayout extends LinearLayout implements Checkable
 	public CheckableLinearLayout(Context context)
 	{
 		super(context);
-		checkBox = new CheckBox(context);
+		checkBox = new CheckBox(context) {
+			
+		};
 		checkBox.setFocusable(false);
+		checkBox.setClickable(false);
 		addView(checkBox);
-		checkBox.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v)
-			{
-			}
-		});
 	}
 	
 	/*

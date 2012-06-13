@@ -62,5 +62,11 @@
         <activity android:label="@string/app_name" 
                   android:name=".main.activities.DrawGraph">
         </activity>        
+        <activity android:label="@string/app_name" 
+                  android:name=".main.activities.DrawBarChart">
+        </activity>        
+        <activity android:label="@string/app_name" 
+                  android:name=".main.activities.DrawPieChart">
+        </activity>        
 	</application>
 </manifest>

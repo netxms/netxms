@@ -13,7 +13,6 @@ import android.app.TabActivity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -169,6 +168,8 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			menu.add(Menu.NONE, R.id.graph_four_hours, Menu.NONE, getString(R.string.last_values_graph_four_hours));
 			menu.add(Menu.NONE, R.id.graph_one_day, Menu.NONE, getString(R.string.last_values_graph_one_day));
 			menu.add(Menu.NONE, R.id.graph_one_week, Menu.NONE, getString(R.string.last_values_graph_one_week));
+			menu.add(Menu.NONE, R.id.bar_chart, Menu.NONE, getString(R.string.last_values_bar_chart));
+			menu.add(Menu.NONE, R.id.pie_chart, Menu.NONE, getString(R.string.last_values_pie_chart));
 		}
 		else
 		{
@@ -178,6 +179,8 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			menu.removeItem(R.id.graph_four_hours);
 			menu.removeItem(R.id.graph_one_day);
 			menu.removeItem(R.id.graph_one_week);
+			menu.removeItem(R.id.bar_chart);
+			menu.removeItem(R.id.pie_chart);
 		}
 		
 		recreateOptionsMenu = false;
@@ -292,6 +295,10 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 				return drawGraph(86400, info.position);
 			case R.id.graph_one_week:
 				return drawGraph(604800, info.position);
+			case R.id.bar_chart:
+				return drawComparisonChart(DrawBarChart.class);
+			case R.id.pie_chart:
+				return drawComparisonChart(DrawPieChart.class);
 			// Alarms
 			case R.id.acknowledge:
 				alarmsAdapter.acknowledgeItem(((Alarm)alarmsAdapter.getItem(info.position)).getId());
@@ -334,6 +341,10 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 				return drawGraph(86400, lastValuesListView.getSelectedItemPosition());
 			case R.id.graph_one_week:
 				return drawGraph(604800, lastValuesListView.getSelectedItemPosition());
+			case R.id.bar_chart:
+				return drawComparisonChart(DrawBarChart.class);
+			case R.id.pie_chart:
+				return drawComparisonChart(DrawPieChart.class);
 			default:
 				return super.onOptionsItemSelected(item);
 		}
@@ -373,7 +384,8 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 				count++;
 			}
 		}
-		else
+		
+		if ((count == 0) && (position != ListView.INVALID_POSITION))
 		{
 			DciValue value = (DciValue)lastValuesAdapter.getItem(position);
 			nodeIdList.add((int)nodeId);
@@ -386,15 +398,64 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		}
 
 		// Pass them to activity
-		newIntent.putExtra("numGraphs", count);
-		newIntent.putIntegerArrayListExtra("nodeIdList", nodeIdList);
-		newIntent.putIntegerArrayListExtra("dciIdList", dciIdList);
-		newIntent.putIntegerArrayListExtra("colorList", colorList);
-		newIntent.putIntegerArrayListExtra("lineWidthList", lineWidthList);
-		newIntent.putStringArrayListExtra("nameList", nameList);
-		newIntent.putExtra("timeFrom", System.currentTimeMillis() - secsBack * 1000);
-		newIntent.putExtra("timeTo", System.currentTimeMillis());
-		startActivity(newIntent);
+		if (count > 0)
+		{
+			newIntent.putExtra("numGraphs", count);
+			newIntent.putIntegerArrayListExtra("nodeIdList", nodeIdList);
+			newIntent.putIntegerArrayListExtra("dciIdList", dciIdList);
+			newIntent.putIntegerArrayListExtra("colorList", colorList);
+			newIntent.putIntegerArrayListExtra("lineWidthList", lineWidthList);
+			newIntent.putStringArrayListExtra("nameList", nameList);
+			newIntent.putExtra("timeFrom", System.currentTimeMillis() - secsBack * 1000);
+			newIntent.putExtra("timeTo", System.currentTimeMillis());
+			startActivity(newIntent);
+		}
+		return true;
+	}
+	
+	/**
+	 * Draw pie chart for selected DCIs
+	 * 
+	 * @return
+	 */
+	private boolean drawComparisonChart(Class<?> chartClass)
+	{
+		Intent newIntent = new Intent(this, chartClass);
+		
+		ArrayList<Integer> nodeIdList = new ArrayList<Integer>();
+		ArrayList<Integer> dciIdList = new ArrayList<Integer>();
+		ArrayList<Integer> colorList = new ArrayList<Integer>();
+		ArrayList<String> nameList = new ArrayList<String>();
+
+		// Set values
+		int count = 0;
+		final SparseBooleanArray positions = lastValuesListView.getCheckedItemPositions();
+		if (positions.size() > 0)
+		{
+			for(int i = 0; (i < lastValuesAdapter.getCount()) && (count < 16); i++)
+			{
+				if (!positions.get(i))
+					continue;
+				
+				DciValue value = (DciValue)lastValuesAdapter.getItem(i);
+				nodeIdList.add((int)nodeId);
+				dciIdList.add((int)value.getId());
+				colorList.add(DEFAULT_COLORS[count]);
+				nameList.add(value.getDescription());
+				count++;
+			}
+		}
+
+		// Pass them to activity
+		if (count > 0)
+		{
+			newIntent.putExtra("numItems", count);
+			newIntent.putIntegerArrayListExtra("nodeIdList", nodeIdList);
+			newIntent.putIntegerArrayListExtra("dciIdList", dciIdList);
+			newIntent.putIntegerArrayListExtra("colorList", colorList);
+			newIntent.putStringArrayListExtra("nameList", nameList);
+			startActivity(newIntent);
+		}
 		return true;
 	}
 

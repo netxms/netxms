@@ -6,4 +6,6 @@
         <item android:id="@+id/graph_four_hours" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_four_hours"></item>
         <item android:id="@+id/graph_one_day" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_one_day"></item>
         <item android:id="@+id/graph_one_week" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_one_week"></item>
+        <item android:id="@+id/bar_chart" android:title="@string/last_values_bar_chart" android:enabled="true" android:visible="true" android:checkable="false" android:checked="false"></item>
+        <item android:id="@+id/pie_chart" android:enabled="true" android:visible="true" android:checkable="false" android:checked="false" android:title="@string/last_values_pie_chart"></item>
     </menu>
