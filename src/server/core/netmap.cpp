@@ -133,7 +133,7 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)m_mapType);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_layout);
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_seedObject);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, uuid_to_string(m_background, temp), DB_BIND_STATIC);
+	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, uuid_to_string(m_background, temp), DB_BIND_STATIC);
 	DBBind(hStmt, 5, DB_SQLTYPE_DOUBLE, m_backgroundLatitude);
 	DBBind(hStmt, 6, DB_SQLTYPE_DOUBLE, m_backgroundLongitude);
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_backgroundZoom);
