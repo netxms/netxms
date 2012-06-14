@@ -68,5 +68,8 @@
         <activity android:label="@string/app_name" 
                   android:name=".main.activities.DrawPieChart">
         </activity>        
-	</application>
+        <activity android:label="@string/app_name" 
+                  android:name=".main.activities.DashboardBrowser">
+        </activity>
+        	</application>
 </manifest>

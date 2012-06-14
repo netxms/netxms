@@ -10,6 +10,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -137,6 +138,9 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 				case ACTIVITY_MACADDRESS:
 					startActivity(new Intent(this, ConnectionPointBrowser.class));
 					break;
+				case ACTIVITY_DASHBOARDS:
+					Log.d("", "ACTIVITY_DASHBOARDS");
+					startActivity(new Intent(this, DashboardBrowser.class));
 				default:
 					break;
 			}

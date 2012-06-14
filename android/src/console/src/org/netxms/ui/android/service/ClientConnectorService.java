@@ -16,6 +16,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.activities.AlarmBrowser;
+import org.netxms.ui.android.main.activities.DashboardBrowser;
 import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.main.activities.NodeBrowser;
 import org.netxms.ui.android.main.activities.GraphBrowser;
@@ -79,6 +80,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	private long lastAlarmIdNotified;
 	private List<ObjectTool> objectTools = null;
 	private BroadcastReceiver receiver = null;
+	private DashboardBrowser dashboardBrowser;
 
 	/**
 	 * Class for clients to access. Because we know this service always runs in
@@ -476,6 +478,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			}
 			refreshAlarmBrowser();
 			refreshNodeBrowser();
+			refreshDashboardBrowser();
 		}
 	}
 
@@ -523,6 +526,23 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 	}
 
+	/**
+	 * Refresh dashboard browser activity
+	 */
+	private void refreshDashboardBrowser()
+	{
+		if (dashboardBrowser != null)
+		{
+			dashboardBrowser.runOnUiThread(new Runnable()
+			{
+				public void run()
+				{
+					dashboardBrowser.refreshList();
+				}
+			});
+		}
+	}
+	
 	/**
 	 * Process graph update event
 	 */
@@ -761,6 +781,15 @@ public class ClientConnectorService extends Service implements SessionListener
 		nodeInfo = browser;
 	}
 
+	
+	/**
+	 * @param browser
+	 */
+	public void registerDashboardBrowser(DashboardBrowser browser)
+	{
+		dashboardBrowser = browser;
+	}
+	
 	/**
 	 * @return the connectionStatus
 	 */
