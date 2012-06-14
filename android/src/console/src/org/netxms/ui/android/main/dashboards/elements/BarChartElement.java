@@ -1,32 +1,44 @@
 /**
  * 
  */
-package org.netxms.ui.android.main.activities;
+package org.netxms.ui.android.main.dashboards.elements;
 
 import org.achartengine.ChartFactory;
-import org.achartengine.GraphicalView;
 import org.achartengine.chart.BarChart.Type;
 import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.SimpleSeriesRenderer;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
+import org.netxms.ui.android.main.dashboards.configs.BarChartConfig;
+import android.content.Context;
 import android.graphics.Paint.Align;
-
+import android.util.Log;
 
 /**
- * Draw pie chart activity
+ * Bar chart element
  */
-public class DrawBarChart extends AbstractComparisonChart
+public class BarChartElement extends AbstractDashboardElement
 {
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.android.main.activities.AbstractComparisonChart#buildGraphView()
+	/**
+	 * @param context
+	 * @param xmlConfig
 	 */
-	@Override
-	protected GraphicalView buildGraphView()
+	public BarChartElement(Context context, String xmlConfig)
 	{
-		return ChartFactory.getBarChartView(this, buildDataset(), buildRenderer(), Type.STACKED);
+		super(context, xmlConfig);
+		try
+		{
+			config = BarChartConfig.createFromXml(xmlConfig);
+		}
+		catch(Exception e)
+		{
+			Log.e("BarChartElement", "Error parsing element config", e);
+			config = new BarChartConfig();
+		}
+		
+		addView(ChartFactory.getBarChartView(getContext(), buildDataset(), buildRenderer(), Type.STACKED));
 	}
-	
+
 	/**
 	 * @return
 	 */
@@ -34,12 +46,12 @@ public class DrawBarChart extends AbstractComparisonChart
 	{
 		XYMultipleSeriesDataset dataset = new XYMultipleSeriesDataset();
 
-		for(int i = 0; i < items.length; i++)
+		for(int i = 0; i < 3; i++)
 		{
-			XYSeries series = new XYSeries(items[i].getDescription());
-			for(int j = 0; j < items.length; j++)
+			XYSeries series = new XYSeries("xxx");
+			for(int j = 0; j < 3; j++)
 			{
-				series.add(j + 1, (i == j) ? values[i] : 0);
+				series.add(j + 1, (i == j) ? 42 : 0);
 			}
 			dataset.addSeries(series);
 		}
@@ -63,21 +75,22 @@ public class DrawBarChart extends AbstractComparisonChart
 		renderer.setPanEnabled(false);
 		renderer.setZoomEnabled(false);
 		
-		for(int color : colorList)
+		//for(int color : colorList)
+		for(int i = 0; i < 3; i++)
 		{
 			SimpleSeriesRenderer r = new SimpleSeriesRenderer();
-			r.setColor(color | 0xFF000000);
+			r.setColor(0xFF00FF00);
 			renderer.addSeriesRenderer(r);
 			r.setDisplayChartValues(false);
 		}
 
 		renderer.setXAxisMin(0.5);
-		renderer.setXAxisMax(items.length + 0.5);
+		renderer.setXAxisMax(3 + 0.5);
 		renderer.setXLabels(1);
 		renderer.setYLabelsAlign(Align.RIGHT);
 		renderer.clearXTextLabels();
-		for(int i = 0; i < items.length; i++)
-			renderer.addXTextLabel(i + 1, items[i].getDescription());
+//		for(int i = 0; i < items.length; i++)
+//			renderer.addXTextLabel(i + 1, items[i].getDescription());
 		
 		return renderer;
 	}

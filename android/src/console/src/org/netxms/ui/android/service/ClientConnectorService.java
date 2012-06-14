@@ -450,11 +450,23 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public GenericObject findObjectById(long objectId)
 	{
+		return findObjectById(objectId, GenericObject.class);
+	}
+
+	/**
+	 * Find object by ID with class filter
+	 * 
+	 * @param objectId
+	 * @param classFilter
+	 * @return
+	 */
+	public GenericObject findObjectById(long objectId, Class<? extends GenericObject> classFilter)
+	{
 		// we can't search without active session
 		if (session == null)
 			return null;
 
-		GenericObject object = session.findObjectById(objectId);
+		GenericObject object = session.findObjectById(objectId, classFilter);
 		// if we don't have object - probably we never synced it
 		// request object synchronization in that case
 		if (object == null)
@@ -463,7 +475,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		return object;
 	}
-
+	
 	/**
 	 * @param object
 	 */
@@ -533,8 +545,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		if (dashboardBrowser != null)
 		{
-			dashboardBrowser.runOnUiThread(new Runnable()
-			{
+			dashboardBrowser.runOnUiThread(new Runnable() {
 				public void run()
 				{
 					dashboardBrowser.refreshList();
@@ -552,8 +563,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			if (this.graphBrowser != null)
 			{
-				graphBrowser.runOnUiThread(new Runnable()
-				{
+				graphBrowser.runOnUiThread(new Runnable() {
 					public void run()
 					{
 						graphBrowser.refreshList();
@@ -781,7 +791,6 @@ public class ClientConnectorService extends Service implements SessionListener
 		nodeInfo = browser;
 	}
 
-	
 	/**
 	 * @param browser
 	 */

@@ -71,5 +71,8 @@
         <activity android:label="@string/app_name" 
                   android:name=".main.activities.DashboardBrowser">
         </activity>
-        	</application>
+        <activity android:label="@string/app_name" 
+                  android:name=".main.activities.DashboardActivity">
+        </activity>
+	</application>
 </manifest>

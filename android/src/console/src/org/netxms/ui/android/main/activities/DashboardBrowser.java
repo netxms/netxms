@@ -9,6 +9,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.NodeListAdapter;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -23,8 +24,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 /**
- * Node browser
- * 
+ * Dashboard browser
  */
 public class DashboardBrowser extends AbstractClientActivity
 {
@@ -48,8 +48,7 @@ public class DashboardBrowser extends AbstractClientActivity
 
 		listView = (ListView)findViewById(R.id.NodeList);
 		listView.setAdapter(adapter);
-		listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
-		{
+		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@SuppressWarnings("rawtypes")
 			public void onItemClick(AdapterView parent, View v, int position, long id)
 			{
@@ -76,6 +75,9 @@ public class DashboardBrowser extends AbstractClientActivity
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onSaveInstanceState(android.os.Bundle)
+	 */
 	@Override
 	protected void onSaveInstanceState(Bundle outState)
 	{
@@ -88,11 +90,14 @@ public class DashboardBrowser extends AbstractClientActivity
 	 */
 	public void showDashboard(long objectId)
 	{
-		// Intent newIntent = new Intent(this, Dashboard.class);
-		// newIntent.putExtra("objectId", objectId);
-		// startActivity(newIntent);
+		Intent newIntent = new Intent(this, DashboardActivity.class);
+		newIntent.putExtra("objectId", objectId);
+		startActivity(newIntent);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onServiceConnected(android.content.ComponentName, android.os.IBinder)
+	 */
 	@Override
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
@@ -149,6 +154,9 @@ public class DashboardBrowser extends AbstractClientActivity
 
 	}
 
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onContextItemSelected(android.view.MenuItem)
+	 */
 	@Override
 	public boolean onContextItemSelected(MenuItem item)
 	{

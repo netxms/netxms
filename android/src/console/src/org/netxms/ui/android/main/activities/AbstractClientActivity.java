@@ -42,6 +42,16 @@ public abstract class AbstractClientActivity extends Activity implements Service
 	protected abstract void onCreateStep2(Bundle savedInstanceState);
 
 	/* (non-Javadoc)
+	 * @see android.app.Activity#onDestroy()
+	 */
+	@Override
+	protected void onDestroy()
+	{
+		unbindService(this);
+		super.onDestroy();
+	}
+
+	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
 	 */
 	@Override
