@@ -84,12 +84,14 @@ public class BarChartElement extends AbstractDashboardElement
 		renderer.setFitLegend(true);
 		renderer.setBarSpacing(0.4f);
 		renderer.setShowGrid(true);
-		renderer.setPanEnabled(false);
-		renderer.setZoomEnabled(false);
+		renderer.setPanEnabled(false, false);
+		renderer.setZoomEnabled(false, false);
 		
 		renderer.setApplyBackgroundColor(true);
+		renderer.setMarginsColor(BACKGROUND_COLOR);
 		renderer.setBackgroundColor(BACKGROUND_COLOR);
 		renderer.setAxesColor(AXIS_COLOR);
+		renderer.setGridColor(AXIS_COLOR);
 		
 		ChartDciConfig[] items = ((BarChartConfig)config).getDciList();
 		for(int i = 0; i < items.length; i++)

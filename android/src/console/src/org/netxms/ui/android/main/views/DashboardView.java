@@ -13,15 +13,21 @@ import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.GridLayout;
+import android.widget.Space;
+import android.widget.TextView;
 
 /**
  * Dashboard view
  */
-public class DashboardView extends LinearLayout
+public class DashboardView extends GridLayout
 {
 	private ClientConnectorService service;
 	private Dashboard dashboard;
+	private int row = 0;
+	private int column = 0;
 
 	/**
 	 * @param context
@@ -33,12 +39,46 @@ public class DashboardView extends LinearLayout
 		this.service = service;
 		this.dashboard = dashboard;
 		
-		setPadding(5, 5, 5, 5);
+		setPadding(10, 10, 10, 10);
+		setAlignmentMode(ALIGN_BOUNDS);
+		setRowOrderPreserved(false);
+
 		//setBackgroundColor(Color.WHITE);
 		
-		//setNumColumns(dashboard.getNumColumns());
+		//setColumnCount(dashboard.getNumColumns());
+		//setRowCount(dashboard.getElements().size() / dashboard.getNumColumns());
 		for(DashboardElement e : dashboard.getElements())
 			createElement(e);
+/*		
+      Spec row1 = spec(0, 1, CENTER);
+      Spec row2 = spec(1, 1, CENTER);
+      Spec row3 = spec(2, BASELINE);
+      Spec row4 = spec(3, BASELINE);
+      Spec row5 = spec(2, 3, FILL); // allow the last two rows to overlap the middle two
+      Spec row6 = spec(5);
+      Spec row7 = spec(6);
+
+      Spec col1a = spec(0, 1, CENTER);
+      Spec col1b = spec(0, 1, LEFT);
+      Spec col1c = spec(0, RIGHT);
+      Spec col2 = spec(1, LEFT);
+      Spec col3 = spec(2, FILL);
+      Spec col4a = spec(3);
+      Spec col4b = spec(3, FILL);
+
+      {
+          TextView c = new TextView(context);
+          c.setTextSize(32);
+          c.setText("Email setup");
+          addView(c, new LayoutParams(row1, col1a));
+      }
+      {
+          TextView c = new TextView(context);
+          c.setTextSize(16);
+          c.setText("You can configure email in just a few steps:");
+          addView(c, new LayoutParams(row2, col1b));
+      }
+      */
 	}
 
 	/**
@@ -69,8 +109,19 @@ public class DashboardView extends LinearLayout
 			Log.e("DashboardView/createElement", "Error parsing element layout", e);
 			layout = new DashboardElementLayout();
 		}
+
+		LayoutParams lp = new LayoutParams();
+//		lp.rowSpec = spec(row, layout.verticalSpan, CENTER);
+//		lp.columnSpec = spec(column, layout.horizontalSpan, CENTER);
+		lp.rowSpec = spec(row++, 1, LEFT);
+		lp.columnSpec = spec(0, 1, RIGHT);
+ 		addView(widget);
 		
-		LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-		addView(widget, lp);
+		column += layout.horizontalSpan;
+		if (column >= getColumnCount())
+		{
+			column = 0;
+			row++;
+		}
 	}
 }

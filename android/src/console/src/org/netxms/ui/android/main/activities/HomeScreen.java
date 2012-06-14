@@ -50,7 +50,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 
 		GridView gridview = (GridView)findViewById(R.id.ActivityList);
 		if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
-			gridview.setNumColumns(4);
+			gridview.setNumColumns(5);
 		else
 			gridview.setNumColumns(2);
 		gridview.setAdapter(new ActivityListAdapter(this));
