@@ -3,13 +3,17 @@
  */
 package org.netxms.ui.android.main.dashboards.elements;
 
-import org.achartengine.ChartFactory;
+import org.achartengine.GraphicalView;
+import org.achartengine.chart.BarChart;
 import org.achartengine.chart.BarChart.Type;
 import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.SimpleSeriesRenderer;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
+import org.netxms.client.datacollection.DciData;
+import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
 import org.netxms.ui.android.main.dashboards.configs.BarChartConfig;
+import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
 import android.graphics.Paint.Align;
 import android.util.Log;
@@ -19,13 +23,16 @@ import android.util.Log;
  */
 public class BarChartElement extends AbstractDashboardElement
 {
+	private BarChart chart;
+	private GraphicalView chartView;
+	
 	/**
 	 * @param context
 	 * @param xmlConfig
 	 */
-	public BarChartElement(Context context, String xmlConfig)
+	public BarChartElement(Context context, String xmlConfig, ClientConnectorService service)
 	{
-		super(context, xmlConfig);
+		super(context, xmlConfig, service);
 		try
 		{
 			config = BarChartConfig.createFromXml(xmlConfig);
@@ -36,7 +43,11 @@ public class BarChartElement extends AbstractDashboardElement
 			config = new BarChartConfig();
 		}
 		
-		addView(ChartFactory.getBarChartView(getContext(), buildDataset(), buildRenderer(), Type.STACKED));
+		chart = new BarChart(buildDataset(), buildRenderer(), Type.STACKED);
+		chartView = new GraphicalView(context, chart);
+		addView(chartView);
+		
+		startRefreshTask(((BarChartConfig)config).getRefreshRate());
 	}
 
 	/**
@@ -46,12 +57,13 @@ public class BarChartElement extends AbstractDashboardElement
 	{
 		XYMultipleSeriesDataset dataset = new XYMultipleSeriesDataset();
 
-		for(int i = 0; i < 3; i++)
+		ChartDciConfig[] items = ((BarChartConfig)config).getDciList();
+		for(int i = 0; i < items.length; i++)
 		{
-			XYSeries series = new XYSeries("xxx");
-			for(int j = 0; j < 3; j++)
+			XYSeries series = new XYSeries(items[i].getName());
+			for(int j = 0; j < items.length; j++)
 			{
-				series.add(j + 1, (i == j) ? 42 : 0);
+				series.add(j + 1, 0);
 			}
 			dataset.addSeries(series);
 		}
@@ -75,11 +87,18 @@ public class BarChartElement extends AbstractDashboardElement
 		renderer.setPanEnabled(false);
 		renderer.setZoomEnabled(false);
 		
-		//for(int color : colorList)
-		for(int i = 0; i < 3; i++)
+		renderer.setApplyBackgroundColor(true);
+		renderer.setBackgroundColor(BACKGROUND_COLOR);
+		renderer.setAxesColor(AXIS_COLOR);
+		
+		ChartDciConfig[] items = ((BarChartConfig)config).getDciList();
+		for(int i = 0; i < items.length; i++)
 		{
 			SimpleSeriesRenderer r = new SimpleSeriesRenderer();
-			r.setColor(0xFF00FF00);
+			int color = items[i].getColorAsInt();
+			if (color == -1)
+				color = DEFAULT_ITEM_COLORS[i];
+			r.setColor(color | 0xFF000000);
 			renderer.addSeriesRenderer(r);
 			r.setDisplayChartValues(false);
 		}
@@ -89,9 +108,53 @@ public class BarChartElement extends AbstractDashboardElement
 		renderer.setXLabels(1);
 		renderer.setYLabelsAlign(Align.RIGHT);
 		renderer.clearXTextLabels();
-//		for(int i = 0; i < items.length; i++)
-//			renderer.addXTextLabel(i + 1, items[i].getDescription());
+		for(int i = 0; i < items.length; i++)
+			renderer.addXTextLabel(i + 1, items[i].getName());
 		
 		return renderer;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.android.main.dashboards.elements.AbstractDashboardElement#refresh()
+	 */
+	@Override
+	public void refresh()
+	{
+		final ChartDciConfig[] items = ((BarChartConfig)config).getDciList();
+		if (items.length == 0)
+			return;
+		
+		try
+		{
+			final DciData[] dciData = new DciData[items.length];
+			for (int i = 0; i < dciData.length; i++)
+			{
+				dciData[i] = new DciData(0, 0);
+				dciData[i] = service.getSession().getCollectedData(items[i].nodeId, items[i].dciId, null, null, 1);
+			}
+			
+			post(new Runnable() {
+				@Override
+				public void run()
+				{
+					XYMultipleSeriesDataset dataset = chart.getDataset();
+					for(int i = 0; i < dciData.length; i++)
+					{
+						dataset.removeSeries(i);
+						XYSeries series = new XYSeries(items[i].getName());
+						for(int j = 0; j < items.length; j++)
+						{
+							series.add(j + 1, (i == j) ? dciData[i].getLastValue().getValueAsDouble() : 0);
+						}
+						dataset.addSeries(i, series);
+					}
+					chartView.repaint();
+				}
+			});
+		}
+		catch(Exception e)
+		{
+			Log.e("nxclient/BarChartElement", "Exception while reading data from server", e);
+		}
 	}
 }

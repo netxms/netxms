@@ -36,7 +36,6 @@ import android.widget.TextView;
 
 /**
  * Node browser
- * 
  */
 public class NodeBrowser extends AbstractClientActivity
 {
@@ -357,11 +356,12 @@ public class NodeBrowser extends AbstractClientActivity
 	protected void onDestroy()
 	{
 		service.registerNodeBrowser(null);
-		unbindService(this);
 		super.onDestroy();
 	}
 	
-	
+	/**
+	 * @param nodeIdList
+	 */
 	private void viewAlarms(ArrayList<Integer> nodeIdList)
 	{
 		Intent newIntent = new Intent(this, AlarmBrowser.class);

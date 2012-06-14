@@ -21,6 +21,7 @@ package org.netxms.ui.android.main.dashboards.configs;
 import java.util.Map;
 import java.util.Set;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 

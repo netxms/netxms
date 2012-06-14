@@ -30,7 +30,6 @@ public class DashboardActivity extends AbstractClientActivity
 		dashboardId = getIntent().getLongExtra("objectId", 0);
 		Log.d("DashboardActivity", "onCreateStep2: dashboardId=" + dashboardId);
 		rootView = new FrameLayout(this);
-		rootView.setBackgroundColor(0xFF008000);
 		setContentView(rootView);
 	}
 
@@ -50,7 +49,7 @@ public class DashboardActivity extends AbstractClientActivity
 	 */
 	private void refresh()
 	{
-		rootView.addView(new DashboardView(this, dashboard), new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+		rootView.addView(new DashboardView(this, dashboard, service), new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 		rootView.invalidate();
 	}
 }

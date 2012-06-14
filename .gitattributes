@@ -145,7 +145,6 @@ android/src/console/src/org/netxms/ui/android/main/adapters/NodeListAdapter.java
 android/src/console/src/org/netxms/ui/android/main/adapters/OverviewAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/configs/AbstractChartConfig.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/configs/BarChartConfig.java -text
-android/src/console/src/org/netxms/ui/android/main/dashboards/configs/ChartDciConfig.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/configs/ComparisonChartConfig.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/configs/DashboardElementConfig.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/configs/DashboardElementLayout.java -text

@@ -35,6 +35,9 @@ public class DashboardBrowser extends AbstractClientActivity
 	private Stack<GenericObject> containerPath = new Stack<GenericObject>();
 	private long[] savedPath = null;
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
+	 */
 	@Override
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
@@ -124,6 +127,9 @@ public class DashboardBrowser extends AbstractClientActivity
 		refreshList();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onServiceDisconnected(android.content.ComponentName)
+	 */
 	@Override
 	public void onServiceDisconnected(ComponentName name)
 	{
@@ -131,6 +137,9 @@ public class DashboardBrowser extends AbstractClientActivity
 		adapter.setService(null);
 	}
 
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreateContextMenu(android.view.ContextMenu, android.view.View, android.view.ContextMenu.ContextMenuInfo)
+	 */
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
 	{
@@ -173,6 +182,9 @@ public class DashboardBrowser extends AbstractClientActivity
 		return super.onContextItemSelected(item);
 	}
 
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onBackPressed()
+	 */
 	@Override
 	public void onBackPressed()
 	{
@@ -258,11 +270,13 @@ public class DashboardBrowser extends AbstractClientActivity
 		return path;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onDestroy()
+	 */
 	@Override
 	protected void onDestroy()
 	{
 		service.registerDashboardBrowser(null);
-		unbindService(this);
 		super.onDestroy();
 	}
 
