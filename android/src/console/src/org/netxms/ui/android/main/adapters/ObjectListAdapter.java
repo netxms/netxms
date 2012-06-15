@@ -23,9 +23,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
- * Adapter for alarm list
+ * Adapter for object list
  */
-public class NodeListAdapter extends BaseAdapter
+public class ObjectListAdapter extends BaseAdapter
 {
 	private Context context;
 	private List<GenericObject> objectList = new ArrayList<GenericObject>(0);
@@ -58,7 +58,7 @@ public class NodeListAdapter extends BaseAdapter
 	 * 
 	 * @param context
 	 */
-	public NodeListAdapter(Context context)
+	public ObjectListAdapter(Context context)
 	{
 		this.context = context;
 	}
@@ -213,12 +213,15 @@ public class NodeListAdapter extends BaseAdapter
 				case GenericObject.OBJECT_CLUSTER:
 					objectIconId = R.drawable.object_cluster;
 					break;
+				case GenericObject.OBJECT_DASHBOARD:
+					objectIconId = R.drawable.dashboard;
+					break;
 			}
 		}
 		
 		Drawable[] layers = new Drawable[2];
 		layers[0] = parent.getResources().getDrawable(objectIconId);
-		layers[1] = parent.getResources().getDrawable(NodeListAdapter.statusImageId[object.getStatus()]);
+		layers[1] = parent.getResources().getDrawable(ObjectListAdapter.statusImageId[object.getStatus()]);
 		LayerDrawable drawable = new LayerDrawable(layers);
 		drawable.setLayerInset(1, layers[0].getIntrinsicWidth() - layers[1].getIntrinsicWidth(), 
 				layers[0].getIntrinsicHeight() - layers[1].getIntrinsicHeight(), 0, 0);

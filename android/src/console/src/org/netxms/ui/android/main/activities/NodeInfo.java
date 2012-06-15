@@ -2,6 +2,7 @@ package org.netxms.ui.android.main.activities;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.Node;
@@ -430,6 +431,9 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 					continue;
 				
 				DciValue value = (DciValue)lastValuesAdapter.getItem(i);
+				if (value.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
+					continue;
+				
 				nodeIdList.add((int)nodeId);
 				dciIdList.add((int)value.getId());
 				colorList.add(DEFAULT_COLORS[count]);

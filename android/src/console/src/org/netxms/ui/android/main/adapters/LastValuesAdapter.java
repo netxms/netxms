@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.android.R;
@@ -194,7 +195,7 @@ public class LastValuesAdapter extends BaseAdapter
 			state.setImageResource(LastValuesAdapter.stateImageId[item.getStatus()]);
 			date.setText(item.getTimestamp().toLocaleString());
 			name.setText(item.getDescription());
-			value.setText(item.getValue());
+			value.setText((item.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE) ? r.getString(R.string.table_value_placeholder) : item.getValue());
 		}
 
 		return view;

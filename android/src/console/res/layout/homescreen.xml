@@ -10,7 +10,7 @@
 	<GridView
 	    android:id="@+id/ActivityList"
 	    android:layout_width="fill_parent"
-	    android:layout_height="fill_parent"
+	    android:layout_height="0dip"
 	    android:layout_weight="0.9"
 	    android:background="@drawable/home_screen_background"
 	    android:drawSelectorOnTop="true"

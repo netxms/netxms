@@ -3,16 +3,14 @@
  */
 package org.netxms.ui.android.main.activities;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.ui.android.R;
-
+import org.netxms.ui.android.main.views.ExtendedLineGraphView;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.os.AsyncTask;
@@ -21,8 +19,7 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import com.jjoe64.graphview.*; 
+import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GraphView.GraphViewSeries;
 import com.jjoe64.graphview.GraphView.GraphViewData;
 import com.jjoe64.graphview.GraphView.GraphViewStyle;
@@ -77,36 +74,13 @@ public class DrawGraph extends AbstractClientActivity
 			timeTo = getIntent().getLongExtra("timeTo", 0);
 			graphTitle = getIntent().getStringExtra("graphTitle");
 		}
-		graphView = new LineGraphView(this, "") {
-			@Override
-			protected String formatLabel(double value, boolean isValueX)
-			{
-				if (isValueX)
-				{
-					SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
-					return s.format(new Date((long)value));
-				}
-				else
-				{
-					if (value <= 1E3)
-						return String.format("%.0f", value);
-					else if (value <= 1E6)
-						return String.format("%.1f K", value/1E3);
-					else if (value < 1E9)
-						return String.format("%.1f M", value/1E6);
-					else if (value < 1E12)
-						return String.format("%.1f G", value/1E9);
-					else if (value < 1E15)
-						return String.format("%.1f T", value/1E12);
-					return super.formatLabel(value, isValueX);
-				}
-			}
-		};
+		graphView = new ExtendedLineGraphView(this, "");
 		graphView.setShowLegend(true);   
 		graphView.setScalable(true);
 		graphView.setScrollable(true);
 		graphView.setLegendAlign(LegendAlign.TOP);   
 		graphView.setLegendWidth(240);  
+		graphView.setZeroBased(true);
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 		title.setText(R.string.graph_title);
 	}

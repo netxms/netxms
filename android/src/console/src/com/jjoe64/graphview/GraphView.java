@@ -291,6 +291,7 @@ abstract public class GraphView extends LinearLayout
 	private boolean manualYAxis;
 	private double manualMaxYValue;
 	private double manualMinYValue;
+	private boolean zeroBased = false;
 
 	/**
 	 *
@@ -482,7 +483,8 @@ abstract public class GraphView extends LinearLayout
 		return legendWidth;
 	}
 
-	private double getMaxX(boolean ignoreViewport) {
+	private double getMaxX(boolean ignoreViewport) 
+	{
 		// if viewport is set, use this
 		if (!ignoreViewport && viewportSize != 0) {
 			return viewportStart+viewportSize;
@@ -503,11 +505,15 @@ abstract public class GraphView extends LinearLayout
 		}
 	}
 
-	private double getMaxY() {
+	private double getMaxY() 
+	{
 		double largest;
-		if (manualYAxis) {
+		if (manualYAxis) 
+		{
 			largest = manualMaxYValue;
-		} else {
+		} 
+		else 
+		{
 			largest = Integer.MIN_VALUE;
 			for (int i=0; i<graphSeries.size(); i++) {
 				GraphViewData[] values = _values(i);
@@ -540,18 +546,29 @@ abstract public class GraphView extends LinearLayout
 		}
 	}
 
-	private double getMinY() {
+	/**
+	 * @return
+	 */
+	private double getMinY() 
+	{
 		double smallest;
-		if (manualYAxis) {
+		if (manualYAxis) 
+		{
 			smallest = manualMinYValue;
-		} else {
+		} 
+		else 
+		{
 			smallest = Integer.MAX_VALUE;
-			for (int i=0; i<graphSeries.size(); i++) {
+			for (int i=0; i<graphSeries.size(); i++) 
+			{
 				GraphViewData[] values = _values(i);
 				for (int ii=0; ii<values.length; ii++)
 					if (values[ii].valueY < smallest)
 						smallest = values[ii].valueY;
 			}
+			
+			if (zeroBased && (smallest > 0))
+				smallest = 0;
 		}
 		return smallest;
 	}
@@ -585,7 +602,8 @@ abstract public class GraphView extends LinearLayout
 	 * if you want to disable the menual y axis, call this method with false.
 	 * @param manualYAxis
 	 */
-	public void setManualYAxis(boolean manualYAxis) {
+	public void setManualYAxis(boolean manualYAxis) 
+	{
 		this.manualYAxis = manualYAxis;
 	}
 
@@ -594,7 +612,8 @@ abstract public class GraphView extends LinearLayout
 	 * @param max
 	 * @param min
 	 */
-	public void setManualYAxisBounds(double max, double min) {
+	public void setManualYAxisBounds(double max, double min) 
+	{
 		manualMaxYValue = max;
 		manualMinYValue = min;
 		manualYAxis = true;
@@ -687,5 +706,21 @@ abstract public class GraphView extends LinearLayout
 		viewVerLabels.invalidate();
 		contentView.invalidate();
 		invalidate();
+	}
+
+	/**
+	 * @return
+	 */
+	public boolean isZeroBased()
+	{
+		return zeroBased;
+	}
+
+	/**
+	 * @param zeroBased
+	 */
+	public void setZeroBased(boolean zeroBased)
+	{
+		this.zeroBased = zeroBased;
 	}
 }

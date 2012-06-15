@@ -3,15 +3,14 @@
  */
 package org.netxms.ui.android.main.dashboards.elements;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
 import org.netxms.ui.android.main.dashboards.configs.LineChartConfig;
+import org.netxms.ui.android.main.views.ExtendedLineGraphView;
 import org.netxms.ui.android.service.ClientConnectorService;
 import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.LineGraphView;
 import com.jjoe64.graphview.GraphView.GraphViewData;
 import com.jjoe64.graphview.GraphView.GraphViewSeries;
 import com.jjoe64.graphview.GraphView.GraphViewStyle;
@@ -46,37 +45,14 @@ public class LineChartElement extends AbstractDashboardElement
 			config = new LineChartConfig();
 		}
 		
-		graphView = new LineGraphView(context, config.getTitle()) {
-			@Override
-			protected String formatLabel(double value, boolean isValueX)
-			{
-				if (isValueX)
-				{
-					SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
-					return s.format(new Date((long)value));
-				}
-				else
-				{
-					if (value <= 1E3)
-						return String.format("%.0f", value);
-					else if (value <= 1E6)
-						return String.format("%.1f K", value/1E3);
-					else if (value < 1E9)
-						return String.format("%.1f M", value/1E6);
-					else if (value < 1E12)
-						return String.format("%.1f G", value/1E9);
-					else if (value < 1E15)
-						return String.format("%.1f T", value/1E12);
-					return super.formatLabel(value, isValueX);
-				}
-			}
-		};
+		graphView = new ExtendedLineGraphView(context, config.getTitle());
 		graphView.setShowLegend(config.isShowLegend());
 		graphView.setScalable(false);
 		graphView.setScrollable(false);
 		graphView.setLegendAlign(LegendAlign.TOP);   
 		graphView.setLegendWidth(240);  
 		graphView.setBackgroundColor(0xFF000000);
+		graphView.setZeroBased(true);
 
 		startRefreshTask(config.getRefreshRate());
 	}

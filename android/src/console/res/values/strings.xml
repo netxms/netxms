@@ -19,7 +19,7 @@
 	<string name="notify_started">NetXMS service started</string>
 	<string name="notify_disconnected">Disconnected from server</string>
 	<string name="notify_connected">Connected to server %1$s</string>
-	<string name="notify_connecting">Connecting to server...</string>
+	<string name="notify_connecting">Connecting to server&#8230;</string>
 	<string name="notify_connection_failed">Connection failed: %1$s</string>
 	<string name="notify_no_connection">Data connection not available!"</string>
 	<string name="notify_action_exec_fail">Cannot execute action: %1$s</string>
@@ -75,12 +75,12 @@
 	<string name="graphs_title">Predefined graphs</string>
 	<string name="graph_draw">Draw</string>
 	<string name="graph_uncategorized">&lt;Uncategorized&gt;</string>
-	<string name="progress_gathering_data">Gathering data...</string>
+	<string name="progress_gathering_data">Gathering data&#8230;</string>
 	<string name="node_unknown">&lt;Unknown&gt;</string>
 	<string name="view_alarms">View alarms</string>
 	<string name="reconnect">Reconnect</string>
 	<string name="home_screen_macaddress">MACaddr</string>
-	<string name="hint_type_macaddress">Type or scan MAC address...</string>
+	<string name="hint_type_macaddress">Type or scan MAC address&#8230;</string>
 	<string name="connectionpoint_title">MAC address search</string>
 	<string name="connectionpoint_invalid">MAC Address &quot;%1$s&quot; is invalid</string>
 	<string name="connectionpoint_notfound">Connection point not found</string>
@@ -132,4 +132,5 @@
 	<string name="last_values_pie_chart">Pie Chart</string>
 	<string name="last_values_bar_chart">Bar Chart</string>
 	<string name="dashboard_title">Dashboards</string>
+	<string name="table_value_placeholder">&lt;&lt; TABLE &gt;&gt;</string>
 </resources>
