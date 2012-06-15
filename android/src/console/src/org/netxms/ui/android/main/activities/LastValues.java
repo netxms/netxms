@@ -107,7 +107,6 @@ public class LastValues extends AbstractClientActivity
 	protected void onDestroy()
 	{
 		service.registerNodeBrowser(null);
-		unbindService(this);
 		super.onDestroy();
 	}
 	

@@ -81,4 +81,20 @@ public class AbstractDashboardElement extends FrameLayout
 		}
 		super.onDetachedFromWindow();
 	}
+
+	/**
+	 * Swap RGB color (R <--> B)
+	 */
+	protected int swapRGB(int color)
+	{
+		return ((color & 0x0000FF) << 16) | (color & 0x00FF00) | ((color & 0xFF0000) >> 16);	// R | G | B
+	}
+
+	/**
+	 * Swap RGB color (R <--> B) and set alpha to 255
+	 */
+	protected int toAndroidColor(int color)
+	{
+		return ((color & 0x0000FF) << 16) | (color & 0x00FF00) | ((color & 0xFF0000) >> 16) | 0xFF000000;	// R | G | B | A
+	}
 }

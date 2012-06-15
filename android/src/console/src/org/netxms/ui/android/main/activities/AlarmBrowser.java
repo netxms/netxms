@@ -198,7 +198,6 @@ public class AlarmBrowser extends AbstractClientActivity
 	protected void onDestroy()
 	{
 		service.registerAlarmBrowser(null);
-		unbindService(this);
 		super.onDestroy();
 	}
 	

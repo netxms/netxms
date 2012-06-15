@@ -137,12 +137,4 @@ public class LineChartElement extends AbstractDashboardElement
 			Log.e(LOG_TAG, "Exception while reading data from server", e);
 		}
 	}
-
-	/**
-	 * Swap RGB color (R <--> B)
-	 */
-	private int swapRGB(int color)
-	{
-		return ((color & 0x0000FF) << 16) | (color & 0x00FF00) | ((color & 0xFF0000) >> 16);	// R | G | B
-	}
 }

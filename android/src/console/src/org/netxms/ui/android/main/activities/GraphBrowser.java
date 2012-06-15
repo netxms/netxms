@@ -174,7 +174,6 @@ public class GraphBrowser extends AbstractClientActivity
 	protected void onDestroy()
 	{
 		service.registerGraphBrowser(null);
-		unbindService(this);
 		super.onDestroy();
 	}
 

@@ -218,7 +218,6 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 	@Override
 	protected void onDestroy()
 	{
-		unbindService(this);
 		super.onDestroy();
 	}
 
