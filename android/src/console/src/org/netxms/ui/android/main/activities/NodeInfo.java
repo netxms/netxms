@@ -496,6 +496,9 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 					continue;
 				
 				DciValue value = (DciValue)lastValuesAdapter.getItem(i);
+				if (value.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
+					continue;
+				
 				nodeIdList.add((int)nodeId);
 				dciIdList.add((int)value.getId());
 				colorList.add(DEFAULT_COLORS[count]);

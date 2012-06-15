@@ -3,51 +3,48 @@
  */
 package org.netxms.ui.android.main.dashboards.elements;
 
+import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
-import org.achartengine.chart.BarChart;
-import org.achartengine.chart.BarChart.Type;
-import org.achartengine.model.XYMultipleSeriesDataset;
-import org.achartengine.model.XYSeries;
+import org.achartengine.model.CategorySeries;
+import org.achartengine.renderer.DefaultRenderer;
 import org.achartengine.renderer.SimpleSeriesRenderer;
-import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
-import org.netxms.ui.android.main.dashboards.configs.BarChartConfig;
+import org.netxms.ui.android.main.dashboards.configs.PieChartConfig;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
-import android.graphics.Paint.Align;
 import android.util.Log;
 
 /**
- * Bar chart element
+ * Pie chart element
  */
-public class BarChartElement extends AbstractDashboardElement
+public class PieChartElement extends AbstractDashboardElement
 {
-	private static final String LOG_TAG = "nxclient/BarChartElement";
+	private static final String LOG_TAG = "nxclient/PieChartElement";
 	
-	private BarChartConfig config;
-	private BarChart chart;
+	private PieChartConfig config;
+	private CategorySeries dataset;
 	private GraphicalView chartView;
 	
 	/**
 	 * @param context
 	 * @param xmlConfig
 	 */
-	public BarChartElement(Context context, String xmlConfig, ClientConnectorService service)
+	public PieChartElement(Context context, String xmlConfig, ClientConnectorService service)
 	{
 		super(context, xmlConfig, service);
 		try
 		{
-			config = BarChartConfig.createFromXml(xmlConfig);
+			config = PieChartConfig.createFromXml(xmlConfig);
 		}
 		catch(Exception e)
 		{
 			Log.e(LOG_TAG, "Error parsing element config", e);
-			config = new BarChartConfig();
+			config = new PieChartConfig();
 		}
 		
-		chart = new BarChart(buildDataset(), buildRenderer(), Type.STACKED);
-		chartView = new GraphicalView(context, chart);
+		dataset = buildDataset();
+		chartView = ChartFactory.getPieChartView(context, dataset, buildRenderer());
 		addView(chartView);
 		
 		startRefreshTask(config.getRefreshRate());
@@ -56,45 +53,31 @@ public class BarChartElement extends AbstractDashboardElement
 	/**
 	 * @return
 	 */
-	private XYMultipleSeriesDataset buildDataset()
+	private CategorySeries buildDataset()
 	{
-		XYMultipleSeriesDataset dataset = new XYMultipleSeriesDataset();
-
+		CategorySeries series = new CategorySeries(config.getTitle());
 		ChartDciConfig[] items = config.getDciList();
 		for(int i = 0; i < items.length; i++)
 		{
-			XYSeries series = new XYSeries(items[i].getName());
-			for(int j = 0; j < items.length; j++)
-			{
-				series.add(j + 1, 0);
-			}
-			dataset.addSeries(series);
+			series.add(items[i].getName(), 0);
 		}
 		
-		return dataset;
+		return series;
 	}
 	
 	/**
 	 * @return
 	 */
-	private XYMultipleSeriesRenderer buildRenderer()
+	private DefaultRenderer buildRenderer()
 	{
-		XYMultipleSeriesRenderer renderer = new XYMultipleSeriesRenderer();
-		renderer.setAxisTitleTextSize(16);
-		renderer.setChartTitleTextSize(20);
+		DefaultRenderer renderer = new DefaultRenderer();
 		renderer.setLabelsTextSize(15);
 		renderer.setLegendTextSize(15);
-		renderer.setFitLegend(true);
-		renderer.setBarSpacing(0.4f);
-		renderer.setShowGrid(true);
-		renderer.setPanEnabled(false, false);
-		renderer.setZoomEnabled(false, false);
-		
+		renderer.setMargins(new int[] { 20, 30, 15, 0 });
+		renderer.setPanEnabled(false);
+		renderer.setZoomEnabled(false);
 		renderer.setApplyBackgroundColor(true);
-		renderer.setMarginsColor(BACKGROUND_COLOR);
 		renderer.setBackgroundColor(BACKGROUND_COLOR);
-		renderer.setAxesColor(AXIS_COLOR);
-		renderer.setGridColor(AXIS_COLOR);
 		
 		ChartDciConfig[] items = config.getDciList();
 		for(int i = 0; i < items.length; i++)
@@ -103,18 +86,12 @@ public class BarChartElement extends AbstractDashboardElement
 			int color = items[i].getColorAsInt();
 			if (color == -1)
 				color = DEFAULT_ITEM_COLORS[i];
+			else
+				color = swapRGB(color);
 			r.setColor(color | 0xFF000000);
 			renderer.addSeriesRenderer(r);
 			r.setDisplayChartValues(false);
 		}
-
-		renderer.setXAxisMin(0.5);
-		renderer.setXAxisMax(items.length + 0.5);
-		renderer.setXLabels(1);
-		renderer.setYLabelsAlign(Align.RIGHT);
-		renderer.clearXTextLabels();
-		for(int i = 0; i < items.length; i++)
-			renderer.addXTextLabel(i + 1, items[i].getName());
 		
 		return renderer;
 	}
@@ -142,16 +119,9 @@ public class BarChartElement extends AbstractDashboardElement
 				@Override
 				public void run()
 				{
-					XYMultipleSeriesDataset dataset = chart.getDataset();
 					for(int i = 0; i < dciData.length; i++)
 					{
-						dataset.removeSeries(i);
-						XYSeries series = new XYSeries(items[i].getName());
-						for(int j = 0; j < items.length; j++)
-						{
-							series.add(j + 1, (i == j) ? dciData[i].getLastValue().getValueAsDouble() : 0);
-						}
-						dataset.addSeries(i, series);
+						dataset.set(i, items[i].getName(), dciData[i].getLastValue().getValueAsDouble());
 					}
 					chartView.repaint();
 				}

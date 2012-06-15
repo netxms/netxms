@@ -10,6 +10,9 @@ import org.netxms.ui.android.main.dashboards.elements.AbstractDashboardElement;
 import org.netxms.ui.android.main.dashboards.elements.BarChartElement;
 import org.netxms.ui.android.main.dashboards.elements.LabelElement;
 import org.netxms.ui.android.main.dashboards.elements.LineChartElement;
+import org.netxms.ui.android.main.dashboards.elements.PieChartElement;
+import org.netxms.ui.android.main.dashboards.elements.TableBarChartElement;
+import org.netxms.ui.android.main.dashboards.elements.TablePieChartElement;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
 import android.util.Log;
@@ -55,6 +58,16 @@ public class DashboardView extends LinearLayout
 			case DashboardElement.BAR_CHART:
 			case DashboardElement.TUBE_CHART:
 				widget = new BarChartElement(getContext(), element.getData(), service);
+				break;
+			case DashboardElement.PIE_CHART:
+				widget = new PieChartElement(getContext(), element.getData(), service);
+				break;
+			case DashboardElement.TABLE_BAR_CHART:
+			case DashboardElement.TABLE_TUBE_CHART:
+				widget = new TableBarChartElement(getContext(), element.getData(), service);
+				break;
+			case DashboardElement.TABLE_PIE_CHART:
+				widget = new TablePieChartElement(getContext(), element.getData(), service);
 				break;
 			case DashboardElement.LABEL:
 				widget = new LabelElement(getContext(), element.getData(), service);

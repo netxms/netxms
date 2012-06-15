@@ -162,6 +162,9 @@ android/src/console/src/org/netxms/ui/android/main/dashboards/elements/AbstractD
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/BarChartElement.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/LabelElement.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/LineChartElement.java -text
+android/src/console/src/org/netxms/ui/android/main/dashboards/elements/PieChartElement.java -text
+android/src/console/src/org/netxms/ui/android/main/dashboards/elements/TableBarChartElement.java -text
+android/src/console/src/org/netxms/ui/android/main/dashboards/elements/TablePieChartElement.java -text
 android/src/console/src/org/netxms/ui/android/main/views/ActivityListElement.java -text
 android/src/console/src/org/netxms/ui/android/main/views/CheckableLinearLayout.java -text
 android/src/console/src/org/netxms/ui/android/main/views/DashboardView.java -text
