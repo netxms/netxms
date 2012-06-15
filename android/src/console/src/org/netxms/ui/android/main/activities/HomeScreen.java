@@ -54,7 +54,6 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 		else
 			gridview.setNumColumns(2);
 		gridview.setAdapter(new ActivityListAdapter(this));
-
 		gridview.setOnItemClickListener(this);
 
 		statusText = (TextView)findViewById(R.id.ScreenTitleSecondary);

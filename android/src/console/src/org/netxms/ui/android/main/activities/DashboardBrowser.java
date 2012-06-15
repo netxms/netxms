@@ -7,7 +7,7 @@ import java.util.Stack;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
-import org.netxms.ui.android.main.adapters.NodeListAdapter;
+import org.netxms.ui.android.main.adapters.ObjectListAdapter;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -29,7 +29,7 @@ import android.widget.TextView;
 public class DashboardBrowser extends AbstractClientActivity
 {
 	private ListView listView;
-	private NodeListAdapter adapter;
+	private ObjectListAdapter adapter;
 	private long initialParent = 7;
 	private GenericObject currentParent = null;
 	private Stack<GenericObject> containerPath = new Stack<GenericObject>();
@@ -47,7 +47,7 @@ public class DashboardBrowser extends AbstractClientActivity
 		title.setText(R.string.dashboard_title);
 
 		// keeps current list of nodes as datasource for listview
-		adapter = new NodeListAdapter(this);
+		adapter = new ObjectListAdapter(this);
 
 		listView = (ListView)findViewById(R.id.NodeList);
 		listView.setAdapter(adapter);

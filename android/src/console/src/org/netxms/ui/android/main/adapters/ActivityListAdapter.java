@@ -82,7 +82,7 @@ public class ActivityListAdapter extends BaseAdapter
 		if (convertView == null)
 		{
 			view = new ActivityListElement(context, imageId[position], textId[position]);
-			view.setLayoutParams(new GridView.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+			view.setLayoutParams(new GridView.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
 		}
 		else
 		{
