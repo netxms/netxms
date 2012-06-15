@@ -130,7 +130,7 @@ public class DashboardLayout extends ViewGroup
 
 		Map<View, Point> coordinates = new HashMap<View, Point>(childrenCount);
 
-		boolean[][] cellUsed = new boolean[columnCount][MAX_ROWS];
+		boolean[][] cellUsed = new boolean[MAX_ROWS][columnCount];
 		int currentColumn = 0;
 		int currentRow = 0;
 		int rowCount = 0;
