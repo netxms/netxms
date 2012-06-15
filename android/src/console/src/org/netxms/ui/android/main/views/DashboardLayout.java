@@ -14,6 +14,8 @@ import android.view.ViewGroup;
 
 public class DashboardLayout extends ViewGroup
 {
+	private static final int MAX_ROWS = 64;
+
 	public static class LayoutParams extends MarginLayoutParams
 	{
 		private int columnSpan;
@@ -128,7 +130,7 @@ public class DashboardLayout extends ViewGroup
 
 		Map<View, Point> coordinates = new HashMap<View, Point>(childrenCount);
 
-		boolean[][] cellUsed = new boolean[columnCount][4];
+		boolean[][] cellUsed = new boolean[columnCount][MAX_ROWS];
 		int currentColumn = 0;
 		int currentRow = 0;
 		int rowCount = 0;
