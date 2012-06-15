@@ -16,14 +16,14 @@ import org.netxms.ui.android.main.dashboards.elements.TablePieChartElement;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
 import android.util.Log;
-import android.widget.LinearLayout;
 
 /**
  * Dashboard view
  */
-public class DashboardView extends LinearLayout
+public class DashboardView extends DashboardLayout
 {
 	private ClientConnectorService service;
+	private Dashboard dashboard;
 
 	/**
 	 * @param context
@@ -33,13 +33,20 @@ public class DashboardView extends LinearLayout
 	{
 		super(context);
 		this.service = service;
-		
+		this.dashboard = dashboard;
+
 		setPadding(10, 10, 10, 10);
 
-		//setBackgroundColor(Color.WHITE);
-		
+		setColumnCount(dashboard.getNumColumns());
+
+		// setBackgroundColor(Color.WHITE);
+
 		for(DashboardElement e : dashboard.getElements())
+		{
 			createElement(e);
+		}
+
+		requestLayout();
 	}
 
 	/**
@@ -48,7 +55,7 @@ public class DashboardView extends LinearLayout
 	private void createElement(DashboardElement element)
 	{
 		Log.d("DashboardView", "createElement: type=" + element.getType());
-		
+
 		AbstractDashboardElement widget;
 		switch(element.getType())
 		{
@@ -76,7 +83,7 @@ public class DashboardView extends LinearLayout
 				widget = new AbstractDashboardElement(getContext(), element.getData(), service);
 				break;
 		}
-		
+
 		DashboardElementLayout layout;
 		try
 		{
@@ -88,6 +95,8 @@ public class DashboardView extends LinearLayout
 			layout = new DashboardElementLayout();
 		}
 
- 		addView(widget);
+		DashboardLayout.LayoutParams layoutParams = new DashboardLayout.LayoutParams(layout.horizontalSpan, layout.verticalSpan);
+		widget.setLayoutParams(layoutParams);
+		addView(widget);
 	}
 }
