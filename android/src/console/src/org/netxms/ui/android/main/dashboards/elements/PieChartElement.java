@@ -73,11 +73,17 @@ public class PieChartElement extends AbstractDashboardElement
 		DefaultRenderer renderer = new DefaultRenderer();
 		renderer.setLabelsTextSize(15);
 		renderer.setLegendTextSize(15);
+		renderer.setShowLegend(config.isShowLegend());
 		renderer.setMargins(new int[] { 20, 30, 15, 0 });
 		renderer.setPanEnabled(false);
 		renderer.setZoomEnabled(false);
+		renderer.setAntialiasing(true);
+		renderer.setChartTitle(config.getTitle());
+		
 		renderer.setApplyBackgroundColor(true);
 		renderer.setBackgroundColor(BACKGROUND_COLOR);
+		renderer.setAxesColor(LABEL_COLOR);
+		renderer.setLabelsColor(LABEL_COLOR);
 		
 		ChartDciConfig[] items = config.getDciList();
 		for(int i = 0; i < items.length; i++)
@@ -90,7 +96,7 @@ public class PieChartElement extends AbstractDashboardElement
 				color = swapRGB(color);
 			r.setColor(color | 0xFF000000);
 			renderer.addSeriesRenderer(r);
-			r.setDisplayChartValues(false);
+			r.setDisplayChartValues(true);
 		}
 		
 		return renderer;

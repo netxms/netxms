@@ -75,19 +75,25 @@ public class TableBarChartElement extends AbstractDashboardElement
 		XYMultipleSeriesRenderer renderer = new XYMultipleSeriesRenderer();
 		renderer.setAxisTitleTextSize(16);
 		renderer.setChartTitleTextSize(20);
+		renderer.setChartTitle(config.getTitle());
 		renderer.setLabelsTextSize(15);
 		renderer.setLegendTextSize(15);
 		renderer.setFitLegend(true);
+		renderer.setShowLegend(config.isShowLegend());
 		renderer.setBarSpacing(0.4f);
-		renderer.setShowGrid(true);
+		renderer.setShowGrid(false);
 		renderer.setPanEnabled(false, false);
 		renderer.setZoomEnabled(false, false);
+		renderer.setAntialiasing(true);
 		
 		renderer.setApplyBackgroundColor(true);
 		renderer.setMarginsColor(BACKGROUND_COLOR);
 		renderer.setBackgroundColor(BACKGROUND_COLOR);
-		renderer.setAxesColor(AXIS_COLOR);
-		renderer.setGridColor(AXIS_COLOR);
+		renderer.setAxesColor(LABEL_COLOR);
+		renderer.setGridColor(GRID_COLOR);
+		renderer.setLabelsColor(LABEL_COLOR);
+		renderer.setXLabelsColor(LABEL_COLOR);
+		renderer.setYLabelsColor(0, LABEL_COLOR);
 		
 		for(int i = 0; i < DEFAULT_ITEM_COLORS.length; i++)
 		{

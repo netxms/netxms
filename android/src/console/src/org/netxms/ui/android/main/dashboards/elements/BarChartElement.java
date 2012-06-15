@@ -85,16 +85,22 @@ public class BarChartElement extends AbstractDashboardElement
 		renderer.setLabelsTextSize(15);
 		renderer.setLegendTextSize(15);
 		renderer.setFitLegend(true);
+		renderer.setShowLegend(config.isShowLegend());
+		renderer.setChartTitle(config.getTitle());
 		renderer.setBarSpacing(0.4f);
-		renderer.setShowGrid(true);
+		renderer.setShowGrid(false);
 		renderer.setPanEnabled(false, false);
 		renderer.setZoomEnabled(false, false);
+		renderer.setAntialiasing(true);
 		
 		renderer.setApplyBackgroundColor(true);
 		renderer.setMarginsColor(BACKGROUND_COLOR);
 		renderer.setBackgroundColor(BACKGROUND_COLOR);
-		renderer.setAxesColor(AXIS_COLOR);
-		renderer.setGridColor(AXIS_COLOR);
+		renderer.setAxesColor(LABEL_COLOR);
+		renderer.setGridColor(GRID_COLOR);
+		renderer.setLabelsColor(LABEL_COLOR);
+		renderer.setXLabelsColor(LABEL_COLOR);
+		renderer.setYLabelsColor(0, LABEL_COLOR);
 		
 		ChartDciConfig[] items = config.getDciList();
 		for(int i = 0; i < items.length; i++)
@@ -103,6 +109,8 @@ public class BarChartElement extends AbstractDashboardElement
 			int color = items[i].getColorAsInt();
 			if (color == -1)
 				color = DEFAULT_ITEM_COLORS[i];
+			else
+				color = swapRGB(color);
 			r.setColor(color | 0xFF000000);
 			renderer.addSeriesRenderer(r);
 			r.setDisplayChartValues(false);

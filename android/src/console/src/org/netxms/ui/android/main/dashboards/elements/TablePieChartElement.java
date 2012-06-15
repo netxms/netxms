@@ -44,7 +44,6 @@ public class TablePieChartElement extends AbstractDashboardElement
 		}
 		
 		dataset = buildDataset();
-		//chart = new PieChart(dataset, buildRenderer());
 		
 		startRefreshTask(config.getRefreshRate());
 	}
@@ -67,18 +66,24 @@ public class TablePieChartElement extends AbstractDashboardElement
 		DefaultRenderer renderer = new DefaultRenderer();
 		renderer.setLabelsTextSize(15);
 		renderer.setLegendTextSize(15);
+		renderer.setShowLegend(config.isShowLegend());
 		renderer.setMargins(new int[] { 20, 30, 15, 0 });
 		renderer.setPanEnabled(false);
 		renderer.setZoomEnabled(false);
+		renderer.setAntialiasing(true);
+		renderer.setChartTitle(config.getTitle());
+
+		renderer.setApplyBackgroundColor(true);
+		renderer.setBackgroundColor(BACKGROUND_COLOR);
+		renderer.setAxesColor(LABEL_COLOR);
+		renderer.setLabelsColor(LABEL_COLOR);
+		
 		for(int i = 0; i < count; i++)
 		{
 			SimpleSeriesRenderer r = new SimpleSeriesRenderer();
 			r.setColor(DEFAULT_ITEM_COLORS[i] | 0xFF000000);
 			renderer.addSeriesRenderer(r);
 		}
-		
-		renderer.setApplyBackgroundColor(true);
-		renderer.setBackgroundColor(BACKGROUND_COLOR);
 		
 		return renderer;
 	}

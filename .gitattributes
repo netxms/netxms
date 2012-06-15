@@ -160,6 +160,7 @@ android/src/console/src/org/netxms/ui/android/main/dashboards/configs/TableTubeC
 android/src/console/src/org/netxms/ui/android/main/dashboards/configs/TubeChartConfig.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/AbstractDashboardElement.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/BarChartElement.java -text
+android/src/console/src/org/netxms/ui/android/main/dashboards/elements/DialChartElement.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/LabelElement.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/LineChartElement.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/PieChartElement.java -text
@@ -168,7 +169,9 @@ android/src/console/src/org/netxms/ui/android/main/dashboards/elements/TablePieC
 android/src/console/src/org/netxms/ui/android/main/views/ActivityListElement.java -text
 android/src/console/src/org/netxms/ui/android/main/views/CheckableLinearLayout.java -text
 android/src/console/src/org/netxms/ui/android/main/views/DashboardView.java -text
+android/src/console/src/org/netxms/ui/android/main/views/DialChart.java -text
 android/src/console/src/org/netxms/ui/android/main/views/ExtendedLineGraphView.java -text
+android/src/console/src/org/netxms/ui/android/main/views/helpers/ChartItem.java -text
 android/src/console/src/org/netxms/ui/android/receiver/BootCompletedIntentReceiver.java -text
 android/src/console/src/org/netxms/ui/android/receiver/ConnectivityChangeIntentReceiver.java -text
 android/src/console/src/org/netxms/ui/android/service/ClientConnectorService.java -text

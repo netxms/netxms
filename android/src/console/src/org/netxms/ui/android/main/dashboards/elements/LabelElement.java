@@ -39,7 +39,7 @@ public class LabelElement extends AbstractDashboardElement
 		
 		TextView view = new TextView(context);
 		view.setText(config.getTitle());
-		view.setGravity(Gravity.CENTER);
+		view.setGravity(Gravity.FILL);
 		view.setBackgroundColor(toAndroidColor(config.getBackgroundColorAsInt()));
 		view.setTextColor(toAndroidColor(config.getForegroundColorAsInt()));
 		

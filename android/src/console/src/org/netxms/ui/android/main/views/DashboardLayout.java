@@ -97,6 +97,9 @@ public class DashboardLayout extends ViewGroup
 		super(context, attrs);
 	}
 
+	/* (non-Javadoc)
+	 * @see android.view.View#onMeasure(int, int)
+	 */
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
 	{
@@ -104,7 +107,7 @@ public class DashboardLayout extends ViewGroup
 		mMaxChildHeight = 0;
 
 		final int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.AT_MOST);
-		final int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.AT_MOST);
+		final int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(heightMeasureSpec), MeasureSpec.AT_MOST);
 
 		int count = getChildCount();
 		for(int i = 0; i < count; i++)
@@ -123,6 +126,9 @@ public class DashboardLayout extends ViewGroup
 		setMeasuredDimension(resolveSize(mMaxChildWidth, widthMeasureSpec), resolveSize(mMaxChildHeight, heightMeasureSpec));
 	}
 
+	/* (non-Javadoc)
+	 * @see android.view.ViewGroup#onLayout(boolean, int, int, int, int)
+	 */
 	@Override
 	protected void onLayout(boolean changed, int l, int t, int r, int b)
 	{
@@ -185,11 +191,15 @@ public class DashboardLayout extends ViewGroup
 			rowCount = Math.max(currentRow + layoutParams.getRowSpan() - 1, rowCount);
 		}
 
-		int width = r - l;
-		int height = b - t;
+		int viewLeft  = l + getPaddingLeft();
+		int viewRight = r - getPaddingRight();
+		int viewTop = t + getPaddingTop();
+		int viewBottom = b - getPaddingBottom();
+		int width = viewRight - viewLeft;
+		int height = viewBottom - viewTop;
 		int columnSize = width / columnCount;
 		int rowSize = height / rowCount;
-
+		
 		Iterator<Entry<View, Point>> iterator = coordinates.entrySet().iterator();
 		while(iterator.hasNext())
 		{
@@ -198,19 +208,26 @@ public class DashboardLayout extends ViewGroup
 			Point point = entry.getValue();
 			LayoutParams layoutParams = getLayoutParams(view);
 
-			int cl = l + (point.x * columnSize);
-			int ct = t + (point.y * rowSize);
-			int cr = l + ((point.x + layoutParams.getColumnSpan()) * columnSize);
-			int cb = t + ((point.y + layoutParams.getRowSpan()) * rowSize);
+			int cl = viewLeft + (point.x * columnSize);
+			int ct = viewTop + (point.y * rowSize);
+			int cr = viewLeft + ((point.x + layoutParams.getColumnSpan()) * columnSize);
+			int cb = viewTop + ((point.y + layoutParams.getRowSpan()) * rowSize);
 			view.layout(cl, ct, cr, cb);
 		}
 	}
 
+	/**
+	 * @param child
+	 * @return
+	 */
 	private LayoutParams getLayoutParams(final View child)
 	{
 		return (LayoutParams)child.getLayoutParams();
 	}
 
+	/**
+	 * @param count
+	 */
 	public void setColumnCount(int count)
 	{
 		columnCount = count;

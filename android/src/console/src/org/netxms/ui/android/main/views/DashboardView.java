@@ -8,6 +8,7 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.android.main.dashboards.configs.DashboardElementLayout;
 import org.netxms.ui.android.main.dashboards.elements.AbstractDashboardElement;
 import org.netxms.ui.android.main.dashboards.elements.BarChartElement;
+import org.netxms.ui.android.main.dashboards.elements.DialChartElement;
 import org.netxms.ui.android.main.dashboards.elements.LabelElement;
 import org.netxms.ui.android.main.dashboards.elements.LineChartElement;
 import org.netxms.ui.android.main.dashboards.elements.PieChartElement;
@@ -68,6 +69,9 @@ public class DashboardView extends DashboardLayout
 				break;
 			case DashboardElement.PIE_CHART:
 				widget = new PieChartElement(getContext(), element.getData(), service);
+				break;
+			case DashboardElement.DIAL_CHART:
+				widget = new DialChartElement(getContext(), element.getData(), service);
 				break;
 			case DashboardElement.TABLE_BAR_CHART:
 			case DashboardElement.TABLE_TUBE_CHART:
