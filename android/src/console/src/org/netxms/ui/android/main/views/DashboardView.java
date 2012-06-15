@@ -46,8 +46,6 @@ public class DashboardView extends DashboardLayout
 		{
 			createElement(e);
 		}
-
-		requestLayout();
 	}
 
 	/**

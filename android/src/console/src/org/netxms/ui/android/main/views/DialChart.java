@@ -11,6 +11,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.util.Log;
 import android.view.View;
 
 /**
@@ -116,13 +117,13 @@ public class DialChart extends View
 		if ((parameters.size() == 0) || (canvas.getWidth() < OUTER_MARGIN_WIDTH * 2) || (canvas.getHeight() < OUTER_MARGIN_HEIGHT * 2))
 			return;
 		
-		int w = (canvas.getWidth() - OUTER_MARGIN_WIDTH * 2) / parameters.size();
-		int h = canvas.getHeight() - OUTER_MARGIN_HEIGHT - top;
+		int w = (getWidth() - OUTER_MARGIN_WIDTH * 2) / parameters.size();
+		int h = getHeight() - OUTER_MARGIN_HEIGHT - top;
 		if ((w > 40 * parameters.size()) && (h > 40))
 		{
 			for(int i = 0; i < parameters.size(); i++)
 			{
-				renderElement(canvas, paint, parameters.get(i), i * w, top, w, h);
+				renderElement(canvas, paint, parameters.get(i), i * w + getPaddingLeft(), top, w, h);
 			}
 		}
 	}

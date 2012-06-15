@@ -12,10 +12,16 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 
+/**
+ * Dashboard layout
+ */
 public class DashboardLayout extends ViewGroup
 {
 	private static final int MAX_ROWS = 64;
 
+	/**
+	 * Layout parameters
+	 */
 	public static class LayoutParams extends MarginLayoutParams
 	{
 		private int columnSpan;
@@ -80,66 +86,50 @@ public class DashboardLayout extends ViewGroup
 
 	private int mMaxChildWidth = 0;
 	private int mMaxChildHeight = 0;
+	private int rowCount = 0;
 	private int columnCount;
+	private Map<View, Point> coordinates = new HashMap<View, Point>(0);
 
+
+	/**
+	 * @param context
+	 */
 	public DashboardLayout(Context context)
 	{
 		super(context);
 	}
 
+	/**
+	 * @param context
+	 * @param attrs
+	 * @param defStyle
+	 */
 	public DashboardLayout(Context context, AttributeSet attrs, int defStyle)
 	{
 		super(context, attrs, defStyle);
 	}
 
+	/**
+	 * @param context
+	 * @param attrs
+	 */
 	public DashboardLayout(Context context, AttributeSet attrs)
 	{
 		super(context, attrs);
 	}
-
-	/* (non-Javadoc)
-	 * @see android.view.View#onMeasure(int, int)
+	
+	/**
+	 * Create logical grid
 	 */
-	@Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
-	{
-		mMaxChildWidth = 0;
-		mMaxChildHeight = 0;
-
-		final int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.AT_MOST);
-		final int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(heightMeasureSpec), MeasureSpec.AT_MOST);
-
-		int count = getChildCount();
-		for(int i = 0; i < count; i++)
-		{
-			final View child = getChildAt(i);
-			if (child.getVisibility() != GONE)
-			{
-				child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
-				mMaxChildWidth = Math.max(mMaxChildWidth, child.getMeasuredWidth());
-				mMaxChildHeight = Math.max(mMaxChildHeight, child.getMeasuredHeight());
-				Log.d("layout", "mMaxChildWidth=" + mMaxChildWidth);
-				Log.d("layout", "mMaxChildHeight=" + mMaxChildHeight);
-			}
-		}
-
-		setMeasuredDimension(resolveSize(mMaxChildWidth, widthMeasureSpec), resolveSize(mMaxChildHeight, heightMeasureSpec));
-	}
-
-	/* (non-Javadoc)
-	 * @see android.view.ViewGroup#onLayout(boolean, int, int, int, int)
-	 */
-	@Override
-	protected void onLayout(boolean changed, int l, int t, int r, int b)
+	private void createGrid()
 	{
 		final int childrenCount = getChildCount();
-
-		Map<View, Point> coordinates = new HashMap<View, Point>(childrenCount);
+		coordinates = new HashMap<View, Point>(childrenCount);
 
 		boolean[][] cellUsed = new boolean[MAX_ROWS][columnCount];
 		int currentColumn = 0;
 		int currentRow = 0;
-		int rowCount = 0;
+		rowCount = 0;
 		for(int i = 0; i < childrenCount; i++)
 		{
 			final View child = getChildAt(i);
@@ -190,7 +180,54 @@ public class DashboardLayout extends ViewGroup
 			}
 			rowCount = Math.max(currentRow + layoutParams.getRowSpan() - 1, rowCount);
 		}
+	}
 
+	/* (non-Javadoc)
+	 * @see android.view.View#onMeasure(int, int)
+	 */
+	@Override
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
+	{
+		createGrid();
+		if (rowCount == 0)
+		{
+			setMeasuredDimension(widthMeasureSpec, heightMeasureSpec);
+			return;
+		}
+		
+		int width = MeasureSpec.getSize(widthMeasureSpec) - getPaddingLeft() - getPaddingRight();
+		int height = MeasureSpec.getSize(heightMeasureSpec) - getPaddingTop() - getPaddingBottom();
+				
+		int columnSize = width / columnCount;
+		int rowSize = height / rowCount;
+
+		int count = getChildCount();
+		for(int i = 0; i < count; i++)
+		{
+			final View view = getChildAt(i);
+			if (view.getVisibility() == GONE)
+				continue;
+			Point point = coordinates.get(view);
+			if (point == null)
+				continue;
+			LayoutParams layoutParams = getLayoutParams(view);
+			int cw = layoutParams.getColumnSpan() * columnSize;
+			int ch = layoutParams.getRowSpan() * rowSize;
+			view.measure(MeasureSpec.makeMeasureSpec(cw, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(ch, MeasureSpec.EXACTLY));
+		}
+
+		setMeasuredDimension(resolveSize(width, widthMeasureSpec), resolveSize(height, heightMeasureSpec));
+	}
+
+	/* (non-Javadoc)
+	 * @see android.view.ViewGroup#onLayout(boolean, int, int, int, int)
+	 */
+	@Override
+	protected void onLayout(boolean changed, int l, int t, int r, int b)
+	{
+		if (rowCount == 0)
+			return;
+		
 		int viewLeft  = l + getPaddingLeft();
 		int viewRight = r - getPaddingRight();
 		int viewTop = t + getPaddingTop();
