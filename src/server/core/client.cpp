@@ -191,6 +191,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *arg)
             errorCount = 0;
          }
          ThreadSleepMs(500);
+			continue;
       }
 
       errorCount = 0;     // Reset consecutive errors counter
@@ -282,6 +283,7 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
             errorCount = 0;
          }
          ThreadSleepMs(500);
+			continue;
       }
 
       errorCount = 0;     // Reset consecutive errors counter

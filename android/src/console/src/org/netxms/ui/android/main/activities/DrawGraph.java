@@ -77,8 +77,7 @@ public class DrawGraph extends AbstractClientActivity
 			timeTo = getIntent().getLongExtra("timeTo", 0);
 			graphTitle = getIntent().getStringExtra("graphTitle");
 		}
-		graphView = new LineGraphView(this, "")
-		{
+		graphView = new LineGraphView(this, "") {
 			@Override
 			protected String formatLabel(double value, boolean isValueX)
 			{
@@ -155,7 +154,6 @@ public class DrawGraph extends AbstractClientActivity
 	protected void onDestroy()
 	{
 		service.registerNodeBrowser(null);
-		unbindService(this);
 		super.onDestroy();
 	}
 

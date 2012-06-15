@@ -27,21 +27,25 @@ import com.jjoe64.graphview.compatible.ScaleGestureDetector;
  * Licensed under the GNU Lesser General Public License (LGPL)
  * http://www.gnu.org/licenses/lgpl.html
  */
-abstract public class GraphView extends LinearLayout {
-	static final private class GraphViewConfig {
+abstract public class GraphView extends LinearLayout 
+{
+	static final private class GraphViewConfig 
+	{
 		static final float BORDER = 20;
 		static final float VERTICAL_LABEL_WIDTH = 100;
 		static final float HORIZONTAL_LABEL_HEIGHT = 80;
 	}
 
-	private class GraphViewContentView extends View {
+	private class GraphViewContentView extends View 
+	{
 		private float lastTouchEventX;
 		private float graphwidth;
 
 		/**
 		 * @param context
 		 */
-		public GraphViewContentView(Context context) {
+		public GraphViewContentView(Context context) 
+		{
 			super(context);
 			setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
 		}
@@ -50,9 +54,11 @@ abstract public class GraphView extends LinearLayout {
 		 * @param canvas
 		 */
 		@Override
-		protected void onDraw(Canvas canvas) {
+		protected void onDraw(Canvas canvas)
+		{
 			// normal
 			paint.setStrokeWidth(0);
+			paint.setAntiAlias(true);
 
 			float border = GraphViewConfig.BORDER;
 			float horstart = 0;
@@ -274,6 +280,7 @@ abstract public class GraphView extends LinearLayout {
 	private double viewportStart;
 	private double viewportSize;
 	private final View viewVerLabels;
+	private GraphViewContentView contentView;
 	private ScaleGestureDetector scaleDetector;
 	private boolean scalable;
 	private NumberFormat numberformatter;
@@ -304,7 +311,8 @@ abstract public class GraphView extends LinearLayout {
 
 		viewVerLabels = new VerLabelsView(context);
 		addView(viewVerLabels);
-		addView(new GraphViewContentView(context), new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT, 1));
+		contentView = new GraphViewContentView(context);
+		addView(contentView, new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT, 1));
 	}
 
 	private GraphViewData[] _values(int idxSeries) {
@@ -338,6 +346,9 @@ abstract public class GraphView extends LinearLayout {
 		graphSeries.add(series);
 	}
 
+	/**
+	 * @param index
+	 */
 	public void removeSeries(int index)
 	{
 		if (index < 0 || index >= graphSeries.size())
@@ -348,11 +359,37 @@ abstract public class GraphView extends LinearLayout {
 		graphSeries.remove(index);
 	}
 	
+	/**
+	 * @param series
+	 */
 	public void removeSeries(GraphViewSeries series)
 	{
 		graphSeries.remove(series);
 	}
 	
+	/**
+	 * Replace series at given index
+	 * 
+	 * @param index
+	 * @param series
+	 */
+	public void addOrReplaceSeries(int index, GraphViewSeries series)
+	{
+		if (index == graphSeries.size())
+		{
+			graphSeries.add(series);
+		}
+		else
+		{
+			graphSeries.set(index, series);
+		}
+	}
+
+	/**
+	 * @param canvas
+	 * @param height
+	 * @param width
+	 */
 	protected void drawLegend(Canvas canvas, float height, float width) {
 		int shapeSize = 15;
 
@@ -634,8 +671,21 @@ abstract public class GraphView extends LinearLayout {
 	 * @param start x-value
 	 * @param size
 	 */
-	public void setViewPort(double start, double size) {
+	public void setViewPort(double start, double size) 
+	{
 		viewportStart = start;
 		viewportSize = size;
+	}
+	
+	/**
+	 * Repaint graph
+	 */
+	public void repaint()
+	{
+		horlabels = null;
+		verlabels = null;
+		viewVerLabels.invalidate();
+		contentView.invalidate();
+		invalidate();
 	}
 }

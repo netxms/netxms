@@ -44,12 +44,31 @@ public class DashboardActivity extends AbstractClientActivity
 		refresh();
 	}
 	
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onStop()
+	 */
+	@Override
+	protected void onStop()
+	{
+		rootView.removeAllViews();
+		super.onStop();
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onRestart()
+	 */
+	@Override
+	protected void onRestart()
+	{
+		super.onRestart();
+		refresh();
+	}
+
 	/**
 	 * Refresh dashboard
 	 */
 	private void refresh()
 	{
 		rootView.addView(new DashboardView(this, dashboard, service), new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
-		rootView.invalidate();
 	}
 }

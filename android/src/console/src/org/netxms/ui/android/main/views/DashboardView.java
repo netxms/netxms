@@ -8,6 +8,7 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.android.main.dashboards.configs.DashboardElementLayout;
 import org.netxms.ui.android.main.dashboards.elements.AbstractDashboardElement;
 import org.netxms.ui.android.main.dashboards.elements.BarChartElement;
+import org.netxms.ui.android.main.dashboards.elements.LineChartElement;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
 import android.graphics.Color;
@@ -91,7 +92,11 @@ public class DashboardView extends GridLayout
 		AbstractDashboardElement widget;
 		switch(element.getType())
 		{
+			case DashboardElement.LINE_CHART:
+				widget = new LineChartElement(getContext(), element.getData(), service);
+				break;
 			case DashboardElement.BAR_CHART:
+			case DashboardElement.TUBE_CHART:
 				widget = new BarChartElement(getContext(), element.getData(), service);
 				break;
 			default:

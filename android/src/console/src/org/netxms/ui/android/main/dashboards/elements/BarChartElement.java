@@ -23,6 +23,7 @@ import android.util.Log;
  */
 public class BarChartElement extends AbstractDashboardElement
 {
+	private BarChartConfig config;
 	private BarChart chart;
 	private GraphicalView chartView;
 	
@@ -47,7 +48,7 @@ public class BarChartElement extends AbstractDashboardElement
 		chartView = new GraphicalView(context, chart);
 		addView(chartView);
 		
-		startRefreshTask(((BarChartConfig)config).getRefreshRate());
+		startRefreshTask(config.getRefreshRate());
 	}
 
 	/**
@@ -57,7 +58,7 @@ public class BarChartElement extends AbstractDashboardElement
 	{
 		XYMultipleSeriesDataset dataset = new XYMultipleSeriesDataset();
 
-		ChartDciConfig[] items = ((BarChartConfig)config).getDciList();
+		ChartDciConfig[] items = config.getDciList();
 		for(int i = 0; i < items.length; i++)
 		{
 			XYSeries series = new XYSeries(items[i].getName());
@@ -93,7 +94,7 @@ public class BarChartElement extends AbstractDashboardElement
 		renderer.setAxesColor(AXIS_COLOR);
 		renderer.setGridColor(AXIS_COLOR);
 		
-		ChartDciConfig[] items = ((BarChartConfig)config).getDciList();
+		ChartDciConfig[] items = config.getDciList();
 		for(int i = 0; i < items.length; i++)
 		{
 			SimpleSeriesRenderer r = new SimpleSeriesRenderer();
@@ -106,7 +107,7 @@ public class BarChartElement extends AbstractDashboardElement
 		}
 
 		renderer.setXAxisMin(0.5);
-		renderer.setXAxisMax(3 + 0.5);
+		renderer.setXAxisMax(items.length + 0.5);
 		renderer.setXLabels(1);
 		renderer.setYLabelsAlign(Align.RIGHT);
 		renderer.clearXTextLabels();
@@ -122,7 +123,7 @@ public class BarChartElement extends AbstractDashboardElement
 	@Override
 	public void refresh()
 	{
-		final ChartDciConfig[] items = ((BarChartConfig)config).getDciList();
+		final ChartDciConfig[] items = config.getDciList();
 		if (items.length == 0)
 			return;
 		

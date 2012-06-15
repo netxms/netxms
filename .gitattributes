@@ -160,6 +160,7 @@ android/src/console/src/org/netxms/ui/android/main/dashboards/configs/TableTubeC
 android/src/console/src/org/netxms/ui/android/main/dashboards/configs/TubeChartConfig.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/AbstractDashboardElement.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/BarChartElement.java -text
+android/src/console/src/org/netxms/ui/android/main/dashboards/elements/LineChartElement.java -text
 android/src/console/src/org/netxms/ui/android/main/views/ActivityListElement.java -text
 android/src/console/src/org/netxms/ui/android/main/views/CheckableLinearLayout.java -text
 android/src/console/src/org/netxms/ui/android/main/views/DashboardView.java -text
