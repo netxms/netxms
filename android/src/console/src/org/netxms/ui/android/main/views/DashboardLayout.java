@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 import android.content.Context;
 import android.graphics.Point;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -84,8 +83,6 @@ public class DashboardLayout extends ViewGroup
 		}
 	}
 
-	private int mMaxChildWidth = 0;
-	private int mMaxChildHeight = 0;
 	private int rowCount = 0;
 	private int columnCount;
 	private Map<View, Point> coordinates = new HashMap<View, Point>(0);
@@ -216,7 +213,7 @@ public class DashboardLayout extends ViewGroup
 			view.measure(MeasureSpec.makeMeasureSpec(cw, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(ch, MeasureSpec.EXACTLY));
 		}
 
-		setMeasuredDimension(resolveSize(width, widthMeasureSpec), resolveSize(height, heightMeasureSpec));
+		setMeasuredDimension(resolveSize(MeasureSpec.getSize(widthMeasureSpec), widthMeasureSpec), resolveSize(MeasureSpec.getSize(heightMeasureSpec), heightMeasureSpec));
 	}
 
 	/* (non-Javadoc)

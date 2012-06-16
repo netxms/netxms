@@ -2660,6 +2660,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			inputStream.skipBytes(4); // DCI ID
 			rows = inputStream.readInt();
 			final int dataType = inputStream.readInt();
+			data.setDataType(dataType);
 
 			for(int i = 0; i < rows; i++)
 			{

@@ -24,7 +24,6 @@ import android.util.Log;
 public class DashboardView extends DashboardLayout
 {
 	private ClientConnectorService service;
-	private Dashboard dashboard;
 
 	/**
 	 * @param context
@@ -34,13 +33,8 @@ public class DashboardView extends DashboardLayout
 	{
 		super(context);
 		this.service = service;
-		this.dashboard = dashboard;
-
-		setPadding(10, 10, 10, 10);
 
 		setColumnCount(dashboard.getNumColumns());
-
-		// setBackgroundColor(Color.WHITE);
 
 		for(DashboardElement e : dashboard.getElements())
 		{

@@ -7,6 +7,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.util.Log;
 import android.widget.FrameLayout;
 
@@ -25,7 +28,8 @@ public class AbstractDashboardElement extends FrameLayout
                                                             0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9 };
 
 	protected ClientConnectorService service;
-	
+
+	private Paint paint;
 	private Timer timer = null;
 	
 	/**
@@ -36,8 +40,23 @@ public class AbstractDashboardElement extends FrameLayout
 	{
 		super(context);
 		this.service = service;
+		setPadding(2, 2, 2, 2);
+		setBackgroundColor(0xFFFFFFFF);
+		paint = new Paint();
+		paint.setStyle(Style.STROKE);
+		paint.setColor(0xFFABADB3);
 	}
 	
+	/* (non-Javadoc)
+	 * @see android.view.View#onDraw(android.graphics.Canvas)
+	 */
+	@Override
+	protected void onDraw(Canvas canvas)
+	{
+		super.onDraw(canvas);
+		canvas.drawRect(0, 0, getWidth() - 1, getHeight() - 1, paint);
+	}
+
 	/**
 	 * Refresh dashboard element
 	 */

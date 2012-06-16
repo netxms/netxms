@@ -45,7 +45,7 @@ public class PieChartElement extends AbstractDashboardElement
 		
 		dataset = buildDataset();
 		chartView = ChartFactory.getPieChartView(context, dataset, buildRenderer());
-		addView(chartView);
+		addView(chartView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 		
 		startRefreshTask(config.getRefreshRate());
 	}

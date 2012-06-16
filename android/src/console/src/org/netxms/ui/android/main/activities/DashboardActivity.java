@@ -4,6 +4,7 @@
 package org.netxms.ui.android.main.activities;
 
 import org.netxms.client.objects.Dashboard;
+import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.views.DashboardView;
 import android.content.ComponentName;
 import android.os.Bundle;
@@ -29,8 +30,8 @@ public class DashboardActivity extends AbstractClientActivity
 	{
 		dashboardId = getIntent().getLongExtra("objectId", 0);
 		Log.d("DashboardActivity", "onCreateStep2: dashboardId=" + dashboardId);
-		rootView = new FrameLayout(this);
-		setContentView(rootView);
+		setContentView(R.layout.dashboard);
+		rootView = (FrameLayout)findViewById(R.id.DashboardLayout);
 	}
 
 	/* (non-Javadoc)

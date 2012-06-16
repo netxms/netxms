@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.main.dashboards.elements;
 
+import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
 import org.netxms.ui.android.main.dashboards.configs.DialChartConfig;
@@ -54,6 +55,8 @@ public class DialChartElement extends AbstractDashboardElement
 			item.nodeId = dci.nodeId;
 			item.dciId = dci.dciId;
 			item.name = dci.name;
+			item.dataType = DataCollectionItem.DT_INT;
+			item.value = 0;
 			chart.addParameter(item);
 		}
 		
@@ -84,7 +87,7 @@ public class DialChartElement extends AbstractDashboardElement
 				{
 					for (int i = 0; i < dciData.length; i++)
 					{
-						chart.updateParameter(i, dciData[i].getLastValue().getValueAsDouble());
+						chart.updateParameter(i, dciData[i].getDataType(), dciData[i].getLastValue().getValueAsDouble());
 					}
 					chart.invalidate();
 				}

@@ -29,9 +29,9 @@ public class DciData
 {
 	private long nodeId;
 	private long dciId;
+	private int dataType;
 	private ArrayList<DciDataRow> values = new ArrayList<DciDataRow>();
-	
-	
+		
 	/**
 	 * @param nodeId
 	 * @param dciId
@@ -42,7 +42,6 @@ public class DciData
 		this.dciId = dciId;
 	}
 
-
 	/**
 	 * @return the nodeId
 	 */
@@ -50,7 +49,6 @@ public class DciData
 	{
 		return nodeId;
 	}
-
 
 	/**
 	 * @return the dciId
@@ -60,7 +58,6 @@ public class DciData
 		return dciId;
 	}
 
-
 	/**
 	 * @return the values
 	 */
@@ -68,8 +65,7 @@ public class DciData
 	{
 		return values.toArray(new DciDataRow[values.size()]);
 	}
-	
-	
+		
 	/**
 	 * Get last added value
 	 * 
@@ -80,12 +76,27 @@ public class DciData
 		return (values.size() > 0) ? values.get(values.size() - 1) : null;
 	}
 	
-	
 	/**
 	 * Add new value
 	 */
 	public void addDataRow(DciDataRow row)
 	{
 		values.add(row);
+	}
+
+	/**
+	 * @return the dataType
+	 */
+	public int getDataType()
+	{
+		return dataType;
+	}
+
+	/**
+	 * @param dataType the dataType to set
+	 */
+	public void setDataType(int dataType)
+	{
+		this.dataType = dataType;
 	}
 }
