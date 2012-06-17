@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.main.dashboards.elements;
 
+import java.util.concurrent.ScheduledExecutorService;
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.model.CategorySeries;
@@ -30,9 +31,9 @@ public class PieChartElement extends AbstractDashboardElement
 	 * @param context
 	 * @param xmlConfig
 	 */
-	public PieChartElement(Context context, String xmlConfig, ClientConnectorService service)
+	public PieChartElement(Context context, String xmlConfig, ClientConnectorService service, ScheduledExecutorService scheduleTaskExecutor)
 	{
-		super(context, xmlConfig, service);
+		super(context, xmlConfig, service, scheduleTaskExecutor);
 		try
 		{
 			config = PieChartConfig.createFromXml(xmlConfig);
@@ -46,7 +47,15 @@ public class PieChartElement extends AbstractDashboardElement
 		dataset = buildDataset();
 		chartView = ChartFactory.getPieChartView(context, dataset, buildRenderer());
 		addView(chartView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-		
+	}
+
+	/* (non-Javadoc)
+	 * @see android.view.View#onAttachedToWindow()
+	 */
+	@Override
+	protected void onAttachedToWindow()
+	{
+		super.onAttachedToWindow();
 		startRefreshTask(config.getRefreshRate());
 	}
 

@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.main.dashboards.elements;
 
+import java.util.concurrent.ScheduledExecutorService;
 import org.achartengine.GraphicalView;
 import org.achartengine.chart.BarChart;
 import org.achartengine.chart.BarChart.Type;
@@ -33,9 +34,9 @@ public class BarChartElement extends AbstractDashboardElement
 	 * @param context
 	 * @param xmlConfig
 	 */
-	public BarChartElement(Context context, String xmlConfig, ClientConnectorService service)
+	public BarChartElement(Context context, String xmlConfig, ClientConnectorService service, ScheduledExecutorService scheduleTaskExecutor)
 	{
-		super(context, xmlConfig, service);
+		super(context, xmlConfig, service, scheduleTaskExecutor);
 		try
 		{
 			config = BarChartConfig.createFromXml(xmlConfig);
@@ -49,7 +50,15 @@ public class BarChartElement extends AbstractDashboardElement
 		chart = new BarChart(buildDataset(), buildRenderer(), Type.STACKED);
 		chartView = new GraphicalView(context, chart);
 		addView(chartView);
-		
+	}
+
+	/* (non-Javadoc)
+	 * @see android.view.View#onAttachedToWindow()
+	 */
+	@Override
+	protected void onAttachedToWindow()
+	{
+		super.onAttachedToWindow();
 		startRefreshTask(config.getRefreshRate());
 	}
 
@@ -120,10 +129,6 @@ public class BarChartElement extends AbstractDashboardElement
 		renderer.setXAxisMax(items.length + 0.5);
 		renderer.setXLabelsColor(BACKGROUND_COLOR);
 		renderer.setYLabelsAlign(Align.RIGHT);
-//		renderer.setXLabels(1);
-//		renderer.clearXTextLabels();
-//		for(int i = 0; i < items.length; i++)
-//			renderer.addXTextLabel(i + 1, items[i].getName());
 		
 		return renderer;
 	}

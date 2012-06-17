@@ -3,6 +3,8 @@
  */
 package org.netxms.ui.android.main.activities;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.views.DashboardView;
@@ -21,6 +23,7 @@ public class DashboardActivity extends AbstractClientActivity
 	private long dashboardId;
 	private Dashboard dashboard;
 	private FrameLayout rootView;
+	private ScheduledExecutorService scheduleTaskExecutor = null;
 	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
@@ -42,6 +45,7 @@ public class DashboardActivity extends AbstractClientActivity
 	{
 		super.onServiceConnected(name, binder);
 		dashboard = (Dashboard)service.findObjectById(dashboardId, Dashboard.class);
+		scheduleTaskExecutor = Executors.newScheduledThreadPool(Math.max(dashboard.getElements().size(), 8));
 		refresh();
 	}
 	
@@ -65,11 +69,22 @@ public class DashboardActivity extends AbstractClientActivity
 		refresh();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onDestroy()
+	 */
+	@Override
+	protected void onDestroy()
+	{
+		if (scheduleTaskExecutor != null)
+			scheduleTaskExecutor.shutdownNow();
+		super.onDestroy();
+	}
+
 	/**
 	 * Refresh dashboard
 	 */
 	private void refresh()
 	{
-		rootView.addView(new DashboardView(this, dashboard, service), new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+		rootView.addView(new DashboardView(this, dashboard, service, scheduleTaskExecutor), new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 	}
 }

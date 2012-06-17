@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.main.dashboards.elements;
 
+import java.util.concurrent.ScheduledExecutorService;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
@@ -27,9 +28,9 @@ public class DialChartElement extends AbstractDashboardElement
 	 * @param context
 	 * @param xmlConfig
 	 */
-	public DialChartElement(Context context, String xmlConfig, ClientConnectorService service)
+	public DialChartElement(Context context, String xmlConfig, ClientConnectorService service, ScheduledExecutorService scheduleTaskExecutor)
 	{
-		super(context, xmlConfig, service);
+		super(context, xmlConfig, service, scheduleTaskExecutor);
 		try
 		{
 			config = DialChartConfig.createFromXml(xmlConfig);
@@ -61,10 +62,18 @@ public class DialChartElement extends AbstractDashboardElement
 		}
 		
 		addView(chart);
-		
-		startRefreshTask(config.getRefreshRate());
 	}
 	
+	/* (non-Javadoc)
+	 * @see android.view.View#onAttachedToWindow()
+	 */
+	@Override
+	protected void onAttachedToWindow()
+	{
+		super.onAttachedToWindow();
+		startRefreshTask(config.getRefreshRate());
+	}
+
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.android.main.dashboards.elements.AbstractDashboardElement#refresh()
 	 */

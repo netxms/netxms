@@ -4,6 +4,7 @@
 package org.netxms.ui.android.main.dashboards.elements;
 
 import java.util.Date;
+import java.util.concurrent.ScheduledExecutorService;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
@@ -32,9 +33,9 @@ public class LineChartElement extends AbstractDashboardElement
 	 * @param context
 	 * @param xmlConfig
 	 */
-	public LineChartElement(Context context, String xmlConfig, ClientConnectorService service)
+	public LineChartElement(Context context, String xmlConfig, ClientConnectorService service, ScheduledExecutorService scheduleTaskExecutor)
 	{
-		super(context, xmlConfig, service);
+		super(context, xmlConfig, service, scheduleTaskExecutor);
 		try
 		{
 			config = LineChartConfig.createFromXml(xmlConfig);
@@ -53,7 +54,15 @@ public class LineChartElement extends AbstractDashboardElement
 		graphView.setLegendWidth(240);  
 		graphView.setBackgroundColor(0xFF000000);
 		graphView.setZeroBased(true);
+	}
 
+	/* (non-Javadoc)
+	 * @see android.view.View#onAttachedToWindow()
+	 */
+	@Override
+	protected void onAttachedToWindow()
+	{
+		super.onAttachedToWindow();
 		startRefreshTask(config.getRefreshRate());
 	}
 

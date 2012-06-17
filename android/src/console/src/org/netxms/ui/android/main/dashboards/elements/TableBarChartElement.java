@@ -5,6 +5,7 @@ package org.netxms.ui.android.main.dashboards.elements;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 import org.achartengine.GraphicalView;
 import org.achartengine.chart.BarChart;
 import org.achartengine.chart.BarChart.Type;
@@ -36,9 +37,9 @@ public class TableBarChartElement extends AbstractDashboardElement
 	 * @param context
 	 * @param xmlConfig
 	 */
-	public TableBarChartElement(Context context, String xmlConfig, ClientConnectorService service)
+	public TableBarChartElement(Context context, String xmlConfig, ClientConnectorService service, ScheduledExecutorService scheduleTaskExecutor)
 	{
-		super(context, xmlConfig, service);
+		super(context, xmlConfig, service, scheduleTaskExecutor);
 		try
 		{
 			config = TableBarChartConfig.createFromXml(xmlConfig);
@@ -53,7 +54,15 @@ public class TableBarChartElement extends AbstractDashboardElement
 		chart = new BarChart(buildDataset(), renderer, Type.STACKED);
 		chartView = new GraphicalView(context, chart);
 		addView(chartView);
-		
+	}
+
+	/* (non-Javadoc)
+	 * @see android.view.View#onAttachedToWindow()
+	 */
+	@Override
+	protected void onAttachedToWindow()
+	{
+		super.onAttachedToWindow();
 		startRefreshTask(config.getRefreshRate());
 	}
 

@@ -5,6 +5,7 @@ package org.netxms.ui.android.main.dashboards.elements;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 import org.achartengine.ChartFactory;
 import org.achartengine.model.CategorySeries;
 import org.achartengine.renderer.DefaultRenderer;
@@ -30,9 +31,9 @@ public class TablePieChartElement extends AbstractDashboardElement
 	 * @param context
 	 * @param xmlConfig
 	 */
-	public TablePieChartElement(Context context, String xmlConfig, ClientConnectorService service)
+	public TablePieChartElement(Context context, String xmlConfig, ClientConnectorService service, ScheduledExecutorService scheduleTaskExecutor)
 	{
-		super(context, xmlConfig, service);
+		super(context, xmlConfig, service, scheduleTaskExecutor);
 		try
 		{
 			config = TablePieChartConfig.createFromXml(xmlConfig);
@@ -44,7 +45,15 @@ public class TablePieChartElement extends AbstractDashboardElement
 		}
 		
 		dataset = buildDataset();
-		
+	}
+
+	/* (non-Javadoc)
+	 * @see android.view.View#onAttachedToWindow()
+	 */
+	@Override
+	protected void onAttachedToWindow()
+	{
+		super.onAttachedToWindow();
 		startRefreshTask(config.getRefreshRate());
 	}
 

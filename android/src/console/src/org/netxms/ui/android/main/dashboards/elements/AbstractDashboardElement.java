@@ -3,8 +3,9 @@
  */
 package org.netxms.ui.android.main.dashboards.elements;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -30,16 +31,18 @@ public class AbstractDashboardElement extends FrameLayout
 	protected ClientConnectorService service;
 
 	private Paint paint;
-	private Timer timer = null;
+	private ScheduledExecutorService scheduleTaskExecutor;
+	private ScheduledFuture<?> task = null;
 	
 	/**
 	 * @param context
 	 * @param xmlConfig
 	 */
-	public AbstractDashboardElement(Context context, String xmlConfig, ClientConnectorService service)
+	public AbstractDashboardElement(Context context, String xmlConfig, ClientConnectorService service, ScheduledExecutorService scheduleTaskExecutor)
 	{
 		super(context);
 		this.service = service;
+		this.scheduleTaskExecutor = scheduleTaskExecutor;
 		setPadding(2, 2, 2, 2);
 		setBackgroundColor(0xFFFFFFFF);
 		paint = new Paint();
@@ -71,21 +74,26 @@ public class AbstractDashboardElement extends FrameLayout
 	 */
 	protected void startRefreshTask(int interval)
 	{
-		if (timer != null)
+		if (task != null)
 		{
 			Log.d(LOG_TAG, "startRefreshTask: timer already exist");
 			return;
 		}
 
-		timer = new Timer(true);
-		timer.schedule(new TimerTask() {
+		if (scheduleTaskExecutor == null)
+		{
+			Log.d(LOG_TAG, "startRefreshTask: executor service not available");
+			return;
+		}
+
+		task = scheduleTaskExecutor.scheduleWithFixedDelay(new Runnable() {
 			@Override
 			public void run()
 			{
 				refresh();
 			}
-		}, 10, interval * 1000);
-		Log.d(LOG_TAG, "startRefreshTask: new task scheduled, interval=" + (interval * 1000));
+		}, 0, interval, TimeUnit.SECONDS);
+		Log.d(LOG_TAG, "startRefreshTask: new task scheduled, interval=" + interval);
 	}
 
 	/* (non-Javadoc)
@@ -94,11 +102,11 @@ public class AbstractDashboardElement extends FrameLayout
 	@Override
 	protected void onDetachedFromWindow()
 	{
-		if (timer != null)
+		if (task != null)
 		{
-			Log.d(LOG_TAG, "onDetachedFromWindow: cancelling timer");
-			timer.cancel();
-			timer = null;
+			Log.d(LOG_TAG, "onDetachedFromWindow: cancelling scheduled task");
+			task.cancel(true);
+			task = null;
 		}
 		super.onDetachedFromWindow();
 	}

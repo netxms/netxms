@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.main.dashboards.elements;
 
+import java.util.concurrent.ScheduledExecutorService;
 import org.netxms.ui.android.main.dashboards.configs.LabelConfig;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
@@ -22,9 +23,9 @@ public class LabelElement extends AbstractDashboardElement
 	 * @param xmlConfig
 	 * @param service
 	 */
-	public LabelElement(Context context, String xmlConfig, ClientConnectorService service)
+	public LabelElement(Context context, String xmlConfig, ClientConnectorService service, ScheduledExecutorService scheduleTaskExecutor)
 	{
-		super(context, xmlConfig, service);
+		super(context, xmlConfig, service, scheduleTaskExecutor);
 
 		LabelConfig config;
 		try

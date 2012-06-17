@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.main.views;
 
+import java.util.concurrent.ScheduledExecutorService;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.android.main.dashboards.configs.DashboardElementLayout;
@@ -24,16 +25,18 @@ import android.util.Log;
 public class DashboardView extends DashboardLayout
 {
 	private ClientConnectorService service;
+	private ScheduledExecutorService scheduleTaskExecutor;
 
 	/**
 	 * @param context
 	 * @param dashboard
 	 */
-	public DashboardView(Context context, Dashboard dashboard, ClientConnectorService service)
+	public DashboardView(Context context, Dashboard dashboard, ClientConnectorService service, ScheduledExecutorService scheduleTaskExecutor)
 	{
 		super(context);
 		this.service = service;
-
+		this.scheduleTaskExecutor = scheduleTaskExecutor;
+		
 		setColumnCount(dashboard.getNumColumns());
 
 		for(DashboardElement e : dashboard.getElements())
@@ -53,30 +56,30 @@ public class DashboardView extends DashboardLayout
 		switch(element.getType())
 		{
 			case DashboardElement.LINE_CHART:
-				widget = new LineChartElement(getContext(), element.getData(), service);
+				widget = new LineChartElement(getContext(), element.getData(), service, scheduleTaskExecutor);
 				break;
 			case DashboardElement.BAR_CHART:
 			case DashboardElement.TUBE_CHART:
-				widget = new BarChartElement(getContext(), element.getData(), service);
+				widget = new BarChartElement(getContext(), element.getData(), service, scheduleTaskExecutor);
 				break;
 			case DashboardElement.PIE_CHART:
-				widget = new PieChartElement(getContext(), element.getData(), service);
+				widget = new PieChartElement(getContext(), element.getData(), service, scheduleTaskExecutor);
 				break;
 			case DashboardElement.DIAL_CHART:
-				widget = new DialChartElement(getContext(), element.getData(), service);
+				widget = new DialChartElement(getContext(), element.getData(), service, scheduleTaskExecutor);
 				break;
 			case DashboardElement.TABLE_BAR_CHART:
 			case DashboardElement.TABLE_TUBE_CHART:
-				widget = new TableBarChartElement(getContext(), element.getData(), service);
+				widget = new TableBarChartElement(getContext(), element.getData(), service, scheduleTaskExecutor);
 				break;
 			case DashboardElement.TABLE_PIE_CHART:
-				widget = new TablePieChartElement(getContext(), element.getData(), service);
+				widget = new TablePieChartElement(getContext(), element.getData(), service, scheduleTaskExecutor);
 				break;
 			case DashboardElement.LABEL:
-				widget = new LabelElement(getContext(), element.getData(), service);
+				widget = new LabelElement(getContext(), element.getData(), service, scheduleTaskExecutor);
 				break;
 			default:
-				widget = new AbstractDashboardElement(getContext(), element.getData(), service);
+				widget = new AbstractDashboardElement(getContext(), element.getData(), service, scheduleTaskExecutor);
 				break;
 		}
 
