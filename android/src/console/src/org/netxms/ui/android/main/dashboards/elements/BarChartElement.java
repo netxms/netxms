@@ -118,11 +118,12 @@ public class BarChartElement extends AbstractDashboardElement
 
 		renderer.setXAxisMin(0.5);
 		renderer.setXAxisMax(items.length + 0.5);
-		renderer.setXLabels(1);
+		renderer.setXLabelsColor(BACKGROUND_COLOR);
 		renderer.setYLabelsAlign(Align.RIGHT);
-		renderer.clearXTextLabels();
-		for(int i = 0; i < items.length; i++)
-			renderer.addXTextLabel(i + 1, items[i].getName());
+//		renderer.setXLabels(1);
+//		renderer.clearXTextLabels();
+//		for(int i = 0; i < items.length; i++)
+//			renderer.addXTextLabel(i + 1, items[i].getName());
 		
 		return renderer;
 	}
