@@ -1,5 +1,6 @@
 package org.netxms.ui.android.main.views;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.Map.Entry;
 import android.content.Context;
 import android.graphics.Point;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,16 +30,30 @@ public class DashboardLayout extends ViewGroup
 		private int gravity;
 		private Point size = new Point(-1, -1);
 
+		/**
+		 * Create default layout parameters - 1x1 span and gravity FILL
+		 */
 		public LayoutParams()
 		{
 			this(1, 1, Gravity.FILL);
 		}
 
+		/**
+		 * Create FILL layout with given row and column span
+		 * 
+		 * @param columnSpan
+		 * @param rowSpan
+		 */
 		public LayoutParams(int columnSpan, int rowSpan)
 		{
 			this(columnSpan, rowSpan, Gravity.FILL);
 		}
 
+		/**
+		 * @param columnSpan
+		 * @param rowSpan
+		 * @param gravity
+		 */
 		public LayoutParams(int columnSpan, int rowSpan, int gravity)
 		{
 			super(WRAP_CONTENT, WRAP_CONTENT);
@@ -46,37 +62,59 @@ public class DashboardLayout extends ViewGroup
 			this.gravity = gravity;
 		}
 
+		/**
+		 * @param columnSpan
+		 * @param rowSpan
+		 */
 		public void setSpan(int columnSpan, int rowSpan)
 		{
 			this.columnSpan = columnSpan;
 			this.rowSpan = rowSpan;
 		}
 
+		/**
+		 * @return
+		 */
 		public int getColumnSpan()
 		{
 			return columnSpan;
 		}
 
+		/**
+		 * @return
+		 */
 		public int getRowSpan()
 		{
 			return rowSpan;
 		}
 
+		/**
+		 * @param gravity
+		 */
 		public void setGravity(int gravity)
 		{
 			this.gravity = gravity;
 		}
 
+		/**
+		 * @return
+		 */
 		public int getGravity()
 		{
 			return gravity;
 		}
 
+		/**
+		 * @return
+		 */
 		public Point getSize()
 		{
 			return size;
 		}
 
+		/**
+		 * @param size
+		 */
 		public void setSize(Point size)
 		{
 			this.size = size;
@@ -86,7 +124,7 @@ public class DashboardLayout extends ViewGroup
 	private int rowCount = 0;
 	private int columnCount;
 	private Map<View, Point> coordinates = new HashMap<View, Point>(0);
-
+	private int[] rowStart = null;
 
 	/**
 	 * @param context
@@ -194,9 +232,74 @@ public class DashboardLayout extends ViewGroup
 		
 		int width = MeasureSpec.getSize(widthMeasureSpec) - getPaddingLeft() - getPaddingRight();
 		int height = MeasureSpec.getSize(heightMeasureSpec) - getPaddingTop() - getPaddingBottom();
-				
+		
+		// Calculate size for each row
+		int[] rowSize = new int[rowCount];
+		Arrays.fill(rowSize, 0);
+		boolean[] rowFill = new boolean[rowCount];
+		Arrays.fill(rowFill, false);
+		
+		for(Entry<View, Point> e : coordinates.entrySet())
+		{
+			LayoutParams layoutParams = getLayoutParams(e.getKey());
+			if ((layoutParams.gravity & Gravity.VERTICAL_GRAVITY_MASK) == Gravity.FILL_VERTICAL)
+			{
+				if (layoutParams.rowSpan == 1)
+				{
+					rowFill[e.getValue().y] = true;
+				}
+			}
+			else
+			{
+				e.getKey().measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+				rowSize[e.getValue().y] = Math.max(rowSize[e.getValue().y], e.getKey().getMeasuredHeight());
+			}
+		}
+		
+		int usedSpace = 0;
+		int fillRows = 0;
+		for(int i = 0; i < rowCount; i++)
+		{
+			if (rowFill[i])
+				fillRows++;
+			usedSpace += rowSize[i];
+		}
+		
+		// If children requires too much space, reduce biggest
+		if (usedSpace > height)
+		{
+			int extraSpace = usedSpace - height;
+			int maxRowSize = height / rowCount;
+			for(int i = 0; i < rowCount; i++)
+			{
+				if (rowSize[i] > maxRowSize)
+				{
+					int delta = Math.min(rowSize[i] - maxRowSize, extraSpace);
+					rowSize[i] -= delta;
+					extraSpace -= delta;
+					usedSpace -= delta;
+				}
+			}
+		}
+		
+		// distribute space evenly between fill rows
+		if (fillRows > 0)
+		{
+			int size = (height - usedSpace) / fillRows;
+			for(int i = 0; i < rowCount; i++)
+			{
+				if (rowFill[i])
+					rowSize[i] += size;
+			}
+		}
+
+		// calculate row starts
+		rowStart = new int[rowCount];
+		rowStart[0] = 0;
+		for(int i = 1; i < rowCount; i++)
+			rowStart[i] = rowStart[i - 1] + rowSize[i - 1];
+		
 		int columnSize = width / columnCount;
-		int rowSize = height / rowCount;
 
 		int count = getChildCount();
 		for(int i = 0; i < count; i++)
@@ -209,7 +312,11 @@ public class DashboardLayout extends ViewGroup
 				continue;
 			LayoutParams layoutParams = getLayoutParams(view);
 			int cw = layoutParams.getColumnSpan() * columnSize;
-			int ch = layoutParams.getRowSpan() * rowSize;
+			
+			Point p = coordinates.get(view);	
+			int ch = rowSize[p.y];
+			for(int j = 1; j < layoutParams.getRowSpan(); j++)
+				ch += rowSize[p.y + j];
 			view.measure(MeasureSpec.makeMeasureSpec(cw, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(ch, MeasureSpec.EXACTLY));
 		}
 
@@ -228,11 +335,8 @@ public class DashboardLayout extends ViewGroup
 		int viewLeft  = l + getPaddingLeft();
 		int viewRight = r - getPaddingRight();
 		int viewTop = t + getPaddingTop();
-		int viewBottom = b - getPaddingBottom();
 		int width = viewRight - viewLeft;
-		int height = viewBottom - viewTop;
 		int columnSize = width / columnCount;
-		int rowSize = height / rowCount;
 		
 		Iterator<Entry<View, Point>> iterator = coordinates.entrySet().iterator();
 		while(iterator.hasNext())
@@ -240,12 +344,11 @@ public class DashboardLayout extends ViewGroup
 			Entry<View, Point> entry = iterator.next();
 			View view = entry.getKey();
 			Point point = entry.getValue();
-			LayoutParams layoutParams = getLayoutParams(view);
 
 			int cl = viewLeft + (point.x * columnSize);
-			int ct = viewTop + (point.y * rowSize);
-			int cr = viewLeft + ((point.x + layoutParams.getColumnSpan()) * columnSize);
-			int cb = viewTop + ((point.y + layoutParams.getRowSpan()) * rowSize);
+			int ct = viewTop + rowStart[point.y];
+			int cr = viewLeft + cl + view.getMeasuredWidth() - 1;
+			int cb = viewTop + ct + view.getMeasuredHeight() - 1;
 			view.layout(cl, ct, cr, cb);
 		}
 	}

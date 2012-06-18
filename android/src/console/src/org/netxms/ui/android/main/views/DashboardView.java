@@ -20,6 +20,7 @@ import org.netxms.ui.android.main.dashboards.elements.UnimplementedElement;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
 import android.util.Log;
+import android.view.Gravity;
 
 /**
  * Dashboard view
@@ -99,7 +100,38 @@ public class DashboardView extends DashboardLayout
 			layout = new DashboardElementLayout();
 		}
 
-		DashboardLayout.LayoutParams layoutParams = new DashboardLayout.LayoutParams(layout.horizontalSpan, layout.verticalSpan);
+		int gravity = 0;
+		switch(layout.horizontalAlignment)
+		{
+			case DashboardElement.FILL:
+				gravity |= Gravity.FILL_HORIZONTAL;
+				break;
+			case DashboardElement.LEFT:
+				gravity |= Gravity.LEFT;
+				break;
+			case DashboardElement.RIGHT:
+				gravity |= Gravity.RIGHT;
+				break;
+			case DashboardElement.CENTER:
+				gravity |= Gravity.CENTER_HORIZONTAL;
+				break;
+		}
+		switch(layout.vertcalAlignment)
+		{
+			case DashboardElement.FILL:
+				gravity |= Gravity.FILL_VERTICAL;
+				break;
+			case DashboardElement.TOP:
+				gravity |= Gravity.TOP;
+				break;
+			case DashboardElement.BOTTOM:
+				gravity |= Gravity.BOTTOM;
+				break;
+			case DashboardElement.CENTER:
+				gravity |= Gravity.CENTER_VERTICAL;
+				break;
+		}
+		DashboardLayout.LayoutParams layoutParams = new DashboardLayout.LayoutParams(layout.horizontalSpan, layout.verticalSpan, gravity);
 		widget.setLayoutParams(layoutParams);
 		addView(widget);
 	}
