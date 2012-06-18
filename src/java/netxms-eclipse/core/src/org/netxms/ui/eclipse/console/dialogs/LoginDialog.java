@@ -201,7 +201,12 @@ public class LoginDialog extends Dialog
 
       checkBoxEncrypt = new Button(groupOpts, SWT.CHECK);
       checkBoxEncrypt.setText(Messages.getString("LoginDialog.opt_encrypt")); //$NON-NLS-1$
-      checkBoxEncrypt.setSelection(settings.getBoolean("Connect.Encrypt")); //$NON-NLS-1$
+      boolean encrypt = true;
+      if (settings.get("Connect.Encrypt") != null) //$NON-NLS-1$
+      {
+      	encrypt = settings.getBoolean("Connect.Encrypt"); //$NON-NLS-1$
+      }
+      checkBoxEncrypt.setSelection(encrypt);
       
       checkBoxClearCache = new Button(groupOpts, SWT.CHECK);
       checkBoxClearCache.setText(Messages.getString("LoginDialog.opt_clear_cache")); //$NON-NLS-1$
