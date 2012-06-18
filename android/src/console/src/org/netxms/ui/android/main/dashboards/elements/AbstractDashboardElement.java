@@ -17,7 +17,7 @@ import android.widget.FrameLayout;
 /**
  * Base class for all dashboard elements
  */
-public class AbstractDashboardElement extends FrameLayout
+public abstract class AbstractDashboardElement extends FrameLayout
 {
 	private static final String LOG_TAG = "nxclient/AbstractDashboardElement";
 	
@@ -29,9 +29,9 @@ public class AbstractDashboardElement extends FrameLayout
                                                             0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9 };
 
 	protected ClientConnectorService service;
+	protected ScheduledExecutorService scheduleTaskExecutor;
 
 	private Paint paint;
-	private ScheduledExecutorService scheduleTaskExecutor;
 	private ScheduledFuture<?> task = null;
 	
 	/**

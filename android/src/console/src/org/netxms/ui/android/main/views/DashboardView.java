@@ -10,11 +10,13 @@ import org.netxms.ui.android.main.dashboards.configs.DashboardElementLayout;
 import org.netxms.ui.android.main.dashboards.elements.AbstractDashboardElement;
 import org.netxms.ui.android.main.dashboards.elements.BarChartElement;
 import org.netxms.ui.android.main.dashboards.elements.DialChartElement;
+import org.netxms.ui.android.main.dashboards.elements.EmbeddedDashboardElement;
 import org.netxms.ui.android.main.dashboards.elements.LabelElement;
 import org.netxms.ui.android.main.dashboards.elements.LineChartElement;
 import org.netxms.ui.android.main.dashboards.elements.PieChartElement;
 import org.netxms.ui.android.main.dashboards.elements.TableBarChartElement;
 import org.netxms.ui.android.main.dashboards.elements.TablePieChartElement;
+import org.netxms.ui.android.main.dashboards.elements.UnimplementedElement;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
 import android.util.Log;
@@ -78,8 +80,11 @@ public class DashboardView extends DashboardLayout
 			case DashboardElement.LABEL:
 				widget = new LabelElement(getContext(), element.getData(), service, scheduleTaskExecutor);
 				break;
+			case DashboardElement.DASHBOARD:
+				widget = new EmbeddedDashboardElement(getContext(), element.getData(), service, scheduleTaskExecutor);
+				break;
 			default:
-				widget = new AbstractDashboardElement(getContext(), element.getData(), service, scheduleTaskExecutor);
+				widget = new UnimplementedElement(getContext(), element.getData(), service, scheduleTaskExecutor);
 				break;
 		}
 

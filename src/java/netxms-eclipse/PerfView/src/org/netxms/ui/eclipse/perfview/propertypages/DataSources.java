@@ -421,7 +421,7 @@ public class DataSources extends PropertyPage
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot change access control list";
+					return "Cannot change data sources";
 				}
 			}.start();
 		}
