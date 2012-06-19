@@ -849,7 +849,14 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection)
       sourceLine++;
       ptr = _tcschr(buffer, _T('\n'));
       if (ptr != NULL)
+		{
+			if (ptr != buffer)
+			{
+				if (*(ptr - 1) == '\r')
+					ptr--;
+			}
          *ptr = 0;
+		}
       ptr = FindComment(buffer);
       if (ptr != NULL)
          *ptr = 0;
