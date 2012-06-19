@@ -208,6 +208,7 @@ mibs_DATA = \
 	V2ADMIN-MIB.txt \
 	VRRP-MIB.txt \
 	WF-COM.txt \
-	WWW-MIB.txt
+	WWW-MIB.txt \
+	XPPC-MIB.txt
 
 EXTRA_DIST=$(mibs_DATA)
