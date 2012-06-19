@@ -3179,6 +3179,11 @@ webui/webapp/Reporter/icons/pdf.png -text
 webui/webapp/Reporter/icons/report.png -text
 webui/webapp/Reporter/icons/schedule.png -text
 webui/webapp/Reporter/plugin.xml -text
+webui/webapp/SLM/.settings/org.eclipse.jdt.core.prefs -text
+webui/webapp/SLM/META-INF/MANIFEST.MF -text
+webui/webapp/SLM/build.properties -text
+webui/webapp/SLM/icons/availability_chart.png -text
+webui/webapp/SLM/plugin.xml -text
 webui/webapp/SNMP/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/SNMP/META-INF/MANIFEST.MF -text
 webui/webapp/SNMP/build.properties -text

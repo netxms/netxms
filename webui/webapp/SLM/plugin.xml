@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.BusinessServiceRoot"
+            objectClass="org.netxms.client.objects.BusinessServiceRoot">
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateNodeLink"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createNodeLink_BusinessServiceRoot"
+               label="Create node &amp;link..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateBusinessService"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createBusinessService_BusinessServiceRoot"
+               label="Create &amp;business service..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart"
+               enablesFor="1"
+               icon="icons/availability_chart.png"
+               id="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart_BusinessServiceRoot"
+               label="&amp;Availability chart"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.BusinessService"
+            objectClass="org.netxms.client.objects.BusinessService">
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateServiceCheckTemplate"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createServiceCheckTemplate_BusinessService"
+               label="Create service check &amp;template..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateServiceCheck"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createServiceCheck_BusinessService"
+               label="Create service &amp;check..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateNodeLink"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createNodeLink_BusinessService"
+               label="Create node &amp;link..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateBusinessService"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createBusinessService_BusinessService"
+               label="Create &amp;business service..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart"
+               enablesFor="1"
+               icon="icons/availability_chart.png"
+               id="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart_BusinessService"
+               label="&amp;Availability chart"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.NodeLink"
+            objectClass="org.netxms.client.objects.NodeLink">
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateServiceCheck"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createServiceCheck_NodeLink"
+               label="Create service &amp;check..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart"
+               enablesFor="1"
+               icon="icons/availability_chart.png"
+               id="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart_NodeLink"
+               label="&amp;Availability chart"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.slm.propertypages.ServiceCheckScript"
+            id="org.netxms.ui.eclipse.slm.propertypages.ServiceCheckScript#10"
+            name="Script">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.ServiceCheck">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.slm.views.ServiceAvailability"
+            icon="icons/availability_chart.png"
+            id="org.netxms.ui.eclipse.slm.views.ServiceAvailability"
+            name="Service Availability"
+            restorable="true">
+      </view>
+   </extension>
+</plugin>
