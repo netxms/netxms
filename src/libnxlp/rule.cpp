@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -32,8 +32,8 @@
 // Constructor
 //
 
-LogParserRule::LogParserRule(LogParser *parser, const char *regexp, DWORD event, int numParams,
-                             const TCHAR *source, DWORD level, DWORD idStart, DWORD idEnd)
+LogParserRule::LogParserRule(LogParser *parser, const char *regexp, DWORD eventCode, const char *eventName,
+									  int numParams, const TCHAR *source, DWORD level, DWORD idStart, DWORD idEnd)
 {
 	String expandedRegexp;
 
@@ -41,7 +41,8 @@ LogParserRule::LogParserRule(LogParser *parser, const char *regexp, DWORD event,
 	expandMacros(regexp, expandedRegexp);
 	m_regexp = _tcsdup(expandedRegexp);
 	m_isValid = (_tregcomp(&m_preg, expandedRegexp, REG_EXTENDED | REG_ICASE) == 0);
-	m_event = event;
+	m_eventCode = eventCode;
+	m_eventName = (eventName != NULL) ? strdup(eventName) : NULL;
 	m_numParams = numParams;
 	m_pmatch = (numParams > 0) ? (regmatch_t *)malloc(sizeof(regmatch_t) * (numParams + 1)) : NULL;
 	m_source = (source != NULL) ? _tcsdup(source) : NULL;
@@ -69,6 +70,7 @@ LogParserRule::~LogParserRule()
 	safe_free(m_description);
 	safe_free(m_source);
 	safe_free(m_regexp);
+	safe_free(m_eventName);
 }
 
 
@@ -90,8 +92,8 @@ bool LogParserRule::match(const char *line, LogParserCallback cb, DWORD objectId
 		if (_tregexec(&m_preg, line, 0, NULL, 0) != 0)
 		{
 			m_parser->trace(6, _T("  matched"));
-			if ((cb != NULL) && (m_event != 0))
-				cb(m_event, line, 0, NULL, objectId, userArg);
+			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
+				cb(m_eventCode, m_eventName, line, 0, NULL, objectId, userArg);
 			return true;
 		}
 	}
@@ -101,7 +103,7 @@ bool LogParserRule::match(const char *line, LogParserCallback cb, DWORD objectId
 		if (_tregexec(&m_preg, line, (m_numParams > 0) ? m_numParams + 1 : 0, m_pmatch, 0) == 0)
 		{
 			m_parser->trace(6, _T("  matched"));
-			if ((cb != NULL) && (m_event != 0))
+			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
 			{
 				char **params = NULL;
 				int i, len;
@@ -125,7 +127,7 @@ bool LogParserRule::match(const char *line, LogParserCallback cb, DWORD objectId
 					}
 				}
 
-				cb(m_event, line, m_numParams, params, objectId, userArg);
+				cb(m_eventCode, m_eventName, line, m_numParams, params, objectId, userArg);
 				
 				for(i = 0; i < m_numParams; i++)
 					safe_free(params[i]);

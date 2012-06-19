@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -29,8 +29,8 @@
 //
 
 static void (* s_fpWriteLog)(int, int, const TCHAR *) = NULL;
-static void (* s_fpSendTrap1)(DWORD, const char *, va_list) = NULL;
-static void (* s_fpSendTrap2)(DWORD, int, TCHAR **) = NULL;
+static void (* s_fpSendTrap1)(DWORD, const TCHAR *, const char *, va_list) = NULL;
+static void (* s_fpSendTrap2)(DWORD, const TCHAR *, int, TCHAR **) = NULL;
 static BOOL (* s_fpSendFile)(void *, DWORD, const TCHAR *, long) = NULL;
 static BOOL (* s_fpPushData)(const TCHAR *, const TCHAR *) = NULL;
 
@@ -40,8 +40,8 @@ static BOOL (* s_fpPushData)(const TCHAR *, const TCHAR *) = NULL;
 //
 
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
-														void (* sendTrap1)(DWORD, const char *, va_list),
-														void (* sendTrap2)(DWORD, int, TCHAR **),
+														void (* sendTrap1)(DWORD, const TCHAR *, const char *, va_list),
+														void (* sendTrap2)(DWORD, const TCHAR *, int, TCHAR **),
 														BOOL (* sendFile)(void *, DWORD, const TCHAR *, long),
 														BOOL (* pushData)(const TCHAR *, const TCHAR *))
 {
@@ -112,22 +112,22 @@ void LIBNETXMS_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va
 // Send trap from agent to server
 //
 
-void LIBNETXMS_EXPORTABLE AgentSendTrap(DWORD dwEvent, const char *pszFormat, ...)
+void LIBNETXMS_EXPORTABLE AgentSendTrap(DWORD dwEvent, const TCHAR *eventName, const char *pszFormat, ...)
 {
    va_list args;
 
    if (s_fpSendTrap1 != NULL)
    {
       va_start(args, pszFormat);
-      s_fpSendTrap1(dwEvent, pszFormat, args);
+      s_fpSendTrap1(dwEvent, eventName, pszFormat, args);
       va_end(args);
    }
 }
 
-void LIBNETXMS_EXPORTABLE AgentSendTrap2(DWORD dwEvent, int nCount, TCHAR **ppszArgList)
+void LIBNETXMS_EXPORTABLE AgentSendTrap2(DWORD dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList)
 {
    if (s_fpSendTrap2 != NULL)
-      s_fpSendTrap2(dwEvent, nCount, ppszArgList);
+      s_fpSendTrap2(dwEvent, eventName, nCount, ppszArgList);
 }
 
 

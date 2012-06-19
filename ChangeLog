@@ -2,6 +2,8 @@
 * 1.2.2
 *
 
+- Android client:
+	- Dashboards implemented
 - NXSL:
 	- Global variables can be declared in script code
 	- New function: GetObjectParents

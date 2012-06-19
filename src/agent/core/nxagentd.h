@@ -434,9 +434,9 @@ BOOL WaitForProcess(const TCHAR *name);
 
 DWORD UpgradeAgent(TCHAR *pszPkgFile);
 
-void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList);
-void SendTrap(DWORD dwEventCode, const char *pszFormat, ...);
-void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args);
+void SendTrap(DWORD dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **ppArgList);
+void SendTrap(DWORD dwEventCode, const TCHAR *eventName, const char *pszFormat, ...);
+void SendTrap(DWORD dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args);
 
 Config *OpenRegistry();
 void CloseRegistry(bool modified);

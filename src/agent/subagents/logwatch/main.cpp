@@ -151,10 +151,10 @@ static void SubagentShutdown()
 // Callback for matched log records
 //
 
-static void LogParserMatch(DWORD event, const TCHAR *text, int paramCount,
+static void LogParserMatch(DWORD eventCode, const TCHAR *eventName, const TCHAR *text, int paramCount,
                            TCHAR **paramList, DWORD objectId, void *userArg)
 {
-	AgentSendTrap2(event, paramCount, paramList);
+	AgentSendTrap2(eventCode, eventName, paramCount, paramList);
 }
 
 

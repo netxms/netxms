@@ -65,7 +65,7 @@
 //    object id, user arg
 //
 
-typedef void (* LogParserCallback)(DWORD, const char *, int, char **, DWORD, void *);
+typedef void (* LogParserCallback)(DWORD, const char *, const char *, int, char **, DWORD, void *);
 
 
 //
@@ -79,7 +79,8 @@ class LIBNXLP_EXPORTABLE LogParserRule
 private:
 	LogParser *m_parser;
 	regex_t m_preg;
-	DWORD m_event;
+	DWORD m_eventCode;
+	char *m_eventName;
 	bool m_isValid;
 	int m_numParams;
 	regmatch_t *m_pmatch;
@@ -99,8 +100,8 @@ private:
 
 public:
 	LogParserRule(LogParser *parser,
-	              const char *regexp, DWORD event = 0, int numParams = 0,
-	              const char *source = NULL, DWORD level = 0xFFFFFFFF,
+	              const char *regexp, DWORD eventCode = 0, const char *eventName = NULL,
+					  int numParams = 0, const char *source = NULL, DWORD level = 0xFFFFFFFF,
 					  DWORD idStart = 0, DWORD idEnd = 0xFFFFFFFF);
 	~LogParserRule();
 
@@ -192,7 +193,7 @@ public:
 	void setProcessAllFlag(bool flag) { m_processAllRules = flag; }
 	bool getProcessAllFlag() { return m_processAllRules; }
 
-	bool addRule(const char *regexp, DWORD event = 0, int numParams = 0);
+	bool addRule(const char *regexp, DWORD eventCode = 0, const char *eventName = NULL, int numParams = 0);
 	bool addRule(LogParserRule *rule);
 	void setCallback(LogParserCallback cb) { m_cb = cb; }
 	void setUserArg(void *arg) { m_userArg = arg; }

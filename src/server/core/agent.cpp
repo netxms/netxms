@@ -68,6 +68,12 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
 		if (acceptTrap)
 		{
 			dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
+			if ((dwEventCode == 0) && pMsg->IsVariableExist(VID_EVENT_NAME))
+			{
+				TCHAR eventName[256];
+				pMsg->GetVariableStr(VID_EVENT_NAME, eventName, 256);
+				dwEventCode = EventCodeFromName(eventName, 0);
+			}
 			iNumArgs = (int)pMsg->GetVariableShort(VID_NUM_ARGS);
 			if (iNumArgs > 32)
 				iNumArgs = 32;

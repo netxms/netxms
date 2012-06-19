@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -155,9 +155,9 @@ bool LogParser::addRule(LogParserRule *rule)
 	return isOK;
 }
 
-bool LogParser::addRule(const char *regexp, DWORD event, int numParams)
+bool LogParser::addRule(const char *regexp, DWORD eventCode, const char *eventName, int numParams)
 {
-	return addRule(new LogParserRule(this, regexp, event, numParams));
+	return addRule(new LogParserRule(this, regexp, eventCode, eventName, numParams));
 }
 
 
@@ -478,17 +478,35 @@ static void EndElement(void *userData, const char *name)
 	}
 	else if (!strcmp(name, "rule"))
 	{
-		DWORD event;
+		DWORD eventCode;
+#ifdef UNICODE
+		TCHAR *eventName = NULL;
+#else
+		const TCHAR *eventName = NULL;
+#endif
 		char *eptr;
 		LogParserRule *rule;
 
 		ps->event.trim();
-		event = strtoul(ps->event, &eptr, 0);
+		eventCode = strtoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
-			event = ps->parser->resolveEventName(ps->event);
+		{
+			eventCode = ps->parser->resolveEventName(ps->event, 0);
+			if (eventCode == 0)
+			{
+#ifdef UNICODE
+				eventName = WideStringFromUTF8String(ps->event);
+#else
+				eventName = ps->event;
+#endif
+			}
+		}
 		if (ps->regexp.isEmpty())
 			ps->regexp = _T(".*");
-		rule = new LogParserRule(ps->parser, (const char *)ps->regexp, event, ps->numEventParams);
+		rule = new LogParserRule(ps->parser, (const char *)ps->regexp, eventCode, eventName, ps->numEventParams);
+#ifdef UNICODE
+		safe_free(eventName);
+#endif
 		if (!ps->ruleContext.isEmpty())
 			rule->setContext(ps->ruleContext);
 		if (!ps->context.isEmpty())

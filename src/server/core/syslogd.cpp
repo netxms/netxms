@@ -378,7 +378,7 @@ static void QueueSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 // Callback for syslog parser
 //
 
-static void SyslogParserCallback(DWORD event, const char *line, int paramCount,
+static void SyslogParserCallback(DWORD eventCode, const char *eventName, const char *line, int paramCount,
 										   char **params, DWORD objectId, void *userArg)
 {
 	char format[] = "ssssssssssssssssssssssssssssssss";
@@ -394,7 +394,7 @@ static void SyslogParserCallback(DWORD event, const char *line, int paramCount,
 	for(i = 0; i < count; i++)
 		plist[i] = params[i];
 #endif
-	PostEvent(event, objectId, format,
+	PostEvent(eventCode, objectId, format,
 	          plist[0], plist[1], plist[2], plist[3],
 	          plist[4], plist[5], plist[6], plist[7],
 	          plist[8], plist[9], plist[10], plist[11],

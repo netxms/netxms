@@ -97,13 +97,13 @@ void ShutdownTrapSender()
 // Send trap to server
 //
 
-void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
+void SendTrap(DWORD dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **ppArgList)
 {
    int i;
    CSCPMessage msg;
 
-	DebugPrintf(INVALID_INDEX, 5, _T("SendTrap(): event_code=%d, num_args=%d, arg[0]=\"%s\" arg[1]=\"%s\" arg[2]=\"%s\""),
-	            dwEventCode, iNumArgs, 
+	DebugPrintf(INVALID_INDEX, 5, _T("SendTrap(): event_code=%d, event_name=%s, num_args=%d, arg[0]=\"%s\" arg[1]=\"%s\" arg[2]=\"%s\""),
+	            dwEventCode, CHECK_NULL(eventName), iNumArgs, 
 					(iNumArgs > 0) ? ppArgList[0] : _T("(null)"),
 					(iNumArgs > 1) ? ppArgList[1] : _T("(null)"),
 					(iNumArgs > 2) ? ppArgList[2] : _T("(null)"));
@@ -112,6 +112,8 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
    msg.SetId(0);
 	msg.SetVariable(VID_TRAP_ID, s_trapId++);
    msg.SetVariable(VID_EVENT_CODE, dwEventCode);
+	if (eventName != NULL)
+		msg.SetVariable(VID_EVENT_NAME, eventName);
    msg.SetVariable(VID_NUM_ARGS, (WORD)iNumArgs);
    for(i = 0; i < iNumArgs; i++)
       msg.SetVariable(VID_EVENT_ARG_BASE + i, ppArgList[i]);
@@ -128,6 +130,7 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
 // Send trap - variant 2
 // Arguments:
 // dwEventCode - Event code
+// eventName   - event name; to send event by name, eventCode must be set to 0
 // pszFormat   - Parameter format string, each parameter represented by one character.
 //    The following format characters can be used:
 //        s - String
@@ -139,7 +142,7 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
 //        X - 64-bit hex integer
 //
 
-void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args)
+void SendTrap(DWORD dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args)
 {
    int i, iNumArgs;
    TCHAR *ppArgList[64];
@@ -182,7 +185,7 @@ void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args)
       }
    }
 
-   SendTrap(dwEventCode, iNumArgs, ppArgList);
+   SendTrap(dwEventCode, eventName, iNumArgs, ppArgList);
 
    for(i = 0; i < iNumArgs; i++)
       if ((pszFormat[i] == 'd') || (pszFormat[i] == 'x') ||
@@ -198,12 +201,12 @@ void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args)
 // Same as variant 2, but uses argument list instead of va_list
 //
 
-void SendTrap(DWORD dwEventCode, const char *pszFormat, ...)
+void SendTrap(DWORD dwEventCode, const TCHAR *eventName, const char *pszFormat, ...)
 {
    va_list args;
 
    va_start(args, pszFormat);
-   SendTrap(dwEventCode, pszFormat, args);
+   SendTrap(dwEventCode, eventName, pszFormat, args);
    va_end(args);
 
 }
