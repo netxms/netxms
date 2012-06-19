@@ -21,6 +21,14 @@
                label="Create &amp;business service..."
                menubarPath="objectcreation">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart"
+               enablesFor="1"
+               icon="icons/availability_chart.png"
+               id="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart_BusinessServiceRoot"
+               label="&amp;Availability chart"
+               menubarPath="additions">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
@@ -54,6 +62,14 @@
                label="Create &amp;business service..."
                menubarPath="objectcreation">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart"
+               enablesFor="1"
+               icon="icons/availability_chart.png"
+               id="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart_BusinessService"
+               label="&amp;Availability chart"
+               menubarPath="additions">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
@@ -65,6 +81,14 @@
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createServiceCheck_NodeLink"
                label="Create service &amp;check..."
                menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart"
+               enablesFor="1"
+               icon="icons/availability_chart.png"
+               id="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart_NodeLink"
+               label="&amp;Availability chart"
+               menubarPath="additions">
          </action>
       </objectContribution>
    </extension>
@@ -80,5 +104,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.slm.views.ServiceAvailability"
+            icon="icons/availability_chart.png"
+            id="org.netxms.ui.eclipse.slm.views.ServiceAvailability"
+            name="Service Availability"
+            restorable="true">
+      </view>
    </extension>
 </plugin>
