@@ -4,6 +4,7 @@
 <product name="NXMC" uid="org.netxms.nxmc" version="1.2.1" useFeatures="false" includeLaunchers="false">
    <plugins>
       <plugin id="com.ibm.icu"/>
+      <plugin id="com.radensolutions.ui.atm"/>
       <plugin id="org.apache.commons.codec"/>
       <plugin id="org.apache.commons.fileupload"/>
       <plugin id="org.apache.commons.io"/>
@@ -76,6 +77,7 @@
       <plugin id="org.netxms.ui.eclipse.serverconfig"/>
       <plugin id="org.netxms.ui.eclipse.serverjobmanager"/>
       <plugin id="org.netxms.ui.eclipse.serviceview"/>
+      <plugin id="org.netxms.ui.eclipse.slm"/>
       <plugin id="org.netxms.ui.eclipse.snmp"/>
       <plugin id="org.netxms.ui.eclipse.switchmanager"/>
       <plugin id="org.netxms.ui.eclipse.topology"/>
@@ -85,6 +87,7 @@
 
    <configurations>
       <plugin id="com.ibm.icu" autoStart="true" startLevel="0" />
+      <plugin id="com.radensolutions.ui.atm" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.codec" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.fileupload" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.io" autoStart="true" startLevel="0" />
@@ -156,6 +159,7 @@
       <plugin id="org.netxms.ui.eclipse.serverconfig" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.serverjobmanager" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.serviceview" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.slm" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.snmp" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.switchmanager" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.topology" autoStart="true" startLevel="0" />
@@ -165,7 +169,7 @@
 
    <warConfiguration webXml="/WAR/WEB-INF/web.xml" launchIni="/WAR/WEB-INF/launch.ini">
    <libraries>
-      <library path="org.eclipse.equinox.servletbridge_1.2.100.v20111010-1614.jar" fromTarget="true"/>
+      <library path="org.eclipse.equinox.servletbridge_1.2.200.v20120522-2049.jar" fromTarget="true"/>
    </libraries>
    </warConfiguration>
 </product>
