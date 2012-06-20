@@ -1,5 +1,6 @@
 qx.Class.define("org.netxms.ui.eclipse.charts.widgets.LineChart", {
-    extend: qx.ui.layout.CanvasLayout,
+    //extend: qx.ui.layout.CanvasLayout,
+    extend: org.eclipse.swt.widgets.Composite,
 
 	construct: function(id) {
 		this.base(arguments);
