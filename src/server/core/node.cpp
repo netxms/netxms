@@ -24,6 +24,17 @@
 
 
 //
+// Externals
+//
+
+extern Queue g_statusPollQueue;
+extern Queue g_configPollQueue;
+extern Queue g_topologyPollQueue;
+extern Queue g_routePollQueue;
+extern Queue g_discoveryPollQueue;
+
+
+//
 // Node class default constructor
 //
 
@@ -774,7 +785,7 @@ Interface *Node::findBridgePort(DWORD bridgePortNumber)
 // Find connection point for node
 //
 
-Interface *Node::findConnectionPoint(DWORD *localIfId, BYTE *localMacAddr)
+Interface *Node::findConnectionPoint(DWORD *localIfId, BYTE *localMacAddr, bool *exactMatch)
 {
 	Interface *cp = NULL;
    LockChildList(FALSE);
@@ -782,7 +793,7 @@ Interface *Node::findConnectionPoint(DWORD *localIfId, BYTE *localMacAddr)
       if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
       {
          Interface *iface = (Interface *)m_pChildList[i];
-			cp = FindInterfaceConnectionPoint(iface->getMacAddr());
+			cp = FindInterfaceConnectionPoint(iface->getMacAddr(), exactMatch);
 			if (cp != NULL)
 			{
 				*localIfId = iface->Id();
@@ -1006,6 +1017,13 @@ void Node::calculateCompoundStatus(BOOL bForcedRecalc)
 
 void Node::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
+	if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
+	{
+		if (dwRqId == 0)
+			m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
+		return;
+	}
+
    DWORD i, dwPollListSize, dwOldFlags = m_dwFlags;
    NetObj *pPollerNode = NULL, **ppPollList;
    BOOL bAllDown;
@@ -1390,6 +1408,13 @@ static DWORD PrintMIBWalkerCallback(DWORD version, SNMP_Variable *var, SNMP_Tran
 void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
                              int nPoller, DWORD dwNetMask)
 {
+	if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
+	{
+		if (dwRqId == 0)
+			m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
+		return;
+	}
+
    DWORD dwOldFlags = m_dwFlags, dwAddr, rcc;
    AgentConnection *pAgentConn;
    TCHAR szBuffer[4096];
@@ -3700,9 +3725,13 @@ BOOL Node::getNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
 
 void Node::updateRoutingTable()
 {
-   ROUTING_TABLE *pRT;
+	if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
+	{
+		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
+		return;
+	}
 
-   pRT = getRoutingTable();
+   ROUTING_TABLE *pRT = getRoutingTable();
    if (pRT != NULL)
    {
       routingTableLock();
@@ -3785,14 +3814,55 @@ void Node::setAgentProxy(AgentConnection *pConn)
 // Prepare node object for deletion
 //
 
+static bool NodeQueueComparator(void *key, void *element)
+{
+	return key == element;
+}
+
 void Node::PrepareForDeletion()
 {
    // Prevent node from being queued for polling
    LockData();
-   m_dwDynamicFlags |= NDF_POLLING_DISABLED;
+   m_dwDynamicFlags |= NDF_POLLING_DISABLED | NDF_DELETE_IN_PROGRESS;
    UnlockData();
 
+	if (g_statusPollQueue.remove(this, NodeQueueComparator))
+	{
+		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
+		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from status poller queue"), m_szName, (int)m_dwId);
+		DecRefCount();
+	}
+
+	if (g_configPollQueue.remove(this, NodeQueueComparator))
+	{
+		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
+		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from configuration poller queue"), m_szName, (int)m_dwId);
+		DecRefCount();
+	}
+
+	if (g_discoveryPollQueue.remove(this, NodeQueueComparator))
+	{
+		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_DISCOVERY_POLL;
+		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from discovery poller queue"), m_szName, (int)m_dwId);
+		DecRefCount();
+	}
+
+	if (g_routePollQueue.remove(this, NodeQueueComparator))
+	{
+		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
+		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from routing table poller queue"), m_szName, (int)m_dwId);
+		DecRefCount();
+	}
+
+	if (g_topologyPollQueue.remove(this, NodeQueueComparator))
+	{
+		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
+		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from topology poller queue"), m_szName, (int)m_dwId);
+		DecRefCount();
+	}
+
    // Wait for all pending polls
+	DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): waiting for outstanding polls to finish"), m_szName, (int)m_dwId);
    while(1)
    {
       LockData();
@@ -3807,6 +3877,7 @@ void Node::PrepareForDeletion()
       UnlockData();
       ThreadSleepMs(100);
    }
+	DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): no outstanding polls left"), m_szName, (int)m_dwId);
 	Template::PrepareForDeletion();
 }
 
@@ -4154,6 +4225,13 @@ nxmap_ObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 
 void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
+	if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
+	{
+		if (dwRqId == 0)
+			m_dwDynamicFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
+		return;
+	}
+
 	pollerLock();
    m_pPollRequestor = pSession;
 

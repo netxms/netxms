@@ -37,14 +37,14 @@ public class Interface extends GenericObject
 	public static final int IF_EXPECTED_STATE_MASK    = 0x30000000;
 	
 	public static final int ADMIN_STATE_UNKNOWN      = 0;
-	public static final int ADMIN_STATE_UP           = 0;
-	public static final int ADMIN_STATE_DOWN         = 0;
-	public static final int ADMIN_STATE_TESTING      = 0;
+	public static final int ADMIN_STATE_UP           = 1;
+	public static final int ADMIN_STATE_DOWN         = 2;
+	public static final int ADMIN_STATE_TESTING      = 3;
 	
 	public static final int OPER_STATE_UNKNOWN       = 0;
-	public static final int OPER_STATE_UP            = 0;
-	public static final int OPER_STATE_DOWN          = 0;
-	public static final int OPER_STATE_TESTING       = 0;
+	public static final int OPER_STATE_UP            = 1;
+	public static final int OPER_STATE_DOWN          = 2;
+	public static final int OPER_STATE_TESTING       = 3;
 	
 	public static final int PAE_STATE_UNKNOWN        = 0;
 	public static final int PAE_STATE_INITIALIZE     = 1;

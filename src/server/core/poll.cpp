@@ -67,7 +67,7 @@ static void CreateManagementNode(DWORD ipAddr, DWORD netMask)
 {
 	TCHAR buffer[256];
 
-   Node *pNode = new Node(ipAddr, NF_IS_LOCAL_MGMT, 0, 0, 0);
+	Node *pNode = new Node(ipAddr, NF_IS_LOCAL_MGMT, 0, 0, 0);
    NetObjInsert(pNode, TRUE);
 	pNode->setName(GetLocalHostName(buffer, 256));
    pNode->configurationPoll(NULL, 0, -1, netMask);
@@ -450,6 +450,13 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       pNode = (Node *)g_discoveryPollQueue.GetOrBlock();
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
+
+		if (pNode->getRuntimeFlags() & NDF_DELETE_IN_PROGRESS)
+		{
+	      pNode->setDiscoveryPollTimeStamp();
+	      pNode->DecRefCount();
+			continue;
+		}
 
       _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->Name(), pNode->Id());
       SetPollerState((long)arg, szBuffer);

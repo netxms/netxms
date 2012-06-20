@@ -7,8 +7,8 @@ Bundle-Activator: org.netxms.ui.eclipse.library.Activator
 Bundle-Vendor: netxms.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
- jar/netxms-base-1.2.1.jar,
- jar/netxms-client-api-1.2.1.jar,
+ jar/netxms-base-1.2.2.jar,
+ jar/netxms-client-api-1.2.2.jar,
  jar/simple-xml-2.6.4.jar
 Export-Package: org.netxms.api.client,
  org.netxms.api.client.constants,

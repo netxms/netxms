@@ -33,6 +33,7 @@ public class NXCNotification extends SessionNotification
 	public static final int NEW_SYSLOG_RECORD = 7;
 	public static final int NEW_SNMP_TRAP = 8;
 	public static final int JOB_CHANGE = 10;
+	public static final int OBJECT_DELETED = 99;
 
 	public static final int SITUATION_BASE = 100;
 	public static final int SITUATION_CREATED = 101;

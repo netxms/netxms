@@ -1966,6 +1966,7 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedColors.ja
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedIcons.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ColorCache.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ColorConverter.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ComparatorHelper.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/IntermediateSelectionProvider.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/NumericTextFieldValidator.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ObjectLabelComparator.java -text

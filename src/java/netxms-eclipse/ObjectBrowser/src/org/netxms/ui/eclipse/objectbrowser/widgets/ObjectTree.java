@@ -219,7 +219,7 @@ public class ObjectTree extends Composite
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
-				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
+				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) || (n.getCode() == NXCNotification.OBJECT_DELETED))
 				{
 					changeCount++;
 					new UIJob(getDisplay(), "Update object tree") {

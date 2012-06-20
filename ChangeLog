@@ -2,6 +2,10 @@
 * 1.2.2
 *
 
+- Management console:
+	- In port view ports are colored according to physical port state
+	- Interface IP shown in connection point search results
+	- Interface IP and MAC shown in "Interfaces" tab
 - Android client:
 	- Dashboards implemented
 - NXSL:

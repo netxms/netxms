@@ -1275,7 +1275,7 @@ int NetObj::getPropagatedStatus()
 // when object deletion is safe
 //
 
-void NetObj::PrepareForDeletion(void)
+void NetObj::PrepareForDeletion()
 {
 }
 

@@ -87,8 +87,7 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
 // with respect for timeouts and retransmissions
 //
 
-DWORD SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, 
-                                DWORD timeout, int numRetries)
+DWORD SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, DWORD timeout, int numRetries)
 {
    DWORD rc;
    int bytes;

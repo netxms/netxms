@@ -115,6 +115,7 @@ public:
 
 	DWORD findMacAddress(const BYTE *macAddr);
 	bool isSingleMacOnPort(DWORD ifIndex, BYTE *macAddr = NULL);
+	int getMacCountOnPort(DWORD ifIndex);
 };
 
 
@@ -230,7 +231,7 @@ public:
 NetworkPath *TraceRoute(Node *pSrc, Node *pDest);
 void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth);
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
-Interface *FindInterfaceConnectionPoint(const BYTE *macAddr);
+Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch);
 
 LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node);
 void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs);

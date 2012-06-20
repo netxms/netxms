@@ -103,6 +103,7 @@ extern DWORD g_dwConditionPollingInterval;
 #define NDF_POLLING_DISABLED           0x0800
 #define NDF_CONFIGURATION_POLL_PASSED  0x1000
 #define NDF_QUEUED_FOR_TOPOLOGY_POLL   0x2000
+#define NDF_DELETE_IN_PROGRESS         0x4000
 
 #define NDF_PERSISTENT (NDF_UNREACHABLE | NDF_AGENT_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_CPSNMP_UNREACHABLE)
 
@@ -985,7 +986,7 @@ public:
 	nxmap_ObjList *GetL2Topology();
 	nxmap_ObjList *BuildL2Topology(DWORD *pdwStatus);
 	ForwardingDatabase *getSwitchForwardingDatabase();
-	Interface *findConnectionPoint(DWORD *localIfId, BYTE *localMacAddr);
+	Interface *findConnectionPoint(DWORD *localIfId, BYTE *localMacAddr, bool *exactMatch);
 	void addHostConnections(LinkLayerNeighbors *nbs);
 	void addExistingConnections(LinkLayerNeighbors *nbs);
 

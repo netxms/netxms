@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,17 +16,29 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.base;
+package org.netxms.ui.eclipse.tools;
 
-import java.util.UUID;
+import java.net.InetAddress;
 
 /**
- * Common constants
+ * Helper class for comparators
  */
-public final class NXCommon
+public class ComparatorHelper
 {
-	// Version information
-	public static final String VERSION = "1.2.2";
-	
-	public static final UUID EMPTY_GUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+	public static int compareInetAddresses(InetAddress a1, InetAddress a2)
+	{
+		byte[] b1 = a1.getAddress(); 
+		byte[] b2 = a2.getAddress();
+		int length = Math.min(b1.length, b2.length);
+		for(int i = 0; i < length; i++)
+		{
+			int n1 = (int)b1[i] & 0xFF; 
+			int n2 = (int)b2[i] & 0xFF; 
+			if (n1 < n2)
+				return -1;
+			if (n1 > n2)
+				return 1;
+		}
+		return b1.length - b2.length;
+	}
 }

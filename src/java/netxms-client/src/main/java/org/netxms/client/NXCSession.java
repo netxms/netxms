@@ -451,7 +451,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 									objectList.put(obj.getObjectId(), obj);
 							}
 							if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
-								sendNotification(new NXCNotification(NXCNotification.OBJECT_CHANGED, obj.getObjectId(), obj));
+							{
+								if (obj.isDeleted())
+									sendNotification(new NXCNotification(NXCNotification.OBJECT_DELETED, obj.getObjectId()));
+								else
+									sendNotification(new NXCNotification(NXCNotification.OBJECT_CHANGED, obj.getObjectId(), obj));
+							}
 							break;
 						case NXCPCodes.CMD_OBJECT_LIST_END:
 							completeSync(syncObjects);
@@ -3047,6 +3052,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+		
+		// If server reports success, delete object from cache and generate
+		// appropriate notification without waiting for actual server update
+		synchronized(objectList)
+		{
+			objectList.remove(objectId);
+		}
+		sendNotification(new NXCNotification(NXCNotification.OBJECT_DELETED, objectId));
 	}
 
 	/**

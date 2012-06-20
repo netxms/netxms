@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -143,12 +143,15 @@ void *Queue::Get()
 	{
 		pElement = INVALID_POINTER_VALUE;
 	}
-	else if (m_dwNumElements != 0)
+	else
    {
-      pElement = m_pElements[m_dwFirst++];
-      if (m_dwFirst == m_dwBufferSize)
-         m_dwFirst = 0;
-      m_dwNumElements--;
+		while((m_dwNumElements > 0) && (pElement == NULL))
+		{
+			pElement = m_pElements[m_dwFirst++];
+			if (m_dwFirst == m_dwBufferSize)
+				m_dwFirst = 0;
+			m_dwNumElements--;
+		}
    }
    Unlock();
    return pElement;
@@ -220,7 +223,7 @@ void *Queue::find(void *key, QUEUE_COMPARATOR comparator)
 	Lock();
 	for(i = 0, pos = m_dwFirst; i < m_dwNumElements; i++)
 	{
-		if (comparator(key, m_pElements[pos]))
+		if ((m_pElements[pos] != NULL) && comparator(key, m_pElements[pos]))
 		{
 			element = m_pElements[pos];
 			break;
@@ -231,4 +234,33 @@ void *Queue::find(void *key, QUEUE_COMPARATOR comparator)
 	}
 	Unlock();
 	return element;
+}
+
+
+//
+// Find element in queue using given key and comparator
+// Returns pointer to element or NULL if element was not found.
+// Element remains in the queue
+//
+
+bool Queue::remove(void *key, QUEUE_COMPARATOR comparator)
+{
+	bool success = false;
+	DWORD i, pos;
+
+	Lock();
+	for(i = 0, pos = m_dwFirst; i < m_dwNumElements; i++)
+	{
+		if ((m_pElements[pos] != NULL) && comparator(key, m_pElements[pos]))
+		{
+			m_pElements[pos] = NULL;
+			success = true;
+			break;
+		}
+		pos++;
+		if (pos == m_dwBufferSize)
+			pos = 0;
+	}
+	Unlock();
+	return success;
 }

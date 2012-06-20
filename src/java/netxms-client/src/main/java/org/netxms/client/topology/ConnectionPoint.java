@@ -34,6 +34,7 @@ public class ConnectionPoint
 	private long nodeId;
 	private long interfaceId;
 	private int interfaceIndex;
+	private boolean directlyConnected; 
 	private Object data;
 	
 	/**
@@ -49,6 +50,7 @@ public class ConnectionPoint
 		localNodeId = msg.getVariableAsInt64(NXCPCodes.VID_LOCAL_NODE_ID);
 		localInterfaceId = msg.getVariableAsInt64(NXCPCodes.VID_LOCAL_INTERFACE_ID);
 		localMacAddress = new MacAddress(msg.getVariableAsBinary(NXCPCodes.VID_MAC_ADDR));
+		directlyConnected = msg.getVariableAsBoolean(NXCPCodes.VID_EXACT_MATCH);
 	}
 
 	/**
@@ -117,5 +119,13 @@ public class ConnectionPoint
 	public void setData(Object data)
 	{
 		this.data = data;
+	}
+
+	/**
+	 * @return the directlyConnected
+	 */
+	public boolean isDirectlyConnected()
+	{
+		return directlyConnected;
 	}
 }

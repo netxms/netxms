@@ -139,6 +139,23 @@ bool ForwardingDatabase::isSingleMacOnPort(DWORD ifIndex, BYTE *macAddr)
 
 
 //
+// Get number of MAC addresses on given port
+//
+
+int ForwardingDatabase::getMacCountOnPort(DWORD ifIndex)
+{
+	int count = 0;
+	for(int i = 0; i < m_fdbSize; i++)
+		if (m_fdb[i].ifIndex == ifIndex)
+		{
+			count++;
+		}
+
+	return count;
+}
+
+
+//
 // Sort FDB
 //
 

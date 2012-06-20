@@ -145,4 +145,27 @@ public class MacAddress
 	{
 		return CompatTools.arrayCopy(value, 6);
 	}
+	
+	/**
+	 * Compare this MAC address to another MAC address.
+	 * 
+	 * @param dst
+	 * @return 0 if two MAC addresses are equal, negative if this MAC address is "lower", and positive if "higher"
+	 */
+	public int compareTo(MacAddress dst)
+	{
+		if (dst == null)
+			return 1;
+		int len = Math.min(value.length, dst.value.length);
+		for(int i = 0; i < len; i++)
+		{
+			int v1 = (int)value[i] & 0xFF;
+			int v2 = (int)dst.value[i] & 0xFF;
+			if (v1 < v2)
+				return -1;
+			if (v1 > v2)
+				return 1;
+		}
+		return value.length - dst.value.length;
+	}
 }

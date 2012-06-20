@@ -63,13 +63,17 @@ void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth)
 // Find connection point for interface
 //
 
-Interface *FindInterfaceConnectionPoint(const BYTE *macAddr)
+Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch)
 {
 	TCHAR macAddrText[32];
 	DbgPrintf(6, _T("Called FindInterfaceConnectionPoint(%s)"), MACToStr(macAddr, macAddrText));
 
 	Interface *iface = NULL;
 	ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects();
+
+	Node *bestMatchNode = NULL;
+	DWORD bestMatchIfIndex = 0;
+	int bestMatchCount = 0x7FFFFFFF;
 
 	for(int i = 0; (i < nodes->size()) && (iface == NULL); i++)
 	{
@@ -80,23 +84,45 @@ Interface *FindInterfaceConnectionPoint(const BYTE *macAddr)
 			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%d]"),
 			          macAddrText, node->Name(), (int)node->Id());
 			DWORD ifIndex = fdb->findMacAddress(macAddr);
-			if ((ifIndex != 0) && fdb->isSingleMacOnPort(ifIndex))
+			if (ifIndex != 0)
 			{
-				iface = node->findInterface(ifIndex, INADDR_ANY);
-				if (iface != NULL)
+				int count = fdb->getMacCountOnPort(ifIndex);
+				if (count == 1)
 				{
-					DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%d] on node %s [%d]"), macAddrText,
-					          iface->Name(), (int)iface->Id(), iface->getParentNode()->Name(), (int)iface->getParentNode()->Id());
+					iface = node->findInterface(ifIndex, INADDR_ANY);
+					if (iface != NULL)
+					{
+						DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%d] on node %s [%d]"), macAddrText,
+									 iface->Name(), (int)iface->Id(), iface->getParentNode()->Name(), (int)iface->getParentNode()->Id());
+					}
+					else
+					{
+						DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): cannot find interface object for node %s [%d] ifIndex %d"),
+									 macAddrText, node->Name(), node->Id(), ifIndex);
+					}
 				}
-				else
+				else if (count < bestMatchCount)
 				{
-					DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): cannot find interface object for node %s [%d] ifIndex %d"),
-					          macAddrText, node->Name(), node->Id(), ifIndex);
+					bestMatchCount = count;
+					bestMatchNode = node;
+					bestMatchIfIndex = ifIndex;
+					DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found potential interface [ifIndex=%d] on node %s [%d], count %d"), 
+					          macAddrText, ifIndex, node->Name(), (int)node->Id(), count);
 				}
 			}
 			fdb->decRefCount();
 		}
 	}
 	delete nodes;
+
+	if (iface != NULL)
+	{
+		*exactMatch = true;
+	}
+	else if (bestMatchNode != NULL)
+	{
+		*exactMatch = false;
+		iface = bestMatchNode->findInterface(bestMatchIfIndex, INADDR_ANY);
+	}
 	return iface;
 }

@@ -28,6 +28,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.views.HostSearchResults;
@@ -38,11 +39,14 @@ import org.netxms.ui.eclipse.topology.views.HostSearchResults;
  */
 public class ConnectionPointLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
-	private static final Color COLOR_FOUND_OBJECT = new Color(Display.getDefault(), 0, 127, 0);
-	private static final Color COLOR_FOUND_MAC = new Color(Display.getDefault(), 0, 0, 127);
+	private static final Color COLOR_FOUND_OBJECT_DIRECT = new Color(Display.getDefault(), 0, 127, 0);
+	private static final Color COLOR_FOUND_OBJECT_INDIRECT = new Color(Display.getDefault(), 136, 160, 52);
+	private static final Color COLOR_FOUND_MAC_DIRECT = new Color(Display.getDefault(), 0, 0, 127);
+	private static final Color COLOR_FOUND_MAC_INDIRECT = new Color(Display.getDefault(), 32, 196, 208);
 	private static final Color COLOR_NOT_FOUND = new Color(Display.getDefault(), 127, 0, 0);
 	
 	private Map<Long, String> cachedObjectNames = new HashMap<Long, String>();
+	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -66,7 +70,7 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 		String name = cachedObjectNames.get(id);
 		if (name == null)
 		{
-			GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(id);
+			GenericObject object = session.findObjectById(id);
 			name = (object != null) ? object.getObjectName() : "<unknown>";
 			cachedObjectNames.put(id, name);
 		}
@@ -90,10 +94,15 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 				return getObjectName(cp.getLocalInterfaceId());
 			case HostSearchResults.COLUMN_MAC_ADDRESS:
 				return cp.getLocalMacAddress().toString();
+			case HostSearchResults.COLUMN_IP_ADDRESS:
+				Interface iface = (Interface)session.findObjectById(cp.getLocalInterfaceId(), Interface.class);
+				return (iface != null) ? iface.getPrimaryIP().getHostAddress() : "";
 			case HostSearchResults.COLUMN_SWITCH:
 				return getObjectName(cp.getNodeId());
 			case HostSearchResults.COLUMN_PORT:
 				return getObjectName(cp.getInterfaceId());
+			case HostSearchResults.COLUMN_TYPE:
+				return cp.isDirectlyConnected() ? "direct" : "indirect";
 		}
 		return null;
 	}
@@ -108,8 +117,8 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 		if (cp.getNodeId() == 0)
 			return COLOR_NOT_FOUND;
 		if (cp.getLocalNodeId() == 0)
-			return COLOR_FOUND_MAC;
-		return COLOR_FOUND_OBJECT;
+			return cp.isDirectlyConnected() ? COLOR_FOUND_MAC_DIRECT : COLOR_FOUND_MAC_INDIRECT;
+		return cp.isDirectlyConnected() ? COLOR_FOUND_OBJECT_DIRECT : COLOR_FOUND_OBJECT_INDIRECT;
 	}
 
 	/* (non-Javadoc)

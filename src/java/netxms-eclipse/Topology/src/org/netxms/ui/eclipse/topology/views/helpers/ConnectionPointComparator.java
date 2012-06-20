@@ -18,11 +18,17 @@
  */
 package org.netxms.ui.eclipse.topology.views.helpers;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.ConnectionPoint;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ComparatorHelper;
 import org.netxms.ui.eclipse.topology.views.HostSearchResults;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -33,6 +39,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class ConnectionPointComparator extends ViewerComparator
 {
 	private ITableLabelProvider labelProvider;
+	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	
 	/**
 	 * @param labelProvider
@@ -62,6 +69,20 @@ public class ConnectionPointComparator extends ViewerComparator
 			case HostSearchResults.COLUMN_SWITCH:
 			case HostSearchResults.COLUMN_PORT:
 				result = labelProvider.getColumnText(e1, column).compareToIgnoreCase(labelProvider.getColumnText(e2, column));
+				break;
+			case HostSearchResults.COLUMN_IP_ADDRESS:
+				Interface iface1 = (Interface)session.findObjectById(((ConnectionPoint)e1).getLocalInterfaceId(), Interface.class);
+				Interface iface2 = (Interface)session.findObjectById(((ConnectionPoint)e2).getLocalInterfaceId(), Interface.class);
+				try
+				{
+					InetAddress a1 = (iface1 != null) ? iface1.getPrimaryIP() : InetAddress.getByAddress(new byte[] { 0, 0, 0, 0});
+					InetAddress a2 = (iface2 != null) ? iface2.getPrimaryIP() : InetAddress.getByAddress(new byte[] { 0, 0, 0, 0});
+					result = ComparatorHelper.compareInetAddresses(a1, a2);
+				}
+				catch(UnknownHostException e)
+				{
+					result = 0;
+				}
 				break;
 			default:
 				result = 0;

@@ -62,6 +62,7 @@ public:
    DWORD Size() { return m_dwNumElements; }
    void Clear();
 	void *find(void *key, QUEUE_COMPARATOR comparator);
+	bool remove(void *key, QUEUE_COMPARATOR comparator);
 };
 
 #endif    /* _nxqueue_h_ */
