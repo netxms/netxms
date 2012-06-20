@@ -6,10 +6,12 @@ import org.netxms.ui.android.main.adapters.ActivityListAdapter;
 import org.netxms.ui.android.service.ClientConnectorService.ConnectionStatus;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,7 +37,8 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	public static final int ACTIVITY_NODES = 3;
 	public static final int ACTIVITY_GRAPHS = 4;
 	public static final int ACTIVITY_MACADDRESS = 5;
-
+	public static final String INTENTIONAL_EXIT_KEY = "IntentionalExit";
+	
 	TextView statusText;
 
 	/*
@@ -46,6 +49,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	@Override
 	public void onCreateStep2(Bundle savedInstanceState)
 	{
+		setIntentionalExit(false);	// Allow autorestart on change connectivity status for premature exit
 		setContentView(R.layout.homescreen);
 
 		GridView gridview = (GridView)findViewById(R.id.ActivityList);
@@ -104,6 +108,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 			case R.string.exit:
 				if (service != null)
 					service.shutdown();
+				setIntentionalExit(true);	// Avoid autorestart on change connectivity status for intentional exit
 				moveTaskToBack(true);
 				System.exit(0);
 				return true;
@@ -165,5 +170,19 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 				Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
 			}
 		});
+	}
+
+	/**
+	 * Set a flag to inform about an intentional exit to avoid
+	 * automatic reconnection on change connectivity status
+	 * 
+	 * @param flag true to signal an intentional exit
+	 */
+	private void setIntentionalExit(boolean flag)
+	{
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this); 
+	    SharedPreferences.Editor editor = prefs.edit(); 
+	    editor.putBoolean(INTENTIONAL_EXIT_KEY, flag); 
+	    editor.commit(); 
 	}
 }
