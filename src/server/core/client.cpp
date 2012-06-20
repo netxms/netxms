@@ -195,6 +195,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *arg)
       }
 
       errorCount = 0;     // Reset consecutive errors counter
+		SetSocketNonBlocking(sockClient);
 
       // Create new session structure and threads
       pSession = new ClientSession(sockClient, (struct sockaddr *)&servAddr);
@@ -287,6 +288,7 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
       }
 
       errorCount = 0;     // Reset consecutive errors counter
+		SetSocketNonBlocking(sockClient);
 
       // Create new session structure and threads
       pSession = new ClientSession(sockClient, (struct sockaddr *)&servAddr);

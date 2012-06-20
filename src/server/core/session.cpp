@@ -393,7 +393,8 @@ void ClientSession::readThread()
    {
       if ((iErr = RecvNXCPMessageEx(m_hSocket, &pRawMsg, m_pMsgBuffer, &msgBufferSize, 
 		                              &m_pCtx, (pDecryptionBuffer != NULL) ? &pDecryptionBuffer : NULL,
-												INFINITE, MAX_MSG_SIZE)) <= 0) {
+												900000, MAX_MSG_SIZE)) <= 0)  // timeout 15 minutes
+		{
          DebugPrintf(5, _T("RecvNXCPMessageEx failed (%d)"), iErr);
          break;
       }
