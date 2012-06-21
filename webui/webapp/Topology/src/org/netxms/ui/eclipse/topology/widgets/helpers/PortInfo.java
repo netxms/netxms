@@ -14,6 +14,8 @@ public class PortInfo
 	private int slot;
 	private int port;
 	private int status;
+	private int adminState;
+	private int operState;
 	private boolean highlighted;
 	
 	/**
@@ -27,6 +29,8 @@ public class PortInfo
 		slot = iface.getSlot();
 		port = iface.getPort();
 		status = iface.getStatus();
+		adminState = iface.getAdminState();
+		operState = iface.getOperState();
 	}
 
 	/**
@@ -83,5 +87,37 @@ public class PortInfo
 	public void setHighlighted(boolean highlighted)
 	{
 		this.highlighted = highlighted;
+	}
+
+	/**
+	 * @return the adminState
+	 */
+	public int getAdminState()
+	{
+		return adminState;
+	}
+
+	/**
+	 * @param adminState the adminState to set
+	 */
+	public void setAdminState(int adminState)
+	{
+		this.adminState = adminState;
+	}
+
+	/**
+	 * @return the operState
+	 */
+	public int getOperState()
+	{
+		return operState;
+	}
+
+	/**
+	 * @param operState the operState to set
+	 */
+	public void setOperState(int operState)
+	{
+		this.operState = operState;
 	}
 }

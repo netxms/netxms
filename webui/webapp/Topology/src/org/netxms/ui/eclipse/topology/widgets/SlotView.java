@@ -33,6 +33,8 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.constants.Severity;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.tools.ColorCache;
@@ -44,13 +46,11 @@ import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
  */
 public class SlotView extends Canvas implements PaintListener, MouseListener
 {
-	private static final long serialVersionUID = 1L;
-
 	private static final int HORIZONTAL_MARGIN = 20;
 	private static final int VERTICAL_MARGIN = 10;
 	private static final int HORIZONTAL_SPACING = 10;
 	private static final int VERTICAL_SPACING = 10;
-	private static final int PORT_WIDTH = 40;
+	private static final int PORT_WIDTH = 44;
 	private static final int PORT_HEIGHT = 30;
 	
 	private static final RGB BACKGROUND_COLOR = new RGB(224, 224, 224);
@@ -170,7 +170,31 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		}
 		else if (portStatusVisible)
 		{
-			gc.setBackground(StatusDisplayInfo.getStatusColor(p.getStatus()));
+			int status = Severity.UNKNOWN;
+			switch(p.getAdminState())
+			{
+				case Interface.ADMIN_STATE_DOWN:
+					status = Severity.DISABLED;
+					break;
+				case Interface.ADMIN_STATE_TESTING:
+					status = Severity.TESTING;
+					break;
+				case Interface.ADMIN_STATE_UP:
+					switch(p.getOperState())
+					{
+						case Interface.OPER_STATE_DOWN:
+							status = Severity.CRITICAL;
+							break;
+						case Interface.OPER_STATE_TESTING:
+							status = Severity.TESTING;
+							break;
+						case Interface.OPER_STATE_UP:
+							status = Severity.NORMAL;
+							break;
+					}
+					break;
+			}
+			gc.setBackground(StatusDisplayInfo.getStatusColor(status));
 			gc.fillRectangle(rect);
 		}
 		else
@@ -182,6 +206,12 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		
 		Point ext = gc.textExtent(label);
 		gc.drawText(label, x + (PORT_WIDTH - ext.x) / 2, y + (PORT_HEIGHT - ext.y) / 2);
+
+		if (p.getStatus() != Severity.NORMAL)
+		{
+			// draw status icon
+			gc.drawImage(StatusDisplayInfo.getStatusImage(p.getStatus()), rect.x + rect.width - 18, rect.y + rect.height - 18);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -190,8 +220,8 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
-		return new Point(((ports.size() + rowCount - 1) / rowCount) * (40 + HORIZONTAL_SPACING) + HORIZONTAL_MARGIN * 2 + nameSize.x,
-				rowCount * 30 + (rowCount - 1) * VERTICAL_SPACING + VERTICAL_MARGIN * 2);
+		return new Point(((ports.size() + rowCount - 1) / rowCount) * (PORT_WIDTH + HORIZONTAL_SPACING) + HORIZONTAL_MARGIN * 2 + nameSize.x,
+				rowCount * PORT_HEIGHT + (rowCount - 1) * VERTICAL_SPACING + VERTICAL_MARGIN * 2);
 	}
 	
 	/**

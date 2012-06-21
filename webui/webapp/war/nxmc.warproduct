@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="NXMC" uid="org.netxms.nxmc" version="1.2.1" useFeatures="false" includeLaunchers="false">
+<product name="NXMC" uid="org.netxms.nxmc" version="1.2.2" useFeatures="false" includeLaunchers="false">
    <plugins>
       <plugin id="com.ibm.icu"/>
-      <plugin id="com.radensolutions.ui.atm"/>
+      <plugin id="com.radensolutions.ui.atm" fragment=""/>
       <plugin id="org.apache.commons.codec"/>
       <plugin id="org.apache.commons.fileupload"/>
       <plugin id="org.apache.commons.io"/>
@@ -77,7 +77,7 @@
       <plugin id="org.netxms.ui.eclipse.serverconfig"/>
       <plugin id="org.netxms.ui.eclipse.serverjobmanager"/>
       <plugin id="org.netxms.ui.eclipse.serviceview"/>
-      <plugin id="org.netxms.ui.eclipse.slm"/>
+      <plugin id="org.netxms.ui.eclipse.slm" fragment=""/>
       <plugin id="org.netxms.ui.eclipse.snmp"/>
       <plugin id="org.netxms.ui.eclipse.switchmanager"/>
       <plugin id="org.netxms.ui.eclipse.topology"/>

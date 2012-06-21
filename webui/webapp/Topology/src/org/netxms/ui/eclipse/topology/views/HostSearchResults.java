@@ -65,8 +65,10 @@ public class HostSearchResults extends ViewPart
 	public static final int COLUMN_NODE = 1;
 	public static final int COLUMN_INTERFACE = 2;
 	public static final int COLUMN_MAC_ADDRESS = 3;
-	public static final int COLUMN_SWITCH = 4;
-	public static final int COLUMN_PORT = 5;
+	public static final int COLUMN_IP_ADDRESS = 4;
+	public static final int COLUMN_SWITCH = 5;
+	public static final int COLUMN_PORT = 6;
+	public static final int COLUMN_TYPE = 7;
 	
 	private static final String TABLE_CONFIG_PREFIX = "HostSearchResults";
 	
@@ -80,8 +82,8 @@ public class HostSearchResults extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "Seq.", "Node", "Interface", "MAC", "Switch", "Port" };
-		final int[] widths = { 70, 120, 120, 90, 120, 120 };
+		final String[] names = { "Seq.", "Node", "Interface", "MAC", "IP", "Switch", "Port", "Type" };
+		final int[] widths = { 70, 120, 120, 90, 90, 120, 120, 60 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_SEQUENCE, SWT.UP, SWT.FULL_SELECTION);
 		viewer.setContentProvider(new ArrayContentProvider());
 		ConnectionPointLabelProvider labelProvider = new ConnectionPointLabelProvider();
@@ -90,8 +92,6 @@ public class HostSearchResults extends ViewPart
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		
 		viewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -110,8 +110,6 @@ public class HostSearchResults extends ViewPart
 	private void createActions()
 	{
 		actionClearLog = new Action("Clear search log") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -158,9 +156,8 @@ public class HostSearchResults extends ViewPart
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
+		menuMgr.addMenuListener(new IMenuListener()
+		{
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -231,9 +228,9 @@ public class HostSearchResults extends ViewPart
 			if ((bridge != null) && (iface != null))
 			{
 				if (host != null)
-					MessageDialog.openInformation(shell, "Connection Point", "Node " + host.getObjectName() + " is connected to network switch " + bridge.getObjectName() + " port " + iface.getObjectName());
+					MessageDialog.openInformation(shell, "Connection Point", "Node " + host.getObjectName() + " is " + (cp.isDirectlyConnected() ? "directly" : "indirectly") + " connected to network switch " + bridge.getObjectName() + " port " + iface.getObjectName());
 				else
-					MessageDialog.openInformation(shell, "Connection Point", "Node with MAC address " + cp.getLocalMacAddress() + " is connected to network switch " + bridge.getObjectName() + " port " + iface.getObjectName());
+					MessageDialog.openInformation(shell, "Connection Point", "Node with MAC address " + cp.getLocalMacAddress() + " is " + (cp.isDirectlyConnected() ? "directly" : "indirectly") + " connected to network switch " + bridge.getObjectName() + " port " + iface.getObjectName());
 				
 				IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 				IViewPart part = page.showView(ID);

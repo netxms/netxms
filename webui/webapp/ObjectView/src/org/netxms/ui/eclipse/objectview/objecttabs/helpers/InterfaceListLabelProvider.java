@@ -100,6 +100,10 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 				return StatusDisplayInfo.getStatusText(iface.getStatus());
 			case InterfacesTab.COLUMN_TYPE:
 				return Integer.toString(iface.getIfType());
+			case InterfacesTab.COLUMN_MAC_ADDRESS:
+				return iface.getMacAddress().toString();
+			case InterfacesTab.COLUMN_IP_ADDRESS:
+				return iface.getPrimaryIP().isAnyLocalAddress() ? null : iface.getPrimaryIP().getHostAddress();
 		}
 		return null;
 	}

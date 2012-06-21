@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab;
+import org.netxms.ui.eclipse.tools.ComparatorHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -83,6 +84,12 @@ public class InterfaceListComparator extends ViewerComparator
 				break;
 			case InterfacesTab.COLUMN_TYPE:
 				result = iface1.getIfType() - iface2.getIfType();
+				break;
+			case InterfacesTab.COLUMN_MAC_ADDRESS:
+				result = iface1.getMacAddress().compareTo(iface2.getMacAddress());
+				break;
+			case InterfacesTab.COLUMN_IP_ADDRESS:
+				result = ComparatorHelper.compareInetAddresses(iface1.getPrimaryIP(), iface2.getPrimaryIP());
 				break;
 			default:
 				result = 0;

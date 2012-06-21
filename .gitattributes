@@ -2341,6 +2341,7 @@ webui/webapp/Core/src/org/netxms/ui/eclipse/shared/SharedColors.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/shared/SharedIcons.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/tools/ColorCache.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/tools/ColorConverter.java -text
+webui/webapp/Core/src/org/netxms/ui/eclipse/tools/ComparatorHelper.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/tools/ImageCache.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/tools/IntermediateSelectionProvider.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/tools/NumericTextFieldValidator.java -text

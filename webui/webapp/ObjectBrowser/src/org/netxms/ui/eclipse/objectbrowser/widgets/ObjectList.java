@@ -18,6 +18,9 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.widgets;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
@@ -35,6 +38,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -63,6 +67,7 @@ public class ObjectList extends Composite
 	private Text filterText;
 	private NXCListener sessionListener = null;
 	private NXCSession session = null;
+	private int changeCount = 0;
 	
 	/**
 	 * @param parent
@@ -123,15 +128,24 @@ public class ObjectList extends Composite
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
-				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
+				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) || (n.getCode() == NXCNotification.OBJECT_DELETED))
 				{
-					getDisplay().asyncExec(new Runnable() {
+					changeCount++;
+					new UIJob(getDisplay(), "Update object list") {
 						@Override
-						public void run()
+						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							objectList.setInput(session.getAllObjects());
+							if (ObjectList.this.isDisposed() || objectList.getControl().isDisposed())
+								return Status.OK_STATUS;
+							
+							changeCount--;
+							if (changeCount <= 0)
+							{
+								objectList.setInput(session.getAllObjects());
+							}
+							return Status.OK_STATUS;
 						}
-					});
+					}.schedule(500);
 				}
 			}
 		};
