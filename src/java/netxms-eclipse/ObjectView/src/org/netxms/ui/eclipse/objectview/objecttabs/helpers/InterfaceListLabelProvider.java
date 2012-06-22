@@ -23,10 +23,13 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.NXCSession;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Label provider for interface list
@@ -36,6 +39,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	private static final String[] ifaceExpectedState = { "UP", "DOWN", "IGNORE" };
 	
 	private Node node = null;
+	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -103,8 +107,48 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 				return iface.getMacAddress().toString();
 			case InterfacesTab.COLUMN_IP_ADDRESS:
 				return iface.getPrimaryIP().isAnyLocalAddress() ? null : iface.getPrimaryIP().getHostAddress();
+			case InterfacesTab.COLUMN_PEER_NAME:
+				return getPeerName(iface);
+			case InterfacesTab.COLUMN_PEER_MAC_ADDRESS:
+				return getPeerMacAddress(iface);
+			case InterfacesTab.COLUMN_PEER_IP_ADDRESS:
+				return getPeerIpAddress(iface);
 		}
 		return null;
+	}
+
+	/**
+	 * @param iface
+	 * @return
+	 */
+	private String getPeerIpAddress(Interface iface)
+	{
+		Node peer = (Node)session.findObjectById(iface.getPeerNodeId(), Node.class);
+		if (peer == null)
+			return null;
+		if (peer.getPrimaryIP().isAnyLocalAddress())
+			return null;
+		return peer.getPrimaryIP().getHostAddress();
+	}
+
+	/**
+	 * @param iface
+	 * @return
+	 */
+	private String getPeerMacAddress(Interface iface)
+	{
+		Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
+		return (peer != null) ? peer.getMacAddress().toString() : null;
+	}
+
+	/**
+	 * @param iface
+	 * @return
+	 */
+	private String getPeerName(Interface iface)
+	{
+		Node peer = (Node)session.findObjectById(iface.getPeerNodeId(), Node.class);
+		return (peer != null) ? peer.getObjectName() : null;
 	}
 
 	/**
@@ -126,6 +170,28 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 		{
 			case InterfacesTab.COLUMN_STATUS:
 				return StatusDisplayInfo.getStatusColor(iface.getStatus());
+			case InterfacesTab.COLUMN_OPER_STATE:
+				switch(iface.getOperState())
+				{
+					case Interface.OPER_STATE_UP:
+						return StatusDisplayInfo.getStatusColor(Severity.NORMAL);
+					case Interface.OPER_STATE_DOWN:
+						return StatusDisplayInfo.getStatusColor((iface.getAdminState() == Interface.ADMIN_STATE_DOWN) ? Severity.DISABLED : Severity.CRITICAL);
+					case Interface.OPER_STATE_TESTING:
+						return StatusDisplayInfo.getStatusColor(Severity.TESTING);
+				}
+				return StatusDisplayInfo.getStatusColor(Severity.UNKNOWN);
+			case InterfacesTab.COLUMN_ADMIN_STATE:
+				switch(iface.getAdminState())
+				{
+					case Interface.ADMIN_STATE_UP:
+						return StatusDisplayInfo.getStatusColor(Severity.NORMAL);
+					case Interface.ADMIN_STATE_DOWN:
+						return StatusDisplayInfo.getStatusColor(Severity.DISABLED);
+					case Interface.ADMIN_STATE_TESTING:
+						return StatusDisplayInfo.getStatusColor(Severity.TESTING);
+				}
+				return StatusDisplayInfo.getStatusColor(Severity.UNKNOWN);
 			default:
 				return null;
 		}
