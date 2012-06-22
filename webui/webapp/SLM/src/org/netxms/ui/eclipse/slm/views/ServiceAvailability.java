@@ -110,7 +110,6 @@ public class ServiceAvailability extends ViewPart
 							refresh();
 						}
 					});
-					refresh();
 				}
 			}
 		};
