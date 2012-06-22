@@ -52,12 +52,15 @@ public class InterfacesTab extends ObjectTab
 	public static final int COLUMN_DESCRIPTION = 6;
 	public static final int COLUMN_MAC_ADDRESS = 7;
 	public static final int COLUMN_IP_ADDRESS = 8;
-	public static final int COLUMN_ADMIN_STATE = 9;
-	public static final int COLUMN_OPER_STATE = 10;
-	public static final int COLUMN_EXPECTED_STATE = 11;
-	public static final int COLUMN_STATUS = 12;
-	public static final int COLUMN_8021X_PAE_STATE = 13;
-	public static final int COLUMN_8021X_BACKEND_STATE = 14;
+	public static final int COLUMN_PEER_NAME = 9;
+	public static final int COLUMN_PEER_MAC_ADDRESS = 10;
+	public static final int COLUMN_PEER_IP_ADDRESS = 11;
+	public static final int COLUMN_ADMIN_STATE = 12;
+	public static final int COLUMN_OPER_STATE = 13;
+	public static final int COLUMN_EXPECTED_STATE = 14;
+	public static final int COLUMN_STATUS = 15;
+	public static final int COLUMN_8021X_PAE_STATE = 16;
+	public static final int COLUMN_8021X_BACKEND_STATE = 17;
 	
 	private SortableTableViewer viewer;
 	private InterfaceListLabelProvider labelProvider;
@@ -68,9 +71,10 @@ public class InterfacesTab extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		final String[] names = { "ID", "Name", "ifType", "ifIndex", "Slot", "Port", "Description", "MAC Address", "IP Address", 
+		final String[] names = { "ID", "Name", "ifType", "ifIndex", "Slot", "Port", "Description", "MAC Address", 
+		                         "IP Address", "Peer Node", "Peer MAC", "Peer IP", 
 				                   "Admin State", "Oper State", "Exp. State", "Status", "802.1x PAE", "802.1x Backend" };
-		final int[] widths = { 60, 150, 90, 70, 70, 70, 150, 90, 90, 80, 80, 80, 80, 80, 80 };
+		final int[] widths = { 60, 150, 90, 70, 70, 70, 150, 100, 90, 150, 100, 90, 80, 80, 80, 80, 80, 80 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		labelProvider = new InterfaceListLabelProvider();
 		viewer.setLabelProvider(labelProvider);

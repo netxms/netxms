@@ -2241,12 +2241,14 @@ webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmListFilter.j
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmListLabelProvider.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/Messages.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/OpenAlarmBrowser.java -text
+webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/ShowObjectAlarms.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/dialogs/EditCommentDialog.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages.properties -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages_es.properties -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/objecttabs/AlarmTab.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmBrowser.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmComments.java -text
+webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/ObjectAlarmBrowser.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmCommentsEditor.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmList.java -text
 webui/webapp/Charts/.settings/org.eclipse.jdt.core.prefs -text
