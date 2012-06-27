@@ -192,7 +192,21 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	{
 		android.view.MenuInflater inflater = getMenuInflater();
 		if (v == lastValuesListView)
-			inflater.inflate(R.menu.last_values_actions, menu);
+		{
+			DciValue value = (DciValue)lastValuesAdapter.getItem(((AdapterView.AdapterContextMenuInfo)menuInfo).position);
+			if (value != null)
+			{
+				switch(value.getDcObjectType())
+				{
+					case DataCollectionObject.DCO_TYPE_ITEM:
+						inflater.inflate(R.menu.last_values_actions, menu);
+						break;
+					case DataCollectionObject.DCO_TYPE_TABLE:
+						inflater.inflate(R.menu.last_values_table_actions, menu);
+						break;
+				}
+			}
+		}
 		else if (v == alarmsListView)
 		{
 			inflater.inflate(R.menu.alarm_actions, menu);
@@ -354,6 +368,8 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 				return drawComparisonChart(DrawBarChart.class);
 			case R.id.pie_chart:
 				return drawComparisonChart(DrawPieChart.class);
+			case R.id.table_last_value:
+				return showTableLastValue(info.position);
 			// Alarms
 			case R.id.acknowledge:
 				alarmsAdapter.acknowledgeItem(((Alarm)alarmsAdapter.getItem(info.position)).getId());
@@ -403,6 +419,23 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			default:
 				return super.onOptionsItemSelected(item);
 		}
+	}
+	
+	/**
+	 * Show last value for table DCI
+	 * 
+	 * @param position
+	 * @return
+	 */
+	private boolean showTableLastValue(int position)
+	{
+		DciValue value = (DciValue)lastValuesAdapter.getItem(position);
+		Intent newIntent = new Intent(this, TableLastValues.class);
+		newIntent.putExtra("nodeId", (int)nodeId);
+		newIntent.putExtra("dciId", (int)value.getId());
+		newIntent.putExtra("description", value.getDescription());
+		startActivity(newIntent);
+		return true;
 	}
 
 	/**

@@ -3,9 +3,9 @@
  */
 package org.netxms.ui.android.main.activities;
 
-import java.text.DateFormat;
-import java.util.Date;
 import org.netxms.client.NodePollListener;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.android.R;
 import android.content.ComponentName;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -17,7 +17,6 @@ import android.text.SpannableString;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
-import android.view.View;
 import android.widget.TextView;
 
 /**
@@ -26,6 +25,7 @@ import android.widget.TextView;
 public class NodePollerActivity extends AbstractClientActivity
 {
 	private static final String LOG_TAG = "nxclient/NodePoller";
+	private static final String[] POLL_NAME = { "", "Status", "Configuration", "Interface", "Topology" };
 	
 	private long nodeId;
 	private int pollType;
@@ -41,11 +41,12 @@ public class NodePollerActivity extends AbstractClientActivity
 		nodeId = getIntent().getIntExtra("nodeId", 0);
 		pollType = getIntent().getIntExtra("pollType", 0);
 		
-		textView = new TextView(this);
-		textView.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+		setContentView(R.layout.node_poller);
+		
+		textView = (TextView)findViewById(R.id.TextView);
 		textView.setTypeface(Typeface.MONOSPACE);
 		textView.setMovementMethod(new ScrollingMovementMethod());
-		setContentView(textView);
+		textView.setHorizontallyScrolling(true);
 	}
 	
 	/* (non-Javadoc)
@@ -55,6 +56,9 @@ public class NodePollerActivity extends AbstractClientActivity
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
 		super.onServiceConnected(name, binder);
+		GenericObject object = service.findObjectById(nodeId);
+		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
+		title.setText(POLL_NAME[pollType] + " poll: " + ((object != null) ? object.getObjectName() : ("[" + Long.toString(nodeId) + "]")));
 		restart();
 	}
 
@@ -133,8 +137,8 @@ public class NodePollerActivity extends AbstractClientActivity
 	 */
 	private void addPollerMessage(String message)
 	{
-		Date now = new Date();
-		textView.append("[" + DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(now) + "] ");
+		//Date now = new Date();
+		//textView.append("[" + DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(now) + "] ");
 		
 		int index = message.indexOf(0x7F);
 		if (index != -1)

@@ -101,14 +101,17 @@ android/src/console/res/layout/graphics.xml -text
 android/src/console/res/layout/homescreen.xml -text
 android/src/console/res/layout/last_values.xml -text
 android/src/console/res/layout/node_info.xml -text
+android/src/console/res/layout/node_poller.xml -text
 android/src/console/res/layout/node_view.xml -text
 android/src/console/res/layout/screen_header_full.xml -text
 android/src/console/res/layout/screen_header_small.xml -text
+android/src/console/res/layout/table_last_values.xml -text
 android/src/console/res/menu-v11/last_values_actions.xml -text
 android/src/console/res/menu-v11/main_menu.xml -text
 android/src/console/res/menu/alarm_actions.xml -text
 android/src/console/res/menu/connectionpoint_actions.xml -text
 android/src/console/res/menu/last_values_actions.xml -text
+android/src/console/res/menu/last_values_table_actions.xml -text
 android/src/console/res/menu/main_menu.xml -text
 android/src/console/res/menu/node_actions.xml -text
 android/src/console/res/values-v11/styles.xml -text
@@ -137,6 +140,7 @@ android/src/console/src/org/netxms/ui/android/main/activities/LastValues.java -t
 android/src/console/src/org/netxms/ui/android/main/activities/NodeBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/NodeInfo.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/NodePollerActivity.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/TableLastValues.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/helpers/XmlDateConverter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/ActivityListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/AlarmListAdapter.java -text
