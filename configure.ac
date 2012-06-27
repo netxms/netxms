@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.1], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.2], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -35,6 +35,7 @@ PLATFORM=`uname -s`
 COMPONENTS=""
 DISABLE_ICONV="no"
 DISABLE_ENCRYPTION="no"
+DISABLE_LMSENSORS="no"
 ENABLE_DEBUG="no"
 STATIC_BUILD="no"
 ALL_STATIC="no"
@@ -310,6 +311,12 @@ AC_ARG_ENABLE(encryption,
 [AS_HELP_STRING(--disable-encryption,disable encryption support)],
 [
 	DISABLE_ENCRYPTION="yes"
+])
+
+AC_ARG_ENABLE(lmsensors,
+[AS_HELP_STRING(--disable-lmsensors,disable lmsensors support)],
+[
+	DISABLE_LMSENSORS="yes"
 ])
 
 AC_ARG_ENABLE(unicode,
@@ -1080,13 +1087,15 @@ if test "x$HAVE_LIBTRE" = "xno"; then
 	AC_DEFINE(TRE_APPROX, 1, [ Define if you want to enable approximate matching functionality. ])
 fi
 
-HAVE_LMSENSORS=yes
-AC_CHECK_HEADER(sensors/sensors.h,,HAVE_LMSENSORS=no)
-if test "x$HAVE_LMSENSORS" = "xyes"; then
-   AC_CHECK_LIB(sensors, sensors_init, [ DUMMY="" ], [ HAVE_LMSENSORS=no ])
-fi
-if test "x$HAVE_LMSENSORS" = "xyes"; then
-	SUBAGENT_DIRS="$SUBAGENT_DIRS lmsensors"
+if test "x$DISABLE_LMSENSORS" = "xno"; then
+	HAVE_LMSENSORS=yes
+	AC_CHECK_HEADER(sensors/sensors.h,,HAVE_LMSENSORS=no)
+	if test "x$HAVE_LMSENSORS" = "xyes"; then
+		AC_CHECK_LIB(sensors, sensors_init, [ DUMMY="" ], [ HAVE_LMSENSORS=no ])
+	fi
+	if test "x$HAVE_LMSENSORS" = "xyes"; then
+		SUBAGENT_DIRS="$SUBAGENT_DIRS lmsensors"
+	fi
 fi
 
 #--------------------------------------------------------------------
