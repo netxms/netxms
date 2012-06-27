@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Stack;
 
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.NodePoller;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
@@ -45,6 +46,7 @@ public class NodeBrowser extends AbstractClientActivity
 	private GenericObject currentParent = null;
 	private Stack<GenericObject> containerPath = new Stack<GenericObject>();
 	private long[] savedPath = null;
+	private GenericObject selectedObject = null;
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
@@ -163,9 +165,9 @@ public class NodeBrowser extends AbstractClientActivity
 		inflater.inflate(R.menu.node_actions, menu);
 		
 		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
-		GenericObject object = (GenericObject)adapter.getItem(info.position);
+		selectedObject = (GenericObject)adapter.getItem(info.position);
 
-		if (object instanceof Node)
+		if (selectedObject instanceof Node)
 		{
 			// add available tools to context menu
 			List<ObjectTool> tools = service.getTools();
@@ -177,7 +179,7 @@ public class NodeBrowser extends AbstractClientActivity
 				{
 					tool = tl.next();
 					if ((tool.getType() == ObjectTool.TYPE_ACTION || tool.getType() == ObjectTool.TYPE_SERVER_COMMAND) &&
-					    tool.isApplicableForNode((Node)object))
+					    tool.isApplicableForNode((Node)selectedObject))
 					{
 						menu.add(Menu.NONE, (int)tool.getId(), 0, tool.getDisplayName());
 					}
@@ -185,8 +187,22 @@ public class NodeBrowser extends AbstractClientActivity
 			}
 		}
 		else
-			menu.getItem(0).setVisible(false); 
+		{
+			hideMenuItem(menu, R.id.find_switch_port);
+			hideMenuItem(menu, R.id.poll);
+		}
 
+	}
+
+	/**
+	 * @param menu
+	 * @param findSwitchPort
+	 */
+	private void hideMenuItem(ContextMenu menu, int id)
+	{
+		MenuItem item = menu.findItem(id);
+		if (item != null)
+			item.setVisible(false);
 	}
 
 	/* (non-Javadoc)
@@ -195,30 +211,54 @@ public class NodeBrowser extends AbstractClientActivity
 	@Override
 	public boolean onContextItemSelected(MenuItem item)
 	{
-		// get selected item
-		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
-		final GenericObject object = (GenericObject)adapter.getItem(info.position);
-
+		if (selectedObject == null)
+			return super.onContextItemSelected(item);
+		
 		// process menu selection
 		switch(item.getItemId())
 		{
 			case R.id.find_switch_port:
-				Intent newIntent = new Intent(this, ConnectionPointBrowser.class);
-				newIntent.putExtra("nodeId", (int)object.getObjectId());
-				startActivity(newIntent);
+				Intent fspIntent = new Intent(this, ConnectionPointBrowser.class);
+				fspIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+				startActivity(fspIntent);
 				return true;
 			case R.id.view_alarms:
-				new SyncMissingChildsTask().execute(new Integer[] { (int)object.getObjectId() });
+				new SyncMissingChildsTask().execute(new Integer[] { (int)selectedObject.getObjectId() });
 				return true;
 			case R.id.unmanage:
-				adapter.unmanageObject(object.getObjectId());
+				adapter.unmanageObject(selectedObject.getObjectId());
 				refreshList();
 				return true;
 			case R.id.manage:
-				adapter.manageObject(object.getObjectId());
+				adapter.manageObject(selectedObject.getObjectId());
 				refreshList();
 				return true;
+			case R.id.poll_status:
+				Intent psIntent = new Intent(this, NodePollerActivity.class);
+				psIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+				psIntent.putExtra("pollType", NodePoller.STATUS_POLL);
+				startActivity(psIntent);
+				return true;
+			case R.id.poll_configuration:
+				Intent pcIntent = new Intent(this, NodePollerActivity.class);
+				pcIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+				pcIntent.putExtra("pollType", NodePoller.CONFIGURATION_POLL);
+				startActivity(pcIntent);
+				return true;
+			case R.id.poll_topology:
+				Intent ptIntent = new Intent(this, NodePollerActivity.class);
+				ptIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+				ptIntent.putExtra("pollType", NodePoller.TOPOLOGY_POLL);
+				startActivity(ptIntent);
+				return true;
+			case R.id.poll_interfaces:
+				Intent piIntent = new Intent(this, NodePollerActivity.class);
+				piIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+				piIntent.putExtra("pollType", NodePoller.INTERFACE_POLL);
+				startActivity(piIntent);
+				return true;
 			default:
+				break;
 		}
 
 		// if we didn't match static menu, check if it was some of tools
@@ -232,8 +272,8 @@ public class NodeBrowser extends AbstractClientActivity
 					if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
 					{	
 						String message = tool.getConfirmationText()
-								.replaceAll("%OBJECT_NAME%", object.getObjectName())
-								.replaceAll("%OBJECT_IP_ADDR%", object.getPrimaryIP().getHostAddress());
+								.replaceAll("%OBJECT_NAME%", selectedObject.getObjectName())
+								.replaceAll("%OBJECT_IP_ADDR%", selectedObject.getPrimaryIP().getHostAddress());
 						new AlertDialog.Builder(this)
 							.setIcon(android.R.drawable.ic_dialog_alert)
 							.setTitle(R.string.confirm_tool_execution)
@@ -243,14 +283,14 @@ public class NodeBrowser extends AbstractClientActivity
 								@Override
 								public void onClick(DialogInterface dialog, int which)
 								{
-									service.executeAction(object.getObjectId(), tool.getData());
+									service.executeAction(selectedObject.getObjectId(), tool.getData());
 								}
 							})
 							.setNegativeButton(R.string.no, null)
 							.show();
 						return true;
 					}
-					service.executeAction(object.getObjectId(), tool.getData());
+					service.executeAction(selectedObject.getObjectId(), tool.getData());
 					return true;
 				}
 			}

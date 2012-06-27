@@ -31,7 +31,8 @@ public class ConnectTask extends Thread
 	private Integer port;
 	private String login;
 	private String password;
-	private Boolean encrypt;
+	private boolean encrypt;
+	private boolean forceReconnect;
 
 	/**
 	 * @param service
@@ -49,13 +50,14 @@ public class ConnectTask extends Thread
 	 * @param password
 	 * @param encrypt
 	 */
-	public void execute(String server, Integer port, String login, String password, Boolean encrypt)
+	public void execute(String server, Integer port, String login, String password, boolean encrypt, boolean forceReconnect)
 	{
 		this.server = server;
 		this.port = port;
 		this.login = login;
 		this.password = password;
 		this.encrypt = encrypt;
+		this.forceReconnect = forceReconnect;
 		start();
 	}
 
@@ -68,28 +70,39 @@ public class ConnectTask extends Thread
 	public void run()
 	{
 		if (service != null)
+		{
 			if (isInternetOn())
 			{
 				service.setConnectionStatus(ConnectionStatus.CS_INPROGRESS, "");
 				NXCSession session = service.getSession();
 				if (session != null)
-					try
+				{
+					if (forceReconnect)
 					{
-						session.checkConnection();
-						service.setConnectionStatus(ConnectionStatus.CS_ALREADYCONNECTED, session.getServerAddress());
-					}
-					catch (NXCException e)
-					{
-						Log.d(TAG, "NXCException in checking connection", e);
-						service.onError(e.getLocalizedMessage());
+						session.disconnect();
 						session = null;
 					}
-					catch (IOException e)
+					else
 					{
-						Log.d(TAG, "IOException in checking connection", e);
-						service.onError(e.getLocalizedMessage());
-						session = null;
+						try
+						{
+							session.checkConnection();
+							service.setConnectionStatus(ConnectionStatus.CS_ALREADYCONNECTED, session.getServerAddress());
+						}
+						catch (NXCException e)
+						{
+							Log.d(TAG, "NXCException in checking connection", e);
+							service.onError(e.getLocalizedMessage());
+							session = null;
+						}
+						catch (IOException e)
+						{
+							Log.d(TAG, "IOException in checking connection", e);
+							service.onError(e.getLocalizedMessage());
+							session = null;
+						}
 					}
+				}
 				if (session == null)	// Already null or invalidated
 				{	
 					DisplayMetrics metrics = new DisplayMetrics();
@@ -120,8 +133,11 @@ public class ConnectTask extends Thread
 				Log.d(TAG, "No internet connection");
 				service.setConnectionStatus(ConnectionStatus.CS_NOCONNECTION, "");
 			}
+		}
 		else
+		{
 			Log.d(TAG, "Service unavailable");
+		}
 	}
 
 	/**

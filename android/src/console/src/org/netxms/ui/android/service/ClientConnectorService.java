@@ -112,8 +112,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 		lastAlarmIdNotified = PreferenceManager.getDefaultSharedPreferences(this).getInt(LASTALARM_KEY, 0);
 		
-		receiver = new BroadcastReceiver()
-		{
+		receiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent)
 			{
@@ -124,7 +123,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		};
 		registerReceiver(receiver, new IntentFilter(Intent.ACTION_TIME_TICK));
 		
-		reconnect();
+		reconnect(true);
 	}
 
 	/*
@@ -137,7 +136,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		if ((intent != null) && (intent.getAction() != null))
 			if (intent.getAction().equals(ACTION_RECONNECT))
-				reconnect();
+				reconnect(false);
 			else if (intent.getAction().equals(ACTION_DISCONNECT))
 				onDisconnect();
 		return super.onStartCommand(intent, flags, startId);
@@ -166,7 +165,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * 
+	 * Shutdown background service
 	 */
 	public void shutdown()
 	{
@@ -182,9 +181,9 @@ public class ClientConnectorService extends Service implements SessionListener
 	public void savePreferences()
 	{
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this); 
-	    SharedPreferences.Editor editor = prefs.edit(); 
-	    editor.putInt(LASTALARM_KEY, (int)lastAlarmIdNotified); 
-	    editor.commit(); 
+		SharedPreferences.Editor editor = prefs.edit(); 
+		editor.putInt(LASTALARM_KEY, (int)lastAlarmIdNotified); 
+		editor.commit(); 
 	}
 	
 	/**
@@ -289,9 +288,9 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 	
 	/**
-	 * Reconnect to server if needed
+	 * Reconnect to server. If forceReconnect set to false
 	 */
-	private void reconnect()
+	public void reconnect(boolean forceReconnect)
 	{
 		synchronized(mutex)
 		{
@@ -304,7 +303,8 @@ public class ClientConnectorService extends Service implements SessionListener
 				                              Integer.parseInt(sp.getString("connection.port", "4701")), 
 				                              sp.getString("connection.login", ""),
 				                              sp.getString("connection.password", ""),
-				                              sp.getBoolean("connection.encrypt", false));
+				                              sp.getBoolean("connection.encrypt", false),
+				                              forceReconnect);
 			}
 		}
 	}

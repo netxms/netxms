@@ -89,9 +89,9 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
 		super.onCreateOptionsMenu(menu);
-		menu.add(Menu.NONE, R.string.exit, Menu.NONE, getString(R.string.exit));
-		menu.findItem(R.string.exit).setIcon(android.R.drawable.ic_menu_close_clear_cancel);
 		menu.removeItem(android.R.id.home);
+		menu.add(Menu.NONE, R.string.reconnect, Menu.NONE, getString(R.string.reconnect)).setIcon(android.R.drawable.ic_menu_revert);
+		menu.add(Menu.NONE, R.string.exit, Menu.NONE, getString(R.string.exit)).setIcon(android.R.drawable.ic_menu_close_clear_cancel);
 		return true;
 	}
 
@@ -105,6 +105,10 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	{
 		switch(item.getItemId())
 		{
+			case R.string.reconnect:
+				if (service != null)
+					service.reconnect(true);
+				return true;
 			case R.string.exit:
 				if (service != null)
 					service.shutdown();

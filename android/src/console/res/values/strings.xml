@@ -133,4 +133,9 @@
 	<string name="last_values_bar_chart">Bar Chart</string>
 	<string name="dashboard_title">Dashboards</string>
 	<string name="table_value_placeholder">&lt;&lt; TABLE &gt;&gt;</string>
+	<string name="menu_poll">Poll</string>
+	<string name="menu_poll_status">Status</string>
+	<string name="menu_poll_configuration">Configuration</string>
+	<string name="menu_poll_topology">Topology</string>
+	<string name="menu_poll_interfaces">Interface names</string>
 </resources>

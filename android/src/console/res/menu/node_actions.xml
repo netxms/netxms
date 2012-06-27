@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu
   xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/find_switch_port" android:enabled="true" android:visible="true" android:title="@string/find_switch_port"></item><item android:id="@+id/view_alarms" android:title="@string/view_alarms"></item><item android:title="@string/unmanage" android:id="@+id/unmanage"></item>
+    <item android:id="@+id/find_switch_port" android:enabled="true" android:visible="true" android:title="@string/find_switch_port"></item>
+    <item android:id="@+id/view_alarms" android:title="@string/view_alarms"></item>
+    <item android:title="@string/unmanage" android:id="@+id/unmanage"></item>
     <item android:title="@string/manage" android:id="@+id/manage"></item>
-    
-       
+    <item android:id="@+id/poll" android:title="@string/menu_poll">
+        <menu>
+            <item android:id="@+id/poll_status" android:title="@string/menu_poll_status"/>
+            <item android:id="@+id/poll_configuration" android:title="@string/menu_poll_configuration"/>
+            <item android:id="@+id/poll_topology" android:title="@string/menu_poll_topology"/>
+            <item android:id="@+id/poll_interfaces" android:title="@string/menu_poll_interfaces"/>
+        </menu>
+    </item>
 </menu>
