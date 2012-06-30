@@ -3118,9 +3118,12 @@ webui/webapp/ObjectView/icons/restart.png -text
 webui/webapp/ObjectView/icons/shutdown.png -text
 webui/webapp/ObjectView/icons/wol.png -text
 webui/webapp/ObjectView/plugin.xml -text
+webui/webapp/ObjectView/schema/org.netxms.ui.eclipse.objectview.objectDetailsProvider.exsd -text
 webui/webapp/ObjectView/schema/org.netxms.ui.eclipse.objectview.tabs.exsd -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/Activator.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowObjectDetailsView.java -text
+webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowStatusMap.java -text
+webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/api/ObjectDetailsProvider.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ComponentsTab.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectOverview.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectTab.java -text
@@ -3135,7 +3138,10 @@ webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/helpers/ComponentTreeContentProvider.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/helpers/ComponentTreeLabelProvider.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/services/SourceProvider.java -text
+webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/views/ObjectStatusMapView.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/views/TabbedObjectView.java -text
+webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/NodeStatusWidget.java -text
+webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/ObjectStatusMap.java -text
 webui/webapp/PerfView/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/PerfView/META-INF/MANIFEST.MF -text
 webui/webapp/PerfView/build.properties -text
