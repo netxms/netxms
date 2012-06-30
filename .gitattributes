@@ -1580,9 +1580,12 @@ src/java/netxms-eclipse/ObjectView/icons/restart.png -text
 src/java/netxms-eclipse/ObjectView/icons/shutdown.png -text
 src/java/netxms-eclipse/ObjectView/icons/wol.png -text
 src/java/netxms-eclipse/ObjectView/plugin.xml -text
+src/java/netxms-eclipse/ObjectView/schema/org.netxms.ui.eclipse.objectview.objectDetailsProvider.exsd -text
 src/java/netxms-eclipse/ObjectView/schema/org.netxms.ui.eclipse.objectview.tabs.exsd -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/Activator.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowObjectDetailsView.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowStatusMap.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/api/ObjectDetailsProvider.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ClusterTab.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ComponentsTab.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectOverview.java -text
@@ -1599,7 +1602,10 @@ src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objectta
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/helpers/ComponentTreeContentProvider.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/helpers/ComponentTreeLabelProvider.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/services/SourceProvider.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/views/ObjectStatusMapView.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/views/TabbedObjectView.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/NodeStatusWidget.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/ObjectStatusMap.java -text
 src/java/netxms-eclipse/PerfView/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/PerfView/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/PerfView/build.properties -text

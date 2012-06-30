@@ -493,7 +493,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		gc.setForeground(StatusDisplayInfo.getStatusColor(object.getStatus()));
 		gc.drawPolyline(arrow);
 
-
 		gc.setForeground(LABEL_TEXT);
 		gc.drawImage(image, rect.x + LABEL_X_MARGIN, rect.y + LABEL_Y_MARGIN);
 		gc.drawText(text, rect.x + LABEL_X_MARGIN + image.getImageData().width + LABEL_SPACING, rect.y + LABEL_Y_MARGIN);

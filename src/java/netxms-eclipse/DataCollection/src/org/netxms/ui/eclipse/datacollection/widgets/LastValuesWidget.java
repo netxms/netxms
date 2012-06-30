@@ -201,7 +201,7 @@ public class LastValuesWidget extends Composite
 	}
 	
 	/**
-	 * Create pop-up menu for alarm list
+	 * Create pop-up menu
 	 */
 	private void createPopupMenu()
 	{
