@@ -22,8 +22,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -61,7 +63,11 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
+import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
@@ -81,6 +87,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	private NXCSession session;
 	private Composite dataArea;
 	private List<Composite> sections = new ArrayList<Composite>();
+	private Map<Long, NodeStatusWidget> nodes = new HashMap<Long, NodeStatusWidget>();
 	private ISelection selection = null;
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 	private MenuManager menuManager;
@@ -100,6 +107,24 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		
 		this.viewPart = viewPart;
 		session = (NXCSession)ConsoleSharedData.getSession();
+		final SessionListener sessionListener = new SessionListener() {
+			@Override
+			public void notificationHandler(SessionNotification n)
+			{
+				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
+					onObjectChange((GenericObject)n.getObject());
+				else if (n.getCode() == NXCNotification.OBJECT_DELETED)
+					onObjectDelete(n.getSubCode());
+			}
+		};
+		session.addListener(sessionListener);
+		addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				session.removeListener(sessionListener);
+			}
+		});
 		
 		setBackground(SharedColors.WHITE);
 		setExpandHorizontal(true);
@@ -187,11 +212,19 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			s.dispose();
 		sections.clear();
 		
+		synchronized(nodes)
+		{
+			nodes.clear();
+		}
+		
 		if (groupObjects)
 			buildSection(rootObjectId, "");
 		else
 			buildFlatView();
-		layout(true, true);
+		dataArea.layout(true, true);
+		
+		Rectangle r = getClientArea();
+		setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
 	}
 	
 	/**
@@ -351,6 +384,11 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		// Register menu for extension.
 		if (viewPart != null)
 			viewPart.getSite().registerContextMenu(menuManager, this);
+		
+		synchronized(nodes)
+		{
+			nodes.put(node.getObjectId(), w);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -453,6 +491,63 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			{
 				p.provideDetails(node, viewPart);
 				break;
+			}
+		}
+	}
+	
+	/**
+	 * Handle object change
+	 */
+	private void onObjectChange(final GenericObject object)
+	{
+		if (!((object instanceof Node) || (object instanceof Container) || (object instanceof Cluster) || (object instanceof ServiceRoot)))
+			return;
+		
+		synchronized(nodes)
+		{
+			final NodeStatusWidget w = nodes.get(object.getObjectId());
+			if (w != null)
+			{
+				getDisplay().asyncExec(new Runnable() {
+					@Override
+					public void run()
+					{
+						if (!w.isDisposed())
+							w.updateObject((Node)object);
+					}
+				});
+			}
+			else if ((object.getObjectId() == rootObjectId) || object.isChildOf(rootObjectId))
+			{
+				getDisplay().asyncExec(new Runnable() {
+					@Override
+					public void run()
+					{
+						if (!isDisposed())
+							refresh();
+					}
+				});
+			}
+		}
+	}
+	
+	/**
+	 * Handle object delete
+	 */
+	private void onObjectDelete(long objectId)
+	{
+		synchronized(nodes)
+		{
+			if (nodes.containsKey(objectId))
+			{
+				getDisplay().asyncExec(new Runnable() {
+					@Override
+					public void run()
+					{
+						if (!isDisposed())
+							refresh();
+					}
+				});
 			}
 		}
 	}

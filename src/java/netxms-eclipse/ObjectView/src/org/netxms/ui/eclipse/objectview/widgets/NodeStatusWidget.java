@@ -91,4 +91,13 @@ public class NodeStatusWidget extends Canvas implements PaintListener
 		gc.dispose();
 		return new Point(160, h + 8);
 	}
+	
+	/**
+	 * @param node
+	 */
+	public void updateObject(Node node)
+	{
+		this.node = node;
+		redraw();
+	}
 }
