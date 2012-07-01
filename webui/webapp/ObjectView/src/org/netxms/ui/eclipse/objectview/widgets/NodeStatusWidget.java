@@ -35,6 +35,8 @@ import org.netxms.ui.eclipse.shared.SharedColors;
  */
 public class NodeStatusWidget extends Canvas implements PaintListener
 {
+	private static final long serialVersionUID = 1L;
+
 	private Node node;
 	
 	/**
@@ -75,8 +77,8 @@ public class NodeStatusWidget extends Canvas implements PaintListener
 		rect.y += 4;
 		rect.width -= 8;
 		rect.height -= 8;
-		e.gc.setClipping(rect);
-		int h = e.gc.textExtent(text, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).y;
+		//e.gc.setClipping(rect);
+		int h = e.gc.textExtent(text).y;
 		e.gc.drawText(text, rect.x, rect.y + (rect.height - h) / 2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
 	}
 
@@ -87,8 +89,17 @@ public class NodeStatusWidget extends Canvas implements PaintListener
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
 		GC gc = new GC(getShell());
-		int h = gc.textExtent("MMM\nMMM", SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).y;
+		int h = gc.textExtent("MMM\nMMM").y;
 		gc.dispose();
 		return new Point(160, h + 8);
+	}
+	
+	/**
+	 * @param node
+	 */
+	public void updateObject(Node node)
+	{
+		this.node = node;
+		redraw();
 	}
 }

@@ -160,5 +160,13 @@
          </action>
       </objectContribution>
    </extension>
+   <extension
+         point="org.netxms.ui.eclipse.objectview.objectDetailsProvider">
+      <provider
+            class="org.netxms.ui.eclipse.alarmviewer.AlarmDetailsProvider"
+            name="Alarm Details Provider"
+            priority="255">
+      </provider>
+   </extension>
 
 </plugin>

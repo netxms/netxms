@@ -6,8 +6,10 @@
 	- In port view ports are colored according to physical port state
 	- Interface IP shown in connection point search results
 	- Interface IP and MAC shown in "Interfaces" tab
+	- Added "Status Map" view
 - Android client:
 	- Dashboards implemented
+	- Node status/configuration/topology poll implemented
 - NXSL:
 	- Global variables can be declared in script code
 	- New function: GetObjectParents

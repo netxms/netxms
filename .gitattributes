@@ -2249,6 +2249,7 @@ webui/webapp/AlarmViewer/icons/user.png -text
 webui/webapp/AlarmViewer/plugin.xml -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/Activator.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmComparator.java -text
+webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmDetailsProvider.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmListFilter.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmListLabelProvider.java -text
 webui/webapp/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/Messages.java -text
