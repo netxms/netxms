@@ -65,6 +65,7 @@ mibs_DATA = \
 	COSINE-GLOBAL-REG.txt \
 	COSINE-InVision-MIB.txt \
 	COSINE-ORION-MIB.txt \
+        Dell-Vendor-MIB.txt \
 	DIGIUM-MIB.txt \
 	DS1-MIB.txt \
 	DS3-MIB.txt \
@@ -118,6 +119,7 @@ mibs_DATA = \
         IPV6-FLOW-LABEL-MIB.txt \
 	IPV6-TC.txt \
 	JUNIPER-IVE-MIB.txt \
+        LANNET-MIB.txt \
 	LLDP-MIB.txt \
 	LLDP-V2-MIB.txt \
 	LLDP-V2-TC-MIB.txt \
@@ -155,6 +157,19 @@ mibs_DATA = \
 	PowerNet-MIB.txt \
 	Printer-MIB.txt \
 	Q-BRIDGE-MIB.txt \
+        RADLAN-CPU-COUNTERS-MIB.txt \
+        RADLAN-Dell-Private-MIB.txt \
+        RADLAN-HWENVIROMENT.txt \
+        RADLAN-MIB.txt \
+        RADLAN-PHY-MIB.txt \
+        RADLAN-Physicaldescription-MIB.txt \
+        RADLAN-rlInterfaces.txt \
+        RADLAN-rndMng.txt \
+        RADLAN-SENSORENTMIB.txt \
+        RADLAN-SNMP-MIB.txt \
+        RADLAN-SNMPv2.txt \
+        RADLAN-TRUNK-MIB.txt \
+        RADLAN-vlan-MIB.txt \
 	RAPID-CITY.txt \
 	RAPID-CITY-BAY-STACK.txt \
 	RC-MLT-MIB.txt \

@@ -2,6 +2,8 @@
 * 1.2.2
 *
 
+- Added driver for Dell PowerConnect switches
+- Added MIBs for Dell PowerConnect switches
 - Management console:
 	- In port view ports are colored according to physical port state
 	- Interface IP shown in connection point search results

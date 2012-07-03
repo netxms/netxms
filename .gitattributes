@@ -2133,6 +2133,7 @@ src/server/drivers/cat2900xl/cat2900xl.cpp -text
 src/server/drivers/cat2900xl/cat2900xl.h -text
 src/server/drivers/cat2900xl/cat2900xl.vcproj -text
 src/server/drivers/catalyst/catalyst.vcproj -text
+src/server/drivers/dell-pwc/dell-pwc.vcproj -text
 src/server/drivers/ers8000/Makefile.am -text
 src/server/drivers/ers8000/ers8000.cpp -text
 src/server/drivers/ers8000/ers8000.h -text

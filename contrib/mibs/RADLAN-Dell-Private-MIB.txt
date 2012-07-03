@@ -1,0 +1,137 @@
+RADLAN-Dell-Private-MIB DEFINITIONS ::= BEGIN
+
+-- Title:               RADLAN LOCALIZATION ROS
+--                      This Private MIB is enhancement for Dell Operational mode
+-- Version:             7.43
+-- Date:                01 Nov 2006
+
+IMPORTS
+    rnd                                         FROM RADLAN-MIB
+    DisplayString                               FROM SNMPv2-TC
+    ipAddrEntry                                 FROM IP-MIB
+    OBJECT-TYPE, MODULE-IDENTITY,IpAddress      FROM SNMPv2-SMI;
+
+
+
+rlOperationalMode    MODULE-IDENTITY
+         LAST-UPDATED "200611010000Z"
+         ORGANIZATION "Radlan Computer Communications Ltd."
+         CONTACT-INFO
+                "radlan.com"
+         DESCRIPTION
+                "The private MIB module definition for operational mode."
+         REVISION "200611010000Z"
+         DESCRIPTION
+                "Initial revision."
+        ::= { rnd 121 }
+
+
+rlOperationalModeState OBJECT-TYPE
+    SYNTAX  INTEGER {
+        managed(0),
+        unmanaged(1),
+        secure(2)
+    }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "Show/Set the current Operational Mode state"
+    DEFVAL  { managed }
+    ::= { rlOperationalMode 1 }
+
+
+rlGlobalIpAddrTable OBJECT-TYPE
+    SYNTAX      SEQUENCE  OF RlGlobalIpAddrEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+       "This table is parralel to MIB II IpAddrTable, and is used to
+        add/delete entries to/from that table."
+    ::=  { rlOperationalMode 2}
+
+rlGlobalIpAddrEntry   OBJECT-TYPE
+    SYNTAX      RlGlobalIpAddrEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "The system global IP address information."
+    INDEX  {rlGlobalIpAdIndex}
+    ::=  { rlGlobalIpAddrTable 1 }
+
+RlGlobalIpAddrEntry ::= SEQUENCE {
+    rlGlobalIpAdIndex                  INTEGER,
+    rlGlobalIpAdEntAddr                IpAddress,
+    rlGlobalIpAdEntNetMask             IpAddress,
+    rlGlobalIpAdDefaultGateway         IpAddress,
+    rlGlobalIpAdOwner                  INTEGER
+}
+
+rlGlobalIpAdIndex OBJECT-TYPE
+    SYNTAX      INTEGER (1)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+           "The system global IP address index."
+    ::=   { rlGlobalIpAddrEntry 1 }
+
+rlGlobalIpAdEntAddr OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "The IP address to which this entry's addressing
+             information pertains."
+    ::= { rlGlobalIpAddrEntry 2 }
+
+rlGlobalIpAdEntNetMask OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+            "The subnet mask associated with the system global IP address.
+             The value of the mask is an IP address with all the network
+             bits set to 1 and all the hosts bits set to 0."
+    ::= { rlGlobalIpAddrEntry 3 }
+
+rlGlobalIpAdDefaultGateway OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        " The default gateway of the system global IP address  "
+    ::=   { rlGlobalIpAddrEntry 4 }
+
+rlGlobalIpAdOwner OBJECT-TYPE
+        SYNTAX  INTEGER
+        {
+               static(1),
+               dhcp(2),
+               default(3)
+        }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+           "The IP Interface owner. Static if interface defined by user, dhcp
+            if received by boot protocol like DHCP."
+    DEFVAL  { static }
+    ::=   { rlGlobalIpAddrEntry 5 }
+
+
+rlDeleteUsersAfterReset OBJECT-TYPE
+    SYNTAX INTEGER {
+        false(0),
+        true(1)
+    }
+
+    MAX-ACCESS read-write
+    STATUS current
+
+    DESCRIPTION
+       "Remove all entries from the rlAAALocalUserTable after reset"
+    DEFVAL { false }
+
+   ::= { rlOperationalMode 3 }
+
+
+END
+
