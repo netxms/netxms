@@ -2,7 +2,7 @@
 * 1.2.2
 *
 
-- Added driver for Dell PowerConnect switches
+- Added drivers for Cisco ESW and Dell PowerConnect switches
 - Added MIBs for Dell PowerConnect switches
 - Management console:
 	- In port view ports are colored according to physical port state

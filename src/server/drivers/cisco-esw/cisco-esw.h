@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Driver for Dell PowerConnect switches
+** Driver for Cisco ESW switches
 ** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -17,12 +17,12 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: dell-pwc.h
+** File: cisco-esw.h
 **
 **/
 
-#ifndef _dell_pwc_h_
-#define _dell_pwc_h_
+#ifndef _cisco_esw_h_
+#define _cisco_esw_h_
 
 #include <nddrv.h>
 
@@ -30,7 +30,7 @@
 /**
  * Driver's class
  */
-class PowerConnectDriver : public NetworkDeviceDriver
+class CiscoEswDriver : public NetworkDeviceDriver
 {
 public:
 	virtual const TCHAR *getName();
@@ -38,7 +38,6 @@ public:
 
 	virtual int isPotentialDevice(const TCHAR *oid);
 	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes);
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable);
 };
 

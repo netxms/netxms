@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Driver for HP ProCurve switches
+** Driver for Cisco ESW switches
 ** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -17,24 +17,24 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: procurve.cpp
+** File: cisco-esw.cpp
 **/
 
-#include "procurve.h"
+#include "cisco-esw.h"
 
 
 //
 // Static data
 //
 
-static TCHAR s_driverName[] = _T("PROCURVE");
+static TCHAR s_driverName[] = _T("CISCO-ESW");
 static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 
 
 /**
  * Get driver name
  */
-const TCHAR *ProCurveDriver::getName()
+const TCHAR *CiscoEswDriver::getName()
 {
 	return s_driverName;
 }
@@ -42,7 +42,7 @@ const TCHAR *ProCurveDriver::getName()
 /**
  * Get driver version
  */
-const TCHAR *ProCurveDriver::getVersion()
+const TCHAR *CiscoEswDriver::getVersion()
 {
 	return s_driverVersion;
 }
@@ -52,9 +52,15 @@ const TCHAR *ProCurveDriver::getVersion()
  *
  * @param oid Device OID
  */
-int ProCurveDriver::isPotentialDevice(const TCHAR *oid)
+int CiscoEswDriver::isPotentialDevice(const TCHAR *oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.11.2.3.7.11"), 24) == 0) ? 127 : 0;
+	if (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.1."), 17) != 0)
+		return 0;
+
+	int model = _tcstol(&oid[17], NULL, 10);
+	if (((model >= 1058) && (model <= 1064)) || (model == 1176) || (model == 1177))
+		return 251;
+	return 0;
 }
 
 /**
@@ -63,29 +69,9 @@ int ProCurveDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool ProCurveDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool CiscoEswDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
 	return true;
-}
-
-/**
- * Do additional checks on the device required by driver.
- * Driver can set device's custom attributes from within
- * this function.
- *
- * @param snmp SNMP transport
- * @param attributes Node's custom attributes
- */
-void ProCurveDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes)
-{
-	int model = _tcstol(&oid[25], NULL, 10);
-	
-	// modular switches
-	if ((model == 7) || (model == 9) || (model == 13) || (model == 14) || (model == 23) || (model == 27))
-	{
-		attributes->set(_T(".procurve.isModular"), _T("1"));
-		attributes->set(_T(".procurve.slotSize"), _T("24"));
-	}
 }
 
 /**
@@ -94,33 +80,22 @@ void ProCurveDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *ProCurveDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable)
+InterfaceList *CiscoEswDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 
-	bool isModular = attributes->getBoolean(_T(".procurve.isModular"), false);
-	DWORD slotSize = attributes->getULong(_T(".procurve.slotSize"), 24);
-
 	// Find physical ports
 	for(int i = 0; i < ifList->getSize(); i++)
 	{
 		NX_INTERFACE_INFO *iface = ifList->get(i);
-		if (iface->dwType == IFTYPE_ETHERNET_CSMACD)
+		if ((iface->dwType == IFTYPE_ETHERNET_CSMACD) && (iface->dwIndex <= 48))
 		{
 			iface->isPhysicalPort = true;
-			if (isModular)
-			{
-				iface->dwSlotNumber = (iface->dwIndex / slotSize) + 1;
-				iface->dwPortNumber = iface->dwIndex % slotSize;
-			}
-			else
-			{
-				iface->dwSlotNumber = 1;
-				iface->dwPortNumber = iface->dwIndex;
-			}
+			iface->dwSlotNumber = 1;
+			iface->dwPortNumber = iface->dwIndex;
 		}
 	}
 
@@ -130,7 +105,7 @@ InterfaceList *ProCurveDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, ProCurveDriver);
+DECLARE_NDD_ENTRY_POINT(s_driverName, CiscoEswDriver);
 
 /**
  * DLL entry point
