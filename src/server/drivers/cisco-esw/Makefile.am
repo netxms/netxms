@@ -1,6 +1,6 @@
 INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 
-DRIVER = procurve
+DRIVER = cisco-esw
 
 pkglib_LTLIBRARIES = cisco-esw.la
 cisco_esw_la_SOURCES = cisco-esw.cpp

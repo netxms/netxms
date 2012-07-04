@@ -2095,6 +2095,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/baystack/Makefile
 	src/server/drivers/cat2900xl/Makefile
 	src/server/drivers/catalyst/Makefile
+	src/server/drivers/cisco-esw/Makefile
 	src/server/drivers/dell-pwc/Makefile
 	src/server/drivers/ers8000/Makefile
 	src/server/drivers/lib/Makefile

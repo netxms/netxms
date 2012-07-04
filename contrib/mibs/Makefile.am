@@ -11,6 +11,8 @@
 mibsdir=$(pkgdatadir)/mibs
 
 mibs_DATA = \
+	APACHE2-MIB.txt \
+	APPLICATION-MIB.txt \
 	ARCADA-MIB.txt \
 	ASTERISK-MIB.txt \
 	ATM-TC-MIB.txt \
@@ -58,22 +60,29 @@ mibs_DATA = \
 	CISCO-SYSLOG-MIB.txt \
 	CISCO-TC.txt \
 	CISCO-TCP-MIB.txt \
-	CISCO-VLAN-IFTABLE-RELATIONSHIP-MIB.txt	\
+	CISCO-VLAN-IFTABLE-RELATIONSHIP-MIB.txt \
 	CISCO-VLAN-MEMBERSHIP-MIB.txt \
 	CISCO-VTP-MIB.txt \
-        CONFIG-MIB.txt \
+	CONFIG-MIB.txt \
 	COSINE-GLOBAL-REG.txt \
 	COSINE-InVision-MIB.txt \
 	COSINE-ORION-MIB.txt \
-        Dell-Vendor-MIB.txt \
+	Dell-Vendor-MIB.txt \
 	DIGIUM-MIB.txt \
+	DISMAN-PING-MIB.txt \
+	DOT12-IF-MIB.txt \
+	DOT12-RPTR-MIB.txt \
 	DS1-MIB.txt \
 	DS3-MIB.txt \
 	DVMRP-MIB.txt \
 	EF-6000-MIB.txt \
 	EMBEDDED-NGX-MIB.txt \
 	ENTITY-MIB.txt \
+	ENTITY-SENSOR-MIB.txt \
+	ENTITY-STATE-MIB.txt \
 	ES-1000-MIB.txt \
+	EtherLike-MIB.txt \
+	FAN-MIB.txt \
 	FDDI-SMT73-MIB.txt \
 	FIBRE-CHANNEL-FE-MIB.txt \
 	FOUNDRY-CAR-MIB.txt \
@@ -85,23 +94,43 @@ mibs_DATA = \
 	FOUNDRY-SN-SWITCH-GROUP-MIB.txt \
 	FOUNDRY-SN-TRAP-MIB.txt \
 	FOUNDRY-SN-VSRP-MIB.txt \
-        HP-DOT1X-EXTENSIONS-MIB.txt \
-        HP-ENTITY-MIB.txt \
-        HP-ICF-8023-RPTR.txt \
-        HP-ICF-BASIC.txt \
-        HP-ICF-BRIDGE.txt \
-        HP-ICF-CHASSIS.txt \
-        HP-ICF-IPCONFIG.txt \
-        HP-ICF-OID.txt \
-        HP-ICF-STACK.txt \
-        HP-ICF-TC.txt \
-        HP-ICF-VRRP-MIB.txt \
-        HP-ICF-XRRP.txt \
-        HP-SwitchStack-MIB.txt \
-        HP-VLAN.txt \
-        HpicfHighAvailability-MIB.txt \
+	HCNUM-TC.txt \
 	HOST-RESOURCES-MIB.txt \
 	HOST-RESOURCES-TYPES.txt \
+	HP-AUTH-MIB.txt \
+	HP-DOT1X-EXTENSIONS-MIB.txt \
+	HP-ENTITY-MIB.txt \
+	HP-ICF-8023-RPTR.txt \
+	HP-ICF-ARP-PROTECT.txt \
+	HP-ICF-AUTORUN.txt \
+	HP-ICF-BASIC.txt \
+	HP-ICF-BRIDGE.txt \
+	HP-ICF-CHAIN.txt \
+	HP-ICF-CHASSIS.txt \
+	HP-ICF-DOWNLOAD.txt \
+	HP-ICF-FTRCO.txt \
+	HP-ICF-GENERIC-RPTR.txt \
+	HP-ICF-IPCONFIG.txt \
+	HP-ICF-IP-ROUTING.txt \
+	HP-ICF-JUMBO-MIB.txt \
+	HP-ICF-LINKTEST.txt \
+	HP-ICF-OID.txt \
+	HP-ICF-OSPF.txt \
+	HP-ICF-POE-MIB.txt \
+	HP-ICF-PROVIDER-BRIDGE.txt \
+	HP-ICF-SECURITY.txt \
+	HP-ICF-SNMP-MIB.txt \
+	HP-ICF-STACK.txt \
+	HP-ICF-SYSLOG-MIB.txt \
+	HP-ICF-TC.txt \
+	HP-ICF-UDP-FORWARD.txt \
+	HP-ICF-USBPORT.txt \
+	HP-ICF-VRRP-MIB.txt \
+	HP-ICF-XRRP.txt \
+	HP-SNTPclientConfiguration-MIB.txt \
+	HP-SwitchStack-MIB.txt \
+	HP-VLAN.txt \
+	HpicfHighAvailability-MIB.txt \
 	IANA-ADDRESS-FAMILY-NUMBERS-MIB.txt \
 	IANA-LANGUAGE-MIB.txt \
 	IANA-RTPROTO-MIB.txt \
@@ -109,21 +138,28 @@ mibs_DATA = \
 	IBM-6611-APPN-MIB.txt \
 	IBM-MIB.txt \
 	IBMCPU-MIB.txt \
+	ICF-ETWIST.txt \
 	IEEE8021-PAE-MIB.txt \
+	IEEE8023-LAG-MIB.txt \
 	IEEE802dot11-MIB.txt \
 	IF-MIB.txt \
 	IGMP-MIB.txt \
 	INET-ADDRESS-MIB.txt \
+	IP-FORWARD-MIB.txt \
 	IP-MIB.txt \
 	IPMROUTE-STD-MIB.txt \
-        IPV6-FLOW-LABEL-MIB.txt \
+	IPV6-FLOW-LABEL-MIB.txt \
+	IPV6-MLD-MIB.txt \
 	IPV6-TC.txt \
+	IPX.txt \
 	JUNIPER-IVE-MIB.txt \
-        LANNET-MIB.txt \
+	JVM-MANAGEMENT-MIB.txt \
+	LANNET-MIB.txt \
 	LLDP-MIB.txt \
 	LLDP-V2-MIB.txt \
 	LLDP-V2-TC-MIB.txt \
 	MAU-MIB.txt \
+	MSSQLSERVER-MIB.txt \
 	MTA-MIB.txt \
 	NET-SNMP-AGENT-MIB.txt \
 	NET-SNMP-MIB.txt \
@@ -142,7 +178,7 @@ mibs_DATA = \
 	NETSCREEN-VPN-MON-MIB.txt \
 	NETSCREEN-VR-MIB.txt \
 	NETSCREEN-VSYS-MIB.txt \
-        NETSWITCH-MIB.txt \
+	NETSWITCH-MIB.txt \
 	NetWare-Server-MIB.txt \
 	NETWORK-APPLIANCE-MIB.txt \
 	NETWORK-SERVICES-MIB.txt \
@@ -150,33 +186,44 @@ mibs_DATA = \
 	NOKIA-IPSO-SYSTEM-MIB.txt \
 	OPTIMUX-MIB.txt \
 	OSPF-MIB.txt \
+	OSPF-TRAP-MIB.txt \
 	P-BRIDGE-MIB.txt \
 	PerfHist-TC-MIB.txt \
 	PIM-MIB.txt \
 	POLYCOM-RMX-MIB.txt \
+	POWER-ETHERNET-MIB.txt \
 	PowerNet-MIB.txt \
+	POWERSUPPLY-MIB.txt \
 	Printer-MIB.txt \
 	Q-BRIDGE-MIB.txt \
-        RADLAN-CPU-COUNTERS-MIB.txt \
-        RADLAN-Dell-Private-MIB.txt \
-        RADLAN-HWENVIROMENT.txt \
-        RADLAN-MIB.txt \
-        RADLAN-PHY-MIB.txt \
-        RADLAN-Physicaldescription-MIB.txt \
-        RADLAN-rlInterfaces.txt \
-        RADLAN-rndMng.txt \
-        RADLAN-SENSORENTMIB.txt \
-        RADLAN-SNMP-MIB.txt \
-        RADLAN-SNMPv2.txt \
-        RADLAN-TRUNK-MIB.txt \
-        RADLAN-vlan-MIB.txt \
+	RADIUS-ACCT-CLIENT-MIB.txt \
+	RADIUS-ACCT-SERVER-MIB.txt \
+	RADIUS-AUTH-CLIENT-MIB.txt \
+	RADIUS-AUTH-SERVER-MIB.txt \
+	RADIUS-DYNAUTH-CLIENT-MIB.txt \
+	RADIUS-DYNAUTH-SERVER-MIB.txt \
+	RADLAN-CPU-COUNTERS-MIB.txt \
+	RADLAN-Dell-Private-MIB.txt \
+	RADLAN-HWENVIROMENT.txt \
+	RADLAN-MIB.txt \
+	RADLAN-PHY-MIB.txt \
+	RADLAN-Physicaldescription-MIB.txt \
+	RADLAN-rlInterfaces.txt \
+	RADLAN-rndMng.txt \
+	RADLAN-SENSORENTMIB.txt \
+	RADLAN-SNMP-MIB.txt \
+	RADLAN-SNMPv2.txt \
+	RADLAN-TRUNK-MIB.txt \
+	RADLAN-vlan-MIB.txt \
 	RAPID-CITY.txt \
 	RAPID-CITY-BAY-STACK.txt \
 	RC-MLT-MIB.txt \
+	RDBMS-MIB.txt \
+	RFC-1212.txt \
 	RFC-1215.txt \
 	RFC1155-SMI.txt \
-	RFC-1212.txt \
 	RFC1213-MIB.txt \
+	RIPv2-MIB.txt \
 	RMON-MIB.txt \
 	RMON2-MIB.txt \
 	RS-232-MIB.txt \
@@ -192,10 +239,14 @@ mibs_DATA = \
 	S5-ROOT-MIB.txt \
 	S5-SWITCH-BAYSECURE-MIB.txt \
 	S5-TCS-MIB.txt \
-        SFLOW-MIB.txt \
-        SMON-MIB.txt \
+	SAVEPOWER-MIB.txt \
+	SEMI-MIB.txt \
+	SFLOW-MIB.txt \
+	SMON-MIB.txt \
 	SNMP-COMMUNITY-MIB.txt \
 	SNMP-FRAMEWORK-MIB.txt \
+	SNMP-MPD-MIB.txt \
+	SNMP-NOTIFICATION-MIB.txt \
 	SNMP-PROXY-MIB.txt \
 	SNMP-REPEATER-MIB.txt \
 	SNMP-TARGET-MIB.txt \
@@ -205,12 +256,15 @@ mibs_DATA = \
 	SNMPv2-SMI.txt \
 	SNMPv2-TC.txt \
 	SNMPv2-TM.txt \
-        STATISTICS-MIB.txt \
+	SNMP-VIEW-BASED-ACM-MIB.txt \
+	STATISTICS-MIB.txt \
 	SW-MIB.txt \
 	SYNOPTICS-COMMON-MIB.txt \
 	SYNOPTICS-ROOT-MIB.txt \
+	SYSAPPL-MIB.txt \
 	TCP-MIB.txt \
 	TOKEN-RING-RMON-MIB.txt \
+	TOKENRING-STATION-SR-MIB.txt \
 	TUNNEL-MIB.txt \
 	UCD-DISKIO-MIB.txt \
 	UCD-DLMOD-MIB.txt \
