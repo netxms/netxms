@@ -1,7 +1,7 @@
 Building binary packages for Debian:
 
 0. Prerequisites:
-	Packages libssl-dev, libexpat1-dev, and libreadline5-dev must be installed
+	Packages libssl-dev, libexpat1-dev, libreadline5-dev, and libsensors4-dev must be installed
 
 1. Configure and build NetXMS as following:
 
