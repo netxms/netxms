@@ -82,6 +82,8 @@ cp /usr/bin/nxsnmpset netxms-server/usr/bin/
 cp /usr/bin/nxsnmpwalk netxms-server/usr/bin/
 cp /usr/bin/nxupload netxms-server/usr/bin/
 cp /usr/lib/netxms/ndd/*.ndd netxms-server/usr/lib/netxms/ndd/
+cp -P /usr/lib/libavaya-ers.so* netxms-server/usr/lib/
+cp -P /usr/lib/libcisco.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxcore.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxmap.so* netxms-server/usr/lib/
 cp -P /usr/lib/libnxsl.so* netxms-server/usr/lib/
