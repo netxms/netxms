@@ -2346,8 +2346,10 @@ webui/webapp/Core/icons/zoom_in.png -text
 webui/webapp/Core/icons/zoom_out.png -text
 webui/webapp/Core/jar/simple-xml-2.6.4.jar -text
 webui/webapp/Core/plugin.xml -text
+webui/webapp/Core/schema/org.netxms.ui.eclipse.branding.exsd -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.loginlisteners.exsd -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
+webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/BrandingProvider.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/ConsoleLoginListener.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/perspectives/DefaultPerspective.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/resources/DataCollectionDisplayInfo.java -text
@@ -2391,6 +2393,7 @@ webui/webapp/Core/src/org/netxms/webui/core/Application.java -text
 webui/webapp/Core/src/org/netxms/webui/core/ApplicationActionBarAdvisor.java -text
 webui/webapp/Core/src/org/netxms/webui/core/ApplicationWorkbenchAdvisor.java -text
 webui/webapp/Core/src/org/netxms/webui/core/ApplicationWorkbenchWindowAdvisor.java -text
+webui/webapp/Core/src/org/netxms/webui/core/BrandingManager.java -text
 webui/webapp/Core/src/org/netxms/webui/core/ExtendedContributionComparator.java -text
 webui/webapp/Core/src/org/netxms/webui/core/LoginJob.java -text
 webui/webapp/Core/src/org/netxms/webui/core/Messages.java -text

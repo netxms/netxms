@@ -31,6 +31,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class DateTimeSelector extends Composite
 {
+	private static final long serialVersionUID = 1L;
+
 	private DateTime datePicker;
 	private DateTime timePicker;
 	
