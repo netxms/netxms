@@ -1895,9 +1895,11 @@ src/java/netxms-eclipse/core/icons/status/warning.png -text
 src/java/netxms-eclipse/core/nxmc.product -text
 src/java/netxms-eclipse/core/plugin.xml -text
 src/java/netxms-eclipse/core/plugin_customization.ini -text
+src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.branding.exsd -text
 src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.loginlisteners.exsd -text
 src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.tweaklets.exsd -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/Activator.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/BrandingManager.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/ExtendedContributionComparator.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/LoginJob.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/Messages.java -text
@@ -1909,6 +1911,7 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/PreferenceInitial
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/Sleak.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/TweakletManager.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/actions/OpenServerConsole.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/api/BrandingProvider.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/api/ConsoleLoginListener.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/api/ConsoleTweaklet.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/dialogs/LoginDialog.java -text

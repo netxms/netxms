@@ -28,6 +28,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -44,6 +45,7 @@ import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.BrandingManager;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -70,7 +72,10 @@ public class LoginDialog extends Dialog
 	public LoginDialog(Shell parentShell)
 	{
 		super(parentShell);
-		loginImage = Activator.getImageDescriptor("icons/login.png"); //$NON-NLS-1$
+		
+		loginImage = BrandingManager.getInstance().getLoginTitleImage();
+		if (loginImage == null)
+			loginImage = Activator.getImageDescriptor("icons/login.png"); //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)
@@ -106,7 +111,8 @@ public class LoginDialog extends Dialog
       dialogLayout.horizontalSpacing = 0;
       dialogArea.setLayout(dialogLayout);
       
-      labelColor = new Color(dialogArea.getDisplay(), 36, 66, 90);
+      RGB customColor = BrandingManager.getInstance().getLoginTitleColor();
+      labelColor = (customColor != null) ? new Color(dialogArea.getDisplay(), customColor) : new Color(dialogArea.getDisplay(), 36, 66, 90);
       dialogArea.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)

@@ -56,6 +56,9 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 	 */
 	public String getInitialWindowPerspectiveId()
 	{
+		String p = BrandingManager.getInstance().getDefaultPerspective();
+		if (p != null)
+			return p;
 		return Activator.getDefault().getPreferenceStore().getString("INITIAL_PERSPECTIVE"); //$NON-NLS-1$
 	}
 
@@ -68,6 +71,7 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 		super.initialize(configurer);
 		
 		TweakletManager.initTweaklets();
+		BrandingManager.create();
 		
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		configurer.setSaveAndRestore(ps.getBoolean("SAVE_AND_RESTORE")); //$NON-NLS-1$
