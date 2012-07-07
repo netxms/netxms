@@ -20,6 +20,7 @@ package org.netxms.webui.core.dialogs;
 
 import java.util.Properties;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -49,6 +50,7 @@ import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.webui.core.Activator;
+import org.netxms.webui.core.BrandingManager;
 
 /**
  *	Login form
@@ -133,7 +135,8 @@ public class LoginForm extends Window
 		gd.horizontalSpan = 2;
 		title.setLayoutData(gd);
 		
-		final Image loginImage = Activator.getImageDescriptor("icons/login.jpg").createImage();
+		final ImageDescriptor customImage = BrandingManager.getInstance().getLoginTitleImage();
+		final Image loginImage = (customImage != null) ? customImage.createImage() : Activator.getImageDescriptor("icons/login.jpg").createImage();
 		Label logo = new Label(content, SWT.NONE);
 		logo.setImage(loginImage);
 		
