@@ -46,4 +46,11 @@ public interface BrandingProvider
 	 * @return filler color for login dialog title image or null to use default
 	 */
 	public abstract RGB getLoginTitleColor();
+	
+	/**
+	 * Get login dialog title.
+	 * 
+	 * @return login dialog title or null to use default
+	 */
+	public abstract String getLoginTitle();
 }

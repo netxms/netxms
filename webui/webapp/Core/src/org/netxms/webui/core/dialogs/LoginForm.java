@@ -126,7 +126,8 @@ public class LoginForm extends Window
 		});
 		
 		Label title = new Label(content, SWT.CENTER);
-		title.setText("NetXMS Server Login");
+		final String customTitle = BrandingManager.getInstance().getLoginTitle();
+		title.setText((customTitle != null) ? customTitle : "NetXMS Server Login");
 		title.setFont(headerFont);
 		title.setForeground(colors.create(57, 33, 89));
 		gd = new GridData();
