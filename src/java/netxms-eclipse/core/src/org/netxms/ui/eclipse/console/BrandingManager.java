@@ -141,4 +141,20 @@ public class BrandingManager
 		}
 		return null;
 	}
+
+	/**
+	 * Get default perspective ID. 
+	 * 
+	 * @return default perspective ID or null if no branding provider defines one.
+	 */
+	public String getLoginTitle()
+	{
+		for(BrandingProvider p : providers.values())
+		{
+			String t = p.getLoginTitle();
+			if (t != null)
+				return t;
+		}
+		return null;
+	}
 }

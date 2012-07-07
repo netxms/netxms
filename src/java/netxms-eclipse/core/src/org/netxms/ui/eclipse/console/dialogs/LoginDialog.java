@@ -85,7 +85,8 @@ public class LoginDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
       super.configureShell(newShell);
-      newShell.setText(Messages.getString("LoginDialog.title")); //$NON-NLS-1$
+      String customTitle = BrandingManager.getInstance().getLoginTitle();
+      newShell.setText((customTitle != null) ? customTitle : Messages.getString("LoginDialog.title")); //$NON-NLS-1$
       
       // Center dialog on screen
       // We don't have main window at this moment, so use
