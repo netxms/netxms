@@ -32,7 +32,6 @@ import org.eclipse.rwt.widgets.ExternalBrowser;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.ISources;
@@ -343,7 +342,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final File file = session.downloadFileFromAgent(node.getObjectId(), tool.getData());
-				Display.getDefault().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
