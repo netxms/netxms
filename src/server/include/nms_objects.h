@@ -420,6 +420,7 @@ public:
    void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
 
 	virtual NXSL_Array *getParentsForNXSL();
+	virtual NXSL_Array *getChildrenForNXSL();
 
    // Debug methods
    const TCHAR *getParentList(TCHAR *szBuffer);

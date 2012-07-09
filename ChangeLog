@@ -14,7 +14,7 @@
 	- Node status/configuration/topology poll implemented
 - NXSL:
 	- Global variables can be declared in script code
-	- New function: GetObjectParents
+	- New functions: GetObjectParents, GetObjectChildren
 - AIX Subagent:
 	- New parameters available: System.CPU.PhysicalAverage.*
 
