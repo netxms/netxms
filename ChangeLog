@@ -9,6 +9,8 @@
 	- Interface IP shown in connection point search results
 	- Interface IP and MAC shown in "Interfaces" tab
 	- Added "Status Map" view
+	- Added option to hide unsupported DCIs from "Last Values" view
+	- Added option to indicate data collection errors in "Last Values" view
 - Android client:
 	- Dashboards implemented
 	- Node status/configuration/topology poll implemented

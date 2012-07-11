@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 {
 	private Image[] stateImages = new Image[3];
 	private boolean useMultipliers = true;
+	private boolean showErrors = true;
 	private ThresholdLabelProvider thresholdLabelProvider;
 	
 	/**
@@ -90,10 +91,14 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 			case LastValuesWidget.COLUMN_DESCRIPTION:
 				return ((DciValue)element).getDescription();
 			case LastValuesWidget.COLUMN_VALUE:
+				if (showErrors && ((DciValue)element).getErrorCount() > 0)
+					return "<< ERROR >>";
 				if (((DciValue)element).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
 					return "<< TABLE >>";
 				return useMultipliers ? getValue((DciValue)element) : ((DciValue)element).getValue();
 			case LastValuesWidget.COLUMN_TIMESTAMP:
+				if (((DciValue)element).getTimestamp().getTime() == 0)
+					return null;
 				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(((DciValue)element).getTimestamp());
 			case LastValuesWidget.COLUMN_THRESHOLD:
 				return formatThreshold(((DciValue)element).getActiveThreshold());
@@ -208,8 +213,11 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	@Override
 	public Color getForeground(Object element, int columnIndex)
 	{
+		if (((DciValue)element).getStatus() == DataCollectionObject.DISABLED)
+			return StatusDisplayInfo.getStatusColor(Severity.UNMANAGED);
+		if (showErrors && ((DciValue)element).getErrorCount() > 0)
+			return StatusDisplayInfo.getStatusColor(Severity.CRITICAL);
 		return null;
-		//return (((DciValue)element).getActiveThreshold() != null) ? StatusDisplayInfo.getStatusColor(Severity.MAJOR) : null;
 	}
 
 	/* (non-Javadoc)
@@ -219,5 +227,21 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	public Color getBackground(Object element, int columnIndex)
 	{
 		return null;
+	}
+
+	/**
+	 * @return the showErrors
+	 */
+	public boolean isShowErrors()
+	{
+		return showErrors;
+	}
+
+	/**
+	 * @param showErrors the showErrors to set
+	 */
+	public void setShowErrors(boolean showErrors)
+	{
+		this.showErrors = showErrors;
 	}
 }

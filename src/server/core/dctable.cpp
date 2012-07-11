@@ -319,6 +319,7 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
 
 void DCTable::processNewError()
 {
+	m_dwErrorCount++;
 }
 
 
@@ -521,6 +522,7 @@ void DCTable::getLastValueSummary(CSCPMessage *pMsg, DWORD dwId)
    pMsg->SetVariable(dwId++, (DWORD)m_tLastPoll);
    pMsg->SetVariable(dwId++, (WORD)m_status);
 	pMsg->SetVariable(dwId++, (WORD)getType());
+	pMsg->SetVariable(dwId++, m_dwErrorCount);
    pMsg->SetVariable(dwId++, (WORD)0);            // compatibility: number of thresholds
 
 	unlock();

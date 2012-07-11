@@ -35,6 +35,7 @@ public abstract class DciValue
 	private int source;				// data source (agent, SNMP, etc.)
 	private int dataType;
 	private int status;				// status (active, disabled, etc.)
+	private int errorCount;
 	private int dcObjectType;		// Data collection object type (item, table, etc.)
 	private Date timestamp;
 	private Threshold activeThreshold;
@@ -82,6 +83,7 @@ public abstract class DciValue
 		timestamp = new Date(msg.getVariableAsInt64(var++) * 1000);
 		status = msg.getVariableAsInteger(var++);
 		dcObjectType = msg.getVariableAsInteger(var++);
+		errorCount = msg.getVariableAsInteger(var++);
 		if (msg.getVariableAsBoolean(var++))
 			activeThreshold = new Threshold(msg, var);
 		else
@@ -174,5 +176,13 @@ public abstract class DciValue
 	public int getDcObjectType()
 	{
 		return dcObjectType;
+	}
+
+	/**
+	 * @return the errorCount
+	 */
+	public int getErrorCount()
+	{
+		return errorCount;
 	}
 }

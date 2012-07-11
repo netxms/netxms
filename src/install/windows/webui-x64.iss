@@ -13,3 +13,4 @@ Source: nxmc\nxmc.war; DestDir: "{app}\WebUI\nxmc"; Flags: ignoreversion; Compon
 Source: files-x64\prunsrv.exe; DestDir: "{app}\WebUI"; Flags: ignoreversion; Components: webui
 
 #include "common-webui.iss"
+

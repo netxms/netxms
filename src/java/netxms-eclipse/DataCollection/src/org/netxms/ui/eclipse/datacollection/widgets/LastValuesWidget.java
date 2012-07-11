@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,6 +78,8 @@ public class LastValuesWidget extends Composite
 	private int autoRefreshInterval = 30000;	// in milliseconds
 	private Runnable refreshTimer;
 	private Action actionUseMultipliers;
+	private Action actionShowErrors;
+	private Action actionShowUnsupported;
 	
 	/**
 	 * Create "last values" widget
@@ -141,16 +143,6 @@ public class LastValuesWidget extends Composite
 		dataViewer.addFilter(filter);
 		WidgetHelper.restoreTableViewerSettings(dataViewer, ds, configPrefix);
 		
-		actionUseMultipliers = new Action("Use &multipliers", Action.AS_CHECK_BOX) {
-			@Override
-			public void run()
-			{
-				setUseMultipliers(!areMultipliersUsed());
-			}
-		};
-
-		createPopupMenu();
-
 		dataViewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -159,6 +151,8 @@ public class LastValuesWidget extends Composite
 				ds.put(configPrefix + ".autoRefresh", autoRefreshEnabled);
 				ds.put(configPrefix + ".autoRefreshInterval", autoRefreshEnabled);
 				ds.put(configPrefix + ".useMultipliers", labelProvider.areMultipliersUsed());
+				ds.put(configPrefix + ".showErrors", isShowErrors());
+				ds.put(configPrefix + ".showUnsupported", isShowUnsupported());
 			}
 		});
 
@@ -176,9 +170,6 @@ public class LastValuesWidget extends Composite
 		fd.right = new FormAttachment(100, 0);
 		filterText.setLayoutData(fd);
 		
-		// Finalize widget creation
-		getDataFromServer();
-		
 		try
 		{
 			ds.getInt(configPrefix + ".autoRefreshInterval");
@@ -191,13 +182,55 @@ public class LastValuesWidget extends Composite
 			labelProvider.setUseMultipliers(ds.getBoolean(configPrefix + ".useMultipliers"));
 		else
 			labelProvider.setUseMultipliers(true);
-		actionUseMultipliers.setChecked(areMultipliersUsed());
+		if (ds.get(configPrefix + ".showErrors") != null)
+			labelProvider.setShowErrors(ds.getBoolean(configPrefix + ".showErrors"));
+		else
+			labelProvider.setShowErrors(true);
+		filter.setShowUnsupported(ds.getBoolean(configPrefix + ".showUnsupported"));
+		
+		createActions();
+		createPopupMenu();
+
+		getDataFromServer();
 		
 		// Set initial focus to filter input line
 		if (filterEnabled)
 			filterText.setFocus();
 		else
 			enableFilter(false);	// Will hide filter area correctly
+	}
+	
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionUseMultipliers = new Action("Use &multipliers", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				setUseMultipliers(actionUseMultipliers.isChecked());
+			}
+		};
+		actionUseMultipliers.setChecked(areMultipliersUsed());
+
+		actionShowErrors = new Action("Show collection &errors", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				setShowErrors(actionShowErrors.isChecked());
+			}
+		};
+		actionShowErrors.setChecked(isShowErrors());
+
+		actionShowUnsupported = new Action("Show &unsupported items", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				setShowUnsupported(actionShowUnsupported.isChecked());
+			}
+		};
+		actionShowUnsupported.setChecked(isShowUnsupported());
 	}
 	
 	/**
@@ -234,6 +267,8 @@ public class LastValuesWidget extends Composite
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		mgr.add(new Separator());
 		mgr.add(actionUseMultipliers);
+		mgr.add(actionShowErrors);
+		mgr.add(actionShowUnsupported);
 	}
 	
 	/**
@@ -403,5 +438,45 @@ public class LastValuesWidget extends Composite
 	public void setFilterCloseAction(Action action)
 	{
 		filterText.setCloseAction(action);
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isShowErrors()
+	{
+		return (labelProvider != null) ? labelProvider.isShowErrors() : false;
+	}
+
+	/**
+	 * @param show
+	 */
+	public void setShowErrors(boolean show)
+	{
+		labelProvider.setShowErrors(show);
+		if (dataViewer != null)
+		{
+			dataViewer.refresh(true);
+		}
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isShowUnsupported()
+	{
+		return (filter != null) ? filter.isShowUnsupported() : false;
+	}
+
+	/**
+	 * @param show
+	 */
+	public void setShowUnsupported(boolean show)
+	{
+		filter.setShowUnsupported(show);
+		if (dataViewer != null)
+		{
+			dataViewer.refresh(true);
+		}
 	}
 }
