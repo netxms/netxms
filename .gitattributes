@@ -8,6 +8,7 @@ android/src/console/.settings/org.eclipse.jdt.core.prefs -text
 android/src/console/AndroidManifest.xml -text
 android/src/console/default.properties -text
 android/src/console/libs/achartengine-1.0.0.jar -text
+android/src/console/libs/acra-4.2.3.jar -text svneol=unset#unset
 android/src/console/libs/simple-xml-2.6.4.jar -text
 android/src/console/lint.xml -text
 android/src/console/project.properties -text
