@@ -29,6 +29,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -89,6 +90,7 @@ public class LogViewer extends ViewPart
 	private Action actionGoLastPage;
 	private Action actionGoNextPage;
 	private Action actionGoPrevPage;
+	private Action actionCopyToClipboard;
 	private Table resultSet;
 	private long currentPosition;
 	
@@ -385,6 +387,14 @@ public class LogViewer extends ViewPart
 		actionShowFilter.setChecked(true);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.show_filter");
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
+		
+		actionCopyToClipboard = new Action("&Copy to clipboard", SharedIcons.COPY) {
+			@Override
+			public void run()
+			{
+				copySelectionToClipboard();
+			}
+		};
 	}
 	
 	/**
@@ -498,5 +508,18 @@ public class LogViewer extends ViewPart
 		viewer.getTable().getParent().layout();
 		if (show)
 			filterBuilder.setFocus();
+	}
+	
+	/**
+	 * Copy selection in the list to clipboard
+	 */
+	private void copySelectionToClipboard()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		StringBuilder sb = new StringBuilder();
+		for(Object o : selection.toList())
+		{
+			
+		}
 	}
 }

@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 
 /**
@@ -30,6 +31,7 @@ public class LastValuesFilter extends ViewerFilter
 	private static final long serialVersionUID = 1L;
 
 	private String filterString = null;
+	private boolean showUnsupported = false;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -37,10 +39,14 @@ public class LastValuesFilter extends ViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
+		final DciValue value = (DciValue)element;
+		
+		if (!showUnsupported && (value.getStatus() == DataCollectionObject.NOT_SUPPORTED))
+			return false;
+		
 		if ((filterString == null) || (filterString.isEmpty()))
 			return true;
 		
-		final DciValue value = (DciValue)element;
 		return value.getDescription().toLowerCase().contains(filterString);
 	}
 
@@ -58,5 +64,21 @@ public class LastValuesFilter extends ViewerFilter
 	public void setFilterString(String filterString)
 	{
 		this.filterString = filterString.toLowerCase();
+	}
+
+	/**
+	 * @return the showUnsupported
+	 */
+	public boolean isShowUnsupported()
+	{
+		return showUnsupported;
+	}
+
+	/**
+	 * @param showUnsupported the showUnsupported to set
+	 */
+	public void setShowUnsupported(boolean showUnsupported)
+	{
+		this.showUnsupported = showUnsupported;
 	}
 }
