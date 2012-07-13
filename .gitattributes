@@ -915,6 +915,7 @@ src/java/netxms-eclipse/AlarmViewer/OSGI-INF/l10n/bundle_ru.properties -text
 src/java/netxms-eclipse/AlarmViewer/OSGI-INF/l10n/bundle_zh_CN.properties -text
 src/java/netxms-eclipse/AlarmViewer/build.properties -text
 src/java/netxms-eclipse/AlarmViewer/icons/acknowledged.png -text
+src/java/netxms-eclipse/AlarmViewer/icons/acknowledged_sticky.png -text svneol=unset#unset
 src/java/netxms-eclipse/AlarmViewer/icons/alarm_browser.png -text
 src/java/netxms-eclipse/AlarmViewer/icons/comments.png -text
 src/java/netxms-eclipse/AlarmViewer/icons/new_comment.png -text
