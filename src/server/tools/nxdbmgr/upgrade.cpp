@@ -278,6 +278,23 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 
+//
+// Upgrade from V254 to V255
+//
+
+static BOOL H_UpgradeFromV254(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE alarms ADD resolved_by integer\n")
+		_T("UPDATE alarms SET resolved_by=0\n")
+		_T("UPDATE alarms SET alarm_state=3 WHERE alarm_state=2\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='254' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
 
 
 //

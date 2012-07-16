@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -409,11 +409,11 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
 void EPRule::GenerateAlarm(Event *pEvent)
 {
    // Terminate alarms with key == our ack_key
-	if (m_iAlarmSeverity == SEVERITY_TERMINATE)
+	if ((m_iAlarmSeverity == SEVERITY_RESOLVE) || (m_iAlarmSeverity == SEVERITY_TERMINATE))
 	{
 		TCHAR *pszAckKey = pEvent->expandText(m_szAlarmKey);
 		if (pszAckKey[0] != 0)
-			g_alarmMgr.terminateByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false);
+			g_alarmMgr.resolveByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false, m_iAlarmSeverity == SEVERITY_TERMINATE);
 		free(pszAckKey);
 	}
 	else	// Generate new alarm

@@ -58,8 +58,8 @@ public:
    void newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 	              int iSeverity, DWORD dwTimeout, DWORD dwTimeoutEvent, Event *pEvent);
    DWORD ackById(DWORD dwAlarmId, DWORD dwUserId, bool sticky);
-   DWORD terminateById(DWORD dwAlarmId, DWORD dwUserId);
-   void terminateByKey(const TCHAR *key, bool useRegexp);
+   DWORD resolveById(DWORD dwAlarmId, DWORD dwUserId, bool terminate);
+   void resolveByKey(const TCHAR *key, bool useRegexp, bool terminate);
    void deleteAlarm(DWORD dwAlarmId);
 	DWORD updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *text, DWORD userId);
 

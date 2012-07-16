@@ -861,6 +861,7 @@ CREATE TABLE alarms
 	repeat_count integer not null,
 	alarm_key varchar(255) null,     // Alarm key (used for auto acknowlegment)
 	ack_by integer not null,         // ID of user who was acknowleged alarm
+	resolved_by integer not null,    // ID of user who was resolved alarm
 	term_by integer not null,        // ID of user who was terminated alarm
 	timeout integer not null,
 	timeout_event integer not null,

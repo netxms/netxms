@@ -458,7 +458,7 @@ private:
    void deleteObject(CSCPMessage *pRequest);
    void getAlarm(CSCPMessage *pRequest);
    void acknowledgeAlarm(CSCPMessage *pRequest);
-   void terminateAlarm(CSCPMessage *pRequest);
+   void resolveAlarm(CSCPMessage *pRequest, bool terminate);
    void deleteAlarm(CSCPMessage *pRequest);
 	void getAlarmNotes(CSCPMessage *pRequest);
 	void updateAlarmNote(CSCPMessage *pRequest);

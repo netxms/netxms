@@ -471,6 +471,7 @@ typedef struct
 #define CMD_GET_TABLE_LAST_VALUES      0x0104
 #define CMD_GET_TABLE_DCI_DATA         0x0105
 #define CMD_GET_THRESHOLD_SUMMARY      0x0106
+#define CMD_RESOLVE_ALARM              0x0107
 
 
 //
@@ -895,6 +896,7 @@ typedef struct
 #define VID_EXPECTED_STATE          ((DWORD)416)
 #define VID_LINK_COLOR              ((DWORD)417)
 #define VID_EXACT_MATCH             ((DWORD)418)
+#define VID_RESOLVED_BY_USER        ((DWORD)419)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

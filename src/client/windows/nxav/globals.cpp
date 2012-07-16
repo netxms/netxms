@@ -55,7 +55,7 @@ DWORD g_dwOptions = 0;
 
 TCHAR *g_szStatusText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL"), _T("UNKNOWN"), _T("UNMANAGED"), _T("DISABLED"), _T("TESTING") };
 TCHAR *g_szStatusTextSmall[] = { _T("Normal"), _T("Warning"), _T("Minor"), _T("Major"), _T("Critical"), _T("Unknown"), _T("Unmanaged"), _T("Disabled"), _T("Testing") };
-TCHAR *g_szAlarmState[] = { _T("Outstanding"), _T("Acknowledged"), _T("Terminated") };
+TCHAR *g_szAlarmState[] = { _T("Outstanding"), _T("Acknowledged"), _T("Resolved"), _T("Terminated") };
 
 
 //

@@ -203,6 +203,7 @@ typedef void * NXC_SESSION;
 #define SEVERITY_CRITICAL     4
 #define SEVERITY_FROM_EVENT   5
 #define SEVERITY_TERMINATE    6
+#define SEVERITY_RESOLVE      7
 
 
 //
@@ -211,7 +212,8 @@ typedef void * NXC_SESSION;
 
 #define ALARM_STATE_OUTSTANDING  0x00
 #define ALARM_STATE_ACKNOWLEDGED 0x01
-#define ALARM_STATE_TERMINATED   0x02
+#define ALARM_STATE_RESOLVED     0x02
+#define ALARM_STATE_TERMINATED   0x03
 #define ALARM_STATE_MASK         0x0F		/* mask for selecting alarm state */
 #define ALARM_STATE_STICKY       0x10		/* bit flag indicating sticky state */
 
@@ -1019,7 +1021,8 @@ typedef struct
    BYTE nOriginalSeverity; // Alarm's original severity
    BYTE nState;            // Current state
    BYTE nHelpDeskState;    // State of alarm in helpdesk system
-   DWORD dwAckByUser;      // Id of user who was acknowledged this alarm (0 for system)
+   DWORD dwAckByUser;      // ID of user who was acknowledged this alarm (0 for system)
+	DWORD dwResolvedByUser; // ID of user who was resolved this alarm (0 for system)
    DWORD dwTermByUser;     // ID of user who was terminated this alarm (0 for system)
    DWORD dwRepeatCount;
 	DWORD dwTimeout;

@@ -43,6 +43,7 @@ static NXCORE_LOG s_logs[] =
 			{ _T("creation_time"), _T("Created"), LC_TIMESTAMP },
 			{ _T("last_change_time"), _T("Last Changed"), LC_TIMESTAMP },
 			{ _T("ack_by"), _T("Ack by"), LC_USER_ID },
+			{ _T("resolved_by"), _T("Resolved by"), LC_USER_ID },
 			{ _T("term_by"), _T("Terminated by"), LC_USER_ID },
 			{ NULL, NULL, 0 }
 		}

@@ -39,11 +39,11 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class AlarmListLabelProvider implements ITableLabelProvider
 {
-	private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, Messages.AlarmListLabelProvider_AlarmState_Terminated };
+	private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, "Resolved", Messages.AlarmListLabelProvider_AlarmState_Terminated };
 	
 	private NXCSession session;
 	private Image[] severityImages = new Image[5];
-	private Image[] stateImages = new Image[3];
+	private Image[] stateImages = new Image[4];
 	private Image commentsImage;
 	private boolean blinkState = true;
 	
@@ -62,7 +62,8 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 
 		stateImages[0] = Activator.getImageDescriptor("icons/outstanding.png").createImage(); //$NON-NLS-1$
 		stateImages[1] = Activator.getImageDescriptor("icons/acknowledged.png").createImage(); //$NON-NLS-1$
-		stateImages[2] = Activator.getImageDescriptor("icons/terminated.png").createImage(); //$NON-NLS-1$
+		stateImages[2] = Activator.getImageDescriptor("icons/acknowledged.png").createImage(); //$NON-NLS-1$
+		stateImages[3] = Activator.getImageDescriptor("icons/terminated.png").createImage(); //$NON-NLS-1$
 		
 		commentsImage = Activator.getImageDescriptor("icons/comments.png").createImage(); //$NON-NLS-1$
 	}

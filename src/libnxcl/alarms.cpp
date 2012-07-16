@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -31,6 +31,7 @@
 static void AlarmFromMsg(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 {
    pAlarm->dwAckByUser = pMsg->GetVariableLong(VID_ACK_BY_USER);
+   pAlarm->dwResolvedByUser = pMsg->GetVariableLong(VID_RESOLVED_BY_USER);
    pAlarm->dwTermByUser = pMsg->GetVariableLong(VID_TERMINATED_BY_USER);
    pAlarm->qwSourceEventId = pMsg->GetVariableInt64(VID_EVENT_ID);
    pAlarm->dwSourceEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);

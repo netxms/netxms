@@ -899,8 +899,11 @@ void ClientSession::processingThread()
          case CMD_ACK_ALARM:
             acknowledgeAlarm(pMsg);
             break;
+         case CMD_RESOLVE_ALARM:
+            resolveAlarm(pMsg, false);
+            break;
          case CMD_TERMINATE_ALARM:
-            terminateAlarm(pMsg);
+            resolveAlarm(pMsg, true);
             break;
          case CMD_DELETE_ALARM:
             deleteAlarm(pMsg);
@@ -4697,10 +4700,10 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
 
 
 //
-// Terminate alarm
+// Resolve/Terminate alarm
 //
 
-void ClientSession::terminateAlarm(CSCPMessage *pRequest)
+void ClientSession::resolveAlarm(CSCPMessage *pRequest, bool terminate)
 {
    CSCPMessage msg;
    NetObj *pObject;
@@ -4718,7 +4721,7 @@ void ClientSession::terminateAlarm(CSCPMessage *pRequest)
       // User should have "terminate alarm" right to the object
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS))
       {
-         msg.SetVariable(VID_RCC, g_alarmMgr.terminateById(dwAlarmId, m_dwUserId));
+         msg.SetVariable(VID_RCC, g_alarmMgr.resolveById(dwAlarmId, m_dwUserId, terminate));
       }
       else
       {

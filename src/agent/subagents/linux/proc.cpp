@@ -245,7 +245,7 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 
 
 //
-// Handler for System.ProcessCount, Process.Count() and Process,CountEx() parameters
+// Handler for System.ProcessCount, Process.Count() and Process.CountEx() parameters
 //
 
 LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
