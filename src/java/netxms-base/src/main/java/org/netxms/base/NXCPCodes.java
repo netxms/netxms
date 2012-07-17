@@ -286,6 +286,7 @@ public final class NXCPCodes
 	public static final int CMD_GET_TABLE_LAST_VALUES    = 0x0104;
 	public static final int CMD_GET_TABLE_DCI_DATA       = 0x0105;
 	public static final int CMD_GET_THRESHOLD_SUMMARY    = 0x0106;
+	public static final int CMD_RESOLVE_ALARM            = 0x0107;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
@@ -706,6 +707,8 @@ public final class NXCPCodes
 	public static final long VID_EXPECTED_STATE          = 416;
 	public static final long VID_LINK_COLOR              = 417;
 	public static final long VID_EXACT_MATCH             = 418;
+	public static final long VID_RESOLVED_BY_USER        = 419;
+	public static final long VID_IS_STICKY               = 420;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

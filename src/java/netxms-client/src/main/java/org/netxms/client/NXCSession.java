@@ -2076,6 +2076,24 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/**
+	 * Resolve alarm.
+	 * 
+	 * @param alarmId
+	 *           Identifier of alarm to be resolved.
+	 * @throws IOException
+	 *            if socket I/O error occurs
+	 * @throws NXCException
+	 *            if NetXMS server returns an error or operation was timed out
+	 */
+	public void resolveAlarm(final long alarmId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_RESOLVE_ALARM);
+		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	/**
 	 * Terminate alarm.
 	 * 
 	 * @param alarmId

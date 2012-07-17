@@ -94,6 +94,7 @@ public class AlarmList extends Composite
 	private Action actionCopyMessage;
 	private Action actionComments;
 	private Action actionAcknowledge;
+	private Action actionResolve;
 	private Action actionStickyAcknowledge;
 	private Action actionTerminate;
 	
@@ -319,11 +320,19 @@ public class AlarmList extends Composite
 			}
 		};
 
-		actionStickyAcknowledge = new Action("&Sticky acknowledge") {
+		actionStickyAcknowledge = new Action("&Sticky acknowledge", Activator.getImageDescriptor("icons/acknowledged_sticky.png")) {
 			@Override
 			public void run()
 			{
 				acknowledgeAlarms(true);
+			}
+		};
+
+		actionResolve = new Action("&Resolve", Activator.getImageDescriptor("icons/resolved.png")) {
+			@Override
+			public void run()
+			{
+				resolveAlarms();
 			}
 		};
 
@@ -368,6 +377,7 @@ public class AlarmList extends Composite
 	{
 		manager.add(actionAcknowledge);
 		manager.add(actionStickyAcknowledge);
+		manager.add(actionResolve);
 		manager.add(actionTerminate);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -504,6 +514,41 @@ public class AlarmList extends Composite
 		}.start();
 	}
 	
+	
+	/**
+	 * Resolve selected alarms
+	 */
+	private void resolveAlarms()
+	{
+		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+		if (selection.size() == 0)
+			return;
+		
+		final Object[] alarms = selection.toArray();
+		new ConsoleJob("Resolving alarms", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				monitor.beginTask("Resolve alarm...", alarms.length);
+				for(Object o : alarms)
+				{
+					if (monitor.isCanceled())
+						break;
+					if (o instanceof Alarm)
+						session.resolveAlarm(((Alarm)o).getId());
+					monitor.worked(1);
+				}
+				monitor.done();
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot resolve alarm";
+			}
+		}.start();
+	}
+
 	/**
 	 * Terminate selected alarms
 	 */

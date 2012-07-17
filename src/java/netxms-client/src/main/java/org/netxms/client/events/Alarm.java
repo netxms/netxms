@@ -46,7 +46,9 @@ public class Alarm
 	private int originalSeverity;
 	private int repeatCount;
 	private int state;
+	private boolean sticky;
 	private int ackByUser;
+	private int resolvedByUser;
 	private int terminateByUser;
 	private long sourceEventId;
 	private int sourceEventCode;
@@ -71,7 +73,9 @@ public class Alarm
 		originalSeverity = msg.getVariableAsInteger(NXCPCodes.VID_ORIGINAL_SEVERITY);
 		repeatCount = msg.getVariableAsInteger(NXCPCodes.VID_REPEAT_COUNT);
 		state = msg.getVariableAsInteger(NXCPCodes.VID_STATE);
+		sticky = msg.getVariableAsBoolean(NXCPCodes.VID_IS_STICKY);
 		ackByUser = msg.getVariableAsInteger(NXCPCodes.VID_ACK_BY_USER);
+		resolvedByUser = msg.getVariableAsInteger(NXCPCodes.VID_RESOLVED_BY_USER);
 		terminateByUser = msg.getVariableAsInteger(NXCPCodes.VID_TERMINATED_BY_USER);
 		sourceEventId = msg.getVariableAsInt64(NXCPCodes.VID_EVENT_ID);
 		sourceEventCode = msg.getVariableAsInteger(NXCPCodes.VID_EVENT_CODE);
@@ -237,5 +241,21 @@ public class Alarm
 	public int getCommentsCount()
 	{
 		return commentsCount;
+	}
+
+	/**
+	 * @return the resolvedByUser
+	 */
+	public int getResolvedByUser()
+	{
+		return resolvedByUser;
+	}
+
+	/**
+	 * @return the sticky
+	 */
+	public boolean isSticky()
+	{
+		return sticky;
 	}
 }

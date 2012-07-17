@@ -47,7 +47,8 @@ public class RuleAlarm extends PropertyPage
 {
 	private static final int ALARM_NO_ACTION = 0;
 	private static final int ALARM_CREATE = 1;
-	private static final int ALARM_TERMINATE = 2;
+	private static final int ALARM_RESOLVE = 2;
+	private static final int ALARM_TERMINATE = 3;
 	
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
@@ -56,6 +57,7 @@ public class RuleAlarm extends PropertyPage
 	private Composite dialogArea;
 	private Button alarmNoAction;
 	private Button alarmCreate;
+	private Button alarmResolve;
 	private Button alarmTerminate;
 	private Composite alarmCreationGroup;
 	private Composite alarmTerminationGroup;
@@ -119,6 +121,23 @@ public class RuleAlarm extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				changeAlarmAction(ALARM_CREATE);
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
+		
+		alarmResolve = new Button(radioGroup, SWT.RADIO);
+		alarmResolve.setText("Resolve alarms");
+		alarmResolve.setSelection(alarmAction == ALARM_RESOLVE);
+		alarmResolve.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				changeAlarmAction(ALARM_RESOLVE);
 			}
 			
 			@Override
@@ -230,9 +249,9 @@ public class RuleAlarm extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.TOP;
-		gd.exclude = (alarmAction != ALARM_TERMINATE);
+		gd.exclude = ((alarmAction != ALARM_TERMINATE) && (alarmAction != ALARM_RESOLVE));
 		alarmTerminationGroup.setLayoutData(gd);
-		alarmTerminationGroup.setVisible(alarmAction == ALARM_TERMINATE);
+		alarmTerminationGroup.setVisible((alarmAction == ALARM_TERMINATE) || (alarmAction == ALARM_RESOLVE));
 		layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginHeight = 0;
@@ -240,7 +259,7 @@ public class RuleAlarm extends PropertyPage
 		alarmTerminationGroup.setLayout(layout);
 		
 		alarmKeyTerminate = new LabeledText(alarmTerminationGroup, SWT.NONE);
-		alarmKeyTerminate.setLabel("Terminate all alarms with key");
+		alarmKeyTerminate.setLabel((alarmAction == ALARM_TERMINATE)? "Terminate all alarms with key" : "Resolve all alarms with key");
 		alarmKeyTerminate.setText(rule.getAlarmKey());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -248,7 +267,7 @@ public class RuleAlarm extends PropertyPage
 		alarmKeyTerminate.setLayoutData(gd);
 		
 		checkTerminateWithRegexp = new Button(alarmTerminationGroup, SWT.CHECK);
-		checkTerminateWithRegexp.setText("Use regular expression for alarm termination");
+		checkTerminateWithRegexp.setText((alarmAction == ALARM_TERMINATE)? "Use regular expression for alarm termination" : "Use regular expression for alarm resolve");
 		checkTerminateWithRegexp.setSelection((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0);
 
 		return dialogArea;
@@ -266,6 +285,9 @@ public class RuleAlarm extends PropertyPage
 		
 		if (rule.getAlarmSeverity() < Severity.UNMANAGED)
 			return ALARM_CREATE;
+		
+		if (rule.getAlarmSeverity() == Severity.DISABLED)
+			return ALARM_RESOLVE;
 		
 		return ALARM_TERMINATE;
 	}
@@ -288,8 +310,10 @@ public class RuleAlarm extends PropertyPage
 			Composite group = (alarmAction == ALARM_CREATE) ? alarmCreationGroup : alarmTerminationGroup;
 			((GridData)group.getLayoutData()).exclude = false;
 			group.setVisible(true);
+			alarmKeyTerminate.setLabel((alarmAction == ALARM_TERMINATE)? "Terminate all alarms with key" : "Resolve all alarms with key");
+			checkTerminateWithRegexp.setText((alarmAction == ALARM_TERMINATE)? "Use regular expression for alarm termination" : "Use regular expression for alarm resolve");
 		}
-		dialogArea.layout();
+		dialogArea.layout(true, true);
 	}
 	
 	/**
@@ -321,9 +345,10 @@ public class RuleAlarm extends PropertyPage
 				rule.setAlarmTimeoutEvent(timeoutEvent.getEventCode());
 				rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM);
 				break;
+			case ALARM_RESOLVE:
 			case ALARM_TERMINATE:
 				rule.setAlarmKey(alarmKeyTerminate.getText());
-				rule.setAlarmSeverity(Severity.UNMANAGED);
+				rule.setAlarmSeverity((alarmAction == ALARM_TERMINATE) ? Severity.UNMANAGED : Severity.DISABLED);
 				rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM);
 				if (checkTerminateWithRegexp.getSelection())
 					rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.TERMINATE_BY_REGEXP);

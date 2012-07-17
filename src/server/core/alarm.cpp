@@ -38,7 +38,7 @@ void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 {
    pMsg->SetVariable(VID_ALARM_ID, pAlarm->dwAlarmId);
    pMsg->SetVariable(VID_ACK_BY_USER, pAlarm->dwAckByUser);
-   pMsg->SetVariable(VID_RESOLVED_BY_USER, pAlarm->dwResolveByUser);
+   pMsg->SetVariable(VID_RESOLVED_BY_USER, pAlarm->dwResolvedByUser);
    pMsg->SetVariable(VID_TERMINATED_BY_USER, pAlarm->dwTermByUser);
    pMsg->SetVariable(VID_EVENT_CODE, pAlarm->dwSourceEventCode);
    pMsg->SetVariable(VID_EVENT_ID, pAlarm->qwSourceEventId);
@@ -48,6 +48,7 @@ void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
    pMsg->SetVariable(VID_ALARM_KEY, pAlarm->szKey);
    pMsg->SetVariable(VID_ALARM_MESSAGE, pAlarm->szMessage);
    pMsg->SetVariable(VID_STATE, (WORD)(pAlarm->nState & ALARM_STATE_MASK));	// send only state to client, without flags
+	pMsg->SetVariable(VID_IS_STICKY, (WORD)((pAlarm->nState & ALARM_STATE_STICKY) ? 1 : 0));
    pMsg->SetVariable(VID_CURRENT_SEVERITY, (WORD)pAlarm->nCurrentSeverity);
    pMsg->SetVariable(VID_ORIGINAL_SEVERITY, (WORD)pAlarm->nOriginalSeverity);
    pMsg->SetVariable(VID_HELPDESK_STATE, (WORD)pAlarm->nHelpDeskState);
@@ -269,7 +270,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 				  (const TCHAR *)DBPrepareString(g_hCoreDB, alarm.szMessage),
               alarm.nOriginalSeverity, alarm.nCurrentSeverity,
 				  (const TCHAR *)DBPrepareString(g_hCoreDB, alarm.szKey),
-				  alarm.nState, alarm.dwAckByUser, alarm.dwResolveByUser, alarm.nHelpDeskState,
+				  alarm.nState, alarm.dwAckByUser, alarm.dwResolvedByUser, alarm.nHelpDeskState,
 				  (const TCHAR *)DBPrepareString(g_hCoreDB, alarm.szHelpDeskRef),
               alarm.dwRepeatCount, alarm.dwTermByUser, alarm.dwTimeout,
 				  alarm.dwTimeoutEvent, alarm.qwSourceEventId);
@@ -346,7 +347,7 @@ DWORD AlarmManager::resolveById(DWORD dwAlarmId, DWORD dwUserId, bool terminate)
 				if (terminate)
 					m_pAlarmList[i].dwTermByUser = dwUserId;
 				else
-					m_pAlarmList[i].dwResolveByUser = dwUserId;
+					m_pAlarmList[i].dwResolvedByUser = dwUserId;
             m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
 				m_pAlarmList[i].nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
 				notifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
@@ -402,7 +403,10 @@ void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool termin
          // Terminate alarm
 			m_pAlarmList[i].nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
          m_pAlarmList[i].dwLastChangeTime = dwCurrTime;
-         m_pAlarmList[i].dwTermByUser = 0;
+			if (terminate)
+				m_pAlarmList[i].dwTermByUser = 0;
+			else
+				m_pAlarmList[i].dwResolvedByUser = 0;
 			notifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
          updateAlarmInDB(&m_pAlarmList[i]);
 			if (terminate)
@@ -473,7 +477,7 @@ void AlarmManager::updateAlarmInDB(NXC_ALARM *pAlarm)
 			     (const TCHAR *)DBPrepareString(g_hCoreDB, pAlarm->szHelpDeskRef),
               pAlarm->dwTimeout, pAlarm->dwTimeoutEvent,
 			     (const TCHAR *)DBPrepareString(g_hCoreDB, pAlarm->szMessage),
-				  pAlarm->dwResolveByUser, pAlarm->dwAlarmId);
+				  pAlarm->dwResolvedByUser, pAlarm->dwAlarmId);
    QueueSQLRequest(szQuery);
 }
 

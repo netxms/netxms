@@ -18,11 +18,17 @@
  */
 package org.netxms.ui.eclipse.epp.widgets;
 
+import java.util.Iterator;
 import java.util.Map.Entry;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.MouseEvent;
@@ -36,7 +42,13 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.internal.IWorkbenchHelpContextIds;
+import org.eclipse.ui.internal.WorkbenchMessages;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
+import org.eclipse.ui.internal.dialogs.PropertyPageContributorManager;
+import org.eclipse.ui.internal.dialogs.PropertyPageManager;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
@@ -647,12 +659,19 @@ public class RuleEditor extends Composite
 					createLabel(clientArea, 1, false, "with key \"" + rule.getAlarmKey() + "\"", null);
 				}
 			}
-			else
+			else if (rule.getAlarmSeverity() == Severity.UNMANAGED)
 			{
 				addActionGroupLabel(clientArea, "Terminate alarms", editor.getImageTerminate(), listener);
 				createLabel(clientArea, 1, false, "with key \"" + rule.getAlarmKey() + "\"", listener);
 				if ((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0)
 					createLabel(clientArea, 1, false, "(use regular expression for alarm termination)", listener);
+			}
+			else if (rule.getAlarmSeverity() == Severity.DISABLED)
+			{
+				addActionGroupLabel(clientArea, "Resolve alarms", editor.getImageTerminate(), listener);
+				createLabel(clientArea, 1, false, "with key \"" + rule.getAlarmKey() + "\"", listener);
+				if ((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0)
+					createLabel(clientArea, 1, false, "(use regular expression for alarm resolve)", listener);
 			}
 		}
 		
@@ -786,11 +805,68 @@ public class RuleEditor extends Composite
 	}
 	
 	/**
-	 * Edit rule's condition
+	 * Create a new property dialog.
+	 * 
+	 * @param shell
+	 *            the parent shell
+	 * @param propertyPageId
+	 *            the property page id
+	 * @param element
+	 *            the adaptable element
+	 * @return the property dialog
+	 */
+	@SuppressWarnings("rawtypes")
+	private static PropertyDialog createDialogOn(Shell shell, final String propertyPageId, Object element, String name)
+	{
+		PropertyPageManager pageManager = new PropertyPageManager();
+		String title = "";//$NON-NLS-1$
+
+		if (element == null)
+		{
+			return null;
+		}
+		
+		// load pages for the selection
+		// fill the manager with contributions from the matching contributors
+		PropertyPageContributorManager.getManager().contribute(pageManager, element);
+		// testing if there are pages in the manager
+		Iterator pages = pageManager.getElements(PreferenceManager.PRE_ORDER).iterator();
+		if (!pages.hasNext())
+		{
+			MessageDialog.openInformation(shell, WorkbenchMessages.PropertyDialog_messageTitle,
+					NLS.bind(WorkbenchMessages.PropertyDialog_noPropertyMessage, name));
+			return null;
+		}
+		title = NLS.bind(WorkbenchMessages.PropertyDialog_propertyMessage, name);
+		PropertyDialog propertyDialog = new PropertyDialog(shell, pageManager, new StructuredSelection(element)) {
+			@Override
+			protected TreeViewer createTreeViewer(Composite parent)
+			{
+				TreeViewer viewer = super.createTreeViewer(parent);
+				viewer.expandAll();
+				viewer.setAutoExpandLevel(TreeViewer.ALL_LEVELS);
+				return viewer;
+			}
+		};
+
+		if (propertyPageId != null)
+		{
+			propertyDialog.setSelectedNode(propertyPageId);
+		}
+		propertyDialog.create();
+
+		propertyDialog.getShell().setText(title);
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(propertyDialog.getShell(), IWorkbenchHelpContextIds.PROPERTY_DIALOG);
+
+		return propertyDialog;
+	}
+
+	/**
+	 * Edit rule
 	 */
 	private void editRule(String pageId)
 	{
-		PropertyDialog dlg = PropertyDialog.createDialogOn(editor.getSite().getShell(), pageId, this);
+		PropertyDialog dlg = createDialogOn(editor.getSite().getShell(), pageId, this, "Rule " + ruleNumber);
 		if (dlg != null)
 		{
 			modified = false;

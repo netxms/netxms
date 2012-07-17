@@ -292,7 +292,7 @@ static BOOL H_UpgradeFromV254(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='254' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='255' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
 
@@ -6358,6 +6358,7 @@ static struct
 	{ 251, 252, H_UpgradeFromV251 },
 	{ 252, 253, H_UpgradeFromV252 },
 	{ 253, 254, H_UpgradeFromV253 },
+	{ 254, 255, H_UpgradeFromV254 },
    { 0, 0, NULL }
 };
 

@@ -897,6 +897,7 @@ typedef struct
 #define VID_LINK_COLOR              ((DWORD)417)
 #define VID_EXACT_MATCH             ((DWORD)418)
 #define VID_RESOLVED_BY_USER        ((DWORD)419)
+#define VID_IS_STICKY               ((DWORD)420)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)
