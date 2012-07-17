@@ -13,6 +13,11 @@
             id="org.netxms.ui.eclipse.library.commands.pause_trace"
             name="%command.PauseTrace">
       </command>
+      <command
+            description="Copy to clipboard"
+            id="org.netxms.ui.eclipse.library.commands.copy"
+            name="Copy">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -27,6 +32,12 @@
             contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="PAUSE">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.library.commands.copy"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+C">
       </key>
    </extension>
    <extension

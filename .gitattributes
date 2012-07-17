@@ -1247,6 +1247,7 @@ src/java/netxms-eclipse/LogViewer/icons/next_page.png -text
 src/java/netxms-eclipse/LogViewer/icons/outstanding.png -text
 src/java/netxms-eclipse/LogViewer/icons/prev_page.png -text
 src/java/netxms-eclipse/LogViewer/icons/remove.png -text
+src/java/netxms-eclipse/LogViewer/icons/resolved.png -text
 src/java/netxms-eclipse/LogViewer/icons/syslog.png -text
 src/java/netxms-eclipse/LogViewer/icons/terminated.png -text
 src/java/netxms-eclipse/LogViewer/plugin.xml -text

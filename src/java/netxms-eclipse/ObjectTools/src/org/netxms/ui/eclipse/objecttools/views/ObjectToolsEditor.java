@@ -263,8 +263,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

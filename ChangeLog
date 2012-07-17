@@ -20,6 +20,12 @@
 	- New functions: GetObjectParents, GetObjectChildren
 - AIX Subagent:
 	- New parameters available: System.CPU.PhysicalAverage.*
+- Fixed bugs:
+	- Config file with CRLF loaded incorrectly on UNIX
+	- Unable to bind object in WebUI
+	- Graph colors can be ignored in dashboards
+	- Object deletion may not be immediately reflected in console
+	- Unable to upload file into image library from Web UI
 
 
 *
