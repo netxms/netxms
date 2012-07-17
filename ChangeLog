@@ -12,6 +12,7 @@
 	- Added "Status Map" view
 	- Added option to hide unsupported DCIs from "Last Values" view
 	- Added option to indicate data collection errors in "Last Values" view
+	- Added "copy to clipboard" function in log viewers and monitors
 - Android client:
 	- Dashboards implemented
 	- Node status/configuration/topology poll implemented

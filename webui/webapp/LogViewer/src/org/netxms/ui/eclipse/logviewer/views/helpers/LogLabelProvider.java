@@ -58,9 +58,10 @@ public class LogLabelProvider implements ITableLabelProvider
 		columns = c.toArray(new LogColumn[c.size()]);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		alarmStateImages = new Image[3];
+		alarmStateImages = new Image[4];
 		alarmStateImages[Alarm.STATE_OUTSTANDING] = Activator.getImageDescriptor("icons/outstanding.png").createImage();
 		alarmStateImages[Alarm.STATE_ACKNOWLEDGED] = Activator.getImageDescriptor("icons/acknowledged.png").createImage();
+		alarmStateImages[Alarm.STATE_RESOLVED] = Activator.getImageDescriptor("icons/resolved.png").createImage();
 		alarmStateImages[Alarm.STATE_TERMINATED] = Activator.getImageDescriptor("icons/terminated.png").createImage();
 		
 		wbLabelProvider = new WorkbenchLabelProvider();

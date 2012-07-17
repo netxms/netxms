@@ -23,13 +23,15 @@ import java.util.Collection;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -38,9 +40,12 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
@@ -59,6 +64,7 @@ import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
 import org.netxms.ui.eclipse.logviewer.widgets.FilterBuilder;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Universal log viewer
@@ -159,8 +165,9 @@ public class LogViewer extends ViewPart
 		fd.right = new FormAttachment(100, 0);
 		filterBuilder.setLayoutData(fd);
 		
-		makeActions();
+		createActions();
 		contributeToActionBars();
+		createPopupMenu();
 		
 		new ConsoleJob("Open log \"" + logName + "\"", this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
@@ -277,6 +284,8 @@ public class LogViewer extends ViewPart
 		manager.add(actionGoNextPage);
 		manager.add(actionGoLastPage);
 		manager.add(new Separator());
+		manager.add(actionCopyToClipboard);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -300,9 +309,44 @@ public class LogViewer extends ViewPart
 	}
 
 	/**
+	 * Create pop-up menu for user list
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener() {
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu
+		Menu menu = menuMgr.createContextMenu(viewer.getControl());
+		viewer.getControl().setMenu(menu);
+
+		// Register menu for extension.
+		getSite().registerContextMenu(menuMgr, viewer);
+	}
+
+	/**
+	 * Fill context menu
+	 * 
+	 * @param mgr Menu manager
+	 */
+	protected void fillContextMenu(final IMenuManager mgr)
+	{
+		mgr.add(actionCopyToClipboard);
+		mgr.add(new Separator());
+		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+	}
+
+	/**
 	 * Create actions
 	 */
-	private void makeActions()
+	private void createActions()
 	{
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
@@ -395,6 +439,8 @@ public class LogViewer extends ViewPart
 				copySelectionToClipboard();
 			}
 		};
+      actionCopyToClipboard.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.copy");
+		handlerService.activateHandler(actionCopyToClipboard.getActionDefinitionId(), new ActionHandler(actionCopyToClipboard));
 	}
 	
 	/**
@@ -515,11 +561,23 @@ public class LogViewer extends ViewPart
 	 */
 	private void copySelectionToClipboard()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		StringBuilder sb = new StringBuilder();
-		for(Object o : selection.toList())
+		TableItem[] selection = viewer.getTable().getSelection();
+		if (selection.length > 0)
 		{
-			
+			StringBuilder sb = new StringBuilder();
+			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n";
+			for(int i = 0; i < selection.length; i++)
+			{
+				if (i > 0)
+					sb.append(newLine);
+				sb.append(selection[i].getText(0));
+				for(int j = 1; j < viewer.getTable().getColumnCount(); j++)
+				{
+					sb.append('\t');
+					sb.append(selection[i].getText(j));
+				}
+			}
+			WidgetHelper.copyToClipboard(sb.toString());
 		}
 	}
 }

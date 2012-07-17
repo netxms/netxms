@@ -2807,6 +2807,7 @@ webui/webapp/LogViewer/icons/next_page.png -text
 webui/webapp/LogViewer/icons/outstanding.png -text
 webui/webapp/LogViewer/icons/prev_page.png -text
 webui/webapp/LogViewer/icons/remove.png -text
+webui/webapp/LogViewer/icons/resolved.png -text
 webui/webapp/LogViewer/icons/syslog.png -text
 webui/webapp/LogViewer/icons/terminated.png -text
 webui/webapp/LogViewer/plugin.xml -text

@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.views;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -42,6 +43,7 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.contexts.IContextService;
@@ -70,6 +72,7 @@ public abstract class AbstractTraceView extends ViewPart
 	private Action actionClear;
 	private Action actionPause;
 	private Action actionShowFilter;
+	private Action actionCopy;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -101,7 +104,7 @@ public abstract class AbstractTraceView extends ViewPart
 			}
 		});
 		
-		viewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.SINGLE);
+		viewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.getTable().setHeaderVisible(true);
 		viewer.setContentProvider(new ArrayContentProvider());
 		setupViewer(viewer);
@@ -192,8 +195,17 @@ public abstract class AbstractTraceView extends ViewPart
       };
       actionShowFilter.setChecked(filterEnabled);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.show_trace_filter");
-		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
-		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
+		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
+		
+      actionCopy = new Action("&Copy to clipboard", SharedIcons.COPY) {
+			@Override
+			public void run()
+			{
+				copySelectionToClipboard();
+			}
+      };
+      actionCopy.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.copy");
+		handlerService.activateHandler(actionCopy.getActionDefinitionId(), new ActionHandler(actionCopy));
 	}
 	
 	/**
@@ -218,6 +230,8 @@ public abstract class AbstractTraceView extends ViewPart
 		manager.add(new Separator());
 		manager.add(actionPause);
 		manager.add(actionClear);
+		manager.add(new Separator());
+		manager.add(actionCopy);
 	}
 
 	/**
@@ -264,6 +278,8 @@ public abstract class AbstractTraceView extends ViewPart
 	 */
 	protected void fillContextMenu(final IMenuManager manager)
 	{
+		manager.add(actionCopy);
+		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
@@ -420,5 +436,30 @@ public abstract class AbstractTraceView extends ViewPart
 	protected void runInUIThread(final Runnable runnable)
 	{
 		viewer.getControl().getDisplay().asyncExec(runnable);
+	}
+	
+	/**
+	 * Copy selection in the list to clipboard
+	 */
+	private void copySelectionToClipboard()
+	{
+		TableItem[] selection = viewer.getTable().getSelection();
+		if (selection.length > 0)
+		{
+			StringBuilder sb = new StringBuilder();
+			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n";
+			for(int i = 0; i < selection.length; i++)
+			{
+				if (i > 0)
+					sb.append(newLine);
+				sb.append(selection[i].getText(0));
+				for(int j = 1; j < viewer.getTable().getColumnCount(); j++)
+				{
+					sb.append('\t');
+					sb.append(selection[i].getText(j));
+				}
+			}
+			WidgetHelper.copyToClipboard(sb.toString());
+		}
 	}
 }
