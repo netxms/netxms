@@ -2,6 +2,7 @@
 * 1.2.2
 *
 
+- New alarm state - "Resolved"
 - Added drivers for Cisco ESW and Dell PowerConnect switches
 - Added MIBs for Dell PowerConnect switches
 - Management console:

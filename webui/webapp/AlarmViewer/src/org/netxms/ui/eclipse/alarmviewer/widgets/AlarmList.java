@@ -92,6 +92,7 @@ public class AlarmList extends Composite
 	private Action actionCopyMessage;
 	private Action actionComments;
 	private Action actionAcknowledge;
+	private Action actionResolve;
 	private Action actionStickyAcknowledge;
 	private Action actionTerminate;
 	
@@ -308,6 +309,8 @@ public class AlarmList extends Composite
 		};
 
 		actionAcknowledge = new Action("&Acknowledge", Activator.getImageDescriptor("icons/acknowledged.png")) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -315,7 +318,9 @@ public class AlarmList extends Composite
 			}
 		};
 
-		actionStickyAcknowledge = new Action("&Sticky acknowledge") {
+		actionStickyAcknowledge = new Action("&Sticky acknowledge", Activator.getImageDescriptor("icons/acknowledged_sticky.png")) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -323,7 +328,19 @@ public class AlarmList extends Composite
 			}
 		};
 
+		actionResolve = new Action("&Resolve", Activator.getImageDescriptor("icons/resolved.png")) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void run()
+			{
+				resolveAlarms();
+			}
+		};
+
 		actionTerminate = new Action("&Terminate", Activator.getImageDescriptor("icons/terminated.png")) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -366,6 +383,7 @@ public class AlarmList extends Composite
 	{
 		manager.add(actionAcknowledge);
 		manager.add(actionStickyAcknowledge);
+		manager.add(actionResolve);
 		manager.add(actionTerminate);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -494,6 +512,41 @@ public class AlarmList extends Composite
 		}.start();
 	}
 	
+	
+	/**
+	 * Resolve selected alarms
+	 */
+	private void resolveAlarms()
+	{
+		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+		if (selection.size() == 0)
+			return;
+		
+		final Object[] alarms = selection.toArray();
+		new ConsoleJob("Resolving alarms", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				monitor.beginTask("Resolve alarm...", alarms.length);
+				for(Object o : alarms)
+				{
+					if (monitor.isCanceled())
+						break;
+					if (o instanceof Alarm)
+						session.resolveAlarm(((Alarm)o).getId());
+					monitor.worked(1);
+				}
+				monitor.done();
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot resolve alarm";
+			}
+		}.start();
+	}
+
 	/**
 	 * Terminate selected alarms
 	 */

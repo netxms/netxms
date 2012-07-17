@@ -40,13 +40,11 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
 public class AlarmListLabelProvider implements ITableLabelProvider
 {
 	private static final long serialVersionUID = 1L;
-
-	// Constants
-	private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, Messages.AlarmListLabelProvider_AlarmState_Terminated };
+	private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, "Resolved", Messages.AlarmListLabelProvider_AlarmState_Terminated };
 	
 	private NXCSession session;
 	private Image[] severityImages = new Image[5];
-	private Image[] stateImages = new Image[3];
+	private Image[] stateImages = new Image[5];
 	private Image commentsImage;
 	private boolean blinkState = true;
 	
@@ -65,7 +63,9 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 
 		stateImages[0] = Activator.getImageDescriptor("icons/outstanding.png").createImage(); //$NON-NLS-1$
 		stateImages[1] = Activator.getImageDescriptor("icons/acknowledged.png").createImage(); //$NON-NLS-1$
-		stateImages[2] = Activator.getImageDescriptor("icons/terminated.png").createImage(); //$NON-NLS-1$
+		stateImages[2] = Activator.getImageDescriptor("icons/resolved.png").createImage(); //$NON-NLS-1$
+		stateImages[3] = Activator.getImageDescriptor("icons/terminated.png").createImage(); //$NON-NLS-1$
+		stateImages[4] = Activator.getImageDescriptor("icons/acknowledged_sticky.png").createImage(); //$NON-NLS-1$
 		
 		commentsImage = Activator.getImageDescriptor("icons/comments.png").createImage(); //$NON-NLS-1$
 	}
@@ -83,6 +83,8 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 			case AlarmList.COLUMN_STATE:
 				if (((Alarm)element).getState() == Alarm.STATE_OUTSTANDING)
 					return blinkState ? stateImages[Alarm.STATE_OUTSTANDING] : SharedIcons.IMG_EMPTY;
+				if ((((Alarm)element).getState() == Alarm.STATE_ACKNOWLEDGED) && ((Alarm)element).isSticky())
+					return stateImages[4];
 				return stateImages[((Alarm)element).getState()];
 			case AlarmList.COLUMN_COMMENTS:
 				return (((Alarm)element).getCommentsCount() > 0) ? commentsImage : null;
@@ -114,7 +116,8 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 			case AlarmList.COLUMN_ACK_BY:
 				if (((Alarm)element).getState() == Alarm.STATE_OUTSTANDING)
 					return null;
-				AbstractUserObject user = session.findUserDBObjectById(((Alarm)element).getAckByUser());
+				long userId = (((Alarm)element).getState() == Alarm.STATE_ACKNOWLEDGED) ? ((Alarm)element).getAckByUser() : ((Alarm)element).getResolvedByUser();
+				AbstractUserObject user = session.findUserDBObjectById(userId);
 				return (user != null) ? user.getName() : ("[" + Long.toString(((Alarm)element).getAckByUser()) + "]");
 			case AlarmList.COLUMN_CREATED:
 				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG).format(((Alarm)element).getCreationTime());
