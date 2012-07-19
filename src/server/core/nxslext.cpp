@@ -995,12 +995,42 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
 
 
 //
+// Get server's configuration variable
+// First argument is a variable name
+// Optional second argumet is default value
+// Returns variable's value if found, default value if not found, and null if not found and no default value given
+//
+
+static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if ((argc == 0) || (argc > 2))
+		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+	if (!argv[0]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	TCHAR buffer[MAX_DB_STRING];
+	if (ConfigReadStr(argv[0]->getValueAsCString(), buffer, MAX_DB_STRING, _T("")))
+	{
+		*ppResult = new NXSL_Value(buffer);
+	}
+	else
+	{
+		*ppResult = (argc == 2) ? new NXSL_Value(argv[1]) : new NXSL_Value;
+	}
+
+	return 0;
+}
+
+
+//
 // Additional server functions to use within all scripts
 //
 
 static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
 	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, 1 },
+   { _T("GetConfigurationVariable"), F_GetConfigurationVariable, -1 },
    { _T("GetCustomAttribute"), F_GetCustomAttribute, 2 },
    { _T("GetEventParameter"), F_GetEventParameter, 2 },
    { _T("GetInterfaceName"), F_GetInterfaceName, 2 },
