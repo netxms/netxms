@@ -85,6 +85,15 @@ DWORD ForwardingDatabase::ifIndexFromPort(DWORD port)
 
 void ForwardingDatabase::addEntry(FDB_ENTRY *entry)
 {
+	// Check for duplicate
+	for(int i = 0; i < m_fdbSize; i++)
+		if (!memcmp(m_fdb[i].macAddr, entry->macAddr, MAC_ADDR_LENGTH))
+		{
+			memcpy(&m_fdb[i], entry, sizeof(FDB_ENTRY));
+			m_fdb[i].ifIndex = ifIndexFromPort(entry->port);
+			return;
+		}
+
 	if (m_fdbSize == m_fdbAllocated)
 	{
 		m_fdbAllocated += 32;
@@ -212,21 +221,25 @@ static DWORD FDBHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pT
 
 
 //
-// dot1dBasePortTable walker's callback
+// dot1qTpFdbEntry walker's callback
 //
 
-static DWORD Dot1dPortTableHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
+static DWORD Dot1qTpFdbHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
-   SNMP_ObjectId *pOid = pVar->GetName();
-   TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4];
-   SNMPConvertOIDToText(pOid->getLength() - 11, (DWORD *)&(pOid->getValue())[11], szSuffix, MAX_OID_LEN * 4);
+	int port = pVar->GetValueAsInt();
+	if (port == 0)
+		return SNMP_ERR_SUCCESS;
 
-	// Get interface index
+   SNMP_ObjectId *pOid = pVar->GetName();
+	DWORD oidLen = pOid->getLength();
+	DWORD oid[MAX_OID_LEN];
+	memcpy(oid, pOid->getValue(), oidLen * sizeof(DWORD));
+
+	// Get port number and status
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
 
-	_tcscpy(szOid, _T(".1.3.6.1.2.1.17.1.4.1.2"));	// Interface index
-   _tcscat(szOid, szSuffix);
-	pRqPDU->bindVariable(new SNMP_Variable(szOid));
+	oid[12] = 3;	// .1.3.6.1.2.1.17.7.1.2.2.1.3 - status
+	pRqPDU->bindVariable(new SNMP_Variable(oid, oidLen));
 
    SNMP_PDU *pRespPDU;
    DWORD rcc = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
@@ -234,15 +247,38 @@ static DWORD Dot1dPortTableHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Tr
 
 	if (rcc == SNMP_ERR_SUCCESS)
    {
-		PORT_MAPPING_ENTRY pm;
+		int status = pRespPDU->getVariable(0)->GetValueAsInt();
+		if (status == 3)	// status 3 == learned
+		{
+			FDB_ENTRY entry;
 
-		pm.port = pVar->GetValueAsUInt();
-		pm.ifIndex = pRespPDU->getVariable(0)->GetValueAsInt();
-		((ForwardingDatabase *)arg)->addPortMapping(&pm);
+			memset(&entry, 0, sizeof(FDB_ENTRY));
+			entry.port = (DWORD)port;
+			for(DWORD i = oidLen - MAC_ADDR_LENGTH, j = 0; i < oidLen; i++)
+				entry.macAddr[j++] = (BYTE)oid[i];
+			Node *node = FindNodeByMAC(entry.macAddr);
+			entry.nodeObject = (node != NULL) ? node->Id() : 0;
+			((ForwardingDatabase *)arg)->addEntry(&entry);
+		}
       delete pRespPDU;
 	}
 
 	return rcc;
+}
+
+
+//
+// dot1dBasePortTable walker's callback
+//
+
+static DWORD Dot1dPortTableHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
+{
+   SNMP_ObjectId *pOid = pVar->GetName();
+	PORT_MAPPING_ENTRY pm;
+	pm.port = pOid->getValue()[pOid->getLength() - 1];
+	pm.ifIndex = pVar->GetValueAsUInt();
+	((ForwardingDatabase *)arg)->addPortMapping(&pm);
+	return SNMP_ERR_SUCCESS;
 }
 
 
@@ -256,8 +292,11 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 		return NULL;
 
 	ForwardingDatabase *fdb = new ForwardingDatabase();
-	node->CallSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.1"), Dot1dPortTableHandler, fdb);
+	node->CallSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb);
+	node->CallSnmpEnumerate(_T(".1.3.6.1.2.1.17.7.1.2.2.1.2"), Dot1qTpFdbHandler, fdb);
+	DbgPrintf(5, _T("FDB: %d entries read from dot1qTpFdbTable"), fdb->getSize());
 	node->CallSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb);
+	DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable"), fdb->getSize());
 	fdb->sort();
 	return fdb;
 }
