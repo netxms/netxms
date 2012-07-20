@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -196,6 +196,7 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
    struct tm *lt;
    TCHAR *pText, szBuffer[4], scriptName[256];
 	int i;
+	uuid_t guid;
 
 	DbgPrintf(8, _T("Event::expandText(event=%p sourceObject=%d template='%s' alarmMsg='%s')"),
 	          event, (int)sourceObject, CHECK_NULL(pszTemplate), CHECK_NULL(pszAlarmMsg));
@@ -237,10 +238,23 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
                   IpToStr(pObject->IpAddr(), &pText[dwPos]);
                   dwPos = (DWORD)_tcslen(pText);
                   break;
-               case 'i':   // Source object identifier
+               case 'g':   // Source object's GUID
+                  dwSize += 36;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+						pObject->getGuid(guid);
+						uuid_to_string(guid, &pText[dwPos]);
+                  dwPos = (DWORD)_tcslen(pText);
+                  break;
+               case 'i':   // Source object identifier in form 0xhhhhhhhh
                   dwSize += 10;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                   _sntprintf(&pText[dwPos], 11, _T("0x%08X"), sourceId);
+                  dwPos = (DWORD)_tcslen(pText);
+                  break;
+               case 'I':   // Source object identifier in decimal form
+                  dwSize += 10;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _sntprintf(&pText[dwPos], 11, _T("%u"), (unsigned int)sourceId);
                   dwPos = (DWORD)_tcslen(pText);
                   break;
                case 't':   // Event's timestamp

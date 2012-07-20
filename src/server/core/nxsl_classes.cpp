@@ -112,7 +112,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
 		uuid_t guid;
-		object->getGuid(guid);
+		pNode->getGuid(guid);
 		TCHAR buffer[128];
 		pValue = new NXSL_Value(uuid_to_string(guid, buffer));
    }
@@ -227,7 +227,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
 		uuid_t guid;
-		object->getGuid(guid);
+		iface->getGuid(guid);
 		TCHAR buffer[128];
 		pValue = new NXSL_Value(uuid_to_string(guid, buffer));
    }
