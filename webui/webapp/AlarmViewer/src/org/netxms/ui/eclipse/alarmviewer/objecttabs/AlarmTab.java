@@ -91,7 +91,8 @@ public class AlarmTab extends ObjectTab
 	@Override
 	public void dispose()
 	{
-		alarmList.dispose();
+		if (alarmList != null)
+			alarmList.dispose();
 		super.dispose();
 	}
 }

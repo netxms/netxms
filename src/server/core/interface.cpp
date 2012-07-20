@@ -811,3 +811,21 @@ void Interface::updateZoneId()
 			zone->addToIndex(this);
 	}
 }
+
+
+//
+// Handler for object deletion notification
+//
+
+void Interface::OnObjectDelete(DWORD dwObjectId)
+{
+	if ((m_peerNodeId == dwObjectId) || (m_peerInterfaceId == dwObjectId))
+	{
+		LockData();
+		m_peerNodeId = 0;
+		m_peerInterfaceId = 0;
+		Modify();
+		UnlockData();
+	}
+	NetObj::OnObjectDelete(dwObjectId);
+}

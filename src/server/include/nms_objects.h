@@ -616,6 +616,9 @@ protected:
 
 	void paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transport *pTransport, Node *node);
 
+protected:
+   virtual void OnObjectDelete(DWORD dwObjectId);
+
 public:
    Interface();
    Interface(DWORD dwAddr, DWORD dwNetMask, DWORD zoneId, bool bSyntheticMask);

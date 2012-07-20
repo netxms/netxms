@@ -4284,6 +4284,24 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 				          (ifRemote != NULL) ? ifRemote->Name() : _T("(null)"));
 				if ((ifLocal != NULL) && (ifRemote != NULL))
 				{
+					// Update old peers for local and remote interfaces, if any
+					if ((ifRemote->getPeerInterfaceId() != 0) && (ifRemote->getPeerInterfaceId() != ifLocal->Id()))
+					{
+						Interface *ifOldPeer = (Interface *)FindObjectById(ifRemote->getPeerInterfaceId(), OBJECT_INTERFACE);
+						if (ifOldPeer != NULL)
+						{
+							ifOldPeer->setPeer(0, 0);
+						}
+					}
+					if ((ifLocal->getPeerInterfaceId() != 0) && (ifLocal->getPeerInterfaceId() != ifRemote->Id()))
+					{
+						Interface *ifOldPeer = (Interface *)FindObjectById(ifLocal->getPeerInterfaceId(), OBJECT_INTERFACE);
+						if (ifOldPeer != NULL)
+						{
+							ifOldPeer->setPeer(0, 0);
+						}
+					}
+
 					ifLocal->setPeer(ni->objectId, ifRemote->Id());
 					ifRemote->setPeer(m_dwId, ifLocal->Id());
 					SendPollerMsg(dwRqId, _T("   Local interface %s linked to remote interface %s:%s\r\n"),
