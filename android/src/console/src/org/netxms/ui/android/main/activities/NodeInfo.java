@@ -42,6 +42,8 @@ import android.widget.TabHost.OnTabChangeListener;
  */
 public class NodeInfo extends TabActivity implements OnTabChangeListener, ServiceConnection
 {
+	private static final String TAG = "nxclient.NodeInfo";
+	private static final int MENU_ITEM_ALARM_ACTIONS = 2;
 	private static final Integer[] DEFAULT_COLORS = { 0x40699C, 0x9E413E, 0x7F9A48, 0x695185, 0x3C8DA3, 0xCC7B38, 0x4F81BD, 0xC0504D,
 	                                                  0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9 };
 	
@@ -133,9 +135,9 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		}));
 
 		// NB Seems to be necessary to avoid overlap of other tabs!
-		tabHost.setCurrentTab(2);
-		tabHost.setCurrentTab(1);
-		tabHost.setCurrentTab(0);
+		tabHost.setCurrentTabByTag(TAB_ALARMS);
+		tabHost.setCurrentTabByTag(TAB_LAST_VALUES);
+		tabHost.setCurrentTabByTag(TAB_OVERVIEW);
 	}
 
 	/*
@@ -172,7 +174,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			}
 			catch(Exception e)
 			{
-				Log.w("NodeInfo", e);
+				Log.w(TAG, "onTabChanged", e);
 			}
 		}
 		else
@@ -210,7 +212,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		else if (v == alarmsListView)
 		{
 			inflater.inflate(R.menu.alarm_actions, menu);
-			menu.getItem(2).setVisible(false);
+			menu.getItem(MENU_ITEM_ALARM_ACTIONS).setVisible(false);
 		}
 	}
 
@@ -224,14 +226,14 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		{
 			android.view.MenuInflater inflater = getMenuInflater();
 			
-			if (tabHost.getCurrentTab() == 1)
+			if (tabHost.getCurrentTabTag().equals(TAB_LAST_VALUES))
 			{
 				inflater.inflate(R.menu.last_values_actions, menu);
 			}
-			else if (tabHost.getCurrentTab() == 2)
+			else if (tabHost.getCurrentTabTag().equals(TAB_ALARMS))
 			{
 				inflater.inflate(R.menu.alarm_actions, menu);
-				menu.getItem(2).setVisible(false);
+				menu.getItem(MENU_ITEM_ALARM_ACTIONS).setVisible(false);
 			}
 		}
 		return super.onCreateOptionsMenu(menu);
@@ -248,7 +250,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		if (!recreateOptionsMenu)
 			return true;
 		
-		if (tabHost.getCurrentTab() == 1)	// FIXME: use tab ID?
+		if (tabHost.getCurrentTabTag().equals(TAB_LAST_VALUES))
 		{
 			menu.add(Menu.NONE, R.id.graph_half_hour, Menu.NONE, getString(R.string.last_values_graph_half_hour));
 			menu.add(Menu.NONE, R.id.graph_one_hour, Menu.NONE, getString(R.string.last_values_graph_one_hour));//.setIcon(R.drawable.ic_menu_line_chart);
@@ -574,7 +576,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			}
 			catch(Exception e)
 			{
-				Log.d("nxclient/NodeInfo", "Exception while executing LoadLastValuesTask.doInBackground", e);
+				Log.d(TAG, "Exception while executing LoadLastValuesTask.doInBackground", e);
 				return null;
 			}
 		}

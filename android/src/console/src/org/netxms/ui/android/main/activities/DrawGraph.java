@@ -50,6 +50,7 @@ public class DrawGraph extends AbstractClientActivity
 	{
 		dialog = new ProgressDialog(this); 
 		setContentView(R.layout.graphics);
+		boolean showLegend = getIntent().getBooleanExtra("showLegend", true);
 		numGraphs = getIntent().getIntExtra("numGraphs", 0);
 		if (numGraphs > 0)
 		{
@@ -75,11 +76,11 @@ public class DrawGraph extends AbstractClientActivity
 			graphTitle = getIntent().getStringExtra("graphTitle");
 		}
 		graphView = new ExtendedLineGraphView(this, "");
-		graphView.setShowLegend(true);   
-		graphView.setScalable(true);
-		graphView.setScrollable(true);
+		graphView.setShowLegend(showLegend);   
 		graphView.setLegendAlign(LegendAlign.TOP);   
 		graphView.setLegendWidth(240);  
+		graphView.setScalable(true);
+		graphView.setScrollable(true);
 		graphView.setZeroBased(true);
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 		title.setText(R.string.graph_title);

@@ -56,12 +56,15 @@ public class ClientConnectorService extends Service implements SessionListener
 	public enum ConnectionStatus { CS_NOCONNECTION, CS_INPROGRESS, CS_ALREADYCONNECTED, CS_CONNECTED, CS_DISCONNECTED, CS_ERROR };
 	public static final String ACTION_RECONNECT = "org.netxms.ui.android.ACTION_RECONNECT";
 	public static final String ACTION_DISCONNECT = "org.netxms.ui.android.ACTION_DISCONNECT";
+	private static final String TAG = "nxclient.ClientConnectorService";
+	private static final String LASTALARM_KEY = "LastALarmIdNotified";
 
 	private static final int NOTIFY_ALARM = 1;
 	private static final int NOTIFY_STATUS = 2;
-	private static final String TAG = "nxclient.ClientConnectorService";
-	private static final String LASTALARM_KEY = "LastALarmIdNotified";
-	
+	private static final int NOTIFY_STATUS_ON_CONNECT = 1; 
+	private static final int NOTIFY_STATUS_ON_DISCONNECT = 2; 
+	private static final int NOTIFY_STATUS_ALWAYS = 3;
+
 	private String mutex = "MUTEX";
 	private Binder binder = new ClientConnectorBinder();
 	private Handler uiThreadHandler;
@@ -224,21 +227,21 @@ public class ClientConnectorService extends Service implements SessionListener
 		switch (status)
 		{
 			case CS_CONNECTED:
-				if (notificationType == 1 || notificationType == 3)
+				if (notificationType == NOTIFY_STATUS_ON_CONNECT || notificationType == NOTIFY_STATUS_ALWAYS)
 				{
 					icon = R.drawable.ic_stat_connected;
 				}
 				text = getString(R.string.notify_connected, extra);
 				break;
 			case CS_DISCONNECTED:
-				if (notificationType == 2 || notificationType == 3)
+				if (notificationType == NOTIFY_STATUS_ON_DISCONNECT || notificationType == NOTIFY_STATUS_ALWAYS)
 				{
 					icon = R.drawable.ic_stat_disconnected;
 				}
 				text = getString(R.string.notify_disconnected);
 				break;
 			case CS_ERROR:
-				if (notificationType == 2 || notificationType == 3)
+				if (notificationType == NOTIFY_STATUS_ON_DISCONNECT || notificationType == NOTIFY_STATUS_ALWAYS)
 				{
 					icon = R.drawable.ic_stat_disconnected;
 				}
