@@ -164,6 +164,10 @@ public class AlarmBrowser extends AbstractClientActivity
 				adapter.acknowledgeItem(al.getId());
 				refreshList();
 				return true;
+			case R.id.resolve:
+				adapter.resolveItem(al.getId());
+				refreshList();
+				return true;
 			case R.id.terminate:
 				adapter.terminateItem(al.getId());
 				refreshList();

@@ -139,4 +139,5 @@
 	<string name="menu_poll_topology">Topology</string>
 	<string name="menu_poll_interfaces">Interface names</string>
 	<string name="table_last_values">Table last values</string>
+	<string name="alarm_resolve">Resolve</string>
 </resources>

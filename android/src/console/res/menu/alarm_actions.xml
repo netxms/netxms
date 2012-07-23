@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu
   xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/acknowledge" android:title="@string/alarm_acknowledge" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item><item android:checkable="false" android:id="@+id/terminate" android:title="@string/alarm_terminate" android:visible="true" android:enabled="true" android:checked="false"></item>
+    <item android:id="@+id/acknowledge" android:title="@string/alarm_acknowledge" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item><item android:id="@+id/resolve" android:checkable="false" android:enabled="true" android:visible="true" android:checked="false" android:title="@string/alarm_resolve"></item><item android:checkable="false" android:id="@+id/terminate" android:title="@string/alarm_terminate" android:visible="true" android:enabled="true" android:checked="false"></item>
     <item android:id="@+id/viewlastvalues" android:checkable="false" android:visible="true" android:enabled="true" android:title="@string/alarm_viewlastvalues" android:checked="false"></item>
+    
     
     
 </menu>

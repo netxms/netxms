@@ -690,6 +690,19 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 		}
 	}
+	/**
+	 * @param id
+	 */
+	public void resolveAlarm(long id)
+	{
+		try
+		{
+			session.resolveAlarm(id);
+		}
+		catch(Exception e)
+		{
+		}
+	}
 
 	/**
 	 * @param id

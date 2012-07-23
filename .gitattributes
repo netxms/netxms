@@ -66,6 +66,7 @@ android/src/console/res/drawable-xhdpi/macaddress.png -text
 android/src/console/res/drawable-xhdpi/nodes.png -text
 android/src/console/res/drawable/alarm_acknowledged.png -text
 android/src/console/res/drawable/alarm_outstanding.png -text
+android/src/console/res/drawable/alarm_resolved.png -text
 android/src/console/res/drawable/alarm_terminated.png -text
 android/src/console/res/drawable/bw_gradient.xml -text
 android/src/console/res/drawable/dashboard.png -text

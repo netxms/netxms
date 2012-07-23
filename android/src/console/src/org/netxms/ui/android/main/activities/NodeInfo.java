@@ -377,6 +377,10 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 				alarmsAdapter.acknowledgeItem(((Alarm)alarmsAdapter.getItem(info.position)).getId());
 				refreshAlarms();
 				return true;
+			case R.id.resolve:
+				alarmsAdapter.resolveItem(((Alarm)alarmsAdapter.getItem(info.position)).getId());
+				refreshAlarms();
+				return true;
 			case R.id.terminate:
 				alarmsAdapter.terminateItem(((Alarm)alarmsAdapter.getItem(info.position)).getId());
 				refreshAlarms();

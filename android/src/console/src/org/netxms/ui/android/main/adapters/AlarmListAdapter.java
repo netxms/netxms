@@ -42,7 +42,7 @@ public class AlarmListAdapter extends BaseAdapter
 
 	private static final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor, 
         R.drawable.status_major, R.drawable.status_critical };
-	private static final int[] stateImageId = { R.drawable.alarm_outstanding, R.drawable.alarm_acknowledged, R.drawable.alarm_terminated };
+	private static final int[] stateImageId = { R.drawable.alarm_outstanding, R.drawable.alarm_acknowledged, R.drawable.alarm_resolved, R.drawable.alarm_terminated };
 
 	/**
 	 * 
@@ -177,6 +177,14 @@ public class AlarmListAdapter extends BaseAdapter
 	public void acknowledgeItem(long id)
 	{
 		service.acknowledgeAlarm(id);
+	}
+
+	/**
+	 * @param id
+	 */
+	public void resolveItem(long id)
+	{
+		service.resolveAlarm(id);
 	}
 
 	/**
