@@ -8,7 +8,6 @@ import java.util.Map.Entry;
 import android.content.Context;
 import android.graphics.Point;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -207,13 +206,15 @@ public class DashboardLayout extends ViewGroup
 				}
 			}
 			coordinates.put(child, new Point(currentColumn, currentRow));
+			
+			rowCount = Math.max(currentRow + layoutParams.getRowSpan(), rowCount);
+
 			currentColumn += columnSpan;
 			if (currentColumn == columnCount)
 			{
 				currentColumn = 0;
 				currentRow++;
 			}
-			rowCount = Math.max(currentRow + layoutParams.getRowSpan() - 1, rowCount);
 		}
 	}
 
