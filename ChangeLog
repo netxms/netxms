@@ -19,7 +19,7 @@
 	- Node status/configuration/topology poll implemented
 - NXSL:
 	- Global variables can be declared in script code
-	- New functions: GetConfigurationVariable, GetObjectParents, GetObjectChildren
+	- New functions: GetConfigurationVariable, GetObjectParents, GetObjectChildren, sleep
 	- New attribute "guid" in classes Interface, NetObj, and Node
 - AIX Subagent:
 	- New parameters available: System.CPU.PhysicalAverage.*
