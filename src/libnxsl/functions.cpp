@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1007,5 +1007,20 @@ int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *p
 
 	int range = argv[1]->getValueAsInt32() - argv[0]->getValueAsInt32() + 1;
 	*ppResult = new NXSL_Value((rand() % range) + argv[0]->getValueAsInt32());
+	return 0;
+}
+
+
+//
+// Suspend execution for given number of milliseconds
+//
+
+int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isInteger())
+		return NXSL_ERR_NOT_INTEGER;
+
+	ThreadSleepMs(argv[0]->getValueAsUInt32());
+	*ppResult = new NXSL_Value;
 	return 0;
 }

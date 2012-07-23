@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -49,6 +49,7 @@ int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *p
 int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
@@ -88,6 +89,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("right"), F_right, -1 },
    { _T("rindex"), F_rindex, -1 },
 	{ _T("rtrim"), F_rtrim, 1 },
+	{ _T("sleep"), F_sleep, 1 },
 	{ _T("strftime"), F_strftime, -1 },
 	{ _T("substr"), F_substr, -1 },
 	{ _T("time"), F_time, 0 },

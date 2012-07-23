@@ -45,6 +45,7 @@ static NXCORE_LOG s_logs[] =
 			{ _T("ack_by"), _T("Ack by"), LC_USER_ID },
 			{ _T("resolved_by"), _T("Resolved by"), LC_USER_ID },
 			{ _T("term_by"), _T("Terminated by"), LC_USER_ID },
+			{ _T("alarm_key"), _T("Key"), LC_TEXT },
 			{ NULL, NULL, 0 }
 		}
 	},
