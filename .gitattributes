@@ -2249,10 +2249,12 @@ webui/webapp/AlarmViewer/OSGI-INF/l10n/bundle_es.properties -text
 webui/webapp/AlarmViewer/OSGI-INF/l10n/bundle_ru.properties -text
 webui/webapp/AlarmViewer/build.properties -text
 webui/webapp/AlarmViewer/icons/acknowledged.png -text
+webui/webapp/AlarmViewer/icons/acknowledged_sticky.png -text
 webui/webapp/AlarmViewer/icons/alarm_browser.png -text
 webui/webapp/AlarmViewer/icons/comments.png -text
 webui/webapp/AlarmViewer/icons/new_comment.png -text
 webui/webapp/AlarmViewer/icons/outstanding.png -text
+webui/webapp/AlarmViewer/icons/resolved.png -text
 webui/webapp/AlarmViewer/icons/terminated.png -text
 webui/webapp/AlarmViewer/icons/user.png -text
 webui/webapp/AlarmViewer/plugin.xml -text

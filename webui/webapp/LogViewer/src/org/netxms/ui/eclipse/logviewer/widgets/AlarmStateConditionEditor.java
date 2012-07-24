@@ -19,16 +19,12 @@
 package org.netxms.ui.eclipse.logviewer.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.log.ColumnFilter;
-import org.netxms.ui.eclipse.logviewer.Activator;
 import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
 
 /**
@@ -67,22 +63,6 @@ public class AlarmStateConditionEditor extends ConditionEditor
 	@Override
 	protected void createContent(Composite parent)
 	{
-		final Image[] stateImages = new Image[3];
-		stateImages[Alarm.STATE_OUTSTANDING] = Activator.getImageDescriptor("icons/outstanding.png").createImage();
-		stateImages[Alarm.STATE_ACKNOWLEDGED] = Activator.getImageDescriptor("icons/acknowledged.png").createImage();
-		stateImages[Alarm.STATE_TERMINATED] = Activator.getImageDescriptor("icons/terminated.png").createImage();
-		
-		addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				for(Image i : stateImages)
-					i.dispose();
-			}
-		});
-		
 		state = new Combo(this, SWT.READ_ONLY | SWT.BORDER);
 		toolkit.adapt(state);
 		for(int i = Alarm.STATE_OUTSTANDING; i <= Alarm.STATE_TERMINATED; i++)

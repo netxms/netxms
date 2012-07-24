@@ -35,6 +35,8 @@ public class Alarm
 	public static final int STATE_RESOLVED = 2;
 	public static final int STATE_TERMINATED = 3;
 	
+	public static final int STATE_MASK = 0x0F;
+	
 	// Alarm helpdesk states
 	public static final int HELPDESK_STATE_IGNORED = 0;
 	public static final int HELPDESK_STATE_OPEN = 1;

@@ -182,7 +182,7 @@ public class FilterBuilder extends Composite
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
-				addColumnToFilter(addColumnLink);
+				addColumnToFilter(addColumnLink, addColumnLink);
 			}
 		});
 	}
@@ -237,7 +237,7 @@ public class FilterBuilder extends Composite
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
-				addSortingColumn();
+				addSortingColumn(linkAdd);
 			}
 		});
 		gd = new GridData();
@@ -302,7 +302,7 @@ public class FilterBuilder extends Composite
 	/**
 	 * 
 	 */
-	private void addSortingColumn()
+	private void addSortingColumn(final Control linkControl)
 	{
 		createColumnSelectionMenu(new ColumnSelectionHandler() {
 			@Override
@@ -319,7 +319,7 @@ public class FilterBuilder extends Composite
 					orderingList.setSelection(new StructuredSelection(column));
 				}
 			}
-		});
+		}, linkControl);
 	}
 	
 	/**
@@ -347,7 +347,7 @@ public class FilterBuilder extends Composite
 	/**
 	 * Add column to filter
 	 */
-	private void addColumnToFilter(final Control lastControl)
+	private void addColumnToFilter(final Control lastControl, final Control linkControl)
 	{
 		createColumnSelectionMenu(new ColumnSelectionHandler() {
 			@Override
@@ -378,7 +378,7 @@ public class FilterBuilder extends Composite
 				
 				FilterBuilder.this.updateLayout();
 			}
-		});
+		}, linkControl);
 	}
 	
 	/**
@@ -386,7 +386,7 @@ public class FilterBuilder extends Composite
 	 * 
 	 * @param listener selection listener
 	 */
-	private void createColumnSelectionMenu(final ColumnSelectionHandler handler)
+	private void createColumnSelectionMenu(final ColumnSelectionHandler handler, Control linkControl)
 	{
 		if (logHandle == null)
 			return;
@@ -432,7 +432,12 @@ public class FilterBuilder extends Composite
 				getShell().setMenu(null);
 			}
 		});
+		
 		columnSelectionMenu.setVisible(true);
+		
+		Point p = linkControl.getParent().toDisplay(linkControl.getLocation());
+		p.y += linkControl.getSize().y;
+		columnSelectionMenu.setLocation(p);
 	}
 	
 	/**

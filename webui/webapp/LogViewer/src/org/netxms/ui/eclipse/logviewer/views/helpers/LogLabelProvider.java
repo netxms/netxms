@@ -39,12 +39,11 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Label provider for log viewer
- *
  */
 public class LogLabelProvider implements ITableLabelProvider
 {
 	private static final long serialVersionUID = 1L;
-	public static final String[] ALARM_STATE_TEXTS = { "Outstanding", "Acknowledged", "Terminated" };
+	public static final String[] ALARM_STATE_TEXTS = { "Outstanding", "Acknowledged", "Resolved", "Terminated" };
 	public static final String[] ALARM_HD_STATE_TEXTS = { "Ignored", "Open", "Closed" };
 	
 	private LogColumn[] columns;
@@ -91,7 +90,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				try
 				{
 					int state = Integer.parseInt(value);
-					return alarmStateImages[state];
+					return alarmStateImages[state & Alarm.STATE_MASK];
 				}
 				catch(NumberFormatException e)
 				{
@@ -152,7 +151,7 @@ public class LogLabelProvider implements ITableLabelProvider
 					if (id == 0)
 						return "";
 					GenericObject object = session.findObjectById(id);
-					return (object != null) ? object.getObjectName() : "<unknown>";
+					return (object != null) ? object.getObjectName() : ("[" + id + "]");
 				}
 				catch(NumberFormatException e)
 				{
@@ -184,7 +183,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				{
 					long code = Long.parseLong(value);
 					EventTemplate evt = session.findEventTemplateByCode(code);
-					return (evt != null) ? evt.getName() : null;
+					return (evt != null) ? evt.getName() : ("[" + code + "]");
 				}
 				catch(NumberFormatException e)
 				{
@@ -194,7 +193,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				try
 				{
 					int state = Integer.parseInt(value);
-					return ALARM_STATE_TEXTS[state];
+					return ALARM_STATE_TEXTS[state & Alarm.STATE_MASK];
 				}
 				catch(Exception e)
 				{

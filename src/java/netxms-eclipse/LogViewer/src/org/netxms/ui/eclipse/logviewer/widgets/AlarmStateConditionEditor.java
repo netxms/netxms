@@ -66,9 +66,10 @@ public class AlarmStateConditionEditor extends ConditionEditor
 	@Override
 	protected void createContent(Composite parent)
 	{
-		final Image[] stateImages = new Image[3];
+		final Image[] stateImages = new Image[4];
 		stateImages[Alarm.STATE_OUTSTANDING] = Activator.getImageDescriptor("icons/outstanding.png").createImage();
 		stateImages[Alarm.STATE_ACKNOWLEDGED] = Activator.getImageDescriptor("icons/acknowledged.png").createImage();
+		stateImages[Alarm.STATE_RESOLVED] = Activator.getImageDescriptor("icons/resolved.png").createImage();
 		stateImages[Alarm.STATE_TERMINATED] = Activator.getImageDescriptor("icons/terminated.png").createImage();
 		
 		addDisposeListener(new DisposeListener() {
