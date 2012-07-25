@@ -29,6 +29,7 @@
 #define IDF_SOUND                       154
 #define IDF_ACK_ICO                     157
 #define IDF_OUTSTANDING                 158
+#define IDF_RESOLVED                    159
 #define IDC_INFO_TEXT                   1000
 #define IDC_CHECK_AUTOLOGIN             1001
 #define IDC_STATIC_SERVER               1003
@@ -50,7 +51,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        159
+#define _APS_NEXT_RESOURCE_VALUE        160
 #define _APS_NEXT_COMMAND_VALUE         32772
 #define _APS_NEXT_CONTROL_VALUE         1010
 #define _APS_NEXT_SYMED_VALUE           106

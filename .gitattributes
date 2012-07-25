@@ -326,6 +326,7 @@ src/client/windows/nxav/res/nosound.png -text
 src/client/windows/nxav/res/nxav.ico -text
 src/client/windows/nxav/res/outstanding.png -text
 src/client/windows/nxav/res/processing.ico -text
+src/client/windows/nxav/res/resolved.png -text
 src/client/windows/nxav/res/small_logo.bmp -text
 src/client/windows/nxav/res/sound.png -text
 src/client/windows/nxav/res/warning.ico -text

@@ -251,6 +251,7 @@ IDF_NOSOUND             FILE                    "res\\nosound.png"
 IDF_SOUND               FILE                    "res\\sound.png"
 IDF_ACK_ICO             FILE                    "res\\acknowledged.png"
 IDF_OUTSTANDING         FILE                    "res\\outstanding.png"
+IDF_RESOLVED            FILE                    "res\\resolved.png"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -147,6 +147,7 @@ BOOL CAlarmViewApp::InitInstance()
    FileFromResource(IDF_NOSOUND, _T("nosound.png"));
    FileFromResource(IDF_ACK_ICO, _T("acknowledged.png"));
    FileFromResource(IDF_OUTSTANDING, _T("outstanding.png"));
+   FileFromResource(IDF_RESOLVED, _T("resolved.png"));
 
    // Place main window to correct monitor
    CreateMonitorList();

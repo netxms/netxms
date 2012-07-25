@@ -146,8 +146,7 @@ void CMainFrame::OnViewRefresh()
    m_pAlarmList = NULL;
    m_dwNumAlarms = 0;
    memset(m_iNumAlarms, 0, sizeof(int) * 5);
-   dwRetCode = DoRequestArg4(NXCLoadAllAlarms, g_hSession, (void *)FALSE, &m_dwNumAlarms, 
-                             &m_pAlarmList, _T("Loading alarms..."));
+   dwRetCode = DoRequestArg3(NXCLoadAllAlarms, g_hSession, &m_dwNumAlarms, &m_pAlarmList, _T("Loading alarms..."));
    if (dwRetCode == RCC_SUCCESS)
    {
       for(i = 0; i < m_dwNumAlarms; i++)
