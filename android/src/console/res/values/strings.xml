@@ -32,7 +32,6 @@
 	<string name="home_screen_graphs">Graphs</string>
 	<string name="alarms_title">Alarms</string>
 	<string name="exit">Disconnect &amp; Exit</string>
-	<string name="alarm_terminate">Terminate alarm</string>
 	<string name="cancel">Cancel</string>
 	<string name="nodes_title">Nodes</string>
 	<string name="unmanage">Unmanage</string>
@@ -54,6 +53,8 @@
 	<string name="status_testing">Testing</string>
 	<string name="alarm_acknowledge">Acknowledge alarm</string>
 	<string name="alarm_viewlastvalues">View last values</string>
+	<string name="alarm_terminate">Terminate alarm</string>
+	<string name="alarm_resolve">Resolve alarm</string>
 	<string name="pref_alarm_notification">Alarm notification by severity</string>
 	<string name="pref_alarm_sound_normal">Normal alarm sound</string>
 	<string name="pref_alarm_sound_warning">Warning alarm sound</string>
@@ -139,5 +140,4 @@
 	<string name="menu_poll_topology">Topology</string>
 	<string name="menu_poll_interfaces">Interface names</string>
 	<string name="table_last_values">Table last values</string>
-	<string name="alarm_resolve">Resolve</string>
 </resources>
