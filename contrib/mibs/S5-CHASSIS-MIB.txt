@@ -22,7 +22,7 @@ S5-CHASSIS-MIB DEFINITIONS ::= BEGIN
 -- Imports
 
 IMPORTS
-	Counter, TimeTicks
+	Counter, TimeTicks, Gauge
 		FROM RFC1155-SMI
 	OBJECT-TYPE
 		FROM RFC-1212

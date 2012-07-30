@@ -1,4 +1,3 @@
-
 BAY-STACK-ERROR-MESSAGE-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
@@ -6,6 +5,8 @@ IMPORTS
     OBJECT-TYPE,
     Unsigned32
         FROM SNMPv2-SMI
+    DisplayString
+        FROM SNMPv2-TC
     bayStackMibs
         FROM SYNOPTICS-ROOT-MIB
     InetAddressType, InetAddress

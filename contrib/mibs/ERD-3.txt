@@ -1,0 +1,311 @@
+ERD-3 DEFINITIONS ::= BEGIN
+    IMPORTS
+    experimental, MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
+    snmpModules, mib-2, IpAddress
+        FROM SNMPv2-SMI
+    DisplayString, TestAndIncr      
+        FROM SNMPv2-TC
+    OBJECT-GROUP, NOTIFICATION-GROUP
+        FROM SNMPv2-CONF;
+
+    nag_Erd_Snmp MODULE-IDENTITY
+        LAST-UPDATED "200807021700Z"
+        ORGANIZATION "NAG "
+        CONTACT-INFO "Vonsovskogo 1a"
+        DESCRIPTION  "The MIB module "
+
+        REVISION "200705011400Z"
+        DESCRIPTION "First version" 
+             ::= { experimental 120 }
+
+
+    system OBJECT IDENTIFIER ::= { mib-2 1 }
+
+    sysDescr OBJECT-TYPE
+        SYNTAX              DisplayString (SIZE(0..255))
+        MAX-ACCESS          read-only
+        STATUS              current
+        DESCRIPTION         "."
+        ::= { system 1 }
+
+    sysName OBJECT-TYPE
+        SYNTAX              DisplayString (SIZE(0..20))
+        MAX-ACCESS          read-write
+        STATUS              current
+        DESCRIPTION         "."
+        ::= { system 5 }
+
+ipAddressEntry OBJECT IDENTIFIER ::={ nag_Erd_Snmp  4 }
+
+ipAddress OBJECT-TYPE
+        SYNTAX              IpAddress
+        MAX-ACCESS          read-write
+        STATUS              current
+        DESCRIPTION         "myIp"
+::= {ipAddressEntry 1}
+
+ipGatewayAddress OBJECT-TYPE
+        SYNTAX              IpAddress
+        MAX-ACCESS          read-write
+        STATUS              current
+        DESCRIPTION         "DGIp"
+::= {ipAddressEntry 2}
+
+ipMonitoringDevice OBJECT-TYPE
+        SYNTAX               IpAddress
+        MAX-ACCESS          read-write 
+        STATUS              current
+        DESCRIPTION         "monitoredIP"
+::= {ipAddressEntry 3}
+
+ipForTrap OBJECT-TYPE
+        SYNTAX               IpAddress 
+        MAX-ACCESS          read-write
+        STATUS              current
+        DESCRIPTION         "ipForTrap"
+::= {ipAddressEntry 4}
+
+resetsSet OBJECT IDENTIFIER ::= { nag_Erd_Snmp  5 }
+
+resetSmartContact7 OBJECT-TYPE
+    SYNTAX            INTEGER  {
+        reset     (1),
+        bypass     (0)}
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+    
+::= { resetsSet 1}
+
+numberOfResetPositives  OBJECT-TYPE
+    SYNTAX          INTEGER {resetPositives (0)}
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 1 1 }
+
+monitorAlarmSignalContact6  OBJECT-TYPE
+    SYNTAX          INTEGER {
+      sensorOn(3),
+      doorIsClose (1),
+      doorIsOpen (2),       
+      sensorOff (0)
+                      }
+
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 2 }
+
+monitorAlarmSignal2Contact5  OBJECT-TYPE
+    SYNTAX          INTEGER {
+      sensorOn(3),
+      doorIsClose (1),
+      doorIsOpen (2),       
+      sensorOff (0)
+                      }
+
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 2 1 }
+
+numberOfAlarmPositives  OBJECT-TYPE
+    SYNTAX          INTEGER {resetPositives (0)}
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 2 2 }
+
+monitorVoltageSignal  OBJECT-TYPE
+    SYNTAX          INTEGER {
+        sensorOn(3),
+        voltageIsYes (2),
+        voltageIsNo (1),       
+        sensorOff (0)
+             }
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 3 }
+
+monitorVoltageSignal2  OBJECT-TYPE
+    SYNTAX          INTEGER {
+        sensorOn(3),
+        voltageIsYes (2),
+        voltageIsNo (1),       
+        sensorOff (0)
+             }
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 3 1}
+
+monitorAnySensorSignal1contact2  OBJECT-TYPE
+    SYNTAX          INTEGER {
+        sensorOn(3),
+        sensorIs_0 (1),
+        sensorIs_1 (2),       
+        sensorOff (0)
+                      }
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 4 }
+
+monitorAnySensorSignal2contact3  OBJECT-TYPE
+    SYNTAX          INTEGER {
+        sensorOn(3),
+        sensorIs_0 (1),
+        sensorIs_1 (2),       
+        sensorOff (0)
+                      }
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 4 1 }
+
+monitorAnySensorSignal3contact4  OBJECT-TYPE
+    SYNTAX          INTEGER {
+        sensorOn(3),
+        sensorIs_0 (1),
+        sensorIs_1 (2),       
+        sensorOff (0)
+                      }
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 4 2 }
+
+
+temperatureSensor  OBJECT-TYPE
+    SYNTAX          INTEGER 
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 5 }
+
+temperatureSensor_out  OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 5 1}
+
+voltageSensorContact10  OBJECT-TYPE
+    SYNTAX          INTEGER 
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 5 2}
+
+sysVoltageAlarm  OBJECT-TYPE
+    SYNTAX          INTEGER 
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 5 3}
+
+voltageSensor2Contact11  OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 5 4}
+
+sysVoltage2Alarm  OBJECT-TYPE
+    SYNTAX          INTEGER 
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 5 5}
+
+
+remoteControlContact8  OBJECT-TYPE
+    SYNTAX          INTEGER {
+
+termostat_set_ON (3),
+switch (4),
+manual_set_ON(2),
+man_off (1),
+man_on (0),
+auto_off (6),
+auto_on (5) 
+                     }
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+
+ ::= { resetsSet 6 }
+
+
+commS OBJECT IDENTIFIER ::= { nag_Erd_Snmp  6 }
+
+    communityString         OBJECT-TYPE
+        SYNTAX              DisplayString (SIZE(0..9))
+        MAX-ACCESS          read-write
+        STATUS              current
+        DESCRIPTION         "qwerty"
+::= {commS 1}
+
+    alarmSense1Name         OBJECT-TYPE
+        SYNTAX              DisplayString (SIZE(0..10))
+        MAX-ACCESS          read-write
+        STATUS              current
+        DESCRIPTION         "qwerty"
+::= {commS 2 1}
+
+    alarmSense2Name         OBJECT-TYPE
+        SYNTAX              DisplayString (SIZE(0..10))
+        MAX-ACCESS          read-write
+        STATUS              current
+        DESCRIPTION         "qwerty"
+::= {commS 2 2}
+
+    userSense1Name         OBJECT-TYPE
+        SYNTAX              DisplayString (SIZE(0..10))
+        MAX-ACCESS          read-write
+        STATUS              current
+        DESCRIPTION         "qwerty"
+::= {commS 2 3}
+
+    userSense2Name         OBJECT-TYPE
+        SYNTAX              DisplayString (SIZE(0..10))
+        MAX-ACCESS          read-write
+        STATUS              current
+        DESCRIPTION         "qwerty"
+::= {commS 2 4}
+
+    userSense3Name         OBJECT-TYPE
+        SYNTAX              DisplayString (SIZE(0..10))
+        MAX-ACCESS          read-write
+        STATUS              current
+        DESCRIPTION         "qwerty"
+::= {commS 2 5}
+
+    trapMode         OBJECT-TYPE
+	SYNTAX          INTEGER {
+        once (1),      
+        cyclically (0)
+                      }
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "qwerty"
+::= {commS 3}
+END
+

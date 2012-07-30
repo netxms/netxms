@@ -80,6 +80,7 @@ mibs_DATA = \
 	ENTITY-MIB.txt \
 	ENTITY-SENSOR-MIB.txt \
 	ENTITY-STATE-MIB.txt \
+	ERD-3.txt \
 	ES-1000-MIB.txt \
 	EtherLike-MIB.txt \
 	FAN-MIB.txt \
