@@ -368,7 +368,7 @@ if test $? = 0; then
 	fi
 	STATIC_BUILD="yes"
 	BUILD_STATIC_AGENT="yes"
-	MODULES="$MODULES libnxlp agent"
+	MODULES="$MODULES libnxlp db agent"
 	DISABLE_ICONV="yes"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
 	if test "x$PROPOSED_STATIC_SUBAGENTS" = "xdefault"; then
@@ -376,7 +376,26 @@ if test $? = 0; then
 	else
 		STATIC_SUBAGENT_LIST="$PROPOSED_STATIC_SUBAGENTS"
 	fi
+
 	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
+
+	check_substr "$STATIC_SUBAGENT_LIST" "odbcquery"
+	if test $? = 0; then
+		COMPONENTS="$COMPONENTS odbc"
+		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/odbcquery/odbcquery.la"
+	fi
+
+	check_substr "$STATIC_SUBAGENT_LIST" "oracle"
+	if test $? = 0; then
+		COMPONENTS="$COMPONENTS oracle"
+		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/oracle/oracle.la"
+	fi
+
+	check_substr "$STATIC_SUBAGENT_LIST" "informix"
+	if test $? = 0; then
+		COMPONENTS="$COMPONENTS informix"
+		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/informix/informix.la"
+	fi
 
 	case "$PLATFORM" in
 		Linux)
@@ -429,7 +448,7 @@ if test $? = 0; then
 	BUILD_STATIC_AGENT="yes"
 	DISABLE_ICONV="yes"
 	USE_PTH="yes"
-	MODULES="$MODULES libnxlp agent"
+	MODULES="$MODULES libnxlp db agent"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -D_USE_GNU_PTH -DSQLITE_THREADSAFE=0 -I/usr/local/include"
 	LDFLAGS="$LDFLAGS -all-static"
 	STATIC_SUBAGENT_LIST="ecs ipso logwatch ping portcheck ups"
@@ -1881,6 +1900,10 @@ check_substr "$COMPONENTS" "odbc"
 if test $? = 0; then
 	AC_CHECK_LIB(odbc, SQLAllocHandle, [ODBC_LIBS="-lodbc"],
 		[AC_MSG_ERROR(libodbc is required for ODBC support)])
+	if test "x$BUILD_STATIC_AGENT" = "xyes"; then
+		SUBAGENT_LIBS="$SUBAGENT_LIBS $ODBC_LIBS"
+		AC_CHECK_LIB(ltdl, lt_dlopen, [SUBAGENT_LIBS="$SUBAGENT_LIBS -lltdl"], [])
+	fi
 fi
 
 
@@ -1898,6 +1921,9 @@ if test $? = 0; then
 	AC_CHECK_LIB(clntsh, OCIHandleAlloc, [ORACLE_LIBS="-lclntsh $NNZ_LIB"],
 		[AC_MSG_ERROR(libclntsh is required for Oracle support)], [$NNZ_LIB])
 	AC_CHECK_LIB(rt, sem_destroy, [ORACLE_LIBS="$ORACLE_LIBS -lrt"], [])
+	if test "x$BUILD_STATIC_AGENT" = "xyes"; then
+		SUBAGENT_LIBS="$SUBAGENT_LIBS $ORACLE_LIBS"
+	fi
 fi
 
 #--------------------------------------------------------------------
@@ -1920,6 +1946,9 @@ if test $? = 0; then
 	AC_CHECK_HEADER(infxcli.h,,AC_MSG_ERROR([*** Cannot find infxcli.h - check your Informix client installation ***]))
 	AC_CHECK_LIB(thcli, SQLAllocHandle, [INFORMIX_LIBS="-lthcli"],
 		[AC_MSG_ERROR(libthcli is required for Informix support)])
+	if test "x$BUILD_STATIC_AGENT" = "xyes"; then
+		SUBAGENT_LIBS="$SUBAGENT_LIBS $INFORMIX_LIBS"
+	fi
 fi
 
 
