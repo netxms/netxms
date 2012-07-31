@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
-import java.text.DateFormat;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
@@ -96,7 +95,7 @@ public class ThresholdTreeLabelProvider extends LabelProvider implements ITableL
 				case ThresholdSummaryWidget.COLUMN_CONDITION:
 					return thresholdLabelProvider.getColumnText(((DciValue)element).getActiveThreshold(), Thresholds.COLUMN_OPERATION);
 				case ThresholdSummaryWidget.COLUMN_TIMESTAMP:
-					return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((DciValue)element).getActiveThreshold().getLastEventTimestamp());
+					return ConsoleSharedData.getDateTimeFormat().format(((DciValue)element).getActiveThreshold().getLastEventTimestamp());
 				default:
 					return null;
 			}

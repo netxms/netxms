@@ -241,6 +241,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private byte[] serverChallenge = new byte[CLIENT_CHALLENGE_SIZE];
 	private boolean zoningEnabled = false;
 	private String tileServerURL;
+	private String dateFormat;
+	private String timeFormat;
 
 	// Objects
 	private Map<Long, GenericObject> objectList = new HashMap<Long, GenericObject>();
@@ -1368,6 +1370,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			{
 				tileServerURL = "http://tile.openstreetmap.org/";
 			}
+			
+			dateFormat = response.getVariableAsString(NXCPCodes.VID_DATE_FORMAT);
+			if ((dateFormat == null) || (dateFormat.length() == 0))
+				dateFormat = "dd.MM.yyyy";
+
+			timeFormat = response.getVariableAsString(NXCPCodes.VID_TIME_FORMAT);
+			if ((timeFormat == null) || (timeFormat.length() == 0))
+				dateFormat = "HH:mm:ss";
 
 			// Setup encryption if required
 			if (connUseEncryption)
@@ -6141,5 +6151,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	public void setClientType(int clientType)
 	{
 		this.clientType = clientType;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.Session#getDateFormat()
+	 */
+	@Override
+	public String getDateFormat()
+	{
+		return dateFormat;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.Session#getTimeFormat()
+	 */
+	@Override
+	public String getTimeFormat()
+	{
+		return timeFormat;
 	}
 }

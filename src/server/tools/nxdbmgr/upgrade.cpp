@@ -279,6 +279,20 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 
 
 //
+// Upgrade from V255 to V256
+//
+
+static BOOL H_UpgradeFromV255(int currVersion, int newVersion)
+{
+	CreateConfigParam(_T("DefaultConsoleDateFormat"), _T("dd.MM.yyyy"), 1, 0);
+	CreateConfigParam(_T("DefaultConsoleTimeFormat"), _T("HH:mm:ss"), 1, 0);
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='256' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V254 to V255
 //
 
@@ -6359,6 +6373,7 @@ static struct
 	{ 252, 253, H_UpgradeFromV252 },
 	{ 253, 254, H_UpgradeFromV253 },
 	{ 254, 255, H_UpgradeFromV254 },
+	{ 255, 256, H_UpgradeFromV255 },
    { 0, 0, NULL }
 };
 

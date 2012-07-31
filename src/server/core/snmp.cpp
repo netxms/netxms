@@ -111,7 +111,8 @@ void SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD d
             case 3:
 					*operState = IF_OPER_STATE_TESTING;
                break;
-            case 2:  // Interface is down
+            case 2:  // down: interface is down
+				case 7:	// lowerLayerDown: down due to state of lower-layer interface(s)
 					*operState = IF_OPER_STATE_DOWN;
                break;
             case 1:

@@ -1549,6 +1549,12 @@ void ClientSession::sendServerInfo(DWORD dwRqId)
 	ConfigReadStr(_T("TileServerURL"), szBuffer, 1024, _T("http://tile.openstreetmap.org/"));
 	msg.SetVariable(VID_TILE_SERVER_URL, szBuffer);
 
+	ConfigReadStr(_T("DefaultConsoleDateFormat"), szBuffer, 1024, _T("dd.MM.yyyy"));
+	msg.SetVariable(VID_DATE_FORMAT, szBuffer);
+
+	ConfigReadStr(_T("DefaultConsoleTimeFormat"), szBuffer, 1024, _T("HH:mm:ss"));
+	msg.SetVariable(VID_TIME_FORMAT, szBuffer);
+
    // Send response
    sendMessage(&msg);
 }

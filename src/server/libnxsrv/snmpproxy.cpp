@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -110,7 +110,8 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout,
 			delete *ppData;
 			*ppData = NULL;
 		}
-		nRet = dwSize;
+		free(pBuffer);
+		nRet = (int)dwSize;
 	}
 	else
 	{

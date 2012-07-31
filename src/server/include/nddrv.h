@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -30,7 +30,7 @@
 /**
  *API version
  */
-#define NDDRV_API_VERSION           1
+#define NDDRV_API_VERSION           2
 
 /**
  * Driver header
@@ -50,6 +50,48 @@ extern "C" NetworkDeviceDriver __NDD_EXPORT *nddCreateInstance() { return new im
 
 
 /**
+ * Port numbering schemes
+ */
+enum
+{
+	NDD_PN_UNKNOWN = 0, // port layout not known to driver
+	NDD_PN_CUSTOM = 1,  // custom layout, driver defines location of each port
+	NDD_PN_LR_UD = 2,   // left-to-right, then up-down:
+	                    //  1 2 3 4
+	                    //  5 6 7 8
+	NDD_PN_LR_DU = 3,   // left-to-right, then down-up:
+	                    //  5 6 7 8
+	                    //  1 2 3 4
+	NDD_PN_UD_LR = 4,   // up-down, then left-right:
+	                    //  1 3 5 7
+	                    //  2 4 6 8
+	NDD_PN_DU_LR = 5    // down-up, then left-right:
+	                    //  2 4 6 8
+	                    //  1 3 5 7
+};
+
+/**
+ * Modules orientation on the switch
+ */
+enum
+{
+	NDD_ORIENTATION_HORIZONTAL = 0,
+	NDD_ORIENTATION_VERTICAL = 1
+};
+
+/**
+ * Module layout definition
+ */
+typedef struct __ndd_module_layout
+{
+	int rows;					// number of port rows on the module
+	int numberingScheme;		// port numbering scheme
+	int columns;            // number of columns for custom layout
+	WORD portRows[256];     // row numbers for ports
+	WORD portColumns[256];  // column numbers for ports
+} NDD_MODULE_LAYOUT;
+
+/**
  * Base class for device drivers
  */
 class LIBNXSRV_EXPORTABLE NetworkDeviceDriver
@@ -66,6 +108,8 @@ public:
 	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes);
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable);
 	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes);
+	virtual int getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes);
+	virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, int module, NDD_MODULE_LAYOUT *layout);
 };
 
 

@@ -898,6 +898,8 @@ typedef struct
 #define VID_EXACT_MATCH             ((DWORD)418)
 #define VID_RESOLVED_BY_USER        ((DWORD)419)
 #define VID_IS_STICKY               ((DWORD)420)
+#define VID_DATE_FORMAT             ((DWORD)421)
+#define VID_TIME_FORMAT             ((DWORD)422)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

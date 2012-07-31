@@ -240,4 +240,17 @@ public interface Session
     */
    public abstract void checkConnection() throws IOException, NetXMSClientException;
    
+   /**
+    * Get default date format provided by server
+    * 
+    * @return
+    */
+   public abstract String getDateFormat();
+
+   /**
+    * Get default time format provided by server
+    * 
+    * @return
+    */
+   public abstract String getTimeFormat();
 }

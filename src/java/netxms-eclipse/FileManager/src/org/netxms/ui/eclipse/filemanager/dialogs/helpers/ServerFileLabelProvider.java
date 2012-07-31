@@ -18,13 +18,13 @@
  */
 package org.netxms.ui.eclipse.filemanager.dialogs.helpers;
 
-import java.text.DateFormat;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.ServerFile;
 import org.netxms.ui.eclipse.filemanager.dialogs.SelectServerFileDialog;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Label provider for ServerFile objects
@@ -63,7 +63,7 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
 			case SelectServerFileDialog.COLUMN_SIZE:
 				return Long.toString(((ServerFile)element).getSize());
 			case SelectServerFileDialog.COLUMN_MODTIME:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(((ServerFile)element).getModifyicationTime());
+				return ConsoleSharedData.getDateTimeFormat().format(((ServerFile)element).getModifyicationTime());
 		}
 		return null;
 	}

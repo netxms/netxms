@@ -417,3 +417,28 @@ failure:
 	delete list;
 	return NULL;
 }
+
+/** 
+ * Get orientation of the modules in the device. Default implementation always returns NDD_ORIENTATION_HORIZONTAL.
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @return module orientation
+ */
+int NetworkDeviceDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes)
+{
+	return NDD_ORIENTATION_HORIZONTAL;
+}
+
+/** 
+ * Get port layout of given module. Default implementation always set NDD_PN_UNKNOWN as layout.
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param module Module number (starting from 1)
+ * @param layout Layout structure to fill
+ */
+void NetworkDeviceDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, int module, NDD_MODULE_LAYOUT *layout)
+{
+	layout->numberingScheme = NDD_PN_UNKNOWN;
+}

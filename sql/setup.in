@@ -234,6 +234,10 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('UseDNSNameForDiscoveredNodes','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('EnableNXSLContainerFunctions','1',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('DefaultConsoleDateFormat','dd.MM.yyyy',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('DefaultConsoleTimeFormat','HH:mm:ss',1,0);
 
 
 /*

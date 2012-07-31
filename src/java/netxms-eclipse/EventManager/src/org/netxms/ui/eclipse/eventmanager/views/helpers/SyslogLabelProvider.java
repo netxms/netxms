@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.eventmanager.views.helpers;
 
-import java.text.DateFormat;
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -97,7 +96,7 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 		switch(columnIndex)
 		{
 			case SyslogMonitor.COLUMN_TIMESTAMP:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG).format(record.getTimestamp());
+				return ConsoleSharedData.getDateTimeFormat().format(record.getTimestamp());
 			case SyslogMonitor.COLUMN_SOURCE:
 				final GenericObject object = session.findObjectById(record.getSourceObjectId());
 				return (object != null) ? object.getObjectName() : "<unknown>";

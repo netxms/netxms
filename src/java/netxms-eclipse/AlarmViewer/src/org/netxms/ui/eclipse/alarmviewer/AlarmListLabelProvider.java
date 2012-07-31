@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.alarmviewer;
 
-import java.text.DateFormat;
-
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
@@ -119,9 +117,9 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 				AbstractUserObject user = session.findUserDBObjectById(userId);
 				return (user != null) ? user.getName() : ("[" + Long.toString(((Alarm)element).getAckByUser()) + "]");
 			case AlarmList.COLUMN_CREATED:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG).format(((Alarm)element).getCreationTime());
+				return ConsoleSharedData.getDateTimeFormat().format(((Alarm)element).getCreationTime());
 			case AlarmList.COLUMN_LASTCHANGE:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG).format(((Alarm)element).getLastChangeTime());
+				return ConsoleSharedData.getDateTimeFormat().format(((Alarm)element).getLastChangeTime());
 		}
 		return null;
 	}

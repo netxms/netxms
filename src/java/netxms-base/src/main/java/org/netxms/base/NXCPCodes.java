@@ -709,6 +709,8 @@ public final class NXCPCodes
 	public static final long VID_EXACT_MATCH             = 418;
 	public static final long VID_RESOLVED_BY_USER        = 419;
 	public static final long VID_IS_STICKY               = 420;
+	public static final long VID_DATE_FORMAT             = 421;
+	public static final long VID_TIME_FORMAT             = 422;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

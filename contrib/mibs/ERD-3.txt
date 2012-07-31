@@ -18,23 +18,6 @@ ERD-3 DEFINITIONS ::= BEGIN
         DESCRIPTION "First version" 
              ::= { experimental 120 }
 
-
-    system OBJECT IDENTIFIER ::= { mib-2 1 }
-
-    sysDescr OBJECT-TYPE
-        SYNTAX              DisplayString (SIZE(0..255))
-        MAX-ACCESS          read-only
-        STATUS              current
-        DESCRIPTION         "."
-        ::= { system 1 }
-
-    sysName OBJECT-TYPE
-        SYNTAX              DisplayString (SIZE(0..20))
-        MAX-ACCESS          read-write
-        STATUS              current
-        DESCRIPTION         "."
-        ::= { system 5 }
-
 ipAddressEntry OBJECT IDENTIFIER ::={ nag_Erd_Snmp  4 }
 
 ipAddress OBJECT-TYPE

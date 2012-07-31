@@ -18,9 +18,7 @@
  */
 package org.netxms.ui.eclipse.objectmanager.views;
 
-import java.text.DateFormat;
 import java.util.Date;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -208,7 +206,7 @@ public class NodePollerView extends ViewPart
 	private void addPollerMessage(String message)
 	{
 		Date now = new Date();
-		textArea.append("[" + DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(now) + "] ");
+		textArea.append("[" + ConsoleSharedData.getDateTimeFormat().format(now) + "] ");
 		
 		int index = message.indexOf(0x7F);
 		if (index != -1)

@@ -35,6 +35,7 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.datacollection.propertypages.Thresholds;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 
 /**
@@ -99,7 +100,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 			case LastValuesWidget.COLUMN_TIMESTAMP:
 				if (((DciValue)element).getTimestamp().getTime() == 0)
 					return null;
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(((DciValue)element).getTimestamp());
+				return ConsoleSharedData.getDateTimeFormat().format(((DciValue)element).getTimestamp());
 			case LastValuesWidget.COLUMN_THRESHOLD:
 				return formatThreshold(((DciValue)element).getActiveThreshold());
 		}

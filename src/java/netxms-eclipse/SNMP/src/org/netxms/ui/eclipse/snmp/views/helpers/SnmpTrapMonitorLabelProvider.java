@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.snmp.views.helpers;
 
-import java.text.DateFormat;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
@@ -59,7 +58,7 @@ public class SnmpTrapMonitorLabelProvider extends LabelProvider implements ITabl
 		switch(columnIndex)
 		{
 			case SnmpTrapMonitor.COLUMN_TIMESTAMP:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG).format(record.getTimestamp());
+				return ConsoleSharedData.getDateTimeFormat().format(record.getTimestamp());
 			case SnmpTrapMonitor.COLUMN_SOURCE_IP:
 				return record.getSourceAddress().getHostAddress();
 			case SnmpTrapMonitor.COLUMN_SOURCE_NODE:

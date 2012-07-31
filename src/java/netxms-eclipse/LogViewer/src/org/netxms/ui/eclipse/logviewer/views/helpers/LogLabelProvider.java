@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.logviewer.views.helpers;
 
-import java.text.DateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -138,7 +137,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				{
 					long timestamp = Long.parseLong(value);
 					Date date = new Date(timestamp * 1000);
-					return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(date);
+					return ConsoleSharedData.getDateTimeFormat().format(date);
 				}
 				catch(NumberFormatException e)
 				{
