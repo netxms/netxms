@@ -424,10 +424,12 @@ void CommSession::processingThread()
       // Check if authentication required
       if ((!m_bIsAuthenticated) && (dwCommand != CMD_AUTHENTICATE))
       {
+			DebugPrintf(m_dwIndex, 6, _T("Authentication required"));
          msg.SetVariable(VID_RCC, ERR_AUTH_REQUIRED);
       }
       else if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && (m_pCtx == NULL))
       {
+			DebugPrintf(m_dwIndex, 6, _T("Encryption required"));
          msg.SetVariable(VID_RCC, ERR_ENCRYPTION_REQUIRED);
       }
       else
