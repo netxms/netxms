@@ -18,11 +18,11 @@
  */
 package org.netxms.ui.eclipse.perfview.views.helpers;
 
-import java.text.DateFormat;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Label provider for historical data view
@@ -49,7 +49,7 @@ public class HistoricalDataLabelProvider extends LabelProvider implements ITable
 		switch(columnIndex)
 		{
 			case 0:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(((DciDataRow)element).getTimestamp());
+				return ConsoleSharedData.getDateTimeFormat().format(((DciDataRow)element).getTimestamp());
 			case 1:
 				return ((DciDataRow)element).getValueAsString();
 		}

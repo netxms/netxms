@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.widgets;
 
-import java.text.DateFormat;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.layout.GridData;
@@ -72,7 +71,7 @@ public class AlarmCommentsEditor extends Composite
 		gd.grabExcessHorizontalSpace = false;
 		user.setLayoutData(gd);
 		
-		final Label time = toolkit.createLabel(this, DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG).format(note.getLastChangeTime()));
+		final Label time = toolkit.createLabel(this, ConsoleSharedData.getDateTimeFormat().format(note.getLastChangeTime()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.eventmanager.views.helpers;
 
-import java.text.DateFormat;
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -90,7 +89,7 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 		switch(columnIndex)
 		{
 			case EventMonitor.COLUMN_TIMESTAMP:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG).format(event.getTimeStamp());
+				return ConsoleSharedData.getDateTimeFormat().format(event.getTimeStamp());
 			case EventMonitor.COLUMN_SOURCE:
 				final GenericObject object = session.findObjectById(event.getSourceId());
 				return (object != null) ? object.getObjectName() : "<unknown>";
