@@ -42,6 +42,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.NodePollListener;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
@@ -203,7 +204,7 @@ public class NodePollerView extends ViewPart
 	private void addPollerMessage(String message)
 	{
 		Date now = new Date();
-		textArea.append("[" + ConsoleSharedData.getDateTimeFormat().format(now) + "] ");
+		textArea.append("[" + RegionalSettings.getDateTimeFormat().format(now) + "] ");
 		
 		int index = message.indexOf(0x7F);
 		if (index != -1)

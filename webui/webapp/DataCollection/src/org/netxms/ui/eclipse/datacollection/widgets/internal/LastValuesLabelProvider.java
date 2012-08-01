@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
-import java.text.DateFormat;
 import java.text.NumberFormat;
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -31,11 +30,11 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.datacollection.propertypages.Thresholds;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 
 /**
@@ -102,7 +101,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 			case LastValuesWidget.COLUMN_TIMESTAMP:
 				if (((DciValue)element).getTimestamp().getTime() == 0)
 					return null;
-				return ConsoleSharedData.getDateTimeFormat().format(((DciValue)element).getTimestamp());
+				return RegionalSettings.getDateTimeFormat().format(((DciValue)element).getTimestamp());
 			case LastValuesWidget.COLUMN_THRESHOLD:
 				return formatThreshold(((DciValue)element).getActiveThreshold());
 		}

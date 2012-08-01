@@ -29,6 +29,7 @@ import org.netxms.client.constants.Severity;
 import org.netxms.client.events.SyslogRecord;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.eventmanager.views.SyslogMonitor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -98,7 +99,7 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 		switch(columnIndex)
 		{
 			case SyslogMonitor.COLUMN_TIMESTAMP:
-				return ConsoleSharedData.getDateTimeFormat().format(record.getTimestamp());
+				return RegionalSettings.getDateTimeFormat().format(record.getTimestamp());
 			case SyslogMonitor.COLUMN_SOURCE:
 				final GenericObject object = session.findObjectById(record.getSourceObjectId());
 				return (object != null) ? object.getObjectName() : "<unknown>";

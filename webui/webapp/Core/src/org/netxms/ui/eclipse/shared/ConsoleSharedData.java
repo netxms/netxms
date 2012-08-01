@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.shared;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import org.eclipse.rwt.RWT;
 import org.netxms.api.client.Session;
 
@@ -36,16 +34,5 @@ public class ConsoleSharedData
 	public static Session getSession()
 	{
 		return (Session)RWT.getSessionStore().getAttribute("netxms.session");
-	}
-
-	/**
-	 * Get formatter for date and time
-	 * 
-	 * @return
-	 */
-	public static DateFormat getDateTimeFormat()
-	{
-		Session session = getSession();
-		return new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat());
 	}
 }

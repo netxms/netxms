@@ -2310,6 +2310,7 @@ webui/webapp/Core/META-INF/MANIFEST.MF -text
 webui/webapp/Core/OSGI-INF/l10n/bundle.properties -text
 webui/webapp/Core/OSGI-INF/l10n/bundle_es.properties -text
 webui/webapp/Core/OSGI-INF/l10n/bundle_ru.properties -text
+webui/webapp/Core/OSGI-INF/l10n/bundle_zh_CN.properties -text
 webui/webapp/Core/build.properties -text
 webui/webapp/Core/icons/add_obj.gif -text
 webui/webapp/Core/icons/alarm.png -text
@@ -2362,12 +2363,14 @@ webui/webapp/Core/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/BrandingProvider.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/ConsoleLoginListener.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/perspectives/DefaultPerspective.java -text
+webui/webapp/Core/src/org/netxms/ui/eclipse/console/preferencepages/RegionalSettingsPrefPage.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/resources/DataCollectionDisplayInfo.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/resources/StatusDisplayInfo.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/IPAddressValidator.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/IPNetMaskValidator.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/MacAddressValidator.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/ObjectNameValidator.java -text
+webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/RegionalSettings.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/shared/ConsoleSharedData.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/shared/IActionConstants.java -text

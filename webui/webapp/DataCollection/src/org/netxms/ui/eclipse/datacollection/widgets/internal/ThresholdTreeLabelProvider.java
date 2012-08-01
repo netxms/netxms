@@ -27,6 +27,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.datacollection.propertypages.Thresholds;
 import org.netxms.ui.eclipse.datacollection.widgets.ThresholdSummaryWidget;
@@ -97,7 +98,7 @@ public class ThresholdTreeLabelProvider extends LabelProvider implements ITableL
 				case ThresholdSummaryWidget.COLUMN_CONDITION:
 					return thresholdLabelProvider.getColumnText(((DciValue)element).getActiveThreshold(), Thresholds.COLUMN_OPERATION);
 				case ThresholdSummaryWidget.COLUMN_TIMESTAMP:
-					return ConsoleSharedData.getDateTimeFormat().format(((DciValue)element).getActiveThreshold().getLastEventTimestamp());
+					return RegionalSettings.getDateTimeFormat().format(((DciValue)element).getActiveThreshold().getLastEventTimestamp());
 				default:
 					return null;
 			}

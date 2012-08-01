@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.snmp.SnmpTrapLogRecord;
+import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor;
 
@@ -60,7 +61,7 @@ public class SnmpTrapMonitorLabelProvider extends LabelProvider implements ITabl
 		switch(columnIndex)
 		{
 			case SnmpTrapMonitor.COLUMN_TIMESTAMP:
-				return ConsoleSharedData.getDateTimeFormat().format(record.getTimestamp());
+				return RegionalSettings.getDateTimeFormat().format(record.getTimestamp());
 			case SnmpTrapMonitor.COLUMN_SOURCE_IP:
 				return record.getSourceAddress().getHostAddress();
 			case SnmpTrapMonitor.COLUMN_SOURCE_NODE:
