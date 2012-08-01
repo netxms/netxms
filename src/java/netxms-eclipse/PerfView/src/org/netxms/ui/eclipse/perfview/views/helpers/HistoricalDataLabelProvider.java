@@ -22,7 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.datacollection.DciDataRow;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 
 /**
  * Label provider for historical data view
@@ -47,7 +47,7 @@ public class HistoricalDataLabelProvider extends LabelProvider implements ITable
 		switch(columnIndex)
 		{
 			case 0:
-				return ConsoleSharedData.getDateTimeFormat().format(((DciDataRow)element).getTimestamp());
+				return RegionalSettings.getDateTimeFormat().format(((DciDataRow)element).getTimestamp());
 			case 1:
 				return ((DciDataRow)element).getValueAsString();
 		}

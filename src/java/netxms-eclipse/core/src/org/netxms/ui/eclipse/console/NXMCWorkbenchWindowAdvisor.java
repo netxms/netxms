@@ -38,6 +38,7 @@ import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
+import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
@@ -60,6 +61,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	public void preWindowOpen()
 	{
 		doLogin(Display.getCurrent());
+
+		RegionalSettings.updateFromPreferences();
 
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		

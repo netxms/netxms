@@ -1928,6 +1928,7 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages_ru.prope
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages_zh_CN.properties -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/perspectives/DefaultPerspective.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/preferencepages/HttpProxyPrefs.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/preferencepages/RegionalSettingsPrefPage.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/preferencepages/WorkbenchGeneralPrefs.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/resources/DataCollectionDisplayInfo.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/resources/StatusDisplayInfo.java -text
@@ -1935,6 +1936,7 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/IPAddressVa
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/IPNetMaskValidator.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/MacAddressValidator.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/ObjectNameValidator.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/RegionalSettings.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/views/ServerConsole.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/views/helpers/ServerConsoleTerminalConnector.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/widgets/StatusSelector.java -text

@@ -54,7 +54,7 @@ import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.SelectionRectangle;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.swtchart.Chart;
@@ -178,7 +178,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 				{
 					Date timestamp = new Date((long)xAxis.getDataCoordinate(e.x));
 					double value = yAxis.getDataCoordinate(e.y);
-					getPlotArea().setToolTipText(ConsoleSharedData.getDateTimeFormat().format(timestamp) + "\n" + value); //$NON-NLS-1$
+					getPlotArea().setToolTipText(RegionalSettings.getDateTimeFormat().format(timestamp) + "\n" + value); //$NON-NLS-1$
 				}
 			});
 		}

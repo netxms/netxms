@@ -33,6 +33,7 @@ import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.logviewer.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -137,7 +138,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				{
 					long timestamp = Long.parseLong(value);
 					Date date = new Date(timestamp * 1000);
-					return ConsoleSharedData.getDateTimeFormat().format(date);
+					return RegionalSettings.getDateTimeFormat().format(date);
 				}
 				catch(NumberFormatException e)
 				{

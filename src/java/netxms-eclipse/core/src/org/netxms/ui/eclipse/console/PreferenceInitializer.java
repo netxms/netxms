@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.console;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 
 /**
  * Preference initializer for console
@@ -46,5 +47,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 		ps.setDefault("HTTP_PROXY_AUTH", false); //$NON-NLS-1$
 		ps.setDefault("HTTP_PROXY_LOGIN", ""); //$NON-NLS-1$ //$NON-NLS-2$
 		ps.setDefault("HTTP_PROXY_PASSWORD", ""); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		ps.setDefault("DATETIME_FORMAT", RegionalSettings.DATETIME_FORMAT_SERVER);
+		ps.setDefault("DATE_FORMAT_STRING", "dd.MM.yyyy");
+		ps.setDefault("TIME_FORMAT_STRING", "HH:mm:ss");
 	}
 }

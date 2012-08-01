@@ -33,6 +33,7 @@ import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.AlarmNote;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
+import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.ImageCache;
@@ -69,7 +70,7 @@ public class AlarmCommentsEditor extends Composite
 		gd.grabExcessHorizontalSpace = false;
 		user.setLayoutData(gd);
 		
-		final Label time = toolkit.createLabel(this, ConsoleSharedData.getDateTimeFormat().format(note.getLastChangeTime()));
+		final Label time = toolkit.createLabel(this, RegionalSettings.getDateTimeFormat().format(note.getLastChangeTime()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

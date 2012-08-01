@@ -28,6 +28,7 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
@@ -117,9 +118,9 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 				AbstractUserObject user = session.findUserDBObjectById(userId);
 				return (user != null) ? user.getName() : ("[" + Long.toString(((Alarm)element).getAckByUser()) + "]");
 			case AlarmList.COLUMN_CREATED:
-				return ConsoleSharedData.getDateTimeFormat().format(((Alarm)element).getCreationTime());
+				return RegionalSettings.getDateTimeFormat().format(((Alarm)element).getCreationTime());
 			case AlarmList.COLUMN_LASTCHANGE:
-				return ConsoleSharedData.getDateTimeFormat().format(((Alarm)element).getLastChangeTime());
+				return RegionalSettings.getDateTimeFormat().format(((Alarm)element).getLastChangeTime());
 		}
 		return null;
 	}

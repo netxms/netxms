@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.shared;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.swt.widgets.TrayItem;
@@ -91,15 +89,5 @@ public class ConsoleSharedData
 	public static void setTrayIcon(TrayItem trayIcon)
 	{
 		ConsoleSharedData.trayIcon = trayIcon;
-	}
-	
-	/**
-	 * Get formatter for date and time
-	 * 
-	 * @return
-	 */
-	public static DateFormat getDateTimeFormat()
-	{
-		return new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat());
 	}
 }
