@@ -441,4 +441,5 @@ int NetworkDeviceDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *
 void NetworkDeviceDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, int module, NDD_MODULE_LAYOUT *layout)
 {
 	layout->numberingScheme = NDD_PN_UNKNOWN;
+	layout->rows = 2;
 }
