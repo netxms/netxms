@@ -619,6 +619,7 @@ int AlarmManager::getMostCriticalStatusForObject(DWORD dwObjectId)
    for(i = 0; i < m_dwNumAlarms; i++)
    {
       if ((m_pAlarmList[i].dwSourceObject == dwObjectId) &&
+			 ((m_pAlarmList[i].nState & ALARM_STATE_MASK) < ALARM_STATE_RESOLVED)
           ((m_pAlarmList[i].nCurrentSeverity > iStatus) || (iStatus == STATUS_UNKNOWN)))
       {
          iStatus = (int)m_pAlarmList[i].nCurrentSeverity;

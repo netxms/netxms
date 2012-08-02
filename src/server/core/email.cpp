@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -271,9 +271,26 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S ", pCurrentTM);
 
 							TIME_ZONE_INFORMATION tzi;
-							GetTimeZoneInformation(&tzi);
-							int offset = abs(tzi.Bias);
-							sprintf(&szBuffer[strlen(szBuffer)], "%c%02d%02d\r\n", tzi.Bias < 0 ? '+' : '-',
+							DWORD tzType = GetTimeZoneInformation(&tzi);
+							LONG effectiveBias;
+							switch(tzType)
+							{
+								case TIME_ZONE_ID_STANDARD:
+									effectiveBias = tzi.Bias + tzi.StandardBias;
+									break;
+								case TIME_ZONE_ID_DAYLIGHT:
+									effectiveBias = tzi.Bias + tzi.DaylightBias;
+									break;
+								case TIME_ZONE_ID_UNKNOWN:
+									effectiveBias = tzi.Bias;
+									break;
+								default:		// error
+									effectiveBias = 0;
+									DbgPrintf(4, _T("GetTimeZoneInformation() call failed"));
+									break;
+							}
+							int offset = abs(effectiveBias);
+							sprintf(&szBuffer[strlen(szBuffer)], "%c%02d%02d\r\n", effectiveBias < 0 ? '+' : '-',
 							        offset / 60, offset % 60);
 #else
                      strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
