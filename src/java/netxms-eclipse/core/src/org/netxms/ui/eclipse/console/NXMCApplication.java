@@ -28,7 +28,7 @@ public class NXMCApplication implements IApplication
 		System.setProperty("osgi.nl", locale); //$NON-NLS-1$
 
 		final Display display = PlatformUI.createDisplay();
-		if (System.getProperty("sleak") != null)
+		if (System.getProperty("sleak") != null) //$NON-NLS-1$
 		{
 			Sleak sleak = new Sleak();
 			sleak.open();

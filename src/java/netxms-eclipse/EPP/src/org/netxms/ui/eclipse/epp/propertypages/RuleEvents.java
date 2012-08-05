@@ -44,6 +44,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -83,10 +84,10 @@ public class RuleEvents extends PropertyPage
       dialogArea.setLayout(layout);
       
       checkInverted = new Button(dialogArea, SWT.CHECK);
-      checkInverted.setText("Inverted rule (match events NOT in the list below)");
+      checkInverted.setText(Messages.RuleEvents_InvertedRule);
       checkInverted.setSelection(rule.isEventsInverted());
       
-      final String[] columnNames = { "Event" };
+      final String[] columnNames = { Messages.RuleEvents_Event };
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -125,7 +126,7 @@ public class RuleEvents extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("Add...");
+      addButton.setText(Messages.RuleEvents_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -144,7 +145,7 @@ public class RuleEvents extends PropertyPage
       addButton.setLayoutData(rd);
 		
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("Delete");
+      deleteButton.setText(Messages.RuleEvents_Delete);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)

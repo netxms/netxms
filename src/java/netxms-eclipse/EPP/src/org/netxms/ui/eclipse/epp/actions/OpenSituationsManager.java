@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.views.SituationsManager;
 
 public class OpenSituationsManager implements IWorkbenchWindowActionDelegate
@@ -61,7 +62,7 @@ public class OpenSituationsManager implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.OpenSituationsManager_Error, Messages.OpenSituationsManager_ErrorText + e.getMessage());
 			}
 		}
 	}

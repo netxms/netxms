@@ -34,6 +34,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.Activator;
+import org.netxms.ui.eclipse.slm.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -68,7 +69,7 @@ public class ServiceCheckScript extends PropertyPage
       
       // Script
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Check script");
+      label.setText(Messages.ServiceCheckScript_CheckScript);
 
       filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
 		filterSource.setText(object.getScript());
@@ -99,7 +100,7 @@ public class ServiceCheckScript extends PropertyPage
 			setValid(false);
 		
 		final String newScript = filterSource.getText();
-		new ConsoleJob("Update service check script", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.ServiceCheckScript_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -112,7 +113,7 @@ public class ServiceCheckScript extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot change service check script";
+				return Messages.ServiceCheckScript_JobError;
 			}
 
 			@Override

@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
@@ -43,7 +44,7 @@ public class EventSelector extends AbstractSelector
 	public EventSelector(Composite parent, int style)
 	{
 		super(parent, style, false);
-		setText("<none>");
+		setText(Messages.EventSelector_None);
 	}
 
 	/**
@@ -53,7 +54,7 @@ public class EventSelector extends AbstractSelector
 	public EventSelector(Composite parent, int style, boolean useHyperlink)
 	{
 		super(parent, style, useHyperlink);
-		setText("<none>");
+		setText(Messages.EventSelector_None);
 	}
 
 	/* (non-Javadoc)
@@ -77,7 +78,7 @@ public class EventSelector extends AbstractSelector
 			else
 			{
 				eventCode = 0;
-				setText("<none>");
+				setText(Messages.EventSelector_None);
 				setImage(null);
 				getTextControl().setToolTipText(null);
 			}
@@ -112,14 +113,14 @@ public class EventSelector extends AbstractSelector
 			}
 			else
 			{
-				setText("<unknown>");
+				setText(Messages.EventSelector_Unknown);
 				setImage(null);
 				getTextControl().setToolTipText(null);
 			}
 		}
 		else
 		{
-			setText("<none>");
+			setText(Messages.EventSelector_None);
 			setImage(null);
 			getTextControl().setToolTipText(null);
 		}
@@ -133,14 +134,14 @@ public class EventSelector extends AbstractSelector
 	private String generateToolTipText(EventTemplate event)
 	{
 		StringBuilder sb = new StringBuilder(event.getName());
-		sb.append(" [");
+		sb.append(" ["); //$NON-NLS-1$
 		sb.append(event.getCode());
-		sb.append("]\nSeverity: ");
+		sb.append(Messages.EventSelector_Severity);
 		sb.append(StatusDisplayInfo.getStatusText(event.getSeverity()));
-		sb.append("\n\n");
+		sb.append("\n\n"); //$NON-NLS-1$
 		sb.append(event.getMessage());
-		sb.append("\n\n");
-		sb.append(event.getDescription().replace("\r", ""));
+		sb.append("\n\n"); //$NON-NLS-1$
+		sb.append(event.getDescription().replace("\r", "")); //$NON-NLS-1$ //$NON-NLS-2$
 		return sb.toString();
 	}
 
@@ -150,6 +151,6 @@ public class EventSelector extends AbstractSelector
 	@Override
 	protected String getButtonToolTip()
 	{
-		return "Select event";
+		return Messages.EventSelector_Tooltip;
 	}
 }

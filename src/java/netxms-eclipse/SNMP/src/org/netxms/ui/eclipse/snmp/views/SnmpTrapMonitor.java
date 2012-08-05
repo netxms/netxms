@@ -31,6 +31,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
+import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapMonitorFilter;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapMonitorLabelProvider;
 import org.netxms.ui.eclipse.views.AbstractTraceView;
@@ -40,7 +41,7 @@ import org.netxms.ui.eclipse.views.AbstractTraceView;
  */
 public class SnmpTrapMonitor extends AbstractTraceView implements SessionListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor";
+	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor"; //$NON-NLS-1$
 	
 	public static final int COLUMN_TIMESTAMP = 0;
 	public static final int COLUMN_SOURCE_IP = 1;
@@ -70,7 +71,7 @@ public class SnmpTrapMonitor extends AbstractTraceView implements SessionListene
 		super.init(site, memento);
 		if (memento != null)
 		{
-			new ConsoleJob("Subscribing to SNMP trap events", null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.SnmpTrapMonitor_SubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -80,7 +81,7 @@ public class SnmpTrapMonitor extends AbstractTraceView implements SessionListene
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot subscribe to SNMP trap events";
+					return Messages.SnmpTrapMonitor_SubscribeJob_Error;
 				}
 			}.start();
 		}
@@ -92,11 +93,11 @@ public class SnmpTrapMonitor extends AbstractTraceView implements SessionListene
 	@Override
 	protected void setupViewer(TableViewer viewer)
 	{
-		addColumn("Timestamp", 150);
-		addColumn("Source IP", 120);
-		addColumn("Source node", 200);
-		addColumn("OID", 200);
-		addColumn("Varbinds", 600);
+		addColumn(Messages.SnmpTrapMonitor_ColTime, 150);
+		addColumn(Messages.SnmpTrapMonitor_ColSourceIP, 120);
+		addColumn(Messages.SnmpTrapMonitor_ColSourceNode, 200);
+		addColumn(Messages.SnmpTrapMonitor_ColOID, 200);
+		addColumn(Messages.SnmpTrapMonitor_ColVarbinds, 600);
 		
 		viewer.setLabelProvider(new SnmpTrapMonitorLabelProvider());
 		setFilter(new SnmpTrapMonitorFilter());
@@ -117,7 +118,7 @@ public class SnmpTrapMonitor extends AbstractTraceView implements SessionListene
 	@Override
 	protected String getConfigPrefix()
 	{
-		return "SnmpTrapMonitor";
+		return "SnmpTrapMonitor"; //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -146,7 +147,7 @@ public class SnmpTrapMonitor extends AbstractTraceView implements SessionListene
 	{
 		session.removeListener(this);
 		
-		new ConsoleJob("Unsubscribe from SNMP trap events", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SnmpTrapMonitor_UnsubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -156,7 +157,7 @@ public class SnmpTrapMonitor extends AbstractTraceView implements SessionListene
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot unsubscribe from SNMP trap events";
+				return Messages.SnmpTrapMonitor_UnsubscribeJob_Error;
 			}
 		}.start();
 		super.dispose();

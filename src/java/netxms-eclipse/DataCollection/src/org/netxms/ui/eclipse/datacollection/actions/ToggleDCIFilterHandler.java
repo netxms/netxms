@@ -50,8 +50,8 @@ public class ToggleDCIFilterHandler extends AbstractHandler implements IElementU
 			if ((tab != null) && (tab instanceof LastValues))
 			{
 				ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
-				Command command = service.getCommand("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter");
-				State state = command.getState("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter.state");
+				Command command = service.getCommand("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
+				State state = command.getState("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter.state"); //$NON-NLS-1$
 				boolean isChecked = !(Boolean)state.getValue();
 				state.setValue(isChecked);
 				((LastValues)tab).setFilterEnabled(isChecked);
@@ -69,8 +69,8 @@ public class ToggleDCIFilterHandler extends AbstractHandler implements IElementU
 	public void updateElement(UIElement element, Map parameters)
 	{
 		ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
-		Command command = service.getCommand("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter");
-		State state = command.getState("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter.state");
+		Command command = service.getCommand("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
+		State state = command.getState("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter.state"); //$NON-NLS-1$
 		element.setChecked((Boolean)state.getValue());
 	}
 }

@@ -43,6 +43,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesFilter;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesLabelProvider;
@@ -57,7 +58,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class LastValuesWidget extends Composite
 {
-	public static final String JOB_FAMILY = "LastValuesViewJob";
+	public static final String JOB_FAMILY = "LastValuesViewJob"; //$NON-NLS-1$
 	
 	// Columns
 	public static final int COLUMN_ID = 0;
@@ -131,7 +132,7 @@ public class LastValuesWidget extends Composite
 		});
 		
 		// Setup table columns
-		final String[] names = { "ID", "Description", "Value", "Timestamp", "Threshold" };
+		final String[] names = { Messages.LastValuesWidget_ColID, Messages.LastValuesWidget_ColDescr, Messages.LastValuesWidget_ColValue, Messages.LastValuesWidget_ColTime, Messages.LastValuesWidget_ColThreshold };
 		final int[] widths = { 70, 250, 150, 120, 150 };
 		dataViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 	
@@ -148,11 +149,11 @@ public class LastValuesWidget extends Composite
 			public void widgetDisposed(DisposeEvent e)
 			{
 				WidgetHelper.saveTableViewerSettings(dataViewer, ds, configPrefix);
-				ds.put(configPrefix + ".autoRefresh", autoRefreshEnabled);
-				ds.put(configPrefix + ".autoRefreshInterval", autoRefreshEnabled);
-				ds.put(configPrefix + ".useMultipliers", labelProvider.areMultipliersUsed());
-				ds.put(configPrefix + ".showErrors", isShowErrors());
-				ds.put(configPrefix + ".showUnsupported", isShowUnsupported());
+				ds.put(configPrefix + ".autoRefresh", autoRefreshEnabled); //$NON-NLS-1$
+				ds.put(configPrefix + ".autoRefreshInterval", autoRefreshEnabled); //$NON-NLS-1$
+				ds.put(configPrefix + ".useMultipliers", labelProvider.areMultipliersUsed()); //$NON-NLS-1$
+				ds.put(configPrefix + ".showErrors", isShowErrors()); //$NON-NLS-1$
+				ds.put(configPrefix + ".showUnsupported", isShowUnsupported()); //$NON-NLS-1$
 			}
 		});
 
@@ -172,21 +173,21 @@ public class LastValuesWidget extends Composite
 		
 		try
 		{
-			ds.getInt(configPrefix + ".autoRefreshInterval");
+			ds.getInt(configPrefix + ".autoRefreshInterval"); //$NON-NLS-1$
 		}
 		catch(NumberFormatException e)
 		{
 		}
-		setAutoRefreshEnabled(ds.getBoolean(configPrefix + ".autoRefresh"));
-		if (ds.get(configPrefix + ".useMultipliers") != null)
-			labelProvider.setUseMultipliers(ds.getBoolean(configPrefix + ".useMultipliers"));
+		setAutoRefreshEnabled(ds.getBoolean(configPrefix + ".autoRefresh")); //$NON-NLS-1$
+		if (ds.get(configPrefix + ".useMultipliers") != null) //$NON-NLS-1$
+			labelProvider.setUseMultipliers(ds.getBoolean(configPrefix + ".useMultipliers")); //$NON-NLS-1$
 		else
 			labelProvider.setUseMultipliers(true);
-		if (ds.get(configPrefix + ".showErrors") != null)
-			labelProvider.setShowErrors(ds.getBoolean(configPrefix + ".showErrors"));
+		if (ds.get(configPrefix + ".showErrors") != null) //$NON-NLS-1$
+			labelProvider.setShowErrors(ds.getBoolean(configPrefix + ".showErrors")); //$NON-NLS-1$
 		else
 			labelProvider.setShowErrors(true);
-		filter.setShowUnsupported(ds.getBoolean(configPrefix + ".showUnsupported"));
+		filter.setShowUnsupported(ds.getBoolean(configPrefix + ".showUnsupported")); //$NON-NLS-1$
 		
 		createActions();
 		createPopupMenu();
@@ -205,7 +206,7 @@ public class LastValuesWidget extends Composite
 	 */
 	private void createActions()
 	{
-		actionUseMultipliers = new Action("Use &multipliers", Action.AS_CHECK_BOX) {
+		actionUseMultipliers = new Action(Messages.LastValuesWidget_UseMultipliers, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -214,7 +215,7 @@ public class LastValuesWidget extends Composite
 		};
 		actionUseMultipliers.setChecked(areMultipliersUsed());
 
-		actionShowErrors = new Action("Show collection &errors", Action.AS_CHECK_BOX) {
+		actionShowErrors = new Action(Messages.LastValuesWidget_ShowErrors, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -223,7 +224,7 @@ public class LastValuesWidget extends Composite
 		};
 		actionShowErrors.setChecked(isShowErrors());
 
-		actionShowUnsupported = new Action("Show &unsupported items", Action.AS_CHECK_BOX) {
+		actionShowUnsupported = new Action(Messages.LastValuesWidget_ShowUnsupported, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -282,11 +283,11 @@ public class LastValuesWidget extends Composite
 			return;
 		}
 
-		ConsoleJob job = new ConsoleJob("Get DCI values for node " + node.getObjectName(), viewPart, Activator.PLUGIN_ID, LastValuesWidget.JOB_FAMILY) {
+		ConsoleJob job = new ConsoleJob(Messages.LastValuesWidget_JobTitle + node.getObjectName(), viewPart, Activator.PLUGIN_ID, LastValuesWidget.JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get DCI values for node " + node.getObjectName();
+				return Messages.LastValuesWidget_JobError + node.getObjectName();
 			}
 
 			@Override
@@ -397,7 +398,7 @@ public class LastValuesWidget extends Composite
 		if (enable)
 			filterText.setFocus();
 		else
-			setFilter("");
+			setFilter(""); //$NON-NLS-1$
 	}
 
 	/**

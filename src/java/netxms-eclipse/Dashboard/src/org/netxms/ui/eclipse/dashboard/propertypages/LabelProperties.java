@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -56,7 +57,7 @@ public class LabelProperties extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		title = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
-		title.setLabel("Title");
+		title.setLabel(Messages.LabelProperties_Title);
 		title.setText(config.getTitle());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -76,7 +77,7 @@ public class LabelProperties extends PropertyPage
 		areaLayout.marginLeft = 0;
 		areaLayout.marginRight = 0;
 		fgArea.setLayout(areaLayout);
-		new Label(fgArea, SWT.NONE).setText("Text color:");
+		new Label(fgArea, SWT.NONE).setText(Messages.LabelProperties_TextColor);
 		foreground = new ColorSelector(fgArea);
 		foreground.setColorValue(ColorConverter.rgbFromInt(config.getForegroundColorAsInt()));
 		
@@ -92,7 +93,7 @@ public class LabelProperties extends PropertyPage
 		areaLayout.marginLeft = 0;
 		areaLayout.marginRight = 0;
 		bgArea.setLayout(areaLayout);
-		new Label(bgArea, SWT.NONE).setText("Background color:");
+		new Label(bgArea, SWT.NONE).setText(Messages.LabelProperties_BgColor);
 		background = new ColorSelector(bgArea);
 		background.setColorValue(ColorConverter.rgbFromInt(config.getBackgroundColorAsInt()));
 		
@@ -106,8 +107,8 @@ public class LabelProperties extends PropertyPage
 	public boolean performOk()
 	{
 		config.setTitle(title.getText());
-		config.setForeground("0x" + Integer.toHexString(ColorConverter.rgbToInt(foreground.getColorValue())));
-		config.setBackground("0x" + Integer.toHexString(ColorConverter.rgbToInt(background.getColorValue())));
+		config.setForeground("0x" + Integer.toHexString(ColorConverter.rgbToInt(foreground.getColorValue()))); //$NON-NLS-1$
+		config.setBackground("0x" + Integer.toHexString(ColorConverter.rgbToInt(background.getColorValue()))); //$NON-NLS-1$
 		return true;
 	}
 }

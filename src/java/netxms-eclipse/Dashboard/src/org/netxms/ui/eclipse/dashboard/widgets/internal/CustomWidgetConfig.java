@@ -30,7 +30,7 @@ import org.simpleframework.xml.core.Persister;
 public class CustomWidgetConfig extends DashboardElementConfig
 {
 	@Element(required=false)
-	private String className = "";
+	private String className = ""; //$NON-NLS-1$
 
 	/**
 	 * Create line chart settings object from XML document

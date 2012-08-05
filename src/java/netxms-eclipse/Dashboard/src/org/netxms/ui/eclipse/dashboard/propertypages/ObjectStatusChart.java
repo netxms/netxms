@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -62,7 +63,7 @@ public class ObjectStatusChart extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
-		objectSelector.setLabel("Root Object");
+		objectSelector.setLabel(Messages.ObjectStatusChart_RootObject);
 		objectSelector.setObjectClass(GenericObject.class);
 		objectSelector.setObjectId(config.getRootObject());
 		GridData gd = new GridData();
@@ -72,7 +73,7 @@ public class ObjectStatusChart extends PropertyPage
 		objectSelector.setLayoutData(gd);
 		
 		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel("Title");
+		title.setLabel(Messages.ObjectStatusChart_Title);
 		title.setText(config.getTitle());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -81,7 +82,7 @@ public class ObjectStatusChart extends PropertyPage
 		title.setLayoutData(gd);
 		
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
-		optionsGroup.setText("Options");
+		optionsGroup.setText(Messages.ObjectStatusChart_Options);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -90,26 +91,26 @@ public class ObjectStatusChart extends PropertyPage
 		optionsGroup.setLayout(optionsLayout);
 
 		checkShowLegend = new Button(optionsGroup, SWT.CHECK);
-		checkShowLegend.setText("Show &legend");
+		checkShowLegend.setText(Messages.ObjectStatusChart_ShowLegend);
 		checkShowLegend.setSelection(config.isShowLegend());
 		
 		checkShow3D = new Button(optionsGroup, SWT.CHECK);
-		checkShow3D.setText("&3D view");
+		checkShow3D.setText(Messages.ObjectStatusChart_3DView);
 		checkShow3D.setSelection(config.isShowIn3D());
 		
 		checkTransposed = new Button(optionsGroup, SWT.CHECK);
-		checkTransposed.setText("Trans&posed");
+		checkTransposed.setText(Messages.ObjectStatusChart_Transposed);
 		checkTransposed.setSelection(config.isTransposed());
 
 		checkTranslucent = new Button(optionsGroup, SWT.CHECK);
-		checkTranslucent.setText("&Translucent");
+		checkTranslucent.setText(Messages.ObjectStatusChart_Translucent);
 		checkTranslucent.setSelection(config.isTranslucent());
 
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Refresh interval (seconds)", 1, 10000, gd);
+		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.ObjectStatusChart_RefreshInterval, 1, 10000, gd);
 		refreshRate.setSelection(config.getRefreshRate());
 
 		return dialogArea;

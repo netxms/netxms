@@ -24,6 +24,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.NetworkMapConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -51,7 +52,7 @@ public class NetworkMap extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
-		objectSelector.setLabel("Network map");
+		objectSelector.setLabel(Messages.NetworkMap_NetworkMap);
 		objectSelector.setObjectClass(org.netxms.client.objects.NetworkMap.class);
 		objectSelector.setObjectId(config.getObjectId());
 		GridData gd = new GridData();
@@ -60,7 +61,7 @@ public class NetworkMap extends PropertyPage
 		objectSelector.setLayoutData(gd);
 		
 		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel("Title");
+		title.setLabel(Messages.NetworkMap_Title);
 		title.setText(config.getTitle());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

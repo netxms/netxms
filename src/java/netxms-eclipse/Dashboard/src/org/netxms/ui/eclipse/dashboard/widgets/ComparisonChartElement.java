@@ -34,6 +34,7 @@ import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -92,7 +93,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 		
 		updateInProgress = true;
 		
-		ConsoleJob job = new ConsoleJob("Get DCI values for chart", viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.ComparisonChartElement_JobTitle, viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -129,7 +130,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get DCI values for comparision chart";
+				return Messages.ComparisonChartElement_JobError;
 			}
 	
 			@Override
@@ -146,7 +147,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 					@Override
 					public void run()
 					{
-						chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")");
+						chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 				});
 				return Status.OK_STATUS;

@@ -114,7 +114,7 @@ public class AlarmNotifier
 					
 					IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 					long currTime = System.currentTimeMillis();
-					if (ps.getBoolean("OUTSTANDING_ALARMS_REMINDER") && 
+					if (ps.getBoolean("OUTSTANDING_ALARMS_REMINDER") &&  //$NON-NLS-1$
 							(outstandingAlarms > 0) && 
 							(lastReminderTime + 300000 <= currTime))
 					{
@@ -130,7 +130,7 @@ public class AlarmNotifier
 					}
 				}
 			}
-		}, "AlarmReminderThread");
+		}, "AlarmReminderThread"); //$NON-NLS-1$
 		thread.setDaemon(true);
 		thread.start();
 	}
@@ -165,7 +165,7 @@ public class AlarmNotifier
 			lastReminderTime = System.currentTimeMillis();
 		outstandingAlarms++;
 		
-		if (!Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_POPUPS"))
+		if (!Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_POPUPS")) //$NON-NLS-1$
 			return;
 		
 		final TrayItem trayIcon = ConsoleSharedData.getTrayIcon();
@@ -202,7 +202,7 @@ public class AlarmNotifier
 					if (window != null)
 					{
 						final ToolTip tip = new ToolTip(window.getShell(), SWT.BALLOON | severityFlag);
-						tip.setText(Messages.AlarmNotifier_ToolTip_Header + StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()) + ")"); //$NON-NLS-2$
+						tip.setText(Messages.AlarmNotifier_ToolTip_Header + StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()) + ")"); //$NON-NLS-1$ //$NON-NLS-1$
 						tip.setMessage(((object != null) ? object.getObjectName() : Long.toString(alarm.getSourceObjectId())) + ": " + alarm.getMessage()); //$NON-NLS-1$
 						tip.setAutoHide(true);
 						trayIcon.setToolTip(tip);

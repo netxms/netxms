@@ -52,6 +52,7 @@ import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.client.snmp.SnmpTrapParameterMapping;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.snmp.Activator;
+import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.dialogs.helpers.ParamMappingLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -61,7 +62,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class TrapConfigurationDialog extends Dialog
 {
-	private static final String PARAMLIST_TABLE_SETTINGS = "TrapConfigurationDialog.ParamList";
+	private static final String PARAMLIST_TABLE_SETTINGS = "TrapConfigurationDialog.ParamList"; //$NON-NLS-1$
 	
 	private SnmpTrap trap;
 	private List<SnmpTrapParameterMapping> pmap;
@@ -96,7 +97,7 @@ public class TrapConfigurationDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Edit SNMP Trap Mapping");
+		newShell.setText(Messages.TrapConfigurationDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -113,7 +114,7 @@ public class TrapConfigurationDialog extends Dialog
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		dialogArea.setLayout(layout);
 		
-		description = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, "Description", trap.getDescription(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+		description = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, Messages.TrapConfigurationDialog_Description, trap.getDescription(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		Composite oidSelection = new Composite(dialogArea, SWT.NONE);
 		layout = new GridLayout();
@@ -127,11 +128,11 @@ public class TrapConfigurationDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		oidSelection.setLayoutData(gd);
 		
-		oid = WidgetHelper.createLabeledText(oidSelection, SWT.BORDER, 300, "Trap OID", 
-				(trap.getObjectId() != null) ? trap.getObjectId().toString() : "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		oid = WidgetHelper.createLabeledText(oidSelection, SWT.BORDER, 300, Messages.TrapConfigurationDialog_TrapOID, 
+				(trap.getObjectId() != null) ? trap.getObjectId().toString() : "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 
 		buttonSelect = new Button(oidSelection, SWT.PUSH);
-		buttonSelect.setText("Select...");
+		buttonSelect.setText(Messages.TrapConfigurationDialog_Select);
 		gd = new GridData();
 		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
 		gd.verticalAlignment = SWT.BOTTOM;
@@ -151,17 +152,17 @@ public class TrapConfigurationDialog extends Dialog
 		});
 		
 		event = new EventSelector(dialogArea, SWT.NONE);
-		event.setLabel("Event");
+		event.setLabel(Messages.TrapConfigurationDialog_Event);
 		event.setEventCode(trap.getEventCode());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		event.setLayoutData(gd);
 		
-		eventTag = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, SWT.DEFAULT, "User Tag", trap.getUserTag(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+		eventTag = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, SWT.DEFAULT, Messages.TrapConfigurationDialog_UserTag, trap.getUserTag(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		Label label = new Label(dialogArea, SWT.NONE);
-		label.setText("Parameters");
+		label.setText(Messages.TrapConfigurationDialog_Parameters);
 		
 		Composite paramArea = new Composite(dialogArea, SWT.NONE);
 		gd = new GridData();
@@ -196,7 +197,7 @@ public class TrapConfigurationDialog extends Dialog
 		buttonArea.setLayout(btnLayout);
 		
 		buttonAdd = new Button(buttonArea, SWT.PUSH);
-		buttonAdd.setText("&Add...");
+		buttonAdd.setText(Messages.TrapConfigurationDialog_Add);
 		buttonAdd.setLayoutData(new RowData(WidgetHelper.BUTTON_WIDTH_HINT, SWT.DEFAULT));
 		buttonAdd.addSelectionListener(new SelectionListener() {
 			@Override
@@ -213,7 +214,7 @@ public class TrapConfigurationDialog extends Dialog
 		});
 		
 		buttonEdit = new Button(buttonArea, SWT.PUSH);
-		buttonEdit.setText("&Edit...");
+		buttonEdit.setText(Messages.TrapConfigurationDialog_Edit);
 		buttonEdit.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -229,7 +230,7 @@ public class TrapConfigurationDialog extends Dialog
 		});
 		
 		buttonDelete = new Button(buttonArea, SWT.PUSH);
-		buttonDelete.setText("&Delete");
+		buttonDelete.setText(Messages.TrapConfigurationDialog_Delete);
 		buttonDelete.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -245,10 +246,10 @@ public class TrapConfigurationDialog extends Dialog
 		});
 		
 		buttonUp = new Button(buttonArea, SWT.PUSH);
-		buttonUp.setText("Move &up");
+		buttonUp.setText(Messages.TrapConfigurationDialog_MoveUp);
 		
 		buttonDown = new Button(buttonArea, SWT.PUSH);
-		buttonDown.setText("Move &down");
+		buttonDown.setText(Messages.TrapConfigurationDialog_MoveDown);
 		
 		return dialogArea;
 	}
@@ -333,11 +334,11 @@ public class TrapConfigurationDialog extends Dialog
 		table.setHeaderVisible(true);
 		
 		TableColumn tc = new TableColumn(table, SWT.LEFT);
-		tc.setText("Number");
+		tc.setText(Messages.TrapConfigurationDialog_Number);
 		tc.setWidth(90);
 		
 		tc = new TableColumn(table, SWT.LEFT);
-		tc.setText("Parameter");
+		tc.setText(Messages.TrapConfigurationDialog_Parameter);
 		tc.setWidth(200);
 		
 		pmap = new ArrayList<SnmpTrapParameterMapping>(trap.getParameterMapping());
@@ -387,7 +388,7 @@ public class TrapConfigurationDialog extends Dialog
 		}
 		catch(SnmpObjectIdFormatException e)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "SNMP OID you have entered is invalid. Please enter correct SNMP OID.");
+			MessageDialog.openWarning(getShell(), Messages.TrapConfigurationDialog_Warning, Messages.TrapConfigurationDialog_WarningInvalidOID);
 			return;
 		}
 

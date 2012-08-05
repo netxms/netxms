@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -45,7 +46,7 @@ public class SendSMSDialog extends Dialog
 	public SendSMSDialog(Shell parentShell)
 	{
 		super(parentShell);
-		phoneNumber = Activator.getDefault().getDialogSettings().get("SendSMS.PhoneNumber");
+		phoneNumber = Activator.getDefault().getDialogSettings().get("SendSMS.PhoneNumber"); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -55,7 +56,7 @@ public class SendSMSDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Send SMS");
+		newShell.setText(Messages.getString("SendSMSDialog.Title")); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -72,7 +73,7 @@ public class SendSMSDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		numberField = new LabeledText(dialogArea, SWT.NONE);
-		numberField.setLabel("Phone number");
+		numberField.setLabel(Messages.getString("SendSMSDialog.PhoneNumber")); //$NON-NLS-1$
 		numberField.setText(phoneNumber);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -81,7 +82,7 @@ public class SendSMSDialog extends Dialog
 		numberField.setLayoutData(gd);
 		
 		messageField = new LabeledText(dialogArea, SWT.NONE);
-		messageField.setLabel("Message");
+		messageField.setLabel(Messages.getString("SendSMSDialog.Message")); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -101,7 +102,7 @@ public class SendSMSDialog extends Dialog
 	{
 		phoneNumber = numberField.getText().trim();
 		message = messageField.getText();
-		Activator.getDefault().getDialogSettings().put("SendSMS.PhoneNumber", phoneNumber);
+		Activator.getDefault().getDialogSettings().put("SendSMS.PhoneNumber", phoneNumber); //$NON-NLS-1$
 		super.okPressed();
 	}
 

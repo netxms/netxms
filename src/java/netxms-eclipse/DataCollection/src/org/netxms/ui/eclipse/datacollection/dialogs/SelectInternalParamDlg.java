@@ -25,6 +25,7 @@ import org.netxms.client.AgentParameter;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Template;
+import org.netxms.ui.eclipse.datacollection.Messages;
 
 /**
  * @author victor
@@ -45,24 +46,24 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		ArrayList<AgentParameter> list = new ArrayList<AgentParameter>(10);
 
 		// Internal parameters common for all nodes
-		list.add(new AgentParameter("ChildStatus(*)", "Status of child object {instance}", DataCollectionItem.DT_INT));
-		list.add(new AgentParameter("ConditionStatus(*)", "Status of condition object {instance}", DataCollectionItem.DT_INT));
-		list.add(new AgentParameter("Dummy", "Dummy value", DataCollectionItem.DT_INT));
-		list.add(new AgentParameter("Net.IP.NextHop(*)", "Next routing hop for IP address {instance}", DataCollectionItem.DT_STRING));
-		list.add(new AgentParameter("Status", "Status", DataCollectionItem.DT_INT));
+		list.add(new AgentParameter("ChildStatus(*)", Messages.SelectInternalParamDlg_DCI_ChildObjectStatus, DataCollectionItem.DT_INT)); //$NON-NLS-1$
+		list.add(new AgentParameter("ConditionStatus(*)", Messages.SelectInternalParamDlg_DCI_ConditionStatus, DataCollectionItem.DT_INT)); //$NON-NLS-1$
+		list.add(new AgentParameter("Dummy", Messages.SelectInternalParamDlg_DCI_Dummy, DataCollectionItem.DT_INT)); //$NON-NLS-1$
+		list.add(new AgentParameter("Net.IP.NextHop(*)", Messages.SelectInternalParamDlg_DCI_NextHop, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
+		list.add(new AgentParameter("Status", Messages.SelectInternalParamDlg_DCI_Status, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		
 		if ((object instanceof Template) || ((Node)object).hasAgent())
 		{
-			list.add(new AgentParameter("AgentStatus", "Status of NetXMS agent", DataCollectionItem.DT_INT));
+			list.add(new AgentParameter("AgentStatus", Messages.SelectInternalParamDlg_DCI_AgentStatus, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		}
 		
 		if ((object instanceof Template) || ((Node)object).isManagementServer())
 		{
-			list.add(new AgentParameter("Server.AverageConfigurationPollerQueueSize", "Average length of configuration poller queue for last minute", DataCollectionItem.DT_FLOAT));
-			list.add(new AgentParameter("AverageDBWriterQueueSize", "Average length of database writer's request queue for last minute", DataCollectionItem.DT_FLOAT));
-			list.add(new AgentParameter("AverageDCIQueuingTime", "Average time to queue DCI for polling for last minute", DataCollectionItem.DT_UINT));
-			list.add(new AgentParameter("AverageDCPollerQueueSize", "Average length of data collection poller's request queue for last minute", DataCollectionItem.DT_FLOAT));
-			list.add(new AgentParameter("AverageStatusPollerQueueSize", "Average length of status poller queue for last minute", DataCollectionItem.DT_FLOAT));
+			list.add(new AgentParameter("Server.AverageConfigurationPollerQueueSize", Messages.SelectInternalParamDlg_DCI_AvgConfPollerQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+			list.add(new AgentParameter("AverageDBWriterQueueSize", Messages.SelectInternalParamDlg_DCI_AvgDBWriterQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+			list.add(new AgentParameter("AverageDCIQueuingTime", Messages.SelectInternalParamDlg_DCI_AvgDCIQueueTime, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
+			list.add(new AgentParameter("AverageDCPollerQueueSize", Messages.SelectInternalParamDlg_DCI_AvgDCQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+			list.add(new AgentParameter("AverageStatusPollerQueueSize", Messages.SelectInternalParamDlg_DCI_AvgStatusPollerQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
 		}
 		
 		viewer.setInput(list.toArray());
@@ -74,6 +75,6 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 	@Override
 	protected String getConfigurationPrefix()
 	{
-		return "SelectInternalParamDlg";
+		return "SelectInternalParamDlg"; //$NON-NLS-1$
 	}
 }

@@ -42,6 +42,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.IdMatchingContentProvider;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.IdMatchingLabelProvider;
@@ -88,7 +89,7 @@ public class IdMatchingDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("ID Mapping Editor");
+		newShell.setText(Messages.IdMatchingDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -105,17 +106,14 @@ public class IdMatchingDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		Label label = new Label(dialogArea, SWT.WRAP);
-		label.setText("Please check that source objects and data collection items correctly mapped to " +
-				        "destination system. Incorrect mappings can be changed by selecting \"Map to...\" " +
-				        "from appropriate item's context menu. When done, press \"OK\" to continue dashboard import or " +
-				        "\"Cancel\" to cancel import process.");
+		label.setText(Messages.IdMatchingDialog_HelpText);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 0;
 		label.setLayoutData(gd);
 		
-		final String[] names = { "Original ID", "Name", "Match ID", "Match Name" };
+		final String[] names = { Messages.IdMatchingDialog_ColumnOriginalID, Messages.IdMatchingDialog_ColumnName, Messages.IdMatchingDialog_ColumnMatchID, Messages.IdMatchingDialog_ColumnMatchName };
 		final int[] widths = { 100, 300, 80, 300 };
 		viewer = new SortableTreeViewer(dialogArea, names, widths, 0, SWT.UP, SWT.BORDER | SWT.SINGLE | SWT.FULL_SELECTION);
 		viewer.getTree().setLinesVisible(true);
@@ -143,7 +141,7 @@ public class IdMatchingDialog extends Dialog
 	 */
 	private void createActions()
 	{
-		actionMap = new Action("&Map to...", Activator.getImageDescriptor("icons/sync.gif")) {
+		actionMap = new Action(Messages.IdMatchingDialog_MapTo, Activator.getImageDescriptor("icons/sync.gif")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -231,7 +229,7 @@ public class IdMatchingDialog extends Dialog
 			}
 			else
 			{
-				MessageDialog.openWarning(getShell(), "Warning", "Target object must be of same class as source object");
+				MessageDialog.openWarning(getShell(), Messages.IdMatchingDialog_Warning, Messages.IdMatchingDialog_ClassMismatch);
 			}
 		}
 	}
@@ -247,7 +245,7 @@ public class IdMatchingDialog extends Dialog
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Get DCI information from node", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.IdMatchingDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -279,7 +277,7 @@ public class IdMatchingDialog extends Dialog
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get DCI information from node";
+				return Messages.IdMatchingDialog_JobErrorText;
 			}
 		}.start();
 	}
@@ -330,7 +328,7 @@ public class IdMatchingDialog extends Dialog
 		
 		if (!ok)
 		{
-			if (!MessageDialog.openQuestion(getShell(), "Matching Errors", "Not all elements was matched correctly to destination system. Imported dashboard will not behave correctly. Are you sure to continue dashboard import?"))
+			if (!MessageDialog.openQuestion(getShell(), Messages.IdMatchingDialog_MatchingErrors, Messages.IdMatchingDialog_ConfirmationText))
 				return;
 		}
 		

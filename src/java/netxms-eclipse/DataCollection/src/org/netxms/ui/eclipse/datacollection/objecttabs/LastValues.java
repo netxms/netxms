@@ -45,7 +45,7 @@ public class LastValues extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		dataView = new LastValuesWidget(getViewPart(), parent, SWT.NONE, (Node)getObject(), "LastValuesTab");
+		dataView = new LastValuesWidget(getViewPart(), parent, SWT.NONE, (Node)getObject(), "LastValuesTab"); //$NON-NLS-1$
 		dataView.setAutoRefreshEnabled(true);
 		dataView.setFilterCloseAction(new Action() {
 			@Override
@@ -53,8 +53,8 @@ public class LastValues extends ObjectTab
 			{
 				dataView.enableFilter(false);
 				ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
-				Command command = service.getCommand("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter");
-				State state = command.getState("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter.state");
+				Command command = service.getCommand("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
+				State state = command.getState("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter.state"); //$NON-NLS-1$
 				state.setValue(false);
 				service.refreshElements(command.getId(), null);
 			}
@@ -106,7 +106,7 @@ public class LastValues extends ObjectTab
 		IContextService contextService = (IContextService)getViewPart().getSite().getService(IContextService.class);
 		if (contextService != null)
 		{
-			contextService.activateContext("org.netxms.ui.eclipse.datacollection.context.LastValues");
+			contextService.activateContext("org.netxms.ui.eclipse.datacollection.context.LastValues"); //$NON-NLS-1$
 		}
 	}
 }

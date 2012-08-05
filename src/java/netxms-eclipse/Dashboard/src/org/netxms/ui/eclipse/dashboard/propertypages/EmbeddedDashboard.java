@@ -48,6 +48,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -92,7 +93,7 @@ public class EmbeddedDashboard extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		Label label = new Label(dialogArea, SWT.NONE);
-		label.setText("Dashboards to display");
+		label.setText(Messages.EmbeddedDashboard_Dashboards);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.LEFT;
 		gd.grabExcessHorizontalSpace = true;
@@ -128,7 +129,7 @@ public class EmbeddedDashboard extends PropertyPage
       leftButtons.setLayoutData(gd);
       
       upButton = new Button(leftButtons, SWT.PUSH);
-      upButton.setText("&Up");
+      upButton.setText(Messages.EmbeddedDashboard_Up);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
@@ -148,7 +149,7 @@ public class EmbeddedDashboard extends PropertyPage
       upButton.setEnabled(false);
       
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText("&Down");
+      downButton.setText(Messages.EmbeddedDashboard_Down);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
@@ -180,7 +181,7 @@ public class EmbeddedDashboard extends PropertyPage
       rightButtons.setLayoutData(gd);
 
       addButton = new Button(rightButtons, SWT.PUSH);
-      addButton.setText("&Add...");
+      addButton.setText(Messages.EmbeddedDashboard_Add);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -199,7 +200,7 @@ public class EmbeddedDashboard extends PropertyPage
       });
 		
       deleteButton = new Button(rightButtons, SWT.PUSH);
-      deleteButton.setText("&Delete");
+      deleteButton.setText(Messages.EmbeddedDashboard_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -233,7 +234,7 @@ public class EmbeddedDashboard extends PropertyPage
       refreshIntervalGroup.setLayoutData(gd);
       
       label = new Label(refreshIntervalGroup, SWT.NONE);
-      label.setText("Display time (seconds)");
+      label.setText(Messages.EmbeddedDashboard_DisplayTime);
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
       gd.horizontalSpan = 2;

@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.AddressListLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -71,7 +72,7 @@ public class IPAddressSelectionDialog extends Dialog
 	@Override
 	protected void configureShell(Shell newShell)
 	{
-		newShell.setText("Select IP address");
+		newShell.setText(Messages.IPAddressSelectionDialog_Title);
 		super.configureShell(newShell);
 	}
 
@@ -119,11 +120,11 @@ public class IPAddressSelectionDialog extends Dialog
 		table.setHeaderVisible(true);
 		
 		TableColumn tc = new TableColumn(table, SWT.LEFT);
-		tc.setText("IP Address");
+		tc.setText(Messages.IPAddressSelectionDialog_IPAddress);
 		tc.setWidth(90);
 		
 		tc = new TableColumn(table, SWT.LEFT);
-		tc.setText("Interface");
+		tc.setText(Messages.IPAddressSelectionDialog_Interface);
 		tc.setWidth(150);
 		
 		Set<GenericObject> addrList = new HashSet<GenericObject>();
@@ -152,7 +153,7 @@ public class IPAddressSelectionDialog extends Dialog
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please select IP address from the list");
+			MessageDialog.openWarning(getShell(), Messages.IPAddressSelectionDialog_Warning, Messages.IPAddressSelectionDialog_WarningText);
 			return;
 		}
 		address = ((Interface)selection.getFirstElement()).getPrimaryIP();

@@ -57,6 +57,7 @@ import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.epp.Activator;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -69,8 +70,8 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePart
 {
-	public static final String ID = "org.netxms.ui.eclipse.epp.view.policy_editor";
-	public static final String JOB_FAMILY = "PolicyEditorJob";
+	public static final String ID = "org.netxms.ui.eclipse.epp.view.policy_editor"; //$NON-NLS-1$
+	public static final String JOB_FAMILY = "PolicyEditorJob"; //$NON-NLS-1$
 
 	private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
 
@@ -122,19 +123,19 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		// Initiate loading of required plugins if they was not loaded yet
 		try
 		{
-			Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter");
-			Platform.getAdapterManager().loadAdapter(new ServerAction(0), "org.eclipse.ui.model.IWorkbenchAdapter");
-			Platform.getAdapterManager().loadAdapter(session.getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter");
+			Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
+			Platform.getAdapterManager().loadAdapter(new ServerAction(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
+			Platform.getAdapterManager().loadAdapter(session.getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{
 		}
 
-		imageStop = Activator.getImageDescriptor("icons/stop.png").createImage();
-		imageAlarm = Activator.getImageDescriptor("icons/alarm.png").createImage();
-		imageSituation = Activator.getImageDescriptor("icons/situation.gif").createImage();
-		imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage();
-		imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage();
+		imageStop = Activator.getImageDescriptor("icons/stop.png").createImage(); //$NON-NLS-1$
+		imageAlarm = Activator.getImageDescriptor("icons/alarm.png").createImage(); //$NON-NLS-1$
+		imageSituation = Activator.getImageDescriptor("icons/situation.gif").createImage(); //$NON-NLS-1$
+		imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage(); //$NON-NLS-1$
+		imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage(); //$NON-NLS-1$
 		imageCollapse = SharedIcons.COLLAPSE.createImage();
 		imageExpand = SharedIcons.EXPAND.createImage();
 		imageEdit = SharedIcons.EDIT.createImage();
@@ -163,8 +164,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
 		if (Platform.getOS().equals(Platform.OS_WIN32))
 		{
-			normalFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.NORMAL);
-			boldFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.BOLD);		
+			normalFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.NORMAL); //$NON-NLS-1$
+			boldFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.BOLD);		 //$NON-NLS-1$
 		}
 		else
 		{
@@ -192,7 +193,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	 */
 	private void createActions()
 	{
-		actionHorizontal = new Action("&Horizontal layout", Action.AS_RADIO_BUTTON) {
+		actionHorizontal = new Action(Messages.EventProcessingPolicyEditor_LayoutH, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -201,9 +202,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 		actionHorizontal.setChecked(!verticalLayout);
-		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/h_layout.gif"));
+		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/h_layout.gif")); //$NON-NLS-1$
 
-		actionVertical = new Action("&Vertical layout", Action.AS_RADIO_BUTTON) {
+		actionVertical = new Action(Messages.EventProcessingPolicyEditor_LayoutV, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -212,9 +213,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 		actionVertical.setChecked(verticalLayout);
-		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/v_layout.gif"));
+		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/v_layout.gif")); //$NON-NLS-1$
 
-		actionSave = new Action("&Save policy") {
+		actionSave = new Action(Messages.EventProcessingPolicyEditor_Save) {
 			@Override
 			public void run()
 			{
@@ -224,7 +225,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionSave.setImageDescriptor(SharedIcons.SAVE);
 		actionSave.setEnabled(false);
 
-		actionCollapseAll = new Action("&Collapse all") {
+		actionCollapseAll = new Action(Messages.EventProcessingPolicyEditor_CollapseAll) {
 			@Override
 			public void run()
 			{
@@ -233,7 +234,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		};
 		actionCollapseAll.setImageDescriptor(SharedIcons.COLLAPSE_ALL);
 
-		actionExpandAll = new Action("&Expand all") {
+		actionExpandAll = new Action(Messages.EventProcessingPolicyEditor_ExpandAll) {
 			@Override
 			public void run()
 			{
@@ -242,7 +243,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		};
 		actionExpandAll.setImageDescriptor(SharedIcons.EXPAND_ALL);
 
-		actionDelete = new Action("&Delete") {
+		actionDelete = new Action(Messages.EventProcessingPolicyEditor_Delete) {
 			@Override
 			public void run()
 			{
@@ -252,7 +253,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 		actionDelete.setEnabled(false);
 
-		actionInsertBefore = new Action("Insert &before") {
+		actionInsertBefore = new Action(Messages.EventProcessingPolicyEditor_InsertBefore) {
 			@Override
 			public void run()
 			{
@@ -260,7 +261,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 
-		actionInsertAfter = new Action("Insert &after") {
+		actionInsertAfter = new Action(Messages.EventProcessingPolicyEditor_InsertAfter) {
 			@Override
 			public void run()
 			{
@@ -268,7 +269,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 
-		actionCut = new Action("Cu&t") {
+		actionCut = new Action(Messages.EventProcessingPolicyEditor_Cut) {
 			@Override
 			public void run()
 			{
@@ -278,7 +279,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionCut.setImageDescriptor(SharedIcons.CUT);
 		actionCut.setEnabled(false);
 
-		actionCopy = new Action("&Copy") {
+		actionCopy = new Action(Messages.EventProcessingPolicyEditor_Copy) {
 			@Override
 			public void run()
 			{
@@ -288,7 +289,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionCopy.setImageDescriptor(SharedIcons.COPY);
 		actionCopy.setEnabled(false);
 
-		actionPaste = new Action("&Paste") {
+		actionPaste = new Action(Messages.EventProcessingPolicyEditor_Paste) {
 			@Override
 			public void run()
 			{
@@ -298,7 +299,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionPaste.setImageDescriptor(SharedIcons.PASTE);
 		actionPaste.setEnabled(false);
 
-		actionEnableRule = new Action("E&nable") {
+		actionEnableRule = new Action(Messages.EventProcessingPolicyEditor_Enable) {
 			@Override
 			public void run()
 			{
@@ -306,7 +307,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 
-		actionDisableRule = new Action("D&isable") {
+		actionDisableRule = new Action(Messages.EventProcessingPolicyEditor_Disable) {
 			@Override
 			public void run()
 			{
@@ -379,11 +380,11 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	 */
 	private void openEventProcessingPolicy()
 	{
-		ConsoleJob job = new ConsoleJob("Open event processing policy", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		ConsoleJob job = new ConsoleJob(Messages.EventProcessingPolicyEditor_OpenJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot open event processing policy";
+				return Messages.EventProcessingPolicyEditor_OpenJob_Error;
 			}
 
 			@Override
@@ -509,7 +510,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private void savePolicy()
 	{
 		actionSave.setEnabled(false);
-		new ConsoleJob("Save event processing policy", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.EventProcessingPolicyEditor_SaveJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -539,7 +540,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot save event processing policy";
+				return Messages.EventProcessingPolicyEditor_SaveJob_Error;
 			}
 		}.start();
 	}
@@ -552,7 +553,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
 		if (policyLocked)
 		{
-			new ConsoleJob("Close event processing policy", null, Activator.PLUGIN_ID, JOB_FAMILY) {
+			new ConsoleJob(Messages.EventProcessingPolicyEditor_CloseJob_Title, null, Activator.PLUGIN_ID, JOB_FAMILY) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -562,7 +563,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot close event processing policy";
+					return Messages.EventProcessingPolicyEditor_CloseJob_Error;
 				}
 			}.start();
 		}
@@ -736,7 +737,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(getViewSite().getShell(), "Error", "Cannot save event processing policy: " + e.getMessage());
+			MessageDialog.openError(getViewSite().getShell(), Messages.EventProcessingPolicyEditor_Error, Messages.EventProcessingPolicyEditor_SaveError + e.getMessage());
 		}
 	}
 

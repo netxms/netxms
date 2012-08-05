@@ -50,6 +50,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
@@ -69,14 +70,14 @@ public class General extends PropertyPage
 {
 	private static final String[] snmpRawTypes = 
 	{ 
-		"None", 
-		"32-bit signed integer", 
-		"32-bit unsigned integer",
-		"64-bit signed integer", 
-		"64-bit unsigned integer",
-		"Floating point number", 
-		"IP address",
-		"MAC address"
+		Messages.General_SNMP_DT_None, 
+		Messages.General_SNMP_DT_int32, 
+		Messages.General_SNMP_DT_uint32,
+		Messages.General_SNMP_DT_int64, 
+		Messages.General_SNMP_DT_uint64,
+		Messages.General_SNMP_DT_float, 
+		Messages.General_SNMP_DT_ipAddr,
+		Messages.General_SNMP_DT_macAddr
 	};
 	
 	private DataCollectionItem dci;
@@ -138,7 +139,7 @@ public class General extends PropertyPage
       
       /** description area **/
       Group groupDescription = new Group(dialogArea, SWT.NONE);
-      groupDescription.setText("Description");
+      groupDescription.setText(Messages.General_Description);
       FillLayout descriptionLayout = new FillLayout();
       descriptionLayout.marginWidth = WidgetHelper.OUTER_SPACING;
       descriptionLayout.marginHeight = WidgetHelper.OUTER_SPACING;
@@ -154,7 +155,7 @@ public class General extends PropertyPage
       
       /** data area **/
       Group groupData = new Group(dialogArea, SWT.NONE);
-      groupData.setText("Data");
+      groupData.setText(Messages.General_Data);
       FormLayout dataLayout = new FormLayout();
       dataLayout.marginHeight = WidgetHelper.OUTER_SPACING;
       dataLayout.marginWidth = WidgetHelper.OUTER_SPACING;
@@ -166,12 +167,12 @@ public class General extends PropertyPage
       groupData.setLayoutData(gd);
       
       parameter = new LabeledText(groupData, SWT.NONE);
-      parameter.setLabel("Parameter");
+      parameter.setLabel(Messages.General_Parameter);
       parameter.getTextControl().setTextLimit(255);
       parameter.setText(dci.getName());
       
       selectButton = new Button(groupData, SWT.PUSH);
-      selectButton.setText("&Select...");
+      selectButton.setText(Messages.General_Select);
       selectButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -202,12 +203,12 @@ public class General extends PropertyPage
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(parameter, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(50, -WidgetHelper.OUTER_SPACING / 2);
-      origin = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, "Origin", fd);
-      origin.add("Internal");
-      origin.add("NetXMS Agent");
-      origin.add("SNMP");
-      origin.add("Check Point SNMP");
-      origin.add("Push");
+      origin = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, Messages.General_Origin, fd);
+      origin.add(Messages.General_SourceInternal);
+      origin.add(Messages.General_SourceAgent);
+      origin.add(Messages.General_SourceSNMP);
+      origin.add(Messages.General_SourceCPSNMP);
+      origin.add(Messages.General_SourcePush);
       origin.select(dci.getOrigin());
       origin.addSelectionListener(new SelectionListener() {
 			@Override
@@ -227,17 +228,17 @@ public class General extends PropertyPage
       fd.left = new FormAttachment(50, WidgetHelper.OUTER_SPACING / 2);
       fd.top = new FormAttachment(parameter, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
-      dataType = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, "Data Type", fd);
-      dataType.add("Integer");
-      dataType.add("Unsigned Integer");
-      dataType.add("Integer 64 bit");
-      dataType.add("Unsigned Integer 64 bit");
-      dataType.add("String");
-      dataType.add("Floating Point Number");
+      dataType = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, Messages.General_DataType, fd);
+      dataType.add(Messages.General_DT_int32);
+      dataType.add(Messages.General_DT_uint32);
+      dataType.add(Messages.General_DT_int64);
+      dataType.add(Messages.General_DT_uint64);
+      dataType.add(Messages.General_DT_string);
+      dataType.add(Messages.General_DT_float);
       dataType.select(dci.getDataType());
 
       checkInterpretRawSnmpValue = new Button(groupData, SWT.CHECK);
-      checkInterpretRawSnmpValue.setText("Interpret SNMP octet string raw value as");
+      checkInterpretRawSnmpValue.setText(Messages.General_InterpretRawValue);
       checkInterpretRawSnmpValue.setSelection(dci.isSnmpRawValueInOctetString());
       checkInterpretRawSnmpValue.addSelectionListener(new SelectionListener() {
 			@Override
@@ -270,7 +271,7 @@ public class General extends PropertyPage
       snmpRawType.setLayoutData(fd);
       
       checkUseCustomSnmpPort = new Button(groupData, SWT.CHECK);
-      checkUseCustomSnmpPort.setText("Use custom SNMP port:");
+      checkUseCustomSnmpPort.setText(Messages.General_UseCustomPort);
       checkUseCustomSnmpPort.setSelection(dci.getSnmpPort() != 0);
       checkUseCustomSnmpPort.addSelectionListener(new SelectionListener() {
 			@Override
@@ -309,7 +310,7 @@ public class General extends PropertyPage
       customSnmpPort.setLayoutData(fd);
       
       proxyNode = new ObjectSelector(groupData, SWT.NONE);
-      proxyNode.setLabel("Proxy node");
+      proxyNode.setLabel(Messages.General_ProxyNode);
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(snmpRawType, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
@@ -321,7 +322,7 @@ public class General extends PropertyPage
       
       /** polling area **/
       Group groupPolling = new Group(dialogArea, SWT.NONE);
-      groupPolling.setText("Polling");
+      groupPolling.setText(Messages.General_Polling);
       FormLayout pollingLayout = new FormLayout();
       pollingLayout.marginHeight = WidgetHelper.OUTER_SPACING;
       pollingLayout.marginWidth = WidgetHelper.OUTER_SPACING;
@@ -336,9 +337,9 @@ public class General extends PropertyPage
       fd.left = new FormAttachment(0, 0);
       fd.right = new FormAttachment(50, -WidgetHelper.OUTER_SPACING / 2);
       fd.top = new FormAttachment(0, 0);
-      schedulingMode = WidgetHelper.createLabeledCombo(groupPolling, SWT.READ_ONLY, "Polling mode", fd);
-      schedulingMode.add("Fixed intervals");
-      schedulingMode.add("Custom schedule");
+      schedulingMode = WidgetHelper.createLabeledCombo(groupPolling, SWT.READ_ONLY, Messages.General_PollingMode, fd);
+      schedulingMode.add(Messages.General_FixedIntervals);
+      schedulingMode.add(Messages.General_CustomSchedule);
       schedulingMode.select(dci.isUseAdvancedSchedule() ? 1 : 0);
       schedulingMode.setEnabled(dci.getOrigin() != DataCollectionItem.PUSH);
       schedulingMode.addSelectionListener(new SelectionListener() {
@@ -357,7 +358,7 @@ public class General extends PropertyPage
       
       pollingInterval = new LabeledText(groupPolling, SWT.NONE);
       pollingInterval.getTextControl().setTextLimit(5);
-      pollingInterval.setLabel("Polling interval (seconds)");
+      pollingInterval.setLabel(Messages.General_PollingInterval);
       pollingInterval.setText(Integer.toString(dci.getPollingInterval()));
       pollingInterval.setEnabled(!dci.isUseAdvancedSchedule() && (dci.getOrigin() != DataCollectionItem.PUSH));
       fd = new FormData();
@@ -370,13 +371,13 @@ public class General extends PropertyPage
       fd.left = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       fd.top = new FormAttachment(schedulingMode.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      clusterResource = WidgetHelper.createLabeledCombo(groupPolling, SWT.READ_ONLY, "Associate with cluster resource", fd);
+      clusterResource = WidgetHelper.createLabeledCombo(groupPolling, SWT.READ_ONLY, Messages.General_ClRes, fd);
       if (cluster != null)
       {
       	clusterResourceMap = new HashMap<Integer, Long>();
       	clusterResourceMap.put(0, 0L);
       	
-	      clusterResource.add("<none>");
+	      clusterResource.add(Messages.General_None);
 	      if (dci.getResourceId() == 0)
 	      	clusterResource.select(0);
 	      
@@ -392,14 +393,14 @@ public class General extends PropertyPage
       }
       else
       {
-	      clusterResource.add("<none>");
+	      clusterResource.add(Messages.General_None);
 	      clusterResource.select(0);
 	      clusterResource.setEnabled(false);
       }
       	
       /** status **/
       Group groupStatus = new Group(dialogArea, SWT.NONE);
-      groupStatus.setText("Status");
+      groupStatus.setText(Messages.General_Status);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -409,20 +410,20 @@ public class General extends PropertyPage
       groupStatus.setLayout(statusLayout);
       
       statusActive = new Button(groupStatus, SWT.RADIO);
-      statusActive.setText("&Active");
+      statusActive.setText(Messages.General_Active);
       statusActive.setSelection(dci.getStatus() == DataCollectionItem.ACTIVE);
       
       statusDisabled = new Button(groupStatus, SWT.RADIO);
-      statusDisabled.setText("&Disabled");
+      statusDisabled.setText(Messages.General_Disabled);
       statusDisabled.setSelection(dci.getStatus() == DataCollectionItem.DISABLED);
       
       statusUnsupported = new Button(groupStatus, SWT.RADIO);
-      statusUnsupported.setText("&Not supported");
+      statusUnsupported.setText(Messages.General_NotSupported);
       statusUnsupported.setSelection(dci.getStatus() == DataCollectionItem.NOT_SUPPORTED);
       
       /** storage **/
       Group groupStorage = new Group(dialogArea, SWT.NONE);
-      groupStorage.setText("Storage");
+      groupStorage.setText(Messages.General_Storage);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -434,7 +435,7 @@ public class General extends PropertyPage
       groupStorage.setLayout(storageLayout);
       
       retentionTime = new LabeledText(groupStorage, SWT.NONE);
-      retentionTime.setLabel("Retention time (days)");
+      retentionTime.setLabel(Messages.General_RetentionTime);
       retentionTime.getTextControl().setTextLimit(5);
       retentionTime.setText(Integer.toString(dci.getRetentionTime()));
       
@@ -504,7 +505,7 @@ public class General extends PropertyPage
 	 */
 	protected boolean applyChanges(final boolean isApply)
 	{
-		if (!WidgetHelper.validateTextInput(customSnmpPort, "Custom SNMP port", new NumericTextFieldValidator(1, 65535), this) ||
+		if (!WidgetHelper.validateTextInput(customSnmpPort, Messages.General_CustomPort, new NumericTextFieldValidator(1, 65535), this) ||
 		    !WidgetHelper.validateTextInput(pollingInterval, new NumericTextFieldValidator(1, 1000000), this) ||
 		    !WidgetHelper.validateTextInput(retentionTime, new NumericTextFieldValidator(1, 65535), this))
 			return false;
@@ -543,7 +544,7 @@ public class General extends PropertyPage
 			dci.setResourceId(clusterResourceMap.get(clusterResource.getSelectionIndex()));
 		}
 
-		new ConsoleJob("Update general settings for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.General_JobTitle + dci.getId(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -560,7 +561,7 @@ public class General extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update general DCI settings";
+				return Messages.General_JobError;
 			}
 		}.start();
 		return true;
@@ -592,11 +593,11 @@ public class General extends PropertyPage
 	{
 		super.performDefaults();
 		schedulingMode.select(0);
-		pollingInterval.setText("60");
+		pollingInterval.setText("60"); //$NON-NLS-1$
 		statusActive.setSelection(true);
 		statusDisabled.setSelection(false);
 		statusUnsupported.setSelection(false);
-		retentionTime.setText("30");
+		retentionTime.setText("30"); //$NON-NLS-1$
 		checkInterpretRawSnmpValue.setSelection(false);
 		checkUseCustomSnmpPort.setSelection(false);
 	}

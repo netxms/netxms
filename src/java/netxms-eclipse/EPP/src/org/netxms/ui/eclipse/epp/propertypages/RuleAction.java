@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.events.EventProcessingPolicyRule;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -54,7 +55,7 @@ public class RuleAction extends PropertyPage
       dialogArea.setLayout(layout);
       
       checkStopProcessing = new Button(dialogArea, SWT.CHECK);
-      checkStopProcessing.setText("&Stop event processing");
+      checkStopProcessing.setText(Messages.RuleAction_StopProcessing);
       checkStopProcessing.setSelection((rule.getFlags() & EventProcessingPolicyRule.STOP_PROCESSING) != 0);
       
 		return dialogArea;

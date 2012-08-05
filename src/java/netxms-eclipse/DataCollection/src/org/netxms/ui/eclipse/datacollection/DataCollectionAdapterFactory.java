@@ -35,7 +35,7 @@ public class DataCollectionAdapterFactory implements IAdapterFactory
 		IWorkbenchAdapter.class
 	};
 	
-	private static final String[] dciStatusImages = { "icons/active.gif", "icons/disabled.gif", "icons/unsupported.gif" };
+	private static final String[] dciStatusImages = { "icons/active.gif", "icons/disabled.gif", "icons/unsupported.gif" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)

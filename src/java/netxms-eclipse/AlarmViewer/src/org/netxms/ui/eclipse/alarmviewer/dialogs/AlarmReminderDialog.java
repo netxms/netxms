@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.events.Alarm;
+import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -36,7 +37,7 @@ public class AlarmReminderDialog extends Dialog
 	{
 		super.configureShell(newShell);
 		newShell.setSize(600, 350);
-		newShell.setText("Outstanding Alarms");
+		newShell.setText(Messages.AlarmReminderDialog_OutstandingAlarms);
 	}
 
 	/* (non-Javadoc)
@@ -52,7 +53,7 @@ public class AlarmReminderDialog extends Dialog
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		dialogArea.setLayout(layout);
 		
-		AlarmList list = new AlarmList(null, dialogArea, SWT.BORDER, "AlarmReminderDialog");
+		AlarmList list = new AlarmList(null, dialogArea, SWT.BORDER, "AlarmReminderDialog"); //$NON-NLS-1$
 		list.setStateFilter(Alarm.STATE_OUTSTANDING);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -70,6 +71,6 @@ public class AlarmReminderDialog extends Dialog
 	@Override
 	protected void createButtonsForButtonBar(Composite parent)
 	{
-		createButton(parent, CANCEL, "Dismiss", false);
+		createButton(parent, CANCEL, Messages.AlarmReminderDialog_Dismiss, false);
 	}
 }

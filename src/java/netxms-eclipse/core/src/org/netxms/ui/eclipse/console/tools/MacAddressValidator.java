@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.console.tools;
 
 import org.netxms.client.MacAddress;
 import org.netxms.client.MacAddressFormatException;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.TextFieldValidator;
 
 /**
@@ -65,6 +66,6 @@ public class MacAddressValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return "Please enter valid MAC address in " + label + " field";
+		return Messages.getString("MacAddressValidator.ErrorPrefix") + label + Messages.getString("MacAddressValidator.ErrorSuffix"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

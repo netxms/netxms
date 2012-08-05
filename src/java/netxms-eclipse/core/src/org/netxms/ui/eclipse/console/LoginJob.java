@@ -106,7 +106,7 @@ public class LoginJob implements IRunnableWithProgress
 			}
 
 			NXCSession session = new NXCSession(hostName, port, loginName, password, encryptSession);
-			session.setConnClientInfo("nxmc/" + NXCommon.VERSION);
+			session.setConnClientInfo("nxmc/" + NXCommon.VERSION); //$NON-NLS-1$
 			monitor.worked(10);
 
 			session.connect();

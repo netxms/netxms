@@ -43,7 +43,7 @@ import org.netxms.ui.eclipse.shared.IActionConstants;
  */
 public class DashboardNavigator extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardNavigator";
+	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardNavigator"; //$NON-NLS-1$
 	
 	private NXCSession session;
 	private ObjectTree objectTree;

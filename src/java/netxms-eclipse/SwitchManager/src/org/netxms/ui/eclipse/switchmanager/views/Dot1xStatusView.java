@@ -38,6 +38,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.switchmanager.Messages;
 import org.netxms.ui.eclipse.switchmanager.views.helpers.Dot1xPortComparator;
 import org.netxms.ui.eclipse.switchmanager.views.helpers.Dot1xPortListLabelProvider;
 import org.netxms.ui.eclipse.switchmanager.views.helpers.Dot1xPortSummary;
@@ -48,7 +49,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class Dot1xStatusView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.switchmanager.views.Dot1xStatusView";
+	public static final String ID = "org.netxms.ui.eclipse.switchmanager.views.Dot1xStatusView"; //$NON-NLS-1$
 	
 	public static final int COLUMN_NODE = 0;
 	public static final int COLUMN_PORT = 1;
@@ -79,7 +80,7 @@ public class Dot1xStatusView extends ViewPart
 
 		session = (NXCSession)ConsoleSharedData.getSession();
 		GenericObject object = session.findObjectById(rootObject);
-		setPartName("802.1x Port State - " + ((object != null) ? object.getObjectName() : ("<" + rootObject + ">")));
+		setPartName(Messages.Dot1xStatusView_PartNamePrefix + ((object != null) ? object.getObjectName() : ("<" + rootObject + ">"))); //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	/* (non-Javadoc)
@@ -88,7 +89,7 @@ public class Dot1xStatusView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "Device", "Slot/Port", "Interface", "PAE State", "Backend State" };
+		final String[] names = { Messages.Dot1xStatusView_ColDevice, Messages.Dot1xStatusView_ColSlotPort, Messages.Dot1xStatusView_ColInterface, Messages.Dot1xStatusView_ColPAE, Messages.Dot1xStatusView_ColBackend };
 		final int[] widths = { 250, 60, 180, 150, 150 };
 		viewer = new SortableTableViewer(parent, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());

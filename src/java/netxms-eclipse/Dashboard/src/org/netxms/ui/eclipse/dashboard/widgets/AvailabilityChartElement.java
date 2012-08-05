@@ -33,6 +33,7 @@ import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AvailabilityChartConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -73,8 +74,8 @@ public class AvailabilityChartElement extends ElementWidget implements DisposeLi
 		chart.setTranslucent(config.isTranslucent());
 		chart.setRotation(225.0);
 		
-		chart.addParameter(new GraphItem(0, 0, 0, 0, "Up", "Uptime"), 100);
-		chart.addParameter(new GraphItem(0, 0, 0, 0, "Down", "Downtime"), 0);
+		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.AvailabilityChartElement_Up, Messages.AvailabilityChartElement_Uptime), 100);
+		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.AvailabilityChartElement_Down, Messages.AvailabilityChartElement_Downtime), 0);
 		chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
 		chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
 		chart.initializationComplete();

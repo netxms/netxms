@@ -24,6 +24,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.WebPageConfig;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -50,7 +51,7 @@ public class WebPage extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		url = new LabeledText(dialogArea, SWT.NONE);
-		url.setLabel("URL");
+		url.setLabel(Messages.WebPage_URL);
 		url.setText(config.getUrl());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -58,7 +59,7 @@ public class WebPage extends PropertyPage
 		url.setLayoutData(gd);
 
 		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel("Title");
+		title.setLabel(Messages.WebPage_Title);
 		title.setText(config.getTitle());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

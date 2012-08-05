@@ -48,8 +48,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 		ps.setDefault("HTTP_PROXY_LOGIN", ""); //$NON-NLS-1$ //$NON-NLS-2$
 		ps.setDefault("HTTP_PROXY_PASSWORD", ""); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		ps.setDefault("DATETIME_FORMAT", RegionalSettings.DATETIME_FORMAT_SERVER);
-		ps.setDefault("DATE_FORMAT_STRING", "dd.MM.yyyy");
-		ps.setDefault("TIME_FORMAT_STRING", "HH:mm:ss");
+		ps.setDefault("DATETIME_FORMAT", RegionalSettings.DATETIME_FORMAT_SERVER); //$NON-NLS-1$
+		ps.setDefault("DATE_FORMAT_STRING", Messages.getString("PreferenceInitializer.DefaultDateFormat")); //$NON-NLS-1$ //$NON-NLS-2$
+		ps.setDefault("TIME_FORMAT_STRING", Messages.getString("PreferenceInitializer.DefaultTimeFormat")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

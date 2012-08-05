@@ -52,7 +52,7 @@ public class Sleak
 
 	public Sleak()
 	{
-		traceFileName = System.getProperty("sleak");
+		traceFileName = System.getProperty("sleak"); //$NON-NLS-1$
 		if (traceFileName.trim().isEmpty())
 		{
 			traceFileName = null;
@@ -101,7 +101,7 @@ public class Sleak
 	{
 		display = Display.getCurrent();
 		shell = new Shell(display);
-		shell.setText("S-Leak");
+		shell.setText("S-Leak"); //$NON-NLS-1$
 		list = new List(shell, SWT.BORDER | SWT.V_SCROLL);
 		list.addListener(SWT.Selection, new Listener()
 		{
@@ -122,7 +122,7 @@ public class Sleak
 			}
 		});
 		check = new Button(shell, SWT.CHECK);
-		check.setText("Stack");
+		check.setText("Stack"); //$NON-NLS-1$
 		check.addListener(SWT.Selection, new Listener()
 		{
 			@Override
@@ -132,7 +132,7 @@ public class Sleak
 			}
 		});
 		start = new Button(shell, SWT.PUSH);
-		start.setText("Snap");
+		start.setText("Snap"); //$NON-NLS-1$
 		start.addListener(SWT.Selection, new Listener()
 		{
 			@Override
@@ -142,7 +142,7 @@ public class Sleak
 			}
 		});
 		stop = new Button(shell, SWT.PUSH);
-		stop.setText("Diff");
+		stop.setText("Diff"); //$NON-NLS-1$
 		stop.addListener(SWT.Selection, new Listener()
 		{
 			@Override
@@ -152,7 +152,7 @@ public class Sleak
 			}
 		});
 		label = new Label(shell, SWT.BORDER);
-		label.setText("0 object(s)");
+		label.setText("0 object(s)"); //$NON-NLS-1$
 		shell.addListener(SWT.Resize, new Listener()
 		{
 			@Override
@@ -205,24 +205,24 @@ public class Sleak
 			}
 			gc.setFont((Font)object);
 			final FontData[] array = gc.getFont().getFontData();
-			String string = "";
+			String string = ""; //$NON-NLS-1$
 			final String lf = text.getLineDelimiter();
 			for(final FontData data : array)
 			{
-				String style = "NORMAL";
+				String style = "NORMAL"; //$NON-NLS-1$
 				final int bits = data.getStyle();
 				if (bits != 0)
 				{
 					if ((bits & SWT.BOLD) != 0)
 					{
-						style = "BOLD ";
+						style = "BOLD "; //$NON-NLS-1$
 					}
 					if ((bits & SWT.ITALIC) != 0)
 					{
-						style += "ITALIC";
+						style += "ITALIC"; //$NON-NLS-1$
 					}
 				}
-				string += data.getName() + " " + data.getHeight() + " " + style + lf;
+				string += data.getName() + " " + data.getHeight() + " " + style + lf; //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			gc.drawString(string, 0, 0);
 			return;
@@ -266,7 +266,7 @@ public class Sleak
 		{
 			final MessageBox dialog = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
 			dialog.setText(shell.getText());
-			dialog.setMessage("Warning: Device is not tracking resource allocation");
+			dialog.setMessage("Warning: Device is not tracking resource allocation"); //$NON-NLS-1$
 			dialog.open();
 		}
 		final Object[] newObjects = info.objects;
@@ -297,7 +297,7 @@ public class Sleak
 		System.arraycopy(diffObjects, 0, objects, 0, count);
 		System.arraycopy(diffErrors, 0, errors, 0, count);
 		list.removeAll();
-		text.setText("");
+		text.setText(""); //$NON-NLS-1$
 		canvas.redraw();
 
 		if (traceFileName != null)
@@ -342,26 +342,26 @@ public class Sleak
 			{
 			}
 		}
-		String string = "";
+		String string = ""; //$NON-NLS-1$
 		if (colors != 0)
 		{
-			string += colors + " Color(s)\n";
+			string += colors + " Color(s)\n"; //$NON-NLS-1$
 		}
 		if (cursors != 0)
 		{
-			string += cursors + " Cursor(s)\n";
+			string += cursors + " Cursor(s)\n"; //$NON-NLS-1$
 		}
 		if (fonts != 0)
 		{
-			string += fonts + " Font(s)\n";
+			string += fonts + " Font(s)\n"; //$NON-NLS-1$
 		}
 		if (gcs != 0)
 		{
-			string += gcs + " GC(s)\n";
+			string += gcs + " GC(s)\n"; //$NON-NLS-1$
 		}
 		if (images != 0)
 		{
-			string += images + " Image(s)\n";
+			string += images + " Image(s)\n"; //$NON-NLS-1$
 		}
 		/* Currently regions are not counted. */
 		// if (regions != 0) string += regions + " Region(s)\n";
@@ -424,7 +424,7 @@ public class Sleak
 				final PrintStream s = new PrintStream(stream);
 				errors[i].printStackTrace(s);
 				writer.println(stream.toString());
-				writer.println("--------------------------");
+				writer.println("--------------------------"); //$NON-NLS-1$
 			}
 		}
 

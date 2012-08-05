@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
@@ -36,7 +37,7 @@ public class ObjectSelector extends AbstractSelector
 	private long objectId = 0;
 	private Class<? extends GenericObject> objectClass = Node.class;
 	private Set<Integer> classFilter = null;
-	private String emptySelectionName = "<none>";
+	private String emptySelectionName = Messages.ObjectSelector_None;
 	
 	/**
 	 * @param parent

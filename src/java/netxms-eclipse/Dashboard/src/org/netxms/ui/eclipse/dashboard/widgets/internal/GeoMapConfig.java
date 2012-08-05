@@ -30,7 +30,7 @@ import org.simpleframework.xml.core.Persister;
 public class GeoMapConfig extends DashboardElementConfig
 {
 	@Element(required=false)
-	private String title = "";
+	private String title = ""; //$NON-NLS-1$
 
 	@Element(required=true)
 	private double latitude = 0.0;

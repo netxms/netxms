@@ -39,7 +39,7 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 	private String dataColumn = null;
 
 	@Element(required = false)
-	private String title = "";
+	private String title = ""; //$NON-NLS-1$
 	
 	@Element(required = false)
 	private int legendPosition = GraphSettings.POSITION_RIGHT;

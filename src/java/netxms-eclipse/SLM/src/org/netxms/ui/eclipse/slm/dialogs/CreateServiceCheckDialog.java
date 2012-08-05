@@ -26,6 +26,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.slm.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -55,7 +56,7 @@ public class CreateServiceCheckDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create Service Check Object");
+		newShell.setText(Messages.CreateServiceCheckDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -73,7 +74,7 @@ public class CreateServiceCheckDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		nameField = new LabeledText(dialogArea, SWT.NONE);
-		nameField.setLabel("Name");
+		nameField.setLabel(Messages.CreateServiceCheckDialog_Name);
 		nameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -93,7 +94,7 @@ public class CreateServiceCheckDialog extends Dialog
 		name = nameField.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please provide non-empty object name");
+			MessageDialog.openWarning(getShell(), Messages.CreateServiceCheckDialog_Warning, Messages.CreateServiceCheckDialog_WarningText);
 			return;
 		}
 		

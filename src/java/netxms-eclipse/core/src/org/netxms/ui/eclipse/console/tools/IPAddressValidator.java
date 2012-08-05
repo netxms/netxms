@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.console.tools;
 
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.TextFieldValidator;
 
 /**
@@ -25,7 +26,7 @@ import org.netxms.ui.eclipse.tools.TextFieldValidator;
  */
 public class IPAddressValidator implements TextFieldValidator
 {
-	private static final String IP_ADDRESS_PATTERN = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
+	private static final String IP_ADDRESS_PATTERN = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"; //$NON-NLS-1$
 	
 	private boolean allowEmpty;
 	
@@ -56,6 +57,6 @@ public class IPAddressValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return "Please enter valid IP address in " + label + " field";
+		return Messages.getString("IPAddressValidator.ErrorPrefix") + label + Messages.getString("IPAddressValidator.ErrorSuffix"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

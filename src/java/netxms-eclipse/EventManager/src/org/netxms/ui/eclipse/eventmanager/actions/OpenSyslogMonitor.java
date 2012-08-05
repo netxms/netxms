@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.eventmanager.Activator;
+import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.views.SyslogMonitor;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -65,7 +66,7 @@ public class OpenSyslogMonitor implements IWorkbenchWindowActionDelegate
 			return;
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Subscribing to syslog events", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.OpenSyslogMonitor_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -80,7 +81,7 @@ public class OpenSyslogMonitor implements IWorkbenchWindowActionDelegate
 						} 
 						catch (PartInitException e) 
 						{
-							MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+							MessageDialog.openError(window.getShell(), Messages.OpenSyslogMonitor_Error, Messages.OpenSyslogMonitor_ErrorText + e.getMessage());
 						}
 					}
 				});
@@ -89,7 +90,7 @@ public class OpenSyslogMonitor implements IWorkbenchWindowActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot subscribe to syslog events";
+				return Messages.OpenSyslogMonitor_JobError;
 			}
 		}.start();
 	}

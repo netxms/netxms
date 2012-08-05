@@ -53,7 +53,7 @@ public class SnmpValueLabelProvider extends LabelProvider implements ITableLabel
 				return value.getName();
 			case MibExplorer.COLUMN_TYPE:
 				if (value.getType() == 0xFFFF)
-					return "Hex-STRING";
+					return "Hex-STRING"; //$NON-NLS-1$
 				return SnmpConstants.getAsnTypeName(value.getType());
 			case MibExplorer.COLUMN_VALUE:
 				return value.getValue();

@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
@@ -42,8 +43,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class Transformation extends PropertyPage
 {
-	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" };
-	private static final String[] DCI_VARIABLES = { "$node" };
+	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+	private static final String[] DCI_VARIABLES = { "$node" }; //$NON-NLS-1$
 	
 	private DataCollectionItem dci;
 	private Combo deltaCalculation;
@@ -65,12 +66,12 @@ public class Transformation extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
-      deltaCalculation = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, "Step 1 - delta calculation",
+      deltaCalculation = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.Transformation_Step1,
                                                          WidgetHelper.DEFAULT_LAYOUT_DATA);
-      deltaCalculation.add("None (keep original value)");
-      deltaCalculation.add("Simple delta");
-      deltaCalculation.add("Average delta per second");
-      deltaCalculation.add("Average delta per minute");
+      deltaCalculation.add(Messages.Transformation_DeltaNone);
+      deltaCalculation.add(Messages.Transformation_DeltaSimple);
+      deltaCalculation.add(Messages.Transformation_DeltaAvgPerSec);
+      deltaCalculation.add(Messages.Transformation_DeltaAvgPerMin);
       deltaCalculation.select(dci.getDeltaCalculation());
      
       GridData gd = new GridData();
@@ -88,7 +89,7 @@ public class Transformation extends PropertyPage
 			}
       };
       transformationScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER,
-                                                                             factory, "Step 2 - transformation script", gd);
+                                                                             factory, Messages.Transformation_Step2, gd);
       transformationScript.addFunctions(Arrays.asList(DCI_FUNCTIONS));
       transformationScript.addVariables(Arrays.asList(DCI_VARIABLES));
       gd = new GridData();
@@ -100,7 +101,7 @@ public class Transformation extends PropertyPage
       transformationScript.setText(dci.getTransformationScript());
       
       testScriptButton = new Button(transformationScript.getParent(), SWT.PUSH);
-      testScriptButton.setText("&Test...");   
+      testScriptButton.setText(Messages.Transformation_Test);   
       gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
@@ -122,11 +123,11 @@ public class Transformation extends PropertyPage
 		dci.setDeltaCalculation(deltaCalculation.getSelectionIndex());
 		dci.setTransformationScript(transformationScript.getText());
 		
-		new ConsoleJob("Update transformation settings for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.Transformation_JobTitle + dci.getId(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update transformation settings";
+				return Messages.Transformation_JobError;
 			}
 
 			@Override
@@ -189,6 +190,6 @@ public class Transformation extends PropertyPage
 	{
 		super.performDefaults();
 		deltaCalculation.select(DataCollectionItem.DELTA_NONE);
-		transformationScript.setText("");
+		transformationScript.setText(""); //$NON-NLS-1$
 	}
 }

@@ -23,6 +23,7 @@ import org.eclipse.ui.PartInitException;
 import org.netxms.client.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -30,7 +31,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class LocationMap extends AbstractGeolocationView
 {
-	public static final String ID = "org.netxms.ui.eclipse.osm.views.LocationMap";
+	public static final String ID = "org.netxms.ui.eclipse.osm.views.LocationMap"; //$NON-NLS-1$
 	
 	private GenericObject object;
 	
@@ -46,14 +47,14 @@ public class LocationMap extends AbstractGeolocationView
 		{
 			long id = Long.parseLong(site.getSecondaryId());
 			object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(id);
-			setPartName("Geolocation - " + object.getObjectName());
+			setPartName(Messages.LocationMap_PartNamePrefix + object.getObjectName());
 		}
 		catch(Exception e)
 		{
-			throw new PartInitException("Cannot initialize geolocation view: internal error", e);
+			throw new PartInitException(Messages.LocationMap_InitError1, e);
 		}
 		if (object == null)
-			throw new PartInitException("Cannot initialize geolocation view: object not found");
+			throw new PartInitException(Messages.LocationMap_InitError2);
 	}
 
 	/* (non-Javadoc)

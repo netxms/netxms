@@ -32,6 +32,7 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -62,11 +63,11 @@ public class CreateDashboard implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), "Dashboard");
+		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.CreateDashboard_Dashboard);
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob("Create dashboard", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateDashboard_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -78,7 +79,7 @@ public class CreateDashboard implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create dashboard object \"" + dlg.getObjectName() + "\"";
+				return Messages.CreateDashboard_ErrorPrefix + dlg.getObjectName() + Messages.CreateDashboard_ErrorSuffix;
 			}
 		}.start();
 	}

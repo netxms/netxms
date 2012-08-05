@@ -38,6 +38,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -47,7 +48,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class LastValues extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.datacollection.view.last_values";
+	public static final String ID = "org.netxms.ui.eclipse.datacollection.view.last_values"; //$NON-NLS-1$
 	
 	private NXCSession session;
 	private Node node;
@@ -68,7 +69,7 @@ public class LastValues extends ViewPart
 		session = (NXCSession)ConsoleSharedData.getSession();
 		GenericObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		node = ((obj != null) && (obj instanceof Node)) ? (Node)obj : null;
-		setPartName("Last Values - " + ((node != null) ? node.getObjectName() : "<error>"));
+		setPartName(Messages.LastValues_PartNamePrefix + ((node != null) ? node.getObjectName() : Messages.LastValues_Error));
 	}
 
 	/* (non-Javadoc)
@@ -80,7 +81,7 @@ public class LastValues extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		dataView = new LastValuesWidget(this, parent, SWT.NONE, node, "LastValuesWidget");
+		dataView = new LastValuesWidget(this, parent, SWT.NONE, node, "LastValuesWidget"); //$NON-NLS-1$
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
@@ -104,7 +105,7 @@ public class LastValues extends ViewPart
 		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
 		if (contextService != null)
 		{
-			contextService.activateContext("org.netxms.ui.eclipse.datacollection.context.LastValues");
+			contextService.activateContext("org.netxms.ui.eclipse.datacollection.context.LastValues"); //$NON-NLS-1$
 		}
 	}
 	
@@ -132,7 +133,7 @@ public class LastValues extends ViewPart
 			}
 		};
 		
-		actionAutoUpdate = new Action("Refresh &automatically", Action.AS_CHECK_BOX) {
+		actionAutoUpdate = new Action(Messages.LastValues_AutoRefresh, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -141,7 +142,7 @@ public class LastValues extends ViewPart
 		};
 		actionAutoUpdate.setChecked(dataView.isAutoRefreshEnabled());
 		
-		actionUseMultipliers = new Action("Use &multipliers", Action.AS_CHECK_BOX) {
+		actionUseMultipliers = new Action(Messages.LastValues_UseMultipliers, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -150,7 +151,7 @@ public class LastValues extends ViewPart
 		};
 		actionUseMultipliers.setChecked(dataView.areMultipliersUsed());
 
-		actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX)
+		actionShowFilter = new Action(Messages.LastValues_ShowFilter, Action.AS_CHECK_BOX)
       {
 			@Override
 			public void run()
@@ -160,7 +161,7 @@ public class LastValues extends ViewPart
 			}
       };
       actionShowFilter.setChecked(dataView.isFilterEnabled());
-      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter");
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
 		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
 	}

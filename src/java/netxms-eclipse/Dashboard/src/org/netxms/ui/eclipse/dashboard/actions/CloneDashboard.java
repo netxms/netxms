@@ -14,6 +14,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -30,10 +31,10 @@ public class CloneDashboard implements IObjectActionDelegate
 	{
 		final long parentId = sourceObject.getParentIdList()[0];
 
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), "Dashboard");
+		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.CloneDashboard_Dashboard);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Create dashboard", part, Activator.PLUGIN_ID, null)
+			new ConsoleJob(Messages.CloneDashboard_JobTitle, part, Activator.PLUGIN_ID, null)
 			{
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -53,7 +54,7 @@ public class CloneDashboard implements IObjectActionDelegate
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create dashboard object \"" + dlg.getObjectName() + "\"";
+					return Messages.CloneDashboard_ErrorPrefix + dlg.getObjectName() + Messages.CloneDashboard_ErrorSuffix;
 				}
 			}.start();
 		}

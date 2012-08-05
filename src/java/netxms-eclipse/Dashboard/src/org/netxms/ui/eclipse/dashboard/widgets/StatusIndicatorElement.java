@@ -56,7 +56,7 @@ public class StatusIndicatorElement extends ElementWidget
 
 		canvas = new Canvas(this, SWT.NONE);
 		canvas.setBackground(colors.create(240, 240, 240));
-		font = new Font(getDisplay(), "Verdana", 12, SWT.NONE);
+		font = new Font(getDisplay(), "Verdana", 12, SWT.NONE); //$NON-NLS-1$
 
 		calcSize(parent);
 

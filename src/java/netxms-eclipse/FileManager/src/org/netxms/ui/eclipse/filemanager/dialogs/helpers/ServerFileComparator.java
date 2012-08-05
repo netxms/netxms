@@ -28,7 +28,7 @@ public class ServerFileComparator extends ViewerComparator
 			return 0;
 		
 		int rc;
-		switch((Integer)sortColumn.getData("ID"))
+		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{
 			case SelectServerFileDialog.COLUMN_NAME:
 				rc = ((ServerFile)e1).getName().compareToIgnoreCase(((ServerFile)e2).getName());

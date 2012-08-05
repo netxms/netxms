@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.dashboard.Messages;
 
 /**
  * Dialog for adding new dashboard element
@@ -51,24 +52,24 @@ public class AddDashboardElementDlg extends Dialog
 		dialogArea.setLayout(layout);
 		
 		elementTypeSelector = new Combo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY);
-		elementTypeSelector.add("Label");
-		elementTypeSelector.add("Line Chart");
-		elementTypeSelector.add("Bar Chart");
-		elementTypeSelector.add("Pie Chart");
-		elementTypeSelector.add("Tube Chart");
-		elementTypeSelector.add("Status Chart");
-		elementTypeSelector.add("Status Indicator");
-		elementTypeSelector.add("Dashboard");
-		elementTypeSelector.add("Network Map");
-		elementTypeSelector.add("Custom Widget");
-		elementTypeSelector.add("Geo Map");
-		elementTypeSelector.add("Alarm Viewer");
-		elementTypeSelector.add("Availability Chart");
-		elementTypeSelector.add("Dial Chart");
-		elementTypeSelector.add("Web Page");
-		elementTypeSelector.add("Bar Chart for Table DCI");
-		elementTypeSelector.add("Pie Chart for Table DCI");
-		elementTypeSelector.add("Tube Chart for Table DCI");
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_Label);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_LineChart);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_BarChart);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_PieChart);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_TubeChart);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_StatusChart);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_StatusIndicator);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_Dashboard);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_NetworkMap);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_CustomWidget);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_GeoMap);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_AlarmViewer);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_AvailabilityChart);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_DialChart);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_WebPage);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_BarChartForTable);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_PieChartForTable);
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_TubeChartForTable);
 		elementTypeSelector.select(1);
 		
 		return dialogArea;

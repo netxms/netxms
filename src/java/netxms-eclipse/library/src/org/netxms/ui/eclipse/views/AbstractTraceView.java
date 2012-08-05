@@ -50,6 +50,7 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.library.Activator;
+import org.netxms.ui.eclipse.library.Messages;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
@@ -143,7 +144,7 @@ public abstract class AbstractTraceView extends ViewPart
 		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
 		if (contextService != null)
 		{
-			contextService.activateContext("org.netxms.ui.eclipse.library.context.AbstractTraceView");
+			contextService.activateContext("org.netxms.ui.eclipse.library.context.AbstractTraceView"); //$NON-NLS-1$
 		}
 	}
 	
@@ -154,7 +155,7 @@ public abstract class AbstractTraceView extends ViewPart
 	{
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
-		actionClear = new Action("&Clear", SharedIcons.CLEAR_LOG) {
+		actionClear = new Action(Messages.AbstractTraceView_Clear, SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
 			{
@@ -162,19 +163,19 @@ public abstract class AbstractTraceView extends ViewPart
 			}
 		};
 		
-		actionPause = new Action("&Pause", Action.AS_CHECK_BOX) {
+		actionPause = new Action(Messages.AbstractTraceView_Pause, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
 				setPaused(actionPause.isChecked());
 			}
 		};
-		actionPause.setImageDescriptor(Activator.getImageDescriptor("icons/pause.png"));
-      actionPause.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.pause_trace");
+		actionPause.setImageDescriptor(Activator.getImageDescriptor("icons/pause.png")); //$NON-NLS-1$
+      actionPause.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.pause_trace"); //$NON-NLS-1$
 		final ActionHandler pauseHandler = new ActionHandler(actionPause);
 		handlerService.activateHandler(actionPause.getActionDefinitionId(), pauseHandler);
 		
-      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
+      actionShowFilter = new Action(Messages.AbstractTraceView_ShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -182,17 +183,17 @@ public abstract class AbstractTraceView extends ViewPart
 			}
       };
       actionShowFilter.setChecked(filterEnabled);
-      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.show_trace_filter");
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.show_trace_filter"); //$NON-NLS-1$
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 		
-      actionCopy = new Action("&Copy to clipboard", SharedIcons.COPY) {
+      actionCopy = new Action(Messages.AbstractTraceView_CopyToClipboard, SharedIcons.COPY) {
 			@Override
 			public void run()
 			{
 				copySelectionToClipboard();
 			}
       };
-      actionCopy.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.copy");
+      actionCopy.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.copy"); //$NON-NLS-1$
 		handlerService.activateHandler(actionCopy.getActionDefinitionId(), new ActionHandler(actionCopy));
 	}
 	
@@ -377,7 +378,7 @@ public abstract class AbstractTraceView extends ViewPart
 		if (enable)
 			filterText.setFocus();
 		else
-			setFilter("");
+			setFilter(""); //$NON-NLS-1$
 	}
 
 	/**
@@ -433,7 +434,7 @@ public abstract class AbstractTraceView extends ViewPart
 		if (selection.length > 0)
 		{
 			StringBuilder sb = new StringBuilder();
-			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n";
+			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
 			for(int i = 0; i < selection.length; i++)
 			{
 				if (i > 0)

@@ -39,7 +39,7 @@ public class Dot1xPortComparator extends ViewerComparator
 		Dot1xPortSummary p2 = (Dot1xPortSummary)e2;
 		
 		int result;
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case Dot1xStatusView.COLUMN_NODE:
 				result = p1.getNodeName().compareToIgnoreCase(p2.getNodeName());

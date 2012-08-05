@@ -34,6 +34,7 @@ import org.netxms.client.objects.NodeLink;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.Activator;
+import org.netxms.ui.eclipse.slm.Messages;
 import org.netxms.ui.eclipse.slm.dialogs.CreateServiceCheckDialog;
 
 /**
@@ -65,7 +66,7 @@ public class CreateServiceCheck implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob("Create new service check object", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateServiceCheck_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -78,7 +79,7 @@ public class CreateServiceCheck implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create service check object \"" + dlg.getName() + "\"";
+				return Messages.CreateServiceCheck_JobErrorPrefix + dlg.getName() + Messages.CreateServiceCheck_JobErrorSuffix;
 			}
 		}.start();
 	}

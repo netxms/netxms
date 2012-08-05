@@ -51,7 +51,7 @@ public class DciComparator extends ViewerComparator
 		DataCollectionObject dci1 = (DataCollectionObject)e1;
 		DataCollectionObject dci2 = (DataCollectionObject)e2;
 
-		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
+		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 		switch(column)
 		{
 			case DataCollectionEditor.COLUMN_ID:

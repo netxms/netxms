@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
+import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.views.EventMonitor;
 
 /**
@@ -64,7 +65,7 @@ public class OpenEventMonitor implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.OpenEventMonitor_Error, Messages.OpenEventMonitor_ErrorText + e.getMessage());
 			}
 		}
 	}

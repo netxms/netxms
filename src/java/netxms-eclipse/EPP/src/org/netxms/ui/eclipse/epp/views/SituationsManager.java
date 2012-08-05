@@ -55,6 +55,7 @@ import org.netxms.client.situations.Situation;
 import org.netxms.client.situations.SituationInstance;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.epp.Activator;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.SituationCache;
 import org.netxms.ui.eclipse.epp.views.helpers.SituationTreeContentProvider;
 import org.netxms.ui.eclipse.epp.views.helpers.SituationTreeLabelProvider;
@@ -69,7 +70,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class SituationsManager extends ViewPart implements SessionListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.epp.views.SituationsManager";
+	public static final String ID = "org.netxms.ui.eclipse.epp.views.SituationsManager"; //$NON-NLS-1$
 	
 	private NXCSession session;
 	private Map<Long, Situation> situations = new HashMap<Long, Situation>();
@@ -102,17 +103,17 @@ public class SituationsManager extends ViewPart implements SessionListener
 		situationTree.setContentProvider(new SituationTreeContentProvider());
 		situationTree.setLabelProvider(new SituationTreeLabelProvider());
 		
-		final String[] names = { "Attribute", "Value" };
+		final String[] names = { Messages.SituationsManager_ColAttribute, Messages.SituationsManager_ColValue };
 		final int[] widths = { 150, 150 };
 		details = new SortableTableViewer(splitter, names, widths, 0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION);
 		details.getTable().setHeaderVisible(true);
 		details.getTable().setLinesVisible(true);
-		WidgetHelper.restoreTableViewerSettings(details, Activator.getDefault().getDialogSettings(), "SituationInstanceDetails");
+		WidgetHelper.restoreTableViewerSettings(details, Activator.getDefault().getDialogSettings(), "SituationInstanceDetails"); //$NON-NLS-1$
 		details.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(details, Activator.getDefault().getDialogSettings(), "SituationInstanceDetails");
+				WidgetHelper.saveTableViewerSettings(details, Activator.getDefault().getDialogSettings(), "SituationInstanceDetails"); //$NON-NLS-1$
 			}
 		});
 
@@ -122,7 +123,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 		
 		session.addListener(this);
 		
-		new ConsoleJob("Load situations configuration", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SituationsManager_LoadJob_Title, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -141,7 +142,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot load situations configuration";
+				return Messages.SituationsManager_LoadJob_Error;
 			}
 
 			@Override
@@ -171,7 +172,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 			}
 		};
 		
-		actionCreate = new Action("&Create...") {
+		actionCreate = new Action(Messages.SituationsManager_Create) {
 			@Override
 			public void run()
 			{
@@ -179,7 +180,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 			}
 		};
 		
-		actionDelete = new Action("&Delete") {
+		actionDelete = new Action(Messages.SituationsManager_Delete) {
 			@Override
 			public void run()
 			{
@@ -274,29 +275,29 @@ public class SituationsManager extends ViewPart implements SessionListener
 	 */
 	private void createSituation()
 	{
-		InputDialog dlg = new InputDialog(getSite().getShell(), "Create Situation", "Name for new situation object", "", new IInputValidator()	{
+		InputDialog dlg = new InputDialog(getSite().getShell(), Messages.SituationsManager_CreateDlg_Title, Messages.SituationsManager_CreateDlg_Text, "", new IInputValidator()	{ //$NON-NLS-1$
 			@Override
 			public String isValid(String newText)
 			{
 				if (newText.trim().isEmpty())
-					return "Situation name cannot be empty";
+					return Messages.SituationsManager_EmptyNameError;
 				return null;
 			}
 		});
 		if (dlg.open() == Window.OK)
 		{
 			final String name = dlg.getValue().trim();
-			new ConsoleJob("Create situation object", this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.SituationsManager_CreateJob_Title, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.createSituation(name, "");
+					session.createSituation(name, ""); //$NON-NLS-1$
 				}
 
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create new situation object";
+					return Messages.SituationsManager_CreateJob_Error;
 				}
 			}.start();
 		}
@@ -309,7 +310,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 	{
 		IStructuredSelection selection = (IStructuredSelection)situationTree.getSelection();
 		final Object[] elements = selection.toArray();
-		new ConsoleJob("Delete situation objects", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SituationsManager_DeleteJob_Title, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -329,7 +330,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot delete situation object";
+				return Messages.SituationsManager_DeleteJob_Error;
 			}
 		}.start();
 	}

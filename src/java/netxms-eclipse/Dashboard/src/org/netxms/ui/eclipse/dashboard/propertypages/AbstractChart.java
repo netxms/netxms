@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ComparisonChartConfig;
@@ -71,7 +72,7 @@ public class AbstractChart extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel("Title");
+		title.setLabel(Messages.AbstractChart_Title);
 		title.setText(config.getTitle());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -79,15 +80,15 @@ public class AbstractChart extends PropertyPage
 		gd.horizontalSpan = 2;
 		title.setLayoutData(gd);
 		
-		legendPosition = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Legend position", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		legendPosition.add("Left");
-		legendPosition.add("Right");
-		legendPosition.add("Top");
-		legendPosition.add("Bottom");
+		legendPosition = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.AbstractChart_LegendPosition, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		legendPosition.add(Messages.AbstractChart_Left);
+		legendPosition.add(Messages.AbstractChart_Right);
+		legendPosition.add(Messages.AbstractChart_Top);
+		legendPosition.add(Messages.AbstractChart_Bottom);
 		legendPosition.select(positionIndexFromValue(config.getLegendPosition()));
 		
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
-		optionsGroup.setText("Options");
+		optionsGroup.setText(Messages.AbstractChart_Options);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -97,7 +98,7 @@ public class AbstractChart extends PropertyPage
 		optionsGroup.setLayout(optionsLayout);
 
 		checkShowTitle = new Button(optionsGroup, SWT.CHECK);
-		checkShowTitle.setText("Show &title");
+		checkShowTitle.setText(Messages.AbstractChart_ShowTitle);
 		checkShowTitle.setSelection(config.isShowTitle());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -105,7 +106,7 @@ public class AbstractChart extends PropertyPage
 		checkShowTitle.setLayoutData(gd);
 		
 		checkShowLegend = new Button(optionsGroup, SWT.CHECK);
-		checkShowLegend.setText("Show &legend");
+		checkShowLegend.setText(Messages.AbstractChart_ShowLegend);
 		checkShowLegend.setSelection(config.isShowLegend());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -115,7 +116,7 @@ public class AbstractChart extends PropertyPage
 		if (config instanceof ComparisonChartConfig)
 		{
 			checkShowIn3D = new Button(optionsGroup, SWT.CHECK);
-			checkShowIn3D.setText("Show in &3D");
+			checkShowIn3D.setText(Messages.AbstractChart_3DView);
 			checkShowIn3D.setSelection(((ComparisonChartConfig)config).isShowIn3D());
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
@@ -123,7 +124,7 @@ public class AbstractChart extends PropertyPage
 			checkShowIn3D.setLayoutData(gd);
 			
 			checkTranslucent = new Button(optionsGroup, SWT.CHECK);
-			checkTranslucent.setText("T&ranslucent");
+			checkTranslucent.setText(Messages.AbstractChart_Translucent);
 			checkTranslucent.setSelection(((ComparisonChartConfig)config).isTranslucent());
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
@@ -133,7 +134,7 @@ public class AbstractChart extends PropertyPage
 			if ((config instanceof BarChartConfig) || (config instanceof TubeChartConfig))
 			{
 				checkTransposed = new Button(optionsGroup, SWT.CHECK);
-				checkTransposed.setText("Trans&posed");
+				checkTransposed.setText(Messages.AbstractChart_Transposed);
 				checkTransposed.setSelection((config instanceof BarChartConfig) ? ((BarChartConfig)config).isTransposed() : ((TubeChartConfig)config).isTransposed());
 				gd = new GridData();
 				gd.horizontalAlignment = SWT.FILL;
@@ -145,7 +146,7 @@ public class AbstractChart extends PropertyPage
 		if (config instanceof LineChartConfig)
 		{
 			checkShowGrid = new Button(optionsGroup, SWT.CHECK);
-			checkShowGrid.setText("Show &grid");
+			checkShowGrid.setText(Messages.AbstractChart_ShowGrid);
 			checkShowGrid.setSelection(((LineChartConfig)config).isShowGrid());
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
@@ -164,13 +165,13 @@ public class AbstractChart extends PropertyPage
 			gd.grabExcessHorizontalSpace = true;
 			timeRangeArea.setLayoutData(gd);
 			
-			timeRange = WidgetHelper.createLabeledSpinner(timeRangeArea, SWT.BORDER, "Time interval", 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
+			timeRange = WidgetHelper.createLabeledSpinner(timeRangeArea, SWT.BORDER, Messages.AbstractChart_TimeInterval, 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
 			timeRange.setSelection(((LineChartConfig)config).getTimeRange());
 			
-			timeUnits = WidgetHelper.createLabeledCombo(timeRangeArea, SWT.READ_ONLY, "Time units", WidgetHelper.DEFAULT_LAYOUT_DATA);
-			timeUnits.add("minutes");
-			timeUnits.add("hours");
-			timeUnits.add("days");
+			timeUnits = WidgetHelper.createLabeledCombo(timeRangeArea, SWT.READ_ONLY, Messages.AbstractChart_TimeUnits, WidgetHelper.DEFAULT_LAYOUT_DATA);
+			timeUnits.add(Messages.AbstractChart_Minutes);
+			timeUnits.add(Messages.AbstractChart_Hours);
+			timeUnits.add(Messages.AbstractChart_Days);
 			timeUnits.select(((LineChartConfig)config).getTimeUnits());
 		}
 		
@@ -178,7 +179,7 @@ public class AbstractChart extends PropertyPage
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Refresh interval (seconds)", 1, 10000, gd);
+		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.AbstractChart_RefreshInterval, 1, 10000, gd);
 		refreshRate.setSelection(config.getRefreshRate());
 		
 		return dialogArea;

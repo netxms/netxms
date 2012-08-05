@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableComparisonChartConfig;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -57,7 +58,7 @@ public class TableDataSource extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		dci = new DciSelector(dialogArea, SWT.NONE, false);
-		dci.setLabel("Data Collection Object");
+		dci.setLabel(Messages.TableDataSource_Object);
 		dci.setDciId(config.getNodeId(), config.getDciId());
 		dci.setDcObjectType(DataCollectionObject.DCO_TYPE_TABLE);
 		GridData gd = new GridData();
@@ -66,7 +67,7 @@ public class TableDataSource extends PropertyPage
 		dci.setLayoutData(gd);
 		
 		instanceColumn = new LabeledText(dialogArea, SWT.NONE);
-		instanceColumn.setLabel("Instance column");
+		instanceColumn.setLabel(Messages.TableDataSource_InstanceColumn);
 		instanceColumn.setText(config.getInstanceColumn());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -74,7 +75,7 @@ public class TableDataSource extends PropertyPage
 		instanceColumn.setLayoutData(gd);
 
 		dataColumn = new LabeledText(dialogArea, SWT.NONE);
-		dataColumn.setLabel("Data column");
+		dataColumn.setLabel(Messages.TableDataSource_DataColumn);
 		dataColumn.setText(config.getDataColumn());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -82,7 +83,7 @@ public class TableDataSource extends PropertyPage
 		dataColumn.setLayoutData(gd);
 		
 		checkIgnoreZeroValues = new Button(dialogArea, SWT.CHECK);
-		checkIgnoreZeroValues.setText("Ignore zero values when building chart");
+		checkIgnoreZeroValues.setText(Messages.TableDataSource_IgnoreZero);
 		checkIgnoreZeroValues.setSelection(config.isIgnoreZeroValues());
 
 		return dialogArea;

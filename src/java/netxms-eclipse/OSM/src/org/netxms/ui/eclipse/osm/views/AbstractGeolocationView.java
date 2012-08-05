@@ -33,6 +33,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.GeoLocation;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.widgets.GeoMapViewer;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
@@ -44,7 +45,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public abstract class AbstractGeolocationView extends ViewPart
 {
-	public static final String JOB_FAMILY = "MapViewJob";
+	public static final String JOB_FAMILY = "MapViewJob"; //$NON-NLS-1$
 	
 	protected GeoMapViewer map;
 	
@@ -78,7 +79,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 		// Initiate loading of required plugins if they was not loaded yet
 		try
 		{
-			Platform.getAdapterManager().loadAdapter(((NXCSession)ConsoleSharedData.getSession()).getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter");
+			Platform.getAdapterManager().loadAdapter(((NXCSession)ConsoleSharedData.getSession()).getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{
@@ -129,7 +130,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 	 */
 	protected void createActions()
 	{
-		actionZoomIn = new Action("Zoom &in") {
+		actionZoomIn = new Action(Messages.AbstractGeolocationView_ZoomIn) {
 			@Override
 			public void run()
 			{
@@ -138,7 +139,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 		};
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 	
-		actionZoomOut = new Action("Zoom &out") {
+		actionZoomOut = new Action(Messages.AbstractGeolocationView_ZoomOut) {
 			@Override
 			public void run()
 			{

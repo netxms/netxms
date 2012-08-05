@@ -31,6 +31,7 @@ import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.eventmanager.Activator;
+import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventLabelProvider;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventMonitorFilter;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -41,7 +42,7 @@ import org.netxms.ui.eclipse.views.AbstractTraceView;
  */
 public class EventMonitor extends AbstractTraceView implements SessionListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.eventmanager.views.EventMonitor";
+	public static final String ID = "org.netxms.ui.eclipse.eventmanager.views.EventMonitor"; //$NON-NLS-1$
 	
 	public static final int COLUMN_TIMESTAMP = 0;
 	public static final int COLUMN_SOURCE = 1;
@@ -75,14 +76,14 @@ public class EventMonitor extends AbstractTraceView implements SessionListener
 		viewer.setLabelProvider(labelProvider);
 		
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		labelProvider.setShowColor(ps.getBoolean("EventMonitor.showColor"));
-		labelProvider.setShowIcons(ps.getBoolean("EventMonitor.showIcons"));
+		labelProvider.setShowColor(ps.getBoolean("EventMonitor.showColor")); //$NON-NLS-1$
+		labelProvider.setShowIcons(ps.getBoolean("EventMonitor.showIcons")); //$NON-NLS-1$
 		
-		addColumn("Timestamp", 150);
-		addColumn("Source", 200);
-		addColumn("Severity", 90);
-		addColumn("Event", 200);
-		addColumn("Message", 600);
+		addColumn(Messages.EventMonitor_ColTimestamp, 150);
+		addColumn(Messages.EventMonitor_ColSource, 200);
+		addColumn(Messages.EventMonitor_ColSeverity, 90);
+		addColumn(Messages.EventMonitor_ColEvent, 200);
+		addColumn(Messages.EventMonitor_ColMessage, 600);
 		
 		setFilter(new EventMonitorFilter());
 	}
@@ -95,7 +96,7 @@ public class EventMonitor extends AbstractTraceView implements SessionListener
 	{
 		super.createActions();
 		
-		actionShowColor = new Action("Show status &colors", Action.AS_CHECK_BOX) {
+		actionShowColor = new Action(Messages.EventMonitor_ShowStatusColors, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -105,7 +106,7 @@ public class EventMonitor extends AbstractTraceView implements SessionListener
 		};
 		actionShowColor.setChecked(labelProvider.isShowColor());
 		
-		actionShowIcons = new Action("Show status &icons", Action.AS_CHECK_BOX) {
+		actionShowIcons = new Action(Messages.EventMonitor_ShowStatusIcons, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -153,8 +154,8 @@ public class EventMonitor extends AbstractTraceView implements SessionListener
 	public void dispose()
 	{
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		ps.setValue("EventMonitor.showColor", labelProvider.isShowColor());
-		ps.setValue("EventMonitor.showIcons", labelProvider.isShowIcons());
+		ps.setValue("EventMonitor.showColor", labelProvider.isShowColor()); //$NON-NLS-1$
+		ps.setValue("EventMonitor.showIcons", labelProvider.isShowIcons()); //$NON-NLS-1$
 		
 		session.removeListener(this);
 		super.dispose();
@@ -175,6 +176,6 @@ public class EventMonitor extends AbstractTraceView implements SessionListener
 	@Override
 	protected String getConfigPrefix()
 	{
-		return "EventMonitor";
+		return "EventMonitor"; //$NON-NLS-1$
 	}	
 }

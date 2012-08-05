@@ -44,9 +44,9 @@ public class RegionalSettings
 	public static void updateFromPreferences()
 	{
 		IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		dateTimeFormat = ps.getInt("DATETIME_FORMAT");
-		dateFormatString = ps.getString("DATE_FORMAT_STRING");
-		timeFormatString = ps.getString("TIME_FORMAT_STRING");
+		dateTimeFormat = ps.getInt("DATETIME_FORMAT"); //$NON-NLS-1$
+		dateFormatString = ps.getString("DATE_FORMAT_STRING"); //$NON-NLS-1$
+		timeFormatString = ps.getString("TIME_FORMAT_STRING"); //$NON-NLS-1$
 	}
 	
 	/**
@@ -60,11 +60,11 @@ public class RegionalSettings
 		{
 			case DATETIME_FORMAT_SERVER:
 				Session session = ConsoleSharedData.getSession();
-				return new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat());
+				return new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat()); //$NON-NLS-1$
 			case DATETIME_FORMAT_CUSTOM:
 				try
 				{
-					return new SimpleDateFormat(dateFormatString + " " + timeFormatString);
+					return new SimpleDateFormat(dateFormatString + " " + timeFormatString); //$NON-NLS-1$
 				}
 				catch(IllegalArgumentException e)
 				{

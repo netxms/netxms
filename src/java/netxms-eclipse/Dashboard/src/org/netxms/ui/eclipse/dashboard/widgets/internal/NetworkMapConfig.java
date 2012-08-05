@@ -36,7 +36,7 @@ public class NetworkMapConfig extends DashboardElementConfig
 	private long objectId = 0;
 
 	@Element(required=false)
-	private String title = "";
+	private String title = ""; //$NON-NLS-1$
 
 	/**
 	 * Create line chart settings object from XML document

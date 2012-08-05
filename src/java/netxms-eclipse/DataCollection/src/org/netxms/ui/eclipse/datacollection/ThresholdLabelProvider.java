@@ -34,12 +34,12 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ThresholdLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final String[] functions = { "last(", "average(", "deviation(", "diff()", "error(", "sum(" };
-	private static final String[] operations = { "<", "<=", "==", ">=", ">", "!=", "like", "!like" };
+	private static final String[] functions = { "last(", "average(", "deviation(", "diff()", "error(", "sum(" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+	private static final String[] operations = { "<", "<=", "==", ">=", ">", "!=", "like", "!like" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
 	
 	private WorkbenchLabelProvider eventLabelProvider = new WorkbenchLabelProvider();
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-	private Image thresholdIcon = Activator.getImageDescriptor("icons/threshold.png").createImage();
+	private Image thresholdIcon = Activator.getImageDescriptor("icons/threshold.png").createImage(); //$NON-NLS-1$
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -72,7 +72,7 @@ public class ThresholdLabelProvider extends LabelProvider implements ITableLabel
 				if (f != Threshold.F_DIFF)
 				{
 					text.append(((Threshold)element).getArg1());
-					text.append(") ");
+					text.append(") "); //$NON-NLS-1$
 				}
 				else
 				{

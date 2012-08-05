@@ -46,6 +46,7 @@ import org.netxms.client.AgentParameter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentParameterComparator;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentParameterFilter;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentParameterLabelProvider;
@@ -86,7 +87,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Parameter Selection");
+		newShell.setText(Messages.AbstractSelectParamDlg_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		final String prefix = getConfigurationPrefix();
 		try
@@ -113,7 +114,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	   dialogArea.setLayout(layout);
 	   
 	   Label label = new Label(dialogArea, SWT.NONE);
-	   label.setText("Available parameters");
+	   label.setText(Messages.AbstractSelectParamDlg_AvailableParameters);
 	   
 	   filterText = new Text(dialogArea, SWT.BORDER);
 	   GridData gd = new GridData();
@@ -129,10 +130,10 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 			}
 	   });
 		
-		final String[] names = { "Name", "Type", "Description" };
+		final String[] names = { Messages.AbstractSelectParamDlg_Name, Messages.AbstractSelectParamDlg_Type, Messages.AbstractSelectParamDlg_Description };
 		final int[] widths = { 150, 100, 350 };
 	   viewer = new SortableTableViewer(dialogArea, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.BORDER);
-	   WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), getConfigurationPrefix() + ".viewer");
+	   WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), getConfigurationPrefix() + ".viewer"); //$NON-NLS-1$
 	   viewer.setContentProvider(new ArrayContentProvider());
 	   viewer.setLabelProvider(new AgentParameterLabelProvider());
 	   viewer.setComparator(new AgentParameterComparator());
@@ -162,7 +163,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-			   WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), getConfigurationPrefix() + ".viewer");
+			   WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), getConfigurationPrefix() + ".viewer"); //$NON-NLS-1$
 			}
 	   });
 
@@ -244,7 +245,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "You must select parameter from the list!");
+			MessageDialog.openWarning(getShell(), Messages.AbstractSelectParamDlg_Warning, Messages.AbstractSelectParamDlg_WarningText);
 			return;
 		}
 		selectedParameter = (AgentParameter)selection.getFirstElement();

@@ -26,6 +26,7 @@ import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedColors;
+import org.netxms.ui.eclipse.slm.Messages;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
@@ -34,7 +35,7 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
  */
 public class ServiceAvailability extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.slm.views.ServiceAvailability";
+	public static final String ID = "org.netxms.ui.eclipse.slm.views.ServiceAvailability"; //$NON-NLS-1$
 	
 	private ServiceContainer object;
 	private DataComparisonChart dayChart;
@@ -57,11 +58,11 @@ public class ServiceAvailability extends ViewPart
 		}
 		catch(Exception e)
 		{
-			throw new PartInitException("Internal error", e);
+			throw new PartInitException(Messages.ServiceAvailability_InternalError, e);
 		}
 		if (object == null)
-			throw new PartInitException("Business service object with ID " + site.getSecondaryId() + " is no longer exist or is not accessible");
-		setPartName("Service Availability - " + object.getObjectName());
+			throw new PartInitException(Messages.ServiceAvailability_InitErrorPart1 + site.getSecondaryId() + Messages.ServiceAvailability_InitErrorPart2);
+		setPartName(Messages.ServiceAvailability_PartNamePrefix + object.getObjectName());
 	}
 
 	/* (non-Javadoc)
@@ -77,9 +78,9 @@ public class ServiceAvailability extends ViewPart
 		layout.numColumns = 4;
 		clientArea.setLayout(layout);
 		
-		dayChart = createChart(clientArea, "Today");
-		weekChart = createChart(clientArea, "This Week");
-		monthChart = createChart(clientArea, "This Month");
+		dayChart = createChart(clientArea, Messages.ServiceAvailability_Today);
+		weekChart = createChart(clientArea, Messages.ServiceAvailability_ThisWeek);
+		monthChart = createChart(clientArea, Messages.ServiceAvailability_ThisMonth);
 		
 		Canvas legend = new Canvas(clientArea, SWT.NONE);
 		legend.addPaintListener(new PaintListener() {
@@ -131,8 +132,8 @@ public class ServiceAvailability extends ViewPart
 		chart.setLabelsVisible(true);
 		chart.setRotation(225.0);
 		
-		chart.addParameter(new GraphItem(0, 0, 0, 0, "Up", "Up"), 100);
-		chart.addParameter(new GraphItem(0, 0, 0, 0, "Down", "Down"), 0);
+		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.ServiceAvailability_Up, Messages.ServiceAvailability_Up), 100);
+		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.ServiceAvailability_Down, Messages.ServiceAvailability_Down), 0);
 		chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
 		chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
 		chart.initializationComplete();
@@ -153,7 +154,7 @@ public class ServiceAvailability extends ViewPart
 	 */
 	private void paintLegend(GC gc)
 	{
-		int th = gc.textExtent("UptimeDowntime").y;
+		int th = gc.textExtent(Messages.ServiceAvailability_UptimeDowntime).y;
 		
 		gc.setBackground(colors.create(127, 154, 72));
 		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), SharedColors.BLACK, 0.2f, colors));
@@ -166,8 +167,8 @@ public class ServiceAvailability extends ViewPart
 		gc.drawRectangle(5, 40, th, th);
 
 		gc.setForeground(SharedColors.BLACK);
-		gc.drawText("Uptime", 10 + th, 10, true);
-		gc.drawText("Downtime", 10 + th, 40, true);
+		gc.drawText(Messages.ServiceAvailability_Uptime, 10 + th, 10, true);
+		gc.drawText(Messages.ServiceAvailability_Downtime, 10 + th, 40, true);
 	}
 
 	/* (non-Javadoc)

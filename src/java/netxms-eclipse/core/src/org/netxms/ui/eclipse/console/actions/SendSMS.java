@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.dialogs.SendSMSDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -69,7 +70,7 @@ public class SendSMS implements IWorkbenchWindowActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Send SMS to " + dlg.getPhoneNumber(), window.getActivePage().getActivePart(), Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.getString("SendSMS.JobTitle") + dlg.getPhoneNumber(), window.getActivePage().getActivePart(), Activator.PLUGIN_ID, null) { //$NON-NLS-1$
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -78,7 +79,7 @@ public class SendSMS implements IWorkbenchWindowActionDelegate
 					@Override
 					public void run()
 					{
-						MessageDialog.openInformation(window.getShell(), "Send SMS", "SMS to number " + dlg.getPhoneNumber() + " sent successfully");
+						MessageDialog.openInformation(window.getShell(), Messages.getString("SendSMS.DialogTitle"), Messages.getString("SendSMS.DialogTextPrefix") + dlg.getPhoneNumber() + Messages.getString("SendSMS.DialogTextSuffix")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					}
 				});
 			}
@@ -86,7 +87,7 @@ public class SendSMS implements IWorkbenchWindowActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot send SMS to " + dlg.getPhoneNumber();
+				return Messages.getString("SendSMS.SendError") + dlg.getPhoneNumber(); //$NON-NLS-1$
 			}
 		}.start();
 	}

@@ -28,6 +28,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.ServiceContainer;
+import org.netxms.ui.eclipse.slm.Messages;
 import org.netxms.ui.eclipse.slm.views.ServiceAvailability;
 
 /**
@@ -61,7 +62,7 @@ public class ShowAvailabilityChart implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.ShowAvailabilityChart_Error, Messages.ShowAvailabilityChart_ErrorText + e.getMessage());
 			}
 		}
 	}

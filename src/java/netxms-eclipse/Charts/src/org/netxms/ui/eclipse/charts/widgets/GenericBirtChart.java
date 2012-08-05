@@ -396,7 +396,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			return;
 
 		if (errorImage == null)
-			errorImage = Activator.getImageDescriptor("icons/chart_error.png").createImage();
+			errorImage = Activator.getImageDescriptor("icons/chart_error.png").createImage(); //$NON-NLS-1$
 
 		gc.setAlpha(127);
 		gc.setBackground(colors.create(127, 127, 127));
@@ -407,7 +407,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		gc.setForeground(colors.create(192, 0, 0));
 		Iterator<String> it = errors.iterator();
 		int y = 12;
-		int h = gc.textExtent("X").y;
+		int h = gc.textExtent("X").y; //$NON-NLS-1$
 		while(it.hasNext())
 		{
 			gc.drawText(it.next(), 40, y, true);

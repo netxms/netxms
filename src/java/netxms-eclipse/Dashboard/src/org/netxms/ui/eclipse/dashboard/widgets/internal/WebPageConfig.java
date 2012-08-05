@@ -30,10 +30,10 @@ import org.simpleframework.xml.core.Persister;
 public class WebPageConfig extends DashboardElementConfig
 {
 	@Element(required=true)
-	private String url = "";
+	private String url = ""; //$NON-NLS-1$
 
 	@Element(required=false)
-	private String title = "";
+	private String title = ""; //$NON-NLS-1$
 
 	/**
 	 * Create line chart settings object from XML document

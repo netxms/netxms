@@ -575,7 +575,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		}
 		else if (absValue >= 1000000000)
 		{
-			return new DecimalFormat("#.#").format(value / 1000000000) + Messages.DialChartWidget_G;
+			return new DecimalFormat("#.#").format(value / 1000000000) + Messages.DialChartWidget_G; //$NON-NLS-1$
 		}
 		else if (absValue >= 10000000)
 		{
@@ -583,7 +583,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		}
 		else if (absValue >= 1000000)
 		{
-			return new DecimalFormat("#.#").format(value / 1000000) + Messages.DialChartWidget_M;
+			return new DecimalFormat("#.#").format(value / 1000000) + Messages.DialChartWidget_M; //$NON-NLS-1$
 		}
 		else if (absValue >= 10000)
 		{
@@ -591,7 +591,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		}
 		else if (absValue >= 1000)
 		{
-			return new DecimalFormat("#.#").format(value / 1000) + Messages.DialChartWidget_K;
+			return new DecimalFormat("#.#").format(value / 1000) + Messages.DialChartWidget_K; //$NON-NLS-1$
 		}
 		else if ((absValue >= 1) && (step >= 1))
 		{

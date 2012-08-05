@@ -33,8 +33,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 	public void initializeDefaultPreferences()
 	{
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		store.setDefault("BLINK_OUTSTANDING_ALARMS", false);
-		store.setDefault("SHOW_TRAY_POPUPS", true);
-		store.setDefault("OUTSTANDING_ALARMS_REMINDER", false);
+		store.setDefault("BLINK_OUTSTANDING_ALARMS", false); //$NON-NLS-1$
+		store.setDefault("SHOW_TRAY_POPUPS", true); //$NON-NLS-1$
+		store.setDefault("OUTSTANDING_ALARMS_REMINDER", false); //$NON-NLS-1$
 	}
 }

@@ -27,6 +27,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.widgets.LocalFileSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -57,7 +58,7 @@ public class StartClientToServerFileUploadDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Upload File");
+		newShell.setText(Messages.StartClientToServerFileUploadDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -75,7 +76,7 @@ public class StartClientToServerFileUploadDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		fileSelector = new LocalFileSelector(dialogArea, SWT.NONE, false);
-		fileSelector.setLabel("Local file");
+		fileSelector.setLabel(Messages.StartClientToServerFileUploadDialog_LocalFile);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -83,7 +84,7 @@ public class StartClientToServerFileUploadDialog extends Dialog
 		fileSelector.setLayoutData(gd);
 		
 		textRemoteFile = new LabeledText(dialogArea, SWT.NONE);
-		textRemoteFile.setLabel("Remote file name");
+		textRemoteFile.setLabel(Messages.StartClientToServerFileUploadDialog_RemoteFileName);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -101,7 +102,7 @@ public class StartClientToServerFileUploadDialog extends Dialog
 		localFile = fileSelector.getFile();
 		if (localFile == null)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please select file for upload");
+			MessageDialog.openWarning(getShell(), Messages.StartClientToServerFileUploadDialog_Warning, Messages.StartClientToServerFileUploadDialog_WarningText);
 			return;
 		}
 		remoteFileName = textRemoteFile.getText().trim();

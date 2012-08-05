@@ -68,6 +68,7 @@ import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.snmp.Activator;
+import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpValueLabelProvider;
 import org.netxms.ui.eclipse.snmp.widgets.MibBrowser;
 import org.netxms.ui.eclipse.snmp.widgets.MibObjectDetails;
@@ -79,7 +80,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class MibExplorer extends ViewPart implements SnmpWalkListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.snmp.views.MibExplorer";
+	public static final String ID = "org.netxms.ui.eclipse.snmp.views.MibExplorer"; //$NON-NLS-1$
 	
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_TYPE = 1;
@@ -111,7 +112,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	{
 		if (memento != null)
 		{
-			long nodeId = safeCast(memento.getInteger("CurrentNode"), 0);
+			long nodeId = safeCast(memento.getInteger("CurrentNode"), 0); //$NON-NLS-1$
 			if (nodeId != 0)
 			{
 				GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
@@ -150,7 +151,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		headerFont = new Font(parent.getDisplay(), "Verdana", 11, SWT.BOLD);
+		headerFont = new Font(parent.getDisplay(), "Verdana", 11, SWT.BOLD); //$NON-NLS-1$
 		headerColor = new Color(parent.getDisplay(), 153, 180, 209);
 		
 		GridLayout layout = new GridLayout();
@@ -164,7 +165,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		header.setFont(headerFont);
 		header.setBackground(headerColor);
 		header.setForeground(SharedColors.WHITE);
-		header.setText((currentNode != null) ? currentNode.getObjectName() : "");
+		header.setText((currentNode != null) ? currentNode.getObjectName() : ""); //$NON-NLS-1$
 		
 		SashForm splitter = new SashForm(parent, SWT.VERTICAL);
 		splitter.setLayout(new FillLayout());
@@ -195,7 +196,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "MibExplorer");
+				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "MibExplorer"); //$NON-NLS-1$
 			}
 		});
 
@@ -218,7 +219,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 		
-		actionWalk = new Action("&Walk") {
+		actionWalk = new Action(Messages.MibExplorer_Walk) {
 			@Override
 			public void run()
 			{
@@ -227,7 +228,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		};
 		actionWalk.setEnabled(currentNode != null);
 		
-		actionSetNode = new Action("Set &node object...") {
+		actionSetNode = new Action(Messages.MibExplorer_SetNodeObject) {
 			@Override
 			public void run()
 			{
@@ -240,23 +241,23 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 		
-		actionCopy = new Action("Copy to clipboard") {
+		actionCopy = new Action(Messages.MibExplorer_CopyToClipboard) {
 			@Override
 			public void run()
 			{
 				TableItem[] selection = viewer.getTable().getSelection();
 				if (selection.length > 0)
 				{
-					final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n";
+					final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
 					StringBuilder sb = new StringBuilder();
 					for(int i = 0; i < selection.length; i++)
 					{
 						if (i > 0)
 							sb.append(newLine);
 						sb.append(selection[i].getText(0));
-						sb.append(" [");
+						sb.append(" ["); //$NON-NLS-1$
 						sb.append(selection[i].getText(1));
-						sb.append("] = ");
+						sb.append("] = "); //$NON-NLS-1$
 						sb.append(selection[i].getText(2));
 					}
 					WidgetHelper.copyToClipboard(sb.toString());
@@ -264,7 +265,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 
-		actionCopyName = new Action("Copy &name to clipboard") {
+		actionCopyName = new Action(Messages.MibExplorer_CopyName) {
 			@Override
 			public void run()
 			{
@@ -272,7 +273,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 
-		actionCopyType = new Action("Copy &type to clipboard") {
+		actionCopyType = new Action(Messages.MibExplorer_CopyType) {
 			@Override
 			public void run()
 			{
@@ -280,7 +281,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 
-		actionCopyValue = new Action("Copy &value to clipboard") {
+		actionCopyValue = new Action(Messages.MibExplorer_CopyValue) {
 			@Override
 			public void run()
 			{
@@ -299,7 +300,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		final TableItem[] selection = viewer.getTable().getSelection();
 		if (selection.length > 0)
 		{
-			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n";
+			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
 			final StringBuilder sb = new StringBuilder();
 			for(int i = 0; i < selection.length; i++)
 			{
@@ -425,18 +426,18 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private void setupViewerColumns()
 	{
 		TableColumn tc = new TableColumn(viewer.getTable(), SWT.LEFT);
-		tc.setText("OID");
+		tc.setText(Messages.MibExplorer_OID);
 		tc.setWidth(300);
 
 		tc = new TableColumn(viewer.getTable(), SWT.LEFT);
-		tc.setText("Type");
+		tc.setText(Messages.MibExplorer_Type);
 		tc.setWidth(100);
 
 		tc = new TableColumn(viewer.getTable(), SWT.LEFT);
-		tc.setText("Value");
+		tc.setText(Messages.MibExplorer_Value);
 		tc.setWidth(300);
 		
-		WidgetHelper.restoreColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "MibExplorer");
+		WidgetHelper.restoreColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "MibExplorer"); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -457,7 +458,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	{
 		currentNode = node;
 		actionWalk.setEnabled((node != null) && !walkActive);
-		header.setText((currentNode != null) ? currentNode.getObjectName() : "");
+		header.setText((currentNode != null) ? currentNode.getObjectName() : ""); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -467,7 +468,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	public void saveState(IMemento memento)
 	{
 		super.saveState(memento);
-		memento.putInteger("CurrentNode", (currentNode != null) ? (int)currentNode.getObjectId() : 0);
+		memento.putInteger("CurrentNode", (currentNode != null) ? (int)currentNode.getObjectId() : 0); //$NON-NLS-1$
 	}
 	
 	/**
@@ -487,7 +488,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		viewer.setInput(new SnmpValue[0]);
 		walkData.clear();
 		
-		ConsoleJob job = new ConsoleJob("Walk MIB tree", this, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.MibExplorer_WalkJob_Title, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -497,7 +498,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot do SNMP MIB tree walk";
+				return Messages.MibExplorer_WalkJob_Error;
 			}
 
 			@Override

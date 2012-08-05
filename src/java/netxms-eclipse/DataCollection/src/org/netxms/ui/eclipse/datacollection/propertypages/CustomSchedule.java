@@ -44,6 +44,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditScheduleDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.tools.StringComparator;
@@ -77,7 +78,7 @@ public class CustomSchedule extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { "Schedule" };
+      final String[] columnNames = { Messages.CustomSchedule_Schedule };
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -124,7 +125,7 @@ public class CustomSchedule extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("&Add...");
+      addButton.setText(Messages.CustomSchedule_Add);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -143,7 +144,7 @@ public class CustomSchedule extends PropertyPage
       });
 		
       editButton = new Button(buttons, SWT.PUSH);
-      editButton.setText("&Edit...");
+      editButton.setText(Messages.CustomSchedule_Edit);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
@@ -162,7 +163,7 @@ public class CustomSchedule extends PropertyPage
       });
 		
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("&Delete");
+      deleteButton.setText(Messages.CustomSchedule_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -196,7 +197,7 @@ public class CustomSchedule extends PropertyPage
 	 */
 	private void addSchedule()
 	{
-		EditScheduleDialog dlg = new EditScheduleDialog(getShell(), "");
+		EditScheduleDialog dlg = new EditScheduleDialog(getShell(), ""); //$NON-NLS-1$
 		if (dlg.open() == Window.OK)
 		{
 			schedules.add(dlg.getSchedule());
@@ -251,7 +252,7 @@ public class CustomSchedule extends PropertyPage
 			setValid(false);
 		
 		dci.setSchedules(schedules);
-		new ConsoleJob("Update schedule for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CustomSchedule_JobTitle + dci.getId(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -268,7 +269,7 @@ public class CustomSchedule extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update DCI schedule";
+				return Messages.CustomSchedule_JobError;
 			}
 		}.start();
 	}

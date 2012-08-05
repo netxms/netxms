@@ -27,7 +27,7 @@ import org.netxms.client.AgentParameter;
  */
 public class AgentParameterFilter extends ViewerFilter
 {
-	private String filter = "";
+	private String filter = ""; //$NON-NLS-1$
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)

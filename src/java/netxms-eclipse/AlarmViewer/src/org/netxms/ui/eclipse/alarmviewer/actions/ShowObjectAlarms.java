@@ -35,6 +35,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
+import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser;
 
 /**
@@ -68,7 +69,7 @@ public class ShowObjectAlarms implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.ShowObjectAlarms_Error, Messages.ShowObjectAlarms_ErrorOpeningView + e.getMessage());
 			}
 		}
 	}

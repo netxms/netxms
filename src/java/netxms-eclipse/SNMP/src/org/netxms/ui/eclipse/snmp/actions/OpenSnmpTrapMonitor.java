@@ -29,6 +29,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
+import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor;
 
 /**
@@ -65,7 +66,7 @@ public class OpenSnmpTrapMonitor implements IWorkbenchWindowActionDelegate
 			return;
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Subscribing to SNMP trap events", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.OpenSnmpTrapMonitor_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -80,7 +81,7 @@ public class OpenSnmpTrapMonitor implements IWorkbenchWindowActionDelegate
 						} 
 						catch (PartInitException e) 
 						{
-							MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+							MessageDialog.openError(window.getShell(), Messages.OpenSnmpTrapMonitor_Error, Messages.OpenSnmpTrapMonitor_ErrorText + e.getMessage());
 						}
 					}
 				});
@@ -89,7 +90,7 @@ public class OpenSnmpTrapMonitor implements IWorkbenchWindowActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot subscribe to SNMP trap events";
+				return Messages.OpenSnmpTrapMonitor_JobError;
 			}
 		}.start();
 	}

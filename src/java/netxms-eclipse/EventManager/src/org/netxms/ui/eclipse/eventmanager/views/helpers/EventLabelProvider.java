@@ -30,6 +30,7 @@ import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
+import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.views.EventMonitor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -91,7 +92,7 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 				return RegionalSettings.getDateTimeFormat().format(event.getTimeStamp());
 			case EventMonitor.COLUMN_SOURCE:
 				final GenericObject object = session.findObjectById(event.getSourceId());
-				return (object != null) ? object.getObjectName() : "<unknown>";
+				return (object != null) ? object.getObjectName() : Messages.EventLabelProvider_Unknown;
 			case EventMonitor.COLUMN_SEVERITY:
 				return StatusDisplayInfo.getStatusText(event.getSeverity());
 			case EventMonitor.COLUMN_EVENT:

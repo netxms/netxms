@@ -41,7 +41,7 @@ public class DciListComparator extends ViewerComparator
 		DciValue v1 = (DciValue)e1;
 		DciValue v2 = (DciValue)e2;
 
-		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case DciList.COLUMN_ID:
 				result = (int)(v1.getId() - v2.getId());

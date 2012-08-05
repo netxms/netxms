@@ -978,6 +978,7 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/internal
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/internal/SelectionRectangle.java -text
 src/java/netxms-eclipse/Dashboard/.classpath -text
 src/java/netxms-eclipse/Dashboard/.project -text
+src/java/netxms-eclipse/Dashboard/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/Dashboard/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/Dashboard/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/Dashboard/build.properties -text
@@ -993,6 +994,7 @@ src/java/netxms-eclipse/Dashboard/icons/server_stats.png -text
 src/java/netxms-eclipse/Dashboard/icons/sync.gif -text
 src/java/netxms-eclipse/Dashboard/plugin.xml -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/Activator.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/Messages.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/CloneDashboard.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/CreateDashboard.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/ExportDashboard.java -text
@@ -1004,6 +1006,7 @@ src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/Ad
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/DataSourceEditDlg.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/EditElementXmlDlg.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/ImportDashboardDialog.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/messages.properties -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/perspectives/DashboardPerspective.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AbstractChart.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AlarmViewer.java -text
@@ -1063,6 +1066,7 @@ src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/in
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/TablePieChartConfig.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/TableTubeChartConfig.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/WebPageConfig.java -text
+src/java/netxms-eclipse/DataCollection/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/DataCollection/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/DataCollection/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/DataCollection/build.properties -text
@@ -1080,6 +1084,7 @@ src/java/netxms-eclipse/DataCollection/icons/unsupported.gif -text
 src/java/netxms-eclipse/DataCollection/plugin.xml -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/Activator.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/DataCollectionAdapterFactory.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/Messages.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/ThresholdLabelProvider.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/ApplyTemplate.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/CreateTemplate.java -text
@@ -1100,6 +1105,7 @@ src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/helpers/AgentParameterComparator.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/helpers/AgentParameterFilter.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/helpers/AgentParameterLabelProvider.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/messages.properties -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/objecttabs/LastValues.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/objecttabs/ThresholdSummary.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/CustomSchedule.java -text
@@ -1122,6 +1128,7 @@ src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/ThresholdTreeComparator.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/ThresholdTreeContentProvider.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/internal/ThresholdTreeLabelProvider.java -text
+src/java/netxms-eclipse/EPP/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/EPP/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/EPP/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/EPP/build.properties -text
@@ -1136,6 +1143,7 @@ src/java/netxms-eclipse/EPP/icons/v_layout.gif -text
 src/java/netxms-eclipse/EPP/plugin.xml -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/Activator.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/LoginListener.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/Messages.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/SituationCache.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/actions/OpenPolicyEditor.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/actions/OpenSituationsManager.java -text
@@ -1147,6 +1155,7 @@ src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/helpers/Action
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/helpers/SituationComparator.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/helpers/SituationLabelProvider.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/helpers/SituationListFilter.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/messages.properties -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleAction.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleAlarm.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleComments.java -text
@@ -1165,6 +1174,7 @@ src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/helpers/Situatio
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/RuleEditor.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/SituationSelector.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/helpers/ImageFactory.java -text
+src/java/netxms-eclipse/EventManager/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/EventManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/EventManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/EventManager/build.properties -text
@@ -1176,6 +1186,7 @@ src/java/netxms-eclipse/EventManager/icons/new.png -text
 src/java/netxms-eclipse/EventManager/plugin.xml -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/Activator.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/EventTemplateAdapterFactory.java -text
+src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/Messages.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/PreferenceInitializer.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/actions/OpenEventConfigurator.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/actions/OpenEventMonitor.java -text
@@ -1183,6 +1194,7 @@ src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/acti
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/EditEventTemplateDialog.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/EventSelectionDialog.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/helpers/EventListFilter.java -text
+src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/messages.properties -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventConfigurator.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventMonitor.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/SyslogMonitor.java -text
@@ -1195,6 +1207,7 @@ src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/view
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/widgets/EventSelector.java -text
 src/java/netxms-eclipse/FileManager/.classpath -text
 src/java/netxms-eclipse/FileManager/.project -text
+src/java/netxms-eclipse/FileManager/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/FileManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/FileManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/FileManager/build.properties -text
@@ -1206,6 +1219,7 @@ src/java/netxms-eclipse/FileManager/icons/upload.png -text
 src/java/netxms-eclipse/FileManager/icons/video.png -text
 src/java/netxms-eclipse/FileManager/plugin.xml -text
 src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/Activator.java -text
+src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/Messages.java -text
 src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/ServerFileAdapterFactory.java -text
 src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/actions/UploadFileToAgent.java -text
 src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/actions/UploadFileToServer.java -text
@@ -1214,6 +1228,7 @@ src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/dialog
 src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/dialogs/StartServerToAgentFileUploadDialog.java -text
 src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/dialogs/helpers/ServerFileComparator.java -text
 src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/dialogs/helpers/ServerFileLabelProvider.java -text
+src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/messages.properties -text
 src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/widgets/LocalFileSelector.java -text
 src/java/netxms-eclipse/FileManager/src/org/netxms/ui/eclipse/filemanager/widgets/ServerFileSelector.java -text
 src/java/netxms-eclipse/ImageLibrary/.settings/org.eclipse.jdt.core.prefs -text
@@ -1381,6 +1396,7 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ResourceFigure.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ZoomAction.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/widgets/NetworkMapWidget.java -text
+src/java/netxms-eclipse/OSM/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/OSM/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/OSM/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/OSM/build.properties -text
@@ -1393,8 +1409,10 @@ src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/Activator.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/GeoLocationCache.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/GeoLocationCacheListener.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/LoginListener.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/Messages.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/actions/OpenLocationMap.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/actions/OpenWorldMap.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/messages.properties -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/Area.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/MapAccessor.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/MapLoader.java -text
@@ -1448,6 +1466,7 @@ src/java/netxms-eclipse/ObjectBrowser/icons/template_root.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/zone.gif -text
 src/java/netxms-eclipse/ObjectBrowser/plugin.xml -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Activator.java -text
+src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Messages.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectAdapterFactory.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectDecorator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/PreferenceInitializer.java -text
@@ -1681,15 +1700,19 @@ src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/Repo
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/StringFieldEditor.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/TimestampFieldEditor.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/helpers/ReportResultLabelProvider.java -text
+src/java/netxms-eclipse/SLM/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/SLM/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SLM/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/SLM/build.properties -text
 src/java/netxms-eclipse/SLM/icons/availability_chart.png -text
 src/java/netxms-eclipse/SLM/plugin.xml -text
 src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/Activator.java -text
+src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/Messages.java -text
 src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/actions/CreateBusinessService.java -text
 src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/actions/CreateServiceCheckTemplate.java -text
 src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/dialogs/CreateBusinessServiceDialog.java -text
+src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/messages.properties -text
+src/java/netxms-eclipse/SNMP/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/SNMP/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SNMP/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/SNMP/build.properties -text
@@ -1702,6 +1725,7 @@ src/java/netxms-eclipse/SNMP/icons/trapeditor.png -text
 src/java/netxms-eclipse/SNMP/plugin.xml -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/Activator.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/LoginListener.java -text
+src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/Messages.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/SnmpConstants.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenMibExplorer.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenMibExplorerForNode.java -text
@@ -1711,6 +1735,7 @@ src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/MibSelection
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/ParamMappingEditDialog.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/TrapConfigurationDialog.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/helpers/ParamMappingLabelProvider.java -text
+src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/messages.properties -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/MibExplorer.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/SnmpTrapEditor.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/SnmpTrapMonitor.java -text
@@ -1801,13 +1826,16 @@ src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widget
 src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widgets/helpers/ServiceTreeElement.java -text
 src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widgets/helpers/ServiceTreeLabelProvider.java -text
 src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widgets/helpers/ServiceTreeModel.java -text
+src/java/netxms-eclipse/SwitchManager/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/SwitchManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SwitchManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/SwitchManager/build.properties -text
 src/java/netxms-eclipse/SwitchManager/icons/pae.png -text
 src/java/netxms-eclipse/SwitchManager/plugin.xml -text
 src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/Activator.java -text
+src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/Messages.java -text
 src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/actions/OpenDot1xStateView.java -text
+src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/messages.properties -text
 src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/Dot1xStatusView.java -text
 src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/helpers/Dot1xPortComparator.java -text
 src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/helpers/Dot1xPortListLabelProvider.java -text

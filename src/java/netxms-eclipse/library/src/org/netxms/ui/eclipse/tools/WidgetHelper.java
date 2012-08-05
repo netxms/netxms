@@ -627,7 +627,7 @@ public class WidgetHelper
 			if (page != null)
 				page.setErrorMessage(validator.getErrorMessage(text, label));
 			else	
-				MessageDialog.openError(control.getShell(), "Input Validation Error", validator.getErrorMessage(text, label));
+				MessageDialog.openError(control.getShell(), Messages.WidgetHelper_InputValidationError, validator.getErrorMessage(text, label));
 		}
 		return ok;
 	}

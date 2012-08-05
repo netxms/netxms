@@ -22,6 +22,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.ServerFile;
+import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.dialogs.SelectServerFileDialog;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
 
@@ -43,7 +44,7 @@ public class ServerFileSelector extends AbstractSelector
 	{
 		super(parent, style, false);
 		labelProvider = new WorkbenchLabelProvider();
-		setText("<none>");
+		setText(Messages.ServerFileSelector_None);
 	}
 
 	/* (non-Javadoc)
@@ -65,7 +66,7 @@ public class ServerFileSelector extends AbstractSelector
 	@Override
 	protected String getButtonToolTip()
 	{
-		return "Select file";
+		return Messages.ServerFileSelector_Tooltip;
 	}
 
 	/**
@@ -90,7 +91,7 @@ public class ServerFileSelector extends AbstractSelector
 		else
 		{
 			setImage(null);
-			setText("<none>");
+			setText(Messages.ServerFileSelector_None);
 		}
 	}
 

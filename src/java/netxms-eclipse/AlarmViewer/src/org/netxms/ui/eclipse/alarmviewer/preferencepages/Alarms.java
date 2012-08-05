@@ -23,6 +23,7 @@ import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
+import org.netxms.ui.eclipse.alarmviewer.Messages;
 
 /**
  * "Alarms" preference page
@@ -44,8 +45,8 @@ public class Alarms extends FieldEditorPreferencePage implements IWorkbenchPrefe
 	@Override
 	protected void createFieldEditors()
 	{
-		addField(new BooleanFieldEditor("BLINK_OUTSTANDING_ALARMS", "Blinking outstanding alarms", getFieldEditorParent()));
-		addField(new BooleanFieldEditor("SHOW_TRAY_POPUPS", "Show tray pop-ups on new alarms", getFieldEditorParent()));
-		addField(new BooleanFieldEditor("OUTSTANDING_ALARMS_REMINDER", "Show pop-up reminder for outstanding alarms", getFieldEditorParent()));
+		addField(new BooleanFieldEditor("BLINK_OUTSTANDING_ALARMS", Messages.Alarms_Blinking, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new BooleanFieldEditor("SHOW_TRAY_POPUPS", Messages.Alarms_ShowPopup, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new BooleanFieldEditor("OUTSTANDING_ALARMS_REMINDER", Messages.Alarms_ShowReminder, getFieldEditorParent())); //$NON-NLS-1$
 	}
 }

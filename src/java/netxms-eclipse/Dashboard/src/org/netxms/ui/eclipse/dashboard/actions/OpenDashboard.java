@@ -28,6 +28,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.views.DashboardView;
 
 /**
@@ -62,7 +63,7 @@ public class OpenDashboard implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.OpenDashboard_Error, Messages.OpenDashboard_ErrorText + e.getMessage());
 			}
 		}
 	}

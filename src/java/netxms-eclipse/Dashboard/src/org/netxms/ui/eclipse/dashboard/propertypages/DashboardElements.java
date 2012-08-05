@@ -51,6 +51,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.AddDashboardElementDlg;
 import org.netxms.ui.eclipse.dashboard.dialogs.EditElementXmlDlg;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.DashboardElementsLabelProvider;
@@ -106,7 +107,7 @@ public class DashboardElements extends PropertyPage
       dialogArea.setLayout(layout);
       
       columnCount = new LabeledText(dialogArea, SWT.NONE);
-      columnCount.setLabel("Number of columns");
+      columnCount.setLabel(Messages.DashboardElements_NumColumns);
       columnCount.setText(Integer.toString(object.getNumColumns()));
       GridData gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
@@ -115,14 +116,14 @@ public class DashboardElements extends PropertyPage
       columnCount.setLayoutData(gridData);
       
       checkEqualWidth = new Button(dialogArea, SWT.CHECK);
-      checkEqualWidth.setText("Make columns equal width");
+      checkEqualWidth.setText(Messages.DashboardElements_EqualWidth);
       checkEqualWidth.setSelection((object.getOptions() & Dashboard.EQUAL_WIDTH_COLUMNS) != 0);
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
       checkEqualWidth.setLayoutData(gridData);
       
-      final String[] columnNames = { "Type", "Span", "Alignment" };
+      final String[] columnNames = { Messages.DashboardElements_Type, Messages.DashboardElements_Span, Messages.DashboardElements_Alignment };
       final int[] columnWidths = { 150, 60, 150 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -153,7 +154,7 @@ public class DashboardElements extends PropertyPage
       leftButtons.setLayoutData(gridData);
 
       upButton = new Button(leftButtons, SWT.PUSH);
-      upButton.setText("&Up");
+      upButton.setText(Messages.DashboardElements_Up);
       upButton.setEnabled(false);
       upButton.addSelectionListener(new SelectionListener() {
 		@Override
@@ -170,7 +171,7 @@ public class DashboardElements extends PropertyPage
       });
       
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText("&Down");
+      downButton.setText(Messages.DashboardElements_Down);
       downButton.setEnabled(false);
       downButton.addSelectionListener(new SelectionListener() {
    		@Override
@@ -198,7 +199,7 @@ public class DashboardElements extends PropertyPage
       rightButtons.setLayoutData(gridData);
 
       addButton = new Button(rightButtons, SWT.PUSH);
-      addButton.setText("&Add...");
+      addButton.setText(Messages.DashboardElements_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -214,7 +215,7 @@ public class DashboardElements extends PropertyPage
 		});
 
       editButton = new Button(rightButtons, SWT.PUSH);
-      editButton.setText("&Edit...");
+      editButton.setText(Messages.DashboardElements_Edit);
       editButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -230,7 +231,7 @@ public class DashboardElements extends PropertyPage
 		});
 
       editXmlButton = new Button(rightButtons, SWT.PUSH);
-      editXmlButton.setText("Edit &XML...");
+      editXmlButton.setText(Messages.DashboardElements_EditXML);
       editXmlButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -246,7 +247,7 @@ public class DashboardElements extends PropertyPage
 		});
 
       deleteButton = new Button(rightButtons, SWT.PUSH);
-      deleteButton.setText("&Delete");
+      deleteButton.setText(Messages.DashboardElements_Delete);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -313,7 +314,7 @@ public class DashboardElements extends PropertyPage
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialog.openError(getShell(), "Error", "Please enter valid integer in range 1 .. 8 as number of columns");
+			MessageDialog.openError(getShell(), Messages.DashboardElements_Error, Messages.DashboardElements_ErrorText);
 			return false;
 		}
 		
@@ -329,7 +330,7 @@ public class DashboardElements extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		new ConsoleJob("Update dashboard configuration", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.DashboardElements_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -339,7 +340,7 @@ public class DashboardElements extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update dashboard configuration";
+				return Messages.DashboardElements_JobError;
 			}
 
 			/* (non-Javadoc)
@@ -430,7 +431,7 @@ public class DashboardElements extends PropertyPage
 					config = DashboardControl.DEFAULT_WEB_PAGE_CONFIG;
 					break;
 				default:
-					config = "<element>\n</element>";
+					config = "<element>\n</element>"; //$NON-NLS-1$
 					break;
 			}
 			DashboardElement element = new DashboardElement(dlg.getElementType(), config);
@@ -467,12 +468,12 @@ public class DashboardElements extends PropertyPage
 			}
 			catch(Exception e)
 			{
-				MessageDialog.openError(getShell(), "Internal Error", "Internal error: " + e.getMessage());
+				MessageDialog.openError(getShell(), Messages.DashboardElements_InternalErrorTitle, Messages.DashboardElements_InternalErrorText + e.getMessage());
 			}
 		}
 		else
 		{
-			MessageDialog.openError(getShell(), "Internal Error", "Internal error: no adapter for dashboard element");
+			MessageDialog.openError(getShell(), Messages.DashboardElements_InternalErrorTitle, Messages.DashboardElements_InternalErrorText2);
 		}
 	}
 	

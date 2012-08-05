@@ -32,6 +32,7 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.datacollection.propertypages.Thresholds;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
@@ -54,9 +55,9 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	{
 		super();
 
-		stateImages[0] = Activator.getImageDescriptor("icons/active.gif").createImage();
-		stateImages[1] = Activator.getImageDescriptor("icons/disabled.gif").createImage();
-		stateImages[2] = Activator.getImageDescriptor("icons/unsupported.gif").createImage();
+		stateImages[0] = Activator.getImageDescriptor("icons/active.gif").createImage(); //$NON-NLS-1$
+		stateImages[1] = Activator.getImageDescriptor("icons/disabled.gif").createImage(); //$NON-NLS-1$
+		stateImages[2] = Activator.getImageDescriptor("icons/unsupported.gif").createImage(); //$NON-NLS-1$
 		
 		thresholdLabelProvider = new ThresholdLabelProvider();
 	}
@@ -92,9 +93,9 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 				return ((DciValue)element).getDescription();
 			case LastValuesWidget.COLUMN_VALUE:
 				if (showErrors && ((DciValue)element).getErrorCount() > 0)
-					return "<< ERROR >>";
+					return Messages.LastValuesLabelProvider_Error;
 				if (((DciValue)element).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
-					return "<< TABLE >>";
+					return Messages.LastValuesLabelProvider_Table;
 				return useMultipliers ? getValue((DciValue)element) : ((DciValue)element).getValue();
 			case LastValuesWidget.COLUMN_TIMESTAMP:
 				if (((DciValue)element).getTimestamp().getTime() == 0)
@@ -115,7 +116,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	private String formatThreshold(Threshold threshold)
 	{
 		if (threshold == null)
-			return "OK";
+			return Messages.LastValuesLabelProvider_OK;
 		return thresholdLabelProvider.getColumnText(threshold, Thresholds.COLUMN_OPERATION);
 	}
 
@@ -136,15 +137,15 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 					long i = Long.parseLong(element.getValue());
 					if ((i >= 10000000000L) || (i <= -10000000000L))
 					{
-						return Long.toString(i / 1000000000L) + " G";
+						return Long.toString(i / 1000000000L) + Messages.LastValuesLabelProvider_Giga;
 					}
 					if ((i >= 10000000) || (i <= -10000000))
 					{
-						return Long.toString(i / 1000000) + " M";
+						return Long.toString(i / 1000000) + Messages.LastValuesLabelProvider_Mega;
 					}
 					if ((i >= 10000) || (i <= -10000))
 					{
-						return Long.toString(i / 1000) + " K";
+						return Long.toString(i / 1000) + Messages.LastValuesLabelProvider_Kilo;
 					}
 				}
 				catch(NumberFormatException e)
@@ -159,15 +160,15 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 					nf.setMaximumFractionDigits(2);
 					if ((d >= 10000000000.0) || (d <= -10000000000.0))
 					{
-						return nf.format(d / 1000000000.0) + " G";
+						return nf.format(d / 1000000000.0) + Messages.LastValuesLabelProvider_Giga;
 					}
 					if ((d >= 10000000) || (d <= -10000000))
 					{
-						return nf.format(d / 1000000) + " M";
+						return nf.format(d / 1000000) + Messages.LastValuesLabelProvider_Mega;
 					}
 					if ((d >= 10000) || (d <= -10000))
 					{
-						return nf.format(d / 1000) + " K";
+						return nf.format(d / 1000) + Messages.LastValuesLabelProvider_Kilo;
 					}
 				}
 				catch(NumberFormatException e)

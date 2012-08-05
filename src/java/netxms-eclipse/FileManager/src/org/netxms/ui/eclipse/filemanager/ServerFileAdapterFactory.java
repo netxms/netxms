@@ -64,28 +64,28 @@ public class ServerFileAdapterFactory implements IAdapterFactory
 				@Override
 				public ImageDescriptor getImageDescriptor(Object object)
 				{
-					String[] parts = ((ServerFile)object).getName().split(".");
+					String[] parts = ((ServerFile)object).getName().split("."); //$NON-NLS-1$
 					if (parts.length < 2)
-						return Activator.getImageDescriptor("icons/file.png");
+						return Activator.getImageDescriptor("icons/file.png"); //$NON-NLS-1$
 
 					String ext = parts[parts.length - 1];
 					
-					if (ext.equalsIgnoreCase("exe"))
-						return Activator.getImageDescriptor("icons/exec.png");
+					if (ext.equalsIgnoreCase("exe")) //$NON-NLS-1$
+						return Activator.getImageDescriptor("icons/exec.png"); //$NON-NLS-1$
 					
-					if (ext.equalsIgnoreCase("pdf"))
-						return Activator.getImageDescriptor("icons/pdf.png");
+					if (ext.equalsIgnoreCase("pdf")) //$NON-NLS-1$
+						return Activator.getImageDescriptor("icons/pdf.png"); //$NON-NLS-1$
 					
-					if (ext.equalsIgnoreCase("avi") || ext.equalsIgnoreCase("mkv") || ext.equalsIgnoreCase("mov") || ext.equalsIgnoreCase("wma"))
-						return Activator.getImageDescriptor("icons/video.png");
+					if (ext.equalsIgnoreCase("avi") || ext.equalsIgnoreCase("mkv") || ext.equalsIgnoreCase("mov") || ext.equalsIgnoreCase("wma")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+						return Activator.getImageDescriptor("icons/video.png"); //$NON-NLS-1$
 					
-					if (ext.equalsIgnoreCase("tar") || ext.equalsIgnoreCase("gz") || 
-					    ext.equalsIgnoreCase("tgz") || ext.equalsIgnoreCase("zip") ||
-					    ext.equalsIgnoreCase("rar") || ext.equalsIgnoreCase("7z") ||
-					    ext.equalsIgnoreCase("bz2") || ext.equalsIgnoreCase("lzma"))
-						return Activator.getImageDescriptor("icons/archive.png");
+					if (ext.equalsIgnoreCase("tar") || ext.equalsIgnoreCase("gz") ||  //$NON-NLS-1$ //$NON-NLS-2$
+					    ext.equalsIgnoreCase("tgz") || ext.equalsIgnoreCase("zip") || //$NON-NLS-1$ //$NON-NLS-2$
+					    ext.equalsIgnoreCase("rar") || ext.equalsIgnoreCase("7z") || //$NON-NLS-1$ //$NON-NLS-2$
+					    ext.equalsIgnoreCase("bz2") || ext.equalsIgnoreCase("lzma")) //$NON-NLS-1$ //$NON-NLS-2$
+						return Activator.getImageDescriptor("icons/archive.png"); //$NON-NLS-1$
 					
-					return Activator.getImageDescriptor("icons/file.png");
+					return Activator.getImageDescriptor("icons/file.png"); //$NON-NLS-1$
 				}
 
 				@Override

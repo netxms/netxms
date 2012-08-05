@@ -35,7 +35,7 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	private ChartDciConfig[] dciList = new ChartDciConfig[0];
 	
 	@Element(required = false)
-	private String title = "";
+	private String title = ""; //$NON-NLS-1$
 	
 	@Element(required = false)
 	private int legendPosition = GraphSettings.POSITION_RIGHT;

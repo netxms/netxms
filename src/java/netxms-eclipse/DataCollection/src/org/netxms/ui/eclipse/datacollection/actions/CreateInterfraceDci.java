@@ -45,6 +45,7 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.CreateInterfaceDciDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.InterfaceDciInfo;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
@@ -106,18 +107,18 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 				lockRequired.put(n.getObjectId(), !((ref != null) && (ref.getView(false) != null)));
 			}
 			
-			new ConsoleJob("Create DCIs for interface", viewPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.CreateInterfraceDci_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create DCI for interface";
+					return Messages.CreateInterfraceDci_JobError;
 				}
 
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					InterfaceDciInfo[] dciInfo = dlg.getDciInfo();
-					monitor.beginTask("Creating DCIs", ifaces.size() * dciInfo.length);
+					monitor.beginTask(Messages.CreateInterfraceDci_TaskName, ifaces.size() * dciInfo.length);
 					for(int i = 0; i < ifaces.size(); i++)
 					{
 						for(int j = 0; j < dciInfo.length; j++)
@@ -166,7 +167,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 		dci.setOrigin(node.hasAgent() ? DataCollectionItem.AGENT : DataCollectionItem.SNMP);
 		dci.setDataType(DataCollectionItem.DT_UINT);
 		dci.setStatus(DataCollectionItem.ACTIVE);
-		dci.setDescription(updateDescription ? dciInfo.description.replaceAll("@@ifName@@", iface.getObjectName()) : dciInfo.description);
+		dci.setDescription(updateDescription ? dciInfo.description.replaceAll("@@ifName@@", iface.getObjectName()) : dciInfo.description); //$NON-NLS-1$
 		dci.setDeltaCalculation(dciInfo.delta ? DataCollectionItem.DELTA_AVERAGE_PER_SECOND : DataCollectionItem.DELTA_NONE);
 		
 		if (dci.getOrigin() == DataCollectionItem.AGENT)
@@ -174,22 +175,22 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			switch(dciType)
 			{
 				case IFDCI_IN_BYTES:
-					dci.setName("Net.Interface.BytesIn(" + iface.getIfIndex() + ")");
+					dci.setName("Net.Interface.BytesIn(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_OUT_BYTES:
-					dci.setName("Net.Interface.BytesOut(" + iface.getIfIndex() + ")");
+					dci.setName("Net.Interface.BytesOut(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_IN_PACKETS:
-					dci.setName("Net.Interface.PacketsIn(" + iface.getIfIndex() + ")");
+					dci.setName("Net.Interface.PacketsIn(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_OUT_PACKETS:
-					dci.setName("Net.Interface.PacketsOut(" + iface.getIfIndex() + ")");
+					dci.setName("Net.Interface.PacketsOut(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_IN_ERRORS:
-					dci.setName("Net.Interface.InErrors(" + iface.getIfIndex() + ")");
+					dci.setName("Net.Interface.InErrors(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_OUT_ERRORS:
-					dci.setName("Net.Interface.OutErrors(" + iface.getIfIndex() + ")");
+					dci.setName("Net.Interface.OutErrors(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 			}
 		}
@@ -198,22 +199,22 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			switch(dciType)
 			{
 				case IFDCI_IN_BYTES:
-					dci.setName(".1.3.6.1.2.1.2.2.1.10." + iface.getIfIndex());
+					dci.setName(".1.3.6.1.2.1.2.2.1.10." + iface.getIfIndex()); //$NON-NLS-1$
 					break;
 				case IFDCI_OUT_BYTES:
-					dci.setName(".1.3.6.1.2.1.2.2.1.16." + iface.getIfIndex());
+					dci.setName(".1.3.6.1.2.1.2.2.1.16." + iface.getIfIndex()); //$NON-NLS-1$
 					break;
 				case IFDCI_IN_PACKETS:
-					dci.setName(".1.3.6.1.2.1.2.2.1.11." + iface.getIfIndex());
+					dci.setName(".1.3.6.1.2.1.2.2.1.11." + iface.getIfIndex()); //$NON-NLS-1$
 					break;
 				case IFDCI_OUT_PACKETS:
-					dci.setName(".1.3.6.1.2.1.2.2.1.17." + iface.getIfIndex());
+					dci.setName(".1.3.6.1.2.1.2.2.1.17." + iface.getIfIndex()); //$NON-NLS-1$
 					break;
 				case IFDCI_IN_ERRORS:
-					dci.setName(".1.3.6.1.2.1.2.2.1.14." + iface.getIfIndex());
+					dci.setName(".1.3.6.1.2.1.2.2.1.14." + iface.getIfIndex()); //$NON-NLS-1$
 					break;
 				case IFDCI_OUT_ERRORS:
-					dci.setName(".1.3.6.1.2.1.2.2.1.20." + iface.getIfIndex());
+					dci.setName(".1.3.6.1.2.1.2.2.1.20." + iface.getIfIndex()); //$NON-NLS-1$
 					break;
 			}
 		}

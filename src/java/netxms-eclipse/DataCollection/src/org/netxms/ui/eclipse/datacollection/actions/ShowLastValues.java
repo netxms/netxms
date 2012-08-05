@@ -28,6 +28,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.LastValues;
 
 /**
@@ -62,7 +63,7 @@ public class ShowLastValues implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.ShowLastValues_Error, Messages.ShowLastValues_ErrorText + e.getMessage());
 			}
 		}
 	}

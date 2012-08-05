@@ -38,6 +38,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.filemanager.Activator;
+import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.dialogs.StartServerToAgentFileUploadDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -71,11 +72,11 @@ public class UploadFileToAgent implements IObjectActionDelegate
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			final Long[] nodeIdList = nodes.toArray(new Long[nodes.size()]);
-			new ConsoleJob("Initiate file upload to agent", viewPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.UploadFileToAgent_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot start file upload job";
+					return Messages.UploadFileToAgent_JobError;
 				}
 
 				@Override

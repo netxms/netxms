@@ -30,6 +30,7 @@ import org.netxms.client.events.SyslogRecord;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
+import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.views.SyslogMonitor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -45,11 +46,11 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 	private static final int[] severityMap = 
 		{ Severity.CRITICAL, Severity.CRITICAL, Severity.MAJOR, Severity.MINOR, Severity.WARNING, Severity.WARNING, Severity.NORMAL, Severity.NORMAL };  
 	private static final String[] severityText = 
-		{ "Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Informational", "Debug" };
+		{ Messages.SyslogLabelProvider_SevEmergency, Messages.SyslogLabelProvider_SevAlert, Messages.SyslogLabelProvider_SevCritical, Messages.SyslogLabelProvider_SevError, Messages.SyslogLabelProvider_SevWarning, Messages.SyslogLabelProvider_SevNotice, Messages.SyslogLabelProvider_SevInfo, Messages.SyslogLabelProvider_SevDebug };
 	private static final String[] facilityText =
-		{ "Kernel", "User", "Mail", "System", "Auth", "Syslog", "Lpr", "News", "UUCP", "Cron", "Security",
-		  "FTPD", "NTP", "Log Audit", "Log Alert", "Clock", "Local0", "Local1", "Local2", "Local3", "Local4",
-		  "Local5", "Local6", "Local7"
+		{ Messages.SyslogLabelProvider_FacKernel, Messages.SyslogLabelProvider_FacUser, Messages.SyslogLabelProvider_FacMail, Messages.SyslogLabelProvider_FacSystem, Messages.SyslogLabelProvider_FacAuth, Messages.SyslogLabelProvider_FacSyslog, Messages.SyslogLabelProvider_FacLpr, Messages.SyslogLabelProvider_FacNews, Messages.SyslogLabelProvider_FacUUCP, Messages.SyslogLabelProvider_FacCron, Messages.SyslogLabelProvider_FacSecurity,
+		  Messages.SyslogLabelProvider_FacFTPD, Messages.SyslogLabelProvider_FacNTP, Messages.SyslogLabelProvider_FacLogAudit, Messages.SyslogLabelProvider_FacLogAlert, Messages.SyslogLabelProvider_FacClock, Messages.SyslogLabelProvider_FacLocal0, Messages.SyslogLabelProvider_FacLocal1, Messages.SyslogLabelProvider_FacLocal2, Messages.SyslogLabelProvider_FacLocal3, Messages.SyslogLabelProvider_FacLocal4,
+		  Messages.SyslogLabelProvider_FacLocal5, Messages.SyslogLabelProvider_FacLocal6, Messages.SyslogLabelProvider_FacLocal7
 		};
 	
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -100,7 +101,7 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 				return RegionalSettings.getDateTimeFormat().format(record.getTimestamp());
 			case SyslogMonitor.COLUMN_SOURCE:
 				final GenericObject object = session.findObjectById(record.getSourceObjectId());
-				return (object != null) ? object.getObjectName() : "<unknown>";
+				return (object != null) ? object.getObjectName() : Messages.SyslogLabelProvider_Unknown;
 			case SyslogMonitor.COLUMN_SEVERITY:
 				try
 				{
@@ -108,7 +109,7 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 				}
 				catch(ArrayIndexOutOfBoundsException e)
 				{
-					return "<" + Integer.toString(record.getSeverity()) + ">";
+					return "<" + Integer.toString(record.getSeverity()) + ">"; //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			case SyslogMonitor.COLUMN_FACILITY:
 				try
@@ -117,7 +118,7 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 				}
 				catch(ArrayIndexOutOfBoundsException e)
 				{
-					return "<" + Integer.toString(record.getFacility()) + ">";
+					return "<" + Integer.toString(record.getFacility()) + ">"; //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			case SyslogMonitor.COLUMN_MESSAGE:
 				return record.getMessage();

@@ -48,7 +48,7 @@ public class MapLoader
 	public static final int TOP_LEFT = GeoLocationCache.TOP_LEFT;
 	public static final int BOTTOM_RIGHT = GeoLocationCache.BOTTOM_RIGHT;
 	
-	private static String CACHE_MUTEX = "cache_mutex";
+	private static String CACHE_MUTEX = "cache_mutex"; //$NON-NLS-1$
 
 	private Display display;
 	private Image missingTile = null; 
@@ -106,7 +106,7 @@ public class MapLoader
 	private Image getMissingTileImage()
 	{
 		if (missingTile == null)
-			missingTile = Activator.getImageDescriptor("icons/missing_tile.png").createImage();
+			missingTile = Activator.getImageDescriptor("icons/missing_tile.png").createImage(); //$NON-NLS-1$
 		return missingTile;
 	}
 	
@@ -118,7 +118,7 @@ public class MapLoader
 	private Image getLoadingTileImage()
 	{
 		if (loadingTile == null)
-			loadingTile = Activator.getImageDescriptor("icons/loading_tile.png").createImage();
+			loadingTile = Activator.getImageDescriptor("icons/loading_tile.png").createImage(); //$NON-NLS-1$
 		return loadingTile;
 	}
 	
@@ -130,7 +130,7 @@ public class MapLoader
 	private Image getBorderTileImage()
 	{
 		if (borderTile == null)
-			borderTile = Activator.getImageDescriptor("icons/border_tile.png").createImage();
+			borderTile = Activator.getImageDescriptor("icons/border_tile.png").createImage(); //$NON-NLS-1$
 		return borderTile;
 	}
 	
@@ -151,7 +151,7 @@ public class MapLoader
 		URL url = null;
 		try
 		{
-			url = new URL(tileServerURL + zoom + "/" + x + "/" + y + ".png");
+			url = new URL(tileServerURL + zoom + "/" + x + "/" + y + ".png"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 		catch(MalformedURLException e)
 		{
@@ -197,14 +197,14 @@ public class MapLoader
 			targetDir = new File(loc.getURL().getPath());
 		}
 		
-		StringBuilder sb = new StringBuilder("OSM");
+		StringBuilder sb = new StringBuilder("OSM"); //$NON-NLS-1$
 		sb.append(File.separatorChar);
 		sb.append(zoom);
 		sb.append(File.separatorChar);
 		sb.append(x);
 		sb.append(File.separatorChar);
 		sb.append(y);
-		sb.append(".png");
+		sb.append(".png"); //$NON-NLS-1$
 
 		return new File(targetDir, sb.toString());
 	}

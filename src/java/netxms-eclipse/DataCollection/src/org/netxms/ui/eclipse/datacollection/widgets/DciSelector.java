@@ -10,6 +10,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -22,7 +23,7 @@ public class DciSelector extends AbstractSelector
 {
 	private long nodeId = 0;
 	private long dciId = 0;
-	private String emptySelectionName = "<none>";
+	private String emptySelectionName = Messages.DciSelector_None;
 	private NXCSession session;
 	private int dcObjectType = -1;
 
@@ -64,7 +65,7 @@ public class DciSelector extends AbstractSelector
 			return;
 		}
 		
-		new ConsoleJob("Resolve DCI name", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.DciSelector_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -86,7 +87,7 @@ public class DciSelector extends AbstractSelector
 							sb.append(nodeId);
 							sb.append(']');
 						}
-						sb.append(" / ");
+						sb.append(" / "); //$NON-NLS-1$
 						if (names.length > 0)
 						{
 							sb.append(names[0]);
@@ -106,7 +107,7 @@ public class DciSelector extends AbstractSelector
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot resolve DCI name";
+				return Messages.DciSelector_JobError;
 			}
 		}.start();
 	}

@@ -44,6 +44,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -83,10 +84,10 @@ public class RuleSourceObjects extends PropertyPage
       dialogArea.setLayout(layout);
       
       checkInverted = new Button(dialogArea, SWT.CHECK);
-      checkInverted.setText("Inverted rule (match objects NOT in the list below)");
+      checkInverted.setText(Messages.RuleSourceObjects_InvertRule);
       checkInverted.setSelection(rule.isSourceInverted());
       
-      final String[] columnNames = { "Object" };
+      final String[] columnNames = { Messages.RuleSourceObjects_Object };
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -125,7 +126,7 @@ public class RuleSourceObjects extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("Add...");
+      addButton.setText(Messages.RuleSourceObjects_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -144,7 +145,7 @@ public class RuleSourceObjects extends PropertyPage
       addButton.setLayoutData(rd);
 		
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("Delete");
+      deleteButton.setText(Messages.RuleSourceObjects_Delete);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)

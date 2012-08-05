@@ -37,6 +37,7 @@ public class Messages extends NLS
 	public static String EditActionDlg_EditAction;
 	public static String EditActionDlg_ExecCommandOnNode;
 	public static String EditActionDlg_ExecCommandOnServer;
+	public static String EditActionDlg_ExecuteScript;
 	public static String EditActionDlg_ForwardEvent;
 	public static String EditActionDlg_MailSubject;
 	public static String EditActionDlg_MessageText;
@@ -46,6 +47,7 @@ public class Messages extends NLS
 	public static String EditActionDlg_Recipient;
 	public static String EditActionDlg_RemoteHost;
 	public static String EditActionDlg_RemoteServer;
+	public static String EditActionDlg_ScriptName;
 	public static String EditActionDlg_SendSMS;
 	public static String EditActionDlg_SenMail;
 	public static String EditActionDlg_Type;

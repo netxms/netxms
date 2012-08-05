@@ -100,10 +100,10 @@ public class ObjectListFilter extends ViewerFilter
 		boolean fullSearch = true;
 		if ((filterString != null) && !filterString.isEmpty())
 		{
-			usePatternMatching = filterString.contains("*") || filterString.contains("?");
+			usePatternMatching = filterString.contains("*") || filterString.contains("?"); //$NON-NLS-1$ //$NON-NLS-2$
 			if (usePatternMatching)
 			{
-				this.filterString = filterString.toLowerCase() + "*";
+				this.filterString = filterString.toLowerCase() + "*"; //$NON-NLS-1$
 			}
 			else
 			{

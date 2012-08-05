@@ -29,7 +29,7 @@ import org.simpleframework.xml.Root;
 @Root(name="dci")
 public class ChartDciConfig
 {
-	public static final String UNSET_COLOR = "UNSET";
+	public static final String UNSET_COLOR = "UNSET"; //$NON-NLS-1$
 	
 	@Attribute
 	public long nodeId;
@@ -54,7 +54,7 @@ public class ChartDciConfig
 		nodeId = 0;
 		dciId = 0;
 		color = UNSET_COLOR;
-		name = "";
+		name = ""; //$NON-NLS-1$
 		lineWidth = 2;
 	}
 
@@ -93,7 +93,7 @@ public class ChartDciConfig
 	{
 		if (color.equals(UNSET_COLOR))
 			return -1;
-		if (color.startsWith("0x"))
+		if (color.startsWith("0x")) //$NON-NLS-1$
 			return Integer.parseInt(color.substring(2), 16);
 		return Integer.parseInt(color, 10);
 	}
@@ -103,7 +103,7 @@ public class ChartDciConfig
 	 */
 	public void setColor(int value)
 	{
-		color = "0x" + Integer.toHexString(value);
+		color = "0x" + Integer.toHexString(value); //$NON-NLS-1$
 	}
 	
 	/**
@@ -112,6 +112,6 @@ public class ChartDciConfig
 	 */
 	public String getName()
 	{
-		return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]");
+		return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

@@ -34,6 +34,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.Activator;
+import org.netxms.ui.eclipse.slm.Messages;
 import org.netxms.ui.eclipse.slm.dialogs.CreateNodeLinkDialog;
 
 /**
@@ -65,7 +66,7 @@ public class CreateNodeLink implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob("Create new node link object", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateNodeLink_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -78,7 +79,7 @@ public class CreateNodeLink implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create node link object \"" + dlg.getName() + "\"";
+				return Messages.CreateNodeLink_JobErrorPrefix + dlg.getName() + Messages.CreateNodeLink_JobErrorSuffix;
 			}
 		}.start();
 	}

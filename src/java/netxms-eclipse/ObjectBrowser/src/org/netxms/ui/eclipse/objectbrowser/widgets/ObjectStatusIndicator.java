@@ -39,6 +39,7 @@ import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeViewer;
 import org.netxms.ui.eclipse.shared.SharedColors;
 
@@ -106,7 +107,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 	 */
 	private void createActions()
 	{
-		actionShowIcons = new Action("Show status &icons", Action.AS_CHECK_BOX) {
+		actionShowIcons = new Action(Messages.ObjectStatusIndicator_ShowIcons, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -116,7 +117,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		};
 		actionShowIcons.setChecked(showIcons);
 
-		actionHideDisabled = new Action("Hide &disabled objects", Action.AS_CHECK_BOX) {
+		actionHideDisabled = new Action(Messages.ObjectStatusIndicator_HideDisabled, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -126,7 +127,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		};
 		actionHideDisabled.setChecked(hideDisabled);
 
-		actionHideNormal = new Action("Hide &normal objects", Action.AS_CHECK_BOX) {
+		actionHideNormal = new Action(Messages.ObjectStatusIndicator_HideNormal, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -136,7 +137,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		};
 		actionHideNormal.setChecked(hideNormal);
 
-		actionHideUnknown = new Action("Hide &unknown objects", Action.AS_CHECK_BOX) {
+		actionHideUnknown = new Action(Messages.ObjectStatusIndicator_HideUnknown, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -146,7 +147,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		};
 		actionHideUnknown.setChecked(hideUnknown);
 
-		actionHideUnmanaged = new Action("Hide un&managed objects", Action.AS_CHECK_BOX) {
+		actionHideUnmanaged = new Action(Messages.ObjectStatusIndicator_HideUnmanaged, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{

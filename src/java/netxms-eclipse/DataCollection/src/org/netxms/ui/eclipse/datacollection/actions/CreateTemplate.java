@@ -32,6 +32,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -62,11 +63,11 @@ public class CreateTemplate implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), "Template");
+		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.CreateTemplate_Template);
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob("Create template", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateTemplate_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -78,7 +79,7 @@ public class CreateTemplate implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create template object \"" + dlg.getObjectName() + "\"";
+				return Messages.CreateTemplate_JobErrorPrefix + dlg.getObjectName() + Messages.CreateTemplate_JobErrorSuffix;
 			}
 		}.start();
 	}

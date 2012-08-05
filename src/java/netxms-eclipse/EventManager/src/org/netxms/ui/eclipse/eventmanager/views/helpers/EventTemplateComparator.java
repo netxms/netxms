@@ -24,7 +24,7 @@ public class EventTemplateComparator extends ViewerComparator
 	{
 		int result;
 
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case EventConfigurator.COLUMN_CODE:
 				result = (int)(((EventTemplate)e1).getCode() - ((EventTemplate)e2).getCode());

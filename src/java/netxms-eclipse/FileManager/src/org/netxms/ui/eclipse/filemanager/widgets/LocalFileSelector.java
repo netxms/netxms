@@ -22,6 +22,7 @@ import java.io.File;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
+import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
 
 /**
@@ -30,8 +31,8 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 public class LocalFileSelector extends AbstractSelector
 {
 	private File file = null;
-	private String[] filterExtensions = { "*.*" };
-	private String[] filterNames = { "All files" };
+	private String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
+	private String[] filterNames = { Messages.LocalFileSelector_AllFiles };
 	
 	/**
 	 * @param parent
@@ -42,7 +43,7 @@ public class LocalFileSelector extends AbstractSelector
 		super(parent, style, useHyperlink);
 
 		setImage(null);
-		setText("<none>");
+		setText(Messages.LocalFileSelector_None);
 	}
 
 	/* (non-Javadoc)
@@ -52,7 +53,7 @@ public class LocalFileSelector extends AbstractSelector
 	protected void selectionButtonHandler()
 	{
 		FileDialog fd = new FileDialog(getShell(), SWT.OPEN);
-		fd.setText("Select File");
+		fd.setText(Messages.LocalFileSelector_SelectFile);
 		fd.setFilterExtensions(filterExtensions);
 		fd.setFilterNames(filterNames);
 		String selected = fd.open();
@@ -68,7 +69,7 @@ public class LocalFileSelector extends AbstractSelector
 	@Override
 	protected String getButtonToolTip()
 	{
-		return "Select file";
+		return Messages.LocalFileSelector_Tooltip;
 	}
 
 	/**
@@ -92,7 +93,7 @@ public class LocalFileSelector extends AbstractSelector
 		else
 		{
 			setImage(null);
-			setText("<none>");
+			setText(Messages.LocalFileSelector_None);
 		}
 	}
 

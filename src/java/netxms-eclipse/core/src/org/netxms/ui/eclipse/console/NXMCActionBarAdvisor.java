@@ -185,25 +185,25 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		actionFullScreen.setActionDefinitionId("org.netxms.ui.eclipse.console.commands.full_screen"); //$NON-NLS-1$
 		getActionBarConfigurer().registerGlobalAction(actionFullScreen);
 		
-		actionLangChinese = new Action("Chinese", Activator.getImageDescriptor("icons/lang/zh.png")) {
+		actionLangChinese = new Action(Messages.getString("NXMCActionBarAdvisor.LangChinese"), Activator.getImageDescriptor("icons/lang/zh.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
 				setLanguage("zh"); //$NON-NLS-1$
 			}
 		};
-		actionLangEnglish = new Action(Messages.getString("NXMCActionBarAdvisor.LangEnglish"), Activator.getImageDescriptor("icons/lang/gb.png")) { //$NON-NLS-1$
+		actionLangEnglish = new Action(Messages.getString("NXMCActionBarAdvisor.LangEnglish"), Activator.getImageDescriptor("icons/lang/gb.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
 				setLanguage("en"); //$NON-NLS-1$
 			}
 		};
-		actionLangRussian = new Action(Messages.getString("NXMCActionBarAdvisor.LangRussian"), Activator.getImageDescriptor("icons/lang/ru.png")) { //$NON-NLS-1$
+		actionLangRussian = new Action(Messages.getString("NXMCActionBarAdvisor.LangRussian"), Activator.getImageDescriptor("icons/lang/ru.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
 				setLanguage("ru"); //$NON-NLS-1$
 			}
 		};
-		actionLangSpanish = new Action(Messages.getString("NXMCActionBarAdvisor.LangSpanish"), Activator.getImageDescriptor("icons/lang/es.png")) { //$NON-NLS-1$
+		actionLangSpanish = new Action(Messages.getString("NXMCActionBarAdvisor.LangSpanish"), Activator.getImageDescriptor("icons/lang/es.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
 				setLanguage("es"); //$NON-NLS-1$
@@ -373,7 +373,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 				final String iniFileName = iniFileUrl.getFile();
 				final File iniFile = new File(iniFileName);
 				
-				final File iniFileBackup = new File(iniFileName + ".bak");
+				final File iniFileBackup = new File(iniFileName + ".bak"); //$NON-NLS-1$
 				iniFileBackup.delete();
 				iniFile.renameTo(iniFileBackup); //$NON-NLS-1$
 				
@@ -404,7 +404,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 			}
 			catch(Exception e)
 			{
-				Activator.getDefault().getLog().log(new Status(Status.ERROR, Activator.PLUGIN_ID, Status.OK, "Exception in setLanguage()", e));
+				Activator.getDefault().getLog().log(new Status(Status.ERROR, Activator.PLUGIN_ID, Status.OK, "Exception in setLanguage()", e)); //$NON-NLS-1$
 			}
 			finally
 			{
@@ -420,7 +420,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 				}
 			}
 		}
-		System.getProperties().setProperty("eclipse.exitdata", "-nl " + locale);
+		System.getProperties().setProperty("eclipse.exitdata", "-nl " + locale); //$NON-NLS-1$ //$NON-NLS-2$
 		PlatformUI.getWorkbench().restart();
 	}
 }

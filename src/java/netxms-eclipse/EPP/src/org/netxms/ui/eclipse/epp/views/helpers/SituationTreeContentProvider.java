@@ -24,13 +24,14 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.situations.Situation;
 import org.netxms.client.situations.SituationInstance;
+import org.netxms.ui.eclipse.epp.Messages;
 
 /**
  * Content provider for situations tree
  */
 public class SituationTreeContentProvider implements ITreeContentProvider
 {
-	private static final String ROOT = "[root]";
+	private static final String ROOT = Messages.SituationTreeContentProvider_Root;
 	
 	private Map<Long, Situation> situations;
 	

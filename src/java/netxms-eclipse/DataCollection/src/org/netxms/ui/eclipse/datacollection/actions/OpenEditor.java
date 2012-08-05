@@ -31,6 +31,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Template;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 
 /**
@@ -64,7 +65,7 @@ public class OpenEditor implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.OpenEditor_Error, Messages.OpenEditor_ErrorText + e.getMessage());
 			}
 		}
 	}

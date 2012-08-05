@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.ServerFile;
+import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.widgets.ServerFileSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -60,7 +61,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Start File Upload");
+		newShell.setText(Messages.StartServerToAgentFileUploadDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -78,7 +79,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		fileSelector = new ServerFileSelector(dialogArea, SWT.NONE);
-		fileSelector.setLabel("Server file");
+		fileSelector.setLabel(Messages.StartServerToAgentFileUploadDialog_ServerFile);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -86,14 +87,14 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		fileSelector.setLayoutData(gd);
 		
 		textRemoteFile = new LabeledText(dialogArea, SWT.NONE);
-		textRemoteFile.setLabel("Remote file name (leave blank for upload to agent's file store)");
+		textRemoteFile.setLabel(Messages.StartServerToAgentFileUploadDialog_RemoteFileName);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		textRemoteFile.setLayoutData(gd);
 		
 		checkJobOnHold = new Button(dialogArea, SWT.CHECK);
-		checkJobOnHold.setText("Create upload job but don't start it (job will be in \"on hold\" state)");
+		checkJobOnHold.setText(Messages.StartServerToAgentFileUploadDialog_CreateJobOnHold);
 		
 		return dialogArea;
 	}
@@ -107,7 +108,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		serverFile = fileSelector.getFile();
 		if (serverFile == null)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please select file for upload");
+			MessageDialog.openWarning(getShell(), Messages.StartServerToAgentFileUploadDialog_Warning, Messages.StartServerToAgentFileUploadDialog_WarningText);
 			return;
 		}
 		remoteFileName = textRemoteFile.getText().trim();

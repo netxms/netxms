@@ -54,6 +54,7 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.IdMatchingDialog;
 import org.netxms.ui.eclipse.dashboard.dialogs.ImportDashboardDialog;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
@@ -125,7 +126,7 @@ public class ImportDashboard implements IObjectActionDelegate
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final Display display = Display.getCurrent();
 		
-		new ConsoleJob("Import dashboard", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.ImportDashboard_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -134,25 +135,25 @@ public class ImportDashboard implements IObjectActionDelegate
 				Document dom = db.parse(dlg.getImportFile());
 				
 				Element root = dom.getDocumentElement();
-				if (!root.getNodeName().equals("dashboard"))
-					throw new Exception("Invalid import file");
+				if (!root.getNodeName().equals("dashboard")) //$NON-NLS-1$
+					throw new Exception(Messages.ImportDashboard_InvalidFile);
 				
 				root.normalize();
 				
 				List<DashboardElement> dashboardElements = new ArrayList<DashboardElement>(); 
 				
-				NodeList elementsRoot = root.getElementsByTagName("elements");
+				NodeList elementsRoot = root.getElementsByTagName("elements"); //$NON-NLS-1$
 				for(int i = 0; i < elementsRoot.getLength(); i++)
 				{
 					if (elementsRoot.item(i).getNodeType() != Node.ELEMENT_NODE)
 						continue;
 					
-					NodeList elements = ((Element)elementsRoot.item(i)).getElementsByTagName("dashboardElement");
+					NodeList elements = ((Element)elementsRoot.item(i)).getElementsByTagName("dashboardElement"); //$NON-NLS-1$
 					for(int j = 0; j < elements.getLength(); j++)
 					{
 						Element e = (Element)elements.item(j);
-						DashboardElement de = new DashboardElement(getNodeValueAsInt(e, "type", 0), getNodeValueAsXml(e, "element"));
-						de.setLayout(getNodeValueAsXml(e, "layout"));
+						DashboardElement de = new DashboardElement(getNodeValueAsInt(e, "type", 0), getNodeValueAsXml(e, "element")); //$NON-NLS-1$ //$NON-NLS-2$
+						de.setLayout(getNodeValueAsXml(e, "layout")); //$NON-NLS-1$
 						dashboardElements.add(de);
 					}
 				}
@@ -163,8 +164,8 @@ public class ImportDashboard implements IObjectActionDelegate
 					final long objectId = session.createObject(cd);
 					
 					NXCObjectModificationData md = new NXCObjectModificationData(objectId);
-					md.setColumnCount(getNodeValueAsInt(root, "columns", 1));
-					md.setObjectFlags(getNodeValueAsInt(root, "options", 0));
+					md.setColumnCount(getNodeValueAsInt(root, "columns", 1)); //$NON-NLS-1$
+					md.setObjectFlags(getNodeValueAsInt(root, "options", 0)); //$NON-NLS-1$
 					md.setDashboardElements(dashboardElements);
 					session.modifyObject(md);
 				}
@@ -173,7 +174,7 @@ public class ImportDashboard implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot import dashboard object \"" + dlg.getObjectName() + "\"";
+				return Messages.ImportDashboard_ErrorPrefix + dlg.getObjectName() + Messages.ImportDashboard_ErrorSuffix;
 			}
 		}.start();
 	}
@@ -192,7 +193,7 @@ public class ImportDashboard implements IObjectActionDelegate
 		for(DciIdMatchingData d : dcis.values())
 		{
 			if (!objects.containsKey(d.srcNodeId))
-				objects.put(d.srcNodeId, new ObjectIdMatchingData(d.srcNodeId, "", GenericObject.OBJECT_NODE));
+				objects.put(d.srcNodeId, new ObjectIdMatchingData(d.srcNodeId, "", GenericObject.OBJECT_NODE)); //$NON-NLS-1$
 		}
 		
 		// try to match objects
@@ -242,7 +243,7 @@ public class ImportDashboard implements IObjectActionDelegate
 		}
 		
 		// show matching results to user
-		UIJob job = new UIJob(display, "") {
+		UIJob job = new UIJob(display, "") { //$NON-NLS-1$
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)
 			{
@@ -290,18 +291,18 @@ public class ImportDashboard implements IObjectActionDelegate
 	private Map<Long, ObjectIdMatchingData> readSourceObjects(Element root)
 	{
 		Map<Long, ObjectIdMatchingData> objects = new HashMap<Long, ObjectIdMatchingData>();
-		NodeList objectsRoot = root.getElementsByTagName("objectMap");
+		NodeList objectsRoot = root.getElementsByTagName("objectMap"); //$NON-NLS-1$
 		for(int i = 0; i < objectsRoot.getLength(); i++)
 		{
 			if (objectsRoot.item(i).getNodeType() != Node.ELEMENT_NODE)
 				continue;
 			
-			NodeList elements = ((Element)objectsRoot.item(i)).getElementsByTagName("object");
+			NodeList elements = ((Element)objectsRoot.item(i)).getElementsByTagName("object"); //$NON-NLS-1$
 			for(int j = 0; j < elements.getLength(); j++)
 			{
 				Element e = (Element)elements.item(j);
-				long id = getAttributeAsLong(e, "id", 0);
-				objects.put(id, new ObjectIdMatchingData(id, e.getTextContent(), (int)getAttributeAsLong(e, "class", 0)));
+				long id = getAttributeAsLong(e, "id", 0); //$NON-NLS-1$
+				objects.put(id, new ObjectIdMatchingData(id, e.getTextContent(), (int)getAttributeAsLong(e, "class", 0))); //$NON-NLS-1$
 			}
 		}
 		return objects;
@@ -316,18 +317,18 @@ public class ImportDashboard implements IObjectActionDelegate
 	private Map<Long, DciIdMatchingData> readSourceDci(Element root)
 	{
 		Map<Long, DciIdMatchingData> dcis = new HashMap<Long, DciIdMatchingData>();
-		NodeList objectsRoot = root.getElementsByTagName("dciMap");
+		NodeList objectsRoot = root.getElementsByTagName("dciMap"); //$NON-NLS-1$
 		for(int i = 0; i < objectsRoot.getLength(); i++)
 		{
 			if (objectsRoot.item(i).getNodeType() != Node.ELEMENT_NODE)
 				continue;
 			
-			NodeList elements = ((Element)objectsRoot.item(i)).getElementsByTagName("dci");
+			NodeList elements = ((Element)objectsRoot.item(i)).getElementsByTagName("dci"); //$NON-NLS-1$
 			for(int j = 0; j < elements.getLength(); j++)
 			{
 				Element e = (Element)elements.item(j);
-				long id = getAttributeAsLong(e, "id", 0);
-				dcis.put(id, new DciIdMatchingData(getAttributeAsLong(e, "node", 0), id, e.getTextContent()));
+				long id = getAttributeAsLong(e, "id", 0); //$NON-NLS-1$
+				dcis.put(id, new DciIdMatchingData(getAttributeAsLong(e, "node", 0), id, e.getTextContent())); //$NON-NLS-1$
 			}
 		}
 		return dcis;
@@ -390,7 +391,7 @@ public class ImportDashboard implements IObjectActionDelegate
 	{
 		NodeList l = parent.getElementsByTagName(tag);
 		if ((l.getLength() == 0) || (l.item(0).getNodeType() != Node.ELEMENT_NODE))
-			return "<" + tag + "></" + tag + ">";
+			return "<" + tag + "></" + tag + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		return nodeToString(l.item(0));
 	}
 	
@@ -406,8 +407,8 @@ public class ImportDashboard implements IObjectActionDelegate
 	{
 		StringWriter sw = new StringWriter();
 		Transformer t = TransformerFactory.newInstance().newTransformer();
-		t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-		t.setOutputProperty(OutputKeys.INDENT, "yes");
+		t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
+		t.setOutputProperty(OutputKeys.INDENT, "yes"); //$NON-NLS-1$
 		t.transform(new DOMSource(node), new StreamResult(sw));
 		return sw.toString();
 	}
