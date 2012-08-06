@@ -144,7 +144,7 @@ private:
 	int m_count;
 	int m_allocated;
 	LL_NEIGHBOR_INFO *m_connections;
-	void *m_data;
+	void *m_data[4];
 
 	bool isDuplicate(LL_NEIGHBOR_INFO *info);
 
@@ -155,8 +155,10 @@ public:
 	void addConnection(LL_NEIGHBOR_INFO *info);
 	LL_NEIGHBOR_INFO *getConnection(int index) { return ((index >= 0) && (index < m_count)) ? &m_connections[index] : NULL; }
 
-	void setData(void *data) { m_data = data; }
-	void *getData() { return m_data; }
+	void setData(int index, void *data) { if ((index >= 0) && (index < 4)) m_data[index] = data; }
+	void *getData(int index) { return ((index >= 0) && (index < 4)) ? m_data[index] : NULL; }
+	void setData(void *data) { setData(0, data); }
+	void *getData() { return getData(0); }
 	int getSize() { return m_count; }
 };
 

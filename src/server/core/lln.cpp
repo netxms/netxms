@@ -32,7 +32,7 @@ LinkLayerNeighbors::LinkLayerNeighbors()
 	m_connections = NULL;
 	m_count = 0;
 	m_allocated = 0;
-	m_data = NULL;
+	memset(m_data, 0, sizeof(m_data));
 }
 
 

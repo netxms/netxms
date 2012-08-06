@@ -22,12 +22,98 @@
 
 #include "nxcore.h"
 
+/**
+ * Local port info
+ */
+struct LOCAL_PORT_INFO
+{
+	BYTE localId[256];
+	size_t localIdLen;
+	TCHAR ifDescr[192];
+};
 
-//
-// Find remote interface
-//
+struct LOCAL_PORT_INFO_CACHE
+{
+	int count;
+	int allocated;
+	LOCAL_PORT_INFO *ports;
+};
 
-static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t idLen)
+/**
+ * Handler for walking local port table
+ */
+static DWORD PortIdLookupHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+	LOCAL_PORT_INFO_CACHE *pc = (LOCAL_PORT_INFO_CACHE *)arg;
+	if (pc->count == pc->allocated)
+	{
+		pc->allocated += 64;
+		pc->ports = (LOCAL_PORT_INFO *)realloc(pc->ports, sizeof(LOCAL_PORT_INFO) * pc->allocated);
+	}
+	
+	LOCAL_PORT_INFO *port = &pc->ports[pc->count++];
+	port->localIdLen = var->getRawValue(port->localId, 256);
+
+	SNMP_ObjectId *oid = var->GetName();
+	DWORD newOid[128];
+	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(DWORD));
+   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
+
+	newOid[oid->getLength() - 2] = 4;	// lldpLocPortDescr
+	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
+
+	SNMP_PDU *pRespPDU = NULL;
+   DWORD rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+	delete pRqPDU;
+	if (rcc == SNMP_ERR_SUCCESS)
+   {
+		pRespPDU->getVariable(0)->GetValueAsString(port->ifDescr, 192);
+		delete pRespPDU;
+	}
+	else
+	{
+		_tcscpy(port->ifDescr, _T("###error###"));
+	}
+
+	return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Lookup interface description from local ID
+ */
+static bool LookupInterfaceDescription(LinkLayerNeighbors *nbs, BYTE *id, size_t idLen, TCHAR *ifName)
+{
+	LOCAL_PORT_INFO_CACHE *pc = (LOCAL_PORT_INFO_CACHE *)nbs->getData(1);
+	if (pc == NULL)
+	{
+		// local port info not cached yet
+		pc = (LOCAL_PORT_INFO_CACHE *)malloc(sizeof(LOCAL_PORT_INFO_CACHE));
+		memset(pc, 0, sizeof(LOCAL_PORT_INFO_CACHE));
+		SNMP_Transport *snmp = (SNMP_Transport *)nbs->getData(2);
+		if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.0.8802.1.1.2.1.3.7.1.3"), PortIdLookupHandler, pc, FALSE) != SNMP_ERR_SUCCESS)
+		{
+			safe_free(pc->ports);
+			free(pc);
+			return false;
+		}
+		nbs->setData(1, pc);
+		Node *node = (Node *)nbs->getData();
+		DbgPrintf(5, _T("LLDP: local port table cached for node %s [%d]"), node->Name(), (int)node->Id());
+	}
+	
+	for(int i = 0; i < pc->count; i++)
+		if ((idLen == pc->ports[i].localIdLen) && !memcmp(id, pc->ports[i].localId, idLen))
+		{
+			nx_strncpy(ifName, pc->ports[i].ifDescr, 130);
+			return true;
+		}
+	return false;
+}
+
+/**
+ * Find remote interface
+ */
+static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t idLen, LinkLayerNeighbors *nbs)
 {
 	TCHAR ifName[130];
 	Interface *ifc;
@@ -66,16 +152,24 @@ static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t
 				ifc = node->findInterface(ifName);
 			}
 			return ifc;
+		case 7:	// local identifier
+			if (LookupInterfaceDescription(nbs, id, idLen, ifName))
+			{
+				ifc = node->findInterface(ifName);	/* TODO: find by cached ifName value */
+			}
+			else
+			{
+				ifc = NULL;
+			}
+			return ifc;
 		default:
 			return NULL;
 	}
 }
 
-
-//
-// Topology table walker's callback for LLDP topology table
-//
-
+/**
+ * Topology table walker's callback for LLDP topology table
+ */
 static DWORD LLDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	LinkLayerNeighbors *nbs = (LinkLayerNeighbors *)arg;
@@ -111,7 +205,7 @@ static DWORD LLDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 		{
 			BYTE remoteIfId[1024];
 			size_t remoteIfIdLen = pRespPDU->getVariable(1)->getRawValue(remoteIfId, 1024);
-			Interface *ifRemote = FindRemoteInterface(remoteNode, pRespPDU->getVariable(2)->GetValueAsUInt(), remoteIfId, remoteIfIdLen);
+			Interface *ifRemote = FindRemoteInterface(remoteNode, pRespPDU->getVariable(2)->GetValueAsUInt(), remoteIfId, remoteIfIdLen, nbs);
 
 			LL_NEIGHBOR_INFO info;
 
@@ -153,18 +247,23 @@ static DWORD LLDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 	return SNMP_ERR_SUCCESS;
 }
 
-
-//
-// Add LLDP-discovered neighbors
-//
-
+/**
+ * Add LLDP-discovered neighbors
+ */
 void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 {
 	if (!(node->getFlags() & NF_IS_LLDP))
 		return;
 
 	DbgPrintf(5, _T("LLDP: collecting topology information for node %s [%d]"), node->Name(), node->Id());
-	nbs->setData(node);
+	nbs->setData(0, node);
+	nbs->setData(1, NULL);	// local port info cache
 	node->CallSnmpEnumerate(_T(".1.0.8802.1.1.2.1.4.1.1.5"), LLDPTopoHandler, nbs);
+	LOCAL_PORT_INFO_CACHE *pc = (LOCAL_PORT_INFO_CACHE *)nbs->getData(1);
+	if (pc != NULL)
+	{
+		safe_free(pc->ports);
+		free(pc);
+	}
 	DbgPrintf(5, _T("LLDP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
 }

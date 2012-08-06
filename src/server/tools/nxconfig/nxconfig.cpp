@@ -61,7 +61,6 @@ BOOL CNxconfigApp::InitInstance()
 {
    HKEY hKey;
    DWORD dwSize, dwData = 0;
-	TCHAR szCmd[1024];
 
 	if (!AfxSocketInit())
 	{
