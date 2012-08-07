@@ -203,6 +203,8 @@ static DWORD LLDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 		Node *remoteNode = FindNodeByLLDPId(remoteId);
 		if (remoteNode != NULL)
 		{
+			nbs->setData(2, transport);
+
 			BYTE remoteIfId[1024];
 			size_t remoteIfIdLen = pRespPDU->getVariable(1)->getRawValue(remoteIfId, 1024);
 			Interface *ifRemote = FindRemoteInterface(remoteNode, pRespPDU->getVariable(2)->GetValueAsUInt(), remoteIfId, remoteIfIdLen, nbs);
