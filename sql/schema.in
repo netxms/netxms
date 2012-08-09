@@ -1212,7 +1212,9 @@ CREATE TABLE network_maps
 	bg_longitude varchar(20) null,
 	bg_zoom integer null,
 	flags integer not null,
+	bg_color integer not null,
 	link_color integer not null,
+	link_routing integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1243,6 +1245,8 @@ CREATE TABLE network_map_links
 	connector_name2 varchar(63) null,
 	color integer not null,
 	status_object integer not null,
+	routing integer not null,
+	bend_points SQL_TEXT4K null,
 	PRIMARY KEY(map_id,element1,element2)
 ) TABLE_TYPE;
 

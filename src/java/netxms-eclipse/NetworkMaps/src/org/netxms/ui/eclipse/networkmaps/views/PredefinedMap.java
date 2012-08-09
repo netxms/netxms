@@ -39,9 +39,9 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -85,6 +85,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	private Action actionRemove;
 	private Action actionMapProperties;
 	private Action actionLinkProperties;
+	private Color backgroundColor = null;
 
 	/**
 	 * Create predefined map view
@@ -152,6 +153,10 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			else
 				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
 		}
+
+		setConnectionRouter(mapObject.getDefaultLinkRouting());
+		backgroundColor = new Color(viewer.getGraphControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
+		viewer.getControl().setBackground(backgroundColor);
 	}
 
 	/**
@@ -463,9 +468,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		if (added > 0)
 		{
 			saveMap();
-			// setAnimationEnabled(false);
 			viewer.setInput(mapPage);
-			// setAnimationEnabled(true);
 		}
 	}
 
@@ -624,6 +627,8 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	public void dispose()
 	{
 		ImageProvider.getInstance().removeUpdateListener(this);
+		if (backgroundColor != null)
+			backgroundColor.dispose();
 		super.dispose();
 	}
 
@@ -634,7 +639,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	protected void onObjectChange(final GenericObject object)
 	{
 		super.onObjectChange(object);
-		Display.getDefault().asyncExec(new Runnable() {
+		viewer.getControl().getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run()
 			{
@@ -657,6 +662,11 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 							viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
 						}
 					}
+
+					if (backgroundColor != null)
+						backgroundColor.dispose();
+					backgroundColor = new Color(viewer.getControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
+					viewer.getGraphControl().setBackground(backgroundColor);
 				}
 			}
 		});

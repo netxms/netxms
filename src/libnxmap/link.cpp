@@ -38,6 +38,7 @@ NetworkMapLink::NetworkMapLink(DWORD e1, DWORD e2, int type)
 	m_connectorName2 = NULL;
 	m_color = 0xFFFFFFFF;
 	m_statusObject = 0;
+	m_routing = ROUTING_DEFAULT;
 }
 
 
@@ -55,6 +56,8 @@ NetworkMapLink::NetworkMapLink(CSCPMessage *msg, DWORD baseId)
 	m_element2 = msg->GetVariableLong(baseId + 5);
 	m_color = msg->GetVariableLong(baseId + 6);
 	m_statusObject = msg->GetVariableLong(baseId + 7);
+	m_routing = msg->GetVariableShort(baseId + 8);
+	msg->GetVariableInt32Array(baseId + 9, MAX_BEND_POINTS * 2, m_bendPoints);
 }
 
 
@@ -102,11 +105,9 @@ void NetworkMapLink::setConnector2Name(const TCHAR *name)
 	m_connectorName2 = (name != NULL) ? _tcsdup(name) : NULL;
 }
 
-
-//
-// Fill NXCP message
-//
-
+/**
+ * Fill NXCP message
+ */
 void NetworkMapLink::fillMessage(CSCPMessage *msg, DWORD baseId)
 {
 	msg->SetVariable(baseId, (WORD)m_type);
@@ -117,4 +118,45 @@ void NetworkMapLink::fillMessage(CSCPMessage *msg, DWORD baseId)
 	msg->SetVariable(baseId + 5, m_element2);
 	msg->SetVariable(baseId + 6, m_color);
 	msg->SetVariable(baseId + 7, m_statusObject);
+	msg->SetVariable(baseId + 8, (WORD)m_routing);
+	msg->SetVariableToInt32Array(baseId + 9, MAX_BEND_POINTS *2, m_bendPoints);
+}
+
+/**
+ * Get bend points formatted as text
+ */
+TCHAR *NetworkMapLink::getBendPoints(TCHAR *buffer)
+{
+	int outPos = 0;
+	for(int i = 0, pos = 0; i < MAX_BEND_POINTS; i++, pos += 2)
+	{
+		if (m_bendPoints[pos] == 0x7FFFFFFF)
+			break;
+		outPos += _sntprintf(&buffer[outPos], 1024 - outPos, _T("%d,%d,"), m_bendPoints[pos], m_bendPoints[pos + 1]);
+	}
+	if (outPos > 0)
+		outPos--;
+	buffer[outPos] = 0;
+	return buffer;
+}
+
+/**
+ * Parse bend points list
+ */
+void NetworkMapLink::parseBendPoints(const TCHAR *data)
+{
+	for(int i = 0; i < MAX_BEND_POINTS * 2; i++)
+		m_bendPoints[i] = 0x7FFFFFFF;
+
+	const TCHAR *ptr = data;
+	int c, pos = 0;
+
+	while(pos < MAX_BEND_POINTS * 2)
+	{
+		if (_stscanf(ptr, _T("%d%n"), &m_bendPoints[pos++], &c) < 1)
+			break;
+		ptr += c;
+		if (*ptr == _T(','))
+			ptr++;
+	}
 }

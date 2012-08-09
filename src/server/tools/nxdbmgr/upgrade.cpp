@@ -40,7 +40,7 @@ static BOOL CreateTable(const TCHAR *pszQuery)
 	String query(pszQuery);
 
    query.translate(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
-   query.translate(_T("$SQL:TEXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
+   query.translate(_T("$SQL:TXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
    query.translate(_T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
    if (g_iSyntax == DB_SYNTAX_MYSQL)
       query += g_pszTableSuffix;
@@ -275,6 +275,28 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 	free(escMessage);
 	free(escDescription);
 	return SQLQuery(query);
+}
+
+
+//
+// Upgrade from V256 to V257
+//
+
+static BOOL H_UpgradeFromV256(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE network_maps ADD bg_color integer\n")
+		_T("ALTER TABLE network_maps ADD link_routing integer\n")
+		_T("UPDATE network_maps SET bg_color=16777215,link_routing=1\n")
+		_T("ALTER TABLE network_map_links ADD routing integer\n")
+		_T("ALTER TABLE network_map_links ADD bend_points $SQL:TXT4K\n")
+		_T("UPDATE network_map_links SET routing=0\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+	
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='257' WHERE var_name='SchemaVersion'")));
+   return TRUE;
 }
 
 
@@ -6374,6 +6396,7 @@ static struct
 	{ 253, 254, H_UpgradeFromV253 },
 	{ 254, 255, H_UpgradeFromV254 },
 	{ 255, 256, H_UpgradeFromV255 },
+	{ 256, 257, H_UpgradeFromV256 },
    { 0, 0, NULL }
 };
 

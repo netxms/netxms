@@ -21,44 +21,48 @@ package org.netxms.ui.eclipse.networkmaps.algorithms;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm;
-import org.eclipse.zest.layouts.dataStructures.InternalNode;
-import org.eclipse.zest.layouts.dataStructures.InternalRelationship;
+import org.eclipse.zest.layouts.LayoutAlgorithm;
+import org.eclipse.zest.layouts.interfaces.EntityLayout;
+import org.eclipse.zest.layouts.interfaces.LayoutContext;
 
 /**
  * Sparse tree (prevent node overlapping) after TreeLayout
  *
  */
-public class SparseTree extends AbstractLayoutAlgorithm
+public class SparseTree implements LayoutAlgorithm
 {
 	private static final int ROW_BINDING_DELTA = 10;
 	private static final int MINIMAL_DISTANCE = 10;
 	
-	/**
-	 * @param styles
-	 */
-	public SparseTree(int styles)
-	{
-		super(styles);
-	}
+	private LayoutContext context;
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#applyLayoutInternal(org.eclipse.zest.layouts.dataStructures.InternalNode[], org.eclipse.zest.layouts.dataStructures.InternalRelationship[], double, double, double, double)
+	 * @see org.eclipse.zest.layouts.LayoutAlgorithm#setLayoutContext(org.eclipse.zest.layouts.interfaces.LayoutContext)
 	 */
 	@Override
-	protected void applyLayoutInternal(InternalNode[] entitiesToLayout, InternalRelationship[] relationshipsToConsider,
-			double boundsX, double boundsY, double boundsWidth, double boundsHeight)
+	public void setLayoutContext(LayoutContext context)
 	{
-		ArrayList<ArrayList<InternalNode>> rows = new ArrayList<ArrayList<InternalNode>>();
+		this.context = context;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.layouts.LayoutAlgorithm#applyLayout(boolean)
+	 */
+	@Override
+	public void applyLayout(boolean clean)
+	{
+		EntityLayout[] entitiesToLayout = context.getEntities();
+
+		ArrayList<ArrayList<EntityLayout>> rows = new ArrayList<ArrayList<EntityLayout>>();
 		for(int i = 0; i < entitiesToLayout.length; i++)
 			addToRow(rows, entitiesToLayout[i]);
 
 		// Sort rows by vertical position
-		Collections.sort(rows, new Comparator<ArrayList<InternalNode>>() {
+		Collections.sort(rows, new Comparator<ArrayList<EntityLayout>>() {
 			@Override
-			public int compare(ArrayList<InternalNode> o1, ArrayList<InternalNode> o2)
+			public int compare(ArrayList<EntityLayout> o1, ArrayList<EntityLayout> o2)
 			{
-				return (int)(o1.get(0).getLayoutEntity().getYInLayout() - o2.get(0).getLayoutEntity().getYInLayout());
+				return (int)(o1.get(0).getLocation().y - o2.get(0).getLocation().y);
 			}
 		});
 		
@@ -66,25 +70,25 @@ public class SparseTree extends AbstractLayoutAlgorithm
 		// any overlapping elements to the right
 		for(int currRowIdx = 0; currRowIdx < rows.size(); currRowIdx++)
 		{
-			final ArrayList<InternalNode> row = rows.get(currRowIdx);
-			Collections.sort(row, new Comparator<InternalNode>() {
+			final ArrayList<EntityLayout> row = rows.get(currRowIdx);
+			Collections.sort(row, new Comparator<EntityLayout>() {
 				@Override
-				public int compare(InternalNode node1, InternalNode node2)
+				public int compare(EntityLayout node1, EntityLayout node2)
 				{
-					return (int)(node1.getLayoutEntity().getXInLayout() - node2.getLayoutEntity().getXInLayout());
+					return (int)(node1.getLocation().x - node2.getLocation().x);
 				}
 			});
 			
 			for(int currNodeIdx = 1; currNodeIdx < row.size(); currNodeIdx++)
 			{
-				final InternalNode currNode = row.get(currNodeIdx);
-				final InternalNode prevNode = row.get(currNodeIdx - 1);
-				double currNodePos = currNode.getLayoutEntity().getXInLayout();
-				double prevNodePos = prevNode.getLayoutEntity().getXInLayout();
-				double minimalPos = prevNodePos + prevNode.getLayoutEntity().getWidthInLayout() + MINIMAL_DISTANCE;
+				final EntityLayout currNode = row.get(currNodeIdx);
+				final EntityLayout prevNode = row.get(currNodeIdx - 1);
+				double currNodePos = currNode.getLocation().x;
+				double prevNodePos = prevNode.getLocation().x;
+				double minimalPos = prevNodePos + prevNode.getSize().width + MINIMAL_DISTANCE;
 				if (currNodePos < minimalPos)
 				{
-					currNode.setLocation(minimalPos, currNode.getLayoutEntity().getYInLayout());
+					currNode.setLocation(minimalPos, currNode.getLocation().y);
 				}
 			}
 		}
@@ -92,31 +96,40 @@ public class SparseTree extends AbstractLayoutAlgorithm
 		// Center parent nodes relatively to child nodes
 		for(int currRowIdx = rows.size() - 1; currRowIdx > 0; currRowIdx--)
 		{
-			final ArrayList<InternalNode> row = rows.get(currRowIdx);
-			double leftmostX = row.get(0).getLayoutEntity().getXInLayout();
+			final ArrayList<EntityLayout> row = rows.get(currRowIdx);
+			double leftmostX = row.get(0).getLocation().x;
 			int firstChildIdx = 0;
-			InternalNode parent = getParentNode(row.get(0), relationshipsToConsider);
+			EntityLayout parent = getParentNode(row.get(0));
 			for(int currNodeIdx = 1; currNodeIdx < row.size(); currNodeIdx++)
 			{
-				InternalNode currNode = row.get(currNodeIdx);
-				InternalNode nextParent = getParentNode(currNode, relationshipsToConsider);
+				EntityLayout currNode = row.get(currNodeIdx);
+				EntityLayout nextParent = getParentNode(currNode);
 				if (parent != nextParent)
 				{
 					if (parent != null)
-						centerNode(rows, currRowIdx, firstChildIdx, parent, relationshipsToConsider,
-								leftmostX, row.get(currNodeIdx - 1).getLayoutEntity().getXInLayout() + row.get(currNodeIdx - 1).getLayoutEntity().getWidthInLayout());
+						centerNode(rows, currRowIdx, firstChildIdx, parent,
+								leftmostX, row.get(currNodeIdx - 1).getLocation().x + row.get(currNodeIdx - 1).getSize().width);
 					parent = nextParent;
-					leftmostX = currNode.getLayoutEntity().getXInLayout();
+					leftmostX = currNode.getLocation().x;
 					firstChildIdx = currNodeIdx;
 				}
 			}
 			if (parent != null)
 			{
-				InternalNode currNode = row.get(row.size() - 1);
-				centerNode(rows, currRowIdx, firstChildIdx, parent, relationshipsToConsider,
-						leftmostX, currNode.getLayoutEntity().getXInLayout() + currNode.getLayoutEntity().getWidthInLayout());
+				EntityLayout currNode = row.get(row.size() - 1);
+				centerNode(rows, currRowIdx, firstChildIdx, parent, leftmostX, currNode.getLocation().x + currNode.getSize().width);
 			}
 		}
+	}
+	
+	/**
+	 * @param e
+	 * @return
+	 */
+	private EntityLayout getParentNode(EntityLayout e)
+	{
+		EntityLayout[] parents = e.getPredecessingEntities();
+		return (parents.length > 0) ? parents[0] : null;
 	}
 	
 	/**
@@ -126,38 +139,37 @@ public class SparseTree extends AbstractLayoutAlgorithm
 	 * @param currRowIdx current row (contains child nodes)
 	 * @param firstChildIdx index of first child node
 	 * @param node current node
-	 * @param relationships graph's relationships
 	 * @param leftmostX position of leftmost child node
 	 * @param rightmostX position of rightmost child node + it's length
 	 */
-	private void centerNode(ArrayList<ArrayList<InternalNode>> rows, int currRowIdx, int firstChildIdx,
-			InternalNode node, InternalRelationship[] relationships, double leftmostX, double rightmostX)
+	private void centerNode(ArrayList<ArrayList<EntityLayout>> rows, int currRowIdx, int firstChildIdx,
+			EntityLayout node, double leftmostX, double rightmostX)
 	{
-		double newX = leftmostX + (rightmostX - leftmostX) / 2 - node.getLayoutEntity().getWidthInLayout() / 2;
-		double shift = newX - node.getLayoutEntity().getXInLayout();
+		double newX = leftmostX + (rightmostX - leftmostX) / 2 - node.getSize().width / 2;
+		double shift = newX - node.getLocation().x;
 		if (shift > 0) 
 		{
-			final ArrayList<InternalNode> row = rows.get(currRowIdx - 1);
-			node.setLocation(newX, node.getLayoutEntity().getYInLayout());
+			final ArrayList<EntityLayout> row = rows.get(currRowIdx - 1);
+			node.setLocation(newX, node.getLocation().y);
 			int index = row.indexOf(node);
 			if (index != -1)
 			{
 				for(int i = index + 1; i < row.size(); i++)
 				{
-					InternalNode n = row.get(i);
-					n.setLocation(n.getLayoutEntity().getXInLayout() + shift, n.getLayoutEntity().getYInLayout());
+					EntityLayout n = row.get(i);
+					n.setLocation(n.getLocation().x + shift, n.getLocation().y);
 				}
 			}
 		}
 		else
 		{
 			// Child nodes are to the left of parent, shift them right
-			final ArrayList<InternalNode> row = rows.get(currRowIdx);
+			final ArrayList<EntityLayout> row = rows.get(currRowIdx);
 			for(int i = firstChildIdx; i < row.size(); i++)
 			{
-				InternalNode n = row.get(i);
-				n.setLocation(n.getLayoutEntity().getXInLayout() - shift, n.getLayoutEntity().getYInLayout());
-				shiftChildNodes(rows, currRowIdx + 1, n, relationships, -shift);
+				EntityLayout n = row.get(i);
+				n.setLocation(n.getLocation().x - shift, n.getLocation().y);
+				shiftChildNodes(rows, currRowIdx + 1, n, -shift);
 			}
 		}
 	}
@@ -168,41 +180,22 @@ public class SparseTree extends AbstractLayoutAlgorithm
 	 * @param rows row list
 	 * @param currRowIdx current row
 	 * @param parent parent node
-	 * @param relationships graph's relationships
 	 * @param shift shift value
 	 */
-	private void shiftChildNodes(ArrayList<ArrayList<InternalNode>> rows, int currRowIdx,
-			InternalNode parent, InternalRelationship[] relationships, double shift)
+	private void shiftChildNodes(ArrayList<ArrayList<EntityLayout>> rows, int currRowIdx, EntityLayout parent, double shift)
 	{
 		if (rows.size() <= currRowIdx)
 			return;
 		
-		final ArrayList<InternalNode> row = rows.get(currRowIdx);
-		for(InternalNode n : row)
+		final ArrayList<EntityLayout> row = rows.get(currRowIdx);
+		for(EntityLayout n : row)
 		{
-			if (getParentNode(n, relationships) == parent)
+			if (getParentNode(n) == parent)
 			{
-				n.setLocation(n.getLayoutEntity().getXInLayout() + shift, n.getLayoutEntity().getYInLayout());
-				shiftChildNodes(rows, currRowIdx + 1, n, relationships, shift);
+				n.setLocation(n.getLocation().x + shift, n.getLocation().y);
+				shiftChildNodes(rows, currRowIdx + 1, n, shift);
 			}
 		}
-	}
-	
-	/**
-	 * Find parent node for given node
-	 * 
-	 * @param node
-	 * @param relationships
-	 * @return
-	 */
-	private InternalNode getParentNode(InternalNode node, InternalRelationship[] relationships)
-	{
-		for(InternalRelationship r : relationships)
-		{
-			if (r.getDestination() == node)
-				return r.getSource();
-		}
-		return null;
 	}
 	
 	/**
@@ -210,12 +203,12 @@ public class SparseTree extends AbstractLayoutAlgorithm
 	 * @param rows rows
 	 * @param node node
 	 */
-	private void addToRow(ArrayList<ArrayList<InternalNode>> rows, InternalNode node)
+	private void addToRow(ArrayList<ArrayList<EntityLayout>> rows, EntityLayout node)
 	{
-		double nodeY = node.getLayoutEntity().getYInLayout();
-		for(ArrayList<InternalNode> row : rows)
+		double nodeY = node.getLocation().y;
+		for(ArrayList<EntityLayout> row : rows)
 		{
-			double rowY = row.get(0).getLayoutEntity().getYInLayout();
+			double rowY = row.get(0).getLocation().y;
 			if (Math.abs(nodeY - rowY) <= ROW_BINDING_DELTA)
 			{
 				row.add(node);
@@ -223,60 +216,8 @@ public class SparseTree extends AbstractLayoutAlgorithm
 			}
 		}
 		
-		ArrayList<InternalNode> newRow = new ArrayList<InternalNode>();
+		ArrayList<EntityLayout> newRow = new ArrayList<EntityLayout>();
 		newRow.add(node);
 		rows.add(newRow);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#getCurrentLayoutStep()
-	 */
-	@Override
-	protected int getCurrentLayoutStep()
-	{
-		return 0;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#getTotalNumberOfLayoutSteps()
-	 */
-	@Override
-	protected int getTotalNumberOfLayoutSteps()
-	{
-		return 0;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#isValidConfiguration(boolean, boolean)
-	 */
-	@Override
-	protected boolean isValidConfiguration(boolean asynchronous, boolean continuous)
-	{
-		return true;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#postLayoutAlgorithm(org.eclipse.zest.layouts.dataStructures.InternalNode[], org.eclipse.zest.layouts.dataStructures.InternalRelationship[])
-	 */
-	@Override
-	protected void postLayoutAlgorithm(InternalNode[] entitiesToLayout, InternalRelationship[] relationshipsToConsider)
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#preLayoutAlgorithm(org.eclipse.zest.layouts.dataStructures.InternalNode[], org.eclipse.zest.layouts.dataStructures.InternalRelationship[], double, double, double, double)
-	 */
-	@Override
-	protected void preLayoutAlgorithm(InternalNode[] entitiesToLayout, InternalRelationship[] relationshipsToConsider, double x,
-			double y, double width, double height)
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#setLayoutArea(double, double, double, double)
-	 */
-	@Override
-	public void setLayoutArea(double x, double y, double width, double height)
-	{
 	}
 }

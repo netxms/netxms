@@ -35,6 +35,7 @@ public class LinkEditor
 	private String connectorName2;
 	private int color;
 	private long statusObject;
+	private int routingAlgorithm;
 	private boolean modified = false;
 	
 	/**
@@ -51,6 +52,7 @@ public class LinkEditor
 		connectorName2 = link.getConnectorName2();
 		color = link.getColor();
 		statusObject = link.getStatusObject();
+		routingAlgorithm = link.getRouting();
 	}
 	
 	/**
@@ -62,6 +64,7 @@ public class LinkEditor
 		link = new NetworkMapLink(name, type, link.getElement1(), link.getElement2(), connectorName1, connectorName2);
 		link.setColor(color);
 		link.setStatusObject(statusObject);
+		link.setRouting(routingAlgorithm);
 		mapPage.addLink(link);
 		modified = true;
 	}
@@ -160,6 +163,22 @@ public class LinkEditor
 	public void setStatusObject(long statusObject)
 	{
 		this.statusObject = statusObject;
+	}
+
+	/**
+	 * @return the routingAlgorithm
+	 */
+	public int getRoutingAlgorithm()
+	{
+		return routingAlgorithm;
+	}
+
+	/**
+	 * @param routingAlgorithm the routingAlgorithm to set
+	 */
+	public void setRoutingAlgorithm(int routingAlgorithm)
+	{
+		this.routingAlgorithm = routingAlgorithm;
 	}
 
 	/**

@@ -1,4 +1,15 @@
 *
+* 1.2.3
+*
+
+- Improved LLDP support
+- Management console:
+	- Configurable date and time format
+	- Background color can be set for network maps
+	- Different connection routing algorithms for network maps
+
+
+*
 * 1.2.2
 *
 

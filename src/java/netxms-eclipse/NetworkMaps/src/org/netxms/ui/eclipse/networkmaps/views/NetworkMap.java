@@ -28,6 +28,8 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.draw2d.ManhattanConnectionRouter;
+import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -66,11 +68,10 @@ import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphNode;
 import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.layouts.LayoutAlgorithm;
-import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.GridLayoutAlgorithm;
-import org.eclipse.zest.layouts.algorithms.HorizontalTreeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.RadialLayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.SpaceTreeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.netxms.api.client.SessionListener;
@@ -109,6 +110,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	
 	private static final String[] layoutAlgorithmNames = 
 		{ "&Spring", "&Radial", "&Horizontal tree", "&Vertical tree", "S&parse vertical tree" };
+	private static final String[] connectionRouterNames =
+		{ "&Direct", "&Manhattan" };
 	
 	private static final int SELECTION_EMPTY = 0;
 	private static final int SELECTION_MIXED = 1;
@@ -123,6 +126,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	protected SessionListener sessionListener;
 	protected MapLabelProvider labelProvider;
 	protected int layoutAlgorithm = LAYOUT_SPRING;
+	protected int routingAlgorithm = NetworkMapLink.ROUTING_DIRECT;
 	protected boolean allowManualLayout = false;     // True if manual layout can be switched on
 	protected boolean automaticLayoutEnabled = true; // Current layout mode - automatic or manual
 	
@@ -134,6 +138,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	private Action actionZoomOut;
 	private Action[] actionZoomTo;
 	private Action[] actionSetAlgorithm;
+	private Action[] actionSetRouter;
 	private Action actionEnableAutomaticLayout;
 	private Action actionSaveLayout;
 	private Action actionOpenSubmap;
@@ -269,9 +274,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		}
 		else
 		{
-			viewer.setLayoutAlgorithm(new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
+			viewer.setLayoutAlgorithm(new ManualLayout());
 		}
-		//viewer.setNodeStyle(ZestStyles.NODES_NO_ANIMATION);
 		viewer.setInput(mapPage);
 	}
 
@@ -305,7 +309,6 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	 * Set layout algorithm for map
 	 * @param alg
 	 */
-	@SuppressWarnings("rawtypes")
 	protected void setLayoutAlgorithm(int alg)
 	{
 		LayoutAlgorithm algorithm;
@@ -313,19 +316,20 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		switch(alg)
 		{
 			case LAYOUT_SPRING:
-				algorithm = new SpringLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
+				algorithm = new SpringLayoutAlgorithm();
 				break;
 			case LAYOUT_RADIAL:
-				algorithm = new RadialLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
+				algorithm = new RadialLayoutAlgorithm();
 				break;
 			case LAYOUT_HTREE:
-				algorithm = new HorizontalTreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
+				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.LEFT_RIGHT);
 				break;
 			case LAYOUT_VTREE:
-				algorithm = new TreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
+				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
 				break;
 			case LAYOUT_SPARSE_VTREE:
-				TreeLayoutAlgorithm mainLayoutAlgorithm = new TreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
+//				TreeLayoutAlgorithm mainLayoutAlgorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
+				/*
 				mainLayoutAlgorithm.setComparator(new Comparator() {
 					@Override
 					public int compare(Object arg0, Object arg1)
@@ -333,19 +337,22 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 						return arg0.toString().compareToIgnoreCase(arg1.toString());
 					}
 				});
-				algorithm = new CompositeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING, 
-						new LayoutAlgorithm[] { mainLayoutAlgorithm,
-						                        new SparseTree(LayoutStyles.NO_LAYOUT_NODE_RESIZING) });
+				*/
+//				algorithm = new CompositeLayoutAlgorithm(new LayoutAlgorithm[] { mainLayoutAlgorithm, new SparseTree() });
+//				algorithm = new SpaceTreeLayoutAlgorithm(SpaceTreeLayoutAlgorithm.TOP_DOWN);
+				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
+				((TreeLayoutAlgorithm)algorithm).setNodeSpace(new Dimension(100, 100));
 				break;
 			default:
-				algorithm = new GridLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
+				algorithm = new GridLayoutAlgorithm();
 				break;
 		}
-		algorithm.setFilter(new GraphLayoutFilter(true));
-		ManualLayout decorationLayoutAlgorithm = new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
-		decorationLayoutAlgorithm.setFilter(new GraphLayoutFilter(false));
-		viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING, 
-				new LayoutAlgorithm[] { algorithm, decorationLayoutAlgorithm }), true);
+		//algorithm.setFilter(new GraphLayoutFilter(true));
+		//ManualLayout decorationLayoutAlgorithm = new ManualLayout();
+		//decorationLayoutAlgorithm.setFilter(new GraphLayoutFilter(false));
+		//viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm( 
+		//		new LayoutAlgorithm[] { algorithm, decorationLayoutAlgorithm }), true);
+		viewer.setLayoutAlgorithm(algorithm);
 
 		actionSetAlgorithm[layoutAlgorithm].setChecked(false);
 		layoutAlgorithm = alg;
@@ -366,8 +373,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				Object data = ((GraphNode)o).getData();
 				if (data instanceof NetworkMapElement)
 				{
-					Point loc = ((GraphNode)o).getLocation();
-					((NetworkMapElement)data).setLocation(loc.x, loc.y);
+					Point loc = ((GraphNode)o).getFigure().getBounds().getCenter();
+					((NetworkMapElement)data).setLocation(loc.x + 1, loc.y);
 				}
 			}
 		}
@@ -381,7 +388,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		updateObjectPositions();
 		
 		automaticLayoutEnabled = false;
-		viewer.setLayoutAlgorithm(new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING), true);
+		viewer.setLayoutAlgorithm(new ManualLayout(), true);
 		
 		for(int i = 0; i < actionSetAlgorithm.length; i++)
 			actionSetAlgorithm[i].setEnabled(false);
@@ -485,6 +492,20 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			actionSetAlgorithm[i].setEnabled(automaticLayoutEnabled);
 		}
 		
+		actionSetRouter = new Action[connectionRouterNames.length];
+		for(int i = 0; i < connectionRouterNames.length; i++)
+		{
+			final int alg = i + 1;
+			actionSetRouter[i] = new Action(connectionRouterNames[i], Action.AS_RADIO_BUTTON) {
+				@Override
+				public void run()
+				{
+					setConnectionRouter(alg);
+				}
+			};
+			actionSetRouter[i].setChecked(routingAlgorithm == alg);
+		}
+		
 		actionEnableAutomaticLayout = new Action("Enable &automatic layout", Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -585,6 +606,18 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	}
 	
 	/**
+	 * Create "Routing" submenu
+	 * @return
+	 */
+	protected IContributionItem createRoutingSubmenu()
+	{
+		MenuManager submenu = new MenuManager("&Routing");
+		for(int i = 0; i < actionSetRouter.length; i++)
+			submenu.add(actionSetRouter[i]);
+		return submenu;
+	}
+	
+	/**
 	 * Fill action bars
 	 */
 	private void contributeToActionBars()
@@ -614,6 +647,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		manager.add(actionShowStatusFrame);
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
+		manager.add(createRoutingSubmenu());
 		manager.add(zoom);
 		manager.add(figureType);
 		manager.add(new Separator());
@@ -739,6 +773,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		manager.add(actionShowStatusFrame);
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
+		manager.add(createRoutingSubmenu());
 		manager.add(zoom);
 		manager.add(figureType);
 		manager.add(new Separator());
@@ -952,21 +987,6 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	}
 	
 	/**
-	 * Enable or disable layout animation
-	 * 
-	 * @param enabled
-	 */
-	protected void setAnimationEnabled(boolean enabled)
-	{
-		int nodeStyle = viewer.getGraphControl().getNodeStyle();
-		if (enabled)
-			nodeStyle &= ~ZestStyles.NODES_NO_LAYOUT_ANIMATION;
-		else
-			nodeStyle |= ZestStyles.NODES_NO_LAYOUT_ANIMATION;
-		viewer.getGraphControl().setNodeStyle(nodeStyle);
-	}
-	
-	/**
 	 * Open submap for currently selected object
 	 */
 	private void openSubmap()
@@ -990,5 +1010,28 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Set map default connection routing algorithm
+	 * 
+	 * @param routingAlgorithm
+	 */
+	public void setConnectionRouter(int routingAlgorithm)
+	{
+		switch(routingAlgorithm)
+		{
+			case NetworkMapLink.ROUTING_MANHATTAN:
+				routingAlgorithm = NetworkMapLink.ROUTING_MANHATTAN;
+				viewer.getGraphControl().setRouter(new ManhattanConnectionRouter());
+				break;
+			default:
+				routingAlgorithm = NetworkMapLink.ROUTING_DIRECT;
+				viewer.getGraphControl().setRouter(null);
+				break;
+		}
+		for(int i = 0; i < actionSetRouter.length; i++)
+			actionSetRouter[i].setChecked(routingAlgorithm == (i + 1));
+		viewer.refresh();
 	}
 }

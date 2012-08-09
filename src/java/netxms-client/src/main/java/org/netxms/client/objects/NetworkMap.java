@@ -57,6 +57,8 @@ public class NetworkMap extends GenericObject
 	private int backgroundZoom;
 	private long seedObjectId;
 	private int defaultLinkColor;
+	private int defaultLinkRouting;
+	private int backgroundColor;
 	private List<NetworkMapElement> elements;
 	private List<NetworkMapLink> links;
 	
@@ -75,6 +77,8 @@ public class NetworkMap extends GenericObject
 		backgroundZoom = msg.getVariableAsInteger(NXCPCodes.VID_BACKGROUND_ZOOM);
 		seedObjectId = msg.getVariableAsInt64(NXCPCodes.VID_SEED_OBJECT);
 		defaultLinkColor = msg.getVariableAsInteger(NXCPCodes.VID_LINK_COLOR);
+		defaultLinkRouting = msg.getVariableAsInteger(NXCPCodes.VID_LINK_ROUTING);
+		backgroundColor = msg.getVariableAsInteger(NXCPCodes.VID_BACKGROUND_COLOR);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<NetworkMapElement>(count);
@@ -179,5 +183,21 @@ public class NetworkMap extends GenericObject
 	public int getDefaultLinkColor()
 	{
 		return defaultLinkColor;
+	}
+
+	/**
+	 * @return the defaultLinkRouting
+	 */
+	public int getDefaultLinkRouting()
+	{
+		return defaultLinkRouting;
+	}
+
+	/**
+	 * @return the backgroundColor
+	 */
+	public int getBackgroundColor()
+	{
+		return backgroundColor;
 	}
 }

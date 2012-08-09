@@ -30,6 +30,12 @@ public class NetworkMapLink
 	public static final int VPN = 1;
 	public static final int MULTILINK = 2;
 	
+	// Routing types
+	public static final int ROUTING_DEFAULT = 0;
+	public static final int ROUTING_DIRECT = 1;
+	public static final int ROUTING_MANHATTAN = 2;
+	public static final int ROUTING_BENDPOINTS = 3;
+	
 	private String name;
 	private int type;
 	private long element1;
@@ -38,6 +44,8 @@ public class NetworkMapLink
 	private String connectorName2;
 	private int color;
 	private long statusObject;
+	private int routing;
+	private long[] bendPoints;
 
 	/**
 	 * @param name
@@ -57,6 +65,8 @@ public class NetworkMapLink
 		this.connectorName2 = connectorName2;
 		this.color = -1;
 		this.statusObject = 0;
+		this.routing = ROUTING_DEFAULT;
+		bendPoints = null;
 	}
 
 	/**
@@ -76,6 +86,8 @@ public class NetworkMapLink
 		this.connectorName2 = "";
 		this.color = -1;
 		this.statusObject = 0;
+		this.routing = ROUTING_DEFAULT;
+		bendPoints = null;
 	}
 	
 	/**
@@ -94,6 +106,8 @@ public class NetworkMapLink
 		connectorName2 = msg.getVariableAsString(baseId + 3);
 		color = msg.getVariableAsInteger(baseId + 6);
 		statusObject = msg.getVariableAsInt64(baseId + 7);
+		routing = msg.getVariableAsInteger(baseId + 8);
+		bendPoints = msg.getVariableAsUInt32Array(baseId + 9);
 	}
 	
 	/**
@@ -112,6 +126,8 @@ public class NetworkMapLink
 		msg.setVariableInt32(baseId + 5, (int)element2);
 		msg.setVariableInt32(baseId + 6, color);
 		msg.setVariableInt32(baseId + 7, (int)statusObject);
+		msg.setVariableInt16(baseId + 8, routing);
+		msg.setVariable(baseId + 9, (bendPoints != null) ? bendPoints : new long[] { 0x7FFFFFFF, 0x7FFFFFFF });
 	}
 
 	/**
@@ -287,5 +303,37 @@ public class NetworkMapLink
 	public void setStatusObject(long statusObject)
 	{
 		this.statusObject = statusObject;
+	}
+
+	/**
+	 * @return the routing
+	 */
+	public int getRouting()
+	{
+		return routing;
+	}
+
+	/**
+	 * @param routing the routing to set
+	 */
+	public void setRouting(int routing)
+	{
+		this.routing = routing;
+	}
+
+	/**
+	 * @return the bendPoints
+	 */
+	public long[] getBendPoints()
+	{
+		return bendPoints;
+	}
+
+	/**
+	 * @param bendPoints the bendPoints to set
+	 */
+	public void setBendPoints(long[] bendPoints)
+	{
+		this.bendPoints = bendPoints;
 	}
 }

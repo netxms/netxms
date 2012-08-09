@@ -18,9 +18,9 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import org.eclipse.zest.core.widgets.GraphItem;
 import org.eclipse.zest.core.widgets.GraphNode;
-import org.eclipse.zest.layouts.Filter;
-import org.eclipse.zest.layouts.LayoutItem;
+import org.eclipse.zest.core.widgets.LayoutFilter;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 
 /**
@@ -28,7 +28,7 @@ import org.netxms.client.maps.elements.NetworkMapDecoration;
  * elements from being included into layout
  *
  */
-public class GraphLayoutFilter implements Filter
+public class GraphLayoutFilter implements LayoutFilter
 {
 	private boolean filterDecoration;
 	
@@ -45,17 +45,17 @@ public class GraphLayoutFilter implements Filter
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.Filter#isObjectFiltered(org.eclipse.zest.layouts.LayoutItem)
+	 * @see org.eclipse.zest.core.widgets.LayoutFilter#isObjectFiltered(org.eclipse.zest.core.widgets.GraphItem)
 	 */
 	@Override
-	public boolean isObjectFiltered(LayoutItem object)
+	public boolean isObjectFiltered(GraphItem item)
 	{
-		if (object.getGraphData() instanceof GraphNode)
+		if (item instanceof GraphNode)
 		{
 			if (filterDecoration)
-				return ((GraphNode)object.getGraphData()).getData() instanceof NetworkMapDecoration;
+				return item.getData() instanceof NetworkMapDecoration;
 			else
-				return !(((GraphNode)object.getGraphData()).getData() instanceof NetworkMapDecoration);
+				return !(item.getData() instanceof NetworkMapDecoration);
 		}
 		return false;
 	}

@@ -1511,7 +1511,9 @@ protected:
 	DWORD m_seedObject;
 	int m_layout;
 	DWORD m_flags;
+	int m_backgroundColor;
 	int m_defaultLinkColor;
+	int m_defaultLinkRouting;
 	uuid_t m_background;
 	double m_backgroundLatitude;
 	double m_backgroundLongitude;

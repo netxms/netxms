@@ -900,6 +900,8 @@ typedef struct
 #define VID_IS_STICKY               ((DWORD)420)
 #define VID_DATE_FORMAT             ((DWORD)421)
 #define VID_TIME_FORMAT             ((DWORD)422)
+#define VID_LINK_ROUTING            ((DWORD)423)
+#define VID_BACKGROUND_COLOR        ((DWORD)424)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

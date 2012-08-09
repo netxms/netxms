@@ -18,93 +18,44 @@
  */
 package org.netxms.ui.eclipse.networkmaps.algorithms;
 
-import org.eclipse.zest.core.widgets.GraphItem;
-import org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm;
-import org.eclipse.zest.layouts.dataStructures.InternalNode;
-import org.eclipse.zest.layouts.dataStructures.InternalRelationship;
+import org.eclipse.swt.widgets.Item;
+import org.eclipse.zest.layouts.LayoutAlgorithm;
+import org.eclipse.zest.layouts.interfaces.EntityLayout;
+import org.eclipse.zest.layouts.interfaces.LayoutContext;
 import org.netxms.client.maps.elements.NetworkMapElement;
 
 /**
  * Manual layout of graph nodes
  *
  */
-public class ManualLayout extends AbstractLayoutAlgorithm
+public class ManualLayout implements LayoutAlgorithm
 {
-	/**
-	 * @param styles
+	private LayoutContext context;
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.layouts.LayoutAlgorithm#setLayoutContext(org.eclipse.zest.layouts.interfaces.LayoutContext)
 	 */
-	public ManualLayout(int styles)
+	@Override
+	public void setLayoutContext(LayoutContext context)
 	{
-		super(styles);
+		this.context = context;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#setLayoutArea(double, double, double, double)
+	 * @see org.eclipse.zest.layouts.LayoutAlgorithm#applyLayout(boolean)
 	 */
 	@Override
-	public void setLayoutArea(double x, double y, double width, double height)
+	public void applyLayout(boolean clean)
 	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#isValidConfiguration(boolean, boolean)
-	 */
-	@Override
-	protected boolean isValidConfiguration(boolean asynchronous, boolean continuous)
-	{
-		return true;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#applyLayoutInternal(org.eclipse.zest.layouts.dataStructures.InternalNode[], org.eclipse.zest.layouts.dataStructures.InternalRelationship[], double, double, double, double)
-	 */
-	@Override
-	protected void applyLayoutInternal(InternalNode[] entitiesToLayout, InternalRelationship[] relationshipsToConsider,
-			double boundsX, double boundsY, double boundsWidth, double boundsHeight)
-	{
+		EntityLayout[] entitiesToLayout = context.getEntities();
 		for(int i = 0; i < entitiesToLayout.length; i++)
 		{
-			GraphItem item = (GraphItem)entitiesToLayout[i].getLayoutEntity().getGraphData();
-			if ((item != null) && (item.getData() instanceof NetworkMapElement))
+			Item[] items = entitiesToLayout[i].getItems();
+			if ((items.length > 0) && (items[0].getData() instanceof NetworkMapElement))
 			{
-				NetworkMapElement mapObject = (NetworkMapElement)item.getData();
+				NetworkMapElement mapObject = (NetworkMapElement)items[0].getData();
 				entitiesToLayout[i].setLocation(mapObject.getX(), mapObject.getY());
 			}
 		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#preLayoutAlgorithm(org.eclipse.zest.layouts.dataStructures.InternalNode[], org.eclipse.zest.layouts.dataStructures.InternalRelationship[], double, double, double, double)
-	 */
-	@Override
-	protected void preLayoutAlgorithm(InternalNode[] entitiesToLayout, InternalRelationship[] relationshipsToConsider, double x,
-			double y, double width, double height)
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#postLayoutAlgorithm(org.eclipse.zest.layouts.dataStructures.InternalNode[], org.eclipse.zest.layouts.dataStructures.InternalRelationship[])
-	 */
-	@Override
-	protected void postLayoutAlgorithm(InternalNode[] entitiesToLayout, InternalRelationship[] relationshipsToConsider)
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#getTotalNumberOfLayoutSteps()
-	 */
-	@Override
-	protected int getTotalNumberOfLayoutSteps()
-	{
-		return 0;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm#getCurrentLayoutStep()
-	 */
-	@Override
-	protected int getCurrentLayoutStep()
-	{
-		return 0;
 	}
 }

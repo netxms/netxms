@@ -51,6 +51,7 @@
 #define MAP_RIGHT_MARGIN      20
 #define MAX_CONNECTOR_NAME		128
 #define MAX_PORT_COUNT			16
+#define MAX_BEND_POINTS       16
 
 
 //
@@ -375,6 +376,16 @@ public:
 
 
 //
+// Routing modes for connections
+//
+
+#define ROUTING_DEFAULT          0
+#define ROUTING_DIRECT           1
+#define ROUTING_MANHATTAN        2
+#define ROUTING_BENDPOINTS       3
+
+
+//
 // Generic map element
 //
 
@@ -472,6 +483,8 @@ protected:
 	TCHAR *m_connectorName2;
 	DWORD m_color;
 	DWORD m_statusObject;
+	int m_routing;
+	DWORD m_bendPoints[MAX_BEND_POINTS * 2];
 
 public:
 	NetworkMapLink(DWORD e1, DWORD e2, int type);
@@ -489,12 +502,16 @@ public:
 	int getType() { return m_type; }
 	DWORD getColor() { return m_color; }
 	DWORD getStatusObject() { return m_statusObject; }
+	int getRouting() { return m_routing; }
+	TCHAR *getBendPoints(TCHAR *buffer);
 
 	void setName(const TCHAR *name);
 	void setConnector1Name(const TCHAR *name);
 	void setConnector2Name(const TCHAR *name);
 	void setColor(DWORD color) { m_color = color; }
 	void setStatusObject(DWORD object) { m_statusObject = object; }
+	void setRouting(int routing) { m_routing = routing; }
+	void parseBendPoints(const TCHAR *data);
 };
 
 

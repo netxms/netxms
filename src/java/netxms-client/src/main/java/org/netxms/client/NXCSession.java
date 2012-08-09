@@ -3243,6 +3243,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			msg.setVariable(NXCPCodes.VID_BACKGROUND_LATITUDE, data.getMapBackgroundLocation().getLatitude());
 			msg.setVariable(NXCPCodes.VID_BACKGROUND_LONGITUDE, data.getMapBackgroundLocation().getLongitude());
 			msg.setVariableInt16(NXCPCodes.VID_BACKGROUND_ZOOM, data.getMapBackgroundZoom());
+			msg.setVariableInt32(NXCPCodes.VID_BACKGROUND_COLOR, data.getMapBackgroundColor());
 		}
 
 		if ((flags & NXCObjectModificationData.MODIFY_IMAGE) != 0)
@@ -3444,6 +3445,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		if ((flags & NXCObjectModificationData.MODIFY_LINK_COLOR) != 0)
 		{
 			msg.setVariableInt32(NXCPCodes.VID_LINK_COLOR, data.getLinkColor());
+		}
+
+		if ((flags & NXCObjectModificationData.MODIFY_CONNECTION_ROUTING) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_LINK_ROUTING, data.getConnectionRouting());
 		}
 
 		sendMessage(msg);

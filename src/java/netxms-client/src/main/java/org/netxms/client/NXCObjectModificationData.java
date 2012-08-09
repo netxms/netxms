@@ -90,6 +90,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_STATUS_CALCULATION = 0x00400000000000L;
 	public static final long MODIFY_CLUSTER_NETWORKS   = 0x00800000000000L;
 	public static final long MODIFY_EXPECTED_STATE     = 0x01000000000000L;
+	public static final long MODIFY_CONNECTION_ROUTING = 0x02000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -122,6 +123,7 @@ public class NXCObjectModificationData
 	private UUID mapBackground;
 	private GeoLocation mapBackgroundLocation;
 	private int mapBackgroundZoom;
+	private int mapBackgroundColor;
 	private UUID image;
 	private Collection<NetworkMapElement> mapElements;
 	private Collection<NetworkMapLink> mapLinks;
@@ -157,6 +159,7 @@ public class NXCObjectModificationData
 	private int[] statusThresholds;
 	private int expectedState;
 	private int linkColor;
+	private int connectionRouting;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -621,11 +624,12 @@ public class NXCObjectModificationData
 	/**
 	 * @param mapBackground the mapBackground to set
 	 */
-	public void setMapBackground(UUID mapBackground, GeoLocation mapBackgroundLocation, int mapBackgroundZoom)
+	public void setMapBackground(UUID mapBackground, GeoLocation mapBackgroundLocation, int mapBackgroundZoom, int mapBackgroundColor)
 	{
 		this.mapBackground = mapBackground;
 		this.mapBackgroundLocation = mapBackgroundLocation;
 		this.mapBackgroundZoom = mapBackgroundZoom;
+		this.mapBackgroundColor = mapBackgroundColor;
 		flags |= MODIFY_MAP_BACKGROUND;
 	}
 
@@ -1273,5 +1277,30 @@ public class NXCObjectModificationData
 	{
 		this.linkColor = linkColor;
 		flags |= MODIFY_LINK_COLOR;
+	}
+
+	/**
+	 * @return the connectionRouting
+	 */
+	public int getConnectionRouting()
+	{
+		return connectionRouting;
+	}
+
+	/**
+	 * @param connectionRouting the connectionRouting to set
+	 */
+	public void setConnectionRouting(int connectionRouting)
+	{
+		this.connectionRouting = connectionRouting;
+		flags |= MODIFY_CONNECTION_ROUTING;
+	}
+
+	/**
+	 * @return the mapBackgroundColor
+	 */
+	public int getMapBackgroundColor()
+	{
+		return mapBackgroundColor;
 	}
 }

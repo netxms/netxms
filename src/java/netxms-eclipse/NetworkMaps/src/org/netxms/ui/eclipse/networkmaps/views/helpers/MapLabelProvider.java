@@ -18,11 +18,18 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import org.eclipse.draw2d.AbsoluteBendpoint;
+import org.eclipse.draw2d.Bendpoint;
+import org.eclipse.draw2d.BendpointConnectionRouter;
 import org.eclipse.draw2d.ConnectionEndpointLocator;
 import org.eclipse.draw2d.ConnectionLocator;
+import org.eclipse.draw2d.ConnectionRouter;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -85,6 +92,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private ILabelProvider workbenchLabelProvider;
 	private ObjectFigureType objectFigureType = ObjectFigureType.ICON;
 	private ColorCache colors;
+	private ManhattanConnectionRouter manhattanRouter = new ManhattanConnectionRouter();
+	private BendpointConnectionRouter bendpointRouter = new BendpointConnectionRouter();
+	
 
 	/**
 	 * Create map label provider
@@ -402,25 +412,41 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			connection.setLineColor(colors.create(ColorConverter.rgbFromInt(link.getColor())));
 		}
 		
+		switch(link.getRouting())
+		{
+			case NetworkMapLink.ROUTING_DIRECT:
+				connection.setRouter(ConnectionRouter.NULL);
+				break;
+			case NetworkMapLink.ROUTING_MANHATTAN:
+				connection.setRouter(manhattanRouter);
+				break;
+			case NetworkMapLink.ROUTING_BENDPOINTS:
+				bendpointRouter.setConstraint(connection.getConnectionFigure(), getConnectionPoints(link));
+				connection.setRouter(bendpointRouter);
+				break;
+			default:
+				connection.setRouter(null);
+				break;
+		}
+		
 		connection.setLineWidth(2);
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.zest.core.viewers.ISelfStyleProvider#selfStyleNode(java.lang
-	 * .Object, org.eclipse.zest.core.widgets.GraphNode)
+	
+	/**
+	 * @param link
+	 * @return
 	 */
-	@Override
-	public void selfStyleNode(Object element, GraphNode node)
+	private List<Bendpoint> getConnectionPoints(NetworkMapLink link)
 	{
-		IFigure figure = node.getNodeFigure();
-		if ((figure != null) && (figure instanceof ObjectFigureIcon))
+		long[] points = link.getBendPoints();
+		List<Bendpoint> list = new ArrayList<Bendpoint>(points.length / 2); 
+		for(int i = 0; i < points.length; i += 2)
 		{
-			((ObjectFigure)figure).update();
-			figure.repaint();
+			if (points[i] == 0x7FFFFFFF)
+				break;
+			list.add(new AbsoluteBendpoint((int)points[i], (int)points[i + 1]));
 		}
+		return list;
 	}
 
 	/**
@@ -471,5 +497,13 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	protected ColorCache getColors()
 	{
 		return colors;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.ISelfStyleProvider#selfStyleNode(java.lang.Object, org.eclipse.zest.core.widgets.GraphNode)
+	 */
+	@Override
+	public void selfStyleNode(Object element, GraphNode node)
+	{
 	}
 }

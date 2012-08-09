@@ -19,14 +19,13 @@
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.zest.core.viewers.internal.ZoomListener;
-import org.eclipse.zest.core.viewers.internal.ZoomManager;
+import org.eclipse.zest.core.widgets.zooming.ZoomListener;
+import org.eclipse.zest.core.widgets.zooming.ZoomManager;
 
 /**
  * Zoom action
  *
  */
-@SuppressWarnings("restriction")
 public class ZoomAction extends Action implements ZoomListener
 {
 	private double zoomLevel;

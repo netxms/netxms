@@ -70,6 +70,9 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 	{
 		super.initialize(configurer);
 		
+		// Early creation of progress service to prevent NPE in Eclipse 4.2
+		PlatformUI.getWorkbench().getProgressService();
+		
 		TweakletManager.initTweaklets();
 		BrandingManager.create();
 		

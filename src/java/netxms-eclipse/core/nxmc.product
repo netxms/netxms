@@ -37,7 +37,6 @@ Copyright (c) 2003-2012 Victor Kirhenshtein, Alex Kirhenshtein
       </win>
    </launcher>
 
-
    <vm>
    </vm>
 
@@ -128,7 +127,6 @@ Copyright (c) 2003-2012 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.eclipse.core.resources.nl_zh_TW" fragment="true"/>
       <plugin id="org.eclipse.core.resources.win32.x86" fragment="true"/>
       <plugin id="org.eclipse.core.runtime"/>
-      <plugin id="org.eclipse.core.runtime.compatibility.registry" fragment="true"/>
       <plugin id="org.eclipse.core.runtime.nl_de" fragment="true"/>
       <plugin id="org.eclipse.core.runtime.nl_es" fragment="true"/>
       <plugin id="org.eclipse.core.runtime.nl_ru" fragment="true"/>
@@ -284,6 +282,7 @@ Copyright (c) 2003-2012 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.eclipse.ui.workbench.texteditor.nl_zh" fragment="true"/>
       <plugin id="org.eclipse.ui.workbench.texteditor.nl_zh_TW" fragment="true"/>
       <plugin id="org.eclipse.zest.core"/>
+      <plugin id="org.eclipse.zest.jface"/>
       <plugin id="org.eclipse.zest.layouts"/>
       <plugin id="org.mozilla.javascript"/>
       <plugin id="org.netxms.nebula.widgets.gallery"/>
