@@ -725,7 +725,14 @@ extern "C"
    DWORD LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, DWORD dwSize);
    TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr);
 
-   void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *pszStr);
+   void LIBNETXMS_EXPORTABLE StrStripA(char *pszStr);
+   void LIBNETXMS_EXPORTABLE StrStripW(WCHAR *pszStr);
+#ifdef UNICODE
+#define StrStrip StrStripW
+#else
+#define StrStrip StrStripA
+#endif
+
    void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
    BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
 	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(const TCHAR *pszStr, const TCHAR *pszExpr, BOOL bMatchCase);
@@ -871,11 +878,29 @@ extern "C"
 #if !HAVE_WSTAT
 	int wstat(const WCHAR *_path, struct stat *_sbuf);
 #endif
+#if !HAVE_WCHDIR
+	int wchdir(const WCHAR *_path);
+#endif
+#if !HAVE_WMKDIR
+	int wmkdir(const WCHAR *_path, int mode);
+#endif
+#if !HAVE_WRMDIR
+	int wrmdir(const WCHAR *_path);
+#endif
 #if !HAVE_WRENAME
 	int wrename(const WCHAR *_oldpath, const WCHAR *_newpath);
 #endif
 #if !HAVE_WUNLINK
 	int wunlink(const WCHAR *_path);
+#endif
+#if !HAVE_WREMOVE
+	int wremove(const WCHAR *_path);
+#endif
+#if !HAVE_WSYSTEM
+	int wsystem(const WCHAR *_cmd);
+#endif
+#if !HAVE_WACCESS
+	int waccess(const WCHAR *_path, int mode);
 #endif
 #if !HAVE_WGETENV
 	WCHAR *wgetenv(const WCHAR *_string);

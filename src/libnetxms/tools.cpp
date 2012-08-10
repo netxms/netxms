@@ -344,15 +344,26 @@ BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern,
 // Strip whitespaces and tabs off the string
 //
 
-void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *str)
+void LIBNETXMS_EXPORTABLE StrStripA(char *str)
 {
    int i;
 
-   for(i=0;(str[i]!=0)&&((str[i]==_T(' '))||(str[i]==_T('\t')));i++);
-   if (i>0)
-      memmove(str,&str[i],(_tcslen(&str[i])+1) * sizeof(TCHAR));
-   for(i=(int)_tcslen(str)-1;(i>=0)&&((str[i]==_T(' '))||(str[i]==_T('\t')));i--);
-   str[i+1]=0;
+   for(i = 0; (str[i]!=0) && ((str[i] == ' ') || (str[i] == '\t')); i++);
+   if (i > 0)
+      memmove(str, &str[i], strlen(&str[i]) + 1);
+   for(i = (int)strlen(str) - 1; (i >= 0) && ((str[i] == ' ') || (str[i] == '\t')); i--);
+   str[i + 1] = 0;
+}
+
+void LIBNETXMS_EXPORTABLE StrStripW(WCHAR *str)
+{
+   int i;
+
+   for(i = 0; (str[i]!=0) && ((str[i] == L' ') || (str[i] == L'\t')); i++);
+   if (i > 0)
+      memmove(str, &str[i], (wcslen(&str[i]) + 1) * sizeof(WCHAR));
+   for(i = (int)wcslen(str) - 1; (i >= 0) && ((str[i] == L' ') || (str[i] == L'\t')); i--);
+   str[i + 1] = 0;
 }
 
 

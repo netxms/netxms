@@ -293,12 +293,12 @@ static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
 		index = 0;
 		do
 		{
-			pType = FindObjectByName(pCurrModule, CHECK_NULL(pszType), &index);
+			pType = FindObjectByName(pCurrModule, CHECK_NULL_A(pszType), &index);
 		}
 		while((pType != NULL) && (pType->iType == MIBC_OBJECT));
       if (pType == NULL)
          pType = FindImportedObjectByName(pCurrModule,
-                                          CHECK_NULL(pszType),
+                                          CHECK_NULL_A(pszType),
                                           &pCurrModule);
       if (pType == NULL)
          break;
@@ -363,13 +363,35 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
             if (pNewObj == NULL)
             {
                if (j == iLen - 1)
+					{
+#ifdef UNICODE
+						WCHAR *wname = WideStringFromMBString(pObject->pszName);
+						WCHAR *wdescr = WideStringFromMBString(pObject->pszDescription);
+                  pNewObj = new SNMP_MIBObject(pSubId->dwValue, wname,
+                                               pObject->iSyntax,
+                                               pObject->iStatus,
+                                               pObject->iAccess,
+                                               wdescr);
+						free(wname);
+						free(wdescr);
+#else
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, pObject->pszName,
                                                pObject->iSyntax,
                                                pObject->iStatus,
                                                pObject->iAccess,
                                                pObject->pszDescription);
+#endif
+					}
                else
+					{
+#ifdef UNICODE
+						WCHAR *wname = WideStringFromMBString(pObject->pszName);
+                  pNewObj = new SNMP_MIBObject(pSubId->dwValue, wname);
+						free(wname);
+#else
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, pSubId->pszName);
+#endif
+					}
                pCurrObj->AddChild(pNewObj);
             }
             else
@@ -377,10 +399,25 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
                if (j == iLen - 1)
                {
                   // Last OID in chain, update object information
+#ifdef UNICODE
+						WCHAR *wdescr = WideStringFromMBString(pObject->pszDescription);
+                  pNewObj->SetInfo(pObject->iSyntax, pObject->iStatus,
+                                   pObject->iAccess, wdescr);
+						free(wdescr);
+#else
                   pNewObj->SetInfo(pObject->iSyntax, pObject->iStatus,
                                    pObject->iAccess, pObject->pszDescription);
+#endif
                   if (pNewObj->Name() == NULL)
+						{
+#ifdef UNICODE
+							WCHAR *wname = WideStringFromMBString(pObject->pszName);
+                     pNewObj->SetName(wname);
+							free(wname);
+#else
                      pNewObj->SetName(pObject->pszName);
+#endif
+						}
                }
             }
             pCurrObj = pNewObj;

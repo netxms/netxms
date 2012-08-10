@@ -166,10 +166,10 @@ static void ScanDirectory(char *pszPath)
             break;
          if (strcmp(pFile->d_name, ".") && strcmp(pFile->d_name, ".."))
          {
-            if (MatchString("*.txt", pFile->d_name, FALSE))
+				int len = (int)strlen(pFile->d_name);
+            if ((len > 4) && (!stricmp(&pFile->d_name[len - 4], ".txt")))
             {
-               sprintf(szBuffer, "%s" FS_PATH_SEPARATOR "%s",
-                       pszPath, pFile->d_name);
+               sprintf(szBuffer, "%s" FS_PATH_SEPARATOR_A "%s", pszPath, pFile->d_name);
                AddFileToList(szBuffer);
             }
          }
@@ -189,8 +189,8 @@ int main(int argc, char *argv[])
    DWORD dwFlags = 0, dwRet;
    int i, ch, rc = 0;
 
-   printf("NetXMS MIB Compiler  Version " NETXMS_VERSION_STRING "\n"
-          "Copyright (c) 2005-2010 Victor Kirhenshtein\n\n");
+   printf("NetXMS MIB Compiler  Version " NETXMS_VERSION_STRING_A "\n"
+          "Copyright (c) 2005-2012 Victor Kirhenshtein\n\n");
 
    // Parse command line
    opterr = 1;
@@ -205,7 +205,8 @@ int main(int argc, char *argv[])
             ScanDirectory(optarg);
             break;
          case 'o':
-            nx_strncpy(m_szOutFile, optarg, MAX_PATH);
+            strncpy(m_szOutFile, optarg, MAX_PATH);
+				m_szOutFile[MAX_PATH - 1] = 0;
             break;
 			case 'P':
             s_pauseBeforeExit = true;
@@ -232,7 +233,13 @@ int main(int argc, char *argv[])
 
       if (pRoot != NULL)
       {
+#ifdef UNICODE
+			WCHAR *wname = WideStringFromMBString(m_szOutFile);
+         dwRet = SNMPSaveMIBTree(wname, pRoot, dwFlags);
+			free(wname);
+#else
          dwRet = SNMPSaveMIBTree(m_szOutFile, pRoot, dwFlags);
+#endif
          if (dwRet != SNMP_ERR_SUCCESS)
             printf("ERROR: Cannot save output file %s (%s)\n", m_szOutFile,
                    SNMPGetErrorText(dwRet));

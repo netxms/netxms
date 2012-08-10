@@ -89,11 +89,11 @@ BOOL NXCORE_EXPORTABLE LoadConfig()
 #if !defined(_WIN32) && !defined(_NETWARE)
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
 	{
-		if (access(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
+		if (_taccess(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
 		{
 			_tcscpy(g_szConfigFile, PREFIX _T("/etc/netxmsd.conf"));
 		}
-		else if (access(_T("/usr/etc/netxmsd.conf"), 4) == 0)
+		else if (_taccess(_T("/usr/etc/netxmsd.conf"), 4) == 0)
 		{
 			_tcscpy(g_szConfigFile, _T("/usr/etc/netxmsd.conf"));
 		}

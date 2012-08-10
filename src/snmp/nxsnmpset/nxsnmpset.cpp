@@ -46,7 +46,7 @@ static DWORD m_type = ASN_OCTET_STRING;
 // Get data
 //
 
-static int SetVariables(int argc, char *argv[])
+static int SetVariables(int argc, TCHAR *argv[])
 {
    SNMP_UDPTransport *pTransport;
    SNMP_PDU *request, *response;
@@ -65,7 +65,7 @@ static int SetVariables(int argc, char *argv[])
    dwResult = pTransport->createUDPTransport(argv[0], 0, m_port);
    if (dwResult != SNMP_ERR_SUCCESS)
    {
-      printf("Unable to create UDP transport: %s\n", SNMPGetErrorText(dwResult));
+      _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(dwResult));
       iExit = 2;
    }
    else
@@ -87,7 +87,7 @@ static int SetVariables(int argc, char *argv[])
          }
          else
          {
-            printf("Invalid OID: %s\n", argv[i]);
+            _tprintf(_T("Invalid OID: %s\n"), argv[i]);
             iExit = 4;
          }
       }
@@ -99,13 +99,13 @@ static int SetVariables(int argc, char *argv[])
          {
             if (response->getErrorCode() != 0)
             {
-               printf("SET operation failed (error code %d)\n", response->getErrorCode());
+               _tprintf(_T("SET operation failed (error code %d)\n"), response->getErrorCode());
             }
             delete response;
          }
          else
          {
-            printf("%s\n", SNMPGetErrorText(dwResult));
+            _tprintf(_T("%s\n"), SNMPGetErrorText(dwResult));
             iExit = 3;
          }
       }
@@ -136,24 +136,24 @@ int main(int argc, char *argv[])
       switch(ch)
       {
          case 'h':   // Display help and exit
-            printf("Usage: nxsnmpset [<options>] <host> <variable> <value>\n"
-                   "Valid options are:\n"
-						 "   -a <method>  : Authentication method for SNMP v3 USM. Valid methods are MD5 and SHA1\n"
-                   "   -A <passwd>  : User's authentication password for SNMP v3 USM\n"
-                   "   -c <string>  : Community string. Default is \"public\"\n"
-						 "   -e <method>  : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n"
-                   "   -E <passwd>  : User's encryption password for SNMP v3 USM\n"
-                   "   -h           : Display help and exit\n"
-                   "   -p <port>    : Agent's port number. Default is 161\n"
-                   "   -t <type>    : Specify variable's data type. Default is octet string.\n"
-                   "   -u <user>    : User name for SNMP v3 USM\n"
-                   "   -v <version> : SNMP version to use (valid values is 1, 2c, and 3)\n"
-                   "   -w <seconds> : Request timeout (default is 3 seconds)\n"
-                   "Note: You can specify data type either as number or in symbolic form.\n"
-                   "      Valid symbolic representations are following:\n"
-                   "         INTEGER, STRING, OID, IPADDR, COUNTER32, GAUGE32,\n"
-                   "         TIMETICKS, COUNTER64, UINT32.\n"
-                   "\n");
+            _tprintf(_T("Usage: nxsnmpset [<options>] <host> <variable> <value>\n")
+                     _T("Valid options are:\n")
+						   _T("   -a <method>  : Authentication method for SNMP v3 USM. Valid methods are MD5 and SHA1\n")
+                     _T("   -A <passwd>  : User's authentication password for SNMP v3 USM\n")
+                     _T("   -c <string>  : Community string. Default is \"public\"\n")
+						   _T("   -e <method>  : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
+                     _T("   -E <passwd>  : User's encryption password for SNMP v3 USM\n")
+                     _T("   -h           : Display help and exit\n")
+                     _T("   -p <port>    : Agent's port number. Default is 161\n")
+                     _T("   -t <type>    : Specify variable's data type. Default is octet string.\n")
+                     _T("   -u <user>    : User name for SNMP v3 USM\n")
+                     _T("   -v <version> : SNMP version to use (valid values is 1, 2c, and 3)\n")
+                     _T("   -w <seconds> : Request timeout (default is 3 seconds)\n")
+                     _T("Note: You can specify data type either as number or in symbolic form.\n")
+                     _T("      Valid symbolic representations are following:\n")
+                     _T("         INTEGER, STRING, OID, IPADDR, COUNTER32, GAUGE32,\n")
+                     _T("         TIMETICKS, COUNTER64, UINT32.\n")
+                     _T("\n"));
             iExit = 0;
             bStart = FALSE;
             break;
@@ -163,10 +163,16 @@ int main(int argc, char *argv[])
             if (*eptr != 0)
             {
                // Try to resolve from symbolic form
+#ifdef UNICODE
+					WCHAR *wdt = WideStringFromMBString(optarg);
+               dwValue = SNMPResolveDataType(wdt);
+					free(wdt);
+#else
                dwValue = SNMPResolveDataType(optarg);
+#endif
                if (dwValue == ASN_NULL)
                {
-                  printf("Invalid data type %s\n", optarg);
+                  _tprintf(_T("Invalid data type %hs\n"), optarg);
                   bStart = FALSE;
                }
                else
@@ -180,10 +186,12 @@ int main(int argc, char *argv[])
             }
             break;
          case 'c':   // Community
-            nx_strncpy(m_community, optarg, 256);
+            strncpy(m_community, optarg, 256);
+				m_community[255] = 0;
             break;
          case 'u':   // User
-            nx_strncpy(m_user, optarg, 256);
+            strncpy(m_user, optarg, 256);
+				m_user[255] = 0;
             break;
 			case 'a':   // authentication method
 				if (!stricmp(optarg, "md5"))
@@ -200,15 +208,16 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
-               printf("Invalid authentication method %s\n", optarg);
+               _tprintf(_T("Invalid authentication method %hs\n"), optarg);
 					bStart = FALSE;
 				}
 				break;
          case 'A':   // authentication password
-            nx_strncpy(m_authPassword, optarg, 256);
-				if (_tcslen(m_authPassword) < 8)
+            strncpy(m_authPassword, optarg, 256);
+				m_authPassword[255] = 0;
+				if (strlen(m_authPassword) < 8)
 				{
-               printf("Authentication password should be at least 8 characters long\n");
+               _tprintf(_T("Authentication password should be at least 8 characters long\n"));
 					bStart = FALSE;
 				}
             break;
@@ -227,15 +236,16 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
-               printf("Invalid encryption method %s\n", optarg);
+               _tprintf(_T("Invalid encryption method %hs\n"), optarg);
 					bStart = FALSE;
 				}
 				break;
          case 'E':   // encription password
-            nx_strncpy(m_encryptionPassword, optarg, 256);
-				if (_tcslen(m_encryptionPassword) < 8)
+            strncpy(m_encryptionPassword, optarg, 256);
+				m_encryptionPassword[255] = 0;
+				if (strlen(m_encryptionPassword) < 8)
 				{
-               printf("Encryption password should be at least 8 characters long\n");
+               _tprintf(_T("Encryption password should be at least 8 characters long\n"));
 					bStart = FALSE;
 				}
             break;
@@ -243,7 +253,7 @@ int main(int argc, char *argv[])
             dwValue = strtoul(optarg, &eptr, 0);
             if ((*eptr != 0) || (dwValue > 65535) || (dwValue == 0))
             {
-               printf("Invalid port number %s\n", optarg);
+               _tprintf(_T("Invalid port number %hs\n"), optarg);
                bStart = FALSE;
             }
             else
@@ -266,7 +276,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-               printf("Invalid SNMP version %s\n", optarg);
+               _tprintf(_T("Invalid SNMP version %hs\n"), optarg);
                bStart = FALSE;
             }
             break;
@@ -274,7 +284,7 @@ int main(int argc, char *argv[])
             dwValue = strtoul(optarg, &eptr, 0);
             if ((*eptr != 0) || (dwValue > 60) || (dwValue == 0))
             {
-               printf("Invalid timeout value %s\n", optarg);
+               _tprintf(_T("Invalid timeout value %hs\n"), optarg);
                bStart = FALSE;
             }
             else
@@ -294,15 +304,24 @@ int main(int argc, char *argv[])
    {
       if (argc - optind < 3)
       {
-         printf("Required argument(s) missing.\nUse nxsnmpset -h to get complete command line syntax.\n");
+         _tprintf(_T("Required argument(s) missing.\nUse nxsnmpset -h to get complete command line syntax.\n"));
       }
       else if ((argc - optind) % 2 != 1)
       {
-         printf("Missing value for variable.\nUse nxsnmpset -h to get complete command line syntax.\n");
+         _tprintf(_T("Missing value for variable.\nUse nxsnmpset -h to get complete command line syntax.\n"));
       }
       else
       {
+#ifdef UNICODE
+			WCHAR *wargv[256];
+			for(int i = optind; i < argc; i++)
+				wargv[i - optind] = WideStringFromMBString(argv[i]);
+         iExit = SetVariables(argc - optind, wargv);
+			for(int i = 0; i < argc - optind; i++)
+				free(wargv[i]);
+#else
          iExit = SetVariables(argc - optind, &argv[optind]);
+#endif
       }
    }
 

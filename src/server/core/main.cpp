@@ -114,7 +114,7 @@ TCHAR NXCORE_EXPORTABLE g_szDumpDir[MAX_PATH] = DEFAULT_DUMP_DIR;
 TCHAR g_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
 TCHAR NXCORE_EXPORTABLE g_szListenAddress[MAX_PATH] = _T("0.0.0.0");
 #ifndef _WIN32
-char NXCORE_EXPORTABLE g_szPIDFile[MAX_PATH] = _T("/var/run/netxmsd.pid");
+TCHAR NXCORE_EXPORTABLE g_szPIDFile[MAX_PATH] = _T("/var/run/netxmsd.pid");
 #endif
 DB_HANDLE g_hCoreDB = 0;
 DWORD g_dwDiscoveryPollingInterval;

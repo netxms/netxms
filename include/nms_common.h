@@ -159,6 +159,8 @@ typedef int bool;
 #define USE_BUNDLED_GETOPT      1
 
 #define FS_PATH_SEPARATOR       _T("\\")
+#define FS_PATH_SEPARATOR_A     "\\"
+#define FS_PATH_SEPARATOR_W     L"\\"
 #define FS_PATH_SEPARATOR_CHAR  _T('\\')
 
 #define WEXITSTATUS(x)          (x)
@@ -308,6 +310,8 @@ typedef unsigned __int64 uint64_t;
 /********** NETWARE ********************/
 
 #define FS_PATH_SEPARATOR       _T("/")
+#define FS_PATH_SEPARATOR_A     "/"
+#define FS_PATH_SEPARATOR_W     L"/"
 #define FS_PATH_SEPARATOR_CHAR  _T('/')
 
 #include <unistd.h>
@@ -405,6 +409,8 @@ typedef int SOCKET;
 #include <netinet/in.h>
 
 #define FS_PATH_SEPARATOR       _T("\\")
+#define FS_PATH_SEPARATOR_A     "\\"
+#define FS_PATH_SEPARATOR_W     L"\\"
 #define FS_PATH_SEPARATOR_CHAR  _T('\\')
 
 typedef int BOOL;
@@ -446,6 +452,8 @@ typedef TUint64 QWORD;
 #include <errno.h>
 
 #define FS_PATH_SEPARATOR       _T("/")
+#define FS_PATH_SEPARATOR_A     "/"
+#define FS_PATH_SEPARATOR_W     L"/"
 #define FS_PATH_SEPARATOR_CHAR  _T('/')
 
 #if HAVE_UNISTD_H

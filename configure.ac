@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.2], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.3-rc1], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -1956,7 +1956,11 @@ fi
 # Other settings
 #--------------------------------------------------------------------
 
-CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\" -DPKGLIBDIR=\\\"\${pkglibdir}\\\""
+if test "x${BUILD_UNICODE}" = "xyes"; then
+	CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"\${prefix}\\\" -DDATADIR=L\\\"\${pkgdatadir}\\\" -DBINDIR=L\\\"\${bindir}\\\" -DLIBDIR=L\\\"\${libdir}\\\" -DPKGLIBDIR=L\\\"\${pkglibdir}\\\""
+else
+	CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\" -DPKGLIBDIR=\\\"\${pkglibdir}\\\""
+fi
 LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $LDFLAGS_SUFFIX"
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])

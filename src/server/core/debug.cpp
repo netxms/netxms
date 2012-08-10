@@ -157,7 +157,7 @@ void DumpProcess(CONSOLE_CTX pCtx)
 
 void DumpProcess(CONSOLE_CTX pCtx)
 {
-	ConsolePrintf(pCtx, "DUMP command is not supported for current operating system\n");
+	ConsolePrintf(pCtx, _T("DUMP command is not supported for current operating system\n"));
 }
 
 #endif
