@@ -30,6 +30,7 @@ import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.MouseMotionListener;
 import org.eclipse.draw2d.RoundedRectangle;
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.widgets.GraphConnection;
@@ -106,7 +107,8 @@ public class BendpointEditor
 		setRoutingConstraints();
 		
 		for(BendpointHandle h : handles.values())
-			h.getParent().remove(h);
+			if (h.getParent() != null)
+				h.getParent().remove(h);
 	}
 	
 	/**
@@ -151,10 +153,85 @@ public class BendpointEditor
 			return;
 		
 		AbsoluteBendpoint bp = new AbsoluteBendpoint(x, y);
-		bendpoints.add(bp);
+		if (bendpoints.size() > 1)
+		{
+			int index = 0;
+			for(int i = 0; i < bendpoints.size() - 1; i++)
+			{
+				AbsoluteBendpoint p1 = bendpoints.get(i);
+				AbsoluteBendpoint p2 = bendpoints.get(i + 1);
+				if (isLineContainsPoint(p1.x, p1.y, p2.x, p2.y, x, y))
+				{
+					index = i + 1;
+					break;
+				}
+			}
+			if (index == 0)
+			{
+				Point pnode = connectionFigure.getTargetAnchor().getReferencePoint();
+				AbsoluteBendpoint plast = bendpoints.get(bendpoints.size() - 1);
+				if (isLineContainsPoint(pnode.x, pnode.y, plast.x, plast.y, x, y))
+					index = bendpoints.size();
+			}
+			bendpoints.add(index, bp);
+		}
+		else if (bendpoints.size() == 1)
+		{
+			Point pnode = connectionFigure.getTargetAnchor().getReferencePoint();
+			AbsoluteBendpoint plast = bendpoints.get(bendpoints.size() - 1);
+			if (isLineContainsPoint(pnode.x, pnode.y, plast.x, plast.y, x, y))
+				bendpoints.add(bp);
+			else
+				bendpoints.add(0, bp);
+		}
+		else
+		{
+			bendpoints.add(bp);
+		}
 		setRoutingConstraints();
 
 		handles.put(bp, new BendpointHandle(bp));
+	}
+	
+	/**
+	 * Check if line between (x1,y1) and (x2,y2) contains (px,py).
+	 * 
+	 * @param p1
+	 * @param p2
+	 * @param p
+	 * @return
+	 */
+	private boolean isLineContainsPoint(int x1, int y1, int x2, int y2, int px, int py)
+	{
+		int tolerance = 7;
+		Rectangle rect = Rectangle.SINGLETON;
+		rect.setSize(0, 0);
+		rect.setLocation(x1, y1);
+		rect.union(x2, y2);
+		rect.expand(tolerance, tolerance);
+		if (!rect.contains(px, py))
+			return false;
+
+		int v1x, v1y, v2x, v2y;
+		int numerator, denominator;
+		double result = 0.0;
+
+		if ((x1 != x2) && (y1 != y2))
+		{
+			v1x = x2 - x1;
+			v1y = y2 - y1;
+			v2x = px - x1;
+			v2y = py - y1;
+
+			numerator = v2x * v1y - v1x * v2y;
+			denominator = v1x * v1x + v1y * v1y;
+
+			result = ((numerator << 10) / denominator * numerator) >> 10;
+		}
+
+		// if it is the same point, and it passes the bounding box test,
+		// the result is always true.
+		return result <= tolerance * tolerance;
 	}
 	
 	/**
@@ -180,6 +257,18 @@ public class BendpointEditor
 			setLocation(new Point(bp.x - HANDLE_SIZE / 2, bp.y - HANDLE_SIZE / 2));
 			addMouseListener(this);
 			setCursor(Display.getCurrent().getSystemCursor(SWT.CURSOR_CROSS));
+		}
+		
+		/**
+		 * Stop dragging
+		 */
+		private void stopDragging()
+		{
+			viewer.hideCrosshair();
+			removeMouseMotionListener(this);
+			drag = false;
+			setRoutingConstraints();
+			saveBendPoints();
 		}
 
 		/* (non-Javadoc)
@@ -215,13 +304,9 @@ public class BendpointEditor
 		{
 			if ((me.button == 1) && drag)
 			{
-				viewer.hideCrosshair();
-				removeMouseMotionListener(this);
-				drag = false;
 				bp.x = me.x;
 				bp.y = me.y;
-				setRoutingConstraints();
-				saveBendPoints();
+				stopDragging();
 			}
 		}
 
@@ -260,6 +345,8 @@ public class BendpointEditor
 		@Override
 		public void mouseExited(MouseEvent me)
 		{
+			if (drag)
+				stopDragging();
 		}
 
 		/* (non-Javadoc)
