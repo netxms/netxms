@@ -1513,8 +1513,13 @@ void ClientSession::sendServerInfo(DWORD dwRqId)
 	        abs(tz.Bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
 #endif
 #elif HAVE_DECL_TIMEZONE
+#ifdef UNICODE
+	swprintf(szBuffer, 1024, L"%hs%hc%02d%hs", tzname[0], (timezone >= 0) ? '+' : '-',
+	         abs(timezone) / 3600, (tzname[1] != NULL) ? tzname[1] : "");
+#else
 	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (timezone >= 0) ? '+' : '-',
 	        abs(timezone) / 3600, (tzname[1] != NULL) ? tzname[1] : "");
+#endif
 #elif HAVE_TM_GMTOFF
 	time_t t;
 	struct tm *loc;
@@ -1532,8 +1537,13 @@ void ClientSession::sendServerInfo(DWORD dwRqId)
 	gmtOffset = -loc->tm_gmtoff / 3600;
 	if (loc->tm_isdst)
 		gmtOffset++;
+#ifdef UNICODE
+	swprintf(szBuffer, 1024, L"%hs%hc%02d%hs", tzname[0], (gmtOffset >= 0) ? '+' : '-',
+	         abs(gmtOffset), (tzname[1] != NULL) ? tzname[1] : "");
+#else
 	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (gmtOffset >= 0) ? '+' : '-',
 	        abs(gmtOffset), (tzname[1] != NULL) ? tzname[1] : "");
+#endif
 #else
 	szBuffer[0] = 0;
 #endif
@@ -5713,9 +5723,9 @@ void ClientSession::InstallPackage(CSCPMessage *pRequest)
 
                         // Create record in database
                         pszEscDescr = EncodeSQLString(szDescription);
-                        _sntprintf(szQuery, 2048, _T("INSERT INTO agent_pkg (pkg_id,pkg_name,"
+                        _sntprintf(szQuery, 2048, _T("INSERT INTO agent_pkg (pkg_id,pkg_name,")
                                                      _T("version,description,platform,pkg_file) ")
-                                                     _T("VALUES (%d,'%s','%s','%s','%s','%s')")),
+                                                     _T("VALUES (%d,'%s','%s','%s','%s','%s')"),
                                    m_dwUploadData, szPkgName, szPkgVersion, pszEscDescr,
                                    szPlatform, pszCleanFileName);
                         free(pszEscDescr);

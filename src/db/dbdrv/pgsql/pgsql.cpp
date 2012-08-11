@@ -97,7 +97,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 
 extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 {
-	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
+	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
 	char *out = (char *)malloc(bufferSize);
 	out[0] = '\'';
@@ -391,18 +391,18 @@ extern "C" void EXPORT DrvBind(PG_STATEMENT *hStmt, int pos, int sqlType, int cT
 			break;
 		case DB_CTYPE_INT64:
 			hStmt->buffers[pos - 1] = (char *)malloc(32);
-			sprintf(hStmt->buffers[pos - 1], INT64_FMT, *((INT64 *)buffer));
+			sprintf(hStmt->buffers[pos - 1], INT64_FMTA, *((INT64 *)buffer));
 			break;
 		case DB_CTYPE_UINT64:
 			hStmt->buffers[pos - 1] = (char *)malloc(32);
-			sprintf(hStmt->buffers[pos - 1], UINT64_FMT, *((QWORD *)buffer));
+			sprintf(hStmt->buffers[pos - 1], UINT64_FMTA, *((QWORD *)buffer));
 			break;
 		case DB_CTYPE_DOUBLE:
 			hStmt->buffers[pos - 1] = (char *)malloc(32);
 			sprintf(hStmt->buffers[pos - 1], "%f", *((double *)buffer));
 			break;
 		default:
-			hStmt->buffers[pos - 1] = _tcsdup("");
+			hStmt->buffers[pos - 1] = strdup("");
 			break;
 	}
 

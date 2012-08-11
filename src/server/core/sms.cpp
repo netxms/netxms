@@ -99,9 +99,9 @@ void InitSMSSender()
       {
          BOOL (* DrvInit)(const TCHAR *);
 
-         DrvInit = (BOOL (*)(const TCHAR *))DLGetSymbolAddr(hModule, _T("SMSDriverInit"), szErrorText);
-         m_DrvSendMsg = (BOOL (*)(const TCHAR *, const TCHAR *))DLGetSymbolAddr(hModule, _T("SMSDriverSend"), szErrorText);
-         m_DrvUnload = (void (*)())DLGetSymbolAddr(hModule, _T("SMSDriverUnload"), szErrorText);
+         DrvInit = (BOOL (*)(const TCHAR *))DLGetSymbolAddr(hModule, "SMSDriverInit", szErrorText);
+         m_DrvSendMsg = (BOOL (*)(const TCHAR *, const TCHAR *))DLGetSymbolAddr(hModule, "SMSDriverSend", szErrorText);
+         m_DrvUnload = (void (*)())DLGetSymbolAddr(hModule, "SMSDriverUnload", szErrorText);
          if ((DrvInit != NULL) && (m_DrvSendMsg != NULL) && (m_DrvUnload != NULL))
          {
             if (DrvInit(szDrvConfig))

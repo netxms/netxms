@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
                    "\n");
 				return 0;
          case 'v':   // Print version and exit
-            printf("NetXMS Password Encryption Tool Version " NETXMS_VERSION_STRING "\n");
+            printf("NetXMS Password Encryption Tool Version " NETXMS_VERSION_STRING_A "\n");
 				return 0;
          case '?':
 				return 1;
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	memset(key, 0, 16);
 
 	CalculateMD5Hash((BYTE *)argv[optind], strlen(argv[optind]), key);
-	nx_strncpy((char *)plainText, argv[optind + 1], 32);
+	strncpy((char *)plainText, argv[optind + 1], 31);
 	ICEEncryptData(plainText, 32, encrypted, key);
 
 	// Convert encrypted password to base64 encoding and print

@@ -34,9 +34,9 @@
 // Display help
 //
 
-static void Help(void)
+static void Help()
 {
-   printf("NetXMS Administartor Tool  Version " NETXMS_VERSION_STRING "\n"
+   printf("NetXMS Administartor Tool  Version " NETXMS_VERSION_STRING_A "\n"
           "Copyright (c) 2004, 2005, 2006, 2007 Victor Kirhenshtein\n\n"
           "Usage: nxadm -c <command>\n"
           "       nxadm -i\n"
@@ -52,7 +52,7 @@ static void Help(void)
 // Execute command
 //
 
-static BOOL ExecCommand(TCHAR *pszCmd)
+static BOOL ExecCommand(char *pszCmd)
 {
    CSCPMessage msg, *pResponse;
    BOOL bConnClosed = FALSE;
@@ -61,7 +61,13 @@ static BOOL ExecCommand(TCHAR *pszCmd)
 
    msg.SetCode(CMD_ADM_REQUEST);
    msg.SetId(g_dwRqId++);
+#ifdef UNICODE
+   WCHAR *wcmd = WideStringFromMBString(pszCmd);
+   msg.SetVariable(VID_COMMAND, wcmd);
+   free(wcmd);
+#else
    msg.SetVariable(VID_COMMAND, pszCmd);
+#endif
    SendMsg(&msg);
 
    while(1)
@@ -105,7 +111,7 @@ static void Shell()
 {
    char *ptr, szCommand[256];
 
-   printf("\nNetXMS Server Remote Console V" NETXMS_VERSION_STRING " Ready\n"
+   printf("\nNetXMS Server Remote Console V" NETXMS_VERSION_STRING_A " Ready\n"
           "Enter \"help\" for command list\n\n");
 
 #if USE_READLINE
@@ -118,7 +124,7 @@ static void Shell()
 #if USE_READLINE
       ptr = readline("\x1b[33mnetxmsd:\x1b[0m ");
 #else
-      WriteToTerminal("\x1b[33mnetxmsd:\x1b[0m ");
+      WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
       fflush(stdout);
       if (fgets(szCommand, 255, stdin) == NULL)
          break;   // Error reading stdin
@@ -130,7 +136,7 @@ static void Shell()
 
       if (ptr != NULL)
       {
-         StrStrip(ptr);
+         StrStripA(ptr);
          if (*ptr != 0)
          {
             if (ExecCommand(ptr))
@@ -163,7 +169,7 @@ int main(int argc, char *argv[])
 {
    int iError, ch;
    BOOL bStart = TRUE, bCmdLineOK = FALSE;
-   TCHAR *pszCmd;
+   char *pszCmd;
 
 #ifdef _WIN32
    WSADATA wsaData;

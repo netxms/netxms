@@ -515,6 +515,14 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
             case CT_STRING:
                nx_strncpy((TCHAR *)cfgTemplate[i].pBuffer, value, cfgTemplate[i].dwBufferSize);
                break;
+            case CT_MB_STRING:
+#ifdef UNICODE
+					memset(cfgTemplate[i].pBuffer, 0, cfgTemplate[i].dwBufferSize);
+					WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, (char *)cfgTemplate[i].pBuffer, cfgTemplate[i].dwBufferSize - 1, NULL, NULL);
+#else
+               nx_strncpy((TCHAR *)cfgTemplate[i].pBuffer, value, cfgTemplate[i].dwBufferSize);
+#endif
+               break;
             case CT_STRING_LIST:
 					*((TCHAR **)cfgTemplate[i].pBuffer) = (TCHAR *)malloc(sizeof(TCHAR) * (entry->getConcatenatedValuesLength() + 1));
 					for(j = 0, curr = *((TCHAR **)cfgTemplate[i].pBuffer); j < entry->getValueCount(); j++)

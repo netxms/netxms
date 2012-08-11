@@ -44,8 +44,8 @@ static void LoadDriver(const TCHAR *file)
    HMODULE hModule = DLOpen(file, errorText);
    if (hModule != NULL)
    {
-		int *apiVersion = (int *)DLGetSymbolAddr(hModule, _T("nddAPIVersion"), errorText);
-      NetworkDeviceDriver *(* CreateInstance)() = (NetworkDeviceDriver *(*)())DLGetSymbolAddr(hModule, _T("nddCreateInstance"), errorText);
+		int *apiVersion = (int *)DLGetSymbolAddr(hModule, "nddAPIVersion", errorText);
+      NetworkDeviceDriver *(* CreateInstance)() = (NetworkDeviceDriver *(*)())DLGetSymbolAddr(hModule, "nddCreateInstance", errorText);
 
       if ((apiVersion != NULL) && (CreateInstance != NULL))
       {

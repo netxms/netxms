@@ -4255,38 +4255,38 @@ static BOOL H_UpgradeFromV46(int currVersion, int newVersion)
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE alarm_notes ("
+   if (!CreateTable(_T("CREATE TABLE alarm_notes (")
 		                 _T("note_id integer not null,")
 		                 _T("alarm_id integer not null,")
 		                 _T("change_time integer not null,")
 		                 _T("user_id integer not null,")
 		                 _T("note_text $SQL:TEXT not null,")
-		                 _T("PRIMARY KEY(note_id))"))))
+		                 _T("PRIMARY KEY(note_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE alarm_change_log	("
+   if (!CreateTable(_T("CREATE TABLE alarm_change_log	(")
                   	  _T("change_id $SQL:INT64 not null,")
 		                 _T("change_time integer not null,")
 		                 _T("alarm_id integer not null,")
 		                 _T("opcode integer not null,")
 		                 _T("user_id integer not null,")
 		                 _T("info_text $SQL:TEXT not null,")
-		                 _T("PRIMARY KEY(change_id))"))))
+		                 _T("PRIMARY KEY(change_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE alarm_grops ("
+   if (!CreateTable(_T("CREATE TABLE alarm_grops (")
 		                 _T("alarm_group_id integer not null,")
 		                 _T("group_name varchar(255) not null,")
-		                 _T("PRIMARY KEY(alarm_group_id))"))))
+		                 _T("PRIMARY KEY(alarm_group_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE alarm_group_map ("
+   if (!CreateTable(_T("CREATE TABLE alarm_group_map (")
 		                 _T("alarm_group_id integer not null,")
                        _T("alarm_id integer not null,")
-		                 _T("PRIMARY KEY(alarm_group_id,alarm_id))"))))
+		                 _T("PRIMARY KEY(alarm_group_id,alarm_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -4418,13 +4418,13 @@ static BOOL H_UpgradeFromV43(int currVersion, int newVersion)
 	   _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (13,-2147483648)\n")
       _T("<END>");
 
-   if (!CreateTable(_T("CREATE TABLE agent_configs ("
+   if (!CreateTable(_T("CREATE TABLE agent_configs (")
 		                 _T("config_id integer not null,")
 		                 _T("config_name varchar(255) not null,")
 		                 _T("config_file $SQL:TEXT not null,")
 		                 _T("config_filter $SQL:TEXT not null,")
 		                 _T("sequence_number integer not null,")
-		                 _T("PRIMARY KEY(config_id))"))))
+		                 _T("PRIMARY KEY(config_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -4487,7 +4487,7 @@ static BOOL H_UpgradeFromV41(int currVersion, int newVersion)
 			_T("   3) Previous condition status#0D#0A   4) Current condition status')\n")
       _T("<END>");
 
-   if (!CreateTable(_T("CREATE TABLE conditions	("
+   if (!CreateTable(_T("CREATE TABLE conditions	(")
 		                 _T("id integer not null,")
 		                 _T("activation_event integer not null,")
 		                 _T("deactivation_event integer not null,")
@@ -4495,17 +4495,17 @@ static BOOL H_UpgradeFromV41(int currVersion, int newVersion)
 		                 _T("active_status integer not null,")
 		                 _T("inactive_status integer not null,")
 		                 _T("script $SQL:TEXT not null,")
-		                 _T("PRIMARY KEY(id))"))))
+		                 _T("PRIMARY KEY(id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE cond_dci_map ("
+   if (!CreateTable(_T("CREATE TABLE cond_dci_map (")
 		                 _T("condition_id integer not null,")
 		                 _T("dci_id integer not null,")
 		                 _T("node_id integer not null,")
 		                 _T("dci_func integer not null,")
 		                 _T("num_polls integer not null,")
-		                 _T("PRIMARY KEY(condition_id,dci_id))"))))
+		                 _T("PRIMARY KEY(condition_id,dci_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -4661,48 +4661,48 @@ static BOOL H_UpgradeFromV38(int currVersion, int newVersion)
 		   _T("   3) DCI ID if script is DCI transformation script, or 0 otherwise')\n")
       _T("<END>");
 
-   if (!CreateTable(_T("CREATE TABLE maps	("
+   if (!CreateTable(_T("CREATE TABLE maps	(")
 		                 _T("map_id integer not null,")
 		                 _T("map_name varchar(255) not null,")
 		                 _T("description $SQL:TEXT not null,")
 		                 _T("root_object_id integer not null,")
-		                 _T("PRIMARY KEY(map_id))"))))
+		                 _T("PRIMARY KEY(map_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE map_access_lists ("
+   if (!CreateTable(_T("CREATE TABLE map_access_lists (")
 		                 _T("map_id integer not null,")
 		                 _T("user_id integer not null,")
 		                 _T("access_rights integer not null,")
-		                 _T("PRIMARY KEY(map_id,user_id))"))))
+		                 _T("PRIMARY KEY(map_id,user_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE submaps ("
+   if (!CreateTable(_T("CREATE TABLE submaps (")
 		                 _T("map_id integer not null,")
 		                 _T("submap_id integer not null,")
 		                 _T("attributes integer not null,")	
-		                 _T("PRIMARY KEY(map_id,submap_id))"))))
+		                 _T("PRIMARY KEY(map_id,submap_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE submap_object_positions ("
+   if (!CreateTable(_T("CREATE TABLE submap_object_positions (")
 		                 _T("map_id integer not null,")
 		                 _T("submap_id integer not null,")
 		                 _T("object_id integer not null,")
 		                 _T("x integer not null,")
 		                 _T("y integer not null,")
-		                 _T("PRIMARY KEY(map_id,submap_id,object_id))"))))
+		                 _T("PRIMARY KEY(map_id,submap_id,object_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE submap_links ("
+   if (!CreateTable(_T("CREATE TABLE submap_links (")
 		                 _T("map_id integer not null,")
 		                 _T("submap_id integer not null,")
 		                 _T("object_id1 integer not null,")
 		                 _T("object_id2 integer not null,")
 		                 _T("link_type integer not null,")
-		                 _T("PRIMARY KEY(map_id,submap_id,object_id1,object_id2))"))))
+		                 _T("PRIMARY KEY(map_id,submap_id,object_id1,object_id2))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -4738,14 +4738,14 @@ static BOOL H_UpgradeFromV37(int currVersion, int newVersion)
       _T("CREATE INDEX idx_snmp_trap_log_trap_timestamp ON snmp_trap_log(trap_timestamp)\n")
       _T("<END>");
 
-   if (!CreateTable(_T("CREATE TABLE snmp_trap_log ("
+   if (!CreateTable(_T("CREATE TABLE snmp_trap_log (")
 		                 _T("trap_id $SQL:INT64 not null,")
 		                 _T("trap_timestamp integer not null,")
 		                 _T("ip_addr varchar(15) not null,")
 		                 _T("object_id integer not null,")
 		                 _T("trap_oid varchar(255) not null,")
 		                 _T("trap_varlist $SQL:TEXT not null,")
-		                 _T("PRIMARY KEY(trap_id))"))))
+		                 _T("PRIMARY KEY(trap_id))")))
 
       if (!g_bIgnoreErrors)
          return FALSE;
@@ -4918,13 +4918,13 @@ static BOOL H_UpgradeFromV33(int currVersion, int newVersion)
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE dci_schedules ("
+   if (!CreateTable(_T("CREATE TABLE dci_schedules (")
 		                 _T("item_id integer not null,")
-                       _T("schedule varchar(255) not null)"))))
+                       _T("schedule varchar(255) not null)")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE syslog ("
+   if (!CreateTable(_T("CREATE TABLE syslog (")
                        _T("msg_id $SQL:INT64 not null,")
 		                 _T("msg_timestamp integer not null,")
 		                 _T("facility integer not null,")
@@ -4933,7 +4933,7 @@ static BOOL H_UpgradeFromV33(int currVersion, int newVersion)
 		                 _T("hostname varchar(127) not null,")
 		                 _T("msg_tag varchar(32) not null,")
 		                 _T("msg_text $SQL:TEXT not null,")
-		                 _T("PRIMARY KEY(msg_id))"))))
+		                 _T("PRIMARY KEY(msg_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -5028,14 +5028,14 @@ static BOOL H_UpgradeFromV32(int currVersion, int newVersion)
       _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (12,-2147483648)\n")
       _T("<END>");
 
-   if (!CreateTable(_T("CREATE TABLE object_tools_table_columns ("
+   if (!CreateTable(_T("CREATE TABLE object_tools_table_columns (")
                   	  _T("tool_id integer not null,")
 		                 _T("col_number integer not null,")
 		                 _T("col_name varchar(255),")
 		                 _T("col_oid varchar(255),")
 		                 _T("col_format integer,")
 		                 _T("col_substr integer,")
-		                 _T("PRIMARY KEY(tool_id,col_number))"))))
+		                 _T("PRIMARY KEY(tool_id,col_number))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -5072,21 +5072,21 @@ static BOOL H_UpgradeFromV31(int currVersion, int newVersion)
       _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (4,-2147483648)\n")
       _T("<END>");
 
-   if (!CreateTable(_T("CREATE TABLE object_tools ("
+   if (!CreateTable(_T("CREATE TABLE object_tools (")
 	                    _T("tool_id integer not null,")
 	                    _T("tool_name varchar(255) not null,")
 	                    _T("tool_type integer not null,")
 	                    _T("tool_data $SQL:TEXT,")
 	                    _T("description varchar(255),")
 	                    _T("flags integer not null,")
-	                    _T("PRIMARY KEY(tool_id))"))))
+	                    _T("PRIMARY KEY(tool_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE object_tools_acl ("
+   if (!CreateTable(_T("CREATE TABLE object_tools_acl (")
 	                    _T("tool_id integer not null,")
 	                    _T("user_id integer not null,")
-	                    _T("PRIMARY KEY(tool_id,user_id))"))))
+	                    _T("PRIMARY KEY(tool_id,user_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -5120,20 +5120,20 @@ static BOOL H_UpgradeFromV30(int currVersion, int newVersion)
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE vpn_connectors ("
+   if (!CreateTable(_T("CREATE TABLE vpn_connectors (")
 		                 _T("id integer not null,")
 		                 _T("node_id integer not null,")
 		                 _T("peer_gateway integer not null,")
-		                 _T("PRIMARY KEY(id))"))))
+		                 _T("PRIMARY KEY(id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE vpn_connector_networks ("
+   if (!CreateTable(_T("CREATE TABLE vpn_connector_networks (")
 		                 _T("vpn_id integer not null,")
 		                 _T("network_type integer not null,")
 		                 _T("ip_addr varchar(15) not null,")
 		                 _T("ip_netmask varchar(15) not null,")
-		                 _T("PRIMARY KEY(vpn_id,ip_addr))"))))
+		                 _T("PRIMARY KEY(vpn_id,ip_addr))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -5217,20 +5217,20 @@ static BOOL H_UpgradeFromV28(int currVersion, int newVersion)
          _T("'<invalid_hash>','zone.ico','<invalid_hash>')\n")
       _T("<END>");
 
-   if (!CreateTable(_T("CREATE TABLE zones ("
+   if (!CreateTable(_T("CREATE TABLE zones (")
 	                    _T("id integer not null,")
 	                    _T("zone_guid integer not null,")
 	                    _T("zone_type integer not null,")
 	                    _T("controller_ip varchar(15) not null,")
 	                    _T("description $SQL:TEXT,")
-	                    _T("PRIMARY KEY(id))"))))
+	                    _T("PRIMARY KEY(id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE zone_ip_addr_list ("
+   if (!CreateTable(_T("CREATE TABLE zone_ip_addr_list (")
 	                    _T("zone_id integer not null,")
 	                    _T("ip_addr varchar(15) not null,")
-	                    _T("PRIMARY KEY(zone_id,ip_addr))"))))
+	                    _T("PRIMARY KEY(zone_id,ip_addr))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -5320,9 +5320,9 @@ static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
 
    if (bRead)
    {
-      _sntprintf(szQuery, 1024, _T("INSERT INTO object_properties (object_id,name,"
+      _sntprintf(szQuery, 1024, _T("INSERT INTO object_properties (object_id,name,")
                                    _T("status,is_deleted,image_id,inherit_access_rights,")
-                                   _T("last_modified) VALUES (%d,'%s',%d,%d,%d,%d,%ld)")),
+                                   _T("last_modified) VALUES (%d,'%s',%d,%d,%d,%d,%ld)"),
                  dwId, szName, dwStatus, bIsDeleted, dwImageId, bInheritRights, time(NULL));
 
       if (!SQLQuery(szQuery))
@@ -5387,7 +5387,7 @@ static BOOL H_UpgradeFromV26(int currVersion, int newVersion)
 		   _T("Parameters:#0D#0A   No message-specific parameters')\n")
       _T("<END>");
 
-   if (!CreateTable(_T("CREATE TABLE object_properties ("
+   if (!CreateTable(_T("CREATE TABLE object_properties (")
 	                    _T("object_id integer not null,")
 	                    _T("name varchar(63) not null,")
 	                    _T("status integer not null,")
@@ -5395,15 +5395,15 @@ static BOOL H_UpgradeFromV26(int currVersion, int newVersion)
 	                    _T("image_id integer,")
 	                    _T("last_modified integer not null,")
 	                    _T("inherit_access_rights integer not null,")
-	                    _T("PRIMARY KEY(object_id))"))))
+	                    _T("PRIMARY KEY(object_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE user_profiles ("
+   if (!CreateTable(_T("CREATE TABLE user_profiles (")
 	                    _T("user_id integer not null,")
 	                    _T("var_name varchar(255) not null,")
 	                    _T("var_value $SQL:TEXT,")
-	                    _T("PRIMARY KEY(user_id,var_name))"))))
+	                    _T("PRIMARY KEY(user_id,var_name))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -5453,9 +5453,9 @@ static BOOL H_UpgradeFromV26(int currVersion, int newVersion)
 
             if (bValidObject)
             {
-               _sntprintf(szQuery, 1024, _T("INSERT INTO object_properties (object_id,name,"
+               _sntprintf(szQuery, 1024, _T("INSERT INTO object_properties (object_id,name,")
                                             _T("status,is_deleted,image_id,inherit_access_rights,")
-                                            _T("last_modified) VALUES (%d,'%s',5,0,%d,%d,%ld)")),
+                                            _T("last_modified) VALUES (%d,'%s',5,0,%d,%d,%ld)"),
                           dwId, szName, dwImageId,
                           DBGetFieldLong(hResult, i, 1) ? TRUE : FALSE,
                           time(NULL));
@@ -5590,11 +5590,11 @@ static BOOL H_UpgradeFromV23(int currVersion, int newVersion)
    TCHAR szQuery[256];
    int i, iNumRows;
 
-   if (!CreateTable(_T("CREATE TABLE raw_dci_values ("
+   if (!CreateTable(_T("CREATE TABLE raw_dci_values (")
                        _T("	item_id integer not null,")
 	                    _T("   raw_value varchar(255),")
 	                    _T("   last_poll_time integer,")
-	                    _T("   PRIMARY KEY(item_id))"))))
+	                    _T("   PRIMARY KEY(item_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -5747,8 +5747,8 @@ static BOOL H_UpgradeFromV20(int currVersion, int newVersion)
          return FALSE;
 
    // Convert "is_xxx" fields into one _T("node_flags") field
-   hResult = SQLSelect(_T("SELECT id,is_snmp,is_agent,is_bridge,is_router,"
-                          _T("is_local_mgmt,is_ospf FROM nodes")));
+   hResult = SQLSelect(_T("SELECT id,is_snmp,is_agent,is_bridge,is_router,")
+                          _T("is_local_mgmt,is_ospf FROM nodes"));
    if (hResult != NULL)
    {
       iNumRows = DBGetNumRows(hResult);
@@ -5870,7 +5870,7 @@ static BOOL H_UpgradeFromV19(int currVersion, int newVersion)
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE network_services ("
+   if (!CreateTable(_T("CREATE TABLE network_services (")
 	                    _T("id integer not null,")
 	                    _T("name varchar(63),")
 	                    _T("status integer,")
@@ -5884,7 +5884,7 @@ static BOOL H_UpgradeFromV19(int currVersion, int newVersion)
 	                    _T("check_responce $SQL:TEXT,")
 	                    _T("poller_node_id integer not null,")
 	                    _T("image_id integer not null,")
-	                    _T("PRIMARY KEY(id))"))))
+	                    _T("PRIMARY KEY(id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -5911,14 +5911,14 @@ static BOOL H_UpgradeFromV18(int currVersion, int newVersion)
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateTable(_T("CREATE TABLE agent_pkg ("
+   if (!CreateTable(_T("CREATE TABLE agent_pkg (")
 	                       _T("pkg_id integer not null,")
 	                       _T("pkg_name varchar(63),")
 	                       _T("version varchar(31),")
 	                       _T("platform varchar(63),")
 	                       _T("pkg_file varchar(255),")
 	                       _T("description varchar(255),")
-	                       _T("PRIMARY KEY(pkg_id))"))))
+	                       _T("PRIMARY KEY(pkg_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -5979,10 +5979,10 @@ static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
          }
       }
 
-      if (!SQLQuery(_T("CREATE TABLE policy_event_list ("
+      if (!SQLQuery(_T("CREATE TABLE policy_event_list (")
                        _T("rule_id integer not null,")
                        _T("event_code integer not null,")
-                       _T("PRIMARY KEY(rule_id,event_code))"))))
+                       _T("PRIMARY KEY(rule_id,event_code))")))
       {
          if (!g_bIgnoreErrors)
          {
@@ -6013,9 +6013,9 @@ static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
    }
 
    _sntprintf(szQuery, 4096, 
-      _T("CREATE TABLE event_cfg (event_code integer not null,"
+      _T("CREATE TABLE event_cfg (event_code integer not null,")
 	      _T("event_name varchar(63) not null,severity integer,flags integer,")
-	      _T("message varchar(255),description %s,PRIMARY KEY(event_code))")),
+	      _T("message varchar(255),description %s,PRIMARY KEY(event_code))"),
               g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
    if (!SQLQuery(szQuery))
       if (!g_bIgnoreErrors)
@@ -6026,10 +6026,10 @@ static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
          return FALSE;
 
    _sntprintf(szQuery, 4096,
-      _T("CREATE TABLE modules (module_id integer not null,"
+      _T("CREATE TABLE modules (module_id integer not null,")
 	      _T("module_name varchar(63),exec_name varchar(255),")
 	      _T("module_flags integer not null default 0,description %s,")
-	      _T("license_key varchar(255),PRIMARY KEY(module_id))")),
+	      _T("license_key varchar(255),PRIMARY KEY(module_id))"),
               g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
    if (!SQLQuery(szQuery))
       if (!g_bIgnoreErrors)
@@ -6422,8 +6422,8 @@ void UpgradeDatabase()
    }
    else if (iVersion > DB_FORMAT_VERSION)
    {
-       _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\n"
-                   _T("You need to upgrade your server before using this database.\n")),
+       _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\n")
+                   _T("You need to upgrade your server before using this database.\n"),
                 (int)iVersion, DB_FORMAT_VERSION);
    }
    else

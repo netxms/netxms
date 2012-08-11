@@ -73,7 +73,7 @@ void LoadNetXMSModules(void)
       {
          BOOL (* ModuleInit)(NXMODULE *);
 
-         ModuleInit = (BOOL (*)(NXMODULE *))DLGetSymbolAddr(hModule, _T("NetXMSModuleInit"), szErrorText);
+         ModuleInit = (BOOL (*)(NXMODULE *))DLGetSymbolAddr(hModule, "NetXMSModuleInit", szErrorText);
          if (ModuleInit != NULL)
          {
             memset(&module, 0, sizeof(NXMODULE));

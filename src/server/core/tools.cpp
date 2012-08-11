@@ -51,19 +51,19 @@ void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize)
 	struct utsname uName;
 	if (uname(&uName) >= 0)
 	{
-		snprintf(pszBuffer, nMaxSize, "%s %s Release %s", uName.nodename, uName.sysname, uName.release);
+		_sntprintf(pszBuffer, nMaxSize, _T("%hs %hs Release %hs"), uName.nodename, uName.sysname, uName.release);
 	}
 	else
 	{
 #if HAVE_POSIX_STRERROR_R
-		strerror_r(errno, pszBuffer, nMaxSize);
+		_tcserror_r(errno, pszBuffer, nMaxSize);
 #else
-		nx_strncpy(pszBuffer, strerror(errno), nMaxSize);
+		nx_strncpy(pszBuffer, _tcserror(errno), nMaxSize);
 #endif
 	}
 # else
-   printf("GetSysInfoStr: code not implemented\n");
-   _tcscpy(pszBuffer, "UNIX");
+   _tprintf(_T("GetSysInfoStr: code not implemented\n"));
+   _tcscpy(pszBuffer, _T("UNIX"));
 # endif // HAVE_SYS_UTSNAME_H
 
 #endif
@@ -84,7 +84,12 @@ TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize)
 	struct utsname uName;
 	if (uname(&uName) >= 0)
 	{
+#ifdef UNICODE
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, uName.nodename, -1, buffer, bufSize);
+		buffer[bufSize - 1] = 0;
+#else
 		nx_strncpy(buffer, uName.nodename, bufSize);
+#endif
 	}
 	else
 	{
@@ -163,7 +168,11 @@ BOOL ExecCommand(TCHAR *pszCommand)
 		struct stat st;
 		int state = 0;
 
-		pTmp = _tcsdup(pszCommand);
+#ifdef UNICODE
+		pTmp = MBStringFromWideString(pszCommand);
+#else
+		pTmp = strdup(pszCommand);
+#endif
 		if (pTmp != NULL)
 		{
 			pCmd[nCount++] = pTmp;

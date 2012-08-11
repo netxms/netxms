@@ -107,22 +107,22 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
    pszEscResponse = EncodeSQLString(CHECK_NULL_EX(m_pszResponse));
    if (bNewObject)
    {
-      _sntprintf(szQuery, 16384, _T("INSERT INTO network_services (id,node_id,"
+      _sntprintf(szQuery, 16384, _T("INSERT INTO network_services (id,node_id,")
                                     _T("service_type,ip_bind_addr,ip_proto,ip_port,")
                                     _T("check_request,check_responce,poller_node_id,")
-												_T("required_polls) VALUES ")
-                                    _T("(%d,%d,%d,'%s',%d,%d,'%s','%s',%d,%d)")),
+		                              _T("required_polls) VALUES ")
+                                    _T("(%d,%d,%d,'%s',%d,%d,'%s','%s',%d,%d)"),
                  m_dwId, m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
                  pszEscResponse, m_dwPollerNode, m_iRequiredPollCount);
    }
    else
    {
-      _sntprintf(szQuery, 16384, _T("UPDATE network_services SET node_id=%d,"
+      _sntprintf(szQuery, 16384, _T("UPDATE network_services SET node_id=%d,")
                                     _T("service_type=%d,ip_bind_addr='%s',")
                                     _T("ip_proto=%d,ip_port=%d,check_request='%s',")
                                     _T("check_responce='%s',poller_node_id=%d,")
-												_T("required_polls=%d WHERE id=%d")),
+		                              _T("required_polls=%d WHERE id=%d"),
                  m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
                  pszEscResponse, m_dwPollerNode, m_iRequiredPollCount, m_dwId);
@@ -158,9 +158,9 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
    if (!loadCommonProperties())
       return FALSE;
 
-   _sntprintf(szQuery, 256, _T("SELECT node_id,service_type,"
+   _sntprintf(szQuery, 256, _T("SELECT node_id,service_type,")
                                _T("ip_bind_addr,ip_proto,ip_port,check_request,check_responce,")
-                               _T("poller_node_id,required_polls FROM network_services WHERE id=%d")), dwId);
+                               _T("poller_node_id,required_polls FROM network_services WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed

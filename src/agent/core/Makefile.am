@@ -18,7 +18,7 @@ else
 nxagentd_LDFLAGS = -static
 endif
 endif
-AM_CPPFLAGS = $(all_includes) -DPREFIX=\"@prefix@\"
+AM_CPPFLAGS = $(all_includes)
 CLEANFILES = messages.c messages.h static_subagents.cpp
 
 messages.c: messages.h

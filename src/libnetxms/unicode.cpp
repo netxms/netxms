@@ -924,6 +924,10 @@ DEFINE_PATH_FUNC(unlink)
 DEFINE_PATH_FUNC(remove)
 #endif
 
+#if !HAVE_WMKSTEMP
+DEFINE_PATH_FUNC(mkstemp)
+#endif
+
 #if !HAVE_WFOPEN
 
 FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type)

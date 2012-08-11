@@ -234,8 +234,10 @@ typedef unsigned __int32 uint32_t;
 typedef unsigned __int64 uint64_t; 
 
 #define INT64_FMT			_T("%I64d")
+#define INT64_FMTA		"%I64d"
 #define INT64_FMTW		L"%I64d"
 #define UINT64_FMT		_T("%I64u")
+#define UINT64_FMTA		"%I64u"
 #define UINT64_FMTW		L"%I64u"
 #define UINT64X_FMT(m)  _T("%") m _T("I64X")
 #if defined(__64BIT__) || (_MSC_VER > 1300)
@@ -358,7 +360,11 @@ typedef X_UINT64_X QWORD;
 #endif
 
 #define INT64_FMT			_T("%lld")
+#define INT64_FMTW		L"%lld"
+#define INT64_FMTA		"%lld"
 #define UINT64_FMT		_T("%llu")
+#define UINT64_FMTW		L"%llu"
+#define UINT64_FMTA		"%llu"
 #define UINT64X_FMT(m)  _T("%") m _T("llX")
 #define TIME_T_FMT		_T("%u")
 #define TIME_T_FCAST(x) ((DWORD)(x))
@@ -422,7 +428,11 @@ typedef TInt64 INT64;
 typedef TUint64 QWORD;
 
 #define INT64_FMT			_T("%lld")
+#define INT64_FMTW		L"%lld"
+#define INT64_FMTA		"%lld"
 #define UINT64_FMT		_T("%llu")
+#define UINT64_FMTW		L"%llu"
+#define UINT64_FMTA		"%llu"
 #define UINT64X_FMT(m)  _T("%") m _T("llX")
 #define TIME_T_FMT		_T("%u")
 #define TIME_T_FCAST(x) ((DWORD)(x))
@@ -550,7 +560,11 @@ typedef u_int64_t QWORD;
 #endif
 
 #define INT64_FMT			_T("%lld")
+#define INT64_FMTW		L"%lld"
+#define INT64_FMTA		"%lld"
 #define UINT64_FMT		_T("%llu")
+#define UINT64_FMTW		L"%llu"
+#define UINT64_FMTA		"%llu"
 #define UINT64X_FMT(m)  _T("%") m _T("llX")
 #ifdef __64BIT__
 #define TIME_T_FMT		_T("%llu")

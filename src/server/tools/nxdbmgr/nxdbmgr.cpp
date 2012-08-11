@@ -54,7 +54,7 @@ const TCHAR *g_pszSqlType[6][3] =
 // Static data
 //
 
-static TCHAR m_szCodePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE;
+static char m_szCodePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE_A;
 static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static TCHAR s_dbDriver[MAX_PATH] = _T("");
 static TCHAR s_dbDrvParams[MAX_PATH] = _T("");
@@ -65,7 +65,7 @@ static TCHAR s_dbName[MAX_DB_NAME] = _T("netxms_db");
 static TCHAR s_dbSchema[MAX_DB_NAME] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("CodePage"), CT_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
+   { _T("CodePage"), CT_MB_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
    { _T("CreateCrashDumps"), CT_IGNORE, 0, 0, 0, 0, NULL },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriver },
    { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDrvParams },
@@ -530,7 +530,7 @@ int main(int argc, char *argv[])
    HKEY hKey;
    DWORD dwSize;
 #else
-   char *pszEnv;
+   TCHAR *pszEnv;
 #endif
 
    InitThreadLibrary();
@@ -547,7 +547,7 @@ int main(int argc, char *argv[])
       RegCloseKey(hKey);
    }
 #else
-   pszEnv = getenv("NETXMSD_CONFIG");
+   pszEnv = _tgetenv(_T("NETXMSD_CONFIG"));
    if (pszEnv != NULL)
       nx_strncpy(szConfigFile, pszEnv, MAX_PATH);
 #endif
@@ -656,17 +656,17 @@ int main(int argc, char *argv[])
 #if !defined(_WIN32) && !defined(_NETWARE)
 	if (!_tcscmp(szConfigFile, _T("{search}")))
 	{
-		if (access(PREFIX "/etc/netxmsd.conf", 4) == 0)
+		if (_taccess(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
 		{
-			_tcscpy(szConfigFile, PREFIX "/etc/netxmsd.conf");
+			_tcscpy(szConfigFile, PREFIX _T("/etc/netxmsd.conf"));
 		}
-		else if (access("/usr/etc/netxmsd.conf", 4) == 0)
+		else if (_taccess(_T("/usr/etc/netxmsd.conf"), 4) == 0)
 		{
-			_tcscpy(szConfigFile, "/usr/etc/netxmsd.conf");
+			_tcscpy(szConfigFile, _T("/usr/etc/netxmsd.conf"));
 		}
 		else
 		{
-			_tcscpy(szConfigFile, "/etc/netxmsd.conf");
+			_tcscpy(szConfigFile, _T("/etc/netxmsd.conf"));
 		}
 	}
 #endif

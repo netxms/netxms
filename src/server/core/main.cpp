@@ -111,7 +111,7 @@ DWORD g_dwMaxLogSize = 16384 * 1024;
 DWORD g_dwLogHistorySize = 4;
 TCHAR g_szDailyLogFileSuffix[64] = _T("");
 TCHAR NXCORE_EXPORTABLE g_szDumpDir[MAX_PATH] = DEFAULT_DUMP_DIR;
-TCHAR g_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
+char g_szCodePage[256] = ICONV_DEFAULT_CODEPAGE_A;
 TCHAR NXCORE_EXPORTABLE g_szListenAddress[MAX_PATH] = _T("0.0.0.0");
 #ifndef _WIN32
 TCHAR NXCORE_EXPORTABLE g_szPIDFile[MAX_PATH] = _T("/var/run/netxmsd.pid");
@@ -894,7 +894,7 @@ void NXCORE_EXPORTABLE Shutdown()
 
 	// Remove PID file
 #ifndef _WIN32
-	remove(g_szPIDFile);
+	_tremove(g_szPIDFile);
 #endif
 
 	// Terminate process

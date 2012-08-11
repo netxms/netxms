@@ -28,7 +28,7 @@
 // Externals
 //
 
-extern TCHAR g_szCodePage[];
+extern char g_szCodePage[];
 extern TCHAR *g_pszModLoadList;
 
 
@@ -53,7 +53,7 @@ TCHAR g_szDbSchema[MAX_DB_NAME] = _T("");
 static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("CodePage"), CT_STRING, 0, 0, 256, 0, g_szCodePage },
+   { _T("CodePage"), CT_MB_STRING, 0, 0, 256, 0, g_szCodePage },
    { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDailyLogFileSuffix },
    { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDir },

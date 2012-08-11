@@ -637,7 +637,7 @@ static bool CheckPasswordComplexity(const TCHAR *password)
 			return false;
 		if (IsStringContainsSubsequence(password, _T("qwertyuiop[]"), 3))
 			return false;
-		if (IsStringContainsSubsequence(password, _T("asdfghjkl;’"), 3))
+		if (IsStringContainsSubsequence(password, _T("asdfghjkl;'"), 3))
 			return false;
 		if (IsStringContainsSubsequence(password, _T("zxcvbnm,./"), 3))
 			return false;

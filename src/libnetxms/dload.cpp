@@ -145,20 +145,12 @@ void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule)
 // Get symbol address from library
 //
 
-void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const TCHAR *pszSymbol, TCHAR *pszErrorText)
+void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *pszSymbol, TCHAR *pszErrorText)
 {
    void *pAddr;
 
 #if defined(_WIN32)
-#if !defined(UNDER_CE) && defined(UNICODE)
-   char szBuffer[256];
-
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                       pszSymbol, -1, szBuffer, 256, NULL, NULL);
-   pAddr = GetProcAddress(hModule, szBuffer);
-#else
    pAddr = GetProcAddress(hModule, pszSymbol);
-#endif
    if ((pAddr == NULL) && (pszErrorText != NULL))
       GetSystemErrorText(GetLastError(), pszErrorText, 255);
 #elif defined(_NETWARE)
@@ -166,23 +158,17 @@ void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const TCHAR *pszSymb
    if (pszErrorText != NULL)
       *pszErrorText = 0;
 #else    /* _WIN32 */
-#ifdef UNICODE
-   char mbbuffer[256];
-
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                       pszSymbol, -1, mbbuffer, 256, NULL, NULL);
-   pAddr = dlsym(hModule, mbbuffer);
+   pAddr = dlsym(hModule, pszSymbol);
    if ((pAddr == NULL) && (pszErrorText != NULL))
-   {
+	{
+#ifdef UNICODE
    	WCHAR *wbuffer = WideStringFromMBString(dlerror());
       nx_strncpy(pszErrorText, wbuffer, 255);
       free(wbuffer);
-   }
 #else
-   pAddr = dlsym(hModule, pszSymbol);
-   if ((pAddr == NULL) && (pszErrorText != NULL))
       nx_strncpy(pszErrorText, dlerror(), 255);
 #endif
+	}
 #endif
    return pAddr;
 }

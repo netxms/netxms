@@ -76,9 +76,9 @@ void InitLocalNetInfo()
       // Convert system name to lowercase
       for(i = 0; un.sysname[i] != 0; i++)
          un.sysname[i] = tolower(un.sysname[i]);
-      if (!_tcscmp(un.sysname, "hp-ux"))
-         _tcscpy(un.sysname, "hpux");
-      snprintf(szName, MAX_PATH, LIBDIR "/libnsm_%s" SHL_SUFFIX, un.sysname);
+      if (!strcmp(un.sysname, "hp-ux"))
+         strcpy(un.sysname, "hpux");
+      _sntprintf(szName, MAX_PATH, LIBDIR _T("/libnsm_%hs") SHL_SUFFIX, un.sysname);
 
       m_hSubAgent = DLOpen(szName, szErrorText);
       if (m_hSubAgent != NULL)

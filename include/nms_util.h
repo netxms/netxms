@@ -89,6 +89,7 @@
 #define CT_BOOLEAN      4
 #define CT_WORD         5
 #define CT_IGNORE       6
+#define CT_MB_STRING    7
 
 
 //
@@ -791,7 +792,7 @@ extern "C"
 
    HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText);
    void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
-   void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const TCHAR *pszSymbol, TCHAR *pszErrorText);
+   void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *pszSymbol, TCHAR *pszErrorText);
 
 	BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValue(const TCHAR *optString, const TCHAR *option, TCHAR *buffer, int bufSize);
 	BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBool(const TCHAR *optString, const TCHAR *option, BOOL defVal);
@@ -898,6 +899,9 @@ extern "C"
 #endif
 #if !HAVE_WSYSTEM
 	int wsystem(const WCHAR *_cmd);
+#endif
+#if !HAVE_WMKSTEMP
+	int wmkstemp(const WCHAR *_template);
 #endif
 #if !HAVE_WACCESS
 	int waccess(const WCHAR *_path, int mode);

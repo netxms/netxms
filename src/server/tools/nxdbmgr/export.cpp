@@ -262,7 +262,12 @@ void ExportDatabase(const char *file)
 
 	success = FALSE;	// Reset success flag
 #else
+#ifdef UNICODE
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, DATADIR, -1, buffer, MAX_PATH - 32, NULL, NULL);
+	strcat(buffer, "/sql/dbschema_sqlite.sql");
+#else
 	strcpy(buffer, DATADIR "/sql/dbschema_sqlite.sql");
+#endif
 #endif
 
 	data = (char *)LoadFileA(buffer, &size);
