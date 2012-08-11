@@ -868,7 +868,7 @@ extern "C"
 	WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString);
 #endif
 
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(_WIN32)
 
 #if !HAVE_WFOPEN
 	FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type);
@@ -920,7 +920,7 @@ extern "C"
 #endif
 #endif
 
-#endif	/* UNICODE */
+#endif	/* UNICODE && !_WIN32*/
 
 #if !HAVE_STRTOLL
 	INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base);

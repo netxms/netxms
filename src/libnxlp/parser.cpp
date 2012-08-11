@@ -29,7 +29,7 @@
 // Context state texts
 //
 
-static const TCHAR *s_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
+static const char *s_states[] = { "MANUAL", "AUTO", "INACTIVE" };
 
 
 //
@@ -165,9 +165,9 @@ bool LogParser::addRule(const char *regexp, DWORD eventCode, const char *eventNa
 // Check context
 //
 
-const TCHAR *LogParser::checkContext(LogParserRule *rule)
+const char *LogParser::checkContext(LogParserRule *rule)
 {
-	const TCHAR *state;
+	const char *state;
 	
 	if (rule->getContext() == NULL)
 	{
@@ -203,7 +203,7 @@ bool LogParser::matchLogRecord(bool hasAttributes, const char *source, DWORD eve
 										 DWORD level, const char *line, DWORD objectId)
 {
 	int i;
-	const TCHAR *state;
+	const char *state;
 	bool matched = false;
 
 	if (hasAttributes)

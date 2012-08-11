@@ -65,8 +65,8 @@ import org.eclipse.ui.progress.UIJob;
 import org.eclipse.zest.core.viewers.AbstractZoomableViewer;
 import org.eclipse.zest.core.viewers.IZoomableWorkbenchPart;
 import org.eclipse.zest.core.widgets.Graph;
+import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphNode;
-import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.layouts.LayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.GridLayoutAlgorithm;
@@ -87,6 +87,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
 import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
+import org.netxms.ui.eclipse.networkmaps.views.helpers.BendpointEditor;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.GraphLayoutFilter;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
@@ -149,6 +150,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
+	private BendpointEditor bendpointEditor = null;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -213,20 +215,38 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		
 		getSite().setSelectionProvider(this);
 		
-		/* FIXME: remove two listeners after upgrade to Zest 2.0. For Zest 1.3
-		 * it is needed because of crazy internal implementation of selection listeners
-		 * in GraphViewer.
-		 */
 		ISelectionChangedListener listener = new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent e)
 			{
+				if (bendpointEditor != null)
+				{
+					bendpointEditor.stop();
+					bendpointEditor = null;
+				}
+				
 				currentSelection = transformSelection(e.getSelection());
 
-				if ((currentSelection.size() == 1) && (analyzeSelection(currentSelection) == SELECTION_OBJECTS))
+				if (currentSelection.size() == 1)
 				{
-					GenericObject object = (GenericObject)currentSelection.getFirstElement();
-					actionOpenSubmap.setEnabled(object.getSubmapId() != 0);
+					int selectionType = analyzeSelection(currentSelection);
+					if (selectionType == SELECTION_OBJECTS)
+					{
+						GenericObject object = (GenericObject)currentSelection.getFirstElement();
+						actionOpenSubmap.setEnabled(object.getSubmapId() != 0);
+					}
+					else
+					{
+						actionOpenSubmap.setEnabled(false);
+						if (selectionType == SELECTION_LINKS)
+						{
+							NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();
+							if (link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS)
+							{
+								bendpointEditor = new BendpointEditor(link, (GraphConnection)viewer.getGraphControl().getSelection().get(0), viewer);
+							}
+						}
+					}
 				}
 				else
 				{
@@ -243,7 +263,6 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				}
 			}
 		};
-		viewer.addSelectionChangedListener(listener);
 		viewer.addPostSelectionChangedListener(listener);
 		
 		viewer.addDoubleClickListener(new IDoubleClickListener() {

@@ -80,7 +80,7 @@ SNMP_MIBObject::SNMP_MIBObject(DWORD dwOID, const TCHAR *pszName)
 // Common initialization
 //
 
-void SNMP_MIBObject::Initialize(void)
+void SNMP_MIBObject::Initialize()
 {
    m_pParent = NULL;
    m_pNext = NULL;

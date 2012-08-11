@@ -1381,6 +1381,7 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/ServiceComponents.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/ServiceDependency.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/VlanMap.java -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/BendpointEditor.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ConnectorLabel.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/DecorationFigure.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ExtendedGraphViewer.java -text

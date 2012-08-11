@@ -569,7 +569,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 					@Override
 					public void run()
 					{
-						viewer.refresh();
+						viewer.setInput(mapPage);
 					}
 				});
 			}

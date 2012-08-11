@@ -21,13 +21,16 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.FigureListener;
+import org.eclipse.draw2d.FreeformLayer;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.Layer;
 import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.GC;
@@ -61,6 +64,11 @@ public class ExtendedGraphViewer extends GraphViewer
 	private int backgroundZoom;
 	private IFigure zestRootLayer;
 	private MapLoader mapLoader;
+	private Layer backgroundLayer;
+	private Layer indicatorLayer;
+	private int crosshairX;
+	private int crosshairY;
+	private Crosshair crosshairFigure;
 	
 	/**
 	 * @param composite
@@ -79,16 +87,21 @@ public class ExtendedGraphViewer extends GraphViewer
 			}
 		});
 		
-		getZoomManager().setZoomLevels(zoomLevels);
+		backgroundLayer = new FreeformLayer();
+		getGraphControl().getRootLayer().add(backgroundLayer, null, 0);
 		backgroundFigure = new BackgroundFigure();
 		backgroundFigure.setSize(10, 10);
+		backgroundLayer.add(backgroundFigure);
+		
+		indicatorLayer = new FreeformLayer();
+		getGraphControl().getRootLayer().add(indicatorLayer, null, 1);
+		
+		getZoomManager().setZoomLevels(zoomLevels);
 		
 		for(Object f : getGraphControl().getRootLayer().getChildren())
 			if (f.getClass().getName().equals("org.eclipse.zest.core.widgets.internal.ZestRootLayer"))
 				zestRootLayer = (IFigure)f;
 
-		getGraphControl().getRootLayer().add(backgroundFigure, 0);
-		
 		final Runnable timer = new Runnable() {
 			@Override
 			public void run()
@@ -173,7 +186,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		final Rectangle controlSize = getGraphControl().getClientArea();
 		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
-		final Point mapSize = new Point(Math.max(controlSize.width, rootLayerSize.width), Math.max(controlSize.height, rootLayerSize.height)); 
+		final Point mapSize = new Point(Math.min(controlSize.width, rootLayerSize.width), Math.max(controlSize.height, rootLayerSize.height)); 
 		ConsoleJob job = new ConsoleJob("Download map tiles", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -184,10 +197,6 @@ public class ExtendedGraphViewer extends GraphViewer
 					public void run()
 					{
 						if (backgroundLocation == null)
-							return;
-						
-						final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
-						if ((mapSize.x != rootLayerSize.width) || (mapSize.y != rootLayerSize.height))
 							return;
 						
 						backgroundFigure.setSize(mapSize.x, mapSize.y);
@@ -298,6 +307,37 @@ public class ExtendedGraphViewer extends GraphViewer
 		}
 		return actions;
 	}
+	
+	/**
+	 * Show crosshair at given location
+	 * 
+	 * @param x
+	 * @param y
+	 */
+	public void showCrosshair(int x, int y)
+	{
+		if (crosshairFigure == null)
+		{
+			crosshairFigure = new Crosshair();
+			indicatorLayer.add(crosshairFigure);
+			crosshairFigure.setSize(getGraphControl().getRootLayer().getSize());
+		}
+		crosshairX = x;
+		crosshairY = y;
+		crosshairFigure.repaint();
+	}
+	
+	/**
+	 * Hide crosshair
+	 */
+	public void hideCrosshair()
+	{
+		if (crosshairFigure != null)
+		{
+			indicatorLayer.remove(crosshairFigure);
+			crosshairFigure = null;
+		}
+	}
 
 	/**
 	 * Additional figure used to display custom background for graph.
@@ -312,6 +352,32 @@ public class ExtendedGraphViewer extends GraphViewer
 		{
 			if (backgroundImage != null)
 				gc.drawImage(backgroundImage, 0, 0);
+		}
+	}
+	
+	/**
+	 * Crosshair
+	 */
+	private class Crosshair extends Figure
+	{
+		/**
+		 * 
+		 */
+		public Crosshair()
+		{
+			setOpaque(false);
+		}
+		
+		/* (non-Javadoc)
+		 * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+		 */
+		@Override
+		protected void paintFigure(Graphics gc)
+		{
+			gc.setLineStyle(SWT.LINE_DOT);
+			Dimension size = getSize();
+			gc.drawLine(0, crosshairY, size.width, crosshairY);
+			gc.drawLine(crosshairX, 0, crosshairX, size.height);
 		}
 	}
 }

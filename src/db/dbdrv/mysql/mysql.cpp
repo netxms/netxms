@@ -281,7 +281,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQuery
 	if (stmt != NULL)
 	{
 		char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-		int rc = mysql_stmt_prepare(stmt, pszQueryUTF8, strlen(pszQueryUTF8));
+		int rc = mysql_stmt_prepare(stmt, pszQueryUTF8, (unsigned long)strlen(pszQueryUTF8));
 		if (rc == 0)
 		{
 			result = (MYSQL_STATEMENT *)malloc(sizeof(MYSQL_STATEMENT));
@@ -339,7 +339,7 @@ extern "C" void EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, int
 		hStmt->buffers->add(b->buffer);
 		if (allocType == DB_BIND_DYNAMIC)
 			free(buffer);
-		b->buffer_length = strlen((char *)b->buffer) + 1;
+		b->buffer_length = (unsigned long)strlen((char *)b->buffer) + 1;
 		hStmt->lengthFields[pos - 1] = b->buffer_length - 1;
 		b->length = &hStmt->lengthFields[pos - 1];
 		b->buffer_type = MYSQL_TYPE_STRING;

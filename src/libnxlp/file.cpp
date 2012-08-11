@@ -86,7 +86,7 @@ static void ParseNewRecords(LogParser *parser, int fh)
 // File parser thread
 //
 
-bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const TCHAR *, ...), bool readFromCurrPos)
+bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const char *, ...), bool readFromCurrPos)
 {
 	char fname[MAX_PATH], temp[MAX_PATH];
 	struct stat st, stn;

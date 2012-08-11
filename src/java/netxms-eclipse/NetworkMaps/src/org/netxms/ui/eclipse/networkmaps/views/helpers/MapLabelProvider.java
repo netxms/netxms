@@ -421,8 +421,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				connection.setRouter(manhattanRouter);
 				break;
 			case NetworkMapLink.ROUTING_BENDPOINTS:
-				bendpointRouter.setConstraint(connection.getConnectionFigure(), getConnectionPoints(link));
 				connection.setRouter(bendpointRouter);
+				connection.setData("ROUTER", bendpointRouter);
+				Object bp = getConnectionPoints(link);
+				bendpointRouter.setConstraint(connection.getConnectionFigure(), bp);
+				connection.getConnectionFigure().setRoutingConstraint(bp);
 				break;
 			default:
 				connection.setRouter(null);
@@ -439,14 +442,21 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private List<Bendpoint> getConnectionPoints(NetworkMapLink link)
 	{
 		long[] points = link.getBendPoints();
-		List<Bendpoint> list = new ArrayList<Bendpoint>(points.length / 2); 
-		for(int i = 0; i < points.length; i += 2)
+		if (points != null)
 		{
-			if (points[i] == 0x7FFFFFFF)
-				break;
-			list.add(new AbsoluteBendpoint((int)points[i], (int)points[i + 1]));
+			List<Bendpoint> list = new ArrayList<Bendpoint>(points.length / 2); 
+			for(int i = 0; i < points.length; i += 2)
+			{
+				if (points[i] == 0x7FFFFFFF)
+					break;
+				list.add(new AbsoluteBendpoint((int)points[i], (int)points[i + 1]));
+			}
+			return list;
 		}
-		return list;
+		else
+		{
+			return new ArrayList<Bendpoint>(0);
+		}
 	}
 
 	/**

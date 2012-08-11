@@ -61,10 +61,12 @@ public class LinkEditor
 	public void update()
 	{
 		mapPage.removeLink(link);
+		long[] bp = link.getBendPoints();
 		link = new NetworkMapLink(name, type, link.getElement1(), link.getElement2(), connectorName1, connectorName2);
 		link.setColor(color);
 		link.setStatusObject(statusObject);
 		link.setRouting(routingAlgorithm);
+		link.setBendPoints(bp);
 		mapPage.addLink(link);
 		modified = true;
 	}

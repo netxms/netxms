@@ -435,7 +435,7 @@ extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int
 			}
 #endif
 			OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
-							 (ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
+							 ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
 							 (sqlType == DB_SQLTYPE_TEXT) ? SQLT_LNG : SQLT_STR,
 							 NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
 			break;
@@ -452,7 +452,7 @@ extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int
 #endif
 			stmt->buffers->set(pos - 1, sqlBuffer);
 			OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
-							 (ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
+							 ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
 							 SQLT_STR, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
 			if (allocType == DB_BIND_DYNAMIC)
 				free(buffer);
@@ -470,7 +470,7 @@ extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int
 #endif
 			stmt->buffers->set(pos - 1, sqlBuffer);
 			OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
-							 (ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
+							 ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
 							 SQLT_STR, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
 			if (allocType == DB_BIND_DYNAMIC)
 				free(buffer);
