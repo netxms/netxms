@@ -72,7 +72,7 @@ public class Generator {
 
         final String driverName = config.getProperty(CONFIG_JDBCDRIVER + dataSourceName);
         if (driverName == null) {
-            throw new RuntimeException(CONFIG_JDBCURL + dataSourceName + " not found in config file");
+            throw new RuntimeException(CONFIG_JDBCDRIVER + dataSourceName + " not found in config file");
         }
         Class.forName(driverName);
         
