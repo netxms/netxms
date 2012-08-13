@@ -37,7 +37,7 @@ SOCKET NetConnectTCP(const TCHAR *szHost, DWORD dwAddr, unsigned short nPort, DW
 		sa.sin_port = htons(nPort);
 		if (szHost != NULL)
 		{
-			sa.sin_addr.s_addr = _inet_addr_t(szHost);
+			sa.sin_addr.s_addr = _t_inet_addr(szHost);
 		}
 		else
 		{
