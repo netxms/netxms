@@ -712,7 +712,6 @@ inline void MutexDestroy(MUTEX mutex)
 
 inline BOOL MutexLock(MUTEX mutex)
 {
-	int i;
 	int ret = FALSE;
 
    if (mutex != NULL)
