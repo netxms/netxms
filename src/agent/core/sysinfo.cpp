@@ -40,6 +40,19 @@
 #define NX_STAT_STRUCT struct stat
 #endif
 
+#ifdef UNICODE
+inline int __call_stat(const WCHAR *f, NX_STAT_STRUCT *s)
+{
+	char *mbf = MBStringFromWideString(f);
+	int rc = NX_STAT(mbf, s);
+	free(mbf);
+	return rc;
+}
+#define CALL_STAT(f, s) __call_stat(f, s)
+#else
+#define CALL_STAT(f, s) NX_STAT(f, s)
+#endif
+
 
 //
 // Handler for System.CurrentTime parameter
@@ -119,7 +132,7 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive,
    TCHAR szFileName[MAX_PATH];
    LONG nRet = SYSINFO_RC_SUCCESS;
 
-   if (NX_STAT(szPath, &fileInfo) == -1) 
+   if (CALL_STAT(szPath, &fileInfo) == -1) 
        return SYSINFO_RC_ERROR;
 
    // if this is just a file than simply return statistics
@@ -153,7 +166,7 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive,
          _tcscat(szFileName, pFile->d_name);
 
          // skip unaccessible entries
-         if (NX_STAT(szFileName, &fileInfo) == -1)
+         if (CALL_STAT(szFileName, &fileInfo) == -1)
             continue;
          
          // skip symlinks
@@ -372,21 +385,21 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    {
 #ifdef _AIX
       // Assume that we are running on PowerPC
-      sprintf(value, "%s-powerpc", info.sysname);
+      _sntprintf(value, MAX_RESULT_LENGTH, _T("%hs-powerpc"), info.sysname);
 #else
-      sprintf(value, "%s-%s", info.sysname, info.machine);
+      _sntprintf(value, MAX_RESULT_LENGTH, _T("%s-%s"), info.sysname, info.machine);
 #endif
    }
    else
    {
-      DebugPrintf(INVALID_INDEX, 2, "uname() failed: %s", strerror(errno));
+      DebugPrintf(INVALID_INDEX, 2, _T("uname() failed: %s"), _tcserror(errno));
       nResult = SYSINFO_RC_ERROR;
    }
 
 #else
 
    // Finally, we don't know a way to detect platform
-   strcpy(value, "unknown");
+   _tcscpy(value, _T("unknown"));
 
 #endif
 
@@ -415,7 +428,7 @@ LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 	if (!AgentGetParameterArg(cmd, 1, szFilePath, MAX_PATH))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	if (NX_STAT(szFilePath, &fileInfo) == -1) 
+	if (CALL_STAT(szFilePath, &fileInfo) == -1) 
 		return SYSINFO_RC_ERROR;
 
 	switch(CAST_FROM_POINTER(arg, int))

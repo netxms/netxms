@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004 - 2007 Alex Kirhenshtein
+** Copyright (C) 2004 - 2012 Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,13 +41,13 @@ static void findMountpointByDevice(char *dev, int size)
 	}
 }
 
-LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
+LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statfs s;
 	char szArg[512] = {0};
 
-	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0)
 	{
@@ -95,35 +95,3 @@ LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
 
 	return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.6  2007/09/27 09:16:41  alk
-disk usage fixed (%), should work for up to 1T mountpoints
-
-Revision 1.5  2007/09/17 18:55:04  alk
-freespace(%) fixed for large partitions
-
-Revision 1.4  2007/04/24 12:04:10  alk
-code reformat
-
-Revision 1.3  2006/03/02 12:17:05  victor
-Removed various warnings related to 64bit platforms
-
-Revision 1.2  2005/08/19 15:23:50  victor
-Added new parameters
-
-Revision 1.1  2004/10/22 22:08:34  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
-
-*/

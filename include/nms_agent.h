@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -450,6 +450,26 @@ inline void ret_string(TCHAR *rbuf, const TCHAR *value)
 	nx_strncpy(rbuf, value, MAX_RESULT_LENGTH);
 }
 
+inline void ret_wstring(TCHAR *rbuf, const WCHAR *value)
+{
+#ifdef UNICODE
+	nx_strncpy(rbuf, value, MAX_RESULT_LENGTH);
+#else
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, rbuf, MAX_RESULT_LENGTH, NULL, NULL);
+	rbuf[MAX_RESULT_LENGTH - 1] = 0;
+#endif
+}
+
+inline void ret_mbstring(TCHAR *rbuf, const char *value)
+{
+#ifdef UNICODE
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, value, -1, rbuf, MAX_RESULT_LENGTH);
+	rbuf[MAX_RESULT_LENGTH - 1] = 0;
+#else
+	nx_strncpy(rbuf, value, MAX_RESULT_LENGTH);
+#endif
+}
+
 inline void ret_int(TCHAR *rbuf, LONG value)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300)
@@ -500,7 +520,14 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
 // API for subagents
 //
 
-BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArg(const TCHAR *param, int index, TCHAR *arg, int maxSize);
+BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize);
+BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, WCHAR *arg, int maxSize);
+#ifdef UNICODE
+#define AgentGetParameterArg AgentGetParameterArgW
+#else
+#define AgentGetParameterArg AgentGetParameterArgA
+#endif
+
 void LIBNETXMS_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...);
 void LIBNETXMS_EXPORTABLE AgentWriteLog2(int logLevel, const TCHAR *format, va_list args);
 void LIBNETXMS_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...);

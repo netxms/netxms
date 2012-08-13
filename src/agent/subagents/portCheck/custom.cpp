@@ -6,13 +6,13 @@
 #include "main.h"
 #include "net.h"
 
-LONG H_CheckCustom(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CheckCustom(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 
-	char szHost[1024];
-	char szPort[1024];
-	char szTimeout[64];
+	TCHAR szHost[1024];
+	TCHAR szPort[1024];
+	TCHAR szTimeout[64];
 	unsigned short nPort;
 
    AgentGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
@@ -24,20 +24,20 @@ LONG H_CheckCustom(const char *pszParam, const char *pArg, char *pValue)
 		return SYSINFO_RC_ERROR;
 	}
 
-	nPort = (unsigned short)atoi(szPort);
+	nPort = (unsigned short)_tcstol(szPort, NULL, 10);
 	if (nPort == 0)
 	{
 		return SYSINFO_RC_ERROR;
 	}
 
-	DWORD dwTimeout = strtoul(szTimeout, NULL, 0);
+	DWORD dwTimeout = _tcstoul(szTimeout, NULL, 0);
 	ret_int(pValue, CheckCustom(szHost, 0, nPort, NULL, NULL, dwTimeout));
 	return nRet;
 }
 
 
-int CheckCustom(char *szAddr, DWORD dwAddr, short nPort, char *szRequest,
-                char *szResponse, DWORD dwTimeout)
+int CheckCustom(TCHAR *szAddr, DWORD dwAddr, short nPort, TCHAR *szRequest,
+                TCHAR *szResponse, DWORD dwTimeout)
 {
 	int nRet;
 	SOCKET nSd;

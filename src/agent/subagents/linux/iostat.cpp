@@ -115,7 +115,7 @@ static void ParseIoStat(char *line)
 		strcpy(m_devices[dev].name, devName);
 		m_devices[dev].isRealDevice = IsRealDevice(devName);
 		memset(m_devices[dev].samples, 0, sizeof(IOSTAT_SAMPLE) * SAMPLES_PER_MINUTE);
-		AgentWriteDebugLog(2, "ParseIoStat(): new device added (name=%s isRealDevice=%d)", devName, m_devices[dev].isRealDevice);
+		AgentWriteDebugLog(2, _T("ParseIoStat(): new device added (name=%hs isRealDevice=%d)"), devName, m_devices[dev].isRealDevice);
 	}
 
 	// Parse counters
@@ -196,7 +196,7 @@ void StartIoStatCollector()
 		if (S_ISDIR(st.st_mode))
 		{
 			m_isSysFsAvailable = true;
-			AgentWriteDebugLog(2, "Linux: using /sys/block to distinguish devices from partitions");
+			AgentWriteDebugLog(2, _T("Linux: using /sys/block to distinguish devices from partitions"));
 		}
 	}	
 
@@ -223,11 +223,11 @@ void ShutdownIoStatCollector()
 // Get samples for given device
 //
 
-static IOSTAT_SAMPLE *GetSamples(const char *param)
+static IOSTAT_SAMPLE *GetSamples(const TCHAR *param)
 {
 	char *devName, buffer[64];
 
-	if (!AgentGetParameterArg(param, 1, buffer, 64))
+	if (!AgentGetParameterArgA(param, 1, buffer, 64))
 		return NULL;
 
 	devName = !strncmp(buffer, "/dev/", 5) ? &buffer[5] : buffer;
@@ -258,7 +258,7 @@ static DWORD GetSampleDelta(IOSTAT_SAMPLE *samples, int metric)
 // Handlers for agent parameters
 //
 
-LONG H_IoStats(const char *pszParam, const char *pArg, char *pValue)
+LONG H_IoStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_UNSUPPORTED;
 
@@ -291,7 +291,7 @@ LONG H_IoStats(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_IoStatsTotal(const char *pszParam, const char *pArg, char *pValue)
+LONG H_IoStatsTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int metric = CAST_FROM_POINTER(pArg, int);
 
@@ -335,7 +335,7 @@ LONG H_IoStatsTotal(const char *pszParam, const char *pArg, char *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-LONG H_DiskQueue(const char *pszParam, const char *pArg, char *pValue)
+LONG H_DiskQueue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_UNSUPPORTED;
 
@@ -356,7 +356,7 @@ LONG H_DiskQueue(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_DiskQueueTotal(const char *pszParam, const char *pArg, char *pValue)
+LONG H_DiskQueueTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	MutexLock(m_dataAccess);
 

@@ -181,16 +181,24 @@ int WatchdogMain(DWORD pid)
          break;
    }
 	syslog(LOG_WARNING, "restarting agent");
-   snprintf(cmdLine, 4096, "\"" PREFIX "/bin/nxagentd\" -c \"%s\" %s%s%s%s-D %d %s",
-            g_szConfigFile, (g_dwFlags & AF_DAEMON) ? "-d " : "",
-	         (g_dwFlags & AF_CENTRAL_CONFIG) ? "-M " : "",
-				(g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : "",
-				(g_dwFlags & AF_CENTRAL_CONFIG) ? " " : "",
-				g_debugLevel, szPlatformSuffixOption);
+   _sntprintf(cmdLine, 4096, _T("\"") PREFIX _T("/bin/nxagentd\" -c \"%s\" %s%s%s%s-D %d %s"),
+              g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
+	           (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
+				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
+				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
+				  g_debugLevel, szPlatformSuffixOption);
+#ifdef UNICODE
+	syslog(LOG_INFO, "command line: %ls", cmdLine);
+#else
 	syslog(LOG_INFO, "command line: %s", cmdLine);
+#endif
    if (ExecuteCommand(cmdLine, NULL, NULL) != ERR_SUCCESS)
 	{
+#ifdef UNICODE
+		syslog(LOG_ERR, "failed to restart agent (command line: %ls)", cmdLine);
+#else
 		syslog(LOG_ERR, "failed to restart agent (command line: %s)", cmdLine);
+#endif
 	}
 #endif
 	return 1;

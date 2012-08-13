@@ -100,11 +100,11 @@ static bool ParseDrbdStatus()
 				memset(&device, 0, sizeof(DRBD_DEVICE));
 				device.id = strtol(&line[pmatch[1].rm_so], NULL, 10);
 				device.protocol = line[pmatch[7].rm_so];
-				nx_strncpy(device.connState, &line[pmatch[2].rm_so], STATUS_FIELD_LEN);
-				nx_strncpy(device.localDeviceState, &line[pmatch[3].rm_so], STATUS_FIELD_LEN);
-				nx_strncpy(device.remoteDeviceState, &line[pmatch[4].rm_so], STATUS_FIELD_LEN);
-				nx_strncpy(device.localDataState, &line[pmatch[5].rm_so], STATUS_FIELD_LEN);
-				nx_strncpy(device.remoteDataState, &line[pmatch[6].rm_so], STATUS_FIELD_LEN);
+				nx_strncpy_mb(device.connState, &line[pmatch[2].rm_so], STATUS_FIELD_LEN);
+				nx_strncpy_mb(device.localDeviceState, &line[pmatch[3].rm_so], STATUS_FIELD_LEN);
+				nx_strncpy_mb(device.remoteDeviceState, &line[pmatch[4].rm_so], STATUS_FIELD_LEN);
+				nx_strncpy_mb(device.localDataState, &line[pmatch[5].rm_so], STATUS_FIELD_LEN);
+				nx_strncpy_mb(device.remoteDataState, &line[pmatch[6].rm_so], STATUS_FIELD_LEN);
 
 				if ((device.id >= 0) && (device.id < MAX_DEVICE_COUNT))
 				{
@@ -117,7 +117,7 @@ static bool ParseDrbdStatus()
 					line[pmatch[i].rm_eo] = 0;
 
 				MutexLock(s_versionAccess);
-				nx_strncpy(s_drbdVersion, &line[pmatch[1].rm_so], 32);
+				nx_strncpy_mb(s_drbdVersion, &line[pmatch[1].rm_so], 32);
 				s_apiVersion = strtol(&line[pmatch[2].rm_so], NULL, 10);
 				s_protocolVersion = strtol(&line[pmatch[3].rm_so], NULL, 10);
 				MutexUnlock(s_versionAccess);
@@ -149,7 +149,7 @@ static THREAD_RESULT THREAD_CALL CollectorThread(void *arg)
 {
 	if (!ParseDrbdStatus())
 	{
-		AgentWriteDebugLog(1, "Unable to parse /proc/drbd, DRBD data collector will not start");
+		AgentWriteDebugLog(1, _T("Unable to parse /proc/drbd, DRBD data collector will not start"));
 		return THREAD_OK;
 	}
 
@@ -192,17 +192,17 @@ void StopDrbdCollector()
 
 LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue)
 {
-	char szBuffer[1024];
+	TCHAR szBuffer[1024];
 
 	MutexLock(s_deviceAccess);
 	for(int i = 0; i < MAX_DEVICE_COUNT; i++)
 	{
 		if (s_devices[i].id != -1)
 		{
-			snprintf(szBuffer, 1024, "/dev/drbd%d %s %s/%s %s/%s %c",
-			         i, s_devices[i].connState, s_devices[i].localDeviceState,
-			         s_devices[i].remoteDeviceState, s_devices[i].localDataState,
-			         s_devices[i].remoteDataState, s_devices[i].protocol);
+			_sntprintf(szBuffer, 1024, _T("/dev/drbd%d %hs %hs/%hs %hs/%hs %hc"),
+			           i, s_devices[i].connState, s_devices[i].localDeviceState,
+			           s_devices[i].remoteDeviceState, s_devices[i].localDataState,
+			           s_devices[i].remoteDataState, s_devices[i].protocol);
 			pValue->add(szBuffer);
 		}
 	}
@@ -221,7 +221,7 @@ LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 	switch(*pArg)
 	{
 		case 'v':	// DRBD version
-			ret_string(pValue, s_drbdVersion);
+			ret_mbstring(pValue, s_drbdVersion);
 			break;
 		case 'a':	// API version
 			ret_int(pValue, s_apiVersion);
@@ -261,19 +261,19 @@ LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 		switch(*pArg)
 		{
 			case 'c':	// Connection state as text
-				ret_string(pValue, s_devices[nDev].connState);
+				ret_mbstring(pValue, s_devices[nDev].connState);
 				break;
 			case 's':	// State as text
-				ret_string(pValue, s_devices[nDev].localDeviceState);
+				ret_mbstring(pValue, s_devices[nDev].localDeviceState);
 				break;
 			case 'S':	// Peer state as text
-				ret_string(pValue, s_devices[nDev].remoteDeviceState);
+				ret_mbstring(pValue, s_devices[nDev].remoteDeviceState);
 				break;
 			case 'd':	// Data state as text
-				ret_string(pValue, s_devices[nDev].localDataState);
+				ret_mbstring(pValue, s_devices[nDev].localDataState);
 				break;
 			case 'D':	// Peer data state as text
-				ret_string(pValue, s_devices[nDev].remoteDataState);
+				ret_mbstring(pValue, s_devices[nDev].remoteDataState);
 				break;
 			case 'p':	// Protocol
 				pValue[0] = s_devices[nDev].protocol;

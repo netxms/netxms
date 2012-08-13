@@ -25,7 +25,7 @@
 
 #include "net.h"
 
-SOCKET NetConnectTCP(const char *szHost, DWORD dwAddr, unsigned short nPort, DWORD dwTimeout)
+SOCKET NetConnectTCP(const TCHAR *szHost, DWORD dwAddr, unsigned short nPort, DWORD dwTimeout)
 {
 	SOCKET nSocket;
 
@@ -37,7 +37,7 @@ SOCKET NetConnectTCP(const char *szHost, DWORD dwAddr, unsigned short nPort, DWO
 		sa.sin_port = htons(nPort);
 		if (szHost != NULL)
 		{
-			sa.sin_addr.s_addr = inet_addr(szHost);
+			sa.sin_addr.s_addr = _inet_addr_t(szHost);
 		}
 		else
 		{

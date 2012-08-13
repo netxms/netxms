@@ -71,17 +71,17 @@
 #define AGENT_DEFAULT_FILE_STORE "SYS:\\"
 #define AGENT_DEFAULT_DATA_DIR   "SYS:ETC"
 #elif defined(_IPSO)
-#define AGENT_DEFAULT_CONFIG     "/opt/netxms/etc/nxagentd.conf"
-#define AGENT_DEFAULT_CONFIG_D   "/opt/netxms/etc/nxagentd.conf.d"
-#define AGENT_DEFAULT_LOG        "/opt/netxms/log/nxagentd.log"
-#define AGENT_DEFAULT_FILE_STORE "/opt/netxms/store"
-#define AGENT_DEFAULT_DATA_DIR   "/opt/netxms/data"
+#define AGENT_DEFAULT_CONFIG     _T("/opt/netxms/etc/nxagentd.conf")
+#define AGENT_DEFAULT_CONFIG_D   _T("/opt/netxms/etc/nxagentd.conf.d")
+#define AGENT_DEFAULT_LOG        _T("/opt/netxms/log/nxagentd.log")
+#define AGENT_DEFAULT_FILE_STORE _T("/opt/netxms/store")
+#define AGENT_DEFAULT_DATA_DIR   _T("/opt/netxms/data")
 #else
-#define AGENT_DEFAULT_CONFIG     "{search}"
-#define AGENT_DEFAULT_CONFIG_D   "{search}"
-#define AGENT_DEFAULT_LOG        "/var/log/nxagentd"
-#define AGENT_DEFAULT_FILE_STORE "/tmp"
-#define AGENT_DEFAULT_DATA_DIR   "/var/opt/netxms/agent"
+#define AGENT_DEFAULT_CONFIG     _T("{search}")
+#define AGENT_DEFAULT_CONFIG_D   _T("{search}")
+#define AGENT_DEFAULT_LOG        _T("/var/log/nxagentd")
+#define AGENT_DEFAULT_FILE_STORE _T("/tmp")
+#define AGENT_DEFAULT_DATA_DIR   _T("/var/opt/netxms/agent")
 #endif
 
 #define REGISTRY_FILE_NAME       _T("registry.dat")

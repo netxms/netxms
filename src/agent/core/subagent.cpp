@@ -202,7 +202,7 @@ BOOL LoadSubAgent(TCHAR *szModuleName)
       sprintf(szEntryPoint, "NxSubAgentRegister_%s", szFileName);
       SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, Config *))DLGetSymbolAddr(hModule, szEntryPoint, szErrorText);
 #else
-      SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, Config *))DLGetSymbolAddr(hModule, _T("NxSubAgentRegister"), szErrorText);
+      SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, Config *))DLGetSymbolAddr(hModule, "NxSubAgentRegister", szErrorText);
 #endif
 
       if (SubAgentRegister != NULL)

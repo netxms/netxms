@@ -653,7 +653,6 @@ typedef struct _dir_struc_w
 #endif
 
 #ifdef __cplusplus
-#ifndef LIBNETXMS_INLINE
    inline TCHAR *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen)
    {
 #if defined(_WIN32) && (_MSC_VER >= 1400)
@@ -664,12 +663,22 @@ typedef struct _dir_struc_w
 #endif
       return pszDest;
    }
-#endif
+
+#ifdef UNICODE
+   inline char *nx_strncpy_mb(char *pszDest, const char *pszSrc, size_t nLen)
+   {
+#if defined(_WIN32) && (_MSC_VER >= 1400)
+		_strncpy_s(pszDest, nLen, pszSrc, _TRUNCATE);
 #else
-TCHAR LIBNETXMS_EXPORTABLE *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen);
+      strncpy(pszDest, pszSrc, nLen - 1);
+      pszDest[nLen - 1] = 0;
+#endif
+      return pszDest;
+   }
+#else
+#define nx_strncpy_mb nx_strncpy
 #endif
 
-#ifdef __cplusplus
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWORD timeout);
 int LIBNETXMS_EXPORTABLE SendEx(SOCKET, const void *, size_t, int, MUTEX);
 int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
@@ -870,11 +879,17 @@ extern "C"
 
 #if defined(UNICODE) && !defined(_WIN32)
 
+#if !HAVE_WPOPEN
+	FILE LIBNETXMS_EXPORTABLE *wpopen(const WCHAR *_command, const WCHAR *_type);
+#endif
 #if !HAVE_WFOPEN
 	FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type);
 #endif
 #if !HAVE_WOPEN
 	int LIBNETXMS_EXPORTABLE wopen(const WCHAR *, int, ...);
+#endif
+#if !HAVE_WCHMOD
+	int LIBNETXMS_EXPORTABLE wchmod(const WCHAR *_name, int mode);
 #endif
 #if !HAVE_WSTAT
 	int wstat(const WCHAR *_path, struct stat *_sbuf);
@@ -908,6 +923,9 @@ extern "C"
 #endif
 #if !HAVE_WGETENV
 	WCHAR *wgetenv(const WCHAR *_string);
+#endif
+#if !HAVE_WCTIME
+	WCHAR *wctime(const time_t *timep);
 #endif
 #if !HAVE_WCSERROR && HAVE_STRERROR
 	WCHAR *wcserror(int errnum);

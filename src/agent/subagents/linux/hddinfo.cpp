@@ -47,7 +47,7 @@
 //
 
 static BOOL GetAttributeValue(ATA_SMART_VALUES *pSmartValues, BYTE bAttr,
-		char *pValue, int nType)
+		TCHAR *pValue, int nType)
 {
 	int i;
 	BOOL bResult = FALSE;
@@ -75,14 +75,14 @@ static BOOL GetAttributeValue(ATA_SMART_VALUES *pSmartValues, BYTE bAttr,
 // Handler for PhysicalDisk.*
 //
 
-LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue)
+LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR, nDisk, nCmd;
 	char szBuffer[MAX_PATH];
 	int hDevice;
 	BYTE ioBuff[1024];
 
-	if (!AgentGetParameterArg(pszParam, 1, szBuffer, MAX_PATH))
+	if (!AgentGetParameterArgA(pszParam, 1, szBuffer, MAX_PATH))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	// Open device
@@ -120,7 +120,7 @@ LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue)
 			switch(pszArg[0])
 			{
 				case 'A':   // Generic attribute
-					if (AgentGetParameterArg(pszParam, 2, szBuffer, 128))
+					if (AgentGetParameterArgA(pszParam, 2, szBuffer, 128))
 					{
 						LONG nAttr;
 						char *eptr;

@@ -64,10 +64,10 @@ enum
 typedef struct t_ProcEnt
 {
 	unsigned int nPid;
-	char szProcName[128];
+	TCHAR szProcName[128];
 	int parent;					// PID of parent process
 	int group;					// Group ID
-	char state;					// Process state
+	TCHAR state;					// Process state
 	long threads;				// Number of threads
 	unsigned long ktime;		// Number of ticks spent in kernel mode
 	unsigned long utime;		// Number of ticks spent in user mode
@@ -168,7 +168,7 @@ enum
 	CPU_USAGE_GUEST,
 };
 
-#define MAKE_CPU_USAGE_PARAM(interval, source)	(const char *)((((DWORD)(interval)) << 16) | ((DWORD)(source)))
+#define MAKE_CPU_USAGE_PARAM(interval, source)	(const TCHAR *)((((DWORD)(interval)) << 16) | ((DWORD)(source)))
 #define CPU_USAGE_PARAM_INTERVAL(p)					((CAST_FROM_POINTER((p), DWORD)) >> 16)
 #define CPU_USAGE_PARAM_SOURCE(p)					((CAST_FROM_POINTER((p), DWORD)) & 0x0000FFFF)
 
@@ -188,36 +188,36 @@ enum
 // Functions
 //
 
-LONG H_DiskInfo(const char *, const char *, char *);
+LONG H_DiskInfo(const TCHAR *, const TCHAR *, TCHAR *);
 
-LONG H_IoStats(const char *, const char *, char *);
-LONG H_IoStatsTotal(const char *, const char *, char *);
-LONG H_DiskQueue(const char *, const char *, char *);
-LONG H_DiskQueueTotal(const char *, const char *, char *);
+LONG H_IoStats(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_IoStatsTotal(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_DiskQueue(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_DiskQueueTotal(const TCHAR *, const TCHAR *, TCHAR *);
 
-LONG H_NetIfInfoFromIOCTL(const char *, const char *, char *);
-LONG H_NetIfInfoFromProc(const char *, const char *, char *);
-LONG H_NetIpForwarding(const char *, const char *, char *);
-LONG H_NetArpCache(const char *, const char *, StringList *);
-LONG H_NetRoutingTable(const char *, const char *, StringList *);
-LONG H_NetIfList(const char *, const char *, StringList *);
+LONG H_NetIfInfoFromIOCTL(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_NetIfInfoFromProc(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *);
+LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *);
+LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *);
 
-LONG H_ProcessList(const char *, const char *, StringList *);
-LONG H_Uptime(const char *, const char *, char *);
-LONG H_Uname(const char *, const char *, char *);
-LONG H_Hostname(const char *, const char *, char *);
-LONG H_Hostname(const char *, const char *, char *);
-LONG H_CpuCount(const char *, const char *, char *);
-LONG H_CpuLoad(const char *, const char *, char *);
-LONG H_CpuUsage(const char *, const char *, char *);
-LONG H_CpuUsageEx(const char *, const char *, char *);
-LONG H_ProcessCount(const char *, const char *, char *);
-LONG H_ProcessDetails(const char *, const char *, char *);
-LONG H_ThreadCount(const char *, const char *, char *);
-LONG H_MemoryInfo(const char *, const char *, char *);
-LONG H_SourcePkgSupport(const char *, const char *, char *);
-LONG H_ConnectedUsers(const char *, const char *, char *);
-LONG H_ActiveUserSessions(const char *, const char *, StringList *);
+LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *);
+LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_CpuCount(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_CpuLoad(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_CpuUsage(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_CpuUsageEx(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_ProcessDetails(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_ThreadCount(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_SourcePkgSupport(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_ConnectedUsers(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_ActiveUserSessions(const TCHAR *, const TCHAR *, StringList *);
 
 void StartCpuUsageCollector();
 void ShutdownCpuUsageCollector();

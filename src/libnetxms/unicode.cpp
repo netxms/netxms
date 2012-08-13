@@ -928,6 +928,23 @@ DEFINE_PATH_FUNC(remove)
 DEFINE_PATH_FUNC(mkstemp)
 #endif
 
+#if !HAVE_WPOPEN
+
+FILE LIBNETXMS_EXPORTABLE *wpopen(const WCHAR *_command, const WCHAR *_type)
+{
+	char *command, *type;
+	FILE *f;
+	
+	command = MBStringFromWideString(_command);
+	type = MBStringFromWideString(_type);
+	f = popen(command, type);
+	free(command);
+	free(type);
+	return f;
+}
+
+#endif
+
 #if !HAVE_WFOPEN
 
 FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type)
@@ -965,6 +982,21 @@ int LIBNETXMS_EXPORTABLE wopen(const WCHAR *_name, int flags, ...)
 	{
 		rc = open(name, flags);
 	}
+	free(name);
+	return rc;
+}
+
+#endif
+
+#if !HAVE_WCHMOD
+
+int LIBNETXMS_EXPORTABLE wchmod(const WCHAR *_name, int mode)
+{
+	char *name;
+	int rc;
+	
+	name = MBStringFromWideString(_name);
+	rc = chmod(name, mode);
 	free(name);
 	return rc;
 }
@@ -1050,6 +1082,18 @@ WCHAR *wgetenv(const WCHAR *_string)
 		return NULL;
 
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, p, -1, value, 8192);
+	return value;
+}
+
+#endif
+
+#if !HAVE_WCTIME
+
+WCHAR *wctime(const time_t *timep)
+{
+	static WCHAR value[256];
+	
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, ctime(timep), -1, value, 256);
 	return value;
 }
 

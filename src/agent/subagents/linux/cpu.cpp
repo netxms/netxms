@@ -265,7 +265,7 @@ void ShutdownCpuUsageCollector(void)
 	free(m_cpuUsageGuest);
 }
 
-static void GetUsage(int source, int cpu, int count, char *value)
+static void GetUsage(int source, int cpu, int count, TCHAR *value)
 {
 	float *table;
 	switch (source)
@@ -324,7 +324,7 @@ static void GetUsage(int source, int cpu, int count, char *value)
 	ret_double(value, usage);
 }
 
-LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int count;
 
@@ -345,16 +345,16 @@ LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-LONG H_CpuUsageEx(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int count, cpu;
-	char buffer[256], *eptr;
+	TCHAR buffer[256], *eptr;
 	struct CpuUsageParam *p = (struct CpuUsageParam *)pValue;
 
 	if (!AgentGetParameterArg(pszParam, 1, buffer, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 		
-	cpu = strtol(buffer, &eptr, 0);
+	cpu = _tcstol(buffer, &eptr, 0);
 	if ((*eptr != 0) || (cpu < 0) || (cpu >= m_maxCPU))
 		return SYSINFO_RC_UNSUPPORTED;
 
@@ -376,7 +376,7 @@ LONG H_CpuUsageEx(const char *pszParam, const char *pArg, char *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	ret_uint(pValue, (m_maxCPU > 0) ? m_maxCPU : 1);
 	return SYSINFO_RC_SUCCESS;

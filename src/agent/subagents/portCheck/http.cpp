@@ -7,7 +7,7 @@
 #include "main.h"
 #include "net.h"
 
-LONG H_CheckHTTP(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CheckHTTP(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 

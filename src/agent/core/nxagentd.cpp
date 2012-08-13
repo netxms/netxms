@@ -189,49 +189,49 @@ static pid_t m_pid;
 
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { "Action", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList },
-   { "ActionShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList },
-   { "ControlServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
-   { "CreateCrashDumps", CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
-	{ "DataDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDirectory },
-   { "DailyLogFileSuffix", CT_STRING, 0, 0, MAX_PATH, 0, m_szDailyLogFileSuffix },
-	{ "DebugLevel", CT_LONG, 0, 0, 0, 0, &g_debugLevel },
-   { "DumpDirectory", CT_STRING, 0, 0, MAX_PATH, 0, m_szDumpDir },
-   { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
-   { "EnableArbitraryFileUpload", CT_BOOLEAN, 0, 0, AF_ARBITRARY_FILE_UPLOAD, 0, &g_dwFlags },
-   { "EnabledCiphers", CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
-   { "EnableProxy", CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags },
-   { "EnableSNMPProxy", CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags },
-   { "EnableSubagentAutoload", CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags },
-   { "EnableWatchdog", CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags },
-   { "ExecTimeout", CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout },
-	{ "ExternalMasterAgent", CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent },
-   { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
-   { "ExternalParameterShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList },
-   { "ExternalParametersProvider", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszParamProviderList },
-   { "ExternalSubagent", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtSubagentList },
-   { "FileStore", CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },
-   { "FullCrashDumps", CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags },
-   { "ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
-   { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
-   { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
-   { "LogHistorySize", CT_LONG, 0, 0, 0, 0, &m_dwLogHistorySize },
-   { "LogRotationMode", CT_LONG, 0, 0, 0, 0, &m_dwLogRotationMode },
-   { "LogUnresolvedSymbols", CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },
-   { "MasterServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList },
-   { "MaxLogSize", CT_LONG, 0, 0, 0, 0, &m_dwMaxLogSize },
-   { "MaxSessions", CT_LONG, 0, 0, 0, 0, &g_dwMaxSessions },
-   { "PlatformSuffix", CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix },
-   { "RequireAuthentication", CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
-   { "RequireEncryption", CT_BOOLEAN, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags },
-   { "Servers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList },
-   { "SessionIdleTimeout", CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout },
-   { "SharedSecret", CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },
-   { "StartupDelay", CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay },
-   { "SubAgent", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList },
-   { "TimeOut", CT_IGNORE, 0, 0, 0, 0, NULL },
-   { "WaitForProcess", CT_STRING, 0, 0, MAX_PATH, 0, m_szProcessToWait },
-   { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { _T("Action"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList },
+   { _T("ActionShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList },
+   { _T("ControlServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
+   { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
+	{ _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDirectory },
+   { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, MAX_PATH, 0, m_szDailyLogFileSuffix },
+	{ _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel },
+   { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, m_szDumpDir },
+   { _T("EnableActions"), CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
+   { _T("EnableArbitraryFileUpload"), CT_BOOLEAN, 0, 0, AF_ARBITRARY_FILE_UPLOAD, 0, &g_dwFlags },
+   { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
+   { _T("EnableProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags },
+   { _T("EnableSNMPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags },
+   { _T("EnableSubagentAutoload"), CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags },
+   { _T("EnableWatchdog"), CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags },
+   { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout },
+	{ _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent },
+   { _T("ExternalParameter"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
+   { _T("ExternalParameterShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList },
+   { _T("ExternalParametersProvider"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszParamProviderList },
+   { _T("ExternalSubagent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtSubagentList },
+   { _T("FileStore"), CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },
+   { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags },
+   { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
+   { _T("ListenPort"), CT_WORD, 0, 0, 0, 0, &g_wListenPort },
+   { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
+   { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &m_dwLogHistorySize },
+   { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &m_dwLogRotationMode },
+   { _T("LogUnresolvedSymbols"), CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },
+   { _T("MasterServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList },
+   { _T("MaxLogSize"), CT_LONG, 0, 0, 0, 0, &m_dwMaxLogSize },
+   { _T("MaxSessions"), CT_LONG, 0, 0, 0, 0, &g_dwMaxSessions },
+   { _T("PlatformSuffix"), CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix },
+   { _T("RequireAuthentication"), CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
+   { _T("RequireEncryption"), CT_BOOLEAN, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags },
+   { _T("Servers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList },
+   { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout },
+   { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },
+   { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay },
+   { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList },
+   { _T("TimeOut"), CT_IGNORE, 0, 0, 0, 0, NULL },
+   { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, m_szProcessToWait },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
 
@@ -239,40 +239,40 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 // Help text
 //
 
-static char m_szHelpText[] =
-   "Usage: nxagentd [options]\n"
-   "Where valid options are:\n"
-   "   -c <file>  : Use configuration file <file> (default " AGENT_DEFAULT_CONFIG ")\n"
-   "   -C         : Check configuration file and exit\n"
-   "   -d         : Run as daemon/service\n"
-	"   -D <level> : Set debug level (0..9)\n"
+static TCHAR m_szHelpText[] =
+   _T("Usage: nxagentd [options]\n")
+   _T("Where valid options are:\n")
+   _T("   -c <file>  : Use configuration file <file> (default ") AGENT_DEFAULT_CONFIG _T(")\n")
+   _T("   -C         : Check configuration file and exit\n")
+   _T("   -d         : Run as daemon/service\n")
+	_T("   -D <level> : Set debug level (0..9)\n")
 #ifdef _WIN32
-   "   -e <name>  : Windows event source name\n"
+   _T("   -e <name>  : Windows event source name\n")
 #endif
-	"   -f         : Run in foreground\n"
-   "   -h         : Display help and exit\n"
+	_T("   -f         : Run in foreground\n")
+   _T("   -h         : Display help and exit\n")
 #ifdef _WIN32
-   "   -H         : Hide agent's window when in standalone mode\n"
-	"   -i         : Installed Windows service must be interactive\n"
-   "   -I         : Install Windows service\n"
+   _T("   -H         : Hide agent's window when in standalone mode\n")
+	_T("   -i         : Installed Windows service must be interactive\n")
+   _T("   -I         : Install Windows service\n")
 #endif
-   "   -M <addr>  : Download config from management server <addr>\n"
+   _T("   -M <addr>  : Download config from management server <addr>\n")
 #ifdef _WIN32
-   "   -n <name>  : Service name\n"
-   "   -N <name>  : Service display name\n"
+   _T("   -n <name>  : Service name\n")
+   _T("   -N <name>  : Service display name\n")
 #endif
 #if !defined(_WIN32)
-   "   -p         : Path to pid file (default: /var/run/nxagentd.pid)\n"
+   _T("   -p         : Path to pid file (default: /var/run/nxagentd.pid)\n")
 #endif
-   "   -P <text>  : Set platform suffix to <text>\n"
-   "   -r <addr>  : Register agent on management server <addr>\n"
+   _T("   -P <text>  : Set platform suffix to <text>\n")
+   _T("   -r <addr>  : Register agent on management server <addr>\n")
 #ifdef _WIN32
-   "   -R         : Remove Windows service\n"
-   "   -s         : Start Windows servive\n"
-   "   -S         : Stop Windows service\n"
+   _T("   -R         : Remove Windows service\n")
+   _T("   -s         : Start Windows servive\n")
+   _T("   -S         : Stop Windows service\n")
 #endif
-   "   -v         : Display version and exit\n"
-   "\n";
+   _T("   -v         : Display version and exit\n")
+   _T("\n");
 
 
 //
@@ -291,12 +291,17 @@ static void SaveRegistry()
 	FILE *f = _tfopen(regPath, _T("w"));
 	if (f != NULL)
 	{
-		_fputts((const TCHAR *)xml, f);
+#ifdef UNICODE
+		char *utf8xml = UTF8StringFromWideString((const WCHAR *)xml);
+		fputs(utf8xml, f);
+#else
+		fputs((const char *)xml, f);
+#endif
 		fclose(f);
 	}
 	else
 	{
-		nxlog_write(MSG_REGISTRY_SAVE_FAILED, NXLOG_ERROR, "ss", regPath, strerror(errno));
+		nxlog_write(MSG_REGISTRY_SAVE_FAILED, NXLOG_ERROR, "ss", regPath, _tcserror(errno));
 	}
 }
 
@@ -597,7 +602,7 @@ void LoadPlatformSubagent()
 {
 #if HAVE_SYS_UTSNAME_H && !defined(_STATIC_AGENT)
    struct utsname un;
-   char szName[MAX_PATH];
+   TCHAR szName[MAX_PATH];
    int i;
 
    if (uname(&un) != -1)
@@ -607,7 +612,7 @@ void LoadPlatformSubagent()
          un.sysname[i] = tolower(un.sysname[i]);
       if (!strcmp(un.sysname, "hp-ux"))
          strcpy(un.sysname, "hpux");
-      snprintf(szName, MAX_PATH, LIBDIR "/libnsm_%s" SHL_SUFFIX, un.sysname);
+      _sntprintf(szName, MAX_PATH, LIBDIR _T("/libnsm_%hs") SHL_SUFFIX, un.sysname);
       LoadSubAgent(szName);
    }
 #endif
@@ -655,7 +660,7 @@ static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
 
 	for(pItem = pEnd = serverList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
 	{
-		pEnd = strchr(pItem, ',');
+		pEnd = _tcschr(pItem, _T(','));
 		if (pEnd != NULL)
 			*pEnd = 0;
 		StrStrip(pItem);
@@ -667,7 +672,7 @@ static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
 		{
 			*mask = 0;
 			mask++;
-			ipAddr = inet_addr(pItem);
+			ipAddr = _t_inet_addr(pItem);
 
 			TCHAR *eptr;
 			int bits = _tcstol(mask, &eptr, 10);
@@ -679,7 +684,7 @@ static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
 			{
 				ipAddr = INADDR_NONE;
 				if (!(g_dwFlags & AF_DAEMON))
-					printf("Invalid network mask %s\n", mask);
+					_tprintf(_T("Invalid network mask %s\n"), mask);
 			}
 		}
 		else
@@ -692,7 +697,7 @@ static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
 		if (g_pServerList[g_dwServerCount].dwIpAddr == INADDR_NONE)
 		{
 			if (!(g_dwFlags & AF_DAEMON))
-				printf("Invalid server address '%s'\n", pItem);
+				_tprintf(_T("Invalid server address '%s'\n"), pItem);
 		}
 		else
 		{
@@ -809,7 +814,7 @@ BOOL Initialize()
 			ParseServerList(m_pszMasterServerList, TRUE, TRUE);
 
 		// Add built-in actions
-		AddAction("Agent.Restart", AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, "CORE", "Restart agent");
+		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
 
 	   // Load platform subagents
 #if !defined(_WIN32)
@@ -828,7 +833,7 @@ BOOL Initialize()
 	// Wait for external process if requested
 	if (m_szProcessToWait[0] != 0)
 	{
-	   DebugPrintf(INVALID_INDEX, 1, "Waiting for process %s", m_szProcessToWait);
+	   DebugPrintf(INVALID_INDEX, 1, _T("Waiting for process %s"), m_szProcessToWait);
 		if (!WaitForProcess(m_szProcessToWait))
 	      nxlog_write(MSG_WAITFORPROCESS_FAILED, EVENTLOG_ERROR_TYPE, "s", m_szProcessToWait);
 	}
@@ -841,7 +846,7 @@ BOOL Initialize()
    {
       for(pItem = pEnd = m_pszSubagentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
-         pEnd = strchr(pItem, '\n');
+         pEnd = _tcschr(pItem, _T('\n'));
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
@@ -855,7 +860,7 @@ BOOL Initialize()
    {
       for(pItem = pEnd = m_pszActionList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
-         pEnd = strchr(pItem, '\n');
+         pEnd = _tcschr(pItem, _T('\n'));
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
@@ -884,7 +889,7 @@ BOOL Initialize()
    {
       for(pItem = pEnd = m_pszExtParamList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
-         pEnd = strchr(pItem, '\n');
+         pEnd = _tcschr(pItem, _T('\n'));
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
@@ -897,7 +902,7 @@ BOOL Initialize()
    {
       for(pItem = pEnd = m_pszShExtParamList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
-         pEnd = strchr(pItem, '\n');
+         pEnd = _tcschr(pItem, _T('\n'));
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
@@ -912,7 +917,7 @@ BOOL Initialize()
    {
       for(pItem = pEnd = m_pszParamProviderList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
-         pEnd = strchr(pItem, '\n');
+         pEnd = _tcschr(pItem, _T('\n'));
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
@@ -927,7 +932,7 @@ BOOL Initialize()
    {
       for(pItem = pEnd = m_pszExtSubagentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
-         pEnd = strchr(pItem, '\n');
+         pEnd = _tcschr(pItem, _T('\n'));
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
@@ -950,15 +955,15 @@ BOOL Initialize()
       {
          DWORD i;
 
-         printf("XXXXXX%*s]\rWAIT [", g_dwStartupDelay, " ");
+         _tprintf(_T("XXXXXX%*s]\rWAIT ["), g_dwStartupDelay, _T(" "));
          fflush(stdout);
          for(i = 0; i < g_dwStartupDelay; i++)
          {
             ThreadSleep(1);
-            putc('.', stdout);
+            _puttc(_T('.'), stdout);
             fflush(stdout);
          }
-         printf("\n");
+         _tprintf(_T("\n"));
       }
    }
 
@@ -1034,7 +1039,7 @@ void Shutdown()
    
    // Remove PID file
 #if !defined(_WIN32)
-   remove(g_szPidFile);
+   _tremove(g_szPidFile);
 #endif
 }
 
@@ -1070,19 +1075,19 @@ void Main()
       }
       else
       {
-         printf("Agent running. Press ESC to shutdown.\n");
+         _tprintf(_T("Agent running. Press ESC to shutdown.\n"));
          while(1)
          {
             if (_getch() == 27)
                break;
          }
-         printf("Agent shutting down...\n");
+         _tprintf(_T("Agent shutting down...\n"));
          Shutdown();
       }
 #else
-      printf("Agent running. Press Ctrl+C to shutdown.\n");
+      _tprintf(_T("Agent running. Press Ctrl+C to shutdown.\n"));
       StartMainLoop(SignalHandler, NULL);
-      printf("\nStopping agent...\n");
+      _tprintf(_T("\nStopping agent...\n"));
 #endif
    }
 }
@@ -1139,8 +1144,8 @@ static void DoRestartActions(DWORD dwOldPID)
 // Create configuration file
 //
 
-static int CreateConfig(const TCHAR *pszServer, const TCHAR *pszLogFile, const TCHAR *pszFileStore,
-                        const TCHAR *configIncludeDir, int iNumSubAgents, TCHAR **ppszSubAgentList)
+static int CreateConfig(const char *pszServer, const char *pszLogFile, const char *pszFileStore,
+                        const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList)
 {
    FILE *fp;
    time_t currTime;
@@ -1155,10 +1160,10 @@ static int CreateConfig(const TCHAR *pszServer, const TCHAR *pszLogFile, const T
       currTime = time(NULL);
       _ftprintf(fp, _T("#\n# NetXMS agent configuration file\n# Created by agent installer at %s#\n\n"),
                 _tctime(&currTime));
-      _ftprintf(fp, _T("MasterServers = %s\nConfigIncludeDir = %s\nLogFile = %s\nFileStore = %s\n"),
+      _ftprintf(fp, _T("MasterServers = %hs\nConfigIncludeDir = %hs\nLogFile = %hs\nFileStore = %hs\n"),
                 pszServer, configIncludeDir, pszLogFile, pszFileStore);
       for(i = 0; i < iNumSubAgents; i++)
-         _ftprintf(fp, _T("SubAgent = %s\n"), ppszSubAgentList[i]);
+         _ftprintf(fp, _T("SubAgent = %hs\n"), ppszSubAgentList[i]);
       fclose(fp);
    }
    return (fp != NULL) ? 0 : 2;
@@ -1185,13 +1190,13 @@ int main(int argc, char *argv[])
    int ch, iExitCode = 0, iAction = ACTION_RUN_AGENT;
    BOOL bRestart = FALSE;
    DWORD dwOldPID, dwMainPID;
-	TCHAR *eptr;
+	char *eptr;
 #ifdef _WIN32
    TCHAR szModuleName[MAX_PATH];
    HKEY hKey;
    DWORD dwSize;
 #else
-   char *pszEnv;
+   TCHAR *pszEnv;
 #endif
 
    InitThreadLibrary();
@@ -1255,30 +1260,55 @@ int main(int argc, char *argv[])
 				}
             break;
          case 'c':   // Configuration file
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigFile, MAX_PATH);
+				g_szConfigFile[MAX_PATH - 1] = 0;
+#else
             nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
+#endif
             break;
 #if !defined(_WIN32)
          case 'p':   // PID file
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szPidFile, MAX_PATH);
+				g_szPidFile[MAX_PATH - 1] = 0;
+#else
             nx_strncpy(g_szPidFile, optarg, MAX_PATH);
+#endif
             break;
 #endif
          case 'C':   // Configuration check only
             iAction = ACTION_CHECK_CONFIG;
             break;
          case 'v':   // Print version and exit
-            printf("NetXMS Core Agent Version " AGENT_VERSION_STRING "\n");
+            _tprintf(_T("NetXMS Core Agent Version ") AGENT_VERSION_STRING _T("\n"));
             iAction = ACTION_NONE;
             break;
          case 'M':
             g_dwFlags |= AF_CENTRAL_CONFIG;
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigServer, MAX_DB_STRING);
+				g_szConfigServer[MAX_DB_STRING - 1] = 0;
+#else
             nx_strncpy(g_szConfigServer, optarg, MAX_DB_STRING);
+#endif
             break;
          case 'r':
             g_dwFlags |= AF_REGISTER;
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szRegistrar, MAX_DB_STRING);
+				g_szRegistrar[MAX_DB_STRING - 1] = 0;
+#else
             nx_strncpy(g_szRegistrar, optarg, MAX_DB_STRING);
+#endif
             break;
          case 'P':   // Platform suffix
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szPlatformSuffix, MAX_PSUFFIX_LENGTH);
+				g_szPlatformSuffix[MAX_PSUFFIX_LENGTH - 1] = 0;
+#else
             nx_strncpy(g_szPlatformSuffix, optarg, MAX_PSUFFIX_LENGTH);
+#endif
             break;
          case 'X':   // Agent is being restarted
             bRestart = TRUE;
@@ -1290,7 +1320,12 @@ int main(int argc, char *argv[])
             break;
          case 'Z':   // Create configuration file
             iAction = ACTION_CREATE_CONFIG;
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigFile, MAX_PATH);
+				g_szConfigFile[MAX_PATH - 1] = 0;
+#else
             nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
+#endif
             break;
 #ifdef _WIN32
          case 'H':   // Hide window
@@ -1324,7 +1359,12 @@ int main(int argc, char *argv[])
             nx_strncpy(g_windowsServiceName, optarg, MAX_PATH);
             break;
          case 'N':   // Service display name
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_windowsServiceDisplayName, MAX_PATH);
+				g_windowsServiceDisplayName[MAX_PATH - 1] = 0;
+#else
             nx_strncpy(g_windowsServiceDisplayName, optarg, MAX_PATH);
+#endif
             break;
 #endif
          case '?':
@@ -1339,32 +1379,32 @@ int main(int argc, char *argv[])
 #if !defined(_WIN32)
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
 	{
-		if (access(PREFIX "/etc/nxagentd.conf", 4) == 0)
+		if (_taccess(PREFIX _T("/etc/nxagentd.conf"), 4) == 0)
 		{
-			_tcscpy(g_szConfigFile, PREFIX "/etc/nxagentd.conf");
+			_tcscpy(g_szConfigFile, PREFIX _T("/etc/nxagentd.conf"));
 		}
-		else if (access("/usr/etc/nxagentd.conf", 4) == 0)
+		else if (_taccess(_T("/usr/etc/nxagentd.conf"), 4) == 0)
 		{
-			_tcscpy(g_szConfigFile, "/usr/etc/nxagentd.conf");
+			_tcscpy(g_szConfigFile, _T("/usr/etc/nxagentd.conf"));
 		}
 		else
 		{
-			_tcscpy(g_szConfigFile, "/etc/nxagentd.conf");
+			_tcscpy(g_szConfigFile, _T("/etc/nxagentd.conf"));
 		}
 	}
 	if (!_tcscmp(g_szConfigIncludeDir, _T("{search}")))
 	{
-		if (access(PREFIX "/etc/nxagentd.conf.d", 4) == 0)
+		if (_taccess(PREFIX _T("/etc/nxagentd.conf.d"), 4) == 0)
 		{
-			_tcscpy(g_szConfigIncludeDir, PREFIX "/etc/nxagentd.conf.d");
+			_tcscpy(g_szConfigIncludeDir, PREFIX _T("/etc/nxagentd.conf.d"));
 		}
-		else if (access("/usr/etc/nxagentd.conf.d", 4) == 0)
+		else if (_taccess(_T("/usr/etc/nxagentd.conf.d"), 4) == 0)
 		{
-			_tcscpy(g_szConfigIncludeDir, "/usr/etc/nxagentd.conf.d");
+			_tcscpy(g_szConfigIncludeDir, _T("/usr/etc/nxagentd.conf.d"));
 		}
 		else
 		{
-			_tcscpy(g_szConfigIncludeDir, "/etc/nxagentd.conf.d");
+			_tcscpy(g_szConfigIncludeDir, _T("/etc/nxagentd.conf.d"));
 		}
 	}
 #endif
@@ -1396,16 +1436,16 @@ int main(int argc, char *argv[])
          if (g_dwFlags & AF_CENTRAL_CONFIG)
          {
             if (g_debugLevel > 0)
-               printf("Downloading configuration from %s...\n", g_szConfigServer);
+               _tprintf(_T("Downloading configuration from %s...\n"), g_szConfigServer);
             if (DownloadConfig(g_szConfigServer))
             {
                if (g_debugLevel > 0)
-                  printf("Configuration downloaded successfully\n");
+                  _tprintf(_T("Configuration downloaded successfully\n"));
             }
             else
             {
                if (g_debugLevel > 0)
-                  printf("Configuration download failed\n");
+                  _tprintf(_T("Configuration download failed\n"));
             }
          }
 
@@ -1461,10 +1501,10 @@ int main(int argc, char *argv[])
 							FILE *fp;
 
 							// Write PID file
-							fp = fopen(g_szPidFile, "w");
+							fp = _tfopen(g_szPidFile, _T("w"));
 							if (fp != NULL)
 							{
-								fprintf(fp, "%d", m_pid);
+								_ftprintf(fp, _T("%d"), m_pid);
 								fclose(fp);
 							}   
 							Main();
@@ -1510,9 +1550,9 @@ int main(int argc, char *argv[])
 			iExitCode = WatchdogMain(dwMainPID);
 			break;
       case ACTION_CREATE_CONFIG:
-         iExitCode = CreateConfig(CHECK_NULL(argv[optind]), CHECK_NULL(argv[optind + 1]),
-                                  CHECK_NULL(argv[optind + 2]), CHECK_NULL(argv[optind + 3]),
-											 argc - optind - 4, &argv[optind + 4]);
+         iExitCode = CreateConfig(CHECK_NULL_A(argv[optind]), CHECK_NULL_A(argv[optind + 1]),
+                                  CHECK_NULL_A(argv[optind + 2]), CHECK_NULL_A(argv[optind + 3]),
+			                         argc - optind - 4, &argv[optind + 4]);
          break;
 #ifdef _WIN32
       case ACTION_INSTALL_SERVICE:
@@ -1537,7 +1577,7 @@ int main(int argc, char *argv[])
          break;
 #endif
 		case ACTION_HELP:
-         fputs(m_szHelpText, stdout);
+         _fputts(m_szHelpText, stdout);
 			break;
       default:
          break;

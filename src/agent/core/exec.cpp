@@ -69,7 +69,7 @@ static THREAD_RESULT THREAD_CALL Worker(void *arg)
 	int nCount = 0;
 
 	pCmd[nCount++] = pTmp;
-	int nLen = _tcslen(pTmp);
+	int nLen = strlen(pTmp);
 	for (int i = 0; i < nLen; i++)
 	{
 		switch(pTmp[i])
@@ -265,7 +265,11 @@ DWORD ExecuteCommand(TCHAR *pszCommand, StringList *args, pid_t *pid)
 	PROCESS_START_INFO pi;
 	pid_t tempPid;
 
+#ifdef UNICODE
+	pi.cmdLine = MBStringFromWideString(pszCmdLine);
+#else
 	pi.cmdLine = strdup(pszCmdLine);
+#endif
 	pi.pid = (pid != NULL) ? pid : &tempPid;
 	pi.condProcessStarted = ConditionCreate(TRUE);
 	if (ThreadCreate(Worker, 0, &pi))

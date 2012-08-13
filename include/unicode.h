@@ -220,6 +220,7 @@
 #define _topen    wopen
 #define _taccess  waccess
 #define _tstat    wstat
+#define _tchmod   wchmod
 #define _tunlink  wunlink
 #define _trename  wrename
 #define _tremove  wremove
@@ -292,6 +293,7 @@
 #define _topen    open
 #define _taccess  access
 #define _tstat    stat
+#define _tchmod   chmod
 #define _tunlink  unlink
 #define _trename  rename
 #define _tremove  remove

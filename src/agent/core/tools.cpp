@@ -28,14 +28,14 @@
 // Print message to the console if allowed to do so
 //
 
-void ConsolePrintf(const char *pszFormat, ...)
+void ConsolePrintf(const TCHAR *pszFormat, ...)
 {
    if (!(g_dwFlags & AF_DAEMON))
    {
       va_list args;
 
       va_start(args, pszFormat);
-      vprintf(pszFormat, args);
+      _vtprintf(pszFormat, args);
       va_end(args);
    }
 }

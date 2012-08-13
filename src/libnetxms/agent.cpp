@@ -136,7 +136,7 @@ void LIBNETXMS_EXPORTABLE AgentSendTrap2(DWORD dwEvent, const TCHAR *eventName, 
 // Returns FALSE on processing error
 //
 
-BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArg(const TCHAR *param, int index, TCHAR *arg, int maxSize)
+static BOOL AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *arg, int maxSize)
 {
    const TCHAR *ptr1, *ptr2;
    int state, currIndex, pos;
@@ -222,6 +222,39 @@ BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArg(const TCHAR *param, int index, TC
    return bResult;
 }
 
+BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize)
+{
+#ifdef UNICODE
+	WCHAR *temp = (WCHAR *)malloc(maxSize * sizeof(WCHAR));
+	BOOL success = AgentGetParameterArgInternal(param, index, temp, maxSize);
+	if (success)
+	{
+		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, temp, -1, arg, maxSize, NULL, NULL);
+		arg[maxSize - 1] = 0;
+	}
+	free(temp);
+	return success;
+#else
+	return AgentGetParameterArgInternal(param, index, arg, maxSize);
+#endif
+}
+
+BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, WCHAR *arg, int maxSize)
+{
+#ifdef UNICODE
+	return AgentGetParameterArgInternal(param, index, arg, maxSize);
+#else
+	char *temp = (char *)malloc(maxSize);
+	BOOL success = AgentGetParameterArgInternal(param, index, temp, maxSize);
+	if (success)
+	{
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, temp, -1, arg, maxSize);
+		arg[maxSize - 1] = 0;
+	}
+	free(temp);
+	return success;
+#endif
+}
 
 //
 // Send file to server

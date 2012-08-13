@@ -194,7 +194,7 @@ static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 
 	for(i = 0; i < m_dwNumTargets; i++)
 	{
-		_stprintf(szBuffer, _T("%s %u %u %u %u %s"), IpToStr(ntohl(m_pTargetList[i].dwIpAddr), szIpAddr),
+		_sntprintf(szBuffer, MAX_DB_STRING + 64, _T("%s %u %u %u %u %s"), IpToStr(ntohl(m_pTargetList[i].dwIpAddr), szIpAddr),
 				m_pTargetList[i].dwLastRTT, m_pTargetList[i].dwAvgRTT, m_pTargetList[i].dwPacketLoss, 
 				m_pTargetList[i].dwPacketSize, m_pTargetList[i].szName);
 		value->add(szBuffer);
@@ -366,7 +366,7 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("PING"), _T(NETXMS_VERSION_STRING),
+	_T("PING"), NETXMS_VERSION_STRING,
 	SubagentInit, SubagentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
