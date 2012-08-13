@@ -2221,7 +2221,6 @@ src/server/tools/nxget/nxget.vcproj -text
 src/server/tools/nxupload/nxupload.vcproj -text
 src/snmp/Makefile.am -text
 src/snmp/libnxsnmp/libnxsnmp.vcproj -text
-src/snmp/libnxsnmp/libnxsnmpw.vcproj -text
 src/snmp/nxmibc/nxmibc.vcproj -text
 src/snmp/nxsnmpget/nxsnmpget.vcproj -text
 src/snmp/nxsnmpset/nxsnmpset.vcproj -text

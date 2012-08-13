@@ -310,7 +310,7 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, DWORD bufferSize,
 			{
 				bool conversionNeeded = false;
 				for(DWORD i = 0; i < dwLen; i++)
-					if (!_istprint(buffer[i]))
+					if (!_istprint(buffer[i]) && (buffer[i] != 0x0D) && (buffer[i] != 0x0A))
 					{
 						conversionNeeded = true;
 						break;

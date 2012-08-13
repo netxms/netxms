@@ -365,15 +365,15 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
                if (j == iLen - 1)
 					{
 #ifdef UNICODE
-						WCHAR *wname = WideStringFromMBString(pObject->pszName);
-						WCHAR *wdescr = WideStringFromMBString(pObject->pszDescription);
+						WCHAR *wname = (pObject->pszName != NULL) ? WideStringFromMBString(pObject->pszName) : NULL;
+						WCHAR *wdescr = (pObject->pszDescription != NULL) ? WideStringFromMBString(pObject->pszDescription) : NULL;
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, wname,
                                                pObject->iSyntax,
                                                pObject->iStatus,
                                                pObject->iAccess,
                                                wdescr);
-						free(wname);
-						free(wdescr);
+						safe_free(wname);
+						safe_free(wdescr);
 #else
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, pObject->pszName,
                                                pObject->iSyntax,
@@ -385,9 +385,9 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
                else
 					{
 #ifdef UNICODE
-						WCHAR *wname = WideStringFromMBString(pObject->pszName);
+						WCHAR *wname = (pObject->pszName != NULL) ? WideStringFromMBString(pObject->pszName) : NULL;
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, wname);
-						free(wname);
+						safe_free(wname);
 #else
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, pSubId->pszName);
 #endif
@@ -400,20 +400,18 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
                {
                   // Last OID in chain, update object information
 #ifdef UNICODE
-						WCHAR *wdescr = WideStringFromMBString(pObject->pszDescription);
-                  pNewObj->SetInfo(pObject->iSyntax, pObject->iStatus,
-                                   pObject->iAccess, wdescr);
-						free(wdescr);
+						WCHAR *wdescr = (pObject->pszDescription != NULL) ? WideStringFromMBString(pObject->pszDescription) : NULL;
+                  pNewObj->SetInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess, wdescr);
+						safe_free(wdescr);
 #else
-                  pNewObj->SetInfo(pObject->iSyntax, pObject->iStatus,
-                                   pObject->iAccess, pObject->pszDescription);
+                  pNewObj->SetInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess, pObject->pszDescription);
 #endif
                   if (pNewObj->Name() == NULL)
 						{
 #ifdef UNICODE
-							WCHAR *wname = WideStringFromMBString(pObject->pszName);
+							WCHAR *wname = (pObject->pszName != NULL) ? WideStringFromMBString(pObject->pszName) : NULL;
                      pNewObj->SetName(wname);
-							free(wname);
+							safe_free(wname);
 #else
                      pNewObj->SetName(pObject->pszName);
 #endif

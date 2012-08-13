@@ -16,5 +16,5 @@ libnxsnmp_la_LIBADD += ../../zlib/libnxzlib.la
 endif
 
 EXTRA_DIST = \
-	libnxsnmp.vcproj libnxsnmpw.vcproj \
+	libnxsnmp.vcproj \
 	libnxsnmp.h
