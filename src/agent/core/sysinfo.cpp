@@ -40,7 +40,7 @@
 #define NX_STAT_STRUCT struct stat
 #endif
 
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(_WIN32)
 inline int __call_stat(const WCHAR *f, NX_STAT_STRUCT *s)
 {
 	char *mbf = MBStringFromWideString(f);

@@ -29,7 +29,7 @@
 // Context state texts
 //
 
-static const char *s_states[] = { "MANUAL", "AUTO", "INACTIVE" };
+static const TCHAR *s_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
 
 
 //
@@ -61,6 +61,7 @@ typedef struct
 	String regexp;
 	String event;
 	String file;
+	int encoding;
 	String id;
 	String level;
 	String source;
@@ -89,6 +90,7 @@ LogParser::LogParser()
 	m_userArg = NULL;
 	m_name = NULL;
 	m_fileName = NULL;
+	m_fileEncoding = LP_FCP_ACP;
 	m_eventNameList = NULL;
 	m_eventResolver = NULL;
 	m_thread = INVALID_THREAD_HANDLE;
@@ -121,7 +123,7 @@ LogParser::~LogParser()
 // Trace
 //
 
-void LogParser::trace(int level, const char *format, ...)
+void LogParser::trace(int level, const TCHAR *format, ...)
 {
 	va_list args;
 
@@ -155,7 +157,7 @@ bool LogParser::addRule(LogParserRule *rule)
 	return isOK;
 }
 
-bool LogParser::addRule(const char *regexp, DWORD eventCode, const char *eventName, int numParams)
+bool LogParser::addRule(const TCHAR *regexp, DWORD eventCode, const TCHAR *eventName, int numParams)
 {
 	return addRule(new LogParserRule(this, regexp, eventCode, eventName, numParams));
 }
@@ -165,9 +167,9 @@ bool LogParser::addRule(const char *regexp, DWORD eventCode, const char *eventNa
 // Check context
 //
 
-const char *LogParser::checkContext(LogParserRule *rule)
+const TCHAR *LogParser::checkContext(LogParserRule *rule)
 {
-	const char *state;
+	const TCHAR *state;
 	
 	if (rule->getContext() == NULL)
 	{
@@ -199,11 +201,11 @@ const char *LogParser::checkContext(LogParserRule *rule)
 // Match log record
 //
 
-bool LogParser::matchLogRecord(bool hasAttributes, const char *source, DWORD eventId,
-										 DWORD level, const char *line, DWORD objectId)
+bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, DWORD eventId,
+										 DWORD level, const TCHAR *line, DWORD objectId)
 {
 	int i;
-	const char *state;
+	const TCHAR *state;
 	bool matched = false;
 
 	if (hasAttributes)
@@ -259,7 +261,7 @@ bool LogParser::matchLogRecord(bool hasAttributes, const char *source, DWORD eve
 // Match simple log line
 //
 
-bool LogParser::matchLine(const char *line, DWORD objectId)
+bool LogParser::matchLine(const TCHAR *line, DWORD objectId)
 {
 	return matchLogRecord(false, NULL, 0, 0, line, objectId);
 }
@@ -269,7 +271,7 @@ bool LogParser::matchLine(const char *line, DWORD objectId)
 // Match log event (text with additional attributes - source, severity, event id)
 //
 
-bool LogParser::matchEvent(const char *source, DWORD eventId, DWORD level, const char *line, DWORD objectId)
+bool LogParser::matchEvent(const TCHAR *source, DWORD eventId, DWORD level, const TCHAR *line, DWORD objectId)
 {
 	return matchLogRecord(true, source, eventId, level, line, objectId);
 }
@@ -279,7 +281,7 @@ bool LogParser::matchEvent(const char *source, DWORD eventId, DWORD level, const
 // Set associated file name
 //
 
-void LogParser::setFileName(const char *name)
+void LogParser::setFileName(const TCHAR *name)
 {
 	safe_free(m_fileName);
 	m_fileName = (name != NULL) ? _tcsdup(name) : NULL;
@@ -292,7 +294,7 @@ void LogParser::setFileName(const char *name)
 // Set parser name
 //
 
-void LogParser::setName(const char *name)
+void LogParser::setName(const TCHAR *name)
 {
 	safe_free(m_name);
 	m_name = _tcsdup((name != NULL) ? name : CHECK_NULL(m_fileName));
@@ -303,7 +305,7 @@ void LogParser::setName(const char *name)
 // Add macro
 //
 
-void LogParser::addMacro(const char *name, const char *value)
+void LogParser::addMacro(const TCHAR *name, const TCHAR *value)
 {
 	m_macros.set(name, value);
 }
@@ -313,7 +315,7 @@ void LogParser::addMacro(const char *name, const char *value)
 // Get macro
 //
 
-const char *LogParser::getMacro(const char *name)
+const TCHAR *LogParser::getMacro(const TCHAR *name)
 {
 	const TCHAR *value;
 
@@ -337,11 +339,48 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->parser->setTraceLevel(XMLGetAttrInt(attrs, "trace", 0));
 		const char *name = XMLGetAttr(attrs, "name");
 		if (name != NULL)
+		{
+#ifdef UNICODE
+			WCHAR *wname = WideStringFromUTF8String(name);
+			ps->parser->setName(wname);
+			free(wname);
+#else
 			ps->parser->setName(name);
+#endif
+		}
 	}
 	else if (!strcmp(name, "file"))
 	{
 		ps->state = XML_STATE_FILE;
+		const char *encoding = XMLGetAttr(attrs, "encoding");
+		if (encoding != NULL)
+		{
+			if (!stricmp(encoding, "acp") || (*encoding == 0))
+			{
+				ps->encoding = LP_FCP_ACP;
+			}
+			else if (!stricmp(encoding, "utf8") || !stricmp(encoding, "utf-8"))
+			{
+				ps->encoding = LP_FCP_UTF8;
+			}
+			else if (!stricmp(encoding, "ucs2") || !stricmp(encoding, "ucs-2") || !stricmp(encoding, "utf-16"))
+			{
+				ps->encoding = LP_FCP_UCS2;
+			}
+			else if (!stricmp(encoding, "ucs4") || !stricmp(encoding, "ucs-4") || !stricmp(encoding, "utf-32"))
+			{
+				ps->encoding = LP_FCP_UCS4;
+			}
+			else
+			{
+				ps->errorText = _T("Invalid file encoding");
+				ps->state = XML_STATE_ERROR;
+			}
+		}
+		else
+		{
+			ps->encoding = LP_FCP_ACP;
+		}
 	}
 	else if (!strcmp(name, "macros"))
 	{
@@ -353,7 +392,12 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 
 		ps->state = XML_STATE_MACRO;
 		name = XMLGetAttr(attrs, "name");
+#ifdef UNICODE
+		ps->macroName = L"";
+		ps->macroName.addMultiByteString(name, strlen(name), CP_UTF8);
+#else
 		ps->macroName = CHECK_NULL_A(name);
+#endif
 		ps->macro = NULL;
 	}
 	else if (!strcmp(name, "rules"))
@@ -371,7 +415,14 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->id = NULL;
 		ps->source = NULL;
 		ps->level = NULL;
+#ifdef UNICODE
+		ps->ruleContext = L"";
+		const char *context = XMLGetAttr(attrs, "context");
+		if (context != NULL)
+			ps->ruleContext.addMultiByteString(context, strlen(context), CP_UTF8);
+#else
 		ps->ruleContext = XMLGetAttr(attrs, "context");
+#endif
 		ps->breakFlag = XMLGetAttrBoolean(attrs, "break", false);
 		ps->state = XML_STATE_RULE;
 		ps->numEventParams = 0;
@@ -461,6 +512,7 @@ static void EndElement(void *userData, const char *name)
 	else if (!strcmp(name, "file"))
 	{
 		ps->parser->setFileName(ps->file);
+		ps->parser->setFileEncoding(ps->encoding);
 		ps->state = XML_STATE_PARSER;
 	}
 	else if (!strcmp(name, "macros"))
@@ -479,34 +531,23 @@ static void EndElement(void *userData, const char *name)
 	else if (!strcmp(name, "rule"))
 	{
 		DWORD eventCode;
-#ifdef UNICODE
-		TCHAR *eventName = NULL;
-#else
 		const TCHAR *eventName = NULL;
-#endif
-		char *eptr;
+		TCHAR *eptr;
 		LogParserRule *rule;
 
 		ps->event.trim();
-		eventCode = strtoul(ps->event, &eptr, 0);
+		eventCode = _tcstoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
 		{
 			eventCode = ps->parser->resolveEventName(ps->event, 0);
 			if (eventCode == 0)
 			{
-#ifdef UNICODE
-				eventName = WideStringFromUTF8String(ps->event);
-#else
-				eventName = ps->event;
-#endif
+				eventName = (const TCHAR *)ps->event;
 			}
 		}
 		if (ps->regexp.isEmpty())
 			ps->regexp = _T(".*");
-		rule = new LogParserRule(ps->parser, (const char *)ps->regexp, eventCode, eventName, ps->numEventParams);
-#ifdef UNICODE
-		safe_free(eventName);
-#endif
+		rule = new LogParserRule(ps->parser, (const TCHAR *)ps->regexp, eventCode, eventName, ps->numEventParams);
 		if (!ps->ruleContext.isEmpty())
 			rule->setContext(ps->ruleContext);
 		if (!ps->context.isEmpty())
@@ -529,7 +570,7 @@ static void EndElement(void *userData, const char *name)
 			DWORD start, end;
 			TCHAR *eptr;
 
-			start = strtoul(ps->id, &eptr, 0);
+			start = _tcstoul(ps->id, &eptr, 0);
 			if (*eptr == 0)
 			{
 				end = start;
@@ -538,7 +579,7 @@ static void EndElement(void *userData, const char *name)
 			{
 				while(!_istdigit(*eptr))
 					eptr++;
-				end = strtoul(eptr, NULL, 0);
+				end = _tcstoul(eptr, NULL, 0);
 			}
 			rule->setIdRange(start, end);
 		}
@@ -586,38 +627,38 @@ static void CharData(void *userData, const XML_Char *s, int len)
 	switch(ps->state)
 	{
 		case XML_STATE_MATCH:
-			ps->regexp.addString(s, len);
+			ps->regexp.addMultiByteString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_ID:
-			ps->id.addString(s, len);
+			ps->id.addMultiByteString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_LEVEL:
-			ps->level.addString(s, len);
+			ps->level.addMultiByteString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_SOURCE:
-			ps->source.addString(s, len);
+			ps->source.addMultiByteString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_EVENT:
-			ps->event.addString(s, len);
+			ps->event.addMultiByteString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_FILE:
-			ps->file.addString(s, len);
+			ps->file.addMultiByteString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_CONTEXT:
-			ps->context.addString(s, len);
+			ps->context.addMultiByteString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_DESCRIPTION:
-			ps->description.addString(s, len);
+			ps->description.addMultiByteString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_MACRO:
-			ps->macro.addString(s, len);
+			ps->macro.addMultiByteString(s, len, CP_UTF8);
 			break;
 		default:
 			break;
 	}
 }
 
-bool LogParser::createFromXml(const char *xml, int xmlLen, char *errorText, int errBufSize)
+bool LogParser::createFromXml(const char *xml, int xmlLen, TCHAR *errorText, int errBufSize)
 {
 	XML_Parser parser = XML_ParserCreate(NULL);
 	XML_PARSER_STATE state;
@@ -633,9 +674,9 @@ bool LogParser::createFromXml(const char *xml, int xmlLen, char *errorText, int 
 
 	if (!success && (errorText != NULL))
 	{
-		snprintf(errorText, errBufSize, "%s at line %d",
-               XML_ErrorString(XML_GetErrorCode(parser)),
-               (int)XML_GetCurrentLineNumber(parser));
+		_sntprintf(errorText, errBufSize, _T("%hs at line %d"),
+                 XML_ErrorString(XML_GetErrorCode(parser)),
+                 (int)XML_GetCurrentLineNumber(parser));
 	}
 	XML_ParserFree(parser);
 
@@ -643,7 +684,7 @@ bool LogParser::createFromXml(const char *xml, int xmlLen, char *errorText, int 
 	{
 		success = false;
 		if (errorText != NULL)
-			strncpy(errorText, state.errorText, errBufSize);
+			_tcsncpy(errorText, state.errorText, errBufSize);
 	}
 	
 	return success;
@@ -654,7 +695,7 @@ bool LogParser::createFromXml(const char *xml, int xmlLen, char *errorText, int 
 // Resolve event name
 //
 
-DWORD LogParser::resolveEventName(const char *name, DWORD defVal)
+DWORD LogParser::resolveEventName(const TCHAR *name, DWORD defVal)
 {
 	if (m_eventNameList != NULL)
 	{

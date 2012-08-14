@@ -32,7 +32,7 @@
 // Constructor
 //
 
-LogParserRule::LogParserRule(LogParser *parser, const char *regexp, DWORD eventCode, const char *eventName,
+LogParserRule::LogParserRule(LogParser *parser, const TCHAR *regexp, DWORD eventCode, const TCHAR *eventName,
 									  int numParams, const TCHAR *source, DWORD level, DWORD idStart, DWORD idEnd)
 {
 	String expandedRegexp;
@@ -42,7 +42,7 @@ LogParserRule::LogParserRule(LogParser *parser, const char *regexp, DWORD eventC
 	m_regexp = _tcsdup(expandedRegexp);
 	m_isValid = (_tregcomp(&m_preg, expandedRegexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_eventCode = eventCode;
-	m_eventName = (eventName != NULL) ? strdup(eventName) : NULL;
+	m_eventName = (eventName != NULL) ? _tcsdup(eventName) : NULL;
 	m_numParams = numParams;
 	m_pmatch = (numParams > 0) ? (regmatch_t *)malloc(sizeof(regmatch_t) * (numParams + 1)) : NULL;
 	m_source = (source != NULL) ? _tcsdup(source) : NULL;
@@ -78,7 +78,7 @@ LogParserRule::~LogParserRule()
 // Match line
 //
 
-bool LogParserRule::match(const char *line, LogParserCallback cb, DWORD objectId, void *userArg)
+bool LogParserRule::match(const TCHAR *line, LogParserCallback cb, DWORD objectId, void *userArg)
 {
 	if (!m_isValid)
 	{
@@ -105,24 +105,24 @@ bool LogParserRule::match(const char *line, LogParserCallback cb, DWORD objectId
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
 			{
-				char **params = NULL;
+				TCHAR **params = NULL;
 				int i, len;
 
 				if (m_numParams > 0)
 				{
-					params = (char **)alloca(sizeof(char *) * m_numParams);
+					params = (TCHAR **)alloca(sizeof(TCHAR *) * m_numParams);
 					for(i = 0; i < m_numParams; i++)
 					{
 						if (m_pmatch[i + 1].rm_so != -1)
 						{
 							len = m_pmatch[i + 1].rm_eo - m_pmatch[i + 1].rm_so;
-							params[i] = (char *)malloc(len + 1);
-							memcpy(params[i], &line[m_pmatch[i + 1].rm_so], len);
+							params[i] = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
+							memcpy(params[i], &line[m_pmatch[i + 1].rm_so], len * sizeof(TCHAR));
 							params[i][len] = 0;
 						}
 						else
 						{
-							params[i] = strdup("");
+							params[i] = _tcsdup(_T(""));
 						}
 					}
 				}
@@ -146,7 +146,7 @@ bool LogParserRule::match(const char *line, LogParserCallback cb, DWORD objectId
 //
 
 bool LogParserRule::matchEx(const TCHAR *source, DWORD eventId, DWORD level,
-								  const char *line, LogParserCallback cb, DWORD objectId, void *userArg)
+								  const TCHAR *line, LogParserCallback cb, DWORD objectId, void *userArg)
 {
 	if (m_source != NULL)
 	{
@@ -178,17 +178,17 @@ bool LogParserRule::matchEx(const TCHAR *source, DWORD eventId, DWORD level,
 // Expand macros in regexp
 //
 
-void LogParserRule::expandMacros(const char *regexp, String &out)
+void LogParserRule::expandMacros(const TCHAR *regexp, String &out)
 {
-	const char *curr, *prev;
-	char name[256];
+	const TCHAR *curr, *prev;
+	TCHAR name[256];
 
 	for(curr = prev = regexp; *curr != 0; curr++)
 	{
-		if (*curr == '@')
+		if (*curr == _T('@'))
 		{
 			// Check for escape
-			if ((curr != regexp) && (*(curr - 1) == '\\'))
+			if ((curr != regexp) && (*(curr - 1) == _T('\\')))
 			{
 				out.addString(prev, (DWORD)(curr - prev - 1));
 				out += _T("@");
@@ -196,7 +196,7 @@ void LogParserRule::expandMacros(const char *regexp, String &out)
 			else
 			{
 				// { should follow @
-				if (*(curr + 1) == '{')
+				if (*(curr + 1) == _T('{'))
 				{
 					int i;
 

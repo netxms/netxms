@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -49,16 +49,16 @@ const TCHAR *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize)
 
 	for(int i = 0; (temp[i] != 0) && (outpos < bufSize - 1); i++)
 	{
-		if (temp[i] == '`')
+		if (temp[i] == _T('`'))
 		{
 			int j = ++i;
-			while((temp[j] != '`') && (temp[j] != 0))
+			while((temp[j] != _T('`')) && (temp[j] != 0))
 				j++;
 			int len = min(j - i, 1023);
 			memcpy(command, &temp[i], len * sizeof(TCHAR));
 			command[len] = 0;
 
-			FILE *p = popen(command, "r");
+			FILE *p = _tpopen(command, _T("r"));
 			if (p != NULL)
 			{
 				char result[1024];

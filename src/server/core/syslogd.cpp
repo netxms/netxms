@@ -328,8 +328,17 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 		MutexLock(m_mutexParserAccess);
 		if ((record.dwSourceObject != 0) && (m_parser != NULL))
 		{
+#ifdef UNICODE
+			WCHAR wtag[MAX_SYSLOG_TAG_LEN];
+			WCHAR wmsg[MAX_LOG_MSG_LENGTH];
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, record.szTag, -1, wtag, MAX_SYSLOG_TAG_LEN);
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, record.szMessage, -1, wmsg, MAX_LOG_MSG_LENGTH);
+			m_parser->matchEvent(wtag, record.nFacility, 1 << record.nSeverity,
+			                     wmsg, record.dwSourceObject);
+#else
 			m_parser->matchEvent(record.szTag, record.nFacility, 1 << record.nSeverity,
 			                     record.szMessage, record.dwSourceObject);
+#endif
 		}
 		MutexUnlock(m_mutexParserAccess);
    }
@@ -378,8 +387,8 @@ static void QueueSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 // Callback for syslog parser
 //
 
-static void SyslogParserCallback(DWORD eventCode, const char *eventName, const char *line, int paramCount,
-										   char **params, DWORD objectId, void *userArg)
+static void SyslogParserCallback(DWORD eventCode, const TCHAR *eventName, const TCHAR *line, int paramCount,
+										   TCHAR **params, DWORD objectId, void *userArg)
 {
 	char format[] = "ssssssssssssssssssssssssssssssss";
 	TCHAR *plist[32];
@@ -387,13 +396,8 @@ static void SyslogParserCallback(DWORD eventCode, const char *eventName, const c
 
 	count = min(paramCount, 32);
 	format[count] = 0;
-#ifdef UNICODE
-	for(i = 0; i < count; i++)
-		plist[i] = WideStringFromMBString(params[i]);
-#else
 	for(i = 0; i < count; i++)
 		plist[i] = params[i];
-#endif
 	PostEvent(eventCode, objectId, format,
 	          plist[0], plist[1], plist[2], plist[3],
 	          plist[4], plist[5], plist[6], plist[7],
@@ -403,10 +407,6 @@ static void SyslogParserCallback(DWORD eventCode, const char *eventName, const c
 	          plist[20], plist[21], plist[22], plist[23],
 	          plist[24], plist[25], plist[26], plist[27],
 	          plist[28], plist[29], plist[30], plist[31]);
-#ifdef UNICODE
-	for(i = 0; i < count; i++)
-		safe_free(plist[i]);
-#endif
 }
 
 
@@ -414,19 +414,12 @@ static void SyslogParserCallback(DWORD eventCode, const char *eventName, const c
 // Event name resolver
 //
 
-static bool EventNameResolver(const char *name, DWORD *code)
+static bool EventNameResolver(const TCHAR *name, DWORD *code)
 {
 	EVENT_TEMPLATE *event;
 	bool success = false;
 
-#ifdef UNICODE
-	WCHAR wname[MAX_OBJECT_NAME];
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, wname, MAX_OBJECT_NAME);
-	wname[MAX_OBJECT_NAME - 1] = 0;
-	event = FindEventTemplateByName(wname);
-#else
 	event = FindEventTemplateByName(name);
-#endif
 	if (event != NULL)
 	{
 		*code = event->dwCode;
@@ -458,11 +451,11 @@ static void CreateParserFromConfig()
 		xml = NULL;
 	}
 #else
-	xml = ConfigReadCLOB(_T("SyslogParser"), _T("<parser></parser>"));
+	xml = ConfigReadCLOB("SyslogParser", "<parser></parser>");
 #endif
 	if (xml != NULL)
 	{
-		char parseError[256];
+		TCHAR parseError[256];
 
 		m_parser = new LogParser;
 		m_parser->setEventNameResolver(EventNameResolver);

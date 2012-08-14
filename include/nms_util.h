@@ -668,7 +668,7 @@ typedef struct _dir_struc_w
    inline char *nx_strncpy_mb(char *pszDest, const char *pszSrc, size_t nLen)
    {
 #if defined(_WIN32) && (_MSC_VER >= 1400)
-		_strncpy_s(pszDest, nLen, pszSrc, _TRUNCATE);
+		strncpy_s(pszDest, nLen, pszSrc, _TRUNCATE);
 #else
       strncpy(pszDest, pszSrc, nLen - 1);
       pszDest[nLen - 1] = 0;
