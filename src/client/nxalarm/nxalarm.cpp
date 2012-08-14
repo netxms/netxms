@@ -80,8 +80,9 @@ static void DebugCallback(TCHAR *pMsg)
 
 int main(int argc, char *argv[])
 {
-	TCHAR *eptr, login[MAX_DB_STRING] = _T("guest"),
+	TCHAR login[MAX_DB_STRING] = _T("guest"),
 	      password[MAX_DB_STRING] = _T("");
+	char *eptr;
 	BOOL isDebug = FALSE, isEncrypt = FALSE;
 	DWORD rcc, alarmId, timeout = 3;
    NXC_SESSION session;
@@ -135,24 +136,39 @@ int main(int argc, char *argv[])
             isEncrypt = TRUE;
             break;
          case 'u':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, login, MAX_DB_STRING);
+				login[MAX_DB_STRING] = 0;
+#else
             nx_strncpy(login, optarg, MAX_DB_STRING);
+#endif
             break;
          case 'P':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, password, MAX_DB_STRING);
+				password[MAX_DB_STRING] = 0;
+#else
             nx_strncpy(password, optarg, MAX_DB_STRING);
+#endif
             break;
          case 'o':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_outFormat, MAX_DB_STRING);
+				m_outFormat[MAX_DB_STRING] = 0;
+#else
             nx_strncpy(m_outFormat, optarg, MAX_DB_STRING);
+#endif
             break;
          case 'w':
-            timeout = _tcstoul(optarg, NULL, 0);
+            timeout = strtoul(optarg, NULL, 0);
             if ((timeout < 1) || (timeout > 120))
             {
-               _tprintf(_T("Invalid timeout %s\n"), optarg);
+               _tprintf(_T("Invalid timeout %hs\n"), optarg);
                return 1;
             }
             break;
          case 'v':
-            printf("NetXMS Alarm Control  Version " NETXMS_VERSION_STRING "\n");
+            _tprintf(_T("NetXMS Alarm Control  Version ") NETXMS_VERSION_STRING _T("\n"));
             return 1;
          case '?':
             return 1;
@@ -168,7 +184,7 @@ int main(int argc, char *argv[])
 	}
 
 	// All commands except "list" requirs alarm id
-   if (_tcsicmp(argv[optind + 1], _T("list")) && (argc - optind < 3))
+   if (stricmp(argv[optind + 1], "list") && (argc - optind < 3))
    {
       _tprintf(_T("Required arguments missing. Use nxalarm -h for help.\n"));
 		return 1;
@@ -193,7 +209,15 @@ int main(int argc, char *argv[])
    if (isDebug)
       NXCSetDebugCallback(DebugCallback);
 
-	rcc = NXCConnect(isEncrypt ? NXCF_ENCRYPT : 0, argv[optind], login,
+#ifdef UNICODE
+	WCHAR whost[256];
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind], -1, whost, 256);
+	whost[255] = 0;
+#define _HOST whost
+#else
+#define _HOST argv[optind]
+#endif
+	rcc = NXCConnect(isEncrypt ? NXCF_ENCRYPT : 0, _HOST, login,
 		              password, 0, NULL, NULL, &session,
                     _T("nxalarm/") NETXMS_VERSION_STRING, NULL);
 	if (rcc != RCC_SUCCESS)
@@ -205,32 +229,32 @@ int main(int argc, char *argv[])
 	NXCSetCommandTimeout(session, timeout * 1000);
 
 	// Execute command
-	if (!_tcsicmp(argv[optind + 1], _T("list")))
+	if (!stricmp(argv[optind + 1], "list"))
 	{
 		rcc = ListAlarms(session);
 	}
 	else
 	{
-		alarmId = _tcstoul(argv[optind + 2], &eptr, 0);
+		alarmId = strtoul(argv[optind + 2], &eptr, 0);
 		if ((*eptr != 0) || (alarmId == 0))
 		{
-			_tprintf(_T("Invalid alarm ID \"%s\"\n"), argv[optind + 2]);
+			_tprintf(_T("Invalid alarm ID \"%hs\"\n"), argv[optind + 2]);
 			NXCDisconnect(session);
 			return 1;
 		}
-		if (!_tcsicmp(argv[optind + 1], _T("ack")))
+		if (!stricmp(argv[optind + 1], "ack"))
 		{
 			rcc = NXCAcknowledgeAlarm(session, alarmId);
 			if (rcc != RCC_SUCCESS)
 				_tprintf(_T("Cannot acknowledge alarm: %s\n"), NXCGetErrorText(rcc));
 		}
-		else if (!_tcsicmp(argv[optind + 1], _T("close")))
+		else if (!stricmp(argv[optind + 1], "close"))
 		{
 			rcc = NXCCloseAlarm(session, alarmId);
 			if (rcc != RCC_SUCCESS)
 				_tprintf(_T("Cannot close alarm: %s\n"), NXCGetErrorText(rcc));
 		}
-		else if (!_tcsicmp(argv[optind + 1], _T("terminate")))
+		else if (!stricmp(argv[optind + 1], "terminate"))
 		{
 			rcc = NXCTerminateAlarm(session, alarmId);
 			if (rcc != RCC_SUCCESS)
@@ -238,7 +262,7 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			_tprintf(_T("Invalid command \"%s\"\n"), argv[optind + 1]);
+			_tprintf(_T("Invalid command \"%hs\"\n"), argv[optind + 1]);
 			NXCDisconnect(session);
 			return 1;
 		}

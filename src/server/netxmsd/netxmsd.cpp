@@ -188,7 +188,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 		{ "start", 0, NULL, 's' },
 		{ "stop", 0, NULL, 'S' },
 #else
-		{ _T("pid-file"), 1, NULL, 'p' },
+		{ "pid-file", 1, NULL, 'p' },
 #endif
 		{ NULL, 0, 0, 0 }
 	};
@@ -318,7 +318,7 @@ int main(int argc, char *argv[])
 #else
    int i;
    FILE *fp;
-   char *pszEnv;
+   TCHAR *pszEnv;
 #endif
 
 #ifdef __sun

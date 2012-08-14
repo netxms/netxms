@@ -95,23 +95,23 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_FLOAT,	DCIDESC_FS_USEDPERC },
 
 	{ _T("DRBD.ConnState(*)"),            H_DRBDDeviceInfo,  _T("c"),
-		DCI_DT_STRING, "Connection state of DRBD device {instance}" },
+		DCI_DT_STRING, _T("Connection state of DRBD device {instance}") },
 	{ _T("DRBD.DataState(*)"),            H_DRBDDeviceInfo,  _T("d"),
-		DCI_DT_STRING, "Data state of DRBD device {instance}" },
+		DCI_DT_STRING, _T("Data state of DRBD device {instance}") },
 	{ _T("DRBD.DeviceState(*)"),          H_DRBDDeviceInfo,  _T("s"),
-		DCI_DT_STRING, "State of DRBD device {instance}" },
+		DCI_DT_STRING, _T("State of DRBD device {instance}") },
 	{ _T("DRBD.PeerDataState(*)"),        H_DRBDDeviceInfo,  _T("D"),
-		DCI_DT_STRING, "Data state of DRBD peer device {instance}" },
+		DCI_DT_STRING, _T("Data state of DRBD peer device {instance}") },
 	{ _T("DRBD.PeerDeviceState(*)"),      H_DRBDDeviceInfo,  _T("S"),
-		DCI_DT_STRING, "State of DRBD peer device {instance}" },
+		DCI_DT_STRING, _T("State of DRBD peer device {instance}") },
 	{ _T("DRBD.Protocol(*)"),             H_DRBDDeviceInfo,  _T("p"),
-		DCI_DT_STRING, "Protocol type used by DRBD device {instance}" },
+		DCI_DT_STRING, _T("Protocol type used by DRBD device {instance}") },
 	{ _T("DRBD.Version.API"),             H_DRBDVersion,     _T("a"),
-		DCI_DT_STRING, "DRBD API version" },
+		DCI_DT_STRING, _T("DRBD API version") },
 	{ _T("DRBD.Version.Driver"),          H_DRBDVersion,     _T("v"),
-		DCI_DT_STRING, "DRBD driver version" },
+		DCI_DT_STRING, _T("DRBD driver version") },
 	{ _T("DRBD.Version.Protocol"),        H_DRBDVersion,     _T("p"),
-		DCI_DT_STRING, "DRBD protocol version" },
+		DCI_DT_STRING, _T("DRBD protocol version") },
 
 	{ _T("Net.Interface.AdminStatus(*)"), H_NetIfInfoFromIOCTL, (TCHAR *)IF_INFO_ADMIN_STATUS,
 		DCI_DT_INT,		DCIDESC_NET_INTERFACE_ADMINSTATUS },
@@ -393,7 +393,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.IO.DiskTime"),           H_IoStatsTotal, (const TCHAR *)IOSTAT_IO_TIME,
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_DISKTIME },
 	{ _T("System.IO.DiskTime(*)"),        H_IoStats, (const TCHAR *)IOSTAT_IO_TIME,
-		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_DISKTIME_EX },
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_DISKTIME_EX }
 };
 
 static NETXMS_SUBAGENT_LIST m_enums[] =
@@ -403,7 +403,7 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 	{ _T("Net.IP.RoutingTable"),          H_NetRoutingTable,    NULL },
 	{ _T("Net.InterfaceList"),            H_NetIfList,          NULL },
 	{ _T("System.ActiveUserSessions"),    H_ActiveUserSessions, NULL },
-	{ _T("System.ProcessList"),           H_ProcessList,        NULL },
+	{ _T("System.ProcessList"),           H_ProcessList,        NULL }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =

@@ -23,7 +23,7 @@
 #include <linux_subagent.h>
 
 
-LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
+LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nVer = CAST_FROM_POINTER(pArg, int);
 	int nRet = SYSINFO_RC_ERROR;
@@ -70,7 +70,7 @@ LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -115,7 +115,7 @@ LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
 						continue;
 					}
 
-					nx_strncpy(irq.ifr_name, szIf, IFNAMSIZ);
+					strncpy(irq.ifr_name, szIf, IFNAMSIZ);
 					if (ioctl(nFd, SIOCGIFINDEX, &irq) != 0)
 					{
 						perror("ioctl()");
@@ -126,13 +126,14 @@ LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
 						nIndex = irq.ifr_ifindex;
 					}
 
-					snprintf(szBuff, sizeof(szBuff),
-							"%02X%02X%02X%02X%02X%02X %d.%d.%d.%d %d",
-							nMAC1, nMAC2, nMAC3, nMAC4, nMAC5, nMAC6,
-							nIP1, nIP2, nIP3, nIP4,
-							nIndex);
+					TCHAR output[256];
+					_sntprintf(output, 256,
+					           _T("%02X%02X%02X%02X%02X%02X %d.%d.%d.%d %d"),
+					           nMAC1, nMAC2, nMAC3, nMAC4, nMAC5, nMAC6,
+					           nIP1, nIP2, nIP3, nIP4,
+					           nIndex);
 
-					pValue->add(szBuff);
+					pValue->add(output);
 				}
 			}
 
@@ -145,7 +146,7 @@ LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
 	return nRet;
 }
 
-LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -191,7 +192,7 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValu
 					int nIndex;
 					struct ifreq irq;
 
-					nx_strncpy(irq.ifr_name, szIF, IFNAMSIZ);
+					strncpy(irq.ifr_name, szIF, IFNAMSIZ);
 					if (ioctl(nFd, SIOCGIFINDEX, &irq) != 0)
 					{
 						perror("ioctl()");
@@ -202,14 +203,14 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValu
 						nIndex = irq.ifr_ifindex;
 					}
 
-					char szBuf1[64], szBuf2[64];
-					snprintf(szLine, sizeof(szLine), "%s/%d %s %d %d",
+					TCHAR output[256], szBuf1[64], szBuf2[64];
+					_sntprintf(output, 256, _T("%s/%d %s %d %d"),
 							IpToStr(ntohl(nDestination), szBuf1),
 							BitsInMask(htonl(nMask)),
 							IpToStr(ntohl(nGateway), szBuf2),
 							nIndex,
 							nType);
-					pValue->add(szLine);
+					pValue->add(output);
 				}
 			}
 		}
@@ -221,7 +222,7 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValu
 	return nRet;
 }
 
-LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct if_nameindex *pIndex;
@@ -255,7 +256,6 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 							struct sockaddr_in *addr;
 							struct ifreq irq;
 							int mask = 0;
-							char szOut[1024];
 							int index = if_nametoindex(ifc.ifc_req[i].ifr_name);
 							char szMacAddr[16];
 
@@ -283,7 +283,8 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 
 							addr = (struct sockaddr_in *)&(ifc.ifc_req[i].ifr_addr);
 
-							snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
+							TCHAR szOut[1024];
+							_sntprintf(szOut, 1024, _T("%d %hs/%d %d %hs %hs"),
 									index,
 									inet_ntoa(addr->sin_addr),
 									mask,
@@ -322,14 +323,14 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 	return nRet;
 }
 
-LONG H_NetIfInfoFromIOCTL(const char *pszParam, const char *pArg, char *pValue)
+LONG H_NetIfInfoFromIOCTL(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	char *eptr, szBuffer[256];
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	struct ifreq ifr;
 	int fd;
 
-	if (!AgentGetParameterArg(pszParam, 1, szBuffer, 256))
+	if (!AgentGetParameterArgA(pszParam, 1, szBuffer, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -349,7 +350,7 @@ LONG H_NetIfInfoFromIOCTL(const char *pszParam, const char *pArg, char *pValue)
 	else
 	{
 		// Name passed as argument
-		nx_strncpy(ifr.ifr_name, szBuffer, IFNAMSIZ);
+		strncpy(ifr.ifr_name, szBuffer, IFNAMSIZ);
 	}
 
 	// Get interface information
@@ -382,7 +383,7 @@ LONG H_NetIfInfoFromIOCTL(const char *pszParam, const char *pArg, char *pValue)
 				}
 				break;
 			case IF_INFO_DESCRIPTION:
-				ret_string(pValue, ifr.ifr_name);
+				ret_mbstring(pValue, ifr.ifr_name);
 				break;
 			default:
 				nRet = SYSINFO_RC_UNSUPPORTED;
@@ -396,7 +397,7 @@ LONG H_NetIfInfoFromIOCTL(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-static LONG ValueFromLine(char *pszLine, int nPos, char *pValue)
+static LONG ValueFromLine(char *pszLine, int nPos, TCHAR *pValue)
 {
 	int i;
 	char *eptr, szBuffer[256];
@@ -405,7 +406,7 @@ static LONG ValueFromLine(char *pszLine, int nPos, char *pValue)
 	LONG nRet = SYSINFO_RC_ERROR;
 
 	for(i = 0, pszWord = pszLine; i <= nPos; i++)
-		pszWord = ExtractWord(pszWord, szBuffer);
+		pszWord = ExtractWordA(pszWord, szBuffer);
 	dwValue = strtoul(szBuffer, &eptr, 0);
 	if (*eptr == 0)
 	{
@@ -415,13 +416,13 @@ static LONG ValueFromLine(char *pszLine, int nPos, char *pValue)
 	return nRet;
 }
 
-LONG H_NetIfInfoFromProc(const char *pszParam, const char *pArg, char *pValue)
+LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	char *ptr, szBuffer[256], szName[IFNAMSIZ];
 	LONG nIndex, nRet = SYSINFO_RC_SUCCESS;
 	FILE *fp;
 
-	if (!AgentGetParameterArg(pszParam, 1, szBuffer, 256))
+	if (!AgentGetParameterArgA(pszParam, 1, szBuffer, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	// Check if we have interface name or index
@@ -435,7 +436,7 @@ LONG H_NetIfInfoFromProc(const char *pszParam, const char *pArg, char *pValue)
 	else
 	{
 		// Name passed as argument
-		nx_strncpy(szName, szBuffer, IFNAMSIZ);
+		strncpy(szName, szBuffer, IFNAMSIZ);
 	}
 
 	// Get interface information
@@ -459,7 +460,7 @@ LONG H_NetIfInfoFromProc(const char *pszParam, const char *pArg, char *pValue)
 				}
 
 				// We expect line in form interface:stats
-				StrStrip(szBuffer);
+				StrStripA(szBuffer);
 				ptr = strchr(szBuffer, ':');
 				if (ptr == NULL)
 					continue;
@@ -480,7 +481,7 @@ LONG H_NetIfInfoFromProc(const char *pszParam, const char *pArg, char *pValue)
 
 		if (nRet == SYSINFO_RC_SUCCESS)
 		{
-			StrStrip(ptr);
+			StrStripA(ptr);
 			switch((long)pArg)
 			{
 				case IF_INFO_BYTES_IN:
