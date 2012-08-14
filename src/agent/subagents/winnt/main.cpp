@@ -27,17 +27,17 @@
 // Externlals
 //
 
-LONG H_ActiveUserSessions(const char *cmd, const char *arg, StringList *value);
-LONG H_AppAddressSpace(const char *pszCmd, const char *pArg, char *pValue);
-LONG H_ConnectedUsers(const char *pszCmd, const char *pArg, char *pValue);
-LONG H_RemoteShareStatus(const char *pszCmd, const char *pArg, char *pValue);
-LONG H_ProcessList(const char *cmd, const char *arg, StringList *value);
-LONG H_ProcessTable(const char *cmd, const char *arg, Table *value);
-LONG H_ProcCount(const char *cmd, const char *arg, char *value);
-LONG H_ProcCountSpecific(const char *cmd, const char *arg, char *value);
-LONG H_ProcInfo(const char *cmd, const char *arg, char *value);
-LONG H_ServiceState(const char *cmd, const char *arg, char *value);
-LONG H_ThreadCount(const char *cmd, const char *arg, char *value);
+LONG H_ActiveUserSessions(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
+LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
+LONG H_RemoteShareStatus(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
+LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value);
+LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
 
 //
@@ -47,8 +47,8 @@ LONG H_ThreadCount(const char *cmd, const char *arg, char *value);
 BOOL (__stdcall *imp_GetProcessIoCounters)(HANDLE, PIO_COUNTERS) = NULL;
 BOOL (__stdcall *imp_GetPerformanceInfo)(PPERFORMANCE_INFORMATION, DWORD) = NULL;
 DWORD (__stdcall *imp_GetGuiResources)(HANDLE, DWORD) = NULL;
-BOOL (__stdcall *imp_WTSEnumerateSessionsA)(HANDLE, DWORD, DWORD, PWTS_SESSION_INFOA *, DWORD *) = NULL;
-BOOL (__stdcall *imp_WTSQuerySessionInformationA)(HANDLE, DWORD, WTS_INFO_CLASS, LPSTR *, DWORD *) = NULL;
+BOOL (__stdcall *imp_WTSEnumerateSessionsW)(HANDLE, DWORD, DWORD, PWTS_SESSION_INFOW *, DWORD *) = NULL;
+BOOL (__stdcall *imp_WTSQuerySessionInformationW)(HANDLE, DWORD, WTS_INFO_CLASS, LPWSTR *, DWORD *) = NULL;
 void (__stdcall *imp_WTSFreeMemory)(void *) = NULL;
 
 
@@ -106,7 +106,7 @@ static LONG H_ActionShutdown(const TCHAR *pszAction, StringList *pArgList, const
 	if (SetCurrentPrivilege(SE_SHUTDOWN_NAME, TRUE))
 	{
 		if (InitiateSystemShutdown(NULL, NULL, 0, TRUE,
-					(*pData == 'R') ? TRUE : FALSE))
+					(*pData == _T('R')) ? TRUE : FALSE))
 			nRet = ERR_SUCCESS;
 	}
 	return nRet;
@@ -119,43 +119,43 @@ static LONG H_ActionShutdown(const TCHAR *pszAction, StringList *pArgList, const
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ "Net.RemoteShareStatus(*)", H_RemoteShareStatus, "C", DCI_DT_INT, _T("Status of remote shared resource") },
-	{ "Net.RemoteShareStatusText(*)", H_RemoteShareStatus, "T", DCI_DT_STRING, _T("Status of remote shared resource as text") },
-	{ "Process.Count(*)", H_ProcCountSpecific, "N", DCI_DT_INT, DCIDESC_PROCESS_COUNT },
-	{ "Process.CountEx(*)", H_ProcCountSpecific, "E", DCI_DT_INT, DCIDESC_PROCESS_COUNTEX },
-	{ "Process.CPUTime(*)", H_ProcInfo, (char *)PROCINFO_CPUTIME, DCI_DT_UINT64, DCIDESC_PROCESS_CPUTIME },
-	{ "Process.GDIObjects(*)", H_ProcInfo, (char *)PROCINFO_GDI_OBJ, DCI_DT_UINT64, DCIDESC_PROCESS_GDIOBJ },
-	{ "Process.IO.OtherB(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_B, DCI_DT_UINT64, DCIDESC_PROCESS_IO_OTHERB },
-	{ "Process.IO.OtherOp(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_OTHEROP },
-	{ "Process.IO.ReadB(*)", H_ProcInfo, (char *)PROCINFO_IO_READ_B, DCI_DT_UINT64, DCIDESC_PROCESS_IO_READB },
-	{ "Process.IO.ReadOp(*)", H_ProcInfo, (char *)PROCINFO_IO_READ_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_READOP },
-	{ "Process.IO.WriteB(*)", H_ProcInfo, (char *)PROCINFO_IO_WRITE_B, DCI_DT_UINT64, DCIDESC_PROCESS_IO_WRITEB },
-	{ "Process.IO.WriteOp(*)", H_ProcInfo, (char *)PROCINFO_IO_WRITE_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_WRITEOP },
-	{ "Process.KernelTime(*)", H_ProcInfo, (char *)PROCINFO_KTIME, DCI_DT_UINT64, DCIDESC_PROCESS_KERNELTIME },
-	{ "Process.PageFaults(*)", H_ProcInfo, (char *)PROCINFO_PF, DCI_DT_UINT64, DCIDESC_PROCESS_PAGEFAULTS },
-	{ "Process.UserObjects(*)", H_ProcInfo, (char *)PROCINFO_USER_OBJ, DCI_DT_UINT64, DCIDESC_PROCESS_USEROBJ },
-	{ "Process.UserTime(*)", H_ProcInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, DCIDESC_PROCESS_USERTIME },
-	{ "Process.VMSize(*)", H_ProcInfo, (char *)PROCINFO_VMSIZE, DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
-	{ "Process.WkSet(*)", H_ProcInfo, (char *)PROCINFO_WKSET, DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
-	{ "System.AppAddressSpace", H_AppAddressSpace, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_APPADDRESSSPACE },
-	{ "System.ConnectedUsers", H_ConnectedUsers, NULL, DCI_DT_INT, DCIDESC_SYSTEM_CONNECTEDUSERS },
-	{ "System.ProcessCount", H_ProcCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
-	{ "System.ServiceState(*)", H_ServiceState, NULL, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
-	{ "System.ThreadCount", H_ThreadCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT }
+	{ _T("Net.RemoteShareStatus(*)"), H_RemoteShareStatus, _T("C"), DCI_DT_INT, _T("Status of remote shared resource") },
+	{ _T("Net.RemoteShareStatusText(*)"), H_RemoteShareStatus, _T("T"), DCI_DT_STRING, _T("Status of remote shared resource as text") },
+	{ _T("Process.Count(*)"), H_ProcCountSpecific, _T("N"), DCI_DT_INT, DCIDESC_PROCESS_COUNT },
+	{ _T("Process.CountEx(*)"), H_ProcCountSpecific, _T("E"), DCI_DT_INT, DCIDESC_PROCESS_COUNTEX },
+	{ _T("Process.CPUTime(*)"), H_ProcInfo, (TCHAR *)PROCINFO_CPUTIME, DCI_DT_UINT64, DCIDESC_PROCESS_CPUTIME },
+	{ _T("Process.GDIObjects(*)"), H_ProcInfo, (TCHAR *)PROCINFO_GDI_OBJ, DCI_DT_UINT64, DCIDESC_PROCESS_GDIOBJ },
+	{ _T("Process.IO.OtherB(*)"), H_ProcInfo, (TCHAR *)PROCINFO_IO_OTHER_B, DCI_DT_UINT64, DCIDESC_PROCESS_IO_OTHERB },
+	{ _T("Process.IO.OtherOp(*)"), H_ProcInfo, (TCHAR *)PROCINFO_IO_OTHER_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_OTHEROP },
+	{ _T("Process.IO.ReadB(*)"), H_ProcInfo, (TCHAR *)PROCINFO_IO_READ_B, DCI_DT_UINT64, DCIDESC_PROCESS_IO_READB },
+	{ _T("Process.IO.ReadOp(*)"), H_ProcInfo, (TCHAR *)PROCINFO_IO_READ_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_READOP },
+	{ _T("Process.IO.WriteB(*)"), H_ProcInfo, (TCHAR *)PROCINFO_IO_WRITE_B, DCI_DT_UINT64, DCIDESC_PROCESS_IO_WRITEB },
+	{ _T("Process.IO.WriteOp(*)"), H_ProcInfo, (TCHAR *)PROCINFO_IO_WRITE_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_WRITEOP },
+	{ _T("Process.KernelTime(*)"), H_ProcInfo, (TCHAR *)PROCINFO_KTIME, DCI_DT_UINT64, DCIDESC_PROCESS_KERNELTIME },
+	{ _T("Process.PageFaults(*)"), H_ProcInfo, (TCHAR *)PROCINFO_PF, DCI_DT_UINT64, DCIDESC_PROCESS_PAGEFAULTS },
+	{ _T("Process.UserObjects(*)"), H_ProcInfo, (TCHAR *)PROCINFO_USER_OBJ, DCI_DT_UINT64, DCIDESC_PROCESS_USEROBJ },
+	{ _T("Process.UserTime(*)"), H_ProcInfo, (TCHAR *)PROCINFO_UTIME, DCI_DT_UINT64, DCIDESC_PROCESS_USERTIME },
+	{ _T("Process.VMSize(*)"), H_ProcInfo, (TCHAR *)PROCINFO_VMSIZE, DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
+	{ _T("Process.WkSet(*)"), H_ProcInfo, (TCHAR *)PROCINFO_WKSET, DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
+	{ _T("System.AppAddressSpace"), H_AppAddressSpace, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_APPADDRESSSPACE },
+	{ _T("System.ConnectedUsers"), H_ConnectedUsers, NULL, DCI_DT_INT, DCIDESC_SYSTEM_CONNECTEDUSERS },
+	{ _T("System.ProcessCount"), H_ProcCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
+	{ _T("System.ServiceState(*)"), H_ServiceState, NULL, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
+	{ _T("System.ThreadCount"), H_ThreadCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT }
 };
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {
-	{ "System.ActiveUserSessions", H_ActiveUserSessions, NULL },
-	{ "System.ProcessList", H_ProcessList, NULL }
+	{ _T("System.ActiveUserSessions"), H_ActiveUserSessions, NULL },
+	{ _T("System.ProcessList"), H_ProcessList, NULL }
 };
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
-	{ "System.Processes", H_ProcessTable, NULL, "PID", DCTDESC_SYSTEM_PROCESSES }
+	{ _T("System.Processes"), H_ProcessTable, NULL, _T("PID"), DCTDESC_SYSTEM_PROCESSES }
 };
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {
-	{ "System.Restart", H_ActionShutdown, "R", "Restart system" },
-	{ "System.Shutdown", H_ActionShutdown, "S", "Shutdown system" }
+	{ _T("System.Restart"), H_ActionShutdown, _T("R"), _T("Restart system") },
+	{ _T("System.Shutdown"), H_ActionShutdown, _T("S"), _T("Shutdown system") }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
@@ -185,29 +185,29 @@ NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 	HMODULE hModule;
 
 	// Import functions which may not be presented in all Windows versions
-	hModule = GetModuleHandle("USER32.DLL");
+	hModule = GetModuleHandle(_T("USER32.DLL"));
 	if (hModule != NULL)
 	{
 		imp_GetGuiResources = (DWORD (__stdcall *)(HANDLE, DWORD))GetProcAddress(hModule, "GetGuiResources");
 	}
 
-	hModule = GetModuleHandle("KERNEL32.DLL");
+	hModule = GetModuleHandle(_T("KERNEL32.DLL"));
 	if (hModule != NULL)
 	{
 		imp_GetProcessIoCounters = (BOOL (__stdcall *)(HANDLE, PIO_COUNTERS))GetProcAddress(hModule, "GetProcessIoCounters");
 	}
 
-	hModule = GetModuleHandle("PSAPI.DLL");
+	hModule = GetModuleHandle(_T("PSAPI.DLL"));
 	if (hModule != NULL)
 	{
 		imp_GetPerformanceInfo = (BOOL (__stdcall *)(PPERFORMANCE_INFORMATION, DWORD))GetProcAddress(hModule, "GetPerformanceInfo");
 	}
 
-	hModule = LoadLibrary("WTSAPI32.DLL");
+	hModule = LoadLibrary(_T("WTSAPI32.DLL"));
 	if (hModule != NULL)
 	{
-		imp_WTSEnumerateSessionsA = (BOOL (__stdcall *)(HANDLE, DWORD, DWORD, PWTS_SESSION_INFOA *, DWORD *))GetProcAddress(hModule, "WTSEnumerateSessionsA");
-		imp_WTSQuerySessionInformationA = (BOOL (__stdcall *)(HANDLE, DWORD, WTS_INFO_CLASS, LPSTR *, DWORD *))GetProcAddress(hModule, "WTSQuerySessionInformationA");
+		imp_WTSEnumerateSessionsW = (BOOL (__stdcall *)(HANDLE, DWORD, DWORD, PWTS_SESSION_INFOW *, DWORD *))GetProcAddress(hModule, "WTSEnumerateSessionsA");
+		imp_WTSQuerySessionInformationW = (BOOL (__stdcall *)(HANDLE, DWORD, WTS_INFO_CLASS, LPWSTR *, DWORD *))GetProcAddress(hModule, "WTSQuerySessionInformationA");
 		imp_WTSFreeMemory = (void (__stdcall *)(void *))GetProcAddress(hModule, "WTSFreeMemory");
 	}
 	*ppInfo = &m_info;

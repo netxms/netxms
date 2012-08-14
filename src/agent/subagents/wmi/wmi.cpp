@@ -28,47 +28,51 @@
 //
 
 LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, StringList *value);
-LONG H_ACPITZCurrTemp(const char *cmd, const char *arg, char *value);
+LONG H_ACPITZCurrTemp(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
 
 //
 // Convert variant to string value
 //
 
-char *VariantToString(VARIANT *pValue)
+TCHAR *VariantToString(VARIANT *pValue)
 {
-   char *buf = NULL;
+   TCHAR *buf = NULL;
 
    switch (pValue->vt) 
    {
 		case VT_NULL: 
-         buf = strdup("<null>");
+         buf = _tcsdup(_T("<null>"));
          break;
 	   case VT_BOOL: 
-			buf = strdup(pValue->boolVal ? "TRUE" : "FALSE");
+			buf = _tcsdup(pValue->boolVal ? _T("TRUE") : _T("FALSE"));
          break;
 	   case VT_UI1:
-			buf = (char *)malloc(32);
-			sprintf(buf, "%d", pValue->bVal);
+			buf = (TCHAR *)malloc(32 * sizeof(TCHAR));
+			_sntprintf(buf, 32, _T("%d"), pValue->bVal);
 			break;
 		case VT_I2:
-			buf = (char *)malloc(32);
-			sprintf(buf, "%d", pValue->uiVal);
+			buf = (TCHAR *)malloc(32 * sizeof(TCHAR));
+			_sntprintf(buf, 32, _T("%d"), pValue->uiVal);
 			break;
 		case VT_I4:
-			buf = (char *)malloc(32);
-			sprintf(buf, "%d", pValue->lVal);
+			buf = (TCHAR *)malloc(32 * sizeof(TCHAR));
+			_sntprintf(buf, 32, _T("%d"), pValue->lVal);
 			break;
 		case VT_R4:
-			buf = (char *)malloc(32);
-			sprintf(buf, "%f", pValue->fltVal);
+			buf = (TCHAR *)malloc(32 * sizeof(TCHAR));
+			_sntprintf(buf, 32, _T("%f"), pValue->fltVal);
 			break;
 		case VT_R8:
-			buf = (char *)malloc(32);
-			sprintf(buf, "%f", pValue->dblVal);
+			buf = (TCHAR *)malloc(32 * sizeof(TCHAR));
+			_sntprintf(buf, 32, _T("%f"), pValue->dblVal);
 			break;
 		case VT_BSTR:
+#ifdef UNICODE
+			buf = wcsdup(pValue->bstrVal);
+#else
 			buf = MBStringFromWideString(pValue->bstrVal);
+#endif
 			break;
 	   default:
 			break;
@@ -184,13 +188,12 @@ void CloseWMIQuery(WMI_QUERY_CONTEXT *ctx)
 // Format: WMI.Query(namespace, query, property)
 //
 
-static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
+static LONG H_WMIQuery(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	WMI_QUERY_CONTEXT ctx;
 	IEnumWbemClassObject *pEnumObject = NULL;
 	IWbemClassObject *pClassObject = NULL;
-	char ns[256], query[256], prop[256];
-	WCHAR *pwszNamespace, *pwszQuery;
+	TCHAR ns[256], query[256], prop[256];
 	ULONG uRet;
 	LONG rc = SYSINFO_RC_ERROR;
 
@@ -199,9 +202,7 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 	    !AgentGetParameterArg(cmd, 3, prop, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	pwszNamespace = WideStringFromMBString(ns);
-	pwszQuery = WideStringFromMBString(query);
-	pEnumObject = DoWMIQuery(pwszNamespace, pwszQuery, &ctx);
+	pEnumObject = DoWMIQuery(ns, query, &ctx);
 	if (pEnumObject != NULL)
 	{
 		if (!_tcsicmp(prop, _T("%%count%%")))
@@ -217,12 +218,10 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 			if (pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK)
 			{
 				VARIANT v;
-				WCHAR *pwstrProperty;
 
-				pwstrProperty = WideStringFromMBString(prop);
-				if (pClassObject->Get(pwstrProperty, 0, &v, 0, 0) == S_OK)
+				if (pClassObject->Get(prop, 0, &v, 0, 0) == S_OK)
 				{
-					char *str;
+					TCHAR *str;
 
 					str = VariantToString(&v);
 					if (str != NULL)
@@ -232,7 +231,7 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 					}
 					else
 					{
-						ret_string(value, "<WMI result conversion error>");
+						ret_string(value, _T("<WMI result conversion error>"));
 					}
 					VariantClear(&v);
 
@@ -242,7 +241,6 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 				{
 					AgentWriteDebugLog(5, _T("WMI: cannot get property \"%s\" from query \"%s\" in namespace \"%s\""), prop, query, ns);
 				}
-				free(pwstrProperty);
 				pClassObject->Release();
 			}
 			else
@@ -257,8 +255,6 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 	{
 		AgentWriteDebugLog(5, _T("WMI: query \"%s\" in namespace \"%s\" failed"), query, ns);
 	}
-	free(pwszNamespace);
-	free(pwszQuery);
    return rc;
 }
 
@@ -284,7 +280,7 @@ static LONG H_WMINameSpaces(const TCHAR *pszParam, const TCHAR *pArg, StringList
 
 			if (pClassObject->Get(L"Name", 0, &v, 0, 0) == S_OK)
 			{
-				char *str;
+				TCHAR *str;
 
 				str = VariantToString(&v);
 				VariantClear(&v);
@@ -310,15 +306,13 @@ static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 	IEnumWbemClassObject *pEnumObject = NULL;
 	IWbemClassObject *pClassObject = NULL;
 	TCHAR ns[256];
-	WCHAR *pwszNamespace;
 	ULONG uRet;
 	LONG rc = SYSINFO_RC_ERROR;
 
 	if (!AgentGetParameterArg(pszParam, 1, ns, 256))
 		return SYSINFO_RC_UNSUPPORTED;
-	pwszNamespace = WideStringFromMBString(ns);
 
-	pEnumObject = DoWMIQuery(pwszNamespace, L"SELECT * FROM meta_class", &ctx);
+	pEnumObject = DoWMIQuery(ns, L"SELECT * FROM meta_class", &ctx);
 	if (pEnumObject != NULL)
 	{
 		while(pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK)
@@ -327,7 +321,7 @@ static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 
 			if (pClassObject->Get(L"__CLASS", 0, &v, 0, 0) == S_OK)
 			{
-				char *str;
+				TCHAR *str;
 
 				str = VariantToString(&v);
 				VariantClear(&v);
@@ -340,7 +334,6 @@ static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 		rc = SYSINFO_RC_SUCCESS;
 	}
 
-	free(pwszNamespace);
    return rc;
 }
 
@@ -359,7 +352,7 @@ static BOOL SubAgentInit(Config *config)
 // Handler for subagent unload
 //
 
-static void SubAgentShutdown(void)
+static void SubAgentShutdown()
 {
 }
 
@@ -370,8 +363,8 @@ static void SubAgentShutdown(void)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("ACPI.ThermalZone.CurrentTemp"), H_ACPITZCurrTemp, "*", DCI_DT_INT, _T("Current temperature in ACPI thermal zone") },
-   { _T("ACPI.ThermalZone.CurrentTemp(*)"), H_ACPITZCurrTemp, "%", DCI_DT_INT, _T("Current temperature in ACPI thermal zone {instance}") },
+   { _T("ACPI.ThermalZone.CurrentTemp"), H_ACPITZCurrTemp, _T("*"), DCI_DT_INT, _T("Current temperature in ACPI thermal zone") },
+   { _T("ACPI.ThermalZone.CurrentTemp(*)"), H_ACPITZCurrTemp, _T("%"), DCI_DT_INT, _T("Current temperature in ACPI thermal zone {instance}") },
    { _T("WMI.Query(*)"), H_WMIQuery, NULL, DCI_DT_STRING, _T("Generic WMI query") }
 };
 static NETXMS_SUBAGENT_LIST m_enums[] =
@@ -384,7 +377,7 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("WMI"), _T(NETXMS_VERSION_STRING) _T(DEBUG_SUFFIX),
+	_T("WMI"), NETXMS_VERSION_STRING,
    SubAgentInit, SubAgentShutdown, NULL,      // handlers
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,

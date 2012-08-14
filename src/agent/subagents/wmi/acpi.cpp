@@ -27,12 +27,12 @@
 // Handler for ACPI.ThermalZone.CurrentTemp(*)
 //
 
-LONG H_ACPITZCurrTemp(const char *cmd, const char *arg, char *value)
+LONG H_ACPITZCurrTemp(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	WMI_QUERY_CONTEXT ctx;
 	IEnumWbemClassObject *pEnumObject = NULL;
 	IWbemClassObject *pClassObject = NULL;
-	char instance[256];
+	TCHAR instance[256];
 	ULONG uRet;
 	LONG rc = SYSINFO_RC_ERROR;
 
@@ -50,13 +50,13 @@ LONG H_ACPITZCurrTemp(const char *cmd, const char *arg, char *value)
 
 			if (pClassObject->Get(L"InstanceName", 0, &v, 0, 0) == S_OK)
 			{
-				char *str;
+				TCHAR *str;
 
 				str = VariantToString(&v);
 				VariantClear(&v);
 				if (str != NULL)
 				{
-					if (!stricmp(str, instance) || (*arg == '*'))
+					if (!_tcsicmp(str, instance) || (*arg == _T('*')))
 					{
 						if (pClassObject->Get(L"CurrentTemperature", 0, &v, 0, 0) == S_OK)
 						{
@@ -101,7 +101,7 @@ LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, StringList *va
 
 			if (pClassObject->Get(L"InstanceName", 0, &v, 0, 0) == S_OK)
 			{
-				char *str;
+				TCHAR *str;
 
 				str = VariantToString(&v);
 				VariantClear(&v);

@@ -1,6 +1,6 @@
 /* 
 ** Windows NT/2000/XP/2003 NetXMS subagent
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
          value = ioCounters.OtherOperationCount;
          break;
       default:       // Unknown attribute
-         AgentWriteLog(EVENTLOG_ERROR_TYPE, "GetProcessAttribute(): Unexpected attribute: 0x%02X", attr);
+         AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("GetProcessAttribute(): Unexpected attribute: 0x%02X"), attr);
          value = 0;
          break;
    }
@@ -156,7 +156,7 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
       case INFOTYPE_SUM:
          return lastValue + value;
       default:
-         AgentWriteLog(EVENTLOG_ERROR_TYPE, "GetProcessAttribute(): Unexpected type: 0x%02X", type);
+         AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("GetProcessAttribute(): Unexpected type: 0x%02X"), type);
          return 0;
    }
 }
@@ -200,8 +200,12 @@ static BOOL GetProcessCommandLine(DWORD dwPId, TCHAR *pszCmdLine, DWORD dwLen)
 				buffer = (WCHAR *)malloc(bufSize);
 				if (ReadProcessMemory(hProcess, pp.CommandLine.Buffer, buffer, bufSize, &dummy))
 				{
+#ifdef UNICODE
+					nx_strncpy(pszCmdLine, buffer, dwLen);
+#else
 					WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, buffer, pp.CommandLine.Length, pszCmdLine, dwLen, NULL, NULL);
 					pszCmdLine[dwLen - 1] = 0;
+#endif
 					bRet = TRUE;
 				}
 				free(buffer);
@@ -280,16 +284,16 @@ static StringList *GetProcessWindows(DWORD dwPID)
 //
 
 static BOOL MatchProcess(DWORD dwPID, HANDLE hProcess, HMODULE hModule, BOOL bExtMatch,
-								 char *pszModName, char *pszCmdLine, char *pszWindowName)
+								 TCHAR *pszModName, TCHAR *pszCmdLine, TCHAR *pszWindowName)
 {
-   char szBaseName[MAX_PATH];
+   TCHAR szBaseName[MAX_PATH];
 	int i;
 	BOOL bRet;
 
    GetModuleBaseName(hProcess, hModule, szBaseName, sizeof(szBaseName));
 	if (bExtMatch)	// Extended version
 	{
-		char commandLine[MAX_PATH];
+		TCHAR commandLine[MAX_PATH];
 		BOOL bProcMatch, bCmdMatch, bWindowMatch;
 
 		bProcMatch = bCmdMatch = bWindowMatch = TRUE;
@@ -326,7 +330,7 @@ static BOOL MatchProcess(DWORD dwPID, HANDLE hProcess, HMODULE hModule, BOOL bEx
 	}
 	else
 	{
-		bRet = !stricmp(szBaseName, pszModName);
+		bRet = !_tcsicmp(szBaseName, pszModName);
 	}
 	return bRet;
 }
@@ -349,14 +353,14 @@ static BOOL MatchProcess(DWORD dwPID, HANDLE hProcess, HMODULE hModule, BOOL bEx
 //    <window>   - window title
 //
 
-LONG H_ProcInfo(const char *cmd, const char *arg, char *value)
+LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   char buffer[256], procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
+   TCHAR buffer[256], procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
    int attr, type, i, procCount, counter;
    unsigned __int64 attrVal;
    DWORD *pdwProcList, dwSize;
    HMODULE *modList;
-   static char *typeList[]={ "min", "max", "avg", "sum", NULL };
+   static TCHAR *typeList[]={ _T("min"), _T("max"), _T("avg"), _T("sum"), NULL };
 
    // Check attribute
    attr = CAST_FROM_POINTER(arg, int);
@@ -372,7 +376,7 @@ LONG H_ProcInfo(const char *cmd, const char *arg, char *value)
    else
    {
       for(type = 0; typeList[type] != NULL; type++)
-         if (!stricmp(typeList[type], buffer))
+         if (!_tcsicmp(typeList[type], buffer))
             break;
       if (typeList[type] == NULL)
          return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
@@ -429,7 +433,7 @@ LONG H_ProcInfo(const char *cmd, const char *arg, char *value)
 // Handler for System.ProcessCount
 //
 
-LONG H_ProcCount(const char *cmd, const char *arg, char *value)
+LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    DWORD dwSize, *pdwProcList;
    PERFORMANCE_INFORMATION pi;
@@ -457,11 +461,11 @@ LONG H_ProcCount(const char *cmd, const char *arg, char *value)
 // Handler for Process.Count(*) and Process.CountEx(*)
 //
 
-LONG H_ProcCountSpecific(const char *cmd, const char *arg, char *value)
+LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    DWORD dwSize = 0, *pdwProcList;
    int i, counter, procCount;
-   char procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
+   TCHAR procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
    HANDLE hProcess;
    HMODULE modList[MAX_MODULES];
 
@@ -506,7 +510,7 @@ LONG H_ProcCountSpecific(const char *cmd, const char *arg, char *value)
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(const char *cmd, const char *arg, StringList *value)
+LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    DWORD i, dwSize, dwNumProc, *pdwProcList;
    LONG iResult = SYSINFO_RC_SUCCESS;
@@ -581,7 +585,7 @@ LONG H_ProcessList(const char *cmd, const char *arg, StringList *value)
 // Handler for System.Processes table
 //
 
-LONG H_ProcessTable(const char *cmd, const char *arg, Table *value)
+LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
 {
    DWORD i, dwSize, dwNumProc, *pdwProcList;
    LONG iResult = SYSINFO_RC_SUCCESS;

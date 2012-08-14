@@ -23,7 +23,7 @@ libnetxms_la_LIBADD += ../libtre/libnxtre.la
 endif
 
 EXTRA_DIST = \
-	libnetxms.vcproj libnetxmsw.vcproj \
+	libnetxms.vcproj \
 	libnetxms.h ice.h md5.h sha1.h uuidP.h \
 	dir.c dirw.c \
 	seh.cpp StackWalker.cpp StackWalker.h

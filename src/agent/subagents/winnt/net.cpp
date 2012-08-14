@@ -1,6 +1,6 @@
 /*
 ** Windows NT/2000/XP/2003 NetXMS subagent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,10 +30,12 @@
 //    or: Net.RemoteShareStatusText(share,domain,login,password)
 //
 
-LONG H_RemoteShareStatus(const char *cmd, const char *arg, char *value)
+LONG H_RemoteShareStatus(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	TCHAR share[MAX_PATH], domain[64], login[64], password[256];
-#ifndef UNICODE
+#ifdef UNICODE
+#define wshare share
+#else
 	WCHAR wshare[MAX_PATH], wdomain[64], wlogin[64], wpassword[64];
 #endif
 	USE_INFO_2 ui;

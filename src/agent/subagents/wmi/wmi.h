@@ -56,7 +56,7 @@ typedef struct
 
 IEnumWbemClassObject *DoWMIQuery(WCHAR *ns, WCHAR *query, WMI_QUERY_CONTEXT *ctx);
 void CloseWMIQuery(WMI_QUERY_CONTEXT *ctx);
-char *VariantToString(VARIANT *pValue);
+TCHAR *VariantToString(VARIANT *pValue);
 LONG VariantToInt(VARIANT *pValue);
 
 

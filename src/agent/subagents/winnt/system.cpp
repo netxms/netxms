@@ -27,7 +27,7 @@
 // Handler for System.ServiceState parameter
 //
 
-LONG H_ServiceState(const char *cmd, const char *arg, char *value)
+LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    SC_HANDLE hManager, hService;
    TCHAR szServiceName[MAX_PATH];
@@ -79,7 +79,7 @@ LONG H_ServiceState(const char *cmd, const char *arg, char *value)
 // Handler for System.ThreadCount
 //
 
-LONG H_ThreadCount(const char *cmd, const char *arg, char *value)
+LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    PERFORMANCE_INFORMATION pi;
 
@@ -102,17 +102,17 @@ LONG H_ThreadCount(const char *cmd, const char *arg, char *value)
 // Handler for System.ConnectedUsers parameter
 //
 
-LONG H_ConnectedUsers(const char *pszCmd, const char *pArg, char *pValue)
+LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
    LONG nRet;
    WTS_SESSION_INFO *pSessionList;
    DWORD i, dwNumSessions, dwCount;
 
-	if ((imp_WTSEnumerateSessionsA == NULL) ||
+	if ((imp_WTSEnumerateSessionsW == NULL) ||
 		 (imp_WTSFreeMemory == NULL))
 		return SYSINFO_RC_UNSUPPORTED;
 
-   if (imp_WTSEnumerateSessionsA(WTS_CURRENT_SERVER_HANDLE, 0, 1,
+   if (imp_WTSEnumerateSessionsW(WTS_CURRENT_SERVER_HANDLE, 0, 1,
                                  &pSessionList, &dwNumSessions))
    {
       for(i = 0, dwCount = 0; i < dwNumSessions; i++)
@@ -135,31 +135,31 @@ LONG H_ConnectedUsers(const char *pszCmd, const char *pArg, char *pValue)
 // Handler for System.ActiveUserSessions enum
 //
 
-LONG H_ActiveUserSessions(const char *pszCmd, const char *pArg, StringList *value)
+LONG H_ActiveUserSessions(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
 {
    LONG nRet;
    WTS_SESSION_INFO *pSessionList;
    DWORD i, dwNumSessions, dwBytes;
    TCHAR *pszClientName, *pszUserName, szBuffer[1024];
 
-	if ((imp_WTSEnumerateSessionsA == NULL) ||
-		 (imp_WTSQuerySessionInformationA == NULL) ||
+	if ((imp_WTSEnumerateSessionsW == NULL) ||
+		 (imp_WTSQuerySessionInformationW == NULL) ||
 		 (imp_WTSFreeMemory == NULL))
 		return SYSINFO_RC_UNSUPPORTED;
 
-   if (imp_WTSEnumerateSessionsA(WTS_CURRENT_SERVER_HANDLE, 0, 1,
+   if (imp_WTSEnumerateSessionsW(WTS_CURRENT_SERVER_HANDLE, 0, 1,
                                  &pSessionList, &dwNumSessions))
    {
       for(i = 0; i < dwNumSessions; i++)
          if ((pSessionList[i].State == WTSActive) ||
              (pSessionList[i].State == WTSConnected))
          {
-            if (!imp_WTSQuerySessionInformationA(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
+            if (!imp_WTSQuerySessionInformationW(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
                                                  WTSClientName, &pszClientName, &dwBytes))
             {
                pszClientName = NULL;
             }
-            if (!imp_WTSQuerySessionInformationA(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
+            if (!imp_WTSQuerySessionInformationW(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
                                                  WTSUserName, &pszUserName, &dwBytes))
             {
                pszUserName = NULL;
@@ -191,7 +191,7 @@ LONG H_ActiveUserSessions(const char *pszCmd, const char *pArg, StringList *valu
 // Handler for System.AppAddressSpace
 //
 
-LONG H_AppAddressSpace(const char *pszCmd, const char *pArg, char *pValue)
+LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
 	SYSTEM_INFO si;
 

@@ -291,8 +291,7 @@ static THREAD_RESULT THREAD_CALL CollectorThread(WINPERF_COUNTER_SET *pSet)
    szFName[16] = pSet->cClass;
    if (pSet->dwNumCounters == 0)
    {
-      AgentWriteLog(EVENTLOG_INFORMATION_TYPE, "Counter set %c is empty, "
-                                                 "collector thread for that set will not start",
+      AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Counter set %c is empty, collector thread for that set will not start"),
                       pSet->cClass);
       return 0;
    }
@@ -323,8 +322,8 @@ static THREAD_RESULT THREAD_CALL CollectorThread(WINPERF_COUNTER_SET *pSet)
    if (dwOKCounters == 0)
    {
       PdhCloseQuery(hQuery);
-      AgentWriteLog(EVENTLOG_WARNING_TYPE, "Failed to add any counter to query for counter set %c, "
-                                             "collector thread for that set will not start",
+      AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("Failed to add any counter to query for counter set %c, ")
+                                           _T("collector thread for that set will not start"),
                       pSet->cClass);
       return 0;
    }
@@ -381,7 +380,7 @@ static THREAD_RESULT THREAD_CALL CollectorThread(WINPERF_COUNTER_SET *pSet)
 
    // Cleanup
    PdhCloseQuery(hQuery);
-   AgentWriteLog(EVENTLOG_INFORMATION_TYPE, "Collector thread for counter set %c terminated", pSet->cClass);
+   AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Collector thread for counter set %c terminated"), pSet->cClass);
 
    return 0;
 }

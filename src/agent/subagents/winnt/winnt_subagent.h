@@ -76,8 +76,8 @@ struct WINDOW_LIST
 extern DWORD (__stdcall *imp_GetGuiResources)(HANDLE, DWORD);
 extern BOOL (__stdcall *imp_GetProcessIoCounters)(HANDLE, PIO_COUNTERS);
 extern BOOL (__stdcall *imp_GetPerformanceInfo)(PPERFORMANCE_INFORMATION, DWORD);
-extern BOOL (__stdcall *imp_WTSEnumerateSessionsA)(HANDLE, DWORD, DWORD, PWTS_SESSION_INFOA *, DWORD *);
-extern BOOL (__stdcall *imp_WTSQuerySessionInformationA)(HANDLE, DWORD, WTS_INFO_CLASS, LPSTR *, DWORD *);
+extern BOOL (__stdcall *imp_WTSEnumerateSessionsW)(HANDLE, DWORD, DWORD, PWTS_SESSION_INFOW *, DWORD *);
+extern BOOL (__stdcall *imp_WTSQuerySessionInformationW)(HANDLE, DWORD, WTS_INFO_CLASS, LPWSTR *, DWORD *);
 extern void (__stdcall *imp_WTSFreeMemory)(void *);
 
 

@@ -581,10 +581,10 @@ void LoadWindowsSubagent()
       switch(ver.dwPlatformId)
       {
          case VER_PLATFORM_WIN32_WINDOWS:    // Windows 9x
-            LoadSubAgent("WIN9X.NSM");
+            LoadSubAgent(_T("WIN9X.NSM"));
             break;
          case VER_PLATFORM_WIN32_NT:   // Windows NT or higher
-            LoadSubAgent("WINNT.NSM");
+            LoadSubAgent(_T("WINNT.NSM"));
             break;
          default:
             break;
@@ -1353,10 +1353,20 @@ int main(int argc, char *argv[])
             iAction = ACTION_REMOVE_EVENT_SOURCE;
             break;
          case 'e':   // Event source name
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_windowsEventSourceName, MAX_PATH);
+				g_windowsEventSourceName[MAX_PATH - 1] = 0;
+#else
             nx_strncpy(g_windowsEventSourceName, optarg, MAX_PATH);
+#endif
             break;
          case 'n':   // Service name
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_windowsServiceName, MAX_PATH);
+				g_windowsServiceName[MAX_PATH - 1] = 0;
+#else
             nx_strncpy(g_windowsServiceName, optarg, MAX_PATH);
+#endif
             break;
          case 'N':   // Service display name
 #ifdef UNICODE

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** nxsms - send SMS via NetXMS server
-** Copyright (C) 2003, 2004, 2005, 206, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -71,21 +71,31 @@ int main(int argc, char *argv[])
             isEncrypt = TRUE;
             break;
          case 'u':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, login, MAX_DB_STRING);
+				login[MAX_DB_STRING] = 0;
+#else
             nx_strncpy(login, optarg, MAX_DB_STRING);
+#endif
             break;
          case 'P':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, password, MAX_DB_STRING);
+				password[MAX_DB_STRING] = 0;
+#else
             nx_strncpy(password, optarg, MAX_DB_STRING);
+#endif
             break;
          case 'w':
-            timeout = _tcstoul(optarg, NULL, 0);
+            timeout = strtoul(optarg, NULL, 0);
             if ((timeout < 1) || (timeout > 120))
             {
-               _tprintf(_T("Invalid timeout %s\n"), optarg);
+               _tprintf(_T("Invalid timeout %hs\n"), optarg);
                return 1;
             }
             break;
          case 'v':
-            printf("NetXMS SMS Sender  Version " NETXMS_VERSION_STRING "\n");
+            _tprintf(_T("NetXMS SMS Sender  Version ") NETXMS_VERSION_STRING _T("\n"));
             return 1;
          case '?':
             return 1;
@@ -119,7 +129,16 @@ int main(int argc, char *argv[])
    if (isDebug)
       NXCSetDebugCallback(DebugCallback);
 
-	rcc = NXCConnect(isEncrypt ? NXCF_ENCRYPT : 0, argv[optind], login,
+#ifdef UNICODE
+	WCHAR whost[256];
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind], -1, whost, 256);
+	whost[255] = 0;
+#define _HOST whost
+#else
+#define _HOST argv[optind]
+#endif
+
+	rcc = NXCConnect(isEncrypt ? NXCF_ENCRYPT : 0, _HOST, login,
 		              password, 0, NULL, NULL, &session,
                     _T("nxsms/") NETXMS_VERSION_STRING, NULL);
 	if (rcc != RCC_SUCCESS)
@@ -130,7 +149,15 @@ int main(int argc, char *argv[])
 
 	NXCSetCommandTimeout(session, timeout * 1000);
 
+#ifdef UNICODE
+	WCHAR *rcpt = WideStringFromMBString(argv[optind + 1]);
+	WCHAR *text = WideStringFromMBString(argv[optind + 2]);
+	rcc = NXCSendSMS(session, rcpt, text);
+	free(rcpt);
+	free(text);
+#else
 	rcc = NXCSendSMS(session, argv[optind + 1], argv[optind + 2]);
+#endif
 	if (rcc != RCC_SUCCESS)
 	{
 		_tprintf(_T("Unable to send SMS: %s\n"), NXCGetErrorText(rcc));

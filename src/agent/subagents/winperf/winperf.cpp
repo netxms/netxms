@@ -392,11 +392,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("PDH.CounterValue(*)"), H_PdhCounterValue, NULL, DCI_DT_INT, _T("") },
    { _T("PDH.Version"), H_PdhVersion, NULL, DCI_DT_UINT, _T("Version of PDH.DLL") },
-   { _T("System.CPU.Usage(*)"), H_CPUUsage, "1", DCI_DT_INT, "Average CPU {instance} utilization for last minute" },
-   { _T("System.CPU.Usage5(*)"), H_CPUUsage, "2", DCI_DT_INT, "Average CPU {instance} utilization for last 5 minutes" },
-   { _T("System.CPU.Usage15(*)"), H_CPUUsage, "3", DCI_DT_INT, "Average CPU {instance} utilization for last 15 minutes" },
-   { _T("System.ThreadCount"), H_CounterAlias, _T("\\System\\Threads"), DCI_DT_UINT, _T("Total number of threads") },
-   { _T("System.Uptime"), H_CounterAlias, _T("\\System\\System Up Time"), DCI_DT_UINT, _T("System uptime") }
+	{ _T("System.CPU.Usage(*)"), H_CPUUsage, _T("1"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_USAGE_EX },
+   { _T("System.CPU.Usage5(*)"), H_CPUUsage, _T("2"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
+   { _T("System.CPU.Usage15(*)"), H_CPUUsage, _T("3"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
+	{ _T("System.ThreadCount"), H_CounterAlias, _T("\\System\\Threads"), DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
+	{ _T("System.Uptime"), H_CounterAlias, _T("\\System\\System Up Time"), DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
 };
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {
@@ -408,7 +408,7 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("WinPerf"), _T(NETXMS_VERSION_STRING) _T(DEBUG_SUFFIX),
+	_T("WinPerf"), NETXMS_VERSION_STRING,
    SubAgentInit, SubAgentShutdown, NULL,      // handlers
    0, NULL,             // parameters
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),

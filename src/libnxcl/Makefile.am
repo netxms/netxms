@@ -14,6 +14,5 @@ libnxcl_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxcl_la_LIBADD = ../libnetxms/libnetxms.la ../libnxmap/libnxmap.la
 
 EXTRA_DIST = \
-	libnxcl.vcproj libnxclw.vcproj \
-	libnxcl.vcp libnxcl.vcw \
+	libnxcl.vcproj \
 	libnxcl.h

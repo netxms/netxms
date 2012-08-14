@@ -122,13 +122,18 @@ int main(int argc, char *argv[])
             bEncrypt = TRUE;
             break;
          case 'o':
-            m_dwObjectId = _tcstoul(optarg, NULL, 0);
+            m_dwObjectId = strtoul(optarg, NULL, 0);
             break;
          case 'u':
             nx_strncpy(m_szLogin, optarg, MAX_DB_STRING);
             break;
          case 'P':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_szPassword, MAX_DB_STRING);
+				m_szPassword[MAX_DB_STRING] = 0;
+#else
             nx_strncpy(m_szPassword, optarg, MAX_DB_STRING);
+#endif
             break;
          case 'T':
             nx_strncpy(m_szUserTag, optarg, MAX_USERTAG_LENGTH);
