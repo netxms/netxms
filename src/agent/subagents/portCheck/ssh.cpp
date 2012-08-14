@@ -6,16 +6,16 @@
 #include "main.h"
 #include "net.h"
 
-LONG H_CheckSSH(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CheckSSH(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 
 	char szHost[256];
-	char szPort[256];
-	char szTimeout[64];
+	TCHAR szPort[256];
+	TCHAR szTimeout[64];
 	unsigned short nPort;
 
-   AgentGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
+   AgentGetParameterArgA(pszParam, 1, szHost, sizeof(szHost));
    AgentGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
    AgentGetParameterArg(pszParam, 3, szTimeout, sizeof(szTimeout));
 
@@ -24,13 +24,13 @@ LONG H_CheckSSH(const char *pszParam, const char *pArg, char *pValue)
 		return SYSINFO_RC_ERROR;
 	}
 
-	nPort = (unsigned short)atoi(szPort);
+	nPort = (unsigned short)_tcstoul(szPort, NULL, 10);
 	if (nPort == 0)
 	{
 		nPort = 22;
 	}
 
-	DWORD dwTimeout = strtoul(szTimeout, NULL, 0);
+	DWORD dwTimeout = _tcstoul(szTimeout, NULL, 0);
 	ret_int(pValue, CheckSSH(szHost, 0, nPort, NULL, NULL, dwTimeout));
 	return nRet;
 }

@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
          case 'u':
 #ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, login, MAX_DB_STRING);
-				login[MAX_DB_STRING] = 0;
+				login[MAX_DB_STRING - 1] = 0;
 #else
             nx_strncpy(login, optarg, MAX_DB_STRING);
 #endif
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
          case 'P':
 #ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, password, MAX_DB_STRING);
-				password[MAX_DB_STRING] = 0;
+				password[MAX_DB_STRING - 1] = 0;
 #else
             nx_strncpy(password, optarg, MAX_DB_STRING);
 #endif

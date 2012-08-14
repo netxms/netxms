@@ -1,6 +1,6 @@
 /*
 ** NetXMS SMS sender subagent
-** Copyright (C) 2007-2011 Victor Kirhenshtein
+** Copyright (C) 2007-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,7 +57,16 @@ static LONG H_SendSMS(const TCHAR *pszAction, StringList *pArgs, const TCHAR *pD
 	if (pArgs->getSize() < 2)
 		return ERR_BAD_ARGUMENTS;
 
-	return SendSMS(pArgs->getValue(0), pArgs->getValue(1)) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+#ifdef UNICODE
+	char *rcpt = MBStringFromWideString(pArgs->getValue(0));
+	char *text = MBStringFromWideString(pArgs->getValue(1));
+	LONG rc = SendSMS(rcpt, text) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+	free(rcpt);
+	free(text);
+#else
+	LONG rc = SendSMS(pArgs->getValue(0), pArgs->getValue(1)) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+#endif
+	return rc;
 }
 
 
@@ -111,7 +120,7 @@ static NETXMS_SUBAGENT_ACTION m_actions[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("SMS"), _T(NETXMS_VERSION_STRING),
+	_T("SMS"), NETXMS_VERSION_STRING,
 	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,

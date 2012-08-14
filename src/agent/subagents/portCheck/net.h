@@ -32,7 +32,7 @@ enum
 	PROTOCOL_TCP
 };
 
-SOCKET NetConnectTCP(const TCHAR *, DWORD, unsigned short, DWORD);
+SOCKET NetConnectTCP(const char *, DWORD, unsigned short, DWORD);
 bool NetCanRead(SOCKET, int);
 bool NetCanWrite(SOCKET, int);
 int NetRead(SOCKET, char *, int);

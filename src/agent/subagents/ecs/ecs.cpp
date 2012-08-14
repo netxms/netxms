@@ -62,7 +62,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 
 	*size = 0;
 
-	DWORD hostAddr = ResolveHostName(host);
+	DWORD hostAddr = ResolveHostNameA(host);
 	if (hostAddr != INADDR_NONE)
 	{
 		SOCKET sd = socket(AF_INET, SOCK_STREAM, 0);
@@ -160,7 +160,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 // Hanlder functions
 //
 
-static LONG H_DoHttp(const char *pszParam, const char *pArg, char *pValue)
+static LONG H_DoHttp(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG ret = SYSINFO_RC_ERROR;
 	char szArg[256];
@@ -178,7 +178,7 @@ static LONG H_DoHttp(const char *pszParam, const char *pArg, char *pValue)
 		hashFunction = (void (*)(unsigned char *, size_t, unsigned char *))&CalculateMD5Hash;
 	}
 
-	AgentGetParameterArg(pszParam, 1, szArg, 255);
+	AgentGetParameterArgA(pszParam, 1, szArg, 255);
 
 	if (!strnicmp(szArg, "http://", 7))
 	{
@@ -195,7 +195,7 @@ static LONG H_DoHttp(const char *pszParam, const char *pArg, char *pValue)
 				sprintf(hashText + (i * 2), "%02x", hash[i]);
 			}
 
-  			ret_string(pValue, hashText);
+  			ret_mbstring(pValue, hashText);
 			ret = SYSINFO_RC_SUCCESS;
 
 			free(content);
@@ -212,10 +212,10 @@ static LONG H_DoHttp(const char *pszParam, const char *pArg, char *pValue)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ "ECS.HttpSHA1(*)",				H_DoHttp,					(char *)1,
-		DCI_DT_STRING, "Calculates SHA1 hash of * URL" },
-	{ "ECS.HttpMD5(*)",				H_DoHttp,					(char *)5,
-		DCI_DT_STRING, "Calculates MD5 hash of * URL" }
+	{ _T("ECS.HttpSHA1(*)"),				H_DoHttp,					(TCHAR *)1,
+		DCI_DT_STRING, _T("Calculates SHA1 hash of * URL") },
+	{ _T("ECS.HttpMD5(*)"),				H_DoHttp,					(TCHAR *)5,
+		DCI_DT_STRING, _T("Calculates MD5 hash of * URL") }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =

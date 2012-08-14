@@ -1,5 +1,3 @@
-/* $Id$ */
-
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <netxms-regex.h>
@@ -12,18 +10,18 @@ LONG H_CheckHTTP(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	LONG nRet = SYSINFO_RC_SUCCESS;
 
 	char szHost[1024];
-	char szPort[1024];
+	TCHAR szPort[1024];
 	char szURI[1024];
 	char szHeader[1024];
 	char szMatch[1024];
-	char szTimeout[64];
+	TCHAR szTimeout[64];
 	unsigned short nPort;
 
-	AgentGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
+	AgentGetParameterArgA(pszParam, 1, szHost, sizeof(szHost));
 	AgentGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
-	AgentGetParameterArg(pszParam, 3, szURI, sizeof(szURI));
-	AgentGetParameterArg(pszParam, 4, szHeader, sizeof(szHeader));
-	AgentGetParameterArg(pszParam, 5, szMatch, sizeof(szMatch));
+	AgentGetParameterArgA(pszParam, 3, szURI, sizeof(szURI));
+	AgentGetParameterArgA(pszParam, 4, szHeader, sizeof(szHeader));
+	AgentGetParameterArgA(pszParam, 5, szMatch, sizeof(szMatch));
    AgentGetParameterArg(pszParam, 6, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0 || szPort[0] == 0 || szURI[0] == 0)
@@ -31,13 +29,13 @@ LONG H_CheckHTTP(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 		return SYSINFO_RC_ERROR;
 	}
 
-	nPort = (unsigned short)atoi(szPort);
+	nPort = (unsigned short)_tcstoul(szPort, NULL, 10);
 	if (nPort == 0)
 	{
 		nPort = 80;
 	}
 
-	DWORD dwTimeout = strtoul(szTimeout, NULL, 0);
+	DWORD dwTimeout = _tcstoul(szTimeout, NULL, 0);
 	ret_int(pValue, CheckHTTP(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout));
 	return nRet;
 }
@@ -49,14 +47,14 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 	SOCKET nSd;
 	regex_t preg;
 
-	if (_tregcomp(&preg, szMatch, REG_EXTENDED | REG_ICASE | REG_NOSUB) != 0)
-	{
-		return PC_ERR_BAD_PARAMS;
-	}
-
 	if (szMatch[0] == 0)
 	{
 		strcpy(szMatch, "^HTTP/1.[01] 200 .*");
+	}
+
+	if (tre_regcomp(&preg, szMatch, REG_EXTENDED | REG_ICASE | REG_NOSUB) != 0)
+	{
+		return PC_ERR_BAD_PARAMS;
 	}
 
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort, dwTimeout);
@@ -107,7 +105,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 			if (buff != NULL && offset > 0) {
 				buff[offset] = 0;
 
-				if (_tregexec(&preg, buff, 0, NULL, 0) == 0)
+				if (tre_regexec(&preg, buff, 0, NULL, 0) == 0)
 				{
 					nRet = PC_ERR_NONE;
 				}

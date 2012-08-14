@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008-2011 Victor Kirhenshtein
+** Copyright (C) 2008-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -189,12 +189,17 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLogV6(void *arg)
 {
 	LogParser *parser = (LogParser *)arg;
 	EVT_HANDLE handle;
-	WCHAR channel[MAX_PATH];
 
+#ifdef UNICODE
+	handle = _EvtSubscribe(NULL, NULL, &(parser->getFileName()[1]), NULL, NULL, arg,
+	                       SubscribeCallback, EvtSubscribeToFutureEvents);
+#else
+	WCHAR channel[MAX_PATH];
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &(parser->getFileName()[1]), -1, channel, MAX_PATH);
 	channel[MAX_PATH - 1] = 0;
 	handle = _EvtSubscribe(NULL, NULL, channel, NULL, NULL, arg,
 	                       SubscribeCallback, EvtSubscribeToFutureEvents);
+#endif
 	if (handle != NULL)
 	{
 		AgentWriteDebugLog(1, _T("LogWatch: Start watching event log \"%s\" (using EvtSubscribe)"),

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 
 #include "net.h"
 
-SOCKET NetConnectTCP(const TCHAR *szHost, DWORD dwAddr, unsigned short nPort, DWORD dwTimeout)
+SOCKET NetConnectTCP(const char *szHost, DWORD dwAddr, unsigned short nPort, DWORD dwTimeout)
 {
 	SOCKET nSocket;
 
@@ -37,7 +37,7 @@ SOCKET NetConnectTCP(const TCHAR *szHost, DWORD dwAddr, unsigned short nPort, DW
 		sa.sin_port = htons(nPort);
 		if (szHost != NULL)
 		{
-			sa.sin_addr.s_addr = _t_inet_addr(szHost);
+			sa.sin_addr.s_addr = inet_addr(szHost);
 		}
 		else
 		{

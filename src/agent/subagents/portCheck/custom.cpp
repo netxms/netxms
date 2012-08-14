@@ -10,12 +10,12 @@ LONG H_CheckCustom(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 
-	TCHAR szHost[1024];
+	char szHost[1024];
 	TCHAR szPort[1024];
 	TCHAR szTimeout[64];
 	unsigned short nPort;
 
-   AgentGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
+   AgentGetParameterArgA(pszParam, 1, szHost, sizeof(szHost));
    AgentGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
    AgentGetParameterArg(pszParam, 3, szTimeout, sizeof(szTimeout));
 
@@ -31,13 +31,12 @@ LONG H_CheckCustom(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	}
 
 	DWORD dwTimeout = _tcstoul(szTimeout, NULL, 0);
-	ret_int(pValue, CheckCustom(szHost, 0, nPort, NULL, NULL, dwTimeout));
+	ret_int(pValue, CheckCustom(szHost, 0, nPort, dwTimeout));
 	return nRet;
 }
 
 
-int CheckCustom(TCHAR *szAddr, DWORD dwAddr, short nPort, TCHAR *szRequest,
-                TCHAR *szResponse, DWORD dwTimeout)
+int CheckCustom(char *szAddr, DWORD dwAddr, short nPort, DWORD dwTimeout)
 {
 	int nRet;
 	SOCKET nSd;

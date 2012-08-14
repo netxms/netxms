@@ -33,8 +33,8 @@
 //
 
 BOOL InitSender(const TCHAR *pszInitArgs);
-void ShutdownSender(void);
-BOOL SendSMS(const TCHAR *pszPhoneNumber, const TCHAR *pszText);
+void ShutdownSender();
+BOOL SendSMS(const char *pszPhoneNumber, const char *pszText);
 
 
 //

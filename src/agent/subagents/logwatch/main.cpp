@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008-2011 Victor Kirhenshtein
+** Copyright (C) 2008-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -287,7 +287,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("LOGWATCH"), _T(NETXMS_VERSION_STRING),
+	_T("LOGWATCH"), NETXMS_VERSION_STRING,
 	SubagentInit, SubagentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,

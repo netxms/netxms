@@ -53,10 +53,10 @@ static StringMap *s_data = new StringMap;
 // Forward declarations
 //
 
-BOOL AddValue(char *pair);
-BOOL Startup();
-BOOL Send();
-BOOL Teardown();
+static BOOL AddValue(TCHAR *pair);
+static BOOL Startup();
+static BOOL Send();
+static BOOL Teardown();
 
 
 //
@@ -85,34 +85,34 @@ static struct option longOptions[] =
 //
 static void usage(char *argv0)
 {
-	printf(
-"NetXMS Agent PUSH  Version " NETXMS_VERSION_STRING "\n"
-"Copyright (c) 2006-2012 Raden Solutions\n\n"
-"Usage: %s [OPTIONS] [@batch_file] [values]\n"
-"  \n"
-"Options:\n"
+	_tprintf(
+_T("NetXMS Agent PUSH  Version ") NETXMS_VERSION_STRING _T("\n")
+_T("Copyright (c) 2006-2012 Raden Solutions\n\n")
+_T("Usage: %hs [OPTIONS] [@batch_file] [values]\n")
+_T("  \n")
+_T("Options:\n")
 #if HAVE_GETOPT_LONG
-"  -V, --version              Display version information.\n"
-"  -h, --help                 Display this help message.\n"
-"  -v, --verbose              Enable verbose messages. Add twice for debug\n"
-"  -q, --quiet                Suppress all messages.\n\n"
+_T("  -V, --version              Display version information.\n")
+_T("  -h, --help                 Display this help message.\n")
+_T("  -v, --verbose              Enable verbose messages. Add twice for debug\n")
+_T("  -q, --quiet                Suppress all messages.\n\n")
 #else
-"  -V             Display version information.\n"
-"  -h             Display this help message.\n"
-"  -v             Enable verbose messages. Add twice for debug\n"
-"  -q             Suppress all messages.\n\n"
+_T("  -V             Display version information.\n")
+_T("  -h             Display this help message.\n")
+_T("  -v             Enable verbose messages. Add twice for debug\n")
+_T("  -q             Suppress all messages.\n\n")
 #endif
-"Notes:\n"
-"  * Values should be given in the following format:\n"
-"    dci=value\n"
-"    where dci can be specified by it's name\n"
-"  * Name of batch file cannot contain character = (equality sign)\n"
-"\n"
-"Examples:\n"
-"  Push two values:\n"
-"      nxapush PushParam1=1 PushParam2=4\n\n"
-"  Push values from file:\n"
-"      nxapush @file\n"
+_T("Notes:\n")
+_T("  * Values should be given in the following format:\n")
+_T("    dci=value\n")
+_T("    where dci can be specified by it's name\n")
+_T("  * Name of batch file cannot contain character = (equality sign)\n")
+_T("\n")
+_T("Examples:\n")
+_T("  Push two values:\n")
+_T("      nxapush PushParam1=1 PushParam2=4\n\n")
+_T("  Push values from file:\n")
+_T("      nxapush @file\n")
 	, argv0);
 }
 
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 		switch(c)
 		{
 		case 'V': // version
-			printf("nxapush (" NETXMS_VERSION_STRING ")\n");
+			_tprintf(_T("nxapush (") NETXMS_VERSION_STRING _T(")\n"));
 			exit(0);
 			break;
 		case 'h': // help
@@ -195,7 +195,13 @@ int main(int argc, char *argv[])
 
 					while (fgets(buffer, sizeof(buffer), fileHandle) != NULL)
 					{
+#ifdef UNICODE
+						WCHAR *wvalue = WideStringFromMBString(buffer);
+						AddValue(wvalue);
+						free(wvalue);
+#else
 						AddValue(buffer);
+#endif
 					}
 
 					if (fileHandle != stdin)
@@ -213,7 +219,13 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
+#ifdef UNICODE
+				WCHAR *wvalue = WideStringFromMBString(argv[optind]);
+				AddValue(wvalue);
+				free(wvalue);
+#else
 				AddValue(argv[optind]);
+#endif
 			}
 
 			optind++;
@@ -248,15 +260,15 @@ int main(int argc, char *argv[])
 // Values parser - clean string and split by '='
 //
 
-BOOL AddValue(char *pair)
+static BOOL AddValue(TCHAR *pair)
 {
 	BOOL ret = FALSE;
-	char *p = pair;
-	char *value = NULL;
+	TCHAR *p = pair;
+	TCHAR *value = NULL;
 
 	for (p = pair; *p != 0; p++)
 	{
-		if (*p == '=' && value == NULL)
+		if (*p == _T('=') && value == NULL)
 		{
 			value = p;
 		}
@@ -280,7 +292,7 @@ BOOL AddValue(char *pair)
 //
 // Initialize client library and connect to the server
 //
-BOOL Startup()
+static BOOL Startup()
 {
 #ifdef _WIN32
 	s_hPipe = CreateFile(_T("\\\\.\\pipe\\nxagentd.push"), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
@@ -314,7 +326,7 @@ BOOL Startup()
 //
 // Send all DCIs
 //
-BOOL Send()
+static BOOL Send()
 {
 	BOOL success = FALSE;
 
@@ -326,7 +338,7 @@ BOOL Send()
 		msg.SetVariable(varId++, s_data->getKeyByIndex(i));
 		msg.SetVariable(varId++, s_data->getValueByIndex(i));
 		if (optVerbose > 2)
-			printf("Record #%d: \"%s\" = \"%s\"\n", i + 1, s_data->getKeyByIndex(i), s_data->getValueByIndex(i));
+			_tprintf(_T("Record #%d: \"%s\" = \"%s\"\n"), i + 1, s_data->getKeyByIndex(i), s_data->getValueByIndex(i));
 	}
 
 	// Send response to pipe
@@ -353,7 +365,7 @@ cleanup:
 //
 // Disconnect and cleanup
 //
-BOOL Teardown()
+static BOOL Teardown()
 {
 #ifdef _WIN32
 	if (s_hPipe != NULL)

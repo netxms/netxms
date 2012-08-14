@@ -1,6 +1,6 @@
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
-** Copyright (C) 2006-2010 Alex Kirhenshtein
+** Copyright (C) 2006-2012 Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -82,45 +82,45 @@ static struct option longOptions[] =
 //
 static void usage(char *argv0)
 {
-	printf(
-"NetXMS PUSH  Version " NETXMS_VERSION_STRING "\n"
-"Copyright (c) 2006-2011 Alex Kirhenshtein\n\n"
-"Usage: %s [OPTIONS] [server] [@batch_file] [values]\n"
-"  \n"
-"Options:\n"
+	_tprintf(
+_T("NetXMS PUSH  Version ") NETXMS_VERSION_STRING _T("\n")
+_T("Copyright (c) 2006-2011 Alex Kirhenshtein\n\n")
+_T("Usage: %hs [OPTIONS] [server] [@batch_file] [values]\n")
+_T("  \n")
+_T("Options:\n")
 #if HAVE_GETOPT_LONG
-"  -V, --version              Display version information.\n"
-"  -h, --help                 Display this help message.\n"
-"  -v, --verbose              Enable verbose messages. Add twice for debug\n"
-"  -q, --quiet                Suppress all messages.\n\n"
-"  -u, --user     <user>      Login to server as user. Default is \"guest\".\n"
-"  -P, --password <password>  Specify user's password. Default is empty.\n"
-"  -e, --encrypt              Encrypt session.\n"
-"  -H, --host     <host>      Server address.\n\n"
+_T("  -V, --version              Display version information.\n")
+_T("  -h, --help                 Display this help message.\n")
+_T("  -v, --verbose              Enable verbose messages. Add twice for debug\n")
+_T("  -q, --quiet                Suppress all messages.\n\n")
+_T("  -u, --user     <user>      Login to server as user. Default is \"guest\".\n")
+_T("  -P, --password <password>  Specify user's password. Default is empty.\n")
+_T("  -e, --encrypt              Encrypt session.\n")
+_T("  -H, --host     <host>      Server address.\n\n")
 #else
-"  -V             Display version information.\n"
-"  -h             Display this help message.\n"
-"  -v             Enable verbose messages. Add twice for debug\n"
-"  -q             Suppress all messages.\n\n"
-"  -u <user>      Login to server as user. Default is \"guest\".\n"
-"  -P <password>  Specify user's password. Default is empty.\n"
-"  -e             Encrypt session.\n"
-"  -H <host>      Server address.\n\n"
+_T("  -V             Display version information.\n")
+_T("  -h             Display this help message.\n")
+_T("  -v             Enable verbose messages. Add twice for debug\n")
+_T("  -q             Suppress all messages.\n\n")
+_T("  -u <user>      Login to server as user. Default is \"guest\".\n")
+_T("  -P <password>  Specify user's password. Default is empty.\n")
+_T("  -e             Encrypt session.\n")
+_T("  -H <host>      Server address.\n\n")
 #endif
-"Notes:\n"
-"  * Values should be given in the following format:\n"
-"    node:dci=value\n"
-"    where node and dci can be specified either by ID, object name, DNS name,\n"
-"    or IP address. If you wish to specify node by DNS name or IP address,\n"
-"    you should prefix it with @ character\n"
-"  * First parameter will be used as \"host\" if -H/--host is unset\n"
-"  * Name of batch file cannot contain character = (equality sign)\n"
-"\n"
-"Examples:\n"
-"  Push two values to server 10.0.0.1 as user \"sender\" with password \"passwd\":\n"
-"      nxpush -H 10.0.0.1 -u sender -P passwd 10:24=1 10:PushParam=4\n\n"
-"  Push values from file to server 10.0.0.1 as user \"guest\" without password:\n"
-"      nxpush 10.0.0.1 @file\n"
+_T("Notes:\n")
+_T("  * Values should be given in the following format:\n")
+_T("    node:dci=value\n")
+_T("    where node and dci can be specified either by ID, object name, DNS name,\n")
+_T("    or IP address. If you wish to specify node by DNS name or IP address,\n")
+_T("    you should prefix it with @ character\n")
+_T("  * First parameter will be used as \"host\" if -H/--host is unset\n")
+_T("  * Name of batch file cannot contain character = (equality sign)\n")
+_T("\n")
+_T("Examples:\n")
+_T("  Push two values to server 10.0.0.1 as user \"sender\" with password \"passwd\":\n")
+_T("      nxpush -H 10.0.0.1 -u sender -P passwd 10:24=1 10:PushParam=4\n\n")
+_T("  Push values from file to server 10.0.0.1 as user \"guest\" without password:\n")
+_T("      nxpush 10.0.0.1 @file\n")
 	, argv0);
 }
 
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 		switch(c)
 		{
 		case 'V': // version
-			printf("nxpush (" NETXMS_VERSION_STRING ")\n");
+			_tprintf(_T("nxpush (") NETXMS_VERSION_STRING _T(")\n"));
 			exit(0);
 			break;
 		case 'h': // help
@@ -352,7 +352,11 @@ BOOL AddValuePair(char *name, char *value)
 			}
 			else
 			{
+#ifdef UNICODE
+				p[queueSize].pszName = WideStringFromMBString(dciName);
+#else
 				p[queueSize].pszName = strdup(dciName);
+#endif
 			}
 
 			if (nodeId > 0)
@@ -361,10 +365,18 @@ BOOL AddValuePair(char *name, char *value)
 			}
 			else
 			{
+#ifdef UNICODE
+				p[queueSize].pszNodeName = WideStringFromMBString(nodeName);
+#else
 				p[queueSize].pszNodeName = strdup(nodeName);
+#endif
 			}
 
+#ifdef UNICODE
+			p[queueSize].pszValue = WideStringFromMBString(value);
+#else
 			p[queueSize].pszValue = strdup(value);
+#endif
 
 			queueSize++;
 		}
@@ -372,7 +384,7 @@ BOOL AddValuePair(char *name, char *value)
 		{
 			if (optVerbose > 0)
 			{
-				printf("realloc failed!: %s\n", strerror(errno));
+				_tprintf(_T("realloc failed!: %s\n"), _tcserror(errno));
 			}
 		}
 	}
@@ -383,9 +395,9 @@ BOOL AddValuePair(char *name, char *value)
 //
 // Callback function for debug messages from client library
 //
-static void DebugCallback(char *pMsg)
+static void DebugCallback(TCHAR *pMsg)
 {
-	printf("NXCL: %s\n", pMsg);
+	_tprintf(_T("NXCL: %s\n"), pMsg);
 }
 
 //
@@ -422,13 +434,31 @@ BOOL Startup()
 		{
 			NXCSetDebugCallback(DebugCallback);
 
-			printf("Connecting to \"%s\" as \"%s\"; encryption is %s\n", optHost, optUser,
-				optEncrypt == TRUE ? "enabled" : "disabled");
+			_tprintf(_T("Connecting to \"%hs\" as \"%hs\"; encryption is %s\n"), optHost, optUser,
+				optEncrypt ? _T("enabled") : _T("disabled"));
 		}
 
-		dwResult = NXCConnect(optEncrypt ? NXCF_ENCRYPT : 0, optHost, optUser, optPassword,
+#ifdef UNICODE
+		WCHAR *wHost = WideStringFromMBString(optHost);
+		WCHAR *wUser = WideStringFromMBString(optUser);
+		WCHAR *wPassword = WideStringFromMBString(optPassword);
+#define _HOST wHost
+#define _USER wUser
+#define _PASSWD wPassword
+#else
+#define _HOST optHost
+#define _USER optUser
+#define _PASSWD optPassword
+#endif
+
+		dwResult = NXCConnect(optEncrypt ? NXCF_ENCRYPT : 0, _HOST, _USER, _PASSWD,
 		                      0, NULL, NULL, &hSession,
-		                      "nxpush/" NETXMS_VERSION_STRING, NULL);
+		                      _T("nxpush/") NETXMS_VERSION_STRING, NULL);
+#ifdef UNICODE
+		free(wHost);
+		free(wUser);
+		free(wPassword);
+#endif
 		if (dwResult != RCC_SUCCESS)
 		{
 			if (optVerbose > 0)
@@ -482,13 +512,13 @@ BOOL Send()
 			for (int j = 0; j < size; j++)
 			{
 				NXC_DCI_PUSH_DATA *rec = &queue[(optBatchSize * i) + j];
-				printf("Record #%d: \"%s\" for %d(%s):%d(%s)\n",
+				_tprintf(_T("Record #%d: \"%s\" for %d(%s):%d(%s)\n"),
 					(optBatchSize * i) + j + 1,
 					rec->pszValue,
 					rec->dwNodeId,
-					rec->pszNodeName != NULL ? rec->pszNodeName : "n/a",
+					rec->pszNodeName != NULL ? rec->pszNodeName : _T("n/a"),
 					rec->dwId,
-					rec->pszName != NULL ? rec->pszName : "n/a");
+					rec->pszName != NULL ? rec->pszName : _T("n/a"));
 			}
 		}
 

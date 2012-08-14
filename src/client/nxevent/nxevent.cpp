@@ -42,9 +42,9 @@ static DWORD m_dwTimeOut = 3;
 // Callback function for debug printing
 //
 
-static void DebugCallback(char *pMsg)
+static void DebugCallback(TCHAR *pMsg)
 {
-   printf("*debug* %s\n", pMsg);
+   _tprintf(_T("*debug* %s\n"), pMsg);
 }
 
 
@@ -52,7 +52,7 @@ static void DebugCallback(char *pMsg)
 // Send event to server
 //
 
-static void SendEvent(int iNumArgs, TCHAR **pArgList, BOOL bEncrypt)
+static void SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
 {
    DWORD dwResult;
    NXC_SESSION hSession;
@@ -76,7 +76,17 @@ static void SendEvent(int iNumArgs, TCHAR **pArgList, BOOL bEncrypt)
       else
       {
          NXCSetCommandTimeout(hSession, m_dwTimeOut * 1000);
+#ifdef UNICODE
+			WCHAR **argList = (WCHAR **)malloc(sizeof(WCHAR *) * iNumArgs);
+			for(int i = 0; i < iNumArgs; i++)
+				argList[i] = WideStringFromMBString(pArgList[i]);
+         dwResult = NXCSendEvent(hSession, m_dwEventCode, m_dwObjectId, iNumArgs, argList, m_szUserTag);
+			for(int i = 0; i < iNumArgs; i++)
+				free(argList[i]);
+			free(argList);
+#else
          dwResult = NXCSendEvent(hSession, m_dwEventCode, m_dwObjectId, iNumArgs, pArgList, m_szUserTag);
+#endif
          if (dwResult != RCC_SUCCESS)
             _tprintf(_T("Unable to send event: %s\n"), NXCGetErrorText(dwResult));
          NXCDisconnect(hSession);
@@ -125,29 +135,39 @@ int main(int argc, char *argv[])
             m_dwObjectId = strtoul(optarg, NULL, 0);
             break;
          case 'u':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_szLogin, MAX_DB_STRING);
+				m_szLogin[MAX_DB_STRING - 1] = 0;
+#else
             nx_strncpy(m_szLogin, optarg, MAX_DB_STRING);
+#endif
             break;
          case 'P':
 #ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_szPassword, MAX_DB_STRING);
-				m_szPassword[MAX_DB_STRING] = 0;
+				m_szPassword[MAX_DB_STRING - 1] = 0;
 #else
             nx_strncpy(m_szPassword, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'T':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_szUserTag, MAX_USERTAG_LENGTH);
+				m_szUserTag[MAX_USERTAG_LENGTH - 1] = 0;
+#else
             nx_strncpy(m_szUserTag, optarg, MAX_USERTAG_LENGTH);
+#endif
             break;
          case 'w':
-            m_dwTimeOut = _tcstoul(optarg, NULL, 0);
+            m_dwTimeOut = strtoul(optarg, NULL, 0);
             if ((m_dwTimeOut < 1) || (m_dwTimeOut > 120))
             {
-               _tprintf(_T("Invalid timeout %s\n"), optarg);
+               _tprintf(_T("Invalid timeout %hs\n"), optarg);
                bStart = FALSE;
             }
             break;
          case 'v':
-            printf("NetXMS Event Sender  Version " NETXMS_VERSION_STRING "\n");
+            _tprintf(_T("NetXMS Event Sender  Version ") NETXMS_VERSION_STRING _T("\n"));
             bStart = FALSE;
             break;
          case '?':
@@ -176,8 +196,13 @@ int main(int argc, char *argv[])
             return 4;
          }
 #endif
+#ifdef UNICODE
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind], -1, m_szServer, 256);
+			m_szServer[255] = 0;
+#else
          nx_strncpy(m_szServer, argv[optind], 256);
-         m_dwEventCode = _tcstoul(argv[optind + 1], NULL, 0);
+#endif
+         m_dwEventCode = strtoul(argv[optind + 1], NULL, 0);
          SendEvent(argc - optind - 2, &argv[optind + 2], bEncrypt);
       }
    }
