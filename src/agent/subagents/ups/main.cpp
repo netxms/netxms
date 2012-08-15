@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2009 Victor Kirhenshtein
+** Copyright (C) 2006-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ static LONG H_UPSData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	if (!m_deviceInfo[nDev]->IsConnected())
 		return SYSINFO_RC_ERROR;
 
-	return m_deviceInfo[nDev]->GetParameter(CAST_FROM_POINTER(pArg, int), pValue);
+	return m_deviceInfo[nDev]->getParameter(CAST_FROM_POINTER(pArg, int), pValue);
 }
 
 
@@ -106,9 +106,10 @@ static LONG H_DeviceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 // Parameter value should be <device_id>:<port>:<protocol>:<name>
 //
 
-static BOOL AddDeviceFromConfig(TCHAR *pszStr)
+static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 {
-	TCHAR *ptr, *eptr, *pszCurrField;
+	const TCHAR *ptr;
+	TCHAR *eptr, *pszCurrField;
 	TCHAR szPort[MAX_PATH], szName[MAX_DB_STRING] = _T("");
 	int nState, nField, nDev, nPos, nProto;
 
@@ -240,8 +241,8 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
 			default:
 				break;
 		}
-		m_deviceInfo[nDev]->SetName(szName);
-		m_deviceInfo[nDev]->SetIndex(nDev);
+		m_deviceInfo[nDev]->setName(szName);
+		m_deviceInfo[nDev]->setIndex(nDev);
 	}
 
 	return ((nState == -1) && (nField >= 3));
@@ -294,7 +295,7 @@ static BOOL SubAgentInit(Config *config)
 	for(i = 0; i < MAX_UPS_DEVICES; i++)
 	{
 		if (m_deviceInfo[i] != NULL)
-			m_deviceInfo[i]->StartCommunication();
+			m_deviceInfo[i]->startCommunication();
 	}
 
 	return TRUE;
@@ -325,12 +326,12 @@ static void SubAgentShutdown()
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("UPS.BatteryLevel(*)"),           H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_BATTERY_LEVEL, char *),
+		CAST_TO_POINTER(UPS_PARAM_BATTERY_LEVEL, TCHAR *),
 		DCI_DT_INT,      _T("UPS {instance} battery charge level")
 	},
 
 	{ _T("UPS.BatteryVoltage(*)"),         H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_BATTERY_VOLTAGE, char *),
+		CAST_TO_POINTER(UPS_PARAM_BATTERY_VOLTAGE, TCHAR *),
 		DCI_DT_FLOAT,    _T("UPS {instance} battery voltage")
 	},
 
@@ -340,62 +341,62 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	},
 
 	{ _T("UPS.EstimatedRuntime(*)"),       H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_EST_RUNTIME, char *),
+		CAST_TO_POINTER(UPS_PARAM_EST_RUNTIME, TCHAR *),
 		DCI_DT_INT,      _T("UPS {instance} estimated on-battery runtime (minutes)")
 	},
 
 	{ _T("UPS.Firmware(*)"),               H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_FIRMWARE, char *),
+		CAST_TO_POINTER(UPS_PARAM_FIRMWARE, TCHAR *),
 		DCI_DT_STRING,   _T("UPS {instance} firmware version")
 	},
 
 	{ _T("UPS.InputVoltage(*)"),           H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_INPUT_VOLTAGE, char *),
+		CAST_TO_POINTER(UPS_PARAM_INPUT_VOLTAGE, TCHAR *),
 		DCI_DT_FLOAT,    _T("UPS {instance} input line voltage")
 	},
 
 	{ _T("UPS.LineFrequency(*)"),          H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_LINE_FREQ, char *),
+		CAST_TO_POINTER(UPS_PARAM_LINE_FREQ, TCHAR *),
 		DCI_DT_INT,      _T("UPS {instance} input line frequency")
 	},
 
 	{ _T("UPS.Load(*)"),                   H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_LOAD, char *),
+		CAST_TO_POINTER(UPS_PARAM_LOAD, TCHAR *),
 		DCI_DT_INT,      _T("UPS {instance} load")
 	},
 
 	{ _T("UPS.MfgDate(*)"),                H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_MFG_DATE, char *),
+		CAST_TO_POINTER(UPS_PARAM_MFG_DATE, TCHAR *),
 		DCI_DT_STRING,   _T("UPS {instance} manufacturing date")
 	},
 
 	{ _T("UPS.Model(*)"),                  H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_MODEL, char *),
+		CAST_TO_POINTER(UPS_PARAM_MODEL, TCHAR *),
 		DCI_DT_STRING,   _T("UPS {instance} model")
 	},
 
 	{ _T("UPS.NominalBatteryVoltage(*)"),  H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_NOMINAL_BATT_VOLTAGE, char *),
+		CAST_TO_POINTER(UPS_PARAM_NOMINAL_BATT_VOLTAGE, TCHAR *),
 		DCI_DT_FLOAT,    _T("UPS {instance} nominal battery voltage")
 	},
 
 	{ _T("UPS.OnlineStatus(*)"),           H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_ONLINE_STATUS, char *),
+		CAST_TO_POINTER(UPS_PARAM_ONLINE_STATUS, TCHAR *),
 		DCI_DT_INT,      _T("UPS {instance} online status")
 	},
 
 	{ _T("UPS.OutputVoltage(*)"),          H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_OUTPUT_VOLTAGE, char *),
+		CAST_TO_POINTER(UPS_PARAM_OUTPUT_VOLTAGE, TCHAR *),
 		DCI_DT_FLOAT,    _T("UPS {instance} output voltage")
 	},
 
 	{ _T("UPS.SerialNumber(*)"),           H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_SERIAL, char *),
+		CAST_TO_POINTER(UPS_PARAM_SERIAL, TCHAR *),
 		DCI_DT_STRING,   _T("UPS {instance} serial number")
 	},
 
 	{ _T("UPS.Temperature(*)"),            H_UPSData,
-		CAST_TO_POINTER(UPS_PARAM_TEMP, char *),
+		CAST_TO_POINTER(UPS_PARAM_TEMP, TCHAR *),
 		DCI_DT_INT,      _T("UPS {instance} temperature")
 	}
 };
@@ -407,7 +408,7 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("UPS"), _T(NETXMS_VERSION_STRING),
+	_T("UPS"), NETXMS_VERSION_STRING,
 	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,

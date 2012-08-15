@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ extern "C" {
 typedef struct
 {
    DWORD dwFlags;
-   TCHAR szValue[MAX_RESULT_LENGTH];
+   char szValue[MAX_RESULT_LENGTH];
 } UPS_PARAMETER;
 
 
@@ -105,8 +105,8 @@ private:
    THREAD m_thCommThread;
    int m_nIndex;
 
-   static THREAD_RESULT THREAD_CALL CommThreadStarter(void *pArg);
-   void CommThread(void);
+   static THREAD_RESULT THREAD_CALL commThreadStarter(void *pArg);
+   void commThread();
 
 protected:
    TCHAR *m_pszDevice;
@@ -114,7 +114,7 @@ protected:
    BOOL m_bIsConnected;
    UPS_PARAMETER m_paramList[UPS_PARAM_COUNT];
 
-   void SetConnected(void) { m_bIsConnected = TRUE; }
+   void SetConnected() { m_bIsConnected = TRUE; }
    void SetNullFlag(int nParam, BOOL bFlag) 
    { 
       if (bFlag)
@@ -123,25 +123,28 @@ protected:
          m_paramList[nParam].dwFlags &= ~UPF_NULL_VALUE;
    }
 
-   virtual BOOL Open(void);
-   virtual void Close(void);
-   virtual BOOL ValidateConnection(void);
+   virtual BOOL Open();
+   virtual void Close();
+   virtual BOOL ValidateConnection();
 
 public:
    UPSInterface(TCHAR *pszDevice);
    virtual ~UPSInterface();
 
-   const TCHAR *Device(void) { return m_pszDevice; }
-   const TCHAR *Name(void) { return CHECK_NULL(m_pszName); }
-   virtual const TCHAR *Type(void) { return _T("GENERIC"); }
-   BOOL IsConnected(void) { return m_bIsConnected; }
+   const TCHAR *Device() { return m_pszDevice; }
+   const TCHAR *Name() { return CHECK_NULL(m_pszName); }
+   virtual const TCHAR *Type() { return _T("GENERIC"); }
+   BOOL IsConnected() { return m_bIsConnected; }
 
-   void SetName(TCHAR *pszName);
-   void SetIndex(int nIndex) { m_nIndex = nIndex; }
+   void setName(const char *pszName);
+#ifdef UNICODE
+   void setName(const WCHAR *pszName);
+#endif
+   void setIndex(int nIndex) { m_nIndex = nIndex; }
 
-   void StartCommunication(void);
+   void startCommunication();
 
-   LONG GetParameter(int nParam, TCHAR *pszValue);
+   LONG getParameter(int nParam, TCHAR *pszValue);
 
    virtual void QueryModel();
    virtual void QueryFirmwareVersion();
@@ -313,7 +316,7 @@ protected:
    virtual void Close(void);
    virtual BOOL ValidateConnection(void);
 
-   LONG ReadIndexedString(USAGE nPage, USAGE uUsage, TCHAR *pszBuffer, int nBufLen);
+   LONG ReadIndexedString(USAGE nPage, USAGE uUsage, char *pszBuffer, int nBufLen);
    LONG ReadInt(USAGE nPage, USAGE nUsage, LONG *pnValue);
 
    void ReadStringParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam);

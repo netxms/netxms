@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -270,19 +270,13 @@ LONG USBInterface::ReadInt(USAGE uPage, USAGE uUsage, LONG *pnValue)
 // Read indexed string value from device
 //
 
-LONG USBInterface::ReadIndexedString(USAGE uPage, USAGE uUsage, TCHAR *pszBuffer, int nBufLen)
+LONG USBInterface::ReadIndexedString(USAGE uPage, USAGE uUsage, char *pszBuffer, int nBufLen)
 {
    LONG nRet, nIndex;
 
    nRet = ReadInt(uPage, uUsage, &nIndex);
    if (nRet == SYSINFO_RC_SUCCESS)
    {
-#ifdef UNICODE
-      if (!HidD_GetIndexedString(m_hDev, nIndex, pszBuffer, nBufLen * sizeof(WCHAR)))
-      {
-         nRet = SYSINFO_RC_ERROR;
-      }
-#else
       WCHAR wszTemp[256];
 
       if (HidD_GetIndexedString(m_hDev, nIndex, wszTemp, 512))
@@ -295,7 +289,6 @@ LONG USBInterface::ReadIndexedString(USAGE uPage, USAGE uUsage, TCHAR *pszBuffer
       {
          nRet = SYSINFO_RC_ERROR;
       }
-#endif
    }
    return nRet;
 }

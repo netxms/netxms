@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006 Alex Kirhenshtein
+** Copyright (C) 2006-2012 Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ BOOL MicrodowellInterface::Open()
 		buff[11] = 0;
 		if (buff[3] != 'E' || buff[4] != 'N' || buff[5] != 'T')
 		{
-			AgentWriteLog(EVENTLOG_WARNING_TYPE, "Unknown Microdowell UPS model on port %s (%s)\n", m_pszDevice, buff);
+			AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("Unknown Microdowell UPS model on port %s (%hs)"), m_pszDevice, buff);
 		}
 		else
 		{

@@ -43,7 +43,7 @@ static void CheckNA(UPS_PARAMETER *p, int nType)
    double dVal;
    char *pErr;
 
-   if (!_tcscmp(p->szValue, _T("NA")))
+   if (!strcmp(p->szValue, "NA"))
    {
       p->dwFlags |= UPF_NOT_SUPPORTED;
    }
@@ -146,8 +146,8 @@ BOOL APCInterface::Open()
    	m_serial.Write("\x01", 1);
 		if (ReadLineFromSerial(buffer, MAX_RESULT_LENGTH))
 		{
-			StrStrip(buffer);
-			SetName(buffer);
+			StrStripA(buffer);
+			setName(buffer);
 		}
    }
    else

@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2009 Victor Kirhenshtein
+** Copyright (C) 2006-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ UPSInterface::~UPSInterface()
 // Set name
 //
 
-void UPSInterface::SetName(TCHAR *pszName)
+void UPSInterface::setName(const char *pszName)
 {
    safe_free(m_pszName);
    if (pszName[0] == 0)
@@ -74,9 +74,35 @@ void UPSInterface::SetName(TCHAR *pszName)
    }
    else
    {
+#ifdef UNICODE
+      m_pszName = WideStringFromMBString(pszName);
+#else
+      m_pszName = strdup(pszName);
+#endif
+   }
+}
+
+
+//
+// Set name
+//
+
+#ifdef UNICODE
+
+void UPSInterface::setName(const WCHAR *pszName)
+{
+   if (pszName[0] == 0)
+   {
+		setName("");
+   }
+   else
+   {
+	   safe_free(m_pszName);
       m_pszName = _tcsdup(pszName);
    }
 }
+
+#endif
 
 
 //
@@ -103,7 +129,7 @@ void UPSInterface::Close(void)
 // Validate connection to the UPS
 //
 
-BOOL UPSInterface::ValidateConnection(void)
+BOOL UPSInterface::ValidateConnection()
 {
    return FALSE;
 }
@@ -113,7 +139,7 @@ BOOL UPSInterface::ValidateConnection(void)
 // Get parameter's value
 //
 
-LONG UPSInterface::GetParameter(int nParam, TCHAR *pszValue)
+LONG UPSInterface::getParameter(int nParam, TCHAR *pszValue)
 {
    LONG nRet;
 
@@ -132,7 +158,11 @@ LONG UPSInterface::GetParameter(int nParam, TCHAR *pszValue)
    }
    else
    {
-      _tcscpy(pszValue, m_paramList[nParam].szValue);
+#ifdef UNICODE
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_paramList[nParam].szValue, -1, pszValue, MAX_RESULT_LENGTH);
+#else
+      strcpy(pszValue, m_paramList[nParam].szValue);
+#endif
       nRet = SYSINFO_RC_SUCCESS;
    }
 
@@ -220,9 +250,9 @@ void UPSInterface::QueryOnlineStatus(void)
 // Communication thread starter
 //
 
-THREAD_RESULT THREAD_CALL UPSInterface::CommThreadStarter(void *pArg)
+THREAD_RESULT THREAD_CALL UPSInterface::commThreadStarter(void *pArg)
 {
-   ((UPSInterface *)pArg)->CommThread();
+   ((UPSInterface *)pArg)->commThread();
    return THREAD_OK;
 }
 
@@ -231,9 +261,9 @@ THREAD_RESULT THREAD_CALL UPSInterface::CommThreadStarter(void *pArg)
 // Start communication thread
 //
 
-void UPSInterface::StartCommunication(void)
+void UPSInterface::startCommunication()
 {
-   m_thCommThread = ThreadCreateEx(CommThreadStarter, 0, this);
+   m_thCommThread = ThreadCreateEx(commThreadStarter, 0, this);
 }
 
 
@@ -241,7 +271,7 @@ void UPSInterface::StartCommunication(void)
 // Communication thread
 //
 
-void UPSInterface::CommThread(void)
+void UPSInterface::commThread()
 {
    int nIteration;
 

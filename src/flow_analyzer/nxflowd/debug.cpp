@@ -1,6 +1,6 @@
 /*
 ** nxflowd - NetXMS Flow Collector Daemon
-** Copyright (c) 2009, 2010 Raden Solutions
+** Copyright (c) 2009-2012 Raden Solutions
 */
 
 #include "nxflowd.h"

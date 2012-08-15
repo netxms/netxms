@@ -65,8 +65,8 @@
 typedef struct SqlCtx 
 {
 	TCHAR		szOdbcMsg[MAX_STR];	/* API error message */
-	SQLCHAR	szSqlErr[MAX_STR];	/* sql error message */
-	SQLCHAR	szSqlStat[10];	/* sql op status */
+	SQLTCHAR	szSqlErr[MAX_STR];	/* sql error message */
+	SQLTCHAR	szSqlStat[10];	/* sql op status */
 	SQLINTEGER	nSqlErr;		/* native sql error code */
 	SQLSMALLINT	nLen;			/* length of szSqlErr */
 	SQLHENV		hEnv;			/* ODBC environment handle */
@@ -119,7 +119,7 @@ int OdbcConnect(void* pvSqlCtx, const TCHAR* pszSrc)
 
 	if (nRet == SUCCESS && pvSqlCtx == NULL)
 	{
-		_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_ECTX));
+		_tcscpy(pSqlCtx->szOdbcMsg, MSG_ECTX);
 		nRet = FAIL;
 	}
 
@@ -129,7 +129,7 @@ int OdbcConnect(void* pvSqlCtx, const TCHAR* pszSrc)
 										(void*)SQL_OV_ODBC3, 0);
 		if (SQLRET_FAIL(nSqlRet))
 		{
-			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_EVERSION));
+			_tcscpy(pSqlCtx->szOdbcMsg, MSG_EVERSION);
 			nRet = FAIL;
 		}
 	}
@@ -139,7 +139,7 @@ int OdbcConnect(void* pvSqlCtx, const TCHAR* pszSrc)
 		nSqlRet = SQLAllocHandle(SQL_HANDLE_DBC, pSqlCtx->hEnv, &pSqlCtx->hDbc);
 		if (SQLRET_FAIL(nSqlRet))
 		{
-			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_ECONNH));
+			_tcscpy(pSqlCtx->szOdbcMsg, MSG_ECONNH);
 			nRet = FAIL;
 		}
 	}
@@ -150,7 +150,7 @@ int OdbcConnect(void* pvSqlCtx, const TCHAR* pszSrc)
 		                            (SQLPOINTER*)TIMEOUT_LOGIN, 0);
 		if (SQLRET_FAIL(nSqlRet))
 		{
-			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_LOGINTOUT));
+			_tcscpy(pSqlCtx->szOdbcMsg, MSG_LOGINTOUT);
 			nRet = FAIL;
 		}
 	}
@@ -161,7 +161,7 @@ int OdbcConnect(void* pvSqlCtx, const TCHAR* pszSrc)
 		                            (SQLPOINTER*)TIMEOUT_CONN, 0);
 		if (SQLRET_FAIL(nSqlRet))
 		{
-			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_CONNTOUT));
+			_tcscpy(pSqlCtx->szOdbcMsg, MSG_CONNTOUT);
 			 nRet = FAIL;
 		}
 	}
@@ -170,16 +170,16 @@ int OdbcConnect(void* pvSqlCtx, const TCHAR* pszSrc)
 	{
 		if (_tcschr(pszSrc, _T('=')) == NULL)
 		{
-			nSqlRet = SQLConnect(pSqlCtx->hDbc, (SQLCHAR*)pszSrc, SQL_NTS, NULL,	SQL_NTS, NULL, SQL_NTS);
+			nSqlRet = SQLConnect(pSqlCtx->hDbc, (SQLTCHAR*)pszSrc, SQL_NTS, NULL,	SQL_NTS, NULL, SQL_NTS);
 		}
 		else
 		{
 			SQLSMALLINT outLen;
-			nSqlRet = SQLDriverConnect(pSqlCtx->hDbc, NULL, (SQLCHAR*)pszSrc, SQL_NTS, NULL,	0, &outLen, SQL_DRIVER_NOPROMPT);
+			nSqlRet = SQLDriverConnect(pSqlCtx->hDbc, NULL, (SQLTCHAR*)pszSrc, SQL_NTS, NULL,	0, &outLen, SQL_DRIVER_NOPROMPT);
 		}
 		if (SQLRET_FAIL(nSqlRet))
 		{
-			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_ECONNECT));
+			_tcscpy(pSqlCtx->szOdbcMsg, MSG_ECONNECT);
 			SQLGetDiagRec(SQL_HANDLE_DBC, pSqlCtx->hDbc, 1, pSqlCtx->szSqlStat,
 							  &pSqlCtx->nSqlErr, pSqlCtx->szSqlErr, MAX_STR, 
 							  &pSqlCtx->nLen);
@@ -188,7 +188,7 @@ int OdbcConnect(void* pvSqlCtx, const TCHAR* pszSrc)
 	}
 
 	if (nRet == SUCCESS)
-		_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_OK));
+		_tcscpy(pSqlCtx->szOdbcMsg, MSG_OK);
 
 	return nRet;	
 }
@@ -201,7 +201,7 @@ int OdbcDisconnect(void* pvSqlCtx)
 
 	if (nRet == SUCCESS && pvSqlCtx == NULL)
 	{
-		_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_ECTX));
+		_tcscpy(pSqlCtx->szOdbcMsg, MSG_ECTX);
 		nRet = FAIL;
 	}
 
@@ -219,12 +219,12 @@ int OdbcDisconnect(void* pvSqlCtx)
 
 	if (SQLRET_FAIL(nSqlRet))
 	{
-		_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_EDISCONN));
+		_tcscpy(pSqlCtx->szOdbcMsg, MSG_EDISCONN);
 		nRet = FAIL;
 	}
 
 	if (nRet == SUCCESS)
-		_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_OK));
+		_tcscpy(pSqlCtx->szOdbcMsg, MSG_OK);
 
 	return nRet;
 }
@@ -249,7 +249,7 @@ int OdbcQuerySelect(void* pvSqlCtx, const TCHAR* pszQuery, TCHAR* pszResult, siz
 	nSqlRet = SQLAllocHandle(SQL_HANDLE_STMT, pSqlCtx->hDbc, &pSqlCtx->hStmt);
 	if (SQLRET_FAIL(nSqlRet))
 	{
-		_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_EHSTMT));
+		_tcscpy(pSqlCtx->szOdbcMsg, MSG_EHSTMT);
 		nRet = FAIL;
 	}
 
@@ -258,7 +258,7 @@ int OdbcQuerySelect(void* pvSqlCtx, const TCHAR* pszQuery, TCHAR* pszResult, siz
 		nSqlRet = SQLBindCol(pSqlCtx->hStmt, 1, SQL_C_CHAR, szBuf, MAX_STR, &nLen);
 		if (SQLRET_FAIL(nSqlRet))
 		{
-			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_EBIND));
+			_tcscpy(pSqlCtx->szOdbcMsg, MSG_EBIND);
 			SQLGetDiagRec(SQL_HANDLE_STMT, pSqlCtx->hStmt, 1, pSqlCtx->szSqlStat,
 							  &pSqlCtx->nSqlErr, pSqlCtx->szSqlErr, MAX_STR, 
 							  &pSqlCtx->nLen);
@@ -268,10 +268,10 @@ int OdbcQuerySelect(void* pvSqlCtx, const TCHAR* pszQuery, TCHAR* pszResult, siz
 
 	if (nRet == SUCCESS)
 	{
-		nSqlRet = SQLExecDirect(pSqlCtx->hStmt, (SQLCHAR*)pszQuery, SQL_NTS);
+		nSqlRet = SQLExecDirect(pSqlCtx->hStmt, (SQLTCHAR*)pszQuery, SQL_NTS);
 		if (SQLRET_FAIL(nSqlRet))
 		{
-			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_EEXECSQL));
+			_tcscpy(pSqlCtx->szOdbcMsg, MSG_EEXECSQL);
 			SQLGetDiagRec(SQL_HANDLE_STMT, pSqlCtx->hStmt, 1, pSqlCtx->szSqlStat,
 							  &pSqlCtx->nSqlErr, pSqlCtx->szSqlErr, MAX_STR, 
 							  &pSqlCtx->nLen);
@@ -285,7 +285,7 @@ int OdbcQuerySelect(void* pvSqlCtx, const TCHAR* pszQuery, TCHAR* pszResult, siz
 		nSqlRet = SQLFetch(pSqlCtx->hStmt);
 		if (nSqlRet != SQL_NO_DATA && SQLRET_FAIL(nSqlRet))
 		{
-			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_EFETCH));
+			_tcscpy(pSqlCtx->szOdbcMsg, MSG_EFETCH);
 			SQLGetDiagRec(SQL_HANDLE_STMT, pSqlCtx->hStmt, 1, pSqlCtx->szSqlStat,
 							  &pSqlCtx->nSqlErr, pSqlCtx->szSqlErr, MAX_STR, 
 							  &pSqlCtx->nLen);
@@ -293,7 +293,7 @@ int OdbcQuerySelect(void* pvSqlCtx, const TCHAR* pszQuery, TCHAR* pszResult, siz
 		}
 		else if (nSqlRet == SQL_NO_DATA)
 		{
-			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_ENOTFOUND));
+			_tcscpy(pSqlCtx->szOdbcMsg, MSG_ENOTFOUND);
 			nRet = FAIL;
 		}
 	}
@@ -304,7 +304,7 @@ int OdbcQuerySelect(void* pvSqlCtx, const TCHAR* pszQuery, TCHAR* pszResult, siz
 	if (nRet == SUCCESS)
 	{
 		_tcsncpy(pszResult, szBuf, MAX_STR);
-		_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_OK));
+		_tcscpy(pSqlCtx->szOdbcMsg, MSG_OK);
 	}
 
 	return nRet;

@@ -71,11 +71,11 @@ void RemoveEventSource();
 //
 
 extern DWORD g_flags;
-extern char g_listenAddress[];
+extern TCHAR g_listenAddress[];
 extern DWORD g_tcpPort;
 extern DWORD g_udpPort;
-extern char g_configFile[];
-extern char g_logFile[];
+extern TCHAR g_configFile[];
+extern TCHAR g_logFile[];
 extern int g_debugLevel;
 extern DB_HANDLE g_dbConnection;
 

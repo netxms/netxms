@@ -1,6 +1,6 @@
 /*
 ** nxflowd - NetXMS Flow Collector Daemon
-** Copyright (c) 2009, 2010 Victor Kirhenshtein
+** Copyright (c) 2009-2012 Victor Kirhenshtein
 */
 
 #include "nxflowd.h"
@@ -28,17 +28,17 @@ extern const TCHAR *g_szMessages[];
 //
 
 DWORD g_flags = AF_LOG_SQL_ERRORS;
-char g_listenAddress[MAX_PATH] = "0.0.0.0";
+TCHAR g_listenAddress[MAX_PATH] = _T("0.0.0.0");
 DWORD g_tcpPort = IPFIX_DEFAULT_PORT;
 DWORD g_udpPort = IPFIX_DEFAULT_PORT;
 DB_DRIVER g_dbDriverHandle = NULL;
 DB_HANDLE g_dbConnection = NULL;
 #ifdef _WIN32
-char g_configFile[MAX_PATH] = "C:\\nxflowd.conf";
-char g_logFile[MAX_PATH] = "C:\\nxflowd.log";
+TCHAR g_configFile[MAX_PATH] = _T("C:\\nxflowd.conf");
+TCHAR g_logFile[MAX_PATH] = _T("C:\\nxflowd.log");
 #else
-char g_configFile[MAX_PATH] = "{search}";
-char g_logFile[MAX_PATH] = "/var/log/nxflowd";
+TCHAR g_configFile[MAX_PATH] = _T("{search}");
+TCHAR g_logFile[MAX_PATH] = _T("/var/log/nxflowd");
 #endif
 
 
@@ -61,21 +61,21 @@ static TCHAR s_dbPassword[MAX_DB_PASSWORD] = _T("");
 static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriver },
-   { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, s_dbDrvParams },
-   { "DBEncryptedPassword", CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword },
-   { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
-   { "DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
-   { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbPassword },
-   { "DBSchema", CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbSchema },
-   { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
-   { "ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_listenAddress },
-   { "ListenPortTCP", CT_LONG, 0, 0, 0, 0, &g_tcpPort },
-   { "ListenPortUDP", CT_LONG, 0, 0, 0, 0, &g_udpPort },
-   { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_logFile },
-   { "LogFailedSQLQueries", CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_flags },
-   { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_logFile },
-   { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriver },
+   { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDrvParams },
+   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword },
+   { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
+   { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
+   { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbPassword },
+   { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbSchema },
+   { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
+   { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_listenAddress },
+   { _T("ListenPortTCP"), CT_LONG, 0, 0, 0, 0, &g_tcpPort },
+   { _T("ListenPortUDP"), CT_LONG, 0, 0, 0, 0, &g_udpPort },
+   { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_logFile },
+   { _T("LogFailedSQLQueries"), CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_flags },
+   { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_logFile },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
 
@@ -90,8 +90,8 @@ static bool LoadConfig()
 	Config *config = new Config();
 	if (config->loadConfig(g_configFile, _T("nxflowd")) && config->parseTemplate(_T("nxflowd"), m_cfgTemplate))
    {
-      if ((!stricmp(g_logFile, "{EventLog}")) ||
-          (!stricmp(g_logFile, "{syslog}")))
+      if ((!_tcsicmp(g_logFile, _T("{EventLog}"))) ||
+          (!_tcsicmp(g_logFile, _T("{syslog}"))))
       {
          g_flags |= AF_USE_SYSLOG;
       }
@@ -168,7 +168,7 @@ bool Initialize()
 		nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
 		return FALSE;
 	}
-	DbgPrintf(1, "Successfully connected to database %s@%s", s_dbName, s_dbServer);
+	DbgPrintf(1, _T("Successfully connected to database %s@%s"), s_dbName, s_dbServer);
 
 	if (!StartCollector())
 		return false;
@@ -239,25 +239,25 @@ void Main()
 // Help text
 //
 
-static char s_helpText[] =
-   "NetXMS NetFlow/IPFIX Collector  Version " NETXMS_VERSION_STRING "\n"
-   "Copyright (c) 2009 Raden Solutions\n\n"
-   "Usage:\n"
-   "   nxflowd [options]\n\n"
-   "Where valid options are:\n"
-   "   -c <file>  : Read configuration from given file\n"
-   "   -d         : Start as daemon (service)\n"
-	"   -D <level> : Set debug level (0..9)\n"
-   "   -h         : Show this help\n"
+static TCHAR s_helpText[] =
+   _T("NetXMS NetFlow/IPFIX Collector  Version ") NETXMS_VERSION_STRING _T("\n")
+   _T("Copyright (c) 2009-2012 Raden Solutions\n\n")
+   _T("Usage:\n")
+   _T("   nxflowd [options]\n\n")
+   _T("Where valid options are:\n")
+   _T("   -c <file>  : Read configuration from given file\n")
+   _T("   -d         : Start as daemon (service)\n")
+	_T("   -D <level> : Set debug level (0..9)\n")
+   _T("   -h         : Show this help\n")
 #ifdef _WIN32
-   "   -I         : Install service\n"
-   "   -R         : Remove service\n"
-   "   -s         : Start service\n"
-   "   -S         : Stop service\n"
+   _T("   -I         : Install service\n")
+   _T("   -R         : Remove service\n")
+   _T("   -s         : Start service\n")
+   _T("   -S         : Stop service\n")
 #else
-   "   -p <file>  : Write PID to given file\n"
+   _T("   -p <file>  : Write PID to given file\n")
 #endif
-   "\n";
+   _T("\n");
 
 
 //
@@ -291,7 +291,7 @@ int main(int argc, char *argv[])
 		switch(ch)
 		{
 			case 'h':   // Display help and exit
-				puts(s_helpText);
+				_putts(s_helpText);
 				return 0;
 			case 'd':   // Run as daemon
 				g_flags |= AF_DAEMON;

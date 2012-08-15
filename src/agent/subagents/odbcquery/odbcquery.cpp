@@ -316,15 +316,15 @@ static void SubAgentShutdown()
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("ODBC.QueryResult(*)"), H_PollResult, "R", DCI_DT_STRING, _T("ODBC query result") },
-   { _T("ODBC.QueryStatus(*)"), H_PollResult, "S", DCI_DT_UINT, _T("ODBC query status") },
-   { _T("ODBC.QueryStatusText(*)"), H_PollResult, "T", DCI_DT_STRING, _T("ODBC query status as text") }
+   { _T("ODBC.QueryResult(*)"), H_PollResult, _T("R"), DCI_DT_STRING, _T("ODBC query result") },
+   { _T("ODBC.QueryStatus(*)"), H_PollResult, _T("S"), DCI_DT_UINT, _T("ODBC query status") },
+   { _T("ODBC.QueryStatusText(*)"), H_PollResult, _T("T"), DCI_DT_STRING, _T("ODBC query status as text") }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("ODBCQUERY"), _T(NETXMS_VERSION_STRING),
+	_T("ODBCQUERY"), NETXMS_VERSION_STRING,
    SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,

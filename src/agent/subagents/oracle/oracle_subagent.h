@@ -37,8 +37,8 @@ typedef struct _DatabaseInfo
 	TCHAR id[MAX_STR];				// this is how client addresses the database
 	TCHAR name[MAX_STR];
 	TCHAR server[MAX_STR];
-	char username[MAX_USERNAME];
-	char password[MAX_PASSWORD];
+	TCHAR username[MAX_USERNAME];
+	TCHAR password[MAX_PASSWORD];
 	THREAD queryThreadHandle;
 	DB_HANDLE handle;
 	bool connected;

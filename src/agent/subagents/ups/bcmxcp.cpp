@@ -349,7 +349,7 @@ int BCMXCPInterface::RecvData(int nCommand)
 BOOL BCMXCPInterface::Open()
 {
    BOOL bRet = FALSE;
-   TCHAR szBuffer[256];
+   char szBuffer[256];
    int i, nBytes, nPos, nLen, nOffset;
 
    if (SerialInterface::Open())
@@ -374,8 +374,8 @@ BOOL BCMXCPInterface::Open()
             {
                memcpy(szBuffer, &m_data[nPos + 1], nLen);
                szBuffer[nLen] = 0;
-               StrStrip(szBuffer);
-               SetName(szBuffer);
+               StrStripA(szBuffer);
+               setName(szBuffer);
             }
 
             // Read meter map
@@ -478,7 +478,7 @@ void BCMXCPInterface::QueryModel(void)
          {
             memcpy(m_paramList[UPS_PARAM_MODEL].szValue, &m_data[nPos + 1], m_data[nPos]);
             m_paramList[UPS_PARAM_MODEL].szValue[m_data[nPos]] = 0;
-            StrStrip(m_paramList[UPS_PARAM_MODEL].szValue);
+            StrStripA(m_paramList[UPS_PARAM_MODEL].szValue);
             m_paramList[UPS_PARAM_MODEL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
          }
          else
@@ -562,7 +562,7 @@ void BCMXCPInterface::QueryTemperature(void)
 // Get line frequency (Hz)
 //
 
-void BCMXCPInterface::QueryLineFrequency(void)
+void BCMXCPInterface::QueryLineFrequency()
 {
    ReadParameter(MAP_INPUT_FREQUENCY, FMT_INTEGER, &m_paramList[UPS_PARAM_LINE_FREQ]);
 }
@@ -572,7 +572,7 @@ void BCMXCPInterface::QueryLineFrequency(void)
 // Get firmware version
 //
 
-void BCMXCPInterface::QueryFirmwareVersion(void)
+void BCMXCPInterface::QueryFirmwareVersion()
 {
    int i, nLen, nBytes, nPos;
 
@@ -586,7 +586,7 @@ void BCMXCPInterface::QueryFirmwareVersion(void)
          {
             if ((m_data[nPos + 1] != 0) || (m_data[nPos] != 0))
             {
-               _stprintf(m_paramList[UPS_PARAM_FIRMWARE].szValue, _T("%d.%02d"), m_data[nPos + 1], m_data[nPos]);
+               sprintf(m_paramList[UPS_PARAM_FIRMWARE].szValue, "%d.%02d", m_data[nPos + 1], m_data[nPos]);
                m_paramList[UPS_PARAM_FIRMWARE].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
                break;
             }
@@ -612,7 +612,7 @@ void BCMXCPInterface::QueryFirmwareVersion(void)
 // Get unit serial number
 //
 
-void BCMXCPInterface::QuerySerialNumber(void)
+void BCMXCPInterface::QuerySerialNumber()
 {
    int nBytes;
 
@@ -624,12 +624,12 @@ void BCMXCPInterface::QuerySerialNumber(void)
          memcpy(m_paramList[UPS_PARAM_SERIAL].szValue, &m_data[64], 16);
          if (m_paramList[UPS_PARAM_SERIAL].szValue[0] == 0)
          {
-            _tcscpy(m_paramList[UPS_PARAM_SERIAL].szValue, _T("UNSET"));
+            strcpy(m_paramList[UPS_PARAM_SERIAL].szValue, "UNSET");
          }
          else
          {
             m_paramList[UPS_PARAM_SERIAL].szValue[16] = 0;
-            StrStrip(m_paramList[UPS_PARAM_SERIAL].szValue);
+            StrStripA(m_paramList[UPS_PARAM_SERIAL].szValue);
          }
          m_paramList[UPS_PARAM_SERIAL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
       }
