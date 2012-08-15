@@ -215,17 +215,22 @@ static BOOL GetProcessCommandLine(DWORD dwPId, TCHAR *pszCmdLine, DWORD dwLen)
 
 #else
 	DWORD dwAddressOfCommandLine;
-	FARPROC pfnGetCommandLineA;
+	FARPROC pfnGetCommandLine;
 	HANDLE hThread;
 
-	pfnGetCommandLineA = GetProcAddress(GetModuleHandle("KERNEL32.DLL"), "GetCommandLineA"); 
+	pfnGetCommandLine = GetProcAddress(GetModuleHandle(_T("KERNEL32.DLL")), 
+#ifdef UNICODE
+		"GetCommandLineW");
+#else
+		"GetCommandLineA");
+#endif
 
-	hThread = CreateRemoteThread(hProcess, 0, 0, (LPTHREAD_START_ROUTINE)pfnGetCommandLineA, 0, 0, 0);
+	hThread = CreateRemoteThread(hProcess, 0, 0, (LPTHREAD_START_ROUTINE)pfnGetCommandLine, 0, 0, 0);
 	if (hThread != INVALID_HANDLE_VALUE)
 	{
 		WaitForSingleObject(hThread, INFINITE);
 		GetExitCodeThread(hThread, &dwAddressOfCommandLine);
-		bRet = ReadProcessMemory(hProcess, (PVOID)dwAddressOfCommandLine, pszCmdLine, dwLen, &dummy);
+		bRet = ReadProcessMemory(hProcess, (PVOID)dwAddressOfCommandLine, pszCmdLine, dwLen * sizeof(TCHAR), &dummy);
 		CloseHandle(hThread);
 	}
 #endif
