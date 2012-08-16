@@ -2728,7 +2728,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 							}
 							sb.append(ch);
 						}
-						inputStream.skipBytes(count);
+						inputStream.skipBytes(count * 2);
 						data.addDataRow(new DciDataRow(new Date(timestamp), sb.toString()));
 						break;
 				}

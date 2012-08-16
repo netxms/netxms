@@ -3,10 +3,13 @@
 *
 
 - Improved LLDP support
+- Agent on Windows is in UNICODE
+- UNICODE build supported on Linux
 - Management console:
 	- Configurable date and time format
 	- Background color can be set for network maps
 	- Different connection routing algorithms for network maps
+	- Fixed incorrect display of string data in DCI history
 
 
 *
