@@ -72,7 +72,7 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 	nFound = -1;
 	if (pEnt != NULL)
 		*pEnt = NULL;
-	AgentWriteDebugLog(5, _T("ProcRead(%p,\"%s\",\"%s\")"), pEnt, CHECK_NULL_A(szProcName), CHECK_NULL_A(szCmdLine));
+	AgentWriteDebugLog(5, _T("ProcRead(%p,\"%hs\",\"%hs\")"), pEnt, CHECK_NULL_A(szProcName), CHECK_NULL_A(szCmdLine));
 
 	nCount = scandir("/proc", &pNameList, &ProcFilter, alphasort);
 	// if everything is null we can simply return nCount!!!
