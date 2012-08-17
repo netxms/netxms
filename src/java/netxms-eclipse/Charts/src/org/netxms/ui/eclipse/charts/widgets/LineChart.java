@@ -376,8 +376,9 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private ILineSeries addLineSeries(int index, String description, Date[] xSeries, double[] ySeries)
 	{
 		ISeriesSet seriesSet = getSeriesSet();
-		ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, description);
-		
+		ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, Integer.toString(index));
+
+		series.setName(description);
 		series.setAntialias(SWT.ON);
 		series.setSymbolType(PlotSymbolType.NONE);
 		series.setLineWidth(2);

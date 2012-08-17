@@ -54,6 +54,9 @@ abstract public class Series implements ISeries {
     /** the series id */
     protected String id;
 
+    /** the series name */
+    protected String name = null;
+
     /** the compressor */
     protected ICompress compressor;
 
@@ -659,4 +662,22 @@ abstract public class Series implements ISeries {
      */
     abstract protected void draw(GC gc, int width, int height, Axis xAxis,
             Axis yAxis);
+
+	/* (non-Javadoc)
+	 * @see org.swtchart.ISeries#setName(java.lang.String)
+	 */
+	@Override
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.swtchart.ISeries#getName()
+	 */
+	@Override
+	public String getName()
+	{
+		return (name != null) ? name : id;
+	}
 }

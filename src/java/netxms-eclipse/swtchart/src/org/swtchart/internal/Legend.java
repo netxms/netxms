@@ -298,7 +298,7 @@ public class Legend extends Composite implements ILegend, PaintListener {
             int maxCellWidth = 0;
 
             for (ISeries series : seriesArray) {
-                int textWidth = Util.getExtentInGC(getFont(), series.getId()).x;
+                int textWidth = Util.getExtentInGC(getFont(), series.getName()).x;
                 int cellWidth = textWidth + SYMBOL_WIDTH + MARGIN * 3;
                 maxCellWidth = Math.max(maxCellWidth, cellWidth);
                 if (yPosition + cellHeight < r.height - titleHeight
@@ -319,7 +319,7 @@ public class Legend extends Composite implements ILegend, PaintListener {
             int xPosition = 0;
 
             for (ISeries series : seriesArray) {
-                int textWidth = Util.getExtentInGC(getFont(), series.getId()).x;
+                int textWidth = Util.getExtentInGC(getFont(), series.getName()).x;
                 int cellWidth = textWidth + SYMBOL_WIDTH + MARGIN * 3;
                 if (xPosition + cellWidth < r.width || xPosition == 0) {
                     xPosition += cellWidth;
@@ -410,15 +410,14 @@ public class Legend extends Composite implements ILegend, PaintListener {
         for (int i = 0; i < seriesArray.length; i++) {
 
             // draw plot line, symbol etc
-            String id = seriesArray[i].getId();
-            Rectangle r = cellBounds.get(id);
+            Rectangle r = cellBounds.get(seriesArray[i].getId());
             drawSymbol(gc, (Series) seriesArray[i], new Rectangle(r.x + MARGIN,
                     r.y + MARGIN, SYMBOL_WIDTH, r.height - MARGIN * 2));
 
             // draw plot id
             gc.setBackground(getBackground());
             gc.setForeground(getForeground());
-            gc.drawText(id, r.x + SYMBOL_WIDTH + MARGIN * 2, r.y, true);
+            gc.drawText(seriesArray[i].getName(), r.x + SYMBOL_WIDTH + MARGIN * 2, r.y, true);
         }
     }
 }

@@ -48,6 +48,20 @@ public interface ISeries {
     String getId();
 
     /**
+     * Gets the series name.
+     * 
+     * @return the series name
+     */
+    String getName();
+    
+    /**
+     * Set series name
+     * 
+    * @param name
+    */
+   void setName(String name);
+
+    /**
      * Sets the visibility state.
      * 
      * @param visible
