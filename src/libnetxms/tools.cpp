@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -450,15 +450,28 @@ INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs()
 // of line reached.
 //
 
-const TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(const TCHAR *line, TCHAR *buffer)
+const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer)
 {
-   const TCHAR *ptr;
-	TCHAR *bptr;
+   const WCHAR *ptr;
+	WCHAR *bptr;
 
-   for(ptr=line;(*ptr==_T(' '))||(*ptr==_T('\t'));ptr++);  // Skip initial spaces
+   for(ptr = line; (*ptr == L' ') || (*ptr == L'\t'); ptr++);  // Skip initial spaces
    // Copy word to buffer
-   for(bptr=buffer;(*ptr!=_T(' '))&&(*ptr!=_T('\t'))&&(*ptr!=0);ptr++,bptr++)
-      *bptr=*ptr;
+   for(bptr = buffer; (*ptr != L' ') && (*ptr != L'\t') && (*ptr != 0); ptr++, bptr++)
+      *bptr = *ptr;
+   *bptr=0;
+   return ptr;
+}
+
+const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer)
+{
+   const char *ptr;
+	char *bptr;
+
+   for(ptr = line; (*ptr == ' ') || (*ptr == '\t'); ptr++);  // Skip initial spaces
+   // Copy word to buffer
+   for(bptr = buffer; (*ptr != ' ') && (*ptr != '\t') && (*ptr != 0); ptr++, bptr++)
+      *bptr = *ptr;
    *bptr=0;
    return ptr;
 }

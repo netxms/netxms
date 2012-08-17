@@ -743,11 +743,14 @@ extern "C"
 #define StrStrip StrStripA
 #endif
 
-   void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
-   BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
-	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(const TCHAR *pszStr, const TCHAR *pszExpr, BOOL bMatchCase);
-   const TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(const TCHAR *line, TCHAR *buffer);
-	TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
+	const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer);
+   const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer);
+#ifdef UNICODE
+#define ExtractWord ExtractWordW
+#else
+#define ExtractWord ExtractWordA
+#endif
+
    int LIBNETXMS_EXPORTABLE NumCharsA(const char *pszStr, char ch);
    int LIBNETXMS_EXPORTABLE NumCharsW(const WCHAR *pszStr, WCHAR ch);
 #ifdef UNICODE
@@ -755,6 +758,7 @@ extern "C"
 #else
 #define NumChars NumCharsA
 #endif
+
 	void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFA(char *str);
 	void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str);
 #ifdef UNICODE
@@ -762,6 +766,11 @@ extern "C"
 #else
 #define RemoveTrailingCRLF RemoveTrailingCRLFA
 #endif
+
+	void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
+   BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
+	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(const TCHAR *pszStr, const TCHAR *pszExpr, BOOL bMatchCase);
+	TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
 
 #ifdef __cplusplus
    BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars = FALSE);
@@ -794,9 +803,6 @@ extern "C"
    DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout,
                                        DWORD *pdwRTT, DWORD dwPacketSize);
 
-   /* deprecated:
-	DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(const TCHAR *pszFileName, const TCHAR *pszSection, 
-                                           NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint);*/
    int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText);
 
    HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText);
