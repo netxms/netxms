@@ -24,7 +24,7 @@
 // Handler for System.ConnectedUsers parameter
 //
 
-LONG H_ConnectedUsers(const char *pszParam, const char *pArg, char *pValue)
+LONG H_ConnectedUsers(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	FILE *f;
@@ -54,12 +54,12 @@ LONG H_ConnectedUsers(const char *pszParam, const char *pArg, char *pValue)
 // Handler for System.ActiveUserSessions enum
 //
 
-LONG H_ActiveUserSessions(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_ActiveUserSessions(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	FILE *f;
 	struct utmp rec;
-	char szBuffer[1024];
+	TCHAR szBuffer[1024];
 
 	f = fopen(UTMP_FILE, "r");
 	if (f != NULL)
@@ -69,8 +69,8 @@ LONG H_ActiveUserSessions(const char *pszParam, const char *pArg, StringList *pV
 		{
 			if (rec.ut_type == USER_PROCESS)
 			{
-				snprintf(szBuffer, 1024, "\"%s\" \"%s\" \"%s\"", rec.ut_user,
-						rec.ut_line, rec.ut_host);
+				_sntprintf(szBuffer, 1024, _T("\"%hs\" \"%hs\" \"%hs\""), rec.ut_user,
+				           rec.ut_line, rec.ut_host);
 				pValue->add(szBuffer);
 			}
 		}
@@ -85,7 +85,7 @@ LONG H_ActiveUserSessions(const char *pszParam, const char *pArg, StringList *pV
 // Handler for System.Uptime parameter
 //
 
-LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
+LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	FILE *hFile;
 	unsigned int uUptime = 0;
@@ -117,7 +117,7 @@ LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
 	return uUptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
-LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
+LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	struct utsname utsName;
 	int nRet = SYSINFO_RC_ERROR;
@@ -131,7 +131,7 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 				utsName.machine);
 		// TODO: processor & platform
 
-		ret_string(pValue, szBuff);
+		ret_mbstring(pValue, szBuff);
 
 		nRet = SYSINFO_RC_SUCCESS;
 	}
@@ -139,21 +139,21 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue)
+LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szBuff[128];
 
 	if (gethostname(szBuff, sizeof(szBuff)) == 0)
 	{
-		ret_string(pValue, szBuff);
+		ret_mbstring(pValue, szBuff);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
 	return nRet;
 }
 
-LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs s;
@@ -198,7 +198,7 @@ LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
+LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -302,7 +302,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	PROC_ENT *pEnt;
@@ -316,9 +316,9 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 
 		for (int i = 0; i < nCount; i++)
 		{
-			char szBuff[128];
+			TCHAR szBuff[128];
 
-			snprintf(szBuff, sizeof(szBuff), "%d %s",
+			_sntprintf(szBuff, sizeof(szBuff), _T("%d %hs"),
 					pEnt[i].nPid, pEnt[i].szProcName);
 			pValue->add(szBuff);
 		}
@@ -330,7 +330,7 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 //
 // stub
 //
-LONG H_SourcePkgSupport(const char *pszParam, const char *pArg, char *pValue)
+LONG H_SourcePkgSupport(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	ret_int(pValue, 1);
 	return SYSINFO_RC_SUCCESS;

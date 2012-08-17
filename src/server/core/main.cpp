@@ -23,7 +23,7 @@
 #include "nxcore.h"
 #include <netxmsdb.h>
 
-#if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE
+#if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>
 #include <readline/history.h>
 #define USE_READLINE 1

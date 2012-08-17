@@ -135,12 +135,12 @@ static bool getSensorValue(char *chipName, char *featureName, double *result) {
 static LONG H_GetValue(const TCHAR *parameters, const TCHAR *arg, TCHAR *value) {
    int ret = SYSINFO_RC_ERROR;
 
-   TCHAR chipName[256];
-   TCHAR featureName[256];
+   char chipName[256];
+   char featureName[256];
 
-   if (AgentGetParameterArg(parameters, 1, chipName, 256) && AgentGetParameterArg(parameters, 2, featureName, 256)) {
-      StrStrip(chipName);
-      StrStrip(featureName);
+   if (AgentGetParameterArgA(parameters, 1, chipName, 256) && AgentGetParameterArgA(parameters, 2, featureName, 256)) {
+      StrStripA(chipName);
+      StrStripA(featureName);
 
       double result;
       if (getSensorValue(chipName, featureName, &result)) {
@@ -175,7 +175,7 @@ static BOOL SubagentInit(Config *config) {
    if (ret) {
       FILE *configFile = NULL;
       if (m_configFileName[0] != 0) {
-         configFile = _tfopen(m_configFileName, "rb");
+         configFile = _tfopen(m_configFileName, _T("rb"));
 
          if (configFile == NULL) {
             AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("Unable to open lm_sensors config file \"%s\""), m_configFileName);
@@ -186,7 +186,7 @@ static BOOL SubagentInit(Config *config) {
       if (ret) {
          int err = sensors_init(configFile);
          if (err != 0) {
-            AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("sensors_init() failed: %s"), sensors_strerror(err));
+            AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("sensors_init() failed: %hs"), sensors_strerror(err));
             ret = false;
          }
       }
@@ -204,7 +204,8 @@ static BOOL SubagentInit(Config *config) {
 // Called by master agent at unload
 //
 
-static void SubagentShutdown(void) {
+static void SubagentShutdown()
+{
    sensors_cleanup();
 }
 
@@ -213,13 +214,15 @@ static void SubagentShutdown(void) {
 // Subagent information
 //
 
-static NETXMS_SUBAGENT_PARAM m_parameters[] = {
+static NETXMS_SUBAGENT_PARAM m_parameters[] = 
+{
    { _T("LMSensors.Value(*)"), H_GetValue, NULL, DCI_DT_FLOAT, _T("Sensor {instance}") },
 };
 
-static NETXMS_SUBAGENT_INFO m_info = {
+static NETXMS_SUBAGENT_INFO m_info = 
+{
    NETXMS_SUBAGENT_INFO_MAGIC,
-   _T("LMSENSORS"), _T(NETXMS_VERSION_STRING),
+   _T("LMSENSORS"), NETXMS_VERSION_STRING,
    SubagentInit, SubagentShutdown, NULL,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
@@ -234,7 +237,8 @@ static NETXMS_SUBAGENT_INFO m_info = {
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_ENTRY_POINT(LMSENSORS) {
+DECLARE_SUBAGENT_ENTRY_POINT(LMSENSORS)
+{
    *ppInfo = &m_info;
    return TRUE;
 }

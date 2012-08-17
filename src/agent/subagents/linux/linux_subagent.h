@@ -64,10 +64,10 @@ enum
 typedef struct t_ProcEnt
 {
 	unsigned int nPid;
-	TCHAR szProcName[128];
+	char szProcName[128];
 	int parent;					// PID of parent process
 	int group;					// Group ID
-	TCHAR state;					// Process state
+	char state;					// Process state
 	long threads;				// Number of threads
 	unsigned long ktime;		// Number of ticks spent in kernel mode
 	unsigned long utime;		// Number of ticks spent in user mode

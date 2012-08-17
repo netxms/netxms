@@ -72,7 +72,7 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 	nFound = -1;
 	if (pEnt != NULL)
 		*pEnt = NULL;
-	AgentWriteDebugLog(5, "ProcRead(%p,\"%s\",\"%s\")", pEnt, CHECK_NULL(szProcName), CHECK_NULL(szCmdLine));
+	AgentWriteDebugLog(5, _T("ProcRead(%p,\"%s\",\"%s\")"), pEnt, CHECK_NULL_A(szProcName), CHECK_NULL_A(szCmdLine));
 
 	nCount = scandir("/proc", &pNameList, &ProcFilter, alphasort);
 	// if everything is null we can simply return nCount!!!
@@ -146,7 +146,7 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 									if (szCmdLine == NULL) // use old style compare
 										bProcFound = strcmp(pProcName, szProcName) == 0;
 									else
-										bProcFound = RegexpMatch(pProcName, szProcName, FALSE);
+										bProcFound = RegexpMatchA(pProcName, szProcName, FALSE);
 								}
 								else
 								{
@@ -188,17 +188,17 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 								processCmdLine[j] = ' ';
 							}
 						}
-						bCmdFound = RegexpMatch(processCmdLine, szCmdLine, TRUE);
+						bCmdFound = RegexpMatchA(processCmdLine, szCmdLine, TRUE);
 					}
 					else
 					{
-						bCmdFound = RegexpMatch("", szCmdLine, TRUE);
+						bCmdFound = RegexpMatchA("", szCmdLine, TRUE);
 					}
 					fclose(hFile);
 				} // hFile != NULL
 				else
 				{
-					bCmdFound = RegexpMatch("", szCmdLine, TRUE);
+					bCmdFound = RegexpMatchA("", szCmdLine, TRUE);
 				}
 			} // szCmdLine
 			else
@@ -211,7 +211,7 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 				if (pEnt != NULL && pProcName != NULL)
 				{
 					(*pEnt)[nFound].nPid = nPid;
-					nx_strncpy((*pEnt)[nFound].szProcName, pProcName, sizeof((*pEnt)[nFound].szProcName));
+					strncpy((*pEnt)[nFound].szProcName, pProcName, sizeof((*pEnt)[nFound].szProcName));
 
 					// Parse rest of /proc/pid/stat file
 					if (pProcStat != NULL)
@@ -222,7 +222,7 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 						           &(*pEnt)[nFound].utime, &(*pEnt)[nFound].ktime, &(*pEnt)[nFound].threads,
 						           &(*pEnt)[nFound].vmsize, &(*pEnt)[nFound].rss) != 10)
 						{
-							AgentWriteDebugLog(2, "Error parsing /proc/%d/stat", nPid);
+							AgentWriteDebugLog(2, _T("Error parsing /proc/%d/stat"), nPid);
 						}
 					}
 				}
@@ -248,22 +248,22 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 // Handler for System.ProcessCount, Process.Count() and Process.CountEx() parameters
 //
 
-LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
+LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szArg[128] = "", szCmdLine[128] = "";
 	int nCount = -1;
 
-	if (*pArg != 'T')
+	if (*pArg != _T('T'))
 	{
-		AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
-		if (*pArg == 'E')
+		AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
+		if (*pArg == _T('E'))
 		{
-			AgentGetParameterArg(pszParam, 2, szCmdLine, sizeof(szCmdLine));
+			AgentGetParameterArgA(pszParam, 2, szCmdLine, sizeof(szCmdLine));
 		}
 	}
 
-	nCount = ProcRead(NULL, (*pArg != 'T') ? szArg : NULL, (*pArg == 'E') ? szCmdLine : NULL);
+	nCount = ProcRead(NULL, (*pArg != _T('T')) ? szArg : NULL, (*pArg == _T('E')) ? szCmdLine : NULL);
 
 	if (nCount >= 0)
 	{
@@ -279,7 +279,7 @@ LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 // Handler for System.ThreadCount parameter
 //
 
-LONG H_ThreadCount(const char *param, const char *arg, char *value)
+LONG H_ThreadCount(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 {
 	int i, sum, count, ret = SYSINFO_RC_ERROR;
 	PROC_ENT *procList;
@@ -314,7 +314,7 @@ LONG H_ThreadCount(const char *param, const char *arg, char *value)
 //    <cmdline>  - command line
 //
 
-LONG H_ProcessDetails(const char *param, const char *arg, char *value)
+LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 {
 	int i, count, type;
 	long pageSize, ticksPerSecond;
@@ -324,7 +324,7 @@ LONG H_ProcessDetails(const char *param, const char *arg, char *value)
    static const char *typeList[]={ "min", "max", "avg", "sum", NULL };
 
    // Get parameter type arguments
-   AgentGetParameterArg(param, 2, buffer, 256);
+   AgentGetParameterArgA(param, 2, buffer, 256);
    if (buffer[0] == 0)     // Omited type
    {
       type = INFOTYPE_SUM;
@@ -339,12 +339,12 @@ LONG H_ProcessDetails(const char *param, const char *arg, char *value)
    }
 
 	// Get process name
-	AgentGetParameterArg(param, 1, procName, MAX_PATH);
-	AgentGetParameterArg(param, 3, cmdLine, MAX_PATH);
-	StrStrip(cmdLine);
+	AgentGetParameterArgA(param, 1, procName, MAX_PATH);
+	AgentGetParameterArgA(param, 3, cmdLine, MAX_PATH);
+	StrStripA(cmdLine);
 
 	count = ProcRead(&procList, procName, (cmdLine[0] != 0) ? cmdLine : NULL);
-	AgentWriteDebugLog(5, "H_ProcessDetails(\"%s\"): ProcRead() returns %d", param, count);
+	AgentWriteDebugLog(5, _T("H_ProcessDetails(\"%hs\"): ProcRead() returns %d"), param, count);
 	if (count == -1)
 		return SYSINFO_RC_ERROR;
 
