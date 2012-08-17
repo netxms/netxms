@@ -743,8 +743,8 @@ extern "C"
 #define StrStrip StrStripA
 #endif
 
-	const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer);
    const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer);
+	const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer);
 #ifdef UNICODE
 #define ExtractWord ExtractWordW
 #else
@@ -767,9 +767,16 @@ extern "C"
 #define RemoveTrailingCRLF RemoveTrailingCRLFA
 #endif
 
+	BOOL LIBNETXMS_EXPORTABLE RegexpMatchA(const char *pszStr, const char *pszExpr, BOOL bMatchCase);
+	BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *pszStr, const WCHAR *pszExpr, BOOL bMatchCase);
+#ifdef UNICODE
+#define RegexpMatch RegexpMatchW
+#else
+#define RegexpMatch RegexpMatchA
+#endif
+
 	void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
    BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
-	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(const TCHAR *pszStr, const TCHAR *pszExpr, BOOL bMatchCase);
 	TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
 
 #ifdef __cplusplus

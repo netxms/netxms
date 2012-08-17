@@ -1200,14 +1200,29 @@ int LIBNETXMS_EXPORTABLE NumCharsA(const char *pszStr, char ch)
 // Match string against regexp
 //
 
-BOOL LIBNETXMS_EXPORTABLE RegexpMatch(const TCHAR *pszStr, const TCHAR *pszExpr, BOOL bMatchCase)
+BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *pszStr, const WCHAR *pszExpr, BOOL bMatchCase)
 {
    regex_t preg;
    BOOL bResult = FALSE;
 
-	if (_tregcomp(&preg, pszExpr, bMatchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
+	if (tre_regwcomp(&preg, pszExpr, bMatchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
 	{
-		if (_tregexec(&preg, pszStr, 0, NULL, 0) == 0) // MATCH
+		if (tre_regwexec(&preg, pszStr, 0, NULL, 0) == 0) // MATCH
+			bResult = TRUE;
+		regfree(&preg);
+	}
+
+   return bResult;
+}
+
+BOOL LIBNETXMS_EXPORTABLE RegexpMatchA(const char *pszStr, const char *pszExpr, BOOL bMatchCase)
+{
+   regex_t preg;
+   BOOL bResult = FALSE;
+
+	if (tre_regcomp(&preg, pszExpr, bMatchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
+	{
+		if (tre_regexec(&preg, pszStr, 0, NULL, 0) == 0) // MATCH
 			bResult = TRUE;
 		regfree(&preg);
 	}

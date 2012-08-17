@@ -55,6 +55,15 @@
 #define _tregnexec regnexec
 #endif
 
+#define tre_regwcomp    regwcomp
+#define tre_regwexec    regwexec
+#define tre_regwncomp   regwncomp
+#define tre_regwnexec   regwnexec
+#define tre_regcomp     regcomp
+#define tre_regexec     regexec
+#define tre_regncomp    regncomp
+#define tre_regnexec    regnexec
+
 #endif	/* USE_BUNDLED_LIBTRE */
 
 #endif	/* _netxms_regex_h */
