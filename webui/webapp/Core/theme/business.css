@@ -16,7 +16,7 @@
   color: #4a4a4a;
   background-color: white;
   background-image: none;
-  font: 12px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 12px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
 *:disabled {
@@ -28,7 +28,7 @@ Widget-ToolTip {
   background-color: #dae9f7;
   border: 1px solid #00589f;
   border-radius: 2px 2px 2px 2px;
-  font: 12px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 12px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   color: #4a4a4a;
   opacity: 1;
   animation: fadeIn 200ms linear, fadeOut 600ms ease-out;
@@ -53,7 +53,7 @@ Display {
   rwt-fontlist: 11px 'Segoe UI', Corbel, Calibri, Tahoma, 'Lucida Sans Unicode';
   
   background-image: url( theme/resources/display/browser_bg.png );
-  font: 12px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 12px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
 /* Default theme for all controls */
@@ -112,6 +112,22 @@ Button[PUSH], Button[TOGGLE], Button[BORDER] {
   cursor: pointer;
 }
 
+Button[ARROW], Button[ARROW][BORDER] {
+  border: 1px solid #A4A4A4;
+  border-radius: 3px;
+  padding: 4px;
+  background-image: gradient(
+    linear, left top, left bottom,
+    from( #ffffff ),
+    color-stop( 48%, #f0f0f0 ),
+    color-stop( 52%, #e0e0e0 ),
+    to( #ffffff )
+  );
+  animation: hoverOut 500ms ease-out;
+  cursor: pointer;
+}
+
+Button[ARROW]:default,
 Button[PUSH]:default,
 Button[TOGGLE]:default {
   background-color: white;
@@ -125,11 +141,11 @@ Button[TOGGLE]:default {
   border: 1px solid #A4A4A4;
 }
 
-Button[PUSH]:disabled, Button[TOGGLE]:disabled {
+Button[ARROW]:disabled, Button[PUSH]:disabled, Button[TOGGLE]:disabled {
   cursor: default;
 }
 
-Button[PUSH]:hover, Button[TOGGLE]:hover {
+Button[ARROW]:hover, Button[PUSH]:hover, Button[TOGGLE]:hover {
   background-image: gradient(
     linear, left top, left bottom,
     from( #ffffff ),
@@ -139,7 +155,7 @@ Button[PUSH]:hover, Button[TOGGLE]:hover {
   );
 }
 
-Button[PUSH]:pressed, Button[TOGGLE]:pressed {
+Button[ARROW]:pressed, Button[PUSH]:pressed, Button[TOGGLE]:pressed {
   animation: none;
   background-image: gradient(
     linear, left top, left bottom,
@@ -217,7 +233,23 @@ Button-RadioIcon:selected:hover {
   background-image: url( theme/resources/button/radio-selected-hover.png );
 }
 
-Button-FocusIndicator[PUSH], Button-FocusIndicator[TOGGLE] {
+Button-ArrowIcon[UP] {
+  background-image: url( theme/resources/button/arrow-up.png );
+}
+
+Button-ArrowIcon[DOWN] {
+  background-image: url( theme/resources/button/arrow-down.png );
+}
+
+Button-ArrowIcon[LEFT] {
+  background-image: url( theme/resources/button/arrow-left.png );
+}
+
+Button-ArrowIcon[RIGHT] {
+  background-image: url( theme/resources/button/arrow-right.png );
+}
+
+Button-FocusIndicator[ARROW], Button-FocusIndicator[PUSH], Button-FocusIndicator[TOGGLE] {
   background-color: transparent; 
   border: 1px dotted #b8b8b8;
   margin: 2px;
@@ -237,7 +269,7 @@ Button-FocusIndicator[CHECK], Button-FocusIndicator[RADIO] {
 
 Combo {
   border: 1px solid #c1c1c1;
-  font: 11px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   background-color: #fcfcfc;
   color: #464a4e;
   border-radius: 2px;
@@ -331,18 +363,20 @@ CTabFolder {
 }
 
 CTabItem {
-  font: 12px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 12px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   color: #4a4a4a;
   background-color: white;
   background-image: none;
-  padding: 2px 4px;
+  padding: 3px 6px 3px 5px;
   spacing: 4px;
   text-shadow: none;
 }
 
 CTabItem:selected {
-  color: white;
-  background-color: #00589f;
+  background-color: white;
+  border-top-color: #00589f;
+  border-bottom-color: #00589f;
+  background-image: none;
 }
 
 /* Do not gray out disabled CTabItems, this is SWT behavior */
@@ -374,7 +408,7 @@ Group-Frame {
 
 Group-Label {
   padding: 0px 3px 0px 4px;
-  font: 11px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   background-color: transparent;
   border: none;
   border-radius: 0;
@@ -630,7 +664,7 @@ Shell-Titlebar {
   padding: 2px 5px 2px;
   margin: 0px;
   height: 22px;
-  font: 12px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 12px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   border: none;
   border-radius: 1px 1px 0px 0px;
   text-shadow: none;
@@ -880,48 +914,36 @@ TableItem {
   background-image: none;
 }
 
-TableItem:hover {
+Table-RowOverlay {
+  background-color: transparent;
+  color: inherit;
+  background-image: none;
+}
+
+Table-RowOverlay:hover {
   background-color: #dae9f7;
 }
 
-TableItem:selected {
+Table-RowOverlay:selected {
   color: white;
   background-color: #00589f;
 }
 
-TableItem:selected:unfocused {
-  background-color: #959595;
-  color: #ffffff;
-}
-
-TableItem:linesvisible:even {
-  background-color: #f3f3f4;
-}
-
-TableItem:linesvisible:even:hover {
-  background-color: #dae9f7;
-}
-
-TableItem:linesvisible:even:selected {
-  background-color: #00589f;
-  color: white;
-}
-
-TableItem:linesvisible:even:selected:unfocused {
+Table-RowOverlay:selected:unfocused {
   background-color: #959595;
   color: #ffffff;
 }
 
 TableColumn {
   background-color: #f8f8ff;
-  padding: 1px 2px;
+  padding: 4px 2px;
   background-image: gradient(
     linear, left top, left bottom,
     from( #fbfcfd ),
     to( #ececec )
   );
   color: #666666;
-  font: 12px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 12px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   border-bottom:none;
   text-shadow: none;
 }
@@ -949,15 +971,11 @@ TableColumn-SortIndicator:down {
 
 Table-Cell {
   spacing: 3px;
-  padding: 4px 3px 3px 3px;
+  padding: 3px 3px 2px 3px;
 }
 
 Table-GridLine {
   color: #dedede;
-}
-
-Table-GridLine:horizontal {
-  color: transparent;
 }
 
 Table-Checkbox {
@@ -1016,6 +1034,12 @@ Text[BORDER] {
 
 Text[BORDER]:focused,
 TEXT[MULTI][BORDER]:focused {
+  box-shadow: none;
+  border: 1px solid #a4a4a4;
+}
+
+Text[BORDER]:read-only,
+TEXT[MULTI][BORDER]:read-only {
   box-shadow: none;
   border: 1px solid #a4a4a4;
 }
@@ -1128,48 +1152,36 @@ TreeItem {
   background-image: none;
 }
 
-TreeItem:hover {
+Tree-RowOverlay {
+  background-color: transparent;
+  color: inherit;
+  background-image: none;
+}
+
+Tree-RowOverlay:hover {
   background-color: #dae9f7;
 }
 
-TreeItem:selected {
+Tree-RowOverlay:selected {
   background-color: #00589f;
   color: #ffffff;
 }
 
-TreeItem:selected:unfocused {
-  background-color: #959595;
-  color: #ffffff;
-}
-
-TreeItem:linesvisible:even {
-  background-color: #f3f3f4;
-}
-
-TreeItem:linesvisible:even:hover {
-  background-color: #dae9f7;
-}
-
-TreeItem:linesvisible:even:selected {
-  background-color: #00589f;
-  color: white;
-}
-
-TreeItem:linesvisible:even:selected:unfocused {
+Tree-RowOverlay:selected:unfocused {
   background-color: #959595;
   color: #ffffff;
 }
 
 TreeColumn {
   background-color: #f8f8ff;
-  padding: 1px 2px;
+  padding: 4px 2px;
   background-image: gradient(
     linear, left top, left bottom,
     from( #fbfcfd ),
     to( #ececec )
   );
   color: #666666;
-  font: 12px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 12px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   border-bottom:none;
   text-shadow: none;
 }
@@ -1197,15 +1209,11 @@ TreeColumn-SortIndicator:down {
 
 Tree-Cell {
   spacing: 3px;
-  padding: 2px 3px 3px 3px;
+  padding: 2px 3px 2px 3px;
 }
 
 Tree-GridLine {
   color: #d0d0d0;
-}
-
-Tree-GridLine:horizontal {
-  color: transparent;
 }
 
 Tree-Checkbox {
@@ -1338,7 +1346,7 @@ DateTime {
   background-color: #fcfcfc;
   border: none;
   padding: 1px 2px;
-  font: 11px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   background-image: none;
   text-shadow: none;
 }
@@ -1395,7 +1403,7 @@ DateTime-Calendar-Navbar {
   border-radius: 0;
   background-color: #00569c;
   color: white;
-  font: bold 11px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: bold 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   text-shadow: none;
   background-image: none;
 }
@@ -1765,7 +1773,7 @@ ToolTip {
     from( #ffffff ),
     to( #e4e5f0 )
   );
-  font: 12px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 12px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   background-color: #fcfcfc;
   animation: fadeIn 200ms linear, fadeOut 600ms ease-out;
   box-shadow: 4px 4px 2px rgba( 0, 0, 0, 0.4 );
@@ -1785,13 +1793,13 @@ ToolTip-Image[ICON_WARNING] {
 
 ToolTip-Text {
   color: #003399;
-  font: bold 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: bold 14px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   text-shadow: none;
 }
 
 ToolTip-Message {
   color: #000000;
-  font: 12px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 12px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   text-shadow: none;
 }
 
@@ -1799,7 +1807,7 @@ ToolTip-Message {
 
 CCombo {
   border: none;
-  font: 11px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   background-color: #fcfcfc;
   color: #464a4e;
   border-radius: 0;
@@ -2187,7 +2195,7 @@ Button.partActive {
   background-image: none;
   border: none;
   color: #fcfcfc;
-  font: 11px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
 Button.partActive:pressed, Button.partActive:hover {
@@ -2203,7 +2211,7 @@ Button.partInactive {
   background-image: none;
   border: none;
   color: #666666;
-  font: 11px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
 Button.partInactive:pressed, Button.partInactive:hover {
@@ -2219,7 +2227,7 @@ Button.partInActiveActive {
   background-image: none;
   border: none;
   color: #fcfcfc;
-  font: 11px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
 Button.partInActiveActive:pressed, Button.partInActiveActive:hover {
@@ -2235,11 +2243,11 @@ Button.perspective {
   background-image: none;
   border: none;
   color: #005091;
-  font: 11px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
 Button.perspective:hover {
-  font: bold 11px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: bold 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   background-image: none;
 }
 
@@ -2256,7 +2264,7 @@ Button.perspectiveActive {
   background-color: transparent;
   background-image: none;
   border: none;
-  font: bold 11px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: bold 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
 Button.perspectiveActive:pressed, Button.perspectiveActive:hover {
@@ -2339,7 +2347,7 @@ Label.standaloneView {
   background-color: transparent;
   border: none;
   color: #666666;
-  font: 11px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
 /* Custom Variants */
@@ -2547,7 +2555,7 @@ ToolItem-DropDownIcon.viewToolbar {
 /* FileUpload */
 
 FileUpload {
-  font: 12px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 12px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   border: 1px solid #A4A4A4;
   border-radius: 3px;
   padding: 2px 5px;

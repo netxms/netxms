@@ -2499,6 +2499,10 @@ webui/webapp/Core/theme/business/viewMenu.png -text
 webui/webapp/Core/theme/business/viewPulldown.png -text
 webui/webapp/Core/theme/business/viewtoolbar_bg.png -text
 webui/webapp/Core/theme/resources/arrows/down.gif -text
+webui/webapp/Core/theme/resources/button/arrow-down.png -text
+webui/webapp/Core/theme/resources/button/arrow-left.png -text
+webui/webapp/Core/theme/resources/button/arrow-right.png -text
+webui/webapp/Core/theme/resources/button/arrow-up.png -text
 webui/webapp/Core/theme/resources/button/check-grayed-hover.png -text
 webui/webapp/Core/theme/resources/button/check-grayed.png -text
 webui/webapp/Core/theme/resources/button/check-selected-hover.png -text

@@ -54,7 +54,6 @@ import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
@@ -522,7 +521,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			@Override
 			protected void jobFinalize()
 			{
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
@@ -542,7 +541,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	@Override
 	public void onSnmpWalkData(final List<SnmpValue> data)
 	{
-		PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+		viewer.getControl().getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run()
 			{
