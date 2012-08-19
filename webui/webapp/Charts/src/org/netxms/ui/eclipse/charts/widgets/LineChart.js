@@ -91,9 +91,7 @@ qx.Class.define("org.netxms.ui.eclipse.charts.widgets.LineChart", {
 
         _applyBgColor : function() {
 			qx.ui.core.Widget.flushGlobalQueues();
-			console.debug('111');
 			this._bgColor = this.getBgColor();
-			console.debug('222');
         },
         
 		update : function() {
@@ -122,14 +120,14 @@ qx.Class.define("org.netxms.ui.eclipse.charts.widgets.LineChart", {
 					$("#_title_" + this._id).hide();
 				}
 
-				console.debug($("#" + this._id));
+				//console.debug($("#" + this._id));
 			
 				$("#_title_" + this._id).text(this._title);
 	    		$.plot($("#_chart_" + this._id), plotData, { xaxis: { mode: "time" } });
-				console.debug('All Done');
+				//console.debug('All Done');
 	    	}
 	    	catch(e) {
-	    		console.error(e);
+	    		//console.error(e);
 	    	}
 
         },

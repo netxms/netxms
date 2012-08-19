@@ -10,6 +10,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
@@ -18,6 +19,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -34,6 +36,7 @@ public class MapLinkGeneral extends PropertyPage
 	private Button radioColorCustom;
 	private ColorSelector color;
 	private ObjectSelector statusObject;
+	private Combo routingAlgorithm;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -136,6 +139,16 @@ public class MapLinkGeneral extends PropertyPage
 		gd.horizontalIndent = 20;
 		color.getButton().setLayoutData(gd);
 		
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		routingAlgorithm = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Routing algorithm", gd);
+		routingAlgorithm.add("Map Default");
+		routingAlgorithm.add("Direct");
+		routingAlgorithm.add("Manhattan");
+		routingAlgorithm.add("Bend points");
+		routingAlgorithm.select(object.getRoutingAlgorithm());
+		
 		return dialogArea;
 	}
 
@@ -164,6 +177,7 @@ public class MapLinkGeneral extends PropertyPage
 			object.setColor(-1);
 			object.setStatusObject(0);
 		}
+		object.setRoutingAlgorithm(routingAlgorithm.getSelectionIndex());
 		object.update();
 		return true;
 	}

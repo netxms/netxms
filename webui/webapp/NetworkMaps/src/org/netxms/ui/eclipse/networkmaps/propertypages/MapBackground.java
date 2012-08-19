@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.networkmaps.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -44,6 +45,7 @@ import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -64,6 +66,7 @@ public class MapBackground extends PropertyPage
 	private Scale zoomScale;
 	private Spinner zoomSpinner;
 	private Label zoomLabel;
+	private ColorSelector backgroundColor;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -221,6 +224,23 @@ public class MapBackground extends PropertyPage
 				widgetSelected(e);
 			}
 		});
+      
+      Composite colorArea = new Composite(dialogArea, SWT.NONE);
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.marginTop = WidgetHelper.OUTER_SPACING;
+      colorArea.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      colorArea.setLayoutData(gd);
+      Label label = new Label(colorArea, SWT.NONE);
+      label.setText("Background color:");
+      backgroundColor = new ColorSelector(colorArea);
+      backgroundColor.setColorValue(ColorConverter.rgbFromInt(object.getBackgroundColor()));
 
 		enableControls(radioTypeImage.getSelection(), radioTypeGeoMap.getSelection());
       return dialogArea;
@@ -251,11 +271,11 @@ public class MapBackground extends PropertyPage
 		
 		if (radioTypeNone.getSelection())
 		{
-			md.setMapBackground(NXCommon.EMPTY_GUID, new GeoLocation(false), 0);
+			md.setMapBackground(NXCommon.EMPTY_GUID, new GeoLocation(false), 0, ColorConverter.rgbToInt(backgroundColor.getColorValue()));
 		}
 		else if (radioTypeImage.getSelection())
 		{
-			md.setMapBackground(image.getImageGuid(), new GeoLocation(false), 0);
+			md.setMapBackground(image.getImageGuid(), new GeoLocation(false), 0, ColorConverter.rgbToInt(backgroundColor.getColorValue()));
 		}
 		else if (radioTypeGeoMap.getSelection())
 		{
@@ -269,7 +289,7 @@ public class MapBackground extends PropertyPage
 				MessageDialog.openError(getShell(), "Error", "Geolocation format error");
 				return false;
 			}
-			md.setMapBackground(NetworkMap.GEOMAP_BACKGROUND, location, zoomSpinner.getSelection());
+			md.setMapBackground(NetworkMap.GEOMAP_BACKGROUND, location, zoomSpinner.getSelection(), ColorConverter.rgbToInt(backgroundColor.getColorValue()));
 		}
 		
 		if (isApply)
