@@ -348,6 +348,7 @@ Combo-FocusIndicator {
 
 CoolBar {
   background-image: none;
+  background-color: #f0f0f0;
 }
 
 CoolItem-Handle {
@@ -551,8 +552,8 @@ Menu {
   opacity: 1;
   animation: none;
   color: #0059a5;
-  background-color: white;
-  border: 1px #0059a5;
+  background-color: #f0f0f0;
+  border: 1px #979797;
   border-radius: 2px;
   box-shadow: 2px 2px 2px rgba( 0, 0, 0, 0.5 );
 }
@@ -621,7 +622,7 @@ ProgressBar-Indicator:error {
 Shell {
   animation: none;
   border: 1px black;
-  background-color: white;
+  background-color: #f0f0f0;
   padding: 0px;
   background-image: none;
   opacity: 1;
@@ -1076,7 +1077,7 @@ ToolBar {
   color: black;
   padding: 0px;
   spacing: 0px;
-  background-color: #ffffff;
+  background-color: #f0f0f0;
   background-image: none;
   border: none;
   opacity: 1;
@@ -2516,7 +2517,7 @@ ToolItem-DropDownIcon.menuBar:hover {
 
 Menu.menuBar {
   color: #0059a5;
-  background-color: white;
+  background-color: red;
   border: 1px solid #cccccc;
   border-radius: 0px 0px 2px 2px;
 }

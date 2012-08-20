@@ -18,14 +18,4 @@
             class="org.netxms.ui.eclipse.charts.PreferenceInitializer">
       </initializer>
    </extension>
-   <extension
-   		id="org.netxms.ui.eclipse.charts.LineChartResources"
-         point="org.eclipse.rap.ui.resources">
-         <resource
-               class="org.netxms.ui.eclipse.charts.widgets.LineChartResource">
-         </resource>
-         <resource
-               class="org.netxms.ui.eclipse.charts.widgets.FlotAPIResource">
-         </resource>
-   </extension>
 </plugin>
