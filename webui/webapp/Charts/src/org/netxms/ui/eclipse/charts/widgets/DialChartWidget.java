@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DialChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
@@ -570,7 +571,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		}
 		else if (absValue >= 1000000000)
 		{
-			return new DecimalFormat("#.#").format(value / 1000000000) + "G";
+			return new DecimalFormat("#.#").format(value / 1000000000) + Messages.DialChartWidget_G; //$NON-NLS-1$
 		}
 		else if (absValue >= 10000000)
 		{
@@ -578,7 +579,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		}
 		else if (absValue >= 1000000)
 		{
-			return new DecimalFormat("#.#").format(value / 1000000) + "M";
+			return new DecimalFormat("#.#").format(value / 1000000) + Messages.DialChartWidget_M; //$NON-NLS-1$
 		}
 		else if (absValue >= 10000)
 		{
@@ -586,7 +587,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		}
 		else if (absValue >= 1000)
 		{
-			return new DecimalFormat("#.#").format(value / 1000) + "K";
+			return new DecimalFormat("#.#").format(value / 1000) + Messages.DialChartWidget_K; //$NON-NLS-1$
 		}
 		else if ((absValue >= 1) && (step >= 1))
 		{

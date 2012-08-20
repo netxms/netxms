@@ -142,6 +142,6 @@ public final class ChartColor
 	 */
 	public static ChartColor getDefaultColor(int index)
 	{
-		return new ChartColor(PreferenceConverter.getColor(Activator.getDefault().getPreferenceStore(), "Chart.Colors.Data." + index));
+		return new ChartColor(PreferenceConverter.getColor(Activator.getDefault().getPreferenceStore(), "Chart.Colors.Data." + index)); //$NON-NLS-1$
 	}
 }
