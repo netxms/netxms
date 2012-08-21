@@ -295,6 +295,9 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 					@Override
 					public void run()
 					{
+						if (isDisposed())
+							return;
+						
 						if (currentTileSet != null)
 							currentTileSet.dispose();
 						currentTileSet = tiles;

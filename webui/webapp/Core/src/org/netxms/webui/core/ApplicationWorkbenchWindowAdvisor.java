@@ -28,8 +28,12 @@ import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rwt.RWT;
+import org.eclipse.rwt.lifecycle.WidgetUtil;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CBanner;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
@@ -86,7 +90,20 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	public void postWindowCreate()
 	{
 		super.postWindowCreate();
-		getWindowConfigurer().getWindow().getShell().setMaximized(true);
+		final Shell shell = getWindowConfigurer().getWindow().getShell(); 
+		shell.setMaximized(true);
+		
+		for(Control ctrl : shell.getChildren())
+		{
+			ctrl.setData(WidgetUtil.CUSTOM_VARIANT, "gray");
+			if (ctrl instanceof CBanner)
+			{
+				for(Control cc : ((CBanner)ctrl).getChildren())
+					cc.setData(WidgetUtil.CUSTOM_VARIANT, "gray");
+			}
+		}
+		
+		shell.getMenuBar().setData(WidgetUtil.CUSTOM_VARIANT, "menuBar");
 	}
 
 	/**

@@ -72,7 +72,7 @@ Display {
 Composite {
   padding: 0px;
   opacity: 1;
-  background-color: #ffffff;
+  background-color: white;
   background-image: none;
   border: none;
   box-shadow: none;
@@ -81,6 +81,7 @@ Composite {
 Composite[BORDER] {
   background-color: white;
   background-image: none;
+  border: 1px solid #979797;
 }
 
 /* Button default theme */
@@ -352,6 +353,7 @@ CoolBar {
 }
 
 CoolItem-Handle {
+  background-color: #f0f0f0;
   border: 1px outset;
   width: 4px;
 }
@@ -359,6 +361,7 @@ CoolItem-Handle {
 /* CTabFolder default theme */
 
 CTabFolder {
+  background-color: #f0f0f0;
   border-color: #A4A4A4;
   border-radius: 2px;
 }
@@ -1083,6 +1086,10 @@ ToolBar {
   opacity: 1;
 }
 
+ToolBar.menuBar {
+  box-shadow: 0px 1px 1px 0px #a4a4a4;
+}
+
 ToolBar[BORDER] {
   border: 1px solid #a4a4a4;
   border-radius: 2px;
@@ -1591,7 +1598,7 @@ ExpandItem-Button:expanded:hover {
 Sash {
   border: none;
   background-image: none;
-  background-color: transparent;
+  background-color: #f0f0f0;
 }
 
 Sash[BORDER] {
@@ -2074,248 +2081,6 @@ ScrollBar-Thumb[HORIZONTAL]:pressed, ScrollBar-UpButton[HORIZONTAL]:pressed, Scr
   );
 }
 
-/******************************************************************************
- * Custom variants for workbench styling
- ******************************************************************************/
-
-/* Button */
-
-Button.clearButton {
-  color: #4a4a4a;
-  background-color: transparent;
-  background-image: none;
-  border: none;
-  padding: 2px;
-}
-
-Button.clearButton:pressed, Button.clearButton:hover {
-  background-image: none;
-}
-
-Button-FocusIndicator.clearButton {
-  border: none;
-}
-
-Button.configMenuButton {
-  color: #4a4a4a;
-  background-color: transparent;
-  background-image: none;
-  border: none;
-  padding: 1px;
-}
-
-Button.configMenuButton:hover, Button.configMenuButton:selected, Button.configMenuButton:pressed {
-  background-image: none;
-}
-
-Button-FocusIndicator.configMenuButton{
-  border: none;
-}
-
-Button.viewClose {
-  color: #4a4a4a;
-  background-color: transparent;
-  background-image: url( theme/business/stack_tab_active_close_active.png );
-  border: none;
-  padding: 2px;
-}
-
-Button.viewClose:pressed {
-  background-image: url( theme/business/stack_tab_active_close_active.png );
-}
-
-Button.viewClose:hover {
-  background-image: url( theme/business/stack_tab_active_close_active_hover.png );
-}
-
-Button-FocusIndicator.viewClose {
-  border: none;
-}
-
-Button.viewCloseInactive {
-  color: #4a4a4a;
-  background-color: transparent;
-  background-image: url( theme/business/stack_tab_inactive_close_active.png );
-  border: none;
-}
-
-Button.viewCloseInactive:pressed {
-  background-image: url( theme/business/stack_tab_inactive_close_active.png );
-}
-
-Button.viewCloseInactive:hover {
-  background-image: url( theme/business/stack_tab_inactive_close_active_hover.png );
-}
-
-Button-FocusIndicator.viewCloseInactive {
-  border: none;
-}
-
-Button.toolbarOverflowInactive {
-  color: #4a4a4a;
-  background-color: transparent;
-  background-image: url( theme/business/toolbar_overflow.png );
-  border: none;
-  padding: 2px;
-}
-
-Button.toolbarOverflowInactive:pressed {
-  background-image: url( theme/business/toolbar_overflow.png );
-}
-
-Button.toolbarOverflowInactive:hover {
-  background-image: url( theme/business/toolbar_overflow_hover.png );
-}
-
-Button-FocusIndicator.toolbarOverflowInactive {
-  border: none;
-}
-
-Button.toolbarOverflowActive {
-  color: #4a4a4a;
-  background-color: transparent;
-  background-image: url( theme/business/toolbar_overflow_active.png );
-  border: none;
-  padding: 2px;
-}
-
-Button.toolbarOverflowActive:pressed {
-  background-image: url( theme/business/toolbar_overflow_active.png );
-}
-
-Button.toolbarOverflowActive:hover {
-  background-image: url( theme/business/toolbar_overflow_hover_active.png );
-}
-
-Button-FocusIndicator.toolbarOverflowActive {
-  border: none;
-}
-
-Button.partActive {
-  background-color: transparent;
-  background-image: none;
-  border: none;
-  color: #fcfcfc;
-  font: 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-}
-
-Button.partActive:pressed, Button.partActive:hover {
-  background-image: none;
-}
-
-Button-FocusIndicator.partActive {
-  border: none;
-}
-
-Button.partInactive {
-  background-color: transparent;
-  background-image: none;
-  border: none;
-  color: #666666;
-  font: 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-}
-
-Button.partInactive:pressed, Button.partInactive:hover {
-  background-image: none;
-}
-
-Button-FocusIndicator.partInactive {
-  border: none;
-}
-
-Button.partInActiveActive {
-  background-color: transparent;
-  background-image: none;
-  border: none;
-  color: #fcfcfc;
-  font: 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-}
-
-Button.partInActiveActive:pressed, Button.partInActiveActive:hover {
-  background-image: none;
-}
-
-Button-FocusIndicator.partInActiveActive {
-  border: none;
-}
-
-Button.perspective {
-  background-color: transparent;
-  background-image: none;
-  border: none;
-  color: #005091;
-  font: 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-}
-
-Button.perspective:hover {
-  font: bold 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-  background-image: none;
-}
-
-Button.perspective:pressed {
-  background-image: none;
-}
-
-Button-FocusIndicator.perspective {
-  border: none;
-}
-
-Button.perspectiveActive {
-  color: #005091;
-  background-color: transparent;
-  background-image: none;
-  border: none;
-  font: bold 11px "Segoe UI", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-}
-
-Button.perspectiveActive:pressed, Button.perspectiveActive:hover {
-  background-image: none;
-}
-
-Button-FocusIndicator.perspectiveActive {
-  border: none;
-}
-
-Button.tabOverflowActive {
-  color: #4a4a4a;
-  background-color: transparent;
-  border: none;
-  padding: 2px;
-  background-image: url( theme/business/stack_tab_overflow_active.png );
-}
-
-Button.tabOverflowActive:pressed {
-  background-image: url( theme/business/stack_tab_overflow_active.png );
-}
-
-Button.tabOverflowActive:hover {
-  background-image: url( theme/business/stack_tab_overflow_active_hover.png );
-}
-
-Button-FocusIndicator.tabOverflowActive {
-  border: none;
-}
-
-Button.tabOverflowInactive {
-  color: #4a4a4a;
-  background-color: transparent;
-  border: none;
-  padding: 2px;
-  background-image: url( theme/business/stack_tab_overflow_inactive.png );
-}
-
-Button.tabOverflowInactive:pressed {
-  background-image: url( theme/business/stack_tab_overflow_inactive.png );
-}
-
-Button.tabOverflowInactive:hover {
-  background-image: url( theme/business/stack_tab_overflow_inactive_hover.png );
-}
-
-Button-FocusIndicator.tabOverflowInactive {
-  border: none;
-}
-
 /* Shell */
 
 .shellGray {
@@ -2353,205 +2118,10 @@ Label.standaloneView {
 
 /* Custom Variants */
 
-.compGray {
-  background-color: #ebebeb;
+Composite.gray {
+  background-color: #f0f0f0;
 }
 
-.compTrans {
-  background-color: transparent;
-}
-
-.partBorder {
-  border: #eb0000;
-}
-
-/* Composite */
-
-Composite.tabActive {
-  border: 1px solid #00589f;
-  border-radius: 0px 7px 0px 0px;
-}
-
-Composite.tabInactive {
-  border: 1px solid #949494;
-  border-radius: 0px 7px 0px 0px;
-}
-
-Composite.inactiveButton {
-  background-color: transparent;
-  border: none;
-}
-
-/* Header Toolbar */
-
-ToolBar.header-toolbar {
-  padding: 0px 0px 0px 5px;
-  color: white;
-  spacing: 25px;
-}
-
-ToolItem.header-toolbar {
-  color: white;
-  border: none;
-  padding: 3px 5px 3px 7px;
-  spacing: 10px;
-}
-
-ToolItem.header-toolbar:hover {
-  background-color: transparent;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #196eb3 ),
-    to( #00447a )
-  );
-  color: white;
-  border: 1px solid #004e8d;
-  padding: 3px 5px 3px 7px;
-}
-
-ToolItem-DropDownIcon.header-toolbar {
-  background-image: url( theme/business/toolbar_arrow.png );
-  border: none;
-}
-
-ToolItem-DropDownIcon.header-toolbar:hover {
-  background-image: url( theme/business/toolbar_arrow.png );
-  border: 1px solid #004e8d;
-}
-
-Menu.header-toolbar {
-  color: #3b8fc2;
-  background-color: white;
-  border: 1px solid #005499;
-  border-radius: 0px 0px 2px 2px;
-}
-
-MenuItem.header-toolbar {
-  color: #004277;
-}
-
-MenuItem.header-toolbar:hover {
-  color: #0369bc;
-  background-color: transparent;
-}
-
-
-/* Header overflow toolbar */
-
-ToolItem.header-overflow {
-  color: #004277;
-  border: none;
-  padding: 0px 25px 0px 0px;
-}
-
-ToolItem.header-overflow:hover {
-  background-color: transparent;
-  color: #0369bc;
-  border: none;
-}
-
-ToolItem-DropDownIcon.header-overflow {
-  background-image: url( theme/business/toolbar_overflow_arrow.png );
-}
-
-ToolItem-DropDownIcon.header-overflow:hover {
-  background-image: url( theme/business/toolbar_overflow_arrow.png );
-  border: none;
-}
-
-Menu.header-overflow {
-  color: #656565;
-  background-color: white;
-  border: 1px #005499;
-  border-radius: 2px;
-}
-
-MenuItem.header-overflow {
-  color: #004277;
-}
-
-MenuItem.header-overflow:hover {
-  color: #0369bc;
-  background-color: transparent;
-}
-
-/* MenuBar */
-
-ToolBar.menuBar {
-  background-color: transparent;
-  padding: 0px;
-  color: #0059a5;
-  spacing: 25px;
-}
-
-ToolItem.menuBar {
-  background-color: transparent;
-  background-image: none;
-  border: none;
-  color: #0059a5;
-  padding: 0px 10px 0px 10px;
-  spacing: 5px;
-}
-
-ToolItem.menuBar:hover {
-  background-color: transparent;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #ffffff ),
-    to( #f1f1f1 )
-  );
-  border: 1px solid #cccccc;
-  border-radius: 2px 2px 0px 0px;
-  color: #0059a5;
-  padding: 0px 10px 0px 10px;
-}
-
-ToolItem-DropDownIcon.menuBar {
-  background-image: url( theme/business/menu_arrow.png );
-}
-
-ToolItem-DropDownIcon.menuBar:hover {
-  background-image: url( theme/business/menu_arrow.png );
-  border: 1px solid #cccccc;
-}
-
-Menu.menuBar {
-  color: #0059a5;
-  background-color: red;
-  border: 1px solid #cccccc;
-  border-radius: 0px 0px 2px 2px;
-}
-
-MenuItem.menuBar {
-  color: #004277;
-}
-
-MenuItem.menuBar:hover {
-  color: #0369bc;
-  background-color: transparent;
-}
-
-/* View ToolBar */
-
-ToolBar.viewToolbar {
-  background-color: transparent;
-  padding: 1px 2px;
-  spacing: 2px;
-}
-
-ToolItem.viewToolbar {
-  border: none;
-}
-
-ToolItem:selected.viewToolbar {
-  padding: 0px;
-  border: 1px solid #0059a5;
-}
-
-ToolItem-DropDownIcon.viewToolbar {
-  background-image: url( theme/business/viewMenu.png );
-  border: none;
-}
 
 /* FileUpload */
 
