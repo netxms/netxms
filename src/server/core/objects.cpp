@@ -542,6 +542,33 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD zoneId, DWORD ipAddr)
 
 
 //
+// Find interface by IP address
+//
+
+Interface NXCORE_EXPORTABLE *FindInterfaceByIP(DWORD zoneId, DWORD ipAddr)
+{
+   if (ipAddr == 0)
+      return NULL;
+
+	Zone *zone = IsZoningEnabled() ? (Zone *)g_idxZoneByGUID.get(zoneId) : NULL;
+
+	Interface *iface = NULL;
+	if (IsZoningEnabled())
+	{
+		if (zone != NULL)
+		{
+			iface = zone->getInterfaceByAddr(ipAddr);
+		}
+	}
+	else
+	{
+		iface = (Interface *)g_idxInterfaceByAddr.get(ipAddr);
+	}
+	return iface;
+}
+
+
+//
 // Find node by MAC address
 //
 

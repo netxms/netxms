@@ -161,6 +161,7 @@ DEFINE_THREAD_STARTER(getServerLogQueryData)
 DEFINE_THREAD_STARTER(executeAction)
 DEFINE_THREAD_STARTER(findNodeConnection)
 DEFINE_THREAD_STARTER(findMacAddress)
+DEFINE_THREAD_STARTER(findIpAddress)
 DEFINE_THREAD_STARTER(processConsoleCommand)
 DEFINE_THREAD_STARTER(sendMib)
 DEFINE_THREAD_STARTER(getReportResults)
@@ -1228,6 +1229,9 @@ void ClientSession::processingThread()
 				break;
 			case CMD_FIND_MAC_LOCATION:
 				CALL_IN_NEW_THREAD(findMacAddress, pMsg);
+				break;
+			case CMD_FIND_IP_LOCATION:
+				CALL_IN_NEW_THREAD(findIpAddress, pMsg);
 				break;
 			case CMD_GET_IMAGE:
 				sendLibraryImage(pMsg);
@@ -10807,11 +10811,9 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Find connection port for given MAC address
-//
-
+/**
+ * Find connection port for given MAC address
+ */
 void ClientSession::findMacAddress(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -10848,6 +10850,7 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 		msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
 		msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
 		msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+		msg.SetVariable(VID_IP_ADDRESS, (localIf != NULL) ? localIf->IpAddr() : (DWORD)0);
 		msg.SetVariable(VID_EXACT_MATCH, exactMatch ? (WORD)1 : (WORD)0);
 		DebugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
 	}
@@ -10855,11 +10858,82 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
+/**
+ * Find connection port for given IP address
+ */
+void ClientSession::findIpAddress(CSCPMessage *request)
+{
+   CSCPMessage msg;
+	TCHAR ipAddrText[16];
 
-//
-// Send image from library to client
-//
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetVariable(VID_RCC, RCC_SUCCESS);
 
+	BYTE macAddr[6];
+	bool found = false;
+
+	DWORD zoneId = request->GetVariableLong(VID_ZONE_ID);
+	DWORD ipAddr = request->GetVariableLong(VID_IP_ADDRESS);
+	Interface *iface = FindInterfaceByIP(zoneId, ipAddr);
+	if ((iface != NULL) && memcmp(iface->getMacAddr(), "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH))
+	{
+		memcpy(macAddr, iface->getMacAddr(), MAC_ADDR_LENGTH);
+		found = true;
+		DebugPrintf(5, _T("findIpAddress(%s): endpoint iface=%s"), IpToStr(ipAddr, ipAddrText), iface->Name());
+	}
+	else
+	{
+		// no interface object with this IP or MAC address not known, try to find it in ARP caches
+		DebugPrintf(5, _T("findIpAddress(%s): interface not found, looking in ARP cache"), IpToStr(ipAddr, ipAddrText));
+		Subnet *subnet = FindSubnetByIP(zoneId, ipAddr);
+		if (subnet != NULL)
+		{
+			found = subnet->findMacAddress(ipAddr, macAddr);
+		}
+	}
+
+	// Find switch port
+	if (found)
+	{
+		bool exactMatch;
+		iface = FindInterfaceConnectionPoint(macAddr, &exactMatch);
+
+		DebugPrintf(5, _T("findIpAddress: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
+		if (iface != NULL)
+		{
+			DWORD localNodeId, localIfId;
+
+			Interface *localIf = FindInterfaceByMAC(macAddr);
+			if (localIf != NULL)
+			{
+				localIfId = localIf->Id();
+				localNodeId = localIf->getParentNode()->Id();
+			}
+			else
+			{
+				localIfId = 0;
+				localNodeId = 0;
+			}
+
+			msg.SetVariable(VID_OBJECT_ID, iface->getParentNode()->Id());
+			msg.SetVariable(VID_INTERFACE_ID, iface->Id());
+			msg.SetVariable(VID_IF_INDEX, iface->getIfIndex());
+			msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
+			msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
+			msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+			msg.SetVariable(VID_IP_ADDRESS, ipAddr);
+			msg.SetVariable(VID_EXACT_MATCH, exactMatch ? (WORD)1 : (WORD)0);
+			DebugPrintf(5, _T("findIpAddress(%s): nodeId=%d ifId=%d ifIndex=%d"), IpToStr(ipAddr, ipAddrText), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
+		}
+	}
+
+	sendMessage(&msg);
+}
+
+/**
+ * Send image from library to client
+ */
 void ClientSession::sendLibraryImage(CSCPMessage *request)
 {
 	CSCPMessage msg;

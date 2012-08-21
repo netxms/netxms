@@ -131,13 +131,13 @@ void InstallFlowCollectorService(const TCHAR *pszExecName)
       DWORD code = GetLastError();
 
       if (code == ERROR_SERVICE_EXISTS)
-         _tprintf("ERROR: Service named '" NXFLOWD_SERVICE_NAME "' already exist\n");
+         _tprintf(_T("ERROR: Service named '") NXFLOWD_SERVICE_NAME _T("' already exist\n"));
       else
-         _tprintf("ERROR: Cannot create service (%s)\n", GetSystemErrorText(code, szErrorText, 256));
+         _tprintf(_T("ERROR: Cannot create service (%s)\n"), GetSystemErrorText(code, szErrorText, 256));
    }
    else
    {
-      _tprintf("NetXMS NetFlow/IPFIX Collector service created successfully\n");
+      _tprintf(_T("NetXMS NetFlow/IPFIX Collector service created successfully\n"));
       CloseServiceHandle(service);
    }
 
@@ -159,7 +159,7 @@ void RemoveFlowCollectorService()
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
-      _tprintf("ERROR: Cannot connect to Service Manager (%s)\n",
+      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"),
              GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
@@ -167,15 +167,15 @@ void RemoveFlowCollectorService()
    service = OpenService(mgr, NXFLOWD_SERVICE_NAME, DELETE);
    if (service == NULL)
    {
-      _tprintf("ERROR: Cannot open service named '" NXFLOWD_SERVICE_NAME "' (%s)\n",
+      _tprintf(_T("ERROR: Cannot open service named '") NXFLOWD_SERVICE_NAME _T("' (%s)\n"),
              GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else
    {
       if (DeleteService(service))
-         _tprintf("NetXMS NetFlow/IPFIX Collector service deleted successfully\n");
+         _tprintf(_T("NetXMS NetFlow/IPFIX Collector service deleted successfully\n"));
       else
-         _tprintf("ERROR: Cannot remove service named '" NXFLOWD_SERVICE_NAME "' (%s)\n",
+         _tprintf(_T("ERROR: Cannot remove service named '") NXFLOWD_SERVICE_NAME _T("' (%s)\n"),
                 GetSystemErrorText(GetLastError(), szErrorText, 256));
 
       CloseServiceHandle(service);
@@ -199,7 +199,7 @@ void StartFlowCollectorService()
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
-      _tprintf("ERROR: Cannot connect to Service Manager (%s)\n",
+      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"),
              GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
@@ -207,15 +207,15 @@ void StartFlowCollectorService()
    service = OpenService(mgr, NXFLOWD_SERVICE_NAME, SERVICE_START);
    if (service == NULL)
    {
-      _tprintf("ERROR: Cannot open service named '" NXFLOWD_SERVICE_NAME "' (%s)\n",
+      _tprintf(_T("ERROR: Cannot open service named '") NXFLOWD_SERVICE_NAME _T("' (%s)\n"),
              GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else
    {
       if (StartService(service, 0, NULL))
-         _tprintf("NetXMS NetFlow/IPFIX Collector service started successfully\n");
+         _tprintf(_T("NetXMS NetFlow/IPFIX Collector service started successfully\n"));
       else
-         _tprintf("ERROR: Cannot start service named '" NXFLOWD_SERVICE_NAME "' (%s)\n",
+         _tprintf(_T("ERROR: Cannot start service named '") NXFLOWD_SERVICE_NAME _T("' (%s)\n"),
                 GetSystemErrorText(GetLastError(), szErrorText, 256));
 
       CloseServiceHandle(service);
@@ -237,7 +237,7 @@ void StopFlowCollectorService()
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
-      _tprintf("ERROR: Cannot connect to Service Manager (%s)\n", 
+      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"), 
              GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
@@ -245,7 +245,7 @@ void StopFlowCollectorService()
    service = OpenService(mgr, NXFLOWD_SERVICE_NAME, SERVICE_STOP);
    if (service == NULL)
    {
-      _tprintf("ERROR: Cannot open service named '" NXFLOWD_SERVICE_NAME "' (%s)\n",
+      _tprintf(_T("ERROR: Cannot open service named '") NXFLOWD_SERVICE_NAME _T("' (%s)\n"),
              GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else
@@ -255,7 +255,7 @@ void StopFlowCollectorService()
       if (ControlService(service, SERVICE_CONTROL_STOP, &status))
          _tprintf(_T("NetXMS NetFlow/IPFIX Collector service stopped successfully\n"));
       else
-         _tprintf(_T("ERROR: Cannot stop service named '"_ NXFLOWD_SERVICE_NAME _T("' (%s)\n"),
+         _tprintf(_T("ERROR: Cannot stop service named '") NXFLOWD_SERVICE_NAME _T("' (%s)\n"),
                 GetSystemErrorText(GetLastError(), szErrorText, 256));
 
       CloseServiceHandle(service);

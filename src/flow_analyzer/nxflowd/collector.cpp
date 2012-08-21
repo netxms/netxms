@@ -76,21 +76,21 @@ static INT64 Int64FromData(void *data, int len)
 static struct
 {
 	int ipfixField;
-	const char *dbField;
+	const TCHAR *dbField;
 } s_fieldMapping[] =
 {
-	{ IPFIX_FT_EXPORTERIPV4ADDRESS, "exporter_ip_addr" },
-	{ IPFIX_FT_SOURCEMACADDRESS, "source_mac_addr" },
-	{ IPFIX_FT_DESTINATIONMACADDRESS, "dest_mac_addr" },
-	{ IPFIX_FT_SOURCEIPV4ADDRESS, "source_ip_addr" },
-	{ IPFIX_FT_DESTINATIONIPV4ADDRESS, "dest_ip_addr" },
-	{ IPFIX_FT_PROTOCOLIDENTIFIER, "ip_proto" },
-	{ IPFIX_FT_SOURCETRANSPORTPORT, "source_ip_port" },
-	{ IPFIX_FT_DESTINATIONTRANSPORTPORT, "dest_ip_port" },
-	{ IPFIX_FT_OCTETDELTACOUNT, "octet_count" },
-	{ IPFIX_FT_PACKETDELTACOUNT, "packet_count" },
-	{ IPFIX_FT_INGRESSINTERFACE, "ingress_interface" },
-	{ IPFIX_FT_EGRESSINTERFACE, "egress_interface" },
+	{ IPFIX_FT_EXPORTERIPV4ADDRESS, _T("exporter_ip_addr") },
+	{ IPFIX_FT_SOURCEMACADDRESS, _T("source_mac_addr") },
+	{ IPFIX_FT_DESTINATIONMACADDRESS, _T("dest_mac_addr") },
+	{ IPFIX_FT_SOURCEIPV4ADDRESS, _T("source_ip_addr") },
+	{ IPFIX_FT_DESTINATIONIPV4ADDRESS, _T("dest_ip_addr") },
+	{ IPFIX_FT_PROTOCOLIDENTIFIER, _T("ip_proto") },
+	{ IPFIX_FT_SOURCETRANSPORTPORT, _T("source_ip_port") },
+	{ IPFIX_FT_DESTINATIONTRANSPORTPORT, _T("dest_ip_port") },
+	{ IPFIX_FT_OCTETDELTACOUNT, _T("octet_count") },
+	{ IPFIX_FT_PACKETDELTACOUNT, _T("packet_count") },
+	{ IPFIX_FT_INGRESSINTERFACE, _T("ingress_interface") },
+	{ IPFIX_FT_EGRESSINTERFACE, _T("egress_interface") },
 	{ 0, NULL }
 };
 
@@ -150,10 +150,10 @@ static int H_DataRecord(ipfixs_node_t *node, ipfixt_node_t *trec, ipfix_datareco
 				{
 					if (ftype == s_fieldMapping[j].ipfixField)
 					{
-						fields += ",";
+						fields += _T(",");
 						fields += s_fieldMapping[j].dbField;
 						trec->ipfixt->fields[i].elem->snprint(buffer, sizeof(buffer), data->addrs[i], data->lens[i]);
-						values.addFormattedString(",'%s'", buffer);
+						values.addFormattedString(_T(",'%hs'"), buffer);
 						break;
 					}
 				}
@@ -163,11 +163,11 @@ static int H_DataRecord(ipfixs_node_t *node, ipfixt_node_t *trec, ipfix_datareco
 
 	if (!fields.isEmpty() && (flowStartTime != 0) && (flowEndTime != 0))
 	{
-		String query = "INSERT INTO flows (flow_id,start_time,end_time";
+		String query = _T("INSERT INTO flows (flow_id,start_time,end_time");
 		query += (const TCHAR *)fields;
-		query.addFormattedString(") VALUES (" INT64_FMT "," INT64_FMT "," INT64_FMT, s_flowId++, flowStartTime, flowEndTime);
+		query.addFormattedString(_T(") VALUES (") INT64_FMT _T(",") INT64_FMT _T(",") INT64_FMT, s_flowId++, flowStartTime, flowEndTime);
 		query += (const TCHAR *)values;
-		query += ")";
+		query += _T(")");
 
 		DBQuery(g_dbConnection, query);
 	}

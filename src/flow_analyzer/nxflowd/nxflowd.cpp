@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
 {
 	int ch, action = 0;
 #ifdef _WIN32
-	char moduleName[MAX_PATH];
+	TCHAR moduleName[MAX_PATH];
 #endif
 
    InitThreadLibrary();
@@ -300,7 +300,12 @@ int main(int argc, char *argv[])
 				g_debugLevel = strtol(optarg, NULL, 0);
 				break;
 			case 'c':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_configFile, MAX_PATH);
+				g_configFile[MAX_PATH - 1] = 0;
+#else
 				nx_strncpy(g_configFile, optarg, MAX_PATH);
+#endif
 				break;
 #ifdef _WIN32
 			case 'I':

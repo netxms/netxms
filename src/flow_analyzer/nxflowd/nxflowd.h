@@ -56,11 +56,11 @@ void DbgPrintf2(int level, const TCHAR *format, va_list args);
 
 #ifdef _WIN32
 void InitService();
-void InstallFlowCollectorService(const char *pszExecName);
+void InstallFlowCollectorService(const TCHAR *pszExecName);
 void RemoveFlowCollectorService();
 void StartFlowCollectorService();
 void StopFlowCollectorService();
-void InstallEventSource(const char *pszPath);
+void InstallEventSource(const TCHAR *pszPath);
 void RemoveEventSource();
 
 #endif

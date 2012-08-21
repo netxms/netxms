@@ -463,11 +463,9 @@ BOOL Node::DeleteFromDB()
    return bSuccess;
 }
 
-
-//
-// Get ARP cache from node
-//
-
+/**
+ * Get ARP cache from node
+ */
 ARP_CACHE *Node::getArpCache()
 {
    ARP_CACHE *pArpCache = NULL;
@@ -498,11 +496,9 @@ ARP_CACHE *Node::getArpCache()
    return pArpCache;
 }
 
-
-//
-// Get list of interfaces from node
-//
-
+/**
+ * Get list of interfaces from node
+ */
 InterfaceList *Node::getInterfaceList()
 {
    InterfaceList *pIfList = NULL;

@@ -472,6 +472,7 @@ typedef struct
 #define CMD_GET_TABLE_DCI_DATA         0x0105
 #define CMD_GET_THRESHOLD_SUMMARY      0x0106
 #define CMD_RESOLVE_ALARM              0x0107
+#define CMD_FIND_IP_LOCATION           0x0108
 
 
 //

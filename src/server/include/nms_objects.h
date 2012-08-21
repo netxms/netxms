@@ -1146,6 +1146,8 @@ public:
 	bool isSyntheticMask() { return m_bSyntheticMask; }
 
 	void setCorrectMask(DWORD dwAddr, DWORD dwMask);
+
+	bool findMacAddress(DWORD ipAddr, BYTE *macAddr);
 };
 
 
@@ -1877,6 +1879,7 @@ Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD zoneId, DWORD ipAddr);
 Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId);
+Interface NXCORE_EXPORTABLE *FindInterfaceByIP(DWORD zoneId, DWORD ipAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description);
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD zoneId, DWORD ipAddr);

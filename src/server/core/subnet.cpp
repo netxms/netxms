@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,17 +16,14 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: subnet.cpp
-**
+** File: subnet.cpp
 **/
 
 #include "nxcore.h"
 
-
-//
-// Subnet class default constructor
-//
-
+/**
+ * Subnet class default constructor
+ */
 Subnet::Subnet()
        :NetObj()
 {
@@ -35,11 +32,9 @@ Subnet::Subnet()
 	m_bSyntheticMask = false;
 }
 
-
-//
-// Subnet class constructor
-//
-
+/**
+ * Subnet class constructor
+ */
 Subnet::Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone, bool bSyntheticMask)
 {
    TCHAR szBuffer[32];
@@ -51,20 +46,16 @@ Subnet::Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone, bool bSyntheticMask)
 	m_bSyntheticMask = bSyntheticMask;
 }
 
-
-//
-// Subnet class destructor
-//
-
+/**
+ * Subnet class destructor
+ */
 Subnet::~Subnet()
 {
 }
 
-
-//
-// Create object from database data
-//
-
+/**
+ * Create object from database data
+ */
 BOOL Subnet::CreateFromDB(DWORD dwId)
 {
    TCHAR szQuery[256];
@@ -99,11 +90,9 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
    return TRUE;
 }
 
-
-//
-// Save subnet object to database
-//
-
+/**
+ * Save subnet object to database
+ */
 BOOL Subnet::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024], szIpAddr[16], szNetMask[16];
@@ -160,11 +149,9 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
    return TRUE;
 }
 
-
-//
-// Delete subnet object from database
-//
-
+/**
+ * Delete subnet object from database
+ */
 BOOL Subnet::DeleteFromDB()
 {
    TCHAR szQuery[256];
@@ -181,11 +168,9 @@ BOOL Subnet::DeleteFromDB()
    return bSuccess;
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create CSCP message with object's data
+ */
 void Subnet::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
@@ -194,11 +179,9 @@ void Subnet::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
 }
 
-
-//
-// Set correct netmask for subnet
-//
-
+/**
+ * Set correct netmask for subnet
+ */
 void Subnet::setCorrectMask(DWORD dwAddr, DWORD dwMask)
 {
 	TCHAR szName[MAX_OBJECT_NAME], szBuffer[32];
@@ -219,4 +202,46 @@ void Subnet::setCorrectMask(DWORD dwAddr, DWORD dwMask)
 
 	Modify();
 	UnlockData();
+}
+
+/**
+ * Find MAC address for given IP address. May take a long time because it involves reading ARP caches
+ * from nodes in this subnet.
+ *
+ * @param ipAddr IP address (host byte order)
+ * @param macAddr buffer for found MAC address
+ * @return true if MAC address found
+ */
+bool Subnet::findMacAddress(DWORD ipAddr, BYTE *macAddr)
+{
+	bool success = false;
+
+	LockChildList(FALSE);
+
+   for(DWORD i = 0; (i < m_dwChildCount) && !success; i++)
+   {
+      if (m_pChildList[i]->Type() != OBJECT_NODE)
+			continue;
+
+		Node *node = (Node *)m_pChildList[i];
+		ARP_CACHE *arpCache = node->getArpCache();
+		if (arpCache == NULL)
+			continue;
+
+		for(DWORD j = 0; j < arpCache->dwNumEntries; j++)
+		{
+			if (arpCache->pEntries[j].dwIpAddr == ipAddr)
+			{
+				memcpy(macAddr, arpCache->pEntries[j].bMacAddr, MAC_ADDR_LENGTH);
+				success = true;
+				break;
+			}
+		}
+
+		DestroyArpCache(arpCache);
+   }
+
+	UnlockChildList();
+
+	return success;
 }

@@ -396,6 +396,7 @@ private:
 	DECLARE_THREAD_STARTER(executeAction)
 	DECLARE_THREAD_STARTER(findNodeConnection)
 	DECLARE_THREAD_STARTER(findMacAddress)
+	DECLARE_THREAD_STARTER(findIpAddress)
 	DECLARE_THREAD_STARTER(processConsoleCommand)
 	DECLARE_THREAD_STARTER(sendMib)
 	DECLARE_THREAD_STARTER(getReportResults)
@@ -567,6 +568,7 @@ private:
 	void addClusterNode(CSCPMessage *request);
 	void findNodeConnection(CSCPMessage *request);
 	void findMacAddress(CSCPMessage *request);
+	void findIpAddress(CSCPMessage *request);
 	void sendLibraryImage(CSCPMessage *request);
 	void updateLibraryImage(CSCPMessage *request);
 	void listLibraryImages(CSCPMessage *request);
