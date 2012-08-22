@@ -15,6 +15,7 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.R;
+import org.netxms.ui.android.helpers.SafeParser;
 import org.netxms.ui.android.main.activities.AlarmBrowser;
 import org.netxms.ui.android.main.activities.DashboardBrowser;
 import org.netxms.ui.android.main.activities.HomeScreen;
@@ -303,7 +304,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				showNotificationStatus(NOTIFY_STATUS, ConnectionStatus.CS_INPROGRESS, "");
 				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 				new ConnectTask(this).execute(sp.getString("connection.server", ""),
-				                              Integer.parseInt(sp.getString("connection.port", "4701")), 
+				                              SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701), 
 				                              sp.getString("connection.login", ""),
 				                              sp.getString("connection.password", ""),
 				                              sp.getBoolean("connection.encrypt", false),

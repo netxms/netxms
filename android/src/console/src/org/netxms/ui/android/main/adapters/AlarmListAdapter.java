@@ -157,7 +157,9 @@ public class AlarmListAdapter extends BaseAdapter
 	@Override
 	public Object getItem(int position)
 	{
-		return alarms.get(position);
+		if (position >= 0 && position < getCount())
+			return alarms.get(position);
+		return null;
 	}
 
 	/*
@@ -168,7 +170,9 @@ public class AlarmListAdapter extends BaseAdapter
 	@Override
 	public long getItemId(int position)
 	{
-		return alarms.get(position).getId();
+		if (position >= 0 && position < getCount())
+			return alarms.get(position).getId();
+		return 0;
 	}
 
 	/**

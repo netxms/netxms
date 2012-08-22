@@ -146,8 +146,16 @@ public class ConnectTask extends Thread
 	private boolean isInternetOn()
 	{
 		ConnectivityManager connec = (ConnectivityManager)service.getSystemService(Context.CONNECTIVITY_SERVICE);
-		return connec.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED || 
-		       connec.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED;
+		if (connec != null)
+		{
+			NetworkInfo wifi = connec.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+			if (wifi != null && wifi.getState() == NetworkInfo.State.CONNECTED)
+				return true;
+			NetworkInfo mobile = connec.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+			if (mobile != null && mobile.getState() == NetworkInfo.State.CONNECTED)
+				return true;
+		}
+		return false;
 	}
 
 }

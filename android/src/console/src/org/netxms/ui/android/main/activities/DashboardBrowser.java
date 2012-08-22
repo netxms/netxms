@@ -19,7 +19,6 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -146,8 +145,8 @@ public class DashboardBrowser extends AbstractClientActivity
 		android.view.MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.node_actions, menu);
 
-		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
-		GenericObject object = (GenericObject)adapter.getItem(info.position);
+//		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
+//		GenericObject object = (GenericObject)adapter.getItem(info.position);
 
 		/*
 		 * if (object instanceof Node) { // add available tools to context menu
@@ -170,8 +169,8 @@ public class DashboardBrowser extends AbstractClientActivity
 	public boolean onContextItemSelected(MenuItem item)
 	{
 		// get selected item
-		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
-		final GenericObject object = (GenericObject)adapter.getItem(info.position);
+//		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
+//		final GenericObject object = (GenericObject)adapter.getItem(info.position);
 
 		// process menu selection
 		switch(item.getItemId())

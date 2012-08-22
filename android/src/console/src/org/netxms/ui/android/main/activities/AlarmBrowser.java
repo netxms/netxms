@@ -173,12 +173,15 @@ public class AlarmBrowser extends AbstractClientActivity
 				refreshList();
 				return true;
 			case R.id.viewlastvalues:
-				GenericObject object = service.findObjectById(al.getSourceObjectId());
-				if (object!=null)
+				if (service != null)
 				{
-					Intent newIntent = new Intent(this, LastValues.class);
-					newIntent.putExtra("objectId", object.getObjectId());
-					startActivity(newIntent);
+					GenericObject object = service.findObjectById(al.getSourceObjectId());
+					if (object!=null)
+					{
+						Intent newIntent = new Intent(this, LastValues.class);
+						newIntent.putExtra("objectId", object.getObjectId());
+						startActivity(newIntent);
+					}
 				}
 				return true;
 			default:
@@ -191,8 +194,11 @@ public class AlarmBrowser extends AbstractClientActivity
 	 */
 	public void refreshList()
 	{
-		adapter.setAlarms(service.getAlarms(), nodeIdList);
-		adapter.notifyDataSetChanged();
+		if (service != null)
+		{
+			adapter.setAlarms(service.getAlarms(), nodeIdList);
+			adapter.notifyDataSetChanged();
+		}
 	}
 
 	/* (non-Javadoc)
@@ -201,7 +207,8 @@ public class AlarmBrowser extends AbstractClientActivity
 	@Override
 	protected void onDestroy()
 	{
-		service.registerAlarmBrowser(null);
+		if (service != null)
+			service.registerAlarmBrowser(null);
 		super.onDestroy();
 	}
 	

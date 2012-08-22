@@ -23,6 +23,7 @@ import java.io.Writer;
 import java.util.Date;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.ui.android.helpers.SafeParser;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
@@ -138,11 +139,11 @@ public class ChartConfig
 			
 			if (name.equals("A"))
 			{
-				refreshRate = safeParseInt(value, 30);
+				refreshRate = SafeParser.parseInt(value, 30);
 			}
 			else if (name.equals("F"))
 			{
-				int flags = safeParseInt(value, 0);
+				int flags = SafeParser.parseInt(value, 0);
 				if ((flags & GraphSettings.GF_AUTO_UPDATE) != 0)
 					autoRefresh = true;
 				if ((flags & GraphSettings.GF_SHOW_GRID) != 0)
@@ -156,30 +157,30 @@ public class ChartConfig
 			}
 			else if (name.equals("N"))
 			{
-				dciCount = safeParseInt(value, 0);
+				dciCount = SafeParser.parseInt(value, 0);
 				dciList = new ChartDciConfig[dciCount];
 				for(int j = 0; j < dciCount; j++)
 					dciList[j] = new ChartDciConfig();
 			}
 			else if (name.equals("TFT"))
 			{
-				timeFrameType = safeParseInt(value, GraphSettings.TIME_FRAME_BACK_FROM_NOW);
+				timeFrameType = SafeParser.parseInt(value, GraphSettings.TIME_FRAME_BACK_FROM_NOW);
 			}
 			else if (name.equals("TU"))
 			{
-				timeUnits = safeParseInt(value, GraphSettings.TIME_UNIT_HOUR);
+				timeUnits = SafeParser.parseInt(value, GraphSettings.TIME_UNIT_HOUR);
 			}
 			else if (name.equals("NTU"))
 			{
-				timeRange = safeParseInt(value, 1);
+				timeRange = SafeParser.parseInt(value, 1);
 			}
 			else if (name.equals("TS"))
 			{
-				timeFrom = new Date((long)safeParseInt(value, 0) * 1000L);
+				timeFrom = new Date((long)SafeParser.parseInt(value, 0) * 1000L);
 			}
 			else if (name.equals("TF"))
 			{
-				timeTo = new Date((long)safeParseInt(value, 0) * 1000L);
+				timeTo = new Date((long)SafeParser.parseInt(value, 0) * 1000L);
 			}
 			else if (name.equals("T"))
 			{
@@ -191,11 +192,11 @@ public class ChartConfig
 			}
 			else if (name.equals("G"))
 			{
-				showGrid = (safeParseInt(value, 1) != 0);
+				showGrid = (SafeParser.parseInt(value, 1) != 0);
 			}
 			else if (name.equals("L"))
 			{
-				showLegend = (safeParseInt(value, 1) != 0);
+				showLegend = (SafeParser.parseInt(value, 1) != 0);
 			}
 			else if (name.equals("R"))
 			{
@@ -203,11 +204,11 @@ public class ChartConfig
 			}
 			else if (name.equals("H"))
 			{
-				showHostNames = (safeParseInt(value, 0) != 0);
+				showHostNames = (SafeParser.parseInt(value, 0) != 0);
 			}
 			else if (name.equals("O"))
 			{
-				logScale = (safeParseInt(value, 0) != 0);
+				logScale = (SafeParser.parseInt(value, 0) != 0);
 			}
 			else if (name.equals("CA"))
 			{
@@ -247,39 +248,39 @@ public class ChartConfig
 			}
 			else if (name.charAt(0) == 'C')	// Item color
 			{
-				int item = safeParseInt(name.substring(1), -1);
+				int item = SafeParser.parseInt(name.substring(1), -1);
 				if ((item >= 0) && (item < itemStyles.length))
-					itemStyles[item].setColor(safeParseInt(value, 0));
+					itemStyles[item].setColor(SafeParser.parseInt(value, 0));
 			}
 			else if (name.charAt(0) == 'T')	// Item type
 			{
-				int item = safeParseInt(name.substring(1), -1);
+				int item = SafeParser.parseInt(name.substring(1), -1);
 				if ((item >= 0) && (item < itemStyles.length))
-					itemStyles[item].setType(safeParseInt(value, 0));
+					itemStyles[item].setType(SafeParser.parseInt(value, 0));
 			}
 			else if (name.charAt(0) == 'W')	// Item line width
 			{
-				int item = safeParseInt(name.substring(1), -1);
+				int item = SafeParser.parseInt(name.substring(1), -1);
 				if ((item >= 0) && (item < itemStyles.length))
-					itemStyles[item].setLineWidth(safeParseInt(value, 0));
+					itemStyles[item].setLineWidth(SafeParser.parseInt(value, 0));
 			}
 			else if ((name.charAt(0) == 'F') && (name.charAt(1) == 'L'))	// Item flags
 			{
-				int item = safeParseInt(name.substring(2), -1);
+				int item = SafeParser.parseInt(name.substring(2), -1);
 				if ((item >= 0) && (item < itemStyles.length))
-					itemStyles[item].setFlags(safeParseInt(value, 0));
+					itemStyles[item].setFlags(SafeParser.parseInt(value, 0));
 			}
 			else if (name.charAt(0) == 'N')	// Node ID
 			{
-				int item = safeParseInt(name.substring(1), -1);
+				int item = SafeParser.parseInt(name.substring(1), -1);
 				if ((item >= 0) && (item < dciCount))
-					dciList[item].nodeId = safeParseLong(value, 0);
+					dciList[item].nodeId = SafeParser.parseLong(value, 0);
 			}
 			else if (name.charAt(0) == 'I')	// DCI information
 			{
 				if (name.charAt(1) == 'D')	// description
 				{
-					int item = safeParseInt(name.substring(2), -1);
+					int item = SafeParser.parseInt(name.substring(2), -1);
 					if ((item >= 0) && (item < dciCount))
 						dciList[item].name = value;
 				}
@@ -294,9 +295,9 @@ public class ChartConfig
 				}
 				else	// assume DCI ID - Ixxx
 				{
-					int item = safeParseInt(name.substring(1), -1);
+					int item = SafeParser.parseInt(name.substring(1), -1);
 					if ((item >= 0) && (item < dciCount))
-						dciList[item].dciId = safeParseLong(value, 0);
+						dciList[item].dciId = SafeParser.parseLong(value, 0);
 				}
 			}
 		}
@@ -308,43 +309,7 @@ public class ChartConfig
 			dciList[i].lineWidth = itemStyles[i].getLineWidth();
 		}
 	}
-	
-	/**
-	 * Parse int without throwing exception
-	 * @param text text to parse
-	 * @param defVal default value to be used in case of parse error
-	 * @return parsed value
-	 */
-	static private int safeParseInt(String text, int defVal)
-	{
-		try
-		{
-			return Integer.parseInt(text);
-		}
-		catch(NumberFormatException e)
-		{
-		}
-		return defVal;
-	}
 
-	/**
-	 * Parse long without throwing exception
-	 * @param text text to parse
-	 * @param defVal default value to be used in case of parse error
-	 * @return parsed value
-	 */
-	static private long safeParseLong(String text, long defVal)
-	{
-		try
-		{
-			return Long.parseLong(text);
-		}
-		catch(NumberFormatException e)
-		{
-		}
-		return defVal;
-	}
-	
 	/**
 	 * Create XML from configuration.
 	 * 

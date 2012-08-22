@@ -96,7 +96,9 @@ public class DialChartElement extends AbstractDashboardElement
 				{
 					for (int i = 0; i < dciData.length; i++)
 					{
-						chart.updateParameter(i, dciData[i].getDataType(), dciData[i].getLastValue().getValueAsDouble());
+						if (dciData[i] != null && dciData[i].getLastValue() != null)
+							chart.updateParameter(i, dciData[i].getDataType(), dciData[i].getLastValue().getValueAsDouble());
+						
 					}
 					chart.invalidate();
 				}

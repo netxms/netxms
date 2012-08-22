@@ -35,7 +35,7 @@ import android.widget.TabHost.TabContentFactory;
 import android.widget.TabHost.OnTabChangeListener;
 
 /**
- * Draw graph activity
+ * Node info activity
  * 
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
  * 
@@ -290,7 +290,8 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		service.registerNodeInfo(this);
 		alarmsAdapter.setService(service);
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
-		title.setText(node.getObjectName());
+		if (node != null)
+			title.setText(node.getObjectName());
 		refreshOverview();
 		refreshLastValues();
 		refreshAlarms();
