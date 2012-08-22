@@ -709,7 +709,14 @@ extern "C"
 												 int (*compare)(const void *, const void *, void *));
 
    INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void);
-   QWORD LIBNETXMS_EXPORTABLE FileSize(const TCHAR *pszFileName);
+
+	QWORD LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName);
+	QWORD LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
+#ifdef UNICODE
+#define FileSize FileSizeW
+#else
+#define FileSize FileSizeA
+#endif
 
    int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask);
    TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer);

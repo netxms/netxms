@@ -668,24 +668,48 @@ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr,
 // Get size of file in bytes
 //
 
-QWORD LIBNETXMS_EXPORTABLE FileSize(const TCHAR *pszFileName)
+QWORD LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName)
 {
 #ifdef _WIN32
    HANDLE hFind;
-   WIN32_FIND_DATA fd;
+   WIN32_FIND_DATAW fd;
 #else
    struct stat fileInfo;
 #endif
 
 #ifdef _WIN32
-   hFind = FindFirstFile(pszFileName, &fd);
+   hFind = FindFirstFileW(pszFileName, &fd);
    if (hFind == INVALID_HANDLE_VALUE)
       return 0;
    FindClose(hFind);
 
    return (unsigned __int64)fd.nFileSizeLow + ((unsigned __int64)fd.nFileSizeHigh << 32);
 #else
-   if (_tstat(pszFileName, &fileInfo) == -1)
+   if (wstat(pszFileName, &fileInfo) == -1)
+      return 0;
+
+   return (QWORD)fileInfo.st_size;
+#endif
+}
+
+QWORD LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName)
+{
+#ifdef _WIN32
+   HANDLE hFind;
+   WIN32_FIND_DATAA fd;
+#else
+   struct stat fileInfo;
+#endif
+
+#ifdef _WIN32
+   hFind = FindFirstFileA(pszFileName, &fd);
+   if (hFind == INVALID_HANDLE_VALUE)
+      return 0;
+   FindClose(hFind);
+
+   return (unsigned __int64)fd.nFileSizeLow + ((unsigned __int64)fd.nFileSizeHigh << 32);
+#else
+   if (stat(pszFileName, &fileInfo) == -1)
       return 0;
 
    return (QWORD)fileInfo.st_size;
