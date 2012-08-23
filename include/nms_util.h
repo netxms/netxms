@@ -869,14 +869,12 @@ extern "C"
 	UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromMBString(const char *pszString);
 	char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *pszString);
 
-#ifdef UNICODE
 	int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...);
 	int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const WCHAR *format, ...);
 	int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *format, ...);
 	int LIBNETXMS_EXPORTABLE nx_vwprintf(const WCHAR *format, va_list args);
 	int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, const WCHAR *format, va_list args);
 	int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, const WCHAR *format, va_list args);
-#endif
 
 #endif	/* _WIN32 */
 

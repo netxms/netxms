@@ -77,7 +77,7 @@ inline int __call_stat(const WCHAR *f, NX_STAT_STRUCT *s)
 /**
  * Find byte sequence in the stream
  */
-static char *FindSequence(char *start, int length, char *sequence, int seqLength)
+static char *FindSequence(char *start, int length, const char *sequence, int seqLength)
 {
 	char *curr = start;
 	int count = 0;
