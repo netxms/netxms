@@ -897,6 +897,10 @@ extern "C"
 	WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString);
 #endif
 
+#if !defined(_WIN32) && !HAVE_WSTAT
+	int wstat(const WCHAR *_path, struct stat *_sbuf);
+#endif
+
 #if defined(UNICODE) && !defined(_WIN32)
 
 #if !HAVE_WPOPEN
@@ -910,9 +914,6 @@ extern "C"
 #endif
 #if !HAVE_WCHMOD
 	int LIBNETXMS_EXPORTABLE wchmod(const WCHAR *_name, int mode);
-#endif
-#if !HAVE_WSTAT
-	int wstat(const WCHAR *_path, struct stat *_sbuf);
 #endif
 #if !HAVE_WCHDIR
 	int wchdir(const WCHAR *_path);

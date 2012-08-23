@@ -77,7 +77,7 @@ LTINIT_CXX=""
 # Common compilation flags
 #--------------------------------------------------------------------
 
-CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE"
+CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DTRE_WCHAR=1"
 
 
 #--------------------------------------------------------------------
@@ -323,7 +323,7 @@ AC_ARG_ENABLE(unicode,
 [AS_HELP_STRING(--enable-unicode,enable UNICODE build)],
 [
 	BUILD_UNICODE="yes"
-	CPPFLAGS="$CPPFLAGS -DUNICODE -DTRE_WCHAR=1"
+	CPPFLAGS="$CPPFLAGS -DUNICODE"
 	FORCE_INTERNAL_LIBTRE="yes"
 ])
 

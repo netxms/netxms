@@ -892,8 +892,22 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *pszString)
 // UNIX UNICODE specific wrapper functions
 //
 
-#if !defined(_WIN32) && defined(UNICODE)
+#if !defined(_WIN32)
 
+#if !HAVE_WSTAT
+
+int wstat(const WCHAR *_path, struct stat *_sbuf)
+{
+	char path[MAX_PATH];
+	
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                       _path, -1, path, MAX_PATH, NULL, NULL);
+	return stat(path, _sbuf);
+}
+
+#endif
+
+#if defined(UNICODE)
 
 //
 // Wide character version of some libc functions
@@ -999,19 +1013,6 @@ int LIBNETXMS_EXPORTABLE wchmod(const WCHAR *_name, int mode)
 	rc = chmod(name, mode);
 	free(name);
 	return rc;
-}
-
-#endif
-
-#if !HAVE_WSTAT
-
-int wstat(const WCHAR *_path, struct stat *_sbuf)
-{
-	char path[MAX_PATH];
-	
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                       _path, -1, path, MAX_PATH, NULL, NULL);
-	return stat(path, _sbuf);
 }
 
 #endif
@@ -1147,6 +1148,7 @@ WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
 #endif
 }
 
+#endif
 #endif
 
 
