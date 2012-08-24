@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
@@ -25,18 +26,20 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
- * Adapter for alarm list
+ * Adapter for last values
+ * 
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
  * 
  */
 
 public class LastValuesAdapter extends BaseAdapter
 {
-	private Context context;
+	private final Context context;
 	private List<DciValue> currentValues = new ArrayList<DciValue>(0);
 
-	private static final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor, 
-		R.drawable.status_major, R.drawable.status_critical };
-	private static final int[] stateImageId = { R.drawable.state_active, R.drawable.state_disabled, R.drawable.state_unsupported};
+	private static final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor,
+			R.drawable.status_major, R.drawable.status_critical };
+	private static final int[] stateImageId = { R.drawable.state_active, R.drawable.state_disabled, R.drawable.state_unsupported };
 
 	/**
 	 * 
@@ -48,14 +51,15 @@ public class LastValuesAdapter extends BaseAdapter
 	}
 
 	/**
-	 * Set alarms
+	 * Set values
 	 * 
-	 * @param alarms
+	 * @param values
 	 */
 	public void setValues(DciValue[] values)
 	{
 		currentValues = Arrays.asList(values);
-		Collections.sort(currentValues, new Comparator<DciValue>() {
+		Collections.sort(currentValues, new Comparator<DciValue>()
+		{
 			@Override
 			public int compare(DciValue object1, DciValue object2)
 			{
@@ -83,7 +87,9 @@ public class LastValuesAdapter extends BaseAdapter
 	@Override
 	public Object getItem(int position)
 	{
-		return currentValues.get(position);
+		if (position >= 0 && position < getCount())
+			return currentValues.get(position);
+		return null;
 	}
 
 	/*
@@ -112,7 +118,7 @@ public class LastValuesAdapter extends BaseAdapter
 		ImageView severity, state;
 		Resources r = context.getResources();
 
-		if (convertView == null)	// new alarm, create fields
+		if (convertView == null) // new alarm, create fields
 		{
 			severity = new ImageView(context);
 			severity.setPadding(5, 5, 5, 2);
@@ -122,7 +128,7 @@ public class LastValuesAdapter extends BaseAdapter
 			icons.setOrientation(LinearLayout.VERTICAL);
 			icons.addView(severity);
 			icons.addView(state);
-			
+
 			threshold = new TextView(context);
 			threshold.setPadding(5, 2, 5, 2);
 			threshold.setTextColor(r.getColor(R.color.text_color));
@@ -152,7 +158,7 @@ public class LastValuesAdapter extends BaseAdapter
 			info2.setOrientation(LinearLayout.HORIZONTAL);
 			info2.addView(name);
 			info2.addView(value);
-			
+
 			texts = new LinearLayout(context);
 			texts.setOrientation(LinearLayout.VERTICAL);
 			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -165,7 +171,7 @@ public class LastValuesAdapter extends BaseAdapter
 			view.addView(texts);
 		}
 		else
-		{ 
+		{
 			// get reference to existing alarm
 			view = (CheckableLinearLayout)convertView;
 			icons = (LinearLayout)view.getChildAt(1);
@@ -179,7 +185,7 @@ public class LastValuesAdapter extends BaseAdapter
 			name = (TextView)info2.getChildAt(0);
 			value = (TextView)info2.getChildAt(1);
 		}
-		
+
 		// get node current name/value pair
 		DciValue item = currentValues.get(position);
 		if (item == null)
@@ -200,8 +206,10 @@ public class LastValuesAdapter extends BaseAdapter
 
 		return view;
 	}
-	
+
 	/**
+	 * Get threshold icon
+	 * 
 	 * @param t
 	 * @return
 	 */
@@ -210,22 +218,23 @@ public class LastValuesAdapter extends BaseAdapter
 		int s = t != null ? t.getCurrentSeverity() : 0;
 		return severityImageId[s < severityImageId.length ? s : 0];
 	}
-	
+
 	/**
+	 * Get threshold text
+	 * 
 	 * @param t
 	 * @return
 	 */
 	private String getThresholdText(Threshold t)
 	{
-		final int[] fns = { R.string.ts_fn_last, R.string.ts_fn_average, R.string.ts_fn_deviation, 
+		final int[] fns = { R.string.ts_fn_last, R.string.ts_fn_average, R.string.ts_fn_deviation,
 				R.string.ts_fn_diff, R.string.ts_fn_error, R.string.ts_fn_sum };
-		final int[] ops = { R.string.ts_op_less, R.string.ts_op_lessequal, R.string.ts_op_equal, 
-				R.string.ts_op_greatherequal, R.string.ts_op_greather, R.string.ts_op_different, 
+		final int[] ops = { R.string.ts_op_less, R.string.ts_op_lessequal, R.string.ts_op_equal,
+				R.string.ts_op_greatherequal, R.string.ts_op_greather, R.string.ts_op_different,
 				R.string.ts_op_like, R.string.ts_op_unlike };
-
+		Resources r = context.getResources();
 		if (t != null)
 		{
-			Resources r = context.getResources();
 			int f = t.getFunction();
 			StringBuilder text = new StringBuilder(r.getString(fns[f]));
 			text.append("(");
@@ -236,7 +245,7 @@ public class LastValuesAdapter extends BaseAdapter
 			text.append(' ');
 			text.append(t.getValue());
 			return text.toString();
-		}		
-		return "OK";
+		}
+		return r.getString(R.string.ts_ok);
 	}
 }

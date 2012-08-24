@@ -2,6 +2,7 @@ package org.netxms.ui.android.main.activities;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
@@ -11,6 +12,7 @@ import org.netxms.ui.android.main.adapters.AlarmListAdapter;
 import org.netxms.ui.android.main.adapters.LastValuesAdapter;
 import org.netxms.ui.android.main.adapters.OverviewAdapter;
 import org.netxms.ui.android.service.ClientConnectorService;
+
 import android.app.Activity;
 import android.app.TabActivity;
 import android.content.ComponentName;
@@ -22,17 +24,17 @@ import android.os.IBinder;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 import android.widget.TabHost;
-import android.widget.TextView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.TabHost.TabContentFactory;
 import android.widget.TabHost.OnTabChangeListener;
+import android.widget.TabHost.TabContentFactory;
+import android.widget.TextView;
 
 /**
  * Node info activity
@@ -40,22 +42,26 @@ import android.widget.TabHost.OnTabChangeListener;
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
  * 
  */
+
 public class NodeInfo extends TabActivity implements OnTabChangeListener, ServiceConnection
 {
+	public static int TAB_OVERVIEW_ID = 0;
+	public static int TAB_LAST_VALUES_ID = 1;
+	public static int TAB_ALARMS_ID = 2;
+
 	private static final String TAG = "nxclient.NodeInfo";
-	private static final int MENU_ITEM_ALARM_ACTIONS = 3;
 	private static final Integer[] DEFAULT_COLORS = { 0x40699C, 0x9E413E, 0x7F9A48, 0x695185, 0x3C8DA3, 0xCC7B38, 0x4F81BD, 0xC0504D,
-	                                                  0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9 };
-	
+			0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9 };
+
 	private static Method method_invalidateOptionsMenu;
-	
+
 	static
 	{
 		try
 		{
 			method_invalidateOptionsMenu = Activity.class.getMethod("invalidateOptionsMenu", new Class[0]);
 		}
-		catch(NoSuchMethodException e)
+		catch (NoSuchMethodException e)
 		{
 			method_invalidateOptionsMenu = null;
 		}
@@ -70,10 +76,11 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	private OverviewAdapter overviewAdapter;
 	private LastValuesAdapter lastValuesAdapter;
 	private AlarmListAdapter alarmsAdapter;
-	private String TAB_OVERVIEW = "";
-	private String TAB_LAST_VALUES = "";
-	private String TAB_ALARMS = "";
-	private long nodeId = 0;
+	private String TAB_OVERVIEW;
+	private String TAB_LAST_VALUES;
+	private String TAB_ALARMS;
+	private int tabId;
+	private long nodeId;
 	private Node node = null;
 	private boolean recreateOptionsMenu = false;
 
@@ -91,6 +98,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		setContentView(R.layout.node_info);
 
 		nodeId = getIntent().getLongExtra("objectId", 0);
+		tabId = getIntent().getIntExtra("tabId", TAB_OVERVIEW_ID);
 
 		tabHost = getTabHost();
 		tabHost.setOnTabChangedListener(this);
@@ -100,7 +108,9 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		overviewListView = (ListView)findViewById(R.id.overview);
 		overviewListView.setAdapter(overviewAdapter);
 
-		tabHost.addTab(tabHost.newTabSpec(TAB_OVERVIEW).setIndicator(TAB_OVERVIEW).setContent(new TabContentFactory() {
+		tabHost.addTab(tabHost.newTabSpec(TAB_OVERVIEW).setIndicator(TAB_OVERVIEW).setContent(new TabContentFactory()
+		{
+			@Override
 			public View createTabContent(String arg0)
 			{
 				return overviewListView;
@@ -114,7 +124,9 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		lastValuesListView.setAdapter(lastValuesAdapter);
 		registerForContextMenu(lastValuesListView);
 
-		tabHost.addTab(tabHost.newTabSpec(TAB_LAST_VALUES).setIndicator(TAB_LAST_VALUES).setContent(new TabContentFactory() {
+		tabHost.addTab(tabHost.newTabSpec(TAB_LAST_VALUES).setIndicator(TAB_LAST_VALUES).setContent(new TabContentFactory()
+		{
+			@Override
 			public View createTabContent(String arg0)
 			{
 				return lastValuesListView;
@@ -124,10 +136,13 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		TAB_ALARMS = getString(R.string.node_info_alarms);
 		alarmsAdapter = new AlarmListAdapter(this);
 		alarmsListView = (ListView)findViewById(R.id.alarms);
+		alarmsListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 		alarmsListView.setAdapter(alarmsAdapter);
 		registerForContextMenu(alarmsListView);
 
-		tabHost.addTab(tabHost.newTabSpec(TAB_ALARMS).setIndicator(TAB_ALARMS).setContent(new TabContentFactory() {
+		tabHost.addTab(tabHost.newTabSpec(TAB_ALARMS).setIndicator(TAB_ALARMS).setContent(new TabContentFactory()
+		{
+			@Override
 			public View createTabContent(String arg0)
 			{
 				return alarmsListView;
@@ -138,8 +153,9 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		tabHost.setCurrentTabByTag(TAB_ALARMS);
 		tabHost.setCurrentTabByTag(TAB_LAST_VALUES);
 		tabHost.setCurrentTabByTag(TAB_OVERVIEW);
-	}
 
+		tabHost.setCurrentTab(tabId);
+	}
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -165,14 +181,14 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			lastValuesAdapter.notifyDataSetChanged();
 		else if (tabId.equals(TAB_ALARMS))
 			alarmsAdapter.notifyDataSetChanged();
-		
+
 		if (method_invalidateOptionsMenu != null)
 		{
 			try
 			{
 				method_invalidateOptionsMenu.invoke(this);
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
 				Log.w(TAG, "onTabChanged", e);
 			}
@@ -198,7 +214,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			DciValue value = (DciValue)lastValuesAdapter.getItem(((AdapterView.AdapterContextMenuInfo)menuInfo).position);
 			if (value != null)
 			{
-				switch(value.getDcObjectType())
+				switch (value.getDcObjectType())
 				{
 					case DataCollectionObject.DCO_TYPE_ITEM:
 						inflater.inflate(R.menu.last_values_actions, menu);
@@ -212,7 +228,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		else if (v == alarmsListView)
 		{
 			inflater.inflate(R.menu.alarm_actions, menu);
-			menu.getItem(MENU_ITEM_ALARM_ACTIONS).setVisible(false);
+			hideMenuItem(menu, R.id.viewlastvalues);
 		}
 	}
 
@@ -225,18 +241,25 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		if (method_invalidateOptionsMenu != null)
 		{
 			android.view.MenuInflater inflater = getMenuInflater();
-			
-			if (tabHost.getCurrentTabTag().equals(TAB_LAST_VALUES))
+
+			if (tabHost.getCurrentTab() == TAB_LAST_VALUES_ID)
 			{
 				inflater.inflate(R.menu.last_values_actions, menu);
 			}
-			else if (tabHost.getCurrentTabTag().equals(TAB_ALARMS))
+			else if (tabHost.getCurrentTab() == TAB_ALARMS_ID)
 			{
 				inflater.inflate(R.menu.alarm_actions, menu);
-				menu.getItem(MENU_ITEM_ALARM_ACTIONS).setVisible(false);
+				hideMenuItem(menu, R.id.viewlastvalues);
 			}
 		}
 		return super.onCreateOptionsMenu(menu);
+	}
+
+	private void hideMenuItem(Menu menu, int resId)
+	{
+		MenuItem item = menu.findItem(resId);
+		if (item != null)
+			item.setVisible(false);
 	}
 
 	/* (non-Javadoc)
@@ -249,11 +272,11 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 
 		if (!recreateOptionsMenu)
 			return true;
-		
-		if (tabHost.getCurrentTabTag().equals(TAB_LAST_VALUES))
+
+		if (tabHost.getCurrentTab() == TAB_LAST_VALUES_ID)
 		{
 			menu.add(Menu.NONE, R.id.graph_half_hour, Menu.NONE, getString(R.string.last_values_graph_half_hour));
-			menu.add(Menu.NONE, R.id.graph_one_hour, Menu.NONE, getString(R.string.last_values_graph_one_hour));//.setIcon(R.drawable.ic_menu_line_chart);
+			menu.add(Menu.NONE, R.id.graph_one_hour, Menu.NONE, getString(R.string.last_values_graph_one_hour));// .setIcon(R.drawable.ic_menu_line_chart);
 			menu.add(Menu.NONE, R.id.graph_two_hours, Menu.NONE, getString(R.string.last_values_graph_two_hours));
 			menu.add(Menu.NONE, R.id.graph_four_hours, Menu.NONE, getString(R.string.last_values_graph_four_hours));
 			menu.add(Menu.NONE, R.id.graph_one_day, Menu.NONE, getString(R.string.last_values_graph_one_day));
@@ -272,7 +295,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			menu.removeItem(R.id.bar_chart);
 			menu.removeItem(R.id.pie_chart);
 		}
-		
+
 		recreateOptionsMenu = false;
 		return true;
 	}
@@ -352,9 +375,9 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		// get selected item
 		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
 
-		switch(item.getItemId())
+		switch (item.getItemId())
 		{
-			// Last values
+		// Last values
 			case R.id.graph_half_hour:
 				return drawGraph(1800, info.position);
 			case R.id.graph_one_hour:
@@ -373,18 +396,15 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 				return drawComparisonChart(DrawPieChart.class);
 			case R.id.table_last_value:
 				return showTableLastValue(info.position);
-			// Alarms
+				// Alarms
 			case R.id.acknowledge:
-				alarmsAdapter.acknowledgeItem(((Alarm)alarmsAdapter.getItem(info.position)).getId());
-				refreshAlarms();
+				acknowledgeAlarms(info.position);
 				return true;
 			case R.id.resolve:
-				alarmsAdapter.resolveItem(((Alarm)alarmsAdapter.getItem(info.position)).getId());
-				refreshAlarms();
+				resolveAlarms(info.position);
 				return true;
 			case R.id.terminate:
-				alarmsAdapter.terminateItem(((Alarm)alarmsAdapter.getItem(info.position)).getId());
-				refreshAlarms();
+				terminateAlarms(info.position);
 				return true;
 		}
 		return super.onContextItemSelected(item);
@@ -398,7 +418,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		switch(item.getItemId())
+		switch (item.getItemId())
 		{
 			case android.R.id.home:
 				startActivity(new Intent(this, HomeScreen.class));
@@ -406,7 +426,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			case R.id.settings:
 				startActivity(new Intent(this, ConsolePreferences.class));
 				return true;
-			// Last values
+				// Last values
 			case R.id.graph_half_hour:
 				return drawGraph(1800, lastValuesListView.getSelectedItemPosition());
 			case R.id.graph_one_hour:
@@ -427,7 +447,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 				return super.onOptionsItemSelected(item);
 		}
 	}
-	
+
 	/**
 	 * Show last value for table DCI
 	 * 
@@ -453,27 +473,27 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	private boolean drawGraph(long secsBack, int position)
 	{
 		Intent newIntent = new Intent(this, DrawGraph.class);
-		
+
 		ArrayList<Integer> nodeIdList = new ArrayList<Integer>();
 		ArrayList<Integer> dciIdList = new ArrayList<Integer>();
 		ArrayList<Integer> colorList = new ArrayList<Integer>();
 		ArrayList<Integer> lineWidthList = new ArrayList<Integer>();
 		ArrayList<String> nameList = new ArrayList<String>();
-		
+
 		// Set values
 		int count = 0;
 		final SparseBooleanArray positions = lastValuesListView.getCheckedItemPositions();
 		if (positions.size() > 0)
 		{
-			for(int i = 0; (i < lastValuesAdapter.getCount()) && (count < 16); i++)
+			for (int i = 0; (i < lastValuesAdapter.getCount()) && (count < 16); i++)
 			{
 				if (!positions.get(i))
 					continue;
-				
+
 				DciValue value = (DciValue)lastValuesAdapter.getItem(i);
 				if (value.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
 					continue;
-				
+
 				nodeIdList.add((int)nodeId);
 				dciIdList.add((int)value.getId());
 				colorList.add(DEFAULT_COLORS[count]);
@@ -482,7 +502,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 				count++;
 			}
 		}
-		
+
 		if ((count == 0) && (position != ListView.INVALID_POSITION))
 		{
 			DciValue value = (DciValue)lastValuesAdapter.getItem(position);
@@ -510,7 +530,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		}
 		return true;
 	}
-	
+
 	/**
 	 * Draw pie chart for selected DCIs
 	 * 
@@ -519,7 +539,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	private boolean drawComparisonChart(Class<?> chartClass)
 	{
 		Intent newIntent = new Intent(this, chartClass);
-		
+
 		ArrayList<Integer> nodeIdList = new ArrayList<Integer>();
 		ArrayList<Integer> dciIdList = new ArrayList<Integer>();
 		ArrayList<Integer> colorList = new ArrayList<Integer>();
@@ -530,15 +550,15 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		final SparseBooleanArray positions = lastValuesListView.getCheckedItemPositions();
 		if (positions.size() > 0)
 		{
-			for(int i = 0; (i < lastValuesAdapter.getCount()) && (count < 16); i++)
+			for (int i = 0; (i < lastValuesAdapter.getCount()) && (count < 16); i++)
 			{
 				if (!positions.get(i))
 					continue;
-				
+
 				DciValue value = (DciValue)lastValuesAdapter.getItem(i);
 				if (value.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
 					continue;
-				
+
 				nodeIdList.add((int)nodeId);
 				dciIdList.add((int)value.getId());
 				colorList.add(DEFAULT_COLORS[count]);
@@ -560,12 +580,64 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		return true;
 	}
 
+	private ArrayList<Long> getAlarmIdList(int position)
+	{
+		int count = 0;
+		ArrayList<Long> alarmIdList = new ArrayList<Long>();
+		final SparseBooleanArray positions = alarmsListView.getCheckedItemPositions();
+		if (positions != null && positions.size() > 0)
+			for (int i = 0; i < alarmsAdapter.getCount(); i++)
+				if (positions.get(i))
+				{
+					Alarm al = (Alarm)alarmsAdapter.getItem(i);
+					if (al != null)
+					{
+						alarmIdList.add(al.getId());
+						count++;
+					}
+				}
+		if (count == 0 && (position != ListView.INVALID_POSITION))
+		{
+			Alarm al = (Alarm)alarmsAdapter.getItem(position);
+			if (al != null)
+				alarmIdList.add(al.getId());
+		}
+		return alarmIdList;
+	}
+
+	private void acknowledgeAlarms(int position)
+	{
+		ArrayList<Long> alarmIdList = getAlarmIdList(position);
+		for (int i = 0; i < alarmIdList.size(); i++)
+			alarmsAdapter.acknowledgeItem(alarmIdList.get(i));
+		if (alarmIdList.size() != 0)
+			refreshAlarms();
+	}
+
+	private void resolveAlarms(int position)
+	{
+		ArrayList<Long> alarmIdList = getAlarmIdList(position);
+		for (int i = 0; i < alarmIdList.size(); i++)
+			alarmsAdapter.resolveItem(alarmIdList.get(i));
+		if (alarmIdList.size() != 0)
+			refreshAlarms();
+	}
+
+	private void terminateAlarms(int position)
+	{
+		ArrayList<Long> alarmIdList = getAlarmIdList(position);
+		for (int i = 0; i < alarmIdList.size(); i++)
+			alarmsAdapter.terminateItem(alarmIdList.get(i));
+		if (alarmIdList.size() != 0)
+			refreshAlarms();
+	}
+
 	/**
 	 * Internal task for loading DCI data
 	 */
 	private class LoadLastValuesTask extends AsyncTask<Object, Void, DciValue[]>
 	{
-		private long nodeId;
+		private final long nodeId;
 
 		protected LoadLastValuesTask(long nodeId)
 		{
@@ -579,7 +651,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			{
 				return service.getSession().getLastValues(nodeId);
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
 				Log.d(TAG, "Exception while executing LoadLastValuesTask.doInBackground", e);
 				return null;

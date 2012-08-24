@@ -12,7 +12,9 @@ import java.util.List;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
+import org.netxms.ui.android.main.views.CheckableLinearLayout;
 import org.netxms.ui.android.service.ClientConnectorService;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.view.Gravity;
@@ -33,16 +35,22 @@ import android.widget.TextView;
 
 public class AlarmListAdapter extends BaseAdapter
 {
-	public enum AlarmSortBy { SORT_SEVERITY_ASC, SORT_SEVERITY_DESC, SORT_DATE_ASC, SORT_DATE_DESC };
+	public static final int SORT_SEVERITY_ASC = 0;
+	public static final int SORT_SEVERITY_DESC = 1;
+	public static final int SORT_DATE_ASC = 2;
+	public static final int SORT_DATE_DESC = 3;
+	public static final int SORT_NAME_ASC = 4;
+	public static final int SORT_NAME_DESC = 5;
 
-	private Context context;
+	private final Context context;
 	private List<Alarm> alarms = new ArrayList<Alarm>(0);
 	private ClientConnectorService service;
-	private AlarmSortBy sortBy = AlarmSortBy.SORT_SEVERITY_DESC;
+	private int sortBy = SORT_SEVERITY_DESC;
 
-	private static final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor, 
-        R.drawable.status_major, R.drawable.status_critical };
+	private static final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor,
+			R.drawable.status_major, R.drawable.status_critical };
 	private static final int[] stateImageId = { R.drawable.alarm_outstanding, R.drawable.alarm_acknowledged, R.drawable.alarm_resolved, R.drawable.alarm_terminated };
+	private String NODE_UNKNOWN = "";
 
 	/**
 	 * 
@@ -51,13 +59,14 @@ public class AlarmListAdapter extends BaseAdapter
 	public AlarmListAdapter(Context context)
 	{
 		this.context = context;
+		NODE_UNKNOWN = context.getResources().getString(R.string.node_unknown);
 	}
 
 	/**
 	 * 
 	 * @param sortBy
 	 */
-	public void setSortBy(AlarmSortBy sortBy)
+	public void setSortBy(int sortBy)
 	{
 		this.sortBy = sortBy;
 	}
@@ -66,7 +75,7 @@ public class AlarmListAdapter extends BaseAdapter
 	 * 
 	 * @return
 	 */
-	public AlarmSortBy getSortBy()
+	public int getSortBy()
 	{
 		return sortBy;
 	}
@@ -81,7 +90,8 @@ public class AlarmListAdapter extends BaseAdapter
 	{
 		if (nodeIdList == null || nodeIdList.size() == 0)
 			this.alarms = Arrays.asList(alarms);
-		else	// Filter on specific node
+		else
+		// Filter on specific node
 		{
 			this.alarms.clear();
 			for (int i = 0; i < alarms.length; i++)
@@ -89,45 +99,79 @@ public class AlarmListAdapter extends BaseAdapter
 					if (alarms[i].getSourceObjectId() == nodeIdList.get(j))
 						this.alarms.add(alarms[i]);
 		}
-		Collections.sort(this.alarms, new Comparator<Alarm>() {
+		Collections.sort(this.alarms, new Comparator<Alarm>()
+		{
 			@Override
-			public int compare(Alarm object1, Alarm object2)
+			public int compare(Alarm alarm1, Alarm alarm2)
 			{
 				switch (sortBy)
 				{
 					case SORT_SEVERITY_ASC:
-						return compareSeverity(object1, object2);
+						return compareSeverity(alarm1, alarm2);
 					case SORT_SEVERITY_DESC:
-						return compareSeverity(object2, object1);
+						return compareSeverity(alarm2, alarm1);
 					case SORT_DATE_ASC:
-						return compareDate(object1, object2);
+						return compareDate(alarm1, alarm2);
 					case SORT_DATE_DESC:
-						return compareDate(object2, object1);
+						return compareDate(alarm2, alarm1);
+					case SORT_NAME_ASC:
+						return compareName(alarm1, alarm2);
+					case SORT_NAME_DESC:
+						return compareName(alarm2, alarm1);
 				}
 				return 1;
 			}
 		});
 	}
 
-	private int compareSeverity(Alarm object1, Alarm object2)
+	/**
+	 * Compare by alarm severity
+	 * 
+	 * @param alarm1	First obj to compare
+	 * @param alarm2	Second obj to compare
+	 */
+	private int compareSeverity(Alarm alarm1, Alarm alarm2)
 	{
-		int rc = object1.getCurrentSeverity() - object2.getCurrentSeverity();
+		int rc = alarm1.getCurrentSeverity() - alarm2.getCurrentSeverity();
 		if (rc == 0)
 		{
-			rc = (int)(object1.getSourceObjectId() - object2.getSourceObjectId());
+			rc = (int)(alarm1.getSourceObjectId() - alarm2.getSourceObjectId());
 			if (rc == 0)
 			{
-				rc = compareDate(object1, object2);
+				rc = compareDate(alarm1, alarm2);
 				if (rc == 0)
-					rc = object1.getState() - object2.getState();
+					rc = alarm1.getState() - alarm2.getState();
 			}
 		}
 		return rc;
 	}
-	
-	private int compareDate(Alarm object1, Alarm object2)
+
+	/**
+	 * Compare by alarm date
+	 * 
+	 * @param alarm1	First obj to compare
+	 * @param alarm2	Second obj to compare
+	 */
+	private int compareDate(Alarm alarm1, Alarm alarm2)
 	{
-		return object1.getLastChangeTime().compareTo(object2.getLastChangeTime());
+		return alarm1.getLastChangeTime().compareTo(alarm2.getLastChangeTime());
+	}
+
+	/**
+	 * Compare by alarm's node name
+	 * 
+	 * @param alarm1	First obj to compare
+	 * @param alarm2	Second obj to compare
+	 */
+	private int compareName(Alarm alarm1, Alarm alarm2)
+	{
+		return getObjectName(alarm1.getSourceObjectId()).compareTo(getObjectName(alarm2.getSourceObjectId()));
+	}
+
+	private String getObjectName(long objectId)
+	{
+		GenericObject object = service.findObjectById(objectId);
+		return object == null ? NODE_UNKNOWN : object.getObjectName();
 	}
 
 	/**
@@ -213,7 +257,7 @@ public class AlarmListAdapter extends BaseAdapter
 		ImageView severity, state;
 		Resources r = context.getResources();
 
-		if (convertView == null)	// new alarm, create fields
+		if (convertView == null) // new alarm, create fields
 		{
 			severity = new ImageView(context);
 			severity.setPadding(5, 5, 5, 2);
@@ -223,7 +267,7 @@ public class AlarmListAdapter extends BaseAdapter
 			icons.setOrientation(LinearLayout.VERTICAL);
 			icons.addView(severity);
 			icons.addView(state);
-			
+
 			source = new TextView(context);
 			source.setPadding(5, 2, 5, 2);
 			source.setTextColor(r.getColor(R.color.text_color));
@@ -248,18 +292,18 @@ public class AlarmListAdapter extends BaseAdapter
 			texts.addView(info);
 			texts.addView(message);
 
-			view = new LinearLayout(context);
+			view = new CheckableLinearLayout(context);
 			view.addView(icons);
 			view.addView(texts);
 		}
 		else
-		{ 
+		{
 			// get reference to existing alarm
-			view = (LinearLayout)convertView;
-			icons = (LinearLayout)view.getChildAt(0);
+			view = (CheckableLinearLayout)convertView;
+			icons = (LinearLayout)view.getChildAt(1);
 			severity = (ImageView)icons.getChildAt(0);
 			state = (ImageView)icons.getChildAt(1);
-			texts = (LinearLayout)view.getChildAt(1);
+			texts = (LinearLayout)view.getChildAt(2);
 			info = (LinearLayout)texts.getChildAt(0);
 			source = (TextView)info.getChildAt(0);
 			date = (TextView)info.getChildAt(1);
@@ -268,8 +312,7 @@ public class AlarmListAdapter extends BaseAdapter
 
 		// get node name
 		Alarm alarm = alarms.get(position);
-		GenericObject object = service.findObjectById(alarm.getSourceObjectId());
-		source.setText(object == null ? r.getString(R.string.node_unknown) : object.getObjectName());
+		source.setText(getObjectName(alarm.getSourceObjectId()));
 		date.setText(alarm.getLastChangeTime().toLocaleString());
 		message.setText(alarm.getMessage());
 		severity.setImageResource(AlarmListAdapter.severityImageId[alarm.getCurrentSeverity()]);

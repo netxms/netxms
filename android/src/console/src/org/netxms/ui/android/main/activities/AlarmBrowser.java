@@ -9,7 +9,6 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.AlarmListAdapter;
-import org.netxms.ui.android.main.adapters.AlarmListAdapter.AlarmSortBy;
 
 import android.content.ComponentName;
 import android.content.Intent;
@@ -17,16 +16,17 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.SparseBooleanArray;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.ListView;
 
 /**
  * Alarm browser
@@ -43,7 +43,7 @@ public class AlarmBrowser extends AbstractClientActivity
 	private AlarmListAdapter adapter;
 	private ArrayList<Integer> nodeIdList;
 	private Spinner sortBy;
-	
+
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
 	 */
@@ -52,7 +52,7 @@ public class AlarmBrowser extends AbstractClientActivity
 	{
 		setContentView(R.layout.alarm_view);
 		nodeIdList = getIntent().getIntegerArrayListExtra("nodeIdList");
-		
+
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 		title.setText(R.string.alarms_title);
 
@@ -60,58 +60,25 @@ public class AlarmBrowser extends AbstractClientActivity
 		adapter = new AlarmListAdapter(this);
 
 		listView = (ListView)findViewById(R.id.AlarmList);
+		listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 		listView.setAdapter(adapter);
 		registerForContextMenu(listView);
 
-		sortBy = (Spinner) findViewById(R.id.sortBy);
-		sortBy.setOnItemSelectedListener(new OnItemSelectedListener() { 
-		    @Override 
-		    public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id)
-		    { 
-	    		setSortBy(position);
-	    		refreshList();
-		    }
+		sortBy = (Spinner)findViewById(R.id.sortBy);
+		sortBy.setOnItemSelectedListener(new OnItemSelectedListener()
+		{
+			@Override
+			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id)
+			{
+				adapter.setSortBy(position);
+				refreshList();
+			}
 			@Override
 			public void onNothingSelected(AdapterView<?> arg0)
 			{
-			} 
-		}); 
+			}
+		});
 		sortBy.setSelection(PreferenceManager.getDefaultSharedPreferences(this).getInt(SORT_KEY, 0));
-	}
-
-	public void setSortBy(int sortBy)
-	{
-		switch (sortBy)
-		{
-			case 0:
-				adapter.setSortBy(AlarmSortBy.SORT_SEVERITY_ASC);
-				break;
-			case 1:
-				adapter.setSortBy(AlarmSortBy.SORT_SEVERITY_DESC);
-				break;
-			case 2:
-				adapter.setSortBy(AlarmSortBy.SORT_DATE_ASC);
-				break;
-			case 3:
-				adapter.setSortBy(AlarmSortBy.SORT_DATE_DESC);
-				break;
-		}
-	}
-
-	public int getSortBy()
-	{
-		switch (adapter.getSortBy())
-		{
-			case SORT_SEVERITY_ASC:
-				return 0;
-			case SORT_SEVERITY_DESC:
-				return 1;
-			case SORT_DATE_ASC:
-				return 2;
-			case SORT_DATE_DESC:
-				return 3;
-		}
-		return 0;
 	}
 
 	/* (non-Javadoc)
@@ -140,55 +107,93 @@ public class AlarmBrowser extends AbstractClientActivity
 	 * @see android.app.Activity#onCreateContextMenu(android.view.ContextMenu, android.view.View, android.view.ContextMenu.ContextMenuInfo)
 	 */
 	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v,ContextMenuInfo menuInfo)
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
 	{
 		android.view.MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.alarm_actions, menu);
+		final SparseBooleanArray positions = listView.getCheckedItemPositions();
+		if (positions != null)
+			for (int i = 0; i < positions.size(); i++)
+				if (positions.get(i))
+				{
+					MenuItem item = menu.findItem(R.id.viewlastvalues);
+					if (item != null)
+						item.setVisible(false);
+					break;
+				}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onContextItemSelected(android.view.MenuItem)
 	 */
 	@Override
 	public boolean onContextItemSelected(MenuItem item)
 	{
-		// get selected item
-		AdapterView.AdapterContextMenuInfo info =
-				(AdapterContextMenuInfo) item.getMenuInfo();
-		Alarm al = (Alarm) adapter.getItem(info.position);
-
-		// process menu selection
+		int count = 0;
+		ArrayList<Long> alarmIdList = new ArrayList<Long>();
+		final SparseBooleanArray positions = listView.getCheckedItemPositions();
+		if (positions != null && positions.size() > 0)
+			for (int i = 0; i < adapter.getCount(); i++)
+				if (positions.get(i))
+				{
+					Alarm al = (Alarm)adapter.getItem(i);
+					if (al != null)
+					{
+						alarmIdList.add(al.getId());
+						count++;
+					}
+				}
+		if (count == 0)
+		{
+			AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
+			Alarm al = (Alarm)adapter.getItem(info.position);
+			if (al != null)
+			{
+				alarmIdList.add(al.getId());
+				count++;
+			}
+		}
 		switch (item.getItemId())
 		{
 			case R.id.acknowledge:
-				adapter.acknowledgeItem(al.getId());
+				for (int i = 0; i < count; i++)
+					adapter.acknowledgeItem(alarmIdList.get(i));
 				refreshList();
 				return true;
 			case R.id.resolve:
-				adapter.resolveItem(al.getId());
+				for (int i = 0; i < count; i++)
+					adapter.resolveItem(alarmIdList.get(i));
 				refreshList();
 				return true;
 			case R.id.terminate:
-				adapter.terminateItem(al.getId());
+				for (int i = 0; i < count; i++)
+					adapter.terminateItem(alarmIdList.get(i));
 				refreshList();
 				return true;
 			case R.id.viewlastvalues:
 				if (service != null)
 				{
-					GenericObject object = service.findObjectById(al.getSourceObjectId());
-					if (object!=null)
+					AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
+					if (info != null)
 					{
-						Intent newIntent = new Intent(this, LastValues.class);
-						newIntent.putExtra("objectId", object.getObjectId());
-						startActivity(newIntent);
+						Alarm al = (Alarm)adapter.getItem(info.position);
+						GenericObject object = service.findObjectById(al.getSourceObjectId());
+						if (object != null)
+						{
+							Intent newIntent = new Intent(this, NodeInfo.class);
+							newIntent.putExtra("objectId", object.getObjectId());
+							newIntent.putExtra("tabId", NodeInfo.TAB_LAST_VALUES_ID);
+							startActivity(newIntent);
+						}
 					}
+					return true;
 				}
-				return true;
 			default:
-				return super.onContextItemSelected(item);
+				break;
 		}
+		return super.onContextItemSelected(item);
 	}
-	
+
 	/**
 	 * Refresh alarm list
 	 */
@@ -198,6 +203,8 @@ public class AlarmBrowser extends AbstractClientActivity
 		{
 			adapter.setAlarms(service.getAlarms(), nodeIdList);
 			adapter.notifyDataSetChanged();
+			for (int i = 0; i < adapter.getCount(); i++)
+				listView.setItemChecked(i, false);
 		}
 	}
 
@@ -211,18 +218,18 @@ public class AlarmBrowser extends AbstractClientActivity
 			service.registerAlarmBrowser(null);
 		super.onDestroy();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onStop()
 	 */
-    @Override
-   	protected void onStop()
-   	{
-   		super.onStop();
-   		
-   		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this); 
-	    SharedPreferences.Editor editor = prefs.edit(); 
-        editor.putInt(SORT_KEY, getSortBy()); 
-	    editor.commit(); 
-    }
+	@Override
+	protected void onStop()
+	{
+		super.onStop();
+
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putInt(SORT_KEY, adapter.getSortBy());
+		editor.commit();
+	}
 }

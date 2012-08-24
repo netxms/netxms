@@ -17,5 +17,7 @@
 	    <item>Sort by severity descending</item> 
 		<item>Sort by date ascending</item> 
 		<item>Sort by date descending</item> 
+		<item>Sort by name ascending</item> 
+		<item>Sort by name descending</item> 
 	</string-array>
 </resources>

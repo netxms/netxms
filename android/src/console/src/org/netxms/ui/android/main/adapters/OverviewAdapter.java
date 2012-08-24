@@ -5,6 +5,7 @@ package org.netxms.ui.android.main.adapters;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.android.R;
@@ -19,14 +20,17 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
- * Adapter for alarm list
+ * Adapter for overview info
+ * 
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
+ * 
  */
 public class OverviewAdapter extends BaseAdapter
 {
-	private Context context;
-	private List<String> labels = new ArrayList<String>(0);
-	private List<String> values = new ArrayList<String>(0);
-	private Resources r;
+	private final Context context;
+	private final List<String> labels = new ArrayList<String>(0);
+	private final List<String> values = new ArrayList<String>(0);
+	private final Resources r;
 
 	/**
 	 * 
@@ -45,35 +49,34 @@ public class OverviewAdapter extends BaseAdapter
 	 */
 	public void setValues(Node node)
 	{
-		labels.add(r.getString(R.string.overview_id));
-		values.add(Integer.toString((int)node.getObjectId()));
-		labels.add(r.getString(R.string.overview_class));
-		values.add(node.getClass().getSimpleName());
-		labels.add(r.getString(R.string.overview_status));
-		values.add(getNodeStatus(node.getStatus()));
-		labels.add(r.getString(R.string.overview_primary_ip));
-		values.add(node.getPrimaryIP().getHostAddress().toString());
-		labels.add(r.getString(R.string.overview_system_description));
-		values.add(node.getSystemDescription());
-		if (node.getAgentVersion().length() != 0)
-		{
-			labels.add(r.getString(R.string.overview_netxms_agent));
-			values.add(node.getAgentVersion());
-			labels.add(r.getString(R.string.overview_agent_version));
-			values.add(node.getAgentVersion());
-		}
-		if (node.getPlatformName().length() != 0)
-		{
-			labels.add(r.getString(R.string.overview_platform_name));
-			values.add(node.getPlatformName());
-		}
-		if (node.getSnmpSysName().length() != 0)
-		{
-			labels.add(r.getString(R.string.overview_snmp_agent));
-			values.add(node.getSnmpSysName());
-			labels.add(r.getString(R.string.overview_snmp_oid));
-			values.add(node.getSnmpOID());
-		}
+		addPair(r.getString(R.string.overview_id), Integer.toString((int)node.getObjectId()));
+		addPair(r.getString(R.string.overview_guid), node.getGuid().toString());
+		addPair(r.getString(R.string.overview_class), node.getClass().getSimpleName());
+		addPair(r.getString(R.string.overview_status), getNodeStatus(node.getStatus()));
+		addPair(r.getString(R.string.overview_zone_id), Long.toString(node.getZoneId()));
+		addPair(r.getString(R.string.overview_primary_hostname), node.getPrimaryName());
+		addPair(r.getString(R.string.overview_primary_ip), node.getPrimaryIP().getHostAddress().toString());
+		if (node.hasAgent())
+			addPair(r.getString(R.string.overview_netxms_agent_version), node.getAgentVersion());
+		addPair(r.getString(R.string.overview_system_description), node.getSystemDescription(), false);
+		addPair(r.getString(R.string.overview_platform_name), node.getPlatformName(), false);
+		addPair(r.getString(R.string.overview_snmp_sysname), node.getSnmpSysName(), false);
+		addPair(r.getString(R.string.overview_snmp_oid), node.getSnmpOID(), false);
+		if ((node.getFlags() & Node.NF_IS_BRIDGE) != 0)
+			addPair(r.getString(R.string.overview_bridge_base_address), node.getBridgeBaseAddress().toString());
+		addPair(r.getString(R.string.overview_driver), node.getDriverName(), false);
+	}
+
+	private void addPair(String label, String value, boolean allowEmpty)
+	{
+		if (allowEmpty || (value != null && value.length() != 0))
+			addPair(label, value);
+	}
+
+	private void addPair(String label, String value)
+	{
+		labels.add(label);
+		values.add(value);
 	}
 
 	private String getNodeStatus(int status)
@@ -96,12 +99,12 @@ public class OverviewAdapter extends BaseAdapter
 				return r.getString(R.string.status_unmanaged);
 			case GenericObject.STATUS_DISABLED:
 				return r.getString(R.string.status_disabled);
-			case GenericObject.STATUS_TESTING:        
+			case GenericObject.STATUS_TESTING:
 				return r.getString(R.string.status_testing);
 		}
 		return r.getString(R.string.status_unknown);
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -171,7 +174,7 @@ public class OverviewAdapter extends BaseAdapter
 			view.addView(itemValue);
 		}
 		else
-		{ 
+		{
 			// get reference to existing view
 			view = (LinearLayout)convertView;
 			itemName = (TextView)view.getChildAt(0);

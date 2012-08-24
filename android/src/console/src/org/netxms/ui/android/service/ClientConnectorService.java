@@ -18,9 +18,9 @@ import org.netxms.ui.android.R;
 import org.netxms.ui.android.helpers.SafeParser;
 import org.netxms.ui.android.main.activities.AlarmBrowser;
 import org.netxms.ui.android.main.activities.DashboardBrowser;
+import org.netxms.ui.android.main.activities.GraphBrowser;
 import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.main.activities.NodeBrowser;
-import org.netxms.ui.android.main.activities.GraphBrowser;
 import org.netxms.ui.android.main.activities.NodeInfo;
 import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
@@ -54,7 +54,11 @@ import android.widget.Toast;
 
 public class ClientConnectorService extends Service implements SessionListener
 {
-	public enum ConnectionStatus { CS_NOCONNECTION, CS_INPROGRESS, CS_ALREADYCONNECTED, CS_CONNECTED, CS_DISCONNECTED, CS_ERROR };
+	public enum ConnectionStatus
+	{
+		CS_NOCONNECTION, CS_INPROGRESS, CS_ALREADYCONNECTED, CS_CONNECTED, CS_DISCONNECTED, CS_ERROR
+	};
+
 	public static final String ACTION_RECONNECT = "org.netxms.ui.android.ACTION_RECONNECT";
 	public static final String ACTION_DISCONNECT = "org.netxms.ui.android.ACTION_DISCONNECT";
 	private static final String TAG = "nxclient.ClientConnectorService";
@@ -62,12 +66,12 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	private static final int NOTIFY_ALARM = 1;
 	private static final int NOTIFY_STATUS = 2;
-	private static final int NOTIFY_STATUS_ON_CONNECT = 1; 
-	private static final int NOTIFY_STATUS_ON_DISCONNECT = 2; 
+	private static final int NOTIFY_STATUS_ON_CONNECT = 1;
+	private static final int NOTIFY_STATUS_ON_DISCONNECT = 2;
 	private static final int NOTIFY_STATUS_ALWAYS = 3;
 
-	private String mutex = "MUTEX";
-	private Binder binder = new ClientConnectorBinder();
+	private final String mutex = "MUTEX";
+	private final Binder binder = new ClientConnectorBinder();
 	private Handler uiThreadHandler;
 	private NotificationManager notificationManager;
 	private NXCSession session = null;
@@ -115,8 +119,9 @@ public class ClientConnectorService extends Service implements SessionListener
 		showToast(getString(R.string.notify_started));
 
 		lastAlarmIdNotified = PreferenceManager.getDefaultSharedPreferences(this).getInt(LASTALARM_KEY, 0);
-		
-		receiver = new BroadcastReceiver() {
+
+		receiver = new BroadcastReceiver()
+		{
 			@Override
 			public void onReceive(Context context, Intent intent)
 			{
@@ -126,7 +131,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			}
 		};
 		registerReceiver(receiver, new IntentFilter(Intent.ACTION_TIME_TICK));
-		
+
 		reconnect(true);
 	}
 
@@ -178,18 +183,18 @@ public class ClientConnectorService extends Service implements SessionListener
 		unregisterReceiver(receiver);
 		stopSelf();
 	}
-	
+
 	/**
 	 * 
 	 */
 	public void savePreferences()
 	{
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this); 
-		SharedPreferences.Editor editor = prefs.edit(); 
-		editor.putInt(LASTALARM_KEY, (int)lastAlarmIdNotified); 
-		editor.commit(); 
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putInt(LASTALARM_KEY, (int)lastAlarmIdNotified);
+		editor.commit();
 	}
-	
+
 	/**
 	 * Show alarm notification
 	 * 
@@ -262,8 +267,8 @@ public class ClientConnectorService extends Service implements SessionListener
 				showToast(text);
 			if (sp.getBoolean("global.notification.icon", false))
 			{
-				Notification n = new Notification(icon, text, System.currentTimeMillis()); 
-				n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT; 
+				Notification n = new Notification(icon, text, System.currentTimeMillis());
+				n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
 				Intent notifyIntent = new Intent(getApplicationContext(), HomeScreen.class);
 				PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
 				n.setLatestEventInfo(getApplicationContext(), getString(R.string.notification_title), text, intent);
@@ -290,13 +295,13 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		notificationManager.cancelAll();
 	}
-	
+
 	/**
 	 * Reconnect to server. If forceReconnect set to false
 	 */
 	public void reconnect(boolean forceReconnect)
 	{
-		synchronized(mutex)
+		synchronized (mutex)
 		{
 			if (connectionStatus != ConnectionStatus.CS_INPROGRESS)
 			{
@@ -304,15 +309,15 @@ public class ClientConnectorService extends Service implements SessionListener
 				showNotificationStatus(NOTIFY_STATUS, ConnectionStatus.CS_INPROGRESS, "");
 				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 				new ConnectTask(this).execute(sp.getString("connection.server", ""),
-				                              SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701), 
-				                              sp.getString("connection.login", ""),
-				                              sp.getString("connection.password", ""),
-				                              sp.getBoolean("connection.encrypt", false),
-				                              forceReconnect);
+						SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701),
+						sp.getString("connection.login", ""),
+						sp.getString("connection.password", ""),
+						sp.getBoolean("connection.encrypt", false),
+						forceReconnect);
 			}
 		}
 	}
-	
+
 	/**
 	 * Called by connect task after successful connection
 	 * 
@@ -321,7 +326,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void onConnect(NXCSession session, Map<Long, Alarm> alarms)
 	{
-		synchronized(mutex)
+		synchronized (mutex)
 		{
 			if (session != null)
 			{
@@ -334,7 +339,8 @@ public class ClientConnectorService extends Service implements SessionListener
 				{
 					long id = -1;
 					Alarm alarm = null;
-					for (Alarm itAlarm : alarms.values())	// Find the newest alarm received when we were offline
+					// Find the newest alarm received when we were offline
+					for (Alarm itAlarm : alarms.values())
 						if (itAlarm.getId() > id)
 						{
 							alarm = itAlarm;
@@ -358,7 +364,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
 		showNotificationStatus(NOTIFY_STATUS, ConnectionStatus.CS_DISCONNECTED, "");
 	}
-	
+
 	/**
 	 * Called by connect task on error during connection
 	 */
@@ -375,7 +381,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	private void nullifySession()
 	{
-		synchronized(mutex)
+		synchronized (mutex)
 		{
 			if (session != null)
 			{
@@ -386,7 +392,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			unknownAlarm = null;
 		}
 	}
-	
+
 	/**
 	 * Process alarm change
 	 * 
@@ -395,11 +401,11 @@ public class ClientConnectorService extends Service implements SessionListener
 	private void processAlarmChange(Alarm alarm)
 	{
 		GenericObject object = findObjectById(alarm.getSourceObjectId());
-		synchronized(mutex)
+		synchronized (mutex)
 		{
 			if (alarms != null)
 			{
-				lastAlarmIdNotified = alarm.getId(); 
+				lastAlarmIdNotified = alarm.getId();
 				alarms.put(lastAlarmIdNotified, alarm);
 			}
 			unknownAlarm = object == null ? alarm : null;
@@ -407,7 +413,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			refreshAlarmBrowser();
 		}
 	}
-		
+
 	/**
 	 * Process alarm change
 	 * 
@@ -415,7 +421,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	private void processAlarmDelete(long id)
 	{
-		synchronized(mutex)
+		synchronized (mutex)
 		{
 			if (alarms != null)
 				alarms.remove(id);
@@ -424,7 +430,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			refreshAlarmBrowser();
 		}
 	}
-	
+
 	/**
 	 * Synchronize information about specific object in background
 	 * 
@@ -432,7 +438,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	private void doBackgroundObjectSync(final long objectId)
 	{
-		new Thread("Background object sync") {
+		new Thread("Background object sync")
+		{
 			@Override
 			public void run()
 			{
@@ -440,14 +447,14 @@ public class ClientConnectorService extends Service implements SessionListener
 				{
 					session.syncObjectSet(new long[] { objectId }, false, NXCSession.OBJECT_SYNC_NOTIFY);
 				}
-				catch(Exception e)
+				catch (Exception e)
 				{
 					Log.d(TAG, "Exception in doBackgroundObjectSync", e);
 				}
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * @param objectId
 	 * @return
@@ -479,15 +486,15 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		return object;
 	}
-	
+
 	/**
 	 * @param object
 	 */
 	private void processObjectUpdate(GenericObject object)
 	{
-		synchronized(mutex)
+		synchronized (mutex)
 		{
-			if (unknownAlarm != null && unknownAlarm.getSourceObjectId() == object.getObjectId())	// Update <Unknown> notification
+			if (unknownAlarm != null && unknownAlarm.getSourceObjectId() == object.getObjectId()) // Update <Unknown> notification
 			{
 				showAlarmNotification(NOTIFY_ALARM, unknownAlarm.getCurrentSeverity(), object.getObjectName() + ": " + unknownAlarm.getMessage());
 				unknownAlarm = null;
@@ -507,6 +514,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			alarmBrowser.runOnUiThread(new Runnable()
 			{
+				@Override
 				public void run()
 				{
 					alarmBrowser.refreshList();
@@ -517,6 +525,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			nodeInfo.runOnUiThread(new Runnable()
 			{
+				@Override
 				public void run()
 				{
 					nodeInfo.refreshAlarms();
@@ -534,6 +543,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			nodeBrowser.runOnUiThread(new Runnable()
 			{
+				@Override
 				public void run()
 				{
 					nodeBrowser.refreshList();
@@ -549,7 +559,9 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		if (dashboardBrowser != null)
 		{
-			dashboardBrowser.runOnUiThread(new Runnable() {
+			dashboardBrowser.runOnUiThread(new Runnable()
+			{
+				@Override
 				public void run()
 				{
 					dashboardBrowser.refreshList();
@@ -557,17 +569,19 @@ public class ClientConnectorService extends Service implements SessionListener
 			});
 		}
 	}
-	
+
 	/**
 	 * Process graph update event
 	 */
 	private void processGraphUpdate()
 	{
-		synchronized(mutex)
+		synchronized (mutex)
 		{
 			if (this.graphBrowser != null)
 			{
-				graphBrowser.runOnUiThread(new Runnable() {
+				graphBrowser.runOnUiThread(new Runnable()
+				{
+					@Override
 					public void run()
 					{
 						graphBrowser.refreshList();
@@ -587,15 +601,15 @@ public class ClientConnectorService extends Service implements SessionListener
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 		switch (severity)
 		{
-			case 0:	// Normal
+			case 0: // Normal
 				return sp.getString("alarm.sound.normal", "");
-			case 1:	// Warning
+			case 1: // Warning
 				return sp.getString("alarm.sound.warning", "");
-			case 2:	// Minor
+			case 2: // Minor
 				return sp.getString("alarm.sound.minor", "");
-			case 3:	// Major
+			case 3: // Major
 				return sp.getString("alarm.sound.major", "");
-			case 4:	// Critical
+			case 4: // Critical
 				return sp.getString("alarm.sound.critical", "");
 		}
 		return "";
@@ -610,20 +624,20 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		switch (severity)
 		{
-			case 0:	// Normal
+			case 0: // Normal
 				return R.drawable.status_normal;
-			case 1:	// Warning
+			case 1: // Warning
 				return R.drawable.status_warning;
-			case 2:	// Minor
+			case 2: // Minor
 				return R.drawable.status_minor;
-			case 3:	// Major
+			case 3: // Major
 				return R.drawable.status_major;
-			case 4:	// Critical
+			case 4: // Critical
 				return R.drawable.status_critical;
 		}
 		return android.R.drawable.stat_notify_sdcard;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -634,7 +648,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	@Override
 	public void notificationHandler(SessionNotification n)
 	{
-		switch(n.getCode())
+		switch (n.getCode())
 		{
 			case SessionNotification.CONNECTION_BROKEN:
 			case SessionNotification.SERVER_SHUTDOWN:
@@ -668,7 +682,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	public Alarm[] getAlarms()
 	{
 		Alarm[] a;
-		synchronized(mutex)
+		synchronized (mutex)
 		{
 			if (alarms != null)
 				a = alarms.values().toArray(new Alarm[alarms.size()]);
@@ -687,7 +701,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			session.acknowledgeAlarm(id);
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 		}
 	}
@@ -700,7 +714,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			session.resolveAlarm(id);
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 		}
 	}
@@ -714,7 +728,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			session.terminateAlarm(id);
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 		}
 	}
@@ -729,7 +743,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			session.setObjectManaged(id, state);
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 		}
 	}
@@ -743,12 +757,12 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			this.objectTools = session.getObjectTools();
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			this.objectTools = null;
 		}
 	}
-	
+
 	/**
 	 * Execute agent action. Communication with server will be done in separate worker thread.
 	 * 
@@ -759,7 +773,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		new ExecActionTask().execute(new Object[] { session, objectId, action, this });
 	}
-	
+
 	/**
 	 * @return
 	 */
@@ -815,7 +829,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		dashboardBrowser = browser;
 	}
-	
+
 	/**
 	 * @return the connectionStatus
 	 */
@@ -879,7 +893,8 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		if (homeScreen != null)
 		{
-			homeScreen.runOnUiThread(new Runnable() {
+			homeScreen.runOnUiThread(new Runnable()
+			{
 				@Override
 				public void run()
 				{
@@ -896,7 +911,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		return session;
 	}
-	
+
 	/**
 	 * Show toast with given text
 	 * 
@@ -904,7 +919,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void showToast(final String text)
 	{
-		uiThreadHandler.post(new Runnable() {
+		uiThreadHandler.post(new Runnable()
+		{
 			@Override
 			public void run()
 			{
