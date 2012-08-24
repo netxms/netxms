@@ -44,25 +44,16 @@
 #include <tre/regex.h>
 
 #ifdef UNICODE
-#define _tregcomp  regwcomp
-#define _tregexec  regwexec
-#define _tregncomp regwncomp
-#define _tregnexec regwnexec
+#define _tregcomp  tre_regwcomp
+#define _tregexec  tre_regwexec
+#define _tregncomp tre_regwncomp
+#define _tregnexec tre_regwnexec
 #else
-#define _tregcomp  regcomp
-#define _tregexec  regexec
-#define _tregncomp regncomp
-#define _tregnexec regnexec
+#define _tregcomp  tre_regcomp
+#define _tregexec  tre_regexec
+#define _tregncomp tre_regncomp
+#define _tregnexec tre_regnexec
 #endif
-
-#define tre_regwcomp    regwcomp
-#define tre_regwexec    regwexec
-#define tre_regwncomp   regwncomp
-#define tre_regwnexec   regwnexec
-#define tre_regcomp     regcomp
-#define tre_regexec     regexec
-#define tre_regncomp    regncomp
-#define tre_regnexec    regnexec
 
 #endif	/* USE_BUNDLED_LIBTRE */
 
