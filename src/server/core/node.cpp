@@ -3537,7 +3537,7 @@ void Node::changeZone(DWORD newZone)
    LockData();
 
    m_zoneId = newZone;
-   m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL;
+   m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
 	m_tLastConfigurationPoll = 0;
 
 	// Remove from subnets
