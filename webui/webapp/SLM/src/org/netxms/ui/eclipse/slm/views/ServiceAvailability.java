@@ -83,6 +83,8 @@ public class ServiceAvailability extends ViewPart
 		
 		Canvas legend = new Canvas(clientArea, SWT.NONE);
 		legend.addPaintListener(new PaintListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void paintControl(PaintEvent e)
 			{

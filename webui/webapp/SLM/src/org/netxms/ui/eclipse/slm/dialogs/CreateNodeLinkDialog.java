@@ -37,6 +37,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CreateNodeLinkDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private LabeledText nameField;
 	private ObjectSelector nodeField;
 	

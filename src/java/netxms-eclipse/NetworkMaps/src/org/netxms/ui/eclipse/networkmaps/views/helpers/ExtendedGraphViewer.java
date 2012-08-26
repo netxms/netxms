@@ -342,6 +342,23 @@ public class ExtendedGraphViewer extends GraphViewer
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.GraphViewer#getFactory()
+	 */
+	@Override
+	protected IStylingGraphModelFactory getFactory()
+	{
+		return new GraphModelEntityRelationshipFactory(this) {
+			@Override
+			public void styleConnection(GraphConnection conn)
+			{
+				// do nothing here - this will override default behavior
+				// to make connection curved if there are multiple connections
+				// between nodes
+			}
+		};
+	}
+
 	/**
 	 * Additional figure used to display custom background for graph.
 	 */
@@ -382,22 +399,5 @@ public class ExtendedGraphViewer extends GraphViewer
 			gc.drawLine(0, crosshairY, size.width, crosshairY);
 			gc.drawLine(crosshairX, 0, crosshairX, size.height);
 		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.core.viewers.GraphViewer#getFactory()
-	 */
-	@Override
-	protected IStylingGraphModelFactory getFactory()
-	{
-		return new GraphModelEntityRelationshipFactory(this) {
-			@Override
-			public void styleConnection(GraphConnection conn)
-			{
-				// do nothing here - this will override default behavior
-				// to make connection curved if there are multiple connections
-				// between nodes
-			}
-		};
 	}
 }

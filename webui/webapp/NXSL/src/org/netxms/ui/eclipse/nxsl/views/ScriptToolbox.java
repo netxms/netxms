@@ -14,7 +14,6 @@ import org.eclipse.ui.part.ViewPart;
 public class ScriptToolbox extends ViewPart
 {
 	private Table functionList;
-	
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)

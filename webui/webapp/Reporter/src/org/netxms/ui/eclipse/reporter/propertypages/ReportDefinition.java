@@ -49,6 +49,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ReportDefinition extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private Report object;
 	private Text reportDefinition;
 	private boolean modified = false;
@@ -87,6 +89,8 @@ public class ReportDefinition extends PropertyPage
       gd.heightHint = 0;
       reportDefinition.setLayoutData(gd);
       reportDefinition.addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -98,6 +102,8 @@ public class ReportDefinition extends PropertyPage
       final Button updateButton = new Button(dialogArea, SWT.PUSH);
       updateButton.setText("Update from file...");
       updateButton.addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

@@ -31,6 +31,8 @@ import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
  */
 public class StringFieldEditor extends FieldEditor
 {
+	private static final long serialVersionUID = 1L;
+
 	private Text text;
 	
 	/**

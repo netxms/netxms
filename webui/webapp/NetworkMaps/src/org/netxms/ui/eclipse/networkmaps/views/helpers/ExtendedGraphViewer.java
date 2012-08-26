@@ -35,7 +35,10 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.viewers.GraphViewer;
+import org.eclipse.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
+import org.eclipse.zest.core.viewers.internal.IStylingGraphModelFactory;
 import org.eclipse.zest.core.viewers.internal.ZoomManager;
+import org.eclipse.zest.core.widgets.GraphConnection;
 import org.netxms.client.GeoLocation;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
@@ -299,6 +302,23 @@ public class ExtendedGraphViewer extends GraphViewer
 				actions[i].setChecked(true);
 		}
 		return actions;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.GraphViewer#getFactory()
+	 */
+	@Override
+	protected IStylingGraphModelFactory getFactory()
+	{
+		return new GraphModelEntityRelationshipFactory(this) {
+			@Override
+			public void styleConnection(GraphConnection conn)
+			{
+				// do nothing here - this will override default behavior
+				// to make connection curved if there are multiple connections
+				// between nodes
+			}
+		};
 	}
 
 	/**

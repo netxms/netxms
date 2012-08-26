@@ -198,6 +198,8 @@ public abstract class AbstractTraceView extends ViewPart
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 		
       actionCopy = new Action("&Copy to clipboard", SharedIcons.COPY) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

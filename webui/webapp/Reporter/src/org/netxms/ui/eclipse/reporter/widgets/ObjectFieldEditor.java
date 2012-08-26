@@ -42,6 +42,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ObjectFieldEditor extends FieldEditor
 {
+	private static final long serialVersionUID = 1L;
 	private static final String EMPTY_SELECTION_TEXT = "<none>";
 	
 	private CLabel text;
@@ -58,6 +59,8 @@ public class ObjectFieldEditor extends FieldEditor
 		super(parameter, toolkit, parent);
 		labelProvider = new WorkbenchLabelProvider();
 		addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

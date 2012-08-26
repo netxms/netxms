@@ -33,6 +33,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public abstract class FieldEditor extends Composite
 {
+	private static final long serialVersionUID = 1L;
+
 	protected ReportParameter parameter;
 	protected FormToolkit toolkit;
 

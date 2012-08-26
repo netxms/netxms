@@ -150,6 +150,8 @@ public class PredefinedGraphTree extends ViewPart
 		};
 		
 		actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

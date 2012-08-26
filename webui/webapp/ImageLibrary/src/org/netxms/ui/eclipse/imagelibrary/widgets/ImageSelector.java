@@ -37,6 +37,8 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class ImageSelector extends AbstractSelector implements ImageUpdateListener
 {
+	private static final long serialVersionUID = 1L;
+
 	private UUID imageGuid = NXCommon.EMPTY_GUID;
 	
 	public ImageSelector(Composite parent, int style)
@@ -44,6 +46,8 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 		super(parent, style, false);
 		ImageProvider.getInstance().addUpdateListener(this);
 		addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

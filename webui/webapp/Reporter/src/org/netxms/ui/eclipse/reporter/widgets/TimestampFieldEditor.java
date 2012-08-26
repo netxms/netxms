@@ -33,6 +33,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class TimestampFieldEditor extends FieldEditor
 {
+	private static final long serialVersionUID = 1L;
+
 	private DateTime datePicker;
 	private DateTime timePicker;
 	

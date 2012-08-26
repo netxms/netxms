@@ -42,6 +42,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ServiceCheckScript extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private ServiceCheck object;
 	private ScriptEditor filterSource;
 	private String initialScript;

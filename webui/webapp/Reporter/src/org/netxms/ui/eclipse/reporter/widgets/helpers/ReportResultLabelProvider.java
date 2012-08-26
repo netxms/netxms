@@ -8,6 +8,8 @@ import org.netxms.client.reports.ReportResult;
 
 public class ReportResultLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private final SimpleDateFormat dateFormat = new SimpleDateFormat();
 
 	@Override

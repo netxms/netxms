@@ -366,7 +366,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	public void selfStyleConnection(Object element, GraphConnection connection)
 	{
 		NetworkMapLink link = (NetworkMapLink)connection.getData();
-
+		
 		if (link.hasConnectorName1())
 		{
 			ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);

@@ -119,6 +119,8 @@ public class ScriptLibrary extends ViewPart
 			}
 		});
 		viewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -147,8 +149,9 @@ public class ScriptLibrary extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction()
-		{
+		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -157,6 +160,8 @@ public class ScriptLibrary extends ViewPart
 		};
 
 		actionNew = new Action("&New...", Activator.getImageDescriptor("icons/new.png")) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -165,6 +170,8 @@ public class ScriptLibrary extends ViewPart
 		};
 
 		actionEdit = new Action("&Edit", Activator.getImageDescriptor("icons/edit.png")) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -174,6 +181,8 @@ public class ScriptLibrary extends ViewPart
 		actionEdit.setEnabled(false);
 
 		actionRename = new Action("&Rename...") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -183,6 +192,8 @@ public class ScriptLibrary extends ViewPart
 		actionRename.setEnabled(false);
 
 		actionDelete = new Action("&Delete", Activator.getImageDescriptor("icons/delete.png")) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -241,8 +252,9 @@ public class ScriptLibrary extends ViewPart
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

@@ -46,6 +46,8 @@ import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
  */
 public class SlotView extends Canvas implements PaintListener, MouseListener
 {
+	private static final long serialVersionUID = 1L;
+
 	private static final int HORIZONTAL_MARGIN = 20;
 	private static final int VERTICAL_MARGIN = 10;
 	private static final int HORIZONTAL_SPACING = 10;

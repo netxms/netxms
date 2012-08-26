@@ -44,6 +44,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ObjectListFieldEditor extends FieldEditor
 {
+	private static final long serialVersionUID = 1L;
 	private TableViewer viewer;
 	private Map<Long, GenericObject> objects = new HashMap<Long, GenericObject>();
 	

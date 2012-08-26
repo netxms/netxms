@@ -107,6 +107,8 @@ public class ObjectStatusMapView extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -115,6 +117,8 @@ public class ObjectStatusMapView extends ViewPart
 		};
 		
 		actionGroupNodes = new Action("&Group nodes", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

@@ -317,6 +317,8 @@ public class LogViewer extends ViewPart
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -433,6 +435,8 @@ public class LogViewer extends ViewPart
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 		
 		actionCopyToClipboard = new Action("&Copy to clipboard", SharedIcons.COPY) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
