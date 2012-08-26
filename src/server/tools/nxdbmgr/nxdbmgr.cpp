@@ -519,7 +519,7 @@ BOOL ValidateDatabase()
 
 int main(int argc, char *argv[])
 {
-   BOOL bStart = TRUE, bForce = FALSE, bQuiet = FALSE;
+   BOOL bStart = TRUE, bForce = FALSE, bQuiet = FALSE, bReplaceValue = TRUE;
    int ch;
    TCHAR szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 #ifdef _WIN32
@@ -548,7 +548,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:dfGhIMqtvX")) != -1)
+   while((ch = getopt(argc, argv, "c:dfGhIMNqtvX")) != -1)
    {
       switch(ch)
       {
@@ -576,6 +576,7 @@ int main(int argc, char *argv[])
                      _T("   -h          : Display help and exit.\n")
                      _T("   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n")
                      _T("   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n")
+                     _T("   -N          : Do not replace existing configuration value (\"set\" command only).\n")
                      _T("   -q          : Quiet mode (don't show startup banner).\n")
                      _T("   -t          : Enable trace mode (show executed SQL queries).\n")
                      _T("   -v          : Display version and exit.\n")
@@ -604,6 +605,9 @@ int main(int argc, char *argv[])
 			case 'G':
 				g_isGuiMode = true;
 				break;
+         case 'N':
+            bReplaceValue = FALSE;
+            break;
          case 'q':
             bQuiet = TRUE;
             break;
@@ -774,7 +778,7 @@ int main(int argc, char *argv[])
 			char *var = argv[optind + 1];
 			char *value = argv[optind + 2];
 #endif
-			CreateConfigParam(var, value, 1, 0, TRUE);
+			CreateConfigParam(var, value, 1, 0, bReplaceValue);
 #ifdef UNICODE
 			free(var);
 			free(value);
