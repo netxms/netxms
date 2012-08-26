@@ -53,8 +53,8 @@ static BOOL CreateTable(const TCHAR *pszQuery)
 // Create configuration parameter if it doesn't exist (unless bForceUpdate set to true)
 //
 
-static BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
-                              int iVisible, int iNeedRestart, BOOL bForceUpdate = FALSE)
+BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
+                       int iVisible, int iNeedRestart, BOOL bForceUpdate)
 {
    TCHAR szQuery[1024], *pszEscValue;
    DB_RESULT hResult;

@@ -68,18 +68,34 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
    return ptr + 1;
 }
 
-
-//
-// Execute SQL batch file
-//
-
+/**
+ * Execute SQL batch file. If file name contains @dbengine@ macro,
+ * it will be replaced with current database engine name in lowercase
+ */
 BOOL ExecSQLBatch(const char *pszFile)
 {
    BYTE *pBatch, *pQuery, *pNext;
    DWORD dwSize;
    BOOL bResult = FALSE;
 
-   pBatch = LoadFileA(pszFile, &dwSize);
+	if (strstr(pszFile, "@dbengine@") != NULL)
+	{
+		static TCHAR *dbengine[] = { _T("mysql"), _T("pgsql"), _T("mssql"), _T("oracle"), _T("sqlite"), _T("db2"), _T("informix") };
+
+		String name;
+		name.addMultiByteString(pszFile, (DWORD)strlen(pszFile), CP_ACP);
+		name.translate(_T("@dbengine@"), dbengine[g_iSyntax]);
+	   pBatch = LoadFile(name, &dwSize);
+	   if (pBatch == NULL)
+		   _tprintf(_T("ERROR: Cannot load SQL command file %s\n"), (const TCHAR *)name);
+	}
+	else
+	{
+	   pBatch = LoadFileA(pszFile, &dwSize);
+	   if (pBatch == NULL)
+		   _tprintf(_T("ERROR: Cannot load SQL command file %hs\n"), pszFile);
+	}
+
    if (pBatch != NULL)
    {
       for(pQuery = pBatch; pQuery < pBatch + dwSize; pQuery = pNext)
@@ -99,10 +115,6 @@ BOOL ExecSQLBatch(const char *pszFile)
          }
       }
       free(pBatch);
-   }
-   else
-   {
-      _tprintf(_T("ERROR: Cannot load SQL command file %hs\n"), pszFile);
    }
    return bResult;
 }

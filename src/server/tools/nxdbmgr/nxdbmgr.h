@@ -75,6 +75,8 @@ BOOL MetaDataReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const 
 BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
 int ConfigReadInt(const TCHAR *pszVar, int iDefault);
 DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault);
+BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
+                       int iVisible, int iNeedRestart, BOOL bForceUpdate = FALSE);
 
 
 //

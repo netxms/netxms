@@ -361,11 +361,9 @@ BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column)
 	return success;
 }
 
-
-//
-// Read string value from metadata table
-//
-
+/**
+ * Read string value from metadata table
+ */
 BOOL MetaDataReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault)
 {
    DB_RESULT hResult;
@@ -391,11 +389,9 @@ BOOL MetaDataReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const 
    return bSuccess;
 }
 
-
-//
-// Read string value from configuration table
-//
-
+/**
+ * Read string value from configuration table
+ */
 BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault)
 {
    DB_RESULT hResult;
@@ -523,7 +519,7 @@ BOOL ValidateDatabase()
 
 int main(int argc, char *argv[])
 {
-   BOOL bStart = TRUE, bForce = FALSE;
+   BOOL bStart = TRUE, bForce = FALSE, bQuiet = FALSE;
    int ch;
    TCHAR szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 #ifdef _WIN32
@@ -534,8 +530,6 @@ int main(int argc, char *argv[])
 #endif
 
    InitThreadLibrary();
-
-   _tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T("\n\n"));
 
    // Check for alternate config file location
 #ifdef _WIN32
@@ -554,21 +548,24 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:dfGhIMtvX")) != -1)
+   while((ch = getopt(argc, argv, "c:dfGhIMqtvX")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
+			   _tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T("\n\n"));
             _tprintf(_T("Usage: nxdbmgr [<options>] <command>\n")
                      _T("Valid commands are:\n")
-						   _T("   batch <file>  : Run SQL batch file\n")
-                     _T("   check         : Check database for errors\n")
-                     _T("   export <file> : Export database to file\n")
-                     _T("   import <file> : Import database from file\n")
-                     _T("   init <file>   : Initialize database\n")
-				         _T("   reindex       : Reindex database\n")
-                     _T("   unlock        : Forced database unlock\n")
-                     _T("   upgrade       : Upgrade database to new version\n")
+						   _T("   batch <file>       : Run SQL batch file\n")
+                     _T("   check              : Check database for errors\n")
+                     _T("   export <file>      : Export database to file\n")
+                     _T("   get <name>         : Get value of server configuration variable\n")
+                     _T("   import <file>      : Import database from file\n")
+                     _T("   init <file>        : Initialize database\n")
+				         _T("   reindex            : Reindex database\n")
+                     _T("   set <name> <value> : Set value of server configuration variable\n")
+                     _T("   unlock             : Forced database unlock\n")
+                     _T("   upgrade            : Upgrade database to new version\n")
                      _T("Valid options are:\n")
                      _T("   -c <config> : Use alternate configuration file. Default is ") DEFAULT_CONFIG_FILE _T("\n")
                      _T("   -d          : Check collected data (may take very long time).\n")
@@ -579,6 +576,7 @@ int main(int argc, char *argv[])
                      _T("   -h          : Display help and exit.\n")
                      _T("   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n")
                      _T("   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n")
+                     _T("   -q          : Quiet mode (don't show startup banner).\n")
                      _T("   -t          : Enable trace mode (show executed SQL queries).\n")
                      _T("   -v          : Display version and exit.\n")
                      _T("   -X          : Ignore SQL errors when upgrading (USE WITH CARE!!!)\n")
@@ -586,6 +584,7 @@ int main(int argc, char *argv[])
             bStart = FALSE;
             break;
          case 'v':   // Print version and exit
+			   _tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T("\n\n"));
             bStart = FALSE;
             break;
          case 'c':
@@ -605,6 +604,9 @@ int main(int argc, char *argv[])
 			case 'G':
 				g_isGuiMode = true;
 				break;
+         case 'q':
+            bQuiet = TRUE;
+            break;
          case 't':
             g_bTrace = TRUE;
             break;
@@ -628,6 +630,9 @@ int main(int argc, char *argv[])
    if (!bStart)
       return 1;
 
+	if (!bQuiet)
+		_tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T("\n\n"));
+
    // Check parameter correctness
    if (argc - optind == 0)
    {
@@ -637,16 +642,19 @@ int main(int argc, char *argv[])
    if (strcmp(argv[optind], "batch") && 
        strcmp(argv[optind], "check") && 
        strcmp(argv[optind], "export") && 
+       strcmp(argv[optind], "get") && 
        strcmp(argv[optind], "import") && 
+       strcmp(argv[optind], "init") &&
        strcmp(argv[optind], "reindex") &&
-       strcmp(argv[optind], "upgrade") &&
+       strcmp(argv[optind], "set") &&
        strcmp(argv[optind], "unlock") &&
-       strcmp(argv[optind], "init"))
+       strcmp(argv[optind], "upgrade"))
    {
       _tprintf(_T("Invalid command \"%hs\". Type nxdbmgr -h for command line syntax.\n"), argv[optind]);
       return 1;
    }
-   if ((!strcmp(argv[optind], "init") || !strcmp(argv[optind], "batch") || !strcmp(argv[optind], "export") || !strcmp(argv[optind], "import")) && (argc - optind < 2))
+   if (((!strcmp(argv[optind], "init") || !strcmp(argv[optind], "batch") || !strcmp(argv[optind], "export") || !strcmp(argv[optind], "import") || !strcmp(argv[optind], "get")) && (argc - optind < 2)) ||
+       (!strcmp(argv[optind], "set") && (argc - optind < 3)))
    {
       _tprintf(_T("Required command argument missing\n"));
       return 1;
@@ -743,6 +751,35 @@ int main(int argc, char *argv[])
          ExportDatabase(argv[optind + 1]);
       else if (!strcmp(argv[optind], "import"))
          ImportDatabase(argv[optind + 1]);
+      else if (!strcmp(argv[optind], "get"))
+		{
+#ifdef UNICODE
+			WCHAR *var = WideStringFromMBString(argv[optind + 1]);
+#else
+			char *var = argv[optind + 1];
+#endif
+			TCHAR buffer[MAX_DB_STRING];
+			ConfigReadStr(var, buffer, MAX_DB_STRING, _T(""));
+			_tprintf(_T("%s\n"), buffer);
+#ifdef UNICODE
+			free(var);
+#endif
+		}
+      else if (!strcmp(argv[optind], "set"))
+		{
+#ifdef UNICODE
+			WCHAR *var = WideStringFromMBString(argv[optind + 1]);
+			WCHAR *value = WideStringFromMBString(argv[optind + 2]);
+#else
+			char *var = argv[optind + 1];
+			char *value = argv[optind + 2];
+#endif
+			CreateConfigParam(var, value, 1, 0, TRUE);
+#ifdef UNICODE
+			free(var);
+			free(value);
+#endif
+		}
    }
 
    // Shutdown
