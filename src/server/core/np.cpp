@@ -218,12 +218,47 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
    return pNode;
 }
 
+static Node *GetOldNodeWithNewIP(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwZoneId, BYTE *bMacAddr)
+{
+	Subnet *subnet;
+	BYTE nodeMacAddr[MAC_ADDR_LENGTH];
+	TCHAR szIpAddr[16], szMacAddr[20];
+
+	IpToStr(dwIpAddr, szIpAddr);
+	MACToStr(bMacAddr, szMacAddr);
+	DbgPrintf(6, _T("GetOldNodeWithNewIP: ip=%s mac=%s"), szIpAddr, szMacAddr);
+
+	if (bMacAddr == NULL)
+	{
+		subnet = FindSubnetByIP(dwZoneId, dwIpAddr);
+		if (subnet != NULL)
+		{
+			BOOL found = subnet->findMacAddress(dwIpAddr, nodeMacAddr);
+			if (!found)
+			{
+				DbgPrintf(6, _T("GetOldNodeWithNewIP: subnet not found"));
+				return NULL;
+			}
+		}
+	}
+	else
+	{
+		memcpy(nodeMacAddr, bMacAddr, MAC_ADDR_LENGTH);
+	}
+
+	Node *node = FindNodeByMAC(nodeMacAddr);
+
+	if (node == NULL)
+		DbgPrintf(6, _T("GetOldNodeWithNewIP: returning null (FindNodeByMac!)"));
+	
+	return node;
+}
 
 //
 // Check if newly discovered node should be added
 //
 
-static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId)
+static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *macAddr)
 {
    DISCOVERY_FILTER_DATA data;
    TCHAR szFilter[MAX_DB_STRING], szBuffer[256], szIpAddr[16];
@@ -240,6 +275,17 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId)
 	{
 		DbgPrintf(4, _T("AcceptNewNode(%s): node already exist in database"), szIpAddr);
       return FALSE;  // Node already exist in database
+	}
+
+	Node *oldNode;
+	if ((oldNode = GetOldNodeWithNewIP(dwIpAddr, dwNetMask, zoneId, macAddr)) != NULL)
+	{
+		TCHAR szOldIpAddr[16];
+		IpToStr(oldNode->IpAddr(), szOldIpAddr);
+		DbgPrintf(4, _T("AcceptNewNode(%s): node already exist in database with ip %s, will change to new"), 
+			szIpAddr, szOldIpAddr);
+		oldNode->changeIPAddress(dwIpAddr);
+		return FALSE;
 	}
 
    // Read configuration
@@ -451,7 +497,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 
 		DbgPrintf(4, _T("NodePoller: processing node %s/%s in zone %d"),
 		          IpToStr(pInfo->dwIpAddr, szIpAddr), IpToStr(pInfo->dwNetMask, szNetMask), (int)pInfo->zoneId);
-		if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, pInfo->zoneId))
+		if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, pInfo->zoneId, pInfo->bMacAddr))
 		{
          Node *node = PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, 0, 0, NULL, 0, 0, NULL, pInfo->zoneId, true, true);
 		}

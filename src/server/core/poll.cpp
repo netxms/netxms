@@ -357,7 +357,7 @@ static bool PollerQueueElementComparator(void *key, void *element)
 	return CAST_FROM_POINTER(key, DWORD) == ((NEW_NODE *)element)->dwIpAddr;
 }
 
-static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
+static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex, BYTE *macAddr = NULL)
 {
 	TCHAR buffer[16];
 
@@ -379,6 +379,10 @@ static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
             pInfo->dwNetMask = pInterface->getIpNetMask();
 				pInfo->zoneId = node->getZoneId();
 				pInfo->ignoreFilter = FALSE;
+				if (macAddr == NULL)
+					memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+				else
+					memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
             g_nodePollerQueue.Put(pInfo);
 				DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%s"),
 				          IpToStr(pInfo->dwIpAddr, buf1), 
@@ -470,7 +474,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       {
          for(i = 0; i < pArpCache->dwNumEntries; i++)
 				if (memcmp(pArpCache->pEntries[i].bMacAddr, _T("\xFF\xFF\xFF\xFF\xFF\xFF"), 6))	// Ignore broadcast addresses
-					CheckPotentialNode(pNode, pArpCache->pEntries[i].dwIpAddr, pArpCache->pEntries[i].dwIndex);
+					CheckPotentialNode(pNode, pArpCache->pEntries[i].dwIpAddr, pArpCache->pEntries[i].dwIndex, pArpCache->pEntries[i].bMacAddr);
          DestroyArpCache(pArpCache);
       }
 
@@ -643,6 +647,7 @@ static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
                   pInfo->dwNetMask = pSubnet->getIpNetMask();
 						pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 						pInfo->ignoreFilter = FALSE;
+						memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
                   g_nodePollerQueue.Put(pInfo);
                }
             }
@@ -655,6 +660,7 @@ static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
                pInfo->dwNetMask = 0;
 					pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 					pInfo->ignoreFilter = FALSE;
+					memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
                g_nodePollerQueue.Put(pInfo);
             }
          }

@@ -2161,6 +2161,8 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
       }
 
       // Check if we have pseudo-interface object
+		BYTE macAddr[MAC_ADDR_LENGTH];
+		BYTE *pMacAddr;
       dwCount = getInterfaceCount(&pInterface);
       if (dwCount == 1)
       {
@@ -2171,7 +2173,17 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
             {
                deleteInterface(pInterface);
 					if (m_dwIpAddr != 0)
-                  createNewInterface(m_dwIpAddr, dwNetMask);
+					{
+						memset(macAddr, 0, MAC_ADDR_LENGTH);
+						Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
+						if (pSubnet != NULL)
+							pSubnet->findMacAddress(m_dwIpAddr, macAddr);
+						pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6) ? NULL : macAddr;
+						TCHAR szMac[20];
+						MACToStr(macAddr, szMac);
+						DbgPrintf(6, _T("Node::updateInterfaceConfiguration: got MAC for unknown interface: %s"), szMac);
+                  createNewInterface(m_dwIpAddr, dwNetMask, NULL, NULL, 0, 0, pMacAddr);
+					}
             }
          }
       }
@@ -2179,8 +2191,19 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
       {
          // No interfaces at all, create pseudo-interface
 			if (m_dwIpAddr != 0)
-         	createNewInterface(m_dwIpAddr, dwNetMask);
+			{
+				memset(macAddr, 0, MAC_ADDR_LENGTH);
+				Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
+				if (pSubnet != NULL)
+					pSubnet->findMacAddress(m_dwIpAddr, macAddr);
+				pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6) ? NULL : macAddr;
+				TCHAR szMac[20];
+				MACToStr(macAddr, szMac);
+				DbgPrintf(6, _T("Node::updateInterfaceConfiguration: got MAC for unknown interface: %s"), szMac);
+         	createNewInterface(m_dwIpAddr, dwNetMask, NULL, NULL, 0, 0, pMacAddr);
+			}
       }
+		DbgPrintf(6, _T("Node::updateInterfaceConfiguration: pflist == NULL, dwCount = %ld"), dwCount);
    }
 
 	SendPollerMsg(dwRqId, _T("Interface configuration check finished\r\n"));

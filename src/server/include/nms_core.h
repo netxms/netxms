@@ -250,6 +250,7 @@ typedef struct
    DWORD dwNetMask;
 	DWORD zoneId;
 	BOOL ignoreFilter;
+	BYTE bMacAddr[MAC_ADDR_LENGTH];
 } NEW_NODE;
 
 
