@@ -1,9 +1,9 @@
 [Setup]
 AppName=NetXMS WebUI
-AppVerName=NetXMS WebUI 1.2.2
-AppVersion=1.2.2
-AppPublisher=NetXMS Team
-AppPublisherURL=http://www.netxms.org
+AppVerName=NetXMS WebUI 1.2.3
+AppVersion=1.2.3
+AppPublisher=Raden Solutions
+AppPublisherURL=http://www.radensolutions.com
 AppSupportURL=http://www.netxms.org
 AppUpdatesURL=http://www.netxms.org
 DefaultDirName=C:\NetXMS
@@ -12,5 +12,5 @@ AllowNoIcons=yes
 LicenseFile=..\..\..\GPL.txt
 Compression=lzma
 SolidCompression=yes
-;Compression=none
 LanguageDetectionMethod=none
+
