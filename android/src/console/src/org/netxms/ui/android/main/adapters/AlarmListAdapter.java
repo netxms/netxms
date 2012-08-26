@@ -46,10 +46,6 @@ public class AlarmListAdapter extends BaseAdapter
 	private List<Alarm> alarms = new ArrayList<Alarm>(0);
 	private ClientConnectorService service;
 	private int sortBy = SORT_SEVERITY_DESC;
-
-	private static final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor,
-			R.drawable.status_major, R.drawable.status_critical };
-	private static final int[] stateImageId = { R.drawable.alarm_outstanding, R.drawable.alarm_acknowledged, R.drawable.alarm_resolved, R.drawable.alarm_terminated };
 	private String NODE_UNKNOWN = "";
 
 	/**
@@ -222,9 +218,9 @@ public class AlarmListAdapter extends BaseAdapter
 	/**
 	 * @param id
 	 */
-	public void acknowledgeItem(long id)
+	public void acknowledgeItem(long id, boolean sticky)
 	{
-		service.acknowledgeAlarm(id);
+		service.acknowledgeAlarm(id, sticky);
 	}
 
 	/**
@@ -315,9 +311,22 @@ public class AlarmListAdapter extends BaseAdapter
 		source.setText(getObjectName(alarm.getSourceObjectId()));
 		date.setText(alarm.getLastChangeTime().toLocaleString());
 		message.setText(alarm.getMessage());
-		severity.setImageResource(AlarmListAdapter.severityImageId[alarm.getCurrentSeverity()]);
-		state.setImageResource(AlarmListAdapter.stateImageId[alarm.getState()]);
+		severity.setImageResource(getAlarmIconSeverity(alarm));
+		state.setImageResource(getAlarmIconState(alarm));
 
 		return view;
+	}
+
+	private int getAlarmIconSeverity(Alarm alarm)
+	{
+		final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor,
+				R.drawable.status_major, R.drawable.status_critical };
+		return severityImageId[alarm.getCurrentSeverity()];
+
+	}
+	private int getAlarmIconState(Alarm alarm)
+	{
+		final int[] stateImageId = { R.drawable.alarm_outstanding, R.drawable.alarm_acknowledged, R.drawable.alarm_resolved, R.drawable.alarm_terminated };
+		return alarm.isSticky() ? R.drawable.alarm_sticky_acknowledged : stateImageId[alarm.getState()];
 	}
 }

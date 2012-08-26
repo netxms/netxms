@@ -695,11 +695,11 @@ public class ClientConnectorService extends Service implements SessionListener
 	/**
 	 * @param id
 	 */
-	public void acknowledgeAlarm(long id)
+	public void acknowledgeAlarm(long id, boolean sticky)
 	{
 		try
 		{
-			session.acknowledgeAlarm(id);
+			session.acknowledgeAlarm(id, sticky);
 		}
 		catch (Exception e)
 		{

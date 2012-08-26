@@ -157,7 +157,12 @@ public class AlarmBrowser extends AbstractClientActivity
 		{
 			case R.id.acknowledge:
 				for (int i = 0; i < count; i++)
-					adapter.acknowledgeItem(alarmIdList.get(i));
+					adapter.acknowledgeItem(alarmIdList.get(i), false);
+				refreshList();
+				return true;
+			case R.id.sticky_acknowledge:
+				for (int i = 0; i < count; i++)
+					adapter.acknowledgeItem(alarmIdList.get(i), true);
 				refreshList();
 				return true;
 			case R.id.resolve:

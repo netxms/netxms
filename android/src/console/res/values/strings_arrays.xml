@@ -17,7 +17,13 @@
 	    <item>Sort by severity descending</item> 
 		<item>Sort by date ascending</item> 
 		<item>Sort by date descending</item> 
-		<item>Sort by name ascending</item> 
-		<item>Sort by name descending</item> 
+		<item>Sort by node name ascending</item> 
+		<item>Sort by node name descending</item> 
+	</string-array>
+	<string-array name="nodeAlarmsSortBy"> 
+		<item>Sort by severity ascending</item> 
+	    <item>Sort by severity descending</item> 
+		<item>Sort by date ascending</item> 
+		<item>Sort by date descending</item> 
 	</string-array>
 </resources>

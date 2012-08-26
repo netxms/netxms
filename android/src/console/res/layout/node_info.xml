@@ -12,18 +12,17 @@
 	    <TabWidget android:id="@android:id/tabs"
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content" />
-		<FrameLayout android:id="@android:id/tabcontent"
+	    <FrameLayout android:id="@android:id/tabcontent"
 			android:background="@color/item_body"
 			android:cacheColorHint="@color/item_body" 
 			android:layout_width="fill_parent" 
 			android:layout_height="fill_parent">
-			<ListView android:id="@+id/overview"
+   			<ListView android:id="@+id/overview"
 			    android:layout_width="fill_parent"
 				android:background="@color/item_body"
 				android:cacheColorHint="@color/item_body" 
 			    android:listSelector="@drawable/list_selection"
-				android:layout_height="wrap_content"
-				android:layout_weight="0">
+				android:layout_height="wrap_content">
 			</ListView>
 			<ListView android:id="@+id/last_values"
 			    android:layout_width="fill_parent"
@@ -31,17 +30,24 @@
 				android:cacheColorHint="@color/item_body" 
 			    android:listSelector="@drawable/list_selection"
 	    		android:choiceMode="multipleChoice"
-				android:layout_height="wrap_content"
-				android:layout_weight="0">
+				android:layout_height="wrap_content">
 			</ListView>
-			<ListView android:id="@+id/alarms"
-			    android:layout_width="fill_parent"
-				android:background="@color/item_body"
-				android:cacheColorHint="@color/item_body" 
-			    android:listSelector="@drawable/list_selection"
-				android:layout_height="wrap_content"
-				android:layout_weight="0">
-			</ListView>
-					</FrameLayout>
+			<LinearLayout android:orientation="vertical"
+				android:layout_width="fill_parent"
+				android:layout_height="fill_parent">
+		    	<Spinner android:id="@+id/sortBy"
+		    		android:layout_width="fill_parent"
+		    		android:layout_height="wrap_content"
+		    		android:entries="@array/nodeAlarmsSortBy" />
+			    <ListView android:id="@+id/alarms"
+				    android:layout_width="fill_parent"
+					android:background="@color/item_body"
+					android:cacheColorHint="@color/item_body" 
+				    android:listSelector="@drawable/list_selection"
+					android:choiceMode="multipleChoice"
+					android:layout_height="wrap_content">
+				</ListView>
+			</LinearLayout>
+		</FrameLayout>
 	</LinearLayout>
 </TabHost>

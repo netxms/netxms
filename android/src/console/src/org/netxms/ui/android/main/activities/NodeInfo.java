@@ -18,9 +18,11 @@ import android.app.TabActivity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.ContextMenu;
@@ -30,7 +32,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TabHost;
 import android.widget.TabHost.OnTabChangeListener;
 import android.widget.TabHost.TabContentFactory;
@@ -52,6 +56,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	private static final String TAG = "nxclient.NodeInfo";
 	private static final Integer[] DEFAULT_COLORS = { 0x40699C, 0x9E413E, 0x7F9A48, 0x695185, 0x3C8DA3, 0xCC7B38, 0x4F81BD, 0xC0504D,
 			0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9 };
+	private static final String SORT_KEY = "NodeAlarmsSortBy";
 
 	private static Method method_invalidateOptionsMenu;
 
@@ -83,6 +88,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	private long nodeId;
 	private Node node = null;
 	private boolean recreateOptionsMenu = false;
+	private Spinner sortBy;
 
 	/* (non-Javadoc)
 	 * @see android.app.ActivityGroup#onCreate(android.os.Bundle)
@@ -107,15 +113,16 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		overviewAdapter = new OverviewAdapter(this);
 		overviewListView = (ListView)findViewById(R.id.overview);
 		overviewListView.setAdapter(overviewAdapter);
-
-		tabHost.addTab(tabHost.newTabSpec(TAB_OVERVIEW).setIndicator(TAB_OVERVIEW).setContent(new TabContentFactory()
-		{
-			@Override
-			public View createTabContent(String arg0)
-			{
-				return overviewListView;
-			}
-		}));
+		tabHost.addTab(tabHost.newTabSpec(TAB_OVERVIEW).setIndicator(
+				TAB_OVERVIEW, getResources().getDrawable(R.drawable.ni_overview_tab)).setContent(
+				new TabContentFactory()
+				{
+					@Override
+					public View createTabContent(String arg0)
+					{
+						return overviewListView;
+					}
+				}));
 
 		TAB_LAST_VALUES = getString(R.string.node_info_last_values);
 		lastValuesAdapter = new LastValuesAdapter(this);
@@ -123,15 +130,16 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		lastValuesListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 		lastValuesListView.setAdapter(lastValuesAdapter);
 		registerForContextMenu(lastValuesListView);
-
-		tabHost.addTab(tabHost.newTabSpec(TAB_LAST_VALUES).setIndicator(TAB_LAST_VALUES).setContent(new TabContentFactory()
-		{
-			@Override
-			public View createTabContent(String arg0)
-			{
-				return lastValuesListView;
-			}
-		}));
+		tabHost.addTab(tabHost.newTabSpec(TAB_LAST_VALUES).setIndicator(
+				TAB_LAST_VALUES, getResources().getDrawable(R.drawable.ni_last_values_tab)).setContent(
+				new TabContentFactory()
+				{
+					@Override
+					public View createTabContent(String arg0)
+					{
+						return lastValuesListView;
+					}
+				}));
 
 		TAB_ALARMS = getString(R.string.node_info_alarms);
 		alarmsAdapter = new AlarmListAdapter(this);
@@ -139,15 +147,32 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		alarmsListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 		alarmsListView.setAdapter(alarmsAdapter);
 		registerForContextMenu(alarmsListView);
+		tabHost.addTab(tabHost.newTabSpec(TAB_ALARMS).setIndicator(
+				TAB_ALARMS, getResources().getDrawable(R.drawable.ni_alarms_tab)).setContent(
+				new TabContentFactory()
+				{
+					@Override
+					public View createTabContent(String arg0)
+					{
+						return alarmsListView;
+					}
+				}));
 
-		tabHost.addTab(tabHost.newTabSpec(TAB_ALARMS).setIndicator(TAB_ALARMS).setContent(new TabContentFactory()
+		sortBy = (Spinner)findViewById(R.id.sortBy);
+		sortBy.setOnItemSelectedListener(new OnItemSelectedListener()
 		{
 			@Override
-			public View createTabContent(String arg0)
+			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id)
 			{
-				return alarmsListView;
+				alarmsAdapter.setSortBy(position);
+				refreshAlarms();
 			}
-		}));
+			@Override
+			public void onNothingSelected(AdapterView<?> arg0)
+			{
+			}
+		});
+		sortBy.setSelection(PreferenceManager.getDefaultSharedPreferences(this).getInt(SORT_KEY, 0));
 
 		// NB Seems to be necessary to avoid overlap of other tabs!
 		tabHost.setCurrentTabByTag(TAB_ALARMS);
@@ -170,18 +195,33 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	}
 
 	/* (non-Javadoc)
+	 * @see android.app.Activity#onStop()
+	 */
+	@Override
+	protected void onStop()
+	{
+		super.onStop();
+
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putInt(SORT_KEY, alarmsAdapter.getSortBy());
+		editor.commit();
+	}
+
+	/* (non-Javadoc)
 	 * @see android.widget.TabHost.OnTabChangeListener#onTabChanged(java.lang.String)
 	 */
 	@Override
 	public void onTabChanged(String tabId)
 	{
+		if (sortBy != null)
+			sortBy.setVisibility(tabId.equals(TAB_ALARMS) ? View.VISIBLE : View.INVISIBLE);
 		if (tabId.equals(TAB_OVERVIEW))
 			overviewAdapter.notifyDataSetChanged();
 		else if (tabId.equals(TAB_LAST_VALUES))
 			lastValuesAdapter.notifyDataSetChanged();
 		else if (tabId.equals(TAB_ALARMS))
 			alarmsAdapter.notifyDataSetChanged();
-
 		if (method_invalidateOptionsMenu != null)
 		{
 			try
@@ -398,7 +438,10 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 				return showTableLastValue(info.position);
 				// Alarms
 			case R.id.acknowledge:
-				acknowledgeAlarms(info.position);
+				acknowledgeAlarms(info.position, false);
+				return true;
+			case R.id.sticky_acknowledge:
+				acknowledgeAlarms(info.position, true);
 				return true;
 			case R.id.resolve:
 				resolveAlarms(info.position);
@@ -605,11 +648,11 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		return alarmIdList;
 	}
 
-	private void acknowledgeAlarms(int position)
+	private void acknowledgeAlarms(int position, boolean sticky)
 	{
 		ArrayList<Long> alarmIdList = getAlarmIdList(position);
 		for (int i = 0; i < alarmIdList.size(); i++)
-			alarmsAdapter.acknowledgeItem(alarmIdList.get(i));
+			alarmsAdapter.acknowledgeItem(alarmIdList.get(i), sticky);
 		if (alarmIdList.size() != 0)
 			refreshAlarms();
 	}
