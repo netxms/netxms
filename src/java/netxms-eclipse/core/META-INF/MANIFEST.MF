@@ -13,7 +13,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
- jar/netxms-client-1.2.2.jar
+ jar/netxms-client-1.2.3.jar
 Export-Package: org.netxms.client,
  org.netxms.client.constants,
  org.netxms.client.dashboards,

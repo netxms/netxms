@@ -10,6 +10,8 @@
 	- Background color can be set for network maps
 	- Different connection routing algorithms for network maps
 	- Fixed incorrect display of string data in DCI history
+	- Added "copy to clipboard" action in MAC address search reults
+	- Added "copy to clipboard" action in interface tab
 
 
 *

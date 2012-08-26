@@ -18,23 +18,31 @@
  */
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListComparator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListLabelProvider;
+import org.netxms.ui.eclipse.shared.IActionConstants;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -64,6 +72,12 @@ public class InterfacesTab extends ObjectTab
 	
 	private SortableTableViewer viewer;
 	private InterfaceListLabelProvider labelProvider;
+	private Action actionCopyToClipboard;
+	private Action actionCopyMacAddressToClipboard;
+	private Action actionCopyIpAddressToClipboard;
+	private Action actionCopyPeerNameToClipboard;
+	private Action actionCopyPeerMacToClipboard;
+	private Action actionCopyPeerIpToClipboard;
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -90,7 +104,62 @@ public class InterfacesTab extends ObjectTab
 				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable");
 			}
 		});
+		createActions();
 		createPopupMenu();
+	}
+	
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionCopyToClipboard = new Action("&Copy to clipboard", SharedIcons.COPY) {
+			@Override
+			public void run()
+			{
+				copyToClipboard(-1);
+			}
+		};	
+
+		actionCopyMacAddressToClipboard = new Action("Copy MAC address to clipboard") {
+			@Override
+			public void run()
+			{
+				copyToClipboard(COLUMN_MAC_ADDRESS);
+			}
+		};	
+
+		actionCopyIpAddressToClipboard = new Action("Copy IP address to clipboard") {
+			@Override
+			public void run()
+			{
+				copyToClipboard(COLUMN_IP_ADDRESS);
+			}
+		};	
+
+		actionCopyPeerNameToClipboard = new Action("Copy peer name to clipboard") {
+			@Override
+			public void run()
+			{
+				copyToClipboard(COLUMN_PEER_NAME);
+			}
+		};	
+
+		actionCopyPeerMacToClipboard = new Action("Copy peer MAC address to clipboard") {
+			@Override
+			public void run()
+			{
+				copyToClipboard(COLUMN_PEER_MAC_ADDRESS);
+			}
+		};	
+
+		actionCopyPeerIpToClipboard = new Action("Copy peer IP address to clipboard") {
+			@Override
+			public void run()
+			{
+				copyToClipboard(COLUMN_PEER_IP_ADDRESS);
+			}
+		};	
 	}
 	
 	/**
@@ -123,7 +192,31 @@ public class InterfacesTab extends ObjectTab
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
+		manager.add(actionCopyToClipboard);
+		manager.add(actionCopyMacAddressToClipboard);
+		manager.add(actionCopyIpAddressToClipboard);
+		manager.add(actionCopyPeerNameToClipboard);
+		manager.add(actionCopyPeerMacToClipboard);
+		manager.add(actionCopyPeerIpToClipboard);
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
+		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_TOPOLOGY));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
+		
+		if (((IStructuredSelection)viewer.getSelection()).size() == 1)
+		{
+			manager.add(new Separator());
+			manager.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
+			manager.add(new PropertyDialogAction(getViewPart().getSite(), viewer));
+		}
 	}
 
 	/* (non-Javadoc)
@@ -155,5 +248,39 @@ public class InterfacesTab extends ObjectTab
 	public boolean showForObject(GenericObject object)
 	{
 		return (object instanceof Node);
+	}
+
+	/**
+	 * Copy content to clipboard
+	 * 
+	 * @param column column number or -1 to copy all columns
+	 */
+	private void copyToClipboard(int column)
+	{
+		final TableItem[] selection = viewer.getTable().getSelection();
+		if (selection.length > 0)
+		{
+			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
+			final StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < selection.length; i++)
+			{
+				if (i > 0)
+					sb.append(newLine);
+				if (column == -1)
+				{
+					for(int j = 0; j < viewer.getTable().getColumnCount(); j++)
+					{
+						if (j > 0)
+							sb.append('\t');
+						sb.append(selection[i].getText(j));
+					}
+				}
+				else
+				{
+					sb.append(selection[i].getText(column));
+				}
+			}
+			WidgetHelper.copyToClipboard(sb.toString());
+		}
 	}
 }
