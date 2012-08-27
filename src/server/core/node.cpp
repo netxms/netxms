@@ -60,6 +60,7 @@ Node::Node() : Template()
    m_tLastConfigurationPoll = 0;
 	m_tLastTopologyPoll = 0;
    m_tLastRTUpdate = 0;
+	m_tDownSince = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
@@ -126,6 +127,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
    m_tLastConfigurationPoll = 0;
 	m_tLastTopologyPoll = 0;
    m_tLastRTUpdate = 0;
+	m_tDownSince = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
@@ -221,7 +223,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
       _T("proxy_node,snmp_proxy,required_polls,uname,")
 		_T("use_ifxtable,snmp_port,community,usm_auth_password,")
 		_T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
-      _T("runtime_flags FROM nodes WHERE id=?"));
+      _T("runtime_flags,down_since FROM nodes WHERE id=?"));
 	if (hStmt == NULL)
 		return FALSE;
 
@@ -280,6 +282,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
 	m_dwDynamicFlags = DBGetFieldULong(hResult, 0, 25);
 	m_dwDynamicFlags &= NDF_PERSISTENT;	// Clear out all non-persistent runtime flags
+
+	m_tDownSince = DBGetFieldLong(hResult, 0, 26);
 
    DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
@@ -373,7 +377,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  _T("zone_guid=%d,proxy_node=%d,snmp_proxy=%d,")
 					  _T("required_polls=%d,use_ifxtable=%d,usm_auth_password=%s,")
 					  _T("usm_priv_password=%s,usm_methods=%d,snmp_sys_name=%s,bridge_base_addr='%s',")
-					  _T("runtime_flags=%d WHERE id=%d"),
+					  _T("runtime_flags=%d,down_since=%d WHERE id=%d"),
                  IpToStr(m_dwIpAddr, szIpAddr), (const TCHAR *)DBPrepareString(hdb, m_primaryName), m_wSNMPPort, 
                  m_dwFlags, m_snmpVersion, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
                  m_iStatusPollType, m_wAgentPort, m_wAuthMethod,
@@ -386,7 +390,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 					  m_nUseIfXTable, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
 					  (const TCHAR *)DBPrepareString(hdb, m_sysName), 
-					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), (int)m_dwDynamicFlags, (int)m_dwId);
+					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), (int)m_dwDynamicFlags, 
+					  (int)m_tDownSince, (int)m_dwId);
 	}
    else
 	{
@@ -397,8 +402,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  _T("agent_version,platform_name,uname,")
                  _T("poller_node_id,zone_guid,snmp_proxy,required_polls,")
 		           _T("use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
-					  _T("snmp_sys_name,bridge_base_addr,runtime_flags) VALUES ")
-		           _T("(%d,'%s',%s,%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d,%s,'%s',%d)"),
+					  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since) VALUES ")
+		           _T("(%d,'%s',%s,%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d,%s,'%s',%d,%d)"),
                  (int)m_dwId, IpToStr(m_dwIpAddr, szIpAddr), (const TCHAR *)DBPrepareString(hdb, m_primaryName),
 					  (int)m_wSNMPPort, m_dwFlags, m_snmpVersion, (
 					  const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
@@ -412,7 +417,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
 					  (const TCHAR *)DBPrepareString(hdb, m_sysName),
-					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), (int)m_dwDynamicFlags);
+					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), (int)m_dwDynamicFlags, 
+					  (int)m_tDownSince);
 	}
    bResult = DBQuery(hdb, szQuery);
 
@@ -1246,6 +1252,7 @@ skip_snmp_check:
 		   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
 		   {
 		      m_dwDynamicFlags |= NDF_UNREACHABLE;
+				m_tDownSince = time(NULL);
 		      PostEvent(EVENT_NODE_DOWN, m_dwId, NULL);
 		      SendPollerMsg(dwRqId, POLLER_ERROR _T("Node is unreachable\r\n"));
 		   }
@@ -1256,6 +1263,7 @@ skip_snmp_check:
 		}
 		else
 		{
+			m_tDownSince = 0;
 		   if (m_dwDynamicFlags & NDF_UNREACHABLE)
 		   {
 		      m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_AGENT_UNREACHABLE);

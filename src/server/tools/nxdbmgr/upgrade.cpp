@@ -277,6 +277,24 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 	return SQLQuery(query);
 }
 
+//
+// Upgrade from V257 to V258
+//
+
+static BOOL H_UpgradeFromV257(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE nodes ADD down_since integer\n")
+		_T("UPDATE nodes SET down_since=0\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CreateConfigParam(_T("DeleteUnreachableNodesPeriod"), _T("0"), 1, 1);
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='258' WHERE var_name='SchemaVersion'")));
+	return TRUE;
+}
 
 //
 // Upgrade from V256 to V257
@@ -6397,6 +6415,7 @@ static struct
 	{ 254, 255, H_UpgradeFromV254 },
 	{ 255, 256, H_UpgradeFromV255 },
 	{ 256, 257, H_UpgradeFromV256 },
+	{ 257, 258, H_UpgradeFromV257 },
    { 0, 0, NULL }
 };
 

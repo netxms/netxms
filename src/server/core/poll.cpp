@@ -254,6 +254,14 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
 {
    NetObj *pObject;
    TCHAR szBuffer[MAX_OBJECT_NAME + 64];
+	static int nUnreachableDeleteDays = -1;
+
+	if (nUnreachableDeleteDays < 0)
+	{
+		nUnreachableDeleteDays = ConfigReadInt(_T("DeleteUnreachableNodesPeriod"), 0);
+		if (nUnreachableDeleteDays < 0)
+			nUnreachableDeleteDays = 0;
+	}
 
    // Initialize state info
    m_pPollerState[(long)arg].iType = 'S';
@@ -270,9 +278,19 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
       _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pObject->Name(), pObject->Id());
       SetPollerState((long)arg, szBuffer);
 		if (pObject->Type() == OBJECT_NODE)
+		{
 			((Node *)pObject)->statusPoll(NULL, 0, (long)arg);
+			// Check if the node has to be deleted due to long downtime
+			if (nUnreachableDeleteDays > 0 && ((Node *)pObject)->getDownTime() > 0 && 
+				time(NULL) - ((Node *)pObject)->getDownTime() > nUnreachableDeleteDays * 24 * 3600)
+			{
+				((Node*)pObject)->deleteObject();
+			}
+		}
 		else if (pObject->Type() == OBJECT_CLUSTER)
+		{
 			((Cluster *)pObject)->statusPoll(NULL, 0, (long)arg);
+		}
       pObject->DecRefCount();
    }
    SetPollerState((long)arg, _T("finished"));

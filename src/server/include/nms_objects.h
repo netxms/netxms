@@ -797,6 +797,7 @@ protected:
    time_t m_tLastRTUpdate;
    time_t m_tFailTimeSNMP;
    time_t m_tFailTimeAgent;
+	time_t m_tDownSince;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_mutexRTAccess;
@@ -886,6 +887,7 @@ public:
 	const TCHAR *getLLDPNodeId() { return m_lldpNodeId; }
 
    BOOL isDown() { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
+	time_t getDownTime() const { return m_tDownSince; }
 
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
    Interface *createNewInterface(DWORD dwAddr, DWORD dwNetMask, const TCHAR *name = NULL, const TCHAR *descr = NULL,
