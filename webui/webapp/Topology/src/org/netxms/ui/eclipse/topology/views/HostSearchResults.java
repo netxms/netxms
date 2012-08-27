@@ -278,9 +278,14 @@ public class HostSearchResults extends ViewPart
 			if ((bridge != null) && (iface != null))
 			{
 				if (host != null)
+				{
 					MessageDialog.openInformation(shell, "Connection Point", "Node " + host.getObjectName() + " is " + (cp.isDirectlyConnected() ? "directly" : "indirectly") + " connected to network switch " + bridge.getObjectName() + " port " + iface.getObjectName());
+				}
 				else
-					MessageDialog.openInformation(shell, "Connection Point", "Node with MAC address " + cp.getLocalMacAddress() + " is " + (cp.isDirectlyConnected() ? "directly" : "indirectly") + " connected to network switch " + bridge.getObjectName() + " port " + iface.getObjectName());
+				{
+					String ipAddress = (cp.getLocalIpAddress() != null) ? "IP address " + cp.getLocalIpAddress().getHostAddress() + " and " : "";
+					MessageDialog.openInformation(shell, "Connection Point", "Node with " + ipAddress + "MAC address " + cp.getLocalMacAddress() + " is " + (cp.isDirectlyConnected() ? "directly" : "indirectly") + " connected to network switch " + bridge.getObjectName() + " port " + iface.getObjectName());
+				}
 				
 				IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 				IViewPart part = page.showView(ID);

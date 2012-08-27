@@ -77,8 +77,12 @@ public class ConnectionPointComparator extends ViewerComparator
 				Interface iface2 = (Interface)session.findObjectById(((ConnectionPoint)e2).getLocalInterfaceId(), Interface.class);
 				try
 				{
-					InetAddress a1 = (iface1 != null) ? iface1.getPrimaryIP() : InetAddress.getByAddress(new byte[] { 0, 0, 0, 0});
-					InetAddress a2 = (iface2 != null) ? iface2.getPrimaryIP() : InetAddress.getByAddress(new byte[] { 0, 0, 0, 0});
+					InetAddress a1 = ((ConnectionPoint)e1).getLocalIpAddress();
+					InetAddress a2 = ((ConnectionPoint)e2).getLocalIpAddress();
+					if (a1 == null)
+						a1 = (iface1 != null) ? iface1.getPrimaryIP() : InetAddress.getByAddress(new byte[] { 0, 0, 0, 0});
+					if (a2 == null)
+						a2 = (iface2 != null) ? iface2.getPrimaryIP() : InetAddress.getByAddress(new byte[] { 0, 0, 0, 0});
 					result = ComparatorHelper.compareInetAddresses(a1, a2);
 				}
 				catch(UnknownHostException e)

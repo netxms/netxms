@@ -2,11 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Object Viewer Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.objectview;singleton:=true
-Bundle-Version: 1.2.2
+Bundle-Version: 1.2.3
 Bundle-Activator: org.netxms.ui.eclipse.objectview.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.netxms.ui.eclipse.charts;bundle-version="1.2.0",
- org.netxms.webui.core;bundle-version="1.2.2",
+Require-Bundle: org.netxms.ui.eclipse.charts;bundle-version="1.2.3",
+ org.netxms.webui.core;bundle-version="1.2.3",
  org.eclipse.rap.ui;bundle-version="1.5.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

@@ -3314,6 +3314,8 @@ webui/webapp/Topology/icons/ports.gif -text
 webui/webapp/Topology/icons/search_history.png -text
 webui/webapp/Topology/icons/vlanview.gif -text
 webui/webapp/Topology/plugin.xml -text
+webui/webapp/Topology/src/org/netxms/ui/eclipse/topology/actions/FindIpAddress.java -text
+webui/webapp/Topology/src/org/netxms/ui/eclipse/topology/dialogs/EnterIpAddressDlg.java -text
 webui/webapp/UserManager/META-INF/MANIFEST.MF -text
 webui/webapp/UserManager/build.properties -text
 webui/webapp/UserManager/icons/change_password.png -text

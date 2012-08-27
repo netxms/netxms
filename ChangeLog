@@ -3,6 +3,7 @@
 *
 
 - Improved LLDP support
+- New "Find IP address" function (find node's switch port by IP address)
 - Set MAC address for "unknown" interfaces from ARP cache
 - Detection of IP address change for nodes without agent and SNMP
 - Agent on Windows is in UNICODE
