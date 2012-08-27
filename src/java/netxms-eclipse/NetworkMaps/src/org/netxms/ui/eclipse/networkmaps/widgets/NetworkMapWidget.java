@@ -18,14 +18,12 @@
  */
 package org.netxms.ui.eclipse.networkmaps.widgets;
 
-import java.util.Comparator;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.zest.layouts.LayoutAlgorithm;
-import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.GridLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.RadialLayoutAlgorithm;
@@ -35,7 +33,6 @@ import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
 import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
-import org.netxms.ui.eclipse.networkmaps.views.helpers.GraphLayoutFilter;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 
@@ -92,7 +89,6 @@ public class NetworkMapWidget extends Composite
 	 * Set layout algorithm for map
 	 * @param alg
 	 */
-	@SuppressWarnings("rawtypes")
 	private void setLayoutAlgorithm(int alg)
 	{
 		LayoutAlgorithm algorithm;
@@ -128,9 +124,6 @@ public class NetworkMapWidget extends Composite
 				algorithm = new GridLayoutAlgorithm();
 				break;
 		}
-		ManualLayout decorationLayoutAlgorithm = new ManualLayout();
-//		decorationLayoutAlgorithm.setFilter(new GraphLayoutFilter(false));
-		viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm( 
-				new LayoutAlgorithm[] { algorithm, decorationLayoutAlgorithm }), true);
+		viewer.setLayoutAlgorithm(algorithm);
 	}
 }

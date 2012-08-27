@@ -95,7 +95,6 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private ManhattanConnectionRouter manhattanRouter = new ManhattanConnectionRouter();
 	private BendpointConnectionRouter bendpointRouter = new BendpointConnectionRouter();
 	
-
 	/**
 	 * Create map label provider
 	 */

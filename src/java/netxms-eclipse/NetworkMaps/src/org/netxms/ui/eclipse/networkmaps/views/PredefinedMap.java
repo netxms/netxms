@@ -556,6 +556,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	 */
 	private void saveMap()
 	{
+		updateObjectPositions();
 		final NXCObjectModificationData md = new NXCObjectModificationData(rootObject.getObjectId());
 		md.setMapContent(mapPage.getElements(), mapPage.getLinks());
 		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL);
@@ -587,6 +588,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	 */
 	private void showMapProperties()
 	{
+		updateObjectPositions();
 		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, mapObject);
 		dlg.open();
 	}
@@ -677,6 +679,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	 */
 	private void showLinkProperties()
 	{
+		updateObjectPositions();
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapLink))
 			return;

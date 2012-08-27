@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.topology.views.helpers;
 
+import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.jface.viewers.IColorProvider;
@@ -95,6 +96,9 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 			case HostSearchResults.COLUMN_MAC_ADDRESS:
 				return cp.getLocalMacAddress().toString();
 			case HostSearchResults.COLUMN_IP_ADDRESS:
+				InetAddress addr = cp.getLocalIpAddress();
+				if (addr != null)
+					return addr.getHostAddress();
 				Interface iface = (Interface)session.findObjectById(cp.getLocalInterfaceId(), Interface.class);
 				return (iface != null) ? iface.getPrimaryIP().getHostAddress() : "";
 			case HostSearchResults.COLUMN_SWITCH:

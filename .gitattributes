@@ -1856,8 +1856,10 @@ src/java/netxms-eclipse/Topology/icons/vlanview.gif -text
 src/java/netxms-eclipse/Topology/plugin.xml -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/Activator.java -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/actions/FindConnectionPoint.java -text
+src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/actions/FindIpAddress.java -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/actions/FindMacAddress.java -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/actions/ShowVlans.java -text
+src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/dialogs/EnterIpAddressDlg.java -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/dialogs/EnterMacAddressDlg.java -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/objecttabs/Ports.java -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/views/HostSearchResults.java -text

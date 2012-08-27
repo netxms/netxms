@@ -10886,10 +10886,15 @@ void ClientSession::findIpAddress(CSCPMessage *request)
 	{
 		// no interface object with this IP or MAC address not known, try to find it in ARP caches
 		DebugPrintf(5, _T("findIpAddress(%s): interface not found, looking in ARP cache"), IpToStr(ipAddr, ipAddrText));
-		Subnet *subnet = FindSubnetByIP(zoneId, ipAddr);
+		Subnet *subnet = FindSubnetForNode(zoneId, ipAddr);
 		if (subnet != NULL)
 		{
+			DebugPrintf(5, _T("findIpAddress(%s): found subnet %s"), ipAddrText, subnet->Name());
 			found = subnet->findMacAddress(ipAddr, macAddr);
+		}
+		else
+		{
+			DebugPrintf(5, _T("findIpAddress(%s): subnet not found"), ipAddrText, subnet->Name());
 		}
 	}
 

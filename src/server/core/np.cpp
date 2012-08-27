@@ -250,7 +250,7 @@ static Interface *GetOldNodeWithNewIP(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwZ
 
 	if (bMacAddr == NULL)
 	{
-		subnet = FindSubnetByIP(dwZoneId, dwIpAddr);
+		subnet = FindSubnetForNode(dwZoneId, dwIpAddr);
 		if (subnet != NULL)
 		{
 			BOOL found = subnet->findMacAddress(dwIpAddr, nodeMacAddr);

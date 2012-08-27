@@ -224,6 +224,7 @@ bool Subnet::findMacAddress(DWORD ipAddr, BYTE *macAddr)
 			continue;
 
 		Node *node = (Node *)m_pChildList[i];
+		DbgPrintf(6, _T("Subnet[%s]::findMacAddress: reading ARP cache for node %s [%u]"), m_szName, node->Name(), node->Id());
 		ARP_CACHE *arpCache = node->getArpCache();
 		if (arpCache == NULL)
 			continue;

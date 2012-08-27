@@ -67,6 +67,7 @@ public class EnterMacAddressDlg extends Dialog
 		textMac = new LabeledText(dialogArea, SWT.NONE);
 		textMac.setLabel("MAC address");
 		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 300;
 		textMac.setLayoutData(gd);

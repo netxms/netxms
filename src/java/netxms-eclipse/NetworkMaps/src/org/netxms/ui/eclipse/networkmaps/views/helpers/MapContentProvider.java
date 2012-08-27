@@ -18,15 +18,17 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.zest.core.viewers.IGraphEntityRelationshipContentProvider;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 
 /**
  * Content provider for map
- * 
  */
 public class MapContentProvider implements IGraphEntityRelationshipContentProvider
 {
@@ -40,8 +42,12 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	{
 		if (!(inputElement instanceof NetworkMapPage))
 			return null;
-		
-		return ((NetworkMapPage)inputElement).getElements().toArray();
+
+		List<NetworkMapElement> elements = new ArrayList<NetworkMapElement>(((NetworkMapPage)inputElement).getElements().size());
+		for(NetworkMapElement e : ((NetworkMapPage)inputElement).getElements())
+			if (!(e instanceof NetworkMapDecoration))
+				elements.add(e);
+		return elements.toArray();
 	}
 
 	/* (non-Javadoc)
@@ -74,5 +80,23 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 			page = (NetworkMapPage)newInput;
 		else
 			page = null;
+	}
+
+	/**
+	 * Get map decorations
+	 * 
+	 * @param inputElement
+	 * @return
+	 */
+	public List<NetworkMapDecoration> getDecorations(Object inputElement)
+	{
+		if (!(inputElement instanceof NetworkMapPage))
+			return null;
+
+		List<NetworkMapDecoration> elements = new ArrayList<NetworkMapDecoration>(((NetworkMapPage)inputElement).getElements().size());
+		for(NetworkMapElement e : ((NetworkMapPage)inputElement).getElements())
+			if (e instanceof NetworkMapDecoration)
+				elements.add((NetworkMapDecoration)e);
+		return elements;
 	}
 }

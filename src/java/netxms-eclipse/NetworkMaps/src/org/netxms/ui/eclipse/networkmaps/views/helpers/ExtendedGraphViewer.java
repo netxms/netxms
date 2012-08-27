@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.FigureListener;
@@ -45,6 +46,7 @@ import org.eclipse.zest.core.viewers.internal.IStylingGraphModelFactory;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.zooming.ZoomManager;
 import org.netxms.client.GeoLocation;
+import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
@@ -68,10 +70,12 @@ public class ExtendedGraphViewer extends GraphViewer
 	private IFigure zestRootLayer;
 	private MapLoader mapLoader;
 	private Layer backgroundLayer;
+	private Layer decorationLayer;
 	private Layer indicatorLayer;
 	private int crosshairX;
 	private int crosshairY;
 	private Crosshair crosshairFigure;
+	private List<NetworkMapDecoration> mapDecorations;
 	
 	/**
 	 * @param composite
@@ -96,8 +100,11 @@ public class ExtendedGraphViewer extends GraphViewer
 		backgroundFigure.setSize(10, 10);
 		backgroundLayer.add(backgroundFigure);
 		
+		decorationLayer = new FreeformLayer();
+		getGraphControl().getRootLayer().add(decorationLayer, null, 1);
+		
 		indicatorLayer = new FreeformLayer();
-		getGraphControl().getRootLayer().add(indicatorLayer, null, 1);
+		getGraphControl().getRootLayer().add(indicatorLayer, null, 2);
 		
 		getZoomManager().setZoomLevels(zoomLevels);
 		
@@ -142,6 +149,30 @@ public class ExtendedGraphViewer extends GraphViewer
 			{
 			}
 		});
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.GraphViewer#inputChanged(java.lang.Object, java.lang.Object)
+	 */
+	@Override
+	protected void inputChanged(Object input, Object oldInput)
+	{
+		super.inputChanged(input, oldInput);
+		decorationLayer.removeAll();
+		if ((getContentProvider() instanceof MapContentProvider) && (getLabelProvider() instanceof MapLabelProvider))
+		{
+			mapDecorations = ((MapContentProvider)getContentProvider()).getDecorations(input);
+			if (mapDecorations != null)
+			{
+				MapLabelProvider lp = (MapLabelProvider)getLabelProvider();
+				for(NetworkMapDecoration d : mapDecorations)
+				{
+					IFigure figure = lp.getFigure(d);
+					figure.setLocation(new org.eclipse.draw2d.geometry.Point(d.getX(), d.getY()));
+					decorationLayer.add(figure);
+				}
+			}
+		}
 	}
 	
 	/**

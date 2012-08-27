@@ -47,12 +47,18 @@
             id="org.netxms.ui.eclipse.topology.commands.find_mac_address"
             name="Find &amp;MAC address...">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.tools"
+            description="Find IP address location in the network"
+            id="org.netxms.ui.eclipse.topology.commands.find_ip_address"
+            name="Find &amp;IP address...">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            id="org.netxms.ui.eclipse.action_set.find_mac_address"
-            label="Find MAC address"
+            id="org.netxms.ui.eclipse.action_set.find_connection_point"
+            label="Find connection point"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.topology.actions.FindMacAddress"
@@ -62,6 +68,15 @@
                menubarPath="tools/additions"
                style="push"
                tooltip="Find MAC address location in the network">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.FindIpAddress"
+               definitionId="org.netxms.ui.eclipse.topology.commands.find_ip_address"
+               id="org.netxms.ui.eclipse.topology.actions.find_ip_address"
+               label="Find &amp;IP address..."
+               menubarPath="tools/additions"
+               style="push"
+               tooltip="Find IP address location in the network">
          </action>
       </actionSet>
    </extension>
@@ -91,6 +106,11 @@
             commandId="org.netxms.ui.eclipse.topology.commands.find_mac_address"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+F11">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.topology.commands.find_ip_address"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+M2+F11">
       </key>
    </extension>
    <extension

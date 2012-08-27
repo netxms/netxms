@@ -5204,13 +5204,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * interface on a switch) for given MAC address. Will return null if
 	 * connection point information cannot be found.
 	 * 
-	 * @param macAddr
-	 *           MAC address
+	 * @param macAddr MAC address
 	 * @return connection point information or null
-	 * @throws IOException
-	 *            if socket or file I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public ConnectionPoint findConnectionPoint(MacAddress macAddr) throws IOException, NXCException
 	{
@@ -5223,7 +5220,32 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return null;
 	}
 
-	/** {@inheritDoc} */
+	/**
+	 * Find connection point (either directly connected or most close known
+	 * interface on a switch) for given IP address. Will return null if
+	 * connection point information cannot be found.
+	 * 
+	 * @param zoneId zone ID
+	 * @param ipAddr IP address to find
+	 * @return connection point information or null
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public ConnectionPoint findConnectionPoint(int zoneId, InetAddress ipAddr) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_FIND_IP_LOCATION);
+		msg.setVariableInt32(NXCPCodes.VID_ZONE_ID, zoneId);
+		msg.setVariable(NXCPCodes.VID_IP_ADDRESS, ipAddr);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		if (response.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID) != 0)
+			return new ConnectionPoint(response);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.Session#checkConnection()
+	 */
 	@Override
 	public void checkConnection() throws IOException, NXCException
 	{

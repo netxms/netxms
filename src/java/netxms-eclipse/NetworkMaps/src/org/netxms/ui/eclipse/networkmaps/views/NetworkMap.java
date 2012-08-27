@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -68,10 +67,8 @@ import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphNode;
 import org.eclipse.zest.layouts.LayoutAlgorithm;
-import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.GridLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.RadialLayoutAlgorithm;
-import org.eclipse.zest.layouts.algorithms.SpaceTreeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.netxms.api.client.SessionListener;
@@ -86,10 +83,8 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
-import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.BendpointEditor;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
-import org.netxms.ui.eclipse.networkmaps.views.helpers.GraphLayoutFilter;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ObjectFigureType;
@@ -347,18 +342,6 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
 				break;
 			case LAYOUT_SPARSE_VTREE:
-//				TreeLayoutAlgorithm mainLayoutAlgorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
-				/*
-				mainLayoutAlgorithm.setComparator(new Comparator() {
-					@Override
-					public int compare(Object arg0, Object arg1)
-					{
-						return arg0.toString().compareToIgnoreCase(arg1.toString());
-					}
-				});
-				*/
-//				algorithm = new CompositeLayoutAlgorithm(new LayoutAlgorithm[] { mainLayoutAlgorithm, new SparseTree() });
-//				algorithm = new SpaceTreeLayoutAlgorithm(SpaceTreeLayoutAlgorithm.TOP_DOWN);
 				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
 				((TreeLayoutAlgorithm)algorithm).setNodeSpace(new Dimension(100, 100));
 				break;
@@ -366,11 +349,6 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				algorithm = new GridLayoutAlgorithm();
 				break;
 		}
-		//algorithm.setFilter(new GraphLayoutFilter(true));
-		//ManualLayout decorationLayoutAlgorithm = new ManualLayout();
-		//decorationLayoutAlgorithm.setFilter(new GraphLayoutFilter(false));
-		//viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm( 
-		//		new LayoutAlgorithm[] { algorithm, decorationLayoutAlgorithm }), true);
 		viewer.setLayoutAlgorithm(algorithm);
 
 		actionSetAlgorithm[layoutAlgorithm].setChecked(false);
