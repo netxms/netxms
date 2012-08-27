@@ -1965,6 +1965,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
    pIfList = getInterfaceList();
    if (pIfList != NULL)
    {
+		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): got %d interfaces"), m_szName, m_dwId, pIfList->getSize());
 		// Remove cluster virtual interfaces from list
 		if (pCluster != NULL)
 		{
@@ -2037,7 +2038,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
                    (ifInfo->dwIpAddr == pInterface->IpAddr()))
                {
                   // Existing interface, check configuration
-                  if (memcmp(ifInfo->bMacAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
+                  if (memcmp(ifInfo->bMacAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) && memcmp(ifInfo->bMacAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
                   {
                      TCHAR szOldMac[16], szNewMac[16];
 
@@ -2137,6 +2138,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
       DWORD dwCount;
 
       SendPollerMsg(dwRqId, POLLER_ERROR _T("Unable to get interface list from node\r\n"));
+		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): Unable to get interface list from node"), m_szName, m_dwId);
 
       // Delete all existing interfaces in case of forced capability recheck
       if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
@@ -2178,13 +2180,34 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 						Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
 						if (pSubnet != NULL)
 							pSubnet->findMacAddress(m_dwIpAddr, macAddr);
-						pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6) ? NULL : macAddr;
+						pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
 						TCHAR szMac[20];
 						MACToStr(macAddr, szMac);
-						DbgPrintf(6, _T("Node::updateInterfaceConfiguration: got MAC for unknown interface: %s"), szMac);
+						DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_szName, m_dwId, szMac);
                   createNewInterface(m_dwIpAddr, dwNetMask, NULL, NULL, 0, 0, pMacAddr);
 					}
             }
+				else
+				{
+					// check MAC address
+					memset(macAddr, 0, MAC_ADDR_LENGTH);
+					Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
+					if (pSubnet != NULL)
+						pSubnet->findMacAddress(m_dwIpAddr, macAddr);
+					if (memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) && memcmp(macAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
+					{
+                  TCHAR szOldMac[16], szNewMac[16];
+
+                  BinToStr((BYTE *)pInterface->getMacAddr(), MAC_ADDR_LENGTH, szOldMac);
+                  BinToStr(macAddr, MAC_ADDR_LENGTH, szNewMac);
+						DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): MAC change for unknown interface: %s to %s"),
+						          m_szName, m_dwId, szOldMac, szNewMac);
+                  PostEvent(EVENT_MAC_ADDR_CHANGED, m_dwId, "idsss",
+                            pInterface->Id(), pInterface->getIfIndex(),
+                            pInterface->Name(), szOldMac, szNewMac);
+                  pInterface->setMacAddr(macAddr);
+					}
+				}
          }
       }
       else if (dwCount == 0)
@@ -2196,14 +2219,14 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 				Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
 				if (pSubnet != NULL)
 					pSubnet->findMacAddress(m_dwIpAddr, macAddr);
-				pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6) ? NULL : macAddr;
+				pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
 				TCHAR szMac[20];
 				MACToStr(macAddr, szMac);
 				DbgPrintf(6, _T("Node::updateInterfaceConfiguration: got MAC for unknown interface: %s"), szMac);
          	createNewInterface(m_dwIpAddr, dwNetMask, NULL, NULL, 0, 0, pMacAddr);
 			}
       }
-		DbgPrintf(6, _T("Node::updateInterfaceConfiguration: pflist == NULL, dwCount = %ld"), dwCount);
+		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pflist == NULL, dwCount = %ld"), m_szName, m_dwId, dwCount);
    }
 
 	SendPollerMsg(dwRqId, _T("Interface configuration check finished\r\n"));
@@ -3504,11 +3527,11 @@ void Node::unbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
    }
 }
 
-
-//
-// Change node's IP address
-//
-
+/**
+ * Change node's IP address.
+ *
+ * @param dwIpAddr new IP address
+ */
 void Node::changeIPAddress(DWORD dwIpAddr)
 {
    DWORD i;
@@ -3517,26 +3540,35 @@ void Node::changeIPAddress(DWORD dwIpAddr)
 
    LockData();
 
-   m_dwIpAddr = dwIpAddr;
-   m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
+	// check if primary name is an IP address
+	if (ntohl(ResolveHostName(m_primaryName)) == m_dwIpAddr)
+	{
+		TCHAR ipAddrText[16];
+		IpToStr(m_dwIpAddr, ipAddrText);
+		if (!_tcscmp(ipAddrText, m_primaryName))
+			IpToStr(dwIpAddr, m_primaryName);
 
-   // Change status of node and all it's childs to UNKNOWN
-   m_iStatus = STATUS_UNKNOWN;
-   LockChildList(FALSE);
-   for(i = 0; i < m_dwChildCount; i++)
-   {
-      m_pChildList[i]->resetStatus();
-      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
-      {
-         if (((Interface *)m_pChildList[i])->isFake())
-         {
-            ((Interface *)m_pChildList[i])->setIpAddr(dwIpAddr);
-         }
-      }
-   }
-   UnlockChildList();
+		m_dwIpAddr = dwIpAddr;
+		m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
 
-   Modify();
+		// Change status of node and all it's childs to UNKNOWN
+		m_iStatus = STATUS_UNKNOWN;
+		LockChildList(FALSE);
+		for(i = 0; i < m_dwChildCount; i++)
+		{
+			m_pChildList[i]->resetStatus();
+			if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+			{
+				if (((Interface *)m_pChildList[i])->isFake())
+				{
+					((Interface *)m_pChildList[i])->setIpAddr(dwIpAddr);
+				}
+			}
+		}
+		UnlockChildList();
+
+		Modify();
+	}
    UnlockData();
 
    agentLock();
@@ -3546,11 +3578,9 @@ void Node::changeIPAddress(DWORD dwIpAddr)
    pollerUnlock();
 }
 
-
-//
-// Change node's zone
-//
-
+/**
+ * Change node's zone
+ */
 void Node::changeZone(DWORD newZone)
 {
    DWORD i;

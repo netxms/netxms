@@ -127,18 +127,28 @@ NXSL_Value *NXSL_DiscoveryClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 }
 
 
-//
-// Discovery class object
-//
-
+/**
+ * Discovery class object
+ */
 static NXSL_DiscoveryClass m_nxslDiscoveryClass;
 
-
-//
-// Poll new node for configuration
-// Returns pointer to new node object on success or NULL on failure
-//
-
+/**
+ * Poll new node for configuration
+ * Returns pointer to new node object on success or NULL on failure
+ *
+ * @param dwIpAddr IP address of new node
+ * @param dwNetMask IP network mask or 0 if not known
+ * @param dwCreationFlags
+ * @param agentPort port number of NetXMS agent
+ * @param snmpPort port number of SNMP agent
+ * @param pszName name for new node, can be NULL
+ * @param dwProxyNode agent proxy node ID or 0 to use direct communications
+ * @param dwSNMPProxy SNMP proxy node ID or 0 to use direct communications
+ * @param pCluster pointer to parent cluster object or NULL
+ * @param zoneId zone ID
+ * @param doConfPoll if set to true, Node::configurationPoll will be called before exit
+ * @param discoveredNode must be set to true if node being added automatically by discovery thread
+ */
 Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
                   WORD agentPort, WORD snmpPort, TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy,
                   Cluster *pCluster, DWORD zoneId, bool doConfPoll, bool discoveredNode)
@@ -218,7 +228,17 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
    return pNode;
 }
 
-static Node *GetOldNodeWithNewIP(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwZoneId, BYTE *bMacAddr)
+/**
+ * Find existing node by MAC address to detect IP address change for already known node.
+ *
+ * @param dwIpAddr new (discovered) IP address
+ * @param dwNetMask network mask for new address
+ * @param dwZoneID zone ID
+ * @param bMacAddr MAC address of discovered node, or NULL if not known
+ *
+ * @return pointer to existing interface object with given MAC address or NULL if no such interface found
+ */
+static Interface *GetOldNodeWithNewIP(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwZoneId, BYTE *bMacAddr)
 {
 	Subnet *subnet;
 	BYTE nodeMacAddr[MAC_ADDR_LENGTH];
@@ -236,9 +256,14 @@ static Node *GetOldNodeWithNewIP(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwZoneId
 			BOOL found = subnet->findMacAddress(dwIpAddr, nodeMacAddr);
 			if (!found)
 			{
-				DbgPrintf(6, _T("GetOldNodeWithNewIP: subnet not found"));
+				DbgPrintf(6, _T("GetOldNodeWithNewIP: MAC address not found"));
 				return NULL;
 			}
+		}
+		else
+		{
+			DbgPrintf(6, _T("GetOldNodeWithNewIP: subnet not found"));
+			return NULL;
 		}
 	}
 	else
@@ -246,18 +271,17 @@ static Node *GetOldNodeWithNewIP(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwZoneId
 		memcpy(nodeMacAddr, bMacAddr, MAC_ADDR_LENGTH);
 	}
 
-	Node *node = FindNodeByMAC(nodeMacAddr);
+	Interface *iface = FindInterfaceByMAC(nodeMacAddr);
 
-	if (node == NULL)
-		DbgPrintf(6, _T("GetOldNodeWithNewIP: returning null (FindNodeByMac!)"));
+	if (iface == NULL)
+		DbgPrintf(6, _T("GetOldNodeWithNewIP: returning null (FindInterfaceByMAC!)"));
 	
-	return node;
+	return iface;
 }
 
-//
-// Check if newly discovered node should be added
-//
-
+/**
+ * Check if newly discovered node should be added
+ */
 static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *macAddr)
 {
    DISCOVERY_FILTER_DATA data;
@@ -277,14 +301,19 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
       return FALSE;  // Node already exist in database
 	}
 
-	Node *oldNode;
-	if ((oldNode = GetOldNodeWithNewIP(dwIpAddr, dwNetMask, zoneId, macAddr)) != NULL)
+	Interface *iface = GetOldNodeWithNewIP(dwIpAddr, dwNetMask, zoneId, macAddr);
+	if (iface != NULL)
 	{
-		TCHAR szOldIpAddr[16];
-		IpToStr(oldNode->IpAddr(), szOldIpAddr);
-		DbgPrintf(4, _T("AcceptNewNode(%s): node already exist in database with ip %s, will change to new"), 
-			szIpAddr, szOldIpAddr);
-		oldNode->changeIPAddress(dwIpAddr);
+		Node *oldNode = iface->getParentNode();
+		if (iface->IpAddr() == oldNode->IpAddr())
+		{
+			// we should change node's primary IP only if old IP for this MAC was also node's primary IP
+			TCHAR szOldIpAddr[16];
+			IpToStr(oldNode->IpAddr(), szOldIpAddr);
+			DbgPrintf(4, _T("AcceptNewNode(%s): node already exist in database with ip %s, will change to new"), 
+				szIpAddr, szOldIpAddr);
+			oldNode->changeIPAddress(dwIpAddr);
+		}
 		return FALSE;
 	}
 

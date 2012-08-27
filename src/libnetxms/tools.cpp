@@ -997,11 +997,12 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWO
 	return rc;
 }
 
-
-//
-// Resolve host name to IP address
-//
-
+/**
+ * Resolve host name to IP address
+ *
+ * @param pszName host name or IP address
+ * @return IP address in network byte order
+ */
 DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
 {
    DWORD dwAddr;

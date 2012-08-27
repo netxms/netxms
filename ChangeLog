@@ -3,6 +3,8 @@
 *
 
 - Improved LLDP support
+- Set MAC address for "unknown" interfaces from ARP cache
+- Detection of IP address change for nodes without agent and SNMP
 - Agent on Windows is in UNICODE
 - UNICODE build supported on Linux
 - Management console:
