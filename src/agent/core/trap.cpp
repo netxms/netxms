@@ -159,24 +159,24 @@ void SendTrap(DWORD dwEventCode, const TCHAR *eventName, const char *pszFormat, 
 					ppArgList[i] = (TCHAR *)_T("");
             break;
          case 'd':
-            ppArgList[i] = (TCHAR *)malloc(16);   //
+            ppArgList[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));   //
             _sntprintf(ppArgList[i], 16, _T("%d"), va_arg(args, LONG)); //
             break;
          case 'D':
-            ppArgList[i] = (TCHAR *)malloc(32); //
+            ppArgList[i] = (TCHAR *)malloc(32 * sizeof(TCHAR)); //
             _sntprintf(ppArgList[i], 32, INT64_FMT, va_arg(args, INT64)); //
             break;
          case 'x':
          case 'i':
-            ppArgList[i] = (TCHAR *)malloc(16);  //
+            ppArgList[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));  //
             _sntprintf(ppArgList[i], 16, _T("0x%08X"), va_arg(args, DWORD));  //
             break;
          case 'X':
-            ppArgList[i] = (TCHAR *)malloc(32);
+            ppArgList[i] = (TCHAR *)malloc(32 * sizeof(TCHAR));
             _sntprintf(ppArgList[i], 32, UINT64X_FMT(_T("016")), va_arg(args, QWORD));
             break;
          case 'a':
-            ppArgList[i] = (TCHAR *)malloc(16);
+            ppArgList[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));
             IpToStr(va_arg(args, DWORD), ppArgList[i]);
             break;
          default:
