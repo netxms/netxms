@@ -61,7 +61,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	public static final String ACTION_RECONNECT = "org.netxms.ui.android.ACTION_RECONNECT";
 	public static final String ACTION_DISCONNECT = "org.netxms.ui.android.ACTION_DISCONNECT";
-	private static final String TAG = "nxclient.ClientConnectorService";
+	private static final String TAG = "nxclient/ClientConnectorService";
 	private static final String LASTALARM_KEY = "LastALarmIdNotified";
 
 	private static final int NOTIFY_ALARM = 1;
@@ -499,9 +499,28 @@ public class ClientConnectorService extends Service implements SessionListener
 				showAlarmNotification(NOTIFY_ALARM, unknownAlarm.getCurrentSeverity(), object.getObjectName() + ": " + unknownAlarm.getMessage());
 				unknownAlarm = null;
 			}
+			refreshHomeScreen();
 			refreshAlarmBrowser();
 			refreshNodeBrowser();
 			refreshDashboardBrowser();
+		}
+	}
+
+	/**
+	 * Refresh homescreen  activity
+	 */
+	private void refreshHomeScreen()
+	{
+		if (homeScreen != null)
+		{
+			homeScreen.runOnUiThread(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					homeScreen.refreshActivityStatus();
+				}
+			});
 		}
 	}
 
@@ -705,6 +724,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 		}
 	}
+
 	/**
 	 * @param id
 	 */
@@ -899,6 +919,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				public void run()
 				{
 					homeScreen.setStatusText(connectionStatusText, connectionStatusColor);
+					homeScreen.refreshActivityStatus();
 				}
 			});
 		}

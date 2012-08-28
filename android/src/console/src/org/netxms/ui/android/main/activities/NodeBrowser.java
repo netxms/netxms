@@ -40,11 +40,12 @@ import android.widget.TextView;
  */
 public class NodeBrowser extends AbstractClientActivity
 {
+	private static final String TAG = "nxclient/SyncMissingObjectsTask";
 	private ListView listView;
 	private ObjectListAdapter adapter;
-	private long initialParent = 2;
+	private final long initialParent = 2;
 	private GenericObject currentParent = null;
-	private Stack<GenericObject> containerPath = new Stack<GenericObject>();
+	private final Stack<GenericObject> containerPath = new Stack<GenericObject>();
 	private long[] savedPath = null;
 	private GenericObject selectedObject = null;
 
@@ -55,7 +56,7 @@ public class NodeBrowser extends AbstractClientActivity
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
 		setContentView(R.layout.node_view);
-		
+
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 		title.setText(R.string.nodes_title);
 
@@ -64,7 +65,9 @@ public class NodeBrowser extends AbstractClientActivity
 
 		listView = (ListView)findViewById(R.id.NodeList);
 		listView.setAdapter(adapter);
-		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+		{
+			@Override
 			@SuppressWarnings("rawtypes")
 			public void onItemClick(AdapterView parent, View v, int position, long id)
 			{
@@ -83,7 +86,7 @@ public class NodeBrowser extends AbstractClientActivity
 		});
 
 		registerForContextMenu(listView);
-		
+
 		// Restore saved state
 		if (savedInstanceState != null)
 			savedPath = savedInstanceState.getLongArray("currentPath");
@@ -119,25 +122,25 @@ public class NodeBrowser extends AbstractClientActivity
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
 		super.onServiceConnected(name, binder);
-		
+
 		adapter.setService(service);
 		service.registerNodeBrowser(this);
 
 		// Restore to saved path if available
 		if ((savedPath != null) && (savedPath.length > 0))
-		{			
-			for(int i = 0; i < savedPath.length - 1; i++)
+		{
+			for (int i = 0; i < savedPath.length - 1; i++)
 			{
 				GenericObject object = service.findObjectById(savedPath[i]);
 				if (object == null)
 					break;
 				containerPath.push(object);
 			}
-			
+
 			currentParent = service.findObjectById(savedPath[savedPath.length - 1]);
 		}
 		savedPath = null;
-		
+
 		refreshList();
 	}
 
@@ -163,7 +166,7 @@ public class NodeBrowser extends AbstractClientActivity
 	{
 		android.view.MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.node_actions, menu);
-		
+
 		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
 		selectedObject = (GenericObject)adapter.getItem(info.position);
 
@@ -175,11 +178,11 @@ public class NodeBrowser extends AbstractClientActivity
 			{
 				Iterator<ObjectTool> tl = tools.iterator();
 				ObjectTool tool;
-				while(tl.hasNext())
+				while (tl.hasNext())
 				{
 					tool = tl.next();
 					if ((tool.getType() == ObjectTool.TYPE_ACTION || tool.getType() == ObjectTool.TYPE_SERVER_COMMAND) &&
-					    tool.isApplicableForNode((Node)selectedObject))
+							tool.isApplicableForNode((Node)selectedObject))
 					{
 						menu.add(Menu.NONE, (int)tool.getId(), 0, tool.getDisplayName());
 					}
@@ -196,7 +199,7 @@ public class NodeBrowser extends AbstractClientActivity
 
 	/**
 	 * @param menu
-	 * @param findSwitchPort
+	 * @param id
 	 */
 	private void hideMenuItem(ContextMenu menu, int id)
 	{
@@ -213,9 +216,9 @@ public class NodeBrowser extends AbstractClientActivity
 	{
 		if (selectedObject == null)
 			return super.onContextItemSelected(item);
-		
+
 		// process menu selection
-		switch(item.getItemId())
+		switch (item.getItemId())
 		{
 			case R.id.find_switch_port:
 				Intent fspIntent = new Intent(this, ConnectionPointBrowser.class);
@@ -265,29 +268,30 @@ public class NodeBrowser extends AbstractClientActivity
 		List<ObjectTool> tools = service.getTools();
 		if (tools != null)
 		{
-			for(final ObjectTool tool : tools)
+			for (final ObjectTool tool : tools)
 			{
 				if ((int)tool.getId() == item.getItemId())
 				{
 					if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
-					{	
+					{
 						String message = tool.getConfirmationText()
 								.replaceAll("%OBJECT_NAME%", selectedObject.getObjectName())
 								.replaceAll("%OBJECT_IP_ADDR%", selectedObject.getPrimaryIP().getHostAddress());
 						new AlertDialog.Builder(this)
-							.setIcon(android.R.drawable.ic_dialog_alert)
-							.setTitle(R.string.confirm_tool_execution)
-							.setMessage(message)
-							.setCancelable(true)
-							.setPositiveButton(R.string.yes, new OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog, int which)
+								.setIcon(android.R.drawable.ic_dialog_alert)
+								.setTitle(R.string.confirm_tool_execution)
+								.setMessage(message)
+								.setCancelable(true)
+								.setPositiveButton(R.string.yes, new OnClickListener()
 								{
-									service.executeAction(selectedObject.getObjectId(), tool.getData());
-								}
-							})
-							.setNegativeButton(R.string.no, null)
-							.show();
+									@Override
+									public void onClick(DialogInterface dialog, int which)
+									{
+										service.executeAction(selectedObject.getObjectId(), tool.getData());
+									}
+								})
+								.setNegativeButton(R.string.no, null)
+								.show();
 						return true;
 					}
 					service.executeAction(selectedObject.getObjectId(), tool.getData());
@@ -347,7 +351,7 @@ public class NodeBrowser extends AbstractClientActivity
 		adapter.notifyDataSetChanged();
 		new SyncMissingObjectsTask(currentParent.getObjectId()).execute(new Object[] { currentParent.getChildIdList() });
 	}
-	
+
 	/**
 	 * Get full path to current position in object tree
 	 * 
@@ -356,7 +360,7 @@ public class NodeBrowser extends AbstractClientActivity
 	private String getFullPath()
 	{
 		StringBuilder sb = new StringBuilder();
-		for(GenericObject o : containerPath)
+		for (GenericObject o : containerPath)
 		{
 			sb.append('/');
 			sb.append(o.getObjectName());
@@ -378,7 +382,7 @@ public class NodeBrowser extends AbstractClientActivity
 	{
 		long[] path = new long[containerPath.size() + ((currentParent != null) ? 1 : 0)];
 		int i = 0;
-		for(GenericObject o : containerPath)
+		for (GenericObject o : containerPath)
 			path[i++] = o.getObjectId();
 
 		if (currentParent != null)
@@ -398,7 +402,7 @@ public class NodeBrowser extends AbstractClientActivity
 		service.registerNodeBrowser(null);
 		super.onDestroy();
 	}
-	
+
 	/**
 	 * @param nodeIdList
 	 */
@@ -408,19 +412,19 @@ public class NodeBrowser extends AbstractClientActivity
 		newIntent.putIntegerArrayListExtra("nodeIdList", nodeIdList);
 		startActivity(newIntent);
 	}
-	
+
 	/**
 	 * Internal task for synching missing objects
 	 */
 	private class SyncMissingObjectsTask extends AsyncTask<Object, Void, Exception>
 	{
-		private long currentRoot;
-		
+		private final long currentRoot;
+
 		protected SyncMissingObjectsTask(long currentRoot)
 		{
 			this.currentRoot = currentRoot;
 		}
-		
+
 		@Override
 		protected Exception doInBackground(Object... params)
 		{
@@ -428,9 +432,9 @@ public class NodeBrowser extends AbstractClientActivity
 			{
 				service.getSession().syncMissingObjects((long[])params[0], false, NXCSession.OBJECT_SYNC_WAIT);
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
-				Log.d("nxclient/SyncMissingObjectsTask", "Exception while executing service.getSession().syncMissingObjects", e);
+				Log.d(TAG, "Exception while executing service.getSession().syncMissingObjects", e);
 				return e;
 			}
 			return null;
@@ -441,42 +445,41 @@ public class NodeBrowser extends AbstractClientActivity
 		{
 			if ((result == null) && (NodeBrowser.this.currentParent.getObjectId() == currentRoot))
 			{
-				adapter.setNodes(currentParent.getChildsAsArray());				
+				adapter.setNodes(currentParent.getChildsAsArray());
 				adapter.notifyDataSetChanged();
 			}
 		}
 	}
 
-	
 	/**
 	 * Internal task for synching missing objects
 	 */
 	private class SyncMissingChildsTask extends AsyncTask<Integer, Void, Integer>
 	{
-		private ArrayList<Integer> childIdList;
-		
+		private final ArrayList<Integer> childIdList;
+
 		protected SyncMissingChildsTask()
 		{
 			childIdList = new ArrayList<Integer>();
 		}
-		
+
 		protected void getChildsList(long[] list)
 		{
-			for (int i = 0; i< list.length; i++)
+			for (int i = 0; i < list.length; i++)
 			{
 				childIdList.add((int)list[i]);
 				GenericObject obj = service.findObjectById(list[i]);
-				if (obj != null && (obj.getObjectClass() == GenericObject.OBJECT_CONTAINER || 
-				                    obj.getObjectClass() == GenericObject.OBJECT_CLUSTER))
+				if (obj != null && (obj.getObjectClass() == GenericObject.OBJECT_CONTAINER ||
+						obj.getObjectClass() == GenericObject.OBJECT_CLUSTER))
 				{
 					try
 					{
 						service.getSession().syncMissingObjects(obj.getChildIdList(), false, NXCSession.OBJECT_SYNC_WAIT);
 						getChildsList(obj.getChildIdList());
 					}
-					catch(Exception e)
+					catch (Exception e)
 					{
-						Log.d("nxclient/SyncMissingChildsTask", "Exception while executing service.getSession().syncMissingObjects", e);
+						Log.d(TAG, "Exception while executing service.getSession().syncMissingObjects", e);
 					}
 				}
 			}

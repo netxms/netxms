@@ -1,13 +1,16 @@
 package org.netxms.ui.android.main.activities;
 
 import org.netxms.base.NXCommon;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ActivityListAdapter;
 import org.netxms.ui.android.service.ClientConnectorService.ConnectionStatus;
+
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -38,8 +41,11 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	public static final int ACTIVITY_GRAPHS = 4;
 	public static final int ACTIVITY_MACADDRESS = 5;
 	public static final String INTENTIONAL_EXIT_KEY = "IntentionalExit";
-	
-	TextView statusText;
+
+	private static final String TAG = "nxclient/HomeScreen";
+	private static final long ALL_SERVICES_ID = 2;
+	private ActivityListAdapter adapter;
+	private TextView statusText;
 
 	/*
 	 * (non-Javadoc)
@@ -57,7 +63,8 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 			gridview.setNumColumns(5);
 		else
 			gridview.setNumColumns(2);
-		gridview.setAdapter(new ActivityListAdapter(this));
+		adapter = new ActivityListAdapter(this);
+		gridview.setAdapter(adapter);
 		gridview.setOnItemClickListener(this);
 
 		statusText = (TextView)findViewById(R.id.ScreenTitleSecondary);
@@ -78,6 +85,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 		super.onServiceConnected(name, binder);
 		service.registerHomeScreen(this);
 		setStatusText(service.getConnectionStatusText(), service.getConnectionStatusColor());
+		refreshActivityStatus();
 	}
 
 	/*
@@ -103,7 +111,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		switch(item.getItemId())
+		switch (item.getItemId())
 		{
 			case R.string.reconnect:
 				if (service != null)
@@ -132,7 +140,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 		// Avoid starting activity if no connection
 		if (service != null
 				&& (service.getConnectionStatus() == ConnectionStatus.CS_CONNECTED || service.getConnectionStatus() == ConnectionStatus.CS_ALREADYCONNECTED))
-			switch((int)id)
+			switch ((int)id)
 			{
 				case ACTIVITY_ALARMS:
 					startActivity(new Intent(this, AlarmBrowser.class));
@@ -147,7 +155,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 					startActivity(new Intent(this, ConnectionPointBrowser.class));
 					break;
 				case ACTIVITY_DASHBOARDS:
-					Log.d("", "ACTIVITY_DASHBOARDS");
+					Log.d(TAG, "ACTIVITY_DASHBOARDS");
 					startActivity(new Intent(this, DashboardBrowser.class));
 				default:
 					break;
@@ -167,13 +175,54 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 
 	public void showToast(final String text)
 	{
-		new Handler(getMainLooper()).post(new Runnable() {
+		new Handler(getMainLooper()).post(new Runnable()
+		{
 			@Override
 			public void run()
 			{
 				Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
 			}
 		});
+	}
+
+	public void refreshActivityStatus()
+	{
+		new SyncTopNode(ALL_SERVICES_ID).execute();
+	}
+
+	/**
+	 * Internal task for synching missing objects
+	 */
+	private class SyncTopNode extends AsyncTask<Object, Void, GenericObject>
+	{
+		private final long nodeId;
+
+		protected SyncTopNode(long nodeId)
+		{
+			this.nodeId = nodeId;
+		}
+
+		@Override
+		protected GenericObject doInBackground(Object... params)
+		{
+			GenericObject obj = null;
+			try
+			{
+				obj = service.findObjectById(nodeId);
+			}
+			catch (Exception e)
+			{
+				Log.d(TAG, "Exception while executing service.findObjectById()", e);
+			}
+			return obj;
+		}
+
+		@Override
+		protected void onPostExecute(GenericObject object)
+		{
+			adapter.setTopNode(object);
+			adapter.notifyDataSetChanged();
+		}
 	}
 
 	/**
@@ -184,9 +233,9 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	 */
 	private void setIntentionalExit(boolean flag)
 	{
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this); 
-	    SharedPreferences.Editor editor = prefs.edit(); 
-	    editor.putBoolean(INTENTIONAL_EXIT_KEY, flag); 
-	    editor.commit(); 
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putBoolean(INTENTIONAL_EXIT_KEY, flag);
+		editor.commit();
 	}
 }

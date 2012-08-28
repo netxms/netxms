@@ -24,9 +24,9 @@ import android.view.WindowManager;
  */
 public class ConnectTask extends Thread
 {
-	private static final String TAG = "nxclient.ConnectTask";
+	private static final String TAG = "nxclient/ConnectTask";
 
-	private ClientConnectorService service;
+	private final ClientConnectorService service;
 	private String server;
 	private Integer port;
 	private String login;
@@ -46,9 +46,11 @@ public class ConnectTask extends Thread
 	 * Execute task
 	 * 
 	 * @param server
+	 * @param port
 	 * @param login
 	 * @param password
 	 * @param encrypt
+	 * @param forceReconnect
 	 */
 	public void execute(String server, Integer port, String login, String password, boolean encrypt, boolean forceReconnect)
 	{
@@ -104,11 +106,11 @@ public class ConnectTask extends Thread
 					}
 				}
 				if (session == null)	// Already null or invalidated
-				{	
+				{
 					DisplayMetrics metrics = new DisplayMetrics();
 					WindowManager wm = (WindowManager)service.getSystemService(Context.WINDOW_SERVICE);
 					wm.getDefaultDisplay().getMetrics(metrics);
-					
+
 					session = new NXCSession(server, port, login, password, encrypt);
 					session.setConnClientInfo("nxmc-android/" + NXCommon.VERSION + "." + service.getString(R.string.build_number));
 					session.setClientType((metrics.densityDpi >= DisplayMetrics.DENSITY_HIGH) ? NXCSession.TABLET_CLIENT : NXCSession.MOBILE_CLIENT);
@@ -121,7 +123,7 @@ public class ConnectTask extends Thread
 						service.onConnect(session, session.getAlarms());
 						service.loadTools();
 					}
-					catch(Exception e)
+					catch (Exception e)
 					{
 						Log.d(TAG, "Exception on connect attempt", e);
 						service.onError(e.getLocalizedMessage());

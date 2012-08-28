@@ -116,11 +116,19 @@ public class AlarmBrowser extends AbstractClientActivity
 			for (int i = 0; i < positions.size(); i++)
 				if (positions.get(i))
 				{
-					MenuItem item = menu.findItem(R.id.viewlastvalues);
-					if (item != null)
-						item.setVisible(false);
+					hideMenuItem(menu, R.id.viewlastvalues);
 					break;
 				}
+	}
+	/**
+	 * @param menu
+	 * @param id
+	 */
+	private void hideMenuItem(ContextMenu menu, int id)
+	{
+		MenuItem item = menu.findItem(id);
+		if (item != null)
+			item.setVisible(false);
 	}
 
 	/* (non-Javadoc)
@@ -208,7 +216,9 @@ public class AlarmBrowser extends AbstractClientActivity
 		{
 			adapter.setAlarms(service.getAlarms(), nodeIdList);
 			adapter.notifyDataSetChanged();
-			for (int i = 0; i < adapter.getCount(); i++)
+			final SparseBooleanArray positions = listView.getCheckedItemPositions();
+			int count = positions != null ? Math.max(positions.size(), adapter.getCount()) : adapter.getCount();
+			for (int i = 0; i < count; i++)
 				listView.setItemChecked(i, false);
 		}
 	}
