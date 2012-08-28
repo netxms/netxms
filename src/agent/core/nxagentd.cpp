@@ -389,7 +389,7 @@ static void ImportSymbols()
    }
    else
    {
-      nxlog_write(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "NETMAN.DLL");
+      nxlog_write(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", _T("NETMAN.DLL"));
    }
 }
 
