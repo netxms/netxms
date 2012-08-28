@@ -2191,7 +2191,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 						pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
 						TCHAR szMac[20];
 						MACToStr(macAddr, szMac);
-						DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_szName, m_dwId, szMac);
+						DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_szName, m_dwId, szMac);
                   createNewInterface(m_dwIpAddr, dwNetMask, NULL, NULL, 0, 0, pMacAddr);
 					}
             }
@@ -2208,7 +2208,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 
                   BinToStr((BYTE *)pInterface->getMacAddr(), MAC_ADDR_LENGTH, szOldMac);
                   BinToStr(macAddr, MAC_ADDR_LENGTH, szNewMac);
-						DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): MAC change for unknown interface: %s to %s"),
+						DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): MAC change for unknown interface: %s to %s"),
 						          m_szName, m_dwId, szOldMac, szNewMac);
                   PostEvent(EVENT_MAC_ADDR_CHANGED, m_dwId, "idsss",
                             pInterface->Id(), pInterface->getIfIndex(),
@@ -2230,7 +2230,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 				pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
 				TCHAR szMac[20];
 				MACToStr(macAddr, szMac);
-				DbgPrintf(6, _T("Node::updateInterfaceConfiguration: got MAC for unknown interface: %s"), szMac);
+				DbgPrintf(5, _T("Node::updateInterfaceConfiguration: got MAC for unknown interface: %s"), szMac);
          	createNewInterface(m_dwIpAddr, dwNetMask, NULL, NULL, 0, 0, pMacAddr);
 			}
       }

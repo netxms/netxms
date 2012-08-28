@@ -60,6 +60,18 @@ public class NXCPVariableTest extends TestCase
 		assertEquals(17, var2.getAsInteger().intValue());
 	}
 
+	public void testInt32SignEncodingAndDecoding() throws Exception
+	{
+		final NXCPVariable var1 = new NXCPVariable(1, NXCPVariable.TYPE_INTEGER, 0xFFFFFFFFL);
+		
+		final byte[] df = var1.createNXCPDataField();
+		final NXCPVariable var2 = new NXCPVariable(df);
+
+		assertEquals(1, var2.getVariableId());
+		assertEquals(NXCPVariable.TYPE_INTEGER, var2.getVariableType());
+		assertEquals(-1, var2.getAsInteger().intValue());
+	}
+
 	
 	//
 	// Int64 variables

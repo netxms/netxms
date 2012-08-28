@@ -42,7 +42,7 @@ static DWORD HandlerArp(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pT
       return dwResult;
 
    oidName[dwNameLen - 6] = 2;  // Retrieve MAC address for this IP
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, bMac, 64, 0);
+	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, bMac, 64, SG_RAW_RESULT);
    if (dwResult == SNMP_ERR_SUCCESS)
    {
       ((ARP_CACHE *)pArg)->dwNumEntries++;

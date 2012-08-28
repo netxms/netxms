@@ -466,8 +466,16 @@ DWORD LIBNXDB_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColum
    pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
    if (pszVal == NULL)
       return 0;
-   iVal = _tcstol(pszVal, NULL, 10);
-   memcpy(&dwVal, &iVal, sizeof(LONG));   // To prevent possible conversion
+	StrStrip(pszVal);
+	if (*pszVal == _T('-'))
+	{
+		iVal = _tcstol(pszVal, NULL, 10);
+		memcpy(&dwVal, &iVal, sizeof(LONG));   // To prevent possible conversion
+	}
+	else
+	{
+		dwVal = _tcstoul(pszVal, NULL, 10);
+	}
    return dwVal;
 }
 
@@ -485,8 +493,16 @@ QWORD LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int iRow, int iColu
    pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
    if (pszVal == NULL)
       return 0;
-   iVal = _tcstoll(pszVal, NULL, 10);
-   memcpy(&qwVal, &iVal, sizeof(INT64));   // To prevent possible conversion
+	StrStrip(pszVal);
+	if (*pszVal == _T('-'))
+	{
+		iVal = _tcstoll(pszVal, NULL, 10);
+		memcpy(&qwVal, &iVal, sizeof(INT64));   // To prevent possible conversion
+	}
+	else
+	{
+		qwVal = _tcstoull(pszVal, NULL, 10);
+	}
    return qwVal;
 }
 
@@ -831,8 +847,16 @@ DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColu
 
    if (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL)
       return 0;
-   iVal = _tcstol(szBuffer, NULL, 10);
-   memcpy(&dwVal, &iVal, sizeof(LONG));   // To prevent possible conversion
+	StrStrip(szBuffer);
+	if (szBuffer[0] == _T('-'))
+	{
+		iVal = _tcstol(szBuffer, NULL, 10);
+		memcpy(&dwVal, &iVal, sizeof(LONG));   // To prevent possible conversion
+	}
+	else
+	{
+		dwVal = _tcstoul(szBuffer, NULL, 10);
+	}
    return dwVal;
 }
 
@@ -849,8 +873,16 @@ QWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iCol
 
    if (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL)
       return 0;
-   iVal = _tcstoll(szBuffer, NULL, 10);
-   memcpy(&qwVal, &iVal, sizeof(INT64));   // To prevent possible conversion
+	StrStrip(szBuffer);
+	if (szBuffer[0] == _T('-'))
+	{
+		iVal = _tcstoll(szBuffer, NULL, 10);
+		memcpy(&qwVal, &iVal, sizeof(INT64));   // To prevent possible conversion
+	}
+	else
+	{
+		qwVal = _tcstoull(szBuffer, NULL, 10);
+	}
    return qwVal;
 }
 
@@ -922,6 +954,7 @@ void LIBNXDB_EXPORTABLE DBFreeAsyncResult(DB_ASYNC_RESULT hResult)
 DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query, TCHAR *errorText)
 {
 	DB_STATEMENT result = NULL;
+	INT64 ms;
 
 #ifdef UNICODE
 #define pwszQuery query
@@ -932,6 +965,9 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 #endif
 
 	MutexLock(hConn->m_mutexTransLock);
+
+	if (hConn->m_driver->m_dumpSql)
+      ms = GetCurrentTimeMs();
 
 	DWORD errorCode;
 	DBDRV_STATEMENT stmt = hConn->m_driver->m_fpDrvPrepare(hConn->m_connection, pwszQuery, &errorCode, wcErrorText);
@@ -961,6 +997,12 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
         nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, hConn->m_driver->m_userArg);
+	}
+
+   if (hConn->m_driver->m_dumpSql)
+   {
+      ms = GetCurrentTimeMs() - ms;
+	   __DBDbgPrintf(9, _T("%s prepare: \"%s\" [%d ms]"), (result != NULL) ? _T("Successful") : _T("Failed"), query, ms);
 	}
 
 #ifndef UNICODE
@@ -1043,7 +1085,10 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, LONG va
 
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, DWORD value)
 {
-	DBBind(hStmt, pos, sqlType, DB_CTYPE_UINT32, &value, DB_BIND_TRANSIENT);
+	// C type intentionally set to INT32 - unsigned numbers will be written as negatives
+	// and correctly parsed on read by DBGetFieldULong
+	// Setting it to UINT32 may cause INSERT/UPDATE failures on some databases
+	DBBind(hStmt, pos, sqlType, DB_CTYPE_INT32, &value, DB_BIND_TRANSIENT);
 }
 
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, INT64 value)

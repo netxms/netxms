@@ -442,9 +442,7 @@ public class NXCPVariable
 		return variableType;
 	}
 
-
 	/**
-	 * Create NXCP DF structure
 	 *
 	 * @return
 	 */
@@ -477,6 +475,12 @@ public class NXCPVariable
 		return size;
 	}
 
+	/**
+	 * Create NXCP DF structure
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
 	public byte[] createNXCPDataField() throws IOException
 	{
 		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(calculateBinarySize());

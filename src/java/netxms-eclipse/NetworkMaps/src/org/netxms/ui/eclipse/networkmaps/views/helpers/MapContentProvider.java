@@ -58,7 +58,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	{
 		NetworkMapLink link = page.findLink((NetworkMapElement)source, (NetworkMapElement)dest);
 		if (link != null)
-			return new Object[] { link };
+			return new Object[] { link };		
 		return null;
 	}
 

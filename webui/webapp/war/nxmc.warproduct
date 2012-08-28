@@ -82,6 +82,7 @@
       <plugin id="org.netxms.ui.eclipse.topology"/>
       <plugin id="org.netxms.ui.eclipse.usermanager"/>
       <plugin id="org.netxms.webui.core"/>
+      <plugin id="org.swtchart"/>
    </plugins>
 
    <configurations>
@@ -163,6 +164,7 @@
       <plugin id="org.netxms.ui.eclipse.topology" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.usermanager" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.webui.core" autoStart="true" startLevel="0" />
+      <plugin id="org.swtchart" autoStart="true" startLevel="0" />
    </configurations>
 
    <warConfiguration webXml="/WAR/WEB-INF/web.xml" launchIni="/WAR/WEB-INF/launch.ini">

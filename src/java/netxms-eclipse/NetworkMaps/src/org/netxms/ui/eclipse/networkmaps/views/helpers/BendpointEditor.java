@@ -293,6 +293,7 @@ public class BendpointEditor
 					drag = true;
 					viewer.showCrosshair(me.x, me.y);
 				}
+				me.consume();
 			}
 		}
 
@@ -328,6 +329,7 @@ public class BendpointEditor
 			{
 				viewer.showCrosshair(me.x, me.y);
 				setLocation(new Point(me.x - HANDLE_SIZE / 2, me.y - HANDLE_SIZE / 2));
+				me.consume();
 			}
 		}
 
