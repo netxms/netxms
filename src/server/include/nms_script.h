@@ -123,10 +123,16 @@ public:
 
 class NXSL_ServerEnv : public NXSL_Environment
 {
+protected:
+	CONSOLE_CTX m_console;
+
 public:
 	NXSL_ServerEnv();
 
+	virtual void print(NXSL_Value *value);
 	virtual void trace(int level, const TCHAR *text);
+
+	void setConsole(CONSOLE_CTX console) { m_console = console; }
 };
 
 

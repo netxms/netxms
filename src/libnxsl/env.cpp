@@ -197,12 +197,40 @@ BOOL NXSL_Environment::useModule(NXSL_Program *pMain, const TCHAR *pszName)
    return bRet;
 }
 
-
-//
-// Write trace message
-// Default implementation does nothing
-//
-
+/**
+ * Write trace message
+ * Default implementation does nothing
+ */
 void NXSL_Environment::trace(int level, const TCHAR *text)
 {
+}
+
+/**
+ * Print text to standard output
+ * Default implementation writes value as string to stdout, if it is set
+ */
+void NXSL_Environment::print(NXSL_Value *value)
+{
+	if (m_pStdOut == NULL)
+		return;
+
+   const TCHAR *pszText;
+   DWORD dwLen;
+   pszText = value->getValueAsString(&dwLen);
+   if (pszText != NULL)
+	{
+#ifdef UNICODE
+		int reqLen = WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, dwLen, NULL, 0, NULL, NULL);
+		char *mbText = (char *)malloc(reqLen);
+		WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, dwLen, mbText, reqLen, NULL, NULL);
+      fwrite(mbText, reqLen, 1, m_pStdOut);
+		free(mbText);
+#else
+      fwrite(pszText, dwLen, 1, m_pStdOut);
+#endif
+	}
+   else
+	{
+      fputs("(null)", m_pStdOut);
+	}
 }

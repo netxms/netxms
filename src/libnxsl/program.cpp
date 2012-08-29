@@ -977,29 +977,7 @@ void NXSL_Program::execute()
          pValue = (NXSL_Value *)m_pDataStack->pop();
          if (pValue != NULL)
          {
-            const TCHAR *pszText;
-            DWORD dwLen;
-
-            if (m_pEnv->getStdOut() != NULL)
-            {
-               pszText = pValue->getValueAsString(&dwLen);
-               if (pszText != NULL)
-					{
-#ifdef UNICODE
-						int reqLen = WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, dwLen, NULL, 0, NULL, NULL);
-						char *mbText = (char *)malloc(reqLen);
-						WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, dwLen, mbText, reqLen, NULL, NULL);
-                  fwrite(mbText, reqLen, 1, m_pEnv->getStdOut());
-						free(mbText);
-#else
-                  fwrite(pszText, dwLen, 1, m_pEnv->getStdOut());
-#endif
-					}
-               else
-					{
-                  fputs("(null)", m_pEnv->getStdOut());
-					}
-            }
+				m_pEnv->print(pValue);
             delete pValue;
          }
          else

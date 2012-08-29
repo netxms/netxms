@@ -1409,6 +1409,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		if (compiledScript != NULL)
 		{
 			NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
+			pEnv->setConsole(pCtx);
 				
 			NXSL_Value *argv[32];
 			int argc = 0;

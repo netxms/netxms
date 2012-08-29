@@ -345,6 +345,7 @@ public:
    NXSL_Environment();
    ~NXSL_Environment();
 
+	virtual void print(NXSL_Value *value);
 	virtual void trace(int level, const TCHAR *text);
 
    void setIO(FILE *pIn, FILE *pOut) { m_pStdIn = pIn; m_pStdOut = pOut; }

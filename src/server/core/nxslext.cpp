@@ -671,6 +671,38 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 }
 
 //
+// Rename object
+// Syntax:
+//    RenameObject(object, name)
+// where:
+//     object - NetXMS object (Node, Interface, or NetObj)
+//     name   - new name for object
+// Return value:
+//     null
+//
+
+static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	((NetObj *)object->getData())->setName(argv[1]->getValueAsCString());
+
+	*ppResult = new NXSL_Value;
+
+	return 0;
+}
+
+//
 // Create new SNMP transport object
 // Syntax:
 //    CreateSNMPTransport(node)
@@ -1060,17 +1092,17 @@ static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 	{ _T("BindObject"), F_BindObject, 2 },
 	{ _T("CreateContainer"), F_CreateContainer, 2 },
 	{ _T("RemoveContainer"), F_RemoveContainer, 1 },
+	{ _T("RenameObject"), F_RenameObject, 2 },
 	{ _T("UnbindObject"), F_UnbindObject, 2 },
 };
 
-
-//
-// Constructor for server default script environment
-//
-
+/**
+ * Constructor for server default script environment
+ */
 NXSL_ServerEnv::NXSL_ServerEnv()
                : NXSL_Environment()
 {
+	m_console = NULL;
 	setLibrary(g_pScriptLibrary);
 	registerFunctionSet(sizeof(m_nxslServerFunctions) / sizeof(NXSL_ExtFunction), m_nxslServerFunctions);
 	RegisterDCIFunctions(this);
@@ -1079,11 +1111,9 @@ NXSL_ServerEnv::NXSL_ServerEnv()
 		registerFunctionSet(sizeof(m_nxslServerFunctionsForContainers) / sizeof(NXSL_ExtFunction), m_nxslServerFunctionsForContainers);
 }
 
-
-//
-// Script trace output
-//
-
+/**
+ * Script trace output
+ */
 void NXSL_ServerEnv::trace(int level, const TCHAR *text)
 {
 	if (level == 0)
@@ -1093,5 +1123,17 @@ void NXSL_ServerEnv::trace(int level, const TCHAR *text)
 	else
 	{
 		DbgPrintf(level, _T("%s"), text);
+	}
+}
+
+/**
+ * Print script output to console
+ */
+void NXSL_ServerEnv::print(NXSL_Value *value)
+{
+	if (m_console != NULL)
+	{
+		const TCHAR *text = value->getValueAsCString();
+		ConsolePrintf(m_console, _T("%s"), CHECK_NULL(text));
 	}
 }
