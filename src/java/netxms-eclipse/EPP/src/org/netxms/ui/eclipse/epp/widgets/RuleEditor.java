@@ -101,6 +101,7 @@ public class RuleEditor extends Composite
 	private Label editButton;
 	private boolean modified = false;
 	private boolean selected = false;
+	private MouseListener ruleMouseListener;
 	
 	/**
 	 * @param parent
@@ -126,9 +127,38 @@ public class RuleEditor extends Composite
 		layout.verticalSpacing = 1;
 		setLayout(layout);
 		
+		ruleMouseListener = new MouseListener() {
+			@Override
+			public void mouseDoubleClick(MouseEvent e)
+			{
+			}
+
+			@Override
+			public void mouseDown(MouseEvent e)
+			{
+				switch(e.button)
+				{
+					case 1:
+						processRuleMouseEvent(e);
+						break;
+					default:
+						if (!selected)
+							RuleEditor.this.editor.setSelection(RuleEditor.this);
+						break;
+				}
+			}
+
+			@Override
+			public void mouseUp(MouseEvent e)
+			{
+			}
+		};
+		
 		createLeftPanel();
 		createHeader();
 		createMainArea();
+		
+		createPopupMenu(new Control[] { leftPanel, ruleNumberLabel, header, headerLabel });
 		
 		condition = new DashboardElement(mainArea, Messages.RuleEditor_Filter) {
 			@Override
@@ -198,36 +228,9 @@ public class RuleEditor extends Composite
 	 */
 	private void createLeftPanel()
 	{
-		final MouseListener mouseListener = new MouseListener() {
-			@Override
-			public void mouseDoubleClick(MouseEvent e)
-			{
-			}
-
-			@Override
-			public void mouseDown(MouseEvent e)
-			{
-				switch(e.button)
-				{
-					case 1:
-						processRuleMouseEvent(e);
-						break;
-					default:
-						if (!selected)
-							editor.setSelection(RuleEditor.this);
-						break;
-				}
-			}
-
-			@Override
-			public void mouseUp(MouseEvent e)
-			{
-			}
-		};
-		
 		leftPanel = new Composite(this, SWT.NONE);
 		leftPanel.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
-		leftPanel.addMouseListener(mouseListener);
+		leftPanel.addMouseListener(ruleMouseListener);
 		
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = 0;
@@ -247,7 +250,7 @@ public class RuleEditor extends Composite
 		ruleNumberLabel.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
 		ruleNumberLabel.setForeground(TITLE_COLOR);
 		ruleNumberLabel.setAlignment(SWT.CENTER);
-		ruleNumberLabel.addMouseListener(mouseListener);
+		ruleNumberLabel.addMouseListener(ruleMouseListener);
 		
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.CENTER;
@@ -255,8 +258,6 @@ public class RuleEditor extends Composite
 		gd.grabExcessVerticalSpace = true;
 		gd.widthHint = 30;
 		ruleNumberLabel.setLayoutData(gd);
-		
-		createPopupMenu(new Control[] { leftPanel, ruleNumberLabel });
 	}
 
 	/**
@@ -289,6 +290,7 @@ public class RuleEditor extends Composite
 	{
 		header = new Composite(this, SWT.NONE);
 		header.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
+		header.addMouseListener(ruleMouseListener);
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
@@ -322,11 +324,13 @@ public class RuleEditor extends Composite
 			@Override
 			public void mouseDown(MouseEvent e)
 			{
+				ruleMouseListener.mouseDown(e);
 			}
 
 			@Override
 			public void mouseUp(MouseEvent e)
 			{
+				ruleMouseListener.mouseUp(e);
 			}
 		});
 		
@@ -961,10 +965,18 @@ public class RuleEditor extends Composite
 	public void setSelected(boolean selected)
 	{
 		this.selected = selected;
-		leftPanel.setBackground(selected ? SELECTED_TITLE_BACKGROUND_COLOR : (rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR));
+		final Color color = selected ? SELECTED_TITLE_BACKGROUND_COLOR : (rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR); 
+		
+		leftPanel.setBackground(color);
 		for(Control c : leftPanel.getChildren())
-			c.setBackground(selected ? SELECTED_TITLE_BACKGROUND_COLOR : (rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR));
+			c.setBackground(color);
 		leftPanel.redraw();
+
+		header.setBackground(color);
+		headerLabel.setBackground(color);
+		expandButton.setBackground(color);
+		editButton.setBackground(color);
+		header.redraw();
 	}
 	
 	/**
@@ -998,12 +1010,13 @@ public class RuleEditor extends Composite
 	 */
 	private void updateBackground()
 	{
-		leftPanel.setBackground(selected ? SELECTED_TITLE_BACKGROUND_COLOR : (rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR));
+		final Color color = selected ? SELECTED_TITLE_BACKGROUND_COLOR : (rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR); 
+		leftPanel.setBackground(color);
 		for(Control c : leftPanel.getChildren())
-			c.setBackground(selected ? SELECTED_TITLE_BACKGROUND_COLOR : (rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR));
-		header.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
-		headerLabel.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
-		expandButton.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
-		editButton.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
+			c.setBackground(color);
+		header.setBackground(color);
+		headerLabel.setBackground(color);
+		expandButton.setBackground(color);
+		editButton.setBackground(color);
 	}
 }
