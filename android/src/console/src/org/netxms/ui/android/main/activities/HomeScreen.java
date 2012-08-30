@@ -1,5 +1,7 @@
 package org.netxms.ui.android.main.activities;
 
+import java.util.ArrayList;
+
 import org.netxms.base.NXCommon;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
@@ -44,6 +46,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 
 	private static final String TAG = "nxclient/HomeScreen";
 	private static final long ALL_SERVICES_ID = 2;
+	private static final long DASHBOARDS_ID = 7;
 	private ActivityListAdapter adapter;
 	private TextView statusText;
 
@@ -187,40 +190,38 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 
 	public void refreshActivityStatus()
 	{
-		new SyncTopNode(ALL_SERVICES_ID).execute();
+		new SyncTopNodes().execute(new Long[] { ALL_SERVICES_ID, DASHBOARDS_ID });
 	}
 
 	/**
 	 * Internal task for synching missing objects
 	 */
-	private class SyncTopNode extends AsyncTask<Object, Void, GenericObject>
+	private class SyncTopNodes extends AsyncTask<Long, Void, ArrayList<GenericObject>>
 	{
-		private final long nodeId;
-
-		protected SyncTopNode(long nodeId)
+		protected SyncTopNodes()
 		{
-			this.nodeId = nodeId;
 		}
 
 		@Override
-		protected GenericObject doInBackground(Object... params)
+		protected ArrayList<GenericObject> doInBackground(Long... params)
 		{
-			GenericObject obj = null;
+			ArrayList<GenericObject> objList = new ArrayList<GenericObject>();
 			try
 			{
-				obj = service.findObjectById(nodeId);
+				for (int i = 0; i < params.length; i++)
+					objList.add(service.findObjectById(params[i].longValue()));
 			}
 			catch (Exception e)
 			{
 				Log.d(TAG, "Exception while executing service.findObjectById()", e);
 			}
-			return obj;
+			return objList;
 		}
 
 		@Override
-		protected void onPostExecute(GenericObject object)
+		protected void onPostExecute(ArrayList<GenericObject> objList)
 		{
-			adapter.setTopNode(object);
+			adapter.setTopNodes(objList);
 			adapter.notifyDataSetChanged();
 		}
 	}

@@ -3,6 +3,8 @@
  */
 package org.netxms.ui.android.main.adapters;
 
+import java.util.ArrayList;
+
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.activities.HomeScreen;
@@ -11,6 +13,7 @@ import org.netxms.ui.android.main.views.ActivityListElement;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -42,7 +45,7 @@ public class ActivityListAdapter extends BaseAdapter
 			R.drawable.status_testing     // STATUS_TESTING = 8;
 	};
 
-	private GenericObject topNode = null;
+	private SparseArray<GenericObject> topNodes = null;
 	private final Context context;
 
 	/**
@@ -56,13 +59,26 @@ public class ActivityListAdapter extends BaseAdapter
 	}
 
 	/**
-	 * Set top node
+	 * Set top nodes list
 	 * 
-	 * @param topNode
+	 * @param objList
 	 */
-	public void setTopNode(GenericObject topNode)
+	public void setTopNodes(ArrayList<GenericObject> objList)
 	{
-		this.topNode = topNode;
+		topNodes = new SparseArray<GenericObject>();
+		for (int i = 0; i < objList.size(); i++)
+		{
+			if (objList.get(i) != null)
+				switch (objList.get(i).getObjectClass())
+				{
+					case GenericObject.OBJECT_DASHBOARDROOT:
+						topNodes.put(HomeScreen.ACTIVITY_DASHBOARDS, objList.get(i));
+						break;
+					case GenericObject.OBJECT_SERVICEROOT:
+						topNodes.put(HomeScreen.ACTIVITY_NODES, objList.get(i));
+						break;
+				}
+		}
 	}
 
 	/*
@@ -120,35 +136,39 @@ public class ActivityListAdapter extends BaseAdapter
 			view = (ActivityListElement)convertView;
 		}
 
-		if (topNode != null && activityId[position] == HomeScreen.ACTIVITY_NODES)
+		if (topNodes != null)
 		{
-			Drawable[] layers;
-			switch (topNode.getStatus())
+			GenericObject obj = topNodes.get(activityId[position]);
+			if (obj != null)
 			{
-				case GenericObject.STATUS_WARNING:
-				case GenericObject.STATUS_MINOR:
-				case GenericObject.STATUS_MAJOR:
-				case GenericObject.STATUS_CRITICAL:
-					layers = new Drawable[2];
-					layers[0] = parent.getResources().getDrawable(imageId[position]);
-					layers[1] = parent.getResources().getDrawable(statusImageId[topNode.getStatus()]);
-					break;
-				case GenericObject.STATUS_NORMAL:
-				case GenericObject.STATUS_UNKNOWN:
-				case GenericObject.STATUS_UNMANAGED:
-				case GenericObject.STATUS_DISABLED:
-				case GenericObject.STATUS_TESTING:
-				default:
-					layers = new Drawable[1];
-					layers[0] = parent.getResources().getDrawable(imageId[position]);
-					break;
+				Drawable[] layers;
+				switch (obj.getStatus())
+				{
+					case GenericObject.STATUS_WARNING:
+					case GenericObject.STATUS_MINOR:
+					case GenericObject.STATUS_MAJOR:
+					case GenericObject.STATUS_CRITICAL:
+						layers = new Drawable[2];
+						layers[0] = parent.getResources().getDrawable(imageId[position]);
+						layers[1] = parent.getResources().getDrawable(statusImageId[obj.getStatus()]);
+						break;
+					case GenericObject.STATUS_NORMAL:
+					case GenericObject.STATUS_UNKNOWN:
+					case GenericObject.STATUS_UNMANAGED:
+					case GenericObject.STATUS_DISABLED:
+					case GenericObject.STATUS_TESTING:
+					default:
+						layers = new Drawable[1];
+						layers[0] = parent.getResources().getDrawable(imageId[position]);
+						break;
+				}
+				ImageView objectIcon = (ImageView)view.getChildAt(0);
+				LayerDrawable drawable = new LayerDrawable(layers);
+				if (layers.length > 1)
+					drawable.setLayerInset(1, layers[0].getIntrinsicWidth() - layers[1].getIntrinsicWidth(),
+							layers[0].getIntrinsicHeight() - layers[1].getIntrinsicHeight(), 0, 0);
+				objectIcon.setImageDrawable(drawable);
 			}
-			ImageView objectIcon = (ImageView)view.getChildAt(0);
-			LayerDrawable drawable = new LayerDrawable(layers);
-			if (layers.length > 1)
-				drawable.setLayerInset(1, layers[0].getIntrinsicWidth() - layers[1].getIntrinsicWidth(),
-						layers[0].getIntrinsicHeight() - layers[1].getIntrinsicHeight(), 0, 0);
-			objectIcon.setImageDrawable(drawable);
 		}
 		return view;
 	}
