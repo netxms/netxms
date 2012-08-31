@@ -2726,6 +2726,8 @@ webui/webapp/EPP/icons/stop.png -text
 webui/webapp/EPP/icons/terminate.png -text
 webui/webapp/EPP/icons/v_layout.gif -text
 webui/webapp/EPP/plugin.xml -text
+webui/webapp/EPP/src/org/netxms/ui/eclipse/epp/Messages.java -text
+webui/webapp/EPP/src/org/netxms/ui/eclipse/epp/messages.properties -text
 webui/webapp/EventManager/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/EventManager/META-INF/MANIFEST.MF -text
 webui/webapp/EventManager/build.properties -text
