@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.ContributionItem;
@@ -343,7 +344,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			}
 			else
 			{
-				command = "/bin/sh -c \"" + command.replaceAll("\"", "\\\"") + "\""; 
+				command = "/bin/sh -c \"" + command.replaceAll("\"", Matcher.quoteReplacement("\\\"")) + "\""; 
 			}
 			
 			try
