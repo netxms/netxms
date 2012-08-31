@@ -175,11 +175,9 @@ void SNMP_MIBObject::Print(int nIndent)
       pCurr->Print(nIndent + 2);
 }
 
-
-//
-// Write string to file
-//
-
+/**
+ * Write string to file
+ */
 static void WriteStringToFile(ZFile *pFile, TCHAR *pszStr)
 {
    WORD wLen, wTemp;
@@ -201,11 +199,9 @@ static void WriteStringToFile(ZFile *pFile, TCHAR *pszStr)
 #endif
 }
 
-
-//
-// Write object to file
-//
-
+/**
+ * Write object to file
+ */
 void SNMP_MIBObject::WriteToFile(ZFile *pFile, DWORD dwFlags)
 {
    SNMP_MIBObject *pCurr;
@@ -273,13 +269,10 @@ void SNMP_MIBObject::WriteToFile(ZFile *pFile, DWORD dwFlags)
    pFile->fputc(MIB_TAG_OBJECT | MIB_END_OF_TAG);
 }
 
-
-//
-// Save MIB tree to file
-//
-
-DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject *pRoot,
-                                           DWORD dwFlags)
+/**
+ * Save MIB tree to file
+ */
+DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject *pRoot, DWORD dwFlags)
 {
    FILE *pFile;
    ZFile *pZFile;
@@ -308,11 +301,9 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject 
    return dwRet;
 }
 
-
-//
-// Read string from file
-//
-
+/**
+ * Read string from file
+ */
 static TCHAR *ReadStringFromFile(ZFile *pFile)
 {
    TCHAR *pszStr;

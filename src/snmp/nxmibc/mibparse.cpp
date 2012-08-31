@@ -24,11 +24,9 @@
 #include "nxmibc.h"
 #include "mibparse.h"
 
-
-//
-// Do actual builtin object creation
-//
-
+/**
+ * Do actual builtin object creation
+ */
 static MP_OBJECT *CreateObject(const char *pszName, DWORD dwId)
 {
    MP_OBJECT *pObject;
@@ -46,11 +44,9 @@ static MP_OBJECT *CreateObject(const char *pszName, DWORD dwId)
    return pObject;
 }
 
-
-//
-// Create builtin object
-//
-
+/**
+ * Create builtin object
+ */
 static MP_OBJECT *CreateBuiltinObject(char *pszName)
 {
    MP_OBJECT *pObject = NULL;
@@ -66,11 +62,9 @@ static MP_OBJECT *CreateBuiltinObject(char *pszName)
    return pObject;
 }
 
-
-//
-// Find module by name
-//
-
+/**
+ * Find module by name
+ */
 static MP_MODULE *FindModuleByName(DynArray *pModuleList, char *pszName)
 {
    int i, iNumModules;
@@ -82,11 +76,9 @@ static MP_MODULE *FindModuleByName(DynArray *pModuleList, char *pszName)
    return NULL;
 }
 
-
-//
-// Find object in module
-//
-
+/**
+ * Find object in module
+ */
 static MP_OBJECT *FindObjectByName(MP_MODULE *pModule, char *pszName, int *pnIndex)
 {
    int i, iNumObjects;
@@ -337,11 +329,9 @@ static void ResolveObjects(DynArray *pModuleList, MP_MODULE *pModule)
    }
 }
 
-
-//
-// Build MIB tree from object list
-//
-
+/**
+ * Build MIB tree from object list
+ */
 static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
 {
    int i, j, iLen, iNumObjects;
@@ -385,7 +375,7 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
                else
 					{
 #ifdef UNICODE
-						WCHAR *wname = (pObject->pszName != NULL) ? WideStringFromMBString(pObject->pszName) : NULL;
+						WCHAR *wname = (pSubId->pszName != NULL) ? WideStringFromMBString(pSubId->pszName) : NULL;
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, wname);
 						safe_free(wname);
 #else
