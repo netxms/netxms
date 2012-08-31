@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.perfview.views;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -224,6 +224,7 @@ public class PredefinedGraphTree extends ViewPart
 	protected void fillContextMenu(final IMenuManager mgr)
 	{
 		mgr.add(actionOpen);
+		mgr.add(actionDelete);
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		mgr.add(new Separator());
 		mgr.add(actionProperties);
@@ -248,9 +249,12 @@ public class PredefinedGraphTree extends ViewPart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionOpen);
-		manager.add(actionRefresh);
+		manager.add(actionDelete);
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
 		manager.add(actionProperties);
+		manager.add(new Separator());
+		manager.add(actionRefresh);
 	}
 
 	/**
@@ -380,11 +384,11 @@ public class PredefinedGraphTree extends ViewPart
 			viewer.update(settings, null);
 		}
 	}
-
 	
 	/**
 	 * Delete predefined graph(s)
 	 */
+	@SuppressWarnings("unchecked")
 	private void deletePredefinedGraph()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
@@ -394,7 +398,7 @@ public class PredefinedGraphTree extends ViewPart
 		if (!MessageDialog.openQuestion(getSite().getShell(), "Delete Predefined Graphs", "Selected predefined graphs will be deleted. Are you sure?"))
 			return;
 		
-		final List<GraphSettings> list = Arrays.asList((GraphSettings[])viewer.getInput());
+		final List<GraphSettings> list = new ArrayList<GraphSettings>((List<GraphSettings>)viewer.getInput());
 		for(final Object o : selection.toList())
 		{
 			if (!(o instanceof GraphSettings))
@@ -410,7 +414,7 @@ public class PredefinedGraphTree extends ViewPart
 						public void run()
 						{
 							list.remove(o);
-							viewer.setInput(list.toArray());
+							viewer.setInput(list);
 						}
 					});
 				}
@@ -418,7 +422,7 @@ public class PredefinedGraphTree extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot update predefined graph";
+					return "Cannot delete predefined graph";
 				}
 			}.start();
 		}
