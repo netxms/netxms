@@ -457,11 +457,9 @@ void NetObj::DeleteParent(NetObj *pObject)
    Modify();
 }
 
-
-//
-// Prepare object for deletion - remove all references, etc.
-//
-
+/**
+ * Walker callback to call OnObjectDelete for each active object
+ */
 void NetObj::onObjectDeleteCallback(NetObj *object, void *data)
 {
 	DWORD currId = ((NetObj *)data)->Id();
@@ -469,6 +467,9 @@ void NetObj::onObjectDeleteCallback(NetObj *object, void *data)
 		object->OnObjectDelete(currId);
 }
 
+/**
+ * Prepare object for deletion - remove all references, etc.
+ */
 void NetObj::deleteObject()
 {
    DWORD i;

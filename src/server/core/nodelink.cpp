@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 NetXMS Team
+** Copyright (C) 2003-2012 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,41 +25,34 @@
 
 #define QUERY_LENGTH		(512)
 
-//
-// NodeLink default constructor
-//
-
+/**
+ * NodeLink default constructor
+ */
 NodeLink::NodeLink() : ServiceContainer()
 {
 	_tcscpy(m_szName, _T("Default"));
 	m_nodeId = 0;
 }
 
-
-//
-// Constructor for new nodelink object
-//
-
+/**
+ * Constructor for new nodelink object
+ */
 NodeLink::NodeLink(const TCHAR *name, DWORD nodeId) : ServiceContainer(name)
 {
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
 	m_nodeId = nodeId;
 }
 
-
-//
-// Nodelink class destructor
-//
-
+/**
+ * Nodelink class destructor
+ */
 NodeLink::~NodeLink()
 {
 }
 
-
-//
-// Create object from database data
-//
-
+/**
+ * Create object from database data
+ */
 BOOL NodeLink::CreateFromDB(DWORD id)
 {
 	const int script_length = 1024;
@@ -106,11 +99,9 @@ BOOL NodeLink::CreateFromDB(DWORD id)
 	return TRUE;
 }
 
-
-//
-// Save service to database
-//
-
+/**
+ * Save nodelink to database
+ */
 BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 {
 	BOOL bNewObject = TRUE;
@@ -158,11 +149,9 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 	return ServiceContainer::SaveToDB(hdb);
 }
 
-
-//
-// Delete object from database
-//
-
+/**
+ * Delete object from database
+ */
 BOOL NodeLink::DeleteFromDB()
 {
 	TCHAR szQuery[QUERY_LENGTH];
@@ -178,22 +167,18 @@ BOOL NodeLink::DeleteFromDB()
 	return bSuccess;
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create CSCP message with object's data
+ */
 void NodeLink::CreateMessage(CSCPMessage *pMsg)
 {
 	ServiceContainer::CreateMessage(pMsg);
 	pMsg->SetVariable(VID_NODE_ID, m_nodeId);
 }
 
-
-//
-// Modify object from message
-//
-
+/**
+ * Modify object from message
+ */
 DWORD NodeLink::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
 	if (!bAlreadyLocked)
@@ -207,11 +192,9 @@ DWORD NodeLink::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	return ServiceContainer::ModifyFromMessage(pRequest, TRUE);
 }
 
-
-//
-// Execute underlying checks for this node link
-//
-
+/**
+ * Execute underlying checks for this node link
+ */
 void NodeLink::execute()
 {
 	DbgPrintf(6, _T("NodeLink::execute() started for %s [%ld]"), m_szName, (long)m_dwId);
@@ -229,11 +212,9 @@ void NodeLink::execute()
 	DbgPrintf(6, _T("NodeLink::execute() finished for %s [%ld]"), m_szName, (long)m_dwId);
 }
 
-
-//
-// Apply single template check to this nodelink
-//
-
+/**
+ * Apply single template check to this nodelink
+ */
 void NodeLink::applyTemplate(SlmCheck *tmpl)
 {
 	// Check if we already have check created from this template
@@ -264,11 +245,9 @@ void NodeLink::applyTemplate(SlmCheck *tmpl)
 	}
 }
 
-
-//
-// Apply templates from the upper levels to this nodelink
-//
-
+/**
+ * Apply templates from the upper levels to this nodelink
+ */
 void NodeLink::applyTemplates()
 {
 	ObjectArray<SlmCheck> templates;
@@ -289,5 +268,30 @@ void NodeLink::applyTemplates()
 		SlmCheck *tmpl = templates.get(j);
 		applyTemplate(tmpl);
 		tmpl->DecRefCount();
+	}
+}
+
+/**
+ * Object deletion thread
+ */
+static THREAD_RESULT THREAD_CALL DeleteThread(void *arg)
+{
+	((NodeLink *)arg)->deleteObject();
+	return THREAD_OK;
+}
+
+/**
+ * Object deletion handler
+ */
+void NodeLink::OnObjectDelete(DWORD dwObjectId)
+{
+	if (dwObjectId == m_nodeId)
+	{
+		// owning node being deleted
+		// OnObjectDelete being called as callback from another
+		// object's OnObjectDelete, so we cannot call this->deleteObject()
+		// directly without potential deadlock
+		DbgPrintf(4, _T("Scheduling deletion of nodelink object %s [%u] due to linked node deletion"), m_szName, m_dwId);
+		ThreadCreate(DeleteThread, 0, this);
 	}
 }

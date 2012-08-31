@@ -1825,6 +1825,8 @@ class NXCORE_EXPORTABLE NodeLink : public ServiceContainer
 protected:
 	DWORD m_nodeId;
 
+   virtual void OnObjectDelete(DWORD dwObjectId);
+
 	void applyTemplate(SlmCheck *tmpl);
 
 public:

@@ -33,11 +33,9 @@ extern Queue g_topologyPollQueue;
 extern Queue g_routePollQueue;
 extern Queue g_discoveryPollQueue;
 
-
-//
-// Node class default constructor
-//
-
+/**
+ * Node class default constructor
+ */
 Node::Node() : Template()
 {
 	m_primaryName[0] = 0;
@@ -98,11 +96,9 @@ Node::Node() : Template()
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 }
 
-
-//
-// Constructor for new node object
-//
-
+/**
+ * Constructor for new node object
+ */
 Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DWORD dwZone) : Template()
 {
 	IpToStr(dwAddr, m_primaryName);
@@ -166,11 +162,9 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 }
 
-
-//
-// Node destructor
-//
-
+/**
+ * Node destructor
+ */
 Node::~Node()
 {
    MutexDestroy(m_hPollerMutex);
@@ -195,11 +189,9 @@ Node::~Node()
 	delete m_components;
 }
 
-
-//
-// Create object from database data
-//
-
+/**
+ * Create object from database data
+ */
 BOOL Node::CreateFromDB(DWORD dwId)
 {
    int i, iNumRows;
@@ -349,11 +341,9 @@ BOOL Node::CreateFromDB(DWORD dwId)
    return bResult;
 }
 
-
-//
-// Save object to database
-//
-
+/**
+ * Save object to database
+ */
 BOOL Node::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR szQuery[4096], szIpAddr[16], baseAddress[16];
