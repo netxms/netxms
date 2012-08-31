@@ -31,7 +31,10 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
@@ -59,6 +62,8 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.MibObject;
+import org.netxms.client.snmp.SnmpObjectId;
+import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -101,6 +106,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private Action actionCopyName;
 	private Action actionCopyType;
 	private Action actionCopyValue;
+	private Action actionSelect;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
@@ -184,6 +190,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		
 		details = new MibObjectDetails(mibViewSplitter, SWT.BORDER, true, mibBrowser);
 		
+		// walk results
 		viewer = new TableViewer(splitter, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
 		viewer.getTable().setLinesVisible(true);
 		viewer.getTable().setHeaderVisible(true);
@@ -197,6 +204,21 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			public void widgetDisposed(DisposeEvent e)
 			{
 				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "MibExplorer");
+			}
+		});
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				actionSelect.setEnabled(selection.size() == 1);
+			}
+		});
+		viewer.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				selectInTree();
 			}
 		});
 
@@ -302,6 +324,39 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 				copyColumnToClipboard(2);
 			}
 		};
+		
+		actionSelect = new Action("Select in MIB tree") {
+			@Override
+			public void run()
+			{
+				selectInTree();
+			}
+		};
+		actionSelect.setEnabled(false);
+	}
+	
+	/**
+	 * Select current result in tree
+	 */
+	private void selectInTree()
+	{
+		final TableItem[] selection = viewer.getTable().getSelection();
+		if (selection.length == 1)
+		{
+			String oid = selection[0].getText(COLUMN_NAME);
+			try
+			{
+				SnmpObjectId id = SnmpObjectId.parseSnmpObjectId(oid);
+				MibObject o = Activator.getMibTree().findObject(id, false);
+				if (o != null)
+				{
+					mibBrowser.setSelection(o);
+				}
+			}
+			catch(SnmpObjectIdFormatException e)
+			{
+			}
+		}
 	}
 	
 	/**
@@ -365,8 +420,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
 			private static final long serialVersionUID = 1L;
 
 			public void menuAboutToShow(IMenuManager mgr)
@@ -433,6 +487,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		manager.add(actionCopyName);
 		manager.add(actionCopyType);
 		manager.add(actionCopyValue);
+		manager.add(new Separator());
+		manager.add(actionSelect);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
