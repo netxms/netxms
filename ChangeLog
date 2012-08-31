@@ -16,6 +16,7 @@
 	- Added "copy to clipboard" action in MAC address search reults
 	- Added "copy to clipboard" action in interface tab
 	- Double click in MIB explorer walk results selects OID in tree
+	- Fixed status indicator update problems in object browser
 - Added commands "get" and "set" to nxdbmgr to manager server configuration
   variables
 - New NXSL function: RenameObject

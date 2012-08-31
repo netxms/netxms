@@ -235,6 +235,8 @@ public class ObjectTree extends Composite
 							{
 								saveExpandedState();
 								objectTree.refresh();
+								if (statusIndicatorEnabled)
+									updateStatusIndicator();
 								restoreExpandedState();
 							}
 							return Status.OK_STATUS;
@@ -467,6 +469,8 @@ public class ObjectTree extends Composite
 			if (parent != null)
 				objectTree.expandToLevel(parent, 1);
 			objectTree.reveal(obj);
+			if (statusIndicatorEnabled)
+				updateStatusIndicator();
 		}
 	}
 
