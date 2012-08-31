@@ -102,10 +102,10 @@ public class ObjectBrowser extends ViewPart
 		super.init(site, memento);
 		if (memento != null)
 		{
-			initHideUnmanaged = safeCast(memento.getBoolean("ObjectBrowser.hideUnmanaged"), false);
-			initHideTemplateChecks = safeCast(memento.getBoolean("ObjectBrowser.hideTemplateChecks"), false);
-			initShowFilter = safeCast(memento.getBoolean("ObjectBrowser.showFilter"), true);
-			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), true);
+			initHideUnmanaged = safeCast(memento.getBoolean("ObjectBrowser.hideUnmanaged"), false); //$NON-NLS-1$
+			initHideTemplateChecks = safeCast(memento.getBoolean("ObjectBrowser.hideTemplateChecks"), false); //$NON-NLS-1$
+			initShowFilter = safeCast(memento.getBoolean("ObjectBrowser.showFilter"), true); //$NON-NLS-1$
+			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), false); //$NON-NLS-1$
 		}
 	}
 

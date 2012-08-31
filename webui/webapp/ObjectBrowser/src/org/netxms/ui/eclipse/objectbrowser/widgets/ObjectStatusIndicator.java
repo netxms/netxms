@@ -204,26 +204,41 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 		if (objectTree == null)
 			return;
 		
-		TreeItem item = objectTree.getTree().getTopItem();
-		if (item == null)
-			return;
-		
 		final GC gc = e.gc;
 		gc.setAntialias(SWT.ON);
-		int y = 0;
-		final int limit = objectTree.getTree().getClientArea().height;
 		final int width = getClientArea().width;
-		final int height = objectTree.getTree().getItemHeight();
-
-		ViewerRow row = objectTree.getTreeViewerRow(item);
-		while((row != null) && (y < limit))
-		{
-			GenericObject object = (GenericObject)row.getItem().getData();
-			drawObject(gc, object, y, width, height);
-			y += height;
-			row = row.getNeighbor(ViewerRow.BELOW, false);
-		}
 		
+		TreeItem item = objectTree.getTree().getTopItem();
+		if (item != null)
+		{		
+			int y = 0;
+			final int limit = objectTree.getTree().getClientArea().height;
+			final int height = objectTree.getTree().getItemHeight();
+	
+			ViewerRow row = objectTree.getTreeViewerRow(item);
+			while((row != null) && (y < limit))
+			{
+				GenericObject object = (GenericObject)row.getItem().getData();
+				drawObject(gc, object, y, width, height);
+				y += height;
+				row = row.getNeighbor(ViewerRow.BELOW, false);
+				if (row == null)
+				{
+					// sometimes ViewerRow.getNeighbor returns null in the middle of the tree
+					// this usually happens when filter is applied
+					// in that case we try to find next item from position
+					for(int i = 16; i < 192; i+= 16)
+					{
+						item = objectTree.getTree().getItem(new Point(y, y + height / 2));
+						if (item != null)
+						{
+							row = objectTree.getTreeViewerRow(item);
+							break;
+						}
+					}
+				}
+			}
+		}		
 		gc.setForeground(SharedColors.BORDER);
 		gc.drawLine(width - 1, 0, width - 1, getClientArea().height);
 	}
