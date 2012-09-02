@@ -142,7 +142,7 @@ void String::addFormattedStringV(const TCHAR *format, va_list args)
 	len = wcslen(format) + NumCharsW(format, L'%') * 1000 + 1;
    buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
 
-   vswprintf(buffer, len, format, args);
+   nx_vswprintf(buffer, len, format, args);
 #endif
 
 #else		/* UNICODE */
