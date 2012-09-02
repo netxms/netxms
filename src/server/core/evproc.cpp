@@ -111,49 +111,69 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
          break;   // Shutdown indicator
 
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,")
-		                                    _T("event_source,event_severity,event_message,root_event_id,user_tag) ")
-		                                    _T("VALUES (?,?,?,?,?,?,?,?)"));
-		if (hStmt != NULL)
-		{
-			do
-			{
-				DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, pEvent->getId());
-				DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, pEvent->getCode());
-				DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (DWORD)pEvent->getTimeStamp());
-				DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, pEvent->getSourceId());
-				DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pEvent->getSeverity());
-				if (_tcslen(pEvent->getMessage()) <= 255)
-				{
-					DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC);
-				}
-				else
-				{
-					TCHAR *temp = _tcsdup(pEvent->getMessage());
-					temp[255] = 0;
-					DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, temp, DB_BIND_DYNAMIC);
-				}
-				DBBind(hStmt, 7, DB_SQLTYPE_BIGINT, pEvent->getRootId());
-				if (_tcslen(pEvent->getMessage()) <= 63)
-				{
-					DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, pEvent->getUserTag(), DB_BIND_STATIC);
-				}
-				else
-				{
-					TCHAR *temp = _tcsdup(pEvent->getMessage());
-					temp[63] = 0;
-					DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, temp, DB_BIND_DYNAMIC);
-				}
-				DBExecute(hStmt);
-				delete pEvent;
-				pEvent = (Event *)s_loggerQueue->Get();
-			} while((pEvent != NULL) && (pEvent != INVALID_POINTER_VALUE));
-			DBFreeStatement(hStmt);
+		int syntaxId = DBGetSyntax(hdb);
+		if (syntaxId == DB_SYNTAX_SQLITE)
+		{ 
+			TCHAR szQuery[2048], szMessage[256], szUserTag[64];
+			nx_strncpy(szMessage, CHECK_NULL_EX(pEvent->getMessage()), 256);
+			nx_strncpy(szUserTag, CHECK_NULL_EX(pEvent->getUserTag()), 64);
+			_sntprintf(szQuery, 2048, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,")
+											  _T("event_severity,event_message,root_event_id,user_tag) VALUES (") UINT64_FMT 
+											  _T(",%d,%d,%d,%d,'%s',") UINT64_FMT _T(",'%s')"), pEvent->getId(), pEvent->getCode(), 
+											  (DWORD)pEvent->getTimeStamp(), pEvent->getSourceId(), pEvent->getSeverity(),szMessage,
+											  pEvent->getRootId(), szUserTag);
+			DBQuery(hdb, szQuery);
+			DbgPrintf(8, _T("EventLogger: DBQuery: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
+			delete pEvent;
 		}
 		else
 		{
-			delete pEvent;
+			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,")
+				_T("event_source,event_severity,event_message,root_event_id,user_tag) ")
+				_T("VALUES (?,?,?,?,?,?,?,?)"));
+			if (hStmt != NULL)
+			{
+				do
+				{
+					DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, pEvent->getId());
+					DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, pEvent->getCode());
+					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (DWORD)pEvent->getTimeStamp());
+					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, pEvent->getSourceId());
+					DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pEvent->getSeverity());
+					if (_tcslen(pEvent->getMessage()) <= 255)
+					{
+						DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC);
+					}
+					else
+					{
+						TCHAR *temp = _tcsdup(pEvent->getMessage());
+						temp[255] = 0;
+						DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, temp, DB_BIND_DYNAMIC);
+					}
+					DBBind(hStmt, 7, DB_SQLTYPE_BIGINT, pEvent->getRootId());
+					if (_tcslen(pEvent->getMessage()) <= 63)
+					{
+						DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, pEvent->getUserTag(), DB_BIND_STATIC);
+					}
+					else
+					{
+						TCHAR *temp = _tcsdup(pEvent->getMessage());
+						temp[63] = 0;
+						DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, temp, DB_BIND_DYNAMIC);
+					}
+					DBExecute(hStmt);
+					DbgPrintf(8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
+					delete pEvent;
+					pEvent = (Event *)s_loggerQueue->Get();
+				} while((pEvent != NULL) && (pEvent != INVALID_POINTER_VALUE));
+				DBFreeStatement(hStmt);
+			}
+			else
+			{
+				delete pEvent;
+			}
 		}
+
 		DBConnectionPoolReleaseConnection(hdb);
 
 		if (pEvent == INVALID_POINTER_VALUE)
