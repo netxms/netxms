@@ -595,10 +595,24 @@ TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr)
 // Convert byte array to text representation
 //
 
-TCHAR LIBNETXMS_EXPORTABLE *BinToStr(const BYTE *pData, DWORD dwSize, TCHAR *pStr)
+WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, DWORD dwSize, WCHAR *pStr)
 {
    DWORD i;
-   TCHAR *pCurr;
+   WCHAR *pCurr;
+
+   for(i = 0, pCurr = pStr; i < dwSize; i++)
+   {
+      *pCurr++ = bin2hex(pData[i] >> 4);
+      *pCurr++ = bin2hex(pData[i] & 15);
+   }
+   *pCurr = 0;
+   return pStr;
+}
+
+char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, DWORD dwSize, char *pStr)
+{
+   DWORD i;
+   char *pCurr;
 
    for(i = 0, pCurr = pStr; i < dwSize; i++)
    {
@@ -1829,7 +1843,13 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 		}
 	}
 #else
-	_fputts(text, stdout);
+#ifdef UNICODE
+	char *mbtext = MBStringFromWideString(text);
+	fputs(mbtext, stdout);
+	free(mbtext);
+#else
+	fputs(text, stdout);
+#endif
 #endif
 }
 

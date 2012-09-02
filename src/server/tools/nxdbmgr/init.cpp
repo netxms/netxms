@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2011 Victor Kirhenshtein
+** Copyright (C) 2004-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -80,7 +80,7 @@ BOOL ExecSQLBatch(const char *pszFile)
 
 	if (strstr(pszFile, "@dbengine@") != NULL)
 	{
-		static TCHAR *dbengine[] = { _T("mysql"), _T("pgsql"), _T("mssql"), _T("oracle"), _T("sqlite"), _T("db2"), _T("informix") };
+		static const TCHAR *dbengine[] = { _T("mysql"), _T("pgsql"), _T("mssql"), _T("oracle"), _T("sqlite"), _T("db2"), _T("informix") };
 
 		String name;
 		name.addMultiByteString(pszFile, (DWORD)strlen(pszFile), CP_ACP);

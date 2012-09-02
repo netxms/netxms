@@ -224,7 +224,7 @@ CREATE TABLE nodes
 	use_ifxtable integer not null,
 	snmp_sys_name varchar(127) null,
 	bridge_base_addr varchar(15) null,
-	down_since integer not null
+	down_since integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

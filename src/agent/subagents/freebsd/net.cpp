@@ -62,13 +62,13 @@ typedef struct t_IfList
 
 struct nlist nl[] = {
 #define N_IFNET 0
-	{ "_ifnet" },
+	{ (char *)"_ifnet" },
 	{ NULL },
 };
 
 kvm_t *kvmd = NULL;
 
-LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
+LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nVer = CAST_FROM_POINTER(pArg, int);
 	int nRet = SYSINFO_RC_ERROR;
@@ -99,12 +99,12 @@ LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_NetIfAdmStatus(const char *pszParam, const char *pArg, char *pValue)
+LONG H_NetIfAdmStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
 
-	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0)
 	{
@@ -131,7 +131,7 @@ LONG H_NetIfAdmStatus(const char *pszParam, const char *pArg, char *pValue)
 				int flags;
 
 				memset(&ifr, 0, sizeof(ifr));
-				nx_strncpy(ifr.ifr_name, szArg, sizeof(ifr.ifr_name));
+				strncpy(ifr.ifr_name, szArg, sizeof(ifr.ifr_name));
 				if (ioctl(nSocket, SIOCGIFFLAGS, (caddr_t)&ifr) >= 0)
 				{
 					flags = (ifr.ifr_flags & 0xffff) | (ifr.ifr_flagshigh << 16);
@@ -155,12 +155,12 @@ LONG H_NetIfAdmStatus(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_NetIfLink(const char *pszParam, const char *pArg, char *pValue)
+LONG H_NetIfLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
 
-	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0)
 	{
@@ -186,7 +186,7 @@ LONG H_NetIfLink(const char *pszParam, const char *pArg, char *pValue)
 				struct ifmediareq ifmr;
 
 				memset(&ifmr, 0, sizeof(ifmr));
-				nx_strncpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
+				strncpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
 				if (ioctl(nSocket, SIOCGIFMEDIA, (caddr_t)&ifmr) >= 0)
 				{
 					if ((ifmr.ifm_status & IFM_AVALID) == IFM_AVALID &&
@@ -215,7 +215,7 @@ LONG H_NetIfLink(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -278,13 +278,17 @@ LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
 				inet_ntoa(pSin->sin_addr),
 				pSdl->sdl_index);
 
+#ifdef UNICODE
+		pValue->addPreallocated(WideStringFromMBString(szBuff));
+#else
 		pValue->add(szBuff);
+#endif
 	}
 
 	return nRet;
 }
 
-LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
 #define sa2sin(x) ((struct sockaddr_in *)x)
 #define ROUNDUP(a) \
@@ -392,7 +396,11 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValu
 						(rtm->rtm_flags & RTF_GATEWAY) == 0 ? 3 : 4);
 				strcat(szOut, szTmp);
 
+#ifdef UNICODE
+				pValue->addPreallocated(WideStringFromMBString(szOut));
+#else
 				pValue->add(szOut);
+#endif
 			}
 		}
 
@@ -405,7 +413,7 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValu
 	return nRet;
 }
 
-LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct ifaddrs *pIfAddr, *pNext;
@@ -493,9 +501,13 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 					snprintf(szOut, sizeof(szOut), "%d 0.0.0.0/0 %d %s %s",
 							pList[i].index,
 							IFTYPE_OTHER,
-							BinToStr((BYTE *)pList[i].mac, 6, macAddr),
+							BinToStrA((BYTE *)pList[i].mac, 6, macAddr),
 							pList[i].name);
+#ifdef UNICODE
+					pValue->addPreallocated(WideStringFromMBString(szOut));
+#else
 					pValue->add(szOut);
+#endif
 				}
 				else
 				{
@@ -508,7 +520,7 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 									inet_ntoa(pList[i].addr[j].ip),
 									pList[i].addr[j].mask,
 									IFTYPE_OTHER,
-							                BinToStr((BYTE *)pList[i].mac, 6, macAddr),
+							                BinToStrA((BYTE *)pList[i].mac, 6, macAddr),
 									pList[i].name,
 									j - 1);
 						}
@@ -519,10 +531,14 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 									inet_ntoa(pList[i].addr[j].ip),
 									pList[i].addr[j].mask,
 									IFTYPE_OTHER,
-							                BinToStr((BYTE *)pList[i].mac, 6, macAddr),
+							                BinToStrA((BYTE *)pList[i].mac, 6, macAddr),
 									pList[i].name);
 						}
+#ifdef UNICODE
+						pValue->addPreallocated(WideStringFromMBString(szOut));
+#else
 						pValue->add(szOut);
+#endif
 					}
 				}
 			}
@@ -552,7 +568,7 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 	return nRet;
 }
 
-LONG H_NetIfInfoFromKVM(const char *pszParam, const char *pArg, char *pValue)
+LONG H_NetIfInfoFromKVM(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
@@ -564,7 +580,7 @@ LONG H_NetIfInfoFromKVM(const char *pszParam, const char *pArg, char *pValue)
 #endif
 	char szName[IFNAMSIZ];
 
-	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0)
 	{

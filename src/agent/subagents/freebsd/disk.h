@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
@@ -34,26 +32,6 @@ enum
 	DISK_TOTAL,
 };
 
-LONG H_DiskInfo(const char *, const char *, char *);
+LONG H_DiskInfo(const TCHAR *, const TCHAR *, TCHAR *);
 
 #endif // __DISK_H__
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-Revision 1.1  2004/10/22 22:08:34  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
-
-*/

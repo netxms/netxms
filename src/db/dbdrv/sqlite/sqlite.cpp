@@ -361,7 +361,7 @@ static int SelectCallback(void *pArg, int nCols, char **ppszData, char **ppszNam
          sizeof(char *) * ((SQLITE_RESULT *)pArg)->nCols * ((SQLITE_RESULT *)pArg)->nRows);
 
    for(i = 0; i < nMaxCol; i++, nPos++)
-      ((SQLITE_RESULT *)pArg)->ppszData[nPos] = strdup(CHECK_NULL_EX(ppszData[i]));
+      ((SQLITE_RESULT *)pArg)->ppszData[nPos] = strdup(CHECK_NULL_EX_A(ppszData[i]));
    for(; i < ((SQLITE_RESULT *)pArg)->nCols; i++, nPos++)
       ((SQLITE_RESULT *)pArg)->ppszData[nPos] = strdup("");
    return 0;

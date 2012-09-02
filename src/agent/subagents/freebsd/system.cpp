@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
@@ -47,7 +45,7 @@
 
 #include "system.h"
 
-LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
+LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int mib[2] = { CTL_KERN, KERN_BOOTTIME };
 	time_t nNow;
@@ -75,7 +73,7 @@ LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
    return nUptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
-LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
+LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	struct utsname utsName;
 	int nRet = SYSINFO_RC_ERROR;
@@ -89,7 +87,7 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 				utsName.machine);
 		// TODO: processor & platform
 
-   	ret_string(pValue, szBuff);
+   	ret_mbstring(pValue, szBuff);
 
 		nRet = SYSINFO_RC_SUCCESS;
 	}
@@ -97,21 +95,21 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
    return nRet;
 }
 
-LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue)
+LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szBuff[128];
 
 	if (gethostname(szBuff, sizeof(szBuff)) == 0)
 	{
-   	ret_string(pValue, szBuff);
+   	ret_mbstring(pValue, szBuff);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
    return nRet;
 }
 
-LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
    char szArg[128] = {0};
@@ -141,12 +139,12 @@ LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	return SYSINFO_RC_UNSUPPORTED;
 }
 
-LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	int mib[2];
@@ -168,7 +166,7 @@ LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
+LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -180,7 +178,6 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	int i;
 	char *pOid;
 	int nPageSize;
-	char szArg[16] = {0};
 	kvm_t *kd;
 	int type = CAST_FROM_POINTER(pArg, int);
 #if HAVE_KVM_GETSWAPINFO
@@ -189,8 +186,6 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 
 	nPageCount = nFreeCount = 0;
 	nSwapTotal = nSwapUsed = 0;
-
-	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 #define DOIT(x, y) { \
 	nSize = sizeof(mib); \
@@ -314,7 +309,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 //
 // stub
 //
-LONG H_SourcePkgSupport(const char *pszParam, const char *pArg, char *pValue)
+LONG H_SourcePkgSupport(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	ret_int(pValue, 1);
 	return SYSINFO_RC_SUCCESS;

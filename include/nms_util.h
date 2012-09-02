@@ -738,7 +738,14 @@ extern "C"
    void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
    void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, DWORD dwSize);
 
-   TCHAR LIBNETXMS_EXPORTABLE *BinToStr(const BYTE *pData, DWORD dwSize, TCHAR *pStr);
+   WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, DWORD dwSize, WCHAR *pStr);
+   char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, DWORD dwSize, char *pStr);
+#ifdef UNICODE
+#define BinToStr BinToStrW
+#else
+#define BinToStr BinToStrA
+#endif
+
    DWORD LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, DWORD dwSize);
    TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr);
 

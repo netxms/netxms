@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
@@ -59,17 +57,17 @@ enum
 #define INFOTYPE_SUM             3
 
 
-LONG H_ProcessList(const char *, const char *, StringList *);
-LONG H_Uptime(const char *, const char *, char *);
-LONG H_Uname(const char *, const char *, char *);
-LONG H_Hostname(const char *, const char *, char *);
-LONG H_Hostname(const char *, const char *, char *);
-LONG H_CpuCount(const char *, const char *, char *);
-LONG H_CpuLoad(const char *, const char *, char *);
-LONG H_CpuUsage(const char *, const char *, char *);
-LONG H_ProcessCount(const char *, const char *, char *);
-LONG H_ProcessInfo(const char *, const char *, char *);
-LONG H_MemoryInfo(const char *, const char *, char *);
-LONG H_SourcePkgSupport(const char *, const char *, char *);
+LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *);
+LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_CpuCount(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_CpuLoad(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_CpuUsage(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_ProcessInfo(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_SourcePkgSupport(const TCHAR *, const TCHAR *, TCHAR *);
 
 #endif // __SYSTEM_H__

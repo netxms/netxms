@@ -73,7 +73,7 @@ static void BuildProcessCommandLine(kvm_t *kd, struct kinfo_proc *p, char *cmdLi
 			{
 				if (i > 0)
 					cmdLine[pos++] = ' ';
-				nx_strncpy(&cmdLine[pos], argv[i], maxSize - pos);
+				strncpy(&cmdLine[pos], argv[i], maxSize - pos);
 				pos += strlen(argv[i]);
 			}
 		}
@@ -81,7 +81,7 @@ static void BuildProcessCommandLine(kvm_t *kd, struct kinfo_proc *p, char *cmdLi
 		{
 			// Use process name if command line is empty
 			cmdLine[0] = '[';
-			nx_strncpy(&cmdLine[1], PNAME, maxSize - 2);
+			strncpy(&cmdLine[1], PNAME, maxSize - 2);
 			strcat(cmdLine, "]");
 		}
 	}
@@ -89,7 +89,7 @@ static void BuildProcessCommandLine(kvm_t *kd, struct kinfo_proc *p, char *cmdLi
 	{
 		// Use process name if command line cannot be obtained
 		cmdLine[0] = '[';
-		nx_strncpy(&cmdLine[1], PNAME, maxSize - 2);
+		strncpy(&cmdLine[1], PNAME, maxSize - 2);
 		strcat(cmdLine, "]");
 	}
 }
@@ -106,8 +106,8 @@ static BOOL MatchProcess(kvm_t *kd, struct kinfo_proc *p, BOOL extMatch, const c
 	if (extMatch)
 	{
 		BuildProcessCommandLine(kd, p, processCmdLine, sizeof(processCmdLine));
-		return ((*name != 0) ? RegexpMatch(PNAME, name, FALSE) : TRUE) &&
-		       ((*cmdLine != 0) ? RegexpMatch(processCmdLine, cmdLine, TRUE) : TRUE);
+		return ((*name != 0) ? RegexpMatchA(PNAME, name, FALSE) : TRUE) &&
+		       ((*cmdLine != 0) ? RegexpMatchA(processCmdLine, cmdLine, TRUE) : TRUE);
 	}
 	else
 	{
@@ -120,7 +120,7 @@ static BOOL MatchProcess(kvm_t *kd, struct kinfo_proc *p, BOOL extMatch, const c
 // Handler for Process.Count, Process.CountEx and System.ProcessCount parameters
 //
 
-LONG H_ProcessCount(const char *param, const char *arg, char *value)
+LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char name[128] = "", cmdLine[128] = "";
@@ -132,10 +132,10 @@ LONG H_ProcessCount(const char *param, const char *arg, char *value)
 
 	if ((*arg != 'S') && (*arg != 'T'))  // Not System.ProcessCount nor System.ThreadCount
 	{
-		AgentGetParameterArg(param, 1, name, sizeof(name));
+		AgentGetParameterArgA(param, 1, name, sizeof(name));
 		if (*arg == 'E')	// Process.CountEx
 		{
-			AgentGetParameterArg(param, 2, cmdLine, sizeof(cmdLine));
+			AgentGetParameterArgA(param, 2, cmdLine, sizeof(cmdLine));
 		}
 	}
 
@@ -190,7 +190,7 @@ LONG H_ProcessCount(const char *param, const char *arg, char *value)
 // Handler for Process.* parameters
 //
 
-LONG H_ProcessInfo(const char *param, const char *arg, char *value)
+LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char name[128] = "", cmdLine[128] = "", buffer[64] = "";
@@ -202,7 +202,7 @@ LONG H_ProcessInfo(const char *param, const char *arg, char *value)
 	static const char *typeList[]={ "min", "max", "avg", "sum", NULL };
 
 	 // Get parameter type arguments
-	AgentGetParameterArg(param, 2, buffer, sizeof(buffer));
+	AgentGetParameterArgA(param, 2, buffer, sizeof(buffer));
 	if (buffer[0] == 0)     // Omited type
 	{
 		type = INFOTYPE_SUM;
@@ -216,8 +216,8 @@ LONG H_ProcessInfo(const char *param, const char *arg, char *value)
 			return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
 	}
 
-	AgentGetParameterArg(param, 1, name, sizeof(name));
-	AgentGetParameterArg(param, 3, cmdLine, sizeof(cmdLine));
+	AgentGetParameterArgA(param, 1, name, sizeof(name));
+	AgentGetParameterArgA(param, 3, cmdLine, sizeof(cmdLine));
 
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
 	if (kd != NULL)
@@ -281,7 +281,7 @@ LONG H_ProcessInfo(const char *param, const char *arg, char *value)
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	int nCount = -1;
@@ -307,7 +307,11 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 						kp[i].kp_proc.p_pid, kp[i].kp_proc.p_comm
 #endif
 						);
+#ifdef UNICODE
+				pValue->addPreallocated(WideStringFromMBString(szBuff));
+#else
 				pValue->add(szBuff);
+#endif
 			}
 		}
 

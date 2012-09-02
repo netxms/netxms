@@ -31,88 +31,88 @@
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ "Disk.Avail(*)",                H_DiskInfo,        (char *)DISK_AVAIL,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ "Disk.AvailPerc(*)",            H_DiskInfo,        (char *)DISK_AVAIL_PERC,	DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ "Disk.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ "Disk.FreePerc(*)",             H_DiskInfo,        (char *)DISK_FREE_PERC,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ "Disk.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ "Disk.UsedPerc(*)",             H_DiskInfo,        (char *)DISK_USED_PERC,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+	{ _T("Disk.Avail(*)"),                H_DiskInfo,        (const TCHAR *)DISK_AVAIL,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+	{ _T("Disk.AvailPerc(*)"),            H_DiskInfo,        (const TCHAR *)DISK_AVAIL_PERC,	DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+	{ _T("Disk.Free(*)"),                 H_DiskInfo,        (const TCHAR *)DISK_FREE,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+	{ _T("Disk.FreePerc(*)"),             H_DiskInfo,        (const TCHAR *)DISK_FREE_PERC,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+	{ _T("Disk.Total(*)"),                H_DiskInfo,        (const TCHAR *)DISK_TOTAL,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+	{ _T("Disk.Used(*)"),                 H_DiskInfo,        (const TCHAR *)DISK_USED,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+	{ _T("Disk.UsedPerc(*)"),             H_DiskInfo,        (const TCHAR *)DISK_USED_PERC,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 
-	{ "FileSystem.Avail(*)",          H_DiskInfo,        (char *)DISK_AVAIL,        DCI_DT_UINT64,	DCIDESC_FS_AVAIL },
-	{ "FileSystem.AvailPerc(*)",      H_DiskInfo,        (char *)DISK_AVAIL_PERC,   DCI_DT_FLOAT,	DCIDESC_FS_AVAILPERC },
-	{ "FileSystem.Free(*)",           H_DiskInfo,        (char *)DISK_FREE,         DCI_DT_UINT64,	DCIDESC_FS_FREE },
-	{ "FileSystem.FreePerc(*)",       H_DiskInfo,        (char *)DISK_FREE_PERC,    DCI_DT_FLOAT,	DCIDESC_FS_FREEPERC },
-	{ "FileSystem.Total(*)",          H_DiskInfo,        (char *)DISK_TOTAL,        DCI_DT_UINT64,	DCIDESC_FS_TOTAL },
-	{ "FileSystem.Used(*)",           H_DiskInfo,        (char *)DISK_USED,         DCI_DT_UINT64,	DCIDESC_FS_USED },
-	{ "FileSystem.UsedPerc(*)",       H_DiskInfo,        (char *)DISK_USED_PERC,    DCI_DT_FLOAT,	DCIDESC_FS_USEDPERC },
+	{ _T("FileSystem.Avail(*)"),          H_DiskInfo,        (const TCHAR *)DISK_AVAIL,        DCI_DT_UINT64,	DCIDESC_FS_AVAIL },
+	{ _T("FileSystem.AvailPerc(*)"),      H_DiskInfo,        (const TCHAR *)DISK_AVAIL_PERC,   DCI_DT_FLOAT,	DCIDESC_FS_AVAILPERC },
+	{ _T("FileSystem.Free(*)"),           H_DiskInfo,        (const TCHAR *)DISK_FREE,         DCI_DT_UINT64,	DCIDESC_FS_FREE },
+	{ _T("FileSystem.FreePerc(*)"),       H_DiskInfo,        (const TCHAR *)DISK_FREE_PERC,    DCI_DT_FLOAT,	DCIDESC_FS_FREEPERC },
+	{ _T("FileSystem.Total(*)"),          H_DiskInfo,        (const TCHAR *)DISK_TOTAL,        DCI_DT_UINT64,	DCIDESC_FS_TOTAL },
+	{ _T("FileSystem.Used(*)"),           H_DiskInfo,        (const TCHAR *)DISK_USED,         DCI_DT_UINT64,	DCIDESC_FS_USED },
+	{ _T("FileSystem.UsedPerc(*)"),       H_DiskInfo,        (const TCHAR *)DISK_USED_PERC,    DCI_DT_FLOAT,	DCIDESC_FS_USEDPERC },
 
-	{ "Net.Interface.AdminStatus(*)", H_NetIfAdmStatus,  NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_ADMINSTATUS },
-	{ "Net.Interface.BytesIn(*)",     H_NetIfInfoFromKVM, (char *)IF_INFO_BYTES_IN,    DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESIN },
-	{ "Net.Interface.BytesOut(*)",    H_NetIfInfoFromKVM, (char *)IF_INFO_BYTES_OUT,   DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESOUT },
-	{ "Net.Interface.InErrors(*)",    H_NetIfInfoFromKVM, (char *)IF_INFO_IN_ERRORS,   DCI_DT_UINT64, DCIDESC_NET_INTERFACE_INERRORS },
-	{ "Net.Interface.Link(*)",        H_NetIfLink,       NULL,				DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ "Net.Interface.OperStatus(*)",  H_NetIfLink,       NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_OPERSTATUS },
-	{ "Net.Interface.OutErrors(*)",   H_NetIfInfoFromKVM, (char *)IF_INFO_OUT_ERRORS,  DCI_DT_UINT64, DCIDESC_NET_INTERFACE_OUTERRORS },
-	{ "Net.Interface.PacketsIn(*)",   H_NetIfInfoFromKVM, (char *)IF_INFO_PACKETS_IN,  DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSIN },
-	{ "Net.Interface.PacketsOut(*)",  H_NetIfInfoFromKVM, (char *)IF_INFO_PACKETS_OUT, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSOUT },
-	{ "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,			DCI_DT_INT,	DCIDESC_NET_IP_FORWARDING },
-	{ "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,			DCI_DT_INT,	DCIDESC_NET_IP6_FORWARDING },
+	{ _T("Net.Interface.AdminStatus(*)"), H_NetIfAdmStatus,  NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_ADMINSTATUS },
+	{ _T("Net.Interface.BytesIn(*)"),     H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_IN,    DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESIN },
+	{ _T("Net.Interface.BytesOut(*)"),    H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_OUT,   DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESOUT },
+	{ _T("Net.Interface.InErrors(*)"),    H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_IN_ERRORS,   DCI_DT_UINT64, DCIDESC_NET_INTERFACE_INERRORS },
+	{ _T("Net.Interface.Link(*)"),        H_NetIfLink,       NULL,				DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+	{ _T("Net.Interface.OperStatus(*)"),  H_NetIfLink,       NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_OPERSTATUS },
+	{ _T("Net.Interface.OutErrors(*)"),   H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_OUT_ERRORS,  DCI_DT_UINT64, DCIDESC_NET_INTERFACE_OUTERRORS },
+	{ _T("Net.Interface.PacketsIn(*)"),   H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_IN,  DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSIN },
+	{ _T("Net.Interface.PacketsOut(*)"),  H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSOUT },
+	{ _T("Net.IP.Forwarding"),            H_NetIpForwarding, (const TCHAR *)4,			DCI_DT_INT,	DCIDESC_NET_IP_FORWARDING },
+	{ _T("Net.IP6.Forwarding"),           H_NetIpForwarding, (const TCHAR *)6,			DCI_DT_INT,	DCIDESC_NET_IP6_FORWARDING },
 
-	{ "Process.Count(*)",             H_ProcessCount,    "P",			DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
-	{ "Process.CountEx(*)",           H_ProcessCount,    "E",			DCI_DT_UINT,	DCIDESC_PROCESS_COUNTEX },
-	{ "Process.CPUTime(*)",           H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_CPUTIME, const char *),
+	{ _T("Process.Count(*)"),             H_ProcessCount,    _T("P"),			DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
+	{ _T("Process.CountEx(*)"),           H_ProcessCount,    _T("E"),			DCI_DT_UINT,	DCIDESC_PROCESS_COUNTEX },
+	{ _T("Process.CPUTime(*)"),           H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_CPUTIME, const TCHAR *),
 		DCI_DT_INT64,	DCIDESC_PROCESS_CPUTIME },
-	{ "Process.Threads(*)",           H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_THREADS, const char *),
+	{ _T("Process.Threads(*)"),           H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_THREADS, const TCHAR *),
 		DCI_DT_INT64,	DCIDESC_PROCESS_THREADS },
-	{ "Process.VMSize(*)",            H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_VMSIZE, const char *),
+	{ _T("Process.VMSize(*)"),            H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_VMSIZE, const TCHAR *),
 		DCI_DT_INT64,	DCIDESC_PROCESS_VMSIZE },
-	{ "Process.WkSet(*)",             H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_WKSET, const char *),
+	{ _T("Process.WkSet(*)"),             H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *),
 		DCI_DT_INT64,	DCIDESC_PROCESS_WKSET },
 
-	{ "System.CPU.Count",             H_CpuCount,        NULL,				DCI_DT_INT,	DCIDESC_SYSTEM_CPU_COUNT },
+	{ _T("System.CPU.Count"),             H_CpuCount,        NULL,				DCI_DT_INT,	DCIDESC_SYSTEM_CPU_COUNT },
 
-	{ "System.CPU.LoadAvg",           H_CpuLoad,         NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG },
-	{ "System.CPU.LoadAvg5",          H_CpuLoad,         NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG5 },
-	{ "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG15 },
-	{ "System.Hostname",              H_Hostname,        NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_HOSTNAME },
-	{ "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
-	{ "System.Memory.Physical.FreePerc", H_MemoryInfo,   (char *)PHYSICAL_FREE_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
-	{ "System.Memory.Physical.Total", H_MemoryInfo,      (char *)PHYSICAL_TOTAL,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
-	{ "System.Memory.Physical.Used",  H_MemoryInfo,      (char *)PHYSICAL_USED,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
-	{ "System.Memory.Physical.UsedPerc", H_MemoryInfo,   (char *)PHYSICAL_USED_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED_PCT },
+	{ _T("System.CPU.LoadAvg"),           H_CpuLoad,         NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG },
+	{ _T("System.CPU.LoadAvg5"),          H_CpuLoad,         NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG5 },
+	{ _T("System.CPU.LoadAvg15"),         H_CpuLoad,         NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG15 },
+	{ _T("System.Hostname"),              H_Hostname,        NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_HOSTNAME },
+	{ _T("System.Memory.Physical.Free"),  H_MemoryInfo,      (const TCHAR *)PHYSICAL_FREE,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
+	{ _T("System.Memory.Physical.FreePerc"), H_MemoryInfo,   (const TCHAR *)PHYSICAL_FREE_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
+	{ _T("System.Memory.Physical.Total"), H_MemoryInfo,      (const TCHAR *)PHYSICAL_TOTAL,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
+	{ _T("System.Memory.Physical.Used"),  H_MemoryInfo,      (const TCHAR *)PHYSICAL_USED,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
+	{ _T("System.Memory.Physical.UsedPerc"), H_MemoryInfo,   (const TCHAR *)PHYSICAL_USED_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED_PCT },
 #if HAVE_KVM_SWAPINFO
-	{ "System.Memory.Swap.Free",      H_MemoryInfo,      (char *)SWAP_FREE,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_FREE },
-	{ "System.Memory.Swap.FreePerc",  H_MemoryInfo,      (char *)SWAP_FREE_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_SWAP_FREE_PCT },
-	{ "System.Memory.Swap.Total",     H_MemoryInfo,      (char *)SWAP_TOTAL,	DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL },
-	{ "System.Memory.Swap.Used",      H_MemoryInfo,      (char *)SWAP_USED,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_USED },
-	{ "System.Memory.Swap.UsedPerc",      H_MemoryInfo,  (char *)SWAP_USED_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_SWAP_USED_PCT },
-	{ "System.Memory.Virtual.Free",   H_MemoryInfo,      (char *)VIRTUAL_FREE,	DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE },
-	{ "System.Memory.Virtual.FreePerc", H_MemoryInfo,    (char *)VIRTUAL_FREE_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE_PCT },
-	{ "System.Memory.Virtual.Total",  H_MemoryInfo,      (char *)VIRTUAL_TOTAL,	DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
-	{ "System.Memory.Virtual.Used",   H_MemoryInfo,      (char *)VIRTUAL_USED,	DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
-	{ "System.Memory.Virtual.UsedPerc", H_MemoryInfo,    (char *)VIRTUAL_USED_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
+	{ _T("System.Memory.Swap.Free"),      H_MemoryInfo,      (const TCHAR *)SWAP_FREE,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_FREE },
+	{ _T("System.Memory.Swap.FreePerc"),  H_MemoryInfo,      (const TCHAR *)SWAP_FREE_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_SWAP_FREE_PCT },
+	{ _T("System.Memory.Swap.Total"),     H_MemoryInfo,      (const TCHAR *)SWAP_TOTAL,	DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL },
+	{ _T("System.Memory.Swap.Used"),      H_MemoryInfo,      (const TCHAR *)SWAP_USED,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_USED },
+	{ _T("System.Memory.Swap.UsedPerc"),      H_MemoryInfo,  (const TCHAR *)SWAP_USED_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_SWAP_USED_PCT },
+	{ _T("System.Memory.Virtual.Free"),   H_MemoryInfo,      (const TCHAR *)VIRTUAL_FREE,	DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE },
+	{ _T("System.Memory.Virtual.FreePerc"), H_MemoryInfo,    (const TCHAR *)VIRTUAL_FREE_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE_PCT },
+	{ _T("System.Memory.Virtual.Total"),  H_MemoryInfo,      (const TCHAR *)VIRTUAL_TOTAL,	DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
+	{ _T("System.Memory.Virtual.Used"),   H_MemoryInfo,      (const TCHAR *)VIRTUAL_USED,	DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
+	{ _T("System.Memory.Virtual.UsedPerc"), H_MemoryInfo,    (const TCHAR *)VIRTUAL_USED_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
 #endif
-	{ "System.ProcessCount",          H_ProcessCount,    "S",			DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESSCOUNT },
-	{ "System.ThreadCount",           H_ProcessCount,    "T",			DCI_DT_UINT,	DCIDESC_SYSTEM_THREADCOUNT },
-	{ "System.Uname",                 H_Uname,           NULL,				DCI_DT_STRING,	DCIDESC_SYSTEM_UNAME },
-	{ "System.Uptime",                H_Uptime,          NULL,				DCI_DT_UINT,	DCIDESC_SYSTEM_UPTIME },
+	{ _T("System.ProcessCount"),          H_ProcessCount,    _T("S"),			DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESSCOUNT },
+	{ _T("System.ThreadCount"),           H_ProcessCount,    _T("T"),			DCI_DT_UINT,	DCIDESC_SYSTEM_THREADCOUNT },
+	{ _T("System.Uname"),                 H_Uname,           NULL,				DCI_DT_STRING,	DCIDESC_SYSTEM_UNAME },
+	{ _T("System.Uptime"),                H_Uptime,          NULL,				DCI_DT_UINT,	DCIDESC_SYSTEM_UPTIME },
 
-	{ "Agent.SourcePackageSupport",   H_SourcePkgSupport,NULL,				DCI_DT_INT,	DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
+	{ _T("Agent.SourcePackageSupport"),   H_SourcePkgSupport,NULL,				DCI_DT_INT,	DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 };
 
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {
-	{ "Net.ArpCache",                 H_NetArpCache,     NULL },
-	{ "Net.InterfaceList",            H_NetIfList,       NULL },
-	{ "Net.IP.RoutingTable",          H_NetRoutingTable, NULL },
-	{ "System.ProcessList",           H_ProcessList,     NULL },
+	{ _T("Net.ArpCache"),                 H_NetArpCache,     NULL },
+	{ _T("Net.InterfaceList"),            H_NetIfList,       NULL },
+	{ _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL },
+	{ _T("System.ProcessList"),           H_ProcessList,     NULL },
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	"FreeBSD",
+	_T("FreeBSD"),
 	NETXMS_VERSION_STRING,
 	NULL, // init handler
 	NULL, // shutdown handler
@@ -122,7 +122,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
 	0, NULL,	// tables
-   0, NULL,	// actions
+	0, NULL,	// actions
 	0, NULL	// push parameters
 };
 
@@ -143,10 +143,10 @@ DECLARE_SUBAGENT_ENTRY_POINT(FREEBSD)
 
 extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
-	return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
+	return H_NetIfList(_T("Net.InterfaceList"), NULL, pValue) == SYSINFO_RC_SUCCESS;
 }
 
 extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
 {
-	return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
+	return H_NetArpCache(_T("Net.ArpCache"), NULL, pValue) == SYSINFO_RC_SUCCESS;
 }

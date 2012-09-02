@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
@@ -35,37 +33,12 @@
 #define IF_INFO_PACKETS_OUT      8
 #define IF_INFO_SPEED            9
 
-LONG H_NetIpForwarding(const char *, const char *, char *);
-LONG H_NetIfAdmStatus(const char *, const char *, char *);
-LONG H_NetIfLink(const char *, const char *, char *);
-LONG H_NetArpCache(const char *, const char *, StringList *);
-LONG H_NetIfList(const char *, const char *, StringList *);
-LONG H_NetRoutingTable(const char *, const char *, StringList *);
-LONG H_NetIfInfoFromKVM(const char *, const char *, char *);
+LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_NetIfAdmStatus(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_NetIfLink(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *);
+LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *);
+LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *);
+LONG H_NetIfInfoFromKVM(const TCHAR *, const TCHAR *, TCHAR *);
 
 #endif // __NET_H__
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.2  2005/03/10 19:04:07  alk
-implemented:
-	Net.Interface.AdminStatus(*)
-	Net.Interface.Link(*)
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-Revision 1.1  2004/10/22 22:08:34  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
-
-*/

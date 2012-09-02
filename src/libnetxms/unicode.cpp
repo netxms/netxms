@@ -989,7 +989,7 @@ int LIBNETXMS_EXPORTABLE wopen(const WCHAR *_name, int flags, ...)
 		va_list args;
 		
 		va_start(args, flags);
-		rc = open(name, flags, va_arg(args, mode_t));
+		rc = open(name, flags, (mode_t)va_arg(args, int));
 		va_end(args); 
 	}
 	else
