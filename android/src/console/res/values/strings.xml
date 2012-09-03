@@ -104,6 +104,7 @@
 	<string name="node_info_last_values">Last values</string>
 	<string name="node_info_overview">Overview</string>
 	<string name="node_info_alarms">Alarms</string>
+	<string name="node_info_interfaces">Interfaces</string>
 	<string name="overview_id">ID</string>
 	<string name="overview_guid">GUID</string>
 	<string name="overview_class">Class</string>
@@ -145,4 +146,20 @@
 	<string name="menu_poll_topology">Topology</string>
 	<string name="menu_poll_interfaces">Interface names</string>
 	<string name="table_last_values">Table last values</string>
+	<string name="if_up">UP</string>
+	<string name="if_down">DOWN</string>
+	<string name="if_ignore">IGNORE</string>
+	<string name="if_id">ID</string>
+	<string name="if_name">Name</string>
+	<string name="if_type">ifType</string>
+	<string name="if_index">ifIndex</string>
+	<string name="if_slot">Slot</string>
+	<string name="if_port">Port</string>
+	<string name="if_description">Description</string>
+	<string name="if_mac_address">MAC Address</string>
+	<string name="if_ip_address">IP Address</string>
+	<string name="if_admin_state">Admin State</string>
+	<string name="if_oper_state">Oper State</string>
+	<string name="if_exp_state">Exp. State</string>
+	<string name="if_status">Status</string>
 </resources>

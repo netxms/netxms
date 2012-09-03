@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/graph_view_child_layout"
+    android:id="@+id/interface_view_child_layout"
     android:layout_width="fill_parent"
 	android:layout_height="fill_parent">
-	<TextView 
-		android:id="@+id/tvChild"
+	<ListView 
+		android:id="@+id/interfacesChild"
 	    android:layout_width="fill_parent"
-		android:layout_height="36dip"
-		android:paddingLeft="5dip"
+		android:layout_height="fill_parent"
+		android:paddingLeft="20dip"
 		android:paddingRight="5dip"
 		android:gravity="center_vertical"
-		android:textSize="17dip"
 		android:cacheColorHint="@color/item_body"
 		android:background="@drawable/explist_selection">
-	</TextView>
+	</ListView>
 </LinearLayout>

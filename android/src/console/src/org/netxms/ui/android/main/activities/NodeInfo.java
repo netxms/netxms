@@ -2,13 +2,19 @@ package org.netxms.ui.android.main.activities;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
+import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.AlarmListAdapter;
+import org.netxms.ui.android.main.adapters.InterfacesAdapter;
 import org.netxms.ui.android.main.adapters.LastValuesAdapter;
 import org.netxms.ui.android.main.adapters.OverviewAdapter;
 import org.netxms.ui.android.service.ClientConnectorService;
@@ -33,6 +39,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TabHost;
@@ -50,8 +57,9 @@ import android.widget.TextView;
 public class NodeInfo extends TabActivity implements OnTabChangeListener, ServiceConnection
 {
 	public static int TAB_OVERVIEW_ID = 0;
-	public static int TAB_LAST_VALUES_ID = 1;
-	public static int TAB_ALARMS_ID = 2;
+	public static int TAB_ALARMS_ID = 1;
+	public static int TAB_LAST_VALUES_ID = 2;
+	public static int TAB_INTERFACES_ID = 3;
 
 	private static final String TAG = "nxclient/NodeInfo";
 	private static final Integer[] DEFAULT_COLORS = { 0x40699C, 0x9E413E, 0x7F9A48, 0x695185, 0x3C8DA3, 0xCC7B38, 0x4F81BD, 0xC0504D,
@@ -78,12 +86,15 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	private ListView overviewListView;
 	private ListView lastValuesListView;
 	private ListView alarmsListView;
+	private ExpandableListView interfacesListView;
 	private OverviewAdapter overviewAdapter;
 	private LastValuesAdapter lastValuesAdapter;
 	private AlarmListAdapter alarmsAdapter;
+	private InterfacesAdapter interfacesAdapter;
 	private String TAB_OVERVIEW;
 	private String TAB_LAST_VALUES;
 	private String TAB_ALARMS;
+	private String TAB_INTERFACES;
 	private int tabId;
 	private long nodeId;
 	private Node node = null;
@@ -124,23 +135,6 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 					}
 				}));
 
-		TAB_LAST_VALUES = getString(R.string.node_info_last_values);
-		lastValuesAdapter = new LastValuesAdapter(this);
-		lastValuesListView = (ListView)findViewById(R.id.last_values);
-		lastValuesListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-		lastValuesListView.setAdapter(lastValuesAdapter);
-		registerForContextMenu(lastValuesListView);
-		tabHost.addTab(tabHost.newTabSpec(TAB_LAST_VALUES).setIndicator(
-				TAB_LAST_VALUES, getResources().getDrawable(R.drawable.ni_last_values_tab)).setContent(
-				new TabContentFactory()
-				{
-					@Override
-					public View createTabContent(String arg0)
-					{
-						return lastValuesListView;
-					}
-				}));
-
 		TAB_ALARMS = getString(R.string.node_info_alarms);
 		alarmsAdapter = new AlarmListAdapter(this);
 		alarmsListView = (ListView)findViewById(R.id.alarms);
@@ -174,9 +168,56 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		});
 		sortBy.setSelection(PreferenceManager.getDefaultSharedPreferences(this).getInt(SORT_KEY, 0));
 
+		TAB_LAST_VALUES = getString(R.string.node_info_last_values);
+		lastValuesAdapter = new LastValuesAdapter(this);
+		lastValuesListView = (ListView)findViewById(R.id.last_values);
+		lastValuesListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+		lastValuesListView.setAdapter(lastValuesAdapter);
+		registerForContextMenu(lastValuesListView);
+		tabHost.addTab(tabHost.newTabSpec(TAB_LAST_VALUES).setIndicator(
+				TAB_LAST_VALUES, getResources().getDrawable(R.drawable.ni_last_values_tab)).setContent(
+				new TabContentFactory()
+				{
+					@Override
+					public View createTabContent(String arg0)
+					{
+						return lastValuesListView;
+					}
+				}));
+
+		TAB_INTERFACES = getString(R.string.node_info_interfaces);
+		interfacesAdapter = new InterfacesAdapter(this, null, null);
+		interfacesListView = (ExpandableListView)findViewById(R.id.interfaces);
+//		interfacesListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+//			@Override
+//			public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id)
+//			{
+//				GraphSettings gs = (GraphSettings)interfacesAdapter.getChild(groupPosition, childPosition);
+//				if (gs != null)
+//				{
+//					//drawGraph(gs);
+//					return true;
+//				}
+//				return false;
+//			}
+//		});
+		interfacesListView.setAdapter(interfacesAdapter);
+		registerForContextMenu(interfacesListView);
+		tabHost.addTab(tabHost.newTabSpec(TAB_INTERFACES).setIndicator(
+				TAB_INTERFACES, getResources().getDrawable(R.drawable.ni_interfaces_tab)).setContent(
+				new TabContentFactory()
+				{
+					@Override
+					public View createTabContent(String arg0)
+					{
+						return interfacesListView;
+					}
+				}));
+
 		// NB Seems to be necessary to avoid overlap of other tabs!
-		tabHost.setCurrentTabByTag(TAB_ALARMS);
+		tabHost.setCurrentTabByTag(TAB_INTERFACES);
 		tabHost.setCurrentTabByTag(TAB_LAST_VALUES);
+		tabHost.setCurrentTabByTag(TAB_ALARMS);
 		tabHost.setCurrentTabByTag(TAB_OVERVIEW);
 
 		tabHost.setCurrentTab(tabId);
@@ -222,6 +263,8 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			lastValuesAdapter.notifyDataSetChanged();
 		else if (tabId.equals(TAB_ALARMS))
 			alarmsAdapter.notifyDataSetChanged();
+		else if (tabId.equals(TAB_INTERFACES))
+			interfacesAdapter.notifyDataSetChanged();
 		if (method_invalidateOptionsMenu != null)
 		{
 			try
@@ -358,6 +401,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		refreshOverview();
 		refreshLastValues();
 		refreshAlarms();
+		refreshInterfaces();
 	}
 
 	/**
@@ -392,6 +436,15 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			alarmsAdapter.setAlarms(service.getAlarms(), id);
 			alarmsAdapter.notifyDataSetChanged();
 		}
+	}
+
+	/**
+	 * 
+	 */
+	public void refreshInterfaces()
+	{
+		if (node != null)
+			new LoadChildrenTask(node.getObjectId(), GenericObject.OBJECT_INTERFACE).execute();
 	}
 
 	/*
@@ -708,6 +761,58 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 			{
 				lastValuesAdapter.setValues(result);
 				lastValuesAdapter.notifyDataSetChanged();
+			}
+		}
+	}
+
+	/**
+	 * Internal task for loading object children data
+	 */
+	private class LoadChildrenTask extends AsyncTask<Object, Void, Set<GenericObject>>
+	{
+		private final long nodeId;
+		private final int classFilter;
+
+		protected LoadChildrenTask(long nodeId, int classFilter)
+		{
+			this.nodeId = nodeId;
+			this.classFilter = classFilter;
+		}
+
+		@Override
+		protected Set<GenericObject> doInBackground(Object... params)
+		{
+			try
+			{
+				GenericObject obj = service.getSession().findObjectById(nodeId);
+				if (obj != null)
+				{
+					service.getSession().syncMissingObjects(obj.getChildIdList(), false, NXCSession.OBJECT_SYNC_WAIT);
+					return obj.getAllChilds(classFilter);
+				}
+			}
+			catch (Exception e)
+			{
+				Log.d(TAG, "Exception while executing LoadChildrenTask.doInBackground", e);
+			}
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Set<GenericObject> result)
+		{
+			if (result != null) 
+			{
+				switch (classFilter)
+				{
+					case GenericObject.OBJECT_INTERFACE:
+						List<Interface> interfaces = new ArrayList<Interface>();
+						for (GenericObject i : result)
+							interfaces.add((Interface)i);
+						interfacesAdapter.setValues(interfaces);
+						interfacesAdapter.notifyDataSetChanged();
+						break;
+				}
 			}
 		}
 	}
