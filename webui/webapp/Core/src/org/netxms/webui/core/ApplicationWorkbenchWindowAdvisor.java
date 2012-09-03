@@ -31,6 +31,7 @@ import org.eclipse.rwt.RWT;
 import org.eclipse.rwt.lifecycle.WidgetUtil;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CBanner;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -99,6 +100,11 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			if (ctrl instanceof CBanner)
 			{
 				for(Control cc : ((CBanner)ctrl).getChildren())
+					cc.setData(WidgetUtil.CUSTOM_VARIANT, "gray");
+			}
+			else if (ctrl.getClass().getName().equals("org.eclipse.swt.widgets.Composite"))
+			{
+				for(Control cc : ((Composite)ctrl).getChildren())
 					cc.setData(WidgetUtil.CUSTOM_VARIANT, "gray");
 			}
 		}
