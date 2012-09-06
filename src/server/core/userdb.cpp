@@ -332,7 +332,10 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
                {
 						// Check if password was expired
 						int passwordExpirationTime = ConfigReadInt(_T("PasswordExpiration"), 0);
-						if ((user->getAuthMethod() == AUTH_NETXMS_PASSWORD) && (passwordExpirationTime > 0) && (time(NULL) > user->getPasswordChangeTime() + passwordExpirationTime * 86400))
+						if ((user->getAuthMethod() == AUTH_NETXMS_PASSWORD) && 
+							 (passwordExpirationTime > 0) && 
+							 ((user->getFlags() & UF_PASSWORD_NEVER_EXPIRES) == 0) &&
+							 (time(NULL) > user->getPasswordChangeTime() + passwordExpirationTime * 86400))
 						{
 							DbgPrintf(4, _T("Password for user \"%s\" has expired"), user->getName());
 							if (user->getId() != 0)	// Do not check grace logins for built-in admin user

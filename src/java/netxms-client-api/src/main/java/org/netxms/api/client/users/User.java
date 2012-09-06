@@ -19,6 +19,7 @@
 package org.netxms.api.client.users;
 
 
+import java.util.Date;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
@@ -39,10 +40,15 @@ public class User extends AbstractUserObject
 	public static final int MAP_CERT_BY_SUBJECT		= 0;
 	public static final int MAP_CERT_BY_PUBKEY		= 1;
 	
-	int authMethod;
-	int certMappingMethod;
-	String certMappingData;
-	String fullName;
+	private int authMethod;
+	private int certMappingMethod;
+	private String certMappingData;
+	private String fullName;
+	private Date lastLogin = null;
+	private Date lastPasswordChange = null;
+	private int minPasswordLength;
+	private Date disabledUntil = null;
+	private int authFailures;
 
 	/**
 	 * Default constructor
@@ -62,8 +68,13 @@ public class User extends AbstractUserObject
 		
 		this.authMethod = src.authMethod;
 		this.certMappingMethod = src.certMappingMethod;
-		this.certMappingData = new String(src.certMappingData);
-		this.fullName = new String(src.fullName);
+		this.certMappingData = src.certMappingData;
+		this.fullName = src.fullName;
+		this.lastLogin = src.lastLogin;
+		this.lastPasswordChange = src.lastPasswordChange;
+		this.minPasswordLength = src.minPasswordLength;
+		this.disabledUntil = src.disabledUntil;
+		this.authFailures = src.authFailures;
 	}
 	
 	/**
@@ -76,6 +87,11 @@ public class User extends AbstractUserObject
 		fullName = msg.getVariableAsString(NXCPCodes.VID_USER_FULL_NAME);
 		certMappingMethod = msg.getVariableAsInteger(NXCPCodes.VID_CERT_MAPPING_METHOD);
 		certMappingData = msg.getVariableAsString(NXCPCodes.VID_CERT_MAPPING_DATA);
+		lastLogin = msg.getVariableAsDate(NXCPCodes.VID_LAST_LOGIN);
+		lastPasswordChange = msg.getVariableAsDate(NXCPCodes.VID_LAST_PASSWORD_CHANGE);
+		minPasswordLength = msg.getVariableAsInteger(NXCPCodes.VID_MIN_PASSWORD_LENGTH);
+		disabledUntil = msg.getVariableAsDate(NXCPCodes.VID_DISABLED_UNTIL);
+		authFailures = msg.getVariableAsInteger(NXCPCodes.VID_AUTH_FAILURES);
 	}
 	
 	/**
@@ -88,6 +104,8 @@ public class User extends AbstractUserObject
 		msg.setVariable(NXCPCodes.VID_USER_FULL_NAME, fullName);
 		msg.setVariableInt16(NXCPCodes.VID_CERT_MAPPING_METHOD, certMappingMethod);
 		msg.setVariable(NXCPCodes.VID_CERT_MAPPING_DATA, certMappingData);
+		msg.setVariableInt16(NXCPCodes.VID_MIN_PASSWORD_LENGTH, minPasswordLength);
+		msg.setVariableInt32(NXCPCodes.VID_DISABLED_UNTIL, (disabledUntil != null) ? (int)(disabledUntil.getTime() / 1000) : 0);
 	}
 
 	/**
@@ -161,5 +179,61 @@ public class User extends AbstractUserObject
 	public Object clone() throws CloneNotSupportedException
 	{
 		return new User(this);
+	}
+
+	/**
+	 * @return the minPasswordLength
+	 */
+	public int getMinPasswordLength()
+	{
+		return minPasswordLength;
+	}
+
+	/**
+	 * @param minPasswordLength the minPasswordLength to set
+	 */
+	public void setMinPasswordLength(int minPasswordLength)
+	{
+		this.minPasswordLength = minPasswordLength;
+	}
+
+	/**
+	 * @return the disabledUntil
+	 */
+	public Date getDisabledUntil()
+	{
+		return disabledUntil;
+	}
+
+	/**
+	 * @param disabledUntil the disabledUntil to set
+	 */
+	public void setDisabledUntil(Date disabledUntil)
+	{
+		this.disabledUntil = disabledUntil;
+	}
+
+	/**
+	 * @return the lastLogin
+	 */
+	public Date getLastLogin()
+	{
+		return lastLogin;
+	}
+
+	/**
+	 * @return the lastPasswordChange
+	 */
+	public Date getLastPasswordChange()
+	{
+		return lastPasswordChange;
+	}
+
+	/**
+	 * @return the authFailures
+	 */
+	public int getAuthFailures()
+	{
+		return authFailures;
 	}
 }

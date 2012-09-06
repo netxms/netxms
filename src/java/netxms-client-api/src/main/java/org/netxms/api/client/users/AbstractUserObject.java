@@ -40,6 +40,7 @@ public abstract class AbstractUserObject
 	public static final int CHANGE_PASSWORD = 0x0008;
 	public static final int CANNOT_CHANGE_PASSWORD = 0x0010;
 	public static final int INTRUDER_LOCKOUT = 0x0020;
+	public static final int PASSWORD_NEVER_EXPIRES = 0x0040;
 	
 	protected long id;
 	protected String name;
