@@ -8,29 +8,32 @@
             locationURI="popup:org.eclipse.ui.popup.any?after=objectmgmt">
          <dynamic
                class="org.netxms.ui.eclipse.objecttools.ObjectToolsDynamicMenu"
-               id="org.netxms.ui.eclipse.objecttools.objectToolsDynamicMenu_Node">
+               id="org.netxms.ui.eclipse.objecttools.objectToolsDynamicMenu">
             <visibleWhen
                   checkEnabled="false">
                <iterate
                      ifEmpty="false"
                      operator="and">
-                  <instanceof
-                        value="org.netxms.client.objects.Node">
-                  </instanceof>
-               </iterate>
-            </visibleWhen>
-         </dynamic>
-         <dynamic
-               class="org.netxms.ui.eclipse.objecttools.ObjectToolsDynamicMenu"
-               id="org.netxms.ui.eclipse.objecttools.objectToolsDynamicMenu_Alarm">
-            <visibleWhen
-                  checkEnabled="false">
-               <iterate
-                     ifEmpty="false"
-                     operator="and">
-                  <instanceof
-                        value="org.netxms.client.events.Alarm">
-                  </instanceof>
+                  <or>
+                     <instanceof
+                           value="org.netxms.client.objects.Node">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.events.Alarm">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Container">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.ServiceRoot">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Subnet">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Cluster">
+                     </instanceof>
+                  </or>
                </iterate>
             </visibleWhen>
          </dynamic>

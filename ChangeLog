@@ -18,6 +18,7 @@
 	- Double click in MIB explorer walk results selects OID in tree
 	- Fixed status indicator update problems in object browser
 	- Fixed dashboard navigator refresh issues
+	- Object tools execution on multiple objects
 - Added commands "get" and "set" to nxdbmgr to manager server configuration
   variables
 - New NXSL function: RenameObject
