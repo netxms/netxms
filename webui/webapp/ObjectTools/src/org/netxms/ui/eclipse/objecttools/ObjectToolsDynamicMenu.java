@@ -23,7 +23,9 @@ import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -44,7 +46,12 @@ import org.eclipse.ui.services.IEvaluationService;
 import org.eclipse.ui.services.IServiceLocator;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.Subnet;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolHandler;
@@ -97,24 +104,9 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		Object selection = evalService.getCurrentState().getVariable(ISources.ACTIVE_MENU_SELECTION_NAME);
 		if ((selection == null) || !(selection instanceof IStructuredSelection))
 			return;
-		if (((IStructuredSelection)selection).size() != 1)
-			return;
 
-		Object element = ((IStructuredSelection)selection).getFirstElement();
-		if (element instanceof Alarm)
-		{
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			element = session.findObjectById(((Alarm)element).getSourceObjectId(), Node.class);
-			if (element == null)
-				return;
-		}
-		else if (!(element instanceof Node))
-		{
-			return;
-		}
-		final Node node = (Node)element;
-		
-		Menu toolsMenu = new Menu(menu);
+		final Set<Node> nodes = buildNodeSet((IStructuredSelection)selection);
+		final Menu toolsMenu = new Menu(menu);
 		
 		ObjectTool[] tools = ObjectToolsCache.getTools();
 		Arrays.sort(tools, new Comparator<ObjectTool>() {
@@ -129,25 +121,9 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		int added = 0;
 		for(int i = 0; i < tools.length; i++)
 		{
-			boolean allowed;
-			if (tools[i].getType() == ObjectTool.TYPE_INTERNAL)
-			{
-				ObjectToolHandler handler = ObjectToolsCache.findHandler(tools[i].getData());
-				if (handler != null)
-				{
-					allowed = handler.canExecuteOnNode(node, tools[i]);
-				}
-				else
-				{
-					allowed = false;
-				}
-			}
-			else
-			{
-				allowed = true;
-			}
+			boolean allowed = isToolAllowed(tools[i], nodes);
 			
-			if (allowed && tools[i].isApplicableForNode(node))
+			if (allowed && isToolApplicable(tools[i], nodes))
 			{
 				String[] path = tools[i].getName().split("\\-\\>");
 			
@@ -176,7 +152,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 					@Override
 					public void widgetSelected(SelectionEvent e)
 					{
-						executeObjectTool(node, (ObjectTool)item.getData());
+						executeObjectTool(nodes, (ObjectTool)item.getData());
 					}
 				});
 				
@@ -197,22 +173,117 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	}
 	
 	/**
-	 * Execute object tool
+	 * Build node set from selection
+	 * 
+	 * @param selection
+	 * @return
+	 */
+	private Set<Node> buildNodeSet(IStructuredSelection selection)
+	{
+		final Set<Node> nodes = new HashSet<Node>();
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		
+		for(Object o : selection.toList())
+		{
+			if (o instanceof Node)
+			{
+				nodes.add((Node)o);
+			}
+			else if ((o instanceof Container) || (o instanceof ServiceRoot) || (o instanceof Subnet) || (o instanceof Cluster))
+			{
+				for(GenericObject n : ((GenericObject)o).getAllChilds(GenericObject.OBJECT_NODE))
+					nodes.add((Node)n);
+			}
+			else if (o instanceof Alarm)
+			{
+				Node n = (Node)session.findObjectById(((Alarm)o).getSourceObjectId(), Node.class);
+				if (n != null)
+					nodes.add(n);
+			}
+		}
+		return nodes;
+	}
+	
+	/**
+	 * Check if tool is allowed for execution on each node from set
+	 * 
+	 * @param tool
+	 * @param nodes
+	 * @return
+	 */
+	private static boolean isToolAllowed(ObjectTool tool, Set<Node> nodes)
+	{
+		if (tool.getType() != ObjectTool.TYPE_INTERNAL)
+			return true;
+		
+		ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
+		if (handler != null)
+		{
+			for(Node n : nodes)
+				if (!handler.canExecuteOnNode(n, tool))
+					return false;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+	/**
+	 * Check if given tool is applicable for all nodes in set
+	 * 
+	 * @param tool
+	 * @param nodes
+	 * @return
+	 */
+	private static boolean isToolApplicable(ObjectTool tool, Set<Node> nodes)
+	{
+		for(Node n : nodes)
+			if (!tool.isApplicableForNode(n))
+				return false;
+		return true;
+	}
+	
+	/**
+	 * Execute object tool on node set
 	 * @param tool Object tool
 	 */
-	private void executeObjectTool(final Node node, final ObjectTool tool)
+	private void executeObjectTool(final Set<Node> nodes, final ObjectTool tool)
 	{
 		if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
 		{
-			String temp = tool.getConfirmationText();
-			temp = temp.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
-			temp = temp.replace("%OBJECT_NAME%", node.getObjectName());
-			String message = temp.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
+			String message = tool.getConfirmationText();
+			if (nodes.size() == 1)
+			{
+				Node node = nodes.iterator().next();
+				message = message.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
+				message = message.replace("%OBJECT_NAME%", node.getObjectName());
+				message = message.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
+			}
+			else
+			{
+				message = message.replace("%OBJECT_IP_ADDR%", "<multiple nodes>");
+				message = message.replace("%OBJECT_NAME%", "<multiple nodes>");
+				message = message.replace("%OBJECT_ID%", "<multiple nodes>");
+			}
 			if (!MessageDialog.openQuestion(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
 					"Confirm Tool Execution", message))
 				return;
 		}
 		
+		for(Node n : nodes)
+			executeObjectToolOnNode(n, tool);
+	}
+	
+	/**
+	 * Execute object tool on single node
+	 * 
+	 * @param node
+	 * @param tool
+	 */
+	private void executeObjectToolOnNode(final Node node, final ObjectTool tool)
+	{
 		switch(tool.getType())
 		{
 			case ObjectTool.TYPE_INTERNAL:
