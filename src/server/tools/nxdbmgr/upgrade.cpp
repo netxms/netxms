@@ -278,6 +278,17 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 //
+// Upgrade from V259 to V260
+//
+
+static BOOL H_UpgradeFromV259(int currVersion, int newVersion)
+{
+	CreateConfigParam(_T("UseFQDNForNodeNames"), _T("1"), 1, 1);
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='260' WHERE var_name='SchemaVersion'")));
+	return TRUE;
+}
+
+//
 // Upgrade from V258 to V259
 //
 
@@ -6434,6 +6445,7 @@ static struct
 	{ 256, 257, H_UpgradeFromV256 },
 	{ 257, 258, H_UpgradeFromV257 },
 	{ 258, 259, H_UpgradeFromV258 },
+	{ 259, 260, H_UpgradeFromV259 },
    { 0, 0, NULL }
 };
 

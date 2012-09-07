@@ -331,6 +331,8 @@ static void LoadGlobalConfig()
 		g_dwFlags |= AF_CHECK_TRUSTED_NODES;
 	if (ConfigReadInt(_T("EnableNXSLContainerFunctions"), 1))
 		g_dwFlags |= AF_ENABLE_NXSL_CONTAINER_FUNCS;
+	if (ConfigReadInt(_T("UseFQDNForNodeNames"), 1))
+		g_dwFlags |= AF_USE_FQDN_FOR_NODE_NAMES;
 
 	if (g_szDataDir[0] == 0)
 	{

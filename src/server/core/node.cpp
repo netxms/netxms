@@ -4059,6 +4059,7 @@ SNMP_SecurityContext *Node::getSnmpSecurityContext()
 BOOL Node::resolveName(BOOL useOnlyDNS)
 {
 	BOOL bSuccess = FALSE;
+	BOOL bNameTruncated = FALSE;
 	HOSTENT *hs;
 	DWORD i, dwAddr;
 	TCHAR szBuffer[256];
@@ -4076,6 +4077,15 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 #else
 		nx_strncpy(m_szName, hs->h_name, MAX_OBJECT_NAME);
 #endif
+		if (!(g_dwFlags & AF_USE_FQDN_FOR_NODE_NAMES))
+		{
+			TCHAR *pPoint = _tcschr(m_szName, _T('.'));
+			if (pPoint != NULL)
+			{
+				*pPoint = _T('\0');
+				bNameTruncated = TRUE;
+			}
+		}
 		bSuccess = TRUE;
 	}
 	else
@@ -4139,7 +4149,8 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 	}
 
 	if (bSuccess)
-		DbgPrintf(4, _T("Name for node %d was resolved to %s"), m_dwId, m_szName);
+		DbgPrintf(4, _T("Name for node %d was resolved to %s%s"), m_dwId, m_szName, 
+			bNameTruncated ? _T(" (truncated to host)") : _T(""));
 	else
 		DbgPrintf(4, _T("Name for node %d was not resolved"), m_dwId, m_szName);
 	return bSuccess;
