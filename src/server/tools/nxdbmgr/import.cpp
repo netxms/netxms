@@ -50,15 +50,22 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 	query += _T(") VALUES (");
 	for(i = 0; i < cols; i++)
 	{
+		if (data[i] != NULL)
+		{
 #ifdef UNICODE
-		WCHAR *wcData = WideStringFromUTF8String(data[i]);
-		String prepData = DBPrepareString(g_hCoreDB, wcData);
-		free(wcData);
+			WCHAR *wcData = WideStringFromUTF8String(data[i]);
+			String prepData = DBPrepareString(g_hCoreDB, wcData);
+			free(wcData);
 #else
-		String prepData = DBPrepareString(g_hCoreDB, data[i]);
+			String prepData = DBPrepareString(g_hCoreDB, data[i]);
 #endif
-		query += (const TCHAR *)prepData;
-		query += _T(",");
+			query += (const TCHAR *)prepData;
+			query += _T(",");
+		}
+		else
+		{
+			query += _T("NULL,");
+		}
 	}
 	query.shrink();
 	query += _T(")");
