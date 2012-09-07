@@ -383,7 +383,7 @@ CREATE TABLE containers
 	category integer not null,
 	object_class integer not null,
 	flags integer not null,
-	auto_bind_filter SQL_TEXT not null,
+	auto_bind_filter SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -430,7 +430,7 @@ CREATE TABLE templates
 	id integer not null,
 	version integer not null,
 	flags integer not null,
-	apply_filter SQL_TEXT not null,
+	apply_filter SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -911,8 +911,8 @@ CREATE TABLE snmp_trap_pmap
 	trap_id integer not null,
 	parameter integer not null,
 	flags integer not null,
-	snmp_oid varchar(255),
-	description varchar(255),
+	snmp_oid varchar(255) null,
+	description varchar(255) null,
 	PRIMARY KEY(trap_id,parameter)
 ) TABLE_TYPE;
 
@@ -1143,7 +1143,7 @@ CREATE TABLE situations
 CREATE TABLE snmp_communities
 (
 	id integer not null,
-	community varchar(255) not null,
+	community varchar(255) null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

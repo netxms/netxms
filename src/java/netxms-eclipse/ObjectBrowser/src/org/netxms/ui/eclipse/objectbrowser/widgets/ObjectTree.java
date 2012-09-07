@@ -602,4 +602,14 @@ public class ObjectTree extends Composite
 	{
 		statusIndicator.refresh(objectTree);
 	}
+	
+	/**
+	 * @param rootObjects
+	 */
+	public void setRootObjects(long[] rootObjects)
+	{
+		((ObjectTreeContentProvider)objectTree.getContentProvider()).setRootObjects(rootObjects);
+		filter.setRootObjects(rootObjects);
+		refresh();
+	}
 }

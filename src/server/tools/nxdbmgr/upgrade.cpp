@@ -278,6 +278,23 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 //
+// Upgrade from V258 to V259
+//
+
+static BOOL H_UpgradeFromV258(int currVersion, int newVersion)
+{
+	// have to made these columns nullable again because
+	// because they was forgotten as NOT NULL in schema.in
+	// and so some databases can still have them as NOT NULL
+	CHK_EXEC(SetColumnNullable(_T("templates"), _T("apply_filter"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(SetColumnNullable(_T("containers"), _T("auto_bind_filter"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='259' WHERE var_name='SchemaVersion'")));
+	return TRUE;
+}
+
+
+//
 // Upgrade from V257 to V258
 //
 
@@ -6416,6 +6433,7 @@ static struct
 	{ 255, 256, H_UpgradeFromV255 },
 	{ 256, 257, H_UpgradeFromV256 },
 	{ 257, 258, H_UpgradeFromV257 },
+	{ 258, 259, H_UpgradeFromV258 },
    { 0, 0, NULL }
 };
 

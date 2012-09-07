@@ -271,4 +271,20 @@ public class ObjectTreeFilter extends ViewerFilter
 	{
 		this.hideTemplateChecks = hideTemplateChecks;
 	}
+
+	/**
+	 * @param rootObjects the rootObjects to set
+	 */
+	public void setRootObjects(long[] rootObjects)
+	{
+		if (rootObjects != null)
+		{
+			this.rootObjects = new long[rootObjects.length];
+			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
+		}
+		else
+		{
+			this.rootObjects = null;
+		}
+	}
 }
