@@ -2559,6 +2559,7 @@ webui/webapp/Dashboard/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/Dashboard/META-INF/MANIFEST.MF -text
 webui/webapp/Dashboard/build.properties -text
 webui/webapp/Dashboard/icons/dashboard.png -text
+webui/webapp/Dashboard/icons/dashboard_nav.gif -text
 webui/webapp/Dashboard/icons/dci.png -text
 webui/webapp/Dashboard/icons/ep_delete.png -text
 webui/webapp/Dashboard/icons/ep_edit.png -text

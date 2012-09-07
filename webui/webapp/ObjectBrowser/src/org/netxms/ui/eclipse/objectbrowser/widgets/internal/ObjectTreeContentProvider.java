@@ -32,12 +32,19 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	private static final long serialVersionUID = 1L;
 
 	private NXCSession session = null;
-	private long[] rootObjects;
+	private long[] rootObjects = null;
 	
+	/**
+	 * @param rootObjects
+	 */
 	public ObjectTreeContentProvider(long[] rootObjects)
 	{
 		super();
-		this.rootObjects = rootObjects;
+		if (rootObjects != null)
+		{
+			this.rootObjects = new long[rootObjects.length];
+			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -46,18 +53,6 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public Object[] getChildren(Object parentElement)
 	{
-		/*
-		final GenericObject[] childsAsArray = ((GenericObject)parentElement).getChildsAsArray();
-		List<GenericObject> filteredList = new ArrayList<GenericObject>();
-		for(GenericObject genericObject : childsAsArray)
-		{
-			if (!genericObject.getObjectName().startsWith("@"))
-			{
-				filteredList.add(genericObject);
-			}
-		}
-		return filteredList.toArray();
-		*/
 		return ((GenericObject)parentElement).getChildsAsArray();
 	}
 
@@ -103,6 +98,21 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{
 		session = (NXCSession)newInput;
-		viewer.refresh();
+	}
+
+	/**
+	 * @param rootObjects the rootObjects to set
+	 */
+	public void setRootObjects(long[] rootObjects)
+	{
+		if (rootObjects != null)
+		{
+			this.rootObjects = new long[rootObjects.length];
+			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
+		}
+		else
+		{
+			this.rootObjects = null;
+		}
 	}
 }

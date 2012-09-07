@@ -20,33 +20,42 @@ package org.netxms.ui.eclipse.dashboard.views;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
+import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 
 /**
  * Dashboard navigator
- *
  */
 public class DashboardNavigator extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardNavigator";
 	
-	private NXCSession session;
+	private NXCSession session = null;
+	private SessionListener sessionListener = null;
 	private ObjectTree objectTree;
+	private Action actionRefresh;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -63,9 +72,28 @@ public class DashboardNavigator extends ViewPart
 		objectTree.getTreeViewer().expandToLevel(2);
 		
 		createActions();
+		contributeToActionBars();
 		createPopupMenu();
 
 		getSite().setSelectionProvider(objectTree.getTreeViewer());
+		
+		sessionListener = new SessionListener() {
+			@Override
+			public void notificationHandler(SessionNotification n)
+			{
+				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) && (n.getObject() instanceof DashboardRoot))
+				{
+					objectTree.getDisplay().asyncExec(new Runnable() {
+						@Override
+						public void run()
+						{
+							refresh();
+						}
+					});
+				}
+			}
+		};
+		session.addListener(sessionListener);
 	}
 	
 	/**
@@ -86,6 +114,45 @@ public class DashboardNavigator extends ViewPart
 	 */
 	private void createActions()
 	{
+		actionRefresh = new RefreshAction() {
+			@Override
+			public void run()
+			{
+				refresh();
+			}
+		};
+	}
+
+	/**
+	 * Contribute actions to action bar
+	 */
+	private void contributeToActionBars()
+	{
+		IActionBars bars = getViewSite().getActionBars();
+		fillLocalPullDown(bars.getMenuManager());
+		fillLocalToolBar(bars.getToolBarManager());
+	}
+
+	/**
+	 * Fill local pull-down menu
+	 * 
+	 * @param manager
+	 *           Menu manager for pull-down menu
+	 */
+	private void fillLocalPullDown(IMenuManager manager)
+	{
+		manager.add(actionRefresh);
+	}
+
+	/**
+	 * Fill local tool bar
+	 * 
+	 * @param manager
+	 *           Menu manager for local toolbar
+	 */
+	private void fillLocalToolBar(IToolBarManager manager)
+	{
+		manager.add(actionRefresh);
 	}
 
 	/**
@@ -142,5 +209,27 @@ public class DashboardNavigator extends ViewPart
 	public void setFocus()
 	{
 		objectTree.setFocus();
+	}
+	
+	/**
+	 * Refresh dashboard tree
+	 */
+	private void refresh()
+	{
+		final Set<Integer> classFilter = new HashSet<Integer>(2);
+		classFilter.add(GenericObject.OBJECT_DASHBOARD);
+		objectTree.setRootObjects(getRootObjects(classFilter));
+		objectTree.getTreeViewer().expandToLevel(2);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		if ((session != null) && (sessionListener != null))
+			session.removeListener(sessionListener);
+		super.dispose();
 	}
 }

@@ -79,6 +79,7 @@
       <view
             allowMultiple="false"
             class="org.netxms.ui.eclipse.dashboard.views.DashboardNavigator"
+            icon="icons/dashboard_nav.gif"
             id="org.netxms.ui.eclipse.dashboard.views.DashboardNavigator"
             name="Dashboard Navigator"
             restorable="true">
