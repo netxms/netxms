@@ -1383,22 +1383,9 @@ void Node::updatePrimaryIpAddr()
 	}
 }
 
-
-//
-// Walker callback for print MIB
-//
-
-static DWORD PrintMIBWalkerCallback(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
-{
-	(*((int *)arg))++;
-	return SNMP_ERR_SUCCESS;
-}
-
-
-//
-// Perform configuration poll on node
-//
-
+/**
+ * Perform configuration poll on node
+ */
 void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
                              int nPoller, DWORD dwNetMask)
 {
@@ -1409,11 +1396,10 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 		return;
 	}
 
-   DWORD dwOldFlags = m_dwFlags, dwAddr, rcc;
-   AgentConnection *pAgentConn;
+   DWORD dwOldFlags = m_dwFlags;
    TCHAR szBuffer[4096];
 	SNMP_Transport *pTransport;
-   BOOL bHasChanges = FALSE;
+   bool hasChanges = false;
 
    SetPollerInfo(nPoller, _T("wait for lock"));
    pollerLock();
@@ -1426,7 +1412,8 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
    {
       m_dwFlags &= ~(NF_IS_NATIVE_AGENT | NF_IS_SNMP | NF_IS_CPSNMP |
                      NF_IS_BRIDGE | NF_IS_ROUTER | NF_IS_OSPF | NF_IS_PRINTER |
-							NF_IS_CDP | NF_IS_LLDP | NF_IS_SONMP);
+							NF_IS_CDP | NF_IS_LLDP | NF_IS_SONMP | NF_IS_VRRP | NF_HAS_VLANS |
+							NF_IS_8021X | NF_IS_STP | NF_HAS_ENTITY_MIB | NF_HAS_IFXTABLE);
 		m_dwDynamicFlags &= ~NDF_CONFIGURATION_POLL_PASSED;
       m_szObjectId[0] = 0;
       m_szPlatformName[0] = 0;
@@ -1447,405 +1434,12 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
    {
 		updatePrimaryIpAddr();
 
-      // Check node's capabilities
       SetPollerInfo(nPoller, _T("capability check"));
       SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
-      
-		// ***** NetXMS agent check *****
-      DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}"), m_szName, m_dwFlags, m_dwDynamicFlags);
-      if ((!((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))) &&
-          (!(m_dwFlags & NF_DISABLE_NXCP)) && (m_dwIpAddr != 0))
-      {
-	      SendPollerMsg(dwRqId, _T("   Checking NetXMS agent...\r\n"));
-         pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
-         setAgentProxy(pAgentConn);
-         DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_szName);
-         if (pAgentConn->connect(g_pServerKey))
-         {
-            DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connected"), m_szName);
-            LockData();
-            m_dwFlags |= NF_IS_NATIVE_AGENT;
-            if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
-            {
-               m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
-               PostEvent(EVENT_AGENT_OK, m_dwId, NULL);
-               SendPollerMsg(dwRqId, POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
-            }
-				else
-				{
-	            SendPollerMsg(dwRqId, POLLER_INFO _T("   NetXMS native agent is active\r\n"));
-				}
-            UnlockData();
-      
-            if (pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
-            {
-               LockData();
-               if (_tcscmp(m_szAgentVersion, szBuffer))
-               {
-                  _tcscpy(m_szAgentVersion, szBuffer);
-                  bHasChanges = TRUE;
-                  SendPollerMsg(dwRqId, _T("   NetXMS agent version changed to %s\r\n"), m_szAgentVersion);
-               }
-               UnlockData();
-            }
 
-            if (pAgentConn->getParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, szBuffer) == ERR_SUCCESS)
-            {
-               LockData();
-               if (_tcscmp(m_szPlatformName, szBuffer))
-               {
-                  _tcscpy(m_szPlatformName, szBuffer);
-                  bHasChanges = TRUE;
-                  SendPollerMsg(dwRqId, _T("   Platform name changed to %s\r\n"), m_szPlatformName);
-               }
-               UnlockData();
-            }
+		hasChanges = hasChanges || confPollAgent(dwRqId);
+		hasChanges = hasChanges || confPollSnmp(dwRqId);
 
-            // Check IP forwarding status
-            if (pAgentConn->getParameter(_T("Net.IP.Forwarding"), 16, szBuffer) == ERR_SUCCESS)
-            {
-               if (_tcstoul(szBuffer, NULL, 10) != 0)
-                  m_dwFlags |= NF_IS_ROUTER;
-               else
-                  m_dwFlags &= ~NF_IS_ROUTER;
-            }
-
-				// Get uname
-				if (pAgentConn->getParameter(_T("System.Uname"), MAX_DB_STRING, szBuffer) == ERR_SUCCESS)
-				{
-					TranslateStr(szBuffer, _T("\r\n"), _T(" "));
-					TranslateStr(szBuffer, _T("\n"), _T(" "));
-					TranslateStr(szBuffer, _T("\r"), _T(" "));
-               LockData();
-               if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, szBuffer))
-               {
-						safe_free(m_sysDescription);
-                  m_sysDescription = _tcsdup(szBuffer);
-                  bHasChanges = TRUE;
-                  SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
-               }
-               UnlockData();
-				}
-
-				StructArray<NXC_AGENT_PARAM> *plist;
-				StructArray<NXC_AGENT_TABLE> *tlist;
-            rcc = pAgentConn->getSupportedParameters(&plist, &tlist);
-				if (rcc == ERR_SUCCESS)
-				{
-					LockData();
-					delete m_paramList;
-					delete m_tableList;
-					m_paramList = plist;
-					m_tableList = tlist;
-					UnlockData();
-				}
-				else
-				{
-				   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%d"), m_szName, rcc);
-				}
-
-				checkAgentPolicyBinding(pAgentConn);
-
-            pAgentConn->disconnect();
-         }
-			else
-			{
-	         DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect"), m_szName);
-			}
-         delete pAgentConn;
-         DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_szName);
-      }
-
-		// ***** SNMP check *****
-		if ((!((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))) &&
-          (!(m_dwFlags & NF_DISABLE_SNMP)) && (m_dwIpAddr != 0))
-      {
-	      SendPollerMsg(dwRqId, _T("   Checking SNMP...\r\n"));
-         DbgPrintf(5, _T("ConfPoll(%s): calling SnmpCheckCommSettings()"), m_szName);
-			pTransport = createSnmpTransport();
-			if (pTransport == NULL)
-			{
-				DbgPrintf(5, _T("ConfPoll(%s): unable to create SNMP transport"), m_szName);
-				goto skip_snmp_checks;
-			}
-
-			SNMP_SecurityContext *newCtx = SnmpCheckCommSettings(pTransport, &m_snmpVersion, m_snmpSecurity);
-			if (newCtx != NULL)
-         {
-            LockData();
-				delete m_snmpSecurity;
-				m_snmpSecurity = newCtx;
-            m_dwFlags |= NF_IS_SNMP;
-            if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
-            {
-               m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
-               PostEvent(EVENT_SNMP_OK, m_dwId, NULL);
-               SendPollerMsg(dwRqId, POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
-            }
-				UnlockData();
-            SendPollerMsg(dwRqId, _T("   SNMP agent is active (version %s)\r\n"), 
-					(m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
-
-				if (SnmpGet(m_snmpVersion, pTransport,
-								_T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, 4096, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
-				{
-					LockData();
-					if (_tcscmp(m_szObjectId, szBuffer))
-					{
-						nx_strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
-						bHasChanges = TRUE;
-					}
-					UnlockData();
-				}
-
-				// Get system description
-				if (SnmpGet(m_snmpVersion, pTransport,
-				            _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, szBuffer, MAX_DB_STRING, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
-				{
-					TranslateStr(szBuffer, _T("\r\n"), _T(" "));
-					TranslateStr(szBuffer, _T("\n"), _T(" "));
-					TranslateStr(szBuffer, _T("\r"), _T(" "));
-					LockData();
-               if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, szBuffer))
-               {
-						safe_free(m_sysDescription);
-                  m_sysDescription = _tcsdup(szBuffer);
-                  bHasChanges = TRUE;
-                  SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
-               }
-					UnlockData();
-				}
-
-				// Select device driver
-				NetworkDeviceDriver *driver = FindDriverForNode(this, pTransport);
-				DbgPrintf(5, _T("ConfPoll(%s): selected device driver %s"), m_szName, driver->getName());
-				LockData();
-				if (driver != m_driver)
-				{
-					m_driver = driver;
-					SendPollerMsg(dwRqId, _T("   New network device driver selected: %s\r\n"), m_driver->getName());
-				}
-				UnlockData();
-
-				// Allow driver to gather additional info
-				m_driver->analyzeDevice(pTransport, m_szObjectId, &m_customAttributes);
-
-				// Get sysName
-				if (SnmpGet(m_snmpVersion, pTransport,
-				            _T(".1.3.6.1.2.1.1.5.0"), NULL, 0, szBuffer, MAX_DB_STRING, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
-				{
-					LockData();
-					if ((m_sysName == NULL) || _tcscmp(m_sysName, szBuffer))
-               {
-						safe_free(m_sysName);
-                  m_sysName = _tcsdup(szBuffer);
-                  bHasChanges = TRUE;
-                  SendPollerMsg(dwRqId, _T("   System name changed to %s\r\n"), m_sysName);
-               }
-					UnlockData();
-				}
-
-            // Check IP forwarding
-            if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.4.1.0"), 1))
-            {
-					LockData();
-               m_dwFlags |= NF_IS_ROUTER;
-					UnlockData();
-            }
-            else
-            {
-					LockData();
-               m_dwFlags &= ~NF_IS_ROUTER;
-					UnlockData();
-            }
-
-            // Check for bridge MIB support
-            if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, 4096, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
-            {
-					LockData();
-               m_dwFlags |= NF_IS_BRIDGE;
-					memcpy(m_baseBridgeAddress, szBuffer, 6);
-					UnlockData();
-
-					// Check for Spanning Tree (IEEE 802.1d) MIB support
-					if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.17.2.1.0"), 3))
-					{
-						LockData();
-						m_dwFlags |= NF_IS_STP;
-						UnlockData();
-					}
-					else
-					{
-						LockData();
-						m_dwFlags &= ~NF_IS_STP;
-						UnlockData();
-					}
-            }
-            else
-            {
-					LockData();
-               m_dwFlags &= ~(NF_IS_BRIDGE | NF_IS_STP);
-					UnlockData();
-            }
-
-            // Check for ENTITY-MIB support
-            if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.47.1.4.1.0"), NULL, 0, szBuffer, 4096, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
-            {
-					LockData();
-               m_dwFlags |= NF_HAS_ENTITY_MIB;
-					UnlockData();
-
-					ComponentTree *components = BuildComponentTree(this, pTransport);
-					LockData();
-					if (m_components != NULL)
-						m_components->decRefCount();
-					m_components = components;
-					UnlockData();
-            }
-            else
-            {
-					LockData();
-               m_dwFlags &= ~NF_HAS_ENTITY_MIB;
-					if (m_components != NULL)
-					{
-						m_components->decRefCount();
-						m_components = NULL;
-					}
-					UnlockData();
-            }
-
-            // Check for printer MIB support
-				int count = 0;
-				SnmpEnumerate(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43.5.1.1.17"), PrintMIBWalkerCallback, &count, FALSE);
-            if (count > 0)
-            {
-					LockData();
-               m_dwFlags |= NF_IS_PRINTER;
-					UnlockData();
-            }
-            else
-            {
-					LockData();
-               m_dwFlags &= ~NF_IS_PRINTER;
-					UnlockData();
-            }
-
-            // Check for CDP (Cisco Discovery Protocol) support
-            if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), 1))
-            {
-					LockData();
-               m_dwFlags |= NF_IS_CDP;
-					UnlockData();
-            }
-            else
-            {
-					LockData();
-               m_dwFlags &= ~NF_IS_CDP;
-					UnlockData();
-            }
-
-            // Check for NDP (Nortel Discovery Protocol) support
-            if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), 1))
-            {
-					LockData();
-               m_dwFlags |= NF_IS_NDP;
-					UnlockData();
-            }
-            else
-            {
-					LockData();
-               m_dwFlags &= ~NF_IS_NDP;
-					UnlockData();
-            }
-
-		      // Check for LLDP (Link Layer Discovery Protocol) support
-				if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
-				{
-					LockData();
-					m_dwFlags |= NF_IS_LLDP;
-					UnlockData();
-
-					if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.1.0"), NULL, 0, szBuffer, 4096, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
-					{
-						_tcscat(szBuffer, _T("@"));
-						int len = (int)_tcslen(szBuffer);
-						if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, &szBuffer[len], 4096 - len, SG_HSTRING_RESULT) == SNMP_ERR_SUCCESS)
-						{
-							LockData();
-							if ((m_lldpNodeId == NULL) || _tcscmp(m_lldpNodeId, szBuffer))
-							{
-								safe_free(m_lldpNodeId);
-								m_lldpNodeId = _tcsdup(szBuffer);
-								bHasChanges = TRUE;
-								SendPollerMsg(dwRqId, _T("   LLDP node ID changed to %s\r\n"), m_lldpNodeId);
-							}
-							UnlockData();
-						}
-					}
-				}
-				else
-				{
-					LockData();
-					m_dwFlags &= ~NF_IS_LLDP;
-					UnlockData();
-				}
-
-            // Check for 802.1x support
-            if (CheckSNMPIntegerValue(pTransport, _T(".1.0.8802.1.1.1.1.1.1.0"), 1))
-            {
-					LockData();
-               m_dwFlags |= NF_IS_8021X;
-					UnlockData();
-            }
-            else
-            {
-					LockData();
-					m_dwFlags &= ~NF_IS_8021X;
-					UnlockData();
-            }
-
-            CheckOSPFSupport(pTransport);
-
-				// Get VRRP information
-				VrrpInfo *vrrpInfo = GetVRRPInfo(this);
-				if (vrrpInfo != NULL)
-				{
-					LockData();
-					m_dwFlags |= NF_IS_VRRP;
-					delete m_vrrpInfo;
-					m_vrrpInfo = vrrpInfo;
-					UnlockData();
-				}
-				else
-				{
-					LockData();
-					m_dwFlags &= ~NF_IS_VRRP;
-					UnlockData();
-				}
-         }
-         else
-         {
-            // Check for CheckPoint SNMP agent on port 161
-            DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_szName);
-				if (SnmpGet(SNMP_VERSION_1, pTransport, _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
-            {
-               LockData();
-               if (_tcscmp(m_szObjectId, _T(".1.3.6.1.4.1.2620.1.1")))
-               {
-                  nx_strncpy(m_szObjectId, _T(".1.3.6.1.4.1.2620.1.1"), MAX_OID_LEN * 4);
-                  bHasChanges = TRUE;
-               }
-
-               m_dwFlags |= NF_IS_SNMP | NF_IS_ROUTER;
-               m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
-               UnlockData();
-               SendPollerMsg(dwRqId, POLLER_INFO _T("   CheckPoint SNMP agent on port 161 is active\r\n"));
-            }
-         }
-			delete pTransport;
-      }
-
-skip_snmp_checks:
       // Check for CheckPoint SNMP agent on port 260
       DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_szName);
       if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && (m_dwIpAddr != 0))
@@ -1868,7 +1462,7 @@ skip_snmp_checks:
       if (dwOldFlags != m_dwFlags)
       {
          PostEvent(EVENT_NODE_FLAGS_CHANGED, m_dwId, "xx", dwOldFlags, m_dwFlags);
-         bHasChanges = TRUE;
+         hasChanges = true;
       }
 
       // Retrieve interface list
@@ -1876,13 +1470,13 @@ skip_snmp_checks:
       SendPollerMsg(dwRqId, _T("Capability check finished\r\n"));
 
 		if (updateInterfaceConfiguration(dwRqId, dwNetMask))
-			bHasChanges = TRUE;
+			hasChanges = true;
 
       m_tLastConfigurationPoll = time(NULL);
 
 		// Check node name
 		SendPollerMsg(dwRqId, _T("Checking node name\r\n"));
-		dwAddr = ntohl(_t_inet_addr(m_szName));
+		DWORD dwAddr = ntohl(_t_inet_addr(m_szName));
 		if ((g_dwFlags & AF_RESOLVE_NODE_NAMES) &&
 			 (dwAddr != INADDR_NONE) && 
 			 (dwAddr != INADDR_ANY) &&
@@ -1893,7 +1487,7 @@ skip_snmp_checks:
 			if (resolveName(FALSE))
 			{
 				SendPollerMsg(dwRqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_szName);
-				bHasChanges = TRUE;
+				hasChanges = true;
 			}
 			else
 			{
@@ -1909,7 +1503,7 @@ skip_snmp_checks:
 				if (resolveName(TRUE))
 				{
 					SendPollerMsg(dwRqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_szName);
-					bHasChanges = TRUE;
+					hasChanges = true;
 				}
 			}
 			else
@@ -1925,7 +1519,7 @@ skip_snmp_checks:
 		updateContainerMembership();
 
 		SendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n"), m_szName);
-		SendPollerMsg(dwRqId, _T("Node configuration was%schanged after poll\r\n"), bHasChanges ? _T(" ") : _T(" not "));
+		SendPollerMsg(dwRqId, _T("Node configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
 
 		m_dwDynamicFlags |= NDF_CONFIGURATION_POLL_PASSED;
    }
@@ -1938,7 +1532,7 @@ skip_snmp_checks:
    pollerUnlock();
    DbgPrintf(4, _T("Finished configuration poll for node %s (ID: %d)"), m_szName, m_dwId);
 
-   if (bHasChanges)
+   if (hasChanges)
    {
       LockData();
       Modify();
@@ -1946,11 +1540,461 @@ skip_snmp_checks:
    }
 }
 
+/**
+ * Configuration poll: check for NetXMS agent
+ */
+bool Node::confPollAgent(DWORD dwRqId)
+{
+   DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}"), m_szName, m_dwFlags, m_dwDynamicFlags);
+	if (((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)) ||
+	    (m_dwIpAddr == 0) || (m_dwFlags & NF_DISABLE_NXCP))
+		return false;
 
-//
-// Update interface configuration
-//
+	bool hasChanges = false;
 
+	SendPollerMsg(dwRqId, _T("   Checking NetXMS agent...\r\n"));
+   AgentConnection *pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+   setAgentProxy(pAgentConn);
+   DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_szName);
+   if (pAgentConn->connect(g_pServerKey))
+   {
+      DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connected"), m_szName);
+      LockData();
+      m_dwFlags |= NF_IS_NATIVE_AGENT;
+      if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
+      {
+         m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
+         PostEvent(EVENT_AGENT_OK, m_dwId, NULL);
+         SendPollerMsg(dwRqId, POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
+      }
+		else
+		{
+         SendPollerMsg(dwRqId, POLLER_INFO _T("   NetXMS native agent is active\r\n"));
+		}
+      UnlockData();
+
+		TCHAR buffer[MAX_RESULT_LENGTH];
+      if (pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, buffer) == ERR_SUCCESS)
+      {
+         LockData();
+         if (_tcscmp(m_szAgentVersion, buffer))
+         {
+            _tcscpy(m_szAgentVersion, buffer);
+            hasChanges = true;
+            SendPollerMsg(dwRqId, _T("   NetXMS agent version changed to %s\r\n"), m_szAgentVersion);
+         }
+         UnlockData();
+      }
+
+      if (pAgentConn->getParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, buffer) == ERR_SUCCESS)
+      {
+         LockData();
+         if (_tcscmp(m_szPlatformName, buffer))
+         {
+            _tcscpy(m_szPlatformName, buffer);
+            hasChanges = true;
+            SendPollerMsg(dwRqId, _T("   Platform name changed to %s\r\n"), m_szPlatformName);
+         }
+         UnlockData();
+      }
+
+      // Check IP forwarding status
+      if (pAgentConn->getParameter(_T("Net.IP.Forwarding"), 16, buffer) == ERR_SUCCESS)
+      {
+         if (_tcstoul(buffer, NULL, 10) != 0)
+            m_dwFlags |= NF_IS_ROUTER;
+         else
+            m_dwFlags &= ~NF_IS_ROUTER;
+      }
+
+		// Get uname
+		if (pAgentConn->getParameter(_T("System.Uname"), MAX_DB_STRING, buffer) == ERR_SUCCESS)
+		{
+			TranslateStr(buffer, _T("\r\n"), _T(" "));
+			TranslateStr(buffer, _T("\n"), _T(" "));
+			TranslateStr(buffer, _T("\r"), _T(" "));
+         LockData();
+         if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, buffer))
+         {
+				safe_free(m_sysDescription);
+            m_sysDescription = _tcsdup(buffer);
+            hasChanges = true;
+            SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
+         }
+         UnlockData();
+		}
+
+		StructArray<NXC_AGENT_PARAM> *plist;
+		StructArray<NXC_AGENT_TABLE> *tlist;
+      DWORD rcc = pAgentConn->getSupportedParameters(&plist, &tlist);
+		if (rcc == ERR_SUCCESS)
+		{
+			LockData();
+			delete m_paramList;
+			delete m_tableList;
+			m_paramList = plist;
+			m_tableList = tlist;
+			UnlockData();
+		}
+		else
+		{
+		   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%d"), m_szName, rcc);
+		}
+
+		checkAgentPolicyBinding(pAgentConn);
+
+      pAgentConn->disconnect();
+   }
+	else
+	{
+      DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect"), m_szName);
+	}
+   delete pAgentConn;
+   DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_szName);
+	return hasChanges;
+}
+
+/**
+ * SNMP walker callback which just counts number of varbinds
+ */
+static DWORD CountingSnmpWalkerCallback(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+	(*((int *)arg))++;
+	return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Configuration poll: check for SNMP
+ */
+bool Node::confPollSnmp(DWORD dwRqId)
+{
+	if (((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)) ||
+	    (m_dwIpAddr == 0) || (m_dwFlags & NF_DISABLE_SNMP))
+		return false;
+
+	bool hasChanges = false;
+
+   SendPollerMsg(dwRqId, _T("   Checking SNMP...\r\n"));
+   DbgPrintf(5, _T("ConfPoll(%s): calling SnmpCheckCommSettings()"), m_szName);
+	SNMP_Transport *pTransport = createSnmpTransport();
+	if (pTransport == NULL)
+	{
+		DbgPrintf(5, _T("ConfPoll(%s): unable to create SNMP transport"), m_szName);
+		return false;
+	}
+
+	SNMP_SecurityContext *newCtx = SnmpCheckCommSettings(pTransport, &m_snmpVersion, m_snmpSecurity);
+	if (newCtx != NULL)
+   {
+      LockData();
+		delete m_snmpSecurity;
+		m_snmpSecurity = newCtx;
+      m_dwFlags |= NF_IS_SNMP;
+      if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
+      {
+         m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
+         PostEvent(EVENT_SNMP_OK, m_dwId, NULL);
+         SendPollerMsg(dwRqId, POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
+      }
+		UnlockData();
+      SendPollerMsg(dwRqId, _T("   SNMP agent is active (version %s)\r\n"), 
+			(m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
+
+		TCHAR szBuffer[4096];
+		if (SnmpGet(m_snmpVersion, pTransport,
+						_T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, 4096, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+		{
+			LockData();
+			if (_tcscmp(m_szObjectId, szBuffer))
+			{
+				nx_strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
+				hasChanges = true;
+			}
+			UnlockData();
+		}
+
+		// Get system description
+		if (SnmpGet(m_snmpVersion, pTransport,
+		            _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, szBuffer, MAX_DB_STRING, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+		{
+			TranslateStr(szBuffer, _T("\r\n"), _T(" "));
+			TranslateStr(szBuffer, _T("\n"), _T(" "));
+			TranslateStr(szBuffer, _T("\r"), _T(" "));
+			LockData();
+         if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, szBuffer))
+         {
+				safe_free(m_sysDescription);
+            m_sysDescription = _tcsdup(szBuffer);
+            hasChanges = true;
+            SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
+         }
+			UnlockData();
+		}
+
+		// Select device driver
+		NetworkDeviceDriver *driver = FindDriverForNode(this, pTransport);
+		DbgPrintf(5, _T("ConfPoll(%s): selected device driver %s"), m_szName, driver->getName());
+		LockData();
+		if (driver != m_driver)
+		{
+			m_driver = driver;
+			SendPollerMsg(dwRqId, _T("   New network device driver selected: %s\r\n"), m_driver->getName());
+		}
+		UnlockData();
+
+		// Allow driver to gather additional info
+		m_driver->analyzeDevice(pTransport, m_szObjectId, &m_customAttributes);
+
+		// Get sysName
+		if (SnmpGet(m_snmpVersion, pTransport,
+		            _T(".1.3.6.1.2.1.1.5.0"), NULL, 0, szBuffer, MAX_DB_STRING, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+		{
+			LockData();
+			if ((m_sysName == NULL) || _tcscmp(m_sysName, szBuffer))
+         {
+				safe_free(m_sysName);
+            m_sysName = _tcsdup(szBuffer);
+            hasChanges = true;
+            SendPollerMsg(dwRqId, _T("   System name changed to %s\r\n"), m_sysName);
+         }
+			UnlockData();
+		}
+
+      // Check IP forwarding
+      if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.4.1.0"), 1))
+      {
+			LockData();
+         m_dwFlags |= NF_IS_ROUTER;
+			UnlockData();
+      }
+      else
+      {
+			LockData();
+         m_dwFlags &= ~NF_IS_ROUTER;
+			UnlockData();
+      }
+
+		checkIfXTable(pTransport);
+		checkBridgeMib(pTransport);
+
+      // Check for ENTITY-MIB support
+      if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.47.1.4.1.0"), NULL, 0, szBuffer, 4096, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+      {
+			LockData();
+         m_dwFlags |= NF_HAS_ENTITY_MIB;
+			UnlockData();
+
+			ComponentTree *components = BuildComponentTree(this, pTransport);
+			LockData();
+			if (m_components != NULL)
+				m_components->decRefCount();
+			m_components = components;
+			UnlockData();
+      }
+      else
+      {
+			LockData();
+         m_dwFlags &= ~NF_HAS_ENTITY_MIB;
+			if (m_components != NULL)
+			{
+				m_components->decRefCount();
+				m_components = NULL;
+			}
+			UnlockData();
+      }
+
+      // Check for printer MIB support
+		int count = 0;
+		SnmpEnumerate(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43.5.1.1.17"), CountingSnmpWalkerCallback, &count, FALSE);
+      if (count > 0)
+      {
+			LockData();
+         m_dwFlags |= NF_IS_PRINTER;
+			UnlockData();
+      }
+      else
+      {
+			LockData();
+         m_dwFlags &= ~NF_IS_PRINTER;
+			UnlockData();
+      }
+
+      // Check for CDP (Cisco Discovery Protocol) support
+      if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), 1))
+      {
+			LockData();
+         m_dwFlags |= NF_IS_CDP;
+			UnlockData();
+      }
+      else
+      {
+			LockData();
+         m_dwFlags &= ~NF_IS_CDP;
+			UnlockData();
+      }
+
+      // Check for NDP (Nortel Discovery Protocol) support
+      if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), 1))
+      {
+			LockData();
+         m_dwFlags |= NF_IS_NDP;
+			UnlockData();
+      }
+      else
+      {
+			LockData();
+         m_dwFlags &= ~NF_IS_NDP;
+			UnlockData();
+      }
+
+      // Check for LLDP (Link Layer Discovery Protocol) support
+		if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
+		{
+			LockData();
+			m_dwFlags |= NF_IS_LLDP;
+			UnlockData();
+
+			if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.1.0"), NULL, 0, szBuffer, 4096, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+			{
+				_tcscat(szBuffer, _T("@"));
+				int len = (int)_tcslen(szBuffer);
+				if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, &szBuffer[len], 4096 - len, SG_HSTRING_RESULT) == SNMP_ERR_SUCCESS)
+				{
+					LockData();
+					if ((m_lldpNodeId == NULL) || _tcscmp(m_lldpNodeId, szBuffer))
+					{
+						safe_free(m_lldpNodeId);
+						m_lldpNodeId = _tcsdup(szBuffer);
+						hasChanges = true;
+						SendPollerMsg(dwRqId, _T("   LLDP node ID changed to %s\r\n"), m_lldpNodeId);
+					}
+					UnlockData();
+				}
+			}
+		}
+		else
+		{
+			LockData();
+			m_dwFlags &= ~NF_IS_LLDP;
+			UnlockData();
+		}
+
+      // Check for 802.1x support
+      if (CheckSNMPIntegerValue(pTransport, _T(".1.0.8802.1.1.1.1.1.1.0"), 1))
+      {
+			LockData();
+         m_dwFlags |= NF_IS_8021X;
+			UnlockData();
+      }
+      else
+      {
+			LockData();
+			m_dwFlags &= ~NF_IS_8021X;
+			UnlockData();
+      }
+
+      CheckOSPFSupport(pTransport);
+
+		// Get VRRP information
+		VrrpInfo *vrrpInfo = GetVRRPInfo(this);
+		if (vrrpInfo != NULL)
+		{
+			LockData();
+			m_dwFlags |= NF_IS_VRRP;
+			delete m_vrrpInfo;
+			m_vrrpInfo = vrrpInfo;
+			UnlockData();
+		}
+		else
+		{
+			LockData();
+			m_dwFlags &= ~NF_IS_VRRP;
+			UnlockData();
+		}
+   }
+   else
+   {
+      // Check for CheckPoint SNMP agent on port 161
+      DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_szName);
+		TCHAR szBuffer[4096];
+		if (SnmpGet(SNMP_VERSION_1, pTransport, _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
+      {
+         LockData();
+         if (_tcscmp(m_szObjectId, _T(".1.3.6.1.4.1.2620.1.1")))
+         {
+            nx_strncpy(m_szObjectId, _T(".1.3.6.1.4.1.2620.1.1"), MAX_OID_LEN * 4);
+            hasChanges = true;
+         }
+
+         m_dwFlags |= NF_IS_SNMP | NF_IS_ROUTER;
+         m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
+         UnlockData();
+         SendPollerMsg(dwRqId, POLLER_INFO _T("   CheckPoint SNMP agent on port 161 is active\r\n"));
+      }
+   }
+	delete pTransport;
+	return hasChanges;
+}
+
+/**
+ * Configuration poll: check for BRIDGE MIB
+ */
+void Node::checkBridgeMib(SNMP_Transport *pTransport)
+{
+	TCHAR szBuffer[4096];
+   if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, 4096, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+   {
+		LockData();
+      m_dwFlags |= NF_IS_BRIDGE;
+		memcpy(m_baseBridgeAddress, szBuffer, 6);
+		UnlockData();
+
+		// Check for Spanning Tree (IEEE 802.1d) MIB support
+		if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.17.2.1.0"), 3))
+		{
+			LockData();
+			m_dwFlags |= NF_IS_STP;
+			UnlockData();
+		}
+		else
+		{
+			LockData();
+			m_dwFlags &= ~NF_IS_STP;
+			UnlockData();
+		}
+   }
+   else
+   {
+		LockData();
+      m_dwFlags &= ~(NF_IS_BRIDGE | NF_IS_STP);
+		UnlockData();
+   }
+}
+
+/**
+ * Configuration poll: check for ifXTable
+ */
+void Node::checkIfXTable(SNMP_Transport *pTransport)
+{
+	int count = 0;
+	SnmpEnumerate(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.31.1.1.1.1"), CountingSnmpWalkerCallback, &count, FALSE);
+   if (count > 0)
+   {
+		LockData();
+      m_dwFlags |= NF_HAS_IFXTABLE;
+		UnlockData();
+   }
+   else
+   {
+		LockData();
+      m_dwFlags &= ~NF_HAS_IFXTABLE;
+		UnlockData();
+   }
+}
+
+/**
+ * Update interface configuration
+ */
 BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 {
    InterfaceList *pIfList;

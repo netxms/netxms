@@ -840,6 +840,10 @@ protected:
 	void checkSubnetBinding(InterfaceList *pIfList);
 	void checkAgentPolicyBinding(AgentConnection *conn);
 	void updatePrimaryIpAddr();
+	bool confPollAgent(DWORD dwRqId);
+	bool confPollSnmp(DWORD dwRqId);
+	void checkBridgeMib(SNMP_Transport *pTransport);
+	void checkIfXTable(SNMP_Transport *pTransport);
 
 	void ApplySystemTemplates();
 	void ApplyUserTemplates();

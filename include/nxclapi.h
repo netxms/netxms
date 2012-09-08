@@ -231,27 +231,28 @@ typedef void * NXC_SESSION;
 // Node flags
 //
 
-#define NF_SYSTEM_FLAGS          0x0000FFFF
-#define NF_USER_FLAGS            0xFFFF0000
+#define NF_SYSTEM_FLAGS           0x0000FFFF
+#define NF_USER_FLAGS             0xFFFF0000
 
-#define NF_IS_SNMP               0x00000001
-#define NF_IS_NATIVE_AGENT       0x00000002
-#define NF_IS_BRIDGE             0x00000004
-#define NF_IS_ROUTER             0x00000008
-#define NF_IS_LOCAL_MGMT         0x00000010
-#define NF_IS_PRINTER            0x00000020
-#define NF_IS_OSPF               0x00000040
-#define NF_BEHIND_NAT            0x00000080
-#define NF_IS_CPSNMP             0x00000100  /* CheckPoint SNMP agent on port 260 */
-#define NF_IS_CDP                0x00000200
-#define NF_IS_NDP                0x00000400  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */
-#define NF_IS_SONMP              0x00000400  /* SONMP is an old name for NDP */
-#define NF_IS_LLDP				   0x00000800	/* Supports Link Layer Discovery Protocol */
-#define NF_IS_VRRP               0x00001000  /* VRRP support */
-#define NF_HAS_VLANS             0x00002000  /* VLAN information available */
-#define NF_IS_8021X              0x00004000  /* 802.1x support enabled on node */
-#define NF_IS_STP                0x00008000  /* Spanning Tree (IEEE 802.1d) enabled on node */
-#define NF_HAS_ENTITY_MIB        0x00010000  /* Supports ENTITY-MIB */
+#define NF_IS_SNMP                0x00000001
+#define NF_IS_NATIVE_AGENT        0x00000002
+#define NF_IS_BRIDGE              0x00000004
+#define NF_IS_ROUTER              0x00000008
+#define NF_IS_LOCAL_MGMT          0x00000010
+#define NF_IS_PRINTER             0x00000020
+#define NF_IS_OSPF                0x00000040
+#define NF_BEHIND_NAT             0x00000080
+#define NF_IS_CPSNMP              0x00000100  /* CheckPoint SNMP agent on port 260 */
+#define NF_IS_CDP                 0x00000200
+#define NF_IS_NDP                 0x00000400  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */
+#define NF_IS_SONMP               0x00000400  /* SONMP is an old name for NDP */
+#define NF_IS_LLDP                0x00000800 /* Supports Link Layer Discovery Protocol */
+#define NF_IS_VRRP                0x00001000  /* VRRP support */
+#define NF_HAS_VLANS              0x00002000  /* VLAN information available */
+#define NF_IS_8021X               0x00004000  /* 802.1x support enabled on node */
+#define NF_IS_STP                 0x00008000  /* Spanning Tree (IEEE 802.1d) enabled on node */
+#define NF_HAS_ENTITY_MIB         0x00010000  /* Supports ENTITY-MIB */
+#define NF_HAS_IFXTABLE           0x00020000  /* Supports ifXTable */
 
 #define NF_DISABLE_DISCOVERY_POLL 0x00400000
 #define NF_DISABLE_TOPOLOGY_POLL  0x00800000

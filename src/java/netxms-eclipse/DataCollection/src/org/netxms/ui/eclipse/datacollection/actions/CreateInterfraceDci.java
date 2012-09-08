@@ -148,7 +148,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 	{
 		Node node = iface.getParentNode();
 		if (node == null)
-			throw new NXCException(RCC.INTERNAL_ERROR);
+			throw new NXCException(RCC.INTERNAL_ERROR);		
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		DataCollectionConfiguration dcc;
@@ -164,8 +164,19 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 		final DataCollectionItem dci = (DataCollectionItem)dcc.findItem(dcc.createItem(), DataCollectionItem.class);
 		dci.setPollingInterval(pollingInterval);
 		dci.setRetentionTime(retentionTime);
-		dci.setOrigin(node.hasAgent() ? DataCollectionItem.AGENT : DataCollectionItem.SNMP);
-		dci.setDataType(DataCollectionItem.DT_UINT);
+		if (node.hasAgent())
+		{
+			dci.setOrigin(DataCollectionItem.AGENT);
+			dci.setDataType(DataCollectionItem.DT_UINT);
+		}
+		else
+		{
+			dci.setOrigin(DataCollectionItem.SNMP);
+			if (node.isIfXTableSupported())
+				dci.setDataType(((dciType != IFDCI_IN_ERRORS) && (dciType != IFDCI_OUT_ERRORS)) ? DataCollectionItem.DT_UINT64 : DataCollectionItem.DT_UINT);
+			else
+				dci.setDataType(DataCollectionItem.DT_UINT);
+		}
 		dci.setStatus(DataCollectionItem.ACTIVE);
 		dci.setDescription(updateDescription ? dciInfo.description.replaceAll("@@ifName@@", iface.getObjectName()) : dciInfo.description); //$NON-NLS-1$
 		dci.setDeltaCalculation(dciInfo.delta ? DataCollectionItem.DELTA_AVERAGE_PER_SECOND : DataCollectionItem.DELTA_NONE);
@@ -199,16 +210,16 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			switch(dciType)
 			{
 				case IFDCI_IN_BYTES:
-					dci.setName(".1.3.6.1.2.1.2.2.1.10." + iface.getIfIndex()); //$NON-NLS-1$
+					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.6." : ".1.3.6.1.2.1.2.2.1.10.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_OUT_BYTES:
-					dci.setName(".1.3.6.1.2.1.2.2.1.16." + iface.getIfIndex()); //$NON-NLS-1$
+					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.10." : ".1.3.6.1.2.1.2.2.1.16.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_IN_PACKETS:
-					dci.setName(".1.3.6.1.2.1.2.2.1.11." + iface.getIfIndex()); //$NON-NLS-1$
+					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.7." : ".1.3.6.1.2.1.2.2.1.11.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_OUT_PACKETS:
-					dci.setName(".1.3.6.1.2.1.2.2.1.17." + iface.getIfIndex()); //$NON-NLS-1$
+					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.11." : ".1.3.6.1.2.1.2.2.1.17.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_IN_ERRORS:
 					dci.setName(".1.3.6.1.2.1.2.2.1.14." + iface.getIfIndex()); //$NON-NLS-1$
