@@ -105,7 +105,7 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 				return stateText[((Alarm)element).getState()];
 			case AlarmList.COLUMN_SOURCE:
 				GenericObject object = session.findObjectById(((Alarm)element).getSourceObjectId());
-				return (object != null) ? object.getObjectName() : ("[" + Long.toString(((Alarm)element).getSourceObjectId()) + "]");
+				return (object != null) ? object.getObjectName() : ("[" + Long.toString(((Alarm)element).getSourceObjectId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case AlarmList.COLUMN_MESSAGE:
 				return ((Alarm)element).getMessage();
 			case AlarmList.COLUMN_COUNT:
@@ -117,7 +117,7 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 					return null;
 				long userId = (((Alarm)element).getState() == Alarm.STATE_ACKNOWLEDGED) ? ((Alarm)element).getAckByUser() : ((Alarm)element).getResolvedByUser();
 				AbstractUserObject user = session.findUserDBObjectById(userId);
-				return (user != null) ? user.getName() : ("[" + Long.toString(((Alarm)element).getAckByUser()) + "]");
+				return (user != null) ? user.getName() : ("[" + Long.toString(((Alarm)element).getAckByUser()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case AlarmList.COLUMN_CREATED:
 				return RegionalSettings.getDateTimeFormat().format(((Alarm)element).getCreationTime());
 			case AlarmList.COLUMN_LASTCHANGE:

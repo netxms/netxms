@@ -52,6 +52,7 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditThresholdDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -68,7 +69,7 @@ public class Thresholds extends PropertyPage
 	public static final int COLUMN_OPERATION = 0;
 	public static final int COLUMN_EVENT = 1;
 	
-	private static final String COLUMN_SETTINGS_PREFIX = "Thresholds.ThresholdList";
+	private static final String COLUMN_SETTINGS_PREFIX = "Thresholds.ThresholdList"; //$NON-NLS-1$
 	
 	private DataCollectionItem dci;
 	private List<Threshold> thresholds;
@@ -88,7 +89,7 @@ public class Thresholds extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		// Initiate loading of event manager plugin if it was not loaded before
-		Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter");
+		Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 		
 		dci = (DataCollectionItem)getElement().getAdapter(DataCollectionItem.class);
 		thresholds = new ArrayList<Threshold>(dci.getThresholds().size());
@@ -104,7 +105,7 @@ public class Thresholds extends PropertyPage
       dialogArea.setLayout(layout);
       
       instance = new LabeledText(dialogArea, SWT.NONE);
-      instance.setLabel("Instance");
+      instance.setLabel(Messages.Thresholds_Instance);
       instance.setText(dci.getInstance());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -112,7 +113,7 @@ public class Thresholds extends PropertyPage
       instance.setLayoutData(gd);
       
       checkAllThresholds = new Button(dialogArea, SWT.CHECK);
-      checkAllThresholds.setText("Process &all thresholds");
+      checkAllThresholds.setText(Messages.Thresholds_ProcessAll);
       checkAllThresholds.setSelection(dci.isProcessAllThresholds());
       
       Composite thresholdArea = new Composite(dialogArea, SWT.NONE);
@@ -130,7 +131,7 @@ public class Thresholds extends PropertyPage
 		layout.numColumns = 2;
       thresholdArea.setLayout(layout);
 	
-      new Label(thresholdArea, SWT.NONE).setText("Thresholds");
+      new Label(thresholdArea, SWT.NONE).setText(Messages.Thresholds_Thresholds);
       
       thresholdList = new TableViewer(thresholdArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       gd = new GridData();
@@ -158,7 +159,7 @@ public class Thresholds extends PropertyPage
       leftButtons.setLayout(buttonsLayout);
 
       upButton = new Button(leftButtons, SWT.PUSH);
-      upButton.setText("&Up");
+      upButton.setText(Messages.Thresholds_Up);
       upButton.setEnabled(false);
       upButton.addSelectionListener(new SelectionListener() {
 			private static final long serialVersionUID = 1L;
@@ -177,7 +178,7 @@ public class Thresholds extends PropertyPage
       });
       
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText("&Down");
+      downButton.setText(Messages.Thresholds_Down);
       downButton.setEnabled(false);
       downButton.addSelectionListener(new SelectionListener() {
 			private static final long serialVersionUID = 1L;
@@ -210,7 +211,7 @@ public class Thresholds extends PropertyPage
       buttons.setLayout(buttonsLayout);
       
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("&Add...");
+      addButton.setText(Messages.Thresholds_Add);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -231,7 +232,7 @@ public class Thresholds extends PropertyPage
 		});
       
       modifyButton = new Button(buttons, SWT.PUSH);
-      modifyButton.setText("&Edit...");
+      modifyButton.setText(Messages.Thresholds_Edit);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       modifyButton.setLayoutData(rd);
@@ -253,7 +254,7 @@ public class Thresholds extends PropertyPage
       });
       
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("&Delete");
+      deleteButton.setText(Messages.Thresholds_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -399,11 +400,11 @@ public class Thresholds extends PropertyPage
 		table.setHeaderVisible(true);
 		
 		TableColumn column = new TableColumn(table, SWT.LEFT);
-		column.setText("Expression");
+		column.setText(Messages.Thresholds_Expression);
 		column.setWidth(200);
 		
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText("Event");
+		column.setText(Messages.Thresholds_Event);
 		column.setWidth(150);
 		
 		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
@@ -448,11 +449,11 @@ public class Thresholds extends PropertyPage
 		dci.getThresholds().clear();
 		dci.getThresholds().addAll(thresholds);
 		
-		new ConsoleJob("Update thresholds for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.Thresholds_JobTitle + dci.getId(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update thresholds";
+				return Messages.Thresholds_JobError;
 			}
 
 			@Override

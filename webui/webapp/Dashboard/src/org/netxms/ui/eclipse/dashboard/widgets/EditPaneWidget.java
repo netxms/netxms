@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
@@ -81,7 +82,7 @@ public class EditPaneWidget extends Canvas implements PaintListener
 	 */
 	private void createActions()
 	{
-		actionEdit = new Action("&Edit") {
+		actionEdit = new Action(Messages.EditPaneWidget_Edit) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -92,7 +93,7 @@ public class EditPaneWidget extends Canvas implements PaintListener
 		};
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 		
-		actionEditXml = new Action("Edit &XML") {
+		actionEditXml = new Action(Messages.EditPaneWidget_EditXML) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -103,7 +104,7 @@ public class EditPaneWidget extends Canvas implements PaintListener
 		};
 		actionEditXml.setImageDescriptor(SharedIcons.XML);
 		
-		actionDelete = new Action("&Delete") {
+		actionDelete = new Action(Messages.EditPaneWidget_Delete) {
 			private static final long serialVersionUID = 1L;
 
 			@Override

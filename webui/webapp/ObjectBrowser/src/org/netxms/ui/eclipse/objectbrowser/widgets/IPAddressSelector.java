@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.IPAddressSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
@@ -48,7 +49,7 @@ public class IPAddressSelector extends AbstractSelector
 	public IPAddressSelector(Composite parent, int style)
 	{
 		super(parent, style, false);
-		setText("<none>");
+		setText(Messages.IPAddressSelector_None);
 		session = (NXCSession)ConsoleSharedData.getSession();
 	}
 
@@ -69,7 +70,7 @@ public class IPAddressSelector extends AbstractSelector
 		else
 		{
 			node = null;
-			setText("<none>");
+			setText(Messages.IPAddressSelector_None);
 		}
 	}
 

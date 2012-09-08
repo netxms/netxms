@@ -66,11 +66,11 @@ public class CreateBusinessService implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.CreateBusinessService_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				session.createObject(new NXCObjectCreationData(GenericObject.OBJECT_BUSINESSSERVICE, dlg.getName(), parentId));
 			}
 

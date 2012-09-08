@@ -34,6 +34,7 @@ import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.eventmanager.Activator;
+import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.SyslogLabelProvider;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.SyslogMonitorFilter;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -45,7 +46,7 @@ import org.netxms.ui.eclipse.views.AbstractTraceView;
  */
 public class SyslogMonitor extends AbstractTraceView implements SessionListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.eventmanager.views.SyslogMonitor";
+	public static final String ID = "org.netxms.ui.eclipse.eventmanager.views.SyslogMonitor"; //$NON-NLS-1$
 	
 	public static final int COLUMN_TIMESTAMP = 0;
 	public static final int COLUMN_SOURCE = 1;
@@ -80,7 +81,7 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 		super.init(site, memento);
 		if (memento != null)
 		{
-			new ConsoleJob("Subscribing to syslog events", null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.SyslogMonitor_SubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -90,7 +91,7 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot subscribe to syslog events";
+					return Messages.SyslogMonitor_SubscribeJob_Error;
 				}
 			}.start();
 		}
@@ -106,16 +107,16 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 		viewer.setLabelProvider(labelProvider);
 		
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		labelProvider.setShowColor(ps.getBoolean("SyslogMonitor.showColor"));
-		labelProvider.setShowIcons(ps.getBoolean("SyslogMonitor.showIcons"));
+		labelProvider.setShowColor(ps.getBoolean("SyslogMonitor.showColor")); //$NON-NLS-1$
+		labelProvider.setShowIcons(ps.getBoolean("SyslogMonitor.showIcons")); //$NON-NLS-1$
 		
-		addColumn("Timestamp", 150);
-		addColumn("Source", 200);
-		addColumn("Severity", 90);
-		addColumn("Facility", 90);
-		addColumn("Host Name", 130);
-		addColumn("Tag", 90);
-		addColumn("Message", 600);
+		addColumn(Messages.SyslogMonitor_ColTimestamp, 150);
+		addColumn(Messages.SyslogMonitor_ColSource, 200);
+		addColumn(Messages.SyslogMonitor_ColSeverity, 90);
+		addColumn(Messages.SyslogMonitor_ColFacility, 90);
+		addColumn(Messages.SyslogMonitor_ColHostName, 130);
+		addColumn(Messages.SyslogMonitor_ColTag, 90);
+		addColumn(Messages.SyslogMonitor_ColMessage, 600);
 		
 		setFilter(new SyslogMonitorFilter());
 	}
@@ -128,7 +129,7 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 	{
 		super.createActions();
 		
-		actionShowColor = new Action("Show status &colors", Action.AS_CHECK_BOX) {
+		actionShowColor = new Action(Messages.SyslogMonitor_ShowStatusColors, Action.AS_CHECK_BOX) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -140,7 +141,7 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 		};
 		actionShowColor.setChecked(labelProvider.isShowColor());
 		
-		actionShowIcons = new Action("Show status &icons", Action.AS_CHECK_BOX) {
+		actionShowIcons = new Action(Messages.SyslogMonitor_ShowStatusIcons, Action.AS_CHECK_BOX) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -190,12 +191,12 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 	public void dispose()
 	{
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		ps.setValue("SyslogMonitor.showColor", labelProvider.isShowColor());
-		ps.setValue("SyslogMonitor.showIcons", labelProvider.isShowIcons());
+		ps.setValue("SyslogMonitor.showColor", labelProvider.isShowColor()); //$NON-NLS-1$
+		ps.setValue("SyslogMonitor.showIcons", labelProvider.isShowIcons()); //$NON-NLS-1$
 		
 		session.removeListener(this);
 		
-		new ConsoleJob("Unsubscribe from syslog events", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SyslogMonitor_UnsubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -205,7 +206,7 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot unsubscribe from syslog events";
+				return Messages.SyslogMonitor_UnsubscribeJob_Error;
 			}
 		}.start();
 		super.dispose();
@@ -226,6 +227,6 @@ public class SyslogMonitor extends AbstractTraceView implements SessionListener
 	@Override
 	protected String getConfigPrefix()
 	{
-		return "SyslogMonitor";
+		return "SyslogMonitor"; //$NON-NLS-1$
 	}	
 }

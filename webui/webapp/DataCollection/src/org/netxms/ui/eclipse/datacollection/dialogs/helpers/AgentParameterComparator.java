@@ -29,7 +29,7 @@ public class AgentParameterComparator extends ViewerComparator
 		AgentParameter p1 = (AgentParameter)e1;
 		AgentParameter p2 = (AgentParameter)e2;
 
-		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case AbstractSelectParamDlg.COLUMN_NAME:
 				result = p1.getName().compareToIgnoreCase(p2.getName());

@@ -53,6 +53,7 @@ import org.netxms.client.datacollection.ColumnDefinition;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditColumnDialog;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.TableColumnLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -93,7 +94,7 @@ public class TableColumns extends PropertyPage
       dialogArea.setLayout(layout);
 
       instanceColumn = new LabeledText(dialogArea, SWT.NONE);
-      instanceColumn.setLabel("Instance column");
+      instanceColumn.setLabel(Messages.TableColumns_InstanceColumn);
       instanceColumn.setText(dci.getInstanceColumn());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -115,7 +116,7 @@ public class TableColumns extends PropertyPage
 		layout.numColumns = 2;
       columnListArea.setLayout(layout);
 	
-      new Label(columnListArea, SWT.NONE).setText("Columns");
+      new Label(columnListArea, SWT.NONE).setText(Messages.TableColumns_Columns);
       
       columnList = new TableViewer(columnListArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       gd = new GridData();
@@ -157,7 +158,7 @@ public class TableColumns extends PropertyPage
       buttons.setLayout(buttonsLayout);
       
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("&Add...");
+      addButton.setText(Messages.TableColumns_Add);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -178,7 +179,7 @@ public class TableColumns extends PropertyPage
 		});
       
       modifyButton = new Button(buttons, SWT.PUSH);
-      modifyButton.setText("&Edit...");
+      modifyButton.setText(Messages.TableColumns_Edit);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       modifyButton.setLayoutData(rd);
@@ -200,7 +201,7 @@ public class TableColumns extends PropertyPage
       });
       
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("&Delete");
+      deleteButton.setText(Messages.TableColumns_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -253,19 +254,19 @@ public class TableColumns extends PropertyPage
 		table.setHeaderVisible(true);
 		
 		TableColumn column = new TableColumn(table, SWT.LEFT);
-		column.setText("Name");
+		column.setText(Messages.TableColumns_Name);
 		column.setWidth(150);
 		
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText("Display Name");
+		column.setText(Messages.TableColumns_DisplayName);
 		column.setWidth(150);
 		
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText("Type");
+		column.setText(Messages.TableColumns_Type);
 		column.setWidth(80);
 		
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText("SNMP OID");
+		column.setText(Messages.TableColumns_OID);
 		column.setWidth(200);
 		
 		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
@@ -323,14 +324,14 @@ public class TableColumns extends PropertyPage
 	 */
 	private void addColumn()
 	{
-		final InputDialog idlg = new InputDialog(getShell(), "New column definition", "Column name", "", new IInputValidator() {
+		final InputDialog idlg = new InputDialog(getShell(), Messages.TableColumns_NewColumn, Messages.TableColumns_ColumnName, "", new IInputValidator() { //$NON-NLS-1$
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public String isValid(String newText)
 			{
 				if (newText.trim().isEmpty())
-					return "Please enter non-empty column name";
+					return Messages.TableColumns_WarningText;
 				return null;
 			}
 		});
@@ -361,11 +362,11 @@ public class TableColumns extends PropertyPage
 		dci.getColumns().clear();
 		dci.getColumns().addAll(columns);
 		
-		new ConsoleJob("Update table columns for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.TableColumns_JobTitle + dci.getId(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update table columns";
+				return Messages.TableColumns_JobError;
 			}
 
 			@Override

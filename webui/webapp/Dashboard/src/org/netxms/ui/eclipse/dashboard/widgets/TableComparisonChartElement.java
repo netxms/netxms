@@ -34,6 +34,7 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.DataChart;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableComparisonChartConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -101,7 +102,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 		
 		updateInProgress = true;
 		
-		ConsoleJob job = new ConsoleJob("Get DCI values for table comparision chart", viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.TableComparisonChartElement_JobTitle, viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -120,7 +121,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get DCI values for comparision chart";
+				return Messages.TableComparisonChartElement_JobError;
 			}
 	
 			@Override

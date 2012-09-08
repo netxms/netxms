@@ -106,11 +106,12 @@ public class SelectServerFileDialog extends Dialog
 			}
 		});
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final ServerFile[] files = ((NXCSession)ConsoleSharedData.getSession()).listServerFiles();
+				final ServerFile[] files = session.listServerFiles();
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()

@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
@@ -62,19 +63,19 @@ public class Layout extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		comboHorizontalAlign = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY, 
-				"Horizontal alignment", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		comboHorizontalAlign.add("FILL");
-		comboHorizontalAlign.add("CENTER");
-		comboHorizontalAlign.add("LEFT");
-		comboHorizontalAlign.add("RIGHT");
+				Messages.Layout_HAlign, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		comboHorizontalAlign.add(Messages.Layout_Fill);
+		comboHorizontalAlign.add(Messages.Layout_Center);
+		comboHorizontalAlign.add(Messages.Layout_Left);
+		comboHorizontalAlign.add(Messages.Layout_Right);
 		comboHorizontalAlign.select(elementLayout.horizontalAlignment);
 		
 		comboVerticalAlign = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY, 
-				"Vertical alignment", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		comboVerticalAlign.add("FILL");
-		comboVerticalAlign.add("CENTER");
-		comboVerticalAlign.add("TOP");
-		comboVerticalAlign.add("BOTTOM");
+				Messages.Layout_VAlign, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		comboVerticalAlign.add(Messages.Layout_Fill);
+		comboVerticalAlign.add(Messages.Layout_Center);
+		comboVerticalAlign.add(Messages.Layout_Top);
+		comboVerticalAlign.add(Messages.Layout_Bottom);
 		comboVerticalAlign.select(elementLayout.vertcalAlignment);
 		
 		final WidgetFactory factory = new WidgetFactory() {
@@ -89,21 +90,21 @@ public class Layout extends PropertyPage
 		};
 		
 		spinnerHorizontalSpan = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
-				"Horizontal span", WidgetHelper.DEFAULT_LAYOUT_DATA);
+				Messages.Layout_HSpan, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		spinnerHorizontalSpan.setSelection(elementLayout.horizontalSpan);
 
 		spinnerVerticalSpan = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
-				"Vertical span", WidgetHelper.DEFAULT_LAYOUT_DATA);
+				Messages.Layout_VSpan, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		spinnerVerticalSpan.setSelection(elementLayout.verticalSpan);
 
 		spinnerWidthHint = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
-				"Width hint", WidgetHelper.DEFAULT_LAYOUT_DATA);
+				Messages.Layout_WHint, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		spinnerWidthHint.setMinimum(-1);
 		spinnerWidthHint.setMaximum(8192);
 		spinnerWidthHint.setSelection(elementLayout.widthHint);
 
 		spinnerHeightHint = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
-				"Height hint", WidgetHelper.DEFAULT_LAYOUT_DATA);
+				Messages.Layout_HHint, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		spinnerHeightHint.setMinimum(-1);
 		spinnerHeightHint.setMaximum(8192);
 		spinnerHeightHint.setSelection(elementLayout.heightHint);

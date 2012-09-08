@@ -24,6 +24,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.CustomWidgetConfig;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -51,7 +52,7 @@ public class CustomWidget extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		className = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
-		className.setLabel("Class name");
+		className.setLabel(Messages.CustomWidget_ClassName);
 		className.setText(config.getClassName());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

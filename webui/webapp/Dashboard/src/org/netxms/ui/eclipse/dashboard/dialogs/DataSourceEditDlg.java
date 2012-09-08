@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -67,7 +68,7 @@ public class DataSourceEditDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Edit Data Source");
+		newShell.setText(Messages.DataSourceEditDlg_Title);
 	}
 
 	/* (non-Javadoc)
@@ -84,7 +85,7 @@ public class DataSourceEditDlg extends Dialog
 		dialogArea.setLayout(layout);
 		
 		dciSelector = new DciSelector(dialogArea, SWT.NONE, false);
-		dciSelector.setLabel("Data collection item");
+		dciSelector.setLabel(Messages.DataSourceEditDlg_DCI);
 		dciSelector.setDciId(dci.nodeId, dci.dciId);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -93,7 +94,7 @@ public class DataSourceEditDlg extends Dialog
 		dciSelector.setLayoutData(gd);
 		
 		name = new LabeledText(dialogArea, SWT.NONE);
-		name.setLabel("Display name");
+		name.setLabel(Messages.DataSourceEditDlg_DisplayName);
 		name.setText(dci.name);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -101,7 +102,7 @@ public class DataSourceEditDlg extends Dialog
 		name.setLayoutData(gd);
 		
 		Group colorGroup = new Group(dialogArea, SWT.NONE);
-		colorGroup.setText("Color");
+		colorGroup.setText(Messages.DataSourceEditDlg_Color);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -112,7 +113,7 @@ public class DataSourceEditDlg extends Dialog
 		colorGroup.setLayout(layout);
 		
 		colorAuto = new Button(colorGroup, SWT.RADIO);
-		colorAuto.setText("&Automatic color");
+		colorAuto.setText(Messages.DataSourceEditDlg_AutoColor);
 		colorAuto.setSelection(dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
 		gd = new GridData();
 		gd.horizontalSpan = 2;
@@ -134,7 +135,7 @@ public class DataSourceEditDlg extends Dialog
 		});
 		
 		colorCustom = new Button(colorGroup, SWT.RADIO);
-		colorCustom.setText("&Custom color:");
+		colorCustom.setText(Messages.DataSourceEditDlg_CustColor);
 		colorCustom.setSelection(!dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
 		colorCustom.addSelectionListener(new SelectionListener() {
 			private static final long serialVersionUID = 1L;
@@ -178,7 +179,7 @@ public class DataSourceEditDlg extends Dialog
 		}
 		else
 		{
-			dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(colorSelector.getColorValue()));
+			dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(colorSelector.getColorValue())); //$NON-NLS-1$
 		}
 		super.okPressed();
 	}

@@ -38,6 +38,7 @@ import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.ui.eclipse.snmp.Activator;
+import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.widgets.MibBrowser;
 import org.netxms.ui.eclipse.snmp.widgets.MibObjectDetails;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -75,7 +76,7 @@ public class MibSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select MIB Object");
+		newShell.setText(Messages.MibSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -100,7 +101,7 @@ public class MibSelectionDialog extends Dialog
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
 		
-		oid = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 500, "Object identifier (OID)", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		oid = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 500, Messages.MibSelectionDialog_OID, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 		oid.addModifyListener(new ModifyListener() {
 			private static final long serialVersionUID = 1L;
 
@@ -126,7 +127,7 @@ public class MibSelectionDialog extends Dialog
 		mibTreeGroup.setLayoutData(gd);
 		
 		Label label = new Label(mibTreeGroup, SWT.NONE);
-		label.setText("MIB tree");
+		label.setText(Messages.MibSelectionDialog_MIBTree);
 		
 		mibTree = new MibBrowser(mibTreeGroup, SWT.BORDER);
 		gd = new GridData();
@@ -172,7 +173,7 @@ public class MibSelectionDialog extends Dialog
 		if ((object != null) && updateObjectId)
 		{
 			SnmpObjectId objectId = object.getObjectId(); 
-			oid.setText((objectId != null) ? objectId.toString() : "");
+			oid.setText((objectId != null) ? objectId.toString() : ""); //$NON-NLS-1$
 		}
 		details.setObject(object);
 	}
@@ -186,7 +187,7 @@ public class MibSelectionDialog extends Dialog
 		selectedObject = mibTree.getSelection();
 		if (selectedObject == null)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please select MIB object before pressing OK");
+			MessageDialog.openWarning(getShell(), Messages.MibSelectionDialog_Warning, Messages.MibSelectionDialog_WarningText);
 			return;
 		}
 		saveSettings();

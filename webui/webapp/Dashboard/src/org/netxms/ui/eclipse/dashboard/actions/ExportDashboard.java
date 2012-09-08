@@ -39,6 +39,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -70,9 +71,9 @@ public class ExportDashboard implements IObjectActionDelegate
 			return;
 		
 		FileDialog dlg = new FileDialog(wbPart.getSite().getShell(), SWT.SAVE);
-		dlg.setText("Select File");
-		dlg.setFilterExtensions(new String[] { "*.xml", "*.*" });
-		dlg.setFilterNames(new String[] { "XML files", "All files" });
+		dlg.setText(Messages.ExportDashboard_SelectFile);
+		dlg.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+		dlg.setFilterNames(new String[] { Messages.ExportDashboard_XMLFiles, Messages.ExportDashboard_AllFiles });
 		final String fileName = dlg.open();
 		if (fileName == null)
 			return;
@@ -80,22 +81,22 @@ public class ExportDashboard implements IObjectActionDelegate
 		final Set<Long> objects = new HashSet<Long>();
 		final Map<Long, Long> items = new HashMap<Long, Long>();
 
-		final StringBuilder xml = new StringBuilder("<dashboard>\n\t<name>");
+		final StringBuilder xml = new StringBuilder("<dashboard>\n\t<name>"); //$NON-NLS-1$
 		xml.append(dashboard.getObjectName());
-		xml.append("</name>\n\t<columns>");
+		xml.append("</name>\n\t<columns>"); //$NON-NLS-1$
 		xml.append(dashboard.getNumColumns());
-		xml.append("</columns>\n\t<options>");
+		xml.append("</columns>\n\t<options>"); //$NON-NLS-1$
 		xml.append(dashboard.getOptions());
-		xml.append("</options>\n\t<elements>\n");
+		xml.append("</options>\n\t<elements>\n"); //$NON-NLS-1$
 		for(DashboardElement e : dashboard.getElements())
 		{
-			xml.append("\t\t<dashboardElement>\n\t\t\t<type>");
+			xml.append("\t\t<dashboardElement>\n\t\t\t<type>"); //$NON-NLS-1$
 			xml.append(e.getType());
-			xml.append("</type>\n");
+			xml.append("</type>\n"); //$NON-NLS-1$
 			xml.append(e.getLayout());
 			xml.append('\n');
 			xml.append(e.getData());
-			xml.append("\n\t\t</dashboardElement>\n");
+			xml.append("\n\t\t</dashboardElement>\n"); //$NON-NLS-1$
 
 			DashboardElementConfig config = (DashboardElementConfig)Platform.getAdapterManager().getAdapter(e, DashboardElementConfig.class);
 			if (config != null)
@@ -104,30 +105,30 @@ public class ExportDashboard implements IObjectActionDelegate
 				items.putAll(config.getDataCollectionItems());
 			}
 		}
-		xml.append("\t</elements>\n");
+		xml.append("\t</elements>\n"); //$NON-NLS-1$
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Export dashbnoard configuration", wbPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.ExportDashboard_JobTitle, wbPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				// Add object ID mapping
-				xml.append("\t<objectMap>\n");
+				xml.append("\t<objectMap>\n"); //$NON-NLS-1$
 				for(Long id : objects)
 				{
 					GenericObject o = session.findObjectById(id);
 					if (o != null)
 					{
-						xml.append("\t\t<object id=\"");
+						xml.append("\t\t<object id=\""); //$NON-NLS-1$
 						xml.append(id);
-						xml.append("\" class=\"");
+						xml.append("\" class=\""); //$NON-NLS-1$
 						xml.append(o.getObjectClass());
-						xml.append("\">");
+						xml.append("\">"); //$NON-NLS-1$
 						xml.append(o.getObjectName());
-						xml.append("</object>\n");
+						xml.append("</object>\n"); //$NON-NLS-1$
 					}
 				}
-				xml.append("\t</objectMap>\n\t<dciMap>\n");
+				xml.append("\t</objectMap>\n\t<dciMap>\n"); //$NON-NLS-1$
 		
 				// Add DCI ID mapping
 				long[] nodeList = new long[items.size()];
@@ -142,17 +143,17 @@ public class ExportDashboard implements IObjectActionDelegate
 				String[] names = session.resolveDciNames(nodeList, dciList);
 				for(int i = 0; i < names.length; i++)
 				{
-					xml.append("\t\t<dci id=\"");
+					xml.append("\t\t<dci id=\""); //$NON-NLS-1$
 					xml.append(dciList[i]);
-					xml.append("\" node=\"");
+					xml.append("\" node=\""); //$NON-NLS-1$
 					xml.append(nodeList[i]);
-					xml.append("\">");
+					xml.append("\">"); //$NON-NLS-1$
 					xml.append(names[i]);
-					xml.append("</dci>\n");
+					xml.append("</dci>\n"); //$NON-NLS-1$
 				}
-				xml.append("\t</dciMap>\n</dashboard>\n");
+				xml.append("\t</dciMap>\n</dashboard>\n"); //$NON-NLS-1$
 				
-				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8");
+				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8"); //$NON-NLS-1$
 				try
 				{
 					out.write(xml.toString());
@@ -166,7 +167,7 @@ public class ExportDashboard implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot save export file";
+				return Messages.ExportDashboard_ErrorText;
 			}
 		}.start();
 	}

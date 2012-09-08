@@ -32,6 +32,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.DciRemoveConfirmationDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ChildObjectListDialog;
@@ -68,11 +69,11 @@ public class RemoveTemplate implements IObjectActionDelegate
 			if (dlg2.open() == Window.OK)
 			{
 				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				new ConsoleJob("Remove template", viewPart, Activator.PLUGIN_ID, null) {
+				new ConsoleJob(Messages.RemoveTemplate_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 					@Override
 					protected String getErrorMessage()
 					{
-						return "Cannot remove template";
+						return Messages.RemoveTemplate_JobError;
 					}
 	
 					@Override

@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.eventmanager.Activator;
+import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.dialogs.helpers.EventListFilter;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateComparator;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateLabelProvider;
@@ -78,7 +79,7 @@ public class EventSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select Event");
+		newShell.setText(Messages.EventSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -105,18 +106,18 @@ public class EventSelectionDialog extends Dialog
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText("Filter:");
+		new Label(dialogArea, SWT.NONE).setText(Messages.EventSelectionDialog_Filter);
 		
 		filterText = new Text(dialogArea, SWT.NONE);
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		filterText.setLayoutData(gd);
-		final String filterString = settings.get("SelectEvent.Filter");
+		final String filterString = settings.get("SelectEvent.Filter"); //$NON-NLS-1$
 		if (filterString != null)
 			filterText.setText(filterString);
 		
-		final String[] names = { "Code", "Name" };
+		final String[] names = { Messages.EventSelectionDialog_Code, Messages.EventSelectionDialog_Name };
 		final int[] widths = { 80, 350 };
 		eventList = new SortableTableViewer(dialogArea, names, widths, 1, SWT.UP, 
 				SWT.BORDER | SWT.FULL_SELECTION | (multiSelection ? SWT.MULTI : SWT.SINGLE) | SWT.H_SCROLL | SWT.V_SCROLL);

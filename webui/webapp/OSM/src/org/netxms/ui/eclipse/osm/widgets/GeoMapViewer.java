@@ -61,6 +61,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.osm.Activator;
 import org.netxms.ui.eclipse.osm.GeoLocationCache;
 import org.netxms.ui.eclipse.osm.GeoLocationCacheListener;
+import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
@@ -85,7 +86,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private static final Color BORDER_COLOR = new Color(Display.getCurrent(), 128, 128, 128);
 	private static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 0, 0, 255);
 	
-	private static final Font TITLE_FONT = new Font(Display.getCurrent(), "Verdana", 10, SWT.BOLD); 
+	private static final Font TITLE_FONT = new Font(Display.getCurrent(), "Verdana", 10, SWT.BOLD);  //$NON-NLS-1$
 
 	private static final int LABEL_ARROW_HEIGHT = 20;
 	private static final int LABEL_ARROW_OFFSET = 10;
@@ -286,7 +287,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 
 		final Point mapSize = new Point(accessor.getMapWidth(), accessor.getMapHeight());
 		final GeoLocation centerPoint = accessor.getCenterPoint();
-		ConsoleJob job = new ConsoleJob("Download map image", viewPart, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.GeoMapViewer_DownloadJob_Title, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -316,7 +317,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot download map image";
+				return Messages.GeoMapViewer_DownloadError;
 			}
 		};
 		job.setUser(false);
@@ -330,7 +331,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 */
 	private void loadMissingTiles(final TileSet tiles)
 	{
-		ConsoleJob job = new ConsoleJob("Load missing map tiles", viewPart, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.GeoMapViewer_LoadMissingJob_Title, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -356,7 +357,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot download map image";
+				return Messages.GeoMapViewer_DownloadError;
 			}
 		};
 		job.setUser(false);

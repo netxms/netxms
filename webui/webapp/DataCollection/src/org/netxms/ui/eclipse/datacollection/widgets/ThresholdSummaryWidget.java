@@ -34,6 +34,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.ThresholdTreeComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.ThresholdTreeContentProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.ThresholdTreeLabelProvider;
@@ -69,7 +70,7 @@ public class ThresholdSummaryWidget extends Composite
 		this.viewPart = viewPart;
 		setLayout(new FillLayout());
 
-		final String[] names = { "Node",  "Status", "Parameter", "Value", "Condition", "Since" };
+		final String[] names = { Messages.ThresholdSummaryWidget_Node,  Messages.ThresholdSummaryWidget_Status, Messages.ThresholdSummaryWidget_Parameter, Messages.ThresholdSummaryWidget_Value, Messages.ThresholdSummaryWidget_Condition, Messages.ThresholdSummaryWidget_Since };
 		final int[] widths = { 200, 100, 250, 100, 100, 140 };
 		viewer = new SortableTreeViewer(this, names, widths, COLUMN_NODE, SWT.UP, SWT.FULL_SELECTION);
 		viewer.setContentProvider(new ThresholdTreeContentProvider());
@@ -121,7 +122,7 @@ public class ThresholdSummaryWidget extends Composite
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final long rootId = object.getObjectId();
-		ConsoleJob job = new ConsoleJob("Get threshold summary", viewPart, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.ThresholdSummaryWidget_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -141,7 +142,7 @@ public class ThresholdSummaryWidget extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get threshold summary";
+				return Messages.ThresholdSummaryWidget_JobError;
 			}
 		};
 		job.setUser(false);

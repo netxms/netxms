@@ -152,10 +152,10 @@ public class ObjectTreeFilter extends ViewerFilter
 			else
 			{
 				mode = NAME;
-				usePatternMatching = filterString.contains("*") || filterString.contains("?");
+				usePatternMatching = filterString.contains("*") || filterString.contains("?"); //$NON-NLS-1$ //$NON-NLS-2$
 				if (usePatternMatching)
 				{
-					this.filterString = filterString.toLowerCase() + "*";
+					this.filterString = filterString.toLowerCase() + "*"; //$NON-NLS-1$
 				}
 				else
 				{

@@ -28,13 +28,13 @@ import org.simpleframework.xml.core.Persister;
 public class LabelConfig extends DashboardElementConfig
 {
 	@Element(required=true)
-	private String title = "";
+	private String title = ""; //$NON-NLS-1$
 
 	@Element(required=false)
-	private String foreground = "0x000000";
+	private String foreground = "0x000000"; //$NON-NLS-1$
 
 	@Element(required=false)
-	private String background = "0xFFFFFF";
+	private String background = "0xFFFFFF"; //$NON-NLS-1$
 
 	/**
 	 * Create line chart settings object from XML document
@@ -78,7 +78,7 @@ public class LabelConfig extends DashboardElementConfig
 	 */
 	public int getForegroundColorAsInt()
 	{
-		if (foreground.startsWith("0x"))
+		if (foreground.startsWith("0x")) //$NON-NLS-1$
 			return Integer.parseInt(foreground.substring(2), 16);
 		return Integer.parseInt(foreground, 10);
 	}
@@ -104,7 +104,7 @@ public class LabelConfig extends DashboardElementConfig
 	 */
 	public int getBackgroundColorAsInt()
 	{
-		if (background.startsWith("0x"))
+		if (background.startsWith("0x")) //$NON-NLS-1$
 			return Integer.parseInt(background.substring(2), 16);
 		return Integer.parseInt(background, 10);
 	}

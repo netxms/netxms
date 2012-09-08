@@ -34,12 +34,12 @@ public class CloneDashboard implements IObjectActionDelegate
 		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.CloneDashboard_Dashboard);
 		if (dlg.open() == Window.OK)
 		{
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			new ConsoleJob(Messages.CloneDashboard_JobTitle, part, Activator.PLUGIN_ID, null)
 			{
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 					NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_DASHBOARD, dlg.getObjectName(), parentId);
 					final long newDashboardId = session.createObject(cd);
 

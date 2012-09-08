@@ -134,7 +134,7 @@ public class EditActionDlg extends Dialog
 		typeRemoteExec.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeExecScript = new Button(typeGroup, SWT.RADIO);
-		typeExecScript.setText("Execute &NXSL script");
+		typeExecScript.setText(Messages.EditActionDlg_ExecuteScript);
 		typeExecScript.setSelection(action.getType() == ServerAction.EXEC_NXSL_SCRIPT);
 		typeExecScript.addSelectionListener(new TypeButtonSelectionListener());
 		
@@ -212,7 +212,7 @@ public class EditActionDlg extends Dialog
 			case ServerAction.FORWARD_EVENT:
 				return Messages.EditActionDlg_RemoteServer;
 			case ServerAction.EXEC_NXSL_SCRIPT:
-				return "Script name";
+				return Messages.EditActionDlg_ScriptName;
 		}
 		return Messages.EditActionDlg_Recipient;
 	}

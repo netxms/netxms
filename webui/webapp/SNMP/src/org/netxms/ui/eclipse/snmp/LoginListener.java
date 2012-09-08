@@ -42,7 +42,6 @@ public class LoginListener implements ConsoleLoginListener
 	@Override
 	public void afterLogin(final NXCSession session, Display display)
 	{
-		// wait for connect
 		ConsoleJob job = new ConsoleJob("Load MIB file on startup", null, Activator.PLUGIN_ID, null, display) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -59,7 +58,7 @@ public class LoginListener implements ConsoleLoginListener
 					{
 						targetDir = new File(loc.getURL().getPath());
 					}
-					File mibFile = new File(targetDir, "netxms.mib");
+					File mibFile = new File(targetDir, "netxms.mib"); //$NON-NLS-1$
 					
 					Date serverMibTimestamp = session.getMibFileTimestamp();
 					if (!mibFile.exists() || (serverMibTimestamp.getTime() > mibFile.lastModified()))
@@ -105,7 +104,7 @@ public class LoginListener implements ConsoleLoginListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot load MIB file from server";
+				return Messages.LoginListener_JobError;
 			}
 		};
 		job.setUser(false);

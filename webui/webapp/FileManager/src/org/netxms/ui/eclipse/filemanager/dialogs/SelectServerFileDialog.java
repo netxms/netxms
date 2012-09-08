@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerFile;
 import org.netxms.ui.eclipse.filemanager.Activator;
+import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.dialogs.helpers.ServerFileComparator;
 import org.netxms.ui.eclipse.filemanager.dialogs.helpers.ServerFileLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -49,7 +50,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class SelectServerFileDialog extends Dialog
 {
-	private static final long serialVersionUID = -194756975291802716L;
+	private static final long serialVersionUID = 1L;
 
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_SIZE = 1;
@@ -70,7 +71,7 @@ public class SelectServerFileDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select File on Server");
+		newShell.setText(Messages.SelectServerFileDialog_Title);
 	}
 	
 	/* (non-Javadoc)
@@ -86,7 +87,7 @@ public class SelectServerFileDialog extends Dialog
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
 		
-		final String[] names = { "Name", "Size", "Modified" };
+		final String[] names = { Messages.SelectServerFileDialog_ColName, Messages.SelectServerFileDialog_ColSize, Messages.SelectServerFileDialog_ColModTime };
 		final int[] widths = { 200, 100, 150 };
 		viewer = new SortableTableViewer(dialogArea, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.BORDER);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -108,7 +109,7 @@ public class SelectServerFileDialog extends Dialog
 		});
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Get server file list", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -125,7 +126,7 @@ public class SelectServerFileDialog extends Dialog
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get file store content";
+				return Messages.SelectServerFileDialog_JobError;
 			}
 		}.start();
 		
@@ -142,7 +143,7 @@ public class SelectServerFileDialog extends Dialog
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please select file from the list");
+			MessageDialog.openWarning(getShell(), Messages.SelectServerFileDialog_Warning, Messages.SelectServerFileDialog_WarningText);
 			return;
 		}
 		

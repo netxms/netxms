@@ -51,6 +51,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectListFilter;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -117,7 +118,7 @@ public class ChildObjectListDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select Subordinate Object");
+		newShell.setText(Messages.ChildObjectListDialog_SelectSubordinate);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -157,7 +158,7 @@ public class ChildObjectListDialog extends Dialog
 		filterArea.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		Label filterLabel = new Label(filterArea, SWT.NONE);
-		filterLabel.setText("Filter: ");
+		filterLabel.setText(Messages.ChildObjectListDialog_Filter);
 		
 		filterText = new Text(filterArea, SWT.BORDER);
 		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -181,7 +182,7 @@ public class ChildObjectListDialog extends Dialog
 		// Create object list
 		objectList = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		TableColumn tc = new TableColumn(objectList.getTable(), SWT.LEFT); 
-		tc.setText("Name");
+		tc.setText(Messages.ChildObjectListDialog_Name);
 		tc.setWidth(280);
 		objectList.getTable().setHeaderVisible(false);
 		objectList.setContentProvider(new ArrayContentProvider());

@@ -108,7 +108,7 @@ public class Area
 	@Override
 	public String toString()
 	{
-		StringBuilder sb = new StringBuilder("Area={");
+		StringBuilder sb = new StringBuilder("Area={"); //$NON-NLS-1$
 		sb.append(xLow);
 		sb.append(',');
 		sb.append(yLow);

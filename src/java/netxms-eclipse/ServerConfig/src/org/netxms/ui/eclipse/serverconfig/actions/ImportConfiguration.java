@@ -67,6 +67,7 @@ public class ImportConfiguration implements IWorkbenchWindowActionDelegate
 		final ConfigurationImportDialog dlg = new ConfigurationImportDialog(shell);
 		if (dlg.open() == Window.OK)
 		{
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			ConsoleJob job = new ConsoleJob("Import Configuration", null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
@@ -83,7 +84,6 @@ public class ImportConfiguration implements IWorkbenchWindowActionDelegate
 					file.close();
 					
 					String content = new String(data, "UTF-8");
-					final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 					session.importConfiguration(content, dlg.getFlags());
 					
 					runInUIThread(new Runnable() {

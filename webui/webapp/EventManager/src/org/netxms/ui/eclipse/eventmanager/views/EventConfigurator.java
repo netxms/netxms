@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,7 @@ package org.netxms.ui.eclipse.eventmanager.views;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -50,7 +47,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
@@ -58,6 +54,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.eventmanager.Activator;
+import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EditEventTemplateDialog;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateComparator;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateLabelProvider;
@@ -72,10 +69,10 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class EventConfigurator extends ViewPart implements SessionListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.eventmanager.view.event_configurator";
-	public static final String JOB_FAMILY = "EventConfiguratorJob";
+	public static final String ID = "org.netxms.ui.eclipse.eventmanager.view.event_configurator"; //$NON-NLS-1$
+	public static final String JOB_FAMILY = "EventConfiguratorJob"; //$NON-NLS-1$
 
-	private static final String TABLE_CONFIG_PREFIX = "EventTemplateList";
+	private static final String TABLE_CONFIG_PREFIX = "EventTemplateList"; //$NON-NLS-1$
 	
 	// Columns
 	public static final int COLUMN_CODE = 0;
@@ -101,7 +98,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	{
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		final String[] names = { "Code", "Name", "Severity", "Flags", "Message", "Description" };
+		final String[] names = { Messages.EventConfigurator_ColCode, Messages.EventConfigurator_ColName, Messages.EventConfigurator_ColSeverity, Messages.EventConfigurator_ColFlags, Messages.EventConfigurator_ColMessage, Messages.EventConfigurator_ColDescription };
 		final int[] widths = { 70, 200, 90, 50, 400, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
@@ -151,12 +148,12 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	 */
 	private void refreshView()
 	{
-		new ConsoleJob("Open event configuration", this, Activator.PLUGIN_ID, JOB_FAMILY)
+		new ConsoleJob(Messages.EventConfigurator_OpenJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY)
 		{
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot open event configuration";
+				return Messages.EventConfigurator_OpenJob_Error;
 			}
 
 			@Override
@@ -188,9 +185,9 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		switch(n.getCode())
 		{
 			case NXCNotification.EVENT_TEMPLATE_MODIFIED:
-				new UIJob(viewer.getControl().getDisplay(), "Update event template list") {
+				viewer.getControl().getDisplay().asyncExec(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						EventTemplate oldTmpl = eventTemplates.get(n.getSubCode());
 						if (oldTmpl != null)
@@ -203,20 +200,18 @@ public class EventConfigurator extends ViewPart implements SessionListener
 							eventTemplates.put(n.getSubCode(), (EventTemplate)n.getObject());
 							viewer.setInput(eventTemplates.values().toArray());
 						}
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 				break;
 			case NXCNotification.EVENT_TEMPLATE_DELETED:
-				new UIJob(viewer.getControl().getDisplay(), "Remove event template from list") {
+				viewer.getControl().getDisplay().asyncExec(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						eventTemplates.remove(n.getSubCode());
 						viewer.setInput(eventTemplates.values().toArray());
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 				break;
 		}
 	}
@@ -285,8 +280,8 @@ public class EventConfigurator extends ViewPart implements SessionListener
 				createNewEventTemplate();
 			}
 		};
-		actionNew.setText("&New event template...");
-		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png"));
+		actionNew.setText(Messages.EventConfigurator_NewEvent);
+		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png")); //$NON-NLS-1$
 
 		actionEdit = new Action() {
 			private static final long serialVersionUID = 1L;
@@ -297,8 +292,8 @@ public class EventConfigurator extends ViewPart implements SessionListener
 				editEventTemplate();
 			}
 		};
-		actionEdit.setText("&Properties...");
-		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png"));
+		actionEdit.setText(Messages.EventConfigurator_Properties);
+		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png")); //$NON-NLS-1$
 		actionEdit.setEnabled(false);
 
 		actionDelete = new Action() {
@@ -310,8 +305,8 @@ public class EventConfigurator extends ViewPart implements SessionListener
 				deleteEventTemplate();
 			}
 		};
-		actionDelete.setText("&Delete");
-		actionDelete.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png"));
+		actionDelete.setText(Messages.EventConfigurator_Delete);
+		actionDelete.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png")); //$NON-NLS-1$
 		actionDelete.setEnabled(false);
 	}
 
@@ -372,11 +367,11 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		EditEventTemplateDialog dlg = new EditEventTemplateDialog(getSite().getShell(), etmpl, false);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Create new event template", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			new ConsoleJob(Messages.EventConfigurator_CreateJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create new event template";
+					return Messages.EventConfigurator_CreateJob_Error;
 				}
 	
 				@Override
@@ -412,11 +407,11 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		EditEventTemplateDialog dlg = new EditEventTemplateDialog(getSite().getShell(), etmpl, false);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Update event template", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			new ConsoleJob(Messages.EventConfigurator_UpdateJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot update event template";
+					return Messages.EventConfigurator_UpdateJob_Error;
 				}
 
 				@Override
@@ -444,18 +439,18 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	{
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
-		final String message = "Do you really wish to delete selected event template" + ((selection.size() > 1) ? "s?" : "?");
+		final String message = ((selection.size() > 1) ? Messages.EventConfigurator_DeleteConfirmation_Plural : Messages.EventConfigurator_DeleteConfirmation_Singular);
 		final Shell shell = getViewSite().getShell();
-		if (!MessageDialog.openQuestion(shell, "Confirm event template deletion", message))
+		if (!MessageDialog.openQuestion(shell, Messages.EventConfigurator_DeleteConfirmationTitle, message))
 		{
 			return;
 		}
 		
-		new ConsoleJob("Delete event templates", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.EventConfigurator_DeleteJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot delete event template";
+				return Messages.EventConfigurator_DeleteJob_Error;
 			}
 
 			@SuppressWarnings("unchecked")

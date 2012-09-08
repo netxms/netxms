@@ -8,6 +8,7 @@
 - Detection of IP address change for nodes without agent and SNMP
 - Agent on Windows is in UNICODE
 - UNICODE build supported on Linux
+- ifXTable used when possible for interface traffic DCIs creation
 - Management console:
 	- Configurable date and time format
 	- Background color can be set for network maps

@@ -28,6 +28,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.switchmanager.Messages;
 import org.netxms.ui.eclipse.switchmanager.views.Dot1xStatusView;
 
 /**
@@ -61,7 +62,7 @@ public class OpenDot1xStateView implements IObjectActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.OpenDot1xStateView_Error, Messages.OpenDot1xStateView_ErrorText + e.getMessage());
 			}
 		}
 	}

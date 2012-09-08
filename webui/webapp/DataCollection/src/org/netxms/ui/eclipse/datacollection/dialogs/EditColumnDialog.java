@@ -8,6 +8,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.datacollection.ColumnDefinition;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 
 /**
@@ -36,7 +37,7 @@ public class EditColumnDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Column Definition: " + column.getName());
+		newShell.setText(Messages.EditColumnDialog_ColumnDefinition + column.getName());
 	}
 
 	/* (non-Javadoc)

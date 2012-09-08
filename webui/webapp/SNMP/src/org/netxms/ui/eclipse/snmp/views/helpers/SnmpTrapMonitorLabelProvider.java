@@ -26,6 +26,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.client.snmp.SnmpTrapLogRecord;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor;
 
 /**
@@ -66,7 +67,7 @@ public class SnmpTrapMonitorLabelProvider extends LabelProvider implements ITabl
 				return record.getSourceAddress().getHostAddress();
 			case SnmpTrapMonitor.COLUMN_SOURCE_NODE:
 				final GenericObject object = session.findObjectById(record.getSourceNode());
-				return (object != null) ? object.getObjectName() : "<unknown>";
+				return (object != null) ? object.getObjectName() : Messages.SnmpTrapMonitorLabelProvider_Unknown;
 			case SnmpTrapMonitor.COLUMN_OID:
 				return record.getTrapObjectId();
 			case SnmpTrapMonitor.COLUMN_VARBINDS:

@@ -36,7 +36,7 @@ public class StatusIndicatorConfig extends DashboardElementConfig
 	private long objectId = 0;
 
 	@Element(required = false)
-	private String title = "";
+	private String title = ""; //$NON-NLS-1$
 
 	/**
 	 * Create status indicator settings object from XML document

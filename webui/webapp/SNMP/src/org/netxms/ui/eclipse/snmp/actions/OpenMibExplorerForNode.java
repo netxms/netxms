@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.views.MibExplorer;
 
 /**
@@ -61,7 +62,7 @@ public class OpenMibExplorerForNode implements IObjectActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.OpenMibExplorerForNode_Error, Messages.OpenMibExplorerForNode_ErrorText + e.getMessage());
 			}
 		}
 	}

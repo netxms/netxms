@@ -27,6 +27,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor;
 
 /**
@@ -60,7 +61,7 @@ public class SnmpTrapComparator extends ViewerComparator
 		int rc;
 		SnmpTrap trap1 = (SnmpTrap)e1;
 		SnmpTrap trap2 = (SnmpTrap)e2;
-		switch((Integer)sortColumn.getData("ID"))
+		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{
 			case SnmpTrapEditor.COLUMN_ID:
 				rc = Long.signum(trap1.getId() - trap2.getId());
@@ -71,8 +72,8 @@ public class SnmpTrapComparator extends ViewerComparator
 			case SnmpTrapEditor.COLUMN_EVENT:
 				EventTemplate evt1 = session.findEventTemplateByCode(trap1.getEventCode());
 				EventTemplate evt2 = session.findEventTemplateByCode(trap2.getEventCode());
-				String name1 = (evt1 != null) ? evt1.getName() : "<unknown>";
-				String name2 = (evt2 != null) ? evt2.getName() : "<unknown>";
+				String name1 = (evt1 != null) ? evt1.getName() : Messages.SnmpTrapComparator_Unknown;
+				String name2 = (evt2 != null) ? evt2.getName() : Messages.SnmpTrapComparator_Unknown;
 				rc = name1.compareToIgnoreCase(name2);
 				break;
 			case SnmpTrapEditor.COLUMN_DESCRIPTION:

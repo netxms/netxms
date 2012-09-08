@@ -111,7 +111,7 @@ public class MapAccessor
 	public String generateUrl()
 	{
 		//StringBuilder sb = new StringBuilder("http://maps.google.com/staticmap?format=png32&center=");
-		StringBuilder sb = new StringBuilder("http://staticmap.openstreetmap.de/staticmap.php?maptype=mapnik&format=png32&center=");
+		StringBuilder sb = new StringBuilder("http://staticmap.openstreetmap.de/staticmap.php?maptype=mapnik&format=png32&center="); //$NON-NLS-1$
 		
 		// Coordinates of map's center
 		sb.append(latitude);
@@ -121,19 +121,19 @@ public class MapAccessor
 		// Zoom or span
 		if ((spanLat != 0) && (spanLon != 0))
 		{
-			sb.append("&span=");
+			sb.append("&span="); //$NON-NLS-1$
 			sb.append(spanLat);
 			sb.append(',');
 			sb.append(spanLon);
 		}
 		else
 		{
-			sb.append("&zoom=");
+			sb.append("&zoom="); //$NON-NLS-1$
 			sb.append(zoom);
 		}
 		
 		// Map size
-		sb.append("&size=");
+		sb.append("&size="); //$NON-NLS-1$
 		sb.append(mapWidth);
 		sb.append('x');
 		sb.append(mapHeight);

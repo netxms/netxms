@@ -33,6 +33,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.Activator;
+import org.netxms.ui.eclipse.slm.Messages;
 import org.netxms.ui.eclipse.slm.dialogs.CreateServiceCheckDialog;
 
 /**
@@ -64,11 +65,11 @@ public class CreateServiceCheckTemplate implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob("Create new service check object", part, Activator.PLUGIN_ID, null) {
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		new ConsoleJob(Messages.CreateServiceCheckTemplate_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_SLMCHECK, dlg.getName(), parentId);
 				cd.setTemplate(true);
 				session.createObject(cd);
@@ -77,7 +78,7 @@ public class CreateServiceCheckTemplate implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create service check template object \"" + dlg.getName() + "\"";
+				return Messages.CreateServiceCheckTemplate_JobErrorPrefix + dlg.getName() + Messages.CreateServiceCheckTemplate_JobErrorSuffix;
 			}
 		}.start();
 	}

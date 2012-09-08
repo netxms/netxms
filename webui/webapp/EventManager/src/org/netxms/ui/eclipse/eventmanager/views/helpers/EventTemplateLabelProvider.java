@@ -50,7 +50,7 @@ public class EventTemplateLabelProvider extends WorkbenchLabelProvider implement
 			case EventConfigurator.COLUMN_SEVERITY:
 				return StatusDisplayInfo.getStatusText(((EventTemplate)element).getSeverity());
 			case EventConfigurator.COLUMN_FLAGS:
-				return ((((EventTemplate)element).getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0) ? "L" : "-";
+				return ((((EventTemplate)element).getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0) ? "L" : "-"; //$NON-NLS-1$ //$NON-NLS-2$
 			case EventConfigurator.COLUMN_MESSAGE:
 				return ((EventTemplate)element).getMessage();
 			case EventConfigurator.COLUMN_DESCRIPTION:

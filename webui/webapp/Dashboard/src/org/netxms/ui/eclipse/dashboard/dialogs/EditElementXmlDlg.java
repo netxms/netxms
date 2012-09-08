@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -56,7 +57,7 @@ public class EditElementXmlDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Edit Element XML");
+		newShell.setText(Messages.EditElementXmlDlg_DialogTitle);
 	}
 
 	/* (non-Javadoc)
@@ -71,7 +72,7 @@ public class EditElementXmlDlg extends Dialog
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 		
 		final Label label = new Label(dialogArea, SWT.NONE);
-		label.setText("XML Configuration");
+		label.setText(Messages.EditElementXmlDlg_EditorTitle);
 	
 		text = new Text(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		GridData gd = new GridData();

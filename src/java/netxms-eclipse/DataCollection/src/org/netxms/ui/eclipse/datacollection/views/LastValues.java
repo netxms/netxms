@@ -151,8 +151,7 @@ public class LastValues extends ViewPart
 		};
 		actionUseMultipliers.setChecked(dataView.areMultipliersUsed());
 
-		actionShowFilter = new Action(Messages.LastValues_ShowFilter, Action.AS_CHECK_BOX)
-      {
+		actionShowFilter = new Action(Messages.LastValues_ShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{

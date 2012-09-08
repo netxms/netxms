@@ -26,6 +26,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.slm.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -37,7 +38,6 @@ public class CreateBusinessServiceDialog extends Dialog
 	private static final long serialVersionUID = 1L;
 
 	private LabeledText nameField;
-	
 	private String name;
 	
 	/**
@@ -56,7 +56,7 @@ public class CreateBusinessServiceDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create Business Service Object");
+		newShell.setText(Messages.CreateBusinessServiceDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -74,7 +74,7 @@ public class CreateBusinessServiceDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		nameField = new LabeledText(dialogArea, SWT.NONE);
-		nameField.setLabel("Name");
+		nameField.setLabel(Messages.CreateBusinessServiceDialog_Name);
 		nameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -94,7 +94,7 @@ public class CreateBusinessServiceDialog extends Dialog
 		name = nameField.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please provide non-empty object name");
+			MessageDialog.openWarning(getShell(), Messages.CreateBusinessServiceDialog_Warning, Messages.CreateBusinessServiceDialog_WarningText);
 			return;
 		}
 		

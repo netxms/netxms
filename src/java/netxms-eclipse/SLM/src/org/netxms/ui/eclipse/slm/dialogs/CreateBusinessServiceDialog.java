@@ -36,7 +36,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class CreateBusinessServiceDialog extends Dialog
 {
 	private LabeledText nameField;
-	
 	private String name;
 	
 	/**

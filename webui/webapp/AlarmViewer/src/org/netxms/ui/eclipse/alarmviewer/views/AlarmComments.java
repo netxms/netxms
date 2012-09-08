@@ -65,9 +65,9 @@ import org.netxms.ui.eclipse.tools.ImageCache;
  */
 public class AlarmComments extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.AlarmComments";
+	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.AlarmComments"; //$NON-NLS-1$
 	
-	private static final String[] stateImage = { "icons/outstanding.png", "icons/acknowledged.png", "icons/terminated.png" };
+	private static final String[] stateImage = { "icons/outstanding.png", "icons/acknowledged.png", "icons/terminated.png" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, Messages.AlarmListLabelProvider_AlarmState_Terminated };	
 	
 	private NXCSession session;
@@ -101,10 +101,10 @@ public class AlarmComments extends ViewPart
 		}
 		catch(NumberFormatException e)
 		{
-			throw new PartInitException("Internal error: invalid secondary ID", e);
+			throw new PartInitException(Messages.AlarmComments_InternalError, e);
 		}
 		
-		setPartName(getPartName() + " [" + Long.toString(alarmId) + "]");
+		setPartName(getPartName() + " [" + Long.toString(alarmId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/* (non-Javadoc)
@@ -186,7 +186,7 @@ public class AlarmComments extends ViewPart
 	private void createAlarmDetailsSection()
 	{
 		final Section details = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		details.setText("Alarm Details");
+		details.setText(Messages.AlarmComments_Details);
 		TableWrapData twd = new TableWrapData();
 		twd.grabHorizontal = true;
 		twd.align = TableWrapData.FILL;
@@ -221,7 +221,7 @@ public class AlarmComments extends ViewPart
 		gd.horizontalSpan = 2;
 		alarmSource.setLayoutData(gd);
 
-		alarmText = toolkit.createLabel(clientArea, "", SWT.WRAP);
+		alarmText = toolkit.createLabel(clientArea, "", SWT.WRAP); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -235,7 +235,7 @@ public class AlarmComments extends ViewPart
 	private void createEditorsSection()
 	{
 		final Section details = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		details.setText("Comments");
+		details.setText(Messages.AlarmComments_Comments);
 		TableWrapData twd = new TableWrapData();
 		twd.grabHorizontal = true;
 		twd.align = TableWrapData.FILL;
@@ -247,8 +247,8 @@ public class AlarmComments extends ViewPart
 		details.setClient(editorsArea);
 		
 		linkAddComment = toolkit.createImageHyperlink(editorsArea, SWT.NONE);
-		linkAddComment.setImage(imageCache.add(Activator.getImageDescriptor("icons/new_comment.png")));
-		linkAddComment.setText("Add comment");
+		linkAddComment.setImage(imageCache.add(Activator.getImageDescriptor("icons/new_comment.png"))); //$NON-NLS-1$
+		linkAddComment.setText(Messages.AlarmComments_AddCommentLink);
 		linkAddComment.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -272,7 +272,7 @@ public class AlarmComments extends ViewPart
 	 */
 	private void refresh()
 	{
-		new ConsoleJob("Get alarm comments", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.AlarmComments_GetComments, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -298,7 +298,7 @@ public class AlarmComments extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get alarm comments";
+				return Messages.AlarmComments_GetError;
 			}
 		}.start();
 	}
@@ -339,7 +339,7 @@ public class AlarmComments extends ViewPart
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob("Add new alarm comment", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.AlarmComments_AddCommentJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -356,7 +356,7 @@ public class AlarmComments extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot add alarm comment";
+				return Messages.AlarmComments_AddError;
 			}
 		}.start();
 	}
@@ -376,7 +376,7 @@ public class AlarmComments extends ViewPart
 		
 		GenericObject object = session.findObjectById(alarm.getSourceObjectId());
 		alarmSource.setImage((object != null) ? wbLabelProvider.getImage(object) : SharedIcons.IMG_UNKNOWN_OBJECT);
-		alarmSource.setText((object != null) ? object.getObjectName() : ("[" + Long.toString(alarm.getSourceObjectId()) + "]"));
+		alarmSource.setText((object != null) ? object.getObjectName() : ("[" + Long.toString(alarm.getSourceObjectId()) + "]")); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		alarmText.setText(alarm.getMessage());
 	}

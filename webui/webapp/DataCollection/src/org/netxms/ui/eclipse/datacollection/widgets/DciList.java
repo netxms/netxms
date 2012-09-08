@@ -37,6 +37,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.DciListComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.DciListLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -82,7 +83,7 @@ public class DciList extends Composite
 		final IDialogSettings ds = Activator.getDefault().getDialogSettings();
 		
 		// Setup table columns
-		final String[] names = { "ID", "Parameter", "Description" };
+		final String[] names = { Messages.DciList_ColID, Messages.DciList_ColParam, Messages.DciList_ColDescr };
 		final int[] widths = { 70, 150, 250 };
 		viewer = new SortableTableViewer(this, names, widths, 2, SWT.DOWN, SWT.SINGLE | SWT.FULL_SELECTION);
 	
@@ -124,11 +125,11 @@ public class DciList extends Composite
 			return;
 		}
 
-		ConsoleJob job = new ConsoleJob("Get DCI values for node " + node.getObjectName(), viewPart, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.DciList_JobTitle + node.getObjectName(), viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get DCI list for node " + node.getObjectName();
+				return Messages.DciList_JobError + node.getObjectName();
 			}
 
 			@Override

@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.slm.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -61,7 +62,7 @@ public class CreateNodeLinkDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create Node Link Object");
+		newShell.setText(Messages.CreateNodeLinkDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -79,7 +80,7 @@ public class CreateNodeLinkDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		nameField = new LabeledText(dialogArea, SWT.NONE);
-		nameField.setLabel("Name (leave empty to use node's name)");
+		nameField.setLabel(Messages.CreateNodeLinkDialog_Name);
 		nameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -88,7 +89,7 @@ public class CreateNodeLinkDialog extends Dialog
 		nameField.setLayoutData(gd);
 		
 		nodeField = new ObjectSelector(dialogArea, SWT.NONE);
-		nodeField.setLabel("Node");
+		nodeField.setLabel(Messages.CreateNodeLinkDialog_Node);
 		nodeField.setObjectClass(Node.class);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -107,7 +108,7 @@ public class CreateNodeLinkDialog extends Dialog
 		nodeId = nodeField.getObjectId();
 		if (nodeId == 0)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please select node object to link");
+			MessageDialog.openWarning(getShell(), Messages.CreateNodeLinkDialog_Warning, Messages.CreateNodeLinkDialog_WarningText);
 			return;
 		}
 		

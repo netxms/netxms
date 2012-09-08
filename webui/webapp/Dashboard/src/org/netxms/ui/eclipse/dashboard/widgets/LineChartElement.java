@@ -41,6 +41,7 @@ import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -129,7 +130,7 @@ public class LineChartElement extends ElementWidget
 		
 		updateInProgress = true;
 		
-		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.LineChartElement_JobTitle, viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			private ChartDciConfig currentDci;
 			
 			@Override
@@ -172,7 +173,7 @@ public class LineChartElement extends ElementWidget
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get value for DCI " + session.getObjectName(currentDci.nodeId) + ":\"" + currentDci.name + "\"";
+				return Messages.LineChartElement_JobErrorPrefix + session.getObjectName(currentDci.nodeId) + ":\"" + currentDci.name + "\""; //$NON-NLS-1$ //$NON-NLS-2$
 			}
 
 			@Override
@@ -189,7 +190,7 @@ public class LineChartElement extends ElementWidget
 					@Override
 					public void run()
 					{
-						chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")");
+						chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 				});
 				return Status.OK_STATUS;

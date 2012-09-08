@@ -43,6 +43,7 @@ import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectListFilter;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -93,7 +94,7 @@ public class ObjectList extends Composite
 		filterArea = new Composite(this, SWT.NONE);
 		
 		filterLabel = new Label(filterArea, SWT.NONE);
-		filterLabel.setText("Filter: ");
+		filterLabel.setText(Messages.ObjectList_Filter);
 		
 		filterText = new Text(filterArea, SWT.BORDER);
 		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -131,7 +132,7 @@ public class ObjectList extends Composite
 				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) || (n.getCode() == NXCNotification.OBJECT_DELETED))
 				{
 					changeCount++;
-					new UIJob(getDisplay(), "Update object list") {
+					new UIJob(getDisplay(), Messages.ObjectList_JobTitle) {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{

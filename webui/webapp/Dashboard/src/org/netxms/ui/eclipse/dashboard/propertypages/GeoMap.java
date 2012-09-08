@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.GeoLocation;
 import org.netxms.client.GeoLocationFormatException;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -60,7 +61,7 @@ public class GeoMap extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		title = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
-		title.setLabel("Title");
+		title.setLabel(Messages.GeoMap_Title);
 		title.setText(config.getTitle());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -69,7 +70,7 @@ public class GeoMap extends PropertyPage
 		title.setLayoutData(gd);
 		
 		latitude = new LabeledText(dialogArea, SWT.NONE);
-		latitude.setLabel("Latitude");
+		latitude.setLabel(Messages.GeoMap_Latitude);
 		latitude.setText(GeoLocation.latitudeToString(config.getLatitude()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -77,14 +78,14 @@ public class GeoMap extends PropertyPage
 		latitude.setLayoutData(gd);
 		
 		longitude = new LabeledText(dialogArea, SWT.NONE);
-		longitude.setLabel("Longitude");
+		longitude.setLabel(Messages.GeoMap_Longitude);
 		longitude.setText(GeoLocation.longitudeToString(config.getLongitude()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		longitude.setLayoutData(gd);
 		
-		zoom = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Zoom", 0, 18, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		zoom = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.GeoMap_Zoom, 0, 18, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		zoom.setSelection(config.getZoom());
 		
 		return dialogArea;
@@ -104,7 +105,7 @@ public class GeoMap extends PropertyPage
 		}
 		catch(GeoLocationFormatException e)
 		{
-			MessageDialog.openError(getShell(), "Error", "Please enter correct latitude and longitude value");
+			MessageDialog.openError(getShell(), Messages.GeoMap_Error, Messages.GeoMap_ErrorText);
 		}
 		config.setTitle(title.getText());
 		config.setZoom(zoom.getSelection());

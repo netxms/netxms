@@ -42,9 +42,9 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	{
 		super();
 
-		stateImages[0] = Activator.getImageDescriptor("icons/active.gif").createImage();
-		stateImages[1] = Activator.getImageDescriptor("icons/disabled.gif").createImage();
-		stateImages[2] = Activator.getImageDescriptor("icons/unsupported.gif").createImage();
+		stateImages[0] = Activator.getImageDescriptor("icons/active.gif").createImage(); //$NON-NLS-1$
+		stateImages[1] = Activator.getImageDescriptor("icons/disabled.gif").createImage(); //$NON-NLS-1$
+		stateImages[2] = Activator.getImageDescriptor("icons/unsupported.gif").createImage(); //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)

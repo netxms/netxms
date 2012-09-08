@@ -32,6 +32,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.osm.Activator;
+import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -40,7 +41,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class WorldMap extends AbstractGeolocationView
 {
-	public static final String ID = "org.netxms.ui.eclipse.osm.views.WorldMap";
+	public static final String ID = "org.netxms.ui.eclipse.osm.views.WorldMap"; //$NON-NLS-1$
 	
 	private GeoLocation initialLocation = new GeoLocation(0.0, 0.0);
 	private int initialZoom = 2;
@@ -54,11 +55,11 @@ public class WorldMap extends AbstractGeolocationView
 	{
 		if (memento != null)
 		{
-			if (memento.getInteger("zoom") != null)
-				initialZoom = memento.getInteger("zoom");
+			if (memento.getInteger("zoom") != null) //$NON-NLS-1$
+				initialZoom = memento.getInteger("zoom"); //$NON-NLS-1$
 			
-			Float lat = memento.getFloat("latitude");
-			Float lon = memento.getFloat("longitude");
+			Float lat = memento.getFloat("latitude"); //$NON-NLS-1$
+			Float lon = memento.getFloat("longitude"); //$NON-NLS-1$
 			if ((lat != null) && (lon != null))
 				initialLocation = new GeoLocation(lat, lon);
 		}		
@@ -73,9 +74,9 @@ public class WorldMap extends AbstractGeolocationView
 	{
 		super.saveState(memento);
 		MapAccessor m = getMapAccessor();
-		memento.putFloat("latitude", (float)m.getLatitude());
-		memento.putFloat("longitude", (float)m.getLongitude());
-		memento.putInteger("zoom", m.getZoom());
+		memento.putFloat("latitude", (float)m.getLatitude()); //$NON-NLS-1$
+		memento.putFloat("longitude", (float)m.getLongitude()); //$NON-NLS-1$
+		memento.putInteger("zoom", m.getZoom()); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -104,7 +105,7 @@ public class WorldMap extends AbstractGeolocationView
 	{
 		super.createActions();
 		
-		actionPlaceObject = new Action("Place object here...") {
+		actionPlaceObject = new Action(Messages.WorldMap_PlaceObject) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -137,7 +138,7 @@ public class WorldMap extends AbstractGeolocationView
 			final NXCObjectModificationData md = new NXCObjectModificationData(dlg.getSelectedObjects().get(0).getObjectId());
 			md.setGeolocation(map.getLocationAtPoint(map.getCurrentPoint()));
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob("Update object's geolocation", this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.WorldMap_JobTitle, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -147,7 +148,7 @@ public class WorldMap extends AbstractGeolocationView
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot update object's geolocation";
+					return Messages.WorldMap_JobError;
 				}
 			}.start();
 		}

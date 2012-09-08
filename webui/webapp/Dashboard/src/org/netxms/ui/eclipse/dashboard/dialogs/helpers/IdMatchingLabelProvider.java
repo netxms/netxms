@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.IdMatchingDialog;
 import org.netxms.ui.eclipse.objectbrowser.shared.ObjectIcons;
 import org.netxms.ui.eclipse.shared.SharedColors;
@@ -51,7 +52,7 @@ public class IdMatchingLabelProvider extends LabelProvider implements ITableLabe
 			return imageCache.add(ObjectIcons.getObjectImageDescriptor(((ObjectIdMatchingData)element).objectClass));
 		
 		if (element instanceof DciIdMatchingData)
-			return imageCache.add(Activator.getImageDescriptor("icons/dci.png"));
+			return imageCache.add(Activator.getImageDescriptor("icons/dci.png")); //$NON-NLS-1$
 		
 		return null;
 	}
@@ -70,7 +71,7 @@ public class IdMatchingLabelProvider extends LabelProvider implements ITableLabe
 				return ((IdMatchingData)element).getSourceName();
 			case IdMatchingDialog.COLUMN_DESTINATION_ID:
 				long id = ((IdMatchingData)element).getDestinationId();
-				return (id > 0) ? Long.toString(id) : "no match";
+				return (id > 0) ? Long.toString(id) : Messages.IdMatchingLabelProvider_NoMatch;
 			case IdMatchingDialog.COLUMN_DESTINATION_NAME:
 				return ((IdMatchingData)element).getDestinationName();
 		}

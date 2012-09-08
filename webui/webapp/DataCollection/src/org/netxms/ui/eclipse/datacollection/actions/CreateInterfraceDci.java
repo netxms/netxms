@@ -45,6 +45,7 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.CreateInterfaceDciDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.InterfaceDciInfo;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
@@ -106,18 +107,18 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 				lockRequired.put(n.getObjectId(), !((ref != null) && (ref.getView(false) != null)));
 			}
 			
-			new ConsoleJob("Create DCIs for interface", viewPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.CreateInterfraceDci_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create DCI for interface";
+					return Messages.CreateInterfraceDci_JobError;
 				}
 
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					InterfaceDciInfo[] dciInfo = dlg.getDciInfo();
-					monitor.beginTask("Creating DCIs", ifaces.size() * dciInfo.length);
+					monitor.beginTask(Messages.CreateInterfraceDci_TaskName, ifaces.size() * dciInfo.length);
 					for(int i = 0; i < ifaces.size(); i++)
 					{
 						for(int j = 0; j < dciInfo.length; j++)
@@ -147,7 +148,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 	{
 		Node node = iface.getParentNode();
 		if (node == null)
-			throw new NXCException(RCC.INTERNAL_ERROR);
+			throw new NXCException(RCC.INTERNAL_ERROR);		
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		DataCollectionConfiguration dcc;
@@ -163,10 +164,21 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 		final DataCollectionItem dci = (DataCollectionItem)dcc.findItem(dcc.createItem(), DataCollectionItem.class);
 		dci.setPollingInterval(pollingInterval);
 		dci.setRetentionTime(retentionTime);
-		dci.setOrigin(node.hasAgent() ? DataCollectionItem.AGENT : DataCollectionItem.SNMP);
-		dci.setDataType(DataCollectionItem.DT_UINT);
+		if (node.hasAgent())
+		{
+			dci.setOrigin(DataCollectionItem.AGENT);
+			dci.setDataType(DataCollectionItem.DT_UINT);
+		}
+		else
+		{
+			dci.setOrigin(DataCollectionItem.SNMP);
+			if (node.isIfXTableSupported())
+				dci.setDataType(((dciType != IFDCI_IN_ERRORS) && (dciType != IFDCI_OUT_ERRORS)) ? DataCollectionItem.DT_UINT64 : DataCollectionItem.DT_UINT);
+			else
+				dci.setDataType(DataCollectionItem.DT_UINT);
+		}
 		dci.setStatus(DataCollectionItem.ACTIVE);
-		dci.setDescription(updateDescription ? dciInfo.description.replaceAll("@@ifName@@", iface.getObjectName()) : dciInfo.description);
+		dci.setDescription(updateDescription ? dciInfo.description.replaceAll("@@ifName@@", iface.getObjectName()) : dciInfo.description); //$NON-NLS-1$
 		dci.setDeltaCalculation(dciInfo.delta ? DataCollectionItem.DELTA_AVERAGE_PER_SECOND : DataCollectionItem.DELTA_NONE);
 		
 		if (dci.getOrigin() == DataCollectionItem.AGENT)
@@ -174,22 +186,22 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			switch(dciType)
 			{
 				case IFDCI_IN_BYTES:
-					dci.setName("Net.Interface.BytesIn(" + iface.getIfIndex() + ")");
+					dci.setName("Net.Interface.BytesIn(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_OUT_BYTES:
-					dci.setName("Net.Interface.BytesOut(" + iface.getIfIndex() + ")");
+					dci.setName("Net.Interface.BytesOut(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_IN_PACKETS:
-					dci.setName("Net.Interface.PacketsIn(" + iface.getIfIndex() + ")");
+					dci.setName("Net.Interface.PacketsIn(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_OUT_PACKETS:
-					dci.setName("Net.Interface.PacketsOut(" + iface.getIfIndex() + ")");
+					dci.setName("Net.Interface.PacketsOut(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_IN_ERRORS:
-					dci.setName("Net.Interface.InErrors(" + iface.getIfIndex() + ")");
+					dci.setName("Net.Interface.InErrors(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_OUT_ERRORS:
-					dci.setName("Net.Interface.OutErrors(" + iface.getIfIndex() + ")");
+					dci.setName("Net.Interface.OutErrors(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 			}
 		}
@@ -198,22 +210,22 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			switch(dciType)
 			{
 				case IFDCI_IN_BYTES:
-					dci.setName(".1.3.6.1.2.1.2.2.1.10." + iface.getIfIndex());
+					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.6." : ".1.3.6.1.2.1.2.2.1.10.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_OUT_BYTES:
-					dci.setName(".1.3.6.1.2.1.2.2.1.16." + iface.getIfIndex());
+					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.10." : ".1.3.6.1.2.1.2.2.1.16.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_IN_PACKETS:
-					dci.setName(".1.3.6.1.2.1.2.2.1.11." + iface.getIfIndex());
+					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.7." : ".1.3.6.1.2.1.2.2.1.11.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_OUT_PACKETS:
-					dci.setName(".1.3.6.1.2.1.2.2.1.17." + iface.getIfIndex());
+					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.11." : ".1.3.6.1.2.1.2.2.1.17.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_IN_ERRORS:
-					dci.setName(".1.3.6.1.2.1.2.2.1.14." + iface.getIfIndex());
+					dci.setName(".1.3.6.1.2.1.2.2.1.14." + iface.getIfIndex()); //$NON-NLS-1$
 					break;
 				case IFDCI_OUT_ERRORS:
-					dci.setName(".1.3.6.1.2.1.2.2.1.20." + iface.getIfIndex());
+					dci.setName(".1.3.6.1.2.1.2.2.1.20." + iface.getIfIndex()); //$NON-NLS-1$
 					break;
 			}
 		}

@@ -33,6 +33,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.DciList;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -65,7 +66,7 @@ public class SelectNodeDciDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select DCI");
+		newShell.setText(Messages.SelectNodeDciDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -133,7 +134,7 @@ public class SelectNodeDciDialog extends Dialog
 		selection = dciList.getSelection();
 		if (selection == null)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please select DCI fro the list and then press OK");
+			MessageDialog.openWarning(getShell(), Messages.SelectNodeDciDialog_Warning, Messages.SelectNodeDciDialog_WarningText);
 			return;
 		}
 		saveSettings();

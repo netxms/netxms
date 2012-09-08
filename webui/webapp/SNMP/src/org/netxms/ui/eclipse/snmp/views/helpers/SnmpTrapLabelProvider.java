@@ -25,6 +25,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor;
 
 /**
@@ -69,7 +70,7 @@ public class SnmpTrapLabelProvider implements ITableLabelProvider
 				return trap.getObjectId().toString();
 			case SnmpTrapEditor.COLUMN_EVENT:
 				EventTemplate evt = session.findEventTemplateByCode(trap.getEventCode());
-				return (evt != null) ? evt.getName() : "<unknown>";
+				return (evt != null) ? evt.getName() : Messages.SnmpTrapLabelProvider_Unknown;
 			case SnmpTrapEditor.COLUMN_DESCRIPTION:
 				return trap.getDescription();
 		}

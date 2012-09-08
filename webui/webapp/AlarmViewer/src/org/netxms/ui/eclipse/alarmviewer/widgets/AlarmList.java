@@ -111,7 +111,7 @@ public class AlarmList extends Composite
 		this.viewPart = viewPart;		
 		
 		// Setup table columns
-		final String[] names = { Messages.AlarmList_ColumnSeverity, Messages.AlarmList_ColumnState, Messages.AlarmList_ColumnSource, Messages.AlarmList_ColumnMessage, Messages.AlarmList_ColumnCount, "Comments", Messages.AlarmList_AckBy, Messages.AlarmList_ColumnCreated, Messages.AlarmList_ColumnLastChange };
+		final String[] names = { Messages.AlarmList_ColumnSeverity, Messages.AlarmList_ColumnState, Messages.AlarmList_ColumnSource, Messages.AlarmList_ColumnMessage, Messages.AlarmList_ColumnCount, Messages.AlarmList_Comments, Messages.AlarmList_AckBy, Messages.AlarmList_ColumnCreated, Messages.AlarmList_ColumnLastChange };
 		final int[] widths = { 100, 100, 150, 300, 70, 70, 100, 100, 100 };
 		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
@@ -298,7 +298,7 @@ public class AlarmList extends Composite
 			}
 		};
 		
-		actionComments = new Action("Comments", Activator.getImageDescriptor("icons/comments.png")) {
+		actionComments = new Action(Messages.AlarmList_Comments, Activator.getImageDescriptor("icons/comments.png")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -308,7 +308,7 @@ public class AlarmList extends Composite
 			}
 		};
 
-		actionAcknowledge = new Action("&Acknowledge", Activator.getImageDescriptor("icons/acknowledged.png")) {
+		actionAcknowledge = new Action(Messages.AlarmList_Acknowledge, Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -318,7 +318,7 @@ public class AlarmList extends Composite
 			}
 		};
 
-		actionStickyAcknowledge = new Action("&Sticky acknowledge", Activator.getImageDescriptor("icons/acknowledged_sticky.png")) {
+		actionStickyAcknowledge = new Action(Messages.AlarmList_StickyAck, Activator.getImageDescriptor("icons/acknowledged_sticky.png")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -328,7 +328,7 @@ public class AlarmList extends Composite
 			}
 		};
 
-		actionResolve = new Action("&Resolve", Activator.getImageDescriptor("icons/resolved.png")) {
+		actionResolve = new Action(Messages.AlarmList_Resolve, Activator.getImageDescriptor("icons/resolved.png")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -338,7 +338,7 @@ public class AlarmList extends Composite
 			}
 		};
 
-		actionTerminate = new Action("&Terminate", Activator.getImageDescriptor("icons/terminated.png")) {
+		actionTerminate = new Action(Messages.AlarmList_Terminate, Activator.getImageDescriptor("icons/terminated.png")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -472,7 +472,7 @@ public class AlarmList extends Composite
 		}
 		catch(PartInitException e)
 		{
-			MessageDialog.openError(getShell(), "Error", "Unable to open alarm comments view: " + e.getLocalizedMessage());
+			MessageDialog.openError(getShell(), Messages.AlarmList_Error, Messages.AlarmList_ErrorText + e.getLocalizedMessage());
 		}
 	}
 	
@@ -523,11 +523,11 @@ public class AlarmList extends Composite
 			return;
 		
 		final Object[] alarms = selection.toArray();
-		new ConsoleJob("Resolving alarms", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+		new ConsoleJob(Messages.AlarmList_Resolving, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask("Resolve alarm...", alarms.length);
+				monitor.beginTask(Messages.AlarmList_ResolveAlarm, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
@@ -542,7 +542,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot resolve alarm";
+				return Messages.AlarmList_CannotResoveAlarm;
 			}
 		}.start();
 	}

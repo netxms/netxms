@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.netxms.api.client.ProgressListener;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.filemanager.Activator;
+import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.dialogs.StartClientToServerFileUploadDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -65,7 +66,7 @@ public class UploadFileToServer implements IWorkbenchWindowActionDelegate
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob("Upload file to server", null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.UploadFileToServer_JobTitle, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(final IProgressMonitor monitor) throws Exception
 				{
@@ -75,7 +76,7 @@ public class UploadFileToServer implements IWorkbenchWindowActionDelegate
 						@Override
 						public void setTotalWorkAmount(long workTotal)
 						{
-							monitor.beginTask("Upload file " + dlg.getLocalFile().getAbsolutePath(), (int)workTotal);
+							monitor.beginTask(Messages.UploadFileToServer_TaskNamePrefix + dlg.getLocalFile().getAbsolutePath(), (int)workTotal);
 						}
 						
 						@Override
@@ -91,7 +92,7 @@ public class UploadFileToServer implements IWorkbenchWindowActionDelegate
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot upload file to server";
+					return Messages.UploadFileToServer_JobError;
 				}
 			}.start();
 		}

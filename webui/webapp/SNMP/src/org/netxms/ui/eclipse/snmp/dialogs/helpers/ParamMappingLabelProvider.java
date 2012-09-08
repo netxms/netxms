@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.snmp.SnmpTrapParameterMapping;
+import org.netxms.ui.eclipse.snmp.Messages;
 
 /**
  * Label provider for SNMP trap parameter mapping
@@ -66,7 +67,7 @@ public class ParamMappingLabelProvider implements ITableLabelProvider
 			case 0:	// position
 				return Integer.toString(pmap.indexOf(pm) + 2);
 			case 1:	// OID or position in trap
-				return (pm.getType() == SnmpTrapParameterMapping.BY_OBJECT_ID) ? pm.getObjectId().toString() : ("POS: " + Integer.toString(pm.getPosition()));
+				return (pm.getType() == SnmpTrapParameterMapping.BY_OBJECT_ID) ? pm.getObjectId().toString() : (Messages.ParamMappingLabelProvider_PositionPrefix + Integer.toString(pm.getPosition()));
 		}
 		return null;
 	}

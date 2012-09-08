@@ -25,6 +25,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.datacollection.ColumnDefinition;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.snmp.SnmpObjectId;
+import org.netxms.ui.eclipse.datacollection.Messages;
 
 /**
  * Label provider for list of table column definitions
@@ -40,12 +41,12 @@ public class TableColumnLabelProvider extends LabelProvider implements ITableLab
 	 */
 	public TableColumnLabelProvider()
 	{
-		dtTexts.put(DataCollectionItem.DT_INT, "Integer");
-		dtTexts.put(DataCollectionItem.DT_UINT, "Unsigned Integer");
-		dtTexts.put(DataCollectionItem.DT_INT64, "Int64");
-		dtTexts.put(DataCollectionItem.DT_UINT64, "Unsigned Int64");
-		dtTexts.put(DataCollectionItem.DT_FLOAT, "Float");
-		dtTexts.put(DataCollectionItem.DT_STRING, "String");
+		dtTexts.put(DataCollectionItem.DT_INT, Messages.TableColumnLabelProvider_in32);
+		dtTexts.put(DataCollectionItem.DT_UINT, Messages.TableColumnLabelProvider_uint32);
+		dtTexts.put(DataCollectionItem.DT_INT64, Messages.TableColumnLabelProvider_int64);
+		dtTexts.put(DataCollectionItem.DT_UINT64, Messages.TableColumnLabelProvider_uint64);
+		dtTexts.put(DataCollectionItem.DT_FLOAT, Messages.TableColumnLabelProvider_float);
+		dtTexts.put(DataCollectionItem.DT_STRING, Messages.TableColumnLabelProvider_string);
 	}
 	
 	/* (non-Javadoc)

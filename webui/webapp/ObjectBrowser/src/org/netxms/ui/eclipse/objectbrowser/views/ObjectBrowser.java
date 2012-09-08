@@ -64,6 +64,7 @@ import org.netxms.client.objects.TemplateRoot;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.IActionConstants;
@@ -105,7 +106,7 @@ public class ObjectBrowser extends ViewPart
 			initHideUnmanaged = safeCast(memento.getBoolean("ObjectBrowser.hideUnmanaged"), false); //$NON-NLS-1$
 			initHideTemplateChecks = safeCast(memento.getBoolean("ObjectBrowser.hideTemplateChecks"), false); //$NON-NLS-1$
 			initShowFilter = safeCast(memento.getBoolean("ObjectBrowser.showFilter"), true); //$NON-NLS-1$
-			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), false); //$NON-NLS-1$
+			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), true); //$NON-NLS-1$
 		}
 	}
 
@@ -121,10 +122,10 @@ public class ObjectBrowser extends ViewPart
 	public void saveState(IMemento memento)
 	{
 		super.saveState(memento);
-		memento.putBoolean("ObjectBrowser.hideUnmanaged", objectTree.isHideUnmanaged());
-		memento.putBoolean("ObjectBrowser.hideTemplateChecks", objectTree.isHideTemplateChecks());
-		memento.putBoolean("ObjectBrowser.showFilter", objectTree.isFilterEnabled());
-		memento.putBoolean("ObjectBrowser.showStatusIndicator", objectTree.isStatusIndicatorEnabled());
+		memento.putBoolean("ObjectBrowser.hideUnmanaged", objectTree.isHideUnmanaged()); //$NON-NLS-1$
+		memento.putBoolean("ObjectBrowser.hideTemplateChecks", objectTree.isHideTemplateChecks()); //$NON-NLS-1$
+		memento.putBoolean("ObjectBrowser.showFilter", objectTree.isFilterEnabled()); //$NON-NLS-1$
+		memento.putBoolean("ObjectBrowser.showStatusIndicator", objectTree.isStatusIndicatorEnabled()); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -189,7 +190,7 @@ public class ObjectBrowser extends ViewPart
 		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
 		if (contextService != null)
 		{
-			contextService.activateContext("org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser");
+			contextService.activateContext("org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser"); //$NON-NLS-1$
 		}
 	}
 	
@@ -210,7 +211,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveObject = new Action("&Move to another container") {
+		actionMoveObject = new Action(Messages.ObjectBrowser_MoveObject) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -220,7 +221,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveTemplate = new Action("&Move to another group") {
+		actionMoveTemplate = new Action(Messages.ObjectBrowser_MoveTemplate) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -230,7 +231,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-		actionMoveBusinessService = new Action("&Move to another service") {
+		actionMoveBusinessService = new Action(Messages.ObjectBrowser_MoveService) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -240,7 +241,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-      actionHideUnmanaged = new Action("&Hide unmanaged objects", Action.AS_CHECK_BOX) {
+      actionHideUnmanaged = new Action(Messages.ObjectBrowser_HideUnmanaged, Action.AS_CHECK_BOX) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -252,7 +253,7 @@ public class ObjectBrowser extends ViewPart
       };
       actionHideUnmanaged.setChecked(objectTree.isHideUnmanaged());
 
-      actionHideTemplateChecks = new Action("Hide check templates", Action.AS_CHECK_BOX) {
+      actionHideTemplateChecks = new Action(Messages.ObjectBrowser_HideCheckTemplates, Action.AS_CHECK_BOX) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -264,7 +265,7 @@ public class ObjectBrowser extends ViewPart
       };
       actionHideTemplateChecks.setChecked(objectTree.isHideTemplateChecks());
 
-      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
+      actionShowFilter = new Action(Messages.ObjectBrowser_ShowFilter, Action.AS_CHECK_BOX) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -275,11 +276,11 @@ public class ObjectBrowser extends ViewPart
 			}
       };
       actionShowFilter.setChecked(objectTree.isFilterEnabled());
-      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.show_object_filter");
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.show_object_filter"); //$NON-NLS-1$
 		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
       
-      actionShowStatusIndicator = new Action("Show &status indicator", Action.AS_CHECK_BOX) {
+      actionShowStatusIndicator = new Action(Messages.ObjectBrowser_ShowStatusIndicator, Action.AS_CHECK_BOX) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -289,7 +290,7 @@ public class ObjectBrowser extends ViewPart
 			}
       };
       actionShowStatusIndicator.setChecked(objectTree.isStatusIndicatorEnabled());
-      actionShowStatusIndicator.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.show_status_indicator");
+      actionShowStatusIndicator.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.show_status_indicator"); //$NON-NLS-1$
 		final ActionHandler showStatusIndicatorHandler = new ActionHandler(actionShowStatusIndicator);
 		handlerService.activateHandler(actionShowStatusIndicator.getActionDefinitionId(), showStatusIndicatorHandler);
 
@@ -467,7 +468,7 @@ public class ObjectBrowser extends ViewPart
 		{
 			final GenericObject target = dlg.getSelectedObjects().get(0);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob("Moving object " + ((GenericObject)currentObject).getObjectName(), this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.ObjectBrowser_MoveJob_Title + ((GenericObject)currentObject).getObjectName(), this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -479,7 +480,7 @@ public class ObjectBrowser extends ViewPart
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot move object " + ((GenericObject)currentObject).getObjectName();
+					return Messages.ObjectBrowser_MoveJob_Error + ((GenericObject)currentObject).getObjectName();
 				}
 			}.start();
 		}

@@ -29,6 +29,7 @@ import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.ui.eclipse.snmp.Activator;
+import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.SnmpConstants;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -66,7 +67,7 @@ public class MibObjectDetails extends Composite
 		
 		if (showOID)
 		{
-			oid = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, "Object identifier (OID)", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+			oid = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, Messages.MibObjectDetails_OID, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 			oid.addModifyListener(new ModifyListener() {
 				private static final long serialVersionUID = 1L;
 
@@ -96,9 +97,9 @@ public class MibObjectDetails extends Composite
 		gd.grabExcessHorizontalSpace = true;
 		infoGroup.setLayoutData(gd);
 		
-		type = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Type", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		status = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Status", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		access = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Access", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		type = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.MibObjectDetails_Type, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+		status = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.MibObjectDetails_Status, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+		access = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.MibObjectDetails_Access, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 		
 		/* MIB object's description */
 		gd = new GridData();
@@ -107,7 +108,7 @@ public class MibObjectDetails extends Composite
 		gd.grabExcessVerticalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		description = WidgetHelper.createLabeledText(this, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.READ_ONLY,
-		                                             500, "Description", "", gd);
+		                                             500, Messages.MibObjectDetails_8, "", gd); //$NON-NLS-1$
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -150,7 +151,7 @@ public class MibObjectDetails extends Composite
 			if ((oid != null) && updateObjectId)
 			{
 				SnmpObjectId objectId = object.getObjectId(); 
-				oid.setText((objectId != null) ? objectId.toString() : "");
+				oid.setText((objectId != null) ? objectId.toString() : ""); //$NON-NLS-1$
 			}
 			description.setText(object.getDescription());
 			type.setText(SnmpConstants.getObjectTypeName(object.getType()));
@@ -160,11 +161,11 @@ public class MibObjectDetails extends Composite
 		else
 		{
 			if (oid != null)
-				oid.setText("");
-			description.setText("");
-			type.setText("");
-			status.setText("");
-			access.setText("");
+				oid.setText(""); //$NON-NLS-1$
+			description.setText(""); //$NON-NLS-1$
+			type.setText(""); //$NON-NLS-1$
+			status.setText(""); //$NON-NLS-1$
+			access.setText(""); //$NON-NLS-1$
 		}
 	}
 }

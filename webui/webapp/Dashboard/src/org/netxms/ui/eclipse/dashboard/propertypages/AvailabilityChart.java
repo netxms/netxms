@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.ServiceContainer;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AvailabilityChartConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -59,7 +60,7 @@ public class AvailabilityChart extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
-		objectSelector.setLabel("Business service object");
+		objectSelector.setLabel(Messages.AvailabilityChart_Object);
 		objectSelector.setObjectClass(ServiceContainer.class);
 		objectSelector.setObjectId(config.getObjectId());
 		GridData gd = new GridData();
@@ -68,7 +69,7 @@ public class AvailabilityChart extends PropertyPage
 		objectSelector.setLayoutData(gd);
 		
 		title = new LabeledText(dialogArea, SWT.NONE);
-		title.setLabel("Title");
+		title.setLabel(Messages.AvailabilityChart_Title);
 		title.setText(config.getTitle());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -76,19 +77,19 @@ public class AvailabilityChart extends PropertyPage
 		title.setLayoutData(gd);
 		
 		checkShowTitle = new Button(dialogArea, SWT.CHECK);
-		checkShowTitle.setText("Show &title");
+		checkShowTitle.setText(Messages.AvailabilityChart_ShowTitle);
 		checkShowTitle.setSelection(config.isShowTitle());
 		
 		checkShowLegend = new Button(dialogArea, SWT.CHECK);
-		checkShowLegend.setText("Show &legend");
+		checkShowLegend.setText(Messages.AvailabilityChart_ShowLegend);
 		checkShowLegend.setSelection(config.isShowLegend());
 		
 		checkShow3D = new Button(dialogArea, SWT.CHECK);
-		checkShow3D.setText("&3D view");
+		checkShow3D.setText(Messages.AvailabilityChart_3DView);
 		checkShow3D.setSelection(config.isShowIn3D());
 		
 		checkTranslucent = new Button(dialogArea, SWT.CHECK);
-		checkTranslucent.setText("&Translucent");
+		checkTranslucent.setText(Messages.AvailabilityChart_Translucent);
 		checkTranslucent.setSelection(config.isTranslucent());
 		
 		return dialogArea;

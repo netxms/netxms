@@ -39,6 +39,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.EditElementXmlDlg;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
@@ -53,19 +54,19 @@ import org.netxms.ui.eclipse.shared.SharedColors;
 @SuppressWarnings("restriction")
 public class DashboardControl extends Composite
 {
+	public static final String DEFAULT_CHART_CONFIG = "<element>\n\t<showIn3D>true</showIn3D>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>";  //$NON-NLS-1$
+	public static final String DEFAULT_LINE_CHART_CONFIG = "<element>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>"; //$NON-NLS-1$
+	public static final String DEFAULT_DIAL_CHART_CONFIG = "<element>\n\t<maxValue>100</maxValue>\n\t<yellowZone>70</yellowZone>\n\t<redZone>90</redZone>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>";  //$NON-NLS-1$
+	public static final String DEFAULT_AVAILABILITY_CHART_CONFIG = "<element>\n\t<objectId>9</objectId>\n\t<showIn3D>true</showIn3D>\n</element>"; //$NON-NLS-1$
+	public static final String DEFAULT_TABLE_CHART_CONFIG = "<element>\n\t<showIn3D>true</showIn3D>\n\t<nodeId>0</nodeId>\n\t<dciId>0</dciId>\n\t<dataColumn>DATA</dataColumn>\n</element>";  //$NON-NLS-1$
+	public static final String DEFAULT_OBJECT_REFERENCE_CONFIG = "<element>\n\t<objectId>0</objectId>\n</element>"; //$NON-NLS-1$
+	public static final String DEFAULT_LABEL_CONFIG = "<element>\n\t<title>Label</title>\n</element>";  //$NON-NLS-1$
+	public static final String DEFAULT_NETWORK_MAP_CONFIG = "<element>\n\t<objectId>0</objectId>\n\t<title></title>\n</element>";  //$NON-NLS-1$
+	public static final String DEFAULT_GEO_MAP_CONFIG = "<element>\n\t<latitude>0</latitude>\n\t<longitude>0</longitude>\n\t<zoom>8</zoom>\t<title></title>\n</element>";  //$NON-NLS-1$
+	public static final String DEFAULT_WEB_PAGE_CONFIG = "<element>\n\t<url>http://</url>\n\t<title></title>\n</element>";  //$NON-NLS-1$
+			
 	private static final long serialVersionUID = 1L;
 
-	public static final String DEFAULT_CHART_CONFIG = "<element>\n\t<showIn3D>true</showIn3D>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>"; 
-	public static final String DEFAULT_LINE_CHART_CONFIG = "<element>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>";
-	public static final String DEFAULT_DIAL_CHART_CONFIG = "<element>\n\t<maxValue>100</maxValue>\n\t<yellowZone>70</yellowZone>\n\t<redZone>90</redZone>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>"; 
-	public static final String DEFAULT_AVAILABILITY_CHART_CONFIG = "<element>\n\t<objectId>9</objectId>\n\t<showIn3D>true</showIn3D>\n</element>";
-	public static final String DEFAULT_TABLE_CHART_CONFIG = "<element>\n\t<showIn3D>true</showIn3D>\n\t<nodeId>0</nodeId>\n\t<dciId>0</dciId>\n\t<dataColumn>DATA</dataColumn>\n</element>"; 
-	public static final String DEFAULT_OBJECT_REFERENCE_CONFIG = "<element>\n\t<objectId>0</objectId>\n</element>";
-	public static final String DEFAULT_LABEL_CONFIG = "<element>\n\t<title>Label</title>\n</element>"; 
-	public static final String DEFAULT_NETWORK_MAP_CONFIG = "<element>\n\t<objectId>0</objectId>\n\t<title></title>\n</element>"; 
-	public static final String DEFAULT_GEO_MAP_CONFIG = "<element>\n\t<latitude>0</latitude>\n\t<longitude>0</longitude>\n\t<zoom>8</zoom>\t<title></title>\n</element>"; 
-	public static final String DEFAULT_WEB_PAGE_CONFIG = "<element>\n\t<url>http://</url>\n\t<title></title>\n</element>"; 
-			
 	private Dashboard dashboard;
 	private List<DashboardElement> elements;
 	private Map<DashboardElement, ElementWidget> elementWidgets = new HashMap<DashboardElement, ElementWidget>();
@@ -355,12 +356,12 @@ public class DashboardControl extends Composite
 			}
 			catch(Exception e)
 			{
-				MessageDialog.openError(getShell(), "Internal Error", "Internal error: " + e.getMessage());
+				MessageDialog.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorPrefix + e.getMessage());
 			}
 		}
 		else
 		{
-			MessageDialog.openError(getShell(), "Internal Error", "Internal error: no adapter for dashboard element");
+			MessageDialog.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorText1);
 		}
 	}
 
@@ -420,12 +421,12 @@ public class DashboardControl extends Composite
 			}
 			catch(Exception e)
 			{
-				MessageDialog.openError(getShell(), "Internal Error", "Internal error: " + e.getMessage());
+				MessageDialog.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorPrefix + e.getMessage());
 			}
 		}
 		else
 		{
-			MessageDialog.openError(getShell(), "Internal Error", "Internal error: no adapter for dashboard element");
+			MessageDialog.openError(getShell(), Messages.DashboardControl_InternalError, Messages.DashboardControl_InternalErrorText2);
 		}
 	}
 	
@@ -520,7 +521,7 @@ public class DashboardControl extends Composite
 		final NXCObjectModificationData md = new NXCObjectModificationData(dashboard.getObjectId());
 		md.setDashboardElements(new ArrayList<DashboardElement>(elements));
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Save dashboard layout", viewPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.DashboardControl_SaveLayout, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -542,7 +543,7 @@ public class DashboardControl extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot save dashboard " + dashboard.getObjectName();
+				return Messages.DashboardControl_SaveError + dashboard.getObjectName();
 			}
 		}.start();
 	}

@@ -48,7 +48,7 @@ public class ThresholdTreeComparator extends ViewerComparator
 		
 		if ((e1 instanceof ThresholdViolationSummary) && (e2 instanceof ThresholdViolationSummary))
 		{
-			switch((Integer)((SortableTreeViewer)viewer).getTree().getSortColumn().getData("ID"))
+			switch((Integer)((SortableTreeViewer)viewer).getTree().getSortColumn().getData("ID")) //$NON-NLS-1$
 			{
 				case ThresholdSummaryWidget.COLUMN_NODE:
 					String name1 = session.getObjectName(((ThresholdViolationSummary)e1).getNodeId());
@@ -64,7 +64,7 @@ public class ThresholdTreeComparator extends ViewerComparator
 		}
 		else if ((e1 instanceof DciValue) && (e2 instanceof DciValue))
 		{
-			switch((Integer)((SortableTreeViewer)viewer).getTree().getSortColumn().getData("ID"))
+			switch((Integer)((SortableTreeViewer)viewer).getTree().getSortColumn().getData("ID")) //$NON-NLS-1$
 			{
 				case ThresholdSummaryWidget.COLUMN_STATUS:
 					result = ((DciValue)e1).getActiveThreshold().getCurrentSeverity() - ((DciValue)e2).getActiveThreshold().getCurrentSeverity();

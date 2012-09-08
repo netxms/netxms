@@ -22,8 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -47,7 +45,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
@@ -57,6 +54,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
+import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.dialogs.TrapConfigurationDialog;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapComparator;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapLabelProvider;
@@ -69,14 +67,14 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class SnmpTrapEditor extends ViewPart implements SessionListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor";
+	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor"; //$NON-NLS-1$
 	
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_TRAP_OID = 1;
 	public static final int COLUMN_EVENT = 2;
 	public static final int COLUMN_DESCRIPTION = 3;
 	
-	private static final String TABLE_CONFIG_PREFIX = "SnmpTrapEditor";
+	private static final String TABLE_CONFIG_PREFIX = "SnmpTrapEditor"; //$NON-NLS-1$
 	
 	private SortableTableViewer viewer;
 	private NXCSession session;
@@ -96,7 +94,7 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		
 		parent.setLayout(new FillLayout());
 		
-		final String[] columnNames = { "ID", "SNMP Trap OID", "Event", "Description" };
+		final String[] columnNames = { Messages.SnmpTrapEditor_ColID, Messages.SnmpTrapEditor_ColOID, Messages.SnmpTrapEditor_ColEvent, Messages.SnmpTrapEditor_ColDescription };
 		final int[] columnWidths = { 70, 200, 100, 200 };
 		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
@@ -211,8 +209,8 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 				createTrap();
 			}
 		};
-		actionNew.setText("&New trap mapping...");
-		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png"));
+		actionNew.setText(Messages.SnmpTrapEditor_NewMapping);
+		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png")); //$NON-NLS-1$
 		
 		actionEdit = new Action() {
 			private static final long serialVersionUID = 1L;
@@ -226,8 +224,8 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 				editTrap();
 			}
 		};
-		actionEdit.setText("&Properties...");
-		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png"));
+		actionEdit.setText(Messages.SnmpTrapEditor_Properties);
+		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png")); //$NON-NLS-1$
 		
 		actionDelete = new Action() {
 			private static final long serialVersionUID = 1L;
@@ -241,8 +239,8 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 				deleteTraps();
 			}
 		};
-		actionDelete.setText("&Delete");
-		actionDelete.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png"));
+		actionDelete.setText(Messages.SnmpTrapEditor_Delete);
+		actionDelete.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png")); //$NON-NLS-1$
 	}
 	
 	/**
@@ -335,11 +333,11 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 	 */
 	private void refreshTrapList()
 	{
-		new ConsoleJob("Load SNMP traps configuration", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SnmpTrapEditor_LoadJob_Title, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot load SNMP traps configuration from server";
+				return Messages.SnmpTrapEditor_LoadJob_Error;
 			}
 
 			@Override
@@ -364,17 +362,16 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 	 */
 	private void updateTrapList()
 	{
-		new UIJob(viewer.getControl().getDisplay(), "Update SNMP trap list") {
+		viewer.getControl().getDisplay().asyncExec(new Runnable() {
 			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor)
+			public void run()
 			{
 				synchronized(traps)
 				{
 					viewer.setInput(traps.values().toArray());
 				}
-				return Status.OK_STATUS;
 			}
-		}.schedule();
+		});
 	}
 
 	/**
@@ -384,11 +381,11 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		final Object[] objects = selection.toArray();
-		new ConsoleJob("Delete SNMP trap configuration records", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SnmpTrapEditor_DeleteJob_Title, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot delete SNMP trap configuration record";
+				return Messages.SnmpTrapEditor_DeleteJob_Error;
 			}
 
 			@Override
@@ -415,11 +412,11 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		TrapConfigurationDialog dlg = new TrapConfigurationDialog(getViewSite().getShell(), trap);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Modify SNMP trap configuration", this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.SnmpTrapEditor_ModifyJob_Title, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot modify SNMP trap configuration";
+					return Messages.SnmpTrapEditor_ModifyJob_Error;
 				}
 
 				@Override
@@ -441,11 +438,11 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 		TrapConfigurationDialog dlg = new TrapConfigurationDialog(getViewSite().getShell(), trap);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Create SNMP trap configuration record", this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.SnmpTrapEditor_CreateJob_Title, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot modify SNMP trap configuration";
+					return Messages.SnmpTrapEditor_CreateJob_Error;
 				}
 
 				@Override

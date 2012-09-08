@@ -15,6 +15,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -43,7 +44,7 @@ public class DciRemoveConfirmationDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Remove Template");
+		newShell.setText(Messages.DciRemoveConfirmationDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -62,7 +63,7 @@ public class DciRemoveConfirmationDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		final Label image = new Label(dialogArea, SWT.NONE);
-		image.setImage(Activator.getImageDescriptor("icons/question.png").createImage());
+		image.setImage(Activator.getImageDescriptor("icons/question.png").createImage()); //$NON-NLS-1$
 		GridData gd = new GridData();
 		gd.verticalSpan = 3;
 		image.setLayoutData(gd);
@@ -77,17 +78,17 @@ public class DciRemoveConfirmationDialog extends Dialog
 		});
 		
 		final Label label = new Label(dialogArea, SWT.WRAP);
-		label.setText("You are about to remove data collection template from a node. Please select how to deal with DCIs related to this template:");
+		label.setText(Messages.DciRemoveConfirmationDialog_WarningText);
 		gd = new GridData();
 		gd.widthHint = 300;
 		label.setLayoutData(gd);
 		
 		radioRemove = new Button(dialogArea, SWT.RADIO);
-		radioRemove.setText("&Remove DCIs from node");
+		radioRemove.setText(Messages.DciRemoveConfirmationDialog_Remove);
 		radioRemove.setSelection(true);
 		
 		radioUnbind = new Button(dialogArea, SWT.RADIO);
-		radioUnbind.setText("&Unbind DCIs from template");
+		radioUnbind.setText(Messages.DciRemoveConfirmationDialog_Unbind);
 		radioUnbind.setSelection(false);
 		
 		return dialogArea;

@@ -69,6 +69,8 @@ public class Capabilities extends TableElement
 		addFlag("isSNMP", (node.getFlags() & Node.NF_IS_SNMP) != 0);
 		addFlag("isSTP", (node.getFlags() & Node.NF_IS_STP) != 0);
 		addFlag("isVRRP", (node.getFlags() & Node.NF_IS_VRRP) != 0);
+		addFlag("hasEntityMIB", (node.getFlags() & Node.NF_HAS_ENTITY_MIB) != 0);
+		addFlag("hasIfXTable", (node.getFlags() & Node.NF_HAS_IFXTABLE) != 0);
 		if ((node.getFlags() & Node.NF_IS_SNMP) != 0)
 		{
 			addPair("snmpPort", Integer.toString(node.getSnmpPort()));

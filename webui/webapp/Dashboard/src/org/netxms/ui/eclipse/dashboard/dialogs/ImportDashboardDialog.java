@@ -27,6 +27,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.filemanager.widgets.LocalFileSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -60,7 +61,7 @@ public class ImportDashboardDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Import Dashboard");
+		newShell.setText(Messages.ImportDashboardDialog_Title);
 	}
 	
 	/* (non-Javadoc)
@@ -77,7 +78,7 @@ public class ImportDashboardDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       textName = new LabeledText(dialogArea, SWT.NONE);
-      textName.setLabel("Object name");
+      textName.setLabel(Messages.ImportDashboardDialog_ObjectName);
       textName.getTextControl().setTextLimit(63);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -86,9 +87,9 @@ public class ImportDashboardDialog extends Dialog
       textName.setLayoutData(gd);
       
       importFileSelector = new LocalFileSelector(dialogArea, SWT.NONE, false);
-      importFileSelector.setLabel("Import file");
-      importFileSelector.setFilterExtensions(new String[] { "*.xml", "*.*" });
-      importFileSelector.setFilterNames(new String[] { "XML files", "All files" });
+      importFileSelector.setLabel(Messages.ImportDashboardDialog_ImportFile);
+      importFileSelector.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+      importFileSelector.setFilterNames(new String[] { Messages.ImportDashboardDialog_XMLFiles, Messages.ImportDashboardDialog_AllFiles });
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -107,13 +108,13 @@ public class ImportDashboardDialog extends Dialog
 		objectName = textName.getText().trim();
 		if (objectName.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid object name");
+			MessageDialog.openWarning(getShell(), Messages.ImportDashboardDialog_Warning, Messages.ImportDashboardDialog_WarningValidName);
 			return;
 		}
 		importFile = importFileSelector.getFile();
 		if (importFile == null)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please select import file");
+			MessageDialog.openWarning(getShell(), Messages.ImportDashboardDialog_Warning, Messages.ImportDashboardDialog_WarningSelectFile);
 			return;
 		}
 		super.okPressed();

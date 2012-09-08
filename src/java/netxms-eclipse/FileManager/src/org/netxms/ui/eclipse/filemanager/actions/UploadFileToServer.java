@@ -65,11 +65,11 @@ public class UploadFileToServer implements IWorkbenchWindowActionDelegate
 		final StartClientToServerFileUploadDialog dlg = new StartClientToServerFileUploadDialog(window.getShell());
 		if (dlg.open() == Window.OK)
 		{
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			new ConsoleJob(Messages.UploadFileToServer_JobTitle, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(final IProgressMonitor monitor) throws Exception
 				{
-					NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 					session.uploadFileToServer(dlg.getLocalFile(), dlg.getRemoteFileName(), new ProgressListener() {
 						private long prevWorkDone = 0;
 						

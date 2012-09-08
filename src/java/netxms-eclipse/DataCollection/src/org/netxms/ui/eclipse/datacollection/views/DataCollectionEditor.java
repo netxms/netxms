@@ -372,8 +372,7 @@ public class DataCollectionEditor extends ViewPart
 	{
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
-		actionRefresh = new RefreshAction()
-		{
+		actionRefresh = new RefreshAction() {
 			@Override
 			public void run()
 			{
@@ -381,8 +380,7 @@ public class DataCollectionEditor extends ViewPart
 			}
 		};
 
-		actionCreateItem = new Action(Messages.DataCollectionEditor_NewParam, Activator.getImageDescriptor("icons/new.png")) //$NON-NLS-1$
-		{
+		actionCreateItem = new Action(Messages.DataCollectionEditor_NewParam, Activator.getImageDescriptor("icons/new.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -390,8 +388,7 @@ public class DataCollectionEditor extends ViewPart
 			}
 		};
 
-		actionCreateTable = new Action(Messages.DataCollectionEditor_NewTable)
-		{
+		actionCreateTable = new Action(Messages.DataCollectionEditor_NewTable) {
 			@Override
 			public void run()
 			{

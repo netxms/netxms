@@ -32,6 +32,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -41,7 +42,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class DashboardDynamicView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardDynamicView";
+	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardDynamicView"; //$NON-NLS-1$
 
 	private Dashboard dashboard = null;
 	private DashboardControl dbc = null;
@@ -158,7 +159,7 @@ public class DashboardDynamicView extends ViewPart
 		dashboard = object;
 		dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, false);
 		parentComposite.layout();
-		setPartName("Dashboard: " + dashboard.getObjectName());
+		setPartName(Messages.DashboardDynamicView_PartNamePrefix + dashboard.getObjectName());
 	}
 	
 	/**
@@ -176,7 +177,7 @@ public class DashboardDynamicView extends ViewPart
 		{
 			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, false);
 			parentComposite.layout();
-			setPartName("Dashboard: " + dashboard.getObjectName());
+			setPartName(Messages.DashboardDynamicView_PartNamePrefix + dashboard.getObjectName());
 		}
 		else
 		{

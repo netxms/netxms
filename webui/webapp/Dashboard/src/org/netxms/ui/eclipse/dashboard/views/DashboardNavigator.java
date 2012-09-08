@@ -50,7 +50,7 @@ import org.netxms.ui.eclipse.shared.IActionConstants;
  */
 public class DashboardNavigator extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardNavigator";
+	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardNavigator"; //$NON-NLS-1$
 	
 	private NXCSession session = null;
 	private SessionListener sessionListener = null;
@@ -115,6 +115,8 @@ public class DashboardNavigator extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

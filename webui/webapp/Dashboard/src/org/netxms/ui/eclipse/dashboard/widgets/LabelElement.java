@@ -67,7 +67,7 @@ public class LabelElement extends ElementWidget
 		label.setForeground(ColorConverter.colorFromInt(config.getForegroundColorAsInt(), colors));
 		setBackground(ColorConverter.colorFromInt(config.getBackgroundColorAsInt(), colors));
 		
-		font = new Font(getDisplay(), "Verdana", 10, SWT.BOLD);
+		font = new Font(getDisplay(), "Verdana", 10, SWT.BOLD); //$NON-NLS-1$
 		label.setFont(font);
 		
 		addDisposeListener(new DisposeListener() {

@@ -34,6 +34,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -44,7 +45,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class DashboardView extends ViewPart implements ISaveablePart
 {
-	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardView";
+	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardView"; //$NON-NLS-1$
 	
 	private NXCSession session;
 	private Dashboard dashboard;
@@ -74,8 +75,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		session = (NXCSession)ConsoleSharedData.getSession();
 		dashboard = (Dashboard)session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		if (dashboard == null)
-			throw new PartInitException("Dashboard object is no longer exist or is not accessible");
-		setPartName("Dashboard: " + dashboard.getObjectName());
+			throw new PartInitException(Messages.DashboardView_InitError);
+		setPartName(Messages.DashboardView_PartNamePrefix + dashboard.getObjectName());
 	}
 
 	/* (non-Javadoc)
@@ -120,15 +121,15 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			{
 				if (dbc.isModified())
 				{
-					if (!MessageDialog.openConfirm(getSite().getShell(), "Refresh Dashboard", 
-							"This will destroy all unsaved changes. Are you sure?"))
+					if (!MessageDialog.openConfirm(getSite().getShell(), Messages.DashboardView_Refresh, 
+							Messages.DashboardView_Confirmation))
 						return;
 				}
 				rebuildDashboard(true);
 			}
 		};
 		
-		actionSave = new Action("&Save") {
+		actionSave = new Action(Messages.DashboardView_Save) {
       	private static final long serialVersionUID = 1L;
 
 			@Override
@@ -140,7 +141,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		actionSave.setImageDescriptor(SharedIcons.SAVE);
 		actionSave.setEnabled(false);
 		
-		actionEditMode = new Action("Edit mode", Action.AS_CHECK_BOX) {
+		actionEditMode = new Action(Messages.DashboardView_EditMode, Action.AS_CHECK_BOX) {
       	private static final long serialVersionUID = 1L;
 
 			@Override
@@ -155,7 +156,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		actionEditMode.setImageDescriptor(SharedIcons.EDIT);
 		actionEditMode.setChecked(dbc.isEditMode());
 		
-		actionAddAlarmBrowser = new Action("Add &alarm browser") {
+		actionAddAlarmBrowser = new Action(Messages.DashboardView_AddAlarmBrowser) {
       	private static final long serialVersionUID = 1L;
 
 			@Override
@@ -165,7 +166,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 		
-		actionAddLabel = new Action("Add &label") {
+		actionAddLabel = new Action(Messages.DashboardView_AddLabel) {
       	private static final long serialVersionUID = 1L;
 
 			@Override
@@ -175,7 +176,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 		
-		actionAddBarChart = new Action("Add &bar chart") {
+		actionAddBarChart = new Action(Messages.DashboardView_AddBarChart) {
       	private static final long serialVersionUID = 1L;
 
 			@Override
@@ -185,7 +186,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 
-		actionAddPieChart = new Action("Add &pie chart") {
+		actionAddPieChart = new Action(Messages.DashboardView_AddPieChart) {
       	private static final long serialVersionUID = 1L;
 
 			@Override
@@ -195,7 +196,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 
-		actionAddTubeChart = new Action("Add &tube chart") {
+		actionAddTubeChart = new Action(Messages.DashboardView_AddTubeChart) {
       	private static final long serialVersionUID = 1L;
 
 			@Override
@@ -205,7 +206,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 
-		actionAddLineChart = new Action("Add &line chart") {
+		actionAddLineChart = new Action(Messages.DashboardView_AddLineChart) {
       	private static final long serialVersionUID = 1L;
 
 			@Override
@@ -215,7 +216,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 
-		actionAddAvailabilityChart = new Action("Add a&vailability chart") {
+		actionAddAvailabilityChart = new Action(Messages.DashboardView_AddAvailChart) {
       	private static final long serialVersionUID = 1L;
 
 			@Override
@@ -225,7 +226,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 
-		actionAddDashboard = new Action("Add embedded &dashboard") {
+		actionAddDashboard = new Action(Messages.DashboardView_AddDashboard) {
       	private static final long serialVersionUID = 1L;
 
 			@Override
@@ -235,7 +236,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 
-		actionAddStatusIndicator = new Action("Add &status indicator") {
+		actionAddStatusIndicator = new Action(Messages.DashboardView_AddStatusIndicator) {
       	private static final long serialVersionUID = 1L;
 
 			@Override
@@ -368,7 +369,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			{
 				dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, false);
 				parentComposite.layout(true, true);
-				setPartName("Dashboard: " + dashboard.getObjectName());
+				setPartName(Messages.DashboardView_PartNamePrefix + dashboard.getObjectName());
 				dbc.setModifyListener(dbcModifyListener);
 			}
 			else

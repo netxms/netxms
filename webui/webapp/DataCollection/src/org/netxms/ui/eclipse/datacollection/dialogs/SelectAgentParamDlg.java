@@ -38,6 +38,7 @@ import org.netxms.client.AgentParameter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -59,7 +60,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 	{
 		super(parentShell, nodeId);
 		
-		actionQuery = new Action("&Query...") {
+		actionQuery = new Action(Messages.SelectAgentParamDlg_Query) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -79,7 +80,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 		((GridLayout)parent.getLayout()).numColumns++;
 		
 		queryButton = new Button(parent, SWT.PUSH);
-		queryButton.setText("&Query...");
+		queryButton.setText(Messages.SelectAgentParamDlg_Query);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -120,11 +121,11 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 	protected void fillParameterList()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Get list of supported parameters for " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SelectAgentParamDlg_JobTitle + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Unable to retrieve list of supported parameters";
+				return Messages.SelectAgentParamDlg_JobError;
 			}
 
 			@Override
@@ -153,13 +154,13 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 		
 		AgentParameter p = (AgentParameter)selection.getFirstElement();
 		String n;
-		if (p.getName().contains("(*)"))
+		if (p.getName().contains("(*)")) //$NON-NLS-1$
 		{
-			InputDialog dlg = new InputDialog(getShell(), "Instance", "Instance for parameter", "", null);
+			InputDialog dlg = new InputDialog(getShell(), Messages.SelectAgentParamDlg_InstanceTitle, Messages.SelectAgentParamDlg_InstanceMessage, "", null); //$NON-NLS-1$
 			if (dlg.open() != Window.OK)
 				return;
 			
-			n = p.getName().replace("(*)", "(" + dlg.getValue() + ")");
+			n = p.getName().replace("(*)", "(" + dlg.getValue() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 		else
 		{
@@ -168,7 +169,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final String name = n;
-		new ConsoleJob("Query agent", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SelectAgentParamDlg_QueryJobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -177,7 +178,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 					@Override
 					public void run()
 					{
-						MessageDialog.openInformation(getShell(), "Current value", "Current value is \"" + value + "\"");
+						MessageDialog.openInformation(getShell(), Messages.SelectAgentParamDlg_CurrentValueTitle, Messages.SelectAgentParamDlg_CurrentValuePrefix + value + Messages.SelectAgentParamDlg_CurrentValueSuffix);
 					}
 				});
 			}
@@ -185,7 +186,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get current parameter value";
+				return Messages.SelectAgentParamDlg_QueryError;
 			}
 		}.start();
 	}
@@ -196,6 +197,6 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 	@Override
 	protected String getConfigurationPrefix()
 	{
-		return "SelectAgentParamDlg";
+		return "SelectAgentParamDlg"; //$NON-NLS-1$
 	}
 }
