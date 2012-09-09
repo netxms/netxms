@@ -2858,6 +2858,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 	
 	/**
+	 * Clear collected data for given DCI
+	 * 
+	 * @param nodeId Node object ID
+	 * @param dciId DCI ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void clearCollectedData(long nodeId, long dciId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLEAR_DCI_DATA);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariableInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
 	 * Get list of thresholds configured for given DCI
 	 * 
 	 * @param nodeId Node object ID

@@ -14,6 +14,10 @@ public class Messages extends NLS
 	public static String AbstractSelectParamDlg_WarningText;
 	public static String ApplyTemplate_JobError;
 	public static String ApplyTemplate_JobTitle;
+	public static String ClearCollectedData_ConfirmationText;
+	public static String ClearCollectedData_ConfirmDialogTitle;
+	public static String ClearCollectedData_ErrorText;
+	public static String ClearCollectedData_TaskName;
 	public static String CreateInterfaceDciDialog_BadPollingInterval;
 	public static String CreateInterfaceDciDialog_BadRetentionTime;
 	public static String CreateInterfaceDciDialog_Data;
