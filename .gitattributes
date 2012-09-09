@@ -2662,6 +2662,7 @@ webui/webapp/DataCollection/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/DataCollection/META-INF/MANIFEST.MF -text
 webui/webapp/DataCollection/build.properties -text
 webui/webapp/DataCollection/icons/active.gif -text
+webui/webapp/DataCollection/icons/clear.gif -text
 webui/webapp/DataCollection/icons/dc_editor.png -text
 webui/webapp/DataCollection/icons/delete.png -text
 webui/webapp/DataCollection/icons/disabled.gif -text

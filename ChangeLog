@@ -9,6 +9,8 @@
 - Agent on Windows is in UNICODE
 - UNICODE build supported on Linux
 - ifXTable used when possible for interface traffic DCIs creation
+- Server can be configured to use DNS host names instead of FQDN for newly
+  discovered nodes
 - Management console:
 	- Configurable date and time format
 	- Background color can be set for network maps
@@ -20,9 +22,11 @@
 	- Fixed status indicator update problems in object browser
 	- Fixed dashboard navigator refresh issues
 	- Object tools execution on multiple objects
+	- Implemented "Clear collected data" action for DCIs
 - Added commands "get" and "set" to nxdbmgr to manager server configuration
   variables
 - New NXSL function: RenameObject
+- Web interface look is more consistent with desktop client
 
 
 *

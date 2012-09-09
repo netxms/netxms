@@ -49,6 +49,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesFilter;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -278,13 +279,15 @@ public class LastValuesWidget extends Composite
 	 * Fill context menu
 	 * @param mgr Menu manager
 	 */
-	protected void fillContextMenu(IMenuManager mgr)
+	protected void fillContextMenu(IMenuManager manager)
 	{
-		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		mgr.add(new Separator());
-		mgr.add(actionUseMultipliers);
-		mgr.add(actionShowErrors);
-		mgr.add(actionShowUnsupported);
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_SECONDARY));
+		manager.add(new Separator());
+		manager.add(actionUseMultipliers);
+		manager.add(actionShowErrors);
+		manager.add(actionShowUnsupported);
 	}
 	
 	/**

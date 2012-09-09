@@ -136,6 +136,32 @@
                menubarPath="datacollection">
          </action>
       </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.DciValue"
+            objectClass="org.netxms.client.datacollection.DciValue">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.ClearCollectedData"
+               enablesFor="+"
+               icon="icons/clear.gif"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.ClearCollectedData_DciValue"
+               label="Clear collected data"
+               menubarPath="secondary">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.DataCollectionObject"
+            objectClass="org.netxms.client.datacollection.DataCollectionObject">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.ClearCollectedData"
+               enablesFor="+"
+               icon="icons/clear.gif"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.ClearCollectedData_DataCollectionObject"
+               label="Clear collected data"
+               menubarPath="secondary">
+         </action>
+      </objectContribution>
    </extension>
 
   <extension
