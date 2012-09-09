@@ -102,6 +102,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
 	private Action actionRefresh;
 	private Action actionWalk;
+	private Action actionCopyObjectName;
 	private Action actionSetNode;
 	private Action actionCopy;
 	private Action actionCopyName;
@@ -261,7 +262,17 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 				}
 			}
 		};
-		
+
+		actionCopyObjectName = new Action(Messages.MibExplorer_CopyName) {
+			@Override
+			public void run()
+			{
+				final MibObject object = mibBrowser.getSelection();
+				if (object != null)
+					WidgetHelper.copyToClipboard(object.getName());
+			}
+		};
+
 		actionCopy = new Action(Messages.MibExplorer_CopyToClipboard) {
 			@Override
 			public void run()
@@ -428,6 +439,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	protected void fillTreeContextMenu(final IMenuManager manager)
 	{
 		manager.add(actionWalk);
+		manager.add(new Separator());
+		manager.add(actionCopyObjectName);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
