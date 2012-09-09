@@ -100,7 +100,7 @@ public class SelectDciDialog extends Dialog
 
 		dciList = new DciList(null, splitter, SWT.BORDER, null, "SelectDciDialog.dciList", dcObjectType);  //$NON-NLS-1$
 		dciList.setDcObjectType(dcObjectType);
-		dciList.getViewer().addDoubleClickListener(new IDoubleClickListener() {
+		dciList.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
 			{

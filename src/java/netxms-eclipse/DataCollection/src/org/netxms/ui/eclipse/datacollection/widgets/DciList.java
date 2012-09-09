@@ -25,6 +25,7 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -187,14 +188,6 @@ public class DciList extends Composite
 	}
 
 	/**
-	 * @return the viewer
-	 */
-	public SortableTableViewer getViewer()
-	{
-		return viewer;
-	}
-
-	/**
 	 * @return the dcObjectType
 	 */
 	public int getDcObjectType()
@@ -209,5 +202,13 @@ public class DciList extends Composite
 	{
 		this.dcObjectType = dcObjectType;
 		getDataFromServer();
+	}
+	
+	/**
+	 * @param listener
+	 */
+	public void addDoubleClickListener(IDoubleClickListener listener)
+	{
+		viewer.addDoubleClickListener(listener);
 	}
 }

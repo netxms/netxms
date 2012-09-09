@@ -76,6 +76,7 @@ import org.netxms.ui.eclipse.datacollection.views.helpers.DciLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -328,6 +329,8 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_SECONDARY));
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -363,6 +366,8 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(actionDisable);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_SECONDARY));
 	}
 
 	/**

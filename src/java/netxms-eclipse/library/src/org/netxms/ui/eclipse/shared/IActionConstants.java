@@ -40,4 +40,5 @@ public interface IActionConstants
 	public static final String MB_DATA_COLLECTION = "datacollection"; //$NON-NLS-1$
 	public static final String MB_TOPOLOGY = "topology"; //$NON-NLS-1$
 	public static final String MB_PROPERTIES = "properties"; //$NON-NLS-1$
+	public static final String MB_SECONDARY = "secondary"; //$NON-NLS-1$
 }
