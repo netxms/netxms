@@ -101,6 +101,7 @@ public class Ports extends ObjectTab implements ISelectionProvider
 		scroller.setExpandVertical(true);
 		scroller.setExpandHorizontal(true);
 		//scroller.getVerticalBar().setIncrement(20);
+		//scroller.getHorizontalBar().setIncrement(20);
 		scroller.addControlListener(new ControlAdapter() {
 			private static final long serialVersionUID = 1L;
 
@@ -145,8 +146,7 @@ public class Ports extends ObjectTab implements ISelectionProvider
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
 			private static final long serialVersionUID = 1L;
 
 			public void menuAboutToShow(IMenuManager mgr)

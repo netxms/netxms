@@ -35,6 +35,10 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -73,6 +77,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	private List<VlanInfo> vlans = new ArrayList<VlanInfo>(0);
 	private NXCSession session;
 	private SortableTableViewer vlanList;
+	private ScrolledComposite scroller;
 	private DeviceView deviceView;
 	private boolean refreshOnStartup = false;
 	
@@ -128,7 +133,15 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		vlanList.setInput(vlans.toArray());
 		vlanList.addSelectionChangedListener(this);
 		
-		deviceView = new DeviceView(parent, SWT.NONE);
+		Composite deviceViewArea = new Composite(parent, SWT.NONE);
+		deviceViewArea.setLayout(new FillLayout());
+		gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		deviceViewArea.setLayoutData(gd);
+		
+		scroller = new ScrolledComposite(deviceViewArea, SWT.H_SCROLL | SWT.V_SCROLL);
+		deviceView = new DeviceView(scroller, SWT.NONE);
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -136,6 +149,21 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		deviceView.setPortStatusVisible(false);
 		deviceView.setNodeId(nodeId);
 
+		scroller.setContent(deviceView);
+		scroller.setBackground(deviceView.getBackground());
+		scroller.setExpandVertical(true);
+		scroller.setExpandHorizontal(true);
+		//scroller.getVerticalBar().setIncrement(20);
+		//scroller.getHorizontalBar().setIncrement(20);
+		scroller.addControlListener(new ControlAdapter() {
+			private static final long serialVersionUID = 1L;
+
+			public void controlResized(ControlEvent e)
+			{
+				scroller.setMinSize(deviceView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+			}
+		});
+		
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
