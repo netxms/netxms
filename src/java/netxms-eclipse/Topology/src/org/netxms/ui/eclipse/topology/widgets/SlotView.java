@@ -204,6 +204,13 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		}
 		gc.drawRectangle(rect);
 		
+		if (selection == p)
+		{
+			gc.setLineStyle(SWT.LINE_DOT);
+			gc.drawRectangle(rect.x + 2, rect.y + 2, rect.width - 4, rect.height - 4);
+			gc.setLineStyle(SWT.LINE_SOLID);
+		}
+		
 		Point ext = gc.textExtent(label);
 		gc.drawText(label, x + (PORT_WIDTH - ext.x) / 2, y + (PORT_HEIGHT - ext.y) / 2);
 
@@ -287,6 +294,7 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		if (p != selection)
 		{
 			selection = p;
+			redraw();
 			for(PortSelectionListener listener : selectionListeners)
 				listener.portSelected(p);
 		}

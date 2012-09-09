@@ -23,6 +23,7 @@
 	- Fixed dashboard navigator refresh issues
 	- Object tools execution on multiple objects
 	- Implemented "Clear collected data" action for DCIs
+	- Fixed missing scrollbar issue in VLAN view
 - Added commands "get" and "set" to nxdbmgr to manager server configuration
   variables
 - New NXSL function: RenameObject
