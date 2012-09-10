@@ -844,6 +844,7 @@ protected:
 	bool confPollSnmp(DWORD dwRqId);
 	void checkBridgeMib(SNMP_Transport *pTransport);
 	void checkIfXTable(SNMP_Transport *pTransport);
+	void executeHookScript(const TCHAR *hookName);
 
 	void ApplySystemTemplates();
 	void ApplyUserTemplates();

@@ -141,6 +141,7 @@ static int SelectResultType(int nType1, int nType2, int nOp)
 
 NXSL_Program::NXSL_Program()
 {
+	m_mutex = MutexCreate();
    m_ppInstructionSet = NULL;
    m_dwCodeSize = 0;
    m_dwCurrPos = INVALID_ADDRESS;
@@ -195,6 +196,7 @@ NXSL_Program::~NXSL_Program()
    safe_free(m_ppszPreloadList);
 
    safe_free(m_pszErrorText);
+	MutexDestroy(m_mutex);
 }
 
 

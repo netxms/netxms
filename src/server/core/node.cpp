@@ -1524,6 +1524,10 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 		m_dwDynamicFlags |= NDF_CONFIGURATION_POLL_PASSED;
    }
 
+	// Execute hook script
+   SetPollerInfo(nPoller, _T("hook"));
+	executeHookScript(_T("ConfigurationPoll"));
+
    // Finish configuration poll
    SetPollerInfo(nPoller, _T("cleanup"));
    if (dwRqId == 0)
@@ -5069,11 +5073,9 @@ TCHAR *Node::expandText(const TCHAR *pszTemplate)
    return pText;
 }
 
-
-//
-// Check and update last agent trap ID
-//
-
+/**
+ * Check and update last agent trap ID
+ */
 bool Node::checkAgentTrapId(QWORD trapId)
 {
 	LockData();
@@ -5084,11 +5086,9 @@ bool Node::checkAgentTrapId(QWORD trapId)
 	return valid;
 }
 
-
-//
-// Get node's physical components
-//
-
+/**
+ * Get node's physical components
+ */
 ComponentTree *Node::getComponents()
 {
 	LockData();
@@ -5097,4 +5097,31 @@ ComponentTree *Node::getComponents()
 		components->incRefCount();
 	UnlockData();
 	return components;
+}
+
+/**
+ * Execute hook script
+ *
+ * @param hookName hook name. Will find and excute script named Hook::hookName
+ */
+void Node::executeHookScript(const TCHAR *hookName)
+{
+	TCHAR scriptName[MAX_PATH] = _T("Hook::");
+	nx_strncpy(&scriptName[6], hookName, MAX_PATH - 6);
+	NXSL_Program *script = g_pScriptLibrary->findScript(scriptName);
+	if (script == NULL)
+	{
+		DbgPrintf(6, _T("Node::executeHookScript(%s [%u]): hook script \"%s\" not found"), m_szName, m_dwId, scriptName);
+		return;
+	}
+
+	NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
+	script->lock();	// FIXME: temporary solution, must allow parallel hook execution
+	script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
+	if (script->run(pEnv, 0, NULL) != 0)
+	{
+		DbgPrintf(4, _T("Node::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"), 
+		          m_szName, m_dwId, scriptName, script->getErrorText());
+	}
+	script->unlock();	// FIXME
 }

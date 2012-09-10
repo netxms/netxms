@@ -460,6 +460,7 @@ struct NXSL_Module
 class LIBNXSL_EXPORTABLE NXSL_Program
 {
 protected:
+	MUTEX m_mutex;
    NXSL_Environment *m_pEnv;
 
    NXSL_Instruction **m_ppInstructionSet;
@@ -523,6 +524,8 @@ public:
            NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL,
            NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
 			  const TCHAR *entryPoint = NULL);
+	void lock() { MutexLock(m_mutex); }
+	void unlock() { MutexUnlock(m_mutex); }
 
    DWORD getCodeSize() { return m_dwCodeSize; }
 
