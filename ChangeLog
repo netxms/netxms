@@ -28,6 +28,7 @@
   variables
 - New NXSL function: RenameObject
 - Web interface look is more consistent with desktop client
+- Fixed critical bug in NXSL interpreter (incorrect execution of operation --)
 
 
 *

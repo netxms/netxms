@@ -1527,11 +1527,9 @@ void NXSL_Program::relocateCode(DWORD dwStart, DWORD dwLen, DWORD dwShift)
       }
 }
 
-
-//
-// Use external module
-//
-
+/**
+ * Use external module
+ */
 void NXSL_Program::useModule(NXSL_Program *pModule, const TCHAR *pszName)
 {
    DWORD i, j, dwStart;
@@ -1570,11 +1568,9 @@ void NXSL_Program::useModule(NXSL_Program *pModule, const TCHAR *pszName)
    m_dwNumFunctions += pModule->m_dwNumFunctions;
 }
 
-
-//
-// Call function at given address
-//
-
+/**
+ * Call function at given address
+ */
 void NXSL_Program::callFunction(int nArgCount)
 {
    int i;
@@ -1618,11 +1614,9 @@ void NXSL_Program::callFunction(int nArgCount)
    }
 }
 
-
-//
-// Find function address by name
-//
-
+/**
+ * Find function address by name
+ */
 DWORD NXSL_Program::getFunctionAddress(const TCHAR *pszName)
 {
    DWORD i;
@@ -1633,11 +1627,9 @@ DWORD NXSL_Program::getFunctionAddress(const TCHAR *pszName)
    return INVALID_ADDRESS;
 }
 
-
-//
-// Match regular expression
-//
-
+/**
+ * Match regular expression
+ */
 NXSL_Value *NXSL_Program::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase)
 {
    regex_t preg;
@@ -1680,24 +1672,35 @@ NXSL_Value *NXSL_Program::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, B
    return pResult;
 }
 
-
-//
-// Get final jump destination from a jump chain
-//
-
+/**
+ * Get final jump destination from a jump chain
+ */
 DWORD NXSL_Program::getFinalJumpDestination(DWORD dwAddr)
 {
 	return (m_ppInstructionSet[dwAddr]->m_nOpCode == OPCODE_JMP) ? getFinalJumpDestination(m_ppInstructionSet[dwAddr]->m_operand.m_dwAddr) : dwAddr;
 }
 
-
-//
-// Optimize compiled program
-//
-
+/**
+ * Optimize compiled program
+ */
 void NXSL_Program::optimize()
 {
 	DWORD i, j;
+
+	// Convert push constant followed by NEG to single push constant
+	for(i = 0; (m_dwCodeSize > 1) && (i < m_dwCodeSize - 1); i++)
+	{
+		if ((m_ppInstructionSet[i]->m_nOpCode == OPCODE_PUSH_CONSTANT) &&
+		    (m_ppInstructionSet[i + 1]->m_nOpCode == OPCODE_NEG) &&
+			 m_ppInstructionSet[i]->m_operand.m_pConstant->isNumeric() &&
+			 !m_ppInstructionSet[i]->m_operand.m_pConstant->isUnsigned())
+		{
+			m_ppInstructionSet[i]->m_operand.m_pConstant->negate();
+			delete m_ppInstructionSet[i + 1];
+			m_dwCodeSize--;
+			memmove(&m_ppInstructionSet[i + 1], &m_ppInstructionSet[i + 2], sizeof(NXSL_Instruction *) * (m_dwCodeSize - i - 1));
+		}
+	}
 
 	// Convert jumps to address beyond code end to NRETs
 	for(i = 0; i < m_dwCodeSize; i++)
@@ -1750,11 +1753,9 @@ void NXSL_Program::optimize()
 	}
 }
 
-
-//
-// Trace
-//
-
+/**
+ * Trace
+ */
 void NXSL_Program::trace(int level, const TCHAR *text)
 {
 	if (m_pEnv != NULL)

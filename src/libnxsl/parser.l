@@ -9,7 +9,7 @@
 whitespace	[[:blank:]\t\r]+
 identifier	[A-Za-z_\$][A-Za-z_\$0-9]*
 compound_ident	{identifier}(::{identifier})+
-integer		\-?(0x)?[0-9]+
+integer		(0x)?[0-9]+
 uint32		{integer}U
 int64		{integer}L
 uint64		{integer}(UL|LU)

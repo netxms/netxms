@@ -636,19 +636,19 @@ void NXSL_Value::decrement()
       switch(m_nDataType)
       {
          case NXSL_DT_INT32:
-            m_value.nInt32++;
+            m_value.nInt32--;
             break;
          case NXSL_DT_UINT32:
-            m_value.uInt32++;
+            m_value.uInt32--;
             break;
          case NXSL_DT_INT64:
-            m_value.nInt64++;
+            m_value.nInt64--;
             break;
          case NXSL_DT_UINT64:
-            m_value.uInt64++;
+            m_value.uInt64--;
             break;
          case NXSL_DT_REAL:
-            m_value.dReal++;
+            m_value.dReal--;
             break;
          default:
             break;
