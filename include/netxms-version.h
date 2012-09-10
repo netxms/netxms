@@ -32,8 +32,8 @@
 #define NETXMS_VERSION_MINOR        2
 #define NETXMS_VERSION_BUILD        3
 #define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("1.2.3-rc4")
-#define NETXMS_VERSION_STRING_A     "1.2.3-rc4"
+#define NETXMS_VERSION_STRING       _T("1.2.3")
+#define NETXMS_VERSION_STRING_A     "1.2.3"
 
 
 //
