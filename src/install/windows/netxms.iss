@@ -150,8 +150,6 @@ Source: "..\..\java\report-generator\target\report-generator.jar"; DestDir: "{ap
 ; Console files
 Source: "..\..\..\Release\scilexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\..\Release\scilexer.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
-Source: "..\..\..\Release\libnxsnmpw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
-Source: "..\..\..\Release\libnxsnmpw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
 Source: "..\..\..\Release\nxuilib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\..\Release\nxuilib.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
 Source: "..\..\..\Release\nxlexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console

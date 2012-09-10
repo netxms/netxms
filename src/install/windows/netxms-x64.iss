@@ -150,8 +150,6 @@ Source: "..\..\..\images\*"; DestDir: "{app}\var\images"; Flags: ignoreversion; 
 ; Console files
 Source: "..\..\..\x64\Release\scilexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\..\x64\Release\scilexer.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
-Source: "..\..\..\x64\Release\libnxsnmpw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
-Source: "..\..\..\x64\Release\libnxsnmpw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
 Source: "..\..\..\x64\Release\nxuilib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\..\x64\Release\nxuilib.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
 Source: "..\..\..\x64\Release\nxlexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
