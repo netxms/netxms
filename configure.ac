@@ -51,6 +51,7 @@ STATIC_SUBAGENT_LIST=""
 PROPOSED_STATIC_SUBAGENTS="default"
 SUBAGENT_DIRS=""
 SUBAGENT_LIBS=""
+SERVER_LIBS=""
 SERVER_TOOLS=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
@@ -1016,8 +1017,11 @@ AC_CHECK_LIB(dl, dlopen)
 AC_CHECK_LIB(kstat, kstat_open)
 
 if test "x$BUILD_SERVER" = "xyes" ; then
-   AC_CHECK_LIB(termcap, tgetstr, [], [AC_CHECK_LIB(ncurses, tgetstr, [], AC_CHECK_LIB(curses, tgetstr))])
-   AC_CHECK_LIB(readline, readline, [], [AC_CHECK_LIB(edit, readline)])
+   AC_CHECK_LIB(termcap, tgetstr, [SERVER_LIBS="$SERVER_LIBS -ltermcap"], [AC_CHECK_LIB(ncurses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lncurses"], AC_CHECK_LIB(curses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lcurses"]))])
+   AC_CHECK_LIB(readline, readline, [SERVER_LIBS="$SERVER_LIBS -lreadline"], [AC_CHECK_LIB(edit, readline, [SERVER_LIBS="$SERVER_LIBS -ledit"])])
+   SAVED_LDFLAGS="$LDFLAGS"
+   LDFLAGS="$LDFLAGS $SERVER_LIBS"
+
    AC_CHECK_FUNCS([readline])
 
    # Check if passing rl_insert to rl_bind_key needs cast
@@ -1053,6 +1057,7 @@ if test "x$BUILD_SERVER" = "xyes" ; then
 
       AC_LANG_POP([C++])
    fi
+   LDFLAGS="$SAVED_LDFLAGS"
 fi
 
 if test "x$NEED_ZLIB" = "xyes"; then
@@ -1977,6 +1982,7 @@ AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
 AC_SUBST(SUBAGENT_DIRS)
+AC_SUBST(SERVER_LIBS)
 AC_SUBST(SERVER_TOOLS)
 AC_SUBST(TOP_LEVEL_MODULES)
 AC_SUBST(CONTRIB_MODULES)
@@ -2202,6 +2208,7 @@ echo
 	echo "Prefix                  : ${prefix}"
 if test "x${BUILD_SERVER}" = "xyes"; then
 	echo "Build Server            : YES"
+	echo "Server libs             : ${SERVER_LIBS}"
 else
 	echo "Build Server            : NO"
 fi

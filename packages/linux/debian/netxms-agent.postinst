@@ -1,6 +1,7 @@
 #!/bin/sh
 
-if [ -f /etc/init.d/nxagentd ]; then
+if [ -x /etc/init.d/nxagentd ]; then
+	update-rc.d nxagentd defaults 98 2 >/dev/null || exit $?
 	if [ -f /etc/nxagentd.conf ]; then
 		/etc/init.d/nxagentd start
 	else

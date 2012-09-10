@@ -9,7 +9,8 @@ netxmsd_LDADD = ../../libnetxms/libnetxms.la \
                 ../../libnxlp/libnxlp.la \
                 ../../db/libnxdb/libnxdb.la \
                 ../libnxsrv/libnxsrv.la \
-                ../core/libnxcore.la
+                ../core/libnxcore.la \
+                @SERVER_LIBS@
 
 EXTRA_DIST = \
 	netxmsd.vcproj \

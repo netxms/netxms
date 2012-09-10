@@ -35,7 +35,8 @@ libnxcore_la_LIBADD = ../../libnetxms/libnetxms.la \
 		      ../../libnxlp/libnxlp.la \
 		      ../../db/libnxdb/libnxdb.la \
 		      ../libnxsrv/libnxsrv.la \
-                      ../../libnxsl/libnxsl.la
+                      ../../libnxsl/libnxsl.la \
+                      @SERVER_LIBS@
 if USE_INTERNAL_LIBTRE
 libnxcore_la_LIBADD += @top_srcdir@/src/libtre/libnxtre.la
 endif
