@@ -11,6 +11,7 @@
 - ifXTable used when possible for interface traffic DCIs creation
 - Server can be configured to use DNS host names instead of FQDN for newly
   discovered nodes
+- Script hooks for configuration poll
 - Management console:
 	- Configurable date and time format
 	- Background color can be set for network maps
@@ -29,6 +30,16 @@
 - New NXSL function: RenameObject
 - Web interface look is more consistent with desktop client
 - Fixed critical bug in NXSL interpreter (incorrect execution of operation --)
+- Android client:
+	- Added: nodes and dashboards container status in home screen reflect 
+          children status (icon changes on WARNING, MINOR, MAJOR, and CRITICAL). 
+	- Added: interfaces tab under node info activity 
+	- Added: handle alarm sticky acnowledge action and state.
+	- Added: sort of alarm list in node info tab. 
+	- Added: multiple selection for actions on alarms list.
+	- Added: sort by node name on alarm list.
+	- Fixed bug: added protection to null pointers 
+	- Fixed bug: hidden wrong menu item in alarms tab
 
 
 *

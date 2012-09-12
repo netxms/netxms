@@ -1687,7 +1687,7 @@ DWORD NXSL_Program::getFinalJumpDestination(DWORD dwAddr)
  */
 void NXSL_Program::optimize()
 {
-	DWORD i, j;
+	DWORD i;
 
 	// Convert push constant followed by NEG to single push constant
 	for(i = 0; (m_dwCodeSize > 1) && (i < m_dwCodeSize - 1); i++)
@@ -1698,9 +1698,7 @@ void NXSL_Program::optimize()
 			 !m_ppInstructionSet[i]->m_operand.m_pConstant->isUnsigned())
 		{
 			m_ppInstructionSet[i]->m_operand.m_pConstant->negate();
-			delete m_ppInstructionSet[i + 1];
-			m_dwCodeSize--;
-			memmove(&m_ppInstructionSet[i + 1], &m_ppInstructionSet[i + 2], sizeof(NXSL_Instruction *) * (m_dwCodeSize - i - 1));
+			removeInstructions(i + 1, 1);
 		}
 	}
 
@@ -1733,24 +1731,38 @@ void NXSL_Program::optimize()
 			  (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ)) &&
 			 (m_ppInstructionSet[i]->m_operand.m_dwAddr == i + 1))
 		{
-			delete m_ppInstructionSet[i];
-			m_dwCodeSize--;
-			memmove(&m_ppInstructionSet[i], &m_ppInstructionSet[i + 1], sizeof(NXSL_Instruction *) * (m_dwCodeSize - i));
-
-			// Change jump destination addresses
-			for(j = 0; j < m_dwCodeSize; j++)
-			{
-				if (((m_ppInstructionSet[j]->m_nOpCode == OPCODE_JMP) ||
- 				     (m_ppInstructionSet[j]->m_nOpCode == OPCODE_JZ) ||
-				     (m_ppInstructionSet[j]->m_nOpCode == OPCODE_JNZ) ||
-				     (m_ppInstructionSet[j]->m_nOpCode == OPCODE_CALL)) &&
-				    (m_ppInstructionSet[j]->m_operand.m_dwAddr > i))
-				{
-		         m_ppInstructionSet[j]->m_operand.m_dwAddr--;
-				}
-			}
-
+			removeInstructions(i, 1);
 			i--;
+		}
+	}
+}
+
+/**
+ * Remove one or more instructions starting at given position.
+ *
+ * @param start start offset
+ * @param count number of instructions to remove
+ */
+void NXSL_Program::removeInstructions(DWORD start, int count)
+{
+	if ((count <= 0) || (start + (DWORD)count >= m_dwCodeSize))
+		return;
+
+	for(DWORD i = 0; i < (DWORD)count; i++)
+		delete m_ppInstructionSet[start + i];
+	memmove(&m_ppInstructionSet[start], &m_ppInstructionSet[start + count], sizeof(NXSL_Instruction *) * (m_dwCodeSize - start - count));
+	m_dwCodeSize -= (DWORD)count;
+
+	// Change jump destination addresses
+	for(DWORD i = 0; i < m_dwCodeSize; i++)
+	{
+		if (((m_ppInstructionSet[i]->m_nOpCode == OPCODE_JMP) ||
+		     (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ) ||
+		     (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ) ||
+		     (m_ppInstructionSet[i]->m_nOpCode == OPCODE_CALL)) &&
+		    (m_ppInstructionSet[i]->m_operand.m_dwAddr > start))
+		{
+         m_ppInstructionSet[i]->m_operand.m_dwAddr -= count;
 		}
 	}
 }

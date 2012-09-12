@@ -516,6 +516,7 @@ public:
    void addPreload(char *pszName);
    void useModule(NXSL_Program *pModule, const TCHAR *pszName);
 	void optimize();
+	void removeInstructions(DWORD start, int count);
 
 	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
 	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_pGlobals->find(pszName); }
