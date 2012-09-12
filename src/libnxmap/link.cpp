@@ -148,15 +148,18 @@ void NetworkMapLink::parseBendPoints(const TCHAR *data)
 	for(int i = 0; i < MAX_BEND_POINTS * 2; i++)
 		m_bendPoints[i] = 0x7FFFFFFF;
 
-	const TCHAR *ptr = data;
-	int c, pos = 0;
-
-	while(pos < MAX_BEND_POINTS * 2)
+	if (data != NULL)
 	{
-		if (_stscanf(ptr, _T("%d%n"), &m_bendPoints[pos++], &c) < 1)
-			break;
-		ptr += c;
-		if (*ptr == _T(','))
-			ptr++;
+		const TCHAR *ptr = data;
+		int c, pos = 0;
+
+		while(pos < MAX_BEND_POINTS * 2)
+		{
+			if (_stscanf(ptr, _T("%d%n"), &m_bendPoints[pos++], &c) < 1)
+				break;
+			ptr += c;
+			if (*ptr == _T(','))
+				ptr++;
+		}
 	}
 }
