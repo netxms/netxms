@@ -28,8 +28,7 @@
 // Default constructor for Interface object
 //
 
-Interface::Interface()
-          : NetObj()
+Interface::Interface() : NetObj()
 {
 	m_flags = 0;
 	nx_strncpy(m_description, m_szName, MAX_DB_STRING);
@@ -55,8 +54,7 @@ Interface::Interface()
 // Constructor for "fake" interface object
 //
 
-Interface::Interface(DWORD dwAddr, DWORD dwNetMask, DWORD zoneId, bool bSyntheticMask)
-          : NetObj()
+Interface::Interface(DWORD dwAddr, DWORD dwNetMask, DWORD zoneId, bool bSyntheticMask) : NetObj()
 {
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
 	if ((dwAddr & 0xFF000000) == 0x7F000000)
@@ -408,9 +406,12 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 
 			if (icmpProxy != 0)
 			{
+				SendPollerMsg(dwRqId, _T("      Starting ICMP ping via proxy\r\n"));
+				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): ping via proxy [%u]"), m_dwId, m_szName, icmpProxy);
 				Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
 				if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
 				{
+					DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): proxy node found: %s"), m_dwId, m_szName, proxyNode->Name());
 					AgentConnection *conn = proxyNode->createAgentConnection();
 					if (conn != NULL)
 					{
@@ -419,6 +420,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 						_sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(m_dwIpAddr, buffer));
 						if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
 						{
+							DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): proxy response: \"%s\""), m_dwId, m_szName, buffer);
 							TCHAR *eptr;
 							long value = _tcstol(buffer, &eptr, 10);
 							if ((*eptr == 0) && (value >= 0))
@@ -438,6 +440,16 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 						conn->disconnect();
 						delete conn;
 					}
+					else
+					{
+						DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): cannot connect to agent on proxy node"), m_dwId, m_szName);
+						SendPollerMsg(dwRqId, POLLER_ERROR _T("      Unable to establish connection with proxy node\r\n"));
+					}
+				}
+				else
+				{
+					DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): proxy node not available"), m_dwId, m_szName);
+					SendPollerMsg(dwRqId, POLLER_ERROR _T("      ICMP proxy not available\r\n"));
 				}
 			}
 			else	// not using ICMP proxy
@@ -691,6 +703,7 @@ void Interface::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_OPER_STATE, m_operState);
 	pMsg->SetVariable(VID_DOT1X_PAE_STATE, m_dot1xPaeAuthState);
 	pMsg->SetVariable(VID_DOT1X_BACKEND_STATE, m_dot1xBackendAuthState);
+	pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
 }
 
 

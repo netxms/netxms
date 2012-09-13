@@ -227,6 +227,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("Servers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList },
    { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout },
    { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },
+	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTimeout },
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay },
    { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList },
    { _T("TimeOut"), CT_IGNORE, 0, 0, 0, 0, NULL },
