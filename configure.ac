@@ -344,7 +344,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools"
-	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors"
+	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
 	CONTRIB_MODULES="mibs backgrounds"
@@ -434,6 +434,11 @@ if test $? = 0; then
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/hpux/hpux.la"
 			STATIC_SUBAGENT_LIST="hpux $STATIC_SUBAGENT_LIST"
 			;;
+		Darwin)
+			SUBAGENT_DIRS="darwin"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/darwin/darwin.la"
+			STATIC_SUBAGENT_LIST="darwin $STATIC_SUBAGENT_LIST"
+			;;
 		*)
 			# unknown
 			;;
@@ -508,6 +513,9 @@ if test $? = 0; then
 			;;
 		HP-UX)
 			SUBAGENT_DIRS="hpux"
+      ;;
+		Darwin)
+			SUBAGENT_DIRS="darwin"
 			;;
 		*)
 			# unknown
@@ -2084,6 +2092,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/wmi/Makefile
 	src/agent/subagents/lmsensors/Makefile
+	src/agent/subagents/darwin//Makefile
 	src/agent/tools/Makefile
 	src/agent/tools/nxapush/Makefile
 	src/client/Makefile
