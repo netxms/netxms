@@ -84,7 +84,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 		IWorkbenchWindow window = configurer.getWindow();
 		
-		window.getShell().setMaximized(true);
+		//window.getShell().setMaximized(true);
 		
 		Session session = ConsoleSharedData.getSession();
 		Activator.getDefault().getStatusItemConnection().setText(session.getUserName() + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
