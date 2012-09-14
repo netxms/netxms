@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -169,7 +169,9 @@ bool SocketConnection::waitForText(const char *text, int timeout)
 	while(1)
 	{
 		if (!canRead(timeout))
+		{
 			return false;
+		}
 
 		int size = read(&m_data[m_dataPos], 4095 - m_dataPos);
 		m_data[size + m_dataPos] = 0;
@@ -180,7 +182,7 @@ bool SocketConnection::waitForText(const char *text, int timeout)
 		{
 			int index = (int)(p - m_data);
 			m_dataPos = bufLen - (index + textLen);
-			memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos);
+			memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos + 1);
 			return true;
 		}
 

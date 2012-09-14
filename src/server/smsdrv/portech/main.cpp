@@ -144,13 +144,12 @@ static BOOL SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const 
 	DbgPrintf(3, _T("Sending SMS (text mode): rcpt=\"%s\" text=\"%s\""), pszPhoneNumber, pszText);
 	
 	__chk(conn->writeLine("ATZ"));	// init modem
-	__chk(conn->waitForText("OK", 5000));
+	__chk(conn->waitForText("OK", 10000));
 	DbgPrintf(4, _T("SMS: ATZ sent"));
 
 	ThreadSleep(1);
-	__chk(conn->write("\r\n", 2));		// empty string, otherwise ATE0 may fail
 	__chk(conn->writeLine("ATE0"));	// disable echo
-	__chk(conn->waitForText("OK", 5000));
+	__chk(conn->waitForText("OK", 10000));
 	DbgPrintf(4, _T("SMS: ATE0 sent"));
 
 	ThreadSleep(1);
@@ -167,7 +166,7 @@ static BOOL SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const 
 	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%s\r\n", pszPhoneNumber);
 #endif
 	__chk(conn->writeLine(szTmp));	// set number
-	__chk(conn->waitForText(">", 5000));
+	__chk(conn->waitForText(">", 10000));
 
 #ifdef UNICODE
 	char mbText[161];
@@ -178,8 +177,8 @@ static BOOL SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const 
 	snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pszText, 0x1A);
 #endif
 	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0); // send text, end with ^Z
-	__chk(conn->waitForText("+CMGS", 10000));
-	__chk(conn->waitForText("OK", 2000));
+	__chk(conn->waitForText("+CMGS", 45000));
+	__chk(conn->waitForText("OK", 5000));
 	DbgPrintf(4, _T("SMS sent successfully"));
 
 	return TRUE;
@@ -211,18 +210,17 @@ static BOOL SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const T
 #endif
 
 	__chk(conn->writeLine("ATZ"));	// init modem
-	__chk(conn->waitForText("OK", 5000));
+	__chk(conn->waitForText("OK", 10000));
 	DbgPrintf(4, _T("SMS: ATZ sent"));
 
 	ThreadSleep(1);
-	__chk(conn->write("\r\n", 2));		// empty string, otherwise ATE0 may fail
 	__chk(conn->writeLine("ATE0"));	// disable echo
-	__chk(conn->waitForText("OK", 5000));
+	__chk(conn->waitForText("OK", 10000));
 	DbgPrintf(4, _T("SMS: ATE0 sent"));
 
 	ThreadSleep(1);
-	__chk(conn->writeLine("AT+CMGF=0"));	// text mode
-	__chk(conn->waitForText("OK", 5000));
+	__chk(conn->writeLine("AT+CMGF=0"));	// PDU mode
+	__chk(conn->waitForText("OK", 10000));
 	DbgPrintf(4, _T("SMS: AT+CMGF=0 sent"));
 
 	char pduBuffer[bufferSize];
@@ -230,11 +228,12 @@ static BOOL SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const T
 
 	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", strlen(pduBuffer) / 2 - 1);
 	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0);
+	__chk(conn->waitForText(">", 10000));
 	DbgPrintf(4, _T("SMS: %hs sent"), szTmp);
 
 	snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pduBuffer, 0x1A);
 	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0);
-	__chk(conn->waitForText("+CMGS", 10000));
+	__chk(conn->waitForText("+CMGS", 45000));
 	__chk(conn->waitForText("OK", 2000));
 	DbgPrintf(4, _T("SMS sent successfully"));
 
