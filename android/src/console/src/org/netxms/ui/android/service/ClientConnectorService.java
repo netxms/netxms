@@ -36,6 +36,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
@@ -198,33 +200,40 @@ public class ClientConnectorService extends Service implements SessionListener
 	/**
 	 * Show alarm notification
 	 * 
-	 * @param id	notification id
-	 * @param severity	notification severity (used to determine icon)
+	 * @param severity	notification severity (used to determine icon and sound)
 	 * @param text	notification text
 	 */
-	public void showAlarmNotification(int id, int severity, String text)
+	public void alarmNotification(int severity, String text)
 	{
-		Notification n = new Notification(GetAlarmIcon(severity), text, System.currentTimeMillis());
-		n.defaults = Notification.DEFAULT_LIGHTS;
+		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+		if (sp.getBoolean("global.notification.alarm", true))
+		{
+			Notification n = new Notification(GetAlarmIcon(severity), text, System.currentTimeMillis());
+			n.defaults = Notification.DEFAULT_LIGHTS;
 
-		Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowser.class);
-		PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
-		n.setLatestEventInfo(getApplicationContext(), getString(R.string.notification_title), text, intent);
-		final String sound = GetAlarmSound(severity);
-		if ((sound != null) && (sound.length() > 0))
-			n.sound = Uri.parse(sound);
-
-		notificationManager.notify(id, n);
+			Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowser.class);
+			PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
+			n.setLatestEventInfo(getApplicationContext(), getString(R.string.notification_title), text, intent);
+			final String sound = GetAlarmSound(severity);
+			if ((sound != null) && (sound.length() > 0))
+				n.sound = Uri.parse(sound);
+			notificationManager.notify(NOTIFY_ALARM, n);
+		}
+		else
+		{
+			Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), Uri.parse(GetAlarmSound(severity)));
+			if (r != null)
+				r.play();
+		}
 	}
 
 	/**
 	 * Show status notification
 	 * 
-	 * @param id	notification id
 	 * @param status	connection status
 	 * @param extra	extra text to add at the end of the toast
 	 */
-	public void showNotificationStatus(int id, ConnectionStatus status, String extra)
+	public void statusNotification(ConnectionStatus status, String extra)
 	{
 		int icon = -1;
 		String text = "";
@@ -260,7 +269,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				return;
 		}
 		if (icon == -1)
-			hideNotification(id);
+			hideNotification(NOTIFY_STATUS);
 		else
 		{
 			if (sp.getBoolean("global.notification.toast", true))
@@ -272,7 +281,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				Intent notifyIntent = new Intent(getApplicationContext(), HomeScreen.class);
 				PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
 				n.setLatestEventInfo(getApplicationContext(), getString(R.string.notification_title), text, intent);
-				notificationManager.notify(id, n);
+				notificationManager.notify(NOTIFY_STATUS, n);
 			}
 		}
 	}
@@ -306,7 +315,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			if (connectionStatus != ConnectionStatus.CS_INPROGRESS)
 			{
 				setConnectionStatus(ConnectionStatus.CS_INPROGRESS, "");
-				showNotificationStatus(NOTIFY_STATUS, ConnectionStatus.CS_INPROGRESS, "");
+				statusNotification(ConnectionStatus.CS_INPROGRESS, "");
 				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 				new ConnectTask(this).execute(sp.getString("connection.server", ""),
 						SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701),
@@ -334,7 +343,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				this.alarms = alarms;
 				session.addListener(this);
 				setConnectionStatus(ConnectionStatus.CS_CONNECTED, session.getServerAddress());
-				showNotificationStatus(NOTIFY_STATUS, ConnectionStatus.CS_CONNECTED, session.getServerAddress());
+				statusNotification(ConnectionStatus.CS_CONNECTED, session.getServerAddress());
 				if (alarms != null)
 				{
 					long id = -1;
@@ -362,7 +371,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		nullifySession();
 		hideNotification(NOTIFY_ALARM);
 		setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
-		showNotificationStatus(NOTIFY_STATUS, ConnectionStatus.CS_DISCONNECTED, "");
+		statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
 	}
 
 	/**
@@ -373,7 +382,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		nullifySession();
 		hideNotification(NOTIFY_ALARM);
 		setConnectionStatus(ConnectionStatus.CS_ERROR, error);
-		showNotificationStatus(NOTIFY_STATUS, ConnectionStatus.CS_ERROR, error);
+		statusNotification(ConnectionStatus.CS_ERROR, error);
 	}
 
 	/**
@@ -409,7 +418,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				alarms.put(lastAlarmIdNotified, alarm);
 			}
 			unknownAlarm = object == null ? alarm : null;
-			showAlarmNotification(NOTIFY_ALARM, alarm.getCurrentSeverity(), ((object != null) ? object.getObjectName() : getString(R.string.node_unknown)) + ": " + alarm.getMessage());
+			alarmNotification(alarm.getCurrentSeverity(), ((object != null) ? object.getObjectName() : getString(R.string.node_unknown)) + ": " + alarm.getMessage());
 			refreshAlarmBrowser();
 		}
 	}
@@ -496,7 +505,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			if (unknownAlarm != null && unknownAlarm.getSourceObjectId() == object.getObjectId()) // Update <Unknown> notification
 			{
-				showAlarmNotification(NOTIFY_ALARM, unknownAlarm.getCurrentSeverity(), object.getObjectName() + ": " + unknownAlarm.getMessage());
+				alarmNotification(unknownAlarm.getCurrentSeverity(), object.getObjectName() + ": " + unknownAlarm.getMessage());
 				unknownAlarm = null;
 			}
 			refreshHomeScreen();
