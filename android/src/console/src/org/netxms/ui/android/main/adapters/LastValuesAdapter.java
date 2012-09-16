@@ -118,7 +118,7 @@ public class LastValuesAdapter extends BaseAdapter
 		ImageView severity, state;
 		Resources r = context.getResources();
 
-		if (convertView == null) // new alarm, create fields
+		if (convertView == null) // new view, create fields
 		{
 			severity = new ImageView(context);
 			severity.setPadding(5, 5, 5, 2);
@@ -136,7 +136,7 @@ public class LastValuesAdapter extends BaseAdapter
 			date.setPadding(5, 2, 5, 2);
 			date.setTextColor(r.getColor(R.color.text_color));
 			date.setGravity(Gravity.RIGHT);
-			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			lp.gravity = Gravity.RIGHT;
 			date.setLayoutParams(lp);
 			info = new LinearLayout(context);
@@ -147,11 +147,12 @@ public class LastValuesAdapter extends BaseAdapter
 			name = new TextView(context);
 			name.setPadding(5, 2, 5, 2);
 			name.setTextColor(r.getColor(R.color.text_color));
+			name.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
 			value = new TextView(context);
 			value.setPadding(5, 2, 5, 2);
 			value.setTextColor(r.getColor(R.color.text_color));
 			value.setGravity(Gravity.RIGHT);
-			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 2);
 			lp.gravity = Gravity.RIGHT;
 			value.setLayoutParams(lp);
 			info2 = new LinearLayout(context);
@@ -161,8 +162,7 @@ public class LastValuesAdapter extends BaseAdapter
 
 			texts = new LinearLayout(context);
 			texts.setOrientation(LinearLayout.VERTICAL);
-			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-			texts.setLayoutParams(lp);
+			texts.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 			texts.addView(info);
 			texts.addView(info2);
 
