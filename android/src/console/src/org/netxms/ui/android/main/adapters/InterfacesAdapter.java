@@ -10,7 +10,6 @@ import org.netxms.client.objects.Interface;
 import org.netxms.ui.android.R;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,7 +29,6 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 	private final Context context;
 	private final ArrayList<String> groups;
 	private final ArrayList<ArrayList<Interface>> children;
-	private final Resources r;
 
 	/**
 	 * 
@@ -41,7 +39,6 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 		this.context = context;
 		this.groups = new ArrayList<String>(0);
 		this.children = new ArrayList<ArrayList<Interface>>(0);
-		r = context.getResources();
 	}
 
 	/**

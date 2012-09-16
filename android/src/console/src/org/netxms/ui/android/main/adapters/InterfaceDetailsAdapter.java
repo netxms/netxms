@@ -57,7 +57,7 @@ public class InterfaceDetailsAdapter extends BaseAdapter
 		addRow(r.getString(R.string.if_port), Integer.toString(i.getPort()));
 		addRow(r.getString(R.string.if_description), i.getDescription());
 		addRow(r.getString(R.string.if_mac_address), i.getMacAddress().toString());
-		addRow(r.getString(R.string.if_ip_address), i.getPrimaryIP().toString());
+		addRow(r.getString(R.string.if_ip_address), i.getPrimaryIP().getHostAddress());
 		addRow(r.getString(R.string.if_admin_state), i.getAdminStateAsText(), getAdminStateColor(i.getAdminState()));
 		addRow(r.getString(R.string.if_oper_state), i.getOperStateAsText(), getOperStateColor(i.getOperState()));
 		addRow(r.getString(R.string.if_exp_state), getExpStateText(i.getExpectedState()));
