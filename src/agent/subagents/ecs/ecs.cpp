@@ -20,6 +20,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <sys/time.h>
 
 #ifdef _WIN32
 #define ECS_EXPORTABLE __declspec(dllexport) __cdecl
@@ -206,6 +207,35 @@ static LONG H_DoHttp(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 }
 
 
+static LONG H_LoadTime(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+{
+	LONG ret = SYSINFO_RC_ERROR;
+	char url[256];
+
+	AgentGetParameterArgA(param, 1, url, 255);
+	if (!strnicmp(url, "http://", 7))
+	{
+    struct timeval beforeRequest, afterRequest;
+		int contentSize;
+
+    gettimeofday(&beforeRequest, NULL);
+		unsigned char *content = GetHttpUrl(url + 7, &contentSize);
+		if (content != NULL)
+		{
+      gettimeofday(&afterRequest, NULL);
+      DWORD loadTime = ((afterRequest.tv_sec - beforeRequest.tv_sec) * 1000) + ((afterRequest.tv_usec - beforeRequest.tv_usec) / 1000);
+      ret_int(value, loadTime);
+
+			ret = SYSINFO_RC_SUCCESS;
+
+			free(content);
+		}
+	}
+
+	return ret;
+}
+
+
 //
 // Subagent information
 //
@@ -214,8 +244,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("ECS.HttpSHA1(*)"),				H_DoHttp,					(TCHAR *)1,
 		DCI_DT_STRING, _T("Calculates SHA1 hash of * URL") },
-	{ _T("ECS.HttpMD5(*)"),				H_DoHttp,					(TCHAR *)5,
-		DCI_DT_STRING, _T("Calculates MD5 hash of * URL") }
+	{ _T("ECS.HttpMD5(*)"),				  H_DoHttp,					(TCHAR *)5,
+		DCI_DT_STRING, _T("Calculates MD5 hash of * URL") },
+	{ _T("ECS.HttpLoadTime(*)"),		H_LoadTime,				NULL,
+		DCI_DT_STRING, _T("Measure load time for URL *") }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
