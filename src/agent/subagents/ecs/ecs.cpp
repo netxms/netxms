@@ -20,7 +20,6 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
-#include <sys/time.h>
 
 #ifdef _WIN32
 #define ECS_EXPORTABLE __declspec(dllexport) __cdecl
@@ -215,19 +214,14 @@ static LONG H_LoadTime(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 	AgentGetParameterArgA(param, 1, url, 255);
 	if (!strnicmp(url, "http://", 7))
 	{
-    struct timeval beforeRequest, afterRequest;
 		int contentSize;
-
-    gettimeofday(&beforeRequest, NULL);
+		INT64 startTime = GetCurrentTimeMs();
 		unsigned char *content = GetHttpUrl(url + 7, &contentSize);
 		if (content != NULL)
 		{
-      gettimeofday(&afterRequest, NULL);
-      DWORD loadTime = ((afterRequest.tv_sec - beforeRequest.tv_sec) * 1000) + ((afterRequest.tv_usec - beforeRequest.tv_usec) / 1000);
-      ret_int(value, loadTime);
-
+			DWORD loadTime = (DWORD)(GetCurrentTimeMs() - startTime);
+			ret_uint(value, loadTime);
 			ret = SYSINFO_RC_SUCCESS;
-
 			free(content);
 		}
 	}
