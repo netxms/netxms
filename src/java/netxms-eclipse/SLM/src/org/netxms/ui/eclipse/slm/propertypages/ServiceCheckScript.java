@@ -100,13 +100,14 @@ public class ServiceCheckScript extends PropertyPage
 			setValid(false);
 		
 		final String newScript = filterSource.getText();
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.ServiceCheckScript_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 				md.setScript(newScript);
-				((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
+				session.modifyObject(md);
 				initialScript = newScript;
 			}
 

@@ -66,6 +66,7 @@ public class ChangePassword implements IWorkbenchWindowActionDelegate
 		final ChangePasswordDialog dlg = new ChangePasswordDialog(window.getShell(), true);
 		if (dlg.open() == Window.OK)
 		{
+			final Session session = ConsoleSharedData.getSession();
 			ConsoleJob job = new ConsoleJob("Change password for current user", null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
@@ -76,7 +77,6 @@ public class ChangePassword implements IWorkbenchWindowActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					Session session = ConsoleSharedData.getSession();
 					((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), dlg.getOldPassword());
 					runInUIThread(new Runnable() {						
 						@Override

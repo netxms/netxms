@@ -66,11 +66,11 @@ public class CreateNetworkMap implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Create new container", part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NETWORKMAP, dlg.getName(), parentId);
 				cd.setMapType(dlg.getType());
 				cd.setSeedObjectId(dlg.getSeedObject());
