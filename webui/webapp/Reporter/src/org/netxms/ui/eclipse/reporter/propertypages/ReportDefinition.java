@@ -170,11 +170,12 @@ public class ReportDefinition extends PropertyPage
 			setValid(false);
 		
 		final String newDefinition = reportDefinition.getText();
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Update report definition", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				((NXCSession)ConsoleSharedData.getSession()).setReportDefinition(object.getObjectId(), newDefinition);
+				session.setReportDefinition(object.getObjectId(), newDefinition);
 			}
 
 			@Override

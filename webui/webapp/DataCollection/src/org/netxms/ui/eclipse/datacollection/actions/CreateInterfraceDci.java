@@ -107,6 +107,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 				lockRequired.put(n.getObjectId(), !((ref != null) && (ref.getView(false) != null)));
 			}
 			
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			new ConsoleJob(Messages.CreateInterfraceDci_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
@@ -125,7 +126,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 						{
 							if (dciInfo[j].enabled)
 							{
-								createInterfaceDci(ifaces.get(i), j, dciInfo[j], dlg.getPollingInterval(), 
+								createInterfaceDci(session, ifaces.get(i), j, dciInfo[j], dlg.getPollingInterval(), 
 										dlg.getRetentionTime(), ifaces.size() > 1, lockRequired);
 							}
 							monitor.worked(1);
@@ -143,14 +144,13 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 	 * @param dciInfo
 	 * @throws Exception
 	 */
-	private static void createInterfaceDci(Interface iface, int dciType, InterfaceDciInfo dciInfo, int pollingInterval,
+	private static void createInterfaceDci(NXCSession session, Interface iface, int dciType, InterfaceDciInfo dciInfo, int pollingInterval,
 			int retentionTime, boolean updateDescription, Map<Long, Boolean> lockRequired) throws Exception
 	{
 		Node node = iface.getParentNode();
 		if (node == null)
 			throw new NXCException(RCC.INTERNAL_ERROR);		
 		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		DataCollectionConfiguration dcc;
 		if (lockRequired.get(node.getObjectId()))
 		{

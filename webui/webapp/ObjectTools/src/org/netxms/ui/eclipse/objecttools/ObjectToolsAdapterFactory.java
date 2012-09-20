@@ -49,6 +49,7 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 		private Display display;
 		private final long toolId;
 		private ObjectToolDetails result = null;
+		private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 
 		private ToolDetailLoader(long toolId, Display display)
 		{
@@ -59,7 +60,6 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 		@Override
 		public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
 		{
-			NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			try
 			{
 				result = session.getObjectToolDetails(toolId);
