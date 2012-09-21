@@ -100,7 +100,7 @@ public class DashboardComposite extends Canvas implements PaintListener
 	@Override
 	public int getBorderWidth()
 	{
-		return 2;
+		return hasBorder ? 2 : 0;
 	}
 
 	/* (non-Javadoc)

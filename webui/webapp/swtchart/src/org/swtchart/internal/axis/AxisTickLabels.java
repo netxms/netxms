@@ -78,9 +78,6 @@ public class AxisTickLabels implements PaintListener
 	/** the default font */
 	private static final Font DEFAULT_FONT = Display.getDefault().getSystemFont();
 
-	/** the default label format */
-	private static final String DEFAULT_DECIMAL_FORMAT = "#.###########";
-
 	/** the possible tick steps */
 	private Map<Integer, Integer[]> possibleTickSteps;
 
@@ -298,7 +295,7 @@ public class AxisTickLabels implements PaintListener
 		while(cal.getTimeInMillis() < max)
 		{
 			tickLabelValues.add(Double.valueOf(cal.getTimeInMillis()));
-			tickLabels.add(format(cal.getTimeInMillis()));
+			tickLabels.add(format(cal.getTimeInMillis(), 0));
 			int tickLabelPosition = (int)((cal.getTimeInMillis() - min) / (max - min) * length);
 			tickLabelPositions.add(tickLabelPosition);
 			if (tickStepUnit == Calendar.MONTH)
@@ -387,11 +384,11 @@ public class AxisTickLabels implements PaintListener
 				if (axis.isDateEnabled())
 				{
 					Date date = new Date((long)j.doubleValue());
-					tickLabels.add(format(date));
+					tickLabels.add(format(date, 0));
 				}
 				else
 				{
-					tickLabels.add(format(j.doubleValue()));
+					tickLabels.add(format(j.doubleValue(), tickStep.doubleValue()));
 				}
 				tickLabelValues.add(j.doubleValue());
 
@@ -459,11 +456,11 @@ public class AxisTickLabels implements PaintListener
 			if (axis.isDateEnabled())
 			{
 				Date date = new Date((long)b.doubleValue());
-				tickLabels.add(format(date));
+				tickLabels.add(format(date, 0));
 			}
 			else
 			{
-				tickLabels.add(format(b.doubleValue()));
+				tickLabels.add(format(b.doubleValue(), tickStep.doubleValue()));
 			}
 			tickLabelValues.add(b.doubleValue());
 
@@ -586,7 +583,7 @@ public class AxisTickLabels implements PaintListener
 	 *           the object
 	 * @return the formatted string
 	 */
-	private String format(Object obj)
+	private String format(Object obj, double tickStep)
 	{
 		if (format == null)
 		{
@@ -623,9 +620,65 @@ public class AxisTickLabels implements PaintListener
 				}
 				return new SimpleDateFormat(dateFormat).format(obj);
 			}
-			return new DecimalFormat(DEFAULT_DECIMAL_FORMAT).format(obj);
+			return roundedDecimalValue((Double)obj, tickStep);
 		}
 		return format.format(obj);
+	}
+
+	/**
+	 * Get rounded value for tick mark
+	 * 
+	 * @param value
+	 * @param step
+	 * @return
+	 */
+	private String roundedDecimalValue(double value, double step)
+	{
+		double absValue = Math.abs(value);
+		if (absValue >= 10000000000L)
+		{
+			return Long.toString(Math.round(value / 1000000000)) + "G";
+		}
+		else if (absValue >= 1000000000)
+		{
+			return new DecimalFormat("0.0").format(value / 1000000000) + "G"; //$NON-NLS-1$
+		}
+		else if (absValue >= 10000000)
+		{
+			return Long.toString(Math.round(value / 1000000)) + "M";
+		}
+		else if (absValue >= 1000000)
+		{
+			return new DecimalFormat("0.0").format(value / 1000000) + "M"; //$NON-NLS-1$
+		}
+		else if (absValue >= 10000)
+		{
+			return Long.toString(Math.round(value / 1000)) + "K";
+		}
+		else if (absValue >= 1000)
+		{
+			return new DecimalFormat("0.0").format(value / 1000) + "K"; //$NON-NLS-1$
+		}
+		else if ((absValue >= 1) && (step >= 1))
+		{
+			return Long.toString(Math.round(value));
+		}
+		else if (absValue == 0)
+		{
+			return "0"; //$NON-NLS-1$
+		}
+		else
+		{
+			if (step < 0.00001)
+				return Double.toString(value);
+			if (step < 0.0001)
+				return new DecimalFormat("0.00000").format(value); //$NON-NLS-1$
+			if (step < 0.001)
+				return new DecimalFormat("0.0000").format(value); //$NON-NLS-1$
+			if (step < 0.01)
+				return new DecimalFormat("0.000").format(value); //$NON-NLS-1$
+			return new DecimalFormat("0.00").format(value); //$NON-NLS-1$
+		}
 	}
 
 	/**
