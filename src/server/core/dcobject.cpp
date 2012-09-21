@@ -428,11 +428,21 @@ void DCObject::setStatus(int status, bool generateEvent)
 // NOTE: We assume that pattern can be modified during processing
 //
 
-static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue)
+static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue, time_t currTime = 0)
 {
    TCHAR *ptr, *curr;
    int nStep, nCurr, nPrev;
    BOOL bRun = TRUE, bRange = FALSE;
+
+	// Check if time() step was specified (% - special syntax)
+	ptr = _tcschr(pszPattern, _T('%'));
+	if (ptr != NULL)
+	{
+		*ptr = 0;
+		ptr++;
+		nStep = *ptr == _T('\0') ? 1 : _tcstol(ptr, NULL, 10);
+		return (currTime % nStep) == 0;
+	}
 
    // Check if step was specified
    ptr = _tcschr(pszPattern, _T('/'));
@@ -440,7 +450,7 @@ static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue)
    {
       *ptr = 0;
       ptr++;
-      nStep = _tcstol(ptr, NULL, 10);
+		nStep = *ptr == _T('\0') ? 1 : _tcstol(ptr, NULL, 10);
    }
    else
    {
@@ -493,7 +503,7 @@ check_step:
 // Match schedule to current time
 //
 
-static BOOL MatchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule)
+static BOOL MatchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp)
 {
    const TCHAR *pszCurr;
 	TCHAR szValue[256];
@@ -519,11 +529,24 @@ static BOOL MatchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule)
          return FALSE;
 
    // Day of week
-   ExtractWord(pszCurr, szValue);
+   pszCurr = ExtractWord(pszCurr, szValue);
 	for(int i = 0; szValue[i] != 0; i++)
 		if (szValue[i] == _T('7'))
 			szValue[i] = _T('0');
-   return MatchScheduleElement(szValue, pCurrTime->tm_wday);
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_wday))
+		return FALSE;
+
+	// Seconds
+	szValue[0] = _T('\0');
+	ExtractWord(pszCurr, szValue);
+	if (szValue[0] != _T('\0'))
+	{
+		if (bWithSeconds)
+			*bWithSeconds = TRUE;
+		return MatchScheduleElement(szValue, pCurrTime->tm_sec, currTimestamp);
+	}
+
+	return TRUE;
 }
 
 
@@ -544,14 +567,17 @@ bool DCObject::isReadyForPolling(time_t currTime)
       {
          DWORD i;
          struct tm tmCurrLocal, tmLastLocal;
+			BOOL bWithSeconds = FALSE;
 
          memcpy(&tmCurrLocal, localtime(&currTime), sizeof(struct tm));
          memcpy(&tmLastLocal, localtime(&m_tLastCheck), sizeof(struct tm));
          for(i = 0, result = false; i < m_dwNumSchedules; i++)
          {
-            if (MatchSchedule(&tmCurrLocal, m_ppScheduleList[i]))
+            if (MatchSchedule(&tmCurrLocal, m_ppScheduleList[i], &bWithSeconds, currTime))
             {
-               if ((currTime - m_tLastCheck >= 60) ||
+					// TODO: do we have to take care about the schedules with seconds
+					// that trigger polling too often?
+               if (bWithSeconds || (currTime - m_tLastCheck >= 60) ||
                    (tmCurrLocal.tm_min != tmLastLocal.tm_min))
                {
                   result = true;

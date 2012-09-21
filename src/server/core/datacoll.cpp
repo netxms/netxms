@@ -27,7 +27,8 @@
 // Constants
 //
 
-#define ITEM_POLLING_INTERVAL    2
+// FIXME: 1 is experimental, revert to 2 in case of problems
+#define ITEM_POLLING_INTERVAL    1	
 
 
 //
