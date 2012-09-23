@@ -386,8 +386,6 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
 
 	int length = (int)wcslen((WCHAR *)buffer) + 1;
 
-	printf("### length = %d\n", length);
-
 	SQLPOINTER sqlBuffer;
 	switch(allocType)
 	{

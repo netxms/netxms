@@ -407,6 +407,12 @@ static BOOL H_UpgradeFromV253(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 {
+	CHK_EXEC(SetColumnNullable(_T("templates"), _T("apply_filter"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(ConvertStrings(_T("templates"), _T("id"), _T("apply_filter")));
+
+	CHK_EXEC(SetColumnNullable(_T("containers"), _T("auto_bind_filter"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(ConvertStrings(_T("containers"), _T("id"), _T("auto_bind_filter")));
+
 	static TCHAR batch[] = 
 		_T("ALTER TABLE templates ADD flags integer\n")
 		_T("UPDATE templates SET flags=0 WHERE enable_auto_apply=0\n")
@@ -417,7 +423,6 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 		_T("UPDATE containers SET flags=3 WHERE enable_auto_bind<>0\n")
 		_T("ALTER TABLE containers DROP COLUMN enable_auto_bind\n")
 		_T("<END>");
-
 	CHK_EXEC(SQLBatch(batch));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_CONTAINER_AUTOBIND, _T("SYS_CONTAINER_AUTOBIND"), EVENT_SEVERITY_NORMAL, 1,
@@ -459,12 +464,6 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 										  _T("   3) Template ID\r\n")
 										  _T("   4) Template name")
 										  ));
-
-	CHK_EXEC(SetColumnNullable(_T("templates"), _T("apply_filter"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
-	CHK_EXEC(ConvertStrings(_T("templates"), _T("id"), _T("apply_filter")));
-
-	CHK_EXEC(SetColumnNullable(_T("containers"), _T("auto_bind_filter"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
-	CHK_EXEC(ConvertStrings(_T("containers"), _T("id"), _T("auto_bind_filter")));
 
 	TCHAR buffer[64];
 	_sntprintf(buffer, 64, _T("%d"), ConfigReadInt(_T("AllowedCiphers"), 15) + 16);
@@ -910,12 +909,12 @@ static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV242(int currVersion, int newVersion)
 {
 	static TCHAR batch[] = 
+		_T("ALTER TABLE items ADD snmp_raw_value_type integer\n")
+		_T("UPDATE items SET snmp_raw_value_type=0\n")
 		_T("ALTER TABLE items ADD flags integer\n")
 		_T("UPDATE items SET flags=adv_schedule+(all_thresholds*2)\n")
 		_T("ALTER TABLE items DROP COLUMN adv_schedule\n")
 		_T("ALTER TABLE items DROP COLUMN all_thresholds\n")
-		_T("ALTER TABLE items ADD snmp_raw_value_type integer\n")
-		_T("UPDATE items SET snmp_raw_value_type=0\n")
 		_T("<END>");
 
 	CHK_EXEC(SQLBatch(batch));

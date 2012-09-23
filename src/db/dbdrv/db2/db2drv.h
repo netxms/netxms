@@ -53,11 +53,6 @@
 #include <db2ApiDf.h>
 #include <sqlcli1.h>
 
-//#include <sql.h>
-//#include <sqlcli.h>
-//#include <sqlcli1.h>
-//#include <sqlext.h>
-
 
 //
 // Driver connection handle structure
