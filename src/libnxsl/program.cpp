@@ -1051,7 +1051,7 @@ void NXSL_Program::execute()
          pValue = pVar->getValue();
          if (pValue->isNumeric())
          {
-            if (cp->m_nOpCode == OPCODE_INC)
+            if (cp->m_nOpCode == OPCODE_INCP)
                pValue->increment();
             else
                pValue->decrement();
