@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -91,6 +91,9 @@ NXSL_Value::NXSL_Value()
 {
    m_nDataType = NXSL_DT_NULL;
    m_pszValStr = NULL;
+#ifdef UNICODE
+	m_valueMBStr = NULL;
+#endif
 	m_name = NULL;
    m_bStringIsValid = FALSE;
 }
@@ -136,6 +139,9 @@ NXSL_Value::NXSL_Value(const NXSL_Value *pValue)
       m_pszValStr = NULL;
 		m_name = NULL;
    }
+#ifdef UNICODE
+	m_valueMBStr = NULL;
+#endif
 }
 
 NXSL_Value::NXSL_Value(NXSL_Object *pObject)
@@ -143,6 +149,9 @@ NXSL_Value::NXSL_Value(NXSL_Object *pObject)
    m_nDataType = NXSL_DT_OBJECT;
    m_value.pObject = pObject;
    m_pszValStr = NULL;
+#ifdef UNICODE
+	m_valueMBStr = NULL;
+#endif
    m_bStringIsValid = FALSE;
 	m_name = NULL;
 }
@@ -153,6 +162,9 @@ NXSL_Value::NXSL_Value(NXSL_Array *pArray)
    m_value.pArray = pArray;
 	pArray->incRefCount();
    m_pszValStr = NULL;
+#ifdef UNICODE
+	m_valueMBStr = NULL;
+#endif
    m_bStringIsValid = FALSE;
 	m_name = NULL;
 }
@@ -163,6 +175,9 @@ NXSL_Value::NXSL_Value(NXSL_Iterator *pIterator)
    m_value.pIterator = pIterator;
 	pIterator->incRefCount();
    m_pszValStr = NULL;
+#ifdef UNICODE
+	m_valueMBStr = NULL;
+#endif
    m_bStringIsValid = FALSE;
 	m_name = NULL;
 }
@@ -171,6 +186,9 @@ NXSL_Value::NXSL_Value(LONG nValue)
 {
    m_nDataType = NXSL_DT_INT32;
    m_pszValStr = NULL;
+#ifdef UNICODE
+	m_valueMBStr = NULL;
+#endif
    m_bStringIsValid = FALSE;
    m_value.nInt32 = nValue;
 	m_name = NULL;
@@ -180,6 +198,9 @@ NXSL_Value::NXSL_Value(DWORD uValue)
 {
    m_nDataType = NXSL_DT_UINT32;
    m_pszValStr = NULL;
+#ifdef UNICODE
+	m_valueMBStr = NULL;
+#endif
    m_bStringIsValid = FALSE;
    m_value.uInt32 = uValue;
 	m_name = NULL;
@@ -189,6 +210,9 @@ NXSL_Value::NXSL_Value(INT64 nValue)
 {
    m_nDataType = NXSL_DT_INT64;
    m_pszValStr = NULL;
+#ifdef UNICODE
+	m_valueMBStr = NULL;
+#endif
    m_bStringIsValid = FALSE;
    m_value.nInt64 = nValue;
 	m_name = NULL;
@@ -198,6 +222,9 @@ NXSL_Value::NXSL_Value(QWORD uValue)
 {
    m_nDataType = NXSL_DT_UINT64;
    m_pszValStr = NULL;
+#ifdef UNICODE
+	m_valueMBStr = NULL;
+#endif
    m_bStringIsValid = FALSE;
    m_value.uInt64 = uValue;
 	m_name = NULL;
@@ -207,6 +234,9 @@ NXSL_Value::NXSL_Value(double dValue)
 {
    m_nDataType = NXSL_DT_REAL;
    m_pszValStr = NULL;
+#ifdef UNICODE
+	m_valueMBStr = NULL;
+#endif
    m_bStringIsValid = FALSE;
    m_value.dReal = dValue;
 	m_name = NULL;
@@ -225,6 +255,9 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue)
 		m_dwStrLen = 0;
 		m_pszValStr = _tcsdup(_T(""));
 	}
+#ifdef UNICODE
+	m_valueMBStr = NULL;
+#endif
    m_bStringIsValid = TRUE;
    updateNumber();
 	m_name = NULL;
@@ -245,6 +278,7 @@ NXSL_Value::NXSL_Value(const char *pszValue)
 		m_dwStrLen = 0;
 		m_pszValStr = _tcsdup(_T(""));
 	}
+	m_valueMBStr = NULL;
    m_bStringIsValid = TRUE;
    updateNumber();
 	m_name = NULL;
@@ -266,6 +300,9 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue, DWORD dwLen)
 	{
 		memset(m_pszValStr, 0, (dwLen + 1) * sizeof(TCHAR));
 	}
+#ifdef UNICODE
+	m_valueMBStr = NULL;
+#endif
    m_bStringIsValid = TRUE;
    updateNumber();
 	m_name = NULL;
@@ -280,6 +317,9 @@ NXSL_Value::~NXSL_Value()
 {
 	safe_free(m_name);
    safe_free(m_pszValStr);
+#ifdef UNICODE
+	safe_free(m_valueMBStr);
+#endif
    switch(m_nDataType)
 	{
 		case NXSL_DT_OBJECT:
@@ -306,8 +346,10 @@ NXSL_Value::~NXSL_Value()
 void NXSL_Value::set(LONG nValue)
 {
    m_nDataType = NXSL_DT_INT32;
-   safe_free(m_pszValStr);
-   m_pszValStr = NULL;
+	safe_free_and_null(m_pszValStr);
+#ifdef UNICODE
+	safe_free_and_null(m_valueMBStr);
+#endif
    m_bStringIsValid = FALSE;
    m_value.nInt32 = nValue;
 }
@@ -358,6 +400,9 @@ void NXSL_Value::updateString()
    TCHAR szBuffer[64];
 
    safe_free(m_pszValStr);
+#ifdef UNICODE
+	safe_free_and_null(m_valueMBStr);
+#endif
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
@@ -473,6 +518,30 @@ const TCHAR *NXSL_Value::getValueAsCString()
 
 
 //
+// Get value as multibyte string
+//
+
+#ifdef UNICODE
+
+const char *NXSL_Value::getValueAsMBString()
+{
+   if (isNull() || isObject() || isArray())
+      return NULL;
+
+	if (m_valueMBStr != NULL)
+		return m_valueMBStr;
+
+   if (!m_bStringIsValid)
+      updateString();
+	if (m_pszValStr != NULL)
+		m_valueMBStr = MBStringFromWideString(m_pszValStr);
+   return m_valueMBStr;
+}
+
+#endif
+
+
+//
 // Get value as string
 //
 
@@ -583,7 +652,13 @@ double NXSL_Value::getValueAsReal()
 void NXSL_Value::concatenate(const TCHAR *pszString, DWORD dwLen)
 {
    if (!m_bStringIsValid)
+	{
       updateString();
+	}
+	else
+	{
+		safe_free_and_null(m_valueMBStr);
+	}
    m_pszValStr = (TCHAR *)realloc(m_pszValStr, (m_dwStrLen + dwLen + 1) * sizeof(TCHAR));
    memcpy(&m_pszValStr[m_dwStrLen], pszString, dwLen * sizeof(TCHAR));
    m_dwStrLen += dwLen;

@@ -198,6 +198,9 @@ class LIBNXSL_EXPORTABLE NXSL_Value
 protected:
    DWORD m_dwStrLen;
    TCHAR *m_pszValStr;
+#ifdef UNICODE
+	char *m_valueMBStr;	// value as MB string; NULL until first request
+#endif
 	TCHAR *m_name;
    BYTE m_nDataType;
    BYTE m_bStringIsValid;
@@ -218,8 +221,10 @@ protected:
 
    void invalidateString()
    {
-      safe_free(m_pszValStr);
-      m_pszValStr = NULL;
+      safe_free_and_null(m_pszValStr);
+#ifdef UNICODE
+		safe_free_and_null(m_valueMBStr);
+#endif
       m_bStringIsValid = FALSE;
    }
 
@@ -264,6 +269,11 @@ public:
 
    const TCHAR *getValueAsString(DWORD *pdwLen);
    const TCHAR *getValueAsCString();
+#ifdef UNICODE
+   const char *getValueAsMBString();
+#else
+	const char *getValueAsMBString() { return getValueAsCString(); }
+#endif
    LONG getValueAsInt32();
    DWORD getValueAsUInt32();
    INT64 getValueAsInt64();

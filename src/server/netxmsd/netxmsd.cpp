@@ -86,8 +86,8 @@ static BOOL ExecAndWait(char *pszCommand)
    PROCESS_INFORMATION pi;
 
    // Fill in process startup info structure
-   memset(&si, 0, sizeof(STARTUPINFO));
-   si.cb = sizeof(STARTUPINFO);
+   memset(&si, 0, sizeof(STARTUPINFOA));
+   si.cb = sizeof(STARTUPINFOA);
    si.dwFlags = 0;
 
    // Create new process
