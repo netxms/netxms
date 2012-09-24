@@ -5,7 +5,7 @@ SUBAGENT = odbcquery
 pkglib_LTLIBRARIES = odbcquery.la
 odbcquery_la_SOURCES = odbcquery.cpp odbcsapi.cpp
 odbcquery_la_LDFLAGS = -module -avoid-version
-odbcquery_la_LIBADD = ../../../libnetxms/libnetxms.la
+odbcquery_la_LIBADD = ../../../libnetxms/libnetxms.la @ODBC_LIBS@
 
 EXTRA_DIST = odbcquery.vcproj odbcquery.h
 
