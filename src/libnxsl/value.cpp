@@ -655,10 +655,12 @@ void NXSL_Value::concatenate(const TCHAR *pszString, DWORD dwLen)
 	{
       updateString();
 	}
+#ifdef UNICODE
 	else
 	{
 		safe_free_and_null(m_valueMBStr);
 	}
+#endif
    m_pszValStr = (TCHAR *)realloc(m_pszValStr, (m_dwStrLen + dwLen + 1) * sizeof(TCHAR));
    memcpy(&m_pszValStr[m_dwStrLen], pszString, dwLen * sizeof(TCHAR));
    m_dwStrLen += dwLen;
