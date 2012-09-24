@@ -456,7 +456,7 @@ BuiltinType:
 }
 |	T_TYPE_UINT32
 {
-	$$ = NXSL_DT_INT32;
+	$$ = NXSL_DT_UINT32;
 }
 |	T_TYPE_UINT64
 {

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
@@ -41,6 +40,9 @@ import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
+/**
+ * Workbench window advisor
+ */
 public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 {
 	public NXMCWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
@@ -82,9 +84,6 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	public void postWindowCreate()
 	{
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-		IWorkbenchWindow window = configurer.getWindow();
-		
-		//window.getShell().setMaximized(true);
 		
 		Session session = ConsoleSharedData.getSession();
 		Activator.getDefault().getStatusItemConnection().setText(session.getUserName() + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
