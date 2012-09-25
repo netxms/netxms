@@ -1954,3 +1954,37 @@ int LIBNETXMS_EXPORTABLE wcscat_s(WCHAR *dst, size_t dstSize, const WCHAR *src)
 
 #endif
 
+
+//
+// strlwr implementation
+//
+
+#if !defined(_WIN32) && !HAVE_STRLWR
+
+char LIBNETXMS_EXPORTABLE *strlwr(char *str)
+{
+	char *s = str;
+	while(*s != 0)
+	{
+		if (isupper(*s))
+			*s = tolower(*s);
+		++s;
+	}
+
+	return str;
+}
+
+WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str)
+{
+	WCHAR *s = str;
+	while(*s != 0)
+	{
+		if (iswupper(*s))
+			*s = towlower(*s);
+		++s;
+	}
+
+	return str;
+}
+
+#endif

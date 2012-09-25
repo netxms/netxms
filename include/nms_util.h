@@ -984,6 +984,11 @@ extern "C"
 	WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src);
 #endif
 
+#if !HAVE_STRLWR && !defined(_WIN32)
+	char LIBNETXMS_EXPORTABLE *strlwr(char *str);
+	WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str);
+#endif
+
 #ifdef _WIN32
 #ifdef UNICODE
     DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *filename);
