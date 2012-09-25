@@ -22,7 +22,6 @@ import org.netxms.api.client.constants.CommonRCC;
 
 /**
  * This class represents request completion codes (RCC) sent by NetXMS server.
- * 
  */
 public final class RCC extends CommonRCC
 {
@@ -48,7 +47,6 @@ public final class RCC extends CommonRCC
 	public static final int INVALID_IP_ADDR = 37;
 	public static final int ACTION_IN_USE = 38;
 	public static final int VARIABLE_NOT_FOUND = 39;
-	public static final int BAD_PROTOCOL = 40;
 	public static final int ADDRESS_IN_USE = 41;
 	public static final int EXEC_FAILED = 47;
 	public static final int INVALID_TOOL_ID = 48;
@@ -94,7 +92,6 @@ public final class RCC extends CommonRCC
 	public static final int ZONE_NOT_EMPTY = 95;
 	public static final int NO_COMPONENT_DATA = 96;
 	public static final int INVALID_ALARM_NOTE_ID = 97;
-	public static final int ENCRYPTION_ERROR = 98;
 	
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

@@ -42,6 +42,7 @@ public class CommonRCC
 	public static final int OPERATION_IN_PROGRESS = 23;
 	public static final int NOT_IMPLEMENTED = 28;
 	public static final int VERSION_MISMATCH = 31;
+	public static final int BAD_PROTOCOL = 40;
 	public static final int NO_CIPHERS = 42;
 	public static final int INVALID_PUBLIC_KEY = 43;
 	public static final int INVALID_SESSION_KEY = 44;
@@ -54,4 +55,5 @@ public class CommonRCC
 	public static final int INVALID_CERT_ID = 74;
 	public static final int WEAK_PASSWORD = 87;
 	public static final int REUSED_PASSWORD = 88;
+	public static final int ENCRYPTION_ERROR = 98;
 }
