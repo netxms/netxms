@@ -6,6 +6,7 @@
 - Management console:
 	- Command line options for automatic connect
 - Storage discovery API
+- New parameter Icmp.PingStdDev in PING subagent
 
 
 *

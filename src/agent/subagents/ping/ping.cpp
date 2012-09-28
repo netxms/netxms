@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2004-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,10 +46,9 @@ static DWORD m_dwPollsPerMinute = 4;
 static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
 {
 	QWORD qwStartTime;
-	DWORD i, dwSum, dwLost, dwCount, dwInterval, dwElapsedTime;
+	DWORD i, dwSum, dwLost, dwCount, dwInterval, dwElapsedTime, dwStdDev;
 	BOOL bUnreachable;
 	PING_TARGET *target = (PING_TARGET *)arg;
-
 	while(!m_bShutdown)
 	{
 		bUnreachable = FALSE;
@@ -64,11 +63,15 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
 		if (target->iBufPos == (int)m_dwPollsPerMinute)
 			target->iBufPos = 0;
 
-		for(i = 0, dwSum = 0, dwLost = 0, dwCount = 0; i < m_dwPollsPerMinute; i++)
+		for(i = 0, dwSum = 0, dwLost = 0, dwCount = 0, dwStdDev = 0; i < m_dwPollsPerMinute; i++)
 		{
 			if (target->pdwHistory[i] < 10000)
 			{
 				dwSum += target->pdwHistory[i];
+				if (target->pdwHistory[i] > 0)
+				{
+					dwStdDev += (target->dwAvgRTT - target->pdwHistory[i]) * (target->dwAvgRTT - target->pdwHistory[i]);
+				}
 				dwCount++;
 			}
 			else
@@ -78,10 +81,19 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
 		}
 		target->dwAvgRTT = bUnreachable ? 10000 : (dwSum / dwCount);
 		target->dwPacketLoss = dwLost * 100 / m_dwPollsPerMinute;
+
+		if (dwCount > 0)
+		{
+			target->dwStdDevRTT = (DWORD)sqrt((double)dwStdDev / (double)dwCount);
+		}
+		else
+		{
+			target->dwStdDevRTT = 0;
+		}
 		
 		dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
-
 		dwInterval = 60000 / m_dwPollsPerMinute;
+
 		if (ConditionWait(m_hCondShutdown, (dwInterval > dwElapsedTime + 1000) ? dwInterval - dwElapsedTime : 1000))
 			break;
 	}
@@ -174,6 +186,9 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 			break;
 		case _T('P'):
 			ret_uint(pValue, m_pTargetList[i].dwPacketLoss);
+			break;
+		case _T('D'):
+			ret_uint(pValue, m_pTargetList[i].dwStdDevRTT);
 			break;
 		default:
 			return SYSINFO_RC_UNSUPPORTED;
@@ -356,6 +371,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Icmp.AvgPingTime(*)"), H_PollResult, _T("A"), DCI_DT_UINT, _T("Average response time of ICMP ping to {instance} for last minute") },
 	{ _T("Icmp.LastPingTime(*)"), H_PollResult, _T("L"), DCI_DT_UINT, _T("Response time of last ICMP ping to {instance}") },
 	{ _T("Icmp.PacketLoss(*)"), H_PollResult, _T("P"), DCI_DT_UINT, _T("Packet loss for ICMP ping to {instance}") },
+ 	{ _T("Icmp.PingStdDev(*)"), H_PollResult, _T("D"), DCI_DT_UINT, _T("Standard deviation for ICMP ping to {instance}") },
 	{ _T("Icmp.Ping(*)"), H_IcmpPing, NULL, DCI_DT_UINT, _T("ICMP ping response time for {instance}") }
 };
 static NETXMS_SUBAGENT_LIST m_enums[] =

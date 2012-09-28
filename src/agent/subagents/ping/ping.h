@@ -26,6 +26,7 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nms_agent.h>
+#include <math.h>
 
 
 //
@@ -46,7 +47,8 @@ struct PING_TARGET
    DWORD dwPacketSize;
    DWORD dwAvgRTT;
    DWORD dwLastRTT;
-	DWORD dwPacketLoss;
+   DWORD dwStdDevRTT;
+   DWORD dwPacketLoss;
    DWORD pdwHistory[MAX_POLLS_PER_MINUTE];
    int iBufPos;
    THREAD hThread;
