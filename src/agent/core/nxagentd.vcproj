@@ -409,6 +409,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sd.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\service.cpp"
 				>
 			</File>

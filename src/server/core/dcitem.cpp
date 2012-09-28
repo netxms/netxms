@@ -1111,6 +1111,7 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
       pValue = new NXSL_Value((const TCHAR *)value);
       pEnv = new NXSL_ServerEnv;
       m_pScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+      m_pScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
 	
       if (m_pScript->run(pEnv, 1, &pValue) == 0)
       {

@@ -287,6 +287,7 @@ src/agent/core/epp.cpp -text
 src/agent/core/nxagentd-unicode.vcproj -text
 src/agent/core/nxagentd.vcproj -text
 src/agent/core/push.cpp -text
+src/agent/libnxsd/libnxsd.vcproj -text
 src/agent/subagents/aix/cpu.cpp -text
 src/agent/subagents/aix/iostat.cpp -text
 src/agent/subagents/ecs/ecs.vcproj -text

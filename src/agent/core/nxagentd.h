@@ -41,6 +41,17 @@
 #undef SEVERITY_CRITICAL
 #endif
 
+#ifdef _WIN32
+#include <aclapi.h>
+#else
+#include <sys/socket.h>
+#include <sys/un.h>
+#endif
+
+#ifndef SUN_LEN
+#define SUN_LEN(su) (sizeof(*(su)) - sizeof((su)->sun_path) + strlen((su)->sun_path))
+#endif
+
 
 //
 // Version
@@ -443,6 +454,8 @@ void CloseRegistry(bool modified);
 
 void StartPushConnector();
 BOOL PushData(const TCHAR *parameter, const TCHAR *value);
+
+void StartStorageDiscoveryConnector();
 
 
 #ifdef _WIN32

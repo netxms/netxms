@@ -22,17 +22,6 @@
 
 #include "nxagentd.h"
 
-#ifdef _WIN32
-#include <aclapi.h>
-#else
-#include <sys/socket.h>
-#include <sys/un.h>
-#endif
-
-#ifndef SUN_LEN
-#define SUN_LEN(su) (sizeof(*(su)) - sizeof((su)->sun_path) + strlen((su)->sun_path))
-#endif
-
 
 /**
  * Push parameter's data

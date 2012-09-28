@@ -207,7 +207,7 @@ public class Table
 	
 	/**
 	 * Get all rows as an array of List<String>. Method returns Object[] because
-	 * Java forbids craetion of generic arrays.
+	 * Java forbids creation of generic arrays.
 	 * 
 	 * @return Array of all rows in a table
 	 */

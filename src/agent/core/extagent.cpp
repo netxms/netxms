@@ -22,10 +22,6 @@
 
 #include "nxagentd.h"
 
-#ifdef _WIN32
-#include <aclapi.h>
-#endif
-
 
 /**
  *Static data

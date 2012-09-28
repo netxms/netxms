@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.console;
 import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
@@ -102,18 +103,48 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		final Shell shell = getWindowConfigurer().getWindow().getShell();
 		boolean success = false;
+		boolean autoConnect = false;
+		String password = "";
+		
+		for(String s : Platform.getCommandLineArgs())
+		{
+			if (s.startsWith("-server="))
+			{
+		      settings.put("Connect.Server", s.substring(8)); //$NON-NLS-1$
+			}
+			else if (s.startsWith("-login="))
+			{
+				settings.put("Connect.Login", s.substring(7)); //$NON-NLS-1$
+			}
+			else if (s.startsWith("-password=")) //$NON-NLS-1$
+			{
+				password = s.substring(10);
+			}
+			else if (s.equals("-auto")) //$NON-NLS-1$
+			{
+				autoConnect = true;
+			}
+		}
 
 		LoginDialog loginDialog;
 		do
 		{
-			loginDialog = new LoginDialog(shell);
-			if (loginDialog.open() != Window.OK)
-				System.exit(0);	// TODO: do we need to use more graceful method?
+			if (!autoConnect)
+			{
+				loginDialog = new LoginDialog(shell);
+				if (loginDialog.open() != Window.OK)
+					System.exit(0);	// TODO: do we need to use more graceful method?
+				password = loginDialog.getPassword();
+			}
+			else
+			{
+				autoConnect = false;	// only do auto connect first time
+			}
 
 			try
 			{
 				LoginJob job = new LoginJob(display, settings.get("Connect.Server"), //$NON-NLS-1$ 
-				                            settings.get("Connect.Login"), loginDialog.getPassword(), //$NON-NLS-1$
+				                            settings.get("Connect.Login"), password, //$NON-NLS-1$
 				                            settings.getBoolean("Connect.Encrypt")); //$NON-NLS-1$
 
 				new ProgressMonitorDialog(shell).run(true, true, job);
@@ -144,7 +175,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(shell);
 				if (dlg.open() == Window.OK)
 				{
-					final String currentPassword = loginDialog.getPassword();
+					final String currentPassword = password;
 					IRunnableWithProgress job = new IRunnableWithProgress() {
 						@Override
 						public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException

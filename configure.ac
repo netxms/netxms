@@ -2070,6 +2070,7 @@ AC_CONFIG_FILES([
 	src/agent/Makefile
 	src/agent/core/Makefile
 	src/agent/install/Makefile
+	src/agent/libnxsd/Makefile
 	src/agent/subagents/Makefile
 	src/agent/subagents/aix/Makefile
 	src/agent/subagents/ecs/Makefile

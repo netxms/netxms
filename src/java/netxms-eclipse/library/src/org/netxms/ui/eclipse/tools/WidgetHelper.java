@@ -213,7 +213,6 @@ public class WidgetHelper
 		return combo;
 	}
 	
-
 	/**
     * Create pair of label and spinner, with label above
 	 * 

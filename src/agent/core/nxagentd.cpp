@@ -984,6 +984,7 @@ BOOL Initialize()
 		m_thSessionWatchdog = ThreadCreateEx(SessionWatchdog, 0, NULL);
 		m_thTrapSender = ThreadCreateEx(TrapSender, 0, NULL);
 		StartPushConnector();
+		StartStorageDiscoveryConnector();
 	}
 
 #if defined(_WIN32)
