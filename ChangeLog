@@ -1,4 +1,14 @@
 *
+* 1.2.4
+*
+
+- New global variable $dci in transformation scripts
+- Management console:
+	- Command line options for automatic connect
+- Storage discovery API
+
+
+*
 * 1.2.3
 *
 
