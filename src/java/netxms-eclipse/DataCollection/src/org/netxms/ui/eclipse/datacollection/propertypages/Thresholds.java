@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -66,9 +65,9 @@ public class Thresholds extends PropertyPage
 {
 	public static final int COLUMN_OPERATION = 0;
 	public static final int COLUMN_EVENT = 1;
-	
+
 	private static final String COLUMN_SETTINGS_PREFIX = "Thresholds.ThresholdList"; //$NON-NLS-1$
-	
+
 	private DataCollectionItem dci;
 	private List<Threshold> thresholds;
 	private LabeledText instance;
@@ -80,7 +79,9 @@ public class Thresholds extends PropertyPage
 	private Button upButton;
 	private Button downButton;
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -88,82 +89,82 @@ public class Thresholds extends PropertyPage
 	{
 		// Initiate loading of event manager plugin if it was not loaded before
 		Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
-		
+
 		dci = (DataCollectionItem)getElement().getAdapter(DataCollectionItem.class);
 		thresholds = new ArrayList<Threshold>(dci.getThresholds().size());
 		for(Threshold t : dci.getThresholds())
 			thresholds.add(new Threshold(t));
-		
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
-      dialogArea.setLayout(layout);
-      
-      instance = new LabeledText(dialogArea, SWT.NONE);
-      instance.setLabel(Messages.Thresholds_Instance);
-      instance.setText(dci.getInstance());
-      GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      instance.setLayoutData(gd);
-      
-      checkAllThresholds = new Button(dialogArea, SWT.CHECK);
-      checkAllThresholds.setText(Messages.Thresholds_ProcessAll);
-      checkAllThresholds.setSelection(dci.isProcessAllThresholds());
-      
-      Composite thresholdArea = new Composite(dialogArea, SWT.NONE);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.verticalAlignment = SWT.FILL;
-      gd.grabExcessVerticalSpace = true;
-      gd.horizontalSpan = 2;
-      thresholdArea.setLayoutData(gd);
-      layout = new GridLayout();
+		dialogArea.setLayout(layout);
+
+		instance = new LabeledText(dialogArea, SWT.NONE);
+		instance.setLabel(Messages.Thresholds_Instance);
+		instance.setText(dci.getInstance());
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		instance.setLayoutData(gd);
+
+		checkAllThresholds = new Button(dialogArea, SWT.CHECK);
+		checkAllThresholds.setText(Messages.Thresholds_ProcessAll);
+		checkAllThresholds.setSelection(dci.isProcessAllThresholds());
+
+		Composite thresholdArea = new Composite(dialogArea, SWT.NONE);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessVerticalSpace = true;
+		gd.horizontalSpan = 2;
+		thresholdArea.setLayoutData(gd);
+		layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		layout.numColumns = 2;
-      thresholdArea.setLayout(layout);
-	
-      new Label(thresholdArea, SWT.NONE).setText(Messages.Thresholds_Thresholds);
-      
-      thresholdList = new TableViewer(thresholdArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.verticalAlignment = SWT.FILL;
-      gd.grabExcessVerticalSpace = true;
-      gd.horizontalSpan = 2;
-      thresholdList.getControl().setLayoutData(gd);
-      setupThresholdList();
-      thresholdList.setInput(thresholds.toArray());
-      
-      Composite leftButtons = new Composite(thresholdArea, SWT.NONE);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.LEFT;
-      leftButtons.setLayoutData(gd);
-      RowLayout buttonsLayout = new RowLayout(SWT.HORIZONTAL);
-      buttonsLayout.marginBottom = 0;
-      buttonsLayout.marginLeft = 0;
-      buttonsLayout.marginRight = 0;
-      buttonsLayout.marginTop = 0;
-      buttonsLayout.spacing = WidgetHelper.OUTER_SPACING;
-      buttonsLayout.fill = true;
-      buttonsLayout.pack = false;
-      leftButtons.setLayout(buttonsLayout);
+		thresholdArea.setLayout(layout);
 
-      upButton = new Button(leftButtons, SWT.PUSH);
-      upButton.setText(Messages.Thresholds_Up);
-      upButton.setEnabled(false);
-      upButton.addSelectionListener(new SelectionListener() {
-		@Override
+		new Label(thresholdArea, SWT.NONE).setText(Messages.Thresholds_Thresholds);
+
+		thresholdList = new TableViewer(thresholdArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessVerticalSpace = true;
+		gd.horizontalSpan = 2;
+		thresholdList.getControl().setLayoutData(gd);
+		setupThresholdList();
+		thresholdList.setInput(thresholds.toArray());
+
+		Composite leftButtons = new Composite(thresholdArea, SWT.NONE);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.LEFT;
+		leftButtons.setLayoutData(gd);
+		RowLayout buttonsLayout = new RowLayout(SWT.HORIZONTAL);
+		buttonsLayout.marginBottom = 0;
+		buttonsLayout.marginLeft = 0;
+		buttonsLayout.marginRight = 0;
+		buttonsLayout.marginTop = 0;
+		buttonsLayout.spacing = WidgetHelper.OUTER_SPACING;
+		buttonsLayout.fill = true;
+		buttonsLayout.pack = false;
+		leftButtons.setLayout(buttonsLayout);
+
+		upButton = new Button(leftButtons, SWT.PUSH);
+		upButton.setText(Messages.Thresholds_Up);
+		upButton.setEnabled(false);
+		upButton.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
-			widgetSelected(e);
+				widgetSelected(e);
 			}
 
 			@Override
@@ -171,65 +172,65 @@ public class Thresholds extends PropertyPage
 			{
 				moveUp();
 			}
-      });
-      
-      downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText(Messages.Thresholds_Down);
-      downButton.setEnabled(false);
-      downButton.addSelectionListener(new SelectionListener() {
-   		@Override
-   			public void widgetDefaultSelected(SelectionEvent e)
-   			{
-   			widgetSelected(e);
-   			}
+		});
 
-   			@Override
-   			public void widgetSelected(SelectionEvent e)
-   			{
-   				moveDown();
-   			}
-         });
-      
-      Composite buttons = new Composite(thresholdArea, SWT.NONE);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.RIGHT;
-      buttons.setLayoutData(gd);
-      buttonsLayout = new RowLayout(SWT.HORIZONTAL);
-      buttonsLayout.marginBottom = 0;
-      buttonsLayout.marginLeft = 0;
-      buttonsLayout.marginRight = 0;
-      buttonsLayout.marginTop = 0;
-      buttonsLayout.spacing = WidgetHelper.OUTER_SPACING;
-      buttonsLayout.fill = true;
-      buttonsLayout.pack = false;
-      buttons.setLayout(buttonsLayout);
-      
-      addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText(Messages.Thresholds_Add);
-      RowData rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      addButton.setLayoutData(rd);
-      addButton.addSelectionListener(new SelectionListener() {
+		downButton = new Button(leftButtons, SWT.PUSH);
+		downButton.setText(Messages.Thresholds_Down);
+		downButton.setEnabled(false);
+		downButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
 				widgetSelected(e);
 			}
-			
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				moveDown();
+			}
+		});
+
+		Composite buttons = new Composite(thresholdArea, SWT.NONE);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.RIGHT;
+		buttons.setLayoutData(gd);
+		buttonsLayout = new RowLayout(SWT.HORIZONTAL);
+		buttonsLayout.marginBottom = 0;
+		buttonsLayout.marginLeft = 0;
+		buttonsLayout.marginRight = 0;
+		buttonsLayout.marginTop = 0;
+		buttonsLayout.spacing = WidgetHelper.OUTER_SPACING;
+		buttonsLayout.fill = true;
+		buttonsLayout.pack = false;
+		buttons.setLayout(buttonsLayout);
+
+		addButton = new Button(buttons, SWT.PUSH);
+		addButton.setText(Messages.Thresholds_Add);
+		RowData rd = new RowData();
+		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+		addButton.setLayoutData(rd);
+		addButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 				addThreshold();
 			}
 		});
-      
-      modifyButton = new Button(buttons, SWT.PUSH);
-      modifyButton.setText(Messages.Thresholds_Edit);
-      rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      modifyButton.setLayoutData(rd);
-      modifyButton.setEnabled(false);
-      modifyButton.addSelectionListener(new SelectionListener() {
+
+		modifyButton = new Button(buttons, SWT.PUSH);
+		modifyButton.setText(Messages.Thresholds_Edit);
+		rd = new RowData();
+		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+		modifyButton.setLayoutData(rd);
+		modifyButton.setEnabled(false);
+		modifyButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -241,15 +242,15 @@ public class Thresholds extends PropertyPage
 			{
 				editThreshold();
 			}
-      });
-      
-      deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText(Messages.Thresholds_Delete);
-      rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      deleteButton.setLayoutData(rd);
-      deleteButton.setEnabled(false);
-      deleteButton.addSelectionListener(new SelectionListener() {
+		});
+
+		deleteButton = new Button(buttons, SWT.PUSH);
+		deleteButton.setText(Messages.Thresholds_Delete);
+		rd = new RowData();
+		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+		deleteButton.setLayoutData(rd);
+		deleteButton.setEnabled(false);
+		deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -261,10 +262,10 @@ public class Thresholds extends PropertyPage
 			{
 				deleteThresholds();
 			}
-      });
-      
-      /*** Selection change listener for thresholds list ***/
-      thresholdList.addSelectionChangedListener(new ISelectionChangedListener() {
+		});
+
+		/*** Selection change listener for thresholds list ***/
+		thresholdList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
@@ -275,16 +276,16 @@ public class Thresholds extends PropertyPage
 				modifyButton.setEnabled(selection.size() == 1);
 				deleteButton.setEnabled(selection.size() > 0);
 			}
-      });
-      
-      thresholdList.addDoubleClickListener(new IDoubleClickListener() {
+		});
+
+		thresholdList.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
 			{
 				editThreshold();
 			}
-      });
-      
+		});
+
 		return dialogArea;
 	}
 
@@ -302,10 +303,10 @@ public class Thresholds extends PropertyPage
 			{
 				thresholds.remove(it.next());
 			}
-	      thresholdList.setInput(thresholds.toArray());
+			thresholdList.setInput(thresholds.toArray());
 		}
 	}
-	
+
 	/**
 	 * Edit selected threshold
 	 */
@@ -322,7 +323,7 @@ public class Thresholds extends PropertyPage
 			}
 		}
 	}
-	
+
 	/**
 	 * Add new threshold
 	 */
@@ -333,11 +334,11 @@ public class Thresholds extends PropertyPage
 		if (dlg.open() == Window.OK)
 		{
 			thresholds.add(threshold);
-	      thresholdList.setInput(thresholds.toArray());
-	      thresholdList.setSelection(new StructuredSelection(threshold));
+			thresholdList.setInput(thresholds.toArray());
+			thresholdList.setSelection(new StructuredSelection(threshold));
 		}
 	}
-	
+
 	/**
 	 * Move currently selected threshold up
 	 */
@@ -347,17 +348,17 @@ public class Thresholds extends PropertyPage
 		if (selection.size() == 1)
 		{
 			final Threshold threshold = (Threshold)selection.getFirstElement();
-			
+
 			int index = thresholds.indexOf(threshold);
 			if (index > 0)
 			{
 				Collections.swap(thresholds, index - 1, index);
-		      thresholdList.setInput(thresholds.toArray());
-		      thresholdList.setSelection(new StructuredSelection(threshold));
+				thresholdList.setInput(thresholds.toArray());
+				thresholdList.setSelection(new StructuredSelection(threshold));
 			}
 		}
 	}
-	
+
 	/**
 	 * Move currently selected threshold down
 	 */
@@ -367,13 +368,13 @@ public class Thresholds extends PropertyPage
 		if (selection.size() == 1)
 		{
 			final Threshold threshold = (Threshold)selection.getFirstElement();
-			
+
 			int index = thresholds.indexOf(threshold);
 			if ((index < thresholds.size() - 1) && (index >= 0))
 			{
 				Collections.swap(thresholds, index + 1, index);
-		      thresholdList.setInput(thresholds.toArray());
-		      thresholdList.setSelection(new StructuredSelection(threshold));
+				thresholdList.setInput(thresholds.toArray());
+				thresholdList.setSelection(new StructuredSelection(threshold));
 			}
 		}
 	}
@@ -386,22 +387,24 @@ public class Thresholds extends PropertyPage
 		Table table = thresholdList.getTable();
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
-		
+
 		TableColumn column = new TableColumn(table, SWT.LEFT);
 		column.setText(Messages.Thresholds_Expression);
 		column.setWidth(200);
-		
+
 		column = new TableColumn(table, SWT.LEFT);
 		column.setText(Messages.Thresholds_Event);
 		column.setWidth(150);
-		
+
 		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
-		
-      thresholdList.setContentProvider(new ArrayContentProvider());
-      thresholdList.setLabelProvider(new ThresholdLabelProvider());
+
+		thresholdList.setContentProvider(new ArrayContentProvider());
+		thresholdList.setLabelProvider(new ThresholdLabelProvider());
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
 	 */
 	@Override
@@ -411,7 +414,9 @@ public class Thresholds extends PropertyPage
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
 	 */
 	@Override
@@ -421,7 +426,7 @@ public class Thresholds extends PropertyPage
 		applyChanges(false);
 		return true;
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 
@@ -431,12 +436,12 @@ public class Thresholds extends PropertyPage
 	{
 		if (isApply)
 			setValid(false);
-		
+
 		dci.setInstance(instance.getText());
 		dci.setProcessAllThresholds(checkAllThresholds.getSelection());
 		dci.getThresholds().clear();
 		dci.getThresholds().addAll(thresholds);
-		
+
 		new ConsoleJob(Messages.Thresholds_JobTitle + dci.getId(), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
@@ -457,7 +462,9 @@ public class Thresholds extends PropertyPage
 				});
 			}
 
-			/* (non-Javadoc)
+			/*
+			 * (non-Javadoc)
+			 * 
 			 * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
 			 */
 			@Override
@@ -477,7 +484,9 @@ public class Thresholds extends PropertyPage
 		}.start();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.preference.PreferencePage#performCancel()
 	 */
 	@Override
@@ -486,7 +495,7 @@ public class Thresholds extends PropertyPage
 		saveSettings();
 		return true;
 	}
-	
+
 	/**
 	 * Save settings
 	 */
