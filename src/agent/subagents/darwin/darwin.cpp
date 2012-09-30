@@ -23,6 +23,7 @@
 
 #include "net.h"
 #include "system.h"
+#include "disk.h"
 
 //
 // Subagent information
@@ -51,6 +52,11 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
   { _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL },
 };
 
+static NETXMS_SUBAGENT_TABLE m_tables[] =
+{
+  { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES },
+};
+
 static NETXMS_SUBAGENT_INFO m_info =
 {
   NETXMS_SUBAGENT_INFO_MAGIC,
@@ -63,7 +69,7 @@ static NETXMS_SUBAGENT_INFO m_info =
   m_parameters,
   sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
   m_enums,
-  0, NULL,	// tables
+  sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE), m_tables,
   0, NULL,	// actions
   0, NULL	// push parameters
 };

@@ -19,11 +19,11 @@ INCLUDES=-I@top_srcdir@/include
 SUBAGENT=darwin
 
 pkglib_LTLIBRARIES=darwin.la
-darwin_la_SOURCES=darwin.cpp net.cpp system.cpp
+darwin_la_SOURCES=darwin.cpp net.cpp system.cpp disk.cpp
 darwin_la_LDFLAGS=-module -avoid-version
 darwin_la_LIBADD=../../../libnetxms/libnetxms.la
 
-EXTRA_DIST=system.h net.h
+EXTRA_DIST=system.h net.h disk.cpp
 
 if !STATIC_BUILD
 install-exec-hook:
