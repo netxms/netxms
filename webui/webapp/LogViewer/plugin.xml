@@ -49,6 +49,11 @@
             id="org.netxms.ui.eclipse.logviewer.commands.openAlarmLog"
             name="Alarm Log">
       </command>
+      <command
+            description="Get more data"
+            id="org.netxms.ui.eclipse.logviewer.commands.get_more_data"
+            name="Get more data">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -128,6 +133,12 @@
             commandId="org.netxms.ui.eclipse.logviewer.commands.openAlarmLog"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="Alt+F8">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.logviewer.commands.get_more_data"
+            contextId="org.netxms.ui.eclipse.logviewer.context.LogViewer"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="F9">
       </key>
    </extension>
    <extension

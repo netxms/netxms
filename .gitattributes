@@ -2812,12 +2812,9 @@ webui/webapp/LogViewer/icons/AuditLog.png -text
 webui/webapp/LogViewer/icons/EventLog.png -text
 webui/webapp/LogViewer/icons/TrapLog.png -text
 webui/webapp/LogViewer/icons/acknowledged.png -text
-webui/webapp/LogViewer/icons/first_page.png -text
-webui/webapp/LogViewer/icons/last_page.png -text
+webui/webapp/LogViewer/icons/get_more_data.png -text
 webui/webapp/LogViewer/icons/log_viewer_job.png -text
-webui/webapp/LogViewer/icons/next_page.png -text
 webui/webapp/LogViewer/icons/outstanding.png -text
-webui/webapp/LogViewer/icons/prev_page.png -text
 webui/webapp/LogViewer/icons/remove.png -text
 webui/webapp/LogViewer/icons/resolved.png -text
 webui/webapp/LogViewer/icons/syslog.png -text
