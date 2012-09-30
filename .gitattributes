@@ -1271,12 +1271,9 @@ src/java/netxms-eclipse/LogViewer/icons/AuditLog.png -text
 src/java/netxms-eclipse/LogViewer/icons/EventLog.png -text
 src/java/netxms-eclipse/LogViewer/icons/TrapLog.png -text
 src/java/netxms-eclipse/LogViewer/icons/acknowledged.png -text
-src/java/netxms-eclipse/LogViewer/icons/first_page.png -text
-src/java/netxms-eclipse/LogViewer/icons/last_page.png -text
+src/java/netxms-eclipse/LogViewer/icons/get_more_data.png -text
 src/java/netxms-eclipse/LogViewer/icons/log_viewer_job.png -text
-src/java/netxms-eclipse/LogViewer/icons/next_page.png -text
 src/java/netxms-eclipse/LogViewer/icons/outstanding.png -text
-src/java/netxms-eclipse/LogViewer/icons/prev_page.png -text
 src/java/netxms-eclipse/LogViewer/icons/remove.png -text
 src/java/netxms-eclipse/LogViewer/icons/resolved.png -text
 src/java/netxms-eclipse/LogViewer/icons/syslog.png -text
@@ -2009,6 +2006,8 @@ src/java/netxms-eclipse/library/icons/expand.png -text
 src/java/netxms-eclipse/library/icons/expandall.png -text
 src/java/netxms-eclipse/library/icons/find.gif -text
 src/java/netxms-eclipse/library/icons/loading.gif -text
+src/java/netxms-eclipse/library/icons/nav_backward.gif -text
+src/java/netxms-eclipse/library/icons/nav_forward.gif -text
 src/java/netxms-eclipse/library/icons/paste.gif -text
 src/java/netxms-eclipse/library/icons/pause.png -text
 src/java/netxms-eclipse/library/icons/refresh.gif -text

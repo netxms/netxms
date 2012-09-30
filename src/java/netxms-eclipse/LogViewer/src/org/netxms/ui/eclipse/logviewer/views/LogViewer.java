@@ -34,6 +34,8 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -68,7 +70,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Universal log viewer
- *
  */
 public class LogViewer extends ViewPart
 {
@@ -76,10 +77,6 @@ public class LogViewer extends ViewPart
 	public static final String JOB_FAMILY = "LogViewerJob";
 	
 	private static final int PAGE_SIZE = 400;
-	private static final int FIRST_PAGE = 0;
-	private static final int LAST_PAGE = 255;
-	private static final int PREV_PAGE = -1;
-	private static final int NEXT_PAGE = 1;
 		
 	private NXCSession session;
 	private FilterBuilder filterBuilder;
@@ -92,13 +89,10 @@ public class LogViewer extends ViewPart
 	private Action actionExecute;
 	private Action actionClearFilter;
 	private Action actionShowFilter;
-	private Action actionGoFirstPage;
-	private Action actionGoLastPage;
-	private Action actionGoNextPage;
-	private Action actionGoPrevPage;
+	private Action actionGetMoreData;
 	private Action actionCopyToClipboard;
 	private Table resultSet;
-	private long currentPosition;
+	private boolean noData = false;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -150,6 +144,14 @@ public class LogViewer extends ViewPart
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		viewer.getControl().setLayoutData(gd);
+		viewer.getTable().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				if (logHandle != null)
+					WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "LogViewer." + logHandle.getName());
+			}
+		});
 
 		/* setup layout */
 		FormData fd = new FormData();
@@ -251,6 +253,7 @@ public class LogViewer extends ViewPart
 			column.setData(lc);
 			column.setWidth(estimateColumnWidth(lc));
 		}
+		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), "LogViewer." + logHandle.getName());
 		viewer.setLabelProvider(new LogLabelProvider(logHandle));
 		filterBuilder.setLogHandle(logHandle);
 	}
@@ -277,12 +280,7 @@ public class LogViewer extends ViewPart
 		manager.add(actionClearFilter);
 		manager.add(actionShowFilter);
 		manager.add(new Separator());
-		manager.add(actionGoFirstPage);
-		manager.add(actionGoPrevPage);
-		manager.add(actionGoNextPage);
-		manager.add(actionGoLastPage);
-		manager.add(new Separator());
-		manager.add(actionCopyToClipboard);
+		manager.add(actionGetMoreData);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -295,13 +293,10 @@ public class LogViewer extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
-		manager.add(actionGoFirstPage);
-		manager.add(actionGoPrevPage);
-		manager.add(actionGoNextPage);
-		manager.add(actionGoLastPage);
-		manager.add(new Separator());
 		manager.add(actionExecute);
 		manager.add(actionClearFilter);
+		manager.add(new Separator());
+		manager.add(actionGetMoreData);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -371,37 +366,16 @@ public class LogViewer extends ViewPart
 			}
 		};
 
-		actionGoFirstPage = new Action("&First page", Activator.getImageDescriptor("icons/first_page.png")) {
+		actionGetMoreData = new Action("Get &more data", Activator.getImageDescriptor("icons/get_more_data.png")) {
 			@Override
 			public void run()
 			{
-				goToPage(FIRST_PAGE);
+				getMoreData();
 			}
 		};
-
-		actionGoLastPage = new Action("&Last page", Activator.getImageDescriptor("icons/last_page.png")) {
-			@Override
-			public void run()
-			{
-				goToPage(LAST_PAGE);
-			}
-		};
-
-		actionGoNextPage = new Action("&Next page", Activator.getImageDescriptor("icons/next_page.png")) {
-			@Override
-			public void run()
-			{
-				goToPage(NEXT_PAGE);
-			}
-		};
-
-		actionGoPrevPage = new Action("&Previous page", Activator.getImageDescriptor("icons/prev_page.png")) {
-			@Override
-			public void run()
-			{
-				goToPage(PREV_PAGE);
-			}
-		};
+		actionGetMoreData.setEnabled(false);
+		actionGetMoreData.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.get_more_data");
+		handlerService.activateHandler(actionGetMoreData.getActionDefinitionId(), new ActionHandler(actionGetMoreData));
 
 		actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
 			@Override
@@ -442,13 +416,15 @@ public class LogViewer extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				logHandle.query(filter);
-				currentPosition = 0;
-				resultSet = logHandle.retrieveData(currentPosition, PAGE_SIZE);
+				final Table data = logHandle.retrieveData(0, PAGE_SIZE);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
+						resultSet = data;
 						viewer.setInput(resultSet.getAllRows());
+						noData = (resultSet.getRowCount() < PAGE_SIZE);
+						actionGetMoreData.setEnabled(!noData);
 					}
 				});
 			}
@@ -456,34 +432,14 @@ public class LogViewer extends ViewPart
 	}
 	
 	/**
-	 * Go to specified page
-	 * 
-	 * @param page Page to go to (one of the FIRST_PAGE, LAST_PAGE, NEXT_PAGE, PREV_PAGE)
+	 * Get more data from server
 	 */
-	private void goToPage(int page)
+	private void getMoreData()
 	{
-		switch(page)
-		{
-			case FIRST_PAGE:
-				currentPosition = 0;
-				break;
-			case LAST_PAGE:
-				currentPosition = logHandle.getNumRecords() - PAGE_SIZE;
-				if (currentPosition < 0)
-					currentPosition = 0;
-				break;
-			case NEXT_PAGE:
-				if (logHandle.getNumRecords() - currentPosition > PAGE_SIZE)
-					currentPosition += PAGE_SIZE;
-				break;
-			case PREV_PAGE:
-				currentPosition -= PAGE_SIZE;
-				if (currentPosition < 0)
-					currentPosition = 0;
-				break;
-		}
+		if (noData)
+			return;	// we already know that there will be no more data
 		
-		new ConsoleJob("Get log page from server", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob("Get log data from server", this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -493,12 +449,15 @@ public class LogViewer extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				resultSet = logHandle.retrieveData(currentPosition, PAGE_SIZE);
+				final Table data = logHandle.retrieveData(resultSet.getRowCount(), PAGE_SIZE);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
+						resultSet.addAll(data);
 						viewer.setInput(resultSet.getAllRows());
+						noData = (data.getRowCount() < PAGE_SIZE);
+						actionGetMoreData.setEnabled(!noData);
 					}
 				});
 			}

@@ -45,6 +45,8 @@ public class SharedIcons
 	public static ImageDescriptor EXPAND;
 	public static ImageDescriptor EXPAND_ALL;
 	public static ImageDescriptor FIND;
+	public static ImageDescriptor NAV_BACKWARD;
+	public static ImageDescriptor NAV_FORWARD;
 	public static ImageDescriptor PASTE;
 	public static ImageDescriptor REFRESH;
 	public static ImageDescriptor RESTART;
@@ -72,6 +74,8 @@ public class SharedIcons
 	public static Image IMG_EXPAND;
 	public static Image IMG_EXPAND_ALL;
 	public static Image IMG_FIND;
+	public static Image IMG_NAV_BACKWARD;
+	public static Image IMG_NAV_FORWARD;
 	public static Image IMG_PASTE;
 	public static Image IMG_REFRESH;
 	public static Image IMG_RESTART;
@@ -104,6 +108,8 @@ public class SharedIcons
 		EXPAND = Activator.getImageDescriptor("icons/expand.png"); //$NON-NLS-1$
 		EXPAND_ALL = Activator.getImageDescriptor("icons/expandall.png"); //$NON-NLS-1$
 		FIND = Activator.getImageDescriptor("icons/find.gif"); //$NON-NLS-1$
+		NAV_BACKWARD = Activator.getImageDescriptor("icons/nav_backward.gif"); //$NON-NLS-1$
+		NAV_FORWARD = Activator.getImageDescriptor("icons/nav_forward.gif"); //$NON-NLS-1$
 		PASTE = Activator.getImageDescriptor("icons/paste.gif"); //$NON-NLS-1$
 		REFRESH = Activator.getImageDescriptor("icons/refresh.gif"); //$NON-NLS-1$
 		RESTART = Activator.getImageDescriptor("icons/restart.gif"); //$NON-NLS-1$
@@ -131,6 +137,8 @@ public class SharedIcons
 		IMG_EXPAND = EXPAND.createImage();
 		IMG_EXPAND_ALL = EXPAND_ALL.createImage();
 		IMG_FIND = FIND.createImage();
+		IMG_NAV_BACKWARD = NAV_BACKWARD.createImage();
+		IMG_NAV_FORWARD = NAV_FORWARD.createImage();
 		IMG_PASTE = PASTE.createImage();
 		IMG_REFRESH = REFRESH.createImage();
 		IMG_RESTART = RESTART.createImage();

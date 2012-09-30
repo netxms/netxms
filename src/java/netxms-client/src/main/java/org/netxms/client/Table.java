@@ -264,4 +264,14 @@ public class Table
 	{
 		this.instanceColumn = instanceColumn;
 	}
+	
+	/**
+	 * Append all records from given table to this table. Source table must have same column set.
+	 * 
+	 * @param src source table
+	 */
+	public void addAll(Table src)
+	{
+		data.addAll(src.data);
+	}
 }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,36 +23,31 @@
 #include "nxcore.h"
 
 
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 LogHandle::LogHandle(NXCORE_LOG *info)
 {
 	m_log = info;
-	m_isDataReady = false;
-	_sntprintf(m_tempTable, 64, _T("log_%p"), this);
-	m_rowCount = 0;
 	m_filter = NULL;
 	m_lock = MutexCreate();
+	m_resultSet = NULL;
+	m_rowCountLimit = 1000;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 LogHandle::~LogHandle()
 {
 	deleteQueryResults();
+	delete m_filter;
 	MutexDestroy(m_lock);
 }
 
-
-//
-// Get column information
-//
-
+/**
+ * Get column information
+ */
 void LogHandle::getColumnInfo(CSCPMessage &msg)
 {
 	DWORD count = 0;
@@ -66,51 +61,23 @@ void LogHandle::getColumnInfo(CSCPMessage &msg)
 	msg.SetVariable(VID_NUM_COLUMNS, count);
 }
 
-
-//
-// Delete query results
-//
-
+/**
+ * Delete query results
+ */
 void LogHandle::deleteQueryResults()
 {
-	if (!m_isDataReady)
+	if (m_resultSet != NULL)
 	{
-		return;
+		DBFreeResult(m_resultSet);
+		m_resultSet = NULL;
 	}
-
-	String query;
-
-	query.addFormattedString(_T("DROP TABLE %s"), m_tempTable);
-
-	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
-	if (dbHandle != NULL)
-	{
-		DBQuery(dbHandle, query);
-
-		DBConnectionPoolReleaseConnection(dbHandle);
-	}
-
-	delete_and_null(m_filter);
-	m_isDataReady = false;
 }
 
-
-//
-// Do query according to filter
-//
-// TODO: refactor and split into smaller methods
-//
-
-bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
+/**
+ * Build query column list
+ */
+void LogHandle::buildQueryColumnList()
 {
-	deleteQueryResults();
-	m_filter = filter;
-
-	if (m_log == NULL)
-	{
-		return false;
-	}
-
 	m_queryColumns = _T("");
 	LOG_COLUMN *column = m_log->columns;
 	bool first = true;
@@ -127,32 +94,53 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
 		m_queryColumns += (*column).name;
 		column++;
 	}
+}
 
+/**
+ * Do query according to filter
+ */
+bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
+{
+	deleteQueryResults();
+	delete m_filter;
+	m_filter = filter;
+
+	buildQueryColumnList();
+	return queryInternal(rowCount);
+}
+
+/**
+ * Do query with current filter and column set
+ */
+bool LogHandle::queryInternal(INT64 *rowCount)
+{
 	String query;
 	switch(g_nDBSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
-			query.addFormattedString(_T("SELECT TOP 10000 %s INTO %s FROM %s "), (const TCHAR *)m_queryColumns, m_tempTable, m_log->table);
+			query.addFormattedString(_T("SELECT TOP %u %s FROM %s "), m_rowCountLimit, (const TCHAR *)m_queryColumns, m_log->table);
 			break;
 		case DB_SYNTAX_INFORMIX:
-			query.addFormattedString(_T("SELECT FIRST 10000 %s INTO %s FROM %s "), (const TCHAR *)m_queryColumns, m_tempTable, m_log->table);
+			query.addFormattedString(_T("SELECT FIRST %u %s FROM %s "), m_rowCountLimit, (const TCHAR *)m_queryColumns, m_log->table);
 			break;
 		case DB_SYNTAX_ORACLE:
+			query.addFormattedString(_T("SELECT * FROM (SELECT %s FROM %s"), (const TCHAR *)m_queryColumns, m_log->table);
+			break;
 		case DB_SYNTAX_SQLITE:
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_MYSQL:
-			query.addFormattedString(_T("CREATE TABLE %s AS SELECT %s FROM %s"), m_tempTable, (const TCHAR *)m_queryColumns, m_log->table);
+			query.addFormattedString(_T("SELECT %s FROM %s"), (const TCHAR *)m_queryColumns, m_log->table);
 			break;
 	}
 
-	int filterSize = filter->getNumColumnFilter();
+	int filterSize = m_filter->getNumColumnFilter();
 	if (filterSize > 0)
 	{
 		query += _T(" WHERE ");
 
 		for(int i = 0; i < filterSize; i++)
 		{
-			ColumnFilter *cf = filter->getColumnFilter(i);
+			ColumnFilter *cf = m_filter->getColumnFilter(i);
 
 			if (i > 0)
 			{
@@ -165,7 +153,7 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
 		}
 	}
 
-	query += filter->buildOrderClause();
+	query += m_filter->buildOrderClause();
 	
 	// Limit record count
 	switch(g_nDBSyntax)
@@ -173,127 +161,93 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
 		case DB_SYNTAX_MYSQL:
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_SQLITE:
-			query += _T(" LIMIT 10000");
+			query.addFormattedString(_T(" LIMIT %u"), m_rowCountLimit);
+			break;
+		case DB_SYNTAX_ORACLE:
+			query.addFormattedString(_T(") WHERE ROWNUM<=%u"), m_rowCountLimit);
 			break;
 		case DB_SYNTAX_DB2:
-			query += _T(" FETCH FIRST 10000 ROWS ONLY");
+			query.addFormattedString(_T(" FETCH FIRST %u ROWS ONLY"), m_rowCountLimit);
 			break;
 	}
 
 	DbgPrintf(4, _T("LOG QUERY: %s"), (const TCHAR *)query);
 
 	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
-
 	bool ret = false;
-	if (dbHandle != NULL)
+	DbgPrintf(7, _T("LogHandle::query(): DB connection acquired"));
+	m_resultSet = DBSelect(dbHandle, (const TCHAR *)query);
+	if (m_resultSet != NULL)
 	{
-		DbgPrintf(7, _T("LogHandle::query(): DB connection acquired"));
-		ret = DBQuery(dbHandle, query) != FALSE;
-		if (ret)
-		{
-			TCHAR query2[256];
-
-			_sntprintf(query2, 256, _T("SELECT count(*) FROM %s"), m_tempTable);
-			DB_RESULT hResult = DBSelect(dbHandle, query2);
-			if (hResult != NULL)
-			{
-				*rowCount = DBGetFieldInt64(hResult, 0, 0);
-				DBFreeResult(hResult);
-				DbgPrintf(7, _T("LogHandle::query(): ") INT64_FMT _T(" records in result set"), *rowCount);
-			}
-			else
-			{
-				ret = false;
-			}
-		}
-		DBConnectionPoolReleaseConnection(dbHandle);
+		*rowCount = DBGetNumRows(m_resultSet);
+		ret = true;
+		DbgPrintf(4, _T("Log query successfull, %d rows fetched"), (int)(*rowCount));
 	}
-	else
-	{
-		DbgPrintf(3, _T("LogHandle::query(): unable to acquire DB connection"));
-	}
-
-	if (ret)
-	{
-		m_isDataReady = true;
-	}
+	DBConnectionPoolReleaseConnection(dbHandle);
 
 	return ret;
 }
 
-
-//
-// Get data from query result
-//
-
-Table *LogHandle::getData(INT64 startRow, INT64 numRows)
+/**
+ * Create table for sending data to client
+ */
+Table *LogHandle::createTable()
 {
-	if (!m_isDataReady)
-	{
-		return NULL;
-	}
-
 	Table *table = new Table();
 
 	LOG_COLUMN *column = m_log->columns;
 	bool first = true;
 	int columnCount = 0;
-	while ((*column).name != NULL)
+	while (column->name != NULL)
 	{
-		table->addColumn((TCHAR *)((*column).name));
-
+		table->addColumn(column->name);
 		column++;
 		columnCount++;
 	}
 
-	String query;
+	return table;
+}
 
-	switch(g_nDBSyntax)
+/**
+ * Get data from query result
+ */
+Table *LogHandle::getData(INT64 startRow, INT64 numRows)
+{
+	DbgPrintf(4, _T("Log data request: startRow=%d, numRows=%d"), (int)startRow, (int)numRows);
+
+	if ((m_resultSet == NULL) || (startRow >= DBGetNumRows(m_resultSet)))
+		return createTable();	// send empty table to indicate end of data
+
+	int resultSize = DBGetNumRows(m_resultSet);
+	if ((int)(startRow + numRows) >= resultSize)
 	{
-		case DB_SYNTAX_MSSQL:
-			query.addFormattedString(_T("SELECT TOP ") INT64_FMT _T(" %s FROM %s"), startRow + numRows, (const TCHAR *)m_queryColumns, m_tempTable);
-			break;
-		case DB_SYNTAX_ORACLE:
-			query.addFormattedString(_T("SELECT %s FROM (SELECT %s,ROWNUM AS R FROM %s) WHERE R BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT,
-			                         (const TCHAR *)m_queryColumns, (const TCHAR *)m_queryColumns, m_tempTable, startRow + 1, startRow + numRows);
-			break;
-		case DB_SYNTAX_PGSQL:
-		case DB_SYNTAX_SQLITE:
-		case DB_SYNTAX_MYSQL:
-			query.addFormattedString(_T("SELECT %s FROM %s LIMIT ") INT64_FMT _T(" OFFSET ") INT64_FMT, (const TCHAR *)m_queryColumns, m_tempTable, numRows, startRow);
-			break;
-	}
-
-	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
-	if (dbHandle != NULL)
-	{
-		DB_RESULT result = DBSelect(dbHandle, query);
-
-		if (result != NULL)
+		if (resultSize < (int)m_rowCountLimit)
 		{
-			int resultSize = DBGetNumRows(result);
-			int offset = (int)max(0, resultSize - (int)numRows); // MSSQL workaround
-			for (int i = offset; i < resultSize; i++)
-			{
-				table->addRow();
-				for (int j = 0; j < columnCount; j++)
-				{
-					table->setPreallocated(j, DBGetField(result, i, j, NULL, 0));
-				}
-			}
-
-			DBFreeResult(result);
+			if (startRow >= resultSize)
+				return createTable();	// send empty table to indicate end of data
 		}
 		else
 		{
-			delete_and_null(table);
+			// possibly we have more rows
+			DWORD newLimit = (DWORD)(startRow + numRows);
+			m_rowCountLimit = (newLimit - m_rowCountLimit < 1000) ? (m_rowCountLimit + 1000) : newLimit;
+			deleteQueryResults();
+			INT64 rowCount;
+			if (!queryInternal(&rowCount))
+				return NULL;
+			resultSize = DBGetNumRows(m_resultSet);
 		}
-
-		DBConnectionPoolReleaseConnection(dbHandle);
 	}
-	else
+
+	Table *table = createTable();
+	int maxRow = (int)min((int)(startRow + numRows), resultSize);
+	for(int i = (int)startRow; i < maxRow; i++)
 	{
-		delete_and_null(table);
+		table->addRow();
+		for(int j = 0; j < table->getNumColumns(); j++)
+		{
+			table->setPreallocated(j, DBGetField(m_resultSet, i, j, NULL, 0));
+		}
 	}
 
 	return table;

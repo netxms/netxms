@@ -163,14 +163,16 @@ class LogHandle
 {
 private:
 	NXCORE_LOG *m_log;
-	bool m_isDataReady;
-	TCHAR m_tempTable[64];
-	INT64 m_rowCount;
 	LogFilter *m_filter;
 	MUTEX m_lock;
    String m_queryColumns;
+	DWORD m_rowCountLimit;
+	DB_RESULT m_resultSet;
 
+	void buildQueryColumnList();
 	void deleteQueryResults();
+	bool queryInternal(INT64 *rowCount);
+	Table *createTable();
 
 public:
 	LogHandle(NXCORE_LOG *log);
