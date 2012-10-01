@@ -76,6 +76,7 @@ struct NXCORE_LOG
 {
 	const TCHAR *name;
 	const TCHAR *table;
+	const TCHAR *idColumn;
 	DWORD requiredAccess;
 	LOG_COLUMN columns[32];
 };
@@ -154,11 +155,9 @@ public:
 	}
 };
 
-
-//
-// Log handle - object used to access log
-//
-
+/**
+ * Log handle - object used to access log
+ */
 class LogHandle
 {
 private:
@@ -167,6 +166,7 @@ private:
 	MUTEX m_lock;
    String m_queryColumns;
 	DWORD m_rowCountLimit;
+	INT64 m_maxRecordId;
 	DB_RESULT m_resultSet;
 
 	void buildQueryColumnList();
@@ -182,7 +182,7 @@ public:
 	void unlock() { MutexUnlock(m_lock); }
 
 	bool query(LogFilter *filter, INT64 *rowCount);
-	Table *getData(INT64 startRow, INT64 numRows);
+	Table *getData(INT64 startRow, INT64 numRows, bool refresh);
 	void getColumnInfo(CSCPMessage &msg);
 };
 

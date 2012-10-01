@@ -430,7 +430,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction() {
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{

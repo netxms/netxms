@@ -199,7 +199,7 @@ public class ObjectBrowser extends ViewPart
 	{
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
-		actionRefresh = new RefreshAction() {
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{

@@ -29,7 +29,7 @@
 
 static NXCORE_LOG s_logs[] =
 {
-	{ _T("AlarmLog"), _T("alarms"), SYSTEM_ACCESS_VIEW_AUDIT_LOG,
+	{ _T("AlarmLog"), _T("alarms"), _T("alarm_id"), SYSTEM_ACCESS_VIEW_AUDIT_LOG,
 		{
 			{ _T("alarm_id"), _T("Alarm ID"), LC_INTEGER },
 			{ _T("alarm_state"), _T("State"), LC_ALARM_STATE },
@@ -49,7 +49,7 @@ static NXCORE_LOG s_logs[] =
 			{ NULL, NULL, 0 }
 		}
 	},
-	{ _T("AuditLog"), _T("audit_log"), SYSTEM_ACCESS_VIEW_AUDIT_LOG,
+	{ _T("AuditLog"), _T("audit_log"), _T("record_id"), SYSTEM_ACCESS_VIEW_AUDIT_LOG,
 		{
 			{ _T("record_id"), _T("Record ID"), LC_INTEGER },
 			{ _T("timestamp"), _T("Timestamp"), LC_TIMESTAMP },
@@ -60,7 +60,7 @@ static NXCORE_LOG s_logs[] =
 			{ NULL, NULL, 0 }
 		}
 	},
-	{ _T("EventLog"), _T("event_log"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
+	{ _T("EventLog"), _T("event_log"), _T("event_id"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
 		{
 			{ _T("event_timestamp"), _T("Time"), LC_TIMESTAMP },
 			{ _T("event_source"), _T("Source"), LC_OBJECT_ID },
@@ -70,7 +70,7 @@ static NXCORE_LOG s_logs[] =
 			{ NULL, NULL, 0 }
 		}
 	},
-	{ _T("SnmpTrapLog"), _T("snmp_trap_log"), SYSTEM_ACCESS_VIEW_TRAP_LOG,
+	{ _T("SnmpTrapLog"), _T("snmp_trap_log"), _T("trap_id"), SYSTEM_ACCESS_VIEW_TRAP_LOG,
 		{
 			{ _T("trap_timestamp"), _T("Time"), LC_TIMESTAMP },
 			{ _T("ip_addr"), _T("Source IP"), LC_TEXT },
@@ -80,7 +80,7 @@ static NXCORE_LOG s_logs[] =
 			{ NULL, NULL, 0 }
 		}
 	},
-	{ _T("syslog"), _T("syslog"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
+	{ _T("syslog"), _T("syslog"), _T("msg_id"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
 		{
 			{ _T("msg_timestamp"), _T("Time"), LC_TIMESTAMP },
 			{ _T("source_object_id"), _T("Source"), LC_OBJECT_ID },

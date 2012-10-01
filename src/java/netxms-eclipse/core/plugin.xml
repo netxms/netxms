@@ -180,12 +180,12 @@
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.netxms.ui.eclipse.console.commands.full_screen"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="F11">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.console.commands.send_sms"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="Ctrl+Alt+S">
       </key>
    </extension>

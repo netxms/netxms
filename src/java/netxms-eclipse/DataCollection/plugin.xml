@@ -276,7 +276,7 @@
       <key
             commandId="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
             contextId="org.netxms.ui.eclipse.datacollection.context.LastValues"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="Ctrl+F2">
       </key>
    </extension>

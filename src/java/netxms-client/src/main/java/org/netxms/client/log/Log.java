@@ -125,18 +125,34 @@ public class Log
 	/**
 	 * Retrieve log data from server. You must first call query() to prepare data on server.
 	 * 
-	 * @param startRow
-	 * @param rowCount
-	 * @return
+	 * @param startRow start row to retrieve
+	 * @param rowCount number of rows to retrieve
+	 * @return data set
 	 * @throws IOException 
 	 * @throws NXCException 
 	 */
 	public Table retrieveData(long startRow, long rowCount) throws IOException, NXCException
 	{
+		return retrieveData(startRow, rowCount, false);
+	}
+	
+	/**
+	 * Retrieve log data from server. You must first call query() to prepare data on server.
+	 * 
+	 * @param startRow start row to retrieve
+	 * @param rowCount number of rows to retrieve
+	 * @param refresh if set to true, server will reload data from database instead of using cache
+	 * @return data set
+	 * @throws IOException 
+	 * @throws NXCException 
+	 */
+	public Table retrieveData(long startRow, long rowCount, boolean refresh) throws IOException, NXCException
+	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_LOG_DATA);
 		msg.setVariableInt32(NXCPCodes.VID_LOG_HANDLE, handle);
 		msg.setVariableInt64(NXCPCodes.VID_START_ROW, startRow);
 		msg.setVariableInt64(NXCPCodes.VID_NUM_ROWS, rowCount);
+		msg.setVariableInt16(NXCPCodes.VID_FORCE_RELOAD, refresh ? 1 : 0);
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId());
 		return session.receiveTable(msg.getMessageId(), NXCPCodes.CMD_LOG_DATA);

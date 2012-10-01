@@ -73,7 +73,7 @@
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.netxms.ui.eclipse.epp.commands.open_policy_editor"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="F4">
       </key>
    </extension>

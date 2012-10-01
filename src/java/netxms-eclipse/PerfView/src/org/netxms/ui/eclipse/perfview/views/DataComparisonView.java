@@ -328,10 +328,7 @@ public class DataComparisonView extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{

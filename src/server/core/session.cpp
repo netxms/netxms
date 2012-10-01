@@ -10585,7 +10585,8 @@ void ClientSession::getServerLogQueryData(CSCPMessage *request)
 	{
 		INT64 startRow = request->GetVariableInt64(VID_START_ROW);
 		INT64 numRows = request->GetVariableInt64(VID_NUM_ROWS);
-		data = log->getData(startRow, numRows);
+		bool refresh = request->GetVariableShort(VID_FORCE_RELOAD) ? true : false;
+		data = log->getData(startRow, numRows, refresh);
 		log->unlock();
 		if (data != NULL)
 		{

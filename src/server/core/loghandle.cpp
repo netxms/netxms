@@ -81,7 +81,7 @@ void LogHandle::buildQueryColumnList()
 	m_queryColumns = _T("");
 	LOG_COLUMN *column = m_log->columns;
 	bool first = true;
-	while ((*column).name != NULL)
+	while(column->name != NULL)
 	{
 		if (!first)
 		{
@@ -91,7 +91,7 @@ void LogHandle::buildQueryColumnList()
 		{
 			first = false;
 		}
-		m_queryColumns += (*column).name;
+		m_queryColumns += column->name;
 		column++;
 	}
 }
@@ -106,6 +106,22 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
 	m_filter = filter;
 
 	buildQueryColumnList();
+
+	m_maxRecordId = -1;
+	TCHAR query[256];
+	_sntprintf(query, 256, _T("SELECT coalesce(max(%s),0) FROM %s"), m_log->idColumn, m_log->table);
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_RESULT hResult = DBSelect(hdb, query);
+	if (hResult != NULL)
+	{
+		if (DBGetNumRows > 0)
+			m_maxRecordId = DBGetFieldInt64(hResult, 0, 0);
+		DBFreeResult(hResult);
+	}
+	DBConnectionPoolReleaseConnection(hdb);
+	if (m_maxRecordId < 0)
+		return false;
+
 	return queryInternal(rowCount);
 }
 
@@ -133,21 +149,15 @@ bool LogHandle::queryInternal(INT64 *rowCount)
 			break;
 	}
 
+	query.addFormattedString(_T(" WHERE %s<=") INT64_FMT, m_log->idColumn, m_maxRecordId);
+
 	int filterSize = m_filter->getNumColumnFilter();
 	if (filterSize > 0)
 	{
-		query += _T(" WHERE ");
-
 		for(int i = 0; i < filterSize; i++)
 		{
 			ColumnFilter *cf = m_filter->getColumnFilter(i);
-
-			if (i > 0)
-			{
-				query += _T(" AND ");
-			}
-
-			query += _T("(");
+			query += _T(" AND (");
 			query += cf->generateSql();
 			query += _T(")");
 		}
@@ -211,26 +221,28 @@ Table *LogHandle::createTable()
 /**
  * Get data from query result
  */
-Table *LogHandle::getData(INT64 startRow, INT64 numRows)
+Table *LogHandle::getData(INT64 startRow, INT64 numRows, bool refresh)
 {
-	DbgPrintf(4, _T("Log data request: startRow=%d, numRows=%d"), (int)startRow, (int)numRows);
+	DbgPrintf(4, _T("Log data request: startRow=%d, numRows=%d, refresh=%s"),
+	          (int)startRow, (int)numRows, refresh ? _T("true") : _T("false"));
 
-	if ((m_resultSet == NULL) || (startRow >= DBGetNumRows(m_resultSet)))
+	if (m_resultSet == NULL)
 		return createTable();	// send empty table to indicate end of data
 
 	int resultSize = DBGetNumRows(m_resultSet);
-	if ((int)(startRow + numRows) >= resultSize)
+	if (((int)(startRow + numRows) >= resultSize) || refresh)
 	{
-		if (resultSize < (int)m_rowCountLimit)
+		if ((resultSize < (int)m_rowCountLimit) && !refresh)
 		{
 			if (startRow >= resultSize)
 				return createTable();	// send empty table to indicate end of data
 		}
 		else
 		{
-			// possibly we have more rows
+			// possibly we have more rows or refresh was requested
 			DWORD newLimit = (DWORD)(startRow + numRows);
-			m_rowCountLimit = (newLimit - m_rowCountLimit < 1000) ? (m_rowCountLimit + 1000) : newLimit;
+			if (newLimit > m_rowCountLimit)
+				m_rowCountLimit = (newLimit - m_rowCountLimit < 1000) ? (m_rowCountLimit + 1000) : newLimit;
 			deleteQueryResults();
 			INT64 rowCount;
 			if (!queryInternal(&rowCount))

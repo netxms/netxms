@@ -714,6 +714,7 @@ public final class NXCPCodes
 	public static final long VID_TIME_FORMAT             = 422;
 	public static final long VID_LINK_ROUTING            = 423;
 	public static final long VID_BACKGROUND_COLOR        = 424;
+	public static final long VID_FORCE_RELOAD            = 425;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

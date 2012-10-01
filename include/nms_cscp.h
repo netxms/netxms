@@ -903,6 +903,7 @@ typedef struct
 #define VID_TIME_FORMAT             ((DWORD)422)
 #define VID_LINK_ROUTING            ((DWORD)423)
 #define VID_BACKGROUND_COLOR        ((DWORD)424)
+#define VID_FORCE_RELOAD            ((DWORD)425)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

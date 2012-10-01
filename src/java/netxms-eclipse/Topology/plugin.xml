@@ -104,12 +104,12 @@
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.netxms.ui.eclipse.topology.commands.find_mac_address"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F11">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.topology.commands.find_ip_address"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+M2+F11">
       </key>
    </extension>
