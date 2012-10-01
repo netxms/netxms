@@ -145,6 +145,8 @@ public class LogViewer extends ViewPart
 		gd.grabExcessVerticalSpace = true;
 		viewer.getControl().setLayoutData(gd);
 		viewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -347,14 +349,16 @@ public class LogViewer extends ViewPart
 	{
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
-		actionRefresh = new RefreshAction() {
+		actionRefresh = new RefreshAction(this) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void run()
 			{
+				refreshData();
 			}
 		};
+		actionRefresh.setEnabled(false);
 
 		actionExecute = new Action("&Execute query", SharedIcons.EXECUTE) {
 			private static final long serialVersionUID = 1L;
@@ -365,6 +369,8 @@ public class LogViewer extends ViewPart
 				doQuery();
 			}
 		};
+		actionExecute.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.execute");
+		handlerService.activateHandler(actionExecute.getActionDefinitionId(), new ActionHandler(actionExecute));
 
 		actionClearFilter = new Action("&Clear filter", SharedIcons.CLEAR_LOG) {
 			private static final long serialVersionUID = 1L;
@@ -420,6 +426,8 @@ public class LogViewer extends ViewPart
 	 */
 	private void doQuery()
 	{
+		actionRefresh.setEnabled(false);
+		actionGetMoreData.setEnabled(false);
 		filter = filterBuilder.createFilter();
 		new ConsoleJob("Query server log", this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
@@ -441,6 +449,7 @@ public class LogViewer extends ViewPart
 						viewer.setInput(resultSet.getAllRows());
 						noData = (resultSet.getRowCount() < PAGE_SIZE);
 						actionGetMoreData.setEnabled(!noData);
+						actionRefresh.setEnabled(true);
 					}
 				});
 			}
@@ -474,6 +483,34 @@ public class LogViewer extends ViewPart
 						viewer.setInput(resultSet.getAllRows());
 						noData = (data.getRowCount() < PAGE_SIZE);
 						actionGetMoreData.setEnabled(!noData);
+					}
+				});
+			}
+		}.start();
+	}
+
+	/**
+	 * Refresh existing dataset
+	 */
+	private void refreshData()
+	{
+		new ConsoleJob("Get log data from server", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot query server log " + logName;
+			}
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final Table data = logHandle.retrieveData(0, resultSet.getRowCount(), true);
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						resultSet = data;
+						viewer.setInput(resultSet.getAllRows());
 					}
 				});
 			}

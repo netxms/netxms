@@ -44,6 +44,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ServiceTree extends Composite implements IServiceFigureListener
 {
+	private static final long serialVersionUID = 1L;
+
 	private GraphViewer viewer;
 	private ServiceTreeModel model;
 	

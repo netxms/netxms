@@ -272,6 +272,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		};
 
 		actionCopyObjectName = new Action(Messages.MibExplorer_CopyName) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

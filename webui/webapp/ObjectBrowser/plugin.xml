@@ -56,19 +56,19 @@
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_browser"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="F3">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objectbrowser.commands.show_object_filter"
             contextId="org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="Ctrl+F2">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objectbrowser.commands.show_status_indicator"
             contextId="org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="Ctrl+F3">
       </key>
    </extension>

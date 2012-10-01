@@ -139,7 +139,7 @@ public class PredefinedGraphTree extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction() {
+		actionRefresh = new RefreshAction(this) {
 			private static final long serialVersionUID = 1L;
 
 			@Override

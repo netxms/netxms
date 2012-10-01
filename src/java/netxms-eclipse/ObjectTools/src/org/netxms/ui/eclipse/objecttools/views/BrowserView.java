@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.objecttools.Activator;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Web browser view
@@ -76,7 +77,7 @@ public class BrowserView extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionBack = new Action("&Back", Activator.getImageDescriptor("icons/back.png")) {
+		actionBack = new Action("&Back", SharedIcons.NAV_BACKWARD) {
 			@Override
 			public void run()
 			{
@@ -84,7 +85,7 @@ public class BrowserView extends ViewPart
 			}
 		};
 
-		actionForward = new Action("&Forward", Activator.getImageDescriptor("icons/forward.png")) {
+		actionForward = new Action("&Forward", SharedIcons.NAV_FORWARD) {
 			@Override
 			public void run()
 			{
@@ -100,7 +101,7 @@ public class BrowserView extends ViewPart
 			}
 		};
 
-		actionReload = new RefreshAction() {
+		actionReload = new RefreshAction(this) {
 			@Override
 			public void run()
 			{

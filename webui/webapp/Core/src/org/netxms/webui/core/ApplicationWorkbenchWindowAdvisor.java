@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
+import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.bindings.BindingManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -39,6 +41,8 @@ import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.eclipse.ui.internal.keys.BindingService;
+import org.eclipse.ui.keys.IBindingService;
 import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
 import org.netxms.webui.core.dialogs.LoginForm;
@@ -48,6 +52,7 @@ import org.netxms.webui.tools.RWTHelper;
 /**
  * Configures the initial size and appearance of a workbench window.
  */
+@SuppressWarnings("restriction")
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 {
 	private Properties properties;
@@ -91,6 +96,18 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	public void postWindowCreate()
 	{
 		super.postWindowCreate();
+		
+		BindingService service = (BindingService)getWindowConfigurer().getWindow().getWorkbench().getService(IBindingService.class);
+		BindingManager bindingManager = service.getBindingManager();
+		try
+		{
+			bindingManager.setActiveScheme(service.getScheme("org.netxms.ui.eclipse.defaultKeyBinding"));
+		}
+		catch(NotDefinedException e)
+		{
+			e.printStackTrace();
+		}
+		
 		final Shell shell = getWindowConfigurer().getWindow().getShell(); 
 		shell.setMaximized(true);
 		

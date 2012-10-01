@@ -19,7 +19,9 @@
 package org.netxms.ui.eclipse.actions;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.swt.SWT;
+import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.netxms.webui.core.Activator;
 import org.netxms.webui.core.Messages;
 
@@ -32,11 +34,24 @@ public class RefreshAction extends Action
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * Constructor
+	 * Create default refresh action
 	 */
 	public RefreshAction()
 	{
 		super(Messages.RefreshAction_Name, Activator.getImageDescriptor("icons/refresh.gif")); //$NON-NLS-1$
-		setAccelerator(SWT.F5);
+	}
+
+	/**
+	 * Create refresh action attached to handler service
+	 * 
+	 * @param viewPart owning view part
+	 */
+	public RefreshAction(IViewPart viewPart)
+	{
+		super(Messages.RefreshAction_Name, Activator.getImageDescriptor("icons/refresh.gif")); //$NON-NLS-1$
+
+		final IHandlerService handlerService = (IHandlerService)viewPart.getSite().getService(IHandlerService.class);
+      setActionDefinitionId("org.netxms.ui.eclipse.library.commands.refresh");
+		handlerService.activateHandler(getActionDefinitionId(), new ActionHandler(this));
 	}
 }

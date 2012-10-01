@@ -61,27 +61,43 @@
             id="org.netxms.ui.eclipse.library.commands.copy"
             name="Copy">
       </command>
+      <command
+            description="Refresh"
+            id="org.netxms.ui.eclipse.library.commands.refresh"
+            name="Refresh">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.netxms.ui.eclipse.library.commands.show_trace_filter"
             contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="Ctrl+F2">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.library.commands.pause_trace"
             contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="PAUSE">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.library.commands.copy"
             contextId="org.eclipse.ui.contexts.window"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="Ctrl+C">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.library.commands.refresh"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="F5">
+      </key>
+      <scheme
+            description="Default NXMC key binding scheme"
+            id="org.netxms.ui.eclipse.defaultKeyBinding"
+            name="NetXMS Default">
+      </scheme>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">

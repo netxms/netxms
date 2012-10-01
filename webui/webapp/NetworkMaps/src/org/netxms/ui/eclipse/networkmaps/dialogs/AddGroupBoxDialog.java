@@ -38,6 +38,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class AddGroupBoxDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private static final RGB DEFAULT_COLOR = new RGB(64, 105, 156);
 	
 	private String title;

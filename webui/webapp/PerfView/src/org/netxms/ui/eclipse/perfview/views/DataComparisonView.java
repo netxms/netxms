@@ -329,12 +329,9 @@ public class DataComparisonView extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction() {
+		actionRefresh = new RefreshAction(this) {
 			private static final long serialVersionUID = 1L;
 
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{

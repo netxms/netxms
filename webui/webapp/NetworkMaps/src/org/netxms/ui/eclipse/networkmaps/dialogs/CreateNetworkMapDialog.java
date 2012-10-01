@@ -39,6 +39,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class CreateNetworkMapDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private Text textName;
 	private Combo mapType;
 	private ObjectSelector seedObjectSelector;
@@ -91,6 +93,8 @@ public class CreateNetworkMapDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       mapType.getParent().setLayoutData(gd);
       mapType.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

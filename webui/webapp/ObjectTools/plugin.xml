@@ -176,19 +176,19 @@
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.copy"
             contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="CTRL+C">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.select_all"
             contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="CTRL+A">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.terminate_process"
             contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="CTRL+BREAK">
       </key>
    </extension>

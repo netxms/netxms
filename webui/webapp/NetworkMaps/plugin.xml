@@ -240,17 +240,17 @@
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddObject"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="Ctrl+A">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.LinkObjects"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="Ctrl+L">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="Ctrl+R">
       </key>
    </extension>

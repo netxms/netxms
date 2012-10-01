@@ -30,6 +30,8 @@ import org.netxms.ui.eclipse.networkmaps.Activator;
  */
 public class GeneralMapPreferences extends FieldEditorPreferencePage implements IWorkbenchPreferencePage
 {
+	private static final long serialVersionUID = 1L;
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */

@@ -201,7 +201,7 @@ public class ObjectBrowser extends ViewPart
 	{
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
-		actionRefresh = new RefreshAction() {
+		actionRefresh = new RefreshAction(this) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
