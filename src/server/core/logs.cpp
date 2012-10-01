@@ -95,11 +95,9 @@ static NXCORE_LOG s_logs[] =
 	{ NULL, NULL, 0 }
 };
 
-
-//
-// Registered log handles
-//
-
+/**
+ * Registered log handles
+ */
 struct LOG_HANDLE_REGISTRATION
 {
 	LogHandle *handle;
@@ -109,21 +107,17 @@ int s_regListSize = 0;
 LOG_HANDLE_REGISTRATION *s_regList = NULL;
 MUTEX s_regListMutex = INVALID_MUTEX_HANDLE;
 
-
-//
-// Init log access
-//
-
+/**
+ * Init log access
+ */
 void InitLogAccess()
 {
 	s_regListMutex = MutexCreate();
 }
 
-
-//
-// Register log handle
-//
-
+/**
+ * Register log handle
+ */
 static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
 {
 	int i;
@@ -146,11 +140,9 @@ static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
 	return i;
 }
 
-
-//
-// Open log by name
-//
-
+/**
+ * Open log by name
+ */
 int OpenLog(const TCHAR *name, ClientSession *session, DWORD *rcc)
 {
 	for(int i = 0; s_logs[i].name != NULL; i++)
@@ -174,11 +166,9 @@ int OpenLog(const TCHAR *name, ClientSession *session, DWORD *rcc)
 	return -1;
 }
 
-
-//
-// Close log
-//
-
+/**
+ * Close log
+ */
 DWORD CloseLog(ClientSession *session, int logHandle)
 {
 	DWORD rcc = RCC_INVALID_LOG_HANDLE;
@@ -200,12 +190,10 @@ DWORD CloseLog(ClientSession *session, int logHandle)
 	return rcc;
 }
 
-
-//
-// Acqure log handle object
-// Caller must call LogHandle::unlock() when it finish work with acquired object
-//
-
+/**
+ * Acqure log handle object
+ * Caller must call LogHandle::unlock() when it finish work with acquired object
+ */
 LogHandle *AcquireLogHandleObject(ClientSession *session, int logHandle)
 {
 	LogHandle *object = NULL;

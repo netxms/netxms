@@ -10456,11 +10456,9 @@ void ClientSession::getUserCustomAttribute(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Set custom attribute for current user
-//
-
+/**
+ * Set custom attribute for current user
+ */
 void ClientSession::setUserCustomAttribute(CSCPMessage *request)
 {
 	CSCPMessage msg;
@@ -10485,11 +10483,9 @@ void ClientSession::setUserCustomAttribute(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Open server log
-//
-
+/**
+ * Open server log
+ */
 void ClientSession::openServerLog(CSCPMessage *request)
 {
 	CSCPMessage msg;
@@ -10519,11 +10515,9 @@ void ClientSession::openServerLog(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Close server log
-//
-
+/**
+ * Close server log
+ */
 void ClientSession::closeServerLog(CSCPMessage *request)
 {
 	CSCPMessage msg;
@@ -10537,11 +10531,9 @@ void ClientSession::closeServerLog(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Query server log
-//
-
+/**
+ * Query server log
+ */
 void ClientSession::queryServerLog(CSCPMessage *request)
 {
 	CSCPMessage msg;
@@ -10566,11 +10558,9 @@ void ClientSession::queryServerLog(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Get log data from query result
-//
-
+/**
+ * Get log data from query result
+ */
 void ClientSession::getServerLogQueryData(CSCPMessage *request)
 {
 	CSCPMessage msg;
@@ -10618,11 +10608,9 @@ void ClientSession::getServerLogQueryData(CSCPMessage *request)
 	}
 }
 
-
-//
-// Send SNMP v3 USM credentials
-//
-
+/**
+ * Send SNMP v3 USM credentials
+ */
 void ClientSession::sendUsmCredentials(DWORD dwRqId)
 {
    CSCPMessage msg;
