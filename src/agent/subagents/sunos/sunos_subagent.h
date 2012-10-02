@@ -31,6 +31,13 @@
 
 
 //
+// Subagent flags
+//
+
+#define SF_IF_ALL_ZONES 0x00000001
+
+
+//
 // File system info types
 //
 
@@ -144,6 +151,7 @@ void kstat_unlock();
 //
 
 extern BOOL g_bShutdown;
+extern DWORD g_flags;
 
 
 #endif

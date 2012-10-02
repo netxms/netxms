@@ -115,11 +115,11 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 	if (nFd >= 0)
 	{
 		ln.lifn_family = AF_INET;
-		ln.lifn_flags = 0;
+		ln.lifn_flags = (g_flags & SF_IF_ALL_ZONES) ? LIFC_ALLZONES : 0;
 		if (ioctl(nFd, SIOCGLIFNUM, &ln) == 0)
 		{
 			lc.lifc_family = AF_INET;
-			lc.lifc_flags = 0;
+			lc.lifc_flags = (g_flags & SF_IF_ALL_ZONES) ? LIFC_ALLZONES : 0;
 			lc.lifc_len = sizeof(struct lifreq) * ln.lifn_count;
 			lc.lifc_buf = (caddr_t)malloc(lc.lifc_len);
 			if (ioctl(nFd, SIOCGLIFCONF, &lc) == 0)

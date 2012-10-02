@@ -54,6 +54,7 @@ LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue);
 //
 
 BOOL g_bShutdown = FALSE;
+DWORD g_flags = 0;
 
 
 //
@@ -92,11 +93,25 @@ static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
 
 
 //
+// Configuration file template
+//
+
+static NX_CFG_TEMPLATE s_cfgTemplate[] =
+{
+	{ _T("InterfacesFromAllZones"), CT_BOOLEAN, 0, 0, SF_IF_ALL_ZONES, 0, &g_flags },
+	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+};
+
+
+//
 // Initalization callback
 //
 
 static BOOL SubAgentInit(Config *config)
 {
+	if (!config->parseTemplate(_T("SunOS"), s_cfgTemplate))
+		return FALSE;
+
 	s_cpuStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
 	s_ioStatThread = ThreadCreateEx(IOStatCollector, 0, NULL);
 	s_kstatLock = MutexCreate();
