@@ -498,6 +498,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		updateEditorAreaLayout();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+	 */
 	@Override
 	public void setFocus()
 	{
@@ -545,6 +548,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		}.start();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
 	@Override
 	public void dispose()
 	{

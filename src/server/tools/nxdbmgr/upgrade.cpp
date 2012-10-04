@@ -23,17 +23,14 @@
 #include "nxdbmgr.h"
 
 
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 BOOL MigrateMaps();
 
-
-//
-// Create table
-//
-
+/**
+ * Create table
+ */
 static BOOL CreateTable(const TCHAR *pszQuery)
 {
    BOOL bResult;
@@ -48,11 +45,9 @@ static BOOL CreateTable(const TCHAR *pszQuery)
    return bResult;
 }
 
-
-//
-// Create configuration parameter if it doesn't exist (unless bForceUpdate set to true)
-//
-
+/**
+ * Create configuration parameter if it doesn't exist (unless bForceUpdate set to true)
+ */
 BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
                        int iVisible, int iNeedRestart, BOOL bForceUpdate)
 {
@@ -90,11 +85,9 @@ BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
    return bResult;
 }
 
-
-//
-// Set primary key constraint
-//
-
+/**
+ * Set primary key constraint
+ */
 static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 {
 	TCHAR query[4096];
@@ -106,11 +99,9 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 	return SQLQuery(query);
 }
 
-
-//
-// Drop primary key from table
-//
-
+/**
+ * Drop primary key from table
+ */
 static BOOL DropPrimaryKey(const TCHAR *table)
 {
 	TCHAR query[1024];
@@ -152,11 +143,9 @@ static BOOL DropPrimaryKey(const TCHAR *table)
 	return success;
 }
 
-
-//
-// Convert strings from # encoded form to normal form
-//
-
+/**
+ * Convert strings from # encoded form to normal form
+ */
 static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *idColumn2, const TCHAR *column)
 {
 	DB_RESULT hResult;
@@ -235,11 +224,9 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 	return ConvertStrings(table, idColumn, NULL, column);
 }
 
-
-//
-// Set column nullable (currently Oracle only implementation)
-//
-
+/**
+ * Set column nullable (currently Oracle only implementation)
+ */
 static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCHAR *type)
 {
 	TCHAR query[1024] = _T("");
@@ -259,11 +246,9 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 	return (query[0] != 0) ? SQLQuery(query) : TRUE;
 }
 
-
-//
-// Create new event template
-//
-
+/**
+ * Create new event template
+ */
 static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int flags, const TCHAR *message, const TCHAR *description)
 {
 	TCHAR query[4096], *escMessage, *escDescription;
@@ -277,10 +262,20 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 	return SQLQuery(query);
 }
 
-//
-// Upgrade from V259 to V260
-//
+/**
+ * Upgrade from V260 to V261
+ */
+static BOOL H_UpgradeFromV260(int currVersion, int newVersion)
+{
+	CreateConfigParam(_T("NumberOfBusinessServicePollers"), _T("10"), 1, 1);
+	CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='NumberOfEventProcessors'")));
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='261' WHERE var_name='SchemaVersion'")));
+	return TRUE;
+}
 
+/**
+ * Upgrade from V259 to V260
+ */
 static BOOL H_UpgradeFromV259(int currVersion, int newVersion)
 {
 	CreateConfigParam(_T("UseFQDNForNodeNames"), _T("1"), 1, 1);
@@ -288,10 +283,9 @@ static BOOL H_UpgradeFromV259(int currVersion, int newVersion)
 	return TRUE;
 }
 
-//
-// Upgrade from V258 to V259
-//
-
+/**
+ * Upgrade from V258 to V259
+ */
 static BOOL H_UpgradeFromV258(int currVersion, int newVersion)
 {
 	// have to made these columns nullable again because
@@ -304,11 +298,9 @@ static BOOL H_UpgradeFromV258(int currVersion, int newVersion)
 	return TRUE;
 }
 
-
-//
-// Upgrade from V257 to V258
-//
-
+/**
+ * Upgrade from V257 to V258
+ */
 static BOOL H_UpgradeFromV257(int currVersion, int newVersion)
 {
 	static TCHAR batch[] = 
@@ -6182,11 +6174,9 @@ static BOOL H_UpgradeFromV16(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V15 to V16
-//
-
+/**
+ * Upgrade from V15 to V16
+ */
 static BOOL H_UpgradeFromV15(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
@@ -6229,11 +6219,9 @@ static BOOL H_UpgradeFromV15(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V14 to V15
-//
-
+/**
+ * Upgrade from V14 to V15
+ */
 static BOOL H_UpgradeFromV14(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
@@ -6281,11 +6269,9 @@ static BOOL H_UpgradeFromV14(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade map
-//
-
+/**
+ * Upgrade map
+ */
 static struct
 {
    int version;
@@ -6445,14 +6431,13 @@ static struct
 	{ 257, 258, H_UpgradeFromV257 },
 	{ 258, 259, H_UpgradeFromV258 },
 	{ 259, 260, H_UpgradeFromV259 },
+	{ 260, 261, H_UpgradeFromV260 },
    { 0, 0, NULL }
 };
 
-
-//
-// Upgrade database to new version
-//
-
+/**
+ * Upgrade database to new version
+ */
 void UpgradeDatabase()
 {
    DB_RESULT hResult;

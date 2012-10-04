@@ -347,7 +347,7 @@ static void LoadGlobalConfig()
 	g_dwPingSize = ConfigReadInt(_T("IcmpPingSize"), 46);
 	g_dwLockTimeout = ConfigReadInt(_T("LockTimeout"), 60000);
 	g_dwSNMPTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 2000);
-	g_dwAgentCommandTimeout = ConfigReadInt(_T("AgentCommandTimeout"), 2000);
+	g_dwAgentCommandTimeout = ConfigReadInt(_T("AgentCommandTimeout"), 4000);
 	g_dwThresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
 	g_nRequiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
 }
@@ -843,11 +843,9 @@ void NXCORE_EXPORTABLE Shutdown()
 	}
 #endif
 
-	// Stop event processor(s)
+	// Stop event processor
 	g_pEventQueue->Clear();
-	dwNumThreads = ConfigReadInt(_T("NumberOfEventProcessors"), 1);
-	for(i = 0; i < dwNumThreads; i++)
-		g_pEventQueue->Put(INVALID_POINTER_VALUE);
+	g_pEventQueue->Put(INVALID_POINTER_VALUE);
 
 	ShutdownMailer();
 	ShutdownSMSSender();
