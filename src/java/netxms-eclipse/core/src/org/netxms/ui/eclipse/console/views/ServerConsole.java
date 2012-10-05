@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.console.views;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -46,6 +45,7 @@ import org.netxms.client.ServerConsoleListener;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.views.helpers.ServerConsoleTerminalConnector;
+import org.netxms.ui.eclipse.console.views.helpers.TerminalReader;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -150,10 +150,9 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 			{
 				try
 				{
-					final BufferedReader in = new BufferedReader(new InputStreamReader(connector.getInputStream()));
+					final TerminalReader in = new TerminalReader(new InputStreamReader(connector.getInputStream()), connector.getRemoteToTerminalOutputStream());
 					while(true)
 					{
-						writeToTerminal("\u001b[33mnetxmsd:\u001b[0m "); //$NON-NLS-1$
 						String command = in.readLine().trim();
 						if (!command.isEmpty())
 						{

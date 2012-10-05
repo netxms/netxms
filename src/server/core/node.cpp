@@ -2405,14 +2405,23 @@ BOOL Node::connectToAgent(DWORD *error, DWORD *socketError)
 
    // Create new agent connection object if needed
    if (m_pAgentConnection == NULL)
+	{
       m_pAgentConnection = new AgentConnectionEx(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_szName, m_dwId);
+	}
+	else
+	{
+		// Check if we already connected
+		if (m_pAgentConnection->nop() == ERR_SUCCESS)
+		{
+			DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): already connected"), m_szName, m_dwId);
+			return TRUE;
+		}
 
-   // Check if we already connected
-   if (m_pAgentConnection->nop() == ERR_SUCCESS)
-      return TRUE;
-
-   // Close current connection or clean up after broken connection
-   m_pAgentConnection->disconnect();
+		// Close current connection or clean up after broken connection
+		m_pAgentConnection->disconnect();
+		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): existing connection reset"), m_szName, m_dwId);
+	}
    m_pAgentConnection->setPort(m_wAgentPort);
 #ifdef UNICODE
 	char mbSecret[MAX_SECRET_LENGTH];
@@ -2423,6 +2432,7 @@ BOOL Node::connectToAgent(DWORD *error, DWORD *socketError)
    m_pAgentConnection->setAuthData(m_wAuthMethod, m_szSharedSecret);
 #endif
    setAgentProxy(m_pAgentConnection);
+	DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_szName, m_dwId, (int)m_wAgentPort);
    bRet = m_pAgentConnection->connect(g_pServerKey, FALSE, error, socketError);
    if (bRet)
 	{

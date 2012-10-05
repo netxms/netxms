@@ -37,6 +37,9 @@ public class ServerConsoleTerminalConnector extends TerminalConnectorImpl implem
 	private PipedInputStream inputStream;
 	private PipedOutputStream outputStream;
 	
+	/**
+	 * 
+	 */
 	public ServerConsoleTerminalConnector()
 	{
 		outputStream = new PipedOutputStream();

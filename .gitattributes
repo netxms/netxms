@@ -1978,6 +1978,7 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/ObjectNameV
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/RegionalSettings.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/views/ServerConsole.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/views/helpers/ServerConsoleTerminalConnector.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/views/helpers/TerminalReader.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/widgets/StatusSelector.java -text
 src/java/netxms-eclipse/library/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/library/META-INF/MANIFEST.MF -text
