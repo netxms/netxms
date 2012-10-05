@@ -131,14 +131,14 @@ BOOL AlarmManager::init()
    DB_RESULT hResult;
    DWORD i;
 
-   // Load unacknowledged alarms into memory
+   // Load active alarms into memory
    hResult = DBSelect(g_hCoreDB, _T("SELECT alarm_id,source_object_id,")
                                  _T("source_event_code,source_event_id,message,")
                                  _T("original_severity,current_severity,")
                                  _T("alarm_key,creation_time,last_change_time,")
                                  _T("hd_state,hd_ref,ack_by,repeat_count,")
                                  _T("alarm_state,timeout,timeout_event,resolved_by ")
-                                 _T("FROM alarms WHERE alarm_state<3"));
+                                 _T("FROM alarms WHERE alarm_state<>3"));
    if (hResult == NULL)
       return FALSE;
 
