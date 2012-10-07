@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.service;
 
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
@@ -22,10 +23,12 @@ import org.netxms.ui.android.main.activities.GraphBrowser;
 import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.main.activities.NodeBrowser;
 import org.netxms.ui.android.main.activities.NodeInfo;
+import org.netxms.ui.android.receiver.AlarmIntentReceiver;
 import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
 import org.netxms.ui.android.service.tasks.ExecActionTask;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -35,6 +38,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.res.Resources;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -71,6 +75,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	private static final int NOTIFY_STATUS_ON_CONNECT = 1;
 	private static final int NOTIFY_STATUS_ON_DISCONNECT = 2;
 	private static final int NOTIFY_STATUS_ALWAYS = 3;
+	private static final int ONE_DAY_MINUTES = 24 * 60;
+	private static final int NETXMS_REQUEST_CODE = 123456;
 
 	private final String mutex = "MUTEX";
 	private final Binder binder = new ClientConnectorBinder();
@@ -91,6 +97,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	private List<ObjectTool> objectTools = null;
 	private BroadcastReceiver receiver = null;
 	private DashboardBrowser dashboardBrowser;
+	private SharedPreferences sp;
 
 	/**
 	 * Class for clients to access. Because we know this service always runs in
@@ -120,7 +127,8 @@ public class ClientConnectorService extends Service implements SessionListener
 
 		showToast(getString(R.string.notify_started));
 
-		lastAlarmIdNotified = PreferenceManager.getDefaultSharedPreferences(this).getInt(LASTALARM_KEY, 0);
+		sp = PreferenceManager.getDefaultSharedPreferences(this);
+		lastAlarmIdNotified = sp.getInt(LASTALARM_KEY, 0);
 
 		receiver = new BroadcastReceiver()
 		{
@@ -134,7 +142,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		};
 		registerReceiver(receiver, new IntentFilter(Intent.ACTION_TIME_TICK));
 
-		reconnect(true);
+		reconnect(true); // Force connection on service re-creation
 	}
 
 	/*
@@ -180,6 +188,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void shutdown()
 	{
+		cancelSchedule();
 		clearNotifications();
 		savePreferences();
 		unregisterReceiver(receiver);
@@ -191,8 +200,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void savePreferences()
 	{
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		SharedPreferences.Editor editor = prefs.edit();
+		SharedPreferences.Editor editor = sp.edit();
 		editor.putInt(LASTALARM_KEY, (int)lastAlarmIdNotified);
 		editor.commit();
 	}
@@ -205,7 +213,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void alarmNotification(int severity, String text)
 	{
-		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 		if (sp.getBoolean("global.notification.alarm", true))
 		{
 			Notification n = new Notification(GetAlarmIcon(severity), text, System.currentTimeMillis());
@@ -237,7 +244,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		int icon = -1;
 		String text = "";
-		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 		int notificationType = Integer.parseInt(sp.getString("global.notification.status", "0"));
 		switch (status)
 		{
@@ -306,23 +312,28 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * Reconnect to server. If forceReconnect set to false
+	 * Reconnect to server.
+	 * 
+	 * @param forceReconnect if set to true forces disconnection before connecting
 	 */
 	public void reconnect(boolean forceReconnect)
 	{
-		synchronized (mutex)
+		if (forceReconnect || isScheduleExpired())
 		{
-			if (connectionStatus != ConnectionStatus.CS_INPROGRESS)
+			Log.i(TAG, "Reconnecting...");
+			synchronized (mutex)
 			{
-				setConnectionStatus(ConnectionStatus.CS_INPROGRESS, "");
-				statusNotification(ConnectionStatus.CS_INPROGRESS, "");
-				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-				new ConnectTask(this).execute(sp.getString("connection.server", ""),
-						SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701),
-						sp.getString("connection.login", ""),
-						sp.getString("connection.password", ""),
-						sp.getBoolean("connection.encrypt", false),
-						forceReconnect);
+				if (connectionStatus != ConnectionStatus.CS_INPROGRESS)
+				{
+					setConnectionStatus(ConnectionStatus.CS_INPROGRESS, "");
+					statusNotification(ConnectionStatus.CS_INPROGRESS, "");
+					new ConnectTask(this).execute(sp.getString("connection.server", ""),
+							SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701),
+							sp.getString("connection.login", ""),
+							sp.getString("connection.password", ""),
+							sp.getBoolean("connection.encrypt", false),
+							forceReconnect);
+				}
 			}
 		}
 	}
@@ -358,6 +369,7 @@ public class ClientConnectorService extends Service implements SessionListener
 					if (alarm != null && alarm.getId() > lastAlarmIdNotified)
 						processAlarmChange(alarm);
 				}
+				schedule(ACTION_DISCONNECT);
 			}
 		}
 	}
@@ -372,6 +384,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		hideNotification(NOTIFY_ALARM);
 		setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
 		statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
+		schedule(ACTION_RECONNECT);
 	}
 
 	/**
@@ -383,6 +396,107 @@ public class ClientConnectorService extends Service implements SessionListener
 		hideNotification(NOTIFY_ALARM);
 		setConnectionStatus(ConnectionStatus.CS_ERROR, error);
 		statusNotification(ConnectionStatus.CS_ERROR, error);
+	}
+
+	/**
+	 * Check for expired pending connection schedule
+	 */
+	private boolean isScheduleExpired()
+	{
+		if (sp.getBoolean("global.scheduler.enable", false))
+		{
+			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
+			return (int)cal.getTimeInMillis() > sp.getInt("global.scheduler.next_activation", 0);
+		}
+		return true;
+	}
+
+	/**
+	 * Gets stored time settings in minutes
+	 */
+	private int getMinutes(String time)
+	{
+		String[] vals = sp.getString(time, "00:00").split(":");
+		return Integer.parseInt(vals[0]) * 60 + Integer.parseInt(vals[1]);
+	}
+
+	/**
+	 * Sets the offset used to compute the next schedule
+	 */
+	private void setDayOffset(Calendar cal, int minutes)
+	{
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		cal.add(Calendar.MINUTE, minutes);
+	}
+
+	/**
+	 * Schedule a new connection/disconnection
+	 */
+	private void schedule(String action)
+	{
+		Log.i(TAG, "Schedule: " + action);
+		if (!sp.getBoolean("global.scheduler.enable", false))
+			cancelSchedule();
+		else
+		{
+			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
+			if (action == ACTION_DISCONNECT)
+				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.duration", "1")));
+			else if (!sp.getBoolean("global.scheduler.daily.enabled", false))
+				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.interval", "15")));
+			else
+			{
+				int on = getMinutes("global.scheduler.daily.on");
+				int off = getMinutes("global.scheduler.daily.off");
+				if (off < on)
+					off += ONE_DAY_MINUTES; // Next day!
+				Calendar calOn = (Calendar)cal.clone();
+				setDayOffset(calOn, on);
+				Calendar calOff = (Calendar)cal.clone();
+				setDayOffset(calOff, off);
+				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.interval", "15")));
+				if (cal.before(calOn))
+				{
+					cal = (Calendar)calOn.clone();
+					Log.i(TAG, "schedule (before): rescheduled for daily interval");
+				}
+				else if (cal.after(calOff))
+				{
+					cal = (Calendar)calOn.clone();
+					setDayOffset(cal, on + ONE_DAY_MINUTES); // Move to the next activation of the excluded range
+					Log.i(TAG, "schedule (after): rescheduled for daily interval");
+				}
+			}
+			Intent intent = new Intent(this, AlarmIntentReceiver.class);
+			intent.putExtra("action", action);
+			PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+			((AlarmManager)getSystemService(ALARM_SERVICE)).set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), sender);
+			// Update status
+			int last = sp.getInt("global.scheduler.next_activation", 0);
+			Editor e = sp.edit();
+			e.putInt("global.scheduler.last_activation", last);
+			e.putInt("global.scheduler.next_activation", (int)cal.getTimeInMillis());
+			e.commit();
+		}
+	}
+
+	/**
+	 * Cancel a pending connection schedule (if any)
+	 */
+	private void cancelSchedule()
+	{
+		Intent intent = new Intent(this, AlarmIntentReceiver.class);
+		PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		((AlarmManager)getSystemService(ALARM_SERVICE)).cancel(sender);
+		if (sp.getInt("global.scheduler.next_activation", 0) != 0)
+		{
+			Editor e = sp.edit();
+			e.putInt("global.scheduler.next_activation", 0);
+			e.commit();
+		}
 	}
 
 	/**
@@ -626,7 +740,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	private String GetAlarmSound(int severity)
 	{
-		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 		switch (severity)
 		{
 			case 0: // Normal

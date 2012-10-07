@@ -105,7 +105,7 @@ public class ConnectTask extends Thread
 						}
 					}
 				}
-				if (session == null)	// Already null or invalidated
+				if (session == null) // Already null or invalidated
 				{
 					DisplayMetrics metrics = new DisplayMetrics();
 					WindowManager wm = (WindowManager)service.getSystemService(Context.WINDOW_SERVICE);
