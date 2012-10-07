@@ -290,6 +290,7 @@ src/agent/core/push.cpp -text
 src/agent/libnxsd/libnxsd.vcproj -text
 src/agent/subagents/aix/cpu.cpp -text
 src/agent/subagents/aix/iostat.cpp -text
+src/agent/subagents/dbquery/dbquery.vcproj -text
 src/agent/subagents/ecs/ecs.vcproj -text
 src/agent/subagents/hpux/iostat.cpp -text
 src/agent/subagents/informix/Makefile.am -text

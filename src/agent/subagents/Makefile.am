@@ -14,4 +14,4 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-SUBDIRS = winnt winperf wmi portCheck ping sms ups ecs logwatch ${SUBAGENT_DIRS}
+SUBDIRS = winnt winperf wmi portCheck ping sms ups ecs logwatch dbquery ${SUBAGENT_DIRS}
