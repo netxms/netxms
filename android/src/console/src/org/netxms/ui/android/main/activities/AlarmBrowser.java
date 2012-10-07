@@ -161,48 +161,55 @@ public class AlarmBrowser extends AbstractClientActivity
 				count++;
 			}
 		}
-		switch (item.getItemId())
+
+		int itemId = item.getItemId();
+		if (itemId == R.id.acknowledge)
 		{
-			case R.id.acknowledge:
-				for (int i = 0; i < count; i++)
-					adapter.acknowledgeItem(alarmIdList.get(i), false);
-				refreshList();
-				return true;
-			case R.id.sticky_acknowledge:
-				for (int i = 0; i < count; i++)
-					adapter.acknowledgeItem(alarmIdList.get(i), true);
-				refreshList();
-				return true;
-			case R.id.resolve:
-				for (int i = 0; i < count; i++)
-					adapter.resolveItem(alarmIdList.get(i));
-				refreshList();
-				return true;
-			case R.id.terminate:
-				for (int i = 0; i < count; i++)
-					adapter.terminateItem(alarmIdList.get(i));
-				refreshList();
-				return true;
-			case R.id.viewlastvalues:
-				if (service != null)
+			for (int i = 0; i < count; i++)
+				adapter.acknowledgeItem(alarmIdList.get(i), false);
+			refreshList();
+			return true;
+		}
+		else if (itemId == R.id.sticky_acknowledge)
+		{
+			for (int i = 0; i < count; i++)
+				adapter.acknowledgeItem(alarmIdList.get(i), true);
+			refreshList();
+			return true;
+		}
+		else if (itemId == R.id.resolve)
+		{
+			for (int i = 0; i < count; i++)
+				adapter.resolveItem(alarmIdList.get(i));
+			refreshList();
+			return true;
+		}
+		else if (itemId == R.id.terminate)
+		{
+			for (int i = 0; i < count; i++)
+				adapter.terminateItem(alarmIdList.get(i));
+			refreshList();
+			return true;
+		}
+		else if (itemId == R.id.viewlastvalues)
+		{
+			if (service != null)
+			{
+				AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
+				if (info != null)
 				{
-					AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
-					if (info != null)
+					Alarm al = (Alarm)adapter.getItem(info.position);
+					GenericObject object = service.findObjectById(al.getSourceObjectId());
+					if (object != null)
 					{
-						Alarm al = (Alarm)adapter.getItem(info.position);
-						GenericObject object = service.findObjectById(al.getSourceObjectId());
-						if (object != null)
-						{
-							Intent newIntent = new Intent(this, NodeInfo.class);
-							newIntent.putExtra("objectId", object.getObjectId());
-							newIntent.putExtra("tabId", NodeInfo.TAB_LAST_VALUES_ID);
-							startActivity(newIntent);
-						}
+						Intent newIntent = new Intent(this, NodeInfo.class);
+						newIntent.putExtra("objectId", object.getObjectId());
+						newIntent.putExtra("tabId", NodeInfo.TAB_LAST_VALUES_ID);
+						startActivity(newIntent);
 					}
-					return true;
 				}
-			default:
-				break;
+				return true;
+			}
 		}
 		return super.onContextItemSelected(item);
 	}

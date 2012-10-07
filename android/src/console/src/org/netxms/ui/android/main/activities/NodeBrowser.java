@@ -217,51 +217,61 @@ public class NodeBrowser extends AbstractClientActivity
 		if (selectedObject == null)
 			return super.onContextItemSelected(item);
 
-		// process menu selection
-		switch (item.getItemId())
+		if (item.getItemId() == R.id.find_switch_port)
 		{
-			case R.id.find_switch_port:
-				Intent fspIntent = new Intent(this, ConnectionPointBrowser.class);
-				fspIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-				startActivity(fspIntent);
-				return true;
-			case R.id.view_alarms:
-				new SyncMissingChildsTask().execute(new Integer[] { (int)selectedObject.getObjectId() });
-				return true;
-			case R.id.unmanage:
-				adapter.unmanageObject(selectedObject.getObjectId());
-				refreshList();
-				return true;
-			case R.id.manage:
-				adapter.manageObject(selectedObject.getObjectId());
-				refreshList();
-				return true;
-			case R.id.poll_status:
-				Intent psIntent = new Intent(this, NodePollerActivity.class);
-				psIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-				psIntent.putExtra("pollType", NodePoller.STATUS_POLL);
-				startActivity(psIntent);
-				return true;
-			case R.id.poll_configuration:
-				Intent pcIntent = new Intent(this, NodePollerActivity.class);
-				pcIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-				pcIntent.putExtra("pollType", NodePoller.CONFIGURATION_POLL);
-				startActivity(pcIntent);
-				return true;
-			case R.id.poll_topology:
-				Intent ptIntent = new Intent(this, NodePollerActivity.class);
-				ptIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-				ptIntent.putExtra("pollType", NodePoller.TOPOLOGY_POLL);
-				startActivity(ptIntent);
-				return true;
-			case R.id.poll_interfaces:
-				Intent piIntent = new Intent(this, NodePollerActivity.class);
-				piIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-				piIntent.putExtra("pollType", NodePoller.INTERFACE_POLL);
-				startActivity(piIntent);
-				return true;
-			default:
-				break;
+			Intent fspIntent = new Intent(this, ConnectionPointBrowser.class);
+			fspIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+			startActivity(fspIntent);
+			return true;
+		}
+		else if (item.getItemId() == R.id.view_alarms)
+		{
+			new SyncMissingChildsTask().execute(new Integer[] { (int)selectedObject.getObjectId() });
+			return true;
+		}
+		else if (item.getItemId() == R.id.unmanage)
+		{
+			adapter.unmanageObject(selectedObject.getObjectId());
+			refreshList();
+			return true;
+		}
+		else if (item.getItemId() == R.id.manage)
+		{
+			adapter.manageObject(selectedObject.getObjectId());
+			refreshList();
+			return true;
+		}
+		else if (item.getItemId() == R.id.poll_status)
+		{
+			Intent psIntent = new Intent(this, NodePollerActivity.class);
+			psIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+			psIntent.putExtra("pollType", NodePoller.STATUS_POLL);
+			startActivity(psIntent);
+			return true;
+		}
+		else if (item.getItemId() == R.id.poll_configuration)
+		{
+			Intent pcIntent = new Intent(this, NodePollerActivity.class);
+			pcIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+			pcIntent.putExtra("pollType", NodePoller.CONFIGURATION_POLL);
+			startActivity(pcIntent);
+			return true;
+		}
+		else if (item.getItemId() == R.id.poll_topology)
+		{
+			Intent ptIntent = new Intent(this, NodePollerActivity.class);
+			ptIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+			ptIntent.putExtra("pollType", NodePoller.TOPOLOGY_POLL);
+			startActivity(ptIntent);
+			return true;
+		}
+		else if (item.getItemId() == R.id.poll_interfaces)
+		{
+			Intent piIntent = new Intent(this, NodePollerActivity.class);
+			piIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+			piIntent.putExtra("pollType", NodePoller.INTERFACE_POLL);
+			startActivity(piIntent);
+			return true;
 		}
 
 		// if we didn't match static menu, check if it was some of tools

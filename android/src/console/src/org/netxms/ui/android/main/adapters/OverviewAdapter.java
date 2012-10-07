@@ -49,6 +49,8 @@ public class OverviewAdapter extends BaseAdapter
 	 */
 	public void setValues(Node node)
 	{
+		labels.clear();
+		values.clear();
 		addPair(r.getString(R.string.overview_id), Integer.toString((int)node.getObjectId()));
 		addPair(r.getString(R.string.overview_guid), node.getGuid().toString());
 		addPair(r.getString(R.string.overview_class), node.getClass().getSimpleName());

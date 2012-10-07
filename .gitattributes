@@ -109,7 +109,6 @@ android/src/console/res/layout/graphics.xml -text
 android/src/console/res/layout/homescreen.xml -text
 android/src/console/res/layout/interfaces_child.xml -text
 android/src/console/res/layout/interfaces_group.xml -text
-android/src/console/res/layout/last_values.xml -text
 android/src/console/res/layout/node_info.xml -text
 android/src/console/res/layout/node_poller.xml -text
 android/src/console/res/layout/node_view.xml -text

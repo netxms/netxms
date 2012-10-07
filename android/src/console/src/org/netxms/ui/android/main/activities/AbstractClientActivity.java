@@ -2,6 +2,7 @@ package org.netxms.ui.android.main.activities;
 
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
+
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -21,7 +22,7 @@ import android.view.MenuItem;
 public abstract class AbstractClientActivity extends Activity implements ServiceConnection
 {
 	private static final String LOG_TAG = "nxclient/AbstractClientActivity";
-	
+
 	protected ClientConnectorService service;
 
 	/* (non-Javadoc)
@@ -34,11 +35,11 @@ public abstract class AbstractClientActivity extends Activity implements Service
 		onCreateStep2(savedInstanceState);
 		startService(new Intent(this, ClientConnectorService.class));
 		bindService(new Intent(this, ClientConnectorService.class), this, 0);
-		
+
 		// the following is required if target API version is 14:
 		//getActionBar().setHomeButtonEnabled(true);
 	}
-	
+
 	/**
 	 * Called by AbstractClientActivity.onCreate before service binding
 	 * to allow inherited classes to do initialization before onServiceConnected call
@@ -63,9 +64,9 @@ public abstract class AbstractClientActivity extends Activity implements Service
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
-	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.main_menu, menu);
-	    return true;
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.main_menu, menu);
+		return true;
 	}
 
 	/* (non-Javadoc)
@@ -75,17 +76,18 @@ public abstract class AbstractClientActivity extends Activity implements Service
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
 		Log.d(LOG_TAG, "onOptionsItemSelected: id=" + android.R.id.home);
-		switch(item.getItemId())
+
+		if (item.getItemId() == android.R.id.home)
 		{
-			case android.R.id.home:
-				startActivity(new Intent(this, HomeScreen.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-				return true;
-			case R.id.settings:
-				startActivity(new Intent(this, ConsolePreferences.class));
-				return true;
-			default:
-				return super.onOptionsItemSelected(item);
+			startActivity(new Intent(this, HomeScreen.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+			return true;
 		}
+		else if (item.getItemId() == R.id.settings)
+		{
+			startActivity(new Intent(this, ConsolePreferences.class));
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
 	}
 
 	/* (non-Javadoc)

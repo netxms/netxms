@@ -58,7 +58,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	@Override
 	public void onCreateStep2(Bundle savedInstanceState)
 	{
-		setIntentionalExit(false);	// Allow autorestart on change connectivity status for premature exit
+		setIntentionalExit(false); // Allow autorestart on change connectivity status for premature exit
 		setContentView(R.layout.homescreen);
 
 		GridView gridview = (GridView)findViewById(R.id.ActivityList);
@@ -114,22 +114,22 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		switch (item.getItemId())
+		if (item.getItemId() == R.string.reconnect)
 		{
-			case R.string.reconnect:
-				if (service != null)
-					service.reconnect(true);
-				return true;
-			case R.string.exit:
-				if (service != null)
-					service.shutdown();
-				setIntentionalExit(true);	// Avoid autorestart on change connectivity status for intentional exit
-				moveTaskToBack(true);
-				System.exit(0);
-				return true;
-			default:
-				return super.onOptionsItemSelected(item);
+			if (service != null)
+				service.reconnect(true);
+			return true;
 		}
+		else if (item.getItemId() == R.string.exit)
+		{
+			if (service != null)
+				service.shutdown();
+			setIntentionalExit(true); // Avoid autorestart on change connectivity status for intentional exit
+			moveTaskToBack(true);
+			System.exit(0);
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
 	}
 
 	/*
