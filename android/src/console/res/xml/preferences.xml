@@ -12,6 +12,14 @@
 			<EditTextPreference android:enabled="true" android:key="connection.password" android:title="@string/pref_password" android:summary="@string/pref_password_summary" android:password="true"></EditTextPreference>
 			<CheckBoxPreference android:title="@string/pref_encrypt" android:key="connection.encrypt" android:enabled="true" android:summaryOn="@string/pref_encrypt_summary_enabled" android:summaryOff="@string/pref_encrypt_summary_disabled" android:defaultValue="false"></CheckBoxPreference>
 		</PreferenceScreen>
+		<PreferenceScreen android:title="@string/pref_scheduler" android:enabled="true">
+			<CheckBoxPreference android:summaryOn="@string/pref_scheduler_enabled" android:key="global.scheduler.enable" android:title="@string/pref_scheduler_enable" android:summaryOff="@string/pref_scheduler_disabled" android:defaultValue="false"/>
+			<EditTextPreference android:title="@string/pref_scheduler_activation_interval" android:summary="@string/pref_scheduler_activation_interval_summary" android:enabled="true" android:defaultValue="15" android:key="global.scheduler.interval" android:digits="0123456789" android:dependency="global.scheduler.enable"></EditTextPreference>
+			<EditTextPreference android:title="@string/pref_scheduler_activation_duration" android:summary="@string/pref_scheduler_activation_duration_summary" android:enabled="true" android:defaultValue="1" android:key="global.scheduler.duration" android:digits="0123456789" android:dependency="global.scheduler.enable"></EditTextPreference>
+			<CheckBoxPreference android:summaryOn="@string/pref_scheduler_daily_enabled" android:key="global.scheduler.daily.enable" android:title="@string/pref_scheduler_daily_enabled" android:summaryOff="@string/pref_scheduler_daily_disabled" android:defaultValue="false" android:dependency="global.scheduler.enable"/>
+			<org.netxms.ui.android.main.settings.TimePreference android:key="global.scheduler.daily.on" android:title="@string/pref_scheduler_daily_on" android:dependency="global.scheduler.daily.enable"/> 
+			<org.netxms.ui.android.main.settings.TimePreference android:key="global.scheduler.daily.off" android:title="@string/pref_scheduler_daily_off" android:dependency="global.scheduler.daily.enable"/>
+		</PreferenceScreen>
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/pref_notifications">
 	    <PreferenceScreen android:title="@string/pref_status">
