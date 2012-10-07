@@ -184,12 +184,14 @@ android/src/console/src/org/netxms/ui/android/main/dashboards/elements/LineChart
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/PieChartElement.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/TableBarChartElement.java -text
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/TablePieChartElement.java -text
+android/src/console/src/org/netxms/ui/android/main/settings/TimePreference.java -text
 android/src/console/src/org/netxms/ui/android/main/views/ActivityListElement.java -text
 android/src/console/src/org/netxms/ui/android/main/views/CheckableLinearLayout.java -text
 android/src/console/src/org/netxms/ui/android/main/views/DashboardView.java -text
 android/src/console/src/org/netxms/ui/android/main/views/DialChart.java -text
 android/src/console/src/org/netxms/ui/android/main/views/ExtendedLineGraphView.java -text
 android/src/console/src/org/netxms/ui/android/main/views/helpers/ChartItem.java -text
+android/src/console/src/org/netxms/ui/android/receiver/AlarmIntentReceiver.java -text
 android/src/console/src/org/netxms/ui/android/receiver/BootCompletedIntentReceiver.java -text
 android/src/console/src/org/netxms/ui/android/receiver/ConnectivityChangeIntentReceiver.java -text
 android/src/console/src/org/netxms/ui/android/service/ClientConnectorService.java -text
