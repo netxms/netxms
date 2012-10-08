@@ -654,4 +654,15 @@ public class WidgetHelper
 	{
 		return validateTextInputInternal(text.getTextControl(), text.getText(), text.getLabel(), validator, page);
 	}
+	
+	/**
+	 * Convert font size in pixels to platform-dependent (DPI dependent actually) points
+	 * @param device
+	 * @param px
+	 * @return
+	 */
+	public static int fontPixelsToPoints(Display device, int px)
+	{
+		return (int)Math.round(px * 72.0 / device.getDPI().y);
+	}
 }

@@ -24,7 +24,6 @@ import org.eclipse.jface.text.rules.WordRule;
 
 /**
  * Keyword matching rule
- *
  */
 public class KeywordRule extends WordRule
 {

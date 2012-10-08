@@ -28,7 +28,8 @@ public class AgentConfigDocument extends Document
 	private static final IPredicateRule[] CONFIG_RULES = {
 		new EndOfLineRule("#", new Token(CONTENT_COMMENTS)), //$NON-NLS-1$
 		SECTION_RULE,
-		new SingleLineRule("\"", "\"", new Token(CONTENT_STRING), '\\', true, false) //$NON-NLS-1$ //$NON-NLS-2$
+		new SingleLineRule("\"", "\"", new Token(CONTENT_STRING), '\\', true, false), //$NON-NLS-1$ //$NON-NLS-2$
+		new CodePatternRule(new Token(DEFAULT_CONTENT_TYPE))
 	};
 	
 	/**

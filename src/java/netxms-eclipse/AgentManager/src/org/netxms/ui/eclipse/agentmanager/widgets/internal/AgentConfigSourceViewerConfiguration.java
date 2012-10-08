@@ -28,16 +28,12 @@ import org.eclipse.jface.text.rules.PatternRule;
 import org.eclipse.jface.text.rules.RuleBasedScanner;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
-import org.netxms.ui.eclipse.agentmanager.widgets.AgentConfigEditor;
 
 /**
  * Source viewer configuration for agent config
- *
  */
 public class AgentConfigSourceViewerConfiguration extends SourceViewerConfiguration
 {
-	private AgentConfigEditor configEditor;
-	
 	private static final IWordDetector configWordDetector = new IWordDetector() {
 		@Override
 		public boolean isWordPart(char c)
@@ -53,7 +49,13 @@ public class AgentConfigSourceViewerConfiguration extends SourceViewerConfigurat
 	};
 	
 	private static final String[] configKeywords = { 
-		"ControlServers", "LogFile", "MasterServers" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		"Action", "ActionShellExec", "CodePage", "ConfigIncludeDir", "ControlServers", "CreateCrashDumps", 
+		"DumpDirectory", "EnableActions", "EnabledCiphers", "EnableProxy", "EnableSNMPProxy", "EnableSubagentAutoload",
+		"EnableWatchdog", "ExecTimeout", "ExternalParameter", "ExternalParameterShellExec", "ExternalSubAgent",
+		"FileStore", "ListenAddress", "ListenPort", "LogFile", "LogHistorySize", "LogRotationMode", 
+		"LogUnresolvedSymbols", "MasterServers", "MaxLogSize", "MaxSessions",
+		"PlatformSuffix", "RequireAuthentication", "RequireEncryption", "Servers", "SessionIdleTimeout",
+		"SharedSecret", "SNMPTimeout", "StartupDelay", "SubAgent", "WaitForProcess" };
 	
 	private static final IRule[] codeRules = { 
 		new KeywordRule(configWordDetector, AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.KEYWORD),
@@ -63,10 +65,9 @@ public class AgentConfigSourceViewerConfiguration extends SourceViewerConfigurat
 	/**
 	 * Creates source viewer configuration for agent config
 	 */
-	public AgentConfigSourceViewerConfiguration(AgentConfigEditor configEditor)
+	public AgentConfigSourceViewerConfiguration()
 	{
 		super();
-		this.configEditor = configEditor;
 	}
 
 	/* (non-Javadoc)

@@ -30,6 +30,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Table;
@@ -525,5 +526,16 @@ public class WidgetHelper
 	public static boolean validateTextInput(LabeledText text, TextFieldValidator validator, PropertyPage page)
 	{
 		return validateTextInputInternal(text.getTextControl(), text.getText(), text.getLabel(), validator, page);
+	}
+	
+	/**
+	 * Convert font size in pixels to platform-dependent (DPI dependent actually) points
+	 * @param device
+	 * @param px
+	 * @return
+	 */
+	public static int fontPixelsToPoints(Display device, int px)
+	{
+		return (int)Math.round(px * 72.0 / device.getDPI().y);
 	}
 }

@@ -19,10 +19,13 @@
 package org.netxms.ui.eclipse.agentmanager.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Widget for editing agent's config
@@ -32,7 +35,6 @@ public class AgentConfigEditor extends Composite
 	private static final long serialVersionUID = -3664402982525808493L;
 	
 	private Text editor;
-	private Font editorFont;
 
 	/**
 	 * @param parent
@@ -43,13 +45,20 @@ public class AgentConfigEditor extends Composite
 	{
 		super(parent, style);
 		
-		editorFont = new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL);
-		
 		setLayout(new FillLayout());
-		editor = new Text(this, editorStyle);
+		editor = new Text(this, SWT.MULTI | editorStyle);
+		
+		final Font font = new Font(getDisplay(), "Courier New", WidgetHelper.fontPixelsToPoints(getDisplay(), 16), SWT.NORMAL);
+		editor.setFont(font);
+		addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
 
-		editor.setFont(editorFont);
-		//editor.setWordWrap(false);
+			@Override
+			public void widgetDisposed(DisposeEvent event)
+			{
+				font.dispose();
+			}
+		});
 	}
 
 	/**

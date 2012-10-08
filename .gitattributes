@@ -920,6 +920,7 @@ src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widg
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widgets/internal/AgentConfigDocument.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widgets/internal/AgentConfigSourceViewerConfiguration.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widgets/internal/AgentConfigTextAttributeProvider.java -text
+src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widgets/internal/CodePatternRule.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widgets/internal/KeywordRule.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widgets/internal/SingleTokenScanner.java -text
 src/java/netxms-eclipse/AlarmViewer/.settings/org.eclipse.core.resources.prefs -text

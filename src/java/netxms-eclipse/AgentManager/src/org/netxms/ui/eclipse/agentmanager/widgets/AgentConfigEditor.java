@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.agentmanager.widgets;
 
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.TextViewerUndoManager;
 import org.eclipse.jface.text.source.ISourceViewer;
@@ -27,7 +28,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.VerifyKeyListener;
 import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.agentmanager.widgets.internal.AgentConfigDocument;
@@ -39,7 +39,6 @@ import org.netxms.ui.eclipse.agentmanager.widgets.internal.AgentConfigSourceView
 public class AgentConfigEditor extends Composite
 {
 	private SourceViewer editor;
-	private Font editorFont;
 
 	/**
 	 * @param parent
@@ -50,11 +49,9 @@ public class AgentConfigEditor extends Composite
 	{
 		super(parent, style);
 		
-		editorFont = new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL); //$NON-NLS-1$
-		
 		setLayout(new FillLayout());
 		editor = new SourceViewer(this, new VerticalRuler(20), editorStyle);
-		editor.configure(new AgentConfigSourceViewerConfiguration(this));
+		editor.configure(new AgentConfigSourceViewerConfiguration());
 
 		final TextViewerUndoManager undoManager = new TextViewerUndoManager(50);
 		editor.setUndoManager(undoManager);
@@ -113,7 +110,7 @@ public class AgentConfigEditor extends Composite
 		});
 
 		StyledText control = editor.getTextWidget();
-		control.setFont(editorFont);
+		control.setFont(JFaceResources.getTextFont());
 		control.setWordWrap(false);
 	}
 
