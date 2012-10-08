@@ -63,6 +63,7 @@
 	<string name="notify_action_exec_success">Action executed successfully</string>
 	<string name="notify_service_obj_sync_success">Objects synchronized</string>
 	<string name="notify_service_obj_sync_fail">Failed to synchronize objects with server.</string>
+	<string name="next_connection_schedule">(next connection scheduled for %1$s)</string>
 	<string name="home_screen_alarms">Alarms</string>
 	<string name="home_screen_dashboards">Dashboards</string>
 	<string name="home_screen_nodes">Nodes</string>

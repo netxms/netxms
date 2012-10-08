@@ -142,7 +142,13 @@ public class ClientConnectorService extends Service implements SessionListener
 		};
 		registerReceiver(receiver, new IntentFilter(Intent.ACTION_TIME_TICK));
 
+//		Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
+//		if (cal.getTimeInMillis() > sp.getLong("global.scheduler.next_activation", 0))
 		reconnect(true); // Force connection on service re-creation
+//		else
+//		{
+//			setSchedule(sp.getLong("global.scheduler.next_activation", 0), ACTION_RECONNECT)
+//		}
 	}
 
 	/*
@@ -350,6 +356,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			if (session != null)
 			{
+				schedule(ACTION_DISCONNECT);
 				this.session = session;
 				this.alarms = alarms;
 				session.addListener(this);
@@ -369,7 +376,6 @@ public class ClientConnectorService extends Service implements SessionListener
 					if (alarm != null && alarm.getId() > lastAlarmIdNotified)
 						processAlarmChange(alarm);
 				}
-				schedule(ACTION_DISCONNECT);
 			}
 		}
 	}
@@ -380,11 +386,11 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void onDisconnect()
 	{
+		schedule(ACTION_RECONNECT);
 		nullifySession();
 		hideNotification(NOTIFY_ALARM);
 		setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
 		statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
-		schedule(ACTION_RECONNECT);
 	}
 
 	/**
@@ -406,7 +412,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		if (sp.getBoolean("global.scheduler.enable", false))
 		{
 			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-			return (int)cal.getTimeInMillis() > sp.getInt("global.scheduler.next_activation", 0);
+			return cal.getTimeInMillis() > sp.getLong("global.scheduler.next_activation", 0);
 		}
 		return true;
 	}
@@ -445,7 +451,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
 			if (action == ACTION_DISCONNECT)
 				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.duration", "1")));
-			else if (!sp.getBoolean("global.scheduler.daily.enabled", false))
+			else if (!sp.getBoolean("global.scheduler.daily.enable", false))
 				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.interval", "15")));
 			else
 			{
@@ -470,17 +476,25 @@ public class ClientConnectorService extends Service implements SessionListener
 					Log.i(TAG, "schedule (after): rescheduled for daily interval");
 				}
 			}
-			Intent intent = new Intent(this, AlarmIntentReceiver.class);
-			intent.putExtra("action", action);
-			PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-			((AlarmManager)getSystemService(ALARM_SERVICE)).set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), sender);
-			// Update status
-			int last = sp.getInt("global.scheduler.next_activation", 0);
-			Editor e = sp.edit();
-			e.putInt("global.scheduler.last_activation", last);
-			e.putInt("global.scheduler.next_activation", (int)cal.getTimeInMillis());
-			e.commit();
+			setSchedule(cal.getTimeInMillis(), action);
 		}
+	}
+
+	/**
+	 * Set a connection schedule
+	 */
+	private void setSchedule(long milliseconds, String action)
+	{
+		Intent intent = new Intent(this, AlarmIntentReceiver.class);
+		intent.putExtra("action", action);
+		PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		((AlarmManager)getSystemService(ALARM_SERVICE)).set(AlarmManager.RTC_WAKEUP, milliseconds, sender);
+		// Update status
+		long last = sp.getLong("global.scheduler.next_activation", 0);
+		Editor e = sp.edit();
+		e.putLong("global.scheduler.last_activation", last);
+		e.putLong("global.scheduler.next_activation", milliseconds);
+		e.commit();
 	}
 
 	/**
@@ -491,10 +505,10 @@ public class ClientConnectorService extends Service implements SessionListener
 		Intent intent = new Intent(this, AlarmIntentReceiver.class);
 		PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		((AlarmManager)getSystemService(ALARM_SERVICE)).cancel(sender);
-		if (sp.getInt("global.scheduler.next_activation", 0) != 0)
+		if (sp.getLong("global.scheduler.next_activation", 0) != 0)
 		{
 			Editor e = sp.edit();
-			e.putInt("global.scheduler.next_activation", 0);
+			e.putLong("global.scheduler.next_activation", 0);
 			e.commit();
 		}
 	}
@@ -1023,7 +1037,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				connectionStatusColor = r.getColor(R.color.notify_connected);
 				break;
 			case CS_DISCONNECTED:
-				connectionStatusText = getString(R.string.notify_disconnected);
+				connectionStatusText = getString(R.string.notify_disconnected) + getNextConnectionRetry();
 				connectionStatusColor = r.getColor(R.color.notify_disconnected);
 				break;
 			case CS_ERROR:
@@ -1047,6 +1061,20 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 	}
 
+	public String getNextConnectionRetry()
+	{
+		long next = sp.getLong("global.scheduler.next_activation", 0);
+		if (next != 0)
+		{
+			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
+			if (cal.getTimeInMillis() < next)
+			{
+				cal.setTimeInMillis(next);
+				return " " + getString(R.string.next_connection_schedule, cal.getTime().toLocaleString());
+			}
+		}
+		return "";
+	}
 	/**
 	 * @return the session
 	 */
