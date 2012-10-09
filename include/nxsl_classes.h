@@ -472,6 +472,7 @@ class LIBNXSL_EXPORTABLE NXSL_Program
 protected:
 	MUTEX m_mutex;
    NXSL_Environment *m_pEnv;
+	void *m_userData;
 
    NXSL_Instruction **m_ppInstructionSet;
    DWORD m_dwCodeSize;
@@ -544,6 +545,9 @@ public:
    void dump(FILE *pFile);
    const TCHAR *getErrorText() { return CHECK_NULL_EX(m_pszErrorText); }
    NXSL_Value *getResult() { return m_pRetValue; }
+
+	void *getUserData() { return m_userData; }
+	void setUserData(void *data) { m_userData = data; }
 };
 
 
