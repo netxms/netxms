@@ -50,10 +50,13 @@ typedef struct
 {
    DWORD dwSize;           // Size of structure in bytes
    TCHAR szName[MAX_OBJECT_NAME];
-   void (* pfMain)(void);  // Pointer to module's main()
+   void (* pfMain)();  // Pointer to module's main()
    int (* pfCommandHandler)(DWORD dwCommand, CSCPMessage *pMsg, ClientSession *pSession);
    BOOL (* pfTrapHandler)(SNMP_PDU *pdu, Node *pNode);
    BOOL (* pfEventHandler)(Event *event);
+	void (* pfStatusPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
+	void (* pfConfPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
+	void (* pfTopologyPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
    HMODULE hModule;
 } NXMODULE;
 

@@ -1002,11 +1002,9 @@ void Node::calculateCompoundStatus(BOOL bForcedRecalc)
       PostEvent(dwEventCodes[m_iStatus], m_dwId, "d", iOldStatus);
 }
 
-
-//
-// Perform status poll on node
-//
-
+/**
+ * Perform status poll on node
+ */
 void Node::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
 	if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
@@ -1271,7 +1269,21 @@ skip_snmp_check:
    // Send delayed events and destroy delayed event queue
    ResendEvents(pQueue);
    delete pQueue;
+
+   // Call hooks in loaded modules
+   for(DWORD i = 0; i < g_dwNumModules; i++)
+	{
+		if (g_pModuleList[i].pfStatusPollHook != NULL)
+		{
+			DbgPrintf(5, _T("StatusPoll(%s [%d]): calling hook in module %s"), m_szName, m_dwId, g_pModuleList[i].szName);
+			g_pModuleList[i].pfStatusPollHook(this, pSession, dwRqId, nPoller);
+		}
+	}
    
+	// Execute hook script
+   SetPollerInfo(nPoller, _T("hook"));
+	executeHookScript(_T("StatusPoll"));
+
    SetPollerInfo(nPoller, _T("cleanup"));
    if (pPollerNode != NULL)
       pPollerNode->DecRefCount();
@@ -1523,6 +1535,16 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 
 		m_dwDynamicFlags |= NDF_CONFIGURATION_POLL_PASSED;
    }
+
+   // Call hooks in loaded modules
+   for(DWORD i = 0; i < g_dwNumModules; i++)
+	{
+		if (g_pModuleList[i].pfConfPollHook != NULL)
+		{
+			DbgPrintf(5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_szName, m_dwId, g_pModuleList[i].szName);
+			g_pModuleList[i].pfConfPollHook(this, pSession, dwRqId, nPoller);
+		}
+	}
 
 	// Execute hook script
    SetPollerInfo(nPoller, _T("hook"));
@@ -4474,6 +4496,20 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 			UnlockData();
 		}
 	}
+
+   // Call hooks in loaded modules
+   for(DWORD i = 0; i < g_dwNumModules; i++)
+	{
+		if (g_pModuleList[i].pfTopologyPollHook != NULL)
+		{
+			DbgPrintf(5, _T("TopologyPoll(%s [%d]): calling hook in module %s"), m_szName, m_dwId, g_pModuleList[i].szName);
+			g_pModuleList[i].pfTopologyPollHook(this, pSession, dwRqId, nPoller);
+		}
+	}
+
+	// Execute hook script
+   SetPollerInfo(nPoller, _T("hook"));
+	executeHookScript(_T("TopologyPoll"));
 
    SendPollerMsg(dwRqId, _T("Finished topology poll for node %s\r\n"), m_szName);
 
