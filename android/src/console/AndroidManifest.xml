@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="org.netxms.ui.android" android:versionName="1.2.3" android:versionCode="4">
+      package="org.netxms.ui.android" android:versionName="1.2.4" android:versionCode="5">
 	<uses-sdk android:targetSdkVersion="11" android:minSdkVersion="8"></uses-sdk>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
