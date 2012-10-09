@@ -142,13 +142,20 @@ public class ClientConnectorService extends Service implements SessionListener
 		};
 		registerReceiver(receiver, new IntentFilter(Intent.ACTION_TIME_TICK));
 
-//		Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-//		if (cal.getTimeInMillis() > sp.getLong("global.scheduler.next_activation", 0))
-		reconnect(true); // Force connection on service re-creation
-//		else
-//		{
-//			setSchedule(sp.getLong("global.scheduler.next_activation", 0), ACTION_RECONNECT)
-//		}
+		long nextActivation = sp.getLong("global.scheduler.next_activation", 0);
+		if (sp.getBoolean("global.scheduler.enable", false) && nextActivation != 0)
+		{
+			Calendar cal = Calendar.getInstance();
+			if (cal.getTimeInMillis() < nextActivation) // Reuse a previous schedule, if not already expired
+			{
+				Log.i(TAG, "onCreate, force reschedule.");
+				setSchedule(nextActivation, ACTION_RECONNECT);
+				setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
+				statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
+				return;
+			}
+		}
+		reconnect(true); // Force connection on service recreation
 	}
 
 	/*
@@ -265,7 +272,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				{
 					icon = R.drawable.ic_stat_disconnected;
 				}
-				text = getString(R.string.notify_disconnected);
+				text = getString(R.string.notify_disconnected) + getNextConnectionRetry();
 				break;
 			case CS_ERROR:
 				if (notificationType == NOTIFY_STATUS_ON_DISCONNECT || notificationType == NOTIFY_STATUS_ALWAYS)
@@ -1075,6 +1082,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		return "";
 	}
+
 	/**
 	 * @return the session
 	 */
