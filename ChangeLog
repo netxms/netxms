@@ -7,6 +7,18 @@
 	- Command line options for automatic connect
 - Storage discovery API
 - New parameter Icmp.PingStdDev in PING subagent
+- Android client:
+	- Restructured settings activity
+	- Alarm status icon notification configurable by settings (independent from playing the sound assigned to the category)
+	- Horizontal scrollable tabs for node info activity (tabs sre no more compressed to show all together)
+	- Fixed bad format for DCI value in last values tab
+	- Scheduler for "passive" connection", parameters:
+		- Enable scheduler: enables the scheduler, if ‘off’ program exposes the previous behaviour
+		- Interval: how many minutes have to elapse before trying to connect to server
+		- Duration: how many minutes connections has to be kept on
+		- Enable daily scheduler: if ‘off’, the above values are applied to the whole day. If ‘on’ they will be applied only to the specified interval (for the whole week).
+		- Daily on: start daily time to apply scheduler values
+		- Daily off: stop daily time to apply scheduler values
 
 
 *
@@ -75,6 +87,67 @@
 - NXSL:
 	- Global variables can be declared in script code
 	- New functions: GetConfigurationVariable, GetObjectParents, GetObjectChildren, sleep
+	- New attribute "guid" in classes Interface, NetObj, and Node
+- AIX Subagent:
+	- New parameters available: System.CPU.PhysicalAverage.*
+- Fixed bugs:
+	- Config file with CRLF loaded incorrectly on UNIX
+	- Unable to bind object in WebUI
+	- Graph colors can be ignored in dashboards
+	- Object deletion may not be immediately reflected in console
+	- Unable to upload file into image library from Web UI
+
+
+*
+* 1.2.1
+*
+
+- Implemented dashboard export/import
+- New NXSL functions for direct SNMP access
+- New NXSL functions for getting min, max, and average DCI value for period
+- Fixed memory leak in NXSL functions gmtime and localtime
+- Fixed memory leak in configuration poller
+- Added driver for HP E-series (ProCurve) switches
+- Implemented "sticky" alarm acknowledgements
+- Added option to disable automatic node unbinding from containers
+- Added option to disable automatic template removal
+- Added events for automatic container binding and unbinding
+- Added events for automatic template apply and remove
+- Java console:
+	- Configuration export implemented
+	- Added object status indication bar in object browser
+	- Added filtering by IP address and comments in object browser
+- Web UI:
+	- Windows installer improved
+	- Line charts improved
+- Agent now allows to define management server address as subnet
+- Additional I/O parameters in Solaris agent
+- Fixed bugs with static agent build
+- Fixed issues: #333, #340, #343, #353
+
+
+*
+* 1.2.2
+*
+
+- New alarm state - "Resolved"
+- Added drivers for Cisco ESW and Dell PowerConnect switches
+- Added MIBs for Dell PowerConnect switches
+- New event processing macros: %g and %I
+- Management console:
+	- In port view ports are colored according to physical port state
+	- Interface IP shown in connection point search results
+	- Interface IP and MAC shown in "Interfaces" tab
+	- Added "Status Map" view
+	- Added option to hide unsupported DCIs from "Last Values" view
+	- Added option to indicate data collection errors in "Last Values" view
+	- Added "copy to clipboard" function in log viewers and monitors
+- Android client:
+	- Dashboards implemented
+	- Node status/configuration/topology poll implemented
+- NXSL:
+	- Global variables can be declared in script code
+	- New functions: GetConfigurationVariable, GetObjectParents, GetObjectChildren
 	- New attribute "guid" in classes Interface, NetObj, and Node
 - AIX Subagent:
 	- New parameters available: System.CPU.PhysicalAverage.*
