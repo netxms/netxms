@@ -18,7 +18,15 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -27,6 +35,9 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -44,6 +55,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.api.DciOpenHandler;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesFilter;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesLabelProvider;
@@ -82,6 +94,7 @@ public class LastValuesWidget extends Composite
 	private Action actionUseMultipliers;
 	private Action actionShowErrors;
 	private Action actionShowUnsupported;
+	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
 	
 	/**
 	 * Create "last values" widget
@@ -98,6 +111,8 @@ public class LastValuesWidget extends Composite
 		session = (NXCSession)ConsoleSharedData.getSession();
 		this.viewPart = viewPart;		
 		this.node = _node;
+		
+		registerOpenHandlers();
 		
 		final IDialogSettings ds = Activator.getDefault().getDialogSettings();
 		
@@ -144,6 +159,18 @@ public class LastValuesWidget extends Composite
 		dataViewer.setComparator(new LastValuesComparator());
 		dataViewer.addFilter(filter);
 		WidgetHelper.restoreTableViewerSettings(dataViewer, ds, configPrefix);
+		
+		dataViewer.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				IStructuredSelection selection = (IStructuredSelection)dataViewer.getSelection();
+				if (selection.size() == 1)
+				{
+					callOpenObjectHandler((DciValue)selection.getFirstElement());
+				}
+			}
+		});
 		
 		dataViewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
@@ -482,5 +509,80 @@ public class LastValuesWidget extends Composite
 		{
 			dataViewer.refresh(true);
 		}
+	}
+
+	/**
+	 * Register object open handlers
+	 */
+	private void registerOpenHandlers()
+	{
+		// Read all registered extensions and create tabs
+		final IExtensionRegistry reg = Platform.getExtensionRegistry();
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.datacollection.dciOpenHandlers");
+		for(int i = 0; i < elements.length; i++)
+		{
+			try
+			{
+				final OpenHandlerData h = new OpenHandlerData();
+				h.handler = (DciOpenHandler)elements[i].createExecutableExtension("class");
+				h.priority = safeParseInt(elements[i].getAttribute("priority"));
+				openHandlers.add(h);
+			}
+			catch(CoreException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
+		// Sort tabs by appearance order
+		Collections.sort(openHandlers, new Comparator<OpenHandlerData>() {
+			@Override
+			public int compare(OpenHandlerData arg0, OpenHandlerData arg1)
+			{
+				return arg0.priority - arg1.priority;
+			}
+		});
+	}
+	
+	/**
+	 * @param s
+	 * @return
+	 */
+	private static int safeParseInt(String s)
+	{
+		if (s == null)
+			return 65535;
+		try
+		{
+			return Integer.parseInt(s);
+		}
+		catch(NumberFormatException e)
+		{
+			return 65535;
+		}
+	}
+	
+	/**
+	 * Call object open handler
+	 * 
+	 * @return
+	 */
+	private boolean callOpenObjectHandler(DciValue object)
+	{
+		for(OpenHandlerData h : openHandlers)
+		{
+			if (h.handler.open(object))
+				return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Internal data for object open handlers
+	 */
+	private class OpenHandlerData
+	{
+		DciOpenHandler handler;
+		int priority;
 	}
 }

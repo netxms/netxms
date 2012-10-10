@@ -1009,6 +1009,7 @@ src/java/netxms-eclipse/Dashboard/icons/server_stats.png -text
 src/java/netxms-eclipse/Dashboard/icons/sync.gif -text
 src/java/netxms-eclipse/Dashboard/plugin.xml -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/Activator.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/DashboardOpenHandler.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/Messages.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/CloneDashboard.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/CreateDashboard.java -text
@@ -1098,6 +1099,7 @@ src/java/netxms-eclipse/DataCollection/icons/threshold.png -text
 src/java/netxms-eclipse/DataCollection/icons/thresholds.gif -text
 src/java/netxms-eclipse/DataCollection/icons/unsupported.gif -text
 src/java/netxms-eclipse/DataCollection/plugin.xml -text
+src/java/netxms-eclipse/DataCollection/schema/org.netxms.ui.eclipse.datacollection.dciOpenHandlers.exsd -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/Activator.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/DataCollectionAdapterFactory.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/Messages.java -text
@@ -1108,6 +1110,7 @@ src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/OpenEditor.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/ShowLastValues.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/ToggleDCIFilterHandler.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/api/DciOpenHandler.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/AbstractSelectParamDlg.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/CreateInterfaceDciDialog.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/EditColumnDialog.java -text
@@ -1371,6 +1374,7 @@ src/java/netxms-eclipse/NetworkMaps/icons/service_components.gif -text
 src/java/netxms-eclipse/NetworkMaps/icons/service_deps.gif -text
 src/java/netxms-eclipse/NetworkMaps/plugin.xml -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/Activator.java -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/NetworkMapOpenHandler.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/CreateMapGroup.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/CreateNetworkMap.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/OpenMapObject.java -text
@@ -1479,12 +1483,15 @@ src/java/netxms-eclipse/ObjectBrowser/icons/template_group.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/template_root.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/zone.gif -text
 src/java/netxms-eclipse/ObjectBrowser/plugin.xml -text
+src/java/netxms-eclipse/ObjectBrowser/schema/org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers.exsd -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Activator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Messages.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectAdapterFactory.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectDecorator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/PreferenceInitializer.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/actions/OpenObjectBrowser.java -text
+src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectOpenHandler.java -text
+src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectOpenListener.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/ChildObjectListDialog.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/CreateObjectDialog.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/IPAddressSelectionDialog.java -text
@@ -1672,6 +1679,7 @@ src/java/netxms-eclipse/PerfView/icons/view3d.png -text
 src/java/netxms-eclipse/PerfView/plugin.xml -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/XmlDateConverter.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowHistoryData.java -text
+src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowLineChart.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowTableLastValues.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/dialogs/HistoricalDataSelectionDialog.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/HistoricalGraphView.java -text

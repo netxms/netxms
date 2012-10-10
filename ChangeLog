@@ -5,12 +5,16 @@
 - New global variable $dci in transformation scripts
 - Management console:
 	- Command line options for automatic connect
+	- Container type objects can be expanded/collapsed by double click
+	  in the object tree
+	- Maps and dashboards can be opened by double click in the object tree
+	- Line charts can be opened by double click on DCI in last values view
 - Storage discovery API
 - New parameter Icmp.PingStdDev in PING subagent
 - Android client:
 	- Restructured settings activity
 	- Alarm status icon notification configurable by settings (independent from playing the sound assigned to the category)
-	- Horizontal scrollable tabs for node info activity (tabs sre no more compressed to show all together)
+	- Horizontal scrollable tabs for node info activity (tabs are no more compressed to show all together)
 	- Fixed bad format for DCI value in last values tab
 	- Scheduler for "passive" connection", parameters:
 		- Enable scheduler: enables the scheduler, if ‘off’ program exposes the previous behaviour
