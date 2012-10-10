@@ -47,4 +47,22 @@ public class ObjectTreeViewer extends TreeViewer
 	{
 		return getViewerRowFromItem(item);
 	}
+	
+	/**
+	 * Toggle item's expanded/collapsed state
+	 * 
+	 * @param item
+	 */
+	public void toggleItemExpandState(TreeItem item)
+	{
+		if (item.getExpanded())
+		{
+			item.setExpanded(false);
+		}
+		else
+		{
+			createChildren(item);
+			item.setExpanded(true);
+		}
+	}
 }

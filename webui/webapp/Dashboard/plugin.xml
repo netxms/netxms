@@ -276,5 +276,13 @@
          </adapter>
       </factory>
    </extension>
+   <extension
+         point="org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers">
+      <handler
+            class="org.netxms.ui.eclipse.dashboard.DashboardOpenHandler"
+            enabledFor="org.netxms.client.objects.Dashboard"
+            priority="10">
+      </handler>
+   </extension>
 
 </plugin>

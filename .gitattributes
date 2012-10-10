@@ -2586,6 +2586,7 @@ webui/webapp/Dashboard/icons/sync.gif -text
 webui/webapp/Dashboard/plugin.xml -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/Activator.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/DashboardElementAdapterFactory.java -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/DashboardOpenHandler.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/Messages.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/CloneDashboard.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/CreateDashboard.java -text
@@ -2686,6 +2687,7 @@ webui/webapp/DataCollection/icons/threshold.png -text
 webui/webapp/DataCollection/icons/thresholds.gif -text
 webui/webapp/DataCollection/icons/unsupported.gif -text
 webui/webapp/DataCollection/plugin.xml -text
+webui/webapp/DataCollection/schema/org.netxms.ui.eclipse.datacollection.dciOpenHandlers.exsd -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/Activator.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/DataCollectionAdapterFactory.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/Messages.java -text
@@ -2698,6 +2700,7 @@ webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/Ope
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/RemoveTemplate.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/ShowLastValues.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/ToggleDCIFilterHandler.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/api/DciOpenHandler.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/AbstractSelectParamDlg.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/CreateInterfaceDciDialog.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/DciRemoveConfirmationDialog.java -text
@@ -2910,6 +2913,7 @@ webui/webapp/NetworkMaps/icons/service_components.gif -text
 webui/webapp/NetworkMaps/icons/service_deps.gif -text
 webui/webapp/NetworkMaps/plugin.xml -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/Activator.java -text
+webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/NetworkMapOpenHandler.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/CreateMapGroup.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/CreateNetworkMap.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/OpenMapObject.java -text
@@ -3017,12 +3021,15 @@ webui/webapp/ObjectBrowser/icons/template_group.png -text
 webui/webapp/ObjectBrowser/icons/template_root.png -text
 webui/webapp/ObjectBrowser/icons/zone.gif -text
 webui/webapp/ObjectBrowser/plugin.xml -text
+webui/webapp/ObjectBrowser/schema/org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers.exsd -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Activator.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Messages.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectAdapterFactory.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectDecorator.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/PreferenceInitializer.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/actions/OpenObjectBrowser.java -text
+webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectOpenHandler.java -text
+webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/api/ObjectOpenListener.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/ChildObjectListDialog.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/CreateObjectDialog.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/IPAddressSelectionDialog.java -text
@@ -3213,6 +3220,7 @@ webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowBarChart.ja
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowDataComparisonChart.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowHistoryData.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowHistoryGraph.java -text
+webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowLineChart.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowPieChart.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/actions/ShowTableLastValues.java -text
 webui/webapp/PerfView/src/org/netxms/ui/eclipse/perfview/dialogs/HistoricalDataSelectionDialog.java -text

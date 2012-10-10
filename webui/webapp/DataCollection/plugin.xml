@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
+   <extension-point id="org.netxms.ui.eclipse.datacollection.dciOpenHandlers" name="DCI Open Handlers" schema="schema/org.netxms.ui.eclipse.datacollection.dciOpenHandlers.exsd"/>
 
    <extension
          point="org.eclipse.ui.views">

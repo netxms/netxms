@@ -272,5 +272,13 @@
             name="Remove">
       </command>
    </extension>
+   <extension
+         point="org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers">
+      <handler
+            class="org.netxms.ui.eclipse.networkmaps.NetworkMapOpenHandler"
+            enabledFor="org.netxms.client.objects.NetworkMap"
+            priority="10">
+      </handler>
+   </extension>
 
 </plugin>

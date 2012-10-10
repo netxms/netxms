@@ -2,19 +2,19 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Dashboard
 Bundle-SymbolicName: org.netxms.ui.eclipse.dashboard;singleton:=true
-Bundle-Version: 1.2.1
+Bundle-Version: 1.2.4
 Bundle-Activator: org.netxms.ui.eclipse.dashboard.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.core.runtime,
- org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.1",
- org.netxms.ui.eclipse.charts;bundle-version="1.2.0",
- org.netxms.ui.eclipse.osm;bundle-version="1.2.0",
- org.netxms.ui.eclipse.datacollection;bundle-version="1.2.1",
- org.netxms.ui.eclipse.alarmviewer;bundle-version="1.2.0",
- org.netxms.webui.core;bundle-version="1.2.1",
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.4",
+ org.netxms.ui.eclipse.charts;bundle-version="1.2.3",
+ org.netxms.ui.eclipse.osm;bundle-version="1.2.1",
+ org.netxms.ui.eclipse.datacollection;bundle-version="1.2.4",
+ org.netxms.ui.eclipse.alarmviewer;bundle-version="1.2.2",
+ org.netxms.webui.core;bundle-version="1.2.4",
  org.eclipse.rap.ui;bundle-version="1.5.0",
- org.netxms.ui.eclipse.networkmaps;bundle-version="1.2.0",
- org.netxms.ui.eclipse.filemanager;bundle-version="1.2.1",
+ org.netxms.ui.eclipse.networkmaps;bundle-version="1.2.4",
+ org.netxms.ui.eclipse.filemanager;bundle-version="1.2.4",
  org.eclipse.rap.rwt.supplemental.filedialog;bundle-version="1.5.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

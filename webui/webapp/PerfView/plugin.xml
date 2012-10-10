@@ -215,5 +215,12 @@
             order="30">
       </tab>
    </extension>
+   <extension
+         point="org.netxms.ui.eclipse.datacollection.dciOpenHandlers">
+      <handler
+            class="org.netxms.ui.eclipse.perfview.actions.ShowLineChart"
+            priority="10">
+      </handler>
+   </extension>
 
 </plugin>

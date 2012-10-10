@@ -289,22 +289,18 @@ BOOL SendMagicPacket(DWORD dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
    return bResult;
 }
 
-
-//
-// Decode SQL string and set as NXCP variable's value
-//
-
+/**
+ * Decode SQL string and set as NXCP variable's value
+ */
 void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszStr)
 {
    DecodeSQLString(pszStr);
    pMsg->SetVariable(dwVarId, pszStr);
 }
 
-
-//
-// Escape string
-//
-
+/**
+ * Escape string
+ */
 void EscapeString(String &str)
 {
    str.escapeCharacter(_T('\\'), _T('\\'));
@@ -315,11 +311,9 @@ void EscapeString(String &str)
    str.translate(_T("\t"), _T("\\t"));
 }
 
-
-//
-// Check if given record exists in database
-//
-
+/**
+ * Check if given record exists in database
+ */
 bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, DWORD id)
 {
 	bool exist = false;

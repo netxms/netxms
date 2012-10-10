@@ -21,12 +21,13 @@ package org.netxms.ui.eclipse.objectbrowser.widgets;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -59,6 +60,7 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeContentProvider;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeFilter;
@@ -91,6 +93,7 @@ public class ObjectTree extends Composite
 	private ObjectStatusIndicator statusIndicator = null;
 	private SelectionListener statusIndicatorSelectionListener = null;
 	private TreeListener statusIndicatorTreeListener;
+	private Set<ObjectOpenListener> openListeners = new HashSet<ObjectOpenListener>(0);
 	
 	/**
 	 * @param parent
@@ -134,6 +137,22 @@ public class ObjectTree extends Composite
 		filter = new ObjectTreeFilter(rootObjects, classFilter);
 		objectTree.addFilter(filter);
 		objectTree.setInput(session);
+		
+		objectTree.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				TreeItem[] items = objectTree.getTree().getSelection();
+				if (items.length == 1)
+				{
+					// Call open handlers. If open event processed by handler, openObject will return true
+					if (!openObject((GenericObject)items[0].getData()))
+					{
+						objectTree.toggleItemExpandState(items[0]);
+					}
+				}
+			}
+		});
 		
 		objectTree.getControl().addListener(SWT.Selection, new Listener() {
 			private static final long serialVersionUID = 1L;
@@ -627,5 +646,35 @@ public class ObjectTree extends Composite
 		((ObjectTreeContentProvider)objectTree.getContentProvider()).setRootObjects(rootObjects);
 		filter.setRootObjects(rootObjects);
 		refresh();
+	}
+	
+	/**
+	 * @param listener
+	 */
+	public void addOpenListener(ObjectOpenListener listener)
+	{
+		openListeners.add(listener);
+	}
+	
+	/**
+	 * @param listener
+	 */
+	public void removeOpenListener(ObjectOpenListener listener)
+	{
+		openListeners.remove(listener);
+	}
+	
+	/**
+	 * Open selected object
+	 * 
+	 * @param object
+	 * @return
+	 */
+	private boolean openObject(GenericObject object)
+	{
+		for(ObjectOpenListener l : openListeners)
+			if (l.openObject(object))
+				return true;
+		return false;
 	}
 }

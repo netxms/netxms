@@ -18,9 +18,16 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.views;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
-
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -65,10 +72,12 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenHandler;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
-import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.IActionConstants;
 
 /**
  * Object browser view
@@ -93,6 +102,7 @@ public class ObjectBrowser extends ViewPart
 	private boolean initHideTemplateChecks = false;
 	private boolean initShowFilter = true;
 	private boolean initShowStatus = true;
+	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
@@ -108,6 +118,7 @@ public class ObjectBrowser extends ViewPart
 			initShowFilter = safeCast(memento.getBoolean("ObjectBrowser.showFilter"), true); //$NON-NLS-1$
 			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), true); //$NON-NLS-1$
 		}
+		registerOpenHandlers();
 	}
 
 	private static boolean safeCast(Boolean b, boolean defval)
@@ -159,6 +170,14 @@ public class ObjectBrowser extends ViewPart
 		objectTree.setHideUnmanaged(initHideUnmanaged);
 		objectTree.enableFilter(initShowFilter);
 		objectTree.enableStatusIndicator(initShowStatus);
+		
+		objectTree.addOpenListener(new ObjectOpenListener() {
+			@Override
+			public boolean openObject(GenericObject object)
+			{
+				return callOpenObjectHandler(object);
+			}
+		});
 		
 		createActions();
 		createMenu();
@@ -484,5 +503,93 @@ public class ObjectBrowser extends ViewPart
 				}
 			}.start();
 		}
+	}
+	
+	/**
+	 * Register object open handlers
+	 */
+	private void registerOpenHandlers()
+	{
+		// Read all registered extensions and create tabs
+		final IExtensionRegistry reg = Platform.getExtensionRegistry();
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers");
+		for(int i = 0; i < elements.length; i++)
+		{
+			try
+			{
+				final OpenHandlerData h = new OpenHandlerData();
+				h.handler = (ObjectOpenHandler)elements[i].createExecutableExtension("class");
+				h.priority = safeParseInt(elements[i].getAttribute("priority"));
+				final String className = elements[i].getAttribute("enabledFor");
+				try
+				{
+					h.enabledFor = (className != null) ? Class.forName(className) : null;
+				}
+				catch(Exception e)
+				{
+					h.enabledFor = null;
+				}
+				openHandlers.add(h);
+			}
+			catch(CoreException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
+		// Sort tabs by appearance order
+		Collections.sort(openHandlers, new Comparator<OpenHandlerData>() {
+			@Override
+			public int compare(OpenHandlerData arg0, OpenHandlerData arg1)
+			{
+				return arg0.priority - arg1.priority;
+			}
+		});
+	}
+	
+	/**
+	 * @param s
+	 * @return
+	 */
+	private static int safeParseInt(String s)
+	{
+		if (s == null)
+			return 65535;
+		try
+		{
+			return Integer.parseInt(s);
+		}
+		catch(NumberFormatException e)
+		{
+			return 65535;
+		}
+	}
+	
+	/**
+	 * Call object open handler
+	 * 
+	 * @return
+	 */
+	private boolean callOpenObjectHandler(GenericObject object)
+	{
+		for(OpenHandlerData h : openHandlers)
+		{
+			if ((h.enabledFor == null) || (h.enabledFor.isInstance(object)))
+			{
+				if (h.handler.openObject(object))
+					return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Internal data for object open handlers
+	 */
+	private class OpenHandlerData
+	{
+		ObjectOpenHandler handler;
+		int priority;
+		Class<?> enabledFor;
 	}
 }
