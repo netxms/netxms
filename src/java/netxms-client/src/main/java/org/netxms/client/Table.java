@@ -104,6 +104,38 @@ public class Table
 	}
 
 	/**
+	 * Fill NXCP message with table's data
+	 * 
+	 * @param msg NXCP message
+	 */
+	public void fillMessage(final NXCPMessage msg)
+	{
+		msg.setVariable(NXCPCodes.VID_TABLE_TITLE, title);
+		if (instanceColumn != null)
+			msg.setVariable(NXCPCodes.VID_INSTANCE_COLUMN, instanceColumn);
+		
+		int columnCount = columnNames.size();
+		msg.setVariableInt32(NXCPCodes.VID_TABLE_NUM_COLS, columnCount);
+		long varId = NXCPCodes.VID_TABLE_COLUMN_INFO_BASE;
+		for(int i = 0; i < columnCount; i++, varId += 8L)
+		{
+			msg.setVariable(varId++, columnNames.get(i));
+			msg.setVariableInt32(varId++, columnFormats.get(i));
+		}
+		
+		msg.setVariableInt32(NXCPCodes.VID_TABLE_NUM_ROWS, data.size());
+		varId = NXCPCodes.VID_TABLE_DATA_BASE;
+		for(int row = 0; row < data.size(); row++)
+		{
+			final List<String> rowData = data.get(row);
+			for(int col = 0; col < columnCount; col++)
+			{
+				msg.setVariable(varId++, rowData.get(col));
+			}
+		}
+	}
+
+	/**
 	 * Get number of columns in table
 	 *
 	 * @return Number of columns
@@ -273,5 +305,29 @@ public class Table
 	public void addAll(Table src)
 	{
 		data.addAll(src.data);
+	}
+
+	/**
+	 * Add new row
+	 */
+	public void addRow()
+	{
+		List<String> row = new ArrayList<String>(columnNames.size());
+		for(int i = 0; i < columnNames.size(); i++)
+			row.add("");
+		data.add(row);
+	}
+	
+	/**
+	 * Set cell value
+	 * 
+	 * @param row
+	 * @param col
+	 * @param value
+	 */
+	public void setCell(int row, int col, String value)
+	{
+		if ((row >= 0) && (row < data.size()) && (col >= 0) && (col < columnNames.size()))
+			data.get(row).set(col, value);
 	}
 }
