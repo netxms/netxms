@@ -40,11 +40,10 @@ private:
 	TCHAR *m_dbName;
 	TCHAR *m_login;
 	TCHAR *m_password;
-	DB_DRIVER m_driver;
+	DB_DRIVER m_hDriver;
 	DB_HANDLE m_hdb;
 
 public:
-	DBConnection(
 };
 
 

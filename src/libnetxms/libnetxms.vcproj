@@ -470,6 +470,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\strmapbase.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\strtoll.c"
 				>
 			</File>

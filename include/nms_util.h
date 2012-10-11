@@ -256,11 +256,9 @@ public:
    double getAsDouble(int nRow, int nCol);
 };
 
-
-//
-// Dynamic string class
-//
-
+/**
+ * Dynamic string class
+ */
 class LIBNETXMS_EXPORTABLE String
 {
 protected:
@@ -307,48 +305,76 @@ public:
 	void shrink(int chars = 1);
 };
 
-
-//
-// String map class
-//
-
-class LIBNETXMS_EXPORTABLE StringMap
+/**
+ * String maps base class
+ */
+class LIBNETXMS_EXPORTABLE StringMapBase
 {
 protected:
 	DWORD m_size;
 	TCHAR **m_keys;
-	TCHAR **m_values;
+	void **m_values;
+	bool m_objectOwner;
+	void (*m_objectDestructor)(void *);
 
 	DWORD find(const TCHAR *key);
+	void setObject(TCHAR *key, void *value, bool keyPreAlloc);
+	void *getObject(const TCHAR *key);
+	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
 
 public:
-	StringMap();
-	StringMap(const StringMap &src);
-	~StringMap();
-
-	StringMap& operator =(const StringMap &src);
-
-	void set(const TCHAR *key, const TCHAR *value);
-	void setPreallocated(TCHAR *key, TCHAR *value);
-	void set(const TCHAR *key, DWORD value);
-
-	const TCHAR *get(const TCHAR *key);
-	DWORD getULong(const TCHAR *key, DWORD defaultValue);
-	bool getBoolean(const TCHAR *key, bool defaultValue);
+	StringMapBase(bool objectOwner);
+	virtual ~StringMapBase();
 
 	void remove(const TCHAR *key);
 	void clear();
 
 	DWORD getSize() { return m_size; }
 	const TCHAR *getKeyByIndex(DWORD idx) { return (idx < m_size) ? CHECK_NULL_EX(m_keys[idx]) : NULL; }
-	const TCHAR *getValueByIndex(DWORD idx) { return (idx < m_size) ? CHECK_NULL_EX(m_values[idx]) : NULL; }
 };
 
+/**
+ * String map class
+ */
+class LIBNETXMS_EXPORTABLE StringMap : public StringMapBase
+{
+public:
+	StringMap() : StringMapBase(true) { }
+	StringMap(const StringMap &src);
+	virtual ~StringMap();
 
-//
-// String list class
-//
+	StringMap& operator =(const StringMap &src);
 
+	void set(const TCHAR *key, const TCHAR *value) { setObject((TCHAR *)key, _tcsdup(value), false); }
+	void setPreallocated(TCHAR *key, TCHAR *value) { setObject(key, value, true); }
+	void set(const TCHAR *key, DWORD value);
+
+	const TCHAR *get(const TCHAR *key) { return (const TCHAR *)getObject(key); }
+	DWORD getULong(const TCHAR *key, DWORD defaultValue);
+	bool getBoolean(const TCHAR *key, bool defaultValue);
+
+	const TCHAR *getValueByIndex(DWORD idx) { return (idx < m_size) ? CHECK_NULL_EX((TCHAR *)m_values[idx]) : NULL; }
+};
+
+/**
+ * String map template for holding objects as values
+ */
+template <class T> class StringObjectMap : public StringMapBase
+{
+private:
+	static void destructor(void *object) { delete (T*)object; }
+
+public:
+	StringObjectMap(bool objectOwner) : StringMapBase(objectOwner) { m_objectDestructor = destructor; }
+
+	void set(const TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, false); }
+	T *get(const TCHAR *key) { return (T*)getObject(key); }
+	T *getValueByIndex(DWORD idx) { return (idx < m_size) ? (T *)m_values[idx] : NULL; }
+};
+
+/**
+ * String list class
+ */
 class LIBNETXMS_EXPORTABLE StringList
 {
 private:
@@ -375,11 +401,9 @@ public:
 	int getIndexIgnoreCase(const TCHAR *value);
 };
 
-
-//
-// Dynamic array class
-//
-
+/**
+ * Dynamic array class
+ */
 class LIBNETXMS_EXPORTABLE Array
 {
 private:
@@ -413,6 +437,9 @@ public:
 	bool isOwner() { return m_objectOwner; }
 };
 
+/**
+ * Template class for dynamic array which holds objects
+ */
 template <class T> class ObjectArray : public Array
 {
 private:
