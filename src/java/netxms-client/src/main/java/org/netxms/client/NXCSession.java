@@ -1377,7 +1377,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
 			timeFormat = response.getVariableAsString(NXCPCodes.VID_TIME_FORMAT);
 			if ((timeFormat == null) || (timeFormat.length() == 0))
-				dateFormat = "HH:mm:ss";
+				timeFormat = "HH:mm:ss";
 
 			// Setup encryption if required
 			if (connUseEncryption)

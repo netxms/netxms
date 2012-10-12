@@ -513,7 +513,7 @@ protected:
 
    DWORD getFunctionAddress(const TCHAR *pszName);
    void relocateCode(DWORD dwStartOffset, DWORD dwLen, DWORD dwShift);
-	DWORD getFinalJumpDestination(DWORD dwAddr);
+	DWORD getFinalJumpDestination(DWORD dwAddr, int srcJump);
 
 public:
    NXSL_Program();

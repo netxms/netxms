@@ -389,13 +389,15 @@ Expression:
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_BIT_XOR));
 }
-|	Expression T_AND Expression
+|	Expression T_AND { pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JZ_PEEK, INVALID_ADDRESS)); } Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_AND));
+	pScript->resolveLastJump(OPCODE_JZ_PEEK);
 }
-|	Expression T_OR Expression
+|	Expression T_OR { pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JNZ_PEEK, INVALID_ADDRESS)); } Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_OR));
+	pScript->resolveLastJump(OPCODE_JNZ_PEEK);
 }
 |	Expression T_LSHIFT Expression
 {

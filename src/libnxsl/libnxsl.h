@@ -110,6 +110,8 @@ typedef void *yyscan_t;
 #define OPCODE_NEXT           54
 #define OPCODE_GLOBAL         55
 #define OPCODE_GLOBAL_ARRAY   56
+#define OPCODE_JZ_PEEK        57
+#define OPCODE_JNZ_PEEK       58
 
 
 //

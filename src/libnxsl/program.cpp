@@ -51,7 +51,7 @@ static const char *m_szCommandMnemonic[] =
    "JNZ", "LIKE", "ILIKE", "MATCH",
    "IMATCH", "CASE", "ARRAY", "EGET",
 	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
-	"GLOBAL", "GARRAY"
+	"GLOBAL", "GARRAY", "JZP", "JNZP"
 };
 
 
@@ -362,6 +362,8 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_JMP:
          case OPCODE_JZ:
          case OPCODE_JNZ:
+         case OPCODE_JZ_PEEK:
+         case OPCODE_JNZ_PEEK:
             fprintf(pFile, "%04X\n", m_ppInstructionSet[i]->m_operand.m_dwAddr);
             break;
          case OPCODE_PUSH_VARIABLE:
@@ -882,9 +884,29 @@ void NXSL_Program::execute()
             }
             else
             {
-               error(3);
+               error(NXSL_ERR_BAD_CONDITION);
             }
             delete pValue;
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
+      case OPCODE_JZ_PEEK:
+      case OPCODE_JNZ_PEEK:
+			pValue = (NXSL_Value *)m_pDataStack->peek();
+         if (pValue != NULL)
+         {
+            if (pValue->isNumeric())
+            {
+					if (cp->m_nOpCode == OPCODE_JZ_PEEK ? pValue->isZero() : pValue->isNonZero())
+                  dwNext = cp->m_operand.m_dwAddr;
+            }
+            else
+            {
+               error(NXSL_ERR_BAD_CONDITION);
+            }
          }
          else
          {
@@ -1678,9 +1700,11 @@ NXSL_Value *NXSL_Program::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, B
 /**
  * Get final jump destination from a jump chain
  */
-DWORD NXSL_Program::getFinalJumpDestination(DWORD dwAddr)
+DWORD NXSL_Program::getFinalJumpDestination(DWORD dwAddr, int srcJump)
 {
-	return (m_ppInstructionSet[dwAddr]->m_nOpCode == OPCODE_JMP) ? getFinalJumpDestination(m_ppInstructionSet[dwAddr]->m_operand.m_dwAddr) : dwAddr;
+	if ((m_ppInstructionSet[dwAddr]->m_nOpCode == OPCODE_JMP) || (m_ppInstructionSet[dwAddr]->m_nOpCode == srcJump))
+		return getFinalJumpDestination(m_ppInstructionSet[dwAddr]->m_operand.m_dwAddr, srcJump);
+	return dwAddr;
 }
 
 /**
@@ -1713,6 +1737,18 @@ void NXSL_Program::optimize()
 		}
 	}
 
+	// Fix destination address for JZP/JNZP jumps
+	for(i = 0; i < m_dwCodeSize; i++)
+	{
+		if (((m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ_PEEK) && 
+			  (m_ppInstructionSet[m_ppInstructionSet[i]->m_operand.m_dwAddr]->m_nOpCode == OPCODE_JNZ_PEEK)) ||
+		    ((m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ_PEEK) && 
+			  (m_ppInstructionSet[m_ppInstructionSet[i]->m_operand.m_dwAddr]->m_nOpCode == OPCODE_JZ_PEEK)))
+		{
+			m_ppInstructionSet[i]->m_operand.m_dwAddr++;
+		}
+	}
+
 	// Convert jump chains to single jump
 	for(i = 0; i < m_dwCodeSize; i++)
 	{
@@ -1720,7 +1756,12 @@ void NXSL_Program::optimize()
 			 (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ) ||
 			 (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ))
 		{
-			m_ppInstructionSet[i]->m_operand.m_dwAddr = getFinalJumpDestination(m_ppInstructionSet[i]->m_operand.m_dwAddr);
+			m_ppInstructionSet[i]->m_operand.m_dwAddr = getFinalJumpDestination(m_ppInstructionSet[i]->m_operand.m_dwAddr, -1);
+		}
+		else if ((m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ_PEEK) ||
+			      (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ_PEEK))
+		{
+			m_ppInstructionSet[i]->m_operand.m_dwAddr = getFinalJumpDestination(m_ppInstructionSet[i]->m_operand.m_dwAddr, m_ppInstructionSet[i]->m_nOpCode);
 		}
 	}
 
@@ -1728,8 +1769,8 @@ void NXSL_Program::optimize()
 	for(i = 0; i < m_dwCodeSize; i++)
 	{
 		if (((m_ppInstructionSet[i]->m_nOpCode == OPCODE_JMP) ||
-			  (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ) ||
-			  (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ)) &&
+			  (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ_PEEK) ||
+			  (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ_PEEK)) &&
 			 (m_ppInstructionSet[i]->m_operand.m_dwAddr == i + 1))
 		{
 			removeInstructions(i, 1);
