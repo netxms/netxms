@@ -17,13 +17,10 @@ import org.netxms.ui.android.main.adapters.AlarmListAdapter;
 import org.netxms.ui.android.main.adapters.InterfacesAdapter;
 import org.netxms.ui.android.main.adapters.LastValuesAdapter;
 import org.netxms.ui.android.main.adapters.OverviewAdapter;
-import org.netxms.ui.android.service.ClientConnectorService;
 
 import android.app.Activity;
-import android.app.TabActivity;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -54,7 +51,7 @@ import android.widget.TextView;
  * 
  */
 
-public class NodeInfo extends TabActivity implements OnTabChangeListener, ServiceConnection
+public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 {
 	public static int TAB_OVERVIEW_ID = 0;
 	public static int TAB_ALARMS_ID = 1;
@@ -80,8 +77,6 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		}
 	}
 
-	protected ClientConnectorService service;
-
 	private TabHost tabHost;
 	private ListView overviewListView;
 	private ListView lastValuesListView;
@@ -105,12 +100,12 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	 * @see android.app.ActivityGroup#onCreate(android.os.Bundle)
 	 */
 	@Override
-	public void onCreate(Bundle savedInstanceState)
+	protected void onCreateStep2(Bundle savedInstanceState)
 	{
-		super.onCreate(savedInstanceState);
-
-		startService(new Intent(this, ClientConnectorService.class));
-		bindService(new Intent(this, ClientConnectorService.class), this, 0);
+//		super.onCreateStep2(savedInstanceState);
+//
+//		startService(new Intent(this, ClientConnectorService.class));
+//		bindService(new Intent(this, ClientConnectorService.class), this, 0);
 
 		setContentView(R.layout.node_info);
 
@@ -221,18 +216,6 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		tabHost.setCurrentTabByTag(TAB_OVERVIEW);
 
 		tabHost.setCurrentTab(tabId);
-	}
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see android.app.Activity#onDestroy()
-	 */
-	@Override
-	protected void onDestroy()
-	{
-		service.registerAlarmBrowser(null);
-		unbindService(this);
-		super.onDestroy();
 	}
 
 	/* (non-Javadoc)
@@ -391,17 +374,20 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	@Override
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
-		service = ((ClientConnectorService.ClientConnectorBinder)binder).getService();
-		node = (Node)service.findObjectById(nodeId);
-		service.registerNodeInfo(this);
-		alarmsAdapter.setService(service);
-		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
-		if (node != null)
-			title.setText(node.getObjectName());
-		refreshOverview();
-		refreshLastValues();
-		refreshAlarms();
-		refreshInterfaces();
+		super.onServiceConnected(name, binder);
+		if (service != null)
+		{
+			node = (Node)service.findObjectById(nodeId);
+			service.registerNodeInfo(this);
+			alarmsAdapter.setService(service);
+			TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
+			if (node != null)
+				title.setText(node.getObjectName());
+			refreshOverview();
+			refreshLastValues();
+			refreshAlarms();
+			refreshInterfaces();
+		}
 	}
 
 	/**
@@ -445,16 +431,6 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 	{
 		if (node != null)
 			new LoadChildrenTask(node.getObjectId(), GenericObject.OBJECT_INTERFACE).execute();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see android.content.ServiceConnection#onServiceDisconnected(android.content.ComponentName)
-	 */
-	@Override
-	public void onServiceDisconnected(ComponentName name)
-	{
 	}
 
 	/*
@@ -801,7 +777,7 @@ public class NodeInfo extends TabActivity implements OnTabChangeListener, Servic
 		@Override
 		protected void onPostExecute(Set<GenericObject> result)
 		{
-			if (result != null) 
+			if (result != null)
 			{
 				switch (classFilter)
 				{

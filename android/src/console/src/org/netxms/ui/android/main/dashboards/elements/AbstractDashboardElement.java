@@ -19,7 +19,7 @@ import android.widget.FrameLayout;
  */
 public abstract class AbstractDashboardElement extends FrameLayout
 {
-	private static final String LOG_TAG = "nxclient/AbstractDashboardElement";
+	private static final String TAG = "nxclient/AbstractDashboardElement";
 	
 	protected static final int MAX_CHART_ITEMS = 16;
 	protected static final int GRID_COLOR = 0xFFE8E8E8;
@@ -76,13 +76,13 @@ public abstract class AbstractDashboardElement extends FrameLayout
 	{
 		if (task != null)
 		{
-			Log.d(LOG_TAG, "startRefreshTask: timer already exist");
+			Log.d(TAG, "startRefreshTask: timer already exist");
 			return;
 		}
 
 		if (scheduleTaskExecutor == null)
 		{
-			Log.d(LOG_TAG, "startRefreshTask: executor service not available");
+			Log.d(TAG, "startRefreshTask: executor service not available");
 			return;
 		}
 
@@ -93,7 +93,7 @@ public abstract class AbstractDashboardElement extends FrameLayout
 				refresh();
 			}
 		}, 0, interval, TimeUnit.SECONDS);
-		Log.d(LOG_TAG, "startRefreshTask: new task scheduled, interval=" + interval);
+		Log.d(TAG, "startRefreshTask: new task scheduled, interval=" + interval);
 	}
 
 	/* (non-Javadoc)
@@ -104,7 +104,7 @@ public abstract class AbstractDashboardElement extends FrameLayout
 	{
 		if (task != null)
 		{
-			Log.d(LOG_TAG, "onDetachedFromWindow: cancelling scheduled task");
+			Log.d(TAG, "onDetachedFromWindow: cancelling scheduled task");
 			task.cancel(true);
 			task = null;
 		}

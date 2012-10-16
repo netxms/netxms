@@ -29,7 +29,7 @@ import android.widget.TextView;
  */
 public class GraphBrowser extends AbstractClientActivity
 {
-	private static final String LOG_TAG = "org.netxms.ui.android.main.activities.GraphBrowser";
+	private static final String TAG = "org.netxms.ui.android.main.activities.GraphBrowser";
 	
 	private ExpandableListView listView;
 	private GraphAdapter adapter;
@@ -112,7 +112,7 @@ public class GraphBrowser extends AbstractClientActivity
 			}
 			catch(Exception e)
 			{
-				Log.w(LOG_TAG, "ChartConfig.createFromXml", e);
+				Log.w(TAG, "ChartConfig.createFromXml", e);
 				config = new ChartConfig();
 			}
 			

@@ -19,7 +19,7 @@ import android.util.Log;
  */
 public class DialChartElement extends AbstractDashboardElement
 {
-	private static final String LOG_TAG = "nxclient/DialChartElement";
+	private static final String TAG = "nxclient/DialChartElement";
 	
 	private DialChartConfig config;
 	private DialChart chart;
@@ -37,7 +37,7 @@ public class DialChartElement extends AbstractDashboardElement
 		}
 		catch(Exception e)
 		{
-			Log.e(LOG_TAG, "Error parsing element config", e);
+			Log.e(TAG, "Error parsing element config", e);
 			config = new DialChartConfig();
 		}
 		
@@ -106,7 +106,7 @@ public class DialChartElement extends AbstractDashboardElement
 		}
 		catch(Exception e)
 		{
-			Log.e(LOG_TAG, "Exception while reading data from server", e);
+			Log.e(TAG, "Exception while reading data from server", e);
 		}
 	}
 }

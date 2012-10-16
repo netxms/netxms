@@ -21,7 +21,7 @@ import android.util.Log;
  */
 public class PieChartElement extends AbstractDashboardElement
 {
-	private static final String LOG_TAG = "nxclient/PieChartElement";
+	private static final String TAG = "nxclient/PieChartElement";
 	
 	private PieChartConfig config;
 	private CategorySeries dataset;
@@ -40,7 +40,7 @@ public class PieChartElement extends AbstractDashboardElement
 		}
 		catch(Exception e)
 		{
-			Log.e(LOG_TAG, "Error parsing element config", e);
+			Log.e(TAG, "Error parsing element config", e);
 			config = new PieChartConfig();
 		}
 		
@@ -144,7 +144,7 @@ public class PieChartElement extends AbstractDashboardElement
 		}
 		catch(Exception e)
 		{
-			Log.e(LOG_TAG, "Exception while reading data from server", e);
+			Log.e(TAG, "Exception while reading data from server", e);
 		}
 	}
 }

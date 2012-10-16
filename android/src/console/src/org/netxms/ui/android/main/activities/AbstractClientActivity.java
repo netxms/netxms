@@ -1,5 +1,6 @@
 package org.netxms.ui.android.main.activities;
 
+import org.netxms.ui.android.NXApplication;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
 
@@ -21,7 +22,7 @@ import android.view.MenuItem;
  */
 public abstract class AbstractClientActivity extends Activity implements ServiceConnection
 {
-	private static final String LOG_TAG = "nxclient/AbstractClientActivity";
+	private static final String TAG = "nxclient/AbstractClientActivity";
 
 	protected ClientConnectorService service;
 
@@ -59,6 +60,28 @@ public abstract class AbstractClientActivity extends Activity implements Service
 	}
 
 	/* (non-Javadoc)
+	 * @see android.app.Activity#onResume()
+	 */
+	@Override
+	protected void onResume()
+	{
+		super.onResume();
+		NXApplication.activityResumed();
+		if (service != null)
+			service.reconnect(false);
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onPause()
+	 */
+	@Override
+	protected void onPause()
+	{
+		super.onStop();
+		NXApplication.activityPaused();
+	}
+
+	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
 	 */
 	@Override
@@ -75,7 +98,7 @@ public abstract class AbstractClientActivity extends Activity implements Service
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		Log.d(LOG_TAG, "onOptionsItemSelected: id=" + android.R.id.home);
+		Log.d(TAG, "onOptionsItemSelected: id=" + android.R.id.home);
 
 		if (item.getItemId() == android.R.id.home)
 		{
@@ -97,6 +120,8 @@ public abstract class AbstractClientActivity extends Activity implements Service
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
 		service = ((ClientConnectorService.ClientConnectorBinder)binder).getService();
+		if (service != null)
+			service.reconnect(false);
 	}
 
 	/* (non-Javadoc)

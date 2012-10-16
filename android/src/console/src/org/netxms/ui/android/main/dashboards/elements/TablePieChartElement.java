@@ -21,7 +21,7 @@ import android.util.Log;
  */
 public class TablePieChartElement extends AbstractDashboardElement
 {
-	private static final String LOG_TAG = "nxclient/TablePieChartElement";
+	private static final String TAG = "nxclient/TablePieChartElement";
 	
 	private TablePieChartConfig config;
 	private CategorySeries dataset;
@@ -40,7 +40,7 @@ public class TablePieChartElement extends AbstractDashboardElement
 		}
 		catch(Exception e)
 		{
-			Log.e(LOG_TAG, "Error parsing element config", e);
+			Log.e(TAG, "Error parsing element config", e);
 			config = new TablePieChartConfig();
 		}
 		

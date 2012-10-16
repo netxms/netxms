@@ -15,6 +15,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.ui.android.NXApplication;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.helpers.SafeParser;
 import org.netxms.ui.android.main.activities.AlarmBrowser;
@@ -67,6 +68,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	public static final String ACTION_RECONNECT = "org.netxms.ui.android.ACTION_RECONNECT";
 	public static final String ACTION_DISCONNECT = "org.netxms.ui.android.ACTION_DISCONNECT";
+	public static final String ACTION_RESCHEDULE = "org.netxms.ui.android.ACTION_RESCHEDULE";
 	private static final String TAG = "nxclient/ClientConnectorService";
 	private static final String LASTALARM_KEY = "LastALarmIdNotified";
 
@@ -136,26 +138,29 @@ public class ClientConnectorService extends Service implements SessionListener
 			public void onReceive(Context context, Intent intent)
 			{
 				Intent i = new Intent(context, ClientConnectorService.class);
-				i.setAction(ACTION_RECONNECT);
+				i.setAction(ACTION_RESCHEDULE);
 				context.startService(i);
 			}
 		};
 		registerReceiver(receiver, new IntentFilter(Intent.ACTION_TIME_TICK));
 
-		long nextActivation = sp.getLong("global.scheduler.next_activation", 0);
-		if (sp.getBoolean("global.scheduler.enable", false) && nextActivation != 0)
-		{
-			Calendar cal = Calendar.getInstance();
-			if (cal.getTimeInMillis() < nextActivation) // Reuse a previous schedule, if not already expired
-			{
-				Log.i(TAG, "onCreate, force reschedule.");
-				setSchedule(nextActivation, ACTION_RECONNECT);
-				setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
-				statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
-				return;
-			}
-		}
-		reconnect(true); // Force connection on service recreation
+//		long nextActivation = sp.getLong("global.scheduler.next_activation", 0);
+//		if (sp.getBoolean("global.scheduler.enable", false) && nextActivation != 0)
+//		{
+//			Calendar cal = Calendar.getInstance();
+//			if (cal.getTimeInMillis() < nextActivation) // Reuse a previous schedule, if not already expired
+//			{
+//				Log.i(TAG, "onCreate, force reschedule.");
+//				setSchedule(nextActivation, ACTION_RECONNECT);
+//				setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
+//				statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
+//				return;
+//			}
+//		}
+//		reconnect(true); // Force connection on service recreation
+
+		if (NXApplication.isActivityVisible())
+			reconnect(false);
 	}
 
 	/*
@@ -170,7 +175,12 @@ public class ClientConnectorService extends Service implements SessionListener
 			if (intent.getAction().equals(ACTION_RECONNECT))
 				reconnect(false);
 			else if (intent.getAction().equals(ACTION_DISCONNECT))
-				onDisconnect();
+				disconnect(false);
+			else if (intent.getAction().equals(ACTION_RESCHEDULE))
+				if (NXApplication.isActivityVisible())
+					reconnect(false);
+				else
+					disconnect(false);
 		return super.onStartCommand(intent, flags, startId);
 	}
 
@@ -329,9 +339,11 @@ public class ClientConnectorService extends Service implements SessionListener
 	 * 
 	 * @param forceReconnect if set to true forces disconnection before connecting
 	 */
-	public void reconnect(boolean forceReconnect)
+	public void reconnect(boolean force)
 	{
-		if (forceReconnect || isScheduleExpired())
+		if (force || (isScheduleExpired() || NXApplication.isActivityVisible()) &&
+				connectionStatus != ConnectionStatus.CS_CONNECTED &&
+				connectionStatus != ConnectionStatus.CS_ALREADYCONNECTED)
 		{
 			Log.i(TAG, "Reconnecting...");
 			synchronized (mutex)
@@ -345,12 +357,30 @@ public class ClientConnectorService extends Service implements SessionListener
 							sp.getString("connection.login", ""),
 							sp.getString("connection.password", ""),
 							sp.getBoolean("connection.encrypt", false),
-							forceReconnect);
+							force);
 				}
 			}
 		}
+//		else
+//			schedule(ACTION_RESCHEDULE);
 	}
-
+	/**
+	 * Disconnect from server. Only when scheduler is enabled and connected.
+	 * 
+	 */
+	public void disconnect(boolean force)
+	{
+		if (force || sp.getBoolean("global.scheduler.enable", false) && !NXApplication.isActivityVisible() &&
+				(connectionStatus == ConnectionStatus.CS_CONNECTED ||
+				connectionStatus == ConnectionStatus.CS_ALREADYCONNECTED))
+		{
+			nullifySession();
+			setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
+			statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
+		}
+//		else
+//			schedule(ACTION_RESCHEDULE);
+	}
 	/**
 	 * Called by connect task after successful connection
 	 * 
@@ -395,7 +425,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		schedule(ACTION_RECONNECT);
 		nullifySession();
-		hideNotification(NOTIFY_ALARM);
 		setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
 		statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
 	}
@@ -406,7 +435,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	public void onError(String error)
 	{
 		nullifySession();
-		hideNotification(NOTIFY_ALARM);
 		setConnectionStatus(ConnectionStatus.CS_ERROR, error);
 		statusNotification(ConnectionStatus.CS_ERROR, error);
 	}
@@ -448,7 +476,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	/**
 	 * Schedule a new connection/disconnection
 	 */
-	private void schedule(String action)
+	public void schedule(String action)
 	{
 		Log.i(TAG, "Schedule: " + action);
 		if (!sp.getBoolean("global.scheduler.enable", false))
@@ -456,6 +484,8 @@ public class ClientConnectorService extends Service implements SessionListener
 		else
 		{
 			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
+			if (action == ACTION_RESCHEDULE)
+				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.postpone", "1")));
 			if (action == ACTION_DISCONNECT)
 				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.duration", "1")));
 			else if (!sp.getBoolean("global.scheduler.daily.enable", false))
@@ -507,7 +537,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	/**
 	 * Cancel a pending connection schedule (if any)
 	 */
-	private void cancelSchedule()
+	public void cancelSchedule()
 	{
 		Intent intent = new Intent(this, AlarmIntentReceiver.class);
 		PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -529,6 +559,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			if (session != null)
 			{
+				session.disconnect();
 				session.removeListener(this);
 				session = null;
 			}

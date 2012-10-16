@@ -4,10 +4,12 @@
 package org.netxms.ui.android.main.activities;
 
 import java.util.Stack;
+
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ObjectListAdapter;
+
 import android.content.ComponentName;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -29,9 +31,9 @@ public class DashboardBrowser extends AbstractClientActivity
 {
 	private ListView listView;
 	private ObjectListAdapter adapter;
-	private long initialParent = 7;
+	private final long initialParent = 7;
 	private GenericObject currentParent = null;
-	private Stack<GenericObject> containerPath = new Stack<GenericObject>();
+	private final Stack<GenericObject> containerPath = new Stack<GenericObject>();
 	private long[] savedPath = null;
 
 	/* (non-Javadoc)
@@ -50,7 +52,9 @@ public class DashboardBrowser extends AbstractClientActivity
 
 		listView = (ListView)findViewById(R.id.NodeList);
 		listView.setAdapter(adapter);
-		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+		{
+			@Override
 			@SuppressWarnings("rawtypes")
 			public void onItemClick(AdapterView parent, View v, int position, long id)
 			{
@@ -105,13 +109,12 @@ public class DashboardBrowser extends AbstractClientActivity
 	{
 		super.onServiceConnected(name, binder);
 
-		adapter.setService(service);
 		service.registerDashboardBrowser(this);
 
 		// Restore to saved path if available
 		if ((savedPath != null) && (savedPath.length > 0))
 		{
-			for(int i = 0; i < savedPath.length - 1; i++)
+			for (int i = 0; i < savedPath.length - 1; i++)
 			{
 				GenericObject object = service.findObjectById(savedPath[i]);
 				if (object == null)
@@ -133,7 +136,6 @@ public class DashboardBrowser extends AbstractClientActivity
 	public void onServiceDisconnected(ComponentName name)
 	{
 		super.onServiceDisconnected(name);
-		adapter.setService(null);
 	}
 
 	/* (non-Javadoc)
@@ -173,7 +175,7 @@ public class DashboardBrowser extends AbstractClientActivity
 //		final GenericObject object = (GenericObject)adapter.getItem(info.position);
 
 		// process menu selection
-		switch(item.getItemId())
+		switch (item.getItemId())
 		{
 			default:
 		}
@@ -238,7 +240,7 @@ public class DashboardBrowser extends AbstractClientActivity
 	private String getFullPath()
 	{
 		StringBuilder sb = new StringBuilder();
-		for(GenericObject o : containerPath)
+		for (GenericObject o : containerPath)
 		{
 			sb.append('/');
 			sb.append(o.getObjectName());
@@ -260,7 +262,7 @@ public class DashboardBrowser extends AbstractClientActivity
 	{
 		long[] path = new long[containerPath.size() + ((currentParent != null) ? 1 : 0)];
 		int i = 0;
-		for(GenericObject o : containerPath)
+		for (GenericObject o : containerPath)
 			path[i++] = o.getObjectId();
 
 		if (currentParent != null)
@@ -284,7 +286,7 @@ public class DashboardBrowser extends AbstractClientActivity
 	 */
 	private class SyncMissingObjectsTask extends AsyncTask<Object, Void, Exception>
 	{
-		private long currentRoot;
+		private final long currentRoot;
 
 		protected SyncMissingObjectsTask(long currentRoot)
 		{
@@ -298,7 +300,7 @@ public class DashboardBrowser extends AbstractClientActivity
 			{
 				service.getSession().syncMissingObjects((long[])params[0], false, NXCSession.OBJECT_SYNC_WAIT);
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
 				Log.d("nxclient/SyncMissingObjectsTask", "Exception while executing service.getSession().syncMissingObjects", e);
 				return e;

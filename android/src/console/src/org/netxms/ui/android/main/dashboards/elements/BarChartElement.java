@@ -24,7 +24,7 @@ import android.util.Log;
  */
 public class BarChartElement extends AbstractDashboardElement
 {
-	private static final String LOG_TAG = "nxclient/BarChartElement";
+	private static final String TAG = "nxclient/BarChartElement";
 	
 	private BarChartConfig config;
 	private BarChart chart;
@@ -43,7 +43,7 @@ public class BarChartElement extends AbstractDashboardElement
 		}
 		catch(Exception e)
 		{
-			Log.e(LOG_TAG, "Error parsing element config", e);
+			Log.e(TAG, "Error parsing element config", e);
 			config = new BarChartConfig();
 		}
 		
@@ -173,7 +173,7 @@ public class BarChartElement extends AbstractDashboardElement
 		}
 		catch(Exception e)
 		{
-			Log.e(LOG_TAG, "Exception while reading data from server", e);
+			Log.e(TAG, "Exception while reading data from server", e);
 		}
 	}
 }

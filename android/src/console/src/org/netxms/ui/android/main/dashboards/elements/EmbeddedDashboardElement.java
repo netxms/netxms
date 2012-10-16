@@ -17,7 +17,7 @@ import android.view.Gravity;
  */
 public class EmbeddedDashboardElement extends AbstractDashboardElement
 {
-	private static final String LOG_TAG = "nxclient/EmbeddedDashboardElement";
+	private static final String TAG = "nxclient/EmbeddedDashboardElement";
 
 	private EmbeddedDashboardConfig config;
 	private int current = 0;
@@ -37,7 +37,7 @@ public class EmbeddedDashboardElement extends AbstractDashboardElement
 		}
 		catch(Exception e)
 		{
-			Log.e(LOG_TAG, "Error parsing element config", e);
+			Log.e(TAG, "Error parsing element config", e);
 			config = new EmbeddedDashboardConfig();
 		}
 		
@@ -61,7 +61,7 @@ public class EmbeddedDashboardElement extends AbstractDashboardElement
 				}
 				catch(Exception e)
 				{
-					Log.e(LOG_TAG, "syncMissingObjects() failed", e);
+					Log.e(TAG, "syncMissingObjects() failed", e);
 				}
 				if (config.getDashboardObjects().length > 1)
 					startRefreshTask(config.getDisplayInterval());

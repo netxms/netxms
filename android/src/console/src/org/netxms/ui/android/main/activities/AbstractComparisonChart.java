@@ -1,11 +1,13 @@
 package org.netxms.ui.android.main.activities;
 
 import java.util.ArrayList;
+
 import org.achartengine.GraphicalView;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.android.R;
+
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.os.AsyncTask;
@@ -17,6 +19,8 @@ import android.widget.TextView;
 
 public abstract class AbstractComparisonChart extends AbstractClientActivity
 {
+	private static final String TAG = "nxclient/AbstractComparisonChart";
+
 	protected ArrayList<Integer> colorList = null;
 	protected GraphItem[] items = null;
 	protected double[] values = null;
@@ -31,7 +35,7 @@ public abstract class AbstractComparisonChart extends AbstractClientActivity
 	@Override
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
-		dialog = new ProgressDialog(this); 
+		dialog = new ProgressDialog(this);
 		setContentView(R.layout.graphics);
 		int numItems = getIntent().getIntExtra("numItems", 0);
 		if (numItems > 0)
@@ -102,14 +106,14 @@ public abstract class AbstractComparisonChart extends AbstractClientActivity
 	 */
 	protected int toAndroidColor(int color)
 	{
-		return 0xFF000000 | ((color & 0x0000FF) << 16) | (color & 0x00FF00) | ((color & 0xFF0000) >> 16);	// Alpha | R | G | B
+		return 0xFF000000 | ((color & 0x0000FF) << 16) | (color & 0x00FF00) | ((color & 0xFF0000) >> 16); // Alpha | R | G | B
 	}
-	
+
 	/**
 	 * @return
 	 */
 	protected abstract GraphicalView buildGraphView();
-	
+
 	/**
 	 * Internal task for loading DCI data
 	 */
@@ -121,12 +125,12 @@ public abstract class AbstractComparisonChart extends AbstractClientActivity
 		@Override
 		protected void onPreExecute()
 		{
-			dialog.setMessage(getString(R.string.progress_gathering_data)); 
-			dialog.setIndeterminate(true); 
+			dialog.setMessage(getString(R.string.progress_gathering_data));
+			dialog.setIndeterminate(true);
 			dialog.setCancelable(false);
 			dialog.show();
 		}
-		
+
 		/* (non-Javadoc)
 		 * @see android.os.AsyncTask#doInBackground(Params[])
 		 */
@@ -146,9 +150,9 @@ public abstract class AbstractComparisonChart extends AbstractClientActivity
 					}
 				}
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
-				Log.d("nxclient/AbstractComparisonChart", "Exception while executing LoadDataTask.doInBackground", e);
+				Log.d(TAG, "Exception while executing LoadDataTask.doInBackground", e);
 				dciData = null;
 			}
 			return dciData;
@@ -168,7 +172,7 @@ public abstract class AbstractComparisonChart extends AbstractClientActivity
 					values[i] = (value != null) ? value.getValueAsDouble() : 0.0;
 				}
 
-				LinearLayout layout = (LinearLayout)findViewById(R.id.graphics);   
+				LinearLayout layout = (LinearLayout)findViewById(R.id.graphics);
 				if (layout != null)
 				{
 					if (graphView != null)

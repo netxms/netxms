@@ -123,7 +123,6 @@ public class NodeBrowser extends AbstractClientActivity
 	{
 		super.onServiceConnected(name, binder);
 
-		adapter.setService(service);
 		service.registerNodeBrowser(this);
 
 		// Restore to saved path if available
@@ -140,22 +139,7 @@ public class NodeBrowser extends AbstractClientActivity
 			currentParent = service.findObjectById(savedPath[savedPath.length - 1]);
 		}
 		savedPath = null;
-
 		refreshList();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * android.content.ServiceConnection#onServiceDisconnected(android.content
-	 * .ComponentName)
-	 */
-	@Override
-	public void onServiceDisconnected(ComponentName name)
-	{
-		super.onServiceDisconnected(name);
-		adapter.setService(null);
 	}
 
 	/* (non-Javadoc)
@@ -194,7 +178,6 @@ public class NodeBrowser extends AbstractClientActivity
 			hideMenuItem(menu, R.id.find_switch_port);
 			hideMenuItem(menu, R.id.poll);
 		}
-
 	}
 
 	/**
@@ -231,13 +214,13 @@ public class NodeBrowser extends AbstractClientActivity
 		}
 		else if (item.getItemId() == R.id.unmanage)
 		{
-			adapter.unmanageObject(selectedObject.getObjectId());
+			service.setObjectMgmtState(selectedObject.getObjectId(), false);
 			refreshList();
 			return true;
 		}
 		else if (item.getItemId() == R.id.manage)
 		{
-			adapter.manageObject(selectedObject.getObjectId());
+			service.setObjectMgmtState(selectedObject.getObjectId(), true);
 			refreshList();
 			return true;
 		}
@@ -357,8 +340,13 @@ public class NodeBrowser extends AbstractClientActivity
 
 		TextView curPath = (TextView)findViewById(R.id.ScreenTitleSecondary);
 		curPath.setText(getFullPath());
-		adapter.setNodes(currentParent.getChildsAsArray());
-		adapter.notifyDataSetChanged();
+
+		Log.i(TAG, "currentParent.getObjectId(): " + currentParent.getObjectId());
+		String childList = "";
+		for (int i = 0; i < currentParent.getChildIdList().length; i++)
+			childList += currentParent.getChildIdList()[i] + " ,";
+		Log.i(TAG, "currentParent.getChildIdList(): " + childList);
+
 		new SyncMissingObjectsTask(currentParent.getObjectId()).execute(new Object[] { currentParent.getChildIdList() });
 	}
 
@@ -426,7 +414,7 @@ public class NodeBrowser extends AbstractClientActivity
 	/**
 	 * Internal task for synching missing objects
 	 */
-	private class SyncMissingObjectsTask extends AsyncTask<Object, Void, Exception>
+	private class SyncMissingObjectsTask extends AsyncTask<Object, Void, GenericObject[]>
 	{
 		private final long currentRoot;
 
@@ -436,26 +424,26 @@ public class NodeBrowser extends AbstractClientActivity
 		}
 
 		@Override
-		protected Exception doInBackground(Object... params)
+		protected GenericObject[] doInBackground(Object... params)
 		{
 			try
 			{
 				service.getSession().syncMissingObjects((long[])params[0], false, NXCSession.OBJECT_SYNC_WAIT);
+				return currentParent.getChildsAsArray();
 			}
 			catch (Exception e)
 			{
-				Log.d(TAG, "Exception while executing service.getSession().syncMissingObjects", e);
-				return e;
+				Log.d(TAG, "Exception while executing service.getSession().syncMissingObjects in SyncMissingObjectsTask", e);
 			}
 			return null;
 		}
 
 		@Override
-		protected void onPostExecute(Exception result)
+		protected void onPostExecute(GenericObject[] result)
 		{
-			if ((result == null) && (NodeBrowser.this.currentParent.getObjectId() == currentRoot))
+			if ((result != null) && (currentParent.getObjectId() == currentRoot))
 			{
-				adapter.setNodes(currentParent.getChildsAsArray());
+				adapter.setNodes(result);
 				adapter.notifyDataSetChanged();
 			}
 		}
@@ -489,7 +477,7 @@ public class NodeBrowser extends AbstractClientActivity
 					}
 					catch (Exception e)
 					{
-						Log.d(TAG, "Exception while executing service.getSession().syncMissingObjects", e);
+						Log.d(TAG, "Exception while executing service.getSession().syncMissingObjects in SyncMissingChildsTask", e);
 					}
 				}
 			}

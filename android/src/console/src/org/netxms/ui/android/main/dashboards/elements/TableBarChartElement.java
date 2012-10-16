@@ -25,7 +25,7 @@ import android.util.Log;
  */
 public class TableBarChartElement extends AbstractDashboardElement
 {
-	private static final String LOG_TAG = "nxclient/TableBarChartElement";
+	private static final String TAG = "nxclient/TableBarChartElement";
 	
 	private TableBarChartConfig config;
 	private BarChart chart;
@@ -46,7 +46,7 @@ public class TableBarChartElement extends AbstractDashboardElement
 		}
 		catch(Exception e)
 		{
-			Log.e(LOG_TAG, "Error parsing element config", e);
+			Log.e(TAG, "Error parsing element config", e);
 			config = new TableBarChartConfig();
 		}
 		

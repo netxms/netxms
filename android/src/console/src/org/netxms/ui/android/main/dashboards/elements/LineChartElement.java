@@ -24,7 +24,7 @@ import android.util.Log;
  */
 public class LineChartElement extends AbstractDashboardElement
 {
-	private static final String LOG_TAG = "nxclient/LineChartElement";
+	private static final String TAG = "nxclient/LineChartElement";
 	
 	private LineChartConfig config;
 	private GraphView graphView = null;
@@ -42,7 +42,7 @@ public class LineChartElement extends AbstractDashboardElement
 		}
 		catch(Exception e)
 		{
-			Log.e(LOG_TAG, "Error parsing element config", e);
+			Log.e(TAG, "Error parsing element config", e);
 			config = new LineChartConfig();
 		}
 		
@@ -73,7 +73,7 @@ public class LineChartElement extends AbstractDashboardElement
 	public void refresh()
 	{
 		final ChartDciConfig[] items = config.getDciList();
-		Log.d(LOG_TAG, "refresh(): " + items.length + " items to load");
+		Log.d(TAG, "refresh(): " + items.length + " items to load");
 		if (items.length == 0)
 			return;
 		
@@ -87,7 +87,7 @@ public class LineChartElement extends AbstractDashboardElement
 			{
 				dciData[i] = service.getSession().getCollectedData(items[i].nodeId, items[i].dciId, new Date(startTime), new Date(endTime), 0);
 			}
-			Log.d(LOG_TAG, "refresh(): data retrieved from server");
+			Log.d(TAG, "refresh(): data retrieved from server");
 			
 			post(new Runnable() {
 				@Override
@@ -108,7 +108,7 @@ public class LineChartElement extends AbstractDashboardElement
 						graphView.addOrReplaceSeries(i, series);
 					}
 					graphView.setViewPort(startTime, endTime - startTime + 1);
-					Log.d(LOG_TAG, "refresh(): " + dciData.length + " series added; viewport set to " + startTime + "/" + (endTime - startTime + 1));
+					Log.d(TAG, "refresh(): " + dciData.length + " series added; viewport set to " + startTime + "/" + (endTime - startTime + 1));
 					
 					if (getChildCount() == 0)
 						addView(graphView);
@@ -119,7 +119,7 @@ public class LineChartElement extends AbstractDashboardElement
 		}
 		catch(Exception e)
 		{
-			Log.e(LOG_TAG, "Exception while reading data from server", e);
+			Log.e(TAG, "Exception while reading data from server", e);
 		}
 	}
 }

@@ -72,7 +72,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 	{
 		dialog = new ProgressDialog(this);
 		r = getResources();
-		setContentView(R.layout.connectionpoint_view);
+		setContentView(R.layout.connection_point_view);
 
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 		title.setText(R.string.connectionpoint_title);
@@ -159,7 +159,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
 	{
 		android.view.MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.connectionpoint_actions, menu);
+		inflater.inflate(R.menu.connection_point_actions, menu);
 	}
 
 	/* (non-Javadoc)

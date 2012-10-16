@@ -24,15 +24,18 @@ public class ConnectivityChangeIntentReceiver extends BroadcastReceiver
 	public void onReceive(Context context, Intent intent)
 	{
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-		if (!sp.getBoolean(HomeScreen.INTENTIONAL_EXIT_KEY, false) && !sp.getBoolean("global.scheduler.enable", false))
+		if (!sp.getBoolean(HomeScreen.INTENTIONAL_EXIT_KEY, false))
 			if (intent.getExtras() != null)
 			{
-				NetworkInfo ni = (NetworkInfo)intent.getExtras().get(ConnectivityManager.EXTRA_NETWORK_INFO);
-				if (ni != null && ni.getState() == NetworkInfo.State.CONNECTED)
+				if (!sp.getBoolean("global.scheduler.enable", false)) // Try to connect only when the scheduler is disabled
 				{
-					Intent i = new Intent(context, ClientConnectorService.class);
-					i.setAction(ClientConnectorService.ACTION_RECONNECT);
-					context.startService(i);
+					NetworkInfo ni = (NetworkInfo)intent.getExtras().get(ConnectivityManager.EXTRA_NETWORK_INFO);
+					if (ni != null && ni.getState() == NetworkInfo.State.CONNECTED)
+					{
+						Intent i = new Intent(context, ClientConnectorService.class);
+						i.setAction(ClientConnectorService.ACTION_RECONNECT);
+						context.startService(i);
+					}
 				}
 				if (intent.getExtras().getBoolean(ConnectivityManager.EXTRA_NO_CONNECTIVITY, Boolean.FALSE))
 				{

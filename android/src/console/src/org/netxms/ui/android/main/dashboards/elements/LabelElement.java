@@ -16,7 +16,7 @@ import android.widget.TextView;
  */
 public class LabelElement extends AbstractDashboardElement
 {
-	private static final String LOG_TAG = "nxclient/LabelElement";
+	private static final String TAG = "nxclient/LabelElement";
 	
 	/**
 	 * @param context
@@ -34,7 +34,7 @@ public class LabelElement extends AbstractDashboardElement
 		}
 		catch(Exception e)
 		{
-			Log.e(LOG_TAG, "Error parsing element config", e);
+			Log.e(TAG, "Error parsing element config", e);
 			config = new LabelConfig();
 		}
 		

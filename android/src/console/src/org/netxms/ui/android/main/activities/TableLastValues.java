@@ -20,7 +20,7 @@ import android.widget.TextView;
  */
 public class TableLastValues extends AbstractClientActivity
 {
-	private static final String LOG_TAG = "nxclient/TableLastValues";
+	private static final String TAG = "nxclient/TableLastValues";
 	
 	private long nodeId;
 	private long dciId;
@@ -78,7 +78,7 @@ public class TableLastValues extends AbstractClientActivity
 				}
 				catch(Exception e)
 				{
-					Log.e(LOG_TAG, "Exception in worker thread", e);
+					Log.e(TAG, "Exception in worker thread", e);
 				}
 			}
 		};

@@ -100,7 +100,7 @@ android/src/console/res/drawable/status_unknown.png -text
 android/src/console/res/drawable/status_unmanaged.png -text
 android/src/console/res/drawable/status_warning.png -text
 android/src/console/res/layout/alarm_view.xml -text
-android/src/console/res/layout/connectionpoint_view.xml -text
+android/src/console/res/layout/connection_point_view.xml -text
 android/src/console/res/layout/dashboard.xml -text
 android/src/console/res/layout/graph_view.xml -text
 android/src/console/res/layout/graph_view_child_layout.xml -text
@@ -118,7 +118,7 @@ android/src/console/res/layout/table_last_values.xml -text
 android/src/console/res/menu-v11/last_values_actions.xml -text
 android/src/console/res/menu-v11/main_menu.xml -text
 android/src/console/res/menu/alarm_actions.xml -text
-android/src/console/res/menu/connectionpoint_actions.xml -text
+android/src/console/res/menu/connection_point_actions.xml -text
 android/src/console/res/menu/last_values_actions.xml -text
 android/src/console/res/menu/last_values_table_actions.xml -text
 android/src/console/res/menu/main_menu.xml -text
@@ -137,6 +137,7 @@ android/src/console/src/com/jjoe64/graphview/compatible/RealScaleGestureDetector
 android/src/console/src/com/jjoe64/graphview/compatible/ScaleGestureDetector.java -text
 android/src/console/src/org/netxms/ui/android/helpers/SafeParser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/AbstractComparisonChart.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/AbstractTabActivity.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/AlarmBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/ConnectionPointBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/ConsolePreferences.java -text

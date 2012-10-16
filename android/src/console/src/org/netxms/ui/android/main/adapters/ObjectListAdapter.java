@@ -11,7 +11,6 @@ import java.util.List;
 
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
-import org.netxms.ui.android.service.ClientConnectorService;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -31,29 +30,28 @@ public class ObjectListAdapter extends BaseAdapter
 {
 	private final Context context;
 	private List<GenericObject> objectList = new ArrayList<GenericObject>(0);
-	private ClientConnectorService service;
 
 	private static final int[] statusImageId = {
-			R.drawable.status_normal,     // STATUS_NORMAL = 0;
-			R.drawable.status_warning,    // STATUS_WARNING = 1;
-			R.drawable.status_minor,      // STATUS_MINOR = 2;
-			R.drawable.status_major,      // STATUS_MAJOR = 3;
-			R.drawable.status_critical,   // STATUS_CRITICAL = 4;
-			R.drawable.status_unknown,    // STATUS_UNKNOWN = 5;
-			R.drawable.status_unmanaged,  // STATUS_UNMANAGED = 6;
-			R.drawable.status_disabled,   // STATUS_DISABLED = 7;
-			R.drawable.status_testing     // STATUS_TESTING = 8;
+			R.drawable.status_normal, // STATUS_NORMAL = 0;
+			R.drawable.status_warning, // STATUS_WARNING = 1;
+			R.drawable.status_minor, // STATUS_MINOR = 2;
+			R.drawable.status_major, // STATUS_MAJOR = 3;
+			R.drawable.status_critical, // STATUS_CRITICAL = 4;
+			R.drawable.status_unknown, // STATUS_UNKNOWN = 5;
+			R.drawable.status_unmanaged, // STATUS_UNMANAGED = 6;
+			R.drawable.status_disabled, // STATUS_DISABLED = 7;
+			R.drawable.status_testing // STATUS_TESTING = 8;
 	};
 	private static final int[] statusTextId = {
-			R.string.status_normal,     // STATUS_NORMAL = 0;
-			R.string.status_warning,    // STATUS_WARNING = 1;
-			R.string.status_minor,      // STATUS_MINOR = 2;
-			R.string.status_major,      // STATUS_MAJOR = 3;
-			R.string.status_critical,   // STATUS_CRITICAL = 4;
-			R.string.status_unknown,    // STATUS_UNKNOWN = 5;
-			R.string.status_unmanaged,	// STATUS_UNMANAGED = 6;
-			R.string.status_disabled,   // STATUS_DISABLED = 7;
-			R.string.status_testing     // STATUS_TESTING = 8;
+			R.string.status_normal, // STATUS_NORMAL = 0;
+			R.string.status_warning, // STATUS_WARNING = 1;
+			R.string.status_minor, // STATUS_MINOR = 2;
+			R.string.status_major, // STATUS_MAJOR = 3;
+			R.string.status_critical, // STATUS_CRITICAL = 4;
+			R.string.status_unknown, // STATUS_UNKNOWN = 5;
+			R.string.status_unmanaged, // STATUS_UNMANAGED = 6;
+			R.string.status_disabled, // STATUS_DISABLED = 7;
+			R.string.status_testing // STATUS_TESTING = 8;
 	};
 
 	/**
@@ -87,14 +85,6 @@ public class ObjectListAdapter extends BaseAdapter
 		});
 	}
 
-	/**
-	 * @param service
-	 */
-	public void setService(ClientConnectorService service)
-	{
-		this.service = service;
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -126,22 +116,6 @@ public class ObjectListAdapter extends BaseAdapter
 	public long getItemId(int position)
 	{
 		return objectList.get(position).getObjectId();
-	}
-
-	/**
-	 * @param id
-	 */
-	public void unmanageObject(long id)
-	{
-		service.setObjectMgmtState(id, false);
-	}
-
-	/**
-	 * @param id
-	 */
-	public void manageObject(long id)
-	{
-		service.setObjectMgmtState(id, true);
 	}
 
 	/*

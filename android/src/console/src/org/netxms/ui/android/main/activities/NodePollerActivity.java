@@ -24,7 +24,7 @@ import android.widget.TextView;
  */
 public class NodePollerActivity extends AbstractClientActivity
 {
-	private static final String LOG_TAG = "nxclient/NodePoller";
+	private static final String TAG = "nxclient/NodePoller";
 	private static final String[] POLL_NAME = { "", "Status", "Configuration", "Interface", "Topology" };
 	
 	private long nodeId;
@@ -95,7 +95,7 @@ public class NodePollerActivity extends AbstractClientActivity
 				}
 				catch(final Exception e)
 				{
-					Log.e(LOG_TAG, "Exception in worker thread", e);
+					Log.e(TAG, "Exception in worker thread", e);
 					onPollCompleted(false, e.getLocalizedMessage());
 				}
 				pollInProgress = false;
