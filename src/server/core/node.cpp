@@ -3511,8 +3511,16 @@ bool Node::applyTemplateItem(DWORD dwTemplateId, DCObject *dcObject)
    }
    else
    {
-      // Update existing item
-      m_dcObjects->get(i)->updateFromTemplate(dcObject);
+      // Update existing item unless it is disabled
+		if (m_dcObjects->get(i)->getStatus() != ITEM_STATUS_DISABLED)
+		{
+			m_dcObjects->get(i)->updateFromTemplate(dcObject);
+			DbgPrintf(9, _T("DCO \"%s\" NOT disabled, update (%d)"), dcObject->getName(), m_dcObjects->get(i)->getStatus());
+		}
+		else
+		{
+			DbgPrintf(9, _T("DCO \"%s\" is disabled, not update (%d)"), dcObject->getName(), m_dcObjects->get(i)->getStatus());
+		}
    }
 
    unlockDciAccess();
