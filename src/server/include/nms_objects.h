@@ -1527,10 +1527,10 @@ protected:
 	double m_backgroundLatitude;
 	double m_backgroundLongitude;
 	int m_backgroundZoom;
-	int m_numElements;
-	NetworkMapElement **m_elements;
-	int m_numLinks;
-	NetworkMapLink **m_links;
+	ObjectArray<NetworkMapElement> *m_elements;
+	ObjectArray<NetworkMapLink> *m_links;
+
+	void updateObjects(nxmap_ObjList *objects);
 
 public:
    NetworkMap();
@@ -1546,6 +1546,8 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+	void updateContent();
 };
 
 

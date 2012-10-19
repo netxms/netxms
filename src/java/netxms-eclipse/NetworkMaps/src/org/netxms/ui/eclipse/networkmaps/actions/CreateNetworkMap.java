@@ -67,7 +67,7 @@ public class CreateNetworkMap implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Create new container", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Create new network map", part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

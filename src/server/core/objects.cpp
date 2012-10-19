@@ -52,6 +52,7 @@ ObjectIndex g_idxNodeById;
 ObjectIndex g_idxNodeByAddr;
 ObjectIndex g_idxConditionById;
 ObjectIndex g_idxServiceCheckById;
+ObjectIndex g_idxNetMapById;
 
 const TCHAR *g_szClassName[]={ _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"),
                                _T("Network"), _T("Container"), _T("Zone"), _T("ServiceRoot"),
@@ -76,12 +77,11 @@ static int m_iStatusShift;        // Shift value for "shifted" status propagatio
 static int m_iStatusTranslation[4];
 static int m_iStatusSingleThreshold;
 static int m_iStatusThresholds[4];
+static CONDITION s_condUpdateMaps = INVALID_CONDITION_HANDLE;
 
-
-//
-// Thread which apply template updates
-//
-
+/**
+ * Thread which apply template updates
+ */
 static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
 {
    TEMPLATE_UPDATE_INFO *pInfo;
@@ -151,11 +151,9 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// DCI cache loading thread
-//
-
+/**
+ * DCI cache loading thread
+ */
 static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 {
    DbgPrintf(1, _T("Started caching of DCI values"));
@@ -167,11 +165,35 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
    return THREAD_OK;
 }
 
+/**
+ * Callback for map update thread
+ */
+static void UpdateMapCallback(NetObj *object, void *data)
+{
+	((NetMap *)object)->updateContent();
+}
 
-//
-// Initialize objects infrastructure
-//
+/**
+ * Map update thread
+ */
+static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
+{
+	DbgPrintf(2, _T("Map update thread started"));
+	while(1)
+	{
+		ConditionWait(g_condUpdateMaps, INFINITE);
+		if (g_dwFlags & AF_SHUTDOWN)
+			break;
 
+		g_idxNetMapById.forEach(UpdateMapCallback, NULL);
+	}
+	DbgPrintf(2, _T("Map update thread stopped"));
+	return THREAD_OK;
+}
+
+/**
+ * Initialize objects infrastructure
+ */
 void ObjectsInit()
 {
    // Load default status calculation info
@@ -184,6 +206,8 @@ void ObjectsInit()
    ConfigReadByteArray(_T("StatusThresholds"), m_iStatusThresholds, 4, 50);
 
    g_pTemplateUpdateQueue = new Queue;
+
+	s_condUpdateMaps = ConditionCreate(FALSE);
 
    // Create "Entire Network" object
    g_pEntireNet = new Network;
@@ -226,11 +250,9 @@ void ObjectsInit()
    ThreadCreate(ApplyTemplateThread, 0, NULL);
 }
 
-
-//
-// Insert new object into network
-//
-
+/**
+ * Insert new object into network
+ */
 void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 {
    if (bNewObject)   
@@ -297,7 +319,6 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_AGENTPOLICY_CONFIG:
 			case OBJECT_NETWORKMAPROOT:
 			case OBJECT_NETWORKMAPGROUP:
-			case OBJECT_NETWORKMAP:
 			case OBJECT_DASHBOARDROOT:
 			case OBJECT_DASHBOARD:
 			case OBJECT_REPORTROOT:
@@ -368,21 +389,28 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_SLMCHECK:
 				g_idxServiceCheckById.put(pObject->Id(), pObject);
             break;
+			case OBJECT_NETWORKMAP:
+				g_idxNetMapById.put(pObject->Id(), pObject);
+            break;
          default:
             nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
             break;
       }
    }
+
+	// Trigger update of network maps
+	if (bNewObject)
+	{
+		
+	}
 }
 
-
-//
-// Delete object from indexes
-// If object has an IP address, this function will delete it from
-// appropriate index. Normally this function should be called from
-// NetObj::Delete() method.
-//
-
+/**
+ * Delete object from indexes
+ * If object has an IP address, this function will delete it from
+ * appropriate index. Normally this function should be called from
+ * NetObj::Delete() method.
+ */
 void NetObjDeleteFromIndexes(NetObj *pObject)
 {
    switch(pObject->Type())
@@ -403,7 +431,6 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_AGENTPOLICY_CONFIG:
 		case OBJECT_NETWORKMAPROOT:
 		case OBJECT_NETWORKMAPGROUP:
-		case OBJECT_NETWORKMAP:
 		case OBJECT_DASHBOARDROOT:
 		case OBJECT_DASHBOARD:
 		case OBJECT_REPORTROOT:
@@ -473,6 +500,9 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          break;
       case OBJECT_SLMCHECK:
 			g_idxServiceCheckById.remove(pObject->Id());
+         break;
+		case OBJECT_NETWORKMAP:
+			g_idxNetMapById.remove(pObject->Id());
          break;
       default:
          nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());

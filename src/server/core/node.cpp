@@ -4306,12 +4306,10 @@ DWORD Node::getThresholdSummary(CSCPMessage *msg, DWORD baseId)
    return varId;
 }
 
-
-//
-// Get current layer 2 topology (as dynamically created list which should be destroyed by caller)
-// Will return NULL if there are no topology information or it is expired
-//
-
+/**
+ * Get current layer 2 topology (as dynamically created list which should be destroyed by caller)
+ * Will return NULL if there are no topology information or it is expired
+ */
 nxmap_ObjList *Node::GetL2Topology()
 {
 	nxmap_ObjList *pResult;
@@ -4331,11 +4329,9 @@ nxmap_ObjList *Node::GetL2Topology()
 	return pResult;
 }
 
-
-//
-// Rebuild layer 2 topology and return it as dynamically reated list which should be destroyed by caller
-//
-
+/**
+ * Rebuild layer 2 topology and return it as dynamically reated list which should be destroyed by caller
+ */
 nxmap_ObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 {
 	nxmap_ObjList *pResult;
@@ -4364,11 +4360,9 @@ nxmap_ObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 	return pResult;
 }
 
-
-//
-// Topology poller
-//
-
+/**
+ * Topology poller
+ */
 void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
 	if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)

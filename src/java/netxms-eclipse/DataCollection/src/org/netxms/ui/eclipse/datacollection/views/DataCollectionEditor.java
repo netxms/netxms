@@ -172,8 +172,7 @@ public class DataCollectionEditor extends ViewPart
 		viewer.addFilter(filter);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "DataCollectionEditor"); //$NON-NLS-1$
 		
-		viewer.addSelectionChangedListener(new ISelectionChangedListener()
-		{
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@SuppressWarnings("unchecked")
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)

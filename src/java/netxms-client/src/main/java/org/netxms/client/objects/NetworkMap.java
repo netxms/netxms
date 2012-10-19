@@ -37,7 +37,11 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 public class NetworkMap extends GenericObject
 {
 	public static final UUID GEOMAP_BACKGROUND = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff"); 
-		
+
+	public static final int TYPE_CUSTOM = 0;
+	public static final int TYPE_LAYER2_TOPOLOGY = 1;
+	public static final int TYPE_IP_TOPOLOGY = 2;
+	
 	public static final int LAYOUT_MANUAL = 0x7FFF;
 	public static final int LAYOUT_SPRING = 0;
 	public static final int LAYOUT_RADIAL = 1;

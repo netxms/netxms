@@ -191,7 +191,7 @@ void nxmap_ObjList::LinkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort
 				int j;
 				for(j = 0; j < m_pLinkList[i].portIdCount; j++)
 				{
-					// assume point-to-point interfaces, therefore or is enough
+					// assume point-to-point interfaces, therefore "or" is enough
 					if ((m_pLinkList[i].portId1[j] == portId1) || (m_pLinkList[i].portId2[j] == portId2))
 						break;
 				}
