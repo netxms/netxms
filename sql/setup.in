@@ -242,6 +242,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('DeleteUnreachableNodesPeriod','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('UseFQDNForNodeNames','1',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ApplyDCIFromTemplateToDisabledDCI','0',1,1);
 
 
 /*

@@ -333,6 +333,8 @@ static void LoadGlobalConfig()
 		g_dwFlags |= AF_ENABLE_NXSL_CONTAINER_FUNCS;
 	if (ConfigReadInt(_T("UseFQDNForNodeNames"), 1))
 		g_dwFlags |= AF_USE_FQDN_FOR_NODE_NAMES;
+	if (ConfigReadInt(_T("ApplyDCIFromTemplateToDisabledDCI"), 0))
+		g_dwFlags |= AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE;
 
 	if (g_szDataDir[0] == 0)
 	{

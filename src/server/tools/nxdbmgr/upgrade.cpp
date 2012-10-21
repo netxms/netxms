@@ -263,6 +263,16 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 /**
+ * Upgrade from V261 to V262
+ */
+static BOOL H_UpgradeFromV261(int currVersion, int newVersion)
+{
+	CreateConfigParam(_T("ApplyDCIFromTemplateToDisabledDCI"), _T("0"), 1, 1);
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='262' WHERE var_name='SchemaVersion'")));
+	return TRUE;
+}
+
+/**
  * Upgrade from V260 to V261
  */
 static BOOL H_UpgradeFromV260(int currVersion, int newVersion)
@@ -6432,6 +6442,7 @@ static struct
 	{ 258, 259, H_UpgradeFromV258 },
 	{ 259, 260, H_UpgradeFromV259 },
 	{ 260, 261, H_UpgradeFromV260 },
+	{ 261, 262, H_UpgradeFromV261 },
    { 0, 0, NULL }
 };
 
