@@ -170,20 +170,20 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
  */
 static void UpdateMapCallback(NetObj *object, void *data)
 {
-	((NetMap *)object)->updateContent();
+	((NetworkMap *)object)->updateContent();
 }
 
 /**
  * Map update thread
  */
-static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
+static THREAD_RESULT THREAD_CALL MapUpdateThread(void *pArg)
 {
 	DbgPrintf(2, _T("Map update thread started"));
-	while(1)
+	while(!SleepAndCheckForShutdown(60))
 	{
-		ConditionWait(g_condUpdateMaps, INFINITE);
-		if (g_dwFlags & AF_SHUTDOWN)
-			break;
+		//ConditionWait(g_condUpdateMaps, INFINITE);
+		//if (g_dwFlags & AF_SHUTDOWN)
+		//	break;
 
 		g_idxNetMapById.forEach(UpdateMapCallback, NULL);
 	}
@@ -1524,6 +1524,9 @@ BOOL LoadObjects()
    {
 		g_idxZoneByGUID.forEach(RecalcStatusCallback, NULL);
    }
+
+   // Start map update thread
+   ThreadCreate(MapUpdateThread, 0, NULL);
 
    return TRUE;
 }
