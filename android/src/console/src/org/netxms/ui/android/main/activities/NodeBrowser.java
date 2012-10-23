@@ -13,6 +13,7 @@ import org.netxms.client.constants.NodePoller;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.ui.android.NXApplication;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ObjectListAdapter;
 
@@ -98,8 +99,24 @@ public class NodeBrowser extends AbstractClientActivity
 	@Override
 	protected void onSaveInstanceState(Bundle outState)
 	{
-		outState.putLongArray("currentPath", getFullPathAsId());
+		savedPath = getFullPathAsId();
+		outState.putLongArray("currentPath", savedPath);
 		super.onSaveInstanceState(outState);
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onResume()
+	 */
+	@Override
+	protected void onResume()
+	{
+		super.onResume();
+		NXApplication.activityResumed();
+		if (service != null)
+		{
+			service.reconnect(false);
+			rescanSavedPath();
+		}
 	}
 
 	/**
@@ -124,22 +141,7 @@ public class NodeBrowser extends AbstractClientActivity
 		super.onServiceConnected(name, binder);
 
 		service.registerNodeBrowser(this);
-
-		// Restore to saved path if available
-		if ((savedPath != null) && (savedPath.length > 0))
-		{
-			for (int i = 0; i < savedPath.length - 1; i++)
-			{
-				GenericObject object = service.findObjectById(savedPath[i]);
-				if (object == null)
-					break;
-				containerPath.push(object);
-			}
-
-			currentParent = service.findObjectById(savedPath[savedPath.length - 1]);
-		}
-		savedPath = null;
-		refreshList();
+		rescanSavedPath();
 	}
 
 	/* (non-Javadoc)
@@ -340,14 +342,30 @@ public class NodeBrowser extends AbstractClientActivity
 
 		TextView curPath = (TextView)findViewById(R.id.ScreenTitleSecondary);
 		curPath.setText(getFullPath());
-
-		Log.i(TAG, "currentParent.getObjectId(): " + currentParent.getObjectId());
-		String childList = "";
-		for (int i = 0; i < currentParent.getChildIdList().length; i++)
-			childList += currentParent.getChildIdList()[i] + " ,";
-		Log.i(TAG, "currentParent.getChildIdList(): " + childList);
-
 		new SyncMissingObjectsTask(currentParent.getObjectId()).execute(new Object[] { currentParent.getChildIdList() });
+	}
+
+	/**
+	 * Rescan saved path
+	 */
+	private void rescanSavedPath()
+	{
+		// Restore to saved path if available
+		if ((savedPath != null) && (savedPath.length > 0))
+		{
+			containerPath.clear();
+			for (int i = 0; i < savedPath.length - 1; i++)
+			{
+				GenericObject object = service.findObjectById(savedPath[i]);
+				if (object == null)
+					break;
+				containerPath.push(object);
+				Log.i(TAG, "object.getObjectId(): " + object.getObjectId());
+			}
+			currentParent = service.findObjectById(savedPath[savedPath.length - 1]);
+			savedPath = null;
+		}
+		refreshList();
 	}
 
 	/**

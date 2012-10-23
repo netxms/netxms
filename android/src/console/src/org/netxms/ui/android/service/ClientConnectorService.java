@@ -361,9 +361,8 @@ public class ClientConnectorService extends Service implements SessionListener
 				}
 			}
 		}
-//		else
-//			schedule(ACTION_RESCHEDULE);
 	}
+
 	/**
 	 * Disconnect from server. Only when scheduler is enabled and connected.
 	 * 
@@ -374,13 +373,13 @@ public class ClientConnectorService extends Service implements SessionListener
 				(connectionStatus == ConnectionStatus.CS_CONNECTED ||
 				connectionStatus == ConnectionStatus.CS_ALREADYCONNECTED))
 		{
+			Log.i(TAG, "Disconnecting...");
 			nullifySession();
 			setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
 			statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
 		}
-//		else
-//			schedule(ACTION_RESCHEDULE);
 	}
+
 	/**
 	 * Called by connect task after successful connection
 	 * 
