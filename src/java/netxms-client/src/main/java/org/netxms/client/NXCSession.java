@@ -6215,4 +6215,18 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	{
 		return timeFormat;
 	}
+	
+	/**
+	 * Handover object cache to new session. After call to this method,
+	 * object cache of this session invalidated and should not be used.
+	 * 
+	 * @param target target session object
+	 */
+	public void handover(NXCSession target)
+	{
+		target.objectList = objectList;
+		for(GenericObject o : objectList.values())
+			o.setSession(target);
+		objectList = null;
+	}
 }

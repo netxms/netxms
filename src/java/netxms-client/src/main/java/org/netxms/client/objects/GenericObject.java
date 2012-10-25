@@ -686,4 +686,14 @@ public class GenericObject
 	{
 		return statusThresholds;
 	}
+
+	/**
+	 * Update internal session reference during session handover. This method should not be called directly!
+	 * 
+	 * @param session new session object
+	 */
+	public final void setSession(NXCSession session)
+	{
+		this.session = session;
+	}
 }
