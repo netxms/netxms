@@ -338,10 +338,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\graph.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\link.cpp"
 				>
 			</File>
@@ -350,27 +346,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\map.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\objlist.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\radial.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\rt.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\submap.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\vertex.cpp"
 				>
 			</File>
 		</Filter>

@@ -1,7 +1,6 @@
 INCLUDES=-I@top_srcdir@/include
 
-SOURCES = element.cpp graph.cpp link.cpp main.cpp map.cpp objlist.cpp \
-          radial.cpp rt.cpp submap.cpp vertex.cpp
+SOURCES = element.cpp link.cpp main.cpp objlist.cpp
 
 lib_LTLIBRARIES = libnxmap.la
 
