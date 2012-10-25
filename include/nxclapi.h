@@ -1855,19 +1855,6 @@ typedef struct
 
 
 //
-// Map information
-//
-
-typedef struct
-{
-   DWORD dwMapId;
-   DWORD dwObjectId;
-   DWORD dwAccess;      // Access rights to the map for current user
-   TCHAR szName[MAX_DB_STRING];
-} NXC_MAP_INFO;
-
-
-//
 // Agent configuration info
 //
 
@@ -2352,22 +2339,6 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateSnmpCommunityList(NXC_SESSION hSession, DWORD 
 											    					 TCHAR **ppszStringList);
 DWORD LIBNXCL_EXPORTABLE NXCGetSnmpUsmCredentials(NXC_SESSION hSession, DWORD *listSize, NXC_SNMP_USM_CRED **list);
 DWORD LIBNXCL_EXPORTABLE NXCUpdateSnmpUsmCredentials(NXC_SESSION hSession, DWORD count, NXC_SNMP_USM_CRED *list);
-
-/** Maps **/
-DWORD LIBNXCL_EXPORTABLE NXCGetMapList(NXC_SESSION hSession, DWORD *pdwNumMaps,
-                                       NXC_MAP_INFO **ppMapList);
-DWORD LIBNXCL_EXPORTABLE NXCSaveMap(NXC_SESSION hSession, void *pMap);
-DWORD LIBNXCL_EXPORTABLE NXCLoadMap(NXC_SESSION hSession, DWORD dwMapId, void **ppMap);
-DWORD LIBNXCL_EXPORTABLE NXCResolveMapName(NXC_SESSION hSession, TCHAR *pszMapName,
-                                           DWORD *pdwMapId);
-DWORD LIBNXCL_EXPORTABLE NXCUploadSubmapBkImage(NXC_SESSION hSession, DWORD dwMapId,
-                                                DWORD dwSubmapId, TCHAR *pszFile);
-DWORD LIBNXCL_EXPORTABLE NXCDownloadSubmapBkImage(NXC_SESSION hSession, DWORD dwMapId,
-                                                  DWORD dwSubmapId, TCHAR *pszFile);
-DWORD LIBNXCL_EXPORTABLE NXCCreateMap(NXC_SESSION hSession, DWORD dwRootObj,
-												  TCHAR *pszName, DWORD *pdwMapId);
-DWORD LIBNXCL_EXPORTABLE NXCDeleteMap(NXC_SESSION hSession, DWORD dwMapId);
-DWORD LIBNXCL_EXPORTABLE NXCRenameMap(NXC_SESSION hSession, DWORD dwMapId, const TCHAR *pszName);
 
 /** Address lists **/
 DWORD LIBNXCL_EXPORTABLE NXCGetAddrList(NXC_SESSION hSession, DWORD dwListType,

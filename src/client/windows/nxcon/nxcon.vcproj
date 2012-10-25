@@ -682,34 +682,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\MapControlBox.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MapFrame.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MapLinkPropDlg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MapManager.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MapSelDlg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MapToolbox.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MapView.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\MIBBrowserDlg.cpp"
 				>
 			</File>
@@ -766,10 +738,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\NodeTopologyView.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\nxcon.cpp"
 				>
 			</File>
@@ -779,10 +747,6 @@
 			</File>
 			<File
 				RelativePath=".\ObjectCommentsEditor.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ObjectDepView.cpp"
 				>
 			</File>
 			<File
@@ -1412,34 +1376,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\MapControlBox.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MapFrame.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MapLinkPropDlg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MapManager.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MapSelDlg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MapToolbox.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MapView.h"
-				>
-			</File>
-			<File
 				RelativePath=".\MIBBrowserDlg.h"
 				>
 			</File>
@@ -1516,10 +1452,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\NodeTopologyView.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\include\nxclapi.h"
 				>
 			</File>
@@ -1545,10 +1477,6 @@
 			</File>
 			<File
 				RelativePath=".\ObjectCommentsEditor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ObjectDepView.h"
 				>
 			</File>
 			<File

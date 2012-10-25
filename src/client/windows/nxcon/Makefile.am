@@ -95,13 +95,6 @@ EXTRA_DIST = \
 	LastValuesPropDlg.cpp LastValuesPropDlg.h \
 	LastValuesView.cpp LastValuesView.h \
 	MainFrm.cpp MainFrm.h \
-	MapControlBox.cpp MapControlBox.h \
-	MapFrame.cpp MapFrame.h \
-	MapLinkPropDlg.cpp MapLinkPropDlg.h \
-	MapManager.cpp MapManager.h \
-	MapSelDlg.cpp MapSelDlg.h \
-	MapToolbox.cpp MapToolbox.h \
-	MapView.cpp MapView.h \
 	MIBBrowserDlg.cpp MIBBrowserDlg.h \
 	ModifiedAgentCfgDlg.cpp ModifiedAgentCfgDlg.h \
 	NetSrvPropsGeneral.cpp NetSrvPropsGeneral.h \
@@ -116,13 +109,11 @@ EXTRA_DIST = \
 	NodePropsGeneral.cpp NodePropsGeneral.h \
 	NodePropsPolling.cpp NodePropsPolling.h \
 	NodeSummary.cpp NodeSummary.h \
-	NodeTopologyView.cpp NodeTopologyView.h \
 	nxcon.vcproj \
 	nxcon.cpp nxcon.h \
 	nxcon.rc \
 	ObjectBrowser.cpp ObjectBrowser.h \
 	ObjectCommentsEditor.cpp ObjectCommentsEditor.h \
-	ObjectDepView.cpp ObjectDepView.h \
 	ObjectOverview.cpp ObjectOverview.h \
 	ObjectPropCaps.cpp ObjectPropCaps.h \
 	ObjectPropsCustomAttrs.cpp ObjectPropsCustomAttrs.h \

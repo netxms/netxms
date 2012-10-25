@@ -822,15 +822,11 @@ retry_db_lock:
 	return TRUE;
 }
 
-
-//
-// Server shutdown
-//
-
+/**
+ * Server shutdown
+ */
 void NXCORE_EXPORTABLE Shutdown()
 {
-	DWORD i, dwNumThreads;
-
 	// Notify clients
 	NotifyClientSessions(NX_NOTIFY_SHUTDOWN, 0);
 
@@ -908,11 +904,9 @@ void NXCORE_EXPORTABLE Shutdown()
 #endif
 }
 
-
-//
-// Fast server shutdown - normally called only by Windows service on system shutdown
-//
-
+/**
+ * Fast server shutdown - normally called only by Windows service on system shutdown
+ */
 void NXCORE_EXPORTABLE FastShutdown()
 {
 	g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag

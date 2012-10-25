@@ -3,10 +3,8 @@
 
 #include "ObjectOverview.h"	// Added by ClassView
 #include "AlarmView.h"	// Added by ClassView
-#include "ObjectDepView.h"	// Added by ClassView
 #include "ClusterView.h"	// Added by ClassView
 #include "NodePerfView.h"
-#include "NodeTopologyView.h"
 #include "ExtEditCtrl.h"
 #include "NodeLastValuesView.h"	// Added by ClassView
 #include "ObjectSubordinateView.h"
@@ -63,10 +61,8 @@ protected:
 	int m_nTitleBarOffset;
 	void AdjustView(void);
 	BOOL m_bShowSearchBar;
-	CNodeTopologyView m_wndTopologyView;
 	CNodePerfView m_wndPerfView;
 	CClusterView m_wndClusterView;
-	CObjectDepView m_wndDepView;
 	CAlarmView m_wndAlarms;
 	void CreateTab(int nIndex, TCHAR *pszName, int nImage, CWnd *pWnd);
 	CWnd *m_pTabWnd[MAX_TABS];

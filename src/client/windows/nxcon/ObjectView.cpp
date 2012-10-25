@@ -144,12 +144,10 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create tab views
    m_wndOverview.Create(NULL, _T("Overview"), WS_CHILD, rect, this, 1);
    m_wndAlarms.Create(NULL, _T("Alarms"), WS_CHILD, rect, this, 2);
-   m_wndDepView.Create(NULL, _T("Deps"), WS_CHILD, rect, this, 3);
-   m_wndClusterView.Create(NULL, _T("Cluster"), WS_CHILD, rect, this, 4);
-   m_wndPerfView.Create(NULL, _T("Performance"), WS_CHILD, rect, this, 5);
-   m_wndTopologyView.Create(NULL, _T("Topology"), WS_CHILD, rect, this, 6);
-   m_wndLastValuesView.Create(NULL, _T("Last Values"), WS_CHILD, rect, this, 7);
-   m_wndSubordinateView.Create(NULL, _T("Subordinates"), WS_CHILD, rect, this, 8);
+   m_wndClusterView.Create(NULL, _T("Cluster"), WS_CHILD, rect, this, 3);
+   m_wndPerfView.Create(NULL, _T("Performance"), WS_CHILD, rect, this, 4);
+   m_wndLastValuesView.Create(NULL, _T("Last Values"), WS_CHILD, rect, this, 5);
+   m_wndSubordinateView.Create(NULL, _T("Subordinates"), WS_CHILD, rect, this, 6);
 
    // Create common tabs
    CreateTab(0, _T("Overview"), 0, &m_wndOverview);
@@ -203,7 +201,6 @@ void CObjectView::Refresh()
    InvalidateRect(&rect, FALSE);
 
    m_wndOverview.Refresh();
-   m_wndDepView.Refresh();
    m_wndClusterView.Refresh();
    m_wndSubordinateView.Refresh();
 }
@@ -239,8 +236,6 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
 		{
          CreateTab(nTab++, _T("Last Values"), 6, &m_wndLastValuesView);
          CreateTab(nTab++, _T("Performance"), 4, &m_wndPerfView);
-			if (m_pObject->node.dwFlags & NF_IS_BRIDGE)
-	         CreateTab(nTab++, _T("Topology"), 5, &m_wndTopologyView);
 		}
       switch(m_pObject->iClass)
       {
@@ -252,9 +247,6 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
          case OBJECT_CONTAINER:
          case OBJECT_SERVICEROOT:
             CreateTab(nTab++, _T("Alarms"), 1, &m_wndAlarms);
-         case OBJECT_CONDITION:
-            CreateTab(nTab++, _T("Dependants"), 2, &m_wndDepView);
-            break;
          default:
             break;
       }
@@ -477,10 +469,8 @@ void CObjectView::AdjustView()
    nOffset = TITLE_BAR_HEIGHT + (rect.bottom - rect.top) + 6 + m_nTitleBarOffset;
    m_wndOverview.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndAlarms.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
-   m_wndDepView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndClusterView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndPerfView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
-   m_wndTopologyView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndLastValuesView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndSubordinateView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
 

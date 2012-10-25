@@ -2,7 +2,7 @@ INCLUDES=-I@top_srcdir@/include
 
 SOURCES = actions.cpp agentcfg.cpp alarms.cpp cert.cpp comm.cpp \
           datacoll.cpp epp.cpp eventdb.cpp events.cpp graph.cpp \
-          layer2.cpp main.cpp map.cpp mib.cpp \
+          layer2.cpp main.cpp mib.cpp \
           mp.cpp objects.cpp objtools.cpp package.cpp script.cpp \
           server.cpp session.cpp situation.cpp snmptrap.cpp \
 	  snmp.cpp users.cpp

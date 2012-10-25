@@ -259,7 +259,6 @@ public:
 	afx_msg void OnAppAbout();
 	afx_msg void OnViewControlpanel();
 	afx_msg void OnViewEvents();
-	afx_msg void OnViewMap();
 	afx_msg void OnConnectToServer();
 	afx_msg void OnViewObjectbrowser();
 	afx_msg void OnControlpanelEvents();
@@ -289,7 +288,6 @@ public:
 	afx_msg void OnToolsGraphsManage();
 	afx_msg void OnControlpanelCertificates();
 	afx_msg void OnViewSituations();
-	afx_msg void OnControlpanelNetworkmaps();
 	afx_msg void OnControlpanelSyslogparser();
 	//}}AFX_MSG
 	afx_msg void OnGraphListUpdate(WPARAM wParam, LPARAM lParam);
@@ -331,7 +329,6 @@ public:
 	CMDIChildWnd *ShowTrapLogBrowser();
 	CMDIChildWnd *ShowAlarmBrowser(TCHAR *pszParams = NULL);
 	CMDIChildWnd *ShowNetworkSummary();
-	CMDIChildWnd *ShowMapFrame(TCHAR *pszParams = NULL);
 	void ApplyTemplate(NXC_OBJECT *pObject);
 	CMDIChildWnd *ShowLastValues(NXC_OBJECT *pObject, TCHAR *pszParams = NULL);
 	void DeployPackage(DWORD dwPkgId, DWORD dwNumObjects, DWORD *pdwObjectList);

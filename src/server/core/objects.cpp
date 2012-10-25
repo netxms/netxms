@@ -181,10 +181,6 @@ static THREAD_RESULT THREAD_CALL MapUpdateThread(void *pArg)
 	DbgPrintf(2, _T("Map update thread started"));
 	while(!SleepAndCheckForShutdown(60))
 	{
-		//ConditionWait(g_condUpdateMaps, INFINITE);
-		//if (g_dwFlags & AF_SHUTDOWN)
-		//	break;
-
 		g_idxNetMapById.forEach(UpdateMapCallback, NULL);
 	}
 	DbgPrintf(2, _T("Map update thread stopped"));

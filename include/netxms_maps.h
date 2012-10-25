@@ -40,36 +40,9 @@
 // Constants
 //
 
-#define MAP_OBJECT_SIZE_X     40
-#define MAP_OBJECT_SIZE_Y     40
-#define MAP_OBJECT_INTERVAL_X 50
-#define MAP_OBJECT_INTERVAL_Y 50
-#define MAP_TEXT_BOX_HEIGHT   24
-#define MAP_TOP_MARGIN        10
-#define MAP_LEFT_MARGIN       20
-#define MAP_BOTTOM_MARGIN     10
-#define MAP_RIGHT_MARGIN      20
 #define MAX_CONNECTOR_NAME		128
 #define MAX_PORT_COUNT			16
 #define MAX_BEND_POINTS       16
-
-
-//
-// Submap attributes
-//
-
-#define SUBMAP_ATTR_AUTOMATIC_LAYOUT      0x00000001
-#define SUBMAP_ATTR_HAS_BK_IMAGE          0x00000002
-#define SUBMAP_ATTR_LAYOUT_COMPLETED      0x00010000
-
-
-//
-// Submap layout methods
-//
-
-#define SUBMAP_LAYOUT_DUMB                0
-#define SUBMAP_LAYOUT_RADIAL              1
-#define SUBMAP_LAYOUT_REINGOLD_TILFORD    2
 
 
 //
@@ -91,23 +64,9 @@
 #define LINK_TYPE_MULTILINK   2
 
 
-//
-// Object-on-map structure
-//
-
-struct MAP_OBJECT
-{
-   DWORD dwId;
-   LONG x;
-   LONG y;
-   DWORD dwState;    // Runtime field, can be used freely by application
-};
-
-
-//
-// Link between objects
-//
-
+/**
+ * Link between objects
+ */
 struct OBJLINK
 {
    DWORD dwId1;
@@ -120,22 +79,9 @@ struct OBJLINK
 	DWORD portId2[MAX_PORT_COUNT];
 };
 
-
-//
-// Access list entry
-//
-
-struct MAP_ACL_ENTRY
-{
-   DWORD dwUserId;
-   DWORD dwAccess;
-};
-
-
-//
-// Connected object list - used as source for nxSubmap::DoLayout
-//
-
+/**
+ * Connected object list - used as source for nxSubmap::DoLayout
+ */
 class LIBNXMAP_EXPORTABLE nxmap_ObjList
 {
 protected:
@@ -163,232 +109,30 @@ public:
 	void CreateMessage(CSCPMessage *pMsg);
 };
 
-
-//
-// Graph's vertex
-//
-
-class LIBNXMAP_EXPORTABLE nxmap_Vertex
-{
-protected:
-   DWORD m_dwId;
-   DWORD m_dwNumChilds;
-   nxmap_Vertex **m_ppChildList;
-   DWORD m_dwNumParents;
-   nxmap_Vertex **m_ppParentList;
-   int m_posX;
-   int m_posY;
-   BOOL m_isProcessed;  // Processed flag for various recursive operations
-
-   void LinkParent(nxmap_Vertex *pVtx);
-   void UnlinkParent(nxmap_Vertex *pVtx);
-
-public:
-   nxmap_Vertex(DWORD dwId);
-   ~nxmap_Vertex();
-
-   DWORD GetId(void) { return m_dwId; }
-   int GetPosX(void) { return m_posX; }
-   int GetPosY(void) { return m_posY; }
-   DWORD GetNumChilds(void) { return m_dwNumChilds; }
-   nxmap_Vertex *GetChild(DWORD dwIndex) { return (dwIndex < m_dwNumChilds) ? m_ppChildList[dwIndex] : NULL; }
-   DWORD GetNumParents(void) { return m_dwNumParents; }
-   nxmap_Vertex *GetParent(DWORD dwIndex) { return (dwIndex < m_dwNumParents) ? m_ppParentList[dwIndex] : NULL; }
-   BOOL IsParentOf(nxmap_Vertex *pVertex);
-   BOOL IsProcessed(void) { return m_isProcessed; }
-
-   void LinkChild(nxmap_Vertex *pVtx);
-   void UnlinkChild(nxmap_Vertex *pVtx);
-   void SetPosition(int x, int y) { m_posX = x; m_posY = y; }
-   void SetAsProcessed(void) { m_isProcessed = TRUE; }
-   void SetAsUnprocessed(void) { m_isProcessed = FALSE; }
-};
-
-
-//
-// Connected graph
-//
-
-class LIBNXMAP_EXPORTABLE nxmap_Graph
-{
-protected:
-   DWORD m_dwVertexCount;
-   nxmap_Vertex **m_ppVertexList;
-   nxmap_Vertex *m_pRoot;
-
-   void SetAsUnprocessed(void);
-   void NormalizeVertexLinks(nxmap_Vertex *pRoot);
-
-public:
-   nxmap_Graph();
-   nxmap_Graph(DWORD dwNumObjects, DWORD *pdwObjectList, DWORD dwNumLinks, OBJLINK *pLinkList);
-   ~nxmap_Graph();
-
-   DWORD GetVertexCount(void) { return m_dwVertexCount; }
-   nxmap_Vertex *FindVertex(DWORD dwId);
-   DWORD GetVertexIndex(nxmap_Vertex *pVertex);
-   nxmap_Vertex *GetRootVertex(void) { return (m_pRoot != NULL) ? m_pRoot : (m_dwVertexCount > 0 ? m_ppVertexList[0] : NULL); }
-   nxmap_Vertex *GetVertexByIndex(DWORD dwIndex) { return dwIndex < m_dwVertexCount ? m_ppVertexList[dwIndex] : NULL; }
-
-   void SetRootVertex(DWORD dwId);
-   void NormalizeLinks(void);
-   void NormalizeVertexPositions(void);
-};
-
-
-//
-// Submap class
-//
-
-class LIBNXMAP_EXPORTABLE nxSubmap
-{
-protected:
-   DWORD m_dwId;
-   DWORD m_dwAttr;
-   DWORD m_dwNumObjects;
-   MAP_OBJECT *m_pObjectList;
-   DWORD m_dwNumLinks;
-   OBJLINK *m_pLinkList;
-
-   void CommonInit(void);
-
-public:
-   nxSubmap();
-   nxSubmap(DWORD dwObjectId);
-   nxSubmap(CSCPMessage *pMsg);
-   virtual ~nxSubmap();
-
-   DWORD Id(void) { return m_dwId; }
-
-   void CreateMessage(CSCPMessage *pMsg);
-   void ModifyFromMessage(CSCPMessage *pMsg);
-
-   POINT GetMinSize(void);
-
-   BOOL GetAutoLayoutFlag(void) { return (m_dwAttr & SUBMAP_ATTR_AUTOMATIC_LAYOUT) ? TRUE : FALSE; }
-   void SetAutoLayoutFlag(BOOL bFlag) { if (bFlag) m_dwAttr |= SUBMAP_ATTR_AUTOMATIC_LAYOUT; else m_dwAttr &= ~SUBMAP_ATTR_AUTOMATIC_LAYOUT; }
-
-   BOOL GetBkImageFlag(void) { return (m_dwAttr & SUBMAP_ATTR_HAS_BK_IMAGE) ? TRUE : FALSE; }
-   void SetBkImageFlag(BOOL bFlag) { if (bFlag) m_dwAttr |= SUBMAP_ATTR_HAS_BK_IMAGE; else m_dwAttr &= ~SUBMAP_ATTR_HAS_BK_IMAGE; }
-
-   BOOL IsLayoutCompleted(void) { return (m_dwAttr & SUBMAP_ATTR_LAYOUT_COMPLETED) ? TRUE : FALSE; }
-
-   void DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
-                 DWORD dwNumLinks, OBJLINK *pLinkList,
-                 int nIdealX, int nIdealY, int nMethod,
-					  BOOL bNormalize);
-   POINT GetObjectPosition(DWORD dwObjectId);
-   POINT GetObjectPositionByIndex(DWORD dwIndex);
-   void SetObjectPosition(DWORD dwObjectId, int x, int y);
-   void SetObjectPositionByIndex(DWORD dwIndex, int x, int y);
-
-   DWORD GetNumObjects(void) { return m_dwNumObjects; }
-   DWORD GetObjectIdFromIndex(DWORD dwIndex) { return m_pObjectList[dwIndex].dwId; }
-   DWORD GetObjectIndex(DWORD dwObjectId);
-
-   void SetObjectState(DWORD dwObjectId, DWORD dwState);
-   void SetObjectStateByIndex(DWORD dwIndex, DWORD dwState) { m_pObjectList[dwIndex].dwState = dwState; }
-   DWORD GetObjectState(DWORD dwObjectId);
-   DWORD GetObjectStateFromIndex(DWORD dwIndex) { return m_pObjectList[dwIndex].dwState; }
-
-   DWORD GetNumLinks(void) { return m_dwNumLinks; }
-   OBJLINK *GetLinkByIndex(DWORD dwIndex) { return &m_pLinkList[dwIndex]; }
-
-	void LinkObjects(DWORD dwObj1, const TCHAR *pszPort1, DWORD dwObj2, const TCHAR *pszPort2, int nType);
-	void UnlinkObjects(DWORD dwObj1, DWORD dwObj2);
-
-	void DeleteObject(DWORD dwObject);
-};
-
-
-//
-// Callback type for submap creation
-//
-
-class nxMap;
-typedef nxSubmap * (* SUBMAP_CREATION_CALLBACK)(DWORD, nxMap *);
-
-
-//
-// Map class
-//
-
-class LIBNXMAP_EXPORTABLE nxMap
-{
-protected:
-   DWORD m_dwMapId;
-   TCHAR *m_pszName;
-   TCHAR *m_pszDescription;
-   DWORD m_dwObjectId;
-   DWORD m_dwNumSubmaps;
-   nxSubmap **m_ppSubmaps;
-   DWORD m_dwACLSize;
-   MAP_ACL_ENTRY *m_pACL;
-   MUTEX m_mutex;
-   SUBMAP_CREATION_CALLBACK m_pfCreateSubmap;
-
-   void CommonInit();
-
-public:
-   nxMap();
-   nxMap(DWORD dwMapId, DWORD dwObjectId, const TCHAR *pszName, const TCHAR *pszDescription);
-   nxMap(CSCPMessage *pMsg);
-   virtual ~nxMap();
-
-   void Lock() { MutexLock(m_mutex); }
-   void Unlock() { MutexUnlock(m_mutex); }
-
-	void SetName(const TCHAR *name) { safe_free(m_pszName); m_pszName = _tcsdup(name); }
-
-   DWORD MapId() { return m_dwMapId; }
-   DWORD ObjectId() { return m_dwObjectId; }
-   TCHAR *Name() { return CHECK_NULL(m_pszName); }
-
-   void AddSubmap(nxSubmap *pSubmap);
-   DWORD GetSubmapCount(void) { return m_dwNumSubmaps; }
-   nxSubmap *GetSubmap(DWORD dwObjectId);
-   nxSubmap *GetSubmapByIndex(DWORD dwIndex) { return dwIndex < m_dwNumSubmaps ? m_ppSubmaps[dwIndex] : NULL; }
-   BOOL IsSubmapExist(DWORD dwObjectId, BOOL bLock = TRUE);
-
-   void CreateMessage(CSCPMessage *pMsg);
-   void ModifyFromMessage(CSCPMessage *pMsg);
-};
-
-
-/********** 1.2.x Map API ********/
-
-
-//
-// Map element types
-//
-
+/**
+ * Map element types
+ */
 #define MAP_ELEMENT_GENERIC      0
 #define MAP_ELEMENT_OBJECT       1
 #define MAP_ELEMENT_DECORATION   2
 
-
-//
-// Decoration types
-//
-
+/**
+ * Decoration types
+ */
 #define MAP_DECORATION_GROUP_BOX 0
 #define MAP_DECORATION_IMAGE     1
 
-
-//
-// Routing modes for connections
-//
-
+/**
+ * Routing modes for connections
+ */
 #define ROUTING_DEFAULT          0
 #define ROUTING_DIRECT           1
 #define ROUTING_MANHATTAN        2
 #define ROUTING_BENDPOINTS       3
 
-
-//
-// Generic map element
-//
-
+/**
+ * Generic map element
+ */
 class LIBNXMAP_EXPORTABLE NetworkMapElement
 {
 protected:
@@ -414,11 +158,9 @@ public:
 	void setPosition(LONG x, LONG y);
 };
 
-
-//
-// Object map element
-//
-
+/**
+ * Object map element
+ */
 class LIBNXMAP_EXPORTABLE NetworkMapObject : public NetworkMapElement
 {
 protected:
@@ -436,11 +178,9 @@ public:
 	DWORD getObjectId() { return m_objectId; }
 };
 
-
-//
-// Decoration map element
-//
-
+/**
+ * Decoration map element
+ */
 class LIBNXMAP_EXPORTABLE NetworkMapDecoration : public NetworkMapElement
 {
 protected:
@@ -467,11 +207,9 @@ public:
 	LONG getHeight() { return m_height; }
 };
 
-
-//
-// Link on map
-//
-
+/**
+ * Link on map
+ */
 class LIBNXMAP_EXPORTABLE NetworkMapLink
 {
 protected:

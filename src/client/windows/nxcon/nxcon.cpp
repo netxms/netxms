@@ -41,7 +41,6 @@
 #include "TrapLogBrowser.h"
 #include "GraphFrame.h"
 #include "SyslogBrowser.h"
-#include "MapFrame.h"
 #include "UserEditor.h"
 #include "ObjectToolsEditor.h"
 #include "ObjectPropSheet.h"
@@ -78,7 +77,6 @@
 #include "CreateIfDCIDlg.h"
 #include "IfPropsGeneral.h"
 #include "SituationManager.h"
-#include "MapManager.h"
 #include "ObjectPropsTrustedNodes.h"
 #include "ObjectPropsCustomAttrs.h"
 #include "SyslogParserCfg.h"
@@ -114,7 +112,6 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_APP_ABOUT, OnAppAbout)
 	ON_COMMAND(ID_VIEW_CONTROLPANEL, OnViewControlpanel)
 	ON_COMMAND(ID_VIEW_EVENTS, OnViewEvents)
-	ON_COMMAND(ID_VIEW_MAP, OnViewMap)
 	ON_COMMAND(ID_CONNECT_TO_SERVER, OnConnectToServer)
 	ON_COMMAND(ID_VIEW_OBJECTBROWSER, OnViewObjectbrowser)
 	ON_COMMAND(ID_CONTROLPANEL_EVENTS, OnControlpanelEvents)
@@ -144,7 +141,6 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_TOOLS_GRAPHS_MANAGE, OnToolsGraphsManage)
 	ON_COMMAND(ID_CONTROLPANEL_CERTIFICATES, OnControlpanelCertificates)
 	ON_COMMAND(ID_VIEW_SITUATIONS, OnViewSituations)
-	ON_COMMAND(ID_CONTROLPANEL_NETWORKMAPS, OnControlpanelNetworkmaps)
 	ON_COMMAND(ID_CONTROLPANEL_SYSLOGPARSER, OnControlpanelSyslogparser)
 	//}}AFX_MSG_MAP
 	ON_THREAD_MESSAGE(NXCM_GRAPH_LIST_UPDATED, OnGraphListUpdate)
@@ -892,37 +888,6 @@ void CConsoleApp::OnViewSyslog()
 void CConsoleApp::OnViewSnmptraplog() 
 {
    ShowTrapLogBrowser();
-}
-
-
-//
-// WM_COMMAND::ID_VIEW_MAP message handler
-//
-
-void CConsoleApp::OnViewMap() 
-{
-	ShowMapFrame();
-}
-
-
-//
-// Show or create object browser window
-//
-
-CMDIChildWnd *CConsoleApp::ShowMapFrame(TCHAR *pszParams)
-{
-   CMDIChildWnd *pWnd;
-	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
-   if (pszParams == NULL)
-   {
-      pWnd = pFrame->CreateNewChild(RUNTIME_CLASS(CMapFrame), IDR_MAPFRAME, m_hMapMenu, m_hMapAccel);
-   }
-   else
-   {
-      pWnd = new CMapFrame(pszParams);
-      CreateChildFrameWithSubtitle(pWnd, IDR_MAPFRAME, NULL, m_hMapMenu, m_hMapAccel);
-   }
-   return pWnd;
 }
 
 
@@ -4564,27 +4529,6 @@ void CConsoleApp::OnViewSituations()
 		{
 			ErrorBox(RCC_ACCESS_DENIED, _T("Cannot open situation manager: %s"));
 		}
-   }
-}
-
-
-//
-// Open map manager
-//
-
-void CConsoleApp::OnControlpanelNetworkmaps() 
-{
-	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
-
-	// create a new MDI child window or open existing
-   if (m_viewState[VIEW_MAP_MANAGER].bActive)
-   {
-      m_viewState[VIEW_MAP_MANAGER].pWnd->BringWindowToTop();
-   }
-   else
-   {
-		pFrame->CreateNewChild(RUNTIME_CLASS(CMapManager), IDR_MAP_MANAGER,
-									  m_hMapManagerMenu, m_hMapManagerAccel);
    }
 }
 

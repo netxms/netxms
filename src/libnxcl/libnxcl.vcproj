@@ -386,10 +386,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\map.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\mib.cpp"
 				>
 			</File>
