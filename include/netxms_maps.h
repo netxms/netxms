@@ -96,17 +96,20 @@ public:
    nxmap_ObjList(CSCPMessage *pMsg);
    ~nxmap_ObjList();
 
-   void AddObject(DWORD dwId);
-   void LinkObjects(DWORD dwId1, DWORD dwId2);
-   void LinkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2, DWORD portId1, DWORD portId2);
-   void Clear(void);
+   void addObject(DWORD dwId);
+   void linkObjects(DWORD dwId1, DWORD dwId2);
+   void linkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2, DWORD portId1, DWORD portId2);
+   void clear();
 
-   DWORD GetNumObjects(void) { return m_dwNumObjects; }
-   DWORD *GetObjects(void) { return m_pdwObjectList; }
-   DWORD GetNumLinks(void) { return m_dwNumLinks; }
-   OBJLINK *GetLinks(void) { return m_pLinkList; }
+   DWORD getNumObjects() { return m_dwNumObjects; }
+   DWORD *getObjects() { return m_pdwObjectList; }
+   DWORD getNumLinks() { return m_dwNumLinks; }
+   OBJLINK *getLinks() { return m_pLinkList; }
 
-	void CreateMessage(CSCPMessage *pMsg);
+	void createMessage(CSCPMessage *pMsg);
+
+	bool isLinkExist(DWORD objectId1, DWORD objectId2);
+	bool isObjectExist(DWORD objectId);
 };
 
 /**

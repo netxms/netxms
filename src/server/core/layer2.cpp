@@ -29,7 +29,7 @@
 
 void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth)
 {
-	topology.AddObject(root->Id());
+	topology.addObject(root->Id());
 
 	LinkLayerNeighbors *nbs = root->getLinkLayerNeighbors();
 	if (nbs == NULL)
@@ -48,7 +48,7 @@ void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth)
 				Interface *ifRemote = node->findInterface(info->ifRemote, INADDR_ANY);
 				DbgPrintf(5, _T("BuildL2Topology: root=%s [%d], node=%s [%d], ifLocal=%d %p, ifRemote=%d %p"),
 				          root->Name(), root->Id(), node->Name(), node->Id(), info->ifLocal, ifLocal, info->ifRemote, ifRemote);
-				topology.LinkObjectsEx(root->Id(), node->Id(),
+				topology.linkObjectsEx(root->Id(), node->Id(),
 					(ifLocal != NULL) ? ifLocal->Name() : _T("N/A"),
 					(ifRemote != NULL) ? ifRemote->Name() : _T("N/A"),
 					info->ifLocal, info->ifRemote);

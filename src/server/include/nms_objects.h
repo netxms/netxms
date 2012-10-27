@@ -1527,10 +1527,13 @@ protected:
 	double m_backgroundLatitude;
 	double m_backgroundLongitude;
 	int m_backgroundZoom;
+	DWORD m_nextElementId;
 	ObjectArray<NetworkMapElement> *m_elements;
 	ObjectArray<NetworkMapLink> *m_links;
 
 	void updateObjects(nxmap_ObjList *objects);
+	DWORD objectIdFromElementId(DWORD eid);
+	DWORD elementIdFromObjectId(DWORD eid);
 
 public:
    NetworkMap();

@@ -79,7 +79,7 @@ nxmap_ObjList::~nxmap_ObjList()
 // Clear list
 //
 
-void nxmap_ObjList::Clear(void)
+void nxmap_ObjList::clear()
 {
    safe_free_and_null(m_pdwObjectList);
    safe_free_and_null(m_pLinkList);
@@ -87,12 +87,10 @@ void nxmap_ObjList::Clear(void)
    m_dwNumLinks = 0;
 }
 
-
-//
-// Add object to list
-//
-
-void nxmap_ObjList::AddObject(DWORD dwId)
+/**
+ * Add object to list
+ */
+void nxmap_ObjList::addObject(DWORD dwId)
 {
    DWORD i;
 
@@ -110,12 +108,10 @@ void nxmap_ObjList::AddObject(DWORD dwId)
    }
 }
 
-
-//
-// Link two objects
-//
-
-void nxmap_ObjList::LinkObjects(DWORD dwId1, DWORD dwId2)
+/**
+ * Link two objects
+ */
+void nxmap_ObjList::linkObjects(DWORD dwId1, DWORD dwId2)
 {
    DWORD i;
    int nCount;
@@ -150,11 +146,9 @@ void nxmap_ObjList::LinkObjects(DWORD dwId1, DWORD dwId2)
    }
 }
 
-
-//
-// Update port names on connector
-//
-
+/**
+ * Update port names on connector
+ */
 static void UpdatePortNames(OBJLINK *link, const TCHAR *port1, const TCHAR *port2)
 {
 	_tcscat_s(link->szPort1, MAX_CONNECTOR_NAME, _T(", "));
@@ -163,12 +157,10 @@ static void UpdatePortNames(OBJLINK *link, const TCHAR *port1, const TCHAR *port
 	_tcscat_s(link->szPort2, MAX_CONNECTOR_NAME, port2);
 }
 
-
-//
-// Link two objects with named links
-//
-
-void nxmap_ObjList::LinkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2, DWORD portId1, DWORD portId2)
+/**
+ * Link two objects with named links
+ */
+void nxmap_ObjList::linkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2, DWORD portId1, DWORD portId2)
 {
    DWORD i;
    int nCount;
@@ -241,12 +233,10 @@ void nxmap_ObjList::LinkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort
    }
 }
 
-
-//
-// Create NXCP message
-//
-
-void nxmap_ObjList::CreateMessage(CSCPMessage *pMsg)
+/**
+ * Create NXCP message
+ */
+void nxmap_ObjList::createMessage(CSCPMessage *pMsg)
 {
 	DWORD i, dwId;
 
@@ -265,4 +255,30 @@ void nxmap_ObjList::CreateMessage(CSCPMessage *pMsg)
 		pMsg->SetVariable(dwId++, m_pLinkList[i].szPort1);
 		pMsg->SetVariable(dwId++, m_pLinkList[i].szPort2);
 	}
+}
+
+/**
+ * Check if link between two given objects exist
+ */
+bool nxmap_ObjList::isLinkExist(DWORD objectId1, DWORD objectId2)
+{
+   for(DWORD i = 0; i < m_dwNumLinks; i++)
+   {
+		if ((m_pLinkList[i].dwId1 == objectId1) && (m_pLinkList[i].dwId2 == objectId2))
+			return true;
+	}
+	return false;
+}
+
+/**
+ * Check if given object exist
+ */
+bool nxmap_ObjList::isObjectExist(DWORD objectId)
+{
+	for(DWORD i = 0; i < m_dwNumObjects; i++)
+	{
+		if (m_pdwObjectList[i] == objectId)
+			return true;
+	}
+	return false;
 }

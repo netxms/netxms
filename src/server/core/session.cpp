@@ -9757,7 +9757,7 @@ void ClientSession::QueryL2Topology(CSCPMessage *pRequest)
 				if (pTopology != NULL)
 				{
 					msg.SetVariable(VID_RCC, RCC_SUCCESS);
-					pTopology->CreateMessage(&msg);
+					pTopology->createMessage(&msg);
 					delete pTopology;
 				}
 				else

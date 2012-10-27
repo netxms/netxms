@@ -23,11 +23,9 @@
 
 #include "libnxmap.h"
 
-
-//
-// Generic element default constructor
-//
-
+/**
+ * Generic element default constructor
+ */
 NetworkMapElement::NetworkMapElement(DWORD id)
 {
 	m_id = id;
@@ -36,11 +34,9 @@ NetworkMapElement::NetworkMapElement(DWORD id)
 	m_posY = 0;
 }
 
-
-//
-// Generic element config constructor
-//
-
+/**
+ * Generic element config constructor
+ */
 NetworkMapElement::NetworkMapElement(DWORD id, Config *config)
 {
 	m_id = id;
@@ -49,11 +45,9 @@ NetworkMapElement::NetworkMapElement(DWORD id, Config *config)
 	m_posY = config->getValueInt(_T("/posY"), 0);
 }
 
-
-//
-// Generic element NXCP constructor
-//
-
+/**
+ * Generic element NXCP constructor
+ */
 NetworkMapElement::NetworkMapElement(CSCPMessage *msg, DWORD baseId)
 {
 	m_id = msg->GetVariableLong(baseId);
@@ -62,20 +56,16 @@ NetworkMapElement::NetworkMapElement(CSCPMessage *msg, DWORD baseId)
 	m_posY = (LONG)msg->GetVariableLong(baseId + 3);
 }
 
-
-//
-// Generic element destructor
-//
-
+/**
+ * Generic element destructor
+ */
 NetworkMapElement::~NetworkMapElement()
 {
 }
 
-
-//
-// Update element's persistent configuration
-//
-
+/**
+ * Update element's persistent configuration
+ */
 void NetworkMapElement::updateConfig(Config *config)
 {
 	config->setValue(_T("/type"), m_type);

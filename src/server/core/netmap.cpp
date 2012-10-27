@@ -50,15 +50,14 @@ NetworkMap::NetworkMap() : NetObj()
 	m_backgroundZoom = 1;
 	m_backgroundColor = 0xFFFFFF;
 	m_defaultLinkColor = -1;
+	m_nextElementId = 1;
 	m_elements = new ObjectArray<NetworkMapElement>(0, 32, true);
 	m_links = new ObjectArray<NetworkMapLink>(0, 32, true);
 }
 
-
-//
-// Create network map object from user session
-//
-
+/**
+ * Create network map object from user session
+ */
 NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
 {
 	m_mapType = type;
@@ -72,16 +71,15 @@ NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
 	m_backgroundZoom = 1;
 	m_backgroundColor = 0xFFFFFF;
 	m_defaultLinkColor = -1;
+	m_nextElementId = 1;
 	m_elements = new ObjectArray<NetworkMapElement>(0, 32, true);
 	m_links = new ObjectArray<NetworkMapLink>(0, 32, true);
 	m_bIsHidden = TRUE;
 }
 
-
-//
-// Network map object destructor
-//
-
+/**
+ * Network map object destructor
+ */
 NetworkMap::~NetworkMap()
 {
 	delete m_elements;
@@ -290,6 +288,8 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 				}
 				delete config;
 				m_elements->add(e);
+				if (m_nextElementId <= e->getId())
+					m_nextElementId = e->getId() + 1;
 			}
          DBFreeResult(hResult);
       }
@@ -422,6 +422,9 @@ DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 				}
 				m_elements->add(e);
 				varId += 100;
+
+				if (m_nextElementId <= e->getId())
+					m_nextElementId = e->getId() + 1;
 			}
 		}
 
@@ -446,6 +449,7 @@ DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
  */
 void NetworkMap::updateContent()
 {
+	DbgPrintf(6, _T("NetworkMap::updateContent(%s [%d]): map type %d, seed %d"), m_szName, m_dwId, m_mapType, m_seedObject);
 	Node *seed;
 	switch(m_mapType)
 	{
@@ -480,24 +484,136 @@ void NetworkMap::updateContent()
  */
 void NetworkMap::updateObjects(nxmap_ObjList *objects)
 {
+	bool modified = false;
+
+	DbgPrintf(5, _T("NetworkMap(%s): updateObjects called"), m_szName);
 	LockData();
 
 	// remove non-existing links
 	for(int i = 0; i < m_links->size(); i++)
 	{
+		NetworkMapLink *link = m_links->get(i);
+		if (!objects->isLinkExist(objectIdFromElementId(link->getElement1()), objectIdFromElementId(link->getElement2())))
+		{
+			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d removed"), m_szName, link->getElement1(), link->getElement2());
+			m_links->remove(i);
+			i--;
+			modified = true;
+		}
 	}
 
 	// remove non-existing objects
 	for(int i = 0; i < m_elements->size(); i++)
 	{
-		for(int j = 0; j < objects->GetNumObjects(); j++)
+		NetworkMapElement *e = m_elements->get(i);
+		if (e->getType() != MAP_ELEMENT_OBJECT)
+			continue;
+
+		if (!objects->isObjectExist(((NetworkMapObject *)e)->getObjectId()))
 		{
+			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: object element %d removed"), m_szName, e->getId());
+			m_elements->remove(i);
+			i--;
+			modified = true;
 		}
 	}
 
-	for(int i = 0; i < objects->GetNumObjects(); i++)
+	// add new objects
+	for(DWORD i = 0; i < objects->getNumObjects(); i++)
 	{
+		bool found = false;
+		for(int j = 0; j < m_elements->size(); j++)
+		{
+			NetworkMapElement *e = m_elements->get(j);
+			if (e->getType() != MAP_ELEMENT_OBJECT)
+				continue;
+			if (((NetworkMapObject *)e)->getObjectId() == objects->getObjects()[i])
+			{
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+		{
+			NetworkMapElement *e = new NetworkMapObject(m_nextElementId++, objects->getObjects()[i]);
+			m_elements->add(e);
+			modified = true;
+			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: new object %d added"), m_szName, objects->getObjects()[i]);
+		}
 	}
 
+	// add new links
+	for(DWORD i = 0; i < objects->getNumLinks(); i++)
+	{
+		bool found = false;
+		for(int j = 0; j < m_links->size(); j++)
+		{
+			NetworkMapLink *l = m_links->get(j);
+			DWORD obj1 = objectIdFromElementId(l->getElement1());
+			DWORD obj2 = objectIdFromElementId(l->getElement2());
+			if ((objects->getLinks()[i].dwId1 == obj1) && (objects->getLinks()[i].dwId2 == obj2))
+			{
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+		{
+			DWORD e1 = elementIdFromObjectId(objects->getLinks()[i].dwId1);
+			DWORD e2 = elementIdFromObjectId(objects->getLinks()[i].dwId2);
+			NetworkMapLink *l = new NetworkMapLink(e1, e2, LINK_TYPE_NORMAL);
+			l->setConnector1Name(objects->getLinks()[i].szPort1);
+			l->setConnector2Name(objects->getLinks()[i].szPort2);
+			m_links->add(l);
+			modified = true;
+			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d added"), m_szName, l->getElement1(), l->getElement2());
+		}
+	}
+
+	if (modified)
+		Modify();
+
 	UnlockData();
+	DbgPrintf(5, _T("NetworkMap(%s): updateObjects completed"), m_szName);
+}
+
+/**
+ * Get object ID from map element ID
+ * Assumes that object data already locked
+ */
+DWORD NetworkMap::objectIdFromElementId(DWORD eid)
+{
+	for(int i = 0; i < m_elements->size(); i++)
+	{
+		NetworkMapElement *e = m_elements->get(i);
+		if (e->getId() == eid)
+		{
+			if (e->getType() == MAP_ELEMENT_OBJECT)
+			{
+				return ((NetworkMapObject *)e)->getObjectId();
+			}
+			else
+			{
+				return 0;
+			}
+		}
+	}
+	return 0;
+}
+
+/**
+ * Get map element ID from object ID
+ * Assumes that object data already locked
+ */
+DWORD NetworkMap::elementIdFromObjectId(DWORD oid)
+{
+	for(int i = 0; i < m_elements->size(); i++)
+	{
+		NetworkMapElement *e = m_elements->get(i);
+		if ((e->getType() == MAP_ELEMENT_OBJECT) && (((NetworkMapObject *)e)->getObjectId() == oid))
+		{
+			return e->getId();
+		}
+	}
+	return 0;
 }
