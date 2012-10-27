@@ -816,6 +816,7 @@ extern "C"
 #define RegexpMatch RegexpMatchA
 #endif
 
+	const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize);
 	void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
    BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
 	TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);

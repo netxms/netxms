@@ -79,9 +79,6 @@
 
 typedef void (* LogParserCallback)(DWORD, const TCHAR *, const TCHAR *, int, TCHAR **, DWORD, void *);
 
-
-const TCHAR LIBNXLP_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize);
-
 //
 // Log parser rule
 //
