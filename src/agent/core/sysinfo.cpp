@@ -20,6 +20,7 @@
 **/
 
 #include "nxagentd.h"
+#include "libnxlp.h"
 
 #if HAVE_SYS_UTSNAME_H
 #include <sys/utsname.h>
@@ -212,7 +213,7 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive,
 
 LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   TCHAR szPath[MAX_PATH], szPattern[MAX_PATH], szRecursive[10], szBuffer[128];
+   TCHAR szPath[MAX_PATH], szRealPath[MAX_PATH], szPattern[MAX_PATH], szRecursive[10], szBuffer[128];
    bool bRecursive = false;
 
    unsigned int uFileCount = 0;
@@ -241,7 +242,11 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    if (szPattern[0] == 0)
       _tcscpy(szPattern, _T("*"));
 
-   nRet = GetDirInfo(szPath, szPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter);
+	// Expand strftime macros in the path
+	if (ExpandFileName(szPath, szRealPath, MAX_PATH) == NULL)
+		return SYSINFO_RC_UNSUPPORTED;
+
+   nRet = GetDirInfo(szRealPath, szPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter);
 
    switch(CAST_FROM_POINTER(arg, int))
    {
@@ -266,14 +271,19 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 
 LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   TCHAR szFileName[MAX_PATH], szHashText[MD5_DIGEST_SIZE * 2 + 1];
+   TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
+	TCHAR szHashText[MD5_DIGEST_SIZE * 2 + 1];
    BYTE hash[MD5_DIGEST_SIZE];
    DWORD i;
 
    if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
-   if (!CalculateFileMD5Hash(szFileName, hash))
+	// Expand strftime macros in the path
+	if (ExpandFileName(szFileName, szRealFileName, MAX_PATH) == NULL)
+		return SYSINFO_RC_UNSUPPORTED;
+
+   if (!CalculateFileMD5Hash(szRealFileName, hash))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Convert MD5 hash to text form
@@ -291,14 +301,19 @@ LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 
 LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   TCHAR szFileName[MAX_PATH], szHashText[SHA1_DIGEST_SIZE * 2 + 1];
+   TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH]; 
+	TCHAR szHashText[SHA1_DIGEST_SIZE * 2 + 1];
    BYTE hash[SHA1_DIGEST_SIZE];
    DWORD i;
 
    if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
-   if (!CalculateFileSHA1Hash(szFileName, hash))
+	// Expand strftime macros in the path
+	if (ExpandFileName(szFileName, szRealFileName, MAX_PATH) == NULL)
+		return SYSINFO_RC_UNSUPPORTED;
+
+   if (!CalculateFileSHA1Hash(szRealFileName, hash))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Convert SHA1 hash to text form
@@ -316,13 +331,17 @@ LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 
 LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   TCHAR szFileName[MAX_PATH];
+   TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
    DWORD dwCRC32;
 
    if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
-   if (!CalculateFileCRC32(szFileName, &dwCRC32))
+	// Expand strftime macros in the path
+	if (ExpandFileName(szFileName, szRealFileName, MAX_PATH) == NULL)
+		return SYSINFO_RC_UNSUPPORTED;
+
+   if (!CalculateFileCRC32(szRealFileName, &dwCRC32))
       return SYSINFO_RC_UNSUPPORTED;
 
    ret_uint(value, dwCRC32);
@@ -421,14 +440,18 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 
 LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-	TCHAR szFilePath[MAX_PATH];
+	TCHAR szFilePath[MAX_PATH], szRealFilePath[MAX_PATH];
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	NX_STAT_STRUCT fileInfo;
 
 	if (!AgentGetParameterArg(cmd, 1, szFilePath, MAX_PATH))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	if (CALL_STAT(szFilePath, &fileInfo) == -1) 
+	// Expand strftime macros in the path
+	if (ExpandFileName(szFilePath, szRealFilePath, MAX_PATH) == NULL)
+		return SYSINFO_RC_UNSUPPORTED;
+
+	if (CALL_STAT(szRealFilePath, &fileInfo) == -1) 
 		return SYSINFO_RC_ERROR;
 
 	switch(CAST_FROM_POINTER(arg, int))
