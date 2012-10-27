@@ -85,8 +85,8 @@ public class CreateNetworkMapDialog extends Dialog
       
       mapType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Map type", WidgetHelper.DEFAULT_LAYOUT_DATA);
       mapType.add("Custom");
-      mapType.add("IP Topology");
       mapType.add("Layer 2 Topology");
+      mapType.add("IP Topology");
       mapType.select(0);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

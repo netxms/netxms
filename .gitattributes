@@ -2300,6 +2300,7 @@ webui/webapp/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers
 webui/webapp/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers/ActionLabelProvider.java -text
 webui/webapp/AgentManager/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/AgentManager/META-INF/MANIFEST.MF -text
+webui/webapp/AgentManager/OSGI-INF/l10n/bundle_es.properties -text
 webui/webapp/AgentManager/build.properties -text
 webui/webapp/AgentManager/icons/active.gif -text
 webui/webapp/AgentManager/icons/agent_config.gif -text
@@ -2310,6 +2311,7 @@ webui/webapp/AgentManager/icons/package_deploy.gif -text
 webui/webapp/AgentManager/icons/pending.gif -text
 webui/webapp/AgentManager/icons/unsaved_config.png -text
 webui/webapp/AgentManager/plugin.xml -text
+webui/webapp/AgentManager/src/org/netxms/ui/eclipse/agentmanager/messages_es.properties -text
 webui/webapp/AlarmViewer/.settings/org.eclipse.core.resources.prefs -text
 webui/webapp/AlarmViewer/META-INF/MANIFEST.MF -text
 webui/webapp/AlarmViewer/OSGI-INF/l10n/bundle.properties -text
@@ -2347,6 +2349,7 @@ webui/webapp/Charts/.settings/org.eclipse.core.resources.prefs -text
 webui/webapp/Charts/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/Charts/META-INF/MANIFEST.MF -text
 webui/webapp/Charts/OSGI-INF/l10n/bundle.properties -text
+webui/webapp/Charts/OSGI-INF/l10n/bundle_es.properties -text
 webui/webapp/Charts/build.properties -text
 webui/webapp/Charts/icons/chart_error.png -text
 webui/webapp/Charts/plugin.xml -text
@@ -2362,6 +2365,7 @@ webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/DataComparisonChart.jav
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/DialChart.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/api/HistoricalDataChart.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/messages.properties -text
+webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/messages_es.properties -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/ChartColors.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/GeneralChartPrefs.java -text
 webui/webapp/Charts/src/org/netxms/ui/eclipse/charts/widgets/DataComparisonBirtChart.java -text
@@ -2617,6 +2621,7 @@ webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/DataSourceEdi
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/EditElementXmlDlg.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/ImportDashboardDialog.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/messages.properties -text
+webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/messages_es.properties -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/perspectives/DashboardPerspective.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AbstractChart.java -text
 webui/webapp/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AlarmViewer.java -text
@@ -2734,6 +2739,7 @@ webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/hel
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/helpers/AgentParameterLabelProvider.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/helpers/InterfaceDciInfo.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/messages.properties -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/messages_es.properties -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/objecttabs/LastValues.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/objecttabs/ThresholdSummary.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/CustomSchedule.java -text
@@ -2774,6 +2780,7 @@ webui/webapp/EPP/icons/v_layout.gif -text
 webui/webapp/EPP/plugin.xml -text
 webui/webapp/EPP/src/org/netxms/ui/eclipse/epp/Messages.java -text
 webui/webapp/EPP/src/org/netxms/ui/eclipse/epp/messages.properties -text
+webui/webapp/EPP/src/org/netxms/ui/eclipse/epp/messages_es.properties -text
 webui/webapp/EventManager/.settings/org.eclipse.core.resources.prefs -text
 webui/webapp/EventManager/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/EventManager/META-INF/MANIFEST.MF -text
@@ -2795,6 +2802,7 @@ webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/EditEve
 webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/EventSelectionDialog.java -text
 webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/helpers/EventListFilter.java -text
 webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/messages.properties -text
+webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/messages_es.properties -text
 webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventConfigurator.java -text
 webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventMonitor.java -text
 webui/webapp/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/SyslogMonitor.java -text
@@ -2818,6 +2826,7 @@ webui/webapp/FileManager/icons/video.png -text
 webui/webapp/FileManager/plugin.xml -text
 webui/webapp/FileManager/src/org/netxms/ui/eclipse/filemanager/Messages.java -text
 webui/webapp/FileManager/src/org/netxms/ui/eclipse/filemanager/messages.properties -text
+webui/webapp/FileManager/src/org/netxms/ui/eclipse/filemanager/messages_es.properties -text
 webui/webapp/ImageLibrary/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/ImageLibrary/META-INF/MANIFEST.MF -text
 webui/webapp/ImageLibrary/build.properties -text
@@ -2831,6 +2840,7 @@ webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/actions/OpenLib
 webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/dialogs/ImagePropertiesDialog.java -text
 webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/dialogs/ImageSelectionDialog.java -text
 webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/messages.properties -text
+webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/messages_es.properties -text
 webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/messages_ru.properties -text
 webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/shared/ImageProvider.java -text
 webui/webapp/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/shared/ImageUpdateListener.java -text
@@ -2860,6 +2870,7 @@ webui/webapp/LogViewer/src/org/netxms/ui/eclipse/logviewer/actions/OpenEventLog.
 webui/webapp/LogViewer/src/org/netxms/ui/eclipse/logviewer/actions/OpenSnmpTrapLog.java -text
 webui/webapp/LogViewer/src/org/netxms/ui/eclipse/logviewer/actions/OpenSyslog.java -text
 webui/webapp/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages.properties -text
+webui/webapp/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages_es.properties -text
 webui/webapp/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages_ru.properties -text
 webui/webapp/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages_zh_CN.properties -text
 webui/webapp/LogViewer/src/org/netxms/ui/eclipse/logviewer/views/LogViewer.java -text
@@ -2986,6 +2997,7 @@ webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/Messages.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/actions/OpenLocationMap.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/actions/OpenWorldMap.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/messages.properties -text
+webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/messages_es.properties -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/tools/Area.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/tools/MapAccessor.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/tools/MapLoader.java -text
@@ -3052,6 +3064,7 @@ webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/Creat
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/IPAddressSelectionDialog.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/ObjectSelectionDialog.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/messages.properties -text
+webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/messages_es.properties -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/messages_ru.properties -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/views/ObjectBrowser.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/widgets/IPAddressSelector.java -text
@@ -3272,6 +3285,7 @@ webui/webapp/SLM/icons/availability_chart.png -text
 webui/webapp/SLM/plugin.xml -text
 webui/webapp/SLM/src/org/netxms/ui/eclipse/slm/Messages.java -text
 webui/webapp/SLM/src/org/netxms/ui/eclipse/slm/messages.properties -text
+webui/webapp/SLM/src/org/netxms/ui/eclipse/slm/messages_es.properties -text
 webui/webapp/SNMP/.settings/org.eclipse.core.resources.prefs -text
 webui/webapp/SNMP/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/SNMP/META-INF/MANIFEST.MF -text
@@ -3296,6 +3310,7 @@ webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/ParamMappingEditDialog.
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/TrapConfigurationDialog.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/helpers/ParamMappingLabelProvider.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/messages.properties -text
+webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/messages_es.properties -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/views/MibExplorer.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/views/SnmpTrapEditor.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/views/SnmpTrapMonitor.java -text
@@ -3370,6 +3385,7 @@ webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/Activator.jav
 webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/Messages.java -text
 webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/actions/OpenDot1xStateView.java -text
 webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/messages.properties -text
+webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/messages_es.properties -text
 webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/Dot1xStatusView.java -text
 webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/helpers/Dot1xPortComparator.java -text
 webui/webapp/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/helpers/Dot1xPortListLabelProvider.java -text
