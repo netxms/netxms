@@ -161,6 +161,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_8021X) ? 1 : 0));
    }
+	else if (!_tcscmp(pszAttr, _T("isLocalMgmt")) || !_tcscmp(pszAttr, _T("isLocalManagement")))
+	{
+		pValue = new NXSL_Value((LONG)((pNode->isLocalManagement()) ? 1 : 0));
+	}
    else if (!_tcscmp(pszAttr, _T("snmpVersion")))
    {
       pValue = new NXSL_Value((LONG)pNode->getSNMPVersion());
