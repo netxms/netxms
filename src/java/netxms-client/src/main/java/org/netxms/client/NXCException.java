@@ -18,16 +18,17 @@
  */
 package org.netxms.client;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.netxms.api.client.NetXMSClientException;
 
 /**
  * NetXMS client library exception. Used to report API call errors.
- *
  */
 public class NXCException extends NetXMSClientException
 {
 	private static final long serialVersionUID = -3247688667511123892L;
-	private static final String[] errorTexts =
+	private static final String[] errorTexts_en =
 	{
       "Request completed successfully",
       "Component locked",
@@ -129,17 +130,146 @@ public class NXCException extends NetXMSClientException
 		"Invalid alarm note ID",
 		"Encryption error"
 	};
-	private static final String[] extendedErrorTexts =
+	private static final String[] extendedErrorTexts_en =
 	{
 		"Bad MIB file header",
 		"Bad MIB file data"
 	};
+	
+	private static final String[] errorTexts_es =
+	{
+      "Petición completada con éxito",
+      "Componente bloqueado",
+      "Acceso denegado",
+      "Petición inválida",
+      "Caducidad de la petición",
+      "La petición está fuera de estado",
+      "Fallo en la base de datos",
+      "ID de objeto inválido",
+      "El objeto ya existe",
+      "Fallo en la comunicación",
+      "Fallo del sistema",
+      "ID de usuario inválido",
+      "Argumento inválido",
+      "DCI duplicado",
+      "ID de DCI inválido",
+      "Sin memoria",
+      "Error de Entrada/Salida",
+      "Operación incompatible",
+      "La creación del objeto ha fallado",
+      "Se ha detectado un bucle en las relaciones del objeto",
+      "Nombre de objeto inválido",
+      "ID de alarma inválido",
+      "ID de acción inválido",
+      "Operación en progreso",
+      "El copiado ha fallado en uno o más DCI(s)",
+      "Código de evento inválido o desconocido",
+      "Sin interfaces adecuados para enviar el paquete mágico",
+      "Sin dirección MAC en el interfaz",
+      "Comando no implementado",
+      "ID de registro de configuración de traps inválido",
+      "La petición del monitor no está soportada por el agente",
+      "Las versiones del cliente y del servidor son incompatibles",
+      "Error al analizar el fichero de información del paquete",
+      "El paquete con las propiedades especificadas ya está instalado en el servidor",
+      "El fichero de paquete ya existe en el servidor",
+      "El recurso del servidor está ocupado",
+      "ID de paquete inválido",
+      "Dirección IP inválida",
+      "La acción es utilizada en una política de tratamiento de eventos",
+      "Variable no encontrada",
+      "El servidor utiliza un protocolo de comunicaciones incompatible",
+      "La dirección ya está utilizada",
+      "No es posible seleccionar cifrado",
+      "Clave pública inválida",
+      "Clave de sesión inválida",
+      "El extremo no soporta cifrado",
+      "Error interno en el servidor",
+      "La ejecución del comando externo ha fallado",
+      "ID de herramienta inválido",
+      "Error en el protocolo SNMP",
+      "Expresión regular incorrecta",
+      "El parámetro no está soportado por el agente",
+      "La operación de E/S del fichero ha fallado",
+      "El fichero MIB está corrupto",
+      "La transferencia del fichero está en progreso",
+      "ID de tarea inválido",
+      "ID de script inválido",
+      "Nombre de script inválido",
+      "Nombre de mapa desconocido",
+      "ID de mapa inválido",
+      "Cuenta desactivada",
+      "No se permiten más intentos de conexión",
+      "Conexión al servidor interrumpida",
+      "ID de configuración del agente inválido",
+      "El servidor ha perdido la conexión con la base de datos",
+      "La alarma está todavía abierta en el sistema de soporte",
+      "La alarma no está en estado \"pendiente\"",
+      "El origen de datos del DCI no es un agente de envío",
+      "Error al analizar el fichero para importar la configuración",
+      "La configuración no puede importarse porque existen errores de validación",
+      "ID de gráfico inválido",
+      "Fallo en el proveedor criptográfico local",
+      "Tipo de autenticación no soportada",
+      "Certificado dañado",
+      "ID de certificado inválido",
+      "Fallo SNMP",
+      "El nodo no soporta descubrimiento de topología en la capa 2",
+      "ID de situación inválido",
+      "No se ha encontrado la instancia indicada",
+      "ID de evento inválido",
+      "La operación no ha podido ser completada por un error en el agente",
+      "Variable desconocida",
+      "Petición de recurso no disponible",
+      "La tarea no puede ser cancelada",
+      "ID de política inválido",
+      "Nombre del registro desconocido",
+      "Handle del registro inválido",
+      "La nueva contraseña es demasiado débil",
+      "La contraseña ha sido utilizada anteriormente",
+      "Handle de sesión inválido",
+      "El nodo ya es miembro de un cluster",
+      "La tarea no puede ser retenida",
+      "La tarea retenida no puede ser reanudada",
+      "El ID de zona ya está en uso",
+      "ID de zona inválido",
+      "No es posible eliminar zonas con algún contenido",
+      "Sin datos en el componente físico",
+      "ID del comentario de la alarma inválido",
+      "Error de cifrado"
+	};
+	private static final String[] extendedErrorTexts_es =
+	{
+      "Error en la cabecera del fichero MIB",
+      "Error en los datos del fichero MIB"
+	};
+	
+	private static final Map<String, String[]> errorTexts;
+	private static final Map<String, String[]> extendedErrorTexts;
+	
+	static
+	{
+		errorTexts = new HashMap<String, String[]>(2);
+		errorTexts.put("en", errorTexts_en);
+		errorTexts.put("es", errorTexts_es);
+		
+		extendedErrorTexts = new HashMap<String, String[]>(2);
+		extendedErrorTexts.put("en", extendedErrorTexts_en);
+		extendedErrorTexts.put("es", extendedErrorTexts_es);
+	}
 
+	/**
+	 * @param errorCode
+	 */
 	public NXCException(int errorCode)
 	{
 		super(errorCode);
 	}
 
+	/**
+	 * @param errorCode
+	 * @param additionalInfo
+	 */
 	public NXCException(int errorCode, String additionalInfo)
 	{
 		super(errorCode, additionalInfo);
@@ -149,13 +279,24 @@ public class NXCException extends NetXMSClientException
 	 * @see org.netxms.api.client.NetXMSClientException#getErrorMessage(int)
 	 */
 	@Override
-	protected String getErrorMessage(int code)
+	protected String getErrorMessage(int code, String lang)
 	{
 		try
 		{
 			if (code > 1000)
-				return extendedErrorTexts[code - 1001];
-			return errorTexts[code];
+			{
+				String[] texts = extendedErrorTexts.get(lang);
+				if (texts == null)
+					texts = extendedErrorTexts_en;
+				return texts[code - 1001];
+			}
+			else
+			{
+				String[] texts = errorTexts.get(lang);
+				if (texts == null)
+					texts = errorTexts_en;
+				return texts[code];
+			}
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{

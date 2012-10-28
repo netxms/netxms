@@ -1,7 +1,5 @@
 package org.netxms.ui.eclipse.console;
 
-import java.util.Locale;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.swt.widgets.Display;
@@ -23,10 +21,6 @@ public class NXMCApplication implements IApplication
 	 */
 	public Object start(IApplicationContext context) throws Exception
 	{
-		final String locale = Platform.getPreferencesService().getString("org.netxms.ui.eclipse.console", "NL", "en", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		Locale.setDefault(new Locale(locale));
-		System.setProperty("osgi.nl", locale); //$NON-NLS-1$
-
 		final Display display = PlatformUI.createDisplay();
 		if (System.getProperty("sleak") != null) //$NON-NLS-1$
 		{

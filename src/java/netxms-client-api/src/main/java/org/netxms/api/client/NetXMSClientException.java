@@ -18,6 +18,8 @@
  */
 package org.netxms.api.client;
 
+import java.util.Locale;
+
 /**
  * Generic NetXMS client exception. Intended to be subclassed by concrete client implementation.
  *
@@ -65,9 +67,10 @@ public abstract class NetXMSClientException extends Exception
 	 * Get error message text for given error code. Must not return null.
 	 * 
 	 * @param code error code
+	 * @param lang language code
 	 * @return error message for given code
 	 */
-	protected abstract String getErrorMessage(int code);
+	protected abstract String getErrorMessage(int code, String lang);
 
 	/**
 	 * Get exception's error code.
@@ -85,7 +88,22 @@ public abstract class NetXMSClientException extends Exception
 	@Override
 	public String getMessage()
 	{
-		String msg = getErrorMessage(errorCode);
+		String msg = getErrorMessage(errorCode, "en");
+		if (additionalInfo != null)
+		{
+			msg += " (" + additionalInfo + ")";
+		}
+		return msg;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Throwable#getLocalizedMessage()
+	 */
+	@Override
+	public String getLocalizedMessage()
+	{
+		Locale locale = Locale.getDefault();
+		String msg = getErrorMessage(errorCode, locale.getLanguage());
 		if (additionalInfo != null)
 		{
 			msg += " (" + additionalInfo + ")";
