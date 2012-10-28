@@ -86,8 +86,10 @@ class LIBNXMAP_EXPORTABLE nxmap_ObjList
 {
 protected:
    DWORD m_dwNumObjects;
+	DWORD m_allocatedObjects;
    DWORD *m_pdwObjectList;
    DWORD m_dwNumLinks;
+	DWORD m_allocatedLinks;
    OBJLINK *m_pLinkList;
 
 public:

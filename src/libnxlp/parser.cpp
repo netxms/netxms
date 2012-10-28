@@ -394,7 +394,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		name = XMLGetAttr(attrs, "name");
 #ifdef UNICODE
 		ps->macroName = L"";
-		ps->macroName.addMultiByteString(name, strlen(name), CP_UTF8);
+		ps->macroName.addMultiByteString(name, (DWORD)strlen(name), CP_UTF8);
 #else
 		ps->macroName = CHECK_NULL_A(name);
 #endif
@@ -419,7 +419,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->ruleContext = L"";
 		const char *context = XMLGetAttr(attrs, "context");
 		if (context != NULL)
-			ps->ruleContext.addMultiByteString(context, strlen(context), CP_UTF8);
+			ps->ruleContext.addMultiByteString(context, (DWORD)strlen(context), CP_UTF8);
 #else
 		ps->ruleContext = XMLGetAttr(attrs, "context");
 #endif

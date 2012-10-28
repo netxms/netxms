@@ -22,12 +22,10 @@
 
 #include "nxcore.h"
 
-
-//
-// Build layer 2 topology for switch
-//
-
-void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth)
+/**
+ * Build layer 2 topology for switch
+ */
+void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth, bool includeEndNodes)
 {
 	topology.addObject(root->Id());
 
@@ -41,9 +39,9 @@ void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth)
 		if (info != NULL)
 		{
 			Node *node = (Node *)FindObjectById(info->objectId);
-			if ((node != NULL) && (nDepth > 0))
+			if ((node != NULL) && (nDepth > 0) && (node->isBridge() || includeEndNodes))
 			{
-				BuildL2Topology(topology, node, nDepth - 1);
+				BuildL2Topology(topology, node, nDepth - 1, includeEndNodes);
 				Interface *ifLocal = root->findInterface(info->ifLocal, INADDR_ANY);
 				Interface *ifRemote = node->findInterface(info->ifRemote, INADDR_ANY);
 				DbgPrintf(5, _T("BuildL2Topology: root=%s [%d], node=%s [%d], ifLocal=%d %p, ifRemote=%d %p"),
@@ -58,11 +56,9 @@ void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth)
 	nbs->decRefCount();
 }
 
-
-//
-// Find connection point for interface
-//
-
+/**
+ * Find connection point for interface
+ */
 Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch)
 {
 	TCHAR macAddrText[32];

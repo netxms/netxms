@@ -758,13 +758,13 @@ public:
    DWORD GetPeerGatewayAddr();
 };
 
-
-//
-// Node
-//
-
+/**
+ * Node
+ */
 class NXCORE_EXPORTABLE Node : public Template
 {
+	friend class Subnet;
+
 protected:
 	TCHAR m_primaryName[MAX_DNS_NAME];
    DWORD m_dwFlags;
@@ -851,6 +851,8 @@ protected:
 
 	void updateContainerMembership();
 	BOOL updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask);
+
+	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD seedSubnet, bool includeEndNodes);
 
    virtual void PrepareForDeletion();
    virtual void OnObjectDelete(DWORD dwObjectId);
@@ -984,22 +986,24 @@ public:
 
    DWORD wakeUp();
 
-   void AddService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
+   void addService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
    DWORD CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0,
                              WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL);
 
-   QWORD GetLastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
-   void SetLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }
+   QWORD getLastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
+   void setLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }
 
    DWORD CallSnmpEnumerate(const TCHAR *pszRootOid, 
       DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *), void *pArg);
 
-	nxmap_ObjList *GetL2Topology();
-	nxmap_ObjList *BuildL2Topology(DWORD *pdwStatus);
+	nxmap_ObjList *getL2Topology();
+	nxmap_ObjList *buildL2Topology(DWORD *pdwStatus, int radius, bool includeEndNodes);
 	ForwardingDatabase *getSwitchForwardingDatabase();
 	Interface *findConnectionPoint(DWORD *localIfId, BYTE *localMacAddr, bool *exactMatch);
 	void addHostConnections(LinkLayerNeighbors *nbs);
 	void addExistingConnections(LinkLayerNeighbors *nbs);
+
+	nxmap_ObjList *buildIPTopology(DWORD *pdwStatus, int radius, bool includeEndNodes);
 
 	ServerJobQueue *getJobQueue() { return m_jobQueue; }
 };
@@ -1122,17 +1126,19 @@ inline void Node::lockForRoutePoll()
    UnlockData(); 
 }
 
-
-//
-// Subnet
-//
-
+/**
+ * Subnet
+ */
 class NXCORE_EXPORTABLE Subnet : public NetObj
 {
+	friend void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD seedSubnet, bool includeEndNodes);
+
 protected:
    DWORD m_dwIpNetMask;
    DWORD m_zoneId;
 	bool m_bSyntheticMask;
+
+	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD seedNode, bool includeEndNodes);
 
 public:
    Subnet();
@@ -1157,11 +1163,9 @@ public:
 	bool findMacAddress(DWORD ipAddr, BYTE *macAddr);
 };
 
-
-//
-// Universal root object
-//
-
+/**
+ * Universal root object
+ */
 class NXCORE_EXPORTABLE UniversalRoot : public NetObj
 {
 public:
@@ -1518,6 +1522,7 @@ class NXCORE_EXPORTABLE NetworkMap : public NetObj
 protected:
 	int m_mapType;
 	DWORD m_seedObject;
+	int m_discoveryRadius;
 	int m_layout;
 	DWORD m_flags;
 	int m_backgroundColor;

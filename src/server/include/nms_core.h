@@ -386,7 +386,7 @@ private:
 	DECLARE_THREAD_STARTER(clearDCIData)
 	DECLARE_THREAD_STARTER(queryParameter)
 	DECLARE_THREAD_STARTER(queryAgentTable)
-	DECLARE_THREAD_STARTER(QueryL2Topology)
+	DECLARE_THREAD_STARTER(queryL2Topology)
 	DECLARE_THREAD_STARTER(SendEventLog)
 	DECLARE_THREAD_STARTER(SendSyslog)
 	DECLARE_THREAD_STARTER(createObject)
@@ -537,7 +537,7 @@ private:
 	void DeleteCertificate(CSCPMessage *pRequest);
 	void UpdateCertificateComments(CSCPMessage *pRequest);
 	void SendCertificateList(DWORD dwRqId);
-	void QueryL2Topology(CSCPMessage *pRequest);
+	void queryL2Topology(CSCPMessage *pRequest);
 	void SendSMS(CSCPMessage *pRequest);
 	void SendCommunityList(DWORD dwRqId);
 	void UpdateCommunityList(CSCPMessage *pRequest);

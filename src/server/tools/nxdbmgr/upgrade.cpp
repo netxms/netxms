@@ -263,6 +263,17 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 /**
+ * Upgrade from V262 to V263
+ */
+static BOOL H_UpgradeFromV262(int currVersion, int newVersion)
+{
+	CHK_EXEC(SQLQuery(_T("ALTER TABLE network_maps ADD radius integer")));
+	CHK_EXEC(SQLQuery(_T("UPDATE network_maps SET radius=-1")));
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='263' WHERE var_name='SchemaVersion'")));
+	return TRUE;
+}
+
+/**
  * Upgrade from V261 to V262
  */
 static BOOL H_UpgradeFromV261(int currVersion, int newVersion)
@@ -6443,6 +6454,7 @@ static struct
 	{ 259, 260, H_UpgradeFromV259 },
 	{ 260, 261, H_UpgradeFromV260 },
 	{ 261, 262, H_UpgradeFromV261 },
+	{ 262, 263, H_UpgradeFromV262 },
    { 0, 0, NULL }
 };
 

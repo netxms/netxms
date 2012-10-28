@@ -246,3 +246,20 @@ bool Subnet::findMacAddress(DWORD ipAddr, BYTE *macAddr)
 
 	return success;
 }
+
+/**
+ * Build IP topology
+ */
+void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD seedNode, bool includeEndNodes)
+{
+	LockChildList(FALSE);
+	for(DWORD i = 0; i < m_dwChildCount; i++)
+	{
+		if ((m_pChildList[i]->Id() == seedNode) || (m_pChildList[i]->Type() != OBJECT_NODE))
+			continue;
+		if (!includeEndNodes && !((Node *)m_pChildList[i])->isRouter())
+			continue;
+		((Node *)m_pChildList[i])->buildIPTopologyInternal(topology, nDepth - 1, m_dwId, includeEndNodes);
+	}
+	UnlockChildList();
+}

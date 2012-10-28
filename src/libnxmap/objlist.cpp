@@ -31,8 +31,10 @@
 nxmap_ObjList::nxmap_ObjList()
 {
    m_dwNumObjects = 0;
+	m_allocatedObjects = 0;
    m_pdwObjectList = NULL;
    m_dwNumLinks = 0;
+	m_allocatedLinks = 0;
    m_pLinkList = NULL;
 }
 
@@ -41,9 +43,11 @@ nxmap_ObjList::nxmap_ObjList(CSCPMessage *pMsg)
 	DWORD i, dwId;
 
    m_dwNumObjects = pMsg->GetVariableLong(VID_NUM_OBJECTS);
+	m_allocatedObjects = m_dwNumObjects;
    m_pdwObjectList = (DWORD *)malloc(m_dwNumObjects * sizeof(DWORD));
 	pMsg->GetVariableInt32Array(VID_OBJECT_LIST, m_dwNumObjects, m_pdwObjectList);
    m_dwNumLinks = pMsg->GetVariableLong(VID_NUM_LINKS);
+	m_allocatedLinks = m_dwNumLinks;
    m_pLinkList = (OBJLINK *)malloc(m_dwNumLinks * sizeof(OBJLINK));
 	for(i = 0, dwId = VID_OBJECT_LINKS_BASE; i < m_dwNumLinks; i++, dwId += 5)
 	{
@@ -58,33 +62,33 @@ nxmap_ObjList::nxmap_ObjList(CSCPMessage *pMsg)
 nxmap_ObjList::nxmap_ObjList(nxmap_ObjList *pSrc)
 {
    m_dwNumObjects = pSrc->m_dwNumObjects;
+	m_allocatedObjects = m_dwNumObjects;
    m_pdwObjectList = (DWORD *)nx_memdup(pSrc->m_pdwObjectList, sizeof(DWORD) * m_dwNumObjects);
    m_dwNumLinks = pSrc->m_dwNumLinks;
+	m_allocatedLinks = m_dwNumLinks;
    m_pLinkList = (OBJLINK *)nx_memdup(pSrc->m_pLinkList, sizeof(OBJLINK) * m_dwNumLinks);
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 nxmap_ObjList::~nxmap_ObjList()
 {
    safe_free(m_pdwObjectList);
    safe_free(m_pLinkList);
 }
 
-
-//
-// Clear list
-//
-
+/**
+ * Clear list
+ */
 void nxmap_ObjList::clear()
 {
    safe_free_and_null(m_pdwObjectList);
    safe_free_and_null(m_pLinkList);
    m_dwNumObjects = 0;
+	m_allocatedObjects = 0;
    m_dwNumLinks = 0;
+	m_allocatedLinks = 0;
 }
 
 /**
@@ -102,9 +106,12 @@ void nxmap_ObjList::addObject(DWORD dwId)
 
    if (i == m_dwNumObjects)
    {
-      m_dwNumObjects++;
-      m_pdwObjectList = (DWORD *)realloc(m_pdwObjectList, sizeof(DWORD) * m_dwNumObjects);
-      m_pdwObjectList[i] = dwId;
+		if (m_dwNumObjects == m_allocatedObjects)
+		{
+			m_allocatedObjects += 64;
+	      m_pdwObjectList = (DWORD *)realloc(m_pdwObjectList, sizeof(DWORD) * m_allocatedObjects);
+		}
+      m_pdwObjectList[m_dwNumObjects++] = dwId;
    }
 }
 
@@ -135,13 +142,17 @@ void nxmap_ObjList::linkObjects(DWORD dwId1, DWORD dwId2)
       }
       if (i == m_dwNumLinks)
       {
+			if (m_dwNumLinks == m_allocatedLinks)
+			{
+				m_allocatedLinks += 64;
+	         m_pLinkList = (OBJLINK *)realloc(m_pLinkList, sizeof(OBJLINK) * m_allocatedLinks);
+			}
+         m_pLinkList[m_dwNumLinks].dwId1 = dwId1;
+         m_pLinkList[m_dwNumLinks].dwId2 = dwId2;
+         m_pLinkList[m_dwNumLinks].nType = LINK_TYPE_NORMAL;
+			m_pLinkList[m_dwNumLinks].szPort1[0] = 0;
+			m_pLinkList[m_dwNumLinks].szPort2[0] = 0;
          m_dwNumLinks++;
-         m_pLinkList = (OBJLINK *)realloc(m_pLinkList, sizeof(OBJLINK) * m_dwNumLinks);
-         m_pLinkList[i].dwId1 = dwId1;
-         m_pLinkList[i].dwId2 = dwId2;
-         m_pLinkList[i].nType = LINK_TYPE_NORMAL;
-			m_pLinkList[i].szPort1[0] = 0;
-			m_pLinkList[i].szPort2[0] = 0;
       }
    }
 }
@@ -219,16 +230,20 @@ void nxmap_ObjList::linkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort
       }
       if (i == m_dwNumLinks)
       {
+			if (m_dwNumLinks == m_allocatedLinks)
+			{
+				m_allocatedLinks += 64;
+	         m_pLinkList = (OBJLINK *)realloc(m_pLinkList, sizeof(OBJLINK) * m_allocatedLinks);
+			}
+         m_pLinkList[m_dwNumLinks].dwId1 = dwId1;
+         m_pLinkList[m_dwNumLinks].dwId2 = dwId2;
+         m_pLinkList[m_dwNumLinks].nType = LINK_TYPE_NORMAL;
+			m_pLinkList[m_dwNumLinks].portIdCount = 1;
+			m_pLinkList[m_dwNumLinks].portId1[0] = portId1;
+			m_pLinkList[m_dwNumLinks].portId2[0] = portId2;
+			nx_strncpy(m_pLinkList[m_dwNumLinks].szPort1, pszPort1, MAX_CONNECTOR_NAME);
+			nx_strncpy(m_pLinkList[m_dwNumLinks].szPort2, pszPort2, MAX_CONNECTOR_NAME);
          m_dwNumLinks++;
-         m_pLinkList = (OBJLINK *)realloc(m_pLinkList, sizeof(OBJLINK) * m_dwNumLinks);
-         m_pLinkList[i].dwId1 = dwId1;
-         m_pLinkList[i].dwId2 = dwId2;
-         m_pLinkList[i].nType = LINK_TYPE_NORMAL;
-			m_pLinkList[i].portIdCount = 1;
-			m_pLinkList[i].portId1[0] = portId1;
-			m_pLinkList[i].portId2[0] = portId2;
-			nx_strncpy(m_pLinkList[i].szPort1, pszPort1, MAX_CONNECTOR_NAME);
-			nx_strncpy(m_pLinkList[i].szPort2, pszPort2, MAX_CONNECTOR_NAME);
       }
    }
 }

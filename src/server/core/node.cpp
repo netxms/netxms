@@ -4312,7 +4312,7 @@ DWORD Node::getThresholdSummary(CSCPMessage *msg, DWORD baseId)
  * Get current layer 2 topology (as dynamically created list which should be destroyed by caller)
  * Will return NULL if there are no topology information or it is expired
  */
-nxmap_ObjList *Node::GetL2Topology()
+nxmap_ObjList *Node::getL2Topology()
 {
 	nxmap_ObjList *pResult;
 	DWORD dwExpTime;
@@ -4334,10 +4334,10 @@ nxmap_ObjList *Node::GetL2Topology()
 /**
  * Rebuild layer 2 topology and return it as dynamically reated list which should be destroyed by caller
  */
-nxmap_ObjList *Node::BuildL2Topology(DWORD *pdwStatus)
+nxmap_ObjList *Node::buildL2Topology(DWORD *pdwStatus, int radius, bool includeEndNodes)
 {
 	nxmap_ObjList *pResult;
-	int nDepth = ConfigReadInt(_T("TopologyDiscoveryRadius"), 5);
+	int nDepth = (radius < 0) ? ConfigReadInt(_T("TopologyDiscoveryRadius"), 5) : radius;
 
 	MutexLock(m_mutexTopoAccess);
 	if ((m_linkLayerNeighbors != NULL) && (m_linkLayerNeighbors->getSize() > 0))
@@ -4345,7 +4345,7 @@ nxmap_ObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 		MutexUnlock(m_mutexTopoAccess);
 
 		pResult = new nxmap_ObjList;
-		::BuildL2Topology(*pResult, this, nDepth);
+		BuildL2Topology(*pResult, this, nDepth, includeEndNodes);
 
 		MutexLock(m_mutexTopoAccess);
 		delete m_pTopology;
@@ -4360,6 +4360,42 @@ nxmap_ObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 	}
 	MutexUnlock(m_mutexTopoAccess);
 	return pResult;
+}
+
+/**
+ * Build IP topology
+ */
+nxmap_ObjList *Node::buildIPTopology(DWORD *pdwStatus, int radius, bool includeEndNodes)
+{
+	int nDepth = (radius < 0) ? ConfigReadInt(_T("TopologyDiscoveryRadius"), 5) : radius;
+	nxmap_ObjList *pResult = new nxmap_ObjList;
+	buildIPTopologyInternal(*pResult, nDepth, 0, includeEndNodes);
+	return pResult;
+}
+
+/**
+ * Build IP topology
+ */
+void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD seedSubnet, bool includeEndNodes)
+{
+	topology.addObject(m_dwId);
+	if (seedSubnet != 0)
+		topology.linkObjects(seedSubnet, m_dwId);
+
+	if (nDepth > 0)
+	{
+		LockParentList(FALSE);
+		for(DWORD i = 0; i < m_dwParentCount; i++)
+		{
+			if ((m_pParentList[i]->Id() == seedSubnet) || (m_pParentList[i]->Type() != OBJECT_SUBNET))
+				continue;
+
+			topology.addObject(m_pParentList[i]->Id());
+			topology.linkObjects(m_dwId, m_pParentList[i]->Id());
+			((Subnet *)m_pParentList[i])->buildIPTopologyInternal(topology, nDepth, m_dwId, includeEndNodes);
+		}
+		UnlockParentList();
+	}
 }
 
 /**

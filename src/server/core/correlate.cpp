@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
                {
                   if (((Node *)hop->object)->isDown())
                   {
-                     pEvent->setRootId(((Node *)hop->object)->GetLastEventId(LAST_EVENT_NODE_DOWN));
+                     pEvent->setRootId(((Node *)hop->object)->getLastEventId(LAST_EVENT_NODE_DOWN));
                   }
                   else
                   {
@@ -129,15 +129,15 @@ void CorrelateEvent(Event *pEvent)
          case EVENT_AGENT_FAIL:
             if (((Node *)pObject)->getRuntimeFlags() & NDF_UNREACHABLE)
             {
-               pEvent->setRootId(((Node *)pObject)->GetLastEventId(LAST_EVENT_NODE_DOWN));
+               pEvent->setRootId(((Node *)pObject)->getLastEventId(LAST_EVENT_NODE_DOWN));
             }
             break;
          case EVENT_NODE_DOWN:
-            ((Node *)pObject)->SetLastEventId(LAST_EVENT_NODE_DOWN, pEvent->getId());
+            ((Node *)pObject)->setLastEventId(LAST_EVENT_NODE_DOWN, pEvent->getId());
             C_SysNodeDown((Node *)pObject, pEvent);
             break;
          case EVENT_NODE_UP:
-            ((Node *)pObject)->SetLastEventId(LAST_EVENT_NODE_DOWN, 0);
+            ((Node *)pObject)->setLastEventId(LAST_EVENT_NODE_DOWN, 0);
             break;
 			case EVENT_NETWORK_CONNECTION_LOST:
 				m_networkLostEventId = pEvent->getId();

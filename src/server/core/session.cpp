@@ -150,7 +150,7 @@ THREAD_RESULT THREAD_CALL ClientSession::ThreadStarter_##func(void *pArg) \
 DEFINE_THREAD_STARTER(getCollectedData)
 DEFINE_THREAD_STARTER(getTableCollectedData)
 DEFINE_THREAD_STARTER(clearDCIData)
-DEFINE_THREAD_STARTER(QueryL2Topology)
+DEFINE_THREAD_STARTER(queryL2Topology)
 DEFINE_THREAD_STARTER(SendEventLog)
 DEFINE_THREAD_STARTER(SendSyslog)
 DEFINE_THREAD_STARTER(createObject)
@@ -1144,7 +1144,7 @@ void ClientSession::processingThread()
 				SendCertificateList(pMsg->GetId());
 				break;
 			case CMD_QUERY_L2_TOPOLOGY:
-				CALL_IN_NEW_THREAD(QueryL2Topology, pMsg);
+				CALL_IN_NEW_THREAD(queryL2Topology, pMsg);
 				break;
 			case CMD_SEND_SMS:
 				SendSMS(pMsg);
@@ -9722,12 +9722,10 @@ void ClientSession::SendCertificateList(DWORD dwRqId)
 	sendMessage(&msg);
 }
 
-
-//
-// Query layer 2 topology from device
-//
-
-void ClientSession::QueryL2Topology(CSCPMessage *pRequest)
+/**
+ * Query layer 2 topology from device
+ */
+void ClientSession::queryL2Topology(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	NetObj *pObject;
@@ -9745,10 +9743,10 @@ void ClientSession::QueryL2Topology(CSCPMessage *pRequest)
 			{
 				nxmap_ObjList *pTopology;
 
-				pTopology = ((Node *)pObject)->GetL2Topology();
+				pTopology = ((Node *)pObject)->getL2Topology();
 				if (pTopology == NULL)
 				{
-					pTopology = ((Node *)pObject)->BuildL2Topology(&dwResult);
+					pTopology = ((Node *)pObject)->buildL2Topology(&dwResult, -1, true);
 				}
 				else
 				{

@@ -1208,6 +1208,7 @@ CREATE TABLE network_maps
 	map_type integer not null,
 	layout integer not null,
 	seed integer not null,
+	radius integer not null,
 	background varchar(36) null,
 	bg_latitude varchar(20) null,
 	bg_longitude varchar(20) null,

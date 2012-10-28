@@ -231,7 +231,7 @@ public:
 //
 
 NetworkPath *TraceRoute(Node *pSrc, Node *pDest);
-void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth);
+void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth, bool includeEndNodes);
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
 Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch);
 

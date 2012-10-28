@@ -41,6 +41,7 @@ NetworkMap::NetworkMap() : NetObj()
 {
 	m_mapType = NETMAP_USER_DEFINED;
 	m_seedObject = 0;
+	m_discoveryRadius = -1;
 	m_flags = MF_SHOW_STATUS_ICON;
 	m_layout = MAP_LAYOUT_MANUAL;
 	uuid_clear(m_background);
@@ -62,6 +63,7 @@ NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
 {
 	m_mapType = type;
 	m_seedObject = seed;
+	m_discoveryRadius = -1;
 	m_flags = MF_SHOW_STATUS_ICON;
 	m_layout = MAP_LAYOUT_RADIAL;
 	uuid_clear(m_background);
@@ -109,11 +111,11 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("network_maps"), _T("id"), m_dwId))
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,seed=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,flags=?,link_color=?,link_routing=?,bg_color=? WHERE id=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,seed=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,flags=?,link_color=?,link_routing=?,bg_color=? WHERE id=?"));
 	}
 	else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,seed,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,seed,radius,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		goto fail;
@@ -121,15 +123,16 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)m_mapType);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_layout);
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_seedObject);
-	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, uuid_to_string(m_background, temp), DB_BIND_STATIC);
-	DBBind(hStmt, 5, DB_SQLTYPE_DOUBLE, m_backgroundLatitude);
-	DBBind(hStmt, 6, DB_SQLTYPE_DOUBLE, m_backgroundLongitude);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_backgroundZoom);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_flags);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_defaultLinkColor);
-	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (LONG)m_defaultLinkRouting);
-	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_backgroundColor);
-	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_discoveryRadius);
+	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, uuid_to_string(m_background, temp), DB_BIND_STATIC);
+	DBBind(hStmt, 6, DB_SQLTYPE_DOUBLE, m_backgroundLatitude);
+	DBBind(hStmt, 7, DB_SQLTYPE_DOUBLE, m_backgroundLongitude);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_backgroundZoom);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_flags);
+	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (LONG)m_defaultLinkColor);
+	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_defaultLinkRouting);
+	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (LONG)m_backgroundColor);
+	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwId);
 
 	if (!DBExecute(hStmt))
 	{
@@ -229,7 +232,7 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 
 	   loadACLFromDB();
 
-		_sntprintf(query, 256, _T("SELECT map_type,layout,seed,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color FROM network_maps WHERE id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT map_type,layout,seed,radius,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color FROM network_maps WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 		if (hResult == NULL)
 			return FALSE;
@@ -237,14 +240,15 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 		m_mapType = DBGetFieldLong(hResult, 0, 0);
 		m_layout = DBGetFieldLong(hResult, 0, 1);
 		m_seedObject = DBGetFieldULong(hResult, 0, 2);
-		DBGetFieldGUID(hResult, 0, 3, m_background);
-		m_backgroundLatitude = DBGetFieldDouble(hResult, 0, 4);
-		m_backgroundLongitude = DBGetFieldDouble(hResult, 0, 5);
-		m_backgroundZoom = (int)DBGetFieldLong(hResult, 0, 6);
-		m_flags = DBGetFieldULong(hResult, 0, 7);
-		m_defaultLinkColor = DBGetFieldLong(hResult, 0, 8);
-		m_defaultLinkRouting = DBGetFieldLong(hResult, 0, 9);
-		m_backgroundColor = DBGetFieldLong(hResult, 0, 10);
+		m_discoveryRadius = DBGetFieldLong(hResult, 0, 3);
+		DBGetFieldGUID(hResult, 0, 4, m_background);
+		m_backgroundLatitude = DBGetFieldDouble(hResult, 0, 5);
+		m_backgroundLongitude = DBGetFieldDouble(hResult, 0, 6);
+		m_backgroundZoom = (int)DBGetFieldLong(hResult, 0, 7);
+		m_flags = DBGetFieldULong(hResult, 0, 8);
+		m_defaultLinkColor = DBGetFieldLong(hResult, 0, 9);
+		m_defaultLinkRouting = DBGetFieldLong(hResult, 0, 10);
+		m_backgroundColor = DBGetFieldLong(hResult, 0, 11);
 		DBFreeResult(hResult);
 
 	   // Load elements
@@ -334,6 +338,7 @@ void NetworkMap::CreateMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_LAYOUT, (WORD)m_layout);
 	msg->SetVariable(VID_FLAGS, m_flags);
 	msg->SetVariable(VID_SEED_OBJECT, m_seedObject);
+	msg->SetVariable(VID_DISCOVERY_RADIUS, (DWORD)m_discoveryRadius);
 	msg->SetVariable(VID_BACKGROUND, m_background, UUID_LENGTH);
 	msg->SetVariable(VID_BACKGROUND_LATITUDE, m_backgroundLatitude);
 	msg->SetVariable(VID_BACKGROUND_LONGITUDE, m_backgroundLongitude);
@@ -378,6 +383,9 @@ DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 
 	if (request->IsVariableExist(VID_SEED_OBJECT))
 		m_seedObject = request->GetVariableLong(VID_SEED_OBJECT);
+
+	if (request->IsVariableExist(VID_DISCOVERY_RADIUS))
+		m_discoveryRadius = (int)request->GetVariableLong(VID_DISCOVERY_RADIUS);
 
 	if (request->IsVariableExist(VID_LINK_COLOR))
 		m_defaultLinkColor = (int)request->GetVariableLong(VID_LINK_COLOR);
@@ -458,7 +466,7 @@ void NetworkMap::updateContent()
 			if (seed != NULL)
 			{
 				DWORD status;
-				nxmap_ObjList *objects = seed->BuildL2Topology(&status);
+				nxmap_ObjList *objects = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
 				if (objects != NULL)
 				{
 					updateObjects(objects);
@@ -467,6 +475,27 @@ void NetworkMap::updateContent()
 				else
 				{
 					DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): call to buildL2Topology on object %d failed"), m_szName, m_dwId, m_seedObject);
+				}
+			}
+			else
+			{
+				DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): seed object %d cannot be found"), m_szName, m_dwId, m_seedObject);
+			}
+			break;
+		case MAP_TYPE_IP_TOPOLOGY:
+			seed = (Node *)FindObjectById(m_seedObject, OBJECT_NODE);
+			if (seed != NULL)
+			{
+				DWORD status;
+				nxmap_ObjList *objects = seed->buildIPTopology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
+				if (objects != NULL)
+				{
+					updateObjects(objects);
+					delete objects;
+				}
+				else
+				{
+					DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): call to BuildIPTopology on object %d failed"), m_szName, m_dwId, m_seedObject);
 				}
 			}
 			else
