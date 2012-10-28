@@ -20,7 +20,6 @@
 **/
 
 #include "nxagentd.h"
-#include "libnxlp.h"
 
 #if HAVE_SYS_UTSNAME_H
 #include <sys/utsname.h>
