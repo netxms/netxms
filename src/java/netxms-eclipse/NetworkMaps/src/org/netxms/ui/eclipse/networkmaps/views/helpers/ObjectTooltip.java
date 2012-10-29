@@ -29,7 +29,6 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
  * Tooltip for object on map
- *
  */
 public class ObjectTooltip extends Figure
 {
@@ -57,5 +56,6 @@ public class ObjectTooltip extends Figure
 		}
 		text.setText(sb.toString());
 		page.add(text);
+System.out.println(">>> " + sb.toString());		
 	}
 }

@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.draw2d.Figure;
+import org.eclipse.draw2d.IFigure;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
@@ -55,6 +56,18 @@ public abstract class ObjectFigure extends Figure
 		setToolTip(new ObjectTooltip(object));
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.draw2d.Figure#setToolTip(org.eclipse.draw2d.IFigure)
+	 */
+	@Override
+	public void setToolTip(IFigure f)
+	{
+		// we set our own tooltip figure in object figure constructor
+		// this check is to prevent overriding it by the viewer
+		if ((f == null) || (f instanceof ObjectTooltip))
+			super.setToolTip(f);
+	}
+
 	/**
 	 * Called by label provider to indicate object update
 	 * @param object updated object
