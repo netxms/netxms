@@ -18,7 +18,11 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.FigureListener;
@@ -30,10 +34,13 @@ import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -76,6 +83,8 @@ public class ExtendedGraphViewer extends GraphViewer
 	private int crosshairY;
 	private Crosshair crosshairFigure;
 	private List<NetworkMapDecoration> mapDecorations;
+	private Set<NetworkMapDecoration> selectedDecorations = new HashSet<NetworkMapDecoration>();
+	private Map<Long, DecorationFigure> decorationFigures = new HashMap<Long, DecorationFigure>();
 	
 	/**
 	 * @param composite
@@ -149,6 +158,19 @@ public class ExtendedGraphViewer extends GraphViewer
 			{
 			}
 		});
+		
+		getGraphControl().addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				clearDecorationSelection();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+			}
+		});
 	}
 
 	/* (non-Javadoc)
@@ -159,6 +181,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		super.inputChanged(input, oldInput);
 		decorationLayer.removeAll();
+		decorationFigures.clear();
 		if ((getContentProvider() instanceof MapContentProvider) && (getLabelProvider() instanceof MapLabelProvider))
 		{
 			mapDecorations = ((MapContentProvider)getContentProvider()).getDecorations(input);
@@ -167,14 +190,87 @@ public class ExtendedGraphViewer extends GraphViewer
 				MapLabelProvider lp = (MapLabelProvider)getLabelProvider();
 				for(NetworkMapDecoration d : mapDecorations)
 				{
-					IFigure figure = lp.getFigure(d);
+					DecorationFigure figure = (DecorationFigure)lp.getFigure(d);
 					figure.setLocation(new org.eclipse.draw2d.geometry.Point(d.getX(), d.getY()));
 					decorationLayer.add(figure);
+					decorationFigures.put(d.getId(), figure);
 				}
 			}
 		}
 	}
 	
+	/**
+	 * Set selection on decoration layer. Intended to be called from decoration figure.
+	 * 
+	 * @param d decoartion object
+	 * @param addToExisting if true, add to existing selection
+	 */
+	protected void setDecorationSelection(NetworkMapDecoration d, boolean addToExisting)
+	{
+		if (!addToExisting)
+		{
+			clearDecorationSelection();
+			getGraphControl().setSelection(null);
+		}
+		selectedDecorations.add(d);
+
+		SelectionChangedEvent event = new SelectionChangedEvent(this, getSelection());
+		fireSelectionChanged(event);
+		firePostSelectionChanged(event);
+	}
+	
+	/**
+	 * Clear selection on decoration layer
+	 */
+	private void clearDecorationSelection()
+	{
+		for(NetworkMapDecoration d : selectedDecorations)
+		{
+			DecorationFigure f = decorationFigures.get(d.getId());
+			if (f != null)
+				f.setSelected(false);
+		}
+		selectedDecorations.clear();
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.GraphViewer#setSelectionToWidget(java.util.List, boolean)
+	 */
+	@SuppressWarnings("rawtypes")
+	@Override
+	protected void setSelectionToWidget(List l, boolean reveal)
+	{
+		selectedDecorations.clear();
+		if (l != null)
+		{
+			clearDecorationSelection();
+			for(Object o : l)
+			{
+				if (o instanceof NetworkMapDecoration)
+				{
+					selectedDecorations.add((NetworkMapDecoration)o);
+					DecorationFigure f = decorationFigures.get(((NetworkMapDecoration)o).getId());
+					if (f != null)
+						f.setSelected(true);
+				}
+			}
+		}
+		super.setSelectionToWidget(l, reveal);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.AbstractStructuredGraphViewer#getSelectionFromWidget()
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	protected List getSelectionFromWidget()
+	{
+		List selection = super.getSelectionFromWidget();
+		for(NetworkMapDecoration d : selectedDecorations)
+			selection.add(d);
+		return selection;
+	}
+
 	/**
 	 * Set background image for graph
 	 * 

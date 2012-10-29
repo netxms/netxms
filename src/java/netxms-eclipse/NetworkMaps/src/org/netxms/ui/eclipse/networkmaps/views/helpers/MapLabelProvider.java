@@ -40,7 +40,6 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.IFigureProvider;
 import org.eclipse.zest.core.viewers.ISelfStyleProvider;
 import org.eclipse.zest.core.widgets.GraphConnection;
@@ -68,7 +67,7 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
 public class MapLabelProvider extends LabelProvider implements IFigureProvider, ISelfStyleProvider
 {
 	private NXCSession session;
-	private GraphViewer viewer;
+	private ExtendedGraphViewer viewer;
 	private Image[] statusImages;
 	private Image imgNodeGeneric;
 	private Image imgNodeWindows;
@@ -98,7 +97,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	/**
 	 * Create map label provider
 	 */
-	public MapLabelProvider(GraphViewer viewer)
+	public MapLabelProvider(ExtendedGraphViewer viewer)
 	{
 		this.viewer = viewer;
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -232,7 +231,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		}
 		if (element instanceof NetworkMapDecoration)
 		{
-			return new DecorationFigure((NetworkMapDecoration)element, this);
+			return new DecorationFigure((NetworkMapDecoration)element, this, viewer);
 		}
 		return null;
 	}

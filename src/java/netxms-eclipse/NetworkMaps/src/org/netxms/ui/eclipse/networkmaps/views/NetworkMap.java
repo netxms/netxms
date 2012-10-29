@@ -482,6 +482,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				public void run()
 				{
 					setLayoutAlgorithm(alg);
+					viewer.setInput(mapPage);
 				}
 			};
 			actionSetAlgorithm[i].setChecked(layoutAlgorithm == i);
