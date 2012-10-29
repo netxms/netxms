@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.dashboard.propertypages;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import org.eclipse.core.internal.runtime.AdapterManager;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -43,7 +42,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.client.NXCObjectModificationData;
@@ -66,7 +64,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * "Dashboard elements" property page for dashboard objects
- *
  */
 @SuppressWarnings("restriction")
 public class DashboardElements extends PropertyPage
@@ -366,7 +363,7 @@ public class DashboardElements extends PropertyPage
 			{
 				if (isApply)
 				{
-					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{
