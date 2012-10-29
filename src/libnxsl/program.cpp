@@ -290,11 +290,9 @@ BOOL NXSL_Program::addFunction(const char *pszName, DWORD dwAddr, char *pszError
    return TRUE;
 }
 
-
-//
-// Add preload information
-//
-
+/**
+ * Add preload information
+ */
 void NXSL_Program::addPreload(char *pszName)
 {
    m_ppszPreloadList = (TCHAR **)realloc(m_ppszPreloadList, sizeof(TCHAR *) * (m_dwNumPreloads + 1));
@@ -307,11 +305,9 @@ void NXSL_Program::addPreload(char *pszName)
    m_dwNumPreloads++;
 }
 
-
-//
-// resolve local functions
-//
-
+/**
+ * resolve local functions
+ */
 void NXSL_Program::resolveFunctions()
 {
    DWORD i, j;
@@ -400,11 +396,9 @@ void NXSL_Program::dump(FILE *pFile)
    }
 }
 
-
-//
-// Report error
-//
-
+/**
+ * Report error
+ */
 void NXSL_Program::error(int nError)
 {
    TCHAR szBuffer[1024];
@@ -417,12 +411,10 @@ void NXSL_Program::error(int nError)
    m_dwCurrPos = INVALID_ADDRESS;
 }
 
-
-//
-// Run program
-// Returns 0 on success and -1 on error
-//
-
+/**
+ * Run program
+ * Returns 0 on success and -1 on error
+ */
 int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
                       NXSL_VariableSystem *pUserLocals, NXSL_VariableSystem **ppGlobals,
 							 NXSL_VariableSystem *pConstants, const TCHAR *entryPoint)
@@ -431,6 +423,8 @@ int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
    NXSL_VariableSystem *pSavedGlobals, *pSavedConstants = NULL;
    NXSL_Value *pValue;
    TCHAR szBuffer[32];
+
+	m_dwCurrPos = INVALID_ADDRESS;
 
    // Save original code size and number of functions
    dwOrigCodeSize = m_dwCodeSize;
@@ -1477,11 +1471,9 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
       m_pDataStack->push(pRes);
 }
 
-
-//
-// Perform unary operation on operand from the stack and push result back to stack
-//
-
+/**
+ * Perform unary operation on operand from the stack and push result back to stack
+ */
 void NXSL_Program::doUnaryOperation(int nOpCode)
 {
    NXSL_Value *pVal;
@@ -1532,24 +1524,26 @@ void NXSL_Program::doUnaryOperation(int nOpCode)
    }
 }
 
-
-//
-// Relocate code block
-//
-
+/**
+ * Relocate code block
+ */
 void NXSL_Program::relocateCode(DWORD dwStart, DWORD dwLen, DWORD dwShift)
 {
    DWORD i, dwLast;
 
    dwLast = min(dwStart + dwLen, m_dwCodeSize);
    for(i = dwStart; i < dwLast; i++)
+	{
       if ((m_ppInstructionSet[i]->m_nOpCode == OPCODE_JMP) ||
           (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ) ||
           (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ) ||
+          (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ_PEEK) ||
+          (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ_PEEK) ||
           (m_ppInstructionSet[i]->m_nOpCode == OPCODE_CALL))
       {
          m_ppInstructionSet[i]->m_operand.m_dwAddr += dwShift;
       }
+	}
 }
 
 /**
@@ -1580,6 +1574,7 @@ void NXSL_Program::useModule(NXSL_Program *pModule, const TCHAR *pszName)
           sizeof(NXSL_Function) * pModule->m_dwNumFunctions);
    for(i = m_dwNumFunctions, j = 0; j < pModule->m_dwNumFunctions; i++, j++)
       m_pFunctionList[i].m_dwAddr += dwStart;
+   m_dwNumFunctions += pModule->m_dwNumFunctions;
 
    // Register module as loaded
    m_pModuleList = (NXSL_Module *)malloc(sizeof(NXSL_Module) * (m_dwNumModules + 1));
@@ -1589,8 +1584,6 @@ void NXSL_Program::useModule(NXSL_Program *pModule, const TCHAR *pszName)
    m_pModuleList[m_dwNumModules].m_dwFunctionStart = m_dwNumFunctions;
    m_pModuleList[m_dwNumModules].m_dwNumFunctions = pModule->m_dwNumFunctions;
    m_dwNumModules++;
-
-   m_dwNumFunctions += pModule->m_dwNumFunctions;
 }
 
 /**
@@ -1801,6 +1794,8 @@ void NXSL_Program::removeInstructions(DWORD start, int count)
 		if (((m_ppInstructionSet[i]->m_nOpCode == OPCODE_JMP) ||
 		     (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ) ||
 		     (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ) ||
+		     (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ_PEEK) ||
+		     (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ_PEEK) ||
 		     (m_ppInstructionSet[i]->m_nOpCode == OPCODE_CALL)) &&
 		    (m_ppInstructionSet[i]->m_operand.m_dwAddr > start))
 		{

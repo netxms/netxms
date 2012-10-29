@@ -63,11 +63,9 @@ static void DestroyActionList()
    RWLockUnlock(m_rwlockActionListAccess);
 }
 
-
-//
-// Load actions list from database
-//
-
+/**
+ * Load actions list from database
+ */
 static BOOL LoadActions()
 {
    DB_RESULT hResult;
@@ -345,11 +343,9 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 	return rcc == ISC_ERR_SUCCESS;
 }
 
-
-//
-// Execute NXSL script
-//
-
+/**
+ * Execute NXSL script
+ */
 static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 {
 	BOOL success = FALSE;
@@ -470,11 +466,9 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
    return bSuccess;
 }
 
-
-//
-// Create new action
-//
-
+/**
+ * Create new action
+ */
 DWORD CreateNewAction(const TCHAR *pszName, DWORD *pdwId)
 {
    DWORD i, dwResult = RCC_SUCCESS;
@@ -514,11 +508,9 @@ DWORD CreateNewAction(const TCHAR *pszName, DWORD *pdwId)
    return dwResult;
 }
 
-
-//
-// Delete action
-//
-
+/**
+ * Delete action
+ */
 DWORD DeleteActionFromDB(DWORD dwActionId)
 {
    DWORD i, dwResult = RCC_INVALID_ACTION_ID;
@@ -546,11 +538,9 @@ DWORD DeleteActionFromDB(DWORD dwActionId)
    return dwResult;
 }
 
-
-//
-// Modify action record from message
-//
-
+/**
+ * Modify action record from message
+ */
 DWORD ModifyActionFromMessage(CSCPMessage *pMsg)
 {
    DWORD i, dwResult = RCC_INVALID_ACTION_ID;
@@ -589,11 +579,9 @@ DWORD ModifyActionFromMessage(CSCPMessage *pMsg)
    return dwResult;
 }
 
-
-//
-// Fill CSCP message with action's data
-//
-
+/**
+ * Fill CSCP message with action's data
+ */
 void FillActionInfoMessage(CSCPMessage *pMsg, NXC_ACTION *pAction)
 {
    pMsg->SetVariable(VID_IS_DISABLED, (WORD)pAction->bIsDisabled);

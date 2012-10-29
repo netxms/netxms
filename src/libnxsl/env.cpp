@@ -52,6 +52,7 @@ int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pr
 int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_sys(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_trace(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
@@ -92,6 +93,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
 	{ _T("sleep"), F_sleep, 1 },
 	{ _T("strftime"), F_strftime, -1 },
 	{ _T("substr"), F_substr, -1 },
+	{ _T("sys"), F_sys, 1 },
 	{ _T("time"), F_time, 0 },
    { _T("trace"), F_trace, 2 },
 	{ _T("trim"), F_trim, 1 },
@@ -153,11 +155,9 @@ void NXSL_Environment::registerFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunctio
    m_dwNumFunctions += dwNumFunctions;
 }
 
-
-//
-// Find module by name
-//
-
+/**
+ * Find module by name
+ */
 BOOL NXSL_Environment::useModule(NXSL_Program *pMain, const TCHAR *pszName)
 {
    TCHAR *pData, szBuffer[MAX_PATH];

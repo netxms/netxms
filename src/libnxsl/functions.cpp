@@ -1010,17 +1010,36 @@ int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *p
 	return 0;
 }
 
-
-//
-// Suspend execution for given number of milliseconds
-//
-
+/**
+ * Suspend execution for given number of milliseconds
+ */
 int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isInteger())
 		return NXSL_ERR_NOT_INTEGER;
 
 	ThreadSleepMs(argv[0]->getValueAsUInt32());
+	*ppResult = new NXSL_Value;
+	return 0;
+}
+
+/**
+ * System functions, mostly for debugging
+ */
+int F_sys(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isInteger())
+		return NXSL_ERR_NOT_INTEGER;
+
+	switch(argv[0]->getValueAsInt32())
+	{
+		case 1:	// dump script code to stdout
+			program->dump(stdout);
+			break;
+		default:
+			break;
+	}
+
 	*ppResult = new NXSL_Value;
 	return 0;
 }

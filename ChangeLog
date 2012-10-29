@@ -24,6 +24,7 @@
 		- Enable daily scheduler: if ‘off’, the above values are applied to the whole day. If ‘on’ they will be applied only to the specified interval (for the whole week).
 		- Daily on: start daily time to apply scheduler values
 		- Daily off: stop daily time to apply scheduler values
+- Fixed issues: #171
 
 
 *

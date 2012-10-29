@@ -22,76 +22,14 @@
 
 #include "nxcore.h"
 
-
-//
-// Global data
-//
-
+/**
+ * Script library
+ */
 NXSL_Library *g_pScriptLibrary = NULL;
 
-
-/*
-
-//
-// NXSL class representing NetXMS object
-//
-
-class ___NXSL_NetXMSObjectClass : public NXSL_Class
-{
-public:
-   NXSL_NetXMSObjectClass() : NXSL_Class() { _tcscpy(m_szName, _T("NetXMS_Object")); }
-
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
-   virtual BOOL setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue);
-};
-
-
-//
-// Read object's attribute
-//
-
-NXSL_Value *NXSL_NetXMSObjectClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
-{
-   NetObj *pSysObj;
-   NXSL_Value *pValue = NULL;
-   TCHAR szBuffer[256];
-
-   pSysObj = (NetObj *)pObject->getData();
-   if (pSysObj != NULL)
-   {
-      if (!_tcscmp(pszAttr, _T("id")))
-      {
-         pValue = new NXSL_Value(pSysObj->Id());
-      }
-      else if (!_tcscmp(pszAttr, _T("name")))
-      {
-         pValue = new NXSL_Value((char *)pSysObj->Name());
-      }
-      else if (!_tcscmp(pszAttr, _T("ipAddr")))
-      {
-         pValue = new NXSL_Value(IpToStr(pSysObj->IpAddr(), szBuffer));
-      }
-   }
-   return pValue;
-}
-
-
-//
-// Set object's attribute
-//
-
-BOOL NXSL_NetXMSObjectClass::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue)
-{
-   return FALSE;
-}
-
-*/
-
-
-//
-// Load scripts from database
-//
-
+/**
+ * Load scripts from database
+ */
 void LoadScripts()
 {
    DB_RESULT hResult;
@@ -113,6 +51,7 @@ void LoadScripts()
          {
             g_pScriptLibrary->addScript(DBGetFieldULong(hResult, i, 0),
                                         DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING), pScript);
+				DbgPrintf(2, _T("Script %s added to library"), szBuffer);
          }
          else
          {
@@ -125,11 +64,9 @@ void LoadScripts()
    }
 }
 
-
-//
-// Reload script from database
-//
-
+/**
+ * Reload script from database
+ */
 void ReloadScript(DWORD dwScriptId)
 {
    TCHAR *pszCode, szQuery[256], szError[1024], szBuffer[MAX_DB_STRING];
@@ -163,11 +100,9 @@ void ReloadScript(DWORD dwScriptId)
    g_pScriptLibrary->unlock();
 }
 
-
-//
-// Check if script ID is valid
-//
-
+/**
+ * Check if script ID is valid
+ */
 BOOL IsValidScriptId(DWORD dwId)
 {
    TCHAR szQuery[256];

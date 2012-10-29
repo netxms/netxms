@@ -90,21 +90,24 @@ NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
    m_nStackItems = pSrc->m_nStackItems;
    switch(m_nOpCode)
    {
+		case OPCODE_CASE:
       case OPCODE_PUSH_CONSTANT:
          m_operand.m_pConstant = new NXSL_Value(pSrc->m_operand.m_pConstant);
          break;
-      case OPCODE_PUSH_VARIABLE:
-      case OPCODE_SET:
-      case OPCODE_CALL_EXTERNAL:
-      case OPCODE_BIND:
       case OPCODE_ARRAY:
-      case OPCODE_INC:
+      case OPCODE_BIND:
+      case OPCODE_CALL_EXTERNAL:
       case OPCODE_DEC:
-      case OPCODE_INCP:
       case OPCODE_DECP:
       case OPCODE_GET_ATTRIBUTE:
-      case OPCODE_SET_ATTRIBUTE:
+      case OPCODE_GLOBAL:
+      case OPCODE_GLOBAL_ARRAY:
+      case OPCODE_INC:
+      case OPCODE_INCP:
 		case OPCODE_NAME:
+      case OPCODE_PUSH_VARIABLE:
+      case OPCODE_SET:
+      case OPCODE_SET_ATTRIBUTE:
          m_operand.m_pszString = _tcsdup(pSrc->m_operand.m_pszString);
          break;
       default:
