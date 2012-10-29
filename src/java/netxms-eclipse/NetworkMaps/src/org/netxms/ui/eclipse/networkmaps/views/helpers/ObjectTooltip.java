@@ -56,6 +56,5 @@ public class ObjectTooltip extends Figure
 		}
 		text.setText(sb.toString());
 		page.add(text);
-System.out.println(">>> " + sb.toString());		
 	}
 }
