@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.ContributionItem;
@@ -409,18 +409,18 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
 		{
 			final String os = Platform.getOS();
-			if (os.equals(Platform.OS_WIN32))
-			{
-				command = "CMD.EXE /C START \"NetXMS\" " + command;
-			}
-			else
-			{
-				command = "/bin/sh -c \"" + command.replaceAll("\"", Matcher.quoteReplacement("\\\"")) + "\""; 
-			}
 			
 			try
 			{
-				Runtime.getRuntime().exec(command);
+				if (os.equals(Platform.OS_WIN32))
+				{
+					command = "CMD.EXE /C START \"NetXMS\" " + command;
+					Runtime.getRuntime().exec(command);
+				}
+				else
+				{
+					Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", command });
+				}
 			}
 			catch(IOException e)
 			{
