@@ -12,8 +12,11 @@
 	- Implemented seed-based network maps
 	- Decoration elements on network maps can be moved and resized
 - NXSL: implemented short-circuit evaluation of logical expressions (&& and ||)
+- New attribute "isLocalMgmt" in NXSL "Node" class
 - Storage discovery API
 - New parameter Icmp.PingStdDev in PING subagent
+- Cisco Catalyst 3550 supported by CATALYST driver
+- Intervals of less then a minute can be defined with custom DCI schedules
 - Android client:
 	- Restructured settings activity
 	- Alarm status icon notification configurable by settings (independent from playing the sound assigned to the category)
@@ -26,7 +29,7 @@
 		- Enable daily scheduler: if ‘off’, the above values are applied to the whole day. If ‘on’ they will be applied only to the specified interval (for the whole week).
 		- Daily on: start daily time to apply scheduler values
 		- Daily off: stop daily time to apply scheduler values
-- Fixed issues: #53, #120, #139, #171
+- Fixed issues: #53, #120, #128, #139, #171
 
 
 *

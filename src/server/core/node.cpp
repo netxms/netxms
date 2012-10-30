@@ -1449,8 +1449,10 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
       SetPollerInfo(nPoller, _T("capability check"));
       SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
 
-		hasChanges = hasChanges || confPollAgent(dwRqId);
-		hasChanges = hasChanges || confPollSnmp(dwRqId);
+		if (confPollAgent(dwRqId))
+			hasChanges = true;
+		if (confPollSnmp(dwRqId))
+			hasChanges = true;
 
       // Check for CheckPoint SNMP agent on port 260
       DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_szName);
