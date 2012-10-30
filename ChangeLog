@@ -11,6 +11,7 @@
 	- Line charts can be opened by double click on DCI in last values view
 	- Implemented seed-based network maps
 	- Decoration elements on network maps can be moved and resized
+	- Object details view can be opened from alarm's context menu
 - NXSL: implemented short-circuit evaluation of logical expressions (&& and ||)
 - New attribute "isLocalMgmt" in NXSL "Node" class
 - Storage discovery API

@@ -8,7 +8,7 @@
       </page>
       <page name="%prefPage.Colors"
             class="org.netxms.ui.eclipse.charts.preferencepages.ChartColors"
-            id="org.eclipse.ui.preferencePages.Charts"
+            id="org.eclipse.ui.preferencePages.ChartColors"
             category="org.eclipse.ui.preferencePages.Charts">
       </page>
    </extension>
