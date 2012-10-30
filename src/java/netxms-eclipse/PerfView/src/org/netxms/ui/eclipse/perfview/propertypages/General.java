@@ -25,6 +25,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
@@ -33,12 +34,15 @@ import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.ChartConfig;
 import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.DateTimeSelector;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -58,6 +62,12 @@ public class General extends PropertyPage
 	private Button checkLogScale;
 	private Scale refreshIntervalScale;
 	private Spinner refreshIntervalSpinner;
+	private Button radioBackFromNow;
+	private Button radioFixedInterval;
+	private Spinner timeRange;
+	private Combo timeUnits;
+	private DateTimeSelector timeFrom;
+	private DateTimeSelector timeTo;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -189,7 +199,100 @@ public class General extends PropertyPage
 				widgetSelected(e);
 			}
 		});
+      
+      Group timeGroup = new Group(dialogArea, SWT.NONE);
+      timeGroup.setText("Time Period");
+      layout = new GridLayout();
+      layout.marginWidth = WidgetHelper.OUTER_SPACING;
+      layout.marginHeight = WidgetHelper.OUTER_SPACING;
+      layout.horizontalSpacing = 16;
+      layout.makeColumnsEqualWidth = true;
+      layout.numColumns = 2;
+      timeGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      timeGroup.setLayoutData(gd);
+      
+      final SelectionListener listener = new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				timeRange.setEnabled(radioBackFromNow.getSelection());
+				timeUnits.setEnabled(radioBackFromNow.getSelection());
+		      timeFrom.setEnabled(radioFixedInterval.getSelection());
+		      timeTo.setEnabled(radioFixedInterval.getSelection());
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		};
 
+      radioBackFromNow = new Button(timeGroup, SWT.RADIO);
+      radioBackFromNow.setText("&Back from now");
+      radioBackFromNow.setSelection(config.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW);
+      radioBackFromNow.addSelectionListener(listener);
+      
+      radioFixedInterval = new Button(timeGroup, SWT.RADIO);
+      radioFixedInterval.setText("&Fixed time frame");
+      radioFixedInterval.setSelection(config.getTimeFrameType() == GraphSettings.TIME_FRAME_FIXED);
+      radioFixedInterval.addSelectionListener(listener);
+      
+      Composite timeBackGroup = new Composite(timeGroup, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.numColumns = 2;
+      timeBackGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.TOP;
+      timeBackGroup.setLayoutData(gd);
+      
+		timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, "Time interval", 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
+		timeRange.setSelection(config.getTimeRange());
+		timeRange.setEnabled(radioBackFromNow.getSelection());
+		
+		timeUnits = WidgetHelper.createLabeledCombo(timeBackGroup, SWT.READ_ONLY, "Time units", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		timeUnits.add("Minutes");
+		timeUnits.add("Hours");
+		timeUnits.add("Days");
+		timeUnits.select(config.getTimeUnits());
+		timeUnits.setEnabled(radioBackFromNow.getSelection());
+
+      Composite timeFixedGroup = new Composite(timeGroup, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      timeFixedGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.TOP;
+      timeFixedGroup.setLayoutData(gd);
+      
+      final WidgetFactory factory = new WidgetFactory() {
+			@Override
+			public Control createControl(Composite parent, int style)
+			{
+				return new DateTimeSelector(parent, style);
+			}
+		};
+		
+      timeFrom = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, "Time from", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeFrom.setValue(config.getTimeFrom());
+      timeFrom.setEnabled(radioFixedInterval.getSelection());
+
+      timeTo = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, "Time to", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeTo.setValue(config.getTimeTo());
+      timeTo.setEnabled(radioFixedInterval.getSelection());
+      
       return dialogArea;
 	}
 
@@ -213,6 +316,16 @@ public class General extends PropertyPage
 		
 		refreshIntervalScale.setSelection(30);
 		refreshIntervalSpinner.setSelection(30);
+		
+		radioBackFromNow.setSelection(true);
+		radioFixedInterval.setSelection(false);
+		
+		timeRange.setSelection(60);
+		timeRange.setEnabled(true);
+		timeUnits.select(0);
+		timeUnits.setEnabled(true);
+		timeFrom.setEnabled(false);
+		timeTo.setEnabled(false);
 	}
 
 	/**
@@ -230,6 +343,12 @@ public class General extends PropertyPage
 		config.setAutoRefresh(checkAutoRefresh.getSelection());
 		config.setLogScale(checkLogScale.getSelection());
 		config.setRefreshRate(refreshIntervalSpinner.getSelection());
+		
+		config.setTimeFrameType(radioBackFromNow.getSelection() ? GraphSettings.TIME_FRAME_BACK_FROM_NOW : GraphSettings.TIME_FRAME_FIXED);
+		config.setTimeUnits(timeUnits.getSelectionIndex());
+		config.setTimeRange(timeRange.getSelection());
+		config.setTimeFrom(timeFrom.getValue());
+		config.setTimeTo(timeTo.getValue());
 		
 		if ((config instanceof PredefinedChartConfig) && isApply)
 		{
