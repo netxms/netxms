@@ -9,6 +9,8 @@
 	  in the object tree
 	- Maps and dashboards can be opened by double click in the object tree
 	- Line charts can be opened by double click on DCI in last values view
+	- Implemented seed-based network maps
+	- Decoration elements on network maps can be moved and resized
 - NXSL: implemented short-circuit evaluation of logical expressions (&& and ||)
 - Storage discovery API
 - New parameter Icmp.PingStdDev in PING subagent

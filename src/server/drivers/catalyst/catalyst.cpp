@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco Catalyst switches
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -68,7 +68,7 @@ bool CatalystDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 	DWORD value = 0;
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.5.1.2.14.0"), NULL, 0, &value, sizeof(DWORD), 0) != SNMP_ERR_SUCCESS)
 		return false;
-	return value > 0;
+	return value >= 0;	// Catalyst 3550 can return 0 as number of slots
 }
 
 /**
