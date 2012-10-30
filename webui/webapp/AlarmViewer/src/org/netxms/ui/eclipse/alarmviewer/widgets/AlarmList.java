@@ -51,6 +51,7 @@ import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.AlarmComparator;
 import org.netxms.ui.eclipse.alarmviewer.AlarmListFilter;
@@ -58,6 +59,7 @@ import org.netxms.ui.eclipse.alarmviewer.AlarmListLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmComments;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -95,6 +97,8 @@ public class AlarmList extends Composite
 	private Action actionResolve;
 	private Action actionStickyAcknowledge;
 	private Action actionTerminate;
+	private Action actionShowAlarmDetails;
+	private Action actionShowObjectDetails;
 	
 	/**
 	 * Create alarm list widget
@@ -347,6 +351,16 @@ public class AlarmList extends Composite
 				terminateAlarms();
 			}
 		};
+		
+		actionShowObjectDetails = new Action("Show &object details") {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void run()
+			{
+				showObjectDetails();
+			}
+		};
 	}
 
 	/**
@@ -393,6 +407,8 @@ public class AlarmList extends Composite
 		if (selection.size() == 1)
 		{
 			manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+			manager.add(new Separator());
+			manager.add(actionShowObjectDetails);
 			manager.add(new Separator());
 		}
 		
@@ -579,5 +595,29 @@ public class AlarmList extends Composite
 				return Messages.TerminateAlarm_ErrorMessage;
 			}
 		}.start();
+	}
+
+	/**
+	 * Acknowledge selected alarms
+	 */
+	private void showObjectDetails()
+	{
+		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		GenericObject object = session.findObjectById(((Alarm)selection.getFirstElement()).getSourceObjectId());
+		if (object != null)
+		{
+			try
+			{
+				TabbedObjectView view = (TabbedObjectView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(TabbedObjectView.ID);
+				view.setObject(object);
+			}
+			catch(PartInitException e)
+			{
+				MessageDialog.openError(getShell(), Messages.AlarmList_Error, "Cannot open object details view: " + e.getLocalizedMessage());
+			}
+		}
 	}
 }

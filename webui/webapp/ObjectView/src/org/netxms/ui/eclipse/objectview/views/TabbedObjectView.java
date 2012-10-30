@@ -224,7 +224,7 @@ public class TabbedObjectView extends ViewPart
 	 * 
 	 * @param object New object
 	 */
-	private void setObject(GenericObject object)
+	public void setObject(GenericObject object)
 	{
 		header.setText(object.getObjectName());
 		for(final ObjectTab tab : tabs)
