@@ -18,7 +18,9 @@
 - Storage discovery API
 - New parameter Icmp.PingStdDev in PING subagent
 - Cisco Catalyst 3550 supported by CATALYST driver
-- Intervals of less then a minute can be defined with custom DCI schedules
+- Intervals of less than a minute can be defined with custom DCI schedules
+- Agent parameters File.xxx (File.Size, etc) now support strftime style macros
+  for current date/time (similar to file name in log parser)
 - Android client:
 	- Restructured settings activity
 	- Alarm status icon notification configurable by settings (independent from playing the sound assigned to the category)
