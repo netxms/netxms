@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.epp.widgets;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.situations.Situation;
+import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.SituationCache;
 import org.netxms.ui.eclipse.epp.dialogs.SituationSelectionDialog;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
@@ -42,8 +43,8 @@ public class SituationSelector extends AbstractSelector
 	 */
 	public SituationSelector(Composite parent, int style)
 	{
-		super(parent, style, false);
-		setText("<none>");
+		super(parent, style, USE_TEXT);
+		setText(Messages.SituationSelector_None);
 	}
 
 	/* (non-Javadoc)
@@ -66,8 +67,7 @@ public class SituationSelector extends AbstractSelector
 			else
 			{
 				situationId = 0;
-				setText("<none>");
-				setImage(null);
+				setText(Messages.SituationSelector_None);
 				getTextControl().setToolTipText(null);
 			}
 		}
@@ -90,15 +90,13 @@ public class SituationSelector extends AbstractSelector
 			}
 			else
 			{
-				setText("<unknown>");
-				setImage(null);
+				setText(Messages.SituationSelector_Unknown);
 				getTextControl().setToolTipText(null);
 			}
 		}
 		else
 		{
-			setText("<none>");
-			setImage(null);
+			setText(Messages.SituationSelector_None);
 			getTextControl().setToolTipText(null);
 		}
 	}
@@ -109,7 +107,7 @@ public class SituationSelector extends AbstractSelector
 	@Override
 	protected String getButtonToolTip()
 	{
-		return "Select situation";
+		return Messages.SituationSelector_Tooltip;
 	}
 
 	/**

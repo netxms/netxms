@@ -45,7 +45,7 @@ public class EventSelector extends AbstractSelector
 	 */
 	public EventSelector(Composite parent, int style)
 	{
-		super(parent, style, false);
+		super(parent, style, 0);
 		setText(Messages.EventSelector_None);
 	}
 
@@ -55,7 +55,7 @@ public class EventSelector extends AbstractSelector
 	 */
 	public EventSelector(Composite parent, int style, boolean useHyperlink)
 	{
-		super(parent, style, useHyperlink);
+		super(parent, style, useHyperlink ? USE_HYPERLINK : 0);
 		setText(Messages.EventSelector_None);
 	}
 

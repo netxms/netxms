@@ -221,6 +221,8 @@ public class General extends PropertyPage
       timeGroup.setLayoutData(gd);
       
       final SelectionListener listener = new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

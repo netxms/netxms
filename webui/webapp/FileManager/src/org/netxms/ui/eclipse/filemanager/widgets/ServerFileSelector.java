@@ -44,7 +44,7 @@ public class ServerFileSelector extends AbstractSelector
 	 */
 	public ServerFileSelector(Composite parent, int style)
 	{
-		super(parent, style, false);
+		super(parent, style, 0);
 		labelProvider = new WorkbenchLabelProvider();
 		setText(Messages.ServerFileSelector_None);
 	}

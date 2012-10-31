@@ -97,8 +97,7 @@ public class ScriptLibrary extends ViewPart
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ScriptLabelProvider());
 		viewer.setComparator(new ScriptComparator());
-		viewer.addSelectionChangedListener(new ISelectionChangedListener()
-		{
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{

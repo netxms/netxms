@@ -2301,6 +2301,7 @@ webui/webapp/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers
 webui/webapp/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers/ActionLabelProvider.java -text
 webui/webapp/AgentManager/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/AgentManager/META-INF/MANIFEST.MF -text
+webui/webapp/AgentManager/OSGI-INF/l10n/bundle.properties -text
 webui/webapp/AgentManager/OSGI-INF/l10n/bundle_es.properties -text
 webui/webapp/AgentManager/build.properties -text
 webui/webapp/AgentManager/icons/active.gif -text
@@ -2910,12 +2911,14 @@ webui/webapp/NXSL/resource.properties -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/Activator.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/actions/OpenScriptLibrary.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/dialogs/CreateScriptDialog.java -text
+webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/dialogs/SelectScriptDialog.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptEditorView.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptLibrary.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptToolbox.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/views/helpers/ScriptComparator.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/views/helpers/ScriptLabelProvider.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/ScriptEditor.java -text
+webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/ScriptSelector.java -text
 webui/webapp/NetworkMaps/META-INF/MANIFEST.MF -text
 webui/webapp/NetworkMaps/build.properties -text
 webui/webapp/NetworkMaps/icons/layer2.png -text

@@ -101,7 +101,7 @@ public class ObjectBrowser extends ViewPart
 	private boolean initHideUnmanaged = false;
 	private boolean initHideTemplateChecks = false;
 	private boolean initShowFilter = true;
-	private boolean initShowStatus = true;
+	private boolean initShowStatus = false;
 	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
 	
 	/* (non-Javadoc)
@@ -116,7 +116,7 @@ public class ObjectBrowser extends ViewPart
 			initHideUnmanaged = safeCast(memento.getBoolean("ObjectBrowser.hideUnmanaged"), false); //$NON-NLS-1$
 			initHideTemplateChecks = safeCast(memento.getBoolean("ObjectBrowser.hideTemplateChecks"), false); //$NON-NLS-1$
 			initShowFilter = safeCast(memento.getBoolean("ObjectBrowser.showFilter"), true); //$NON-NLS-1$
-			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), true); //$NON-NLS-1$
+			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), false); //$NON-NLS-1$
 		}
 		registerOpenHandlers();
 	}
