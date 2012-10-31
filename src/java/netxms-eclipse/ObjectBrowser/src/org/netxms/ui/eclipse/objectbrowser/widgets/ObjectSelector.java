@@ -45,7 +45,7 @@ public class ObjectSelector extends AbstractSelector
 	 */
 	public ObjectSelector(Composite parent, int style)
 	{
-		super(parent, style, false);
+		super(parent, style, 0);
 		setText(emptySelectionName);
 	}
 
@@ -70,6 +70,7 @@ public class ObjectSelector extends AbstractSelector
 				objectId = 0;
 				setText(emptySelectionName);
 			}
+			fireModifyListeners();
 		}
 	}
 
@@ -79,6 +80,14 @@ public class ObjectSelector extends AbstractSelector
 	public long getObjectId()
 	{
 		return objectId;
+	}
+
+	/**
+	 * @return the object name
+	 */
+	public String getObjectName()
+	{
+		return getText();
 	}
 
 	/**

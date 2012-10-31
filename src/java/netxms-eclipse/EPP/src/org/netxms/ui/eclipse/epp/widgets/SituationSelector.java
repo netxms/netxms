@@ -41,7 +41,7 @@ public class SituationSelector extends AbstractSelector
 	 */
 	public SituationSelector(Composite parent, int style)
 	{
-		super(parent, style, false);
+		super(parent, style, USE_TEXT);
 		setText(Messages.SituationSelector_None);
 	}
 
@@ -66,7 +66,6 @@ public class SituationSelector extends AbstractSelector
 			{
 				situationId = 0;
 				setText(Messages.SituationSelector_None);
-				setImage(null);
 				getTextControl().setToolTipText(null);
 			}
 		}
@@ -90,14 +89,12 @@ public class SituationSelector extends AbstractSelector
 			else
 			{
 				setText(Messages.SituationSelector_Unknown);
-				setImage(null);
 				getTextControl().setToolTipText(null);
 			}
 		}
 		else
 		{
 			setText(Messages.SituationSelector_None);
-			setImage(null);
 			getTextControl().setToolTipText(null);
 		}
 	}

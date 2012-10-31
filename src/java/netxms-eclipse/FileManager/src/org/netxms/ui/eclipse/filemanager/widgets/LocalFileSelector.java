@@ -40,9 +40,8 @@ public class LocalFileSelector extends AbstractSelector
 	 */
 	public LocalFileSelector(Composite parent, int style, boolean useHyperlink)
 	{
-		super(parent, style, useHyperlink);
+		super(parent, style, USE_TEXT | (useHyperlink ? USE_HYPERLINK : 0));
 
-		setImage(null);
 		setText(Messages.LocalFileSelector_None);
 	}
 
@@ -92,7 +91,6 @@ public class LocalFileSelector extends AbstractSelector
 		}
 		else
 		{
-			setImage(null);
 			setText(Messages.LocalFileSelector_None);
 		}
 	}

@@ -34,7 +34,7 @@ public class DciSelector extends AbstractSelector
 	 */
 	public DciSelector(Composite parent, int style, boolean useHyperlink)
 	{
-		super(parent, style, useHyperlink);
+		super(parent, style, USE_TEXT | (useHyperlink ? USE_HYPERLINK : 0));
 		setText(emptySelectionName);
 		session = (NXCSession)ConsoleSharedData.getSession();
 	}

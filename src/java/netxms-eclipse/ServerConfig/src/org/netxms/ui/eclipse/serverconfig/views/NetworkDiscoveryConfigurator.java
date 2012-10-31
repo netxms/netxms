@@ -57,6 +57,7 @@ import org.netxms.client.IpAddressListElement;
 import org.netxms.client.constants.NetworkDiscovery;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.nxsl.widgets.ScriptSelector;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.dialogs.AddAddressListElementDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.AddUsmCredDialog;
@@ -64,7 +65,6 @@ import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListElementCompar
 import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.SnmpUsmComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.SnmpUsmLabelProvider;
-import org.netxms.ui.eclipse.serverconfig.widgets.ScriptSelector;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.StringComparator;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -339,7 +339,9 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		radioFilterOff.addSelectionListener(radioButtonListener);
 		radioFilterCustom = toolkit.createButton(clientArea, "&Custom script)", SWT.RADIO);
 		radioFilterCustom.addSelectionListener(radioButtonListener);
-		filterScript = new ScriptSelector(toolkit, clientArea, "");
+		filterScript = new ScriptSelector(clientArea, SWT.NONE, true, false);
+		toolkit.adapt(filterScript);
+		filterScript.getTextControl().setBackground(clientArea.getBackground());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

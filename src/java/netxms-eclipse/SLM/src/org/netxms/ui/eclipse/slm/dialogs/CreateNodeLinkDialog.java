@@ -113,7 +113,7 @@ public class CreateNodeLinkDialog extends Dialog
 		name = nameField.getText().trim();
 		if (name.isEmpty())
 		{
-			name = nodeField.getText();
+			name = nodeField.getObjectName();
 		}
 		
 		super.okPressed();

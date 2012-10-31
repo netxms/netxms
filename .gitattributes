@@ -1345,6 +1345,7 @@ src/java/netxms-eclipse/NXSL/resource.properties -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/Activator.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/actions/OpenScriptLibrary.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/dialogs/CreateScriptDialog.java -text
+src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/dialogs/SelectScriptDialog.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/tools/NXSLLineStyleListener.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptEditorView.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptLibrary.java -text
@@ -1352,6 +1353,7 @@ src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptToolbox.
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/helpers/ScriptComparator.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/helpers/ScriptLabelProvider.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/ScriptEditor.java -text
+src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/ScriptSelector.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/CodePatternRule.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/KeywordRule.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/NXSLDocument.java -text
@@ -1819,7 +1821,6 @@ src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/view
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/helpers/SnmpUsmLabelProvider.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/helpers/ViewLabelProvider.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/LogParserEditor.java -text
-src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/ScriptSelector.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParser.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserContext.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/helpers/LogParserEvent.java -text
