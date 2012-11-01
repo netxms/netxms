@@ -47,3 +47,10 @@ begin
   (* MsgBox(strJvmArgument, mbInformation, MB_OK); *)
 end;
 
+Procedure StopAllServices;
+Var
+  iResult: Integer;
+Begin
+  Exec('net.exe', 'stop nxWebUI', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
+End;
+
