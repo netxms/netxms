@@ -15,7 +15,6 @@
 	- Custom time intervals can be set in line chart properties
 - NXSL: implemented short-circuit evaluation of logical expressions (&& and ||)
 - New attribute "isLocalMgmt" in NXSL "Node" class
-- Storage discovery API
 - New parameter Icmp.PingStdDev in PING subagent
 - Cisco Catalyst 3550 supported by CATALYST driver
 - Intervals of less than a minute can be defined with custom DCI schedules
