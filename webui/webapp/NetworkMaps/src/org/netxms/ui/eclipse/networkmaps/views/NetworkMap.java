@@ -24,10 +24,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -59,7 +55,6 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.eclipse.zest.core.viewers.AbstractZoomableViewer;
 import org.eclipse.zest.core.viewers.IZoomableWorkbenchPart;
 import org.eclipse.zest.core.widgets.Graph;
@@ -91,8 +86,8 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.GraphLayoutFilter;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ObjectFigureType;
-import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
@@ -120,7 +115,6 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	protected GenericObject rootObject;
 	protected NetworkMapPage mapPage;
 	protected ExtendedGraphViewer viewer;
-	protected SessionListener sessionListener;
 	protected MapLabelProvider labelProvider;
 	protected int layoutAlgorithm = LAYOUT_SPRING;
 	protected boolean allowManualLayout = false;     // True if manual layout can be switched on
@@ -144,6 +138,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
+	private SessionListener sessionListener;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -251,10 +246,18 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 
 		sessionListener = new SessionListener() {
 			@Override
-			public void notificationHandler(SessionNotification n)
+			public void notificationHandler(final SessionNotification n)
 			{
 				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
-					onObjectChange((GenericObject)n.getObject());
+				{
+					viewer.getControl().getDisplay().asyncExec(new Runnable() {
+						@Override
+						public void run()
+						{
+							onObjectChange((GenericObject)n.getObject());
+						}
+					});
+				}
 			}
 		};
 		session.addListener(sessionListener);
@@ -265,7 +268,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		
 		if (automaticLayoutEnabled)
 		{
-			setLayoutAlgorithm(layoutAlgorithm);
+			setLayoutAlgorithm(layoutAlgorithm, true);
 		}
 		else
 		{
@@ -278,7 +281,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	/**
 	 * Do full map refresh
 	 */
-	private void refreshMap()
+	protected void refreshMap()
 	{
 		buildMapPage();
 		viewer.setInput(mapPage);
@@ -306,8 +309,28 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	 * @param alg
 	 */
 	@SuppressWarnings("rawtypes")
-	protected void setLayoutAlgorithm(int alg)
+	protected void setLayoutAlgorithm(int alg, boolean forceChange)
 	{
+		if (alg == org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL)
+		{
+			if (!automaticLayoutEnabled)
+				return;	// manual layout already
+			
+			automaticLayoutEnabled = false;
+			actionSetAlgorithm[layoutAlgorithm].setChecked(false);
+			actionEnableAutomaticLayout.setChecked(false);
+			return;
+		}
+		
+		if (automaticLayoutEnabled && (alg == layoutAlgorithm) && !forceChange)
+			return;	// nothing to change
+		
+		if (!automaticLayoutEnabled)
+		{
+			actionEnableAutomaticLayout.setChecked(true);
+			automaticLayoutEnabled = true;
+		}
+		
 		LayoutAlgorithm algorithm;
 		
 		switch(alg)
@@ -394,7 +417,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	protected void setAutomaticLayout()
 	{
 		automaticLayoutEnabled = true;
-		setLayoutAlgorithm(layoutAlgorithm);
+		setLayoutAlgorithm(layoutAlgorithm, true);
 		
 		for(int i = 0; i < actionSetAlgorithm.length; i++)
 			actionSetAlgorithm[i].setEnabled(true);
@@ -495,7 +518,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				@Override
 				public void run()
 				{
-					setLayoutAlgorithm(alg);
+					setLayoutAlgorithm(alg, true);
 				}
 			};
 			actionSetAlgorithm[i].setChecked(layoutAlgorithm == i);
@@ -833,24 +856,17 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	 */
 	protected void onObjectChange(final GenericObject object)
 	{
-		new UIJob(viewer.getControl().getDisplay(), "Refresh map") {
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor)
-			{
-				NetworkMapObject element = mapPage.findObjectElement(object.getObjectId());
-				if (element != null)
-					viewer.refresh(element, true);
-				
-				List<NetworkMapLink> links = mapPage.findLinksWithStatusObject(object.getObjectId());
-				if (links != null)
-					for(NetworkMapLink l : links)
-						viewer.refresh(l);
-				
-				if (object.getObjectId() == rootObject.getObjectId())
-					rootObject = object;
-				return Status.OK_STATUS;
-			}
-		}.schedule();
+		NetworkMapObject element = mapPage.findObjectElement(object.getObjectId());
+		if (element != null)
+			viewer.refresh(element, true);
+		
+		List<NetworkMapLink> links = mapPage.findLinksWithStatusObject(object.getObjectId());
+		if (links != null)
+			for(NetworkMapLink l : links)
+				viewer.refresh(l);
+		
+		if (object.getObjectId() == rootObject.getObjectId())
+			rootObject = object;
 	}
 	
 	/**

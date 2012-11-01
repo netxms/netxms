@@ -39,6 +39,7 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
@@ -84,6 +85,8 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	private Action actionRemove;
 	private Action actionMapProperties;
 	private Action actionLinkProperties;
+	private Color backgroundColor = null;
+	private Color defaultLinkColor = null;
 
 	/**
 	 * Create predefined map view
@@ -130,8 +133,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	public void createPartControl(Composite parent)
 	{
 		super.createPartControl(parent);
-		viewer.addSelectionChangedListener(new ISelectionChangedListener()
-		{
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
@@ -139,7 +141,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			}
 		});
 
-		if (mapObject.getMapType() == 0)
+		if (mapObject.getMapType() == org.netxms.client.objects.NetworkMap.TYPE_CUSTOM)
 			addDropSupport();
 			
 		ImageProvider.getInstance().addUpdateListener(this);
@@ -151,8 +153,20 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			else
 				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
 		}
+		
+		if (mapObject.getDefaultLinkColor() >= 0)
+		{
+			defaultLinkColor = new Color(viewer.getControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getDefaultLinkColor()));
+			labelProvider.setDefaultLinkColor(defaultLinkColor);
+		}
+		
+		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
+		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
+		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
+		
+		refreshMap();
 	}
-
+	
 	/**
 	 * Add drop support
 	 */
@@ -637,6 +651,8 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	public void dispose()
 	{
 		ImageProvider.getInstance().removeUpdateListener(this);
+		if (defaultLinkColor != null)
+			defaultLinkColor.dispose();
 		super.dispose();
 	}
 
@@ -647,32 +663,60 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	protected void onObjectChange(final GenericObject object)
 	{
 		super.onObjectChange(object);
-		getSite().getShell().getDisplay().asyncExec(new Runnable() {
-			@Override
-			public void run()
+		
+		if (object.getObjectId() != mapObject.getObjectId())
+			return;
+		
+		UUID oldBackground = mapObject.getBackground();
+		mapObject = (org.netxms.client.objects.NetworkMap)object;
+		if (!oldBackground.equals(mapObject.getBackground()) || mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
+		{
+			if (mapObject.getBackground().equals(NXCommon.EMPTY_GUID))
 			{
-				if (object.getObjectId() == mapObject.getObjectId())
-				{
-					UUID oldBackground = mapObject.getBackground();
-					mapObject = (org.netxms.client.objects.NetworkMap)object;
-					if (!oldBackground.equals(mapObject.getBackground()) || mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
-					{
-						if (mapObject.getBackground().equals(NXCommon.EMPTY_GUID))
-						{
-							viewer.setBackgroundImage(null);
-						}
-						else if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
-						{
-							viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
-						}
-						else
-						{
-							viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
-						}
-					}
-				}
+				viewer.setBackgroundImage(null);
 			}
-		});
+			else if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
+			{
+				viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
+			}
+			else
+			{
+				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+			}
+		}
+
+		if (backgroundColor != null)
+			backgroundColor.dispose();
+		backgroundColor = new Color(viewer.getControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
+		viewer.getGraphControl().setBackground(backgroundColor);
+
+		if (defaultLinkColor != null)
+			defaultLinkColor.dispose();
+		if (mapObject.getDefaultLinkColor() >= 0)
+		{
+			defaultLinkColor = new Color(viewer.getControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getDefaultLinkColor()));
+		}
+		else
+		{
+			defaultLinkColor = null;
+		}
+		labelProvider.setDefaultLinkColor(defaultLinkColor);
+
+		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
+		{
+			if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
+				viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
+			else
+				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+		}
+
+		setLayoutAlgorithm(mapObject.getLayout(), false);
+		
+		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
+		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
+		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
+		
+		refreshMap();
 	}
 	
 	/**

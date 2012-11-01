@@ -216,6 +216,16 @@
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
+            class="org.netxms.ui.eclipse.networkmaps.propertypages.MapOptions"
+            id="org.netxms.ui.eclipse.networkmaps.propertypages.MapOptions"
+            name="Map Options">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.NetworkMap">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
             class="org.netxms.ui.eclipse.networkmaps.propertypages.MapBackground"
             id="org.netxms.ui.eclipse.networkmaps.propertypages.MapBackground"
             name="Map Background">
