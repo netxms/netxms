@@ -52,6 +52,7 @@ public class NetworkMap extends GenericObject
 	public static final int MF_SHOW_STATUS_ICON  = 0x000001;
 	public static final int MF_SHOW_STATUS_FRAME = 0x000002;
 	public static final int MF_SHOW_STATUS_BKGND = 0x000004;
+	public static final int MF_SHOW_END_NODES    = 0x000008;
 	
 	private int mapType;
 	private int layout;
@@ -63,6 +64,7 @@ public class NetworkMap extends GenericObject
 	private int defaultLinkColor;
 	private int defaultLinkRouting;
 	private int backgroundColor;
+	private int discoveryRadius;
 	private List<NetworkMapElement> elements;
 	private List<NetworkMapLink> links;
 	
@@ -83,6 +85,7 @@ public class NetworkMap extends GenericObject
 		defaultLinkColor = msg.getVariableAsInteger(NXCPCodes.VID_LINK_COLOR);
 		defaultLinkRouting = msg.getVariableAsInteger(NXCPCodes.VID_LINK_ROUTING);
 		backgroundColor = msg.getVariableAsInteger(NXCPCodes.VID_BACKGROUND_COLOR);
+		discoveryRadius = msg.getVariableAsInteger(NXCPCodes.VID_DISCOVERY_RADIUS);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<NetworkMapElement>(count);
@@ -203,5 +206,13 @@ public class NetworkMap extends GenericObject
 	public int getBackgroundColor()
 	{
 		return backgroundColor;
+	}
+
+	/**
+	 * @return the discoveryRadius
+	 */
+	public final int getDiscoveryRadius()
+	{
+		return discoveryRadius;
 	}
 }

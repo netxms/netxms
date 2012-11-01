@@ -91,6 +91,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_CLUSTER_NETWORKS   = 0x00800000000000L;
 	public static final long MODIFY_EXPECTED_STATE     = 0x01000000000000L;
 	public static final long MODIFY_CONNECTION_ROUTING = 0x02000000000000L;
+	public static final long MODIFY_DISCOVERY_RADIUS   = 0x04000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -160,6 +161,7 @@ public class NXCObjectModificationData
 	private int expectedState;
 	private int linkColor;
 	private int connectionRouting;
+	private int discoveryRadius;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1302,5 +1304,22 @@ public class NXCObjectModificationData
 	public int getMapBackgroundColor()
 	{
 		return mapBackgroundColor;
+	}
+
+	/**
+	 * @return the discoveryRadius
+	 */
+	public final int getDiscoveryRadius()
+	{
+		return discoveryRadius;
+	}
+
+	/**
+	 * @param discoveryRadius the discoveryRadius to set
+	 */
+	public final void setDiscoveryRadius(int discoveryRadius)
+	{
+		this.discoveryRadius = discoveryRadius;
+		flags |= MODIFY_DISCOVERY_RADIUS;
 	}
 }

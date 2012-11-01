@@ -36,6 +36,7 @@ import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -91,6 +92,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private ILabelProvider workbenchLabelProvider;
 	private ObjectFigureType objectFigureType = ObjectFigureType.ICON;
 	private ColorCache colors;
+	private Color defaultLinkColor = null;
 	private ManhattanConnectionRouter manhattanRouter = new ManhattanConnectionRouter();
 	private BendpointConnectionRouter bendpointRouter = new BendpointConnectionRouter();
 	
@@ -409,6 +411,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			connection.setLineColor(colors.create(ColorConverter.rgbFromInt(link.getColor())));
 		}
+		else if (defaultLinkColor != null)
+		{
+			connection.setLineColor(defaultLinkColor);
+		}
 		
 		switch(link.getRouting())
 		{
@@ -513,5 +519,21 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	@Override
 	public void selfStyleNode(Object element, GraphNode node)
 	{
+	}
+
+	/**
+	 * @return the defaultLinkColor
+	 */
+	public final Color getDefaultLinkColor()
+	{
+		return defaultLinkColor;
+	}
+
+	/**
+	 * @param defaultLinkColor the defaultLinkColor to set
+	 */
+	public final void setDefaultLinkColor(Color defaultLinkColor)
+	{
+		this.defaultLinkColor = defaultLinkColor;
 	}
 }

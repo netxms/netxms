@@ -3466,7 +3466,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
 		if ((flags & NXCObjectModificationData.MODIFY_CONNECTION_ROUTING) != 0)
 		{
-			msg.setVariableInt32(NXCPCodes.VID_LINK_ROUTING, data.getConnectionRouting());
+			msg.setVariableInt16(NXCPCodes.VID_LINK_ROUTING, data.getConnectionRouting());
+		}
+
+		if ((flags & NXCObjectModificationData.MODIFY_DISCOVERY_RADIUS) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_DISCOVERY_RADIUS, data.getDiscoveryRadius());
 		}
 
 		sendMessage(msg);
