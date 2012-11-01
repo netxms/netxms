@@ -164,8 +164,6 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			labelProvider.setDefaultLinkColor(defaultLinkColor);
 		}
 		
-		setLayoutAlgorithm(mapObject.getLayout());
-
 		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
 		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
 		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
@@ -705,8 +703,8 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			else
 				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
 		}
-		
-		setLayoutAlgorithm(mapObject.getLayout());
+
+		setLayoutAlgorithm(mapObject.getLayout(), false);
 		
 		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
 		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);

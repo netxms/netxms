@@ -287,7 +287,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		
 		if (automaticLayoutEnabled)
 		{
-			setLayoutAlgorithm(layoutAlgorithm);
+			setLayoutAlgorithm(layoutAlgorithm, true);
 		}
 		else
 		{
@@ -326,8 +326,28 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	 * Set layout algorithm for map
 	 * @param alg
 	 */
-	protected void setLayoutAlgorithm(int alg)
+	protected void setLayoutAlgorithm(int alg, boolean forceChange)
 	{
+		if (alg == org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL)
+		{
+			if (!automaticLayoutEnabled)
+				return;	// manual layout already
+			
+			automaticLayoutEnabled = false;
+			actionSetAlgorithm[layoutAlgorithm].setChecked(false);
+			actionEnableAutomaticLayout.setChecked(false);
+			return;
+		}
+		
+		if (automaticLayoutEnabled && (alg == layoutAlgorithm) && !forceChange)
+			return;	// nothing to change
+		
+		if (!automaticLayoutEnabled)
+		{
+			actionEnableAutomaticLayout.setChecked(true);
+			automaticLayoutEnabled = true;
+		}
+		
 		LayoutAlgorithm algorithm;
 		
 		switch(alg)
@@ -401,7 +421,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	protected void setAutomaticLayout()
 	{
 		automaticLayoutEnabled = true;
-		setLayoutAlgorithm(layoutAlgorithm);
+		setLayoutAlgorithm(layoutAlgorithm, true);
 		
 		for(int i = 0; i < actionSetAlgorithm.length; i++)
 			actionSetAlgorithm[i].setEnabled(true);
@@ -485,7 +505,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				@Override
 				public void run()
 				{
-					setLayoutAlgorithm(alg);
+					setLayoutAlgorithm(alg, true);
 					viewer.setInput(mapPage);
 				}
 			};

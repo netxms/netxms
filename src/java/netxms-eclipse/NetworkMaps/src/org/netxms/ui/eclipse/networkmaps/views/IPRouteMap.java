@@ -74,7 +74,7 @@ public class IPRouteMap extends NetworkMap
 	public void createPartControl(Composite parent)
 	{
 		super.createPartControl(parent);
-		setLayoutAlgorithm(LAYOUT_HTREE);
+		setLayoutAlgorithm(LAYOUT_HTREE, true);
 	}
 
 	/* (non-Javadoc)

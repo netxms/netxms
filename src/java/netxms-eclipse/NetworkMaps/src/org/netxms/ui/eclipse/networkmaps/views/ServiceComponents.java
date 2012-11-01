@@ -94,6 +94,6 @@ public class ServiceComponents extends NetworkMap
 	public void createPartControl(Composite parent)
 	{
 		super.createPartControl(parent);
-		setLayoutAlgorithm(LAYOUT_SPARSE_VTREE);
+		setLayoutAlgorithm(LAYOUT_SPARSE_VTREE, true);
 	}
 }

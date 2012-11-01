@@ -89,6 +89,6 @@ public class ServiceDependency extends NetworkMap
 	public void createPartControl(Composite parent)
 	{
 		super.createPartControl(parent);
-		setLayoutAlgorithm(LAYOUT_VTREE);
+		setLayoutAlgorithm(LAYOUT_VTREE, true);
 	}
 }
