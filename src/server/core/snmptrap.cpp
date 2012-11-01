@@ -41,11 +41,9 @@ static BOOL m_bLogAllTraps = FALSE;
 static INT64 m_qnTrapId = 1;
 static bool s_allowVarbindConversion = true;
 
-
-//
-// Load trap configuration from database
-//
-
+/**
+ * Load trap configuration from database
+ */
 static BOOL LoadTrapCfg()
 {
    DB_RESULT hResult;
@@ -133,11 +131,9 @@ static BOOL LoadTrapCfg()
    return bResult;
 }
 
-
-//
-// Initialize trap handling
-//
-
+/**
+ * Initialize trap handling
+ */
 void InitTraps()
 {
    DB_RESULT hResult;
@@ -233,11 +229,9 @@ static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
    pSession->onNewSNMPTrap((CSCPMessage *)pArg);
 }
 
-
-//
-// Process trap
-//
-
+/**
+ * Process trap
+ */
 static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq)
 {
    DWORD i, dwOriginAddr, dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
@@ -276,12 +270,12 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
       dwBufSize = pdu->getNumVariables() * 4096 + 16;
       pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
       pszTrapArgs[0] = 0;
-      for(i = 0, dwBufPos = 0; i < pdu->getNumVariables(); i++)
+		for(i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2, dwBufPos = 0; i < pdu->getNumVariables(); i++)
       {
          pVar = pdu->getVariable(i);
 			bool convertToHex = true;
          dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
-                                (i == 0) ? _T("") : _T("; "),
+                                (dwBufPos == 0) ? _T("") : _T("; "),
                                 pVar->GetName()->getValueAsText(), 
 										  s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 3000, &convertToHex) : pVar->GetValueAsString(szBuffer, 3000));
       }
@@ -338,7 +332,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
                dwMatchIdx = i;
                break;   // Find exact match
             }
-            if (iResult == OID_SHORTER)
+            else if (iResult == OID_SHORTER)
             {
                if (m_pTrapCfg[i].dwOidLen > dwMatchLen)
                {
@@ -362,12 +356,12 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
             dwBufSize = pdu->getNumVariables() * 4096 + 16;
             pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
             pszTrapArgs[0] = 0;
-            for(i = 0, dwBufPos = 0; i < pdu->getNumVariables(); i++)
+            for(i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2, dwBufPos = 0; i < pdu->getNumVariables(); i++)
             {
                pVar = pdu->getVariable(i);
 					bool convertToHex = true;
                dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
-                                      (i == 0) ? _T("") : _T("; "),
+                                      (dwBufPos == 0) ? _T("") : _T("; "),
                                       pVar->GetName()->getValueAsText(), 
 												  s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 512, &convertToHex) : pVar->GetValueAsString(szBuffer, 512));
             }
@@ -397,11 +391,9 @@ static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addr
 	return (node != NULL) ? node->getSnmpSecurityContext() : NULL;
 }
 
-
-//
-// SNMP trap receiver thread
-//
-
+/**
+ * SNMP trap receiver thread
+ */
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 {
    SOCKET hSocket;
@@ -504,11 +496,9 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// Fill NXCP message with trap configuration data
-//
-
+/**
+ * Fill NXCP message with trap configuration data
+ */
 static void FillTrapConfigDataMsg(CSCPMessage &msg, NXC_TRAP_CFG_ENTRY *trap)
 {
    DWORD i, dwId1, dwId2, dwId3, dwId4;
@@ -887,11 +877,9 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
    return dwResult;
 }
 
-
-//
-// Create trap record in NXMP file
-//
-
+/**
+ * Create trap record in NXMP file
+ */
 void CreateNXMPTrapRecord(String &str, DWORD dwId)
 {
 	DWORD i, j;

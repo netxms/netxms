@@ -230,11 +230,9 @@ LONG SNMP_Variable::GetValueAsInt()
    return iValue;
 }
 
-
-//
-// Get value as string
-//
-
+/**
+ * Get value as string
+ */
 TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize)
 {
    DWORD dwLen;
@@ -269,7 +267,10 @@ TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize)
       case ASN_OCTET_STRING:
          dwLen = min(dwBufferSize - 1, m_dwValueLength);
 #ifdef UNICODE
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_pValue, dwLen, pszBuffer, dwBufferSize);
+			// received octet string can contain char sequences invalid for
+			// current code page, so we don't use normal conversion functions here
+			for(DWORD i = 0; i < dwLen; i++)
+				pszBuffer[i] = ((char *)m_pValue)[i];
 #else
          memcpy(pszBuffer, m_pValue, dwLen);
 #endif
@@ -282,11 +283,9 @@ TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize)
    return pszBuffer;
 }
 
-
-//
-// Get value as string
-//
-
+/**
+ * Get value as printable string, doing bin to hex conversion if necessary
+ */
 TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, DWORD bufferSize, bool *convertToHex)
 {
    DWORD dwLen;
@@ -300,7 +299,10 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, DWORD bufferSize,
 	{
          dwLen = min(bufferSize - 1, m_dwValueLength);
 #ifdef UNICODE
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_pValue, dwLen, buffer, bufferSize);
+			// received octet string can contain char sequences invalid for
+			// current code page, so we don't use normal conversion functions here
+			for(DWORD i = 0; i < dwLen; i++)
+				buffer[i] = ((char *)m_pValue)[i];
 #else
          memcpy(buffer, m_pValue, dwLen);
 #endif
@@ -348,11 +350,9 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, DWORD bufferSize,
 	return buffer;
 }
 
-
-//
-// Get value as object id
-//
-
+/**
+ * Get value as object id
+ */
 SNMP_ObjectId *SNMP_Variable::GetValueAsObjectId()
 {
    SNMP_ObjectId *oid = NULL;
@@ -364,11 +364,9 @@ SNMP_ObjectId *SNMP_Variable::GetValueAsObjectId()
    return oid;
 }
 
-
-//
-// Get value as MAC address
-//
-
+/**
+ * Get value as MAC address
+ */
 TCHAR *SNMP_Variable::GetValueAsMACAddr(TCHAR *pszBuffer)
 {
    int i;
