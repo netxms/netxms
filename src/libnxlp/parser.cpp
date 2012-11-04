@@ -54,14 +54,14 @@ static const TCHAR *s_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
 #define XML_STATE_DESCRIPTION 12
 
 
-typedef struct
+struct XML_PARSER_STATE
 {
 	LogParser *parser;
 	int state;
 	String regexp;
 	String event;
-	String file;
-	int encoding;
+	StringList files;
+	ObjectArray<int> encodings;
 	String id;
 	String level;
 	String source;
@@ -75,7 +75,8 @@ typedef struct
 	String macro;
 	bool invertedRule;
 	bool breakFlag;
-} XML_PARSER_STATE;
+	XML_PARSER_STATE(): encodings(1, 1, true) {}
+};
 
 
 //
@@ -357,19 +358,19 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		{
 			if (!stricmp(encoding, "acp") || (*encoding == 0))
 			{
-				ps->encoding = LP_FCP_ACP;
+				ps->encodings.add(new int(LP_FCP_ACP));
 			}
 			else if (!stricmp(encoding, "utf8") || !stricmp(encoding, "utf-8"))
 			{
-				ps->encoding = LP_FCP_UTF8;
+				ps->encodings.add(new int(LP_FCP_UTF8));
 			}
 			else if (!stricmp(encoding, "ucs2") || !stricmp(encoding, "ucs-2") || !stricmp(encoding, "utf-16"))
 			{
-				ps->encoding = LP_FCP_UCS2;
+				ps->encodings.add(new int(LP_FCP_UCS2));
 			}
 			else if (!stricmp(encoding, "ucs4") || !stricmp(encoding, "ucs-4") || !stricmp(encoding, "utf-32"))
 			{
-				ps->encoding = LP_FCP_UCS4;
+				ps->encodings.add(new int(LP_FCP_UCS4));
 			}
 			else
 			{
@@ -379,7 +380,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		}
 		else
 		{
-			ps->encoding = LP_FCP_ACP;
+			ps->encodings.add(new int(LP_FCP_ACP));
 		}
 	}
 	else if (!strcmp(name, "macros"))
@@ -511,8 +512,6 @@ static void EndElement(void *userData, const char *name)
 	}
 	else if (!strcmp(name, "file"))
 	{
-		ps->parser->setFileName(ps->file);
-		ps->parser->setFileEncoding(ps->encoding);
 		ps->state = XML_STATE_PARSER;
 	}
 	else if (!strcmp(name, "macros"))
@@ -623,6 +622,7 @@ static void EndElement(void *userData, const char *name)
 static void CharData(void *userData, const XML_Char *s, int len)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+	String str; 
 
 	switch(ps->state)
 	{
@@ -642,7 +642,8 @@ static void CharData(void *userData, const XML_Char *s, int len)
 			ps->event.addMultiByteString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_FILE:
-			ps->file.addMultiByteString(s, len, CP_UTF8);
+			str.addMultiByteString(s, len, CP_UTF8);
+			ps->files.add(str);
 			break;
 		case XML_STATE_CONTEXT:
 			ps->context.addMultiByteString(s, len, CP_UTF8);
@@ -658,36 +659,58 @@ static void CharData(void *userData, const XML_Char *s, int len)
 	}
 }
 
-bool LogParser::createFromXml(const char *xml, int xmlLen, TCHAR *errorText, int errBufSize)
+ObjectArray<LogParser>* LogParser::createFromXml(const char *xml, int xmlLen, TCHAR *errorText, int errBufSize)
 {
-	XML_Parser parser = XML_ParserCreate(NULL);
-	XML_PARSER_STATE state;
+	ObjectArray<LogParser>* parsers = NULL;
 	bool success;
 
-	// Parse XML
-	state.parser = this;
-	state.state = -1;
-	XML_SetUserData(parser, &state);
-	XML_SetElementHandler(parser, StartElement, EndElement);
-	XML_SetCharacterDataHandler(parser, CharData);
-	success = (XML_Parse(parser, xml, (xmlLen == -1) ? (int)strlen(xml) : xmlLen, TRUE) != XML_STATUS_ERROR);
-
-	if (!success && (errorText != NULL))
+	for (int k = 0; ; k++)
 	{
-		_sntprintf(errorText, errBufSize, _T("%hs at line %d"),
-                 XML_ErrorString(XML_GetErrorCode(parser)),
-                 (int)XML_GetCurrentLineNumber(parser));
+		XML_Parser parser = XML_ParserCreate(NULL);
+		XML_PARSER_STATE state;
+		state.parser = new LogParser;
+		state.state = -1;
+		XML_SetUserData(parser, &state);
+		XML_SetElementHandler(parser, StartElement, EndElement);
+		XML_SetCharacterDataHandler(parser, CharData);
+		success = (XML_Parse(parser, xml, (xmlLen == -1) ? (int)strlen(xml) : xmlLen, TRUE) != XML_STATUS_ERROR);
+		if (!success && (errorText != NULL))
+		{
+			_sntprintf(errorText, errBufSize, _T("%hs at line %d"),
+				XML_ErrorString(XML_GetErrorCode(parser)),
+				(int)XML_GetCurrentLineNumber(parser));
+			break;
+		}
+		XML_ParserFree(parser);
+		if (success && (state.state == XML_STATE_ERROR))
+		{
+			success = false;
+			if (errorText != NULL)
+				_tcsncpy(errorText, state.errorText, errBufSize);
+			break;
+		}
+		else if (success)
+		{ 
+			if (parsers == NULL)
+				parsers = new ObjectArray<LogParser>;
+			parsers->add(state.parser);
+			if (k <= state.encodings.size() - 1)
+			{
+				state.parser->setFileName(state.files.getValue(k));
+				state.parser->setFileEncoding(*state.encodings.get(k));
+			}
+			if (k >= state.encodings.size() - 1)
+				break;
+		}
 	}
-	XML_ParserFree(parser);
 
-	if (success && (state.state == XML_STATE_ERROR))
+	if (!success && parsers != NULL)
 	{
-		success = false;
-		if (errorText != NULL)
-			_tcsncpy(errorText, state.errorText, errBufSize);
+		delete parsers;
+		parsers = NULL;
 	}
-	
-	return success;
+
+	return parsers;
 }
 
 

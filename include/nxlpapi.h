@@ -35,6 +35,7 @@
 #endif
 
 #include <netxms-regex.h>
+#include <nms_util.h>
 
 
 //
@@ -188,7 +189,7 @@ public:
 	LogParser();
 	~LogParser();
 	
-	bool createFromXml(const char *xml, int xmlLen = -1, TCHAR *errorText = NULL, int errBufSize = 0);
+	static ObjectArray<LogParser>* createFromXml(const char *xml, int xmlLen = -1, TCHAR *errorText = NULL, int errBufSize = 0);
 
 	void setFileName(const TCHAR *name);
 	const TCHAR *getFileName() { return m_fileName; }

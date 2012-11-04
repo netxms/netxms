@@ -174,7 +174,6 @@ static void LogParserTrace(const TCHAR *format, va_list args)
 
 static void AddParserFromConfig(const TCHAR *file)
 {
-	LogParser *parser;
 	BYTE *xml;
 	DWORD size;
 	TCHAR error[1024];
@@ -182,31 +181,35 @@ static void AddParserFromConfig(const TCHAR *file)
 	xml = LoadFile(file, &size);
 	if (xml != NULL)
 	{
-		parser = new LogParser;
-		if (parser->createFromXml((const char *)xml, size, error, 1024))
+		ObjectArray<LogParser> *parsers = LogParser::createFromXml((const char *)xml, size, error, 1024);
+		if (parsers != NULL)
 		{
-			if (parser->getFileName() != NULL)
+			for (int i = 0; i < parsers->size(); i++)
 			{
-				parser->setCallback(LogParserMatch);
-				parser->setTraceCallback(LogParserTrace);
-				m_numParsers++;
-				m_parserList = (LogParser **)realloc(m_parserList, sizeof(LogParser *) * m_numParsers);
-				m_parserList[m_numParsers - 1] = parser;
-				AgentWriteDebugLog(1, _T("LogWatch: registered parser for file %s, trace level set to %d"),
-				                   parser->getFileName(), parser->getTraceLevel());
+				LogParser *parser = parsers->get(i);
+				if (parser->getFileName() != NULL)
+				{
+					parser->setCallback(LogParserMatch);
+					parser->setTraceCallback(LogParserTrace);
+					m_numParsers++;
+					m_parserList = (LogParser **)realloc(m_parserList, sizeof(LogParser *) * m_numParsers);
+					m_parserList[m_numParsers - 1] = parser;
+					AgentWriteDebugLog(1, _T("LogWatch: registered parser for file %s, trace level set to %d"),
+						parser->getFileName(), parser->getTraceLevel());
 #ifdef _WIN32
-				AgentWriteDebugLog(7, _T("LogWatch: Process RSS after parser creation is ") INT64_FMT _T(" bytes"), GetProcessRSS());
+					AgentWriteDebugLog(7, _T("LogWatch: Process RSS after parser creation is ") INT64_FMT _T(" bytes"), GetProcessRSS());
 #endif
-			}
-			else
-			{
-				delete parser;
-				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Parser configuration %s missing file name to parse"), file);
+				}
+				else
+				{
+					delete parser;
+					AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Parser configuration %s missing file name to parse (%d)"), file, i);
+				}
 			}
 		}
 		else
 		{
-			delete parser;
+			delete parsers;
 			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Cannot create parser from configuration file %s (%s)"), file, error);
 		}
 		free(xml);
