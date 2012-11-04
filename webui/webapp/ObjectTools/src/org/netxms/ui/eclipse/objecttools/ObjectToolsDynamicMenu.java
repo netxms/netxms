@@ -30,7 +30,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.rwt.widgets.ExternalBrowser;
+import org.eclipse.rap.rwt.widgets.ExternalBrowser;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;

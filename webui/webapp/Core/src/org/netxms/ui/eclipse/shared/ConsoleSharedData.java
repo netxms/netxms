@@ -18,7 +18,7 @@
  */
 package org.netxms.ui.eclipse.shared;
 
-import org.eclipse.rwt.RWT;
+import org.eclipse.rap.rwt.RWT;
 import org.netxms.api.client.Session;
 
 /**

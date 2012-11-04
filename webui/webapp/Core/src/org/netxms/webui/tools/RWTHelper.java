@@ -3,8 +3,8 @@
  */
 package org.netxms.webui.tools;
 
-import org.eclipse.rwt.RWT;
-import org.eclipse.rwt.lifecycle.UICallBack;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.lifecycle.UICallBack;
 import org.eclipse.swt.widgets.Display;
 
 /**

@@ -39,7 +39,7 @@ import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.PaletteImpl;
 import org.eclipse.birt.core.framework.PlatformConfig;
 import org.eclipse.jface.preference.PreferenceConverter;
-import org.eclipse.rwt.graphics.Graphics;
+import org.eclipse.rap.rwt.graphics.Graphics;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;

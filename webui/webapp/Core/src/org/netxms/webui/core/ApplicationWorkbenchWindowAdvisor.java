@@ -29,8 +29,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
-import org.eclipse.rwt.RWT;
-import org.eclipse.rwt.lifecycle.WidgetUtil;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CBanner;
 import org.eclipse.swt.widgets.Composite;
@@ -113,20 +112,20 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		
 		for(Control ctrl : shell.getChildren())
 		{
-			ctrl.setData(WidgetUtil.CUSTOM_VARIANT, "gray");
+			ctrl.setData(RWT.CUSTOM_VARIANT, "gray");
 			if (ctrl instanceof CBanner)
 			{
 				for(Control cc : ((CBanner)ctrl).getChildren())
-					cc.setData(WidgetUtil.CUSTOM_VARIANT, "gray");
+					cc.setData(RWT.CUSTOM_VARIANT, "gray");
 			}
 			else if (ctrl.getClass().getName().equals("org.eclipse.swt.widgets.Composite"))
 			{
 				for(Control cc : ((Composite)ctrl).getChildren())
-					cc.setData(WidgetUtil.CUSTOM_VARIANT, "gray");
+					cc.setData(RWT.CUSTOM_VARIANT, "gray");
 			}
 		}
 		
-		shell.getMenuBar().setData(WidgetUtil.CUSTOM_VARIANT, "menuBar");
+		shell.getMenuBar().setData(RWT.CUSTOM_VARIANT, "menuBar");
 	}
 
 	/**
