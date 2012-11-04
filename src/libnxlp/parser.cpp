@@ -60,6 +60,7 @@ struct XML_PARSER_STATE
 	int state;
 	String regexp;
 	String event;
+	String file;
 	StringList files;
 	ObjectArray<int> encodings;
 	String id;
@@ -512,6 +513,8 @@ static void EndElement(void *userData, const char *name)
 	}
 	else if (!strcmp(name, "file"))
 	{
+		ps->files.add(ps->file);
+		ps->file = _T("");
 		ps->state = XML_STATE_PARSER;
 	}
 	else if (!strcmp(name, "macros"))
@@ -642,8 +645,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
 			ps->event.addMultiByteString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_FILE:
-			str.addMultiByteString(s, len, CP_UTF8);
-			ps->files.add(str);
+			ps->file.addMultiByteString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_CONTEXT:
 			ps->context.addMultiByteString(s, len, CP_UTF8);
