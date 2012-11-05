@@ -5,6 +5,6 @@
     <item android:id="@+id/resolve" android:title="@string/alarm_resolve" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false" ></item>
     <item android:id="@+id/terminate" android:title="@string/alarm_terminate" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item>
     <item android:id="@+id/viewlastvalues" android:title="@string/alarm_viewlastvalues" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item>
-    <item android:id="@+id/selectall" android:title="@string/alarm_selectall" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item>
-    <item android:id="@+id/unselectall" android:title="@string/alarm_unselectall" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item>
+    <item android:id="@+id/selectall" android:title="@string/alarm_selectall" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false" android:icon="@drawable/ic_select_all" android:showAsAction="always"></item>
+    <item android:id="@+id/unselectall" android:title="@string/alarm_unselectall" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false" android:icon="@drawable/ic_unselect_all" android:showAsAction="always"></item>
 </menu>

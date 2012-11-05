@@ -102,11 +102,6 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	@Override
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
-//		super.onCreateStep2(savedInstanceState);
-//
-//		startService(new Intent(this, ClientConnectorService.class));
-//		bindService(new Intent(this, ClientConnectorService.class), this, 0);
-
 		setContentView(R.layout.node_info);
 
 		nodeId = getIntent().getLongExtra("objectId", 0);
@@ -336,21 +331,7 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	{
 		super.onPrepareOptionsMenu(menu);
 
-		if (!recreateOptionsMenu)
-			return true;
-
-		if (tabHost.getCurrentTab() == TAB_LAST_VALUES_ID)
-		{
-			menu.add(Menu.NONE, R.id.graph_half_hour, Menu.NONE, getString(R.string.last_values_graph_half_hour));
-			menu.add(Menu.NONE, R.id.graph_one_hour, Menu.NONE, getString(R.string.last_values_graph_one_hour));// .setIcon(R.drawable.ic_menu_line_chart);
-			menu.add(Menu.NONE, R.id.graph_two_hours, Menu.NONE, getString(R.string.last_values_graph_two_hours));
-			menu.add(Menu.NONE, R.id.graph_four_hours, Menu.NONE, getString(R.string.last_values_graph_four_hours));
-			menu.add(Menu.NONE, R.id.graph_one_day, Menu.NONE, getString(R.string.last_values_graph_one_day));
-			menu.add(Menu.NONE, R.id.graph_one_week, Menu.NONE, getString(R.string.last_values_graph_one_week));
-			menu.add(Menu.NONE, R.id.bar_chart, Menu.NONE, getString(R.string.last_values_bar_chart));
-			menu.add(Menu.NONE, R.id.pie_chart, Menu.NONE, getString(R.string.last_values_pie_chart));
-		}
-		else
+		if (recreateOptionsMenu)
 		{
 			menu.removeItem(R.id.graph_half_hour);
 			menu.removeItem(R.id.graph_one_hour);
@@ -360,9 +341,26 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 			menu.removeItem(R.id.graph_one_week);
 			menu.removeItem(R.id.bar_chart);
 			menu.removeItem(R.id.pie_chart);
+			menu.removeItem(R.id.selectall);
+			menu.removeItem(R.id.unselectall);
+			if (tabHost.getCurrentTab() == TAB_LAST_VALUES_ID)
+			{
+				menu.add(Menu.NONE, R.id.graph_half_hour, Menu.NONE, getString(R.string.last_values_graph_half_hour));
+				menu.add(Menu.NONE, R.id.graph_one_hour, Menu.NONE, getString(R.string.last_values_graph_one_hour));// .setIcon(R.drawable.ic_menu_line_chart);
+				menu.add(Menu.NONE, R.id.graph_two_hours, Menu.NONE, getString(R.string.last_values_graph_two_hours));
+				menu.add(Menu.NONE, R.id.graph_four_hours, Menu.NONE, getString(R.string.last_values_graph_four_hours));
+				menu.add(Menu.NONE, R.id.graph_one_day, Menu.NONE, getString(R.string.last_values_graph_one_day));
+				menu.add(Menu.NONE, R.id.graph_one_week, Menu.NONE, getString(R.string.last_values_graph_one_week));
+				menu.add(Menu.NONE, R.id.bar_chart, Menu.NONE, getString(R.string.last_values_bar_chart));
+				menu.add(Menu.NONE, R.id.pie_chart, Menu.NONE, getString(R.string.last_values_pie_chart));
+			}
+			else if (tabHost.getCurrentTab() == TAB_ALARMS_ID)
+			{
+				menu.add(Menu.NONE, R.id.selectall, Menu.NONE, getString(R.string.alarm_selectall));
+				menu.add(Menu.NONE, R.id.unselectall, Menu.NONE, getString(R.string.alarm_unselectall));
+			}
+			recreateOptionsMenu = false;
 		}
-
-		recreateOptionsMenu = false;
 		return true;
 	}
 
@@ -478,6 +476,12 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 			case R.id.terminate:
 				terminateAlarms(info.position);
 				return true;
+			case R.id.selectall:
+				selectAll(true);
+				return true;
+			case R.id.unselectall:
+				selectAll(false);
+				return true;
 		}
 		return super.onContextItemSelected(item);
 	}
@@ -497,6 +501,13 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 				return true;
 			case R.id.settings:
 				startActivity(new Intent(this, ConsolePreferences.class));
+				return true;
+				// Alarms
+			case R.id.selectall:
+				selectAll(true);
+				return true;
+			case R.id.unselectall:
+				selectAll(false);
 				return true;
 				// Last values
 			case R.id.graph_half_hour:
@@ -650,6 +661,12 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 			startActivity(newIntent);
 		}
 		return true;
+	}
+
+	private void selectAll(boolean select)
+	{
+		for (int i = 0; i < alarmsAdapter.getCount(); i++)
+			alarmsListView.setItemChecked(i, select);
 	}
 
 	private ArrayList<Long> getAlarmIdList(int position)

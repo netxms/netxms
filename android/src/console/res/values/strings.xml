@@ -95,6 +95,8 @@
 	<string name="alarm_resolve">Resolve</string>
 	<string name="alarm_terminate">Terminate</string>
 	<string name="alarm_viewlastvalues">View last values</string>
+	<string name="alarm_selectall">Select All</string>
+	<string name="alarm_unselectall">Unselect All</string>
 	<string name="graph_title">History graph</string>
 	<string name="last_values_graph_half_hour">Graph last half hour</string>
 	<string name="last_values_graph_one_hour">Graph last hour</string>

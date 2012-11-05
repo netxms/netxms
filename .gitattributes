@@ -15,8 +15,10 @@ android/src/console/project.properties -text
 android/src/console/res/drawable-hdpi-v11/ic_menu_bar_chart.png -text
 android/src/console/res/drawable-hdpi-v11/ic_menu_line_chart.png -text
 android/src/console/res/drawable-hdpi-v11/ic_menu_pie_chart.png -text
+android/src/console/res/drawable-hdpi-v11/ic_select_all.png -text
 android/src/console/res/drawable-hdpi-v11/ic_stat_connected.png -text
 android/src/console/res/drawable-hdpi-v11/ic_stat_disconnected.png -text
+android/src/console/res/drawable-hdpi-v11/ic_unselect_all.png -text
 android/src/console/res/drawable-hdpi-v9/ic_stat_connected.png -text
 android/src/console/res/drawable-hdpi-v9/ic_stat_disconnected.png -text
 android/src/console/res/drawable-hdpi/alarms.png -text
@@ -115,6 +117,7 @@ android/src/console/res/layout/node_view.xml -text
 android/src/console/res/layout/screen_header_full.xml -text
 android/src/console/res/layout/screen_header_small.xml -text
 android/src/console/res/layout/table_last_values.xml -text
+android/src/console/res/menu-v11/alarm_actions.xml -text
 android/src/console/res/menu-v11/last_values_actions.xml -text
 android/src/console/res/menu-v11/main_menu.xml -text
 android/src/console/res/menu/alarm_actions.xml -text
