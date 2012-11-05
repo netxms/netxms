@@ -79,11 +79,9 @@ struct XML_PARSER_STATE
 	XML_PARSER_STATE(): encodings(1, 1, true) {}
 };
 
-
-//
-// Parser default constructor
-//
-
+/**
+ * Parser default constructor
+ */
 LogParser::LogParser()
 {
 	m_numRules = 0;
@@ -104,11 +102,46 @@ LogParser::LogParser()
 	_tcscpy(m_status, LPS_INIT);
 }
 
+/**
+ * Parser copy constructor
+ */
+LogParser::LogParser(LogParser *src)
+{
+	m_numRules = src->m_numRules;
+	m_rules = (LogParserRule **)malloc(sizeof(LogParserRule *) * m_numRules);
+	for(int i = 0; i < m_numRules; i++)
+		m_rules[i] = new LogParserRule(src->m_rules[i], this);
 
-//
-// Destructor
-//
+	m_cb = src->m_cb;
+	m_userArg = src->m_userArg;
+	m_name = (src->m_name != NULL) ? _tcsdup(src->m_name) : NULL;
+	m_fileName = (src->m_fileName != NULL) ? _tcsdup(src->m_fileName) : NULL;
+	m_fileEncoding = src->m_fileEncoding;
 
+	if (src->m_eventNameList != NULL)
+	{
+		int count;
+		for(count = 0; src->m_eventNameList[count].text != NULL; count++);
+		m_eventNameList = (count > 0) ? (CODE_TO_TEXT *)nx_memdup(src->m_eventNameList, sizeof(CODE_TO_TEXT) * (count + 1)) : NULL;
+	}
+	else
+	{
+		m_eventNameList = NULL;
+	}
+
+	m_eventResolver = src->m_eventResolver;
+	m_thread = INVALID_THREAD_HANDLE;
+	m_recordsProcessed = 0;
+	m_recordsMatched = 0;
+	m_processAllRules = src->m_processAllRules;
+	m_traceLevel = src->m_traceLevel;
+	m_traceCallback = src->m_traceCallback;
+	_tcscpy(m_status, LPS_INIT);
+}
+
+/**
+ * Destructor
+ */
 LogParser::~LogParser()
 {
 	int i;
@@ -120,11 +153,9 @@ LogParser::~LogParser()
 	safe_free(m_fileName);
 }
 
-
-//
-// Trace
-//
-
+/**
+ * Trace
+ */
 void LogParser::trace(int level, const TCHAR *format, ...)
 {
 	va_list args;
@@ -312,11 +343,9 @@ void LogParser::addMacro(const TCHAR *name, const TCHAR *value)
 	m_macros.set(name, value);
 }
 
-
-//
-// Get macro
-//
-
+/**
+ * Get macro
+ */
 const TCHAR *LogParser::getMacro(const TCHAR *name)
 {
 	const TCHAR *value;
@@ -325,11 +354,9 @@ const TCHAR *LogParser::getMacro(const TCHAR *name)
 	return CHECK_NULL_EX(value);
 }
 
-
-//
-// Create parser configuration from XML
-//
-
+/**
+ * Create parser configuration from XML - callback for element start
+ */
 static void StartElement(void *userData, const char *name, const char **attrs)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
@@ -503,6 +530,9 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	}
 }
 
+/**
+ * Create parser configuration from XML - callback for element end
+ */
 static void EndElement(void *userData, const char *name)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
@@ -622,10 +652,12 @@ static void EndElement(void *userData, const char *name)
 	}
 }
 
+/**
+ * Create parser configuration from XML - callback for element data
+ */
 static void CharData(void *userData, const XML_Char *s, int len)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
-	String str; 
 
 	switch(ps->state)
 	{
@@ -661,48 +693,46 @@ static void CharData(void *userData, const XML_Char *s, int len)
 	}
 }
 
-ObjectArray<LogParser>* LogParser::createFromXml(const char *xml, int xmlLen, TCHAR *errorText, int errBufSize)
+/**
+ * Create parser configuration from XML. Returns array of identical parsers,
+ * one for each <file> tag in source XML. Resulting parsers only differs with file names.
+ */
+ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TCHAR *errorText, int errBufSize)
 {
 	ObjectArray<LogParser>* parsers = NULL;
 	bool success;
 
-	for (int k = 0; ; k++)
+	XML_Parser parser = XML_ParserCreate(NULL);
+	XML_PARSER_STATE state;
+	state.parser = new LogParser;
+	state.state = -1;
+	XML_SetUserData(parser, &state);
+	XML_SetElementHandler(parser, StartElement, EndElement);
+	XML_SetCharacterDataHandler(parser, CharData);
+	success = (XML_Parse(parser, xml, (xmlLen == -1) ? (int)strlen(xml) : xmlLen, TRUE) != XML_STATUS_ERROR);
+	if (!success && (errorText != NULL))
 	{
-		XML_Parser parser = XML_ParserCreate(NULL);
-		XML_PARSER_STATE state;
-		state.parser = new LogParser;
-		state.state = -1;
-		XML_SetUserData(parser, &state);
-		XML_SetElementHandler(parser, StartElement, EndElement);
-		XML_SetCharacterDataHandler(parser, CharData);
-		success = (XML_Parse(parser, xml, (xmlLen == -1) ? (int)strlen(xml) : xmlLen, TRUE) != XML_STATUS_ERROR);
-		if (!success && (errorText != NULL))
+		_sntprintf(errorText, errBufSize, _T("%hs at line %d"),
+			XML_ErrorString(XML_GetErrorCode(parser)),
+			(int)XML_GetCurrentLineNumber(parser));
+	}
+	XML_ParserFree(parser);
+	if (success && (state.state == XML_STATE_ERROR))
+	{
+		success = false;
+		if (errorText != NULL)
+			_tcsncpy(errorText, state.errorText, errBufSize);
+	}
+	else if (success)
+	{ 
+		if (parsers == NULL)
+			parsers = new ObjectArray<LogParser>;
+		for(int i = 0; i < state.files.getSize(); i++)
 		{
-			_sntprintf(errorText, errBufSize, _T("%hs at line %d"),
-				XML_ErrorString(XML_GetErrorCode(parser)),
-				(int)XML_GetCurrentLineNumber(parser));
-			break;
-		}
-		XML_ParserFree(parser);
-		if (success && (state.state == XML_STATE_ERROR))
-		{
-			success = false;
-			if (errorText != NULL)
-				_tcsncpy(errorText, state.errorText, errBufSize);
-			break;
-		}
-		else if (success)
-		{ 
-			if (parsers == NULL)
-				parsers = new ObjectArray<LogParser>;
-			parsers->add(state.parser);
-			if (k <= state.encodings.size() - 1)
-			{
-				state.parser->setFileName(state.files.getValue(k));
-				state.parser->setFileEncoding(*state.encodings.get(k));
-			}
-			if (k >= state.encodings.size() - 1)
-				break;
+			LogParser *p = (i > 0) ? new LogParser(state.parser) : state.parser;
+			p->setFileName(state.files.getValue(i));
+			p->setFileEncoding(*state.encodings.get(i));
+			parsers->add(p);
 		}
 	}
 
@@ -715,11 +745,9 @@ ObjectArray<LogParser>* LogParser::createFromXml(const char *xml, int xmlLen, TC
 	return parsers;
 }
 
-
-//
-// Resolve event name
-//
-
+/**
+ * Resolve event name
+ */
 DWORD LogParser::resolveEventName(const TCHAR *name, DWORD defVal)
 {
 	if (m_eventNameList != NULL)

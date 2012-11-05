@@ -115,6 +115,7 @@ public:
 	              const TCHAR *regexp, DWORD eventCode = 0, const TCHAR *eventName = NULL,
 					  int numParams = 0, const TCHAR *source = NULL, DWORD level = 0xFFFFFFFF,
 					  DWORD idStart = 0, DWORD idEnd = 0xFFFFFFFF);
+	LogParserRule(LogParserRule *src, LogParser *parser);
 	~LogParserRule();
 
 	bool isValid() { return m_isValid; }
@@ -187,9 +188,10 @@ private:
 
 public:
 	LogParser();
+	LogParser(LogParser *src);
 	~LogParser();
 	
-	static ObjectArray<LogParser>* createFromXml(const char *xml, int xmlLen = -1, TCHAR *errorText = NULL, int errBufSize = 0);
+	static ObjectArray<LogParser> *createFromXml(const char *xml, int xmlLen = -1, TCHAR *errorText = NULL, int errBufSize = 0);
 
 	void setFileName(const TCHAR *name);
 	const TCHAR *getFileName() { return m_fileName; }

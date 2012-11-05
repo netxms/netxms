@@ -27,11 +27,9 @@
 #include <alloca.h>
 #endif
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 LogParserRule::LogParserRule(LogParser *parser, const TCHAR *regexp, DWORD eventCode, const TCHAR *eventName,
 									  int numParams, const TCHAR *source, DWORD level, DWORD idStart, DWORD idEnd)
 {
@@ -57,11 +55,33 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *regexp, DWORD event
 	m_description = NULL;
 }
 
+/**
+ * Copy constructor
+ */
+LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
+{
+	m_parser = parser;
+	m_regexp = _tcsdup(src->m_regexp);
+	m_isValid = (_tregcomp(&m_preg, m_regexp, REG_EXTENDED | REG_ICASE) == 0);
+	m_eventCode = src->m_eventCode;
+	m_eventName = (src->m_eventName != NULL) ? _tcsdup(src->m_eventName) : NULL;
+	m_numParams = src->m_numParams;
+	m_pmatch = (m_numParams > 0) ? (regmatch_t *)malloc(sizeof(regmatch_t) * (m_numParams + 1)) : NULL;
+	m_source = (src->m_source != NULL) ? _tcsdup(src->m_source) : NULL;
+	m_level = src->m_level;
+	m_idStart = src->m_idStart;
+	m_idEnd = src->m_idEnd;
+	m_context = (src->m_context != NULL) ? _tcsdup(src->m_context) : NULL;
+	m_contextAction = src->m_contextAction;
+	m_contextToChange = (src->m_contextToChange != NULL) ? _tcsdup(src->m_contextToChange) : NULL;;
+	m_isInverted = src->m_isInverted;
+	m_breakOnMatch = src->m_breakOnMatch;
+	m_description = (src->m_description != NULL) ? _tcsdup(src->m_description) : NULL;;
+}
 
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 LogParserRule::~LogParserRule()
 {
 	if (m_isValid)
@@ -71,13 +91,13 @@ LogParserRule::~LogParserRule()
 	safe_free(m_source);
 	safe_free(m_regexp);
 	safe_free(m_eventName);
+	safe_free(m_context);
+	safe_free(m_contextToChange);
 }
 
-
-//
-// Match line
-//
-
+/**
+ * Match line
+ */
 bool LogParserRule::match(const TCHAR *line, LogParserCallback cb, DWORD objectId, void *userArg)
 {
 	if (!m_isValid)
@@ -140,11 +160,9 @@ bool LogParserRule::match(const TCHAR *line, LogParserCallback cb, DWORD objectI
 	return false;	// no match
 }
 
-
-//
-// Match event
-//
-
+/**
+ * Match event
+ */
 bool LogParserRule::matchEx(const TCHAR *source, DWORD eventId, DWORD level,
 								  const TCHAR *line, LogParserCallback cb, DWORD objectId, void *userArg)
 {
@@ -173,11 +191,9 @@ bool LogParserRule::matchEx(const TCHAR *source, DWORD eventId, DWORD level,
 	return match(line, cb, objectId, userArg);
 }
 
-
-//
-// Expand macros in regexp
-//
-
+/**
+ * Expand macros in regexp
+ */
 void LogParserRule::expandMacros(const TCHAR *regexp, String &out)
 {
 	const TCHAR *curr, *prev;
