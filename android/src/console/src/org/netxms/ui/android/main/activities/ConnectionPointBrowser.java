@@ -322,47 +322,50 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 		protected String doInBackground(Object... params)
 		{
 			String string = nodeId != 0 ? r.getString(R.string.connectionpoint_notfound) : r.getString(R.string.connectionpoint_macaddress_notfound, macAddress);
-			NXCSession session = service.getSession();
-			if (session != null)
+			if (service != null)
 			{
-				ConnectionPoint cp = null;
-				Node host = null;
-				Node bridge = null;
-				Interface iface = null;
-				try
+				NXCSession session = service.getSession();
+				if (session != null)
 				{
-					cp = nodeId != 0 ? session.findConnectionPoint(nodeId) : session.findConnectionPoint(MacAddress.parseMacAddress(macAddress));
-					if (cp != null)
+					ConnectionPoint cp = null;
+					Node host = null;
+					Node bridge = null;
+					Interface iface = null;
+					try
 					{
-						session.syncMissingObjects(new long[] { cp.getLocalNodeId(), cp.getNodeId(), cp.getInterfaceId() }, false, NXCSession.OBJECT_SYNC_WAIT);
-						host = (Node)session.findObjectById(cp.getLocalNodeId());
-						bridge = (Node)session.findObjectById(cp.getNodeId());
-						iface = (Interface)session.findObjectById(cp.getInterfaceId());
+						cp = nodeId != 0 ? session.findConnectionPoint(nodeId) : session.findConnectionPoint(MacAddress.parseMacAddress(macAddress));
+						if (cp != null)
+						{
+							session.syncMissingObjects(new long[] { cp.getLocalNodeId(), cp.getNodeId(), cp.getInterfaceId() }, false, NXCSession.OBJECT_SYNC_WAIT);
+							host = (Node)session.findObjectById(cp.getLocalNodeId());
+							bridge = (Node)session.findObjectById(cp.getNodeId());
+							iface = (Interface)session.findObjectById(cp.getInterfaceId());
+						}
+						else
+						{
+							session.syncMissingObjects(new long[] { nodeId }, false, NXCSession.OBJECT_SYNC_WAIT);
+							host = (Node)session.findObjectById(nodeId);
+						}
 					}
-					else
+					catch (MacAddressFormatException e)
 					{
-						session.syncMissingObjects(new long[] { nodeId }, false, NXCSession.OBJECT_SYNC_WAIT);
-						host = (Node)session.findObjectById(nodeId);
+						Log.d("nxclient/ConnectionPointBrowser", "MacAddressFormatException while executing searchMacAddress", e);
+						string = r.getString(R.string.connectionpoint_invalid, macAddress);
 					}
-				}
-				catch (MacAddressFormatException e)
-				{
-					Log.d("nxclient/ConnectionPointBrowser", "MacAddressFormatException while executing searchMacAddress", e);
-					string = r.getString(R.string.connectionpoint_invalid, macAddress);
-				}
-				catch (NXCException e)
-				{
-					Log.d("nxclient/SearchConnectionPointTask", "NXCException while executing syncMissingObjects", e);
-				}
-				catch (IOException e)
-				{
-					Log.d("nxclient/SearchConnectionPointTask", "IOException while executing syncMissingObjects", e);
-				}
+					catch (NXCException e)
+					{
+						Log.d("nxclient/SearchConnectionPointTask", "NXCException while executing syncMissingObjects", e);
+					}
+					catch (IOException e)
+					{
+						Log.d("nxclient/SearchConnectionPointTask", "IOException while executing syncMissingObjects", e);
+					}
 
-				if ((bridge != null) && (iface != null))
-					string = r.getString(R.string.connectionpoint_info, host != null ? " " + host.getObjectName() : "", cp.getLocalMacAddress().toString(), bridge.getObjectName(), iface.getObjectName());
-				else if (host != null)
-					string = r.getString(R.string.connectionpoint_nodeid_notfound, host.getObjectName());
+					if ((bridge != null) && (iface != null))
+						string = r.getString(R.string.connectionpoint_info, host != null ? " " + host.getObjectName() : "", cp.getLocalMacAddress().toString(), bridge.getObjectName(), iface.getObjectName());
+					else if (host != null)
+						string = r.getString(R.string.connectionpoint_nodeid_notfound, host.getObjectName());
+				}
 			}
 			return string;
 		}
