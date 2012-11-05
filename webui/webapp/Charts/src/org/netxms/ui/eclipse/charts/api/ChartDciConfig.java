@@ -46,6 +46,12 @@ public class ChartDciConfig
 	@Element(required=false)
 	public int lineWidth;
 	
+	@Element(required=false)
+	public boolean area;
+	
+	@Element(required=false)
+	public boolean showThresholds;
+
 	/**
 	 * Default constructor
 	 */
@@ -56,6 +62,7 @@ public class ChartDciConfig
 		color = UNSET_COLOR;
 		name = ""; //$NON-NLS-1$
 		lineWidth = 2;
+		area = false;
 	}
 
 	/**
@@ -70,6 +77,7 @@ public class ChartDciConfig
 		this.color = src.color;
 		this.name = src.name;
 		this.lineWidth = src.lineWidth;
+		this.area = src.area;
 	}
 
 	/**
@@ -84,6 +92,7 @@ public class ChartDciConfig
 		name = dci.getDescription();
 		color = UNSET_COLOR;
 		lineWidth = 2;
+		area = false;
 	}
 
 	/**

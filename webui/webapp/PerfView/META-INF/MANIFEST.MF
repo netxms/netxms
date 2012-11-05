@@ -2,14 +2,14 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Performance View Plug-in for NXMC
 Bundle-SymbolicName: org.netxms.ui.eclipse.perfview;singleton:=true
-Bundle-Version: 1.2.1
+Bundle-Version: 1.2.5
 Bundle-Activator: org.netxms.ui.eclipse.perfview.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.core.runtime,
  org.netxms.ui.eclipse.charts;bundle-version="1.2.0",
  org.netxms.ui.eclipse.objectview;bundle-version="1.2.0",
  org.eclipse.rap.ui;bundle-version="1.5.0",
- org.netxms.webui.core;bundle-version="1.2.1",
+ org.netxms.webui.core;bundle-version="1.2.4",
  org.netxms.ui.eclipse.datacollection;bundle-version="1.2.0",
  org.netxms.ui.eclipse.usermanager;bundle-version="1.2.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6

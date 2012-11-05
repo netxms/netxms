@@ -350,7 +350,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		
 		radioFilterOff = toolkit.createButton(clientArea, "&No filtering", SWT.RADIO);
 		radioFilterOff.addSelectionListener(radioButtonListener);
-		radioFilterCustom = toolkit.createButton(clientArea, "&Custom script)", SWT.RADIO);
+		radioFilterCustom = toolkit.createButton(clientArea, "&Custom script", SWT.RADIO);
 		radioFilterCustom.addSelectionListener(radioButtonListener);
 		filterScript = new ScriptSelector(clientArea, SWT.NONE, true, false);
 		toolkit.adapt(filterScript);

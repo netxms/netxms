@@ -700,6 +700,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 
 		GraphItemStyle style = itemStyles.get(index);
 		series.setLineColor(ColorConverter.colorFromInt(style.getColor(), colors));
+		series.enableArea(style.getType() == GraphItemStyle.AREA);
 	}
 
 	/* (non-Javadoc)

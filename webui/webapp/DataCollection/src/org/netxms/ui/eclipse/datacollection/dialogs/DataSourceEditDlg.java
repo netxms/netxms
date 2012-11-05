@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.perfview.dialogs;
+package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.ColorSelector;
@@ -42,13 +42,15 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class DataSourceEditDlg extends Dialog
 {
 	private static final long serialVersionUID = 1L;
-
+	
 	private ChartDciConfig dci;
 	private DciSelector dciSelector;
 	private LabeledText name;
 	private Button colorAuto;
 	private Button colorCustom;
 	private ColorSelector colorSelector;
+	private Button checkAreaChart;
+	private Button checkShowThresholds;
 	
 	/**
 	 * @param parentShell
@@ -160,6 +162,24 @@ public class DataSourceEditDlg extends Dialog
 		colorSelector.getButton().setLayoutData(gd);
 		colorSelector.setEnabled(!dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
 		
+		Group optionsGroup = new Group(dialogArea, SWT.NONE);
+		optionsGroup.setText("Options");
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		optionsGroup.setLayoutData(gd);
+		
+		layout = new GridLayout();
+		optionsGroup.setLayout(layout);
+		
+		checkAreaChart = new Button(optionsGroup, SWT.CHECK);
+		checkAreaChart.setText("A&rea chart");
+		checkAreaChart.setSelection(dci.area);
+		
+		checkShowThresholds = new Button(optionsGroup, SWT.CHECK);
+		checkShowThresholds.setText("Show &thresholds");
+		checkShowThresholds.setSelection(dci.showThresholds);
+		
 		return dialogArea;
 	}
 
@@ -180,6 +200,8 @@ public class DataSourceEditDlg extends Dialog
 		{
 			dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(colorSelector.getColorValue()));
 		}
+		dci.area = checkAreaChart.getSelection();
+		dci.showThresholds = checkShowThresholds.getSelection();
 		super.okPressed();
 	}
 }
