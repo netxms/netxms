@@ -289,7 +289,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 			int color = dci.getColorAsInt();
 			if (color == -1)
 				color = ChartColor.getDefaultColor(index).getRGB();
-			styles.add(new GraphItemStyle(GraphItemStyle.LINE, color, 2, 0));
+			styles.add(new GraphItemStyle(dci.area ? GraphItemStyle.AREA : GraphItemStyle.LINE, color, 2, 0));
 			index++;
 		}
 		chart.setItemStyles(styles);
