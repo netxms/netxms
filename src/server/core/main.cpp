@@ -554,7 +554,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 #ifndef _WIN32
 	if (SetDefaultCodepage(g_szCodePage))
 	{
-		DbgPrintf(1, _T("Code page set to %s"), g_szCodePage);
+		DbgPrintf(1, _T("Code page set to %hs"), g_szCodePage);
 	}
 	else
 	{

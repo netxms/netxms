@@ -392,6 +392,15 @@ void ClientSession::readThread()
 #endif
    while(1)
    {
+		// Shrink buffer after receiving large message
+		if (msgBufferSize > 131072)
+		{
+			msgBufferSize = 131072;
+		   pRawMsg = (CSCP_MESSAGE *)realloc(pRawMsg, msgBufferSize);
+			if (pDecryptionBuffer != NULL)
+			   pDecryptionBuffer = (BYTE *)realloc(pDecryptionBuffer, msgBufferSize);
+		}
+
       if ((iErr = RecvNXCPMessageEx(m_hSocket, &pRawMsg, m_pMsgBuffer, &msgBufferSize, 
 		                              &m_pCtx, (pDecryptionBuffer != NULL) ? &pDecryptionBuffer : NULL,
 												900000, MAX_MSG_SIZE)) <= 0)  // timeout 15 minutes

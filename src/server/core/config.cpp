@@ -179,11 +179,9 @@ static void OnConfigVariableChange(BOOL isCLOB, const TCHAR *name, const TCHAR *
 	}
 }
 
-
-//
-// Read string value from configuration table
-//
-
+/**
+ * Read string value from configuration table
+ */
 BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault)
 {
    DB_RESULT hResult;
@@ -214,11 +212,9 @@ BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
    return bSuccess;
 }
 
-
-//
-// Read multibyte string from configuration table
-//
-
+/**
+ * Read multibyte string from configuration table
+ */
 #ifdef UNICODE
 
 BOOL NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault)

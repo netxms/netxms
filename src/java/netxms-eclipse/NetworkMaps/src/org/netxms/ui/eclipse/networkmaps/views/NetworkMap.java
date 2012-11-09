@@ -62,6 +62,7 @@ import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphNode;
 import org.eclipse.zest.layouts.LayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.GridLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.RadialLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
@@ -77,6 +78,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.algorithms.ExpansionAlgorithm;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.BendpointEditor;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
@@ -372,7 +374,9 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				algorithm = new GridLayoutAlgorithm();
 				break;
 		}
-		viewer.setLayoutAlgorithm(algorithm);
+		//viewer.setLayoutAlgorithm(algorithm);
+		
+		viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm(new LayoutAlgorithm[] { algorithm, new ExpansionAlgorithm() }));
 
 		actionSetAlgorithm[layoutAlgorithm].setChecked(false);
 		layoutAlgorithm = alg;
