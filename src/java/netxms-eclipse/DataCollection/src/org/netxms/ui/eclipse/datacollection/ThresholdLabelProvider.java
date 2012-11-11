@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -53,7 +54,7 @@ public class ThresholdLabelProvider extends LabelProvider implements ITableLabel
 				return thresholdIcon;
 			case Thresholds.COLUMN_EVENT:
 				final EventTemplate event = session.findEventTemplateByCode(((Threshold)element).getFireEvent());
-				return StatusDisplayInfo.getStatusImage(event.getSeverity());
+				return StatusDisplayInfo.getStatusImage((event != null) ? event.getSeverity() : Severity.UNKNOWN);
 		}
 		return null;
 	}
