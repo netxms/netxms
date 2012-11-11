@@ -617,7 +617,15 @@ public class AxisTickLabels implements PaintListener
 	private String roundedDecimalValue(double value, double step)
 	{
 		double absValue = Math.abs(value);
-		if (absValue >= 10000000000L)
+		if (absValue >= 10000000000000L)
+		{
+			return Long.toString(Math.round(value / 1000000000000L)) + "T";
+		}
+		else if (absValue >= 1000000000000L)
+		{
+			return new DecimalFormat("0.0").format(value / 1000000000000L) + "T"; //$NON-NLS-1$
+		}
+		else if (absValue >= 10000000000L)
 		{
 			return Long.toString(Math.round(value / 1000000000)) + "G";
 		}

@@ -135,6 +135,10 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 				try
 				{
 					long i = Long.parseLong(element.getValue());
+					if ((i >= 10000000000000L) || (i <= -10000000000000L))
+					{
+						return Long.toString(i / 1000000000000L) + " T";
+					}
 					if ((i >= 10000000000L) || (i <= -10000000000L))
 					{
 						return Long.toString(i / 1000000000L) + Messages.LastValuesLabelProvider_Giga;
@@ -158,6 +162,10 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 					double d = Double.parseDouble(element.getValue());
 					NumberFormat nf = NumberFormat.getNumberInstance();
 					nf.setMaximumFractionDigits(2);
+					if ((d >= 10000000000000.0) || (d <= -10000000000000.0))
+					{
+						return nf.format(d / 1000000000000.0) + " T";
+					}
 					if ((d >= 10000000000.0) || (d <= -10000000000.0))
 					{
 						return nf.format(d / 1000000000.0) + Messages.LastValuesLabelProvider_Giga;
