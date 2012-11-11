@@ -24,6 +24,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -72,6 +73,7 @@ public class ObjectOverview extends ObjectTab
 			{
 				Rectangle r = scroller.getClientArea();
 				scroller.setMinSize(viewArea.computeSize(r.width, SWT.DEFAULT));
+				objectChanged(getObject());
 			}
 		});
 		
@@ -188,6 +190,9 @@ public class ObjectOverview extends ObjectTab
 		
 		Rectangle r = scroller.getClientArea();
 		scroller.setMinSize(viewArea.computeSize(r.width, SWT.DEFAULT));
+		
+		Point s = viewArea.getSize();
+		viewArea.redraw(0, 0, s.x, s.y, true);
 	}
 
 	/* (non-Javadoc)

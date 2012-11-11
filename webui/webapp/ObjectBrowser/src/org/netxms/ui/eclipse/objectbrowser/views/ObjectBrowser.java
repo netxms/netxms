@@ -39,6 +39,7 @@ import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
@@ -102,6 +103,7 @@ public class ObjectBrowser extends ViewPart
 	private boolean initHideTemplateChecks = false;
 	private boolean initShowFilter = true;
 	private boolean initShowStatus = false;
+	private long initObjectId = 0;
 	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
 	
 	/* (non-Javadoc)
@@ -117,6 +119,7 @@ public class ObjectBrowser extends ViewPart
 			initHideTemplateChecks = safeCast(memento.getBoolean("ObjectBrowser.hideTemplateChecks"), false); //$NON-NLS-1$
 			initShowFilter = safeCast(memento.getBoolean("ObjectBrowser.showFilter"), true); //$NON-NLS-1$
 			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), false); //$NON-NLS-1$
+			initObjectId = safeCast(memento.getInteger("ObjetBrowser.selectedObject"), 0);
 		}
 		registerOpenHandlers();
 	}
@@ -124,6 +127,11 @@ public class ObjectBrowser extends ViewPart
 	private static boolean safeCast(Boolean b, boolean defval)
 	{
 		return (b != null) ? b : defval;
+	}
+
+	private static int safeCast(Integer i, int defval)
+	{
+		return (i != null) ? i : defval;
 	}
 
 	/* (non-Javadoc)
@@ -137,6 +145,16 @@ public class ObjectBrowser extends ViewPart
 		memento.putBoolean("ObjectBrowser.hideTemplateChecks", objectTree.isHideTemplateChecks()); //$NON-NLS-1$
 		memento.putBoolean("ObjectBrowser.showFilter", objectTree.isFilterEnabled()); //$NON-NLS-1$
 		memento.putBoolean("ObjectBrowser.showStatusIndicator", objectTree.isStatusIndicatorEnabled()); //$NON-NLS-1$
+
+		IStructuredSelection selection = (IStructuredSelection)objectTree.getTreeViewer().getSelection();
+		if (selection.size() == 1)
+		{
+			memento.putInteger("ObjetBrowser.selectedObject", (int)((GenericObject)selection.getFirstElement()).getObjectId());
+		}
+		else
+		{
+			memento.putInteger("ObjetBrowser.selectedObject", 0);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -199,6 +217,15 @@ public class ObjectBrowser extends ViewPart
 		objectTree.setFilterCloseAction(actionShowFilter);
 		
 		activateContext();
+		
+		if (initObjectId != 0)
+		{
+			GenericObject o = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(initObjectId);
+			if (o != null)
+			{
+				objectTree.getTreeViewer().setSelection(new StructuredSelection(o), true);
+			}
+		}
 	}
 	
 	/**

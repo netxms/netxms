@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IMemento;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IViewSite;
@@ -52,11 +53,13 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.objectview.services.SourceProvider;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 
@@ -77,6 +80,7 @@ public class TabbedObjectView extends ViewPart
 	private IntermediateSelectionProvider selectionProvider;
 	private Action actionRefresh;
 	private SourceProvider sourceProvider;
+	private long objectId = 0; 
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -87,6 +91,31 @@ public class TabbedObjectView extends ViewPart
 		super.init(site);
 		sourceProvider = Activator.getDefault().getSourceProvider();
 		selectionService = getSite().getWorkbenchWindow().getSelectionService();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
+	 */
+	@Override
+	public void init(IViewSite site, IMemento memento) throws PartInitException
+	{
+		super.init(site, memento);
+		if (memento != null)
+		{
+			Integer i = memento.getInteger("TabbedObjectView.objectId");
+			if (i != null)
+				objectId = i; 
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
+	 */
+	@Override
+	public void saveState(IMemento memento)
+	{
+		super.saveState(memento);
+		memento.putInteger("TabbedObjectView.objectId", (int)objectId);
 	}
 
 	/* (non-Javadoc)
@@ -161,6 +190,9 @@ public class TabbedObjectView extends ViewPart
 		
 		selectionProvider = new IntermediateSelectionProvider();
 		getSite().setSelectionProvider(selectionProvider);
+		
+		if (objectId != 0)
+			setObject(((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId));
 	}
 	
 	/**
@@ -250,6 +282,7 @@ public class TabbedObjectView extends ViewPart
 			{
 			}
 		}
+		objectId = (object != null) ? object.getObjectId() : 0;
 	}
 
 	/* (non-Javadoc)
