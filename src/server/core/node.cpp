@@ -4386,6 +4386,7 @@ void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD se
 
 	if (nDepth > 0)
 	{
+		ObjectArray<Subnet> subnets;
 		LockParentList(FALSE);
 		for(DWORD i = 0; i < m_dwParentCount; i++)
 		{
@@ -4394,9 +4395,17 @@ void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD se
 
 			topology.addObject(m_pParentList[i]->Id());
 			topology.linkObjects(m_dwId, m_pParentList[i]->Id());
-			((Subnet *)m_pParentList[i])->buildIPTopologyInternal(topology, nDepth, m_dwId, includeEndNodes);
+			m_pParentList[i]->IncRefCount();
+			subnets.add((Subnet *)m_pParentList[i]);
 		}
 		UnlockParentList();
+
+		for(int j = 0; j < subnets.size(); j++)
+		{
+			Subnet *s = subnets.get(j);
+			s->buildIPTopologyInternal(topology, nDepth, m_dwId, includeEndNodes);
+			s->DecRefCount();
+		}
 	}
 }
 

@@ -162,7 +162,6 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		viewId += (parts.length > 0) ? parts[0] : site.getSecondaryId();
 	
 		parseSecondaryId(parts);
-		buildMapPage();
 	}
 	
 	/**
@@ -295,7 +294,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		{
 			viewer.setLayoutAlgorithm(new ManualLayout());
 		}
-		viewer.setInput(mapPage);
+		
+		refreshMap();
 	}
 
 	/**

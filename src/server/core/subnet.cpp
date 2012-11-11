@@ -252,6 +252,7 @@ bool Subnet::findMacAddress(DWORD ipAddr, BYTE *macAddr)
  */
 void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD seedNode, bool includeEndNodes)
 {
+	ObjectArray<Node> nodes;
 	LockChildList(FALSE);
 	for(DWORD i = 0; i < m_dwChildCount; i++)
 	{
@@ -259,7 +260,15 @@ void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD 
 			continue;
 		if (!includeEndNodes && !((Node *)m_pChildList[i])->isRouter())
 			continue;
-		((Node *)m_pChildList[i])->buildIPTopologyInternal(topology, nDepth - 1, m_dwId, includeEndNodes);
+		m_pChildList[i]->IncRefCount();
+		nodes.add((Node *)m_pChildList[i]);
 	}
 	UnlockChildList();
+
+	for(int j = 0; j < nodes.size(); j++)
+	{
+		Node *n = nodes.get(j);
+		n->buildIPTopologyInternal(topology, nDepth - 1, m_dwId, includeEndNodes);
+		n->DecRefCount();
+	}
 }
