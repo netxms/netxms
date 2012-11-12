@@ -57,7 +57,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Object's "access control" property page
- *
  */
 public class PredefinedGraph extends PropertyPage
 {

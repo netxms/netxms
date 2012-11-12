@@ -27,12 +27,14 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
@@ -51,8 +53,11 @@ public class PerfTab extends PropertyPage
 	private PerfTabGraphSettings settings;
 	private Button checkShow;
 	private LabeledText title;
+	private LabeledText name;
 	private ColorSelector color;
+	private Combo type;
 	private Button checkShowThresholds;
+	private DciSelector parentDci;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -76,14 +81,14 @@ public class PerfTab extends PropertyPage
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
-		layout.numColumns = 2;
+		layout.numColumns = 3;
       dialogArea.setLayout(layout);
       
       checkShow = new Button(dialogArea, SWT.CHECK);
       checkShow.setText("&Show on performance tab");
       checkShow.setSelection(settings.isEnabled());
       GridData gd = new GridData();
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = 3;
       checkShow.setLayoutData(gd);
       
       title = new LabeledText(dialogArea, SWT.NONE);
@@ -99,14 +104,38 @@ public class PerfTab extends PropertyPage
       new Label(colors, SWT.NONE).setText("Color");
       color = new ColorSelector(colors);
       color.setColorValue(ColorConverter.rgbFromInt(settings.getColorAsInt()));
+      
+      type = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Type", new GridData(SWT.LEFT, SWT.CENTER, false, false));
+      type.add("Line");
+      type.add("Area");
+      type.select(settings.getType());
 
+      parentDci = new DciSelector(dialogArea, SWT.NONE, false);
+      parentDci.setDciId(dci.getNodeId(), settings.getParentDciId());
+      parentDci.setFixedNode(true);
+      parentDci.setLabel("Attach to another DCI");
+      gd = new GridData();
+      gd.horizontalSpan = 3;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      parentDci.setLayoutData(gd);
+
+      name = new LabeledText(dialogArea, SWT.NONE);
+      name.setLabel("Name in legend");
+      name.setText(settings.getName());
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalSpan = 3;
+      name.setLayoutData(gd);
+      
       checkShowThresholds = new Button(dialogArea, SWT.CHECK);
       checkShowThresholds.setText("&Show thresholds on graph");
       checkShowThresholds.setSelection(settings.isShowThresholds());
       gd = new GridData();
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = 3;
       checkShowThresholds.setLayoutData(gd);
-
+      
       return dialogArea;
 	}
 	
@@ -122,8 +151,12 @@ public class PerfTab extends PropertyPage
 		
 		settings.setEnabled(checkShow.getSelection());
 		settings.setTitle(title.getText());
+		settings.setName(name.getText());
 		settings.setColor(ColorConverter.rgbToInt(color.getColorValue()));
+		settings.setType(type.getSelectionIndex());
 		settings.setShowThresholds(checkShowThresholds.getSelection());
+
+		settings.setParentDciId(parentDci.getDciId());
 		
 		try
 		{
@@ -199,5 +232,6 @@ public class PerfTab extends PropertyPage
 		checkShow.setSelection(defaults.isEnabled());
 		title.setText(defaults.getTitle());
 		color.setColorValue(ColorConverter.rgbFromInt(defaults.getColorAsInt()));
+		parentDci.setDciId(0, 0);
 	}
 }

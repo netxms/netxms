@@ -27,11 +27,15 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
@@ -40,6 +44,7 @@ import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.DciList;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Dialog for DCI selection
@@ -53,14 +58,17 @@ public class SelectDciDialog extends Dialog
 	private DciList dciList;
 	private DciValue selection;
 	private int dcObjectType = -1;
+	private long fixedNode;
+	private boolean enableEmptySelection = false;
 	
 	/**
 	 * @param parentShell
 	 */
-	public SelectDciDialog(Shell parentShell)
+	public SelectDciDialog(Shell parentShell, long fixedNode)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
+		this.fixedNode = fixedNode;
 	}
 
 	/* (non-Javadoc)
@@ -83,24 +91,55 @@ public class SelectDciDialog extends Dialog
 	}
 
 	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
+	 */
+	@Override
+	protected void createButtonsForButtonBar(Composite parent)
+	{
+		if (enableEmptySelection)
+		{
+			Button button = createButton(parent, 1000, "&None", false);
+			button.addSelectionListener(new SelectionListener() {
+				@Override
+				public void widgetSelected(SelectionEvent e)
+				{
+					selection = null;
+					saveSettings();
+					SelectDciDialog.super.okPressed();
+				}
+				
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e)
+				{
+					widgetSelected(e);
+				}
+			});
+		}		
+		super.createButtonsForButtonBar(parent);
+	}
+
+	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
-		Composite dialogArea = (Composite)super.createDialogArea(parent);
+		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		
+		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		dialogArea.setLayout(new FillLayout());
 		
-		splitter = new SashForm(dialogArea, SWT.HORIZONTAL);
-		
-		objectTree = new ObjectTree(splitter, SWT.BORDER, ObjectTree.NONE, null, ObjectSelectionDialog.createNodeSelectionFilter());
-		IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		String text = settings.get("SelectDciDialog.Filter"); //$NON-NLS-1$
-		if (text != null)
-			objectTree.setFilter(text);
+		if (fixedNode == 0)
+		{
+			splitter = new SashForm(dialogArea, SWT.HORIZONTAL);
+			
+			objectTree = new ObjectTree(splitter, SWT.BORDER, ObjectTree.NONE, null, ObjectSelectionDialog.createNodeSelectionFilter());
+			String text = settings.get("SelectDciDialog.Filter"); //$NON-NLS-1$
+			if (text != null)
+				objectTree.setFilter(text);
+		}
 
-		dciList = new DciList(null, splitter, SWT.BORDER, null, "SelectDciDialog.dciList", dcObjectType);  //$NON-NLS-1$
+		dciList = new DciList(null, (fixedNode == 0) ? splitter : dialogArea, SWT.BORDER, null, "SelectDciDialog.dciList", dcObjectType);  //$NON-NLS-1$
 		dciList.setDcObjectType(dcObjectType);
 		dciList.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
@@ -110,29 +149,36 @@ public class SelectDciDialog extends Dialog
 			}
 		});
 
-		try
+		if (fixedNode == 0)
 		{
-			int[] weights = new int[2];
-			weights[0] = settings.getInt("SelectDciDialog.weight1"); //$NON-NLS-1$
-			weights[1] = settings.getInt("SelectDciDialog.weight2"); //$NON-NLS-1$
-			splitter.setWeights(weights);
-		}
-		catch(NumberFormatException e)
-		{
-			splitter.setWeights(new int[] { 30, 70 });
-		}
-		
-		objectTree.getTreeViewer().addSelectionChangedListener(new ISelectionChangedListener()	{
-			@Override
-			public void selectionChanged(SelectionChangedEvent event)
+			try
 			{
-				GenericObject object = objectTree.getFirstSelectedObject2();
-				if ((object != null) && (object instanceof Node))
-					dciList.setNode((Node)object);
-				else
-					dciList.setNode(null);
+				int[] weights = new int[2];
+				weights[0] = settings.getInt("SelectDciDialog.weight1"); //$NON-NLS-1$
+				weights[1] = settings.getInt("SelectDciDialog.weight2"); //$NON-NLS-1$
+				splitter.setWeights(weights);
 			}
-		});
+			catch(NumberFormatException e)
+			{
+				splitter.setWeights(new int[] { 30, 70 });
+			}
+			
+			objectTree.getTreeViewer().addSelectionChangedListener(new ISelectionChangedListener()	{
+				@Override
+				public void selectionChanged(SelectionChangedEvent event)
+				{
+					GenericObject object = objectTree.getFirstSelectedObject2();
+					if ((object != null) && (object instanceof Node))
+						dciList.setNode((Node)object);
+					else
+						dciList.setNode(null);
+				}
+			});
+		}
+		else
+		{
+			dciList.setNode((Node)((NXCSession)ConsoleSharedData.getSession()).findObjectById(fixedNode, Node.class));
+		}
 		
 		return dialogArea;
 	}
@@ -147,11 +193,14 @@ public class SelectDciDialog extends Dialog
 
 		settings.put("SelectDciDialog.cx", size.x); //$NON-NLS-1$
 		settings.put("SelectDciDialog.cy", size.y); //$NON-NLS-1$
-		settings.put("SelectDciDialog.Filter", objectTree.getFilter()); //$NON-NLS-1$
-		
-		int[] weights = splitter.getWeights();
-		settings.put("SelectDciDialog.weight1", weights[0]); //$NON-NLS-1$
-		settings.put("SelectDciDialog.weight2", weights[1]); //$NON-NLS-1$
+		if (fixedNode == 0)
+		{
+			settings.put("SelectDciDialog.Filter", objectTree.getFilter()); //$NON-NLS-1$
+			
+			int[] weights = splitter.getWeights();
+			settings.put("SelectDciDialog.weight1", weights[0]); //$NON-NLS-1$
+			settings.put("SelectDciDialog.weight2", weights[1]); //$NON-NLS-1$
+		}
 	}
 
 	/* (non-Javadoc)
@@ -204,5 +253,21 @@ public class SelectDciDialog extends Dialog
 		this.dcObjectType = dcObjectType;
 		if (dciList != null)
 			dciList.setDcObjectType(dcObjectType);
+	}
+
+	/**
+	 * @return the enableEmptySelection
+	 */
+	public final boolean isEnableEmptySelection()
+	{
+		return enableEmptySelection;
+	}
+
+	/**
+	 * @param enableEmptySelection the enableEmptySelection to set
+	 */
+	public final void setEnableEmptySelection(boolean enableEmptySelection)
+	{
+		this.enableEmptySelection = enableEmptySelection;
 	}
 }

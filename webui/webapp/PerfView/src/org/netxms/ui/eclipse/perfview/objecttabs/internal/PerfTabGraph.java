@@ -18,8 +18,10 @@
  */
 package org.netxms.ui.eclipse.perfview.objecttabs.internal;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -51,7 +53,7 @@ public class PerfTabGraph extends DashboardComposite
 	private static final long serialVersionUID = 1L;
 
 	private long nodeId;
-	private PerfTabDci dci;
+	private List<PerfTabDci> items = new ArrayList<PerfTabDci>(4);
 	private HistoricalDataChart chart;
 	private Runnable refreshTimer;
 	private boolean updateInProgress = false;
@@ -65,7 +67,7 @@ public class PerfTabGraph extends DashboardComposite
 	{
 		super(parent, SWT.BORDER);
 		this.nodeId = nodeId;
-		this.dci = dci;
+		items.add(dci);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		setLayout(new FillLayout());
@@ -79,8 +81,37 @@ public class PerfTabGraph extends DashboardComposite
 		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
 		chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
 		
-		chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", dci.getDescription()));
-
+		chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getName().isEmpty() ? dci.getDescription() : settings.getName()));
+	}
+	
+	/**
+	 * Add another item to graph
+	 * 
+	 * @param dci
+	 * @param settings
+	 */
+	public void addItem(PerfTabDci dci, PerfTabGraphSettings settings)
+	{
+		chart.setLegendVisible(true);
+		synchronized(items)
+		{
+			items.add(dci);
+			GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
+			List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(chart.getItemStyles());
+			if (styles.size() < items.size())
+				styles.add(style);
+			else
+				styles.set(items.size() - 1, style);
+			chart.setItemStyles(styles);
+			chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getName().isEmpty() ? dci.getDescription() : settings.getName()));
+		}
+	}
+	
+	/**
+	 * Start chart update
+	 */
+	public void start()
+	{
 		final Display display = getDisplay();
 		refreshTimer = new Runnable() {
 			@Override
@@ -109,32 +140,41 @@ public class PerfTabGraph extends DashboardComposite
 		chart.clearErrors();
 		
 		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", null, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			private PerfTabDci currentDci;
+			
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final Date from = new Date(System.currentTimeMillis() - 3600000);
 				final Date to = new Date(System.currentTimeMillis());
-				final DciData data = session.getCollectedData(nodeId, dci.getId(), from, to, 0);
-				//final Threshold[] thresholds = session.getThresholds(nodeId, dci.getId());
-
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
+				synchronized(items)
+				{
+					final DciData[] data = new DciData[items.size()];
+					for(int i = 0; i < data.length; i++)
 					{
-						if (!((Widget)chart).isDisposed())
-						{
-							chart.setTimeRange(from, to);
-							chart.updateParameter(0, data, true);
-						}
-						updateInProgress = false;
+						currentDci = items.get(i);
+						data[i] = session.getCollectedData(nodeId, currentDci.getId(), from, to, 0);
 					}
-				});
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
+						{
+							if (!((Widget)chart).isDisposed())
+							{
+								chart.setTimeRange(from, to);
+								for(int i = 0; i < data.length; i++)
+									chart.updateParameter(i, data[i], true);
+							}
+							updateInProgress = false;
+						}
+					});
+				}
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get value for DCI " + dci.getId() + " (" + dci.getDescription() + ")";
+				return "Cannot get value for DCI " + currentDci.getId() + " (" + currentDci.getDescription() + ")";
 			}
 
 			@Override

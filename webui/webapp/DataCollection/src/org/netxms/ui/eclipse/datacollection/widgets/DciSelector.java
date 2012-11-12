@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.datacollection.widgets;
 
@@ -28,6 +43,8 @@ public class DciSelector extends AbstractSelector
 	private String emptySelectionName = Messages.DciSelector_None;
 	private NXCSession session;
 	private int dcObjectType = -1;
+	private String dciName = null;
+	private boolean fixedNode = false; 
 
 	/**
 	 * @param parent
@@ -47,12 +64,22 @@ public class DciSelector extends AbstractSelector
 	@Override
 	protected void selectionButtonHandler()
 	{
-		SelectDciDialog dlg = new SelectDciDialog(getShell());
+		SelectDciDialog dlg = new SelectDciDialog(getShell(), fixedNode ? nodeId : 0);
+		dlg.setEnableEmptySelection(true);
 		dlg.setDcObjectType(dcObjectType);
 		if (dlg.open() == Window.OK)
 		{
 			DciValue dci = dlg.getSelection();
-			setDciId(dci.getNodeId(), dci.getId());
+			if (dci != null)
+			{
+				setDciId(dci.getNodeId(), dci.getId());
+				dciName = dci.getName();
+			}
+			else
+			{
+				setDciId(fixedNode ? nodeId : 0, 0);
+				dciName = null;
+			}
 		}
 	}
 	
@@ -61,7 +88,7 @@ public class DciSelector extends AbstractSelector
 	 */
 	private void updateText()
 	{
-		if (nodeId == 0)
+		if ((nodeId == 0) || (dciId == 0))
 		{
 			setText(emptySelectionName);
 			return;
@@ -79,17 +106,20 @@ public class DciSelector extends AbstractSelector
 						Node node = (Node)session.findObjectById(nodeId, Node.class);
 						
 						StringBuilder sb = new StringBuilder();
-						if (node != null)
+						if (!fixedNode)
 						{
-							sb.append(node.getObjectName());
+							if (node != null)
+							{
+								sb.append(node.getObjectName());
+							}
+							else
+							{
+								sb.append('[');
+								sb.append(nodeId);
+								sb.append(']');
+							}
+							sb.append(" / "); //$NON-NLS-1$
 						}
-						else
-						{
-							sb.append('[');
-							sb.append(nodeId);
-							sb.append(']');
-						}
-						sb.append(" / "); //$NON-NLS-1$
 						if (names.length > 0)
 						{
 							sb.append(names[0]);
@@ -170,5 +200,29 @@ public class DciSelector extends AbstractSelector
 	public void setDcObjectType(int dcObjectType)
 	{
 		this.dcObjectType = dcObjectType;
+	}
+
+	/**
+	 * @return the fixedNode
+	 */
+	public final boolean isFixedNode()
+	{
+		return fixedNode;
+	}
+
+	/**
+	 * @param fixedNode the fixedNode to set
+	 */
+	public final void setFixedNode(boolean fixedNode)
+	{
+		this.fixedNode = fixedNode;
+	}
+
+	/**
+	 * @return the dciName
+	 */
+	public final String getDciName()
+	{
+		return dciName;
 	}
 }

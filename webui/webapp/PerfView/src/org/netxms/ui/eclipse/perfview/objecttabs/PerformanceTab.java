@@ -21,7 +21,11 @@ package org.netxms.ui.eclipse.perfview.objecttabs;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -49,11 +53,10 @@ import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
  * Performance tab
- *
  */
 public class PerformanceTab extends ObjectTab
 {
-	private List<PerfTabGraph> charts = new ArrayList<PerfTabGraph>();
+	private Map<Long, PerfTabGraph> charts = new HashMap<Long, PerfTabGraph>();
 	private ScrolledComposite scroller;
 	private Composite chartArea;
 	private AnimatedImage waitingImage = null;
@@ -99,7 +102,7 @@ public class PerformanceTab extends ObjectTab
 	@Override
 	public void objectChanged(final GenericObject object)
 	{
-		for(PerfTabGraph chart : charts)
+		for(PerfTabGraph chart : charts.values())
 			chart.dispose();
 		charts.clear();
 		
@@ -158,29 +161,62 @@ public class PerformanceTab extends ObjectTab
 			waitingImage.dispose();
 			waitingImage = null;
 		}
+
+		for(PerfTabGraph chart : charts.values())
+			chart.dispose();
+		charts.clear();
 		
+		List<PerfTabGraphSettings> settings = new ArrayList<PerfTabGraphSettings>(items.length);
 		for(int i = 0; i < items.length; i++)
 		{
 			try
 			{
-				PerfTabGraphSettings settings = PerfTabGraphSettings.createFromXml(items[i].getPerfTabSettings());
-
-				if (settings.isEnabled())
+				PerfTabGraphSettings s = PerfTabGraphSettings.createFromXml(items[i].getPerfTabSettings());
+				if (s.isEnabled())
 				{
-					PerfTabGraph chart = new PerfTabGraph(chartArea, getObject().getObjectId(), items[i], settings);
-					charts.add(chart);
-					
-					final GridData gd = new GridData();
-					gd.horizontalAlignment = SWT.FILL;
-					gd.grabExcessHorizontalSpace = true;
-					gd.heightHint = 250;
-					chart.setLayoutData(gd);
+					s.setRuntimeDciInfo(items[i]);
+					settings.add(s);
 				}
 			}
 			catch(Exception e)
 			{
 			}
 		}
+		
+		Collections.sort(settings, new Comparator<PerfTabGraphSettings>() {
+			@Override
+			public int compare(PerfTabGraphSettings o1, PerfTabGraphSettings o2)
+			{
+				return (int)(o1.getParentDciId() - o2.getParentDciId());
+			}
+		});
+		
+		for(PerfTabGraphSettings s : settings)
+		{
+			if (s.getParentDciId() == 0)
+			{
+				PerfTabGraph chart = new PerfTabGraph(chartArea, getObject().getObjectId(), s.getRuntimeDciInfo(), s);
+				charts.put(s.getRuntimeDciInfo().getId(), chart);
+				
+				final GridData gd = new GridData();
+				gd.horizontalAlignment = SWT.FILL;
+				gd.grabExcessHorizontalSpace = true;
+				gd.heightHint = 250;
+				chart.setLayoutData(gd);
+			}
+			else
+			{
+				PerfTabGraph chart = charts.get(s.getParentDciId());
+				if (chart != null)
+				{
+					chart.addItem(s.getRuntimeDciInfo(), s);
+				}
+			}
+		}
+		
+		for(PerfTabGraph chart : charts.values())
+			chart.start();
+		
 		updateChartAreaLayout();
 	}
 
