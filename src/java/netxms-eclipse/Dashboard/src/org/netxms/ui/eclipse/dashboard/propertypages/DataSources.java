@@ -301,7 +301,7 @@ public class DataSources extends PropertyPage
 	 */
 	private void addItem()
 	{
-		SelectDciDialog dlg = new SelectDciDialog(getShell());
+		SelectDciDialog dlg = new SelectDciDialog(getShell(), -1);
 		dlg.setDcObjectType(DataCollectionObject.DCO_TYPE_ITEM);
 		if (dlg.open() == Window.OK)
 		{

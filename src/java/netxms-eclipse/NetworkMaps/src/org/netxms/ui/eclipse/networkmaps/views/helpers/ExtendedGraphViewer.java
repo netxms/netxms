@@ -180,6 +180,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	protected void inputChanged(Object input, Object oldInput)
 	{
 		super.inputChanged(input, oldInput);
+		
 		decorationLayer.removeAll();
 		decorationFigures.clear();
 		if ((getContentProvider() instanceof MapContentProvider) && (getLabelProvider() instanceof MapLabelProvider))
@@ -404,7 +405,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			getFactory().refresh(getGraphControl(), element, updateLabels);
 		}
 	}
-	
+
 	/**
 	 * Zoom to next level
 	 */

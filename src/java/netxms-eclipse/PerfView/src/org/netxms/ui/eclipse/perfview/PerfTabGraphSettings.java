@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.perfview;
 
@@ -7,6 +22,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 
 import org.netxms.client.datacollection.GraphItemStyle;
+import org.netxms.client.datacollection.PerfTabDci;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
@@ -14,9 +30,8 @@ import org.simpleframework.xml.core.Persister;
 
 /**
  * Settings for performance tab graph
- *
  */
-@Root(name="config")
+@Root(name="config", strict=false)
 public class PerfTabGraphSettings
 {
 	@Element(required=false)
@@ -32,7 +47,18 @@ public class PerfTabGraphSettings
 	private String title = "";
 	
 	@Element(required=false)
+	private String name = "";
+	
+	@Element(required=false)
 	private boolean showThresholds = false;
+	
+	@Element(required=false)
+	private long parentDciId = 0;
+
+	@Element(required=false)
+	private String parentDciName = null;
+	
+	private PerfTabDci runtimeDciInfo = null;
 
 	/**
 	 * Create performance tab graph settings object from XML document
@@ -157,5 +183,69 @@ public class PerfTabGraphSettings
 	public void setShowThresholds(boolean showThresholds)
 	{
 		this.showThresholds = showThresholds;
+	}
+
+	/**
+	 * @return the parentDciId
+	 */
+	public final long getParentDciId()
+	{
+		return parentDciId;
+	}
+
+	/**
+	 * @param parentDciId the parentDciId to set
+	 */
+	public final void setParentDciId(long parentDciId)
+	{
+		this.parentDciId = parentDciId;
+	}
+
+	/**
+	 * @return the parentDciName
+	 */
+	public final String getParentDciName()
+	{
+		return parentDciName;
+	}
+
+	/**
+	 * @param parentDciName the parentDciName to set
+	 */
+	public final void setParentDciName(String parentDciName)
+	{
+		this.parentDciName = parentDciName;
+	}
+
+	/**
+	 * @return the runtimeDciInfo
+	 */
+	public final PerfTabDci getRuntimeDciInfo()
+	{
+		return runtimeDciInfo;
+	}
+
+	/**
+	 * @param runtimeDciInfo the runtimeDciInfo to set
+	 */
+	public final void setRuntimeDciInfo(PerfTabDci runtimeDciInfo)
+	{
+		this.runtimeDciInfo = runtimeDciInfo;
+	}
+
+	/**
+	 * @return the name
+	 */
+	public final String getName()
+	{
+		return name;
+	}
+
+	/**
+	 * @param name the name to set
+	 */
+	public final void setName(String name)
+	{
+		this.name = name;
 	}
 }

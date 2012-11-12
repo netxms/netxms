@@ -4,6 +4,7 @@
 
 - Management console:
 	- "Area" option implemented on line charts
+	- Multiple DCIs can be combined on one graph on "Performance" tab
 - Fixed issues: #162, #163
 
 
