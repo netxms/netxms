@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2011 Victor Kirhenshtein
+** Copyright (C) 2004-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -259,7 +259,11 @@ retry_ifconf:
 		{
 			// Check if interface already in internal table
 			for(j = 0; j < nifs; j++)
-				if (!strcmp(ifl[j].name, ifc.ifc_req[i].ifr_name))
+				if (!strcmp(ifl[j].name, ifc.ifc_req[i].ifr_name) &&
+				    (((ifc.ifc_req[i].ifr_addr.sa_family == AF_INET) && 
+				      (((struct sockaddr_in *)&ifc.ifc_req[i].ifr_addr)->sin_addr.s_addr == ifl[j].ip)) ||
+				     (ifc.ifc_req[i].ifr_addr.sa_family != AF_INET) ||
+				     (ifl[j].ip == 0)))
 					break;
 			if (j == nifs)
 			{
