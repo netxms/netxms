@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -23,11 +23,13 @@
 
 #include "libnetxms.h"
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ *
+ * @param initial initial array size
+ * @param grow number of elements to add when array has to grow
+ * @param owner if set to true, array is an owner of added objects and will destroy them on removed from array
+ */
 Array::Array(int initial, int grow, bool owner)
 {
 	m_size = 0;
@@ -38,11 +40,9 @@ Array::Array(int initial, int grow, bool owner)
 	m_objectDestructor = free;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 Array::~Array()
 {
 	if (m_objectOwner)
@@ -53,11 +53,9 @@ Array::~Array()
 	safe_free(m_data);
 }
 
-
-//
-// Add object
-//
-
+/**
+ * Add object
+ */
 int Array::add(void *object)
 {
 	if (m_size == m_allocated)
@@ -69,13 +67,11 @@ int Array::add(void *object)
 	return m_size - 1;
 }
 
-
-//
-// Set object at given index. If index is within array bounds, object at this position will be replaced,
-// otherwise array will be expanded as required. Other new positions created during expansion will
-// be filled with NULL values.
-//
-
+/**
+ * Set object at given index. If index is within array bounds, object at this position will be replaced,
+ * otherwise array will be expanded as required. Other new positions created during expansion will
+ * be filled with NULL values.
+ */
 void Array::set(int index, void *object)
 {
 	if (index < 0)
@@ -101,12 +97,10 @@ void Array::set(int index, void *object)
 	m_data[index] = object;
 }
 
-
-//
-// Replace object at given index. If index is beyond array bounds,
-// this method will do nothing.
-//
-
+/**
+ * Replace object at given index. If index is beyond array bounds,
+ * this method will do nothing.
+ */
 void Array::replace(int index, void *object)
 {
 	if ((index < 0) || (index >= m_size))
@@ -118,11 +112,9 @@ void Array::replace(int index, void *object)
 	m_data[index] = object;
 }
 
-
-//
-// Remove element at given index
-//
-
+/**
+ * Remove element at given index
+ */
 void Array::internalRemove(int index, bool allowDestruction)
 {
 	if ((index < 0) || (index >= m_size))
@@ -134,11 +126,9 @@ void Array::internalRemove(int index, bool allowDestruction)
 	memmove(&m_data[index], &m_data[index + 1], sizeof(void *) * (m_size - index));
 }
 
-
-//
-// Clear array
-//
-
+/**
+ * Clear array
+ */
 void Array::clear()
 {
 	if (m_objectOwner)

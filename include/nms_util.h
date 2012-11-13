@@ -455,11 +455,9 @@ public:
 	void replace(int index, T *object) { Array::replace(index, (void *)object); }
 };
 
-
-//
-// Auxilliary class to hold dynamically allocated array of structures
-//
-
+/**
+ * Auxilliary class to hold dynamically allocated array of structures
+ */
 template <class T> class StructArray
 {
 private:
@@ -474,12 +472,10 @@ public:
 	T *get(int index) { return ((index >= 0) && (index < m_count)) ? &m_data[index] : NULL; }
 };
 
-
-//
-// Auxilliary class for objects which counts references and
-// destroys itself wheren reference count falls to 0
-//
-
+/**
+ * Auxilliary class for objects which counts references and
+ * destroys itself wheren reference count falls to 0
+ */
 class LIBNETXMS_EXPORTABLE RefCountObject
 {
 private:
@@ -494,11 +490,9 @@ public:
 	void decRefCount();
 };
 
-
-//
-// Network connection
-//
-
+/**
+ * Network connection
+ */
 class LIBNETXMS_EXPORTABLE SocketConnection
 {
 protected:

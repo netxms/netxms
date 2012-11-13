@@ -29,7 +29,7 @@
 // Constants
 //
 
-#define MAX_ERROR_NUMBER         26
+#define MAX_ERROR_NUMBER         27
 #define CONTROL_STACK_LIMIT      32768
 
 
@@ -86,7 +86,8 @@ static const TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
 	_T("Array index is not an integer"),
 	_T("Attempt to use array element access operation on non-array"),
 	_T("Cannot assign to a variable that is constant"),
-	_T("Named parameter required")
+	_T("Named parameter required"),
+	_T("Function or operation argument is not an iterator")
 };
 
 
@@ -331,11 +332,9 @@ void NXSL_Program::resolveFunctions()
    }
 }
 
-
-//
-// Dump program to file (as text)
-//
-
+/**
+ * Dump program to file (as text)
+ */
 void NXSL_Program::dump(FILE *pFile)
 {
    DWORD i;
