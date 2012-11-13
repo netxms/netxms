@@ -27,18 +27,19 @@
 
 DECLARE_DRIVER_HEADER("MSSQL")
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define DATA_BUFFER_SIZE      65536
 
+/**
+ * Selected ODBC driver
+ */
+static TCHAR s_driver[SQL_MAX_DSN_LENGTH + 1] = _T("SQL Native Client");
 
-//
-// Convert ODBC state to NetXMS database error code and get error text
-//
-
+/**
+ * Convert ODBC state to NetXMS database error code and get error text
+ */
 static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *errorText)
 {
    SQLRETURN nRet;
@@ -84,11 +85,9 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *
    return dwError;
 }
 
-
-//
-// Clear any pending result sets on given statement
-//
-
+/**
+ * Clear any pending result sets on given statement
+ */
 static void ClearPendingResults(SQLHSTMT stmt)
 {
 	while(1)
@@ -99,11 +98,9 @@ static void ClearPendingResults(SQLHSTMT stmt)
 	}
 }
 
-
-//
-// Prepare string for using in SQL query - enclose in quotes and escape as needed
-//
-
+/**
+ * Prepare string for using in SQL query - enclose in quotes and escape as needed
+ */
 extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
@@ -170,30 +167,50 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 	return out;
 }
 
-
-//
-// Initialize driver
-//
-
+/**
+ * Initialize driver
+ */
 extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 {
+   // Allocate environment
+	SQLHENV sqlEnv;
+   long rc = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &sqlEnv);
+	if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
+		return FALSE;
+
+	rc = SQLSetEnvAttr(sqlEnv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
+	if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
+		return FALSE;
+
+	// Find correct driver
+	// Default is "SQL Native Client", but switch to "SQL Server Native Client 10.0" if found
+	TCHAR name[SQL_MAX_DSN_LENGTH + 1], attrs[1024];
+	SQLSMALLINT l1, l2;
+	rc = SQLDrivers(sqlEnv, SQL_FETCH_FIRST, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
+	while((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+	{
+		if (!_tcscmp(name, _T("SQL Server Native Client 10.0")))
+		{
+			_tcscpy(s_driver, name);
+			break;
+		}
+		rc = SQLDrivers(sqlEnv, SQL_FETCH_NEXT, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
+	}
+
+   SQLFreeHandle(SQL_HANDLE_ENV, sqlEnv);
    return TRUE;
 }
 
-
-//
-// Unload handler
-//
-
+/**
+ * Unload handler
+ */
 extern "C" void EXPORT DrvUnload()
 {
 }
 
-
-//
-// Connect to database
-//
-
+/**
+ * Connect to database
+ */
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *login, const char *password, 
 															 const char *database, const char *schema, WCHAR *errorText)
 {
@@ -235,13 +252,13 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 
 	if (!strcmp(login, "*"))
 	{
-		snprintf(connectString, 1024, "DRIVER={SQL Native Client};Server=%s;Trusted_Connection=yes;Database=%s;APP=NetXMS",
-			      host, database);
+		snprintf(connectString, 1024, "DRIVER={%s};Server=%s;Trusted_Connection=yes;Database=%s;APP=NetXMS",
+			      s_driver, host, database);
 	}
 	else
 	{
-		snprintf(connectString, 1024, "DRIVER={SQL Server Native Client 10.0};Server=%s;UID=%s;PWD=%s;Database=%s;APP=NetXMS",
-		         host, login, password, database);
+		snprintf(connectString, 1024, "DRIVER={%s};Server=%s;UID=%s;PWD=%s;Database=%s;APP=NetXMS",
+		         s_driver, host, login, password, database);
 	}
 	iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
 
@@ -269,11 +286,9 @@ connect_failure_0:
    return NULL;
 }
 
-
-//
-// Disconnect from database
-//
-
+/**
+ * Disconnect from database
+ */
 extern "C" void EXPORT DrvDisconnect(MSSQL_CONN *pConn)
 {
    MutexLock(pConn->mutexQuery);
@@ -285,11 +300,9 @@ extern "C" void EXPORT DrvDisconnect(MSSQL_CONN *pConn)
    free(pConn);
 }
 
-
-//
-// Prepare statement
-//
-
+/**
+ * Prepare statement
+ */
 extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MSSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    long iResult;
