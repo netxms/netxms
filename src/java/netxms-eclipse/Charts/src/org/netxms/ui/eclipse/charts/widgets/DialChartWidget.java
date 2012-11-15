@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DialChart;
@@ -370,6 +371,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		// Draw title
 		if (titleVisible && (title != null))
 		{
+			gc.setFont(Activator.getDefault().getChartTitleFont());
 			Point ext = gc.textExtent(title, SWT.DRAW_TRANSPARENT);
 			int x = (ext.x < size.x) ? (size.x - ext.x) / 2 : 0;
 			gc.drawText(title, x, top, true);
