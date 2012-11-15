@@ -1,5 +1,5 @@
 INCLUDES=-I@top_srcdir@/include
-SOURCES = maincpp attr.cpp
+SOURCES = main.cpp attr.cpp
 
 lib_LTLIBRARIES = libnxsd.la
 
