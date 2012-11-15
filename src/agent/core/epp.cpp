@@ -106,6 +106,7 @@ void ParamProvider::poll()
 	StringMap *parameters = new StringMap;
 	if ((hPipe = _tpopen(m_command, _T("r"))) != NULL)
 	{
+	   DebugPrintf(INVALID_INDEX, 8, _T("ParamProvider::poll(): started command \"%s\""), m_command);
 		while(!feof(hPipe))
 		{
 			TCHAR *line = _fgetts(buffer, 1024, hPipe);
@@ -131,6 +132,7 @@ void ParamProvider::poll()
 			}
 		}
 		pclose(hPipe);
+		DebugPrintf(INVALID_INDEX, 8, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_command, (int)parameters->getSize());
 	}
 	else
 	{
