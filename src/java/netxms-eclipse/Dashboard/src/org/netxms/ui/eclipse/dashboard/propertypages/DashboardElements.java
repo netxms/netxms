@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,7 +64,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * "Dashboard elements" property page for dashboard objects
- *
  */
 @SuppressWarnings("restriction")
 public class DashboardElements extends PropertyPage

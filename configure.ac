@@ -634,6 +634,7 @@ esac
 #  * Disable C++ exceptions and RTTI
 #  * Turn on 64bit mode on HP-UX/Itanium
 #  * Turn on 64bit mode on AIX
+#  * Turn on 64bit mode on Solaris
 #--------------------------------------------------------------------
 
 if test "x$CC" = "xgcc" ; then
@@ -661,16 +662,6 @@ if test "x$CC" = "xgcc" ; then
 		])
 
 	AC_LANG_POP([C++])
-
-	#AC_MSG_CHECKING(whether C compiler accepts -Wno-unused-result)
-	#OLD_CPPFLAGS="$CPPFLAGS"
-	#CPPFLAGS="$CPPFLAGS -Wno-unused-result"
-	#AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-	#	[ AC_MSG_RESULT(yes) ], 
-	#	[ 
-	#		CPPFLAGS="$OLD_CPPFLAGS"
-	#		AC_MSG_RESULT(no)
-	#	])
 
 	if test "x$PLATFORM" = "xHP-UX"; then
 		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
@@ -729,6 +720,36 @@ if test "x$CC" = "xgcc" ; then
 					LTINIT_CC="gcc -maix64"
 					LTINIT_CXX="g++ -maix64"
 					OBJECT_MODE=64
+					AC_MSG_RESULT(yes) 
+				], 
+				[ 
+					CPPFLAGS="$OLD_CPPFLAGS"
+					AC_MSG_RESULT(no)
+				])
+		fi
+	fi
+	
+	if test "x$PLATFORM" = "xSunOS"; then
+		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
+			AC_MSG_CHECKING(whether C compiler accepts -m32)
+			OLD_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="$CPPFLAGS -m32"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ 
+					LDFLAGS="-m32 $LDFLAGS"
+					AC_MSG_RESULT(yes) 
+				], 
+				[ 
+					CPPFLAGS="$OLD_CPPFLAGS"
+					AC_MSG_RESULT(no)
+				])
+		else
+			AC_MSG_CHECKING(whether C compiler accepts -m64)
+			OLD_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="$CPPFLAGS -m64"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ 
+					LDFLAGS="-m64 $LDFLAGS"
 					AC_MSG_RESULT(yes) 
 				], 
 				[ 

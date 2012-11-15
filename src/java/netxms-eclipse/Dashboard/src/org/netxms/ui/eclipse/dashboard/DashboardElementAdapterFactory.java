@@ -33,6 +33,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.NetworkMapConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.SeparatorConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TablePieChartConfig;
@@ -100,6 +101,8 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 						return NetworkMapConfig.createFromXml(element.getData());
 					case DashboardElement.PIE_CHART:
 						return PieChartConfig.createFromXml(element.getData());
+					case DashboardElement.SEPARATOR:
+						return SeparatorConfig.createFromXml(element.getData());
 					case DashboardElement.STATUS_CHART:
 						return ObjectStatusChartConfig.createFromXml(element.getData());
 					case DashboardElement.STATUS_INDICATOR:

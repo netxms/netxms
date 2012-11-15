@@ -43,6 +43,7 @@ public class DashboardElement
 	public static final int TABLE_BAR_CHART = 15;
 	public static final int TABLE_PIE_CHART = 16;
 	public static final int TABLE_TUBE_CHART = 17;
+	public static final int SEPARATOR = 18;
 	
 	public static final int FILL = 0;
 	public static final int CENTER = 1;

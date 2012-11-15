@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,9 @@ public class AddDashboardElementDlg extends Dialog
 	private Combo elementTypeSelector; 
 	private int elementType;
 	
+	/**
+	 * @param parentShell
+	 */
 	public AddDashboardElementDlg(Shell parentShell)
 	{
 		super(parentShell);
@@ -70,6 +73,7 @@ public class AddDashboardElementDlg extends Dialog
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_BarChartForTable);
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_PieChartForTable);
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_TubeChartForTable);
+		elementTypeSelector.add("Separator");
 		elementTypeSelector.select(1);
 		
 		return dialogArea;
