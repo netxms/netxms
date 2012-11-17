@@ -43,6 +43,10 @@ enum
 	CPU_USAGE_GUEST,
 };
 
+
+void StartCpuUsageCollector();
+void ShutdownCpuUsageCollector();
+
 LONG H_CpuCount(const TCHAR *, const TCHAR *, TCHAR *);
 LONG H_CpuLoad(const TCHAR *, const TCHAR *, TCHAR *);
 LONG H_CpuUsage(const TCHAR *, const TCHAR *, TCHAR *);
