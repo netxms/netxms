@@ -1,20 +1,20 @@
 /* 
-** NetXMS subagent for Darwin
-** Copyright (C) 2012 Alex Kirhenshtein
+** netxms subagent for darwin
+** copyright (c) 2012 alex kirhenshtein
 **
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** this program is free software; you can redistribute it and/or modify
+** it under the terms of the gnu general public license as published by
+** the free software foundation; either version 2 of the license, or
 ** (at your option) any later version.
 **
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
+** this program is distributed in the hope that it will be useful,
+** but without any warranty; without even the implied warranty of
+** merchantability or fitness for a particular purpose.  see the
+** gnu general public license for more details.
 **
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** you should have received a copy of the gnu general public license
+** along with this program; if not, write to the free software
+** foundation, inc., 675 mass ave, cambridge, ma 02139, usa.
 **
 **/
 
@@ -40,16 +40,6 @@ enum
 	VIRTUAL_TOTAL,
 };
 
-enum
-{
-	PROCINFO_CPUTIME,
-	PROCINFO_KTIME,
-	PROCINFO_PAGEFAULTS,
-	PROCINFO_THREADS,
-	PROCINFO_UTIME,
-	PROCINFO_VMSIZE,
-	PROCINFO_WKSET
-};
 
 #define INFOTYPE_MIN             0
 #define INFOTYPE_MAX             1
@@ -62,9 +52,6 @@ LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *);
 LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *);
 LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *);
 LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_CpuCount(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_CpuLoad(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_CpuUsage(const TCHAR *, const TCHAR *, TCHAR *);
 LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *);
 LONG H_ProcessInfo(const TCHAR *, const TCHAR *, TCHAR *);
 LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *);
