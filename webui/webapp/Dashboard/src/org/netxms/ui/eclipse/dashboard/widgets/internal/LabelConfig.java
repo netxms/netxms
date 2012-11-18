@@ -27,7 +27,7 @@ import org.simpleframework.xml.core.Persister;
  */
 public class LabelConfig extends DashboardElementConfig
 {
-	@Element(required=true)
+	@Element(required=false)
 	private String title = ""; //$NON-NLS-1$
 
 	@Element(required=false)

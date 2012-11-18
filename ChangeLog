@@ -4,9 +4,10 @@
 - Management console:
 	- "Area" option implemented on line charts
 	- Multiple DCIs can be combined on one graph on "Performance" tab
-- Fixed issues: #23, #162, #163
+	- New dashboard element: separator
 - Android client:
 	- Select all/unselect all in alarms list
+- Fixed issues: #23, #162, #163
 
 
 * 1.2.4

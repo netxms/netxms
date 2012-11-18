@@ -265,6 +265,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.SeparatorProperties"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.SeparatorProperties#0"
+            name="Separator">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.SeparatorConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">

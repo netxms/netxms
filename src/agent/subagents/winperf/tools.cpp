@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2004-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -77,11 +77,9 @@ void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError)
                    pszFunction, dwError, pszPdhCall, GetPdhErrorText(dwError, szBuffer, 1024));
 }
 
-
-//
-// Create index of counters
-//
-
+/**
+ * Create index of counters
+ */
 void CreateCounterIndex(TCHAR *pData)
 {
 	TCHAR *pCurr;
@@ -97,11 +95,9 @@ void CreateCounterIndex(TCHAR *pData)
 	}
 }
 
-
-//
-// Translate single counter name's element
-//
-
+/**
+ * Translate single counter name's element
+ */
 static BOOL TranslateElement(TCHAR *pszText)
 {
 	DWORD i, dwSize;
@@ -117,11 +113,9 @@ static BOOL TranslateElement(TCHAR *pszText)
 	return FALSE;
 }
 
-
-//
-// Translate counter name from English to localized
-//
-
+/**
+ * Translate counter name from English to localized
+ */
 BOOL TranslateCounterName(const TCHAR *pszName, TCHAR *pszOut)
 {
 	const TCHAR *pCurr = pszName;
@@ -169,7 +163,7 @@ BOOL TranslateCounterName(const TCHAR *pszName, TCHAR *pszOut)
 	{
 		if (pBrace - pCurr >= MAX_ELEMENT_LENGTH)
 			return FALSE;
-		memcpy(szTemp, pCurr, pBrace - pCurr);
+		memcpy(szTemp, pCurr, (pBrace - pCurr) * sizeof(TCHAR));
 		szTemp[pBrace - pCurr] = 0;
 		pCurr = pBrace;
 		pNext = _tcschr(pCurr, _T(')'));

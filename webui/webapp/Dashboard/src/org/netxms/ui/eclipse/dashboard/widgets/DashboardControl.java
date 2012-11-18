@@ -235,6 +235,9 @@ public class DashboardControl extends Composite
 			case DashboardElement.ALARM_VIEWER:
 				w = new AlarmViewerElement(this, e, viewPart);
 				break;
+			case DashboardElement.SEPARATOR:
+				w = new SeparatorElement(this, e, viewPart);
+				break;
 			default:
 				w = new ElementWidget(this, e, viewPart);
 				break;

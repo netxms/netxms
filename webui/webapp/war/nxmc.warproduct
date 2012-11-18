@@ -4,6 +4,7 @@
 <product name="NXMC" uid="org.netxms.nxmc" version="1.2.4" useFeatures="false" includeLaunchers="false">
    <plugins>
       <plugin id="com.ibm.icu"/>
+      <plugin id="javax.xml"/>
       <plugin id="org.apache.commons.codec"/>
       <plugin id="org.apache.commons.fileupload"/>
       <plugin id="org.apache.commons.io"/>
@@ -87,6 +88,7 @@
 
    <configurations>
       <plugin id="com.ibm.icu" autoStart="true" startLevel="0" />
+      <plugin id="javax.xml" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.codec" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.fileupload" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.io" autoStart="true" startLevel="0" />
@@ -169,7 +171,7 @@
 
    <warConfiguration webXml="/WAR/WEB-INF/web.xml" launchIni="/WAR/WEB-INF/launch.ini">
    <libraries>
-      <library path="org.eclipse.equinox.servletbridge_1.2.200.v20120522-2049.jar" fromTarget="true"/>
+      <library path="org.eclipse.equinox.servletbridge_1.2.200.v20120912-125810.jar" fromTarget="true"/>
    </libraries>
    </warConfiguration>
 </product>

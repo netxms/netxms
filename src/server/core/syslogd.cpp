@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,10 +54,9 @@ static LogParser *m_parser = NULL;
 static MUTEX m_mutexParserAccess = INVALID_MUTEX_HANDLE;
 
 
-//
-// Parse timestamp field
-//
-
+/**
+ * Parse timestamp field
+ */
 static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptmTime)
 {
    static char psMonth[12][5] = { "Jan ", "Feb ", "Mar ", "Apr ",
@@ -146,11 +145,9 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptm
    return TRUE;
 }
 
-
-//
-// Parse syslog message
-//
-
+/**
+ * Parse syslog message
+ */
 static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_SYSLOG_RECORD *pRec)
 {
    int i, nLen, nPos = 0;
@@ -227,12 +224,10 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_SYSLOG_RECORD *pRec)
    return TRUE;
 }
 
-
-//
-// Bind syslog message to NetXMS node object
-// dwSourceIP is an IP address from which we receive message
-//
-
+/**
+ * Bind syslog message to NetXMS node object
+ * dwSourceIP is an IP address from which we receive message
+ */
 static void BindMsgToNode(NX_SYSLOG_RECORD *pRec, DWORD dwSourceIP)
 {
    Node *pNode = NULL;
@@ -286,22 +281,18 @@ static void BindMsgToNode(NX_SYSLOG_RECORD *pRec, DWORD dwSourceIP)
    }
 }
 
-
-//
-// Handler for EnumerateSessions()
-//
-
+/**
+ * Handler for EnumerateSessions()
+ */
 static void BroadcastSyslogMessage(ClientSession *pSession, void *pArg)
 {
    if (pSession->isAuthenticated())
       pSession->onSyslogMessage((NX_SYSLOG_RECORD *)pArg);
 }
 
-
-//
-// Process syslog message
-//
-
+/**
+ * Process syslog message
+ */
 static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 {
    NX_SYSLOG_RECORD record;
@@ -344,11 +335,9 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
    }
 }
 
-
-//
-// Syslog processing thread
-//
-
+/**
+ * Syslog processing thread
+ */
 static THREAD_RESULT THREAD_CALL SyslogProcessingThread(void *pArg)
 {
    QUEUED_SYSLOG_MESSAGE *pMsg;
