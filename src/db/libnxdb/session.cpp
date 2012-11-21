@@ -1002,7 +1002,7 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
    if (hConn->m_driver->m_dumpSql)
    {
       ms = GetCurrentTimeMs() - ms;
-	   __DBDbgPrintf(9, _T("%s prepare: \"%s\" [%d ms]"), (result != NULL) ? _T("Successful") : _T("Failed"), query, ms);
+		__DBDbgPrintf(9, _T("{%p} %s prepare: \"%s\" [%d ms]"), result, (result != NULL) ? _T("Successful") : _T("Failed"), query, ms);
 	}
 
 #ifndef UNICODE
@@ -1063,6 +1063,37 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, wBuffer, realAllocType);
 #undef wBuffer
 #undef realAllocType
+
+	if (hStmt->m_connection->m_driver->m_dumpSql)
+   {
+		if (cType == DB_CTYPE_STRING)
+		{
+			__DBDbgPrintf(9, _T("{%p} bind at pos %d: \"%s\""), hStmt, pos, buffer);
+		}
+		else
+		{
+			TCHAR text[64];
+			switch(cType)
+			{
+				case DB_CTYPE_INT32:
+					_sntprintf(text, 64, _T("%d"), *((LONG *)buffer));
+					break;
+				case DB_CTYPE_UINT32:
+					_sntprintf(text, 64, _T("%u"), *((DWORD *)buffer));
+					break;
+				case DB_CTYPE_INT64:
+					_sntprintf(text, 64, INT64_FMT, *((INT64 *)buffer));
+					break;
+				case DB_CTYPE_UINT64:
+					_sntprintf(text, 64, UINT64_FMT, *((QWORD *)buffer));
+					break;
+				case DB_CTYPE_DOUBLE:
+					_sntprintf(text, 64, _T("%f"), *((double *)buffer));
+					break;
+			}
+			__DBDbgPrintf(9, _T("{%p} bind at pos %d: \"%s\""), hStmt, pos, text);
+		}
+	}
 }
 
 

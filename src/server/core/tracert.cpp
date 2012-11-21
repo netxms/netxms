@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,11 +21,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Network path constructor
-//
-
+/**
+ * Network path constructor
+ */
 NetworkPath::NetworkPath()
 {
 	m_hopCount = 0;
@@ -34,11 +32,9 @@ NetworkPath::NetworkPath()
 	m_complete = false;
 }
 
-
-//
-// Network path destructor
-//
-
+/**
+ * Network path destructor
+ */
 NetworkPath::~NetworkPath()
 {
 	for(int i = 0; i < m_hopCount; i++)
@@ -47,11 +43,9 @@ NetworkPath::~NetworkPath()
 	safe_free(m_path);
 }
 
-
-//
-// Add hop to path
-//
-
+/**
+ * Add hop to path
+ */
 void NetworkPath::addHop(DWORD nextHop, NetObj *currentObject, DWORD ifIndex, bool isVpn)
 {
 	if (m_hopCount == m_allocated)
@@ -68,11 +62,9 @@ void NetworkPath::addHop(DWORD nextHop, NetObj *currentObject, DWORD ifIndex, bo
 		currentObject->IncRefCount();
 }
 
-
-//
-// Fill NXCP message with trace data
-//
-
+/**
+ * Fill NXCP message with trace data
+ */
 void NetworkPath::fillMessage(CSCPMessage *msg)
 {
 	msg->SetVariable(VID_HOP_COUNT, (WORD)m_hopCount);
@@ -87,11 +79,9 @@ void NetworkPath::fillMessage(CSCPMessage *msg)
 	}
 }
 
-
-//
-// Trace route between two nodes
-//
-
+/**
+ * Trace route between two nodes
+ */
 NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
 {
    DWORD dwNextHop, dwIfIndex, dwHopCount;

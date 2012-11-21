@@ -22,18 +22,14 @@
 
 #include "nxcore.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static QWORD m_networkLostEventId = 0;
 
-
-//
-// Correlate SYS_NODE_DOWN event
-//
-
+/**
+ * Correlate SYS_NODE_DOWN event
+ */
 static void C_SysNodeDown(Node *pNode, Event *pEvent)
 {
    NetworkPath *pTrace;
@@ -103,11 +99,9 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
    }
 }
 
-
-//
-// Correlate event
-//
-
+/**
+ * Correlate event
+ */
 void CorrelateEvent(Event *pEvent)
 {
    NetObj *pObject;
