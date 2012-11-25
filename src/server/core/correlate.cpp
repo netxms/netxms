@@ -32,12 +32,6 @@ static QWORD m_networkLostEventId = 0;
  */
 static void C_SysNodeDown(Node *pNode, Event *pEvent)
 {
-   NetworkPath *pTrace;
-   Node *pMgmtNode;
-   Interface *pInterface;
-   NetObj *pObject;
-   int i;
-
 	// Check for NetXMS server netwok connectivity
 	if (g_dwFlags & AF_NO_NETWORK_CONNECTIVITY)
 	{
@@ -47,56 +41,57 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 
    // Trace route from management station to failed node and
    // check for failed intermediate nodes or interfaces
-   pMgmtNode = (Node *)FindObjectById(g_dwMgmtNode);
-   if (pMgmtNode != NULL)
+   Node *pMgmtNode = (Node *)FindObjectById(g_dwMgmtNode);
+   if (pMgmtNode == NULL)
+	{
+		DbgPrintf(5, _T("C_SysNodeDown: cannot find management node"));
+		return;
+	}
+
+	NetworkPath *trace = TraceRoute(pMgmtNode, pNode);
+	if (trace == NULL)
+	{
+		DbgPrintf(5, _T("C_SysNodeDown: trace to node %s [%d] not available"), pNode->Name(), pNode->Id());
+		return;
+	}
+
+   for(int i = 0; i < trace->getHopCount(); i++)
    {
-      pTrace = TraceRoute(pMgmtNode, pNode);
-      if (pTrace != NULL)
+		HOP_INFO *hop = trace->getHopInfo(i);
+      if ((hop->object == NULL) || (hop->object == pNode) || (hop->object->Type() != OBJECT_NODE))
+			continue;
+
+      if (((Node *)hop->object)->isDown())
       {
-         for(i = 0; i < pTrace->getHopCount(); i++)
+         pEvent->setRootId(((Node *)hop->object)->getLastEventId(LAST_EVENT_NODE_DOWN));
+			DbgPrintf(5, _T("C_SysNodeDown: upstream node %s [%d] for current node %s [%d] is down"),
+			          hop->object->Name(), hop->object->Id(), pNode->Name(), pNode->Id());
+			break;
+      }
+
+      if (hop->isVpn)
+      {
+         // Next hop is behind VPN tunnel
+         VPNConnector *vpnConn = (VPNConnector *)FindObjectById(hop->ifIndex, OBJECT_VPNCONNECTOR);
+         if ((vpnConn != NULL) &&
+             (vpnConn->Status() == STATUS_CRITICAL))
          {
-				HOP_INFO *hop = pTrace->getHopInfo(i);
-            if ((hop->object != NULL) && (hop->object != pNode))
-            {
-               if (hop->object->Type() == OBJECT_NODE)
-               {
-                  if (((Node *)hop->object)->isDown())
-                  {
-                     pEvent->setRootId(((Node *)hop->object)->getLastEventId(LAST_EVENT_NODE_DOWN));
-                  }
-                  else
-                  {
-                     if (hop->isVpn)
-                     {
-                        // Next hop is behind VPN tunnel
-                        pObject = FindObjectById(hop->ifIndex);
-                        if (pObject != NULL)
-                        {
-                           if ((pObject->Type() == OBJECT_VPNCONNECTOR) &&
-                               (pObject->Status() == STATUS_CRITICAL))
-                           {
-                              /* TODO: set root id */
-                           }
-                        }
-                     }
-                     else
-                     {
-                        pInterface = ((Node *)hop->object)->findInterface(hop->ifIndex, INADDR_ANY);
-                        if (pInterface != NULL)
-                        {
-                           if (pInterface->Status() == STATUS_CRITICAL)
-                           {
-                              pEvent->setRootId(pInterface->getLastDownEventId());
-                           }
-                        }
-                     }
-                  }
-               }
-            }
+            /* TODO: set root id */
          }
-         delete pTrace;
+      }
+      else
+      {
+         Interface *pInterface = ((Node *)hop->object)->findInterface(hop->ifIndex, INADDR_ANY);
+         if ((pInterface != NULL) && ((pInterface->Status() == STATUS_CRITICAL) || (pInterface->Status() == STATUS_DISABLED)))
+         {
+				DbgPrintf(5, _T("C_SysNodeDown: upstream interface %s [%d] on node %s [%d] for current node %s [%d] is down"),
+				          pInterface->Name(), pInterface->Id(), hop->object->Name(), hop->object->Id(), pNode->Name(), pNode->Id());
+            pEvent->setRootId(pInterface->getLastDownEventId());
+				break;
+         }
       }
    }
+   delete trace;
 }
 
 /**
@@ -104,40 +99,54 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
  */
 void CorrelateEvent(Event *pEvent)
 {
-   NetObj *pObject;
-   Interface *pInterface;
+   Node *node = (Node *)FindObjectById(pEvent->getSourceId(), OBJECT_NODE);
+   if (node == NULL)
+		return;
 
-   pObject = FindObjectById(pEvent->getSourceId());
-   if ((pObject != NULL) && (pObject->Type() == OBJECT_NODE))
+	DbgPrintf(6, _T("CorrelateEvent: event %s id ") UINT64_FMT _T(" source %s [%d]"),
+	          pEvent->getName(), pEvent->getId(), node->Name(), node->Id());
+
+   switch(pEvent->getCode())
    {
-      switch(pEvent->getCode())
-      {
-         case EVENT_INTERFACE_DOWN:
-            pInterface = ((Node *)pObject)->findInterface(pEvent->getParameterAsULong(4), INADDR_ANY);
-            if (pInterface != NULL)
-            {
-               pInterface->setLastDownEventId(pEvent->getId());
-            }
-         case EVENT_SERVICE_DOWN:
-         case EVENT_SNMP_FAIL:
-         case EVENT_AGENT_FAIL:
-            if (((Node *)pObject)->getRuntimeFlags() & NDF_UNREACHABLE)
-            {
-               pEvent->setRootId(((Node *)pObject)->getLastEventId(LAST_EVENT_NODE_DOWN));
-            }
-            break;
-         case EVENT_NODE_DOWN:
-            ((Node *)pObject)->setLastEventId(LAST_EVENT_NODE_DOWN, pEvent->getId());
-            C_SysNodeDown((Node *)pObject, pEvent);
-            break;
-         case EVENT_NODE_UP:
-            ((Node *)pObject)->setLastEventId(LAST_EVENT_NODE_DOWN, 0);
-            break;
-			case EVENT_NETWORK_CONNECTION_LOST:
-				m_networkLostEventId = pEvent->getId();
-				break;
-         default:
-            break;
-      }
+      case EVENT_INTERFACE_DISABLED:
+			{
+				Interface *pInterface = node->findInterface(pEvent->getParameterAsULong(4), INADDR_ANY);
+				if (pInterface != NULL)
+				{
+					pInterface->setLastDownEventId(pEvent->getId());
+				}
+			}
+			break;
+      case EVENT_INTERFACE_DOWN:
+			{
+				Interface *pInterface = node->findInterface(pEvent->getParameterAsULong(4), INADDR_ANY);
+				if (pInterface != NULL)
+				{
+					pInterface->setLastDownEventId(pEvent->getId());
+				}
+			}
+			// there are intentionally no break
+      case EVENT_SERVICE_DOWN:
+      case EVENT_SNMP_FAIL:
+      case EVENT_AGENT_FAIL:
+         if (node->getRuntimeFlags() & NDF_UNREACHABLE)
+         {
+            pEvent->setRootId(node->getLastEventId(LAST_EVENT_NODE_DOWN));
+         }
+         break;
+      case EVENT_NODE_DOWN:
+         node->setLastEventId(LAST_EVENT_NODE_DOWN, pEvent->getId());
+         C_SysNodeDown(node, pEvent);
+         break;
+      case EVENT_NODE_UP:
+         node->setLastEventId(LAST_EVENT_NODE_DOWN, 0);
+         break;
+		case EVENT_NETWORK_CONNECTION_LOST:
+			m_networkLostEventId = pEvent->getId();
+			break;
+      default:
+         break;
    }
+
+	DbgPrintf(6, _T("CorrelateEvent: finished, rootId=") UINT64_FMT, pEvent->getRootId());
 }

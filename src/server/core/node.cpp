@@ -609,12 +609,10 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
 	UnlockData();
 }
 
-
-//
-// Find interface by index and node IP
-// Returns pointer to interface object or NULL if appropriate interface couldn't be found
-//
-
+/**
+ * Find interface by index and node IP
+ * Returns pointer to interface object or NULL if appropriate interface couldn't be found
+ */
 Interface *Node::findInterface(DWORD dwIndex, DWORD dwHostAddr)
 {
    DWORD i;
@@ -640,12 +638,10 @@ Interface *Node::findInterface(DWORD dwIndex, DWORD dwHostAddr)
    return NULL;
 }
 
-
-//
-// Find interface by name or description
-// Returns pointer to interface object or NULL if appropriate interface couldn't be found
-//
-
+/**
+ * Find interface by name or description
+ * Returns pointer to interface object or NULL if appropriate interface couldn't be found
+ */
 Interface *Node::findInterface(const TCHAR *name)
 {
    DWORD i;
@@ -666,12 +662,10 @@ Interface *Node::findInterface(const TCHAR *name)
    return NULL;
 }
 
-
-//
-// Find interface by slot/port pair
-// Returns pointer to interface object or NULL if appropriate interface couldn't be found
-//
-
+/**
+ * Find interface by slot/port pair
+ * Returns pointer to interface object or NULL if appropriate interface couldn't be found
+ */
 Interface *Node::findInterfaceBySlotAndPort(DWORD slot, DWORD port)
 {
    DWORD i;
@@ -692,12 +686,10 @@ Interface *Node::findInterfaceBySlotAndPort(DWORD slot, DWORD port)
    return NULL;
 }
 
-
-//
-// Find interface by MAC address
-// Returns pointer to interface object or NULL if appropriate interface couldn't be found
-//
-
+/**
+ * Find interface by MAC address
+ * Returns pointer to interface object or NULL if appropriate interface couldn't be found
+ */
 Interface *Node::findInterfaceByMAC(const BYTE *macAddr)
 {
    DWORD i;
@@ -718,12 +710,10 @@ Interface *Node::findInterfaceByMAC(const BYTE *macAddr)
    return NULL;
 }
 
-
-//
-// Find interface by IP address
-// Returns pointer to interface object or NULL if appropriate interface couldn't be found
-//
-
+/**
+ * Find interface by IP address
+ * Returns pointer to interface object or NULL if appropriate interface couldn't be found
+ */
 Interface *Node::findInterfaceByIP(DWORD ipAddr)
 {
    DWORD i;
@@ -747,11 +737,9 @@ Interface *Node::findInterfaceByIP(DWORD ipAddr)
    return NULL;
 }
 
-
-//
-// Find interface by bridge port number
-//
-
+/**
+ * Find interface by bridge port number
+ */
 Interface *Node::findBridgePort(DWORD bridgePortNumber)
 {
    DWORD i;
@@ -772,11 +760,9 @@ Interface *Node::findBridgePort(DWORD bridgePortNumber)
    return NULL;
 }
 
-
-//
-// Find connection point for node
-//
-
+/**
+ * Find connection point for node
+ */
 Interface *Node::findConnectionPoint(DWORD *localIfId, BYTE *localMacAddr, bool *exactMatch)
 {
 	Interface *cp = NULL;
@@ -986,11 +972,9 @@ void Node::deleteInterface(Interface *pInterface)
 	pInterface->deleteObject();
 }
 
-
-//
-// Calculate node status based on child objects status
-//
-
+/**
+ * Calculate node status based on child objects status
+ */
 void Node::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    int iOldStatus = m_iStatus;
@@ -1242,6 +1226,8 @@ skip_snmp_check:
 		   {
 		      m_dwDynamicFlags |= NDF_UNREACHABLE;
 				m_tDownSince = time(NULL);
+			   SetPollerInfo(nPoller, _T("check network path"));
+				checkNetworkPath(dwRqId);
 		      PostEvent(EVENT_NODE_DOWN, m_dwId, NULL);
 		      SendPollerMsg(dwRqId, POLLER_ERROR _T("Node is unreachable\r\n"));
 		   }
@@ -1308,12 +1294,73 @@ skip_snmp_check:
    DbgPrintf(5, _T("Finished status poll for node %s (ID: %d)"), m_szName, m_dwId);
 }
 
+/**
+ * Check network path between node and management server to detect possible intermediate node failure
+ */
+void Node::checkNetworkPath(DWORD dwRqId)
+{
+   Node *mgmtNode = (Node *)FindObjectById(g_dwMgmtNode);
+   if (mgmtNode == NULL)
+	{
+		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): cannot find management node"), m_szName, m_dwId);
+		return;
+	}
 
-//
-// Check agent policy binding
-// Intended to be called only from configuration poller
-//
+	NetworkPath *trace = TraceRoute(mgmtNode, this);
+   if (trace == NULL)
+	{
+		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): trace not available"), m_szName, m_dwId);
+		return;
+	}
+	DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): trace available, %d hops, %s"),
+	          m_szName, m_dwId, trace->getHopCount(), trace->isComplete() ? _T("complete") : _T("incomplete"));
 
+	// We will do path check in two passes
+	// If unreachable intermediate node will be found on first pass,
+	// then method will just return true. Otherwise, we will do
+	// second pass, this time forcing status poll on each node in the path.
+   SendPollerMsg(dwRqId, _T("Checking network path...\r\n"));
+	time_t now = time(NULL);
+	bool secondPass = false;
+	bool pathProblemFound = false;
+restart:
+   for(int i = 0; i < trace->getHopCount(); i++)
+   {
+		HOP_INFO *hop = trace->getHopInfo(i);
+      if ((hop->object == NULL) || (hop->object == this) || (hop->object->Type() != OBJECT_NODE))
+			continue;
+
+		DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): checking upstream node %s [%d]"),
+		          m_szName, m_dwId, hop->object->Name(), hop->object->Id());
+      if (secondPass && !((Node *)hop->object)->isDown() && (((Node *)hop->object)->m_tLastStatusPoll < now - 1))
+		{
+			DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
+			          m_szName, m_dwId, hop->object->Name(), hop->object->Id());
+			((Node *)hop->object)->statusPoll(NULL, 0, 0);
+		}
+
+      if (((Node *)hop->object)->isDown())
+      {
+			DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): upstream node %s [%d] is down"),
+			          m_szName, m_dwId, hop->object->Name(), hop->object->Id());
+			SendPollerMsg(dwRqId, POLLER_WARNING _T("   Upstream node %s is down\r\n"), hop->object->Name());
+			pathProblemFound = true;
+			break;
+      }
+   }
+	if (!secondPass && !pathProblemFound)
+	{
+		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): will do second pass"), m_szName, m_dwId);
+		secondPass = true;
+		goto restart;
+	}
+   delete trace;
+}
+
+/**
+ * Check agent policy binding
+ * Intended to be called only from configuration poller
+ */
 void Node::checkAgentPolicyBinding(AgentConnection *conn)
 {
 	AgentPolicyInfo *ap;
@@ -3792,77 +3839,85 @@ ROUTING_TABLE *Node::getRoutingTable()
    return pRT;
 }
 
-
-//
-// Get next hop for given destination address
-//
-
-BOOL Node::getNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
-                      DWORD *pdwIfIndex, BOOL *pbIsVPN)
+/**
+ * Get next hop for given destination address
+ */
+BOOL Node::getNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop, DWORD *pdwIfIndex, BOOL *pbIsVPN)
 {
    DWORD i;
-   BOOL bResult = FALSE;
+   BOOL nextHopFound = FALSE;
 
 	// Check directly connected networks and VPN connectors
-   LockChildList(FALSE);
-   for(i = 0; i < m_dwChildCount; i++)
+	BOOL nonFunctionalInterfaceFound = FALSE;
+	LockChildList(FALSE);
+	for(i = 0; i < m_dwChildCount; i++)
 	{
-      if (m_pChildList[i]->Type() == OBJECT_VPNCONNECTOR)
-      {
-         if (((VPNConnector *)m_pChildList[i])->IsRemoteAddr(dwDestAddr) &&
-             ((VPNConnector *)m_pChildList[i])->IsLocalAddr(dwSrcAddr))
-         {
-            *pdwNextHop = ((VPNConnector *)m_pChildList[i])->GetPeerGatewayAddr();
-            *pdwIfIndex = m_pChildList[i]->Id();
-            *pbIsVPN = TRUE;
-            bResult = TRUE;
-            break;
-         }
-      }
-      else if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) && 
-		         (m_pChildList[i]->IpAddr() != 0) &&
-					(m_pChildList[i]->Status() == SEVERITY_NORMAL))
-      {
+		if (m_pChildList[i]->Type() == OBJECT_VPNCONNECTOR)
+		{
+			if (((VPNConnector *)m_pChildList[i])->IsRemoteAddr(dwDestAddr) &&
+				 ((VPNConnector *)m_pChildList[i])->IsLocalAddr(dwSrcAddr))
+			{
+				*pdwNextHop = ((VPNConnector *)m_pChildList[i])->GetPeerGatewayAddr();
+				*pdwIfIndex = m_pChildList[i]->Id();
+				*pbIsVPN = TRUE;
+				nextHopFound = TRUE;
+				break;
+			}
+		}
+		else if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) && 
+					(m_pChildList[i]->IpAddr() != 0))
+		{
 			DWORD mask = ((Interface *)m_pChildList[i])->getIpNetMask();
 			if ((dwDestAddr & mask) == (m_pChildList[i]->IpAddr() & mask))
 			{
-            *pdwNextHop = dwDestAddr;
+				*pdwNextHop = dwDestAddr;
 				*pdwIfIndex = ((Interface *)m_pChildList[i])->getIfIndex();
-            *pbIsVPN = FALSE;
-            bResult = TRUE;
-            break;
+				*pbIsVPN = FALSE;
+				if (m_pChildList[i]->Status() == SEVERITY_NORMAL)  /* TODO: use separate link status */
+				{
+					// found operational interface
+					nextHopFound = TRUE;
+					break;
+				}
+				// non-operational interface found, continue search
+				// but will use this interface if other suitable interfaces will not be found
+				nonFunctionalInterfaceFound = TRUE;
 			}
 		}
 	}
-   UnlockChildList();
+	UnlockChildList();
 
-   // Check routing table
-   if (!bResult)
+	// Check routing table
+	// If directly connected subnet found, only check host routes
+	nextHopFound = nextHopFound || nonFunctionalInterfaceFound;
+   routingTableLock();
+   if (m_pRoutingTable != NULL)
    {
-      routingTableLock();
-      if (m_pRoutingTable != NULL)
-      {
-         for(i = 0; i < (DWORD)m_pRoutingTable->iNumEntries; i++)
-            if ((dwDestAddr & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr)
-            {
-               *pdwNextHop = m_pRoutingTable->pRoutes[i].dwNextHop;
-               *pdwIfIndex = m_pRoutingTable->pRoutes[i].dwIfIndex;
-               *pbIsVPN = FALSE;
-               bResult = TRUE;
-               break;
-            }
-      }
-      routingTableUnlock();
+      for(i = 0; i < (DWORD)m_pRoutingTable->iNumEntries; i++)
+		{
+         if ((!nextHopFound || (m_pRoutingTable->pRoutes[i].dwDestMask == 0xFFFFFFFF)) && 
+			    ((dwDestAddr & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr))
+         {
+            *pdwNextHop = m_pRoutingTable->pRoutes[i].dwNextHop;
+            *pdwIfIndex = m_pRoutingTable->pRoutes[i].dwIfIndex;
+            *pbIsVPN = FALSE;
+            nextHopFound = TRUE;
+            break;
+         }
+		}
    }
+	else
+	{
+		DbgPrintf(6, _T("Node::getNextHop(%s [%d]): no routing table"), m_szName, m_dwId);
+	}
+   routingTableUnlock();
 
-   return bResult;
+   return nextHopFound;
 }
 
-
-//
-// Update cached routing table
-//
-
+/**
+ * Update cached routing table
+ */
 void Node::updateRoutingTable()
 {
 	if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
@@ -3878,16 +3933,15 @@ void Node::updateRoutingTable()
       DestroyRoutingTable(m_pRoutingTable);
       m_pRoutingTable = pRT;
       routingTableUnlock();
+		DbgPrintf(5, _T("Routing table updated for node %s [%d]"), m_szName, m_dwId);
    }
    m_tLastRTUpdate = time(NULL);
    m_dwDynamicFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
 }
 
-
-//
-// Call SNMP Enumerate with node's SNMP parameters
-//
-
+/**
+ * Call SNMP Enumerate with node's SNMP parameters
+ */
 DWORD Node::CallSnmpEnumerate(const TCHAR *pszRootOid, 
                               DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
                               void *pArg)
@@ -3918,11 +3972,9 @@ DWORD Node::CallSnmpEnumerate(const TCHAR *pszRootOid,
 	}
 }
 
-
-//
-// Set proxy information for agent's connection
-//
-
+/**
+ * Set proxy information for agent's connection
+ */
 void Node::setAgentProxy(AgentConnection *pConn)
 {
 	DWORD proxyNode = m_dwProxyNode;
@@ -3949,11 +4001,9 @@ void Node::setAgentProxy(AgentConnection *pConn)
    }
 }
 
-
-//
-// Prepare node object for deletion
-//
-
+/**
+ * Prepare node object for deletion
+ */
 static bool NodeQueueComparator(void *key, void *element)
 {
 	return key == element;

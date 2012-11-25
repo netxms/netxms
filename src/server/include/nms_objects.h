@@ -845,6 +845,7 @@ protected:
 	void checkBridgeMib(SNMP_Transport *pTransport);
 	void checkIfXTable(SNMP_Transport *pTransport);
 	void executeHookScript(const TCHAR *hookName);
+	void checkNetworkPath(DWORD dwRqId);
 
 	void ApplySystemTemplates();
 	void ApplyUserTemplates();

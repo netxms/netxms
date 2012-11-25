@@ -377,7 +377,7 @@ static bool PollerQueueElementComparator(void *key, void *element)
 
 static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex, BYTE *macAddr = NULL)
 {
-	TCHAR buffer[16];
+	TCHAR buffer[32];
 
 	DbgPrintf(6, _T("DiscoveryPoller(): checking potential node %s at %d"), IpToStr(ipAddr, buffer), ifIndex);
 	if ((ipAddr != 0) && (ipAddr != 0xFFFFFFFF) && ((ipAddr & 0xFF000000) != 0x7F000000) &&
@@ -387,6 +387,9 @@ static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex, BYTE *ma
       Interface *pInterface = node->findInterface(ifIndex, ipAddr);
       if (pInterface != NULL)
 		{
+			DbgPrintf(6, _T("DiscoveryPoller(): interface found: %s [%d] addr=%s mask=%s ifIndex=%d"),
+			          pInterface->Name(), pInterface->Id(), IpToStr(pInterface->IpAddr(), buffer),
+			          IpToStr(pInterface->getIpNetMask(), &buffer[16]), pInterface->getIfIndex());
          if ((ipAddr < 0xE0000000) && !IsBroadcastAddress(ipAddr, pInterface->getIpNetMask()))
          {
             NEW_NODE *pInfo;

@@ -91,6 +91,9 @@
 #if defined(__GNUC__) || defined(__HP_aCC)
 #define _LL(x) (x ## LL)
 #define _ULL(x) (x ## ULL)
+#elif defined(_MSC_VER)
+#define _LL(x) (x ## i64)
+#define _ULL(x) (x ## ui64)
 #else
 #define _LL(x) (x)
 #define _ULL(x) (x)
