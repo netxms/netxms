@@ -52,11 +52,27 @@ static TCHAR m_dailyLogSuffixTemplate[64] = _T("%Y%m%d");
 static time_t m_currentDayStart = 0;
 static void (*m_consoleWriter)(const TCHAR *, ...) = (void (*)(const TCHAR *, ...))_tprintf;
 
+/**
+ * Format current time for output
+ */
+static TCHAR *FormatLogTimestamp(TCHAR *buffer)
+{
+	INT64 now = GetCurrentTimeMs();
+	time_t t = now / 1000;
+#if HAVE_LOCALTIME_R
+	struct tm ltmBuffer;
+	struct tm *loc = localtime_r(&t, &ltmBuffer);
+#else
+	struct tm *loc = localtime(&t);
+#endif
+	_tcsftime(buffer, 32, _T("[%d-%b-%Y %H:%M:%S"), loc);
+	_sntprintf(&buffer[21], 8, _T(".%03d]"), now % 1000);
+	return buffer;
+}
 
-//
-// Set timestamp of start of the current day
-//
-
+/**
+ * Set timestamp of start of the current day
+ */
 static void SetDayStart()
 {
 	time_t now = time(NULL);
@@ -73,12 +89,10 @@ static void SetDayStart()
 	m_currentDayStart = mktime(&dayStart);
 }
 
-
-//
-// Set log rotation policy
-// Setting log size to 0 or mode to NXLOG_ROTATION_DISABLED disables log rotation
-//
-
+/**
+ * Set log rotation policy
+ * Setting log size to 0 or mode to NXLOG_ROTATION_DISABLED disables log rotation
+ */
 BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLogSize, int historySize, const TCHAR *dailySuffix)
 {
 	BOOL isValid = TRUE;
@@ -124,21 +138,17 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLog
 	return isValid;
 }
 
-
-//
-// Set console writer
-//
-
+/**
+ * Set console writer
+ */
 void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(void (*writer)(const TCHAR *, ...))
 {
 	m_consoleWriter = writer;
 }
 
-
-//
-// Rotate log
-//
-
+/**
+ * Rotate log
+ */
 static BOOL RotateLog(BOOL needLock)
 {
 	int i;
@@ -200,16 +210,8 @@ static BOOL RotateLog(BOOL needLock)
    if (m_logFileHandle != NULL)
    {
 		m_flags |= NXLOG_IS_OPEN;
-      time_t t = time(NULL);
-#if HAVE_LOCALTIME_R
-      struct tm ltmBuffer;
-      struct tm *loc = localtime_r(&t, &ltmBuffer);
-#else
-      struct tm *loc = localtime(&t);
-#endif
 		TCHAR buffer[32];
-      _tcsftime(buffer, 32, _T("%d-%b-%Y %H:%M:%S"), loc);
-      _ftprintf(m_logFileHandle, _T("[%s] Log file truncated.\n"), buffer);
+      _ftprintf(m_logFileHandle, _T("%s Log file truncated.\n"), FormatLogTimestamp(buffer));
 	}
 
 	if (needLock)
@@ -218,21 +220,17 @@ static BOOL RotateLog(BOOL needLock)
 	return (m_flags & NXLOG_IS_OPEN) ? TRUE : FALSE;
 }
 
-
-//
-// API for application to force log rotation
-//
-
+/**
+ * API for application to force log rotation
+ */
 BOOL LIBNETXMS_EXPORTABLE nxlog_rotate()
 {
 	return RotateLog(TRUE);
 }
 
-
-//
-// Initialize log
-//
-
+/**
+ * Initialize log
+ */
 BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags,
                                      const TCHAR *msgModule, unsigned int msgCount, const TCHAR **messages)
 {
@@ -266,25 +264,13 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags,
    else
    {
       TCHAR buffer[32];
-      struct tm *loc;
-#if HAVE_LOCALTIME_R
-      struct tm ltmBuffer;
-#endif
-      time_t t;
 
 		nx_strncpy(m_logFileName, logName, MAX_PATH);
       m_logFileHandle = _tfopen(logName, _T("a"));
       if (m_logFileHandle != NULL)
       {
 			m_flags |= NXLOG_IS_OPEN;
-         t = time(NULL);
-#if HAVE_LOCALTIME_R
-         loc = localtime_r(&t, &ltmBuffer);
-#else
-         loc = localtime(&t);
-#endif
-         _tcsftime(buffer, 32, _T("%d-%b-%Y %H:%M:%S"), loc);
-         _ftprintf(m_logFileHandle, _T("\n[%s] Log file opened\n"), buffer);
+         _ftprintf(m_logFileHandle, _T("\n%s Log file opened\n"), FormatLogTimestamp(buffer));
       }
 
       m_mutexLogAccess = MutexCreate();
@@ -293,11 +279,9 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags,
 	return (m_flags & NXLOG_IS_OPEN) ? TRUE : FALSE;
 }
 
-
-//
-// Close log
-//
-
+/**
+ * Close log
+ */
 void LIBNETXMS_EXPORTABLE nxlog_close()
 {
    if (m_flags & NXLOG_IS_OPEN)
@@ -321,37 +305,24 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
    }
 }
 
-
-//
-// Write record to log file
-//
-
+/**
+ * Write record to log file
+ */
 static void WriteLogToFile(TCHAR *message)
 {
    TCHAR buffer[64];
-   time_t t;
-   struct tm *loc;
-#if HAVE_LOCALTIME_R
-      struct tm ltmBuffer;
-#endif
 
    // Prevent simultaneous write to log file
    MutexLock(m_mutexLogAccess);
 
-   t = time(NULL);
-
 	// Check for new day start
+   time_t t = time(NULL);
 	if ((m_rotationMode == NXLOG_ROTATION_DAILY) && (t >= m_currentDayStart + 86400))
 	{
 		RotateLog(FALSE);
 	}
 
-#if HAVE_LOCALTIME_R
-   loc = localtime_r(&t, &ltmBuffer);
-#else
-   loc = localtime(&t);
-#endif
-   _tcsftime(buffer, 32, _T("[%d-%b-%Y %H:%M:%S]"), loc);
+	FormatLogTimestamp(buffer);
    if (m_logFileHandle != NULL)
 	{
       _ftprintf(m_logFileHandle, _T("%s %s"), buffer, message);
@@ -373,11 +344,9 @@ static void WriteLogToFile(TCHAR *message)
    MutexUnlock(m_mutexLogAccess);
 }
 
-
-//
-// Format message (UNIX version)
-//
-
+/**
+ * Format message (UNIX version)
+ */
 #ifndef _WIN32
 
 static TCHAR *FormatMessageUX(DWORD dwMsgId, TCHAR **ppStrings)
@@ -429,35 +398,28 @@ static TCHAR *FormatMessageUX(DWORD dwMsgId, TCHAR **ppStrings)
 
 #endif   /* ! _WIN32 */
 
-
-//
-// Write log record
-// Parameters:
-// msg    - Message ID
-// wType  - Message type (see ReportEvent() for details)
-// format - Parameter format string, each parameter represented by one character.
-//          The following format characters can be used:
-//             s - String (multibyte or UNICODE, depending on build)
-//             m - multibyte string
-//             u - UNICODE string
-//             d - Decimal integer
-//             x - Hex integer
-//             e - System error code (will appear in log as textual description)
-//             a - IP address in network byte order
-//             A - IPv6 address in network byte order
-//
-
+/**
+ * Write log record
+ * Parameters:
+ * msg    - Message ID
+ * wType  - Message type (see ReportEvent() for details)
+ * format - Parameter format string, each parameter represented by one character.
+ *          The following format characters can be used:
+ *             s - String (multibyte or UNICODE, depending on build)
+ *             m - multibyte string
+ *             u - UNICODE string
+ *             d - Decimal integer
+ *             x - Hex integer
+ *             e - System error code (will appear in log as textual description)
+ *             a - IP address in network byte order
+ *             A - IPv6 address in network byte order
+ */
 void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...)
 {
    va_list args;
    TCHAR *strings[16], *pMsg, szBuffer[256];
    int numStrings = 0;
    DWORD error;
-	time_t t;
-	struct tm *loc;
-#if HAVE_LOCALTIME_R
-	struct tm ltmBuffer;
-#endif
 #if defined(UNICODE) && !defined(_WIN32)
 	char *mbMsg;
 #endif
@@ -571,10 +533,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
          }
 			if (m_flags & NXLOG_USE_SYSLOG)
 			{
-				t = time(NULL);
-				loc = localtime(&t);
-				_tcsftime(szBuffer, 32, _T("[%d-%b-%Y %H:%M:%S]"), loc);
-				m_consoleWriter(_T("%s %s"), szBuffer, (TCHAR *)lpMsgBuf);
+				m_consoleWriter(_T("%s %s"), FormatLogTimestamp(szBuffer), (TCHAR *)lpMsgBuf);
 			}
 			else
 			{
@@ -589,10 +548,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
          _sntprintf(message, 64, _T("MSG 0x%08X - cannot format message"), msg);
 			if (m_flags & NXLOG_USE_SYSLOG)
 			{
-				t = time(NULL);
-				loc = localtime(&t);
-				_tcsftime(szBuffer, 32, _T("[%d-%b-%Y %H:%M:%S]"), loc);
-				m_consoleWriter(_T("%s %s"), szBuffer, message);
+				m_consoleWriter(_T("%s %s"), FormatLogTimestamp(szBuffer), message);
 			}
 			else
 			{
@@ -639,14 +595,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 
 		if (m_flags & NXLOG_PRINT_TO_STDOUT)
 		{
-			t = time(NULL);
-#if HAVE_LOCALTIME_R
-			loc = localtime_r(&t, &ltmBuffer);
-#else
-			loc = localtime(&t);
-#endif
-			_tcsftime(szBuffer, 32, _T("[%d-%b-%Y %H:%M:%S]"), loc);
-			m_consoleWriter(_T("%s %s"), szBuffer, pMsg);
+			m_consoleWriter(_T("%s %s"), FormatLogTimestamp(szBuffer), pMsg);
 		}
    }
    else
