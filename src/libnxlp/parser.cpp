@@ -242,14 +242,14 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, DWORD ev
 	bool matched = false;
 
 	if (hasAttributes)
-		trace(2, _T("Match event: source=\"%s\" id=%u level=%d text=\"%s\""), source, eventId, level, line);
+		trace(5, _T("Match event: source=\"%s\" id=%u level=%d text=\"%s\""), source, eventId, level, line);
 	else
-		trace(2, _T("Match line: \"%s\""), line);
+		trace(5, _T("Match line: \"%s\""), line);
 
 	m_recordsProcessed++;
 	for(i = 0; i < m_numRules; i++)
 	{
-		trace(4, _T("checking rule %d \"%s\""), i + 1, m_rules[i]->getDescription());
+		trace(6, _T("checking rule %d \"%s\""), i + 1, m_rules[i]->getDescription());
 		if ((state = checkContext(m_rules[i])) != NULL)
 		{
 			bool ruleMatched = hasAttributes ?
@@ -257,7 +257,7 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, DWORD ev
 				m_rules[i]->match(line, m_cb, objectId, m_userArg);
 			if (ruleMatched)
 			{
-				trace(1, _T("rule %d \"%s\" matched"), i + 1, m_rules[i]->getDescription());
+				trace(5, _T("rule %d \"%s\" matched"), i + 1, m_rules[i]->getDescription());
 				if (!matched)
 					m_recordsMatched++;
 				
@@ -265,14 +265,14 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, DWORD ev
 				if (m_rules[i]->getContextToChange() != NULL)
 				{
 					m_contexts.set(m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
-					trace(2, _T("rule %d \"%s\": context %s set to %s"), i + 1, m_rules[i]->getDescription(), m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
+					trace(5, _T("rule %d \"%s\": context %s set to %s"), i + 1, m_rules[i]->getDescription(), m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
 				}
 				
 				// Set context of this rule to inactive if rule context mode is "automatic reset"
 				if (!_tcscmp(state, s_states[CONTEXT_SET_AUTOMATIC]))
 				{
 					m_contexts.set(m_rules[i]->getContext(), s_states[CONTEXT_CLEAR]);
-					trace(2, _T("rule %d \"%s\": context %s cleared because it was set to automatic reset mode"),
+					trace(5, _T("rule %d \"%s\": context %s cleared because it was set to automatic reset mode"),
 							i + 1, m_rules[i]->getDescription(), m_rules[i]->getContext());
 				}
 				matched = true;
@@ -282,10 +282,10 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, DWORD ev
 		}
 	}
 	if (i < m_numRules)
-		trace(2, _T("processing stopped at rule %d \"%s\"; result = %s"), i + 1,
+		trace(5, _T("processing stopped at rule %d \"%s\"; result = %s"), i + 1,
 				m_rules[i]->getDescription(), matched ? _T("true") : _T("false"));
 	else
-		trace(2, _T("Processing stopped at end of rules list; result = %s"), matched ? _T("true") : _T("false"));
+		trace(5, _T("Processing stopped at end of rules list; result = %s"), matched ? _T("true") : _T("false"));
 	return matched;
 }
 
