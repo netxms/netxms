@@ -23,11 +23,9 @@
 #include "nxcore.h"
 #include <ieee8021x.h>
 
-
-//
-// Default constructor for Interface object
-//
-
+/**
+ * Default constructor for Interface object
+ */
 Interface::Interface() : NetObj()
 {
 	m_flags = 0;
@@ -321,14 +319,11 @@ BOOL Interface::DeleteFromDB()
    return bSuccess;
 }
 
-
-//
-// Perform status poll on interface
-//
-
-void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
-									Queue *pEventQueue, BOOL bClusterSync,
-									SNMP_Transport *pTransport)
+/**
+ * Perform status poll on interface
+ */
+void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQueue, 
+									BOOL bClusterSync, SNMP_Transport *pTransport)
 {
    m_pPollRequestor = pSession;
    Node *pNode = getParentNode();

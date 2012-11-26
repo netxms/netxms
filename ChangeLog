@@ -7,7 +7,7 @@
 	- New dashboard element: separator
 - Android client:
 	- Select all/unselect all in alarms list
-- Fixed issues: #23, #162, #163
+- Fixed issues: #23, #162, #163, #186
 
 
 * 1.2.4

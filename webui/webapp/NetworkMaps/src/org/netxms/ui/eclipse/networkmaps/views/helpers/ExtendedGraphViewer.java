@@ -25,6 +25,7 @@ import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
+import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.events.DisposeEvent;
@@ -33,7 +34,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
 import org.eclipse.zest.core.viewers.internal.IStylingGraphModelFactory;
@@ -43,6 +43,7 @@ import org.netxms.client.GeoLocation;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
+import org.netxms.ui.eclipse.osm.tools.Tile;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
 
 /**
@@ -58,6 +59,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	
 	private BackgroundFigure backgroundFigure;
 	private Image backgroundImage = null;
+	private TileSet backgroundTiles = null;
 	private GeoLocation backgroundLocation = null;
 	private int backgroundZoom;
 	private IFigure zestRootLayer;
@@ -182,7 +184,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final TileSet tiles = mapLoader.getAllTiles(mapSize, backgroundLocation, MapLoader.TOP_LEFT, backgroundZoom, false);
-				Display.getDefault().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
@@ -192,10 +194,15 @@ public class ExtendedGraphViewer extends GraphViewer
 						final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
 						if ((mapSize.x != rootLayerSize.width) || (mapSize.y != rootLayerSize.height))
 							return;
-						
+
+						if (backgroundImage != null)
+						{
+							backgroundImage.dispose();
+							backgroundImage = null;
+						}
+						backgroundTiles = tiles;
 						backgroundFigure.setSize(mapSize.x, mapSize.y);
-						drawTiles(tiles);
-						getGraphControl().redraw();
+						backgroundFigure.repaint();
 					}
 				});
 			}
@@ -208,47 +215,6 @@ public class ExtendedGraphViewer extends GraphViewer
 		};
 		job.setUser(false);
 		job.start();
-	}
-
-	/**
-	 * @param tileSet
-	 */
-	private void drawTiles(TileSet tileSet)
-	{
-		/*
-		if ((backgroundLocation != null) && (backgroundImage != null))
-			backgroundImage.dispose();
-		
-		if ((tileSet == null) || (tileSet.tiles == null) || (tileSet.tiles.length == 0))
-		{
-			backgroundImage = null;
-			return;
-		}
-
-		final Tile[][] tiles = tileSet.tiles;
-
-		Dimension size = backgroundFigure.getSize();
-		backgroundImage = new Image(getGraphControl().getDisplay(), size.width, size.height);
-		GC gc = new GC(backgroundImage);
-
-		int x = tileSet.xOffset;
-		int y = tileSet.yOffset;
-		for(int i = 0; i < tiles.length; i++)
-		{
-			for(int j = 0; j < tiles[i].length; j++)
-			{
-				gc.drawImage(tiles[i][j].getImage(), x, y);
-				x += 256;
-				if (x >= size.width)
-				{
-					x = tileSet.xOffset;
-					y += 256;
-				}
-			}
-		}
-
-		gc.dispose();
-		*/
 	}
 
 	/* (non-Javadoc)
@@ -334,6 +300,38 @@ public class ExtendedGraphViewer extends GraphViewer
 		{
 			if (backgroundImage != null)
 				gc.drawImage(backgroundImage, 0, 0);
+			if (backgroundTiles != null)
+				drawTiles(gc, backgroundTiles);
+		}
+		
+		/**
+		 * @param tileSet
+		 */
+		private void drawTiles(Graphics gc, TileSet tileSet)
+		{
+			if ((tileSet == null) || (tileSet.tiles == null) || (tileSet.tiles.length == 0))
+				return;
+
+			final Tile[][] tiles = tileSet.tiles;
+
+			Dimension size = backgroundFigure.getSize();
+			backgroundImage = new Image(getGraphControl().getDisplay(), size.width, size.height);
+
+			int x = tileSet.xOffset;
+			int y = tileSet.yOffset;
+			for(int i = 0; i < tiles.length; i++)
+			{
+				for(int j = 0; j < tiles[i].length; j++)
+				{
+					gc.drawImage(tiles[i][j].getImage(), x, y);
+					x += 256;
+					if (x >= size.width)
+					{
+						x = tileSet.xOffset;
+						y += 256;
+					}
+				}
+			}
 		}
 	}
 }
