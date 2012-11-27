@@ -29,11 +29,9 @@
 
 #define MAX_LOG_HISTORY_SIZE	16
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 #ifdef _WIN32
 static HANDLE m_eventLogHandle = NULL;
 static HMODULE m_msgModuleHandle = NULL;

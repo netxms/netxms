@@ -91,38 +91,30 @@
 #define CT_IGNORE       6
 #define CT_MB_STRING    7
 
-
-//
-// Return codes for NxLoadConfig()
-//
-
+/**
+ * Return codes for NxLoadConfig()
+ */
 #define NXCFG_ERR_OK       0
 #define NXCFG_ERR_NOFILE   1
 #define NXCFG_ERR_SYNTAX   2
 
-
-//
-// nxlog_open() flags
-//
-
+/**
+ * nxlog_open() flags
+ */
 #define NXLOG_USE_SYSLOG		((DWORD)0x00000001)
 #define NXLOG_PRINT_TO_STDOUT	((DWORD)0x00000002)
 #define NXLOG_IS_OPEN         ((DWORD)0x80000000)
 
-
-//
-// nxlog rotation policy
-//
-
+/**
+ * nxlog rotation policy
+ */
 #define NXLOG_ROTATION_DISABLED  0
 #define NXLOG_ROTATION_DAILY     1
 #define NXLOG_ROTATION_BY_SIZE   2
 
-
-//
-// _tcsdup() replacement
-//
-
+/**
+ * _tcsdup() replacement
+ */
 #if defined(_WIN32) && defined(USE_WIN32_HEAP)
 #ifdef __cplusplus
 extern "C" {
@@ -134,11 +126,9 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src);
 #endif
 #endif
 
-
-//
-// Class for serial communications
-//
-
+/**
+ * Class for serial communications
+ */
 #ifdef __cplusplus
 
 #ifndef _WIN32

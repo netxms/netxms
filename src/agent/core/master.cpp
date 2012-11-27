@@ -95,8 +95,15 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 		}
 		else
 		{
-			AgentWriteDebugLog(1, _T("Cannot connect to master agent, will retry in 5 seconds"));
-			ThreadSleep(5);
+			if (GetLastError() == ERROR_PIPE_BUSY)
+			{
+				WaitNamedPipe(pipeName, 5000);
+			}
+			else
+			{
+				AgentWriteDebugLog(1, _T("Cannot connect to master agent, will retry in 5 seconds"));
+				ThreadSleep(5);
+			}
 		}
 	}
 	AgentWriteDebugLog(1, _T("Master agent listener stopped"));

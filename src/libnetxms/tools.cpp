@@ -116,11 +116,9 @@ TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer)
 	}
 }
 
-
-//
-// Convert IPv6 address from binary form to string
-//
-
+/**
+ * Convert IPv6 address from binary form to string
+ */
 TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer)
 {
    static TCHAR internalBuffer[64];
@@ -163,11 +161,9 @@ TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer)
    return bufPtr;
 }
 
-
-//
-// Duplicate memory block
-//
-
+/**
+ * Duplicate memory block
+ */
 void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize)
 {
    void *pNewData;

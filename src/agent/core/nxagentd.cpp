@@ -1004,11 +1004,9 @@ BOOL Initialize()
    return TRUE;
 }
 
-
-//
-// Shutdown routine
-//
-
+/**
+ * Shutdown agent
+ */
 void Shutdown()
 {
 	DebugPrintf(INVALID_INDEX, 2, _T("Shutdown() called"));
@@ -1045,11 +1043,9 @@ void Shutdown()
 #endif
 }
 
-
-//
-// Common Main()
-//
-
+/**
+ * Common Main()
+ */
 void Main()
 {
    nxlog_write(MSG_AGENT_STARTED, NXLOG_INFO, NULL);
@@ -1094,11 +1090,9 @@ void Main()
    }
 }
 
-
-//
-// Do necessary actions on agent restart
-//
-
+/**
+ * Do necessary actions on agent restart
+ */
 static void DoRestartActions(DWORD dwOldPID)
 {
 #if defined(_WIN32)
@@ -1141,11 +1135,9 @@ static void DoRestartActions(DWORD dwOldPID)
 #endif
 }
 
-
-//
-// Create configuration file
-//
-
+/**
+ * Create configuration file
+ */
 static int CreateConfig(const char *pszServer, const char *pszLogFile, const char *pszFileStore,
                         const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList)
 {

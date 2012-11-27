@@ -80,9 +80,9 @@ static struct option longOptions[] =
 
 #define SHORT_OPTIONS "Vhvqb:"
 
-//
-//
-//
+/**
+ * Show online help
+ */
 static void usage(char *argv0)
 {
 	_tprintf(
@@ -116,9 +116,9 @@ _T("      nxapush @file\n")
 	, argv0);
 }
 
-//
-// Entry point
-//
+/**
+ * Entry point
+ */
 int main(int argc, char *argv[])
 {
 	int ret = 0;
@@ -255,11 +255,9 @@ int main(int argc, char *argv[])
 	return ret;
 }
 
-
-//
-// Values parser - clean string and split by '='
-//
-
+/**
+ * Values parser - clean string and split by '='
+ */
 static BOOL AddValue(TCHAR *pair)
 {
 	BOOL ret = FALSE;
@@ -289,15 +287,23 @@ static BOOL AddValue(TCHAR *pair)
 	return ret;
 }
 
-//
-// Initialize client library and connect to the server
-//
+/**
+ * Initialize and connect to the agent
+ */
 static BOOL Startup()
 {
 #ifdef _WIN32
+reconnect:
 	s_hPipe = CreateFile(_T("\\\\.\\pipe\\nxagentd.push"), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (s_hPipe == INVALID_HANDLE_VALUE)
+	{
+		if (GetLastError() == ERROR_PIPE_BUSY)
+		{
+			if (WaitNamedPipe(_T("\\\\.\\pipe\\nxagentd.push"), 5000))
+				goto reconnect;
+		}
 		return FALSE;
+	}
 
 	DWORD pipeMode = PIPE_READMODE_MESSAGE;
 	SetNamedPipeHandleState(s_hPipe, &pipeMode, NULL, NULL);
@@ -323,9 +329,9 @@ static BOOL Startup()
 	return TRUE;
 }
 
-//
-// Send all DCIs
-//
+/**
+ * Send all DCIs
+ */
 static BOOL Send()
 {
 	BOOL success = FALSE;
@@ -362,9 +368,9 @@ cleanup:
 	return success;
 }
 
-//
-// Disconnect and cleanup
-//
+/**
+ * Disconnect and cleanup
+ */
 static BOOL Teardown()
 {
 #ifdef _WIN32

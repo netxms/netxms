@@ -288,6 +288,7 @@ sdk/openssl/lib/x86/ssleay32.lib -text
 sdk/samples/C/subagent/sample-subagent.vcproj -text
 sdk/samples/Java/get-dci-from-server/pom.xml -text
 sdk/samples/Java/get-dci-from-server/src/main/java/org/netxms/samples/Sample.java -text
+src/agent/appagent/appagent.vcproj -text
 src/agent/core/epp.cpp -text
 src/agent/core/nxagentd-unicode.vcproj -text
 src/agent/core/nxagentd.vcproj -text
@@ -317,6 +318,7 @@ src/agent/subagents/ups/ups.vcproj -text
 src/agent/subagents/winnt/winnt.vcproj -text
 src/agent/subagents/winperf/winperf.vcproj -text
 src/agent/subagents/wmi/wmi.vcproj -text
+src/agent/tools/nxappget/nxappget.vcproj -text
 src/agent/tools/nxapush/nxapush.vcproj -text
 src/client/install/nxcon.iss -text
 src/client/nxalarm/nxalarm.vcproj -text
