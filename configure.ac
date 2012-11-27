@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.4], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.5], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -2089,6 +2089,7 @@ AC_CONFIG_FILES([
 	m4/Makefile
 	src/Makefile
 	src/agent/Makefile
+	src/agent/appagent/Makefile
 	src/agent/core/Makefile
 	src/agent/install/Makefile
 	src/agent/libnxsd/Makefile
@@ -2116,6 +2117,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/lmsensors/Makefile
 	src/agent/subagents/darwin//Makefile
 	src/agent/tools/Makefile
+	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile
 	src/client/Makefile
 	src/client/install/Makefile

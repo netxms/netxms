@@ -20,6 +20,10 @@
 
 #include <appagent.h>
 
+#if HAVE_GETOPT_H
+#include <getopt.h>
+#endif
+
 
 //
 // options
@@ -31,11 +35,11 @@ static int optBatchSize = 0;
 #if HAVE_DECL_GETOPT_LONG
 static struct option longOptions[] =
 {
-	{"version",   no_argument,       NULL,        'V'},
-	{"help",      no_argument,       NULL,        'h'},
-	{"verbose",   no_argument,       NULL,        'v'},
-	{"quiet",     no_argument,       NULL,        'q'},
-	{NULL, 0, NULL, 0}
+	{ "version",   no_argument,       NULL,        'V' },
+	{ "help",      no_argument,       NULL,        'h' },
+	{ "verbose",   no_argument,       NULL,        'v' },
+	{ "quiet",     no_argument,       NULL,        'q' },
+	{ NULL, 0, NULL, 0 }
 };
 #endif
 
@@ -125,7 +129,7 @@ int main(int argc, char *argv[])
 	WCHAR *metricName = WideStringFromMBString(argv[optind + 1]);
 #else
 	char *appName = argv[optind];
-	char *metricName argv[optind + 1];
+	char *metricName = argv[optind + 1];
 #endif
 	HPIPE hPipe;
 	if (AppAgentConnect(appName, &hPipe))

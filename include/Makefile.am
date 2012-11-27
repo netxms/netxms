@@ -10,6 +10,7 @@
 
 
 EXTRA_DIST = \
+	appagent.h \
 	ata.h \
 	base64.h \
 	config-netware.h \
