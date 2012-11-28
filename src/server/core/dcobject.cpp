@@ -514,13 +514,61 @@ check_step:
 // Match schedule to current time
 //
 
-static BOOL MatchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp)
+BOOL DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp)
 {
    const TCHAR *pszCurr;
 	TCHAR szValue[256];
+   TCHAR *realSchedule = pszSchedule;
+
+   if (_tcslen(pszSchedule) > 4 && !_tcsncmp(pszSchedule, _T("%["), 2))
+   {
+      TCHAR *scriptName = _tcsdup(pszSchedule + 2);
+      if (scriptName != NULL)
+      {
+         TCHAR *closingBracker = _tcschr(scriptName, _T(']'));
+         if (closingBracker != NULL)
+         {
+            *closingBracker = 0;
+
+            g_pScriptLibrary->lock();
+            NXSL_Program *script = g_pScriptLibrary->findScript(scriptName);
+            if (script != NULL)
+            {
+               NXSL_ServerEnv *env = new NXSL_ServerEnv;
+               script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+               script->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
+               if (script->run(env) == 0)
+               {
+                  NXSL_Value *result = script->getResult();
+                  if (result != NULL)
+                  {
+                     const TCHAR *temp = result->getValueAsCString();
+                     if (temp != NULL)
+                     {
+                        DbgPrintf(7, _T("DCObject::matchSchedule(%%[%s]) expanded to \"%s\""), scriptName, temp);
+                        realSchedule = _tcsdup(temp);
+                     }
+                  }
+               }
+               else
+               {
+                  DbgPrintf(4, _T("DCObject::matchSchedule(%%[%s]) script execution failed"), scriptName);
+               }
+            }
+            g_pScriptLibrary->unlock();
+         }
+         free(scriptName);
+      }
+      else
+      {
+         // invalid syntax
+         // TODO: add logging
+         return FALSE;
+      }
+   }
 
    // Minute
-   pszCurr = ExtractWord(pszSchedule, szValue);
+   pszCurr = ExtractWord(realSchedule, szValue);
    if (!MatchScheduleElement(szValue, pCurrTime->tm_min))
          return FALSE;
 
@@ -584,7 +632,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
          memcpy(&tmLastLocal, localtime(&m_tLastCheck), sizeof(struct tm));
          for(i = 0, result = false; i < m_dwNumSchedules; i++)
          {
-            if (MatchSchedule(&tmCurrLocal, m_ppScheduleList[i], &bWithSeconds, currTime))
+            if (matchSchedule(&tmCurrLocal, m_ppScheduleList[i], &bWithSeconds, currTime))
             {
 					// TODO: do we have to take care about the schedules with seconds
 					// that trigger polling too often?

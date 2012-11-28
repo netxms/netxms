@@ -276,6 +276,9 @@ public:
 	void addSchedule(const TCHAR *pszSchedule);
 
 	bool prepareForDeletion();
+
+private:
+  BOOL matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp);
 };
 
 
