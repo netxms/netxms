@@ -162,6 +162,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 
 	// get mail encoding from DB
 	ConfigReadStrA(_T("MailEncoding"), szEncoding, sizeof(szEncoding) / sizeof(TCHAR), "iso-8859-1");
+   BOOL encodeSubject = ConfigReadInt(_T("MailBase64Subjects"), 0) != 0;
 
    // Fill in address structure
    memset(&sa, 0, sizeof(sa));
@@ -253,7 +254,25 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      snprintf(szBuffer, SMTP_BUFFER_SIZE, "To: <%s>\r\n", pszRcpt);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
                      // subject
-                     snprintf(szBuffer, SMTP_BUFFER_SIZE, "Subject: %s\r\n", pszSubject);
+                     if (encodeSubject)
+                     {
+                        char *encodedSubject = NULL;
+                        int encodedSubjectLen = base64_encode_alloc(pszSubject, strlen(pszSubject), &encodedSubject);
+                        if (encodedSubject != NULL)
+                        {
+                           snprintf(szBuffer, SMTP_BUFFER_SIZE, "Subject: =?%s?B?%s?=\r\n", szEncoding, encodedSubject);
+                           free(encodedSubject);
+                        }
+                        else
+                        {
+                           // fallback
+                           snprintf(szBuffer, SMTP_BUFFER_SIZE, "Subject: %s\r\n", pszSubject);
+                        }
+                     }
+                     else
+                     {
+                        snprintf(szBuffer, SMTP_BUFFER_SIZE, "Subject: %s\r\n", pszSubject);
+                     }
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
                      
 							// date
