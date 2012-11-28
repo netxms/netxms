@@ -424,6 +424,29 @@ void DCObject::setStatus(int status, bool generateEvent)
 
 
 //
+// Get step size for "%" and "/" crontab cases
+//
+
+static int GetStepSize(TCHAR *str)
+{
+  int step = 0;
+  if (str != NULL)
+  {
+    *str = 0;
+    str++;
+    step = *str == _T('\0') ? 1 : _tcstol(str, NULL, 10);
+  }
+
+  if (step <= 0)
+  {
+    step = 1;
+  }
+
+  return step;
+}
+
+
+//
 // Match schedule element
 // NOTE: We assume that pattern can be modified during processing
 //
@@ -438,24 +461,12 @@ static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue, time_t currTime 
 	ptr = _tcschr(pszPattern, _T('%'));
 	if (ptr != NULL)
 	{
-		*ptr = 0;
-		ptr++;
-		nStep = *ptr == _T('\0') ? 1 : _tcstol(ptr, NULL, 10);
-		return (nStep > 0) && (currTime % nStep) == 0;
+    return currTime % GetStepSize(ptr);
 	}
 
    // Check if step was specified
    ptr = _tcschr(pszPattern, _T('/'));
-   if (ptr != NULL)
-   {
-      *ptr = 0;
-      ptr++;
-		nStep = *ptr == _T('\0') ? 1 : _tcstol(ptr, NULL, 10);
-   }
-   else
-   {
-      nStep = 1;
-   }
+   nStep = GetStepSize(ptr);
 
    if (*pszPattern == _T('*'))
       goto check_step;
