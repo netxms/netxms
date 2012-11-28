@@ -92,7 +92,7 @@ static APPAGENT_MSG *GetMetric(WCHAR *name, int length)
  */
 static void ProcessRequest(HPIPE hPipe)
 {
-	MessageBuffer *mb = new MessageBuffer;
+	AppAgentMessageBuffer *mb = new AppAgentMessageBuffer;
 
 	AppAgentWriteLog(5, _T("ProcessRequest: connection established"));
 	while(true)

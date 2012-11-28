@@ -26,7 +26,7 @@
  * 
  * @return message length or -1 if message start not found
  */
-int MessageBuffer::seek()
+int AppAgentMessageBuffer::seek()
 {
 	if (m_pos < APPAGENT_MSG_START_INDICATOR_LEN + APPAGENT_MSG_SIZE_FIELD_LEN)
 		return -1;
@@ -49,7 +49,7 @@ int MessageBuffer::seek()
  *
  * @param pos start position of remaining content
  */
-void MessageBuffer::shrink(int pos)
+void AppAgentMessageBuffer::shrink(int pos)
 {
 	if (pos > m_pos)
 		pos = m_pos;
@@ -60,7 +60,7 @@ void MessageBuffer::shrink(int pos)
 /**
  * Receive message from pipe
  */
-APPAGENT_MSG *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent, MessageBuffer *mb)
+APPAGENT_MSG *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent, AppAgentMessageBuffer *mb)
 {
 	APPAGENT_MSG *msg = NULL;
 
@@ -75,7 +75,7 @@ APPAGENT_MSG *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent, MessageBuffer *mb)
 
 			memset(&ov, 0, sizeof(OVERLAPPED));
 			ov.hEvent = hEvent;
-			if (!ReadFile(hPipe, &mb->m_data[mb->m_pos], MessageBuffer::DATA_SIZE - mb->m_pos, NULL, &ov))
+			if (!ReadFile(hPipe, &mb->m_data[mb->m_pos], AppAgentMessageBuffer::DATA_SIZE - mb->m_pos, NULL, &ov))
 			{
 				if (GetLastError() != ERROR_IO_PENDING)
 					return NULL;
@@ -87,16 +87,16 @@ APPAGENT_MSG *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent, MessageBuffer *mb)
 		}
 		else
 		{
-			if (!ReadFile(hPipe, &mb->m_data[mb->m_pos], MessageBuffer::DATA_SIZE - mb->m_pos, &bytes, NULL))
+			if (!ReadFile(hPipe, &mb->m_data[mb->m_pos], AppAgentMessageBuffer::DATA_SIZE - mb->m_pos, &bytes, NULL))
 				return NULL;
 		}
 #else
-		int bytes = RecvEx(hPipe, &mb->m_data[mb->m_pos], MessageBuffer::DATA_SIZE - mb->m_pos, 0, INFINITE);
+		int bytes = RecvEx(hPipe, &mb->m_data[mb->m_pos], AppAgentMessageBuffer::DATA_SIZE - mb->m_pos, 0, INFINITE);
 		if (bytes <= 0)
 			return NULL;
 #endif
 		mb->m_pos += (int)bytes;
-		if (mb->m_pos == MessageBuffer::DATA_SIZE)
+		if (mb->m_pos == AppAgentMessageBuffer::DATA_SIZE)
 		{
 			mb->m_pos = 0;
 		}

@@ -28,7 +28,7 @@
 /**
  * Message buffer
  */
-class MessageBuffer
+class AppAgentMessageBuffer
 {
 public:
 	static const int DATA_SIZE = 65536;
@@ -36,7 +36,7 @@ public:
 	char m_data[DATA_SIZE];
 	int m_pos;
 
-	MessageBuffer() { m_pos = 0; }
+	AppAgentMessageBuffer() { m_pos = 0; }
 
 	int seek();
 	void shrink(int pos);
@@ -45,7 +45,7 @@ public:
 /**
  * Internal functions
  */
-APPAGENT_MSG *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent, MessageBuffer *mb);
+APPAGENT_MSG *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent, AppAgentMessageBuffer *mb);
 bool SendMessageToPipe(HPIPE hPipe, APPAGENT_MSG *msg);
 APPAGENT_MSG *NewMessage(int command, int rcc, int length);
 

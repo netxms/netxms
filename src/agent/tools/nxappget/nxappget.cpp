@@ -51,7 +51,7 @@ static struct option longOptions[] =
 static void usage(char *argv0)
 {
 	_tprintf(
-_T("NetXMS Application Agent GET  Version ") NETXMS_VERSION_STRING _T("\n")
+_T("NetXMS Application Agent Connector  Version ") NETXMS_VERSION_STRING _T("\n")
 _T("Copyright (c) 2006-2012 Raden Solutions\n\n")
 _T("Usage: %hs agent_name metric_name\n")
 _T("  \n")

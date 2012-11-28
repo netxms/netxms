@@ -91,7 +91,7 @@ int APPAGENT_EXPORTABLE AppAgentGetMetric(HPIPE hPipe, const TCHAR *name, TCHAR 
 
 	if (SendMessageToPipe(hPipe, request))
 	{
-		MessageBuffer *mb = new MessageBuffer;
+		AppAgentMessageBuffer *mb = new AppAgentMessageBuffer;
 		APPAGENT_MSG *response = ReadMessageFromPipe(hPipe, NULL, mb);
 		if (response != NULL)
 		{
