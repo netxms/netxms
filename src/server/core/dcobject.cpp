@@ -441,7 +441,7 @@ static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue, time_t currTime 
 		*ptr = 0;
 		ptr++;
 		nStep = *ptr == _T('\0') ? 1 : _tcstol(ptr, NULL, 10);
-		return (currTime % nStep) == 0;
+		return (nStep > 0) && (currTime % nStep) == 0;
 	}
 
    // Check if step was specified
