@@ -37,6 +37,7 @@ DISABLE_ICONV="no"
 DISABLE_ENCRYPTION="no"
 DISABLE_LMSENSORS="no"
 ENABLE_DEBUG="no"
+ENABLE_WERROR="no"
 STATIC_BUILD="no"
 ALL_STATIC="no"
 DBDRIVER_SELECTED="no"
@@ -332,6 +333,12 @@ AC_ARG_ENABLE(debug,
 [AS_HELP_STRING(--enable-debug,enable additional debugging functionality)],
 [
 	ENABLE_DEBUG="yes"
+])
+
+AC_ARG_ENABLE(werror,
+[AS_HELP_STRING(--enable-werror,threat all warnings as errors)],
+[
+	ENABLE_WERROR="yes"
 ])
 
 AC_ARG_ENABLE(64bit,
@@ -1996,6 +2003,10 @@ else
 	CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\" -DPKGLIBDIR=\\\"\${pkglibdir}\\\""
 fi
 LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $LDFLAGS_SUFFIX"
+
+if test "x${ENABLE_WERROR}" = "xyes"; then
+	CPPFLAGS="$CPPFLAGS -Werror"
+fi
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
