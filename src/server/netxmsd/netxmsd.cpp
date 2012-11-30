@@ -173,22 +173,22 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 #if defined(_WIN32) || HAVE_DECL_GETOPT_LONG
 	static struct option longOptions[] =
 	{
-		{ "check-db", 0, NULL, 'e' },
-		{ "config", 1, NULL, 'c' },
-		{ "daemon", 0, NULL, 'd' },
-		{ "debug", 1, NULL, 'D' },
-		{ "help", 0, NULL, 'h' },
+		{ (char *)"check-db", 0, NULL, 'e' },
+		{ (char *)"config", 1, NULL, 'c' },
+		{ (char *)"daemon", 0, NULL, 'd' },
+		{ (char *)"debug", 1, NULL, 'D' },
+		{ (char *)"help", 0, NULL, 'h' },
 #ifdef _WIN32
-		{ "check-service", 0, NULL, '!' },
-		{ "dump", 1, NULL, '~' },
-		{ "install", 0, NULL, 'I' },
-		{ "login", 1, NULL, 'L' },
-		{ "password", 1, NULL, 'P' },
-		{ "remove", 0, NULL, 'R' },
-		{ "start", 0, NULL, 's' },
-		{ "stop", 0, NULL, 'S' },
+		{ (char *)"check-service", 0, NULL, '!' },
+		{ (char *)"dump", 1, NULL, '~' },
+		{ (char *)"install", 0, NULL, 'I' },
+		{ (char *)"login", 1, NULL, 'L' },
+		{ (char *)"password", 1, NULL, 'P' },
+		{ (char *)"remove", 0, NULL, 'R' },
+		{ (char *)"start", 0, NULL, 's' },
+		{ (char *)"stop", 0, NULL, 'S' },
 #else
-		{ "pid-file", 1, NULL, 'p' },
+		{ (char *)"pid-file", 1, NULL, 'p' },
 #endif
 		{ NULL, 0, 0, 0 }
 	};

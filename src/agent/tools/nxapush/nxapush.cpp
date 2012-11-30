@@ -69,12 +69,12 @@ static int optBatchSize = 0;
 #if HAVE_DECL_GETOPT_LONG
 static struct option longOptions[] =
 {
-	{"version",   no_argument,       NULL,        'V'},
-	{"help",      no_argument,       NULL,        'h'},
-	{"verbose",   no_argument,       NULL,        'v'},
-	{"quiet",     no_argument,       NULL,        'q'},
-	{"batchsize", required_argument, NULL,        'b'},
-	{NULL, 0, NULL, 0}
+	{ (char *)"version",   no_argument,       NULL,        'V'},
+	{ (char *)"help",      no_argument,       NULL,        'h'},
+	{ (char *)"verbose",   no_argument,       NULL,        'v'},
+	{ (char *)"quiet",     no_argument,       NULL,        'q'},
+	{ (char *)"batchsize", required_argument, NULL,        'b'},
+	{ NULL, 0, NULL, 0}
 };
 #endif
 

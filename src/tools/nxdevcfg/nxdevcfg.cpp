@@ -71,14 +71,14 @@ int main(int argc, char *argv[])
 #if HAVE_DECL_GETOPT_LONG
 	static struct option longOptions[] = 
 	{
-		{ "bindir", 0, NULL, 'b' },
-		{ "cflags", 0, NULL, 'c' },
-		{ "cppflags", 0, NULL, 'C' },
-		{ "cxxflags", 0, NULL, 'X' },
-		{ "datadir", 0, NULL, 'd' },
-		{ "ldflags", 0, NULL, 'l' },
-		{ "libdir", 0, NULL, 'L' },
-		{ "prefix", 0, NULL, 'P' },
+		{ (char *)"bindir", 0, NULL, 'b' },
+		{ (char *)"cflags", 0, NULL, 'c' },
+		{ (char *)"cppflags", 0, NULL, 'C' },
+		{ (char *)"cxxflags", 0, NULL, 'X' },
+		{ (char *)"datadir", 0, NULL, 'd' },
+		{ (char *)"ldflags", 0, NULL, 'l' },
+		{ (char *)"libdir", 0, NULL, 'L' },
+		{ (char *)"prefix", 0, NULL, 'P' },
 		{ NULL, 0, 0, 0 }
 	};
 #endif
