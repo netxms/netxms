@@ -22,6 +22,7 @@ import android.widget.FrameLayout;
  */
 public class DashboardActivity extends AbstractClientActivity
 {
+	private static final String TAG = "nxclient/DashboardActivity";
 	private long dashboardId;
 	private Dashboard dashboard;
 	private FrameLayout rootView;
@@ -34,7 +35,7 @@ public class DashboardActivity extends AbstractClientActivity
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
 		dashboardId = getIntent().getLongExtra("objectId", 0);
-		Log.d("DashboardActivity", "onCreateStep2: dashboardId=" + dashboardId);
+		Log.d(TAG, "onCreateStep2: dashboardId=" + dashboardId);
 		setContentView(R.layout.dashboard);
 		rootView = (FrameLayout)findViewById(R.id.DashboardLayout);
 	}

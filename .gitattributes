@@ -138,6 +138,7 @@ android/src/console/src/com/jjoe64/graphview/GraphViewDemo.java -text
 android/src/console/src/com/jjoe64/graphview/LineGraphView.java -text
 android/src/console/src/com/jjoe64/graphview/compatible/RealScaleGestureDetector.java -text
 android/src/console/src/com/jjoe64/graphview/compatible/ScaleGestureDetector.java -text
+android/src/console/src/org/netxms/ui/android/helpers/Multipliers.java -text
 android/src/console/src/org/netxms/ui/android/helpers/SafeParser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/AbstractComparisonChart.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/AbstractTabActivity.java -text

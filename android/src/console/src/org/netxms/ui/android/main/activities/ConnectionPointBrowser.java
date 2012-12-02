@@ -54,6 +54,7 @@ import android.widget.TextView;
 
 public class ConnectionPointBrowser extends AbstractClientActivity
 {
+	private static final String TAG = "nxclient/ConnectionPointBrowser";
 	private static final String CPLIST_KEY = "ConnectionPointList";
 	private final int maxConnectionPoints = 50;
 	private List<String> cpList = new ArrayList<String>(0);
@@ -75,7 +76,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 		setContentView(R.layout.connection_point_view);
 
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
-		title.setText(R.string.connectionpoint_title);
+		title.setText(R.string.connection_point_title);
 		// keeps current list of alarms as datasource for listview
 		adapter = new ConnectionPointListAdapter(this);
 		listView = (ListView)findViewById(R.id.ConnectionPointList);
@@ -122,7 +123,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
-		Log.w("ConnectionPointBrowser", "onActivityResult: rq=" + requestCode + " result=" + resultCode);
+		Log.w(TAG, "onActivityResult: rq=" + requestCode + " result=" + resultCode);
 		BarcodeScannerIntentResult scanResult = BarcodeScannerIntegrator.parseActivityResult(requestCode, resultCode, data);
 		if (scanResult != null)
 		{
@@ -172,12 +173,12 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
 		final int position = info.position;
 
-		if (item.getItemId() == R.id.connectionpoint_deleteone)
+		if (item.getItemId() == R.id.connection_point_delete_one)
 		{
 			new AlertDialog.Builder(this)
 					.setIcon(android.R.drawable.ic_dialog_alert)
 					.setTitle(R.string.confirm_tool_execution)
-					.setMessage(r.getString(R.string.connectionpoint_confirm_one))
+					.setMessage(r.getString(R.string.connection_point_confirm_delete_one))
 					.setCancelable(true)
 					.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener()
 					{
@@ -191,12 +192,12 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 					.setNegativeButton(R.string.no, null)
 					.show();
 		}
-		else if (item.getItemId() == R.id.connectionpoint_deleteall)
+		else if (item.getItemId() == R.id.connection_point_delete_all)
 		{
 			new AlertDialog.Builder(this)
 					.setIcon(android.R.drawable.ic_dialog_alert)
 					.setTitle(R.string.confirm_tool_execution)
-					.setMessage(r.getString(R.string.connectionpoint_confirm_all))
+					.setMessage(r.getString(R.string.connection_point_confirm_delete_all))
 					.setCancelable(true)
 					.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener()
 					{
@@ -321,7 +322,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 		@Override
 		protected String doInBackground(Object... params)
 		{
-			String string = nodeId != 0 ? r.getString(R.string.connectionpoint_notfound) : r.getString(R.string.connectionpoint_macaddress_notfound, macAddress);
+			String string = nodeId != 0 ? r.getString(R.string.connection_point_notfound) : r.getString(R.string.connection_point_macaddress_notfound, macAddress);
 			if (service != null)
 			{
 				NXCSession session = service.getSession();
@@ -349,22 +350,22 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 					}
 					catch (MacAddressFormatException e)
 					{
-						Log.d("nxclient/ConnectionPointBrowser", "MacAddressFormatException while executing searchMacAddress", e);
-						string = r.getString(R.string.connectionpoint_invalid, macAddress);
+						Log.d(TAG, "MacAddressFormatException while executing searchMacAddress", e);
+						string = r.getString(R.string.connection_point_invalid, macAddress);
 					}
 					catch (NXCException e)
 					{
-						Log.d("nxclient/SearchConnectionPointTask", "NXCException while executing syncMissingObjects", e);
+						Log.d(TAG, "NXCException while executing syncMissingObjects", e);
 					}
 					catch (IOException e)
 					{
-						Log.d("nxclient/SearchConnectionPointTask", "IOException while executing syncMissingObjects", e);
+						Log.d(TAG, "IOException while executing syncMissingObjects", e);
 					}
 
 					if ((bridge != null) && (iface != null))
-						string = r.getString(R.string.connectionpoint_info, host != null ? " " + host.getObjectName() : "", cp.getLocalMacAddress().toString(), bridge.getObjectName(), iface.getObjectName());
+						string = r.getString(R.string.connection_point_info, host != null ? " " + host.getObjectName() : "", cp.getLocalMacAddress().toString(), bridge.getObjectName(), iface.getObjectName());
 					else if (host != null)
-						string = r.getString(R.string.connectionpoint_nodeid_notfound, host.getObjectName());
+						string = r.getString(R.string.connection_point_nodeid_notfound, host.getObjectName());
 				}
 			}
 			return string;

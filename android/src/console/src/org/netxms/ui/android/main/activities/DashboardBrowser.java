@@ -29,6 +29,7 @@ import android.widget.TextView;
  */
 public class DashboardBrowser extends AbstractClientActivity
 {
+	private static final String TAG = "nxclient/DashboardBrowser";
 	private ListView listView;
 	private ObjectListAdapter adapter;
 	private final long initialParent = 7;
@@ -302,7 +303,7 @@ public class DashboardBrowser extends AbstractClientActivity
 			}
 			catch (Exception e)
 			{
-				Log.d("nxclient/SyncMissingObjectsTask", "Exception while executing service.getSession().syncMissingObjects", e);
+				Log.d(TAG, "Exception while executing service.getSession().syncMissingObjects", e);
 				return e;
 			}
 			return null;

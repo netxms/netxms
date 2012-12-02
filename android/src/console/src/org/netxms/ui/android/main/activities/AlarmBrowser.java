@@ -12,9 +12,11 @@ import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.AlarmListAdapter;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -47,6 +49,7 @@ public class AlarmBrowser extends AbstractClientActivity
 	private ArrayList<Integer> nodeIdList;
 	private Spinner sortBy;
 	private static Method method_invalidateOptionsMenu;
+	private ProgressDialog dialog;
 
 	static
 	{
@@ -66,6 +69,8 @@ public class AlarmBrowser extends AbstractClientActivity
 	@Override
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
+		dialog = new ProgressDialog(this);
+
 		setContentView(R.layout.alarm_view);
 		nodeIdList = getIntent().getIntegerArrayListExtra("nodeIdList");
 
@@ -136,6 +141,7 @@ public class AlarmBrowser extends AbstractClientActivity
 					break;
 				}
 	}
+
 	/**
 	 * @param menu
 	 * @param id
@@ -169,6 +175,7 @@ public class AlarmBrowser extends AbstractClientActivity
 	{
 		super.onPrepareOptionsMenu(menu);
 
+		menu.removeItem(R.id.viewlastvalues);
 		if (method_invalidateOptionsMenu == null)
 		{
 			menu.removeItem(R.id.selectall);
@@ -185,6 +192,32 @@ public class AlarmBrowser extends AbstractClientActivity
 	@Override
 	public boolean onContextItemSelected(MenuItem item)
 	{
+		if (handleItemSelection(item))
+			return true;
+		return super.onContextItemSelected(item);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
+	 */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		if (handleItemSelection(item))
+			return true;
+		return super.onOptionsItemSelected(item);
+	}
+
+	/**
+	 * Handles menu item selection for both Option and Context menus
+	 * @param item	Menu item to handle
+	 * @return true if menu has been properly handled
+	 */
+	@SuppressWarnings("unchecked")
+	private boolean handleItemSelection(MenuItem item)
+	{
 		int itemId = item.getItemId();
 		if (itemId == R.id.selectall)
 			selectAll(true);
@@ -198,54 +231,40 @@ public class AlarmBrowser extends AbstractClientActivity
 				if (info != null)
 				{
 					Alarm al = (Alarm)adapter.getItem(info.position);
-					GenericObject object = service.findObjectById(al.getSourceObjectId());
-					if (object != null)
+					if (al != null)
 					{
-						Intent newIntent = new Intent(this, NodeInfo.class);
-						newIntent.putExtra("objectId", object.getObjectId());
-						newIntent.putExtra("tabId", NodeInfo.TAB_LAST_VALUES_ID);
-						startActivity(newIntent);
+						GenericObject object = service.findObjectById(al.getSourceObjectId());
+						if (object != null)
+						{
+							Intent newIntent = new Intent(this, NodeInfo.class);
+							newIntent.putExtra("objectId", object.getObjectId());
+							newIntent.putExtra("tabId", NodeInfo.TAB_LAST_VALUES_ID);
+							startActivity(newIntent);
+							return true;
+						}
 					}
 				}
-				return true;
 			}
 		}
 		else
 		{
 			ArrayList<Long> alarmIdList = getSelection(item);
-			int count = alarmIdList.size();
-			if (itemId == R.id.acknowledge)
-			{
-				for (int i = 0; i < count; i++)
-					adapter.acknowledgeItem(alarmIdList.get(i), false);
-				refreshList();
-				return true;
-			}
-			else if (itemId == R.id.sticky_acknowledge)
-			{
-				for (int i = 0; i < count; i++)
-					adapter.acknowledgeItem(alarmIdList.get(i), true);
-				refreshList();
-				return true;
-			}
-			else if (itemId == R.id.resolve)
-			{
-				for (int i = 0; i < count; i++)
-					adapter.resolveItem(alarmIdList.get(i));
-				refreshList();
-				return true;
-			}
-			else if (itemId == R.id.terminate)
-			{
-				for (int i = 0; i < count; i++)
-					adapter.terminateItem(alarmIdList.get(i));
-				refreshList();
-				return true;
-			}
+			if (alarmIdList.size() != 0)
+				if (itemId == R.id.acknowledge ||
+						itemId == R.id.sticky_acknowledge ||
+						itemId == R.id.resolve ||
+						itemId == R.id.terminate)
+				{
+					new AlarmActionTask(itemId).execute(alarmIdList);
+					return true;
+				}
 		}
-		return super.onContextItemSelected(item);
+		return false;
 	}
 
+	/**
+	 * Get list of selected items
+	 */
 	private ArrayList<Long> getSelection(MenuItem item)
 	{
 		ArrayList<Long> idList = new ArrayList<Long>();
@@ -261,32 +280,24 @@ public class AlarmBrowser extends AbstractClientActivity
 		if (idList.size() == 0)
 		{
 			AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
-			Alarm al = (Alarm)adapter.getItem(info.position);
-			if (al != null)
-				idList.add(al.getId());
+			if (info != null)
+			{
+				Alarm al = (Alarm)adapter.getItem(info.position);
+				if (al != null)
+					idList.add(al.getId());
+			}
 		}
 		return idList;
 	}
 
+	/**
+	 * Select/unselect all items
+	 * @param select true to select, false to unselect
+	 */
 	private void selectAll(boolean select)
 	{
 		for (int i = 0; i < adapter.getCount(); i++)
 			listView.setItemChecked(i, select);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
-	 */
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item)
-	{
-		if (item.getItemId() == R.id.selectall)
-			selectAll(true);
-		else if (item.getItemId() == R.id.unselectall)
-			selectAll(false);
-		return super.onOptionsItemSelected(item);
 	}
 
 	/**
@@ -328,5 +339,55 @@ public class AlarmBrowser extends AbstractClientActivity
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putInt(SORT_KEY, adapter.getSortBy());
 		editor.commit();
+	}
+
+	/**
+	 * Internal task for taking action on list of alarms selected
+	 */
+	private class AlarmActionTask extends AsyncTask<ArrayList<Long>, Void, Void>
+	{
+		private final int action;
+
+		protected AlarmActionTask(int action)
+		{
+			this.action = action;
+		}
+
+		@Override
+		protected void onPreExecute()
+		{
+			dialog.setMessage(getString(R.string.progress_processing_data));
+			dialog.setIndeterminate(true);
+			dialog.setCancelable(false);
+			dialog.show();
+		}
+
+		@Override
+		protected Void doInBackground(ArrayList<Long>... params)
+		{
+			switch (action)
+			{
+				case R.id.acknowledge:
+					adapter.acknowledgeItem(params[0], false);
+					break;
+				case R.id.sticky_acknowledge:
+					adapter.acknowledgeItem(params[0], true);
+					break;
+				case R.id.resolve:
+					adapter.resolveItem(params[0]);
+					break;
+				case R.id.terminate:
+					adapter.terminateItem(params[0]);
+					break;
+			}
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void result)
+		{
+			refreshList();
+			dialog.cancel();
+		}
 	}
 }

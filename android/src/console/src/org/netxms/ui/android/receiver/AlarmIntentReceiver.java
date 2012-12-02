@@ -24,7 +24,7 @@ public class AlarmIntentReceiver extends BroadcastReceiver
 		Bundle bundle = intent.getExtras();
 		Intent i = new Intent(context, ClientConnectorService.class);
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-		String action = ClientConnectorService.ACTION_RECONNECT;
+		String action = ClientConnectorService.ACTION_CONNECT;
 		if (sp.getBoolean("global.scheduler.enable", false))
 			action = bundle.getString("action");
 		i.setAction(action);

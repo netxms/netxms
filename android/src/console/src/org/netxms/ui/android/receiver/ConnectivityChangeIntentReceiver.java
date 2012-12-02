@@ -33,14 +33,14 @@ public class ConnectivityChangeIntentReceiver extends BroadcastReceiver
 					if (ni != null && ni.getState() == NetworkInfo.State.CONNECTED)
 					{
 						Intent i = new Intent(context, ClientConnectorService.class);
-						i.setAction(ClientConnectorService.ACTION_RECONNECT);
+						i.setAction(ClientConnectorService.ACTION_FORCE_CONNECT);
 						context.startService(i);
 					}
 				}
 				if (intent.getExtras().getBoolean(ConnectivityManager.EXTRA_NO_CONNECTIVITY, Boolean.FALSE))
 				{
 					Intent i = new Intent(context, ClientConnectorService.class);
-					i.setAction(ClientConnectorService.ACTION_DISCONNECT);
+					i.setAction(ClientConnectorService.ACTION_FORCE_DISCONNECT);
 					context.startService(i);
 				}
 			}

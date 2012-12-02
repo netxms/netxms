@@ -23,7 +23,7 @@
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/pref_notifications">
 	    <PreferenceScreen android:title="@string/pref_status">
-			<ListPreference android:dialogTitle="@string/pref_global_notification_status" android:key="global.notification.status" android:title="@string/pref_global_notification_status" android:entryValues="@array/notificationStatusValues" android:entries="@array/notificationStatusLabels" android:defaultValue="0" />
+			<ListPreference android:dialogTitle="@string/pref_global_notification_status" android:key="global.notification.status" android:title="@string/pref_global_notification_status" android:entryValues="@array/notification_status_values" android:entries="@array/notification_status_labels" android:defaultValue="0" />
 	        <CheckBoxPreference android:summaryOff="@string/pref_global_notification_toast_disabled" android:summaryOn="@string/pref_global_notification_toast_enabled" android:key="global.notification.toast" android:enabled="true" android:defaultValue="true" android:title="@string/pref_global_notification_toast"/>
 	    	<CheckBoxPreference android:summaryOff="@string/pref_global_notification_icon_disabled" android:summaryOn="@string/pref_global_notification_icon_enabled" android:key="global.notification.icon" android:enabled="true" android:defaultValue="false" android:title="@string/pref_global_notification_icon"/>
 		</PreferenceScreen>
@@ -37,5 +37,8 @@
 				<RingtonePreference android:key="alarm.sound.critical" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_critical" android:icon="@drawable/status_critical" />
 			</PreferenceCategory>
 		</PreferenceScreen>
+	</PreferenceCategory>
+	<PreferenceCategory android:title="@string/pref_interface">
+		<ListPreference android:dialogTitle="@string/pref_multiplier_title" android:key="global.multipliers" android:title="@string/pref_multipliers" android:entryValues="@array/multiplier_values" android:entries="@array/multiplier_labels" android:defaultValue="1" />
 	</PreferenceCategory>
 </PreferenceScreen>

@@ -218,25 +218,25 @@ public class AlarmListAdapter extends BaseAdapter
 	/**
 	 * @param id
 	 */
-	public void acknowledgeItem(long id, boolean sticky)
+	public void acknowledgeItem(ArrayList<Long> ids, boolean sticky)
 	{
-		service.acknowledgeAlarm(id, sticky);
+		service.acknowledgeAlarm(ids, sticky);
 	}
 
 	/**
 	 * @param id
 	 */
-	public void resolveItem(long id)
+	public void resolveItem(ArrayList<Long> ids)
 	{
-		service.resolveAlarm(id);
+		service.resolveAlarm(ids);
 	}
 
 	/**
 	 * @param id
 	 */
-	public void terminateItem(long id)
+	public void terminateItem(ArrayList<Long> ids)
 	{
-		service.teminateAlarm(id);
+		service.teminateAlarm(ids);
 	}
 
 	/*
@@ -319,14 +319,15 @@ public class AlarmListAdapter extends BaseAdapter
 
 	private int getAlarmIconSeverity(Alarm alarm)
 	{
-		final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor,
-				R.drawable.status_major, R.drawable.status_critical };
+		final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning,
+				R.drawable.status_minor, R.drawable.status_major, R.drawable.status_critical };
 		return severityImageId[alarm.getCurrentSeverity()];
 
 	}
 	private int getAlarmIconState(Alarm alarm)
 	{
-		final int[] stateImageId = { R.drawable.alarm_outstanding, R.drawable.alarm_acknowledged, R.drawable.alarm_resolved, R.drawable.alarm_terminated };
+		final int[] stateImageId = { R.drawable.alarm_outstanding, R.drawable.alarm_acknowledged,
+				R.drawable.alarm_resolved, R.drawable.alarm_terminated };
 		return alarm.isSticky() ? R.drawable.alarm_sticky_acknowledged : stateImageId[alarm.getState()];
 	}
 }

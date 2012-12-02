@@ -5,12 +5,14 @@ package org.netxms.ui.android.main.activities;
 
 import java.util.ArrayList;
 import java.util.Date;
+
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.views.ExtendedLineGraphView;
+
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.os.AsyncTask;
@@ -19,9 +21,10 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.GraphView.GraphViewSeries;
 import com.jjoe64.graphview.GraphView.GraphViewData;
+import com.jjoe64.graphview.GraphView.GraphViewSeries;
 import com.jjoe64.graphview.GraphView.GraphViewStyle;
 import com.jjoe64.graphview.GraphView.LegendAlign;
 
@@ -33,6 +36,7 @@ import com.jjoe64.graphview.GraphView.LegendAlign;
  */
 public class DrawGraph extends AbstractClientActivity
 {
+	private static final String TAG = "nxclient/DrawGraph";
 	private GraphView graphView = null;
 	private GraphItem[] items = null;
 	private GraphItemStyle[] itemStyles = null;
@@ -40,7 +44,7 @@ public class DrawGraph extends AbstractClientActivity
 	private long timeFrom = 0;
 	private long timeTo = 0;
 	private String graphTitle = "";
-	ProgressDialog dialog; 
+	ProgressDialog dialog;
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
@@ -48,7 +52,7 @@ public class DrawGraph extends AbstractClientActivity
 	@Override
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
-		dialog = new ProgressDialog(this); 
+		dialog = new ProgressDialog(this);
 		setContentView(R.layout.graphics);
 		boolean showLegend = getIntent().getBooleanExtra("showLegend", true);
 		numGraphs = getIntent().getIntExtra("numGraphs", 0);
@@ -76,9 +80,9 @@ public class DrawGraph extends AbstractClientActivity
 			graphTitle = getIntent().getStringExtra("graphTitle");
 		}
 		graphView = new ExtendedLineGraphView(this, "");
-		graphView.setShowLegend(showLegend);   
-		graphView.setLegendAlign(LegendAlign.TOP);   
-		graphView.setLegendWidth(240);  
+		graphView.setShowLegend(showLegend);
+		graphView.setLegendAlign(LegendAlign.TOP);
+		graphView.setLegendWidth(240);
 		graphView.setScalable(true);
 		graphView.setScrollable(true);
 		graphView.setZeroBased(true);
@@ -140,8 +144,8 @@ public class DrawGraph extends AbstractClientActivity
 		@Override
 		protected void onPreExecute()
 		{
-			dialog.setMessage(getString(R.string.progress_gathering_data)); 
-			dialog.setIndeterminate(true); 
+			dialog.setMessage(getString(R.string.progress_gathering_data));
+			dialog.setIndeterminate(true);
 			dialog.setCancelable(false);
 			dialog.show();
 		}
@@ -161,9 +165,9 @@ public class DrawGraph extends AbstractClientActivity
 					}
 				}
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
-				Log.d("nxclient/DrawGraph", "Exception while executing LoadDataTask.doInBackground", e);
+				Log.d(TAG, "Exception while executing LoadDataTask.doInBackground", e);
 				dciData = null;
 			}
 			return dciData;
@@ -182,25 +186,26 @@ public class DrawGraph extends AbstractClientActivity
 					if (dciDataRow.length > 0)
 					{
 						GraphViewData[] gwData = new GraphViewData[dciDataRow.length];
-						for (int j = dciDataRow.length-1, k = 0; j >= 0; j--, k++)	// dciData are reversed!
+						for (int j = dciDataRow.length - 1, k = 0; j >= 0; j--, k++)
+							// dciData are reversed!
 							gwData[k] = new GraphViewData(dciDataRow[j].getTimestamp().getTime(), dciDataRow[j].getValueAsDouble());
 						GraphViewSeries gwSeries = new GraphViewSeries(items[i].getDescription(), new GraphViewStyle(itemStyles[i].getColor(), itemStyles[i].getLineWidth()), gwData);
 						graphView.addSeries(gwSeries);
 						addedSeries++;
-						start = dciDataRow[dciDataRow.length-1].getTimestamp().getTime();
+						start = dciDataRow[dciDataRow.length - 1].getTimestamp().getTime();
 						end = dciDataRow[0].getTimestamp().getTime();
 					}
 				}
-				if (addedSeries == 0)	// Add an empty series when getting no data
+				if (addedSeries == 0) // Add an empty series when getting no data
 				{
-					GraphViewData[] gwData = new GraphViewData[] { new GraphViewData(0, 0) };  
+					GraphViewData[] gwData = new GraphViewData[] { new GraphViewData(0, 0) };
 					GraphViewSeries gwSeries = new GraphViewSeries("", new GraphViewStyle(0xFFFFFF, 4), gwData);
 					graphView.addSeries(gwSeries);
 				}
-				LinearLayout layout = (LinearLayout)findViewById(R.id.graphics);   
+				LinearLayout layout = (LinearLayout)findViewById(R.id.graphics);
 				if (layout != null)
 				{
-					graphView.setViewPort(start, end-start+1);	// Start showing full graph
+					graphView.setViewPort(start, end - start + 1); // Start showing full graph
 					layout.addView(graphView);
 				}
 			}

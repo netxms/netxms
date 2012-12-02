@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.service;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -66,8 +67,10 @@ public class ClientConnectorService extends Service implements SessionListener
 		CS_NOCONNECTION, CS_INPROGRESS, CS_ALREADYCONNECTED, CS_CONNECTED, CS_DISCONNECTED, CS_ERROR
 	};
 
-	public static final String ACTION_RECONNECT = "org.netxms.ui.android.ACTION_RECONNECT";
+	public static final String ACTION_CONNECT = "org.netxms.ui.android.ACTION_CONNECT";
+	public static final String ACTION_FORCE_CONNECT = "org.netxms.ui.android.ACTION_FORCE_CONNECT";
 	public static final String ACTION_DISCONNECT = "org.netxms.ui.android.ACTION_DISCONNECT";
+	public static final String ACTION_FORCE_DISCONNECT = "org.netxms.ui.android.ACTION_FORCE_DISCONNECT";
 	public static final String ACTION_RESCHEDULE = "org.netxms.ui.android.ACTION_RESCHEDULE";
 	private static final String TAG = "nxclient/ClientConnectorService";
 	private static final String LASTALARM_KEY = "LastALarmIdNotified";
@@ -144,21 +147,6 @@ public class ClientConnectorService extends Service implements SessionListener
 		};
 		registerReceiver(receiver, new IntentFilter(Intent.ACTION_TIME_TICK));
 
-//		long nextActivation = sp.getLong("global.scheduler.next_activation", 0);
-//		if (sp.getBoolean("global.scheduler.enable", false) && nextActivation != 0)
-//		{
-//			Calendar cal = Calendar.getInstance();
-//			if (cal.getTimeInMillis() < nextActivation) // Reuse a previous schedule, if not already expired
-//			{
-//				Log.i(TAG, "onCreate, force reschedule.");
-//				setSchedule(nextActivation, ACTION_RECONNECT);
-//				setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
-//				statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
-//				return;
-//			}
-//		}
-//		reconnect(true); // Force connection on service recreation
-
 		if (NXApplication.isActivityVisible())
 			reconnect(false);
 	}
@@ -172,10 +160,14 @@ public class ClientConnectorService extends Service implements SessionListener
 	public int onStartCommand(Intent intent, int flags, int startId)
 	{
 		if ((intent != null) && (intent.getAction() != null))
-			if (intent.getAction().equals(ACTION_RECONNECT))
+			if (intent.getAction().equals(ACTION_CONNECT))
 				reconnect(false);
+			else if (intent.getAction().equals(ACTION_FORCE_CONNECT))
+				reconnect(true);
 			else if (intent.getAction().equals(ACTION_DISCONNECT))
 				disconnect(false);
+			else if (intent.getAction().equals(ACTION_FORCE_DISCONNECT))
+				disconnect(true);
 			else if (intent.getAction().equals(ACTION_RESCHEDULE))
 				if (NXApplication.isActivityVisible())
 					reconnect(false);
@@ -422,7 +414,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void onDisconnect()
 	{
-		schedule(ACTION_RECONNECT);
+		schedule(ACTION_CONNECT);
 		nullifySession();
 		setConnectionStatus(ConnectionStatus.CS_DISCONNECTED, "");
 		statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
@@ -885,13 +877,14 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * @param id
+	 * @param ids
 	 */
-	public void acknowledgeAlarm(long id, boolean sticky)
+	public void acknowledgeAlarm(ArrayList<Long> ids, boolean sticky)
 	{
 		try
 		{
-			session.acknowledgeAlarm(id, sticky);
+			for (int i = 0; i < ids.size(); i++)
+				session.acknowledgeAlarm(ids.get(i).longValue(), sticky);
 		}
 		catch (Exception e)
 		{
@@ -899,13 +892,14 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * @param id
+	 * @param ids
 	 */
-	public void resolveAlarm(long id)
+	public void resolveAlarm(ArrayList<Long> ids)
 	{
 		try
 		{
-			session.resolveAlarm(id);
+			for (int i = 0; i < ids.size(); i++)
+				session.resolveAlarm(ids.get(i).longValue());
 		}
 		catch (Exception e)
 		{
@@ -913,13 +907,14 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * @param id
+	 * @param ids
 	 */
-	public void teminateAlarm(long id)
+	public void teminateAlarm(ArrayList<Long> ids)
 	{
 		try
 		{
-			session.terminateAlarm(id);
+			for (int i = 0; i < ids.size(); i++)
+				session.terminateAlarm(ids.get(i).longValue());
 		}
 		catch (Exception e)
 		{
@@ -1107,7 +1102,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			if (cal.getTimeInMillis() < next)
 			{
 				cal.setTimeInMillis(next);
-				return " " + getString(R.string.next_connection_schedule, cal.getTime().toLocaleString());
+				return " " + getString(R.string.notify_next_connection_schedule, cal.getTime().toLocaleString());
 			}
 		}
 		return "";

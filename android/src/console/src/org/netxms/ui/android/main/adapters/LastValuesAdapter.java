@@ -13,10 +13,14 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.android.R;
+import org.netxms.ui.android.helpers.Multipliers;
+import org.netxms.ui.android.helpers.SafeParser;
 import org.netxms.ui.android.main.views.CheckableLinearLayout;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.preference.PreferenceManager;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,6 +38,7 @@ import android.widget.TextView;
 
 public class LastValuesAdapter extends BaseAdapter
 {
+	private final SharedPreferences sp;
 	private final Context context;
 	private List<DciValue> currentValues = new ArrayList<DciValue>(0);
 
@@ -48,6 +53,7 @@ public class LastValuesAdapter extends BaseAdapter
 	public LastValuesAdapter(Context context)
 	{
 		this.context = context;
+		sp = PreferenceManager.getDefaultSharedPreferences(context);
 	}
 
 	/**
@@ -201,17 +207,74 @@ public class LastValuesAdapter extends BaseAdapter
 			state.setImageResource(LastValuesAdapter.stateImageId[item.getStatus()]);
 			date.setText(item.getTimestamp().toLocaleString());
 			name.setText(item.getDescription());
-			value.setText((item.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE) ? r.getString(R.string.table_value_placeholder) : item.getValue());
+			value.setText((item.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE) ? r.getString(R.string.table_value_placeholder) : getFormattedValue(item));
 		}
 
 		return view;
 	}
 
 	/**
+	 * Get formatted value (using multiplier as necessary)
+	 * 
+	 * @param dciValue	Value to be formatted
+	 * @return String value formatted
+	 */
+	private String getFormattedValue(DciValue dciValue)
+	{
+		boolean floating = false;
+		double value = 0;
+		switch (dciValue.getDataType())
+		{
+			case DataCollectionObject.DT_INT:
+			case DataCollectionObject.DT_UINT:
+				value = SafeParser.parseInt(dciValue.getValue(), 0);
+				break;
+			case DataCollectionObject.DT_INT64:
+			case DataCollectionObject.DT_UINT64:
+				value = SafeParser.parseLong(dciValue.getValue(), 0);
+				break;
+			case DataCollectionObject.DT_FLOAT:
+				value = SafeParser.parseDouble(dciValue.getValue(), 0);
+				floating = true;
+				break;
+			case DataCollectionObject.DT_STRING:
+			case DataCollectionObject.DT_NULL:
+			default:
+				return dciValue.getValue();
+		}
+		int m = Integer.parseInt(sp.getString("global.multipliers", "1"));
+		double absValue = Math.abs(value);
+		if (floating)
+		{
+			if (absValue <= 0.01)
+				return String.format("%.5f", value);
+			if (absValue <= 0.1)
+				return String.format("%.4f", value);
+			if (absValue <= 1)
+				return String.format("%.3f", value);
+			if (absValue <= 10)
+				return String.format("%.2f", value);
+			if (absValue <= 100)
+				return String.format("%.1f", value);
+		}
+		if (absValue <= Multipliers.getValue(m, Multipliers.K))
+			return String.format("%.0f", value);
+		if (absValue <= Multipliers.getValue(m, Multipliers.M))
+			return String.format("%.1f %s", value / Multipliers.getValue(m, Multipliers.K), Multipliers.getLabel(m, Multipliers.K));
+		if (absValue < Multipliers.getValue(m, Multipliers.G))
+			return String.format("%.1f %s", value / Multipliers.getValue(m, Multipliers.M), Multipliers.getLabel(m, Multipliers.M));
+		if (absValue < Multipliers.getValue(m, Multipliers.T))
+			return String.format("%.1f %s", value / Multipliers.getValue(m, Multipliers.G), Multipliers.getLabel(m, Multipliers.G));
+		if (absValue < Multipliers.getValue(m, Multipliers.P))
+			return String.format("%.1f %s", value / Multipliers.getValue(m, Multipliers.T), Multipliers.getLabel(m, Multipliers.T));
+		return String.format("%.0f", value);
+	}
+
+	/**
 	 * Get threshold icon
 	 * 
 	 * @param t
-	 * @return
+	 * @return Threshold icon id
 	 */
 	private int getThresholdIcon(Threshold t)
 	{
@@ -223,7 +286,7 @@ public class LastValuesAdapter extends BaseAdapter
 	 * Get threshold text
 	 * 
 	 * @param t
-	 * @return
+	 * @return Threshold text
 	 */
 	private String getThresholdText(Threshold t)
 	{

@@ -697,28 +697,31 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	private void acknowledgeAlarms(int position, boolean sticky)
 	{
 		ArrayList<Long> alarmIdList = getAlarmIdList(position);
-		for (int i = 0; i < alarmIdList.size(); i++)
-			alarmsAdapter.acknowledgeItem(alarmIdList.get(i), sticky);
 		if (alarmIdList.size() != 0)
+		{
+			alarmsAdapter.acknowledgeItem(alarmIdList, sticky);
 			refreshAlarms();
+		}
 	}
 
 	private void resolveAlarms(int position)
 	{
 		ArrayList<Long> alarmIdList = getAlarmIdList(position);
-		for (int i = 0; i < alarmIdList.size(); i++)
-			alarmsAdapter.resolveItem(alarmIdList.get(i));
 		if (alarmIdList.size() != 0)
+		{
+			alarmsAdapter.resolveItem(alarmIdList);
 			refreshAlarms();
+		}
 	}
 
 	private void terminateAlarms(int position)
 	{
 		ArrayList<Long> alarmIdList = getAlarmIdList(position);
-		for (int i = 0; i < alarmIdList.size(); i++)
-			alarmsAdapter.terminateItem(alarmIdList.get(i));
 		if (alarmIdList.size() != 0)
+		{
+			alarmsAdapter.terminateItem(alarmIdList);
 			refreshAlarms();
+		}
 	}
 
 	/**

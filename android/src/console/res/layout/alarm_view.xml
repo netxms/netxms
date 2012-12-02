@@ -11,7 +11,7 @@
     	<Spinner android:id="@+id/sortBy"
     		android:layout_width="fill_parent"
     		android:layout_height="wrap_content"
-    		android:entries="@array/alarmsSortBy" />
+    		android:entries="@array/alarms_sort_by" />
 	</LinearLayout>
 	<ListView 
 			android:id="@+id/AlarmList" 
