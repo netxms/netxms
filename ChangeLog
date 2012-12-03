@@ -1,3 +1,4 @@
+*
 * 1.2.5
 *
 
@@ -6,12 +7,14 @@
 	- "Area" option implemented on line charts
 	- Multiple DCIs can be combined on one graph on "Performance" tab
 	- New dashboard element: separator
+	- DCIs can be created from MIB Explorer
 - Android client:
 	- Select all/unselect all in alarms list
 - API for creating embedded application agents
-- Fixed issues: #23, #162, #163, #186
+- Fixed issues: #23, #47, #162, #163, #177, #186
 
 
+*
 * 1.2.4
 *
 

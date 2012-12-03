@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,10 +27,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpObjectId;
-import org.netxms.client.snmp.SnmpObjectIdFormatException;
-import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.SnmpConstants;
+import org.netxms.ui.eclipse.snmp.shared.MibCache;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -119,19 +118,12 @@ public class MibObjectDetails extends Composite
 	 */
 	private void onManualOidChange()
 	{
-		try
+		MibObject o = MibCache.findObject(oid.getText(), false);
+		if ((o != null) && (mibTree != null))
 		{
-			SnmpObjectId id = SnmpObjectId.parseSnmpObjectId(oid.getText());
-			MibObject o = Activator.getMibTree().findObject(id, false);
-			if ((o != null) && (mibTree != null))
-			{
-				updateObjectId = false;
-				mibTree.setSelection(o);
-				updateObjectId = true;
-			}
-		}
-		catch(SnmpObjectIdFormatException e)
-		{
+			updateObjectId = false;
+			mibTree.setSelection(o);
+			updateObjectId = true;
 		}
 	}
 	

@@ -107,7 +107,7 @@
    <extension
          point="org.netxms.ui.eclipse.loginlisteners">
       <loginlistener
-            class="org.netxms.ui.eclipse.snmp.LoginListener">
+            class="org.netxms.ui.eclipse.snmp.shared.MibCache">
       </loginlistener>
    </extension>
 

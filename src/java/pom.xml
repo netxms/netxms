@@ -10,7 +10,7 @@
   <url>http://www.netxms.org</url>
 
   <properties>
-    <projectversion>1.2.4</projectversion>
+    <projectversion>1.2.5</projectversion>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   

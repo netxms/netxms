@@ -342,7 +342,7 @@ AC_ARG_ENABLE(werror,
 ])
 
 AC_ARG_ENABLE(64bit,
-[AS_HELP_STRING(--disable-64bit,disable 64bit build (force 32bit build event on 64bit machine))],
+[AS_HELP_STRING(--disable-64bit,disable 64bit build (force 32bit build on 64bit machine))],
 [
 	FORCE_32BIT_BUILD="yes"
 ])

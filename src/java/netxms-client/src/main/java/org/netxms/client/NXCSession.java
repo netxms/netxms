@@ -5753,7 +5753,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				final String name = response.getVariableAsString(varId++);
 				final int type = response.getVariableAsInteger(varId++);
 				final String value = response.getVariableAsString(varId++);
-				data.add(new SnmpValue(name, type, value));
+				data.add(new SnmpValue(name, type, value, nodeId));
 			}
 			listener.onSnmpWalkData(data);
 			if (response.isEndOfSequence())

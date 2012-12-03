@@ -36,9 +36,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpObjectId;
-import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
+import org.netxms.ui.eclipse.snmp.shared.MibCache;
 import org.netxms.ui.eclipse.snmp.widgets.MibBrowser;
 import org.netxms.ui.eclipse.snmp.widgets.MibObjectDetails;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -150,7 +150,7 @@ public class MibSelectionDialog extends Dialog
 		
 		if (initialSelection != null)
 		{
-			MibObject object = Activator.getMibTree().findObject(initialSelection, false);
+			MibObject object = MibCache.getMibTree().findObject(initialSelection, false);
 			if (object != null)
 			{
 				mibTree.setSelection(object);
@@ -225,19 +225,12 @@ public class MibSelectionDialog extends Dialog
 	 */
 	private void onManualOidChange()
 	{
-		try
+		MibObject o = MibCache.findObject(oid.getText(), false);
+		if (o != null)
 		{
-			SnmpObjectId id = SnmpObjectId.parseSnmpObjectId(oid.getText());
-			MibObject o = Activator.getMibTree().findObject(id, false);
-			if (o != null)
-			{
-				updateObjectId = false;
-				mibTree.setSelection(o);
-				updateObjectId = true;
-			}
-		}
-		catch(SnmpObjectIdFormatException e)
-		{
+			updateObjectId = false;
+			mibTree.setSelection(o);
+			updateObjectId = true;
 		}
 	}
 }

@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.snmp.views;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
@@ -62,8 +61,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.MibObject;
-import org.netxms.client.snmp.SnmpObjectId;
-import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -73,6 +70,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
+import org.netxms.ui.eclipse.snmp.shared.MibCache;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpValueLabelProvider;
 import org.netxms.ui.eclipse.snmp.widgets.MibBrowser;
 import org.netxms.ui.eclipse.snmp.widgets.MibObjectDetails;
@@ -80,7 +78,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * SNMP MIB explorer
- *
  */
 public class MibExplorer extends ViewPart implements SnmpWalkListener
 {
@@ -339,18 +336,10 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		final TableItem[] selection = viewer.getTable().getSelection();
 		if (selection.length == 1)
 		{
-			String oid = selection[0].getText(COLUMN_NAME);
-			try
+			MibObject o = MibCache.findObject(selection[0].getText(COLUMN_NAME), false);
+			if (o != null)
 			{
-				SnmpObjectId id = SnmpObjectId.parseSnmpObjectId(oid);
-				MibObject o = Activator.getMibTree().findObject(id, false);
-				if (o != null)
-				{
-					mibBrowser.setSelection(o);
-				}
-			}
-			catch(SnmpObjectIdFormatException e)
-			{
+				mibBrowser.setSelection(o);
 			}
 		}
 	}

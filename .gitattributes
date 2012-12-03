@@ -1769,7 +1769,6 @@ src/java/netxms-eclipse/SNMP/icons/snmp_trap_monitor.png -text
 src/java/netxms-eclipse/SNMP/icons/trapeditor.png -text
 src/java/netxms-eclipse/SNMP/plugin.xml -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/Activator.java -text
-src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/LoginListener.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/Messages.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/SnmpConstants.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenMibExplorer.java -text

@@ -27,18 +27,20 @@ public class SnmpValue
 	private SnmpObjectId objectId;
 	private int type;
 	private String value;
+	private long nodeId;
 	
 	/**
 	 * @param name
 	 * @param type
 	 * @param value
 	 */
-	public SnmpValue(String name, int type, String value)
+	public SnmpValue(String name, int type, String value, long nodeId)
 	{
 		this.name = name;
 		this.objectId = null;
 		this.type = type;
 		this.value = value;
+		this.nodeId = nodeId;
 	}
 	
 	/**
@@ -46,12 +48,13 @@ public class SnmpValue
 	 * @param type
 	 * @param value
 	 */
-	public SnmpValue(SnmpObjectId objectId, int type, String value)
+	public SnmpValue(SnmpObjectId objectId, int type, String value, long nodeId)
 	{
 		this.name = objectId.toString();
 		this.objectId = objectId;
 		this.type = type;
 		this.value = value;
+		this.nodeId = nodeId;
 	}
 
 	/**
@@ -82,7 +85,7 @@ public class SnmpValue
 	}
 
 	/**
-	 * Get object type. Note that this is an ASN type, not type of MibObject
+	 * Get object type. Note that this is an ASN.1 identifier type (defined in {@link org.netxms.client.constants.ASN}}), not type of MibObject
 	 * 
 	 * @return the type
 	 */
@@ -97,5 +100,13 @@ public class SnmpValue
 	public String getValue()
 	{
 		return value;
+	}
+
+	/**
+	 * @return the nodeId
+	 */
+	public final long getNodeId()
+	{
+		return nodeId;
 	}
 }

@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.snmp;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.netxms.client.snmp.MibTree;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -33,8 +32,6 @@ public class Activator extends AbstractUIPlugin
 
 	// The shared instance
 	private static Activator plugin;
-	
-	private static MibTree mibTree = new MibTree();
 
 	/**
 	 * The constructor
@@ -90,21 +87,5 @@ public class Activator extends AbstractUIPlugin
 	public static ImageDescriptor getImageDescriptor(String path)
 	{
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
-	}
-
-	/**
-	 * @return the mibTree
-	 */
-	public static MibTree getMibTree()
-	{
-		return mibTree;
-	}
-
-	/**
-	 * @param mibTree the mibTree to set
-	 */
-	public static void setMibTree(MibTree mibTree)
-	{
-		Activator.mibTree = mibTree;
 	}
 }
