@@ -163,6 +163,18 @@
                menubarPath="secondary">
          </action>
       </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.SnmpValue"
+            objectClass="org.netxms.client.snmp.SnmpValue">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.CreateSnmpDci"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.CreateSnmpDci#SnmpValue"
+               label="Create data collection item..."
+               menubarPath="additions">
+         </action>
+      </objectContribution>
    </extension>
 
   <extension

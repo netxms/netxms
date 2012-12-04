@@ -3309,7 +3309,6 @@ webui/webapp/SNMP/icons/snmp_trap_monitor.png -text
 webui/webapp/SNMP/icons/trapeditor.png -text
 webui/webapp/SNMP/plugin.xml -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/Activator.java -text
-webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/LoginListener.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/Messages.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/SnmpConstants.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenMibExplorer.java -text

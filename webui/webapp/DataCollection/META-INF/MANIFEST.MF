@@ -7,12 +7,12 @@ Bundle-Activator: org.netxms.ui.eclipse.datacollection.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.4",
  org.netxms.ui.eclipse.eventmanager;bundle-version="1.2.0",
- org.netxms.ui.eclipse.objectview;bundle-version="1.2.3",
- org.netxms.ui.eclipse.snmp;bundle-version="1.2.0",
- org.netxms.ui.eclipse.nxsl;bundle-version="1.2.0",
+ org.netxms.ui.eclipse.objectview;bundle-version="1.2.4",
+ org.netxms.ui.eclipse.snmp;bundle-version="1.2.5",
+ org.netxms.ui.eclipse.nxsl;bundle-version="1.2.4",
  org.eclipse.core.expressions;bundle-version="3.4.400",
- org.netxms.webui.core;bundle-version="1.2.4",
- org.eclipse.rap.ui;bundle-version="1.5.0",
+ org.netxms.webui.core;bundle-version="1.2.5",
+ org.eclipse.rap.ui;bundle-version="2.0.0",
  org.netxms.ui.eclipse.charts;bundle-version="1.2.5"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

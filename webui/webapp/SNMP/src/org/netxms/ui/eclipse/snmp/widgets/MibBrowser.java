@@ -27,7 +27,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 import org.netxms.client.snmp.MibObject;
-import org.netxms.ui.eclipse.snmp.Activator;
+import org.netxms.ui.eclipse.snmp.shared.MibCache;
 import org.netxms.ui.eclipse.snmp.widgets.helpers.MibObjectComparator;
 import org.netxms.ui.eclipse.snmp.widgets.helpers.MibTreeContentProvider;
 import org.netxms.ui.eclipse.snmp.widgets.helpers.MibTreeLabelProvider;
@@ -58,7 +58,7 @@ public class MibBrowser extends Composite
 		mibTree.setContentProvider(new MibTreeContentProvider());
 		mibTree.setLabelProvider(new MibTreeLabelProvider());
 		mibTree.setComparator(new MibObjectComparator());
-		mibTree.setInput(Activator.getMibTree());
+		mibTree.setInput(MibCache.getMibTree());
 	}
 	
 	/**
@@ -96,7 +96,7 @@ public class MibBrowser extends Composite
 	 */
 	public void refreshTree()
 	{
-		mibTree.setInput(Activator.getMibTree());
+		mibTree.setInput(MibCache.getMibTree());
 	}
 	
 	/**
