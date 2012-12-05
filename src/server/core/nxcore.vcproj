@@ -613,6 +613,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\mobile.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\modules.cpp"
 				>
 			</File>

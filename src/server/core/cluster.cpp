@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Cluster class default constructor
-//
-
+/**
+ * Cluster class default constructor
+ */
 Cluster::Cluster()
         :Template()
 {
@@ -40,11 +38,9 @@ Cluster::Cluster()
 	m_zoneId = 0;
 }
 
-
-//
-// Cluster class new object constructor
-//
-
+/**
+ * Cluster class new object constructor
+ */
 Cluster::Cluster(const TCHAR *pszName, DWORD zoneId)
         :Template(pszName)
 {
@@ -58,22 +54,18 @@ Cluster::Cluster(const TCHAR *pszName, DWORD zoneId)
 	m_zoneId = zoneId;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 Cluster::~Cluster()
 {
 	safe_free(m_pSyncNetList);
 	safe_free(m_pResourceList);
 }
 
-
-//
-// Create object from database data
-//
-
+/**
+ * Create object from database data
+ */
 BOOL Cluster::CreateFromDB(DWORD dwId)
 {
 	TCHAR szQuery[256];
@@ -203,11 +195,9 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
    return bResult;
 }
 
-
-//
-// Save object to database
-//
-
+/**
+ * Save object to database
+ */
 BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 {
 	TCHAR szQuery[4096], szIpAddr[16], szNetMask[16];
@@ -342,11 +332,9 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
    return bResult;
 }
 
-
-//
-// Delete object from database
-//
-
+/**
+ * Delete object from database
+ */
 BOOL Cluster::DeleteFromDB()
 {
    TCHAR szQuery[256];

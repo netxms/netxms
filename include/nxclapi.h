@@ -110,40 +110,32 @@ typedef void * NXC_SESSION;
 #define AUTH_MD5_HASH         2
 #define AUTH_SHA1_HASH        3
 
-
-//
-// Client-server authentication types
-//
-
+/**
+ * Client-server authentication types
+ */
 #define NETXMS_AUTH_TYPE_PASSWORD       0
 #define NETXMS_AUTH_TYPE_CERTIFICATE    1
 
-
-//
-// Client type
-//
-
+/**
+ * Client type
+ */
 #define CLIENT_TYPE_DESKTOP      0
 #define CLIENT_TYPE_WEB          1
 #define CLIENT_TYPE_MOBILE       2
 #define CLIENT_TYPE_TABLET       3
 #define CLIENT_TYPE_APPLICATION  4
 
-
-//
-// Forced poll types
-//
-
+/**
+ * Forced poll types
+ */
 #define POLL_STATUS           1
 #define POLL_CONFIGURATION    2
 #define POLL_INTERFACE_NAMES  3
 #define POLL_TOPOLOGY         4
 
-
-//
-// Object types
-//
-
+/**
+ * Object types
+ */
 #define OBJECT_GENERIC              0
 #define OBJECT_SUBNET               1
 #define OBJECT_NODE                 2
@@ -175,12 +167,11 @@ typedef void * NXC_SESSION;
 #define OBJECT_BUSINESSSERVICE      28
 #define OBJECT_NODELINK             29
 #define OBJECT_SLMCHECK             30
+#define OBJECT_MOBILEDEVICE         31
 
-
-//
-// Object's status
-//
-
+/**
+ * Object's status
+ */
 #define STATUS_NORMAL         0
 #define STATUS_WARNING        1
 #define STATUS_MINOR          2
@@ -191,11 +182,9 @@ typedef void * NXC_SESSION;
 #define STATUS_DISABLED       7
 #define STATUS_TESTING        8
 
-
-//
-// Event and alarm severity
-//
-
+/**
+ * Event and alarm severity
+ */
 #define SEVERITY_NORMAL       0
 #define SEVERITY_WARNING      1
 #define SEVERITY_MINOR        2
@@ -205,11 +194,9 @@ typedef void * NXC_SESSION;
 #define SEVERITY_TERMINATE    6
 #define SEVERITY_RESOLVE      7
 
-
-//
-// Alarm states
-//
-
+/**
+ * Alarm states
+ */
 #define ALARM_STATE_OUTSTANDING  0x00
 #define ALARM_STATE_ACKNOWLEDGED 0x01
 #define ALARM_STATE_RESOLVED     0x02
@@ -217,20 +204,16 @@ typedef void * NXC_SESSION;
 #define ALARM_STATE_MASK         0x0F		/* mask for selecting alarm state */
 #define ALARM_STATE_STICKY       0x10		/* bit flag indicating sticky state */
 
-
-//
-// Alarm state in help desk system
-//
-
+/**
+ * Alarm state in help desk system
+ */
 #define ALARM_HELPDESK_IGNORED   0
 #define ALARM_HELPDESK_OPEN      1
 #define ALARM_HELPDESK_CLOSED    2
 
-
-//
-// Node flags
-//
-
+/**
+ * Node flags
+ */
 #define NF_SYSTEM_FLAGS           0x0000FFFF
 #define NF_USER_FLAGS             0xFFFF0000
 

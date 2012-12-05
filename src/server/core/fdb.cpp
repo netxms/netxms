@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 ForwardingDatabase::ForwardingDatabase()
 {
 	m_fdb = NULL;
@@ -219,11 +217,9 @@ static DWORD FDBHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pT
 	return rcc;
 }
 
-
-//
-// dot1qTpFdbEntry walker's callback
-//
-
+/**
+ * dot1qTpFdbEntry walker's callback
+ */
 static DWORD Dot1qTpFdbHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
 	int port = pVar->GetValueAsInt();
@@ -266,11 +262,9 @@ static DWORD Dot1qTpFdbHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transp
 	return rcc;
 }
 
-
-//
-// dot1dBasePortTable walker's callback
-//
-
+/**
+ * dot1dBasePortTable walker's callback
+ */
 static DWORD Dot1dPortTableHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
    SNMP_ObjectId *pOid = pVar->GetName();
@@ -281,11 +275,9 @@ static DWORD Dot1dPortTableHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Tr
 	return SNMP_ERR_SUCCESS;
 }
 
-
-//
-// Get switch forwarding database from node
-//
-
+/**
+ * Get switch forwarding database from node
+ */
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 {
 	if (!node->isBridge())

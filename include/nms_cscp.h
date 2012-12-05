@@ -473,6 +473,8 @@ typedef struct
 #define CMD_GET_THRESHOLD_SUMMARY      0x0106
 #define CMD_RESOLVE_ALARM              0x0107
 #define CMD_FIND_IP_LOCATION           0x0108
+#define CMD_REPORT_DEVICE_STATUS       0x0109
+#define CMD_REPORT_DEVICE_INFO         0x010A
 
 
 //
@@ -905,6 +907,12 @@ typedef struct
 #define VID_BACKGROUND_COLOR        ((DWORD)424)
 #define VID_FORCE_RELOAD            ((DWORD)425)
 #define VID_DISCOVERY_RADIUS        ((DWORD)426)
+#define VID_BATTERY_LEVEL           ((DWORD)427)
+#define VID_VENDOR                  ((DWORD)428)
+#define VID_MODEL                   ((DWORD)429)
+#define VID_OS_NAME                 ((DWORD)430)
+#define VID_OS_VERSION              ((DWORD)431)
+#define VID_SERIAL_NUMBER           ((DWORD)432)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

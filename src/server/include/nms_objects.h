@@ -749,16 +749,21 @@ public:
 /**
  * Mobile device class
  */
-class NXCODE_EXPORTABLE MobileDevice : public Template
+class NXCORE_EXPORTABLE MobileDevice : public Template
 {
 protected:
 	time_t m_lastReportTime;
 	TCHAR *m_deviceId;
+	TCHAR *m_vendor;
 	TCHAR *m_model;
+	TCHAR *m_serialNumber;
+	TCHAR *m_osName;
+	TCHAR *m_osVersion;
+	TCHAR *m_userId;
 
 public:
    MobileDevice();
-   MobileDevice(const TCHAR *imei);
+   MobileDevice(const TCHAR *deviceId);
    virtual ~MobileDevice();
 
    virtual int Type() { return OBJECT_MOBILEDEVICE; }
