@@ -18,6 +18,7 @@
     <module>netxms-base</module>
     <module>netxms-client-api</module>
     <module>netxms-client</module>
+    <module>mobile-agent</module>
     <!--<module>netxms-agent</module>-->
   </modules>
 </project>

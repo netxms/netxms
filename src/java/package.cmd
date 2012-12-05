@@ -3,6 +3,7 @@
 del /q /s /f netxms-base\target\*
 del /q /s /f netxms-client-api\target\*
 del /q /s /f netxms-client\target\*
+del /q /s /f mobile-agent\target\*
 
 call mvn -Dmaven.test.skip=true package %*
 call mvn -Dmaven.test.skip=true install %*
