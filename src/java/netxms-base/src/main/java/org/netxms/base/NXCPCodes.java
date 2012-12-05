@@ -288,6 +288,7 @@ public final class NXCPCodes
 	public static final int CMD_GET_THRESHOLD_SUMMARY    = 0x0106;
 	public static final int CMD_RESOLVE_ALARM            = 0x0107;
 	public static final int CMD_FIND_IP_LOCATION         = 0x0108;
+	public static final int CMD_REPORT_DEVICE_STATUS     = 0x0109;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;

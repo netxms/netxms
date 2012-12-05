@@ -19,7 +19,6 @@
 package org.netxms.client;
 
 import java.net.InetAddress;
-
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;

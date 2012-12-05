@@ -729,8 +729,6 @@ src/java/netxms-client/src/main/java/com/jcraft/jzlib/ZStream.java -text
 src/java/netxms-client/src/main/java/com/jcraft/jzlib/ZStreamException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/AccessListElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/AgentParameter.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/GeoLocation.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/GeoLocationFormatException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/IpAddressListElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/MacAddress.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/MacAddressFormatException.java -text
@@ -740,7 +738,6 @@ src/java/netxms-client/src/main/java/org/netxms/client/NXCNotification.java -tex
 src/java/netxms-client/src/main/java/org/netxms/client/NXCObjectCreationData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCObjectModificationData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCReceivedFile.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/NXCServerJob.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCSession.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NodePollListener.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/PhysicalComponent.java -text

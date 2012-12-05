@@ -62,6 +62,7 @@ import org.netxms.api.client.users.UserGroup;
 import org.netxms.api.client.users.UserManager;
 import org.netxms.base.CompatTools;
 import org.netxms.base.EncryptionContext;
+import org.netxms.base.GeoLocation;
 import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPDataInputStream;
@@ -494,7 +495,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 									+ NXCNotification.NOTIFY_BASE, new Alarm(msg)));
 							break;
 						case NXCPCodes.CMD_JOB_CHANGE_NOTIFICATION:
-							sendNotification(new NXCNotification(NXCNotification.JOB_CHANGE, new NXCServerJob(msg)));
+							sendNotification(new NXCNotification(NXCNotification.JOB_CHANGE, new ServerJob(msg)));
 							break;
 						case NXCPCodes.CMD_FILE_DATA:
 							processFileData(msg);
@@ -3862,7 +3863,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @throws NXCException
 	 *            if NetXMS server returns an error or operation was timed out
 	 */
-	public NXCServerJob[] getServerJobList() throws IOException, NXCException
+	public ServerJob[] getServerJobList() throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_JOB_LIST);
 		sendMessage(msg);
@@ -3870,10 +3871,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 
 		int count = response.getVariableAsInteger(NXCPCodes.VID_JOB_COUNT);
-		NXCServerJob[] jobList = new NXCServerJob[count];
+		ServerJob[] jobList = new ServerJob[count];
 		long baseVarId = NXCPCodes.VID_JOB_LIST_BASE;
 		for(int i = 0; i < count; i++, baseVarId += 10)
-			jobList[i] = new NXCServerJob(response, baseVarId);
+			jobList[i] = new ServerJob(response, baseVarId);
 
 		return jobList;
 	}

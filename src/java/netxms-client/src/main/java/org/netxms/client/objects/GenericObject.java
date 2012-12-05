@@ -18,17 +18,19 @@
  */
 package org.netxms.client.objects;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import org.netxms.base.*;
-import org.netxms.client.GeoLocation;
+import org.netxms.base.GeoLocation;
+import org.netxms.base.NXCPCodes;
+import org.netxms.base.NXCPMessage;
+import org.netxms.base.NXCommon;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
 

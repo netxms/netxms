@@ -21,10 +21,9 @@ package org.netxms.client.objects;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
+import org.netxms.base.GeoLocation;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;

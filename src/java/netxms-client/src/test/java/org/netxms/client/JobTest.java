@@ -28,7 +28,7 @@ public class JobTest extends SessionTest
 	{
 		final NXCSession session = connect();
 		
-		final NXCServerJob[] jobList = session.getServerJobList();
+		final ServerJob[] jobList = session.getServerJobList();
 		assertNotNull(jobList);
 		
 		session.disconnect();

@@ -4,6 +4,8 @@
 package org.netxms.client;
 
 import junit.framework.TestCase;
+import org.netxms.base.GeoLocation;
+import org.netxms.base.GeoLocationFormatException;
 
 /**
  * Tests for GeoLocation class
