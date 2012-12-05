@@ -46,8 +46,8 @@ import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
-import org.netxms.client.NXCServerJob;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ServerJob;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -316,7 +316,7 @@ public class ServerJobManager extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final NXCServerJob[] jobList = session.getServerJobList();
+				final ServerJob[] jobList = session.getServerJobList();
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -329,12 +329,12 @@ public class ServerJobManager extends ViewPart
 						
 						// Build new list of selected jobs - add object to selection if
 						// object with same id was selected before
-						List<NXCServerJob> selectedJobs = new ArrayList<NXCServerJob>(selectedObjects.length);
+						List<ServerJob> selectedJobs = new ArrayList<ServerJob>(selectedObjects.length);
 						for(int i = 0; i < selectedObjects.length; i++)
 						{
 							for(int j = 0; j < jobList.length; j++)
 							{
-								if (((NXCServerJob)selectedObjects[i]).getId() == jobList[j].getId())
+								if (((ServerJob)selectedObjects[i]).getId() == jobList[j].getId())
 								{
 									selectedJobs.add(jobList[j]);
 									break;
@@ -398,9 +398,9 @@ public class ServerJobManager extends ViewPart
 				while(it.hasNext())
 				{
 					Object object = it.next();
-					if (object instanceof NXCServerJob)
+					if (object instanceof ServerJob)
 					{
-						final NXCServerJob jobObject = (NXCServerJob)object;
+						final ServerJob jobObject = (ServerJob)object;
 						switch(actionId)
 						{
 							case CANCEL_JOB: 
