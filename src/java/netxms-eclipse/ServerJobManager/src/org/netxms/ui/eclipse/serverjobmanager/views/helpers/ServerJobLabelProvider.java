@@ -25,8 +25,8 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.client.NXCServerJob;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ServerJob;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.serverjobmanager.Activator;
 import org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager;
@@ -51,21 +51,21 @@ public class ServerJobLabelProvider extends LabelProvider implements ITableLabel
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		statusTexts.put(NXCServerJob.ACTIVE, "Active");
-		statusTexts.put(NXCServerJob.CANCEL_PENDING, "Cancel pending");
-		statusTexts.put(NXCServerJob.CANCELLED, "Cancelled");
-		statusTexts.put(NXCServerJob.COMPLETED, "Completed");
-		statusTexts.put(NXCServerJob.FAILED, "Failed");
-		statusTexts.put(NXCServerJob.ON_HOLD, "On hold");
-		statusTexts.put(NXCServerJob.PENDING, "Pending");
+		statusTexts.put(ServerJob.ACTIVE, "Active");
+		statusTexts.put(ServerJob.CANCEL_PENDING, "Cancel pending");
+		statusTexts.put(ServerJob.CANCELLED, "Cancelled");
+		statusTexts.put(ServerJob.COMPLETED, "Completed");
+		statusTexts.put(ServerJob.FAILED, "Failed");
+		statusTexts.put(ServerJob.ON_HOLD, "On hold");
+		statusTexts.put(ServerJob.PENDING, "Pending");
 
-		statusImages.put(NXCServerJob.ACTIVE, Activator.getImageDescriptor("icons/active.gif").createImage());
-		statusImages.put(NXCServerJob.CANCEL_PENDING, Activator.getImageDescriptor("icons/cancel_pending.png").createImage());
-		statusImages.put(NXCServerJob.CANCELLED, Activator.getImageDescriptor("icons/cancel.png").createImage());
-		statusImages.put(NXCServerJob.COMPLETED, Activator.getImageDescriptor("icons/completed.gif").createImage());
-		statusImages.put(NXCServerJob.FAILED, Activator.getImageDescriptor("icons/failed.png").createImage());
-		statusImages.put(NXCServerJob.ON_HOLD, Activator.getImageDescriptor("icons/hold.gif").createImage());
-		statusImages.put(NXCServerJob.PENDING, Activator.getImageDescriptor("icons/pending.gif").createImage());
+		statusImages.put(ServerJob.ACTIVE, Activator.getImageDescriptor("icons/active.gif").createImage());
+		statusImages.put(ServerJob.CANCEL_PENDING, Activator.getImageDescriptor("icons/cancel_pending.png").createImage());
+		statusImages.put(ServerJob.CANCELLED, Activator.getImageDescriptor("icons/cancel.png").createImage());
+		statusImages.put(ServerJob.COMPLETED, Activator.getImageDescriptor("icons/completed.gif").createImage());
+		statusImages.put(ServerJob.FAILED, Activator.getImageDescriptor("icons/failed.png").createImage());
+		statusImages.put(ServerJob.ON_HOLD, Activator.getImageDescriptor("icons/hold.gif").createImage());
+		statusImages.put(ServerJob.PENDING, Activator.getImageDescriptor("icons/pending.gif").createImage());
 	}
 	
 	/* (non-Javadoc)
@@ -74,24 +74,24 @@ public class ServerJobLabelProvider extends LabelProvider implements ITableLabel
 	@Override
 	public String getColumnText(Object obj, int index)
 	{
-		if (obj instanceof NXCServerJob)
+		if (obj instanceof ServerJob)
 		{
 			switch(index)
 			{
 				case ServerJobManager.COLUMN_STATUS:
-					return statusTexts.get(((NXCServerJob)obj).getStatus());
+					return statusTexts.get(((ServerJob)obj).getStatus());
 				case ServerJobManager.COLUMN_USER:
-					AbstractUserObject user = session.findUserDBObjectById(((NXCServerJob)obj).getUserId());
+					AbstractUserObject user = session.findUserDBObjectById(((ServerJob)obj).getUserId());
 					return (user != null) ? user.getName() : "<unknown>";
 				case ServerJobManager.COLUMN_NODE:
-					GenericObject object = session.findObjectById(((NXCServerJob)obj).getNodeId());
+					GenericObject object = session.findObjectById(((ServerJob)obj).getNodeId());
 					return (object != null) ? object.getObjectName() : "<unknown>";
 				case ServerJobManager.COLUMN_DESCRIPTION:
-					return ((NXCServerJob)obj).getDescription();
+					return ((ServerJob)obj).getDescription();
 				case ServerJobManager.COLUMN_PROGRESS:
-					return (((NXCServerJob)obj).getStatus() == NXCServerJob.ACTIVE) ? Integer.toString(((NXCServerJob)obj).getProgress()) + "%" : "";
+					return (((ServerJob)obj).getStatus() == ServerJob.ACTIVE) ? Integer.toString(((ServerJob)obj).getProgress()) + "%" : "";
 				case ServerJobManager.COLUMN_MESSAGE:
-					return ((NXCServerJob)obj).getFailureMessage();
+					return ((ServerJob)obj).getFailureMessage();
 			}
 		}
 		return "";
@@ -124,9 +124,9 @@ public class ServerJobLabelProvider extends LabelProvider implements ITableLabel
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		if (!(element instanceof NXCServerJob) || (columnIndex != ServerJobManager.COLUMN_STATUS))
+		if (!(element instanceof ServerJob) || (columnIndex != ServerJobManager.COLUMN_STATUS))
 			return null;
 		
-		return statusImages.get(((NXCServerJob)element).getStatus());
+		return statusImages.get(((ServerJob)element).getStatus());
 	}
 }

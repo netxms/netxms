@@ -289,6 +289,7 @@ public final class NXCPCodes
 	public static final int CMD_RESOLVE_ALARM            = 0x0107;
 	public static final int CMD_FIND_IP_LOCATION         = 0x0108;
 	public static final int CMD_REPORT_DEVICE_STATUS     = 0x0109;
+	public static final int CMD_REPORT_DEVICE_INFO       = 0x010A;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
@@ -717,6 +718,12 @@ public final class NXCPCodes
 	public static final long VID_BACKGROUND_COLOR        = 424;
 	public static final long VID_FORCE_RELOAD            = 425;
 	public static final long VID_DISCOVERY_RADIUS        = 426;
+	public static final long VID_BATTERY_LEVEL           = 427;
+	public static final long VID_VENDOR                  = 428;
+	public static final long VID_MODEL                   = 429;
+	public static final long VID_OS_NAME                 = 430;
+	public static final long VID_OS_VERSION              = 431;
+	public static final long VID_SERIAL_NUMBER           = 432;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

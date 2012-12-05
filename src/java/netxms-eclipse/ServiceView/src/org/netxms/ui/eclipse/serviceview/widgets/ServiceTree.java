@@ -18,19 +18,14 @@
  */
 package org.netxms.ui.eclipse.serviceview.widgets;
 
-import java.util.Comparator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.zest.core.viewers.GraphViewer;
-import org.eclipse.zest.layouts.LayoutAlgorithm;
-import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.SpaceTreeLayoutAlgorithm;
-import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.IServiceFigureListener;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.ServiceTreeContentProvider;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.ServiceTreeElement;

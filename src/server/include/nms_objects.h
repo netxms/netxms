@@ -258,11 +258,9 @@ public:
 	Component *getRoot() { return m_root; }
 };
 
-
-//
-// Base class for network objects
-//
-
+/**
+ * Base class for network objects
+ */
 class NXCORE_EXPORTABLE NetObj
 {
 private:
@@ -457,11 +455,9 @@ inline void NetObj::DecRefCount()
    MutexUnlock(m_mutexRefCount);
 }
 
-
-//
-// Node template class
-//
-
+/**
+ * Data collection template class
+ */
 class NXCORE_EXPORTABLE Template : public NetObj
 {
 protected:
@@ -537,11 +533,9 @@ public:
 	void associateItems();
 };
 
-
-//
-// Cluster class
-//
-
+/**
+ * Cluster class
+ */
 class NXCORE_EXPORTABLE Cluster : public Template
 {
 protected:
@@ -585,11 +579,9 @@ public:
    }
 };
 
-
-//
-// Interface class
-//
-
+/**
+ * Interface class
+ */
 class NXCORE_EXPORTABLE Interface : public NetObj
 {
 protected:
@@ -682,11 +674,9 @@ public:
    DWORD wakeUp();
 };
 
-
-//
-// Network service class
-//
-
+/**
+ * Network service class
+ */
 class NetworkService : public NetObj
 {
 protected:
@@ -723,11 +713,9 @@ public:
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 };
 
-
-//
-// VPN connector class
-//
-
+/**
+ * VPN connector class
+ */
 class VPNConnector : public NetObj
 {
 protected:
@@ -756,6 +744,31 @@ public:
    BOOL IsLocalAddr(DWORD dwIpAddr);
    BOOL IsRemoteAddr(DWORD dwIpAddr);
    DWORD GetPeerGatewayAddr();
+};
+
+/**
+ * Mobile device class
+ */
+class NXCODE_EXPORTABLE MobileDevice : public Template
+{
+protected:
+	time_t m_lastReportTime;
+	TCHAR *m_deviceId;
+	TCHAR *m_model;
+
+public:
+   MobileDevice();
+   MobileDevice(const TCHAR *imei);
+   virtual ~MobileDevice();
+
+   virtual int Type() { return OBJECT_MOBILEDEVICE; }
+
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual BOOL DeleteFromDB();
+   virtual BOOL CreateFromDB(DWORD dwId);
+
+	virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 };
 
 /**

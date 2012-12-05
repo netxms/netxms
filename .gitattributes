@@ -604,6 +604,7 @@ src/install/windows/jetty/webapps/.donotdelete -text
 src/install/windows/netxms-x64.iss -text
 src/install/windows/setup.iss -text
 src/java/eclipse_addons.txt -text
+src/java/mobile-agent/pom.xml -text
 src/java/nebula/org.netxms.nebula.widgets.gallery.tests/META-INF/MANIFEST.MF -text
 src/java/nebula/org.netxms.nebula.widgets.gallery.tests/build.properties -text
 src/java/nebula/org.netxms.nebula.widgets.gallery.tests/pom.xml -text

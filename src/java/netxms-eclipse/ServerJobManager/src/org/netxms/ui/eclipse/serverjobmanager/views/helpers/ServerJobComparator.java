@@ -21,8 +21,8 @@ package org.netxms.ui.eclipse.serverjobmanager.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.NXCServerJob;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ServerJob;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -55,20 +55,20 @@ public class ServerJobComparator extends ViewerComparator
 		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
 		{
 			case ServerJobManager.COLUMN_STATUS:
-				result = ((NXCServerJob)e1).getStatus() - ((NXCServerJob)e2).getStatus();
+				result = ((ServerJob)e1).getStatus() - ((ServerJob)e2).getStatus();
 				break;
 			case ServerJobManager.COLUMN_NODE:
-				GenericObject object1 = session.findObjectById(((NXCServerJob)e1).getNodeId());
-				GenericObject object2 = session.findObjectById(((NXCServerJob)e2).getNodeId());
+				GenericObject object1 = session.findObjectById(((ServerJob)e1).getNodeId());
+				GenericObject object2 = session.findObjectById(((ServerJob)e2).getNodeId());
 				String name1 = (object1 != null) ? object1.getObjectName() : "<unknown>";
 				String name2 = (object2 != null) ? object2.getObjectName() : "<unknown>";
 				result = name1.compareToIgnoreCase(name2);
 				break;
 			case ServerJobManager.COLUMN_DESCRIPTION:
-				result = ((NXCServerJob)e1).getDescription().compareToIgnoreCase(((NXCServerJob)e2).getDescription());
+				result = ((ServerJob)e1).getDescription().compareToIgnoreCase(((ServerJob)e2).getDescription());
 				break;
 			case ServerJobManager.COLUMN_MESSAGE:
-				result = ((NXCServerJob)e1).getFailureMessage().compareToIgnoreCase(((NXCServerJob)e2).getFailureMessage());
+				result = ((ServerJob)e1).getFailureMessage().compareToIgnoreCase(((ServerJob)e2).getFailureMessage());
 				break;
 			default:
 				result = 0;
