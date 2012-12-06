@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,6 +71,7 @@ public class GenericObject
 	public static final int OBJECT_BUSINESSSERVICE     = 28;
 	public static final int OBJECT_NODELINK            = 29;
 	public static final int OBJECT_SLMCHECK            = 30;
+	public static final int OBJECT_MOBILEDEVICE        = 31;
 	
 	// Status codes
 	public static final int STATUS_NORMAL         = 0;

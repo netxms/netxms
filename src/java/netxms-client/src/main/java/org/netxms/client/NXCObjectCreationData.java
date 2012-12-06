@@ -64,6 +64,7 @@ public class NXCObjectCreationData
 	private int port;
 	private boolean physicalPort;
 	private boolean createStatusDci;
+	private String deviceId;
 	
 	/**
 	 * Constructor.
@@ -576,5 +577,21 @@ public class NXCObjectCreationData
 	public void setSnmpPort(int snmpPort)
 	{
 		this.snmpPort = snmpPort;
+	}
+
+	/**
+	 * @return the deviceId
+	 */
+	public final String getDeviceId()
+	{
+		return deviceId;
+	}
+
+	/**
+	 * @param deviceId the deviceId to set
+	 */
+	public final void setDeviceId(String deviceId)
+	{
+		this.deviceId = deviceId;
 	}
 }

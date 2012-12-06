@@ -110,6 +110,7 @@ import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
@@ -293,6 +294,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				break;
 			case GenericObject.OBJECT_CONDITION:
 				object = new Condition(msg, this);
+				break;
+			case GenericObject.OBJECT_MOBILEDEVICE:
+				object = new MobileDevice(msg, this);
 				break;
 			case GenericObject.OBJECT_NODE:
 				object = new Node(msg, this);
@@ -3074,6 +3078,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				msg.setVariableInt32(NXCPCodes.VID_IF_SLOT, data.getSlot());
 				msg.setVariableInt32(NXCPCodes.VID_IF_PORT, data.getPort());
 				msg.setVariableInt16(NXCPCodes.VID_IS_PHYS_PORT, data.isPhysicalPort() ? 1 : 0);
+				break;
+			case GenericObject.OBJECT_MOBILEDEVICE:
+				msg.setVariable(NXCPCodes.VID_DEVICE_ID, data.getDeviceId());
 				break;
 		}
 
