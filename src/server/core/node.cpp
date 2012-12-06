@@ -434,11 +434,9 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 	return bResult;
 }
 
-
-//
-// Delete object from database
-//
-
+/**
+ * Delete object from database
+ */
 BOOL Node::DeleteFromDB()
 {
    TCHAR szQuery[256];
@@ -3502,25 +3500,10 @@ DWORD Node::getTableLastValues(DWORD dciId, CSCPMessage *msg)
    return rcc;
 }
 
-
-//
-// Clean expired DCI data
-//
-
-void Node::cleanDCIData()
-{
-   lockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
-      m_dcObjects->get(i)->deleteExpiredData();
-   unlockDciAccess();
-}
-
-
-//
-// Apply DCI from template
-// pItem passed to this method should be a template's DCI
-//
-
+/**
+ * Apply DCI from template
+ * pItem passed to this method should be a template's DCI
+ */
 bool Node::applyTemplateItem(DWORD dwTemplateId, DCObject *dcObject)
 {
    bool bResult = true;
@@ -3784,29 +3767,9 @@ DWORD Node::getInterfaceCount(Interface **ppInterface)
    return dwCount;
 }
 
-
-//
-// Update cache for all DCI's
-//
-
-void Node::updateDciCache()
-{
-	lockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
-	{
-		if (m_dcObjects->get(i)->getType() == DCO_TYPE_ITEM)
-		{
-			((DCItem *)m_dcObjects->get(i))->updateCacheSize();
-		}
-	}
-	unlockDciAccess();
-}
-
-
-//
-// Get routing table from node
-//
-
+/**
+ * Get routing table from node
+ */
 ROUTING_TABLE *Node::getRoutingTable()
 {
    ROUTING_TABLE *pRT = NULL;

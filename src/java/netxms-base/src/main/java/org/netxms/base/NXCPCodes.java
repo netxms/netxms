@@ -724,6 +724,7 @@ public final class NXCPCodes
 	public static final long VID_OS_NAME                 = 430;
 	public static final long VID_OS_VERSION              = 431;
 	public static final long VID_SERIAL_NUMBER           = 432;
+	public static final long VID_DEVICE_ID               = 433;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

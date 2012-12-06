@@ -52,11 +52,9 @@ double g_dAvgConfigPollerQueueSize = 0;
 DWORD g_dwAvgDCIQueuingTime = 0;
 Queue *g_pItemQueue = NULL;
 
-
-//
-// Collect data for DCI
-//
-
+/**
+ * Collect data for DCI
+ */
 static void *GetItemData(Node *pNode, DCItem *pItem, TCHAR *pBuffer, DWORD *error)
 {
    switch(pItem->getDataSource())
@@ -81,11 +79,9 @@ static void *GetItemData(Node *pNode, DCItem *pItem, TCHAR *pBuffer, DWORD *erro
 	return pBuffer;
 }
 
-
-//
-// Collect data for table
-//
-
+/**
+ * Collect data for table
+ */
 static void *GetTableData(Node *pNode, DCTable *table, DWORD *error)
 {
 	Table *result = NULL;

@@ -891,6 +891,7 @@ typedef struct
 #define VID_OS_NAME                 ((DWORD)430)
 #define VID_OS_VERSION              ((DWORD)431)
 #define VID_SERIAL_NUMBER           ((DWORD)432)
+#define VID_DEVICE_ID               ((DWORD)433)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

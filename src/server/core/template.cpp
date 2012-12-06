@@ -1111,11 +1111,9 @@ void Template::PrepareForDeletion()
 	NetObj::PrepareForDeletion();
 }
 
-
-//
-// Check if template should be automatically applied to node
-//
-
+/**
+ * Check if template should be automatically applied to node
+ */
 BOOL Template::isApplicable(Node *node)
 {
 	NXSL_ServerEnv *pEnv;
@@ -1144,4 +1142,31 @@ BOOL Template::isApplicable(Node *node)
 	}
 	UnlockData();
 	return result;
+}
+
+/**
+ * Update cache for all DCI's
+ */
+void Template::updateDciCache()
+{
+	lockDciAccess();
+   for(int i = 0; i < m_dcObjects->size(); i++)
+	{
+		if (m_dcObjects->get(i)->getType() == DCO_TYPE_ITEM)
+		{
+			((DCItem *)m_dcObjects->get(i))->updateCacheSize();
+		}
+	}
+	unlockDciAccess();
+}
+
+/**
+ * Clean expired DCI data
+ */
+void Template::cleanDCIData()
+{
+   lockDciAccess();
+   for(int i = 0; i < m_dcObjects->size(); i++)
+      m_dcObjects->get(i)->deleteExpiredData();
+   unlockDciAccess();
 }

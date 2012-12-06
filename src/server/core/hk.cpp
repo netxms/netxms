@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Remove deleted objects which are no longer referenced
-//
-
+/**
+ * Remove deleted objects which are no longer referenced
+ */
 static void CleanDeletedObjects(DB_HANDLE hdb)
 {
    DB_RESULT hResult;
@@ -63,11 +61,9 @@ static void CleanDeletedObjects(DB_HANDLE hdb)
    }
 }
 
-
-//
-// Delete empty subnets
-//
-
+/**
+ * Delete empty subnets
+ */
 static void DeleteEmptySubnets()
 {
 	ObjectArray<NetObj> *subnets = g_idxSubnetByAddr.getObjects();
@@ -83,22 +79,18 @@ static void DeleteEmptySubnets()
 	delete subnets;
 }
 
-
-//
-// Maintenance tasks specific to PostgreSQL
-//
-
+/**
+ * Maintenance tasks specific to PostgreSQL
+ */
 static void PGSQLMaintenance(DB_HANDLE hdb)
 {
    if (!ConfigReadInt(_T("DisableVacuum"), 0))
       DBQuery(hdb, _T("VACUUM ANALYZE"));
 }
 
-
-//
-// Delete notes for alarm
-//
-
+/**
+ * Delete notes for alarm
+ */
 void DeleteAlarmNotes(DB_HANDLE hdb, DWORD alarmId)
 {
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_notes WHERE alarm_id=?"));
@@ -110,11 +102,9 @@ void DeleteAlarmNotes(DB_HANDLE hdb, DWORD alarmId)
 	DBFreeStatement(hStmt);
 }
 
-
-//
-// Remove outdated alarm records
-//
-
+/**
+ * Remove outdated alarm records
+ */
 static void CleanAlarmHistory(DB_HANDLE hdb)
 {
 	DWORD retentionTime = ConfigReadULong(_T("AlarmHistoryRetentionTime"), 180);
@@ -148,21 +138,17 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
 	}
 }
 
-
-//
-// Callback for cleaning expired DCI data on node
-//
-
+/**
+ * Callback for cleaning expired DCI data on node
+ */
 static void CleanDciData(NetObj *object, void *data)
 {
-	((Node *)object)->cleanDCIData();
+	((Template *)object)->cleanDCIData();
 }
 
-
-//
-// Housekeeper thread
-//
-
+/**
+ * Housekeeper thread
+ */
 THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 {
    time_t currTime;
@@ -219,6 +205,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
 		// Remove expired DCI data
 		g_idxNodeById.forEach(CleanDciData, NULL);
+		g_idxMobileDeviceById.forEach(CleanDciData, NULL);
 
       // Run DB-specific maintenance tasks
       if (g_nDBSyntax == DB_SYNTAX_PGSQL)

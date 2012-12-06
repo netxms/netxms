@@ -205,6 +205,7 @@ CREATE TABLE mobile_devices
 	os_name varchar(32) null,
 	os_version varchar(64) null,
 	user_id varchar(64) null,
+	battery_level integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

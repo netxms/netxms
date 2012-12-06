@@ -527,6 +527,9 @@ public:
    void queueUpdate();
    void queueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI);
 
+   void updateDciCache();
+   void cleanDCIData();
+
    void CreateNXMPRecord(String &str);
 	
 	bool enumDCObjects(bool (* pfCallback)(DCObject *, DWORD, void *), void *pArg);
@@ -760,10 +763,11 @@ protected:
 	TCHAR *m_osName;
 	TCHAR *m_osVersion;
 	TCHAR *m_userId;
+	LONG m_batteryLevel;
 
 public:
    MobileDevice();
-   MobileDevice(const TCHAR *deviceId);
+   MobileDevice(const TCHAR *name, const TCHAR *deviceId);
    virtual ~MobileDevice();
 
    virtual int Type() { return OBJECT_MOBILEDEVICE; }
@@ -981,11 +985,9 @@ public:
    DWORD getTableLastValues(DWORD dciId, CSCPMessage *msg);
 	DWORD getThresholdSummary(CSCPMessage *msg, DWORD baseId);
 	void processNewDCValue(DCObject *dco, time_t currTime, void *value);
-   void cleanDCIData();
    bool applyTemplateItem(DWORD dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList);
    void unbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
-   void updateDciCache();
 	DWORD getPerfTabDCIList(CSCPMessage *pMsg);
 	virtual NXSL_Array *getParentsForNXSL();
 	NXSL_Array *getInterfacesForNXSL();

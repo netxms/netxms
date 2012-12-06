@@ -276,6 +276,7 @@ static BOOL H_UpgradeFromV263(int currVersion, int newVersion)
 								_T("os_name varchar(32) null,")
 								_T("os_version varchar(64) null,")
 								_T("user_id varchar(64) null,")
+								_T("battery_level integer not null,")
 	                     _T("PRIMARY KEY(id))")));
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='264' WHERE var_name='SchemaVersion'")));
 	return TRUE;
@@ -6468,6 +6469,7 @@ static struct
 	{ 260, 261, H_UpgradeFromV260 },
 	{ 261, 262, H_UpgradeFromV261 },
 	{ 262, 263, H_UpgradeFromV262 },
+	{ 263, 264, H_UpgradeFromV263 },
    { 0, 0, NULL }
 };
 

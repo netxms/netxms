@@ -257,7 +257,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      if (encodeSubject)
                      {
                         char *encodedSubject = NULL;
-                        int encodedSubjectLen = base64_encode_alloc(pszSubject, strlen(pszSubject), &encodedSubject);
+                        size_t encodedSubjectLen = base64_encode_alloc(pszSubject, strlen(pszSubject), &encodedSubject);
                         if (encodedSubject != NULL)
                         {
                            snprintf(szBuffer, SMTP_BUFFER_SIZE, "Subject: =?%s?B?%s?=\r\n", szEncoding, encodedSubject);

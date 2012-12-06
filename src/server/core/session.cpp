@@ -4088,17 +4088,15 @@ void ClientSession::sendMIBTimestamp(DWORD dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Create new object
-//
-
+/**
+ * Create new object
+ */
 void ClientSession::createObject(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject, *pParent;
    int iClass, iServiceType;
-   TCHAR szObjectName[MAX_OBJECT_NAME], nodePrimaryName[MAX_DNS_NAME];
+   TCHAR szObjectName[MAX_OBJECT_NAME], nodePrimaryName[MAX_DNS_NAME], deviceId[MAX_OBJECT_NAME];
    TCHAR *pszRequest, *pszResponse, *pszComments;
    DWORD dwIpAddr, zoneId, nodeId;
    WORD wIpProto, wIpPort;
@@ -4175,6 +4173,11 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								{
 									((Node *)pObject)->setPrimaryName(nodePrimaryName);
 								}
+								break;
+							case OBJECT_MOBILEDEVICE:
+								pRequest->GetVariableStr(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
+								pObject = new MobileDevice(szObjectName, deviceId);
+								NetObjInsert(pObject, TRUE);
 								break;
 							case OBJECT_CONTAINER:
 								pObject = new Container(szObjectName, pRequest->GetVariableLong(VID_CATEGORY));

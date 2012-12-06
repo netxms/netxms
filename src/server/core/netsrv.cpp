@@ -42,13 +42,11 @@ NetworkService::NetworkService()
 	m_iRequiredPollCount = 0;	// Use system default
 }
 
-
-//
-// Extended constructor
-// Note that pszRequest and pszResponse should be dynamically allocated
-// and they will be freed by object's destructor!!!
-//
-
+/**
+ * Extended constructor
+ * Note that pszRequest and pszResponse should be dynamically allocated
+ * and they will be freed by object's destructor!!!
+ */
 NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
                                TCHAR *pszRequest, TCHAR *pszResponse,
                                Node *pHostNode, DWORD dwPollerNode)

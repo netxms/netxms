@@ -445,12 +445,10 @@ static int GetStepSize(TCHAR *str)
   return step;
 }
 
-
-//
-// Match schedule element
-// NOTE: We assume that pattern can be modified during processing
-//
-
+/**
+ * Match schedule element
+ * NOTE: We assume that pattern can be modified during processing
+ */
 static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue, time_t currTime = 0)
 {
    TCHAR *ptr, *curr;
@@ -460,9 +458,7 @@ static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue, time_t currTime 
 	// Check if time() step was specified (% - special syntax)
 	ptr = _tcschr(pszPattern, _T('%'));
 	if (ptr != NULL)
-	{
-    return currTime % GetStepSize(ptr);
-	}
+		return (currTime % GetStepSize(ptr)) != 0;
 
    // Check if step was specified
    ptr = _tcschr(pszPattern, _T('/'));
@@ -509,11 +505,9 @@ check_step:
    return (nValue % nStep) == 0;
 }
 
-
-//
-// Match schedule to current time
-//
-
+/**
+ * Match schedule to current time
+ */
 BOOL DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp)
 {
    const TCHAR *pszCurr;

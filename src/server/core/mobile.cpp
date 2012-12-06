@@ -17,7 +17,6 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 ** File: mobile.cpp
-**
 **/
 
 #include "nxcore.h"
@@ -25,7 +24,7 @@
 /**
  * Default constructor
  */
-MobileDevice::MobileDevice()
+MobileDevice::MobileDevice() : Template()
 {
 	m_lastReportTime = 0;
 	m_deviceId = NULL;
@@ -35,12 +34,13 @@ MobileDevice::MobileDevice()
 	m_osName = NULL;
 	m_osVersion = NULL;
 	m_userId = NULL;
+	m_batteryLevel = -1;
 }
 
 /**
  * Constructor for creating new mobile device object
  */
-MobileDevice::MobileDevice(const TCHAR *deviceId)
+MobileDevice::MobileDevice(const TCHAR *name, const TCHAR *deviceId) : Template(name)
 {
 	m_lastReportTime = 0;
 	m_deviceId = _tcsdup(deviceId);
@@ -50,6 +50,7 @@ MobileDevice::MobileDevice(const TCHAR *deviceId)
 	m_osName = NULL;
 	m_osVersion = NULL;
 	m_userId = NULL;
+	m_batteryLevel = -1;
 }
 
 /**
@@ -80,7 +81,7 @@ BOOL MobileDevice::CreateFromDB(DWORD dwId)
    }
 
 	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id FROM mobile_devices WHERE id=%d"), (int)m_dwId);
+	_sntprintf(query, 256, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level FROM mobile_devices WHERE id=%d"), (int)m_dwId);
 	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 	if (hResult == NULL)
 		return FALSE;
@@ -92,6 +93,7 @@ BOOL MobileDevice::CreateFromDB(DWORD dwId)
 	m_osName = DBGetField(hResult, 0, 4, NULL, 0);
 	m_osVersion = DBGetField(hResult, 0, 5, NULL, 0);
 	m_userId = DBGetField(hResult, 0, 6, NULL, 0);
+	m_batteryLevel = DBGetFieldLong(hResult, 0, 7);
 	DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -117,9 +119,9 @@ BOOL MobileDevice::SaveToDB(DB_HANDLE hdb)
    BOOL bResult;
 	DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("mobile_devices"), _T("id"), m_dwId))
-		hStmt = DBPrepare(hdb, _T("UPDATE mobile_devices SET device_id=?,vendor=?,model=?,serial_number=?,os_name=?,os_version=?,user_id=? WHERE id=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE mobile_devices SET device_id=?,vendor=?,model=?,serial_number=?,os_name=?,os_version=?,user_id=?,battery_level=? WHERE id=?"));
 	else
-		hStmt = DBPrepare(hdb, _T("INSERT INTO mobile_devices (device_id,vendor,model,serial_number,os_name,os_version,user_id,id) VALUES (?,?,?,?,?,?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO mobile_devices (device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level,id) VALUES (?,?,?,?,?,?,?,?,?)"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_deviceId), DB_BIND_STATIC);
@@ -129,7 +131,8 @@ BOOL MobileDevice::SaveToDB(DB_HANDLE hdb)
 		DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_osName), DB_BIND_STATIC);
 		DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_osVersion), DB_BIND_STATIC);
 		DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_userId), DB_BIND_STATIC);
-		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_batteryLevel);
+		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_dwId);
 
 		bResult = DBExecute(hStmt);
 
@@ -184,9 +187,17 @@ BOOL MobileDevice::DeleteFromDB()
 /**
  * Create CSCP message with object's data
  */
-void MobileDevice::CreateMessage(CSCPMessage *pMsg)
+void MobileDevice::CreateMessage(CSCPMessage *msg)
 {
-   Template::CreateMessage(pMsg);
+   Template::CreateMessage(msg);
+	msg->SetVariable(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
+	msg->SetVariable(VID_VENDOR, CHECK_NULL_EX(m_vendor));
+	msg->SetVariable(VID_MODEL, CHECK_NULL_EX(m_model));
+	msg->SetVariable(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_model));
+	msg->SetVariable(VID_OS_NAME, CHECK_NULL_EX(m_model));
+	msg->SetVariable(VID_OS_VERSION, CHECK_NULL_EX(m_model));
+	msg->SetVariable(VID_USER_ID, CHECK_NULL_EX(m_userId));
+	msg->SetVariable(VID_BATTERY_LEVEL, (WORD)m_batteryLevel);
 }
 
 /**
@@ -196,7 +207,6 @@ DWORD MobileDevice::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked
 {
    if (!bAlreadyLocked)
       LockData();
-
 
    return Template::ModifyFromMessage(pRequest, TRUE);
 }
