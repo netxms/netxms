@@ -2,14 +2,14 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Open Street Maps Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.osm;singleton:=true
-Bundle-Version: 1.2.1
+Bundle-Version: 1.2.5
 Bundle-Activator: org.netxms.ui.eclipse.osm.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- org.netxms.ui.eclipse.library;bundle-version="1.2.1",
- org.netxms.ui.eclipse.console;bundle-version="1.2.1",
- org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.1"
+ org.netxms.ui.eclipse.library;bundle-version="1.2.5",
+ org.netxms.ui.eclipse.console;bundle-version="1.2.5",
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.4"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.osm.tools,

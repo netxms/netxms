@@ -31,7 +31,7 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.GeoLocation;
+import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;

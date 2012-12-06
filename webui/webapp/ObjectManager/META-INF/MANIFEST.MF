@@ -2,16 +2,16 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Basic Object Management Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.objectmanager;singleton:=true
-Bundle-Version: 1.2.0
+Bundle-Version: 1.2.5
 Bundle-Activator: org.netxms.ui.eclipse.objectmanager.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.netxms.ui.eclipse.objectbrowser;bundle-version="1.1.8",
- org.netxms.ui.eclipse.usermanager;bundle-version="1.1.9",
- org.netxms.ui.eclipse.nxsl;bundle-version="1.1.8",
- org.netxms.ui.eclipse.imagelibrary;bundle-version="1.1.9",
- org.netxms.ui.eclipse.datacollection;bundle-version="1.1.8",
- org.netxms.ui.eclipse.eventmanager;bundle-version="1.1.8",
- org.eclipse.rap.ui;bundle-version="1.4.1",
- org.netxms.webui.core;bundle-version="1.2.0"
+Require-Bundle: org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.4",
+ org.netxms.ui.eclipse.usermanager;bundle-version="1.2.1",
+ org.netxms.ui.eclipse.nxsl;bundle-version="1.2.4",
+ org.netxms.ui.eclipse.imagelibrary;bundle-version="1.2.2",
+ org.netxms.ui.eclipse.datacollection;bundle-version="1.2.5",
+ org.netxms.ui.eclipse.eventmanager;bundle-version="1.2.0",
+ org.eclipse.rap.ui;bundle-version="2.0.0",
+ org.netxms.webui.core;bundle-version="1.2.5"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

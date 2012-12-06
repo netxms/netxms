@@ -26,7 +26,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.GeoLocation;
+import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;

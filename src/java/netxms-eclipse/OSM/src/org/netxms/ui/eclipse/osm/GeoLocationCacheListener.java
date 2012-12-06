@@ -18,7 +18,7 @@
  */
 package org.netxms.ui.eclipse.osm;
 
-import org.netxms.client.GeoLocation;
+import org.netxms.base.GeoLocation;
 import org.netxms.client.objects.GenericObject;
 
 /**

@@ -52,11 +52,9 @@
 
 #define CSCP_TEMP_BUF_SIZE             65536
 
-
-//
-// Ciphers
-//
-
+/**
+ * Ciphers
+ */
 #define CSCP_CIPHER_AES_256      0
 #define CSCP_CIPHER_BLOWFISH     1
 #define CSCP_CIPHER_IDEA         2
@@ -69,11 +67,9 @@
 #define CSCP_SUPPORT_3DES        0x08
 #define CSCP_SUPPORT_AES_128     0x10
 
-
-//
-// Data field structure
-//
-
+/**
+ * Data field structure
+ */
 #ifdef __HP_aCC
 #pragma pack 1
 #else
@@ -105,11 +101,9 @@ typedef struct
 #define df_real   data.dFloat
 #define df_string data.string
 
-
-//
-// Message structure
-//
-
+/**
+ * Message structure
+ */
 typedef struct
 {
    WORD wCode;       // Message (command) code
@@ -120,22 +114,18 @@ typedef struct
    CSCP_DF df[1];    // Data fields
 } CSCP_MESSAGE;
 
-
-//
-// Encrypted payload header
-//
-
+/**
+ * Encrypted payload header
+ */
 typedef struct
 {
    DWORD dwChecksum;
    DWORD dwReserved; // Align to 8-byte boundary
 } CSCP_ENCRYPTED_PAYLOAD_HEADER;
 
-
-//
-// Encrypted message structure
-//
-
+/**
+ * Encrypted message structure
+ */
 typedef struct
 {
    WORD wCode;       // Should be CMD_ENCRYPTED_MESSAGE
@@ -145,11 +135,9 @@ typedef struct
    BYTE data[1];     // Encrypted payload
 } CSCP_ENCRYPTED_MESSAGE;
 
-
-//
-// DCI data header structure
-//
-
+/**
+ * DCI data header structure
+ */
 typedef struct
 {
    DWORD dwItemId;
@@ -157,11 +145,9 @@ typedef struct
    DWORD dwDataType;
 } DCI_DATA_HEADER;
 
-
-//
-// DCI data row structure
-//
-
+/**
+ * DCI data row structure
+ */
 typedef struct
 {
    DWORD dwTimeStamp;
@@ -180,11 +166,9 @@ typedef struct
 #pragma pack()
 #endif
 
-
-//
-// Data types
-//
-
+/**
+ * Data types
+ */
 #define CSCP_DT_INTEGER    0
 #define CSCP_DT_STRING     1
 #define CSCP_DT_INT64      2
@@ -192,11 +176,9 @@ typedef struct
 #define CSCP_DT_BINARY     4
 #define CSCP_DT_FLOAT      5
 
-
-//
-// Message flags
-//
-
+/**
+ * Message flags
+ */
 #define MF_BINARY          0x0001
 #define MF_END_OF_FILE     0x0002
 #define MF_DONT_ENCRYPT    0x0004
@@ -204,11 +186,9 @@ typedef struct
 #define MF_REVERSE_ORDER   0x0010
 #define MF_CONTROL         0x0020
 
-
-//
-// Message (command) codes
-//
-
+/**
+ * Message (command) codes
+ */
 #define CMD_LOGIN                      0x0001
 #define CMD_LOGIN_RESP                 0x0002
 #define CMD_KEEPALIVE                  0x0003
@@ -476,11 +456,9 @@ typedef struct
 #define CMD_REPORT_DEVICE_STATUS       0x0109
 #define CMD_REPORT_DEVICE_INFO         0x010A
 
-
-//
-// Variable identifiers
-//
-
+/**
+ * Variable identifiers
+ */
 #define VID_LOGIN_NAME              ((DWORD)1)
 #define VID_PASSWORD                ((DWORD)2)
 #define VID_OBJECT_ID               ((DWORD)3)

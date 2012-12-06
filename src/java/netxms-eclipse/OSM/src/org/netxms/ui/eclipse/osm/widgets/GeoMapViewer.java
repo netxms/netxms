@@ -46,7 +46,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.client.GeoLocation;
+import org.netxms.base.GeoLocation;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;

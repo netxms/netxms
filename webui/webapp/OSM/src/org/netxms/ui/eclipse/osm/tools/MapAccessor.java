@@ -18,7 +18,7 @@
  */
 package org.netxms.ui.eclipse.osm.tools;
 
-import org.netxms.client.GeoLocation;
+import org.netxms.base.GeoLocation;
 
 /**
  * This class can be used to build map access URL

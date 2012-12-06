@@ -52,7 +52,7 @@ import org.eclipse.zest.core.viewers.internal.GraphModelEntityRelationshipFactor
 import org.eclipse.zest.core.viewers.internal.IStylingGraphModelFactory;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.zooming.ZoomManager;
-import org.netxms.client.GeoLocation;
+import org.netxms.base.GeoLocation;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;

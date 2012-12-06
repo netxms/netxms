@@ -24,11 +24,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.eclipse.swt.graphics.Point;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
-import org.netxms.client.GeoLocation;
+import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;

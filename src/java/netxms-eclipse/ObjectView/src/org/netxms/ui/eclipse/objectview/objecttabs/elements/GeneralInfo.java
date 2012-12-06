@@ -19,9 +19,8 @@
 package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
 import java.text.NumberFormat;
-
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.GeoLocation;
+import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;

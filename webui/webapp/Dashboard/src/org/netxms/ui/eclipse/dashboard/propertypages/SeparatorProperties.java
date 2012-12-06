@@ -41,6 +41,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class SeparatorProperties extends PropertyPage
 {
+	private static final long serialVersionUID = 1L;
+
 	private SeparatorConfig config;
 	private ColorSelector foreground;
 	private ColorSelector background;
@@ -127,6 +129,8 @@ public class SeparatorProperties extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       lineWidthScale.setLayoutData(gd);
       lineWidthScale.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -145,6 +149,8 @@ public class SeparatorProperties extends PropertyPage
       lineWidthSpinner.setMaximum(600);
       lineWidthSpinner.setSelection(config.getLineWidth());
       lineWidthSpinner.addSelectionListener(new SelectionListener() {
+      	private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
