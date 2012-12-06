@@ -24,19 +24,15 @@
 #include "libnxsl.h"
 #include <netxms-regex.h>
 
-
-//
-// Constants
-//
-
-#define MAX_ERROR_NUMBER         27
+/**
+ * Constants
+ */
+#define MAX_ERROR_NUMBER         29
 #define CONTROL_STACK_LIMIT      32768
 
-
-//
-// Command mnemonics
-//
-
+/**
+ * Command mnemonics
+ */
 static const char *m_szCommandMnemonic[] =
 {
    "NOP", "RET", "JMP", "CALL", "CALL",
@@ -54,11 +50,9 @@ static const char *m_szCommandMnemonic[] =
 	"GLOBAL", "GARRAY", "JZP", "JNZP"
 };
 
-
-//
-// Error texts
-//
-
+/**
+ * Error texts
+ */
 static const TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
 {
 	_T("Data stack underflow"),
@@ -87,14 +81,14 @@ static const TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
 	_T("Attempt to use array element access operation on non-array"),
 	_T("Cannot assign to a variable that is constant"),
 	_T("Named parameter required"),
-	_T("Function or operation argument is not an iterator")
+	_T("Function or operation argument is not an iterator"),
+	_T("Statistical data for given instance is not collected yet"),
+	_T("Requested statistical parameter does not exist")
 };
 
-
-//
-// Determine operation data type
-//
-
+/**
+ * Determine operation data type
+ */
 static int SelectResultType(int nType1, int nType2, int nOp)
 {
    int nType;
@@ -135,11 +129,9 @@ static int SelectResultType(int nType1, int nType2, int nOp)
    return nType;
 }
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 NXSL_Program::NXSL_Program()
 {
 	m_mutex = MutexCreate();
@@ -167,11 +159,9 @@ NXSL_Program::NXSL_Program()
 	srand((unsigned int)time(NULL));
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 NXSL_Program::~NXSL_Program()
 {
    DWORD i;
@@ -201,11 +191,9 @@ NXSL_Program::~NXSL_Program()
 	MutexDestroy(m_mutex);
 }
 
-
-//
-// Add new instruction to set
-//
-
+/**
+ * Add new instruction to set
+ */
 void NXSL_Program::addInstruction(NXSL_Instruction *pInstruction)
 {
    m_ppInstructionSet = (NXSL_Instruction **)realloc(m_ppInstructionSet,
@@ -213,11 +201,9 @@ void NXSL_Program::addInstruction(NXSL_Instruction *pInstruction)
    m_ppInstructionSet[m_dwCodeSize++] = pInstruction;
 }
 
-
-//
-// Resolve last jump with INVALID_ADDRESS to current address
-//
-
+/**
+ * Resolve last jump with INVALID_ADDRESS to current address
+ */
 void NXSL_Program::resolveLastJump(int nOpCode)
 {
    DWORD i;
@@ -234,11 +220,9 @@ void NXSL_Program::resolveLastJump(int nOpCode)
    }
 }
 
-
-//
-// Create jump at given address replacing another instruction (usually NOP)
-//
-
+/**
+ * Create jump at given address replacing another instruction (usually NOP)
+ */
 void NXSL_Program::createJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr)
 {
 	int nLine;
@@ -251,13 +235,11 @@ void NXSL_Program::createJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr)
 	m_ppInstructionSet[dwOpAddr] = new NXSL_Instruction(nLine, OPCODE_JMP, dwJumpAddr);
 }
 
-
-//
-// Add new function to defined functions list
-// Will use first free address if dwAddr == INVALID_ADDRESS
-// Name must be in UTF-8
-//
-
+/**
+ * Add new function to defined functions list
+ * Will use first free address if dwAddr == INVALID_ADDRESS
+ * Name must be in UTF-8
+ */
 BOOL NXSL_Program::addFunction(const char *pszName, DWORD dwAddr, char *pszError)
 {
    DWORD i;

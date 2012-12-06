@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -33,18 +33,14 @@
 #define LIBNXSL_EXPORTABLE
 #endif
 
-
-//
-// Various defines
-//
-
+/**
+ * Various defines
+ */
 #define MAX_FUNCTION_NAME  64
 
-
-//
-// Script execution errors
-//
-
+/**
+ * Script execution errors
+ */
 #define NXSL_ERR_DATA_STACK_UNDERFLOW     1
 #define NXSL_ERR_CONTROL_STACK_UNDERFLOW  2
 #define NXSL_ERR_BAD_CONDITION            3
@@ -72,30 +68,26 @@
 #define NXSL_ERR_ASSIGNMENT_TO_CONSTANT   25
 #define NXSL_ERR_NAMED_PARAM_REQUIERED    26
 #define NXSL_ERR_NOT_ITERATOR					27
+#define NXSL_ERR_NO_STAT_DATA             28
+#define NXSL_ERR_NO_SUCH_STAT_PARAM       29
 
-
-//
-// Special return codes for external functions
-//
-
+/**
+ * Special return codes for external functions
+ */
 #define NXSL_STOP_SCRIPT_EXECUTION        -1
 
-
-//
-// Exportable classes
-//
-
+/**
+ * Exportable classes
+ */
 #ifdef __cplusplus
 #include <nxsl_classes.h>
 #else
 struct NXSL_Program;
 #endif
 
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 #ifdef __cplusplus
 extern "C" {
 #endif
