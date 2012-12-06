@@ -50,6 +50,7 @@ ObjectIndex g_idxInterfaceByAddr;
 ObjectIndex g_idxZoneByGUID;
 ObjectIndex g_idxNodeById;
 ObjectIndex g_idxNodeByAddr;
+ObjectIndex g_idxMobileDeviceById;
 ObjectIndex g_idxConditionById;
 ObjectIndex g_idxServiceCheckById;
 ObjectIndex g_idxNetMapById;
@@ -62,7 +63,8 @@ const TCHAR *g_szClassName[]={ _T("Generic"), _T("Subnet"), _T("Node"), _T("Inte
                                _T("AgentPolicy"), _T("AgentPolicyConfig"), _T("NetworkMapRoot"),
                                _T("NetworkMapGroup"), _T("NetworkMap"), _T("DashboardRoot"), 
                                _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report"),
-							   _T("BusinessServiceRoot"), _T("BusinessService"), _T("NodeLink"), _T("SlmCheck")
+                               _T("BusinessServiceRoot"), _T("BusinessService"), _T("NodeLink"),
+                               _T("ServiceCheck"), _T("MobileDevice")
 };
 
 
@@ -260,7 +262,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 		pObject->generateGuid();
 
       // Create tables for storing data collection values
-      if (pObject->Type() == OBJECT_NODE)
+      if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE))
       {
          TCHAR szQuery[256], szQueryTemplate[256];
          DWORD i;
@@ -329,6 +331,9 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_NODE:
 				g_idxNodeById.put(pObject->Id(), pObject);
 				g_idxNodeByAddr.put(pObject->IpAddr(), pObject);
+            break;
+			case OBJECT_MOBILEDEVICE:
+				g_idxMobileDeviceById.put(pObject->Id(), pObject);
             break;
          case OBJECT_SUBNET:
             if (pObject->IpAddr() != 0)
@@ -441,6 +446,9 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       case OBJECT_NODE:
 			g_idxNodeById.remove(pObject->Id());
 			g_idxNodeByAddr.remove(pObject->IpAddr());
+         break;
+      case OBJECT_MOBILEDEVICE:
+			g_idxMobileDeviceById.remove(pObject->Id());
          break;
       case OBJECT_SUBNET:
          if (pObject->IpAddr() != 0)
@@ -1031,6 +1039,31 @@ BOOL LoadObjects()
          {
             delete pSubnet;
             nxlog_write(MSG_SUBNET_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Load mobile devices
+   DbgPrintf(2, _T("Loading mobile devices..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM mobile_devices"));
+   if (hResult != 0)
+   {
+      MobileDevice *md;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         md = new MobileDevice;
+         if (md->CreateFromDB(dwId))
+         {
+            NetObjInsert(md, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete md;
+            nxlog_write(MSG_MOBILEDEVICE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);
@@ -1627,6 +1660,7 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
          if ((iChildClass == OBJECT_CONTAINER) || 
              (iChildClass == OBJECT_NODE) ||
              (iChildClass == OBJECT_CLUSTER) ||
+             (iChildClass == OBJECT_MOBILEDEVICE) ||
              (iChildClass == OBJECT_CONDITION))
             return TRUE;
          break;

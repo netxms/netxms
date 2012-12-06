@@ -177,16 +177,34 @@ CREATE INDEX idx_ocattr_oid ON object_custom_attributes(object_id);
 
 
 /*
-** Zone object
+** Zone objects
 */
 
 CREATE TABLE zones
 (
-	id integer not null,		// Zone object's ID
+	id integer not null,		// Zone object ID
 	zone_guid integer not null,	// Globally unique ID for zone
 	agent_proxy integer not null,
 	snmp_proxy integer not null,
 	icmp_proxy integer not null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
+** Mobile device objects
+*/
+
+CREATE TABLE mobile_devices
+(
+	id integer not null,
+	device_id varchar(64) not null,
+	vendor varchar(64) null,
+	model varchar(128) null,
+	serial_number varchar(64) null,
+	os_name varchar(32) null,
+	os_version varchar(64) null,
+	user_id varchar(64) null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

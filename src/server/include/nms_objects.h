@@ -1966,6 +1966,7 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByGUID;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxMobileDeviceById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxConditionById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxServiceCheckById;
 

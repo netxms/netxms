@@ -263,6 +263,25 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 /**
+ * Upgrade from V263 to V264
+ */
+static BOOL H_UpgradeFromV263(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateTable(_T("CREATE TABLE mobile_devices (")
+	                     _T("id integer not null,")
+								_T("device_id varchar(64) not null,")
+								_T("vendor varchar(64) null,")
+								_T("model varchar(128) null,")
+								_T("serial_number varchar(64) null,")
+								_T("os_name varchar(32) null,")
+								_T("os_version varchar(64) null,")
+								_T("user_id varchar(64) null,")
+	                     _T("PRIMARY KEY(id))")));
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='264' WHERE var_name='SchemaVersion'")));
+	return TRUE;
+}
+
+/**
  * Upgrade from V262 to V263
  */
 static BOOL H_UpgradeFromV262(int currVersion, int newVersion)
@@ -558,11 +577,9 @@ static BOOL H_UpgradeFromV251(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V250 to V251
-//
-
+/**
+ * Upgrade from V250 to V251
+ */
 static BOOL H_UpgradeFromV250(int currVersion, int newVersion)
 {
 	static TCHAR batch[] = 
@@ -586,11 +603,9 @@ static BOOL H_UpgradeFromV250(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V249 to V250
-//
-
+/**
+ * Upgrade from V249 to V250
+ */
 static BOOL H_UpgradeFromV249(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateTable(_T("CREATE TABLE licenses (")
@@ -602,11 +617,9 @@ static BOOL H_UpgradeFromV249(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V248 to V249
-//
-
+/**
+ * Upgrade from V248 to V249
+ */
 #define TDATA_CREATE_QUERY  _T("CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp integer not null,tdata_row integer not null,tdata_column integer not null,tdata_value varchar(255) null)")
 #define TDATA_INDEX_MSSQL   _T("CREATE CLUSTERED INDEX idx_tdata_%d_id_timestamp ON tdata_%d(item_id,tdata_timestamp)")
 #define TDATA_INDEX_PGSQL   _T("CREATE INDEX idx_tdata_%d_timestamp_id ON tdata_%d(tdata_timestamp,item_id)")

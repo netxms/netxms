@@ -860,4 +860,10 @@ Language=English
 Failed to load service check object with id %1 from database
 .
 
+MessageId=
+SymbolicName=MSG_MOBILEDEVICE_LOAD_FAILED
+Language=English
+Failed to load mobile device object with id %1 from database
+.
+
 ;#endif

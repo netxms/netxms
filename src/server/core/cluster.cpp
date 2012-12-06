@@ -201,8 +201,7 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
 BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 {
 	TCHAR szQuery[4096], szIpAddr[16], szNetMask[16];
-   DB_RESULT hResult;
-   BOOL bResult, bNewObject = TRUE;
+   BOOL bResult;
    DWORD i;
 
    // Lock object's access
@@ -210,23 +209,14 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 
    saveCommonProperties(hdb);
 
-   // Check for object's existence in database
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM clusters WHERE id=%d"), m_dwId);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         bNewObject = FALSE;
-      DBFreeResult(hResult);
-   }
-   if (bNewObject)
-      _sntprintf(szQuery, 4096,
-                 _T("INSERT INTO clusters (id,cluster_type,zone_guid) VALUES (%d,%d,%d)"),
-                 (int)m_dwId, (int)m_dwClusterType, (int)m_zoneId);
-   else
+   if (IsDatabaseRecordExist(hdb, _T("clusters"), _T("id"), m_dwId))
       _sntprintf(szQuery, 4096,
                  _T("UPDATE clusters SET cluster_type=%d,zone_guid=%d WHERE id=%d"),
                  (int)m_dwClusterType, (int)m_zoneId, (int)m_dwId);
+	else
+      _sntprintf(szQuery, 4096,
+                 _T("INSERT INTO clusters (id,cluster_type,zone_guid) VALUES (%d,%d,%d)"),
+                 (int)m_dwId, (int)m_dwClusterType, (int)m_zoneId);
    bResult = DBQuery(hdb, szQuery);
 
    // Save data collection items
@@ -353,11 +343,9 @@ BOOL Cluster::DeleteFromDB()
    return bSuccess;
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create CSCP message with object's data
+ */
 void Cluster::CreateMessage(CSCPMessage *pMsg)
 {
 	DWORD i, dwId;
@@ -378,11 +366,9 @@ void Cluster::CreateMessage(CSCPMessage *pMsg)
 	}
 }
 
-
-//
-// Modify object from message
-//
-
+/**
+ * Modify object from message
+ */
 DWORD Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
@@ -452,21 +438,17 @@ DWORD Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    return Template::ModifyFromMessage(pRequest, TRUE);
 }
 
-
-//
-// Calculate compound status
-//
-
+/**
+ * Calculate compound status
+ */
 void Cluster::calculateCompoundStatus(BOOL bForcedRecalc)
 {
 	NetObj::calculateCompoundStatus(bForcedRecalc);
 }
 
-
-//
-// Check if given address is within sync network
-//
-
+/**
+ * Check if given address is within sync network
+ */
 bool Cluster::isSyncAddr(DWORD dwAddr)
 {
 	DWORD i;
@@ -485,11 +467,9 @@ bool Cluster::isSyncAddr(DWORD dwAddr)
 	return bRet;
 }
 
-
-//
-// Check if given address is a resource address
-//
-
+/**
+ * Check if given address is a resource address
+ */
 bool Cluster::isVirtualAddr(DWORD dwAddr)
 {
 	DWORD i;
@@ -508,11 +488,9 @@ bool Cluster::isVirtualAddr(DWORD dwAddr)
 	return bRet;
 }
 
-
-//
-// Status poll
-//
-
+/**
+ * Status poll
+ */
 void Cluster::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
 	DWORD i, j, k, dwPollListSize;
@@ -659,11 +637,9 @@ void Cluster::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Finished"), m_szName);
 }
 
-
-//
-// Check if node is current owner of resource
-//
-
+/**
+ * Check if node is current owner of resource
+ */
 bool Cluster::isResourceOnNode(DWORD dwResource, DWORD dwNode)
 {
 	bool bRet = FALSE;
