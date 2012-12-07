@@ -33,6 +33,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.agentmanager.Activator;
+import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -64,7 +65,7 @@ public class OpenAgentConfig implements IObjectActionDelegate
 		else
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob("Retrieving agent's config", null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.OpenAgentConfig_GetConfig, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -80,7 +81,7 @@ public class OpenAgentConfig implements IObjectActionDelegate
 							}
 							catch(PartInitException e)
 							{
-								MessageDialog.openError(window.getShell(), "Error", "Cannot open agent config: " + e.getLocalizedMessage());
+								MessageDialog.openError(window.getShell(), Messages.OpenAgentConfig_Error, Messages.OpenAgentConfig_OpenErrorPrefix + e.getLocalizedMessage());
 							}
 						}
 					});
@@ -89,7 +90,7 @@ public class OpenAgentConfig implements IObjectActionDelegate
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot open agent config";
+					return Messages.OpenAgentConfig_OpenError;
 				}
 			}.start();
 		}

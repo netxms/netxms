@@ -25,6 +25,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.objects.Node;
 import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.ui.eclipse.agentmanager.Activator;
+import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.views.PackageDeploymentMonitor;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
@@ -33,8 +34,8 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class DeploymentStatusLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 2042089859316813125L;
-	private static final String[] statusText = { "Pending", "Uploading file", "Installing", "Completed", "Failed", "Initializing" }; 
+	private static final long serialVersionUID = 1L;
+	private static final String[] statusText = { Messages.DeploymentStatusLabelProvider_Pending, Messages.DeploymentStatusLabelProvider_Uploading, Messages.DeploymentStatusLabelProvider_Installing, Messages.DeploymentStatusLabelProvider_Completed, Messages.DeploymentStatusLabelProvider_Failed, Messages.DeploymentStatusLabelProvider_Init }; 
 			
 	private WorkbenchLabelProvider workbenchLabelProvider;
 	private Image imageActive;
@@ -48,10 +49,10 @@ public class DeploymentStatusLabelProvider extends LabelProvider implements ITab
 	public DeploymentStatusLabelProvider()
 	{
 		workbenchLabelProvider = new WorkbenchLabelProvider();
-		imageActive = Activator.getImageDescriptor("icons/active.gif").createImage();
-		imagePending = Activator.getImageDescriptor("icons/pending.gif").createImage();
-		imageCompleted = Activator.getImageDescriptor("icons/complete.png").createImage();
-		imageFailed = Activator.getImageDescriptor("icons/failed.png").createImage();
+		imageActive = Activator.getImageDescriptor("icons/active.gif").createImage(); //$NON-NLS-1$
+		imagePending = Activator.getImageDescriptor("icons/pending.gif").createImage(); //$NON-NLS-1$
+		imageCompleted = Activator.getImageDescriptor("icons/complete.png").createImage(); //$NON-NLS-1$
+		imageFailed = Activator.getImageDescriptor("icons/failed.png").createImage(); //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)
@@ -103,7 +104,7 @@ public class DeploymentStatusLabelProvider extends LabelProvider implements ITab
 				}
 				catch(ArrayIndexOutOfBoundsException e)
 				{
-					return "Unknown";
+					return Messages.DeploymentStatusLabelProvider_Unknown;
 				}
 			case PackageDeploymentMonitor.COLUMN_ERROR:
 				return s.getMessage();

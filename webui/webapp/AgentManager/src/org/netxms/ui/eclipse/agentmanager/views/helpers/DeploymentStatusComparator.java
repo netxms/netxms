@@ -29,7 +29,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class DeploymentStatusComparator extends ViewerComparator
 {
-	private static final long serialVersionUID = -5349350222371504920L;
+	private static final long serialVersionUID = 1L;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -40,7 +40,7 @@ public class DeploymentStatusComparator extends ViewerComparator
 		DeploymentStatus s1 = (DeploymentStatus)e1;
 		DeploymentStatus s2 = (DeploymentStatus)e2;
 		int result;
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case PackageDeploymentMonitor.COLUMN_NODE:
 				result = s1.getNodeName().compareToIgnoreCase(s2.getNodeName());

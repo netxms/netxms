@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,38 +16,36 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.agentmanager.dialogs;
+package org.netxms.ui.eclipse.objectmanager.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.ui.eclipse.agentmanager.Activator;
-import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Shows prompt for saving agent's config
- *
+ * Mobile device object creation dialog
  */
-public class SaveConfigDialog extends Dialog
+public class CreateMobileDeviceDialog extends Dialog
 {
 	private static final long serialVersionUID = 1L;
 
-	public static final int SAVE_ID = 100;
-	public static final int SAVE_AND_APPLY_ID = 101;
-	public static final int DISCARD_ID = 102;
+	private LabeledText nameField;
+	private LabeledText deviceIdField;
+	
+	private String name;
+	private String deviceId;
 	
 	/**
 	 * @param parentShell
 	 */
-	public SaveConfigDialog(Shell parentShell)
+	public CreateMobileDeviceDialog(Shell parentShell)
 	{
 		super(parentShell);
 	}
@@ -59,19 +57,7 @@ public class SaveConfigDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.SaveConfigDialog_UnsavedChanges);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	protected void createButtonsForButtonBar(Composite parent)
-	{
-		createButton(parent, SAVE_ID, Messages.SaveConfigDialog_Save, false);
-		createButton(parent, SAVE_AND_APPLY_ID, Messages.SaveConfigDialog_SaveApply, false);
-		createButton(parent, DISCARD_ID, Messages.SaveConfigDialog_Discard, false);
-		createButton(parent, IDialogConstants.CANCEL_ID, Messages.SaveConfigDialog_Cancel, false);
+		newShell.setText("Create Mobile Device Object");
 	}
 
 	/* (non-Javadoc)
@@ -83,37 +69,61 @@ public class SaveConfigDialog extends Dialog
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
 		GridLayout layout = new GridLayout();
-		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
-		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-		layout.numColumns = 2;
+		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
 		
-		final Label image = new Label(dialogArea, SWT.NONE);
-		image.setImage(Activator.getImageDescriptor("icons/unsaved_config.png").createImage()); //$NON-NLS-1$
-		
-		final CLabel text = new CLabel(dialogArea, SWT.LEFT);
-		text.setText(Messages.SaveConfigDialog_ModifiedMessage);
+		nameField = new LabeledText(dialogArea, SWT.NONE);
+		nameField.setLabel("Name");
+		nameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
-		text.setLayoutData(gd);
+		gd.grabExcessHorizontalSpace = true;
+		gd.widthHint = 300;
+		nameField.setLayoutData(gd);
+		
+		deviceIdField = new LabeledText(dialogArea, SWT.NONE);
+		deviceIdField.setLabel("Device ID (IMEI or ESN)");
+		deviceIdField.getTextControl().setTextLimit(12);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		deviceIdField.setLayoutData(gd);
 		
 		return dialogArea;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#buttonPressed(int)
+	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */
 	@Override
-	protected void buttonPressed(int buttonId)
+	protected void okPressed()
 	{
-		if (buttonId >= 100)
+		deviceId = deviceIdField.getText().trim();
+		name = nameField.getText().trim();
+		if (name.isEmpty())
 		{
-			setReturnCode(buttonId);
-			close();
+			MessageDialog.openWarning(getShell(), "Warning", "Please provide non-empty object name");
+			return;
 		}
-		super.buttonPressed(buttonId);
+		
+		super.okPressed();
 	}
 
+	/**
+	 * @return object name
+	 */
+	public String getName()
+	{
+		return name;
+	}
+
+	/**
+	 * @return device ID
+	 */
+	public String getDeviceId()
+	{
+		return deviceId;
+	}
 }

@@ -55,15 +55,19 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		list.add(new AgentParameter("ChildStatus(*)", Messages.SelectInternalParamDlg_DCI_ChildObjectStatus, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		list.add(new AgentParameter("ConditionStatus(*)", Messages.SelectInternalParamDlg_DCI_ConditionStatus, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		list.add(new AgentParameter("Dummy", Messages.SelectInternalParamDlg_DCI_Dummy, DataCollectionItem.DT_INT)); //$NON-NLS-1$
-		list.add(new AgentParameter("Net.IP.NextHop(*)", Messages.SelectInternalParamDlg_DCI_NextHop, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
 		list.add(new AgentParameter("Status", Messages.SelectInternalParamDlg_DCI_Status, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		
-		if ((object instanceof Template) || ((Node)object).hasAgent())
+		if ((object instanceof Template) || (object instanceof Node))
+		{
+			list.add(new AgentParameter("Net.IP.NextHop(*)", Messages.SelectInternalParamDlg_DCI_NextHop, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
+		}
+		
+		if ((object instanceof Template) || ((object instanceof Node) && ((Node)object).hasAgent()))
 		{
 			list.add(new AgentParameter("AgentStatus", Messages.SelectInternalParamDlg_DCI_AgentStatus, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		}
 		
-		if ((object instanceof Template) || ((Node)object).isManagementServer())
+		if ((object instanceof Template) || ((object instanceof Node) && ((Node)object).isManagementServer()))
 		{
 			list.add(new AgentParameter("Server.AverageConfigurationPollerQueueSize", Messages.SelectInternalParamDlg_DCI_AvgConfPollerQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
 			list.add(new AgentParameter("AverageDBWriterQueueSize", Messages.SelectInternalParamDlg_DCI_AvgDBWriterQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$

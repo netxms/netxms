@@ -22,6 +22,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CreateSnmpDciDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private LabeledText textDescription;
 	private LabeledText textInterval;
 	private LabeledText textRetention;

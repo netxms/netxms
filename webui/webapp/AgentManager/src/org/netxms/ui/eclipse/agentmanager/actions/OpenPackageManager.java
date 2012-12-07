@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
+import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.views.PackageManager;
 
 public class OpenPackageManager implements IWorkbenchWindowActionDelegate
@@ -61,7 +62,7 @@ public class OpenPackageManager implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.OpenPackageManager_Error, Messages.OpenPackageManager_ErrorOpenView + e.getMessage());
 			}
 		}
 	}

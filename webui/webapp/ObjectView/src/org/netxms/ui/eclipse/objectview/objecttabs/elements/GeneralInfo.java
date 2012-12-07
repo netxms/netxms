@@ -24,6 +24,7 @@ import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.NodeLink;
 import org.netxms.client.objects.ServiceCheck;
@@ -35,7 +36,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * "General" element on object overview tab
- *
  */
 public class GeneralInfo extends TableElement
 {
@@ -103,6 +103,17 @@ public class GeneralInfo extends TableElement
 				if ((node.getFlags() & Node.NF_IS_BRIDGE) != 0)
 					addPair("Bridge Base Address", node.getBridgeBaseAddress().toString());
 				addPair("Driver", node.getDriverName(), false);
+				break;
+			case GenericObject.OBJECT_MOBILEDEVICE:
+				MobileDevice md = (MobileDevice)object;
+				addPair("Device ID", md.getDeviceId());
+				addPair("Vendor", md.getVendor());
+				addPair("Model", md.getModel());
+				addPair("Operating System", md.getOsName());
+				addPair("OS Version", md.getOsVersion());
+				addPair("User", md.getUserId(), false);
+				if (md.getBatteryLevel() >= 0)
+					addPair("Battery Level", Integer.toString(md.getBatteryLevel()) + "%");
 				break;
 			case GenericObject.OBJECT_SUBNET:
 				Subnet subnet = (Subnet)object;

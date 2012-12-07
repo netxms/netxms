@@ -17,6 +17,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.agentmanager.views;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -37,6 +38,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.dialogs.SaveConfigDialog;
 import org.netxms.ui.eclipse.agentmanager.widgets.AgentConfigEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -47,7 +49,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 {
-	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView";
+	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView"; //$NON-NLS-1$
 	
 	private NXCSession session;
 	private long nodeId;
@@ -71,7 +73,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		nodeId = Long.parseLong(site.getSecondaryId());
 		
 		GenericObject object = session.findObjectById(nodeId);
-		setPartName("Agent Config - " + ((object != null) ? object.getObjectName() : Long.toString(nodeId)));
+		setPartName(Messages.AgentConfigEditorView_PartName + ((object != null) ? object.getObjectName() : Long.toString(nodeId)));
 	}
 
 	/* (non-Javadoc)
@@ -126,32 +128,24 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction()
-		{
+		actionRefresh = new RefreshAction() {
 			private static final long serialVersionUID = 1L;
 
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
 			}
 		};
 		
-		actionSave = new Action()
-		{
+		actionSave = new Action() {
 			private static final long serialVersionUID = 1L;
 
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
 			}
 		};
-		actionSave.setText("&Save");
+		actionSave.setText(Messages.AgentConfigEditorView_Save);
 		actionSave.setImageDescriptor(SharedIcons.SAVE);
 	}
 
@@ -203,7 +197,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(getViewSite().getShell(), "Error", "Cannot save agent's configuration file: " + e.getMessage());
+			MessageDialog.openError(getViewSite().getShell(), Messages.AgentConfigEditorView_Error, Messages.AgentConfigEditorView_SaveError + e.getMessage());
 		}
 	}
 

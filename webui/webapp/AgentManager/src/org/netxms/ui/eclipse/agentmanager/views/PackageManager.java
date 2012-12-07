@@ -57,6 +57,7 @@ import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.client.packages.PackageInfo;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
+import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.PackageComparator;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.PackageLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -70,7 +71,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class PackageManager extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.PackageManager";
+	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.PackageManager"; //$NON-NLS-1$
 	
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;
@@ -92,7 +93,7 @@ public class PackageManager extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "ID", "Name", "Version", "Platform", "File", "Description" };
+		final String[] names = { Messages.PackageManager_ColumnID, Messages.PackageManager_ColumnName, Messages.PackageManager_ColumnVersion, Messages.PackageManager_ColumnPlatform, Messages.PackageManager_ColumnFile, Messages.PackageManager_ColumnDescription };
 		final int[] widths = { 70, 120, 90, 120, 150, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -114,7 +115,7 @@ public class PackageManager extends ViewPart
 		});
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Open package database", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.PackageManager_OpenDatabase, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -140,7 +141,7 @@ public class PackageManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot open package database";
+				return Messages.PackageManager_OpenError;
 			}
 		}.start();
 	}
@@ -169,7 +170,7 @@ public class PackageManager extends ViewPart
 			}
 		};
 		
-		actionInstall = new Action("&Install new package...", SharedIcons.ADD_OBJECT) {
+		actionInstall = new Action(Messages.PackageManager_InstallAction, SharedIcons.ADD_OBJECT) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -179,7 +180,7 @@ public class PackageManager extends ViewPart
 			}
 		};
 		
-		actionRemove = new Action("&Remove", SharedIcons.DELETE_OBJECT) {
+		actionRemove = new Action(Messages.PackageManager_RemoveAction, SharedIcons.DELETE_OBJECT) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -189,7 +190,7 @@ public class PackageManager extends ViewPart
 			}
 		};
 		
-		actionDeploy = new Action("&Deploy to managed nodes...", Activator.getImageDescriptor("icons/package_deploy.gif")) {
+		actionDeploy = new Action(Messages.PackageManager_DeployAction, Activator.getImageDescriptor("icons/package_deploy.gif")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -276,7 +277,7 @@ public class PackageManager extends ViewPart
 	private void refresh()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Load package list", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.PackageManager_LoadPkgList, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -294,7 +295,7 @@ public class PackageManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get package list from server";
+				return Messages.PackageManager_PkgListLoadError;
 			}
 		}.start();
 	}
@@ -305,9 +306,9 @@ public class PackageManager extends ViewPart
 	private void installPackage()
 	{
 		FileDialog fd = new FileDialog(getSite().getShell(), SWT.OPEN);
-		fd.setText("Select Package File");
-		fd.setFilterExtensions(new String[] { "*.npi", "*.*" });
-		fd.setFilterNames(new String[] { "NetXMS Package Info", "All files" });
+		fd.setText(Messages.PackageManager_SelectFile);
+		fd.setFilterExtensions(new String[] { "*.npi", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+		fd.setFilterNames(new String[] { Messages.PackageManager_FileTypePackage, Messages.PackageManager_FileTypeAll });
 		String npiName = fd.open();
 		if (npiName != null)
 		{
@@ -316,7 +317,7 @@ public class PackageManager extends ViewPart
 				final File npiFile = new File(npiName);
 				final PackageInfo p = new PackageInfo(npiFile);
 				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				new ConsoleJob("Install package", this, Activator.PLUGIN_ID, null) {
+				new ConsoleJob(Messages.PackageManager_InstallPackage, this, Activator.PLUGIN_ID, null) {
 					@Override
 					protected void runInternal(final IProgressMonitor monitor) throws Exception
 					{
@@ -326,7 +327,7 @@ public class PackageManager extends ViewPart
 							@Override
 							public void setTotalWorkAmount(long amount)
 							{
-								monitor.beginTask("Upload package file", (int)amount);
+								monitor.beginTask(Messages.PackageManager_UploadPackage, (int)amount);
 							}
 							
 							@Override
@@ -350,13 +351,13 @@ public class PackageManager extends ViewPart
 					@Override
 					protected String getErrorMessage()
 					{
-						return "Cannot install package";
+						return Messages.PackageManager_InstallError;
 					}
 				}.start();
 			}
 			catch(IOException e)
 			{
-				MessageDialog.openError(getSite().getShell(), "Error", "Cannot open package information file: " + e.getLocalizedMessage());
+				MessageDialog.openError(getSite().getShell(), Messages.PackageManager_Error, Messages.PackageManager_PkgFileOpenError + e.getLocalizedMessage());
 			}
 		}
 	}
@@ -366,13 +367,13 @@ public class PackageManager extends ViewPart
 	 */
 	private void removePackage()
 	{
-		if (!MessageDialog.openConfirm(getSite().getShell(), "Confirm Package Delete", "Are you sure you wish to delete selected packages?"))
+		if (!MessageDialog.openConfirm(getSite().getShell(), Messages.PackageManager_ConfirmDeleteTitle, Messages.PackageManager_ConfirmDeleteText))
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final Object[] packages = ((IStructuredSelection)viewer.getSelection()).toArray();
 		final List<Object> removedPackages = new ArrayList<Object>();
-		new ConsoleJob("Delete agent packages", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.PackageManager_DeletePackages, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -399,7 +400,7 @@ public class PackageManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot delete package from server";
+				return Messages.PackageManager_PkgDeleteError;
 			}
 		}.start();
 	}
@@ -414,7 +415,7 @@ public class PackageManager extends ViewPart
 			return;
 		final PackageInfo pkg = (PackageInfo)selection.getFirstElement();
 		
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(false));
 		dlg.enableMultiSelection(true);
 		if (dlg.open() != Window.OK)
 			return;
@@ -425,7 +426,7 @@ public class PackageManager extends ViewPart
 			objects.add(o.getObjectId());
 		}
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		ConsoleJob job = new ConsoleJob("Deploy agent package", null, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.PackageManager_DeployAgentPackage, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -455,7 +456,7 @@ public class PackageManager extends ViewPart
 									}
 									catch(PartInitException e)
 									{
-										MessageDialog.openError(getSite().getShell(), "Error", "Cannot open deployment monitor view: " + e.getLocalizedMessage());
+										MessageDialog.openError(getSite().getShell(), Messages.PackageManager_Error, Messages.PackageManager_ErrorOpenView + e.getLocalizedMessage());
 									}
 									synchronized(sync)
 									{
@@ -481,7 +482,7 @@ public class PackageManager extends ViewPart
 							@Override
 							public void run()
 							{
-								MessageDialog.openInformation(getSite().getShell(), "Information", "Package deployment completed");
+								MessageDialog.openInformation(getSite().getShell(), Messages.PackageManager_Information, Messages.PackageManager_PkgDepCompleted);
 							}
 						});
 					}
@@ -491,7 +492,7 @@ public class PackageManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot start package deployment";
+				return Messages.PackageManager_DepStartError;
 			}
 		};
 		job.setUser(false);
@@ -505,7 +506,7 @@ public class PackageManager extends ViewPart
 	public void dispose()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Unlock package database", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.PackageManager_UnlockDatabase, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -524,7 +525,7 @@ public class PackageManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot unlock package database";
+				return Messages.PackageManager_DBUnlockError;
 			}
 		}.start();
 		super.dispose();

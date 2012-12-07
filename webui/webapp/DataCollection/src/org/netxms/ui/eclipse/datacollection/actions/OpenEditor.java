@@ -29,6 +29,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -80,7 +81,7 @@ public class OpenEditor implements IObjectActionDelegate
 		    (((IStructuredSelection)selection).size() == 1))
 		{
 			Object element = ((IStructuredSelection)selection).getFirstElement();
-			if ((element instanceof Node) || (element instanceof Template) || (element instanceof Cluster))
+			if ((element instanceof Node) || (element instanceof Template) || (element instanceof Cluster) || (element instanceof MobileDevice))
 			{
 				object = (GenericObject)element;
 			}

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Adapter factory for NetXMS objects
- *
  */
 public class ObjectAdapterFactory implements IAdapterFactory
 {
@@ -104,6 +103,8 @@ public class ObjectAdapterFactory implements IAdapterFactory
 							return Activator.getImageDescriptor("icons/interface.png"); //$NON-NLS-1$
 						case GenericObject.OBJECT_NETWORKSERVICE:
 							return Activator.getImageDescriptor("icons/network_service.png"); //$NON-NLS-1$
+						case GenericObject.OBJECT_MOBILEDEVICE:
+							return Activator.getImageDescriptor("icons/mobile_device.png"); //$NON-NLS-1$
 						case GenericObject.OBJECT_CONDITION:
 							return Activator.getImageDescriptor("icons/condition.gif"); //$NON-NLS-1$
 						case GenericObject.OBJECT_TEMPLATEROOT:

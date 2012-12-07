@@ -30,7 +30,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class PackageComparator extends ViewerComparator
 {
-	private static final long serialVersionUID = 8671148698789246737L;
+	private static final long serialVersionUID = 1L;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -41,7 +41,7 @@ public class PackageComparator extends ViewerComparator
 		PackageInfo p1 = (PackageInfo)e1;
 		PackageInfo p2 = (PackageInfo)e2;
 		int result;
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case PackageManager.COLUMN_ID:
 				result = Long.signum(p1.getId() - p2.getId());

@@ -56,7 +56,7 @@ public class DeploymentStatus
 		{
 			nodeObject = (Node)((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId, Node.class);
 		}
-		return (nodeObject != null) ? nodeObject.getObjectName() : ("[" + Long.toString(nodeId) + "]");
+		return (nodeObject != null) ? nodeObject.getObjectName() : ("[" + Long.toString(nodeId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
@@ -80,7 +80,7 @@ public class DeploymentStatus
 	 */
 	public String getMessage()
 	{
-		return (message != null) ? message : "";
+		return (message != null) ? message : ""; //$NON-NLS-1$
 	}
 
 	/**

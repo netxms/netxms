@@ -85,6 +85,7 @@ public class SystemRights extends PropertyPage
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, "Manage users");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SEND_SMS, "Send SMS");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, "Register agents");
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, "Login as mobile device");
 		
 		return dialogArea;
 	}

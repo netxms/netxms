@@ -100,6 +100,8 @@ public class SelectDciDialog extends Dialog
 		{
 			Button button = createButton(parent, 1000, "&None", false);
 			button.addSelectionListener(new SelectionListener() {
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{
@@ -133,7 +135,7 @@ public class SelectDciDialog extends Dialog
 		{
 			splitter = new SashForm(dialogArea, SWT.HORIZONTAL);
 			
-			objectTree = new ObjectTree(splitter, SWT.BORDER, ObjectTree.NONE, null, ObjectSelectionDialog.createNodeSelectionFilter());
+			objectTree = new ObjectTree(splitter, SWT.BORDER, ObjectTree.NONE, null, ObjectSelectionDialog.createNodeSelectionFilter(true));
 			String text = settings.get("SelectDciDialog.Filter"); //$NON-NLS-1$
 			if (text != null)
 				objectTree.setFilter(text);

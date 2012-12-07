@@ -131,7 +131,7 @@ public class TrustedNodes extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
+				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(true));
 				if (dlg.open() == Window.OK)
 				{
 					GenericObject[] nodes = dlg.getSelectedObjects(Node.class);

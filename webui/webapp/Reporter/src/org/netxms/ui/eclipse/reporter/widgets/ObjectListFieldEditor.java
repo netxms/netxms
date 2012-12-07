@@ -111,7 +111,7 @@ public class ObjectListFieldEditor extends FieldEditor
 	 */
 	private void addObjects()
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(false));
 		if (dlg.open() == Window.OK)
 		{
 			for(GenericObject o : dlg.getSelectedObjects())

@@ -2319,6 +2319,7 @@ webui/webapp/AgentManager/icons/package_deploy.gif -text
 webui/webapp/AgentManager/icons/pending.gif -text
 webui/webapp/AgentManager/icons/unsaved_config.png -text
 webui/webapp/AgentManager/plugin.xml -text
+webui/webapp/AgentManager/src/org/netxms/ui/eclipse/agentmanager/messages.properties -text
 webui/webapp/AgentManager/src/org/netxms/ui/eclipse/agentmanager/messages_es.properties -text
 webui/webapp/AlarmViewer/.settings/org.eclipse.core.resources.prefs -text
 webui/webapp/AlarmViewer/META-INF/MANIFEST.MF -text
@@ -3028,6 +3029,7 @@ webui/webapp/ObjectBrowser/icons/container.png -text
 webui/webapp/ObjectBrowser/icons/dashboard.gif -text
 webui/webapp/ObjectBrowser/icons/dashboard_root.gif -text
 webui/webapp/ObjectBrowser/icons/interface.png -text
+webui/webapp/ObjectBrowser/icons/mobile_device.png -text
 webui/webapp/ObjectBrowser/icons/netmap.png -text
 webui/webapp/ObjectBrowser/icons/netmap_group.png -text
 webui/webapp/ObjectBrowser/icons/netmap_root.gif -text

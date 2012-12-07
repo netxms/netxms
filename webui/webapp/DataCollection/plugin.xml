@@ -39,7 +39,7 @@
                class="org.netxms.ui.eclipse.datacollection.actions.ShowLastValues"
                enablesFor="1"
                icon="icons/last_values.png"
-               id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues#Node"
                label="Last values"
                menubarPath="datacollection">
          </action>
@@ -173,6 +173,26 @@
                id="org.netxms.ui.eclipse.datacollection.popupActions.CreateSnmpDci#SnmpValue"
                label="Create data collection item..."
                menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.MobileDevice"
+            objectClass="org.netxms.client.objects.MobileDevice">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
+               enablesFor="1"
+               icon="icons/dc_editor.png"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#MobileDevice"
+               label="Data Collection Configuration"
+               menubarPath="datacollection">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.ShowLastValues"
+               enablesFor="1"
+               icon="icons/last_values.png"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues#MobileDevice"
+               label="Last values"
+               menubarPath="datacollection">
          </action>
       </objectContribution>
    </extension>

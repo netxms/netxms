@@ -29,7 +29,7 @@ import org.netxms.ui.eclipse.agentmanager.views.PackageManager;
  */
 public class PackageLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 3508029172611479842L;
+	private static final long serialVersionUID = 1L;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
