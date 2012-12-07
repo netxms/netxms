@@ -10,6 +10,8 @@
 	- DCIs can be created from MIB Explorer
 - Android client:
 	- Select all/unselect all in alarms list
+	- Multipliers for graphs and last values: binary (power of two) and decimal (power of ten)
+	- Fixed issues: #189, #192
 - API for creating embedded application agents
 - Fixed issues: #23, #47, #162, #163, #177, #186
 
