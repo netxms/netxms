@@ -61,6 +61,7 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	private static final String TAG = "nxclient/NodeInfo";
 	private static final Integer[] DEFAULT_COLORS = { 0x40699C, 0x9E413E, 0x7F9A48, 0x695185, 0x3C8DA3, 0xCC7B38, 0x4F81BD, 0xC0504D,
 			0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9 };
+	private static final int MAX_COLORS = DEFAULT_COLORS.length;
 	private static final String SORT_KEY = "NodeAlarmsSortBy";
 
 	private static Method method_invalidateOptionsMenu;
@@ -178,19 +179,6 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 		TAB_INTERFACES = getString(R.string.node_info_interfaces);
 		interfacesAdapter = new InterfacesAdapter(this, null, null);
 		interfacesListView = (ExpandableListView)findViewById(R.id.interfaces);
-//		interfacesListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
-//			@Override
-//			public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id)
-//			{
-//				GraphSettings gs = (GraphSettings)interfacesAdapter.getChild(groupPosition, childPosition);
-//				if (gs != null)
-//				{
-//					//drawGraph(gs);
-//					return true;
-//				}
-//				return false;
-//			}
-//		});
 		interfacesListView.setAdapter(interfacesAdapter);
 		registerForContextMenu(interfacesListView);
 		tabHost.addTab(tabHost.newTabSpec(TAB_INTERFACES).setIndicator(
@@ -417,7 +405,8 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 		{
 			ArrayList<Integer> id = new ArrayList<Integer>(0);
 			id.add((int)node.getObjectId());
-			alarmsAdapter.setAlarms(service.getAlarms(), id);
+			alarmsAdapter.setFilter(id);
+			alarmsAdapter.setAlarms(service.getAlarms());
 			alarmsAdapter.notifyDataSetChanged();
 		}
 	}
@@ -439,50 +428,8 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	@Override
 	public boolean onContextItemSelected(MenuItem item)
 	{
-		// get selected item
-		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
-
-		switch (item.getItemId())
-		{
-		// Last values
-			case R.id.graph_half_hour:
-				return drawGraph(1800, info.position);
-			case R.id.graph_one_hour:
-				return drawGraph(3600, info.position);
-			case R.id.graph_two_hours:
-				return drawGraph(7200, info.position);
-			case R.id.graph_four_hours:
-				return drawGraph(14400, info.position);
-			case R.id.graph_one_day:
-				return drawGraph(86400, info.position);
-			case R.id.graph_one_week:
-				return drawGraph(604800, info.position);
-			case R.id.bar_chart:
-				return drawComparisonChart(DrawBarChart.class);
-			case R.id.pie_chart:
-				return drawComparisonChart(DrawPieChart.class);
-			case R.id.table_last_value:
-				return showTableLastValue(info.position);
-				// Alarms
-			case R.id.acknowledge:
-				acknowledgeAlarms(info.position, false);
-				return true;
-			case R.id.sticky_acknowledge:
-				acknowledgeAlarms(info.position, true);
-				return true;
-			case R.id.resolve:
-				resolveAlarms(info.position);
-				return true;
-			case R.id.terminate:
-				terminateAlarms(info.position);
-				return true;
-			case R.id.selectall:
-				selectAll(true);
-				return true;
-			case R.id.unselectall:
-				selectAll(false);
-				return true;
-		}
+		if (handleItemSelection(item))
+			return true;
 		return super.onContextItemSelected(item);
 	}
 
@@ -494,6 +441,18 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
+		if (handleItemSelection(item))
+			return true;
+		return super.onOptionsItemSelected(item);
+	}
+
+	/**
+	 * Handles menu item selection for both Option and Context menus
+	 * @param item	Menu item to handle
+	 * @return true if menu has been properly handled
+	 */
+	private boolean handleItemSelection(MenuItem item)
+	{
 		switch (item.getItemId())
 		{
 			case android.R.id.home:
@@ -502,33 +461,92 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 			case R.id.settings:
 				startActivity(new Intent(this, ConsolePreferences.class));
 				return true;
-				// Alarms
 			case R.id.selectall:
 				selectAll(true);
 				return true;
 			case R.id.unselectall:
 				selectAll(false);
 				return true;
-				// Last values
+			case R.id.acknowledge:
+				alarmsAdapter.doAction(AlarmListAdapter.ACKNOWLEDGE, getAlarmsSelection(item));
+				selectAll(false);
+				return true;
+			case R.id.sticky_acknowledge:
+				alarmsAdapter.doAction(AlarmListAdapter.STICKY_ACKNOWLEDGE, getAlarmsSelection(item));
+				selectAll(false);
+				return true;
+			case R.id.resolve:
+				alarmsAdapter.doAction(AlarmListAdapter.RESOLVE, getAlarmsSelection(item));
+				selectAll(false);
+				return true;
+			case R.id.terminate:
+				alarmsAdapter.doAction(AlarmListAdapter.TERMINATE, getAlarmsSelection(item));
+				selectAll(false);
+				return true;
+			case R.id.table_last_value:
+				return showTableLastValue(getLastValuesSelection(item));
 			case R.id.graph_half_hour:
-				return drawGraph(1800, lastValuesListView.getSelectedItemPosition());
+				return drawGraph(1800, getLastValuesSelection(item));
 			case R.id.graph_one_hour:
-				return drawGraph(3600, lastValuesListView.getSelectedItemPosition());
+				return drawGraph(3600, getLastValuesSelection(item));
 			case R.id.graph_two_hours:
-				return drawGraph(7200, lastValuesListView.getSelectedItemPosition());
+				return drawGraph(7200, getLastValuesSelection(item));
 			case R.id.graph_four_hours:
-				return drawGraph(14400, lastValuesListView.getSelectedItemPosition());
+				return drawGraph(14400, getLastValuesSelection(item));
 			case R.id.graph_one_day:
-				return drawGraph(86400, lastValuesListView.getSelectedItemPosition());
+				return drawGraph(86400, getLastValuesSelection(item));
 			case R.id.graph_one_week:
-				return drawGraph(604800, lastValuesListView.getSelectedItemPosition());
+				return drawGraph(604800, getLastValuesSelection(item));
 			case R.id.bar_chart:
 				return drawComparisonChart(DrawBarChart.class);
 			case R.id.pie_chart:
 				return drawComparisonChart(DrawPieChart.class);
-			default:
-				return super.onOptionsItemSelected(item);
 		}
+		return false;
+	}
+
+	/**
+	 * Get list of selected alarms
+	 */
+	private ArrayList<Long> getAlarmsSelection(MenuItem item)
+	{
+		ArrayList<Long> idList = new ArrayList<Long>();
+		final SparseBooleanArray positions = alarmsListView.getCheckedItemPositions();
+		if (positions != null && positions.size() > 0)
+			for (int i = 0; i < alarmsAdapter.getCount(); i++)
+				if (positions.get(i))
+				{
+					Alarm al = (Alarm)alarmsAdapter.getItem(i);
+					if (al != null)
+						idList.add(al.getId());
+				}
+		if (idList.size() == 0)
+		{
+			AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
+			Alarm al = (Alarm)alarmsAdapter.getItem(info != null ? info.position : alarmsListView.getSelectedItemPosition());
+			if (al != null)
+				idList.add(al.getId());
+		}
+		return idList;
+	}
+
+	/**
+	 * Get list of selected dci values
+	 */
+	private ArrayList<Long> getLastValuesSelection(MenuItem item)
+	{
+		ArrayList<Long> idList = new ArrayList<Long>();
+		final SparseBooleanArray positions = lastValuesListView.getCheckedItemPositions();
+		if (positions != null && positions.size() > 0)
+			for (int i = 0; i < lastValuesAdapter.getCount(); i++)
+				if (positions.get(i))
+					idList.add((long)i);
+		if (idList.size() == 0)
+		{
+			AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
+			idList.add((long)(info != null ? info.position : lastValuesListView.getSelectedItemPosition()));
+		}
+		return idList;
 	}
 
 	/**
@@ -537,14 +555,17 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	 * @param position
 	 * @return
 	 */
-	private boolean showTableLastValue(int position)
+	private boolean showTableLastValue(ArrayList<Long> idList)
 	{
-		DciValue value = (DciValue)lastValuesAdapter.getItem(position);
-		Intent newIntent = new Intent(this, TableLastValues.class);
-		newIntent.putExtra("nodeId", (int)nodeId);
-		newIntent.putExtra("dciId", (int)value.getId());
-		newIntent.putExtra("description", value.getDescription());
-		startActivity(newIntent);
+		if (idList.size() > 0)
+		{
+			DciValue value = (DciValue)lastValuesAdapter.getItem(idList.get(0).intValue());
+			Intent newIntent = new Intent(this, TableLastValues.class);
+			newIntent.putExtra("nodeId", (int)nodeId);
+			newIntent.putExtra("dciId", (int)value.getId());
+			newIntent.putExtra("description", value.getDescription());
+			startActivity(newIntent);
+		}
 		return true;
 	}
 
@@ -553,63 +574,48 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	 * @param val
 	 * @return
 	 */
-	private boolean drawGraph(long secsBack, int position)
+	private boolean drawGraph(long secsBack, ArrayList<Long> idList)
 	{
-		Intent newIntent = new Intent(this, DrawGraph.class);
-
-		ArrayList<Integer> nodeIdList = new ArrayList<Integer>();
-		ArrayList<Integer> dciIdList = new ArrayList<Integer>();
-		ArrayList<Integer> colorList = new ArrayList<Integer>();
-		ArrayList<Integer> lineWidthList = new ArrayList<Integer>();
-		ArrayList<String> nameList = new ArrayList<String>();
-
-		// Set values
-		int count = 0;
-		final SparseBooleanArray positions = lastValuesListView.getCheckedItemPositions();
-		if (positions.size() > 0)
+		if (idList.size() > 0)
 		{
-			for (int i = 0; (i < lastValuesAdapter.getCount()) && (count < 16); i++)
+			ArrayList<Integer> nodeIdList = new ArrayList<Integer>();
+			ArrayList<Integer> dciIdList = new ArrayList<Integer>();
+			ArrayList<Integer> colorList = new ArrayList<Integer>();
+			ArrayList<Integer> lineWidthList = new ArrayList<Integer>();
+			ArrayList<String> nameList = new ArrayList<String>();
+
+			// Set values
+			int count = 0;
+			for (int i = 0; i < idList.size() && count < MAX_COLORS; i++)
 			{
-				if (!positions.get(i))
-					continue;
-
-				DciValue value = (DciValue)lastValuesAdapter.getItem(i);
-				if (value.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
-					continue;
-
-				nodeIdList.add((int)nodeId);
-				dciIdList.add((int)value.getId());
-				colorList.add(DEFAULT_COLORS[count]);
-				lineWidthList.add(3);
-				nameList.add(value.getDescription());
-				count++;
+				DciValue value = (DciValue)lastValuesAdapter.getItem(idList.get(i).intValue());
+				if (value != null && value.getDcObjectType() == DataCollectionObject.DCO_TYPE_ITEM)
+				{
+					nodeIdList.add((int)nodeId);
+					dciIdList.add((int)value.getId());
+					colorList.add(DEFAULT_COLORS[count]);
+					lineWidthList.add(3);
+					nameList.add(value.getDescription());
+					count++;
+				}
 			}
-		}
 
-		if ((count == 0) && (position != ListView.INVALID_POSITION))
-		{
-			DciValue value = (DciValue)lastValuesAdapter.getItem(position);
-			nodeIdList.add((int)nodeId);
-			dciIdList.add((int)value.getId());
-			colorList.add(DEFAULT_COLORS[0]);
-			lineWidthList.add(3);
-			nameList.add(value.getDescription());
-			newIntent.putExtra("graphTitle", value.getDescription());
-			count++;
-		}
-
-		// Pass them to activity
-		if (count > 0)
-		{
-			newIntent.putExtra("numGraphs", count);
-			newIntent.putIntegerArrayListExtra("nodeIdList", nodeIdList);
-			newIntent.putIntegerArrayListExtra("dciIdList", dciIdList);
-			newIntent.putIntegerArrayListExtra("colorList", colorList);
-			newIntent.putIntegerArrayListExtra("lineWidthList", lineWidthList);
-			newIntent.putStringArrayListExtra("nameList", nameList);
-			newIntent.putExtra("timeFrom", System.currentTimeMillis() - secsBack * 1000);
-			newIntent.putExtra("timeTo", System.currentTimeMillis());
-			startActivity(newIntent);
+			// Pass them to activity
+			if (count > 0)
+			{
+				Intent newIntent = new Intent(this, DrawGraph.class);
+				if (count == 1)
+					newIntent.putExtra("graphTitle", nameList.get(0));
+				newIntent.putExtra("numGraphs", count);
+				newIntent.putIntegerArrayListExtra("nodeIdList", nodeIdList);
+				newIntent.putIntegerArrayListExtra("dciIdList", dciIdList);
+				newIntent.putIntegerArrayListExtra("colorList", colorList);
+				newIntent.putIntegerArrayListExtra("lineWidthList", lineWidthList);
+				newIntent.putStringArrayListExtra("nameList", nameList);
+				newIntent.putExtra("timeFrom", System.currentTimeMillis() - secsBack * 1000);
+				newIntent.putExtra("timeTo", System.currentTimeMillis());
+				startActivity(newIntent);
+			}
 		}
 		return true;
 	}
@@ -633,7 +639,7 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 		final SparseBooleanArray positions = lastValuesListView.getCheckedItemPositions();
 		if (positions.size() > 0)
 		{
-			for (int i = 0; (i < lastValuesAdapter.getCount()) && (count < 16); i++)
+			for (int i = 0; (i < lastValuesAdapter.getCount()) && (count < MAX_COLORS); i++)
 			{
 				if (!positions.get(i))
 					continue;
@@ -667,61 +673,6 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	{
 		for (int i = 0; i < alarmsAdapter.getCount(); i++)
 			alarmsListView.setItemChecked(i, select);
-	}
-
-	private ArrayList<Long> getAlarmIdList(int position)
-	{
-		int count = 0;
-		ArrayList<Long> alarmIdList = new ArrayList<Long>();
-		final SparseBooleanArray positions = alarmsListView.getCheckedItemPositions();
-		if (positions != null && positions.size() > 0)
-			for (int i = 0; i < alarmsAdapter.getCount(); i++)
-				if (positions.get(i))
-				{
-					Alarm al = (Alarm)alarmsAdapter.getItem(i);
-					if (al != null)
-					{
-						alarmIdList.add(al.getId());
-						count++;
-					}
-				}
-		if (count == 0 && (position != ListView.INVALID_POSITION))
-		{
-			Alarm al = (Alarm)alarmsAdapter.getItem(position);
-			if (al != null)
-				alarmIdList.add(al.getId());
-		}
-		return alarmIdList;
-	}
-
-	private void acknowledgeAlarms(int position, boolean sticky)
-	{
-		ArrayList<Long> alarmIdList = getAlarmIdList(position);
-		if (alarmIdList.size() != 0)
-		{
-			alarmsAdapter.acknowledgeItem(alarmIdList, sticky);
-			refreshAlarms();
-		}
-	}
-
-	private void resolveAlarms(int position)
-	{
-		ArrayList<Long> alarmIdList = getAlarmIdList(position);
-		if (alarmIdList.size() != 0)
-		{
-			alarmsAdapter.resolveItem(alarmIdList);
-			refreshAlarms();
-		}
-	}
-
-	private void terminateAlarms(int position)
-	{
-		ArrayList<Long> alarmIdList = getAlarmIdList(position);
-		if (alarmIdList.size() != 0)
-		{
-			alarmsAdapter.terminateItem(alarmIdList);
-			refreshAlarms();
-		}
 	}
 
 	/**

@@ -888,6 +888,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		catch (Exception e)
 		{
+			Log.d(TAG, "Exception while executing session.acknowledgeAlarm", e);
 		}
 	}
 
@@ -903,13 +904,14 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		catch (Exception e)
 		{
+			Log.d(TAG, "Exception while executing session.resolveAlarm", e);
 		}
 	}
 
 	/**
 	 * @param ids
 	 */
-	public void teminateAlarm(ArrayList<Long> ids)
+	public void terminateAlarm(ArrayList<Long> ids)
 	{
 		try
 		{
@@ -918,6 +920,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		catch (Exception e)
 		{
+			Log.d(TAG, "Exception while executing session.terminateAlarm", e);
 		}
 	}
 
@@ -933,6 +936,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		catch (Exception e)
 		{
+			Log.d(TAG, "Exception while executing session.setObjectManaged", e);
 		}
 	}
 
@@ -948,6 +952,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		catch (Exception e)
 		{
 			this.objectTools = null;
+			Log.d(TAG, "Exception while executing session.getObjectTools", e);
 		}
 	}
 

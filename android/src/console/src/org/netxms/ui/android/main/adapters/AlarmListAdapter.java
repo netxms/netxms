@@ -15,8 +15,10 @@ import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.views.CheckableLinearLayout;
 import org.netxms.ui.android.service.ClientConnectorService;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.res.Resources;
+import android.os.AsyncTask;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,12 +43,19 @@ public class AlarmListAdapter extends BaseAdapter
 	public static final int SORT_DATE_DESC = 3;
 	public static final int SORT_NAME_ASC = 4;
 	public static final int SORT_NAME_DESC = 5;
+	public static final int ACKNOWLEDGE = 0;
+	public static final int STICKY_ACKNOWLEDGE = 1;
+	public static final int RESOLVE = 2;
+	public static final int TERMINATE = 3;
 
 	private final Context context;
 	private List<Alarm> alarms = new ArrayList<Alarm>(0);
+	private ArrayList<Integer> nodeIdList = null;
 	private ClientConnectorService service;
 	private int sortBy = SORT_SEVERITY_DESC;
 	private String NODE_UNKNOWN = "";
+	private final ProgressDialog dialog;
+	private final Resources r;
 
 	/**
 	 * 
@@ -55,7 +64,9 @@ public class AlarmListAdapter extends BaseAdapter
 	public AlarmListAdapter(Context context)
 	{
 		this.context = context;
-		NODE_UNKNOWN = context.getResources().getString(R.string.node_unknown);
+		r = context.getResources();
+		NODE_UNKNOWN = r.getString(R.string.node_unknown);
+		dialog = new ProgressDialog(context);
 	}
 
 	/**
@@ -77,18 +88,26 @@ public class AlarmListAdapter extends BaseAdapter
 	}
 
 	/**
+	 * Set alarms filter
+	 * 
+	 * @param list List of nodes to be used to filter alarms
+	 */
+	public void setFilter(ArrayList<Integer> list)
+	{
+		nodeIdList = list;
+	}
+
+	/**
 	 * Set alarms
 	 * 
 	 * @param alarms List of alarms
-	 * @param nodeIdList List of nodes to be used to filter alarms
 	 */
-	public void setAlarms(Alarm[] alarms, ArrayList<Integer> nodeIdList)
+	public void setAlarms(Alarm[] alarms)
 	{
 		if (nodeIdList == null || nodeIdList.size() == 0)
 			this.alarms = Arrays.asList(alarms);
 		else
-		// Filter on specific node
-		{
+		{ // Filter on specific node
 			this.alarms.clear();
 			for (int i = 0; i < alarms.length; i++)
 				for (int j = 0; j < nodeIdList.size(); j++)
@@ -216,27 +235,15 @@ public class AlarmListAdapter extends BaseAdapter
 	}
 
 	/**
-	 * @param id
+	 * @param action	Action to be executed
+	 * @param ids	List of id to be processed
 	 */
-	public void acknowledgeItem(ArrayList<Long> ids, boolean sticky)
-	{
-		service.acknowledgeAlarm(ids, sticky);
-	}
 
-	/**
-	 * @param id
-	 */
-	public void resolveItem(ArrayList<Long> ids)
+	@SuppressWarnings("unchecked")
+	public void doAction(int action, ArrayList<Long> ids)
 	{
-		service.resolveAlarm(ids);
-	}
-
-	/**
-	 * @param id
-	 */
-	public void terminateItem(ArrayList<Long> ids)
-	{
-		service.teminateAlarm(ids);
+		if (ids.size() > 0)
+			new AlarmActionTask(action).execute(ids);
 	}
 
 	/*
@@ -251,7 +258,6 @@ public class AlarmListAdapter extends BaseAdapter
 		TextView message, source, date;
 		LinearLayout view, texts, info, icons;
 		ImageView severity, state;
-		Resources r = context.getResources();
 
 		if (convertView == null) // new alarm, create fields
 		{
@@ -329,5 +335,56 @@ public class AlarmListAdapter extends BaseAdapter
 		final int[] stateImageId = { R.drawable.alarm_outstanding, R.drawable.alarm_acknowledged,
 				R.drawable.alarm_resolved, R.drawable.alarm_terminated };
 		return alarm.isSticky() ? R.drawable.alarm_sticky_acknowledged : stateImageId[alarm.getState()];
+	}
+
+	/**
+	 * Internal task for taking action on list of alarms selected
+	 */
+	private class AlarmActionTask extends AsyncTask<ArrayList<Long>, Void, Void>
+	{
+		private final int action;
+
+		protected AlarmActionTask(int action)
+		{
+			this.action = action;
+		}
+
+		@Override
+		protected void onPreExecute()
+		{
+			dialog.setMessage(r.getString(R.string.progress_processing_data));
+			dialog.setIndeterminate(true);
+			dialog.setCancelable(false);
+			dialog.show();
+		}
+
+		@Override
+		protected Void doInBackground(ArrayList<Long>... params)
+		{
+			switch (action)
+			{
+				case ACKNOWLEDGE:
+					service.acknowledgeAlarm(params[0], false);
+					break;
+				case STICKY_ACKNOWLEDGE:
+					service.acknowledgeAlarm(params[0], true);
+					break;
+				case RESOLVE:
+					service.resolveAlarm(params[0]);
+					break;
+				case TERMINATE:
+					service.terminateAlarm(params[0]);
+					break;
+			}
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void result)
+		{
+			setAlarms(service.getAlarms());
+			notifyDataSetChanged();
+			dialog.cancel();
+		}
 	}
 }
