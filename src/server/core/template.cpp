@@ -22,21 +22,17 @@
 
 #include "nxcore.h"
 
-
-//
-// Redefined status calculation for template group
-//
-
+/**
+ * Redefined status calculation for template group
+ */
 void TemplateGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
 
-
-//
-// Template object constructor
-//
-
+/**
+ * Template object constructor
+ */
 Template::Template() : NetObj()
 {
 	m_dcObjects = new ObjectArray<DCObject>(8, 16, true);
@@ -49,11 +45,9 @@ Template::Template() : NetObj()
 	m_mutexDciAccess = MutexCreateRecursive();
 }
 
-
-//
-// Constructor for new template object
-//
-
+/**
+ * Constructor for new template object
+ */
 Template::Template(const TCHAR *pszName) : NetObj()
 {
    nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME);
@@ -544,12 +538,10 @@ bool Template::setItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
    return success;
 }
 
-
-//
-// Lock data collection items list
-//
-
-BOOL Template::LockDCIList(DWORD dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
+/**
+ * Lock data collection items list
+ */
+BOOL Template::lockDCIList(DWORD dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
 {
    BOOL bSuccess;
 
@@ -571,12 +563,10 @@ BOOL Template::LockDCIList(DWORD dwSessionId, const TCHAR *pszNewOwner, TCHAR *p
    return bSuccess;
 }
 
-
-//
-// Unlock data collection items list
-//
-
-BOOL Template::UnlockDCIList(DWORD dwSessionId)
+/**
+ * Unlock data collection items list
+ */
+BOOL Template::unlockDCIList(DWORD dwSessionId)
 {
    BOOL bSuccess = FALSE;
 
@@ -596,12 +586,10 @@ BOOL Template::UnlockDCIList(DWORD dwSessionId)
    return bSuccess;
 }
 
-
-//
-// Send DCI list to client
-//
-
-void Template::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
+/**
+ * Send DCI list to client
+ */
+void Template::sendItemsToClient(ClientSession *pSession, DWORD dwRqId)
 {
    CSCPMessage msg;
 
@@ -807,40 +795,38 @@ DWORD Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
 
-
-//
-// Apply template to node
-//
-
-BOOL Template::ApplyToNode(Node *pNode)
+/**
+ * Apply template to data collection target
+ */
+BOOL Template::applyToTarget(DataCollectionTarget *target)
 {
    DWORD *pdwItemList;
    BOOL bErrors = FALSE;
 
    // Link node to template
-   if (!IsChild(pNode->Id()))
+   if (!IsChild(target->Id()))
    {
-      AddChild(pNode);
-      pNode->AddParent(this);
+      AddChild(target);
+      target->AddParent(this);
    }
 
    pdwItemList = (DWORD *)malloc(sizeof(DWORD) * m_dcObjects->size());
-   DbgPrintf(2, _T("Apply %d items from template \"%s\" to node \"%s\""),
-             m_dcObjects->size(), m_szName, pNode->Name());
+   DbgPrintf(2, _T("Apply %d items from template \"%s\" to target \"%s\""),
+             m_dcObjects->size(), m_szName, target->Name());
 
    // Copy items
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
 		DCObject *object = m_dcObjects->get(i);
       pdwItemList[i] = object->getId();
-      if (!pNode->applyTemplateItem(m_dwId, object))
+      if (!target->applyTemplateItem(m_dwId, object))
       {
          bErrors = TRUE;
       }
    }
 
    // Clean items deleted from template
-   pNode->cleanDeletedTemplateItems(m_dwId, m_dcObjects->size(), pdwItemList);
+   target->cleanDeletedTemplateItems(m_dwId, m_dcObjects->size(), pdwItemList);
 
    // Cleanup
    free(pdwItemList);
@@ -848,11 +834,9 @@ BOOL Template::ApplyToNode(Node *pNode)
    return bErrors;
 }
 
-
-//
-// Queue template update
-//
-
+/**
+ * Queue template update
+ */
 void Template::queueUpdate()
 {
    DWORD i;
@@ -860,24 +844,22 @@ void Template::queueUpdate()
 
    LockData();
    for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_NODE)
+      if ((m_pChildList[i]->Type() == OBJECT_NODE) || (m_pChildList[i]->Type() == OBJECT_MOBILEDEVICE))
       {
          IncRefCount();
          pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
          pInfo->iUpdateType = APPLY_TEMPLATE;
          pInfo->pTemplate = this;
-         pInfo->dwNodeId = m_pChildList[i]->Id();
+         pInfo->targetId = m_pChildList[i]->Id();
          g_pTemplateUpdateQueue->Put(pInfo);
       }
    UnlockData();
 }
 
-
-//
-// Queue template remove from node
-//
-
-void Template::queueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI)
+/**
+ * Queue template remove from node
+ */
+void Template::queueRemoveFromTarget(DWORD targetId, BOOL bRemoveDCI)
 {
    TEMPLATE_UPDATE_INFO *pInfo;
 
@@ -886,17 +868,15 @@ void Template::queueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI)
    pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
    pInfo->iUpdateType = REMOVE_TEMPLATE;
    pInfo->pTemplate = this;
-   pInfo->dwNodeId = dwNodeId;
+   pInfo->targetId = targetId;
    pInfo->bRemoveDCI = bRemoveDCI;
    g_pTemplateUpdateQueue->Put(pInfo);
    UnlockData();
 }
 
-
-//
-// Get list of events used by DCIs
-//
-
+/**
+ * Get list of events used by DCIs
+ */
 DWORD *Template::getDCIEventsList(DWORD *pdwCount)
 {
    DWORD i, j, *pdwList;
@@ -956,109 +936,9 @@ void Template::CreateNXMPRecord(String &str)
 	str += _T("\t\t</template>\n");
 }
 
-
-//
-// Validate template agains specific DCI list
-//
-
-void Template::ValidateDCIList(DCI_CFG *cfg)
-{
-	DWORD i, j, dwNumDeleted, *pdwDeleteList;
-
-	lockDciAccess(); // write lock
-
-	pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dcObjects->size());
-	dwNumDeleted = 0;
-
-	for(i = 0; i < (DWORD)m_dcObjects->size(); i++)
-	{
-		if (m_dcObjects->get(i)->getType() == DCO_TYPE_ITEM)
-		{
-			DCItem *item = (DCItem *)m_dcObjects->get(i);
-			for(j = 0; cfg[j].pszName != NULL; j++)
-			{
-				if (!_tcsicmp(item->getDescription(), cfg[j].pszName))
-				{
-					item->systemModify(cfg[j].pszParam, cfg[j].nOrigin, cfg[j].nRetention, cfg[j].nInterval, cfg[j].nDataType);
-					cfg[j].nFound = 1;
-					break;
-				}
-			}
-
-			// Mark non-existing items
-			if (cfg[j].pszName == NULL)
-				pdwDeleteList[dwNumDeleted++] = item->getId();
-		}
-	}
-
-	// Delete unneeded items
-	for(i = 0; i < dwNumDeleted; i++)
-		deleteDCObject(pdwDeleteList[i], false);
-
-	safe_free(pdwDeleteList);
-
-	// Create missing items
-	for(i = 0; cfg[i].pszName != NULL; i++)
-	{
-		if (!cfg[i].nFound)
-		{
-			addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), cfg[i].pszParam,
-				                    cfg[i].nOrigin, cfg[i].nDataType,
-									     cfg[i].nInterval, cfg[i].nRetention,
-									     this, cfg[i].pszName), true);
-		}
-	}
-
-	unlockDciAccess();
-}
-
-
-//
-// Validate system template
-//
-
-void Template::ValidateSystemTemplate()
-{
-	if (!_tcsicmp(m_szName, _T("@System.Agent")))
-	{
-		DCI_CFG dciCfgAgent[] =
-		{
-			{ _T("@system.cpu_usage"), _T("System.CPU.Usage"), 60, 1, DCI_DT_INT, DS_NATIVE_AGENT, 0 },
-			{ _T("@system.load_avg"), _T("System.CPU.LoadAvg"), 60, 1, DCI_DT_FLOAT, DS_NATIVE_AGENT, 0 },
-			{ _T("@system.usedmem"), _T("System.Memory.Physical.Used"), 60, 1, DCI_DT_UINT64, DS_NATIVE_AGENT, 0 },
-			{ _T("@system.totalmem"), _T("System.Memory.Physical.Total"), 60, 1, DCI_DT_UINT64, DS_NATIVE_AGENT, 0 },
-			{ _T("@system.disk_queue"), _T("System.IO.DiskQueue"), 60, 1, DCI_DT_FLOAT, DS_NATIVE_AGENT, 0 },
-			{ NULL, NULL, 0, 0, 0, 0 }
-		};
-
-		ValidateDCIList(dciCfgAgent);
-	}
-	else if (!_tcsicmp(m_szName, _T("@System.SNMP")))
-	{
-		DCI_CFG dciCfgSNMP[] =
-		{
-			{ _T("@system.cpu_usage.cisco.0"), _T(".1.3.6.1.4.1.9.9.109.1.1.1.1.7.0"),
-			  60, 1, DCI_DT_INT, DS_SNMP_AGENT, 0 },		// Cisco devices
-			{ _T("@system.cpu_usage.cisco.1"), _T(".1.3.6.1.4.1.9.9.109.1.1.1.1.7.1"),
-			  60, 1, DCI_DT_INT, DS_SNMP_AGENT, 0 },		// Cisco devices - CPU #1
-			{ _T("@system.cpu_usage.passport"), _T(".1.3.6.1.4.1.2272.1.1.20.0"),
-			  60, 1, DCI_DT_INT, DS_SNMP_AGENT, 0 },		// Nortel Passport switches
-			{ _T("@system.cpu_usage.netscreen"), _T(".1.3.6.1.4.1.3224.16.1.2.0"),
-			  60, 1, DCI_DT_INT, DS_SNMP_AGENT, 0 },		// Netscreen devices
-			{ _T("@system.cpu_usage.ipso"), _T(".1.3.6.1.4.1.94.1.21.1.7.1.0"),
-			  60, 1, DCI_DT_INT, DS_SNMP_AGENT, 0 },		// Nokia IPSO
-			{ NULL, NULL, 0, 0, 0, 0 }
-		};
-
-		ValidateDCIList(dciCfgSNMP);
-	}
-}
-
-
-//
-// Enumerate all DCIs
-//
-
+/**
+ * Enumerate all DCIs
+ */
 bool Template::enumDCObjects(bool (* pfCallback)(DCObject *, DWORD, void *), void *pArg)
 {
 	bool success = true;
@@ -1089,11 +969,9 @@ void Template::associateItems()
 	unlockDciAccess();
 }
 
-
-//
-// Prepare template for deletion
-//
-
+/**
+ * Prepare template for deletion
+ */
 void Template::PrepareForDeletion()
 {
 	if (Type() == OBJECT_TEMPLATE)
@@ -1103,8 +981,8 @@ void Template::PrepareForDeletion()
 		LockChildList(FALSE);
 		for(i = 0; i < m_dwChildCount; i++)
 		{
-			if (m_pChildList[i]->Type() == OBJECT_NODE)
-				queueRemoveFromNode(m_pChildList[i]->Id(), TRUE);
+			if ((m_pChildList[i]->Type() == OBJECT_NODE) || (m_pChildList[i]->Type() == OBJECT_MOBILEDEVICE))
+				queueRemoveFromTarget(m_pChildList[i]->Id(), TRUE);
 		}
 		UnlockChildList();
 	}
@@ -1142,31 +1020,4 @@ BOOL Template::isApplicable(Node *node)
 	}
 	UnlockData();
 	return result;
-}
-
-/**
- * Update cache for all DCI's
- */
-void Template::updateDciCache()
-{
-	lockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
-	{
-		if (m_dcObjects->get(i)->getType() == DCO_TYPE_ITEM)
-		{
-			((DCItem *)m_dcObjects->get(i))->updateCacheSize();
-		}
-	}
-	unlockDciAccess();
-}
-
-/**
- * Clean expired DCI data
- */
-void Template::cleanDCIData()
-{
-   lockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
-      m_dcObjects->get(i)->deleteExpiredData();
-   unlockDciAccess();
 }

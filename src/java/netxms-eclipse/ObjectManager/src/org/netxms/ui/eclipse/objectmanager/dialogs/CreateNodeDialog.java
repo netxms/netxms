@@ -106,8 +106,8 @@ public class CreateNodeDialog extends Dialog
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
 		GridLayout layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
-		layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
+		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		layout.numColumns = 2;

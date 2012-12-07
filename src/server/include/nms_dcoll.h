@@ -239,7 +239,7 @@ public:
    const TCHAR *getDescription() { return m_szDescription; }
 	const TCHAR *getSystemTag() { return m_systemTag; }
 	const TCHAR *getPerfTabSettings() { return m_pszPerfTabSettings; }
-   Template *getRelatedNode() { return m_pNode; }
+   Template *getTarget() { return m_pNode; }
    DWORD getTemplateId() { return m_dwTemplateId; }
    DWORD getTemplateItemId() { return m_dwTemplateItemId; }
 	DWORD getResourceId() { return m_dwResourceId; }

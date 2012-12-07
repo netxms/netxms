@@ -60,6 +60,18 @@
                menubarPath="additions">
          </action>
       </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.osm.actions.popup.object.MobileDevice"
+            objectClass="org.netxms.client.objects.MobileDevice">
+         <action
+               class="org.netxms.ui.eclipse.osm.actions.OpenLocationMap"
+               enablesFor="1"
+               icon="icons/map.png"
+               id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap#MobileDevice"
+               label="Geolocation"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

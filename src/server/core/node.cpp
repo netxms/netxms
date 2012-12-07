@@ -36,7 +36,7 @@ extern Queue g_discoveryPollQueue;
 /**
  * Node class default constructor
  */
-Node::Node() : Template()
+Node::Node() : DataCollectionTarget()
 {
 	m_primaryName[0] = 0;
    m_iStatus = STATUS_UNKNOWN;
@@ -99,7 +99,7 @@ Node::Node() : Template()
 /**
  * Constructor for new node object
  */
-Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DWORD dwZone) : Template()
+Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DWORD dwZone) : DataCollectionTarget()
 {
 	IpToStr(dwAddr, m_primaryName);
    m_iStatus = STATUS_UNKNOWN;
@@ -442,16 +442,12 @@ BOOL Node::DeleteFromDB()
    TCHAR szQuery[256];
    BOOL bSuccess;
 
-   bSuccess = Template::DeleteFromDB();
+   bSuccess = DataCollectionTarget::DeleteFromDB();
    if (bSuccess)
    {
       _sntprintf(szQuery, 256, _T("DELETE FROM nodes WHERE id=%d"), (int)m_dwId);
       QueueSQLRequest(szQuery);
       _sntprintf(szQuery, 256, _T("DELETE FROM nsmap WHERE node_id=%d"), (int)m_dwId);
-      QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, 256, _T("DROP TABLE idata_%d"), (int)m_dwId);
-      QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, 256, _T("DROP TABLE tdata_%d"), (int)m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;
@@ -548,11 +544,9 @@ InterfaceList *Node::getInterfaceList()
    return pIfList;
 }
 
-
-//
-// Add VRRP interfaces to interface list
-//
-
+/**
+ * Add VRRP interfaces to interface list
+ */
 void Node::addVrrpInterfaces(InterfaceList *ifList)
 {
 	int i, j, k;
@@ -1572,10 +1566,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 			}
 		}
 
-		// Apply templates
-		ApplySystemTemplates();
-		ApplyUserTemplates();
-
+		applyUserTemplates();
 		updateContainerMembership();
 
 		SendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n"), m_szName);
@@ -2349,46 +2340,9 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 	return hasChanges;
 }
 
-
-//
-// Apply system templates
-//
-
-void Node::ApplySystemTemplates()
-{
-	Template *pTemplate;
-
-	pTemplate = FindTemplateByName(_T("@System.Agent"));
-	if (pTemplate != NULL)
-	{
-		if (isNativeAgent())
-		{
-			if (!pTemplate->IsChild(m_dwId))
-			{
-				DbgPrintf(4, _T("Node::ApplySystemTemplates(): applying template %d \"%s\" to node %d \"%s\""),
-				          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
-				pTemplate->ApplyToNode(this);
-			}
-		}
-		else
-		{
-			if (pTemplate->IsChild(m_dwId))
-			{
-				DbgPrintf(4, _T("Node::ApplySystemTemplates(): removing template %d \"%s\" from node %d \"%s\""),
-				          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
-				pTemplate->DeleteChild(this);
-				DeleteParent(pTemplate);
-				pTemplate->queueRemoveFromNode(m_dwId, TRUE);
-			}
-		}
-	}
-}
-
-
-//
-// Apply user templates
-//
-
+/**
+ * Apply user templates
+ */
 static void ApplyTemplate(NetObj *object, void *node)
 {
    if ((object->Type() == OBJECT_TEMPLATE) && !object->isDeleted())
@@ -2400,7 +2354,7 @@ static void ApplyTemplate(NetObj *object, void *node)
 			{
 				DbgPrintf(4, _T("Node::ApplyUserTemplates(): applying template %d \"%s\" to node %d \"%s\""),
 				          pTemplate->Id(), pTemplate->Name(), ((Node *)node)->Id(), ((Node *)node)->Name());
-				pTemplate->ApplyToNode((Node *)node);
+				pTemplate->applyToTarget((Node *)node);
 				PostEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", ((Node *)node)->Id(), ((Node *)node)->Name(), pTemplate->Id(), pTemplate->Name());
 			}
 		}
@@ -2412,23 +2366,21 @@ static void ApplyTemplate(NetObj *object, void *node)
 				          pTemplate->Id(), pTemplate->Name(), ((Node *)node)->Id(), ((Node *)node)->Name());
 				pTemplate->DeleteChild((Node *)node);
 				((Node *)node)->DeleteParent(pTemplate);
-				pTemplate->queueRemoveFromNode(((Node *)node)->Id(), TRUE);
+				pTemplate->queueRemoveFromTarget(((Node *)node)->Id(), TRUE);
 				PostEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", ((Node *)node)->Id(), ((Node *)node)->Name(), pTemplate->Id(), pTemplate->Name());
 			}
 		}
    }
 }
 
-void Node::ApplyUserTemplates()
+void Node::applyUserTemplates()
 {
 	g_idxObjectById.forEach(ApplyTemplate, this);
 }
 
-
-//
-// Update container membership
-//
-
+/**
+ * Update container membership
+ */
 static void UpdateContainerBinding(NetObj *object, void *node)
 {
    if ((object->Type() == OBJECT_CONTAINER) && !object->isDeleted())
@@ -2586,12 +2538,10 @@ DWORD Node::getItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TC
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
 
-
-//
-// Get item's value via SNMP from CheckPoint's agent
-//
-
-DWORD Node::GetItemFromCheckPointSNMP(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer)
+/**
+ * Get item's value via SNMP from CheckPoint's agent
+ */
+DWORD Node::getItemFromCheckPointSNMP(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer)
 {
    DWORD dwResult;
 
@@ -2614,12 +2564,10 @@ DWORD Node::GetItemFromCheckPointSNMP(const TCHAR *szParam, DWORD dwBufSize, TCH
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
 
-
-//
-// Get item's value via native agent
-//
-
-DWORD Node::GetItemFromAgent(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer)
+/**
+ * Get item's value via native agent
+ */
+DWORD Node::getItemFromAgent(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer)
 {
    DWORD dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
    DWORD dwTries = 3;
@@ -2730,24 +2678,24 @@ end_loop:
    return dwResult;
 }
 
-
-//
-// Get value for server's internal parameter
-//
-
-DWORD Node::GetInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer)
+/**
+ * Get value for server's internal parameter
+ */
+DWORD Node::getInternalItem(const TCHAR *param, DWORD bufSize, TCHAR *buffer)
 {
-   DWORD dwError = DCE_SUCCESS;
+	DWORD rc = DataCollectionTarget::getInternalItem(param, bufSize, buffer);
+	if (rc == RCC_SUCCESS)
+		return RCC_SUCCESS;
 
-   if (!_tcsicmp(szParam, _T("Status")))
+   if (!_tcsicmp(param, _T("Status")))
    {
-      _sntprintf(szBuffer, dwBufSize, _T("%d"), m_iStatus);
+      _sntprintf(buffer, bufSize, _T("%d"), m_iStatus);
    }
-   else if (!_tcsicmp(szParam, _T("Dummy")))
+   else if (!_tcsicmp(param, _T("Dummy")))
    {
-      _tcscpy(szBuffer, _T("0"));
+      _tcscpy(buffer, _T("0"));
    }
-   else if (MatchString(_T("Net.IP.NextHop(*)"), szParam, FALSE))
+   else if (MatchString(_T("Net.IP.NextHop(*)"), param, FALSE))
    {
       if ((m_dwFlags & NF_IS_NATIVE_AGENT) || (m_dwFlags & NF_IS_SNMP))
 		{
@@ -2755,166 +2703,91 @@ DWORD Node::GetInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuff
 			DWORD destAddr, nextHop, ifIndex;
 			BOOL isVpn;
 
-	      AgentGetParameterArg(szParam, 1, arg, 256);
+	      AgentGetParameterArg(param, 1, arg, 256);
 			destAddr = ntohl(_t_inet_addr(arg));
 			if ((destAddr > 0) && (destAddr < 0xE0000000))
 			{
 				if (getNextHop(m_dwIpAddr, destAddr, &nextHop, &ifIndex, &isVpn))
 				{
-					IpToStr(nextHop, szBuffer);
+					IpToStr(nextHop, buffer);
 				}
 				else
 				{
-					_tcscpy(szBuffer, _T("UNREACHABLE"));
+					_tcscpy(buffer, _T("UNREACHABLE"));
 				}
 			}
 			else
 			{
-	         dwError = DCE_NOT_SUPPORTED;
+	         rc = DCE_NOT_SUPPORTED;
 			}
 		}
 		else
 		{
-         dwError = DCE_NOT_SUPPORTED;
+         rc = DCE_NOT_SUPPORTED;
 		}
    }
-   else if (!_tcsicmp(szParam, _T("AgentStatus")))
+   else if (!_tcsicmp(param, _T("AgentStatus")))
    {
       if (m_dwFlags & NF_IS_NATIVE_AGENT)
       {
-         szBuffer[0] = (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ? _T('1') : _T('0');
-         szBuffer[1] = 0;
+         buffer[0] = (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ? _T('1') : _T('0');
+         buffer[1] = 0;
       }
       else
       {
-         dwError = DCE_NOT_SUPPORTED;
-      }
-   }
-   else if (MatchString(_T("ChildStatus(*)"), szParam, FALSE))
-   {
-      TCHAR *pEnd, szArg[256];
-      DWORD i, dwId;
-      NetObj *pObject = NULL;
-
-      AgentGetParameterArg(szParam, 1, szArg, 256);
-      dwId = _tcstoul(szArg, &pEnd, 0);
-      if (*pEnd != 0)
-      {
-         // Argument is object's name
-         dwId = 0;
-      }
-
-      // Find child object with requested ID or name
-      LockChildList(FALSE);
-      for(i = 0; i < m_dwChildCount; i++)
-      {
-         if (((dwId == 0) && (!_tcsicmp(m_pChildList[i]->Name(), szArg))) ||
-             (dwId == m_pChildList[i]->Id()))
-         {
-            pObject = m_pChildList[i];
-            break;
-         }
-      }
-      UnlockChildList();
-
-      if (pObject != NULL)
-      {
-         _sntprintf(szBuffer, dwBufSize, _T("%d"), pObject->Status());
-      }
-      else
-      {
-         dwError = DCE_NOT_SUPPORTED;
-      }
-   }
-   else if (MatchString(_T("ConditionStatus(*)"), szParam, FALSE))
-   {
-      TCHAR *pEnd, szArg[256];
-      DWORD dwId;
-      NetObj *pObject = NULL;
-
-      AgentGetParameterArg(szParam, 1, szArg, 256);
-      dwId = _tcstoul(szArg, &pEnd, 0);
-      if (*pEnd == 0)
-		{
-			pObject = FindObjectById(dwId);
-			if (pObject != NULL)
-				if (pObject->Type() != OBJECT_CONDITION)
-					pObject = NULL;
-		}
-		else
-      {
-         // Argument is object's name
-			pObject = FindObjectByName(szArg, OBJECT_CONDITION);
-      }
-
-      if (pObject != NULL)
-      {
-			if (pObject->IsTrustedNode(m_dwId))
-			{
-				_sntprintf(szBuffer, dwBufSize, _T("%d"), pObject->Status());
-			}
-			else
-			{
-	         dwError = DCE_NOT_SUPPORTED;
-			}
-      }
-      else
-      {
-         dwError = DCE_NOT_SUPPORTED;
+         rc = DCE_NOT_SUPPORTED;
       }
    }
    else if (m_dwFlags & NF_IS_LOCAL_MGMT)
    {
-      if (!_tcsicmp(szParam, _T("Server.AverageDCPollerQueueSize")))
+      if (!_tcsicmp(param, _T("Server.AverageDCPollerQueueSize")))
       {
-         _sntprintf(szBuffer, dwBufSize, _T("%f"), g_dAvgPollerQueueSize);
+         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgPollerQueueSize);
       }
-      else if (!_tcsicmp(szParam, _T("Server.AverageDBWriterQueueSize")))
+      else if (!_tcsicmp(param, _T("Server.AverageDBWriterQueueSize")))
       {
-         _sntprintf(szBuffer, dwBufSize, _T("%f"), g_dAvgDBAndIDataWriterQueueSize);
+         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgDBAndIDataWriterQueueSize);
       }
-      else if (!_tcsicmp(szParam, _T("Server.AverageDBWriterQueueSize.Other")))
+      else if (!_tcsicmp(param, _T("Server.AverageDBWriterQueueSize.Other")))
       {
-         _sntprintf(szBuffer, dwBufSize, _T("%f"), g_dAvgDBWriterQueueSize);
+         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgDBWriterQueueSize);
       }
-      else if (!_tcsicmp(szParam, _T("Server.AverageDBWriterQueueSize.IData")))
+      else if (!_tcsicmp(param, _T("Server.AverageDBWriterQueueSize.IData")))
       {
-         _sntprintf(szBuffer, dwBufSize, _T("%f"), g_dAvgIDataWriterQueueSize);
+         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgIDataWriterQueueSize);
       }
-      else if (!_tcsicmp(szParam, _T("Server.AverageStatusPollerQueueSize")))
+      else if (!_tcsicmp(param, _T("Server.AverageStatusPollerQueueSize")))
       {
-         _sntprintf(szBuffer, dwBufSize, _T("%f"), g_dAvgStatusPollerQueueSize);
+         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgStatusPollerQueueSize);
       }
-      else if (!_tcsicmp(szParam, _T("Server.AverageConfigurationPollerQueueSize")))
+      else if (!_tcsicmp(param, _T("Server.AverageConfigurationPollerQueueSize")))
       {
-         _sntprintf(szBuffer, dwBufSize, _T("%f"), g_dAvgConfigPollerQueueSize);
+         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgConfigPollerQueueSize);
       }
-      else if (!_tcsicmp(szParam, _T("Server.AverageDCIQueuingTime")))
+      else if (!_tcsicmp(param, _T("Server.AverageDCIQueuingTime")))
       {
-         _sntprintf(szBuffer, dwBufSize, _T("%u"), g_dwAvgDCIQueuingTime);
+         _sntprintf(buffer, bufSize, _T("%u"), g_dwAvgDCIQueuingTime);
       }
-      else if (!_tcsicmp(szParam, _T("Server.TotalEventsProcessed")))
+      else if (!_tcsicmp(param, _T("Server.TotalEventsProcessed")))
       {
-         _sntprintf(szBuffer, dwBufSize, INT64_FMT, g_totalEventsProcessed);
+         _sntprintf(buffer, bufSize, INT64_FMT, g_totalEventsProcessed);
       }
       else
       {
-         dwError = DCE_NOT_SUPPORTED;
+         rc = DCE_NOT_SUPPORTED;
       }
    }
    else
    {
-      dwError = DCE_NOT_SUPPORTED;
+      rc = DCE_NOT_SUPPORTED;
    }
 
-   return dwError;
+   return rc;
 }
 
-
-//
-// Translate DCI error code into RCC
-//
-
+/**
+ * Translate DCI error code into RCC
+ */
 static DWORD RCCFromDCIError(DWORD error)
 {
    switch(error)
@@ -2930,11 +2803,9 @@ static DWORD RCCFromDCIError(DWORD error)
    }
 }
 
-
-//
-// Get item's value for client
-//
-
+/**
+ * Get item's value for client
+ */
 DWORD Node::getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, DWORD dwBufSize)
 {
    DWORD dwResult = 0, dwRetCode;
@@ -2943,16 +2814,16 @@ DWORD Node::getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffe
    switch(iOrigin)
    {
       case DS_INTERNAL:
-         dwRetCode = GetInternalItem(pszParam, dwBufSize, pszBuffer);
+         dwRetCode = getInternalItem(pszParam, dwBufSize, pszBuffer);
          break;
       case DS_NATIVE_AGENT:
-         dwRetCode = GetItemFromAgent(pszParam, dwBufSize, pszBuffer);
+         dwRetCode = getItemFromAgent(pszParam, dwBufSize, pszBuffer);
          break;
       case DS_SNMP_AGENT:
 			dwRetCode = getItemFromSNMP(0, pszParam, dwBufSize, pszBuffer, SNMP_RAWTYPE_NONE);
          break;
       case DS_CHECKPOINT_AGENT:
-         dwRetCode = GetItemFromCheckPointSNMP(pszParam, dwBufSize, pszBuffer);
+         dwRetCode = getItemFromCheckPointSNMP(pszParam, dwBufSize, pszBuffer);
          break;
       default:
          dwResult = RCC_INVALID_ARGUMENT;
@@ -2977,43 +2848,12 @@ DWORD Node::getTableForClient(const TCHAR *name, Table **table)
 	return RCCFromDCIError(dwRetCode);
 }
 
-
-//
-// Put items which requires polling into the queue
-//
-
-void Node::queueItemsForPolling(Queue *pPollerQueue)
-{
-   if ((m_iStatus == STATUS_UNMANAGED) ||
-	    (m_dwFlags & NF_DISABLE_DATA_COLLECT) ||
-		 (m_bIsDeleted))
-      return;  // Do not collect data for unmanaged nodes or if data collection is disabled
-
-   time_t currTime = time(NULL);
-
-   lockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
-   {
-		DCObject *object = m_dcObjects->get(i);
-      if (object->isReadyForPolling(currTime))
-      {
-         object->setBusyFlag(TRUE);
-         IncRefCount();   // Increment reference count for each queued DCI
-         pPollerQueue->Put(object);
-			DbgPrintf(8, _T("Node(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_szName, object->getId(), object->getName());
-      }
-   }
-   unlockDciAccess();
-}
-
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create CSCP message with object's data
+ */
 void Node::CreateMessage(CSCPMessage *pMsg)
 {
-   Template::CreateMessage(pMsg);
+   DataCollectionTarget::CreateMessage(pMsg);
 	pMsg->SetVariable(VID_PRIMARY_NAME, m_primaryName);
    pMsg->SetVariable(VID_FLAGS, m_dwFlags);
    pMsg->SetVariable(VID_RUNTIME_FLAGS, m_dwDynamicFlags);
@@ -3189,14 +3029,12 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       m_dwFlags |= pRequest->GetVariableLong(VID_FLAGS) & NF_USER_FLAGS;
    }
 
-   return Template::ModifyFromMessage(pRequest, TRUE);
+   return DataCollectionTarget::ModifyFromMessage(pRequest, TRUE);
 }
 
-
-//
-// Wakeup node using magic packet
-//
-
+/**
+ * Wakeup node using magic packet
+ */
 DWORD Node::wakeUp()
 {
    DWORD i, dwResult = RCC_NO_WOL_INTERFACES;
@@ -3216,28 +3054,24 @@ DWORD Node::wakeUp()
    return dwResult;
 }
 
-
-//
-// Get status of interface with given index from SNMP agent
-//
-
+/**
+ * Get status of interface with given index from SNMP agent
+ */
 void Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex, int *adminState, int *operState)
 {
    SnmpGetInterfaceStatus(m_snmpVersion, pTransport, dwIndex, adminState, operState);
 }
 
-
-//
-// Get status of interface with given index from native agent
-//
-
+/**
+ * Get status of interface with given index from native agent
+ */
 void Node::getInterfaceStatusFromAgent(DWORD dwIndex, int *adminState, int *operState)
 {
    TCHAR szParam[128], szBuffer[32];
 
    // Get administrative status
    _sntprintf(szParam, 128, _T("Net.Interface.AdminStatus(%u)"), dwIndex);
-   if (GetItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
+   if (getItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
    {
       *adminState = _tcstol(szBuffer, NULL, 0);
 
@@ -3252,7 +3086,7 @@ void Node::getInterfaceStatusFromAgent(DWORD dwIndex, int *adminState, int *oper
             break;
          case IF_ADMIN_STATE_UP:     // Interface administratively up, check link state
             _sntprintf(szParam, 128, _T("Net.Interface.Link(%u)"), dwIndex);
-            if (GetItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
+            if (getItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
             {
                DWORD dwLinkState = _tcstoul(szBuffer, NULL, 0);
                *operState = (dwLinkState == 0) ? IF_OPER_STATE_DOWN : IF_OPER_STATE_UP;
@@ -3412,11 +3246,9 @@ void Node::CheckOSPFSupport(SNMP_Transport *pTransport)
    }
 }
 
-
-//
-// Create ready to use agent connection
-//
-
+/**
+ * Create ready to use agent connection
+ */
 AgentConnectionEx *Node::createAgentConnection()
 {
    AgentConnectionEx *conn;
@@ -3437,215 +3269,6 @@ AgentConnectionEx *Node::createAgentConnection()
    }
 	DbgPrintf(6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_szName, (int)m_dwId, conn);
    return conn;
-}
-
-
-//
-// Get last collected values of all DCIs
-//
-
-DWORD Node::getLastValues(CSCPMessage *msg)
-{
-   lockDciAccess();
-
-	DWORD dwId = VID_DCI_VALUES_BASE, dwCount = 0;
-   for(int i = 0; i < m_dcObjects->size(); i++)
-	{
-		DCObject *object = m_dcObjects->get(i);
-		if (_tcsnicmp(object->getDescription(), _T("@system."), 8))
-		{
-			if (object->getType() == DCO_TYPE_ITEM)
-			{
-				((DCItem *)object)->getLastValue(msg, dwId);
-				dwId += 50;
-				dwCount++;
-			}
-			else if (object->getType() == DCO_TYPE_TABLE)
-			{
-				((DCTable *)object)->getLastValueSummary(msg, dwId);
-				dwId += 50;
-				dwCount++;
-			}
-		}
-	}
-   msg->SetVariable(VID_NUM_ITEMS, dwCount);
-
-   unlockDciAccess();
-   return RCC_SUCCESS;
-}
-
-
-//
-// Get last collected values of givel table
-//
-
-DWORD Node::getTableLastValues(DWORD dciId, CSCPMessage *msg)
-{
-	DWORD rcc = RCC_INVALID_DCI_ID;
-
-   lockDciAccess();
-
-   for(int i = 0; i < m_dcObjects->size(); i++)
-	{
-		DCObject *object = m_dcObjects->get(i);
-		if ((object->getId() == dciId) && (object->getType() == DCO_TYPE_TABLE))
-		{
-			((DCTable *)object)->getLastValue(msg);
-			rcc = RCC_SUCCESS;
-			break;
-		}
-	}
-
-   unlockDciAccess();
-   return rcc;
-}
-
-/**
- * Apply DCI from template
- * pItem passed to this method should be a template's DCI
- */
-bool Node::applyTemplateItem(DWORD dwTemplateId, DCObject *dcObject)
-{
-   bool bResult = true;
-
-   lockDciAccess();	// write lock
-
-   DbgPrintf(5, _T("Applying DCO \"%s\" to node \"%s\""), dcObject->getName(), m_szName);
-
-   // Check if that template item exists
-	int i;
-   for(i = 0; i < m_dcObjects->size(); i++)
-      if ((m_dcObjects->get(i)->getTemplateId() == dwTemplateId) &&
-          (m_dcObjects->get(i)->getTemplateItemId() == dcObject->getId()))
-         break;   // Item with specified id already exist
-
-   if (i == m_dcObjects->size())
-   {
-      // New item from template, just add it
-		DCObject *newObject;
-		switch(dcObject->getType())
-		{
-			case DCO_TYPE_ITEM:
-				newObject = new DCItem((DCItem *)dcObject);
-				break;
-			case DCO_TYPE_TABLE:
-				newObject = new DCTable((DCTable *)dcObject);
-				break;
-			default:
-				newObject = NULL;
-				break;
-		}
-		if (newObject != NULL)
-		{
-			newObject->setTemplateId(dwTemplateId, dcObject->getId());
-			newObject->changeBinding(CreateUniqueId(IDG_ITEM), this, TRUE);
-			bResult = addDCObject(newObject, true);
-		}
-   }
-   else
-   {
-      // Update existing item unless it is disabled
-		if (m_dcObjects->get(i)->getStatus() != ITEM_STATUS_DISABLED || (g_dwFlags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE))
-		{
-			m_dcObjects->get(i)->updateFromTemplate(dcObject);
-			DbgPrintf(9, _T("DCO \"%s\" NOT disabled or ApplyDCIFromTemplateToDisabledDCI set, updated (%d)"), 
-				dcObject->getName(), m_dcObjects->get(i)->getStatus());
-		}
-		else
-		{
-			DbgPrintf(9, _T("DCO \"%s\" is disabled and ApplyDCIFromTemplateToDisabledDCI not set, no update (%d)"), 
-				dcObject->getName(), m_dcObjects->get(i)->getStatus());
-		}
-   }
-
-   unlockDciAccess();
-
-	if (bResult)
-	{
-		LockData();
-		m_bIsModified = TRUE;
-		UnlockData();
-	}
-   return bResult;
-}
-
-
-//
-// Clean deleted template items from node's DCI list
-// Arguments is template id and list of valid template item ids.
-// all items related to given template and not presented in list should be deleted.
-//
-
-void Node::cleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList)
-{
-   DWORD i, j, dwNumDeleted, *pdwDeleteList;
-
-   lockDciAccess();  // write lock
-
-   pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dcObjects->size());
-   dwNumDeleted = 0;
-
-   for(i = 0; i < (DWORD)m_dcObjects->size(); i++)
-      if (m_dcObjects->get(i)->getTemplateId() == dwTemplateId)
-      {
-         for(j = 0; j < dwNumItems; j++)
-            if (m_dcObjects->get(i)->getTemplateItemId() == pdwItemList[j])
-               break;
-
-         // Delete DCI if it's not in list
-         if (j == dwNumItems)
-            pdwDeleteList[dwNumDeleted++] = m_dcObjects->get(i)->getId();
-      }
-
-   for(i = 0; i < dwNumDeleted; i++)
-      deleteDCObject(pdwDeleteList[i], false);
-
-   unlockDciAccess();
-   free(pdwDeleteList);
-}
-
-
-//
-// Unbind node from template, i.e either remove DCI association with template
-// or remove these DCIs at all
-//
-
-void Node::unbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
-{
-   DWORD i;
-
-   if (bRemoveDCI)
-   {
-      lockDciAccess();  // write lock
-
-		DWORD *pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dcObjects->size());
-		DWORD dwNumDeleted = 0;
-
-      for(i = 0; i < (DWORD)m_dcObjects->size(); i++)
-         if (m_dcObjects->get(i)->getTemplateId() == dwTemplateId)
-         {
-            pdwDeleteList[dwNumDeleted++] = m_dcObjects->get(i)->getId();
-         }
-
-		for(i = 0; i < dwNumDeleted; i++)
-			deleteDCObject(pdwDeleteList[i], false);
-
-      unlockDciAccess();
-
-		safe_free(pdwDeleteList);
-   }
-   else
-   {
-      lockDciAccess();
-
-      for(int i = 0; i < m_dcObjects->size(); i++)
-         if (m_dcObjects->get(i)->getTemplateId() == dwTemplateId)
-         {
-            m_dcObjects->get(i)->setTemplateId(0, 0);
-         }
-
-      unlockDciAccess();
-   }
 }
 
 /**
@@ -4031,15 +3654,13 @@ void Node::PrepareForDeletion()
       ThreadSleepMs(100);
    }
 	DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): no outstanding polls left"), m_szName, (int)m_dwId);
-	Template::PrepareForDeletion();
+	DataCollectionTarget::PrepareForDeletion();
 }
 
-
-//
-// Check if specified SNMP variable set to specified value.
-// If variable doesn't exist at all, will return FALSE
-//
-
+/**
+ * Check if specified SNMP variable set to specified value.
+ * If variable doesn't exist at all, will return FALSE
+ */
 BOOL Node::CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID, int nValue)
 {
    DWORD dwTemp;
@@ -4049,11 +3670,9 @@ BOOL Node::CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID
    return FALSE;
 }
 
-
-//
-// Check and update if needed interface names
-//
-
+/**
+ * Check and update if needed interface names
+ */
 void Node::checkInterfaceNames(InterfaceList *pIfList)
 {
    // Cut interface names to MAX_OBJECT_NAME and check for unnamed interfaces
@@ -4065,11 +3684,9 @@ void Node::checkInterfaceNames(InterfaceList *pIfList)
    }
 }
 
-
-//
-// Get cluster object this node belongs to, if any
-//
-
+/**
+ * Get cluster object this node belongs to, if any
+ */
 Cluster *Node::getMyCluster()
 {
 	DWORD i;
@@ -4227,7 +3844,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 		if (!(bSuccess || useOnlyDNS))
 		{
 			DbgPrintf(4, _T("Resolving name for node %d [%s] via agent..."), m_dwId, m_szName);
-			if (GetItemFromAgent(_T("System.Hostname"), 256, szBuffer) == DCE_SUCCESS)
+			if (getItemFromAgent(_T("System.Hostname"), 256, szBuffer) == DCE_SUCCESS)
 			{
 				StrStrip(szBuffer);
 				if (szBuffer[0] != 0)
@@ -4260,68 +3877,6 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 	else
 		DbgPrintf(4, _T("Name for node %d was not resolved"), m_dwId, m_szName);
 	return bSuccess;
-}
-
-
-//
-// Send list of DCIs to be shown on performance tab
-//
-
-DWORD Node::getPerfTabDCIList(CSCPMessage *pMsg)
-{
-	lockDciAccess();
-
-	DWORD dwId = VID_SYSDCI_LIST_BASE, dwCount = 0;
-   for(int i = 0; i < m_dcObjects->size(); i++)
-	{
-		DCObject *object = m_dcObjects->get(i);
-		if (object->getPerfTabSettings() != NULL)
-		{
-			pMsg->SetVariable(dwId++, object->getId());
-			pMsg->SetVariable(dwId++, object->getDescription());
-			pMsg->SetVariable(dwId++, (WORD)object->getStatus());
-			pMsg->SetVariable(dwId++, object->getPerfTabSettings());
-			pMsg->SetVariable(dwId++, (WORD)object->getType());
-			dwId += 5;
-			dwCount++;
-		}
-	}
-   pMsg->SetVariable(VID_NUM_ITEMS, dwCount);
-
-	unlockDciAccess();
-   return RCC_SUCCESS;
-}
-
-
-//
-// Get threshold violation summary into NXCP message
-//
-
-DWORD Node::getThresholdSummary(CSCPMessage *msg, DWORD baseId)
-{
-	DWORD varId = baseId;
-
-	msg->SetVariable(varId++, m_dwId);
-	DWORD countId = varId++;
-	DWORD count = 0;
-
-	lockDciAccess();
-   for(int i = 0; i < m_dcObjects->size(); i++)
-	{
-		DCObject *object = m_dcObjects->get(i);
-		if (object->getType() == DCO_TYPE_ITEM)
-		{
-			if (((DCItem *)object)->hasActiveThreshold())
-			{
-				((DCItem *)object)->getLastValue(msg, varId);
-				varId += 50;
-				count++;
-			}
-		}
-	}
-	unlockDciAccess();
-	msg->SetVariable(countId, count);
-   return varId;
 }
 
 /**
@@ -4905,23 +4460,9 @@ void Node::updateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
    DbgPrintf(4, _T("Finished interface names poll for node %s (ID: %d)"), m_szName, m_dwId);
 }
 
-
-//
-// Process new DCI value
-//
-
-void Node::processNewDCValue(DCObject *dco, time_t currTime, void *value)
-{
-	lockDciAccess();
-	dco->processNewValue(currTime, value);
-	unlockDciAccess();
-}
-
-
-//
-// Get list of parent objects for NXSL script
-//
-
+/**
+ * Get list of parent objects for NXSL script
+ */
 NXSL_Array *Node::getParentsForNXSL()
 {
 	NXSL_Array *parents = new NXSL_Array;
@@ -5235,4 +4776,12 @@ void Node::executeHookScript(const TCHAR *hookName)
 		          m_szName, m_dwId, scriptName, script->getErrorText());
 	}
 	script->unlock();	// FIXME
+}
+
+/**
+ * Check if data collection is disabled
+ */
+bool Node::isDataCollectionDisabled()
+{
+	return (m_dwFlags & NF_DISABLE_DATA_COLLECT) != 0;
 }

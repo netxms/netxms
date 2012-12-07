@@ -30,32 +30,29 @@
 #include "nms_topo.h"
 #include "nxcore_reports.h"
 
-
-//
-// Forward declarations of classes
-//
-
+/**
+ * Forward declarations of classes
+ */
 class AgentConnection;
 class AgentConnectionEx;
 class ClientSession;
 class Queue;
+class DataCollectionTarget;
 
-
-//
-// Global variables used by inline functions
-//
-
+/**
+ * Global variables used by inline functions
+ */
 extern DWORD g_dwDiscoveryPollingInterval;
 extern DWORD g_dwStatusPollingInterval;
 extern DWORD g_dwConfigurationPollingInterval;
 extern DWORD g_dwRoutingTableUpdateInterval;
 extern DWORD g_dwTopologyPollingInterval;
 extern DWORD g_dwConditionPollingInterval;
+extern Node a;
 
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define MAX_INTERFACES        4096
 #define MAX_ATTR_NAME_LEN     128
 #define INVALID_INDEX         0xFFFFFFFF
@@ -142,40 +139,20 @@ extern DWORD g_dwConditionPollingInterval;
 #define APPLY_TEMPLATE        0
 #define REMOVE_TEMPLATE       1
 
-
-//
-// Queued template update information
-//
-
+/**
+ * Queued template update information
+ */
 struct TEMPLATE_UPDATE_INFO
 {
    int iUpdateType;
    Template *pTemplate;
-   DWORD dwNodeId;
+   DWORD targetId;
    BOOL bRemoveDCI;
 };
 
-
-//
-// DCI configuration for system templates
-//
-
-typedef struct
-{
-	const TCHAR *pszName;
-	const TCHAR *pszParam;
-	int nInterval;
-	int nRetention;
-	int nDataType;
-	int nOrigin;
-	int nFound;
-} DCI_CFG;
-
-
-//
-// Object index structure
-//
-
+/**
+ * Object index structure
+ */
 struct INDEX_ELEMENT
 {
    QWORD key;
@@ -207,11 +184,9 @@ public:
 	void forEach(void (*callback)(NetObj *, void *), void *data);
 };
 
-
-//
-// Node component
-//
-
+/**
+ * Node component
+ */
 class Component
 {
 protected:
@@ -411,6 +386,7 @@ public:
    void DropUserAccess(DWORD dwUserId);
 
    void addChildNodesToList(ObjectArray<Node> *nodeList, DWORD dwUserId);
+   void addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList, DWORD dwUserId);
    
    const TCHAR *getCustomAttribute(const TCHAR *name) { return m_customAttributes.get(name); }
    void setCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); Modify(); }
@@ -510,25 +486,20 @@ public:
    DCObject *getDCObjectByIndex(int index);
    DCObject *getDCObjectByName(const TCHAR *pszName);
    DCObject *getDCObjectByDescription(const TCHAR *pszDescription);
-   BOOL LockDCIList(DWORD dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
-   BOOL UnlockDCIList(DWORD dwSessionId);
-   void SetDCIModificationFlag(void) { m_bDCIListModified = TRUE; }
-   void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);
-   BOOL IsLockedBySession(DWORD dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
+   BOOL lockDCIList(DWORD dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
+   BOOL unlockDCIList(DWORD dwSessionId);
+   void setDCIModificationFlag() { m_bDCIListModified = TRUE; }
+   void sendItemsToClient(ClientSession *pSession, DWORD dwRqId);
+   BOOL isLockedBySession(DWORD dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
    DWORD *getDCIEventsList(DWORD *pdwCount);
-	void ValidateSystemTemplate(void);
-	void ValidateDCIList(DCI_CFG *cfg);
 
-   BOOL ApplyToNode(Node *pNode);
+   BOOL applyToTarget(DataCollectionTarget *pNode);
 	BOOL isApplicable(Node *node);
 	bool isAutoApplyEnabled() { return (m_flags & TF_AUTO_APPLY) ? true : false; }
 	bool isAutoRemoveEnabled() { return ((m_flags & (TF_AUTO_APPLY | TF_AUTO_REMOVE)) == (TF_AUTO_APPLY | TF_AUTO_REMOVE)) ? true : false; }
 	void setAutoApplyFilter(const TCHAR *filter);
    void queueUpdate();
-   void queueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI);
-
-   void updateDciCache();
-   void cleanDCIData();
+   void queueRemoveFromTarget(DWORD targetId, BOOL bRemoveDCI);
 
    void CreateNXMPRecord(String &str);
 	
@@ -750,9 +721,44 @@ public:
 };
 
 /**
+ * Common base class for all objects capable of collecting data
+ */
+class NXCORE_EXPORTABLE DataCollectionTarget : public Template
+{
+protected:
+	virtual bool isDataCollectionDisabled();
+
+public:
+   DataCollectionTarget();
+   DataCollectionTarget(const TCHAR *name);
+   virtual ~DataCollectionTarget();
+
+   virtual BOOL DeleteFromDB();
+
+	virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+   virtual DWORD getInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
+
+   DWORD getLastValues(CSCPMessage *msg);
+   DWORD getTableLastValues(DWORD dciId, CSCPMessage *msg);
+	DWORD getThresholdSummary(CSCPMessage *msg, DWORD baseId);
+	DWORD getPerfTabDCIList(CSCPMessage *pMsg);
+
+   void updateDciCache();
+   void cleanDCIData();
+   void queueItemsForPolling(Queue *pPollerQueue);
+	void processNewDCValue(DCObject *dco, time_t currTime, void *value);
+
+	bool applyTemplateItem(DWORD dwTemplateId, DCObject *dcObject);
+   void cleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList);
+   void unbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
+};
+
+/**
  * Mobile device class
  */
-class NXCORE_EXPORTABLE MobileDevice : public Template
+class NXCORE_EXPORTABLE MobileDevice : public DataCollectionTarget
 {
 protected:
 	time_t m_lastReportTime;
@@ -772,9 +778,9 @@ public:
 
    virtual int Type() { return OBJECT_MOBILEDEVICE; }
 
+   virtual BOOL CreateFromDB(DWORD dwId);
    virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB();
-   virtual BOOL CreateFromDB(DWORD dwId);
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
@@ -783,7 +789,7 @@ public:
 /**
  * Node
  */
-class NXCORE_EXPORTABLE Node : public Template
+class NXCORE_EXPORTABLE Node : public DataCollectionTarget
 {
 	friend class Subnet;
 
@@ -869,13 +875,14 @@ protected:
 	void executeHookScript(const TCHAR *hookName);
 	void checkNetworkPath(DWORD dwRqId);
 
-	void ApplySystemTemplates();
-	void ApplyUserTemplates();
+	void applyUserTemplates();
 
 	void updateContainerMembership();
 	BOOL updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask);
 
 	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD seedSubnet, bool includeEndNodes);
+
+	virtual bool isDataCollectionDisabled();
 
    virtual void PrepareForDeletion();
    virtual void OnObjectDelete(DWORD dwObjectId);
@@ -973,26 +980,18 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    BOOL connectToAgent(DWORD *error = NULL, DWORD *socketError = NULL);
+	bool checkAgentTrapId(QWORD id);
+
+	virtual DWORD getInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
    DWORD getItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer, int interpretRawValue);
-   DWORD GetItemFromCheckPointSNMP(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
-   DWORD GetItemFromAgent(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
-   DWORD GetInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
+   DWORD getItemFromCheckPointSNMP(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
+   DWORD getItemFromAgent(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
 	DWORD getTableFromAgent(const TCHAR *name, Table **table);
-   void queueItemsForPolling(Queue *pPollerQueue);
    DWORD getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, DWORD dwBufSize);
    DWORD getTableForClient(const TCHAR *name, Table **table);
-   DWORD getLastValues(CSCPMessage *msg);
-   DWORD getTableLastValues(DWORD dciId, CSCPMessage *msg);
-	DWORD getThresholdSummary(CSCPMessage *msg, DWORD baseId);
-	void processNewDCValue(DCObject *dco, time_t currTime, void *value);
-   bool applyTemplateItem(DWORD dwTemplateId, DCObject *dcObject);
-   void cleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList);
-   void unbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
-	DWORD getPerfTabDCIList(CSCPMessage *pMsg);
+
 	virtual NXSL_Array *getParentsForNXSL();
 	NXSL_Array *getInterfacesForNXSL();
-
-	bool checkAgentTrapId(QWORD id);
 
    void openParamList(StructArray<NXC_AGENT_PARAM> **paramList);
    void closeParamList() { UnlockData(); }

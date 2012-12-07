@@ -52,6 +52,8 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -81,7 +83,7 @@ public class LastValuesWidget extends Composite
 	public static final int COLUMN_THRESHOLD = 4;
 	
 	private final ViewPart viewPart;
-	private Node node;
+	private GenericObject dcTarget;
 	private NXCSession session;
 	private boolean filterEnabled = false;
 	private FilterText filterText;
@@ -105,12 +107,12 @@ public class LastValuesWidget extends Composite
 	 * @param _node node to display data for
 	 * @param configPrefix configuration prefix for saving/restoring viewer settings
 	 */
-	public LastValuesWidget(ViewPart viewPart, Composite parent, int style, Node _node, final String configPrefix)
+	public LastValuesWidget(ViewPart viewPart, Composite parent, int style, GenericObject dcTarget, final String configPrefix)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		this.viewPart = viewPart;		
-		this.node = _node;
+		this.dcTarget = dcTarget;
 		
 		registerOpenHandlers();
 		
@@ -307,23 +309,23 @@ public class LastValuesWidget extends Composite
 	 */
 	private void getDataFromServer()
 	{
-		if (node == null)
+		if (dcTarget == null)
 		{
 			dataViewer.setInput(new DciValue[0]);
 			return;
 		}
 
-		ConsoleJob job = new ConsoleJob(Messages.LastValuesWidget_JobTitle + node.getObjectName(), viewPart, Activator.PLUGIN_ID, LastValuesWidget.JOB_FAMILY) {
+		ConsoleJob job = new ConsoleJob(Messages.LastValuesWidget_JobTitle + dcTarget.getObjectName(), viewPart, Activator.PLUGIN_ID, LastValuesWidget.JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.LastValuesWidget_JobError + node.getObjectName();
+				return Messages.LastValuesWidget_JobError + dcTarget.getObjectName();
 			}
 
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final DciValue[] data = session.getLastValues(node.getObjectId());
+				final DciValue[] data = session.getLastValues(dcTarget.getObjectId());
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -343,9 +345,12 @@ public class LastValuesWidget extends Composite
 	 * 
 	 * @param _node new node object
 	 */
-	public void setNode(Node _node)
+	public void setNode(GenericObject node)
 	{
-		this.node = _node;
+		if ((node instanceof Node) || (node instanceof MobileDevice))
+			this.dcTarget = node;
+		else
+			this.dcTarget = null;
 		getDataFromServer();
 	}
 	

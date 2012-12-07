@@ -198,7 +198,7 @@ public class IdMatchingDialog extends Dialog
 		switch(data.objectClass)
 		{
 			case GenericObject.OBJECT_NODE:
-				classFilter = ObjectSelectionDialog.createNodeSelectionFilter();
+				classFilter = ObjectSelectionDialog.createNodeSelectionFilter(false);
 				break;
 			case GenericObject.OBJECT_CONTAINER:
 				classFilter = ObjectSelectionDialog.createContainerSelectionFilter();

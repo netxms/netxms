@@ -60,7 +60,7 @@ public class ShowIPRoute implements IObjectActionDelegate
 	{
 		if ((sourceNode != null) && (targetNode == null))
 		{
-			ObjectSelectionDialog dlg = new ObjectSelectionDialog(window.getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
+			ObjectSelectionDialog dlg = new ObjectSelectionDialog(window.getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(false));
 			if (dlg.open() != Window.OK)
 				return;
 			

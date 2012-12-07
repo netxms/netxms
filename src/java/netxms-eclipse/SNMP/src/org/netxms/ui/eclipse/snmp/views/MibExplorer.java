@@ -251,7 +251,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			@Override
 			public void run()
 			{
-				ObjectSelectionDialog dlg = new ObjectSelectionDialog(MibExplorer.this.getSite().getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
+				ObjectSelectionDialog dlg = new ObjectSelectionDialog(MibExplorer.this.getSite().getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(false));
 				dlg.enableMultiSelection(false);
 				if (dlg.open() == Window.OK)
 				{

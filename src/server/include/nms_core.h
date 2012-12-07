@@ -443,7 +443,7 @@ private:
    void applyTemplate(CSCPMessage *pRequest);
    void getCollectedData(CSCPMessage *pRequest);
    void getTableCollectedData(CSCPMessage *pRequest);
-	bool getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *response, Node *node, int dciType);
+	bool getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *response, DataCollectionTarget *object, int dciType);
 	void clearDCIData(CSCPMessage *pRequest);
    void changeDCIStatus(CSCPMessage *pRequest);
    void getLastValues(CSCPMessage *pRequest);
@@ -520,10 +520,10 @@ private:
    void DeleteAgentConfig(CSCPMessage *pRequest);
    void SwapAgentConfigs(CSCPMessage *pRequest);
    void SendObjectComments(CSCPMessage *pRequest);
-   void UpdateObjectComments(CSCPMessage *pRequest);
-   void PushDCIData(CSCPMessage *pRequest);
-   void GetAddrList(CSCPMessage *pRequest);
-   void SetAddrList(CSCPMessage *pRequest);
+   void updateObjectComments(CSCPMessage *pRequest);
+   void pushDCIData(CSCPMessage *pRequest);
+   void getAddrList(CSCPMessage *pRequest);
+   void setAddrList(CSCPMessage *pRequest);
    void resetComponent(CSCPMessage *pRequest);
    void sendDCIEventList(CSCPMessage *request);
 	void SendDCIInfo(CSCPMessage *pRequest);

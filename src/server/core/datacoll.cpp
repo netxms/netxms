@@ -38,11 +38,9 @@
 extern Queue g_statusPollQueue;
 extern Queue g_configPollQueue;
 
-
-//
-// Global data
-//
-
+/**
+ * Global data
+ */
 double g_dAvgPollerQueueSize = 0;
 double g_dAvgDBWriterQueueSize = 0;
 double g_dAvgIDataWriterQueueSize = 0;
@@ -55,22 +53,31 @@ Queue *g_pItemQueue = NULL;
 /**
  * Collect data for DCI
  */
-static void *GetItemData(Node *pNode, DCItem *pItem, TCHAR *pBuffer, DWORD *error)
+static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *pBuffer, DWORD *error)
 {
    switch(pItem->getDataSource())
    {
       case DS_INTERNAL:    // Server internal parameters (like status)
-         *error = pNode->GetInternalItem(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+         *error = dcTarget->getInternalItem(pItem->getName(), MAX_LINE_SIZE, pBuffer);
          break;
       case DS_SNMP_AGENT:
-			*error = pNode->getItemFromSNMP(pItem->getSnmpPort(), pItem->getName(), MAX_LINE_SIZE, 
-				pBuffer, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
+			if (dcTarget->Type() == OBJECT_NODE)
+				*error = ((Node *)dcTarget)->getItemFromSNMP(pItem->getSnmpPort(), pItem->getName(), MAX_LINE_SIZE, 
+					pBuffer, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
+			else
+				*error = DCE_NOT_SUPPORTED;
          break;
       case DS_CHECKPOINT_AGENT:
-         *error = pNode->GetItemFromCheckPointSNMP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+			if (dcTarget->Type() == OBJECT_NODE)
+	         *error = ((Node *)dcTarget)->getItemFromCheckPointSNMP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+			else
+				*error = DCE_NOT_SUPPORTED;
          break;
       case DS_NATIVE_AGENT:
-         *error = pNode->GetItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+			if (dcTarget->Type() == OBJECT_NODE)
+	         *error = ((Node *)dcTarget)->getItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+			else
+				*error = DCE_NOT_SUPPORTED;
          break;
 		default:
 			*error = DCE_NOT_SUPPORTED;
@@ -82,13 +89,16 @@ static void *GetItemData(Node *pNode, DCItem *pItem, TCHAR *pBuffer, DWORD *erro
 /**
  * Collect data for table
  */
-static void *GetTableData(Node *pNode, DCTable *table, DWORD *error)
+static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, DWORD *error)
 {
 	Table *result = NULL;
    switch(table->getDataSource())
    {
 		case DS_NATIVE_AGENT:
-			*error = pNode->getTableFromAgent(table->getName(), &result);
+			if (dcTarget->Type() == OBJECT_NODE)
+				*error = ((Node *)dcTarget)->getTableFromAgent(table->getName(), &result);
+			else
+				*error = DCE_NOT_SUPPORTED;
 			break;
 		default:
 			*error = DCE_NOT_SUPPORTED;
@@ -97,11 +107,9 @@ static void *GetTableData(Node *pNode, DCTable *table, DWORD *error)
 	return result;
 }
 
-
-//
-// Data collector
-//
-
+/**
+ * Data collector
+ */
 static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 {
    DWORD dwError;
@@ -110,64 +118,64 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    while(!IsShutdownInProgress())
    {
       DCObject *pItem = (DCObject *)g_pItemQueue->GetOrBlock();
-		Node *pNode = (Node *)pItem->getRelatedNode();
+		DataCollectionTarget *target = (DataCollectionTarget *)pItem->getTarget();
 
 		if (pItem->isScheduledForDeletion())
 		{
-	      DbgPrintf(7, _T("DataCollector(): about to destroy DC object %d \"%s\" node=%d"),
-			          pItem->getId(), pItem->getName(), (pNode != NULL) ? pNode->Id() : -1);
+	      DbgPrintf(7, _T("DataCollector(): about to destroy DC object %d \"%s\" owner=%d"),
+			          pItem->getId(), pItem->getName(), (target != NULL) ? target->Id() : -1);
 			pItem->deleteFromDB();
 			delete pItem;
 			continue;
 		}
 
-      DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" node=%d proxy=%d"),
-		          pItem->getId(), pItem->getName(), (pNode != NULL) ? pNode->Id() : -1, pItem->getProxyNode());
+      DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d proxy=%d"),
+		          pItem->getId(), pItem->getName(), (target != NULL) ? target->Id() : -1, pItem->getProxyNode());
 		if (pItem->getProxyNode() != 0)
 		{
-			NetObj *object = FindObjectById(pItem->getProxyNode());
+			NetObj *object = FindObjectById(pItem->getProxyNode(), OBJECT_NODE);
 			if (object != NULL)
 			{
 				if ((object->Type() == OBJECT_NODE) &&
-					(object->IsTrustedNode((pNode != NULL) ? pNode->Id() : 0)))
+					(object->IsTrustedNode((target != NULL) ? target->Id() : 0)))
 				{
-					pNode = (Node *)object;
-					pNode->IncRefCount();
+					target = (Node *)object;
+					target->IncRefCount();
 				}
 				else
 				{
                // Change item's status to _T("not supported")
                pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
 
-					if (pNode != NULL)
+					if (target != NULL)
 					{
-						pNode->DecRefCount();
-						pNode = NULL;
+						target->DecRefCount();
+						target = NULL;
 					}
 				}
 			}
 			else
 			{
-				if (pNode != NULL)
+				if (target != NULL)
 				{
-					pNode->DecRefCount();
-					pNode = NULL;
+					target->DecRefCount();
+					target = NULL;
 				}
 			}
 		}
 
       time_t currTime = time(NULL);
-      if (pNode != NULL)
+      if (target != NULL)
       {
 			void *data;
 
 			switch(pItem->getType())
 			{
 				case DCO_TYPE_ITEM:
-					data = GetItemData(pNode, (DCItem *)pItem, pBuffer, &dwError);
+					data = GetItemData(target, (DCItem *)pItem, pBuffer, &dwError);
 					break;
 				case DCO_TYPE_TABLE:
-					data = GetTableData(pNode, (DCTable *)pItem, &dwError);
+					data = GetTableData(target, (DCTable *)pItem, &dwError);
 					break;
 				default:
 					data = NULL;
@@ -181,7 +189,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
             case DCE_SUCCESS:
 					if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
 	               pItem->setStatus(ITEM_STATUS_ACTIVE, true);
-					((Node *)pItem->getRelatedNode())->processNewDCValue(pItem, currTime, data);
+					((DataCollectionTarget *)pItem->getTarget())->processNewDCValue(pItem, currTime, data);
                break;
             case DCE_COMM_ERROR:
                pItem->processNewError();
@@ -193,16 +201,16 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
          }
 
          // Decrement node's usage counter
-         pNode->DecRefCount();
-			if ((pItem->getProxyNode() != 0) && (pItem->getRelatedNode() != NULL))
+         target->DecRefCount();
+			if ((pItem->getProxyNode() != 0) && (pItem->getTarget() != NULL))
 			{
-				pItem->getRelatedNode()->DecRefCount();
+				pItem->getTarget()->DecRefCount();
 			}
       }
-      else     /* pNode == NULL */
+      else     /* target == NULL */
       {
-			Template *n = pItem->getRelatedNode();
-         DbgPrintf(3, _T("*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" node=%d proxy=%d)"),
+			Template *n = pItem->getTarget();
+         DbgPrintf(3, _T("*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" target=%d proxy=%d)"),
 			          pItem->getId(), pItem->getName(), (n != NULL) ? n->Id() : -1, pItem->getProxyNode());
       }
 
@@ -216,24 +224,20 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// Callback for queueing DCIs
-//
-
+/**
+ * Callback for queueing DCIs
+ */
 static void QueueItems(NetObj *object, void *data)
 {
-	DbgPrintf(8, _T("ItemPoller: calling Node::queueItemsForPolling for node %s [%d]"),
+	DbgPrintf(8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%d]"),
 				 object->Name(), object->Id());
-	((Node *)object)->queueItemsForPolling(g_pItemQueue);
+	((DataCollectionTarget *)object)->queueItemsForPolling(g_pItemQueue);
 }
 
-
-//
-// Item poller thread: check nodes' items and put into the 
-// data collector queue when data polling required
-//
-
+/**
+ * Item poller thread: check nodes' items and put into the 
+ * data collector queue when data polling required
+ */
 static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 {
    DWORD dwSum, dwWatchdogId, dwCurrPos = 0;
@@ -252,6 +256,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 
       qwStart = GetCurrentTimeMs();
 		g_idxNodeById.forEach(QueueItems, NULL);
+		g_idxMobileDeviceById.forEach(QueueItems, NULL);
 
       // Save last poll time
       dwTimingHistory[dwCurrPos] = (DWORD)(GetCurrentTimeMs() - qwStart);
@@ -269,11 +274,9 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// Statistics collection thread
-//
-
+/**
+ * Statistics collection thread
+ */
 static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 {
    DWORD i, dwCurrPos = 0;
@@ -330,11 +333,9 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// Initialize data collection subsystem
-//
-
+/**
+ * Initialize data collection subsystem
+ */
 BOOL InitDataCollector()
 {
    int i, iNumCollectors;
@@ -356,11 +357,9 @@ BOOL InitDataCollector()
    return TRUE;
 }
 
-
-//
-// Write full list of supported parameters (from all nodes) to message
-//
-
+/**
+ * Write full list of supported parameters (from all nodes) to message
+ */
 struct __param_list
 {
 	DWORD size;

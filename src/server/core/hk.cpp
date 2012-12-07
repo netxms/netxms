@@ -143,7 +143,7 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
  */
 static void CleanDciData(NetObj *object, void *data)
 {
-	((Template *)object)->cleanDCIData();
+	((DataCollectionTarget *)object)->cleanDCIData();
 }
 
 /**

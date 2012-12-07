@@ -116,4 +116,13 @@ public class MobileDevice extends GenericObject
 	{
 		return batteryLevel;
 	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+	 */
+	@Override
+	public String getObjectClassName()
+	{
+		return "MobileDevice";
+	}
 }

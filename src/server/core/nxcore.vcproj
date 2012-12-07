@@ -505,6 +505,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dctarget.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\dctcolumn.cpp"
 				>
 			</File>

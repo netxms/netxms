@@ -25,6 +25,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -82,7 +83,8 @@ public class AlarmTab extends ObjectTab
 	{
 		return (object instanceof Node) || (object instanceof Subnet) ||
 		       (object instanceof EntireNetwork) || (object instanceof Container) ||
-		       (object instanceof Cluster) || (object instanceof ServiceRoot);
+		       (object instanceof Cluster) || (object instanceof ServiceRoot) ||
+		       (object instanceof MobileDevice);
 	}
 
 	/* (non-Javadoc)

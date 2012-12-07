@@ -1139,11 +1139,9 @@ void NetObj::SendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...)
    }
 }
 
-
-//
-// Add child node objects (direct and indirect childs) to list
-//
-
+/**
+ * Add child node objects (direct and indirect childs) to list
+ */
 void NetObj::addChildNodesToList(ObjectArray<Node> *nodeList, DWORD dwUserId)
 {
    DWORD i;
@@ -1176,11 +1174,44 @@ void NetObj::addChildNodesToList(ObjectArray<Node> *nodeList, DWORD dwUserId)
    UnlockChildList();
 }
 
+/**
+ * Add child data collection targets (direct and indirect childs) to list
+ */
+void NetObj::addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList, DWORD dwUserId)
+{
+   DWORD i;
 
-//
-// Hide object and all its childs
-//
+   LockChildList(FALSE);
 
+   // Walk through our own child list
+   for(i = 0; i < m_dwChildCount; i++)
+   {
+      if ((m_pChildList[i]->Type() == OBJECT_NODE) || (m_pChildList[i]->Type() == OBJECT_MOBILEDEVICE))
+      {
+         // Check if this objects already in the list
+			int j;
+			for(j = 0; j < dctList->size(); j++)
+				if (dctList->get(j)->Id() == m_pChildList[i]->Id())
+               break;
+         if (j == dctList->size())
+         {
+            m_pChildList[i]->IncRefCount();
+				dctList->add((DataCollectionTarget *)m_pChildList[i]);
+         }
+      }
+      else
+      {
+         if (m_pChildList[i]->CheckAccessRights(dwUserId, OBJECT_ACCESS_READ))
+            m_pChildList[i]->addChildDCTargetsToList(dctList, dwUserId);
+      }
+   }
+
+   UnlockChildList();
+}
+
+/**
+ * Hide object and all its childs
+ */
 void NetObj::hide()
 {
    DWORD i;

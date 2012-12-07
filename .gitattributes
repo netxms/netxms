@@ -1472,6 +1472,7 @@ src/java/netxms-eclipse/ObjectBrowser/icons/container.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/dashboard.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/dashboard_root.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/interface.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/mobile_device.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/netmap.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/netmap_group.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/netmap_root.gif -text

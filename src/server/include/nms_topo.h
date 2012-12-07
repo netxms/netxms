@@ -28,11 +28,9 @@
 class Node;
 class Interface;
 
-
-//
-// Hop information structure
-//
-
+/**
+ * Hop information structure
+ */
 struct HOP_INFO
 {
    DWORD nextHop;     // Next hop address
@@ -41,11 +39,9 @@ struct HOP_INFO
    bool isVpn;        // TRUE if next hop is behind VPN tunnel
 };
 
-
-//
-// Network path trace
-//
-
+/**
+ * Network path trace
+ */
 class NetworkPath
 {
 private:

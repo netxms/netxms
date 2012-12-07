@@ -208,7 +208,7 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
 	// Bind node to cluster before first configuration poll
 	if (pCluster != NULL)
 	{
-		pCluster->ApplyToNode(pNode);
+		pCluster->applyToTarget(pNode);
 	}
 
    if (dwCreationFlags & NXC_NCF_CREATE_UNMANAGED)

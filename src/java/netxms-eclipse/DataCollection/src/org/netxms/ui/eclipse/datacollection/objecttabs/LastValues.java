@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,13 +27,13 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.contexts.IContextService;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
 /**
  * Last values tab
- *
  */
 public class LastValues extends ObjectTab
 {
@@ -67,7 +67,7 @@ public class LastValues extends ObjectTab
 	@Override
 	public void objectChanged(GenericObject object)
 	{
-		dataView.setNode((object instanceof Node) ? (Node)object : null);
+		dataView.setNode(object);
 	}
 
 	/* (non-Javadoc)
@@ -76,7 +76,7 @@ public class LastValues extends ObjectTab
 	@Override
 	public boolean showForObject(GenericObject object)
 	{
-		return object instanceof Node;
+		return (object instanceof Node) || (object instanceof MobileDevice);
 	}
 
 	/* (non-Javadoc)

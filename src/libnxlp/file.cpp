@@ -217,7 +217,11 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 	bool readFromStart = !readFromCurrPos;
 
 	if (m_fileName == NULL)
+	{
+		if (logger != NULL)
+			logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: parser thread will not start, file name not set"));
 		return false;
+	}
 
 	if (logger != NULL)
 		logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: parser thread for file \"%s\" started"), m_fileName);

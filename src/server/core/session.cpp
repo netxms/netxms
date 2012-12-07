@@ -563,7 +563,7 @@ void ClientSession::readThread()
          if ((pObject->Type() == OBJECT_NODE) ||
              (pObject->Type() == OBJECT_CLUSTER) ||
              (pObject->Type() == OBJECT_TEMPLATE))
-            ((Template *)pObject)->UnlockDCIList(m_dwIndex);
+            ((Template *)pObject)->unlockDCIList(m_dwIndex);
    }
 
    // Waiting while reference count becomes 0
@@ -1093,7 +1093,7 @@ void ClientSession::processingThread()
 				sendPerfTabDCIList(pMsg);
 				break;
          case CMD_PUSH_DCI_DATA:
-            PushDCIData(pMsg);
+            pushDCIData(pMsg);
             break;
          case CMD_GET_AGENT_CFG_LIST:
             SendAgentCfgList(pMsg->GetId());
@@ -1114,13 +1114,13 @@ void ClientSession::processingThread()
             SendObjectComments(pMsg);
             break;
          case CMD_UPDATE_OBJECT_COMMENTS:
-            UpdateObjectComments(pMsg);
+            updateObjectComments(pMsg);
             break;
          case CMD_GET_ADDR_LIST:
-            GetAddrList(pMsg);
+            getAddrList(pMsg);
             break;
          case CMD_SET_ADDR_LIST:
-            SetAddrList(pMsg);
+            setAddrList(pMsg);
             break;
          case CMD_RESET_COMPONENT:
             resetComponent(pMsg);
@@ -1379,11 +1379,9 @@ void ClientSession::onFileUpload(BOOL bSuccess)
       _tunlink(m_szCurrFileName);
 }
 
-
-//
-// Send message to client
-//
-
+/**
+ * Send message to client
+ */
 void ClientSession::sendMessage(CSCPMessage *msg)
 {
    TCHAR szBuffer[128];
@@ -2818,11 +2816,9 @@ void ClientSession::changeObjectMgmtStatus(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-// 
-// Set user's password
-//
-
+/**
+ * Set user's password
+ */
 void ClientSession::SetPassword(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -2865,11 +2861,9 @@ void ClientSession::SetPassword(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send node's DCIs to client and lock data collection settings
-//
-
+/**
+ * Send node's DCIs to client and lock data collection settings
+ */
 void ClientSession::openNodeDCIList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -2889,12 +2883,13 @@ void ClientSession::openNodeDCIList(CSCPMessage *pRequest)
    {
       if ((pObject->Type() == OBJECT_NODE) ||
           (pObject->Type() == OBJECT_CLUSTER) ||
+          (pObject->Type() == OBJECT_MOBILEDEVICE) ||
           (pObject->Type() == OBJECT_TEMPLATE))
       {
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             // Try to lock DCI list
-            if (((Template *)pObject)->LockDCIList(m_dwIndex, m_szUserName, szLockInfo))
+            if (((Template *)pObject)->lockDCIList(m_dwIndex, m_szUserName, szLockInfo))
             {
                bSuccess = TRUE;
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -2930,14 +2925,12 @@ void ClientSession::openNodeDCIList(CSCPMessage *pRequest)
 
    // If DCI list was successfully locked, send it to client
    if (bSuccess)
-      ((Template *)pObject)->SendItemsToClient(this, pRequest->GetId());
+      ((Template *)pObject)->sendItemsToClient(this, pRequest->GetId());
 }
 
-
-//
-// Unlock node's data collection settings
-//
-
+/**
+ * Unlock node's data collection settings
+ */
 void ClientSession::closeNodeDCIList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -2955,6 +2948,7 @@ void ClientSession::closeNodeDCIList(CSCPMessage *pRequest)
    {
       if ((pObject->Type() == OBJECT_NODE) ||
           (pObject->Type() == OBJECT_CLUSTER) ||
+          (pObject->Type() == OBJECT_MOBILEDEVICE) ||
           (pObject->Type() == OBJECT_TEMPLATE))
       {
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -2962,7 +2956,7 @@ void ClientSession::closeNodeDCIList(CSCPMessage *pRequest)
             BOOL bSuccess;
 
             // Try to unlock DCI list
-            bSuccess = ((Template *)pObject)->UnlockDCIList(m_dwIndex);
+            bSuccess = ((Template *)pObject)->unlockDCIList(m_dwIndex);
             msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_OUT_OF_STATE_REQUEST);
 
             // Modify list of open nodes DCI lists
@@ -3004,11 +2998,9 @@ void ClientSession::closeNodeDCIList(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Create, modify, or delete data collection item for node
-//
-
+/**
+ * Create, modify, or delete data collection item for node
+ */
 void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -3026,9 +3018,10 @@ void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
    {
       if ((pObject->Type() == OBJECT_NODE) ||
           (pObject->Type() == OBJECT_CLUSTER) ||
+          (pObject->Type() == OBJECT_MOBILEDEVICE) ||
           (pObject->Type() == OBJECT_TEMPLATE))
       {
-         if (((Template *)pObject)->IsLockedBySession(m_dwIndex))
+         if (((Template *)pObject)->isLockedBySession(m_dwIndex))
          {
             if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
@@ -3107,7 +3100,7 @@ void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
                      break;
                }
                if (bSuccess)
-                  ((Template *)pObject)->SetDCIModificationFlag();
+                  ((Template *)pObject)->setDCIModificationFlag();
             }
             else  // User doesn't have MODIFY rights on object
             {
@@ -3133,11 +3126,9 @@ void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Change status for one or more DCIs
-//
-
+/**
+ * Change status for one or more DCIs
+ */
 void ClientSession::changeDCIStatus(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -3153,9 +3144,10 @@ void ClientSession::changeDCIStatus(CSCPMessage *pRequest)
    {
       if ((pObject->Type() == OBJECT_NODE) ||
           (pObject->Type() == OBJECT_CLUSTER) ||
+          (pObject->Type() == OBJECT_MOBILEDEVICE) ||
           (pObject->Type() == OBJECT_TEMPLATE))
       {
-         if (((Template *)pObject)->IsLockedBySession(m_dwIndex))
+         if (((Template *)pObject)->isLockedBySession(m_dwIndex))
          {
             if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
@@ -3196,11 +3188,9 @@ void ClientSession::changeDCIStatus(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Clear all collected data for DCI
-//
-
+/**
+ * Clear all collected data for DCI
+ */
 void ClientSession::clearDCIData(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -3215,7 +3205,7 @@ void ClientSession::clearDCIData(CSCPMessage *pRequest)
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
-      if (pObject->Type() == OBJECT_NODE)
+      if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE))
       {
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
          {
@@ -3252,11 +3242,9 @@ void ClientSession::clearDCIData(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Copy or move DCI from one node or template to another
-//
-
+/**
+ * Copy or move DCI from one node or template to another
+ */
 void ClientSession::copyDCI(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -3274,10 +3262,10 @@ void ClientSession::copyDCI(CSCPMessage *pRequest)
    if ((pSource != NULL) && (pDestination != NULL))
    {
       // Check object types
-      if (((pSource->Type() == OBJECT_NODE) || (pSource->Type() == OBJECT_TEMPLATE) || (pSource->Type() == OBJECT_CLUSTER)) && 
-          ((pDestination->Type() == OBJECT_NODE) || (pDestination->Type() == OBJECT_TEMPLATE) || (pDestination->Type() == OBJECT_CLUSTER)))
+      if (((pSource->Type() == OBJECT_NODE) || (pSource->Type() == OBJECT_MOBILEDEVICE) || (pSource->Type() == OBJECT_TEMPLATE) || (pSource->Type() == OBJECT_CLUSTER)) && 
+		    ((pDestination->Type() == OBJECT_NODE) || (pDestination->Type() == OBJECT_MOBILEDEVICE) || (pDestination->Type() == OBJECT_TEMPLATE) || (pDestination->Type() == OBJECT_CLUSTER)))
       {
-         if (((Template *)pSource)->IsLockedBySession(m_dwIndex))
+         if (((Template *)pSource)->isLockedBySession(m_dwIndex))
          {
             bMove = pRequest->GetVariableShort(VID_MOVE_FLAG);
             // Check access rights
@@ -3286,7 +3274,7 @@ void ClientSession::copyDCI(CSCPMessage *pRequest)
             {
                // Attempt to lock destination's DCI list
                if ((pDestination->Id() == pSource->Id()) ||
-                   (((Template *)pDestination)->LockDCIList(m_dwIndex, m_szUserName, szLockInfo)))
+                   (((Template *)pDestination)->lockDCIList(m_dwIndex, m_szUserName, szLockInfo)))
                {
                   DWORD i, *pdwItemList, dwNumItems;
                   const DCObject *pSrcItem;
@@ -3353,7 +3341,7 @@ void ClientSession::copyDCI(CSCPMessage *pRequest)
                   // Cleanup
                   free(pdwItemList);
                   if (pDestination->Id() != pSource->Id())
-                     ((Template *)pDestination)->UnlockDCIList(m_dwIndex);
+                     ((Template *)pDestination)->unlockDCIList(m_dwIndex);
                   msg.SetVariable(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
 
                   // Queue template update
@@ -3390,11 +3378,9 @@ void ClientSession::copyDCI(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send list of thresholds for DCI
-//
-
+/**
+ * Send list of thresholds for DCI
+ */
 void ClientSession::sendDCIThresholds(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -3410,9 +3396,9 @@ void ClientSession::sendDCIThresholds(CSCPMessage *request)
    {
       if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-			if (object->Type() == OBJECT_NODE)
+			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE))
 			{
-				DCObject *dci = ((Node *)object)->getDCObjectById(request->GetVariableLong(VID_DCI_ID));
+				DCObject *dci = ((Template *)object)->getDCObjectById(request->GetVariableLong(VID_DCI_ID));
 				if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 				{
 					((DCItem *)dci)->fillMessageWithThresholds(&msg);
@@ -3442,11 +3428,9 @@ void ClientSession::sendDCIThresholds(CSCPMessage *request)
    sendMessage(&msg);
 }
 
-
-//
-// Prepare statement for reading data from idata table
-//
-
+/**
+ * Prepare statement for reading data from idata table
+ */
 static DB_STATEMENT PrepareIDataSelect(DB_HANDLE hdb, DWORD nodeId, DWORD maxRows, const TCHAR *condition)
 {
 	TCHAR query[512];
@@ -3474,11 +3458,9 @@ static DB_STATEMENT PrepareIDataSelect(DB_HANDLE hdb, DWORD nodeId, DWORD maxRow
 	return DBPrepare(hdb, query);
 }
 
-
-//
-// Prepare statement for reading data from tdata table
-//
-
+/**
+ * Prepare statement for reading data from tdata table
+ */
 static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, DWORD nodeId, DWORD maxRows, const TCHAR *condition)
 {
 	TCHAR query[512];
@@ -3512,15 +3494,13 @@ static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, DWORD nodeId, DWORD maxRow
 	return NULL;
 }
 
-
-//
-// Get collected data for table or simple DCI
-//
-
-bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *response, Node *node, int dciType)
+/**
+ * Get collected data for table or simple DCI
+ */
+bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *response, DataCollectionTarget *dcTarget, int dciType)
 {
 	// Find DCI object
-	DCObject *dci = node->getDCObjectById(request->GetVariableLong(VID_DCI_ID));
+	DCObject *dci = dcTarget->getDCObjectById(request->GetVariableLong(VID_DCI_ID));
 	if (dci == NULL)
 	{
 		response->SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
@@ -3564,10 +3544,10 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 	switch(dciType)
 	{
 		case DCO_TYPE_ITEM:
-			hStmt = PrepareIDataSelect(hdb, node->Id(), maxRows, condition);
+			hStmt = PrepareIDataSelect(hdb, dcTarget->Id(), maxRows, condition);
 			break;
 		case DCO_TYPE_TABLE:
-			hStmt = PrepareTDataSelect(hdb, node->Id(), maxRows, condition);
+			hStmt = PrepareTDataSelect(hdb, dcTarget->Id(), maxRows, condition);
 			break;
 		default:
 			hStmt = NULL;
@@ -3689,11 +3669,9 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 	return success;
 }
 
-
-//
-// Get collected data
-//
-
+/**
+ * Get collected data
+ */
 void ClientSession::getCollectedData(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -3703,24 +3681,31 @@ void ClientSession::getCollectedData(CSCPMessage *request)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(request->GetId());
 
-   Node *node = (Node *)FindObjectById(request->GetVariableLong(VID_OBJECT_ID), OBJECT_NODE);
-   if (node != NULL)
+   NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
+   if (object != NULL)
    {
-      if (node->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-      {
-			if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
+		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		{
+			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE))
 			{
-				success = getCollectedDataFromDB(request, &msg, node, DCO_TYPE_ITEM);
+				if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
+				{
+					success = getCollectedDataFromDB(request, &msg, (DataCollectionTarget *)object, DCO_TYPE_ITEM);
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_DB_CONNECTION_LOST);
+				}
 			}
 			else
 			{
-				msg.SetVariable(VID_RCC, RCC_DB_CONNECTION_LOST);
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
-      }
-      else
-      {
-         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-      }
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
    }
    else  // No object with given ID
    {
@@ -3732,11 +3717,9 @@ void ClientSession::getCollectedData(CSCPMessage *request)
       sendMessage(&msg);
 }
 
-
-//
-// Get collected data for table DCI
-//
-
+/**
+ * Get collected data for table DCI
+ */
 void ClientSession::getTableCollectedData(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -3746,24 +3729,31 @@ void ClientSession::getTableCollectedData(CSCPMessage *request)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(request->GetId());
 
-   Node *node = (Node *)FindObjectById(request->GetVariableLong(VID_OBJECT_ID), OBJECT_NODE);
-   if (node != NULL)
+   NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
+   if (object != NULL)
    {
-      if (node->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-      {
-			if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
+		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		{
+			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE))
 			{
-				success = getCollectedDataFromDB(request, &msg, node, DCO_TYPE_TABLE);
+				if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
+				{
+					success = getCollectedDataFromDB(request, &msg, (DataCollectionTarget *)object, DCO_TYPE_TABLE);
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_DB_CONNECTION_LOST);
+				}
 			}
 			else
 			{
-				msg.SetVariable(VID_RCC, RCC_DB_CONNECTION_LOST);
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
-      }
-      else
-      {
-         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-      }
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
    }
    else
    {
@@ -3774,11 +3764,9 @@ void ClientSession::getTableCollectedData(CSCPMessage *request)
       sendMessage(&msg);
 }
 
-
-//
-// Send latest collected values for all DCIs of given node
-//
-
+/**
+ * Send latest collected values for all DCIs of given node
+ */
 void ClientSession::getLastValues(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -3794,9 +3782,9 @@ void ClientSession::getLastValues(CSCPMessage *pRequest)
    {
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         if (pObject->Type() == OBJECT_NODE)
+         if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE))
          {
-            msg.SetVariable(VID_RCC, ((Node *)pObject)->getLastValues(&msg));
+            msg.SetVariable(VID_RCC, ((DataCollectionTarget *)pObject)->getLastValues(&msg));
          }
          else
          {
@@ -3817,11 +3805,9 @@ void ClientSession::getLastValues(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send latest collected values for given table DCI of given node
-//
-
+/**
+ * Send latest collected values for given table DCI of given node
+ */
 void ClientSession::getTableLastValues(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -3837,9 +3823,9 @@ void ClientSession::getTableLastValues(CSCPMessage *pRequest)
    {
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         if (pObject->Type() == OBJECT_NODE)
+         if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE))
          {
-				msg.SetVariable(VID_RCC, ((Node *)pObject)->getTableLastValues(pRequest->GetVariableLong(VID_DCI_ID), &msg));
+				msg.SetVariable(VID_RCC, ((DataCollectionTarget *)pObject)->getTableLastValues(pRequest->GetVariableLong(VID_DCI_ID), &msg));
          }
          else
          {
@@ -3860,11 +3846,9 @@ void ClientSession::getTableLastValues(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Open event processing policy
-//
-
+/**
+ * Open event processing policy
+ */
 void ClientSession::openEPP(DWORD dwRqId)
 {
    CSCPMessage msg;
@@ -3904,11 +3888,9 @@ void ClientSession::openEPP(DWORD dwRqId)
       g_pEventPolicy->SendToClient(this, dwRqId);
 }
 
-
-//
-// Close event processing policy
-//
-
+/**
+ * Close event processing policy
+ */
 void ClientSession::closeEPP(DWORD dwRqId)
 {
    CSCPMessage msg;
@@ -4310,7 +4292,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								pParent->calculateCompoundStatus();
 								if (pParent->Type() == OBJECT_CLUSTER)
 								{
-									((Cluster *)pParent)->ApplyToNode((Node *)pObject);
+									((Cluster *)pParent)->applyToTarget((DataCollectionTarget *)pObject);
 								}
 								if (pObject->Type() == OBJECT_NODELINK)
 								{
@@ -4386,11 +4368,9 @@ void ClientSession::createObject(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Add cluster node
-//
-
+/**
+ * Add cluster node
+ */
 void ClientSession::addClusterNode(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -4410,7 +4390,7 @@ void ClientSession::addClusterNode(CSCPMessage *request)
 				if (cluster->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) &&
 					 node->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
 				{
-					((Cluster *)cluster)->ApplyToNode((Node *)node);
+					((Cluster *)cluster)->applyToTarget((Node *)node);
 					((Node *)node)->setRecheckCapsFlag();
 					((Node *)node)->forceConfigurationPoll();
 
@@ -4446,11 +4426,9 @@ void ClientSession::addClusterNode(CSCPMessage *request)
    sendMessage(&msg);
 }
 
-
-//
-// Bind/unbind object
-//
-
+/**
+ * Bind/unbind object
+ */
 void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
 {
    CSCPMessage msg;
@@ -4510,14 +4488,14 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
                pParent->DeleteChild(pChild);
                pChild->DeleteParent(pParent);
                if ((pParent->Type() == OBJECT_TEMPLATE) &&
-                   (pChild->Type() == OBJECT_NODE))
+                   ((pChild->Type() == OBJECT_NODE) || (pChild->Type() == OBJECT_MOBILEDEVICE)))
                {
-                  ((Template *)pParent)->queueRemoveFromNode(pChild->Id(), pRequest->GetVariableShort(VID_REMOVE_DCI));
+                  ((Template *)pParent)->queueRemoveFromTarget(pChild->Id(), pRequest->GetVariableShort(VID_REMOVE_DCI));
                }
                else if ((pParent->Type() == OBJECT_CLUSTER) &&
                         (pChild->Type() == OBJECT_NODE))
                {
-                  ((Cluster *)pParent)->queueRemoveFromNode(pChild->Id(), TRUE);
+                  ((Cluster *)pParent)->queueRemoveFromTarget(pChild->Id(), TRUE);
 						((Node *)pChild)->setRecheckCapsFlag();
 						((Node *)pChild)->forceConfigurationPoll();
                }
@@ -5865,11 +5843,9 @@ void ClientSession::SendParametersList(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Deplay package to node(s)
-//
-
+/**
+ * Deplay package to node(s)
+ */
 void ClientSession::DeployPackage(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -6015,11 +5991,9 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
       MutexUnlock(hMutex);
 }
 
-
-//
-// Apply data collection template to node
-//
-
+/**
+ * Apply data collection template to node or mobile device
+ */
 void ClientSession::applyTemplate(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -6036,15 +6010,15 @@ void ClientSession::applyTemplate(CSCPMessage *pRequest)
    {
       // Check object types
       if ((pSource->Type() == OBJECT_TEMPLATE) && 
-          (pDestination->Type() == OBJECT_NODE))
+          ((pDestination->Type() == OBJECT_NODE) || (pDestination->Type() == OBJECT_MOBILEDEVICE)))
       {
          TCHAR szLockInfo[MAX_SESSION_NAME];
          BOOL bLockSucceed = FALSE;
 
          // Acquire DCI lock if needed
-         if (!((Template *)pSource)->IsLockedBySession(m_dwIndex))
+         if (!((Template *)pSource)->isLockedBySession(m_dwIndex))
          {
-            bLockSucceed = ((Template *)pSource)->LockDCIList(m_dwIndex, m_szUserName, szLockInfo);
+            bLockSucceed = ((Template *)pSource)->lockDCIList(m_dwIndex, m_szUserName, szLockInfo);
          }
          else
          {
@@ -6058,12 +6032,12 @@ void ClientSession::applyTemplate(CSCPMessage *pRequest)
                 (pDestination->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
             {
                // Attempt to lock destination's DCI list
-               if (((Node *)pDestination)->LockDCIList(m_dwIndex, m_szUserName, szLockInfo))
+               if (((DataCollectionTarget *)pDestination)->lockDCIList(m_dwIndex, m_szUserName, szLockInfo))
                {
                   BOOL bErrors;
 
-                  bErrors = ((Template *)pSource)->ApplyToNode((Node *)pDestination);
-                  ((Template *)pDestination)->UnlockDCIList(m_dwIndex);
+                  bErrors = ((Template *)pSource)->applyToTarget((DataCollectionTarget *)pDestination);
+                  ((Template *)pDestination)->unlockDCIList(m_dwIndex);
                   msg.SetVariable(VID_RCC, bErrors ? RCC_DCI_COPY_ERRORS : RCC_SUCCESS);
                }
                else  // Destination's DCI list already locked by someone else
@@ -6077,7 +6051,7 @@ void ClientSession::applyTemplate(CSCPMessage *pRequest)
                msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
             }
 
-            ((Template *)pSource)->UnlockDCIList(m_dwIndex);
+            ((Template *)pSource)->unlockDCIList(m_dwIndex);
          }
          else  // Source node DCI list not locked by this session
          {
@@ -8450,12 +8424,10 @@ void ClientSession::SendObjectComments(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Update object comments from client
-//
-
-void ClientSession::UpdateObjectComments(CSCPMessage *pRequest)
+/**
+ * Update object comments from client
+ */
+void ClientSession::updateObjectComments(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
@@ -8483,17 +8455,15 @@ void ClientSession::UpdateObjectComments(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Push DCI data
-//
-
-void ClientSession::PushDCIData(CSCPMessage *pRequest)
+/**
+ * Push DCI data
+ */
+void ClientSession::pushDCIData(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD i, dwObjectId, dwNumItems, dwId, dwItemId;
    NetObj *pObject;
-   Node **ppNodeList = NULL;
+   DataCollectionTarget **dcTargetList = NULL;
    DCItem **ppItemList = NULL;
    TCHAR szName[256], **ppValueList;
    BOOL bOK;
@@ -8504,7 +8474,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
    dwNumItems = pRequest->GetVariableLong(VID_NUM_ITEMS);
    if (dwNumItems > 0)
    {
-      ppNodeList = (Node **)malloc(sizeof(Node *) * dwNumItems);
+      dcTargetList = (DataCollectionTarget **)malloc(sizeof(DataCollectionTarget *) * dwNumItems);
       ppItemList = (DCItem **)malloc(sizeof(DCItem *) * dwNumItems);
       ppValueList = (TCHAR **)malloc(sizeof(TCHAR *) * dwNumItems);
       memset(ppValueList, 0, sizeof(TCHAR *) * dwNumItems);
@@ -8536,23 +8506,23 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
          // Validate object
          if (pObject != NULL)
          {
-            if (pObject->Type() == OBJECT_NODE)
+            if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE))
             {
                if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_PUSH_DATA))
                {
-                  ppNodeList[i] = (Node *)pObject;
+                  dcTargetList[i] = (DataCollectionTarget *)pObject;
 
                   // Object OK, find DCI by ID or name (if ID==0)
                   dwItemId = pRequest->GetVariableLong(dwId++);
 						DCObject *pItem;
                   if (dwItemId != 0)
                   {
-                     pItem = ppNodeList[i]->getDCObjectById(dwItemId);
+                     pItem = dcTargetList[i]->getDCObjectById(dwItemId);
                   }
                   else
                   {
                      pRequest->GetVariableStr(dwId++, szName, 256);
-                     pItem = ppNodeList[i]->getDCObjectByName(szName);
+                     pItem = dcTargetList[i]->getDCObjectByName(szName);
                   }
 
                   if ((pItem != NULL) && (pItem->getType() == DCO_TYPE_ITEM))
@@ -8599,7 +8569,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
          {
 				if (_tcslen(ppValueList[i]) >= MAX_DCI_STRING_VALUE)
 					ppValueList[i][MAX_DCI_STRING_VALUE - 1] = 0;
-				ppNodeList[i]->processNewDCValue(ppItemList[i], t, ppValueList[i]);
+				dcTargetList[i]->processNewDCValue(ppItemList[i], t, ppValueList[i]);
 				ppItemList[i]->setLastPollTime(t);
          }
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -8613,7 +8583,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
       for(i = 0; i < dwNumItems; i++)
          safe_free(ppValueList[i]);
       free(ppItemList);
-      free(ppNodeList);
+      free(dcTargetList);
    }
    else
    {
@@ -8623,12 +8593,10 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Get address list
-//
-
-void ClientSession::GetAddrList(CSCPMessage *pRequest)
+/**
+ * Get address list
+ */
+void ClientSession::getAddrList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szQuery[256];
@@ -8669,12 +8637,10 @@ void ClientSession::GetAddrList(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Set address list
-//
-
-void ClientSession::SetAddrList(CSCPMessage *pRequest)
+/**
+ * Set address list
+ */
+void ClientSession::setAddrList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD i, dwId, dwNumRec, dwListType;
@@ -12102,11 +12068,9 @@ void ClientSession::getNodeComponents(CSCPMessage *request)
    sendMessage(&msg);
 }
 
-
-//
-// Get threshold summary for underlying node objects
-//
-
+/**
+ * Get threshold summary for underlying data collection targets
+ */
 void ClientSession::getThresholdSummary(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -12124,16 +12088,16 @@ void ClientSession::getThresholdSummary(CSCPMessage *request)
 			if ((object->Type() == OBJECT_CONTAINER) || (object->Type() == OBJECT_SERVICEROOT) || 
 			    (object->Type() == OBJECT_SUBNET) || (object->Type() == OBJECT_NETWORK) || (object->Type() == OBJECT_ZONE))
 			{
-				ObjectArray<Node> *nodes = new ObjectArray<Node>();
-				object->addChildNodesToList(nodes, m_dwUserId);
+				ObjectArray<DataCollectionTarget> *targets = new ObjectArray<DataCollectionTarget>();
+				object->addChildDCTargetsToList(targets, m_dwUserId);
 				DWORD varId = VID_THRESHOLD_BASE;
-				for(int i = 0; i < nodes->size(); i++)
+				for(int i = 0; i < targets->size(); i++)
 				{
-					if (nodes->get(i)->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-						varId = nodes->get(i)->getThresholdSummary(&msg, varId);
-					nodes->get(i)->DecRefCount();
+					if (targets->get(i)->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+						varId = targets->get(i)->getThresholdSummary(&msg, varId);
+					targets->get(i)->DecRefCount();
 				}
-				delete nodes;
+				delete targets;
 			}
 			else
 			{

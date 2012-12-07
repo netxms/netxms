@@ -24,7 +24,7 @@
 /**
  * Default constructor
  */
-MobileDevice::MobileDevice() : Template()
+MobileDevice::MobileDevice() : DataCollectionTarget()
 {
 	m_lastReportTime = 0;
 	m_deviceId = NULL;
@@ -40,7 +40,7 @@ MobileDevice::MobileDevice() : Template()
 /**
  * Constructor for creating new mobile device object
  */
-MobileDevice::MobileDevice(const TCHAR *name, const TCHAR *deviceId) : Template(name)
+MobileDevice::MobileDevice(const TCHAR *name, const TCHAR *deviceId) : DataCollectionTarget(name)
 {
 	m_lastReportTime = 0;
 	m_deviceId = _tcsdup(deviceId);
@@ -171,14 +171,10 @@ BOOL MobileDevice::DeleteFromDB()
    TCHAR szQuery[256];
    BOOL bSuccess;
 
-   bSuccess = Template::DeleteFromDB();
+   bSuccess = DataCollectionTarget::DeleteFromDB();
    if (bSuccess)
    {
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM mobile_devices WHERE id=%d"), (int)m_dwId);
-      QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, 256, _T("DROP TABLE idata_%d"), (int)m_dwId);
-      QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, 256, _T("DROP TABLE tdata_%d"), (int)m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;
@@ -189,7 +185,7 @@ BOOL MobileDevice::DeleteFromDB()
  */
 void MobileDevice::CreateMessage(CSCPMessage *msg)
 {
-   Template::CreateMessage(msg);
+   DataCollectionTarget::CreateMessage(msg);
 	msg->SetVariable(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
 	msg->SetVariable(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->SetVariable(VID_MODEL, CHECK_NULL_EX(m_model));
@@ -197,7 +193,7 @@ void MobileDevice::CreateMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_OS_NAME, CHECK_NULL_EX(m_model));
 	msg->SetVariable(VID_OS_VERSION, CHECK_NULL_EX(m_model));
 	msg->SetVariable(VID_USER_ID, CHECK_NULL_EX(m_userId));
-	msg->SetVariable(VID_BATTERY_LEVEL, (WORD)m_batteryLevel);
+	msg->SetVariable(VID_BATTERY_LEVEL, (DWORD)m_batteryLevel);
 }
 
 /**
@@ -208,5 +204,5 @@ DWORD MobileDevice::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked
    if (!bAlreadyLocked)
       LockData();
 
-   return Template::ModifyFromMessage(pRequest, TRUE);
+   return DataCollectionTarget::ModifyFromMessage(pRequest, TRUE);
 }

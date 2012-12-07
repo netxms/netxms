@@ -33,7 +33,7 @@ import org.netxms.client.objects.Node;
  */
 public class DataCollectionTest extends SessionTest
 {
-	private static final long nodeId = 101;
+	private static final long nodeId = 100;
 	
 	public void testGetLastValues() throws Exception
 	{
@@ -44,8 +44,11 @@ public class DataCollectionTest extends SessionTest
 		
 		boolean statusFound = false;
 		for(int i = 0; i < list.length; i++)
+		{
+			System.out.println(list[i].getDescription() + " = " + list[i].getValue());
 			if ((list[i].getName().equalsIgnoreCase("Status")) && (list[i].getSource() == DataCollectionObject.INTERNAL))
 				statusFound = true;
+		}
 		assertEquals(true, statusFound);
 		
 		session.disconnect();

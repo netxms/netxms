@@ -602,11 +602,9 @@ BOOL DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
 	return TRUE;
 }
 
-
-//
-// Check if data collection object have to be polled
-//
-
+/**
+ * Check if data collection object have to be polled
+ */
 bool DCObject::isReadyForPolling(time_t currTime)
 {
    bool result;
@@ -614,7 +612,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
    lock();
    if ((m_status != ITEM_STATUS_DISABLED) && (!m_busy) &&
        isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
-		 (matchClusterResource()))
+		 matchClusterResource())
    {
       if (m_flags & DCF_ADVANCED_SCHEDULE)
       {
@@ -656,22 +654,18 @@ bool DCObject::isReadyForPolling(time_t currTime)
    return result;
 }
 
-
-//
-// Returns true if internal cache is loaded. If data collection object
-// does not have cache should return true
-//
-
+/**
+ * Returns true if internal cache is loaded. If data collection object
+ * does not have cache should return true
+ */
 bool DCObject::isCacheLoaded()
 {
 	return true;
 }
 
-
-//
-// Prepare object for deletion
-//
-
+/**
+ * Prepare object for deletion
+ */
 bool DCObject::prepareForDeletion()
 {
 	DbgPrintf(9, _T("DCObject::prepareForDeletion for DCO %d"), m_dwId);

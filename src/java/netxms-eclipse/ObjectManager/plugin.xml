@@ -295,6 +295,13 @@
                menubarPath="objectcreation">
          </action>
          <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateMobileDevice"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createMobileDevice_Container"
+               label="Create &amp;mobile device..."
+               menubarPath="objectcreation">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_Container"
@@ -339,6 +346,13 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNode_ServiceRoot"
                label="Create &amp;node..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateMobileDevice"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createMobileDevice_ServiceRoot"
+               label="Create &amp;mobile device..."
                menubarPath="objectcreation">
          </action>
          <action

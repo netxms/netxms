@@ -1155,11 +1155,9 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
    }
 }
 
-
-//
-// Set new ID and node/template association
-//
-
+/**
+ * Set new ID and node/template association
+ */
 void DCItem::changeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpansion)
 {
 	DCObject::changeBinding(dwNewId, pNewNode, doMacroExpansion);
@@ -1179,14 +1177,12 @@ void DCItem::changeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpans
    unlock();
 }
 
-
-//
-// Update required cache size depending on thresholds
-// dwCondId is an identifier of calling condition object id. If it is not 0,
-// GetCacheSizeForDCI should be called with bNoLock == TRUE for appropriate
-// condition object
-//
-
+/**
+ * Update required cache size depending on thresholds
+ * dwCondId is an identifier of calling condition object id. If it is not 0,
+ * GetCacheSizeForDCI should be called with bNoLock == TRUE for appropriate
+ * condition object
+ */
 void DCItem::updateCacheSize(DWORD dwCondId)
 {
    DWORD i, dwSize, dwRequiredSize;
@@ -1200,7 +1196,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
 
    // Minimum cache size is 1 for nodes (so GetLastValue can work)
    // and it is always 0 for templates
-   if (m_pNode->Type() == OBJECT_NODE)
+   if ((m_pNode->Type() == OBJECT_NODE) || (m_pNode->Type() == OBJECT_MOBILEDEVICE))
    {
       dwRequiredSize = 1;
 
@@ -1323,11 +1319,9 @@ void DCItem::updateCacheSize(DWORD dwCondId)
    m_bCacheLoaded = true;
 }
 
-
-//
-// Put last value into CSCP message
-//
-
+/**
+ * Put last value into CSCP message
+ */
 void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
 {
 	lock();
@@ -1370,11 +1364,9 @@ void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
 	unlock();
 }
 
-
-//
-// Get item's last value for use in NXSL
-//
-
+/**
+ * Get item's last value for use in NXSL
+ */
 NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
 {
    NXSL_Value *pValue;

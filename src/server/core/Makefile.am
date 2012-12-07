@@ -10,12 +10,12 @@ libnxcore_la_SOURCES =  acl.cpp agent.cpp agent_policy.cpp actions.cpp \
 			columnfilter.cpp components.cpp condition.cpp \
 			config.cpp container.cpp correlate.cpp dashboard.cpp \
 			datacoll.cpp dbwrite.cpp dcitem.cpp dcithreshold.cpp \
-			dcivalue.cpp dcobject.cpp dctable.cpp dctcolumn.cpp \
-			debug.cpp download_job.cpp ef.cpp email.cpp \
-			entirenet.cpp epp.cpp events.cpp evproc.cpp fdb.cpp \
-			hk.cpp id.cpp import.cpp index.cpp interface.cpp \
-			isc.cpp job.cpp jobmgr.cpp jobqueue.cpp layer2.cpp \
-			lln.cpp lldp.cpp locks.cpp logfilter.cpp \
+			dcivalue.cpp dcobject.cpp dctable.cpp dctarget.cpp \
+			dctcolumn.cpp debug.cpp download_job.cpp ef.cpp \
+			email.cpp entirenet.cpp epp.cpp events.cpp evproc.cpp \
+			fdb.cpp hk.cpp id.cpp import.cpp index.cpp \
+			interface.cpp isc.cpp job.cpp jobmgr.cpp jobqueue.cpp \
+			layer2.cpp lln.cpp lldp.cpp locks.cpp logfilter.cpp \
 			loghandle.cpp logs.cpp main.cpp mobile.cpp \
 			modules.cpp ndd.cpp ndp.cpp netinfo.cpp netmap.cpp \
 			netobj.cpp netsrv.cpp node.cpp nodelink.cpp np.cpp \
