@@ -16,13 +16,26 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.mobile.agent.constants;
-
-import org.netxms.base.CommonRCC;
+package org.netxms.mobile.agent;
 
 /**
- * This class represents request completion codes (RCC) sent by NetXMS server or agent.
+ * Basic connection tests
  */
-public class RCC extends CommonRCC
+public class ConnectionTest extends SessionTest
 {
+	public void testConnect() throws Exception
+	{
+		final Session session = connect();
+
+		Thread.sleep(2000);
+		session.disconnect();
+	}
+
+	public void testEncryptedConnect() throws Exception
+	{
+		final Session session = connect(true);
+
+		Thread.sleep(2000);
+		session.disconnect();
+	}
 }

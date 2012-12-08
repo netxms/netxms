@@ -23,11 +23,9 @@
 #ifndef _netxms_version_h_
 #define _netxms_version_h_
 
-
-//
-// Version constants 
-//
-
+/**
+ * Version constants 
+ */
 #define NETXMS_VERSION_MAJOR        1
 #define NETXMS_VERSION_MINOR        2
 #define NETXMS_VERSION_BUILD        5
@@ -35,12 +33,14 @@
 #define NETXMS_VERSION_STRING       _T("1.2.5")
 #define NETXMS_VERSION_STRING_A     "1.2.5"
 
+/**
+ * Current client-server protocol version
+ */
+#define CLIENT_PROTOCOL_VERSION           34
 
-//
-// Current client-server protocol version
-//
-
-#define CLIENT_PROTOCOL_VERSION     34
-
+/**
+ * Current mobile device protocol version
+ */
+#define MOBILE_DEVICE_PROTOCOL_VERSION    1
 
 #endif

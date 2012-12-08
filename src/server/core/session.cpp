@@ -48,22 +48,18 @@
 # define OPENSSL_CONST
 #endif
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define TRAP_CREATE     1
 #define TRAP_UPDATE     2
 #define TRAP_DELETE     3
 
 #define MAX_MSG_SIZE    4194304
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 extern Queue g_statusPollQueue;
 extern Queue g_configPollQueue;
 extern Queue g_routePollQueue;
@@ -72,14 +68,12 @@ extern Queue g_nodePollerQueue;
 extern Queue g_conditionPollerQueue;
 extern Queue *g_pItemQueue;
 
-void UnregisterSession(DWORD dwIndex);
+void UnregisterClientSession(DWORD dwIndex);
 void ResetDiscoveryPoller();
 
-
-//
-// Node poller start data
-//
-
+/**
+ * Node poller start data
+ */
 typedef struct
 {
    ClientSession *pSession;
@@ -88,33 +82,27 @@ typedef struct
    DWORD dwRqId;
 } POLLER_START_DATA;
 
-
-//
-// Additional processing thread start data
-//
-
+/**
+ * Additional processing thread start data
+ */
 typedef struct
 {
 	ClientSession *pSession;
 	CSCPMessage *pMsg;
 } PROCTHREAD_START_DATA;
 
-
-//
-// Object tool acl entry
-//
-
+/**
+ * Object tool acl entry
+ */
 typedef struct
 {
    DWORD dwToolId;
    DWORD dwUserId;
 } OBJECT_TOOL_ACL;
 
-
-//
-// Graph ACL entry
-//
-
+/**
+ * Graph ACL entry
+ */
 struct GRAPH_ACL_ENTRY
 {
 	DWORD dwGraphId;
@@ -122,11 +110,9 @@ struct GRAPH_ACL_ENTRY
 	DWORD dwAccess;
 };
 
-
-//
-// Additional message processing thread starters
-//
-
+/**
+ * Additional message processing thread starters
+ */
 #define CALL_IN_NEW_THREAD(func, msg) \
 { \
 	PROCTHREAD_START_DATA *pData = (PROCTHREAD_START_DATA *)malloc(sizeof(PROCTHREAD_START_DATA)); \
@@ -170,62 +156,52 @@ DEFINE_THREAD_STARTER(renderReport)
 DEFINE_THREAD_STARTER(getNetworkPath)
 DEFINE_THREAD_STARTER(queryParameter)
 
-
-//
-// Client communication read thread starter
-//
-
-THREAD_RESULT THREAD_CALL ClientSession::ReadThreadStarter(void *pArg)
+/**
+ * Client communication read thread starter
+ */
+THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *pArg)
 {
    ((ClientSession *)pArg)->readThread();
 
    // When ClientSession::ReadThread exits, all other session
    // threads are already stopped, so we can safely destroy
    // session object
-   UnregisterSession(((ClientSession *)pArg)->getIndex());
+   UnregisterClientSession(((ClientSession *)pArg)->getIndex());
    delete (ClientSession *)pArg;
    return THREAD_OK;
 }
 
-
-//
-// Client communication write thread starter
-//
-
-THREAD_RESULT THREAD_CALL ClientSession::WriteThreadStarter(void *pArg)
+/**
+ * Client communication write thread starter
+ */
+THREAD_RESULT THREAD_CALL ClientSession::writeThreadStarter(void *pArg)
 {
    ((ClientSession *)pArg)->writeThread();
    return THREAD_OK;
 }
 
-
-//
-// Received message processing thread starter
-//
-
-THREAD_RESULT THREAD_CALL ClientSession::ProcessingThreadStarter(void *pArg)
+/**
+ * Received message processing thread starter
+ */
+THREAD_RESULT THREAD_CALL ClientSession::processingThreadStarter(void *pArg)
 {
    ((ClientSession *)pArg)->processingThread();
    return THREAD_OK;
 }
 
-
-//
-// Information update processing thread starter
-//
-
-THREAD_RESULT THREAD_CALL ClientSession::UpdateThreadStarter(void *pArg)
+/**
+ * Information update processing thread starter
+ */
+THREAD_RESULT THREAD_CALL ClientSession::updateThreadStarter(void *pArg)
 {
    ((ClientSession *)pArg)->updateThread();
    return THREAD_OK;
 }
 
-
-//
-// Forced node poll thread starter
-//
-
-THREAD_RESULT THREAD_CALL ClientSession::PollerThreadStarter(void *pArg)
+/**
+ * Forced node poll thread starter
+ */
+THREAD_RESULT THREAD_CALL ClientSession::pollerThreadStarter(void *pArg)
 {
    ((POLLER_START_DATA *)pArg)->pSession->pollerThread(
       ((POLLER_START_DATA *)pArg)->pNode,
@@ -236,11 +212,9 @@ THREAD_RESULT THREAD_CALL ClientSession::PollerThreadStarter(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// Client session class constructor
-//
-
+/**
+ * Client session class constructor
+ */
 ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
 {
    m_pSendQueue = new Queue;
@@ -288,11 +262,9 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
 	m_console = NULL;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 ClientSession::~ClientSession()
 {
    if (m_hSocket != -1)
@@ -334,25 +306,21 @@ ClientSession::~ClientSession()
 	}
 }
 
-
-//
-// Start all threads
-//
-
+/**
+ * Start all threads
+ */
 void ClientSession::run()
 {
-   m_hWriteThread = ThreadCreateEx(WriteThreadStarter, 0, this);
-   m_hProcessingThread = ThreadCreateEx(ProcessingThreadStarter, 0, this);
-   m_hUpdateThread = ThreadCreateEx(UpdateThreadStarter, 0, this);
-   ThreadCreate(ReadThreadStarter, 0, this);
+   m_hWriteThread = ThreadCreateEx(writeThreadStarter, 0, this);
+   m_hProcessingThread = ThreadCreateEx(processingThreadStarter, 0, this);
+   m_hUpdateThread = ThreadCreateEx(updateThreadStarter, 0, this);
+   ThreadCreate(readThreadStarter, 0, this);
 }
 
-
-//
-// Print debug information
-//
-
-void ClientSession::DebugPrintf(int level, const TCHAR *format, ...)
+/**
+ * Print debug information
+ */
+void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
 {
    if (level <= g_nDebugLevel)
    {
@@ -366,11 +334,9 @@ void ClientSession::DebugPrintf(int level, const TCHAR *format, ...)
    }
 }
 
-
-//
-// ReadThread()
-//
-
+/**
+ * Read thread
+ */
 void ClientSession::readThread()
 {
 	DWORD msgBufferSize = 1024;
@@ -405,14 +371,14 @@ void ClientSession::readThread()
 		                              &m_pCtx, (pDecryptionBuffer != NULL) ? &pDecryptionBuffer : NULL,
 												900000, MAX_MSG_SIZE)) <= 0)  // timeout 15 minutes
 		{
-         DebugPrintf(5, _T("RecvNXCPMessageEx failed (%d)"), iErr);
+         debugPrintf(5, _T("RecvNXCPMessageEx failed (%d)"), iErr);
          break;
       }
 
       // Check if message is too large
       if (iErr == 1)
       {
-         DebugPrintf(4, _T("Received message %s is too large (%d bytes)"),
+         debugPrintf(4, _T("Received message %s is too large (%d bytes)"),
                      NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                      ntohl(pRawMsg->dwSize));
          continue;
@@ -421,14 +387,14 @@ void ClientSession::readThread()
       // Check for decryption error
       if (iErr == 2)
       {
-         DebugPrintf(4, _T("Unable to decrypt received message"));
+         debugPrintf(4, _T("Unable to decrypt received message"));
          continue;
       }
 
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
       {
-         DebugPrintf(4, _T("Actual message size doesn't match wSize value (%d,%d)"), iErr, ntohl(pRawMsg->dwSize));
+         debugPrintf(4, _T("Actual message size doesn't match wSize value (%d,%d)"), iErr, ntohl(pRawMsg->dwSize));
          continue;   // Bad packet, wait for next
       }
 
@@ -440,7 +406,7 @@ void ClientSession::readThread()
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
          pRawMsg->wCode = ntohs(pRawMsg->wCode);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-         DebugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
+         debugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
 
          if ((pRawMsg->wCode == CMD_FILE_DATA) ||
              (pRawMsg->wCode == CMD_ABORT_FILE_TRANSFER))
@@ -453,7 +419,7 @@ void ClientSession::readThread()
                   {
                      if (wFlags & MF_END_OF_FILE)
                      {
-								DebugPrintf(6, _T("Got end of file marker"));
+								debugPrintf(6, _T("Got end of file marker"));
                         CSCPMessage msg;
 
                         close(m_hCurrFile);
@@ -469,7 +435,7 @@ void ClientSession::readThread()
                   }
                   else
                   {
-							DebugPrintf(6, _T("I/O error"));
+							debugPrintf(6, _T("I/O error"));
                      // I/O error
                      CSCPMessage msg;
 
@@ -495,7 +461,7 @@ void ClientSession::readThread()
             }
             else
             {
-               DebugPrintf(4, _T("Out of state message (ID: %d)"), pRawMsg->dwId);
+               debugPrintf(4, _T("Out of state message (ID: %d)"), pRawMsg->dwId);
             }
          }
       }
@@ -505,7 +471,7 @@ void ClientSession::readThread()
          pMsg = new CSCPMessage(pRawMsg);
          if ((pMsg->GetCode() == CMD_SESSION_KEY) && (pMsg->GetId() == m_dwEncryptionRqId))
          {
-		      DebugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
+		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
             m_dwEncryptionResult = SetupEncryptionContext(pMsg, &m_pCtx, NULL, g_pServerKey, NXCP_VERSION);
             ConditionSet(m_condEncryptionSetup);
             m_dwEncryptionRqId = 0;
@@ -513,7 +479,7 @@ void ClientSession::readThread()
          }
          else if (pMsg->GetCode() == CMD_KEEPALIVE)
 			{
-		      DebugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
+		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
 				respondToKeepalive(pMsg->GetId());
 				delete pMsg;
 			}
@@ -569,7 +535,7 @@ void ClientSession::readThread()
    // Waiting while reference count becomes 0
    if (m_dwRefCount > 0)
    {
-      DebugPrintf(3, _T("Waiting for pending requests..."));
+      debugPrintf(3, _T("Waiting for pending requests..."));
       do
       {
          ThreadSleep(1);
@@ -577,14 +543,12 @@ void ClientSession::readThread()
    }
 
 	WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0, _T("User logged out (client: %s)"), m_szClientInfo);
-   DebugPrintf(3, _T("Session closed"));
+   debugPrintf(3, _T("Session closed"));
 }
 
-
-//
-// WriteThread()
-//
-
+/**
+ * Network write thread
+ */
 void ClientSession::writeThread()
 {
    CSCP_MESSAGE *pRawMsg;
@@ -599,7 +563,7 @@ void ClientSession::writeThread()
          break;
 
 		if (ntohs(pRawMsg->wCode) != CMD_ADM_MESSAGE)
-			DebugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
+			debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
 
       if (m_pCtx != NULL)
       {
@@ -629,11 +593,9 @@ void ClientSession::writeThread()
    }
 }
 
-
-//
-// Update processing thread
-//
-
+/**
+ * Update processing thread
+ */
 void ClientSession::updateThread()
 {
    UPDATE_INFO *pUpdate;
@@ -727,11 +689,9 @@ void ClientSession::updateThread()
    }
 }
 
-
-//
-// Message processing thread
-//
-
+/**
+ * Message processing thread
+ */
 void ClientSession::processingThread()
 {
    CSCPMessage *pMsg;
@@ -746,7 +706,7 @@ void ClientSession::processingThread()
          break;
 
       m_wCurrentCmd = pMsg->GetCode();
-      DebugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
+      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
       if (!(m_dwFlags & CSF_AUTHENTICATED) && 
           (m_wCurrentCmd != CMD_LOGIN) && 
           (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
@@ -765,9 +725,6 @@ void ClientSession::processingThread()
             break;
          case CMD_GET_SERVER_INFO:
             sendServerInfo(pMsg->GetId());
-            break;
-         case CMD_KEEPALIVE:
-            respondToKeepalive(pMsg->GetId());
             break;
          case CMD_GET_MY_CONFIG:
             SendConfigForAgent(pMsg);
@@ -1306,9 +1263,9 @@ void ClientSession::processingThread()
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
 				{
-					if (g_pModuleList[i].pfCommandHandler != NULL)
+					if (g_pModuleList[i].pfClientCommandHandler != NULL)
 					{
-						status = g_pModuleList[i].pfCommandHandler(m_wCurrentCmd, pMsg, this);
+						status = g_pModuleList[i].pfClientCommandHandler(m_wCurrentCmd, pMsg, this);
 						if (status != NXMOD_COMMAND_IGNORED)
 						{
 							if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
@@ -1336,11 +1293,9 @@ void ClientSession::processingThread()
    }
 }
 
-
-//
-// Respond to client's keepalive message
-//
-
+/**
+ * Respond to client's keepalive message
+ */
 void ClientSession::respondToKeepalive(DWORD dwRqId)
 {
    CSCPMessage msg;
@@ -1351,11 +1306,9 @@ void ClientSession::respondToKeepalive(DWORD dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Process received file
-//
-
+/**
+ * Process received file
+ */
 void ClientSession::onFileUpload(BOOL bSuccess)
 {
    // Do processing specific to command initiated file upload
@@ -1388,7 +1341,7 @@ void ClientSession::sendMessage(CSCPMessage *msg)
    BOOL bResult;
 
 	if (msg->GetCode() != CMD_ADM_MESSAGE)
-		DebugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
+		debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
 
 	CSCP_MESSAGE *pRawMsg = msg->CreateMessage();
    if (m_pCtx != NULL)
@@ -1417,17 +1370,15 @@ void ClientSession::sendMessage(CSCPMessage *msg)
    }
 }
 
-
-//
-// Send raw message to client
-//
-
+/**
+ * Send raw message to client
+ */
 void ClientSession::sendRawMessage(CSCP_MESSAGE *msg)
 {
    TCHAR szBuffer[128];
    BOOL bResult;
 
-	DebugPrintf(6, _T("Sending raw message %s"), NXCPMessageCodeName(ntohs(msg->wCode), szBuffer));
+	debugPrintf(6, _T("Sending raw message %s"), NXCPMessageCodeName(ntohs(msg->wCode), szBuffer));
    if (m_pCtx != NULL)
    {
       CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(m_pCtx, msg);
@@ -1453,21 +1404,17 @@ void ClientSession::sendRawMessage(CSCP_MESSAGE *msg)
    }
 }
 
-
-//
-// Send file to client
-//
-
+/**
+ * Send file to client
+ */
 BOOL ClientSession::sendFile(const TCHAR *file, DWORD dwRqId)
 {
 	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, 0, NULL, NULL, m_mutexSocketWrite);
 }
 
-
-//
-// Send server information to client
-//
-
+/**
+ * Send server information to client
+ */
 void ClientSession::sendServerInfo(DWORD dwRqId)
 {
    CSCPMessage msg;
@@ -1559,7 +1506,7 @@ void ClientSession::sendServerInfo(DWORD dwRqId)
 	szBuffer[0] = 0;
 #endif
 	msg.SetVariable(VID_TIMEZONE, szBuffer);
-	DebugPrintf(2, _T("Server time zone: %s"), szBuffer);
+	debugPrintf(2, _T("Server time zone: %s"), szBuffer);
 
 	ConfigReadStr(_T("WindowsConsoleUpgradeURL"), szBuffer, 1024,
 	              _T("http://www.netxms.org/download/netxms-console-%version%.exe"));
@@ -1580,11 +1527,9 @@ void ClientSession::sendServerInfo(DWORD dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Authenticate client
-//
-
+/**
+ * Authenticate client
+ */
 void ClientSession::login(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -1668,7 +1613,7 @@ void ClientSession::login(CSCPMessage *pRequest)
 			msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
          msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? 0 : 1));
 			msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
-         DebugPrintf(3, _T("User %s authenticated"), m_szUserName);
+         debugPrintf(3, _T("User %s authenticated"), m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
       }
@@ -1694,11 +1639,9 @@ void ClientSession::login(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send event configuration to client
-//
-
+/**
+ * Send event configuration to client
+ */
 void ClientSession::sendEventDB(DWORD dwRqId)
 {
    DB_ASYNC_RESULT hResult;
@@ -3210,17 +3153,17 @@ void ClientSession::clearDCIData(CSCPMessage *pRequest)
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
          {
 				dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
-				DebugPrintf(4, _T("ClearDCIData: request for DCI %d at node %d"), dwItemId, pObject->Id()); 
+				debugPrintf(4, _T("ClearDCIData: request for DCI %d at node %d"), dwItemId, pObject->Id()); 
             DCObject *dci = ((Template *)pObject)->getDCObjectById(dwItemId);
 				if (dci != NULL)
 				{
 					msg.SetVariable(VID_RCC, dci->deleteAllData() ? RCC_SUCCESS : RCC_DB_FAILURE);
-					DebugPrintf(4, _T("ClearDCIData: DCI %d at node %d"), dwItemId, pObject->Id()); 
+					debugPrintf(4, _T("ClearDCIData: DCI %d at node %d"), dwItemId, pObject->Id()); 
 				}
 				else
 				{
 					msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
-					DebugPrintf(4, _T("ClearDCIData: DCI %d at node %d not found"), dwItemId, pObject->Id()); 
+					debugPrintf(4, _T("ClearDCIData: DCI %d at node %d not found"), dwItemId, pObject->Id()); 
 				}
          }
          else  // User doesn't have DELETE rights on object
@@ -3949,7 +3892,7 @@ void ClientSession::saveEPP(CSCPMessage *pRequest)
             m_ppEPPRuleList = (EPRule **)malloc(sizeof(EPRule *) * m_dwNumRecordsToUpload);
             memset(m_ppEPPRuleList, 0, sizeof(EPRule *) * m_dwNumRecordsToUpload);
          }
-         DebugPrintf(5, _T("Accepted EPP upload request for %d rules"), m_dwNumRecordsToUpload);
+         debugPrintf(5, _T("Accepted EPP upload request for %d rules"), m_dwNumRecordsToUpload);
       }
       else
       {
@@ -3993,7 +3936,7 @@ void ClientSession::processEPPRecord(CSCPMessage *pRequest)
             CSCPMessage msg;
 
             // All records received, replace event policy...
-            DebugPrintf(5, _T("Replacing event processing policy with a new one at %p (%d rules)"),
+            debugPrintf(5, _T("Replacing event processing policy with a new one at %p (%d rules)"),
                         m_ppEPPRuleList, m_dwNumRecordsToUpload);
             g_pEventPolicy->ReplacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
             g_pEventPolicy->SaveToDB();
@@ -5102,7 +5045,7 @@ void ClientSession::forcedNodePoll(CSCPMessage *pRequest)
             m_dwRefCount++;
 
             pData->pNode = (Node *)pObject;
-            ThreadCreate(PollerThreadStarter, 0, pData);
+            ThreadCreate(pollerThreadStarter, 0, pData);
             msg.SetVariable(VID_RCC, RCC_OPERATION_IN_PROGRESS);
             msg.SetVariable(VID_POLLER_MESSAGE, _T("Poll request accepted\r\n"));
 				pData = NULL;
@@ -6449,11 +6392,9 @@ void ClientSession::changeObjectZone(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Setup encryption with client
-//
-
+/**
+ * Setup encryption with client
+ */
 void ClientSession::setupEncryption(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -6486,11 +6427,9 @@ void ClientSession::setupEncryption(CSCPMessage *request)
    sendMessage(&msg);
 }
 
-
-//
-// Get agent's configuration file
-//
-
+/**
+ * Get agent's configuration file
+ */
 void ClientSession::getAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -6822,11 +6761,9 @@ void ClientSession::sendObjectTools(DWORD dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Send tool list to client
-//
-
+/**
+ * Send tool list to client
+ */
 void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -6946,11 +6883,9 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Update object tool
-//
-
+/**
+ * Update object tool
+ */
 void ClientSession::updateObjectTool(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -6973,11 +6908,9 @@ void ClientSession::updateObjectTool(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Delete object tool
-//
-
+/**
+ * Delete object tool
+ */
 void ClientSession::deleteObjectTool(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -9253,7 +9186,7 @@ void ClientSession::DefineGraph(CSCPMessage *pRequest)
 	// Create/update graph
 	if (bSuccess)
 	{
-		DebugPrintf(5, _T("%s graph %d"), bNew ? _T("Creating") : _T("Updating"), dwGraphId);
+		debugPrintf(5, _T("%s graph %d"), bNew ? _T("Creating") : _T("Updating"), dwGraphId);
 		bSuccess = FALSE;
 		if (DBBegin(g_hCoreDB))
 		{
@@ -10140,24 +10073,24 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
       _tcscat(fname, DDIR_SHARED_FILES);
       _tcscat(fname, FS_PATH_SEPARATOR);
       _tcscat(fname, name);
-		DebugPrintf(4, _T("Requested file %s"), name);
+		debugPrintf(4, _T("Requested file %s"), name);
 		if (_taccess(fname, 0) == 0)
 		{
-			DebugPrintf(5, _T("Sending file %s"), name);
+			debugPrintf(5, _T("Sending file %s"), name);
 			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx, 0, NULL, NULL, m_mutexSocketWrite))
 			{
-				DebugPrintf(5, _T("File %s was succesfully sent"), name);
+				debugPrintf(5, _T("File %s was succesfully sent"), name);
 		      msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else
 			{
-				DebugPrintf(5, _T("Unable to send file %s: SendFileOverNXCP() failed"), name);
+				debugPrintf(5, _T("Unable to send file %s: SendFileOverNXCP() failed"), name);
 		      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
 			}
 		}
 		else
 		{
-			DebugPrintf(5, _T("Unable to send file %s: access() failed"), name);
+			debugPrintf(5, _T("Unable to send file %s: access() failed"), name);
 	      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
 		}
 	}
@@ -10726,7 +10659,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 	{
 		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
-			DebugPrintf(5, _T("findNodeConnection: objectId=%d class=%d name=\"%s\""), objectId, object->Type(), object->Name());
+			debugPrintf(5, _T("findNodeConnection: objectId=%d class=%d name=\"%s\""), objectId, object->Type(), object->Name());
 			Interface *iface = NULL;
 			DWORD localNodeId, localIfId;
 			BYTE localMacAddr[MAC_ADDR_LENGTH];
@@ -10750,7 +10683,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 
-			DebugPrintf(5, _T("findNodeConnection: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
+			debugPrintf(5, _T("findNodeConnection: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
 			if (iface != NULL)
 			{
 				msg.SetVariable(VID_OBJECT_ID, iface->getParentNode()->Id());
@@ -10760,7 +10693,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 				msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
 				msg.SetVariable(VID_MAC_ADDR, localMacAddr, MAC_ADDR_LENGTH);
 				msg.SetVariable(VID_EXACT_MATCH, exactMatch ? (WORD)1 : (WORD)0);
-				DebugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
+				debugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
 			}
 		}
 		else
@@ -10792,7 +10725,7 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 	Interface *iface = FindInterfaceConnectionPoint(macAddr, &exactMatch);
 	msg.SetVariable(VID_RCC, RCC_SUCCESS);
 
-	DebugPrintf(5, _T("findMacAddress: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
+	debugPrintf(5, _T("findMacAddress: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
 	if (iface != NULL)
 	{
 		DWORD localNodeId, localIfId;
@@ -10817,7 +10750,7 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 		msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
 		msg.SetVariable(VID_IP_ADDRESS, (localIf != NULL) ? localIf->IpAddr() : (DWORD)0);
 		msg.SetVariable(VID_EXACT_MATCH, exactMatch ? (WORD)1 : (WORD)0);
-		DebugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
+		debugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
 	}
 	
 	sendMessage(&msg);
@@ -10845,21 +10778,21 @@ void ClientSession::findIpAddress(CSCPMessage *request)
 	{
 		memcpy(macAddr, iface->getMacAddr(), MAC_ADDR_LENGTH);
 		found = true;
-		DebugPrintf(5, _T("findIpAddress(%s): endpoint iface=%s"), IpToStr(ipAddr, ipAddrText), iface->Name());
+		debugPrintf(5, _T("findIpAddress(%s): endpoint iface=%s"), IpToStr(ipAddr, ipAddrText), iface->Name());
 	}
 	else
 	{
 		// no interface object with this IP or MAC address not known, try to find it in ARP caches
-		DebugPrintf(5, _T("findIpAddress(%s): interface not found, looking in ARP cache"), IpToStr(ipAddr, ipAddrText));
+		debugPrintf(5, _T("findIpAddress(%s): interface not found, looking in ARP cache"), IpToStr(ipAddr, ipAddrText));
 		Subnet *subnet = FindSubnetForNode(zoneId, ipAddr);
 		if (subnet != NULL)
 		{
-			DebugPrintf(5, _T("findIpAddress(%s): found subnet %s"), ipAddrText, subnet->Name());
+			debugPrintf(5, _T("findIpAddress(%s): found subnet %s"), ipAddrText, subnet->Name());
 			found = subnet->findMacAddress(ipAddr, macAddr);
 		}
 		else
 		{
-			DebugPrintf(5, _T("findIpAddress(%s): subnet not found"), ipAddrText, subnet->Name());
+			debugPrintf(5, _T("findIpAddress(%s): subnet not found"), ipAddrText, subnet->Name());
 		}
 	}
 
@@ -10869,7 +10802,7 @@ void ClientSession::findIpAddress(CSCPMessage *request)
 		bool exactMatch;
 		iface = FindInterfaceConnectionPoint(macAddr, &exactMatch);
 
-		DebugPrintf(5, _T("findIpAddress: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
+		debugPrintf(5, _T("findIpAddress: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
 		if (iface != NULL)
 		{
 			DWORD localNodeId, localIfId;
@@ -10894,7 +10827,7 @@ void ClientSession::findIpAddress(CSCPMessage *request)
 			msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
 			msg.SetVariable(VID_IP_ADDRESS, ipAddr);
 			msg.SetVariable(VID_EXACT_MATCH, exactMatch ? (WORD)1 : (WORD)0);
-			DebugPrintf(5, _T("findIpAddress(%s): nodeId=%d ifId=%d ifIndex=%d"), IpToStr(ipAddr, ipAddrText), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
+			debugPrintf(5, _T("findIpAddress(%s): nodeId=%d ifId=%d ifIndex=%d"), IpToStr(ipAddr, ipAddrText), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
 		}
 	}
 
@@ -10916,7 +10849,7 @@ void ClientSession::sendLibraryImage(CSCPMessage *request)
 	uuid_t guid;
 	request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
 	uuid_to_string(guid, guidText);
-	DebugPrintf(5, _T("sendLibraryImage: guid=%s"), guidText);
+	debugPrintf(5, _T("sendLibraryImage: guid=%s"), guidText);
 
 	if (rcc == RCC_SUCCESS)
 	{
@@ -11051,8 +10984,8 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	if (mimetype[0] == 0)
 		_tcscpy(mimetype, _T("image/png"));
 
-	//DebugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s, imageSize=%d"), guidText, name, category, (int)imageSize);
-	DebugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s"), guidText, name, category);
+	//debugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s, imageSize=%d"), guidText, name, category, (int)imageSize);
+	debugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s"), guidText, name, category);
 
 	if (rcc == RCC_SUCCESS)
 	{
@@ -11163,7 +11096,7 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 
 	request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
 	uuid_to_string(guid, guidText);
-	DebugPrintf(5, _T("deleteLibraryImage: guid=%s"), guidText);
+	debugPrintf(5, _T("deleteLibraryImage: guid=%s"), guidText);
 
 	_sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE guid = '%s'"), guidText);
 	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
@@ -11233,7 +11166,7 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 	{
 		category[0] = 0;
 	}
-	DebugPrintf(5, _T("listLibraryImages: category=%s"), category[0] == 0 ? _T("*ANY*") : category);
+	debugPrintf(5, _T("listLibraryImages: category=%s"), category[0] == 0 ? _T("*ANY*") : category);
 
 	_tcscpy(query, _T("SELECT guid,name,category,mimetype,protected FROM images"));
 	if (category[0] != 0)

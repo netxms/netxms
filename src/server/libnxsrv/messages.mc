@@ -866,4 +866,22 @@ Language=English
 Failed to load mobile device object with id %1 from database
 .
 
+MessageId=
+SymbolicName=MSG_MD_SESSION_CLOSED
+Language=English
+Mobile device session closed due to communication error (%1)
+.
+
+MessageId=
+SymbolicName=MSG_TOO_MANY_MD_SESSIONS
+Language=English
+Too many mobile device sessions open - unable to accept new client connection
+.
+
+MessageId=
+SymbolicName=MSG_LISTENING_FOR_MOBILE_DEVICES
+Language=English
+Listening for mobile device connections on TCP socket %1:%2
+.
+
 ;#endif

@@ -523,11 +523,9 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
    }
 }
 
-
-//
-// Get IP netmask for object of any class
-//
-
+/**
+ * Get IP netmask for object of any class
+ */
 static DWORD GetObjectNetmask(NetObj *pObject)
 {
    switch(pObject->Type())
@@ -541,11 +539,26 @@ static DWORD GetObjectNetmask(NetObj *pObject)
    }
 }
 
+/**
+ * Find mobile device by device ID
+ */
+static bool DeviceIdComparator(NetObj *object, void *deviceId)
+{
+	return ((object->Type() == OBJECT_MOBILEDEVICE) && !object->isDeleted() &&
+		     !_tcscmp((const TCHAR *)deviceId, ((MobileDevice *)object)->getDeviceId()));
+}
 
-//
-// Find node by IP address
-//
+MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId)
+{
+	if ((deviceId == NULL) || (*deviceId == 0))
+		return NULL;
 
+	return (MobileDevice *)g_idxMobileDeviceById.find(DeviceIdComparator, (void *)deviceId);
+}
+
+/**
+ * Find node by IP address
+ */
 Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD zoneId, DWORD ipAddr)
 {
    if (ipAddr == 0)
@@ -583,11 +596,9 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD zoneId, DWORD ipAddr)
 	return (iface != NULL) ? iface->getParentNode() : NULL;
 }
 
-
-//
-// Find interface by IP address
-//
-
+/**
+ * Find interface by IP address
+ */
 Interface NXCORE_EXPORTABLE *FindInterfaceByIP(DWORD zoneId, DWORD ipAddr)
 {
    if (ipAddr == 0)
@@ -610,22 +621,18 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByIP(DWORD zoneId, DWORD ipAddr)
 	return iface;
 }
 
-
-//
-// Find node by MAC address
-//
-
+/**
+ * Find node by MAC address
+ */
 Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr)
 {
 	Interface *pInterface = FindInterfaceByMAC(macAddr);
 	return (pInterface != NULL) ? pInterface->getParentNode() : NULL;
 }
 
-
-//
-// Find interface by MAC address
-//
-
+/**
+ * Find interface by MAC address
+ */
 static bool MACComparator(NetObj *object, void *macAddr)
 {
 	return ((object->Type() == OBJECT_INTERFACE) && !object->isDeleted() &&
@@ -640,11 +647,9 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
 	return (Interface *)g_idxObjectById.find(MACComparator, (void *)macAddr);
 }
 
-
-//
-// Find interface by description
-//
-
+/**
+ * Find interface by description
+ */
 static bool DescriptionComparator(NetObj *object, void *description)
 {
 	return ((object->Type() == OBJECT_INTERFACE) && !object->isDeleted() &&

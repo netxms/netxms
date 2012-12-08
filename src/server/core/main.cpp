@@ -74,36 +74,35 @@ extern Queue g_conditionPollerQueue;
 extern Queue *g_pItemQueue;
 
 void InitClientListeners();
+void InitMobileDeviceListeners();
 void InitCertificates();
 void InitUsers();
 void CleanupUsers();
 
+/**
+ * Thread functions
+ */
+THREAD_RESULT THREAD_CALL HouseKeeper(void *);
+THREAD_RESULT THREAD_CALL Syncer(void *);
+THREAD_RESULT THREAD_CALL NodePoller(void *);
+THREAD_RESULT THREAD_CALL PollManager(void *);
+THREAD_RESULT THREAD_CALL EventProcessor(void *);
+THREAD_RESULT THREAD_CALL WatchdogThread(void *);
+THREAD_RESULT THREAD_CALL ClientListener(void *);
+THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *);
+THREAD_RESULT THREAD_CALL MobileDeviceListener(void *);
+THREAD_RESULT THREAD_CALL MobileDeviceListenerIPv6(void *);
+THREAD_RESULT THREAD_CALL ISCListener(void *);
+THREAD_RESULT THREAD_CALL LocalAdminListener(void *);
+THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *);
+THREAD_RESULT THREAD_CALL SyslogDaemon(void *);
+THREAD_RESULT THREAD_CALL BeaconPoller(void *);
+THREAD_RESULT THREAD_CALL JobManagerThread(void *);
+THREAD_RESULT THREAD_CALL UptimeCalculator(void *);
 
-//
-// Thread functions
-//
-
-THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg);
-THREAD_RESULT THREAD_CALL Syncer(void *pArg);
-THREAD_RESULT THREAD_CALL NodePoller(void *pArg);
-THREAD_RESULT THREAD_CALL PollManager(void *pArg);
-THREAD_RESULT THREAD_CALL EventProcessor(void *pArg);
-THREAD_RESULT THREAD_CALL WatchdogThread(void *pArg);
-THREAD_RESULT THREAD_CALL ClientListener(void *pArg);
-THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg);
-THREAD_RESULT THREAD_CALL ISCListener(void *pArg);
-THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg);
-THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg);
-THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg);
-THREAD_RESULT THREAD_CALL BeaconPoller(void *pArg);
-THREAD_RESULT THREAD_CALL JobManagerThread(void *arg);
-THREAD_RESULT THREAD_CALL UptimeCalculator(void *arg);
-
-
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 TCHAR NXCORE_EXPORTABLE g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 TCHAR NXCORE_EXPORTABLE g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
 DWORD g_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
@@ -810,6 +809,13 @@ retry_db_lock:
 	ThreadCreate(ClientListenerIPv6, 0, NULL);
 #endif
 
+	// Allow mobile devices to connect
+	InitMobileDeviceListeners();
+	ThreadCreate(MobileDeviceListener, 0, NULL);
+#ifdef WITH_IPV6
+	ThreadCreate(MobileDeviceListenerIPv6, 0, NULL);
+#endif
+
 	// Start uptime calculator for SLM
 	ThreadCreate(UptimeCalculator, 0, NULL);
 
@@ -1297,7 +1303,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		}
 		else if (IsCommand(_T("SESSIONS"), szBuffer, 2))
 		{
-			DumpSessions(pCtx);
+			ConsolePrintf(pCtx, _T("\x1b[1mCLIENT SESSIONS\x1b[0m\n============================================================\n"));
+			DumpClientSessions(pCtx);
+			ConsolePrintf(pCtx, _T("\n\x1b[1mMOBILE DEVICE SESSIONS\x1b[0m\n============================================================\n"));
+			DumpMobileDeviceSessions(pCtx);
 		}
 		else if (IsCommand(_T("STATS"), szBuffer, 2))
 		{

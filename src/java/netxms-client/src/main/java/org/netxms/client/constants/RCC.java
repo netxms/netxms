@@ -18,7 +18,7 @@
  */
 package org.netxms.client.constants;
 
-import org.netxms.api.client.constants.CommonRCC;
+import org.netxms.base.CommonRCC;
 
 /**
  * This class represents request completion codes (RCC) sent by NetXMS server.

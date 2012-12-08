@@ -28,18 +28,14 @@
 #define close	_close
 #endif
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define FILE_BUFFER_SIZE      32768
 
-
-//
-// Get symbolic name for message code
-//
-
+/**
+ * Get symbolic name for message code
+ */
 TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 {
    static const TCHAR *pszMsgNames[] =
@@ -306,30 +302,31 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_GET_TABLE_LAST_VALUES"),
 		_T("CMD_GET_TABLE_DCI_DATA"),
 		_T("CMD_GET_THRESHOLD_SUMMARY"),
-		_T("CMD_RESOLVE_ALARM")
+		_T("CMD_RESOLVE_ALARM"),
+		_T("CMD_FIND_IP_LOCATION"),
+		_T("CMD_REPORT_DEVICE_STATUS"),
+		_T("CMD_REPORT_DEVICE_INFO")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_RESOLVE_ALARM))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_REPORT_DEVICE_INFO))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);
    return pszBuffer;
 }
 
-
-//
-// Receive raw CSCP message from network
-// If pMsg is NULL, temporary buffer will be re-initialized
-// Returns message size on success or:
-//   0 if connection is closed
-//  <0 on socket errors
-//   1 if message is too large to fit in buffer (normal messages is at least 16
-//     bytes long, so we never get length of 1 for valid message)
-//     In this case, only message header will be copied into buffer
-//   2 Message decryption failed
-//   3 Receive timeout
-//
-
+/**
+ * Receive raw CSCP message from network
+ * If pMsg is NULL, temporary buffer will be re-initialized
+ * Returns message size on success or:
+ *   0 if connection is closed
+ *  <0 on socket errors
+ *   1 if message is too large to fit in buffer (normal messages is at least 16
+ *     bytes long, so we never get length of 1 for valid message)
+ *     In this case, only message header will be copied into buffer
+ *   2 Message decryption failed
+ *   3 Receive timeout
+ */
 int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuffer,
                                            CSCP_BUFFER *nxcpBuffer, DWORD *bufferSize,
                                            NXCPEncryptionContext **ppCtx, 

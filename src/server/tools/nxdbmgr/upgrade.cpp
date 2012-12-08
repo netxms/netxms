@@ -278,6 +278,7 @@ static BOOL H_UpgradeFromV263(int currVersion, int newVersion)
 								_T("user_id varchar(64) null,")
 								_T("battery_level integer not null,")
 	                     _T("PRIMARY KEY(id))")));
+	CHK_EXEC(CreateConfigParam(_T("MobileDeviceListenerPort"), _T("4747"), 1, 1));
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='264' WHERE var_name='SchemaVersion'")));
 	return TRUE;
 }
@@ -298,7 +299,7 @@ static BOOL H_UpgradeFromV262(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV261(int currVersion, int newVersion)
 {
-	CreateConfigParam(_T("ApplyDCIFromTemplateToDisabledDCI"), _T("0"), 1, 1);
+	CHK_EXEC(CreateConfigParam(_T("ApplyDCIFromTemplateToDisabledDCI"), _T("0"), 1, 1));
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='262' WHERE var_name='SchemaVersion'")));
 	return TRUE;
 }
@@ -308,7 +309,7 @@ static BOOL H_UpgradeFromV261(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV260(int currVersion, int newVersion)
 {
-	CreateConfigParam(_T("NumberOfBusinessServicePollers"), _T("10"), 1, 1);
+	CHK_EXEC(CreateConfigParam(_T("NumberOfBusinessServicePollers"), _T("10"), 1, 1));
 	CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='NumberOfEventProcessors'")));
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='261' WHERE var_name='SchemaVersion'")));
 	return TRUE;
@@ -319,7 +320,7 @@ static BOOL H_UpgradeFromV260(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV259(int currVersion, int newVersion)
 {
-	CreateConfigParam(_T("UseFQDNForNodeNames"), _T("1"), 1, 1);
+	CHK_EXEC(CreateConfigParam(_T("UseFQDNForNodeNames"), _T("1"), 1, 1));
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='260' WHERE var_name='SchemaVersion'")));
 	return TRUE;
 }
@@ -351,16 +352,15 @@ static BOOL H_UpgradeFromV257(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CreateConfigParam(_T("DeleteUnreachableNodesPeriod"), _T("0"), 1, 1);
+	CHK_EXEC(CreateConfigParam(_T("DeleteUnreachableNodesPeriod"), _T("0"), 1, 1));
 
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='258' WHERE var_name='SchemaVersion'")));
 	return TRUE;
 }
 
-//
-// Upgrade from V256 to V257
-//
-
+/**
+ * Upgrade from V256 to V257
+ */
 static BOOL H_UpgradeFromV256(int currVersion, int newVersion)
 {
 	static TCHAR batch[] = 
@@ -378,15 +378,13 @@ static BOOL H_UpgradeFromV256(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V255 to V256
-//
-
+/**
+ * Upgrade from V255 to V256
+ */
 static BOOL H_UpgradeFromV255(int currVersion, int newVersion)
 {
-	CreateConfigParam(_T("DefaultConsoleDateFormat"), _T("dd.MM.yyyy"), 1, 0);
-	CreateConfigParam(_T("DefaultConsoleTimeFormat"), _T("HH:mm:ss"), 1, 0);
+	CHK_EXEC(CreateConfigParam(_T("DefaultConsoleDateFormat"), _T("dd.MM.yyyy"), 1, 0));
+	CHK_EXEC(CreateConfigParam(_T("DefaultConsoleTimeFormat"), _T("HH:mm:ss"), 1, 0));
 
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='256' WHERE var_name='SchemaVersion'")));
    return TRUE;

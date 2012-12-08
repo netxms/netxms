@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,35 +23,31 @@
 #ifndef _nxmodule_h_
 #define _nxmodule_h_
 
-
-//
-// Forward declaration of server classes
-//
-
+/**
+ * Forward declaration of server classes
+ */
 class ClientSession;
+class MobileDeviceSession;
 class Node;
 class Event;
 
-
-//
-// Command handler return codes
-//
-
+/**
+ * Command handler return codes
+ */
 #define NXMOD_COMMAND_IGNORED          -1
 #define NXMOD_COMMAND_PROCESSED        0
 #define NXMOD_COMMAND_ACCEPTED_ASYNC   1
 
-
-//
-// Module registration structure
-//
-
+/**
+ * Module registration structure
+ */
 typedef struct
 {
    DWORD dwSize;           // Size of structure in bytes
    TCHAR szName[MAX_OBJECT_NAME];
    void (* pfMain)();  // Pointer to module's main()
-   int (* pfCommandHandler)(DWORD dwCommand, CSCPMessage *pMsg, ClientSession *pSession);
+   int (* pfClientCommandHandler)(DWORD dwCommand, CSCPMessage *pMsg, ClientSession *pSession);
+   int (* pfMobileDeviceCommandHandler)(DWORD dwCommand, CSCPMessage *pMsg, MobileDeviceSession *pSession);
    BOOL (* pfTrapHandler)(SNMP_PDU *pdu, Node *pNode);
    BOOL (* pfEventHandler)(Event *event);
 	void (* pfStatusPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
@@ -60,20 +56,15 @@ typedef struct
    HMODULE hModule;
 } NXMODULE;
 
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 void LoadNetXMSModules();
 
-
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 extern DWORD g_dwNumModules;
 extern NXMODULE *g_pModuleList;
-
 
 #endif   /* _nxmodule_h_ */

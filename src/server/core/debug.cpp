@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,11 +26,9 @@
 #include <dbghelp.h>
 #endif
 
-
-//
-// Test read/write lock state and print to stdout
-//
-
+/**
+ * Test read/write lock state and print to stdout
+ */
 void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX pCtx)
 {
    ConsolePrintf(pCtx, _T("  %s: "), szName);
@@ -53,11 +51,9 @@ void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX pCtx)
    }
 }
 
-
-//
-// Print message to console, either local or remote
-//
-
+/**
+ * Print message to console, either local or remote
+ */
 void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
 {
    va_list args;
@@ -88,11 +84,9 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
    }
 }
 
-
-//
-// Show server statistics
-//
-
+/**
+ * Show server statistics
+ */
 static void DciCountCallback(NetObj *object, void *data)
 {
 	*((int *)data) += (int)((Node *)object)->getItemCount();
@@ -108,22 +102,18 @@ void ShowServerStats(CONSOLE_CTX pCtx)
 	              g_idxObjectById.getSize(), g_idxNodeById.getSize(), dciCount);
 }
 
-
-//
-// Show queue stats
-//
-
+/**
+ * Show queue stats
+ */
 void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const TCHAR *pszName)
 {
    if (pQueue != NULL)
       ConsolePrintf(pCtx, _T("%-32s : %d\n"), pszName, pQueue->Size());
 }
 
-
-//
-// Write process coredump
-//
-
+/**
+ * Write process coredump
+ */
 #ifdef _WIN32
 
 void DumpProcess(CONSOLE_CTX pCtx)

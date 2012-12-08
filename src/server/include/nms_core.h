@@ -296,11 +296,9 @@ typedef struct
    void *pData;         // Pointer to data block
 } UPDATE_INFO;
 
-
-//
-// Extended agent connection
-//
-
+/**
+ * Extended agent connection
+ */
 class AgentConnectionEx : public AgentConnection
 {
 protected:
@@ -317,11 +315,79 @@ public:
 	DWORD uninstallPolicy(AgentPolicy *policy);
 };
 
+/**
+ * Mobile device session
+ */
+class NXCORE_EXPORTABLE MobileDeviceSession
+{
+private:
+   SOCKET m_hSocket;
+   Queue *m_pSendQueue;
+   Queue *m_pMessageQueue;
+   DWORD m_dwIndex;
+   int m_iState;
+   WORD m_wCurrentCmd;
+   DWORD m_dwUserId;
+	DWORD m_deviceObjectId;
+   CSCP_BUFFER *m_pMsgBuffer;
+   NXCPEncryptionContext *m_pCtx;
+	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
+   THREAD m_hWriteThread;
+   THREAD m_hProcessingThread;
+	MUTEX m_mutexSocketWrite;
+	struct sockaddr *m_clientAddr;
+	TCHAR m_szHostName[256]; // IP address of name of conneced host in textual form
+   TCHAR m_szUserName[MAX_SESSION_NAME];   // String in form login_name@host
+   TCHAR m_szClientInfo[96];  // Client app info string
+   DWORD m_dwEncryptionRqId;
+   DWORD m_dwEncryptionResult;
+   CONDITION m_condEncryptionSetup;
+   DWORD m_dwRefCount;
+	bool m_isAuthenticated;
 
-//
-// Client session
-//
+   static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL processingThreadStarter(void *);
 
+   void readThread();
+   void writeThread();
+   void processingThread();
+
+   void setupEncryption(CSCPMessage *request);
+   void respondToKeepalive(DWORD dwRqId);
+   void debugPrintf(int level, const TCHAR *format, ...);
+   void sendServerInfo(DWORD dwRqId);
+   void login(CSCPMessage *pRequest);
+   void updateDeviceInfo(CSCPMessage *pRequest);
+   void updateDeviceStatus(CSCPMessage *pRequest);
+
+public:
+   MobileDeviceSession(SOCKET hSocket, struct sockaddr *addr);
+   ~MobileDeviceSession();
+
+   void incRefCount() { m_dwRefCount++; }
+   void decRefCount() { if (m_dwRefCount > 0) m_dwRefCount--; }
+
+   void run();
+
+   void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
+   void sendMessage(CSCPMessage *pMsg);
+
+	DWORD getIndex() { return m_dwIndex; }
+   void setIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
+   int getState() { return m_iState; }
+   const TCHAR *getUserName() { return m_szUserName; }
+   const TCHAR *getClientInfo() { return m_szClientInfo; }
+	const TCHAR *getHostName() { return m_szHostName; }
+   DWORD getUserId() { return m_dwUserId; }
+   bool isAuthenticated() { return m_isAuthenticated; }
+   WORD getCurrentCmd() { return m_wCurrentCmd; }
+   int getCipher() { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
+};
+
+/**
+ * Client (user) session
+ */
 #define DECLARE_THREAD_STARTER(func) static THREAD_RESULT THREAD_CALL ThreadStarter_##func(void *);
 
 class NXCORE_EXPORTABLE ClientSession
@@ -375,11 +441,11 @@ private:
    DWORD m_dwActiveChannels;     // Active data channels
 	CONSOLE_CTX m_console;			// Server console context
 
-   static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL WriteThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL ProcessingThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL UpdateThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL PollerThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL processingThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL updateThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL pollerThreadStarter(void *);
 
 	DECLARE_THREAD_STARTER(getCollectedData)
 	DECLARE_THREAD_STARTER(getTableCollectedData)
@@ -414,7 +480,7 @@ private:
    void setupEncryption(CSCPMessage *request);
    void respondToKeepalive(DWORD dwRqId);
    void onFileUpload(BOOL bSuccess);
-   void DebugPrintf(int level, const TCHAR *format, ...);
+   void debugPrintf(int level, const TCHAR *format, ...);
    void sendServerInfo(DWORD dwRqId);
    void login(CSCPMessage *pRequest);
    void sendAllObjects(CSCPMessage *pRequest);
@@ -812,18 +878,17 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
 #endif   /* not _WIN32 */
 
 void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX pCtx);
-void DumpSessions(CONSOLE_CTX pCtx);
+void DumpClientSessions(CONSOLE_CTX pCtx);
+void DumpMobileDeviceSessions(CONSOLE_CTX pCtx);
 void ShowPollerState(CONSOLE_CTX pCtx);
 void SetPollerInfo(int nIdx, const TCHAR *pszMsg);
 void ShowServerStats(CONSOLE_CTX pCtx);
 void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const TCHAR *pszName);
 void DumpProcess(CONSOLE_CTX pCtx);
 
-
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 extern TCHAR NXCORE_EXPORTABLE g_szConfigFile[];
 extern TCHAR NXCORE_EXPORTABLE g_szLogFile[];
 extern DWORD g_dwLogRotationMode;

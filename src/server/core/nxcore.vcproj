@@ -617,6 +617,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\mdconn.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\mdsession.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\mobile.cpp"
 				>
 			</File>

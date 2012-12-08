@@ -30,7 +30,8 @@
 
 #define NXCP_VERSION                   2
 
-#define SERVER_LISTEN_PORT             4701
+#define SERVER_LISTEN_PORT_FOR_CLIENTS 4701
+#define SERVER_LISTEN_PORT_FOR_MOBILES 4747
 #define MAX_DCI_STRING_VALUE           256
 #define CLIENT_CHALLENGE_SIZE				256
 #define CSCP_HEADER_SIZE               16

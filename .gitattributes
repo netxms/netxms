@@ -701,7 +701,6 @@ src/java/netxms-client-api/src/main/java/org/netxms/api/client/ProgressListener.
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/Session.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/SessionListener.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/SessionNotification.java -text
-src/java/netxms-client-api/src/main/java/org/netxms/api/client/constants/CommonRCC.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/constants/UserAccessRights.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/images/ImageLibraryManager.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/images/LibraryImage.java -text

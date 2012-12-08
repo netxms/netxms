@@ -43,12 +43,13 @@ import org.netxms.mobile.agent.constants.RCC;
 public class Session
 {
 	// Various public constants
-	public static final int DEFAULT_CONN_PORT = 4703;
+	public static final int DEFAULT_CONN_PORT = 4747;
 	public static final int PROTOCOL_VERSION = 1;
 
 	// Connection-related attributes
 	private String connAddress;
 	private int connPort;
+	private String connDeviceId;
 	private String connLoginName;
 	private String connPassword;
 	private boolean connUseEncryption;
@@ -155,48 +156,54 @@ public class Session
 	}
 
 	/**
-	 * @param connAddress
-	 * @param connLoginName
-	 * @param connPassword
+	 * @param address
+	 * @param deviceId
+	 * @param loginName
+	 * @param password
 	 */
-	public Session(String connAddress, String connLoginName, String connPassword)
+	public Session(String address, String deviceId, String loginName, String password)
 	{
-		this.connAddress = connAddress;
+		this.connAddress = address;
 		this.connPort = DEFAULT_CONN_PORT;
-		this.connLoginName = connLoginName;
-		this.connPassword = connPassword;
+		this.connDeviceId = deviceId;
+		this.connLoginName = loginName;
+		this.connPassword = password;
 		this.connUseEncryption = false;
 	}
 
 	/**
-	 * @param connAddress
-	 * @param connPort
-	 * @param connLoginName
-	 * @param connPassword
+	 * @param address
+	 * @param port
+	 * @param deviceId
+	 * @param loginName
+	 * @param password
 	 */
-	public Session(String connAddress, int connPort, String connLoginName, String connPassword)
+	public Session(String address, int port, String deviceId, String loginName, String password)
 	{
-		this.connAddress = connAddress;
-		this.connPort = connPort;
-		this.connLoginName = connLoginName;
-		this.connPassword = connPassword;
+		this.connAddress = address;
+		this.connPort = port;
+		this.connDeviceId = deviceId;
+		this.connLoginName = loginName;
+		this.connPassword = password;
 		this.connUseEncryption = false;
 	}
 
 	/**
-	 * @param connAddress
-	 * @param connPort
-	 * @param connLoginName
-	 * @param connPassword
-	 * @param connUseEncryption
+	 * @param address
+	 * @param port
+	 * @param deviceId
+	 * @param loginName
+	 * @param password
+	 * @param useEncryption
 	 */
-	public Session(String connAddress, int connPort, String connLoginName, String connPassword, boolean connUseEncryption)
+	public Session(String address, int port, String deviceId, String loginName, String password, boolean useEncryption)
 	{
-		this.connAddress = connAddress;
-		this.connPort = connPort;
-		this.connLoginName = connLoginName;
-		this.connPassword = connPassword;
-		this.connUseEncryption = connUseEncryption;
+		this.connAddress = address;
+		this.connPort = port;
+		this.connDeviceId = deviceId;
+		this.connLoginName = loginName;
+		this.connPassword = password;
+		this.connUseEncryption = useEncryption;
 	}
 
 	/* (non-Javadoc)
@@ -330,6 +337,13 @@ public class Session
 		waitForRCC(msg.getMessageId());
 	}
 
+	/**
+	 * Connect to server.
+	 * 
+	 * @throws IOException
+	 * @throws UnknownHostException
+	 * @throws MobileAgentException
+	 */
 	public void connect() throws IOException, UnknownHostException, MobileAgentException
 	{
 		Logger.info("Session.connect", "Connecting to " + connAddress + ":" + connPort);
@@ -365,6 +379,7 @@ public class Session
 			// Login to server
 			Logger.debug("Session.connect", "Connected to server version " + serverVersion + ", trying to login");
 			request = newMessage(NXCPCodes.CMD_LOGIN);
+			request.setVariable(NXCPCodes.VID_DEVICE_ID, connDeviceId);
 			request.setVariable(NXCPCodes.VID_LOGIN_NAME, connLoginName);
 			request.setVariable(NXCPCodes.VID_PASSWORD, connPassword);
 			request.setVariable(NXCPCodes.VID_LIBNXCL_VERSION, NXCommon.VERSION);
