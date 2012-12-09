@@ -785,6 +785,9 @@ public:
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
+	void updateSystemInfo(CSCPMessage *msg);
+	void updateStatus(CSCPMessage *msg);
+
 	const TCHAR *getDeviceId() { return CHECK_NULL_EX(m_deviceId); }
 };
 

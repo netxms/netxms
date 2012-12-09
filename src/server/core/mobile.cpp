@@ -189,9 +189,9 @@ void MobileDevice::CreateMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
 	msg->SetVariable(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->SetVariable(VID_MODEL, CHECK_NULL_EX(m_model));
-	msg->SetVariable(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_model));
-	msg->SetVariable(VID_OS_NAME, CHECK_NULL_EX(m_model));
-	msg->SetVariable(VID_OS_VERSION, CHECK_NULL_EX(m_model));
+	msg->SetVariable(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
+	msg->SetVariable(VID_OS_NAME, CHECK_NULL_EX(m_osName));
+	msg->SetVariable(VID_OS_VERSION, CHECK_NULL_EX(m_osVersion));
 	msg->SetVariable(VID_USER_ID, CHECK_NULL_EX(m_userId));
 	msg->SetVariable(VID_BATTERY_LEVEL, (DWORD)m_batteryLevel);
 }
@@ -205,4 +205,60 @@ DWORD MobileDevice::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked
       LockData();
 
    return DataCollectionTarget::ModifyFromMessage(pRequest, TRUE);
+}
+
+/**
+ * Update system information from NXCP message
+ */
+void MobileDevice::updateSystemInfo(CSCPMessage *msg)
+{
+	LockData();
+
+	safe_free(m_vendor);
+	m_vendor = msg->GetVariableStr(VID_VENDOR);
+
+	safe_free(m_model);
+	m_model = msg->GetVariableStr(VID_MODEL);
+
+	safe_free(m_serialNumber);
+	m_serialNumber = msg->GetVariableStr(VID_SERIAL_NUMBER);
+
+	safe_free(m_osName);
+	m_osName = msg->GetVariableStr(VID_OS_NAME);
+
+	safe_free(m_osVersion);
+	m_osVersion = msg->GetVariableStr(VID_OS_VERSION);
+
+	safe_free(m_userId);
+	m_userId = msg->GetVariableStr(VID_USER_NAME);
+
+	Modify();
+	UnlockData();
+}
+
+/**
+ * Update status from NXCP message
+ */
+void MobileDevice::updateStatus(CSCPMessage *msg)
+{
+	LockData();
+
+	if (msg->IsVariableExist(VID_BATTERY_LEVEL))
+		m_batteryLevel = (int)msg->GetVariableLong(VID_BATTERY_LEVEL);
+	else
+		m_batteryLevel = -1;
+
+	if (msg->IsVariableExist(VID_GEOLOCATION_TYPE))
+		m_geoLocation = GeoLocation(*msg);
+
+	if (msg->IsVariableExist(VID_IP_ADDRESS))
+		m_dwIpAddr = msg->GetVariableLong(VID_IP_ADDRESS);
+
+	TCHAR temp[32];
+	DbgPrintf(5, _T("Mobile device %s [%d] updated from agent (battery=%d addr=%s loc=[%s %s])"),
+	          m_szName, (int)m_dwId, m_batteryLevel, IpToStr(m_dwIpAddr, temp),
+				 m_geoLocation.getLatitudeAsString(), m_geoLocation.getLongitudeAsString());
+
+	Modify();
+	UnlockData();
 }

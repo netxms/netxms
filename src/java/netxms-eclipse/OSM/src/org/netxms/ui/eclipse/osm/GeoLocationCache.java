@@ -88,6 +88,7 @@ public class GeoLocationCache implements SessionListener
 			for(GenericObject object : session.getAllObjects())
 			{
 				if ((object.getObjectClass() == GenericObject.OBJECT_NODE) ||
+					 (object.getObjectClass() == GenericObject.OBJECT_MOBILEDEVICE) ||
 					 (object.getObjectClass() == GenericObject.OBJECT_CLUSTER) ||
 					 (object.getObjectClass() == GenericObject.OBJECT_CONTAINER))
 				{
@@ -110,6 +111,7 @@ public class GeoLocationCache implements SessionListener
 	private void onObjectChange(GenericObject object)
 	{
 		if ((object.getObjectClass() != GenericObject.OBJECT_NODE) &&
+			 (object.getObjectClass() != GenericObject.OBJECT_MOBILEDEVICE) &&
 		    (object.getObjectClass() != GenericObject.OBJECT_CLUSTER) &&
 		    (object.getObjectClass() != GenericObject.OBJECT_CONTAINER))
 			return;

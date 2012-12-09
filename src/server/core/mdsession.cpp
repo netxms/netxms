@@ -665,6 +665,7 @@ void MobileDeviceSession::updateDeviceInfo(CSCPMessage *request)
 	MobileDevice *device = (MobileDevice *)FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE);
 	if (device != NULL)
 	{
+		device->updateSystemInfo(request);
 		msg.SetVariable(VID_RCC, RCC_SUCCESS);
 	}
 	else
@@ -689,6 +690,7 @@ void MobileDeviceSession::updateDeviceStatus(CSCPMessage *request)
 	MobileDevice *device = (MobileDevice *)FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE);
 	if (device != NULL)
 	{
+		device->updateStatus(request);
 		msg.SetVariable(VID_RCC, RCC_SUCCESS);
 	}
 	else

@@ -568,7 +568,7 @@ public class Session
 		}
 		
 		msg.setVariableInt32(NXCPCodes.VID_FLAGS, flags);
-		msg.setVariableInt16(NXCPCodes.VID_BATTERY_LEVEL, batteryLevel);
+		msg.setVariableInt32(NXCPCodes.VID_BATTERY_LEVEL, batteryLevel);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}

@@ -111,6 +111,7 @@ public class GeneralInfo extends TableElement
 				addPair("Device ID", md.getDeviceId());
 				addPair("Vendor", md.getVendor());
 				addPair("Model", md.getModel());
+				addPair("Serial Number", md.getSerialNumber());
 				addPair("Operating System", md.getOsName());
 				addPair("OS Version", md.getOsVersion());
 				addPair("User", md.getUserId(), false);
