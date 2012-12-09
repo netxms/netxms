@@ -24,7 +24,7 @@
 	<string name="home_screen_dashboards">Dashboards</string>
 	<string name="home_screen_nodes">Nodes</string>
 	<string name="home_screen_graphs">Graphics</string>
-	<string name="home_screen_macaddress">MAC address</string>
+	<string name="home_screen_macaddress">MACaddress</string>
 			
     <string name="settings">Settings</string>
 	<string name="pref_encrypt_summary_disabled">Do not use encryption</string>

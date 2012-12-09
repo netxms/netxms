@@ -196,6 +196,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 
 	public void refreshActivityStatus()
 	{
+		refreshPendingAlarms();
 		new SyncTopNodes().execute(new Long[] { ALL_SERVICES_ID, DASHBOARDS_ID });
 	}
 
