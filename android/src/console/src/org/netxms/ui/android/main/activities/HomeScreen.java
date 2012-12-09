@@ -188,6 +188,12 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 		});
 	}
 
+	public void refreshPendingAlarms()
+	{
+		adapter.setPendingAlarms(service.getAlarms().length);
+		adapter.notifyDataSetChanged();
+	}
+
 	public void refreshActivityStatus()
 	{
 		new SyncTopNodes().execute(new Long[] { ALL_SERVICES_ID, DASHBOARDS_ID });

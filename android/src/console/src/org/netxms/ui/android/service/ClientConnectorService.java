@@ -691,7 +691,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * Refresh the alarm browser activity
+	 * Refresh the alarms related activities
 	 */
 	private void refreshAlarmBrowser()
 	{
@@ -714,6 +714,17 @@ public class ClientConnectorService extends Service implements SessionListener
 				public void run()
 				{
 					nodeInfo.refreshAlarms();
+				}
+			});
+		}
+		if (homeScreen != null)
+		{
+			homeScreen.runOnUiThread(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					homeScreen.refreshPendingAlarms();
 				}
 			});
 		}

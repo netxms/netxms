@@ -10,6 +10,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ObjectListAdapter;
 
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -36,6 +37,7 @@ public class DashboardBrowser extends AbstractClientActivity
 	private GenericObject currentParent = null;
 	private final Stack<GenericObject> containerPath = new Stack<GenericObject>();
 	private long[] savedPath = null;
+	private ProgressDialog dialog;
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
@@ -43,6 +45,7 @@ public class DashboardBrowser extends AbstractClientActivity
 	@Override
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
+		dialog = new ProgressDialog(this);
 		setContentView(R.layout.node_view);
 
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
@@ -295,6 +298,15 @@ public class DashboardBrowser extends AbstractClientActivity
 		}
 
 		@Override
+		protected void onPreExecute()
+		{
+			dialog.setMessage(getString(R.string.progress_gathering_data));
+			dialog.setIndeterminate(true);
+			dialog.setCancelable(false);
+			dialog.show();
+		}
+
+		@Override
 		protected Exception doInBackground(Object... params)
 		{
 			try
@@ -312,6 +324,7 @@ public class DashboardBrowser extends AbstractClientActivity
 		@Override
 		protected void onPostExecute(Exception result)
 		{
+			dialog.cancel();
 			if ((result == null) && (DashboardBrowser.this.currentParent.getObjectId() == currentRoot))
 			{
 				adapter.setNodes(currentParent.getChildsAsArray());

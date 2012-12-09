@@ -34,19 +34,23 @@ public class ActivityListAdapter extends BaseAdapter
 	private static final int[] textId = { R.string.home_screen_alarms, R.string.home_screen_dashboards,
 			R.string.home_screen_nodes, R.string.home_screen_graphs, R.string.home_screen_macaddress };
 	private static final int[] statusImageId = {
-			R.drawable.status_normal,     // STATUS_NORMAL = 0;
-			R.drawable.status_warning,    // STATUS_WARNING = 1;
-			R.drawable.status_minor,      // STATUS_MINOR = 2;
-			R.drawable.status_major,      // STATUS_MAJOR = 3;
-			R.drawable.status_critical,   // STATUS_CRITICAL = 4;
-			R.drawable.status_unknown,    // STATUS_UNKNOWN = 5;
-			R.drawable.status_unmanaged,  // STATUS_UNMANAGED = 6;
-			R.drawable.status_disabled,   // STATUS_DISABLED = 7;
-			R.drawable.status_testing     // STATUS_TESTING = 8;
+			R.drawable.status_normal, // STATUS_NORMAL = 0;
+			R.drawable.status_warning, // STATUS_WARNING = 1;
+			R.drawable.status_minor, // STATUS_MINOR = 2;
+			R.drawable.status_major, // STATUS_MAJOR = 3;
+			R.drawable.status_critical, // STATUS_CRITICAL = 4;
+			R.drawable.status_unknown, // STATUS_UNKNOWN = 5;
+			R.drawable.status_unmanaged, // STATUS_UNMANAGED = 6;
+			R.drawable.status_disabled, // STATUS_DISABLED = 7;
+			R.drawable.status_testing // STATUS_TESTING = 8;
 	};
-
+	private static final int[] alarmId = { R.drawable.alarm_pg, R.drawable.alarm_p1, R.drawable.alarm_p2,
+			R.drawable.alarm_p3, R.drawable.alarm_p4, R.drawable.alarm_p5, R.drawable.alarm_p6,
+			R.drawable.alarm_p7, R.drawable.alarm_p8, R.drawable.alarm_p9 };
+	private static final int MAX_ALARMS = alarmId.length;
 	private SparseArray<GenericObject> topNodes = null;
 	private final Context context;
+	private int numAlarms = 0;
 
 	/**
 	 * Create activity list adapter.
@@ -79,6 +83,11 @@ public class ActivityListAdapter extends BaseAdapter
 						break;
 				}
 		}
+	}
+
+	public void setPendingAlarms(int num)
+	{
+		numAlarms = num;
 	}
 
 	/*
@@ -125,50 +134,68 @@ public class ActivityListAdapter extends BaseAdapter
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent)
 	{
-		ActivityListElement view;
-		if (convertView == null)
+		ActivityListElement view = null;
+		if (position >= 0 && position < getCount())
 		{
-			view = new ActivityListElement(context, imageId[position], textId[position]);
-			view.setLayoutParams(new GridView.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-		}
-		else
-		{
-			view = (ActivityListElement)convertView;
-		}
-
-		if (topNodes != null)
-		{
-			GenericObject obj = topNodes.get(activityId[position]);
-			if (obj != null)
+			if (convertView == null)
 			{
-				Drawable[] layers;
-				switch (obj.getStatus())
-				{
-					case GenericObject.STATUS_WARNING:
-					case GenericObject.STATUS_MINOR:
-					case GenericObject.STATUS_MAJOR:
-					case GenericObject.STATUS_CRITICAL:
-						layers = new Drawable[2];
-						layers[0] = parent.getResources().getDrawable(imageId[position]);
-						layers[1] = parent.getResources().getDrawable(statusImageId[obj.getStatus()]);
-						break;
-					case GenericObject.STATUS_NORMAL:
-					case GenericObject.STATUS_UNKNOWN:
-					case GenericObject.STATUS_UNMANAGED:
-					case GenericObject.STATUS_DISABLED:
-					case GenericObject.STATUS_TESTING:
-					default:
-						layers = new Drawable[1];
-						layers[0] = parent.getResources().getDrawable(imageId[position]);
-						break;
-				}
-				ImageView objectIcon = (ImageView)view.getChildAt(0);
-				LayerDrawable drawable = new LayerDrawable(layers);
-				if (layers.length > 1)
-					drawable.setLayerInset(1, layers[0].getIntrinsicWidth() - layers[1].getIntrinsicWidth(),
-							layers[0].getIntrinsicHeight() - layers[1].getIntrinsicHeight(), 0, 0);
-				objectIcon.setImageDrawable(drawable);
+				view = new ActivityListElement(context, imageId[position], textId[position]);
+				view.setLayoutParams(new GridView.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
 			}
+			else
+			{
+				view = (ActivityListElement)convertView;
+			}
+
+			Drawable infoLayer = null;
+			switch (activityId[position])
+			{
+				case HomeScreen.ACTIVITY_ALARMS:
+					if (numAlarms > 0)
+						infoLayer = parent.getResources().getDrawable(numAlarms >= MAX_ALARMS ? alarmId[0] : alarmId[numAlarms]);
+					break;
+				case HomeScreen.ACTIVITY_NODES:
+				case HomeScreen.ACTIVITY_DASHBOARDS:
+					if (topNodes != null)
+					{
+						GenericObject obj = topNodes.get(activityId[position]);
+						if (obj != null)
+						{
+							switch (obj.getStatus())
+							{
+								case GenericObject.STATUS_WARNING:
+								case GenericObject.STATUS_MINOR:
+								case GenericObject.STATUS_MAJOR:
+								case GenericObject.STATUS_CRITICAL:
+									infoLayer = parent.getResources().getDrawable(statusImageId[obj.getStatus()]);
+									break;
+								case GenericObject.STATUS_NORMAL:
+								case GenericObject.STATUS_UNKNOWN:
+								case GenericObject.STATUS_UNMANAGED:
+								case GenericObject.STATUS_DISABLED:
+								case GenericObject.STATUS_TESTING:
+								default:
+									break;
+							}
+						}
+					}
+					break;
+			}
+			Drawable[] layers;
+			if (infoLayer != null)
+			{
+				layers = new Drawable[2];
+				layers[1] = infoLayer;
+			}
+			else
+				layers = new Drawable[1];
+			layers[0] = parent.getResources().getDrawable(imageId[position]);
+			ImageView objectIcon = (ImageView)view.getChildAt(0);
+			LayerDrawable drawable = new LayerDrawable(layers);
+			if (layers.length > 1)
+				drawable.setLayerInset(1, layers[0].getIntrinsicWidth() - layers[1].getIntrinsicWidth(),
+						layers[0].getIntrinsicHeight() - layers[1].getIntrinsicHeight(), 0, 0);
+			objectIcon.setImageDrawable(drawable);
 		}
 		return view;
 	}

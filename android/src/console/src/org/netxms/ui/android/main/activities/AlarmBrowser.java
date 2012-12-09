@@ -212,62 +212,50 @@ public class AlarmBrowser extends AbstractClientActivity
 	 */
 	private boolean handleItemSelection(MenuItem item)
 	{
-		int itemId = item.getItemId();
-		if (itemId == R.id.selectall)
+		switch (item.getItemId())
 		{
-			selectAll(true);
-			return true;
-		}
-		if (itemId == R.id.unselectall)
-		{
-			selectAll(false);
-			return true;
-		}
-		else if (itemId == R.id.viewlastvalues)
-		{
-			if (service != null)
-			{
-				AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
-				if (info != null)
+			case R.id.selectall:
+				selectAll(true);
+				return true;
+			case R.id.unselectall:
+				selectAll(false);
+				return true;
+			case R.id.viewlastvalues:
+				if (service != null)
 				{
-					Alarm al = (Alarm)adapter.getItem(info.position);
-					if (al != null)
+					AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
+					if (info != null)
 					{
-						GenericObject object = service.findObjectById(al.getSourceObjectId());
-						if (object != null)
+						Alarm al = (Alarm)adapter.getItem(info.position);
+						if (al != null)
 						{
-							Intent newIntent = new Intent(this, NodeInfo.class);
-							newIntent.putExtra("objectId", object.getObjectId());
-							newIntent.putExtra("tabId", NodeInfo.TAB_LAST_VALUES_ID);
-							startActivity(newIntent);
-							return true;
+							GenericObject object = service.findObjectById(al.getSourceObjectId());
+							if (object != null)
+							{
+								Intent newIntent = new Intent(this, NodeInfo.class);
+								newIntent.putExtra("objectId", object.getObjectId());
+								newIntent.putExtra("tabId", NodeInfo.TAB_LAST_VALUES_ID);
+								startActivity(newIntent);
+							}
 						}
 					}
 				}
-			}
-		}
-		else
-		{
-			ArrayList<Long> alarmIdList = getSelection(item);
-			if (alarmIdList.size() != 0)
-			{
+				return true;
+			case R.id.acknowledge:
+				adapter.doAction(AlarmListAdapter.ACKNOWLEDGE, getSelection(item));
+				return true;
+			case R.id.sticky_acknowledge:
+				adapter.doAction(AlarmListAdapter.STICKY_ACKNOWLEDGE, getSelection(item));
 				selectAll(false);
-				switch (itemId)
-				{
-					case R.id.acknowledge:
-						adapter.doAction(AlarmListAdapter.ACKNOWLEDGE, alarmIdList);
-						return true;
-					case R.id.sticky_acknowledge:
-						adapter.doAction(AlarmListAdapter.STICKY_ACKNOWLEDGE, alarmIdList);
-						return true;
-					case R.id.resolve:
-						adapter.doAction(AlarmListAdapter.RESOLVE, alarmIdList);
-						return true;
-					case R.id.terminate:
-						adapter.doAction(AlarmListAdapter.TERMINATE, alarmIdList);
-						return true;
-				}
-			}
+				return true;
+			case R.id.resolve:
+				adapter.doAction(AlarmListAdapter.RESOLVE, getSelection(item));
+				selectAll(false);
+				return true;
+			case R.id.terminate:
+				adapter.doAction(AlarmListAdapter.TERMINATE, getSelection(item));
+				selectAll(false);
+				return true;
 		}
 		return false;
 	}

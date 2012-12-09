@@ -34,7 +34,7 @@ public class GraphBrowser extends AbstractClientActivity
 	private static final String TAG = "nxclient/GraphBrowser";
 	private ExpandableListView listView;
 	private GraphAdapter adapter;
-	ProgressDialog dialog;
+	private ProgressDialog dialog;
 
 	/*
 	 * (non-Javadoc)

@@ -68,6 +68,16 @@ android/src/console/res/drawable-xhdpi/macaddress.png -text
 android/src/console/res/drawable-xhdpi/nodes.png -text
 android/src/console/res/drawable/alarm_acknowledged.png -text
 android/src/console/res/drawable/alarm_outstanding.png -text
+android/src/console/res/drawable/alarm_p1.png -text
+android/src/console/res/drawable/alarm_p2.png -text
+android/src/console/res/drawable/alarm_p3.png -text
+android/src/console/res/drawable/alarm_p4.png -text
+android/src/console/res/drawable/alarm_p5.png -text
+android/src/console/res/drawable/alarm_p6.png -text
+android/src/console/res/drawable/alarm_p7.png -text
+android/src/console/res/drawable/alarm_p8.png -text
+android/src/console/res/drawable/alarm_p9.png -text
+android/src/console/res/drawable/alarm_pg.png -text
 android/src/console/res/drawable/alarm_resolved.png -text
 android/src/console/res/drawable/alarm_sticky_acknowledged.png -text
 android/src/console/res/drawable/alarm_terminated.png -text

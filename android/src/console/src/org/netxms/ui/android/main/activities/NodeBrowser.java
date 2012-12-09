@@ -18,6 +18,7 @@ import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ObjectListAdapter;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -49,6 +50,7 @@ public class NodeBrowser extends AbstractClientActivity
 	private final Stack<GenericObject> containerPath = new Stack<GenericObject>();
 	private long[] savedPath = null;
 	private GenericObject selectedObject = null;
+	private ProgressDialog dialog;
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
@@ -56,6 +58,7 @@ public class NodeBrowser extends AbstractClientActivity
 	@Override
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
+		dialog = new ProgressDialog(this);
 		setContentView(R.layout.node_view);
 
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
@@ -442,6 +445,15 @@ public class NodeBrowser extends AbstractClientActivity
 		}
 
 		@Override
+		protected void onPreExecute()
+		{
+			dialog.setMessage(getString(R.string.progress_gathering_data));
+			dialog.setIndeterminate(true);
+			dialog.setCancelable(false);
+			dialog.show();
+		}
+
+		@Override
 		protected GenericObject[] doInBackground(Object... params)
 		{
 			try
@@ -459,6 +471,7 @@ public class NodeBrowser extends AbstractClientActivity
 		@Override
 		protected void onPostExecute(GenericObject[] result)
 		{
+			dialog.cancel();
 			if ((result != null) && (currentParent.getObjectId() == currentRoot))
 			{
 				adapter.setNodes(result);
@@ -477,6 +490,15 @@ public class NodeBrowser extends AbstractClientActivity
 		protected SyncMissingChildsTask()
 		{
 			childIdList = new ArrayList<Integer>();
+		}
+
+		@Override
+		protected void onPreExecute()
+		{
+			dialog.setMessage(getString(R.string.progress_gathering_data));
+			dialog.setIndeterminate(true);
+			dialog.setCancelable(false);
+			dialog.show();
 		}
 
 		protected void getChildsList(long[] list)
@@ -514,6 +536,7 @@ public class NodeBrowser extends AbstractClientActivity
 		@Override
 		protected void onPostExecute(Integer result)
 		{
+			dialog.cancel();
 			viewAlarms(childIdList);
 		}
 	}
