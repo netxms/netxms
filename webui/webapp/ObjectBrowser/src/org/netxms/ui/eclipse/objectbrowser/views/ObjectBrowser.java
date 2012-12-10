@@ -401,6 +401,8 @@ public class ObjectBrowser extends ViewPart
 	{
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
 		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_NXVS));
+		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
