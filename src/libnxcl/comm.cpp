@@ -257,7 +257,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, const TCHAR *pszServer, const
    THREAD hThread;
    TCHAR  *pszPort, szBuffer[64], szHostName[128];
 	BYTE challenge[CLIENT_CHALLENGE_SIZE];
-   WORD wPort = SERVER_LISTEN_PORT;
+   WORD wPort = SERVER_LISTEN_PORT_FOR_CLIENTS;
 
    nx_strncpy(szHostName, pszServer, 128);
 
