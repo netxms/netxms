@@ -327,7 +327,7 @@ public class ExtendedGraphViewer extends GraphViewer
 					@Override
 					public void run()
 					{
-						if (backgroundLocation == null)
+						if ((backgroundLocation == null) || getGraphControl().isDisposed())
 							return;
 						
 						backgroundFigure.setSize(mapSize.x, mapSize.y);
