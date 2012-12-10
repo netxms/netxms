@@ -23,11 +23,9 @@
 #ifndef _nxcore_jobs_h_
 #define _nxcore_jobs_h_
 
-
-//
-// Job status
-//
-
+/**
+ * Job status
+ */
 enum ServerJobStatus
 {
 	JOB_PENDING = 0,
@@ -39,11 +37,9 @@ enum ServerJobStatus
 	JOB_CANCEL_PENDING
 };
 
-
-//
-// Job class
-//
-
+/**
+ * Job class
+ */
 class ServerJobQueue;
 class NetObj;
 
@@ -116,11 +112,9 @@ public:
 	void fillMessage(CSCPMessage *msg);
 };
 
-
-//
-// Job queue class
-//
-
+/**
+ * Job queue class
+ */
 class ServerJobQueue
 {
 private:
@@ -140,28 +134,25 @@ public:
 	void cleanup();
 
 	ServerJob *findJob(DWORD jobId);
+	int getJobCount(const TCHAR *type = NULL);
 
 	void jobCompleted(ServerJob *job);
 
 	DWORD fillMessage(CSCPMessage *msg, DWORD *varIdBase);
 };
 
-
-//
-// Job manager API
-//
-
+/**
+ * Job manager API
+ */
 bool NXCORE_EXPORTABLE AddJob(ServerJob *job);
 void GetJobList(CSCPMessage *msg);
 DWORD NXCORE_EXPORTABLE CancelJob(DWORD userId, CSCPMessage *msg);
 DWORD NXCORE_EXPORTABLE HoldJob(DWORD userId, CSCPMessage *msg);
 DWORD NXCORE_EXPORTABLE UnholdJob(DWORD userId, CSCPMessage *msg);
 
-
-//
-// File upload job
-//
-
+/**
+ * File upload job
+ */
 class FileUploadJob : public ServerJob
 {
 protected:
@@ -186,11 +177,9 @@ public:
 	virtual ~FileUploadJob();
 };
 
-
-//
-// File download job
-//
-
+/**
+ * File download job
+ */
 class FileDownloadJob : public ServerJob
 {
 private:
@@ -217,11 +206,9 @@ public:
 	static TCHAR *buildServerFileName(DWORD nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
 };
 
-
-//
-// Agent policy deployment job
-//
-
+/**
+ * Agent policy deployment job
+ */
 class AgentPolicy;
 
 class PolicyDeploymentJob : public ServerJob

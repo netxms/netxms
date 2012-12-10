@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,17 +16,15 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: jobmgr.cpp
+** File: jobqueue.cpp
 **
 **/
 
 #include "nxcore.h"
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 ServerJobQueue::ServerJobQueue()
 {
 	m_jobCount = 0;
@@ -34,11 +32,9 @@ ServerJobQueue::ServerJobQueue()
 	m_accessMutex = MutexCreate();
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 ServerJobQueue::~ServerJobQueue()
 {
 	int i;
@@ -53,11 +49,9 @@ ServerJobQueue::~ServerJobQueue()
 	MutexDestroy(m_accessMutex);
 }
 
-
-//
-// Add job
-//
-
+/**
+ * Add job
+ */
 void ServerJobQueue::add(ServerJob *job)
 {
 	MutexLock(m_accessMutex);
@@ -73,11 +67,9 @@ void ServerJobQueue::add(ServerJob *job)
 	runNext();
 }
 
-
-//
-// Run next job if possible
-//
-
+/**
+ * Run next job if possible
+ */
 void ServerJobQueue::runNext()
 {
 	int i;
@@ -92,11 +84,9 @@ void ServerJobQueue::runNext()
 	MutexUnlock(m_accessMutex);
 }
 
-
-//
-// Handler for job completion
-//
-
+/**
+ * Handler for job completion
+ */
 void ServerJobQueue::jobCompleted(ServerJob *job)
 {
 	int i;
@@ -120,11 +110,9 @@ void ServerJobQueue::jobCompleted(ServerJob *job)
 	runNext();
 }
 
-
-//
-// Cancel job
-//
-
+/**
+ * Cancel job
+ */
 bool ServerJobQueue::cancel(DWORD jobId)
 {
 	int i;
@@ -156,11 +144,9 @@ bool ServerJobQueue::cancel(DWORD jobId)
 	return success;
 }
 
-
-//
-// Hold job
-//
-
+/**
+ * Hold job
+ */
 bool ServerJobQueue::hold(DWORD jobId)
 {
 	int i;
@@ -185,11 +171,9 @@ bool ServerJobQueue::hold(DWORD jobId)
 	return success;
 }
 
-
-//
-// Unhold job
-//
-
+/**
+ * Unhold job
+ */
 bool ServerJobQueue::unhold(DWORD jobId)
 {
 	int i;
@@ -214,11 +198,9 @@ bool ServerJobQueue::unhold(DWORD jobId)
 	return success;
 }
 
-
-//
-// Clean up queue
-//
-
+/**
+ * Clean up queue
+ */
 void ServerJobQueue::cleanup()
 {
 	int i;
@@ -249,18 +231,15 @@ void ServerJobQueue::cleanup()
 	runNext();
 }
 
-
-//
-// Find job by ID
-//
-
+/**
+ * Find job by ID
+ */
 ServerJob *ServerJobQueue::findJob(DWORD jobId)
 {
-	int i;
 	ServerJob *job = NULL;
 
 	MutexLock(m_accessMutex);
-	for(i = 0; i < m_jobCount; i++)
+	for(int i = 0; i < m_jobCount; i++)
 		if (m_jobList[i]->getId()  == jobId)
 		{
 			job = m_jobList[i];
@@ -271,12 +250,10 @@ ServerJob *ServerJobQueue::findJob(DWORD jobId)
 	return job;
 }
 
-
-//
-// Fill NXCP message with jobs' information
-// Increments base variable id; returns number of jobs added to message
-//
-
+/**
+ * Fill NXCP message with jobs' information
+ * Increments base variable id; returns number of jobs added to message
+ */
 DWORD ServerJobQueue::fillMessage(CSCPMessage *msg, DWORD *varIdBase)
 {
 	DWORD id = *varIdBase;
@@ -297,4 +274,28 @@ DWORD ServerJobQueue::fillMessage(CSCPMessage *msg, DWORD *varIdBase)
 	MutexUnlock(m_accessMutex);
 	*varIdBase = id;
 	return i;
+}
+
+/**
+ * Get number of jobs in job queue
+ */
+int ServerJobQueue::getJobCount(const TCHAR *type)
+{
+	int count;
+	MutexLock(m_accessMutex);
+	if (type == NULL)
+	{
+		count = m_jobCount;
+	}
+	else
+	{
+		count = 0;
+		for(int i = 0; i < m_jobCount; i++)
+			if (!_tcscmp(m_jobList[i]->getType(), type))
+			{
+				count++;
+			}
+	}
+	MutexUnlock(m_accessMutex);
+	return count;
 }

@@ -1031,6 +1031,7 @@ public:
 	nxmap_ObjList *buildIPTopology(DWORD *pdwStatus, int radius, bool includeEndNodes);
 
 	ServerJobQueue *getJobQueue() { return m_jobQueue; }
+	int getJobCount(const TCHAR *type = NULL) { return m_jobQueue->getJobCount(type); }
 };
 
 
