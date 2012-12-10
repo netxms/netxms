@@ -254,31 +254,40 @@ public class TabbedObjectView extends ViewPart
 	 */
 	public void setObject(GenericObject object)
 	{
-		header.setText(object.getObjectName());
-		for(final ObjectTab tab : tabs)
+		if (object != null)
 		{
-			if (tab.showForObject(object))
+			header.setText(object.getObjectName());
+			for(final ObjectTab tab : tabs)
 			{
-				tab.show();
-				tab.changeObject(object);
+				if (tab.showForObject(object))
+				{
+					tab.show();
+					tab.changeObject(object);
+				}
+				else
+				{
+					tab.hide();
+				}
 			}
-			else
+			
+			if (tabFolder.getSelection() == null)
 			{
+				try
+				{
+					tabFolder.setSelection(tabFolder.getItem(0));
+				}
+				catch(IllegalArgumentException e)
+				{
+				}
+			}
+			objectId = (object != null) ? object.getObjectId() : 0;
+		}
+		else
+		{
+			for(final ObjectTab tab : tabs)
 				tab.hide();
-			}
+			objectId = 0;
 		}
-		
-		if (tabFolder.getSelection() == null)
-		{
-			try
-			{
-				tabFolder.setSelection(tabFolder.getItem(0));
-			}
-			catch(IllegalArgumentException e)
-			{
-			}
-		}
-		objectId = (object != null) ? object.getObjectId() : 0;
 	}
 
 	/* (non-Javadoc)
