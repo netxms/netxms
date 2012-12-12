@@ -11074,7 +11074,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 
 	if (rcc == RCC_SUCCESS)
 	{
-		EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid);
+		EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid, this);
 	}
 }
 
@@ -11137,7 +11137,7 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 
 	if (rcc == RCC_SUCCESS)
 	{
-		EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid);
+		EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid, this);
 	}
 }
 
