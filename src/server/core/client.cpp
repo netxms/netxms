@@ -325,13 +325,13 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
 /**
  * Enumerate active sessions
  */
-void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg)
+void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg, ClientSession *current)
 {
    int i;
 
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
-      if (m_pSessionList[i] != NULL)
+      if (m_pSessionList[i] != NULL && (current != NULL && m_pSessionList[i] != current))
          pHandler(m_pSessionList[i], pArg);
    RWLockUnlock(m_rwlockSessionListAccess);
 }
