@@ -126,25 +126,25 @@ BOOL InitSender(const TCHAR *pszInitArgs)
 	AgentWriteDebugLog(1, _T("SMS init: port={%s}, speed=%d, data=%d, parity=%s, stop=%d"),
 	                portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1);
 	
-	bRet = m_serial.Open(portName);
+	bRet = m_serial.open(portName);
 	if (bRet)
 	{
 		AgentWriteDebugLog(5, _T("SMS Sender: port opened"));
-		m_serial.SetTimeout(1000);
-		m_serial.Set(portSpeed, dataBits, parity, stopBits);
+		m_serial.setTimeout(1000);
+		m_serial.set(portSpeed, dataBits, parity, stopBits);
 		
 		// enter PIN: AT+CPIN="xxxx"
 		// register network: AT+CREG1
 		
 		char szTmp[128];
-		m_serial.Write("ATZ\r\n", 5); // init modem && read user prefs
-		m_serial.Read(szTmp, 128); // read OK
+		m_serial.write("ATZ\r\n", 5); // init modem && read user prefs
+		m_serial.read(szTmp, 128); // read OK
 		AgentWriteDebugLog(5, _T("SMS init: ATZ sent, got {%hs}"), szTmp);
-		m_serial.Write("ATE0\r\n", 6); // disable echo
-		m_serial.Read(szTmp, 128); // read OK
+		m_serial.write("ATE0\r\n", 6); // disable echo
+		m_serial.read(szTmp, 128); // read OK
 		AgentWriteDebugLog(5, _T("SMS init: ATE0 sent, got {%hs}"), szTmp);
-		m_serial.Write("ATI3\r\n", 6); // read vendor id
-		m_serial.Read(szTmp, 128); // read version
+		m_serial.write("ATI3\r\n", 6); // read vendor id
+		m_serial.read(szTmp, 128); // read version
 		AgentWriteDebugLog(5, _T("SMS init: ATI3 sent, got {%hs}"), szTmp);
 		
 		if (stricmp(szTmp, "ERROR") != 0)
@@ -176,11 +176,9 @@ BOOL InitSender(const TCHAR *pszInitArgs)
 	return bRet;
 }
 
-
-//
-// Send SMS
-//
-
+/**
+ * Send SMS
+ */
 BOOL SendSMS(const char *pszPhoneNumber, const char *pszText)
 {
 	if (pszPhoneNumber != NULL && pszText != NULL)
@@ -189,32 +187,30 @@ BOOL SendSMS(const char *pszPhoneNumber, const char *pszText)
 		
 		AgentWriteDebugLog(3, _T("SMS send: to {%s}: {%s}"), pszPhoneNumber, pszText);
 		
-		m_serial.Write("ATZ\r\n", 5); // init modem && read user prefs
-		m_serial.Read(szTmp, 128); // read OK
+		m_serial.write("ATZ\r\n", 5); // init modem && read user prefs
+		m_serial.read(szTmp, 128); // read OK
 		AgentWriteDebugLog(5, _T("SMS send: ATZ sent, got {%hs}"), szTmp);
-		m_serial.Write("ATE0\r\n", 5); // disable echo
-		m_serial.Read(szTmp, 128); // read OK
+		m_serial.write("ATE0\r\n", 5); // disable echo
+		m_serial.read(szTmp, 128); // read OK
 		AgentWriteDebugLog(5, _T("SMS send: ATE0 sent, got {%hs}"), szTmp);
-		m_serial.Write("AT+CMGF=1\r\n", 11); // =1 - text message
-		m_serial.Read(szTmp, 128); // read OK
+		m_serial.write("AT+CMGF=1\r\n", 11); // =1 - text message
+		m_serial.read(szTmp, 128); // read OK
 		AgentWriteDebugLog(5, _T("SMS send: AT+CMGF=1 sent, got {%hs}"), szTmp);
 		snprintf(szTmp, sizeof(szTmp), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
-		m_serial.Write(szTmp, (int)strlen(szTmp)); // set number
+		m_serial.write(szTmp, (int)strlen(szTmp)); // set number
 		snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pszText, 0x1A);
-		m_serial.Write(szTmp, (int)strlen(szTmp)); // send text, end with ^Z
-		m_serial.Read(szTmp, 128); // read +CMGS:ref_num
+		m_serial.write(szTmp, (int)strlen(szTmp)); // send text, end with ^Z
+		m_serial.read(szTmp, 128); // read +CMGS:ref_num
 		AgentWriteDebugLog(5, _T("SMS send: AT+CMGS + message body sent, got {%hs}"), szTmp);
 	}
 	
 	return true;
 }
 
-
-//
-// Shutdown sender
-//
-
-void ShutdownSender(void)
+/**
+ * Shutdown sender
+ */
+void ShutdownSender()
 {
-	m_serial.Close();
+	m_serial.close();
 }

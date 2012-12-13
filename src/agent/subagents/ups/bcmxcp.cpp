@@ -253,7 +253,7 @@ BOOL BCMXCPInterface::SendReadCommand(BYTE nCommand)
    CalculateChecksum(packet);
    do
    {
-      bRet = m_serial.Write((char *)packet, 4);
+      bRet = m_serial.write((char *)packet, 4);
       nRetries--;
    } while((!bRet) && (nRetries > 0));
    return bRet;
@@ -277,7 +277,7 @@ int BCMXCPInterface::RecvData(int nCommand)
       do
       {
 			// Read PW_COMMAND_START_BYTE byte
-			if (m_serial.Read((char *)packet, 1) != 1)
+			if (m_serial.read((char *)packet, 1) != 1)
             return -1;  // Read error
 			nCount++;
 		} while((packet[0] != PW_COMMAND_START_BYTE) && (nCount < 128));
@@ -286,7 +286,7 @@ int BCMXCPInterface::RecvData(int nCommand)
 			return -1;  // Didn't get command start byte
 
 		// Read block number byte
-      if (m_serial.Read((char *)&packet[1], 1) != 1)
+      if (m_serial.read((char *)&packet[1], 1) != 1)
          return -1;  // Read error
 		nBlock = packet[1];
 
@@ -304,14 +304,14 @@ int BCMXCPInterface::RecvData(int nCommand)
 		}
 
 		// Read data lenght byte
-      if (m_serial.Read((char *)&packet[2], 1) != 1)
+      if (m_serial.read((char *)&packet[2], 1) != 1)
          return -1;  // Read error
 		nLength = packet[2];
 		if (nLength < 1) 
 			return -1;  // Invalid data length
 
 		// Read sequence byte
-      if (m_serial.Read((char *)&packet[3], 1) != 1)
+      if (m_serial.read((char *)&packet[3], 1) != 1)
          return -1;  // Read error
 		if ((packet[3] & 0x80) == 0x80)
          bEndBlock = TRUE;
@@ -322,13 +322,13 @@ int BCMXCPInterface::RecvData(int nCommand)
 		// Read data
       for(nRead = 0; nRead < nLength; nRead += nBytes)
       {
-         nBytes = m_serial.Read((char *)&packet[nRead + 4], nLength - nRead);
+         nBytes = m_serial.read((char *)&packet[nRead + 4], nLength - nRead);
          if (nBytes <= 0)
             return -1;  // Read error
       }
 
 		// Read the checksum byte
-      if (m_serial.Read((char *)&packet[nLength + 4], 1) != 1)
+      if (m_serial.read((char *)&packet[nLength + 4], 1) != 1)
          return -1;  // Read error
 
 		// Validate packet's checksum
@@ -354,11 +354,11 @@ BOOL BCMXCPInterface::Open()
 
    if (SerialInterface::Open())
    {
-      m_serial.SetTimeout(1000);
-      m_serial.Set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
+      m_serial.setTimeout(1000);
+      m_serial.set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
 
       // Send two escapes
-      m_serial.Write("\x1D\x1D", 2);
+      m_serial.write("\x1D\x1D", 2);
 
       // Read UPS ID block
       if (SendReadCommand(PW_ID_BLOCK_REQ))

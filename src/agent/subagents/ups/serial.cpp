@@ -97,7 +97,7 @@ BOOL SerialInterface::ReadLineFromSerial(char *pszBuffer, int nBufLen)
    memset(pszBuffer, 0, nBufLen);
    do
    {
-      nRet = m_serial.Read(&pszBuffer[nPos], 1);
+      nRet = m_serial.read(&pszBuffer[nPos], 1);
       if (nRet > 0)
          nPos += nRet;
    } while((nRet > 0) && (pszBuffer[nPos - 1] != '\n') && (nPos < nBufLen));
@@ -118,7 +118,7 @@ BOOL SerialInterface::ReadLineFromSerial(char *pszBuffer, int nBufLen)
 
 BOOL SerialInterface::Open()
 {
-   return m_serial.Open(m_pszDevice);
+   return m_serial.open(m_pszDevice);
 }
 
 
@@ -128,6 +128,6 @@ BOOL SerialInterface::Open()
 
 void SerialInterface::Close()
 {
-   m_serial.Close();
+   m_serial.close();
    UPSInterface::Close();
 }

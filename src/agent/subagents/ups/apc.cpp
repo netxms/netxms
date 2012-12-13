@@ -100,7 +100,7 @@ void APCInterface::QueryParameter(const char *pszRq, UPS_PARAMETER *p, int nType
 {
    char *pch;
 
-   m_serial.Write(pszRq, 1);
+   m_serial.write(pszRq, 1);
    if (ReadLineFromSerial(p->szValue, MAX_RESULT_LENGTH))
    {
       if (chSep != -1)
@@ -130,11 +130,11 @@ BOOL APCInterface::Open()
    if (!SerialInterface::Open())
       return FALSE;
 
-   m_serial.SetTimeout(1000);
-   m_serial.Set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
+   m_serial.setTimeout(1000);
+   m_serial.set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
 
    // Turn on "smart" mode
-   m_serial.Write("Y", 1);
+   m_serial.write("Y", 1);
    bRet = ReadLineFromSerial(szLine, 256);
    if (bRet && !strcmp(szLine, "SM"))
    {
@@ -143,7 +143,7 @@ BOOL APCInterface::Open()
 		
 		// Query model and set as device name
 		char buffer[MAX_RESULT_LENGTH];
-   	m_serial.Write("\x01", 1);
+   	m_serial.write("\x01", 1);
 		if (ReadLineFromSerial(buffer, MAX_RESULT_LENGTH))
 		{
 			StrStripA(buffer);
@@ -168,7 +168,7 @@ BOOL APCInterface::ValidateConnection(void)
    BOOL bRet;
    char szLine[256];
 
-   m_serial.Write("Y", 1);
+   m_serial.write("Y", 1);
    bRet = ReadLineFromSerial(szLine, 256);
    return (bRet && !strcmp(szLine, "SM"));
 }
@@ -192,13 +192,13 @@ void APCInterface::QueryFirmwareVersion(void)
 {
    char szRev[256], szVer[256];
 
-   m_serial.Write("V", 1);
+   m_serial.write("V", 1);
    if (!ReadLineFromSerial(szVer, 256))
    {
       szVer[0] = 0;
    }
 
-   m_serial.Write("b", 1);
+   m_serial.write("b", 1);
    if (!ReadLineFromSerial(szRev, 256))
    {
       szRev[0] = 0;
@@ -336,7 +336,7 @@ void APCInterface::QueryOnlineStatus(void)
    char *eptr, szLine[MAX_RESULT_LENGTH];
    DWORD dwFlags;
 
-   m_serial.Write("Q", 1);
+   m_serial.write("Q", 1);
    if (ReadLineFromSerial(szLine, MAX_RESULT_LENGTH))
    {
       if (strcmp(szLine, "NA"))

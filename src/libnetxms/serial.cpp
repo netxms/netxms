@@ -45,12 +45,10 @@
 #endif
 #endif
 
-
-//
-// Constructor
-//
-
-Serial::Serial(void)
+/**
+ * Constructor
+ */
+Serial::Serial()
 {
 	m_nTimeout = 0;
 	m_hPort = INVALID_HANDLE_VALUE;
@@ -60,26 +58,23 @@ Serial::Serial(void)
 #endif
 }
 
-
-//
-// Destructor
-//
-
-Serial::~Serial(void)
+/**
+ * Destructor
+ */
+Serial::~Serial()
 {
-	Close();
+	close();
+	safe_free(m_pszPort);
 }
 
-
-//
-// Open serial device
-//
-
-bool Serial::Open(const TCHAR *pszPort)
+/**
+ * Open serial device
+ */
+bool Serial::open(const TCHAR *pszPort)
 {
 	bool bRet = false;
 	
-	Close();    // In case if port already open
+	close();    // In case if port already open
 	safe_free(m_pszPort);
 	m_pszPort = _tcsdup(pszPort);
 	
@@ -94,22 +89,16 @@ bool Serial::Open(const TCHAR *pszPort)
 	{
 		tcgetattr(m_hPort, &m_originalSettings);
 #endif
-		Set(38400, 8, NOPARITY, ONESTOPBIT, FLOW_NONE);
+		set(38400, 8, NOPARITY, ONESTOPBIT, FLOW_NONE);
 		bRet = true;
 	}
 	return bRet;
 }
-	
-	
-//
-// Set communication parameters
-//
-bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
-{
-	return Set(nSpeed, nDataBits, nParity, nStopBits, FLOW_NONE);
-}
-	
-bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl)
+
+/**
+ * Set communication parameters
+ */
+bool Serial::set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl)
 {
 	bool bRet = false;
 		
@@ -251,12 +240,10 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
 	return bRet;
 }
 
-
-//
-// Close serial port
-//
-
-void Serial::Close(void)
+/**
+ * Close serial port
+ */
+void Serial::close()
 {
 	if (m_hPort != INVALID_HANDLE_VALUE)
 	{
@@ -268,17 +255,13 @@ void Serial::Close(void)
 		close(m_hPort);
 #endif // _WIN32s
 		m_hPort = INVALID_HANDLE_VALUE;
-		safe_free(m_pszPort);
-		m_pszPort = NULL;
 	}
 }
 
-
-//
-// Set receive timeout (in milliseconds)
-//
-
-void Serial::SetTimeout(int nTimeout)
+/**
+ * Set receive timeout (in milliseconds)
+ */
+void Serial::setTimeout(int nTimeout)
 {
 #ifdef _WIN32
 	COMMTIMEOUTS ct;
@@ -301,27 +284,33 @@ void Serial::SetTimeout(int nTimeout)
 #endif // WIN32
 }
 
-
-//
-// Restart port
-//
-
-bool Serial::Restart(void)
+/**
+ * Restart port
+ */
+bool Serial::restart()
 {
-	Close();
-	ThreadSleepMs(500);
-	if (Open(m_pszPort))
-		if (Set(m_nSpeed, m_nDataBits, m_nParity, m_nStopBits, m_nFlowControl))
-			return true;
+	if (m_pszPort == NULL)
 		return false;
+
+	close();
+	ThreadSleepMs(500);
+	
+	TCHAR *temp = m_pszPort;
+	m_pszPort = NULL;	// to prevent desctruction by open()
+	if (open(m_pszPort))
+		if (set(m_nSpeed, m_nDataBits, m_nParity, m_nStopBits, m_nFlowControl))
+		{
+			free(temp);
+			return true;
+		}
+	free(temp);
+	return false;
 }
 
-
-//
-// Read character(s) from port
-//
-
-int Serial::Read(char *pBuff, int nSize)
+/**
+ * Read character(s) from port
+ */
+int Serial::read(char *pBuff, int nSize)
 {
 	int nRet;
 	
@@ -363,11 +352,10 @@ int Serial::Read(char *pBuff, int nSize)
 	return nRet;
 }
 
-//
-// Read character(s) from port
-//
-
-int Serial::ReadAll(char *pBuff, int nSize)
+/**
+ * Read character(s) from port
+ */
+int Serial::readAll(char *pBuff, int nSize)
 {
 	int nRet;
 	
@@ -433,11 +421,10 @@ int Serial::ReadAll(char *pBuff, int nSize)
 	return nRet;
 }
 
-//
-// Write character(s) to port
-//
-
-bool Serial::Write(const char *pBuff, int nSize)
+/**
+ * Write character(s) to port
+ */
+bool Serial::write(const char *pBuff, int nSize)
 {
 	bool bRet = false;
 	
@@ -458,7 +445,7 @@ bool Serial::Write(const char *pBuff, int nSize)
 	}
 	else
 	{
-		Restart();
+		restart();
 	}
 	
 #else // UNIX
@@ -478,12 +465,10 @@ bool Serial::Write(const char *pBuff, int nSize)
 	return bRet;
 }
 
-
-//
-// Flush buffer
-//
-
-void Serial::Flush(void)
+/**
+ * Flush buffer
+ */
+void Serial::flush()
 {
 #ifdef _WIN32
 	
@@ -497,33 +482,3 @@ void Serial::Flush(void)
 	
 #endif // _WIN32
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.19  2007/01/24 21:34:55  victor
-- Fixed Serial::ReadAll() under Windows
-- Added isSystem object's attribute
-
-Revision 1.18  2007/01/24 00:54:17  alk
-Serial::ReadAll() implementation
-
-Revision 1.17  2006/11/21 22:06:19  alk
-DTR/RTS issues fixed (req. for nokia gsm modem on serial port)
-
-Revision 1.16  2006/11/21 22:04:07  alk
-code reformatted (mix of tab/space replaced with tabs)
-
-Revision 1.15  2006/10/20 10:15:56  victor
-- libnxcscp merged into libnetxms
-- Fixed NetWare compilation issues
-
-Revision 1.14  2006/09/10 06:59:37  victor
-Fixed problmes with Win32 build
-
-Revision 1.13  2006/09/07 22:02:06  alk
-UNIX version of Serial rewritten
-termio removed from configure (depricated in favour of termio_s_?)
-	
-*/

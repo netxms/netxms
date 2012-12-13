@@ -155,21 +155,6 @@ enum
 
 class LIBNETXMS_EXPORTABLE Serial
 {
-public:
-	Serial(void);
-	~Serial(void);
-
-	bool Open(const TCHAR *pszPort);
-	void Close(void);
-	void SetTimeout(int nTimeout);
-	int Read(char *pBuff, int nSize); /* waits up to timeout and do single read */
-	int ReadAll(char *pBuff, int nSize); /* read until timeout or out of space */
-	bool Write(const char *pBuff, int nSize);
-	void Flush(void);
-	bool Set(int nSpeed, int nDataBits, int nParity, int nStopBits);
-	bool Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl);
-	bool Restart(void);
-
 private:
 	TCHAR *m_pszPort;
 	int m_nTimeout;
@@ -185,13 +170,25 @@ private:
 #else
 	HANDLE m_hPort;
 #endif
+
+public:
+	Serial();
+	~Serial();
+
+	bool open(const TCHAR *pszPort);
+	void close();
+	void setTimeout(int nTimeout);
+	int read(char *pBuff, int nSize); /* waits up to timeout and do single read */
+	int readAll(char *pBuff, int nSize); /* read until timeout or out of space */
+	bool write(const char *pBuff, int nSize);
+	void flush();
+	bool set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl = FLOW_NONE);
+	bool restart();
 };
 
-
-//
-// Class for table data storage
-//
-
+/**
+ * Class for table data storage
+ */
 class CSCPMessage;
 
 class LIBNETXMS_EXPORTABLE Table

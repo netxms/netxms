@@ -1205,11 +1205,9 @@ public:
    void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
 };
 
-
-//
-// Service root
-//
-
+/**
+ * Service root
+ */
 class NXCORE_EXPORTABLE ServiceRoot : public UniversalRoot
 {
 public:
@@ -1219,11 +1217,9 @@ public:
    virtual int Type() { return OBJECT_SERVICEROOT; }
 };
 
-
-//
-// Template root
-//
-
+/**
+ * Template root
+ */
 class NXCORE_EXPORTABLE TemplateRoot : public UniversalRoot
 {
 public:

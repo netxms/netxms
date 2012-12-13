@@ -54,17 +54,17 @@ BOOL MicrodowellInterface::SendCmd(const char *cmd, int cmdLen, char *ret, int *
 	}
 	buff[i++] = crc;
 
-   m_serial.Write(buff, i);
+   m_serial.write(buff, i);
 
 	for (c = 0; c != '['; )
 	{
-		if (m_serial.Read((char *)&c, 1) != 1)
+		if (m_serial.read((char *)&c, 1) != 1)
 		{
 			return FALSE;
 		}
 	}
 
-	if (m_serial.Read(buff, i + 1) < i + 1)
+	if (m_serial.read(buff, i + 1) < i + 1)
 	{
 		return FALSE;
 	}
@@ -97,8 +97,8 @@ BOOL MicrodowellInterface::Open()
    if (!SerialInterface::Open())
       return FALSE;
 
-   m_serial.SetTimeout(1000);
-   m_serial.Set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
+   m_serial.setTimeout(1000);
+   m_serial.set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
 
 	char buff[512];
 	int len;
