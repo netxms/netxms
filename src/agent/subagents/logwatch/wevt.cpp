@@ -25,11 +25,9 @@
 #include <winevt.h>
 #include <winmeta.h>
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static BOOL (WINAPI *_EvtClose)(EVT_HANDLE);
 static EVT_HANDLE (WINAPI *_EvtCreateRenderContext)(DWORD, LPCWSTR *, DWORD);
 static BOOL (WINAPI *_EvtGetPublisherMetadataProperty)(EVT_HANDLE, EVT_PUBLISHER_METADATA_PROPERTY_ID, DWORD, DWORD, PEVT_VARIANT, PDWORD);
@@ -38,11 +36,9 @@ static EVT_HANDLE (WINAPI *_EvtOpenPublisherMetadata)(EVT_HANDLE, LPCWSTR, LPCWS
 static BOOL (WINAPI *_EvtRender)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PVOID, PDWORD, PDWORD);
 static EVT_HANDLE (WINAPI *_EvtSubscribe)(EVT_HANDLE, HANDLE, LPCWSTR, LPCWSTR, EVT_HANDLE, PVOID, EVT_SUBSCRIBE_CALLBACK, DWORD);
 
-
-//
-// Log metadata property
-//
-
+/**
+ * Log metadata property
+ */
 static void LogMetadataProperty(EVT_HANDLE pubMetadata, EVT_PUBLISHER_METADATA_PROPERTY_ID id, const TCHAR *name)
 {
 	WCHAR buffer[4096];
@@ -52,11 +48,9 @@ static void LogMetadataProperty(EVT_HANDLE pubMetadata, EVT_PUBLISHER_METADATA_P
 	AgentWriteDebugLog(5, _T("LogWatch: publisher %s: %S"), name, p->StringVal);
 }
 
-
-//
-// Subscription callback
-//
-
+/**
+ * Subscription callback
+ */
 static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID userContext, EVT_HANDLE event)
 {
 	WCHAR buffer[4096], *msg = buffer;
@@ -180,11 +174,9 @@ cleanup:
 	return 0;
 }
 
-
-//
-// Event log parser thread
-//
-
+/**
+ * Event log parser thread
+ */
 THREAD_RESULT THREAD_CALL ParserThreadEventLogV6(void *arg)
 {
 	LogParser *parser = (LogParser *)arg;
@@ -221,11 +213,9 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLogV6(void *arg)
 	return THREAD_OK;
 }
 
-
-//
-// Initialize event log reader for Windows Vista and later
-//
-
+/**
+ * Initialize event log reader for Windows Vista and later
+ */
 bool InitEventLogParsersV6()
 {
 	HMODULE module = LoadLibrary(_T("wevtapi.dll"));

@@ -229,11 +229,9 @@ const TCHAR *LogParser::checkContext(LogParserRule *rule)
 	}
 }
 
-
-//
-// Match log record
-//
-
+/**
+ * Match log record
+ */
 bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, DWORD eventId,
 										 DWORD level, const TCHAR *line, DWORD objectId)
 {
@@ -289,31 +287,25 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, DWORD ev
 	return matched;
 }
 
-
-//
-// Match simple log line
-//
-
+/**
+ * Match simple log line
+ */
 bool LogParser::matchLine(const TCHAR *line, DWORD objectId)
 {
 	return matchLogRecord(false, NULL, 0, 0, line, objectId);
 }
 
-
-//
-// Match log event (text with additional attributes - source, severity, event id)
-//
-
+/**
+ * Match log event (text with additional attributes - source, severity, event id)
+ */
 bool LogParser::matchEvent(const TCHAR *source, DWORD eventId, DWORD level, const TCHAR *line, DWORD objectId)
 {
 	return matchLogRecord(true, source, eventId, level, line, objectId);
 }
 
-
-//
-// Set associated file name
-//
-
+/**
+ * Set associated file name
+ */
 void LogParser::setFileName(const TCHAR *name)
 {
 	safe_free(m_fileName);

@@ -22,11 +22,9 @@
 
 #include "winnt_subagent.h"
 
-
-//
-// Externlals
-//
-
+/**
+ * Externlals
+ */
 LONG H_ActiveUserSessions(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
 LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
@@ -39,23 +37,9 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
-
-//
-// Global variables
-//
-
-BOOL (__stdcall *imp_GetProcessIoCounters)(HANDLE, PIO_COUNTERS) = NULL;
-BOOL (__stdcall *imp_GetPerformanceInfo)(PPERFORMANCE_INFORMATION, DWORD) = NULL;
-DWORD (__stdcall *imp_GetGuiResources)(HANDLE, DWORD) = NULL;
-BOOL (__stdcall *imp_WTSEnumerateSessionsW)(HANDLE, DWORD, DWORD, PWTS_SESSION_INFOW *, DWORD *) = NULL;
-BOOL (__stdcall *imp_WTSQuerySessionInformationW)(HANDLE, DWORD, WTS_INFO_CLASS, LPWSTR *, DWORD *) = NULL;
-void (__stdcall *imp_WTSFreeMemory)(void *) = NULL;
-
-
-//
-// Set or clear current privilege
-//
-
+/**
+ * Set or clear current privilege
+ */
 static BOOL SetCurrentPrivilege(LPCTSTR pszPrivilege, BOOL bEnablePrivilege)
 {
 	HANDLE hToken;
@@ -93,12 +77,9 @@ static BOOL SetCurrentPrivilege(LPCTSTR pszPrivilege, BOOL bEnablePrivilege)
 	return bSuccess;
 }
 
-
-
-//
-// Shutdown system
-//
-
+/**
+ * Shutdown system
+ */
 static LONG H_ActionShutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData)
 {
 	LONG nRet = ERR_INTERNAL_ERROR;
@@ -112,11 +93,9 @@ static LONG H_ActionShutdown(const TCHAR *pszAction, StringList *pArgList, const
 	return nRet;
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("Net.RemoteShareStatus(*)"), H_RemoteShareStatus, _T("C"), DCI_DT_INT, _T("Status of remote shared resource") },
@@ -174,51 +153,18 @@ static NETXMS_SUBAGENT_INFO m_info =
 	0, NULL	// push parameters
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
-extern "C" BOOL __declspec(dllexport) __cdecl
-NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
+/**
+ * Entry point for NetXMS agent
+ */
+DECLARE_SUBAGENT_ENTRY_POINT(WINNT)
 {
-	HMODULE hModule;
-
-	// Import functions which may not be presented in all Windows versions
-	hModule = GetModuleHandle(_T("USER32.DLL"));
-	if (hModule != NULL)
-	{
-		imp_GetGuiResources = (DWORD (__stdcall *)(HANDLE, DWORD))GetProcAddress(hModule, "GetGuiResources");
-	}
-
-	hModule = GetModuleHandle(_T("KERNEL32.DLL"));
-	if (hModule != NULL)
-	{
-		imp_GetProcessIoCounters = (BOOL (__stdcall *)(HANDLE, PIO_COUNTERS))GetProcAddress(hModule, "GetProcessIoCounters");
-	}
-
-	hModule = GetModuleHandle(_T("PSAPI.DLL"));
-	if (hModule != NULL)
-	{
-		imp_GetPerformanceInfo = (BOOL (__stdcall *)(PPERFORMANCE_INFORMATION, DWORD))GetProcAddress(hModule, "GetPerformanceInfo");
-	}
-
-	hModule = LoadLibrary(_T("WTSAPI32.DLL"));
-	if (hModule != NULL)
-	{
-		imp_WTSEnumerateSessionsW = (BOOL (__stdcall *)(HANDLE, DWORD, DWORD, PWTS_SESSION_INFOW *, DWORD *))GetProcAddress(hModule, "WTSEnumerateSessionsA");
-		imp_WTSQuerySessionInformationW = (BOOL (__stdcall *)(HANDLE, DWORD, WTS_INFO_CLASS, LPWSTR *, DWORD *))GetProcAddress(hModule, "WTSQuerySessionInformationA");
-		imp_WTSFreeMemory = (void (__stdcall *)(void *))GetProcAddress(hModule, "WTSFreeMemory");
-	}
 	*ppInfo = &m_info;
 	return TRUE;
 }
 
-
-//
-// DLL entry point
-//
-
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)

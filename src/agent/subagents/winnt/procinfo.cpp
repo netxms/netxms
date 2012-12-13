@@ -40,36 +40,6 @@ static unsigned __int64 ConvertProcessTime(FILETIME *lpft)
 
 
 //
-// Check if attribute supported or not
-//
-
-static BOOL IsAttributeSupported(int attr)
-{
-   switch(attr)
-   {
-      case PROCINFO_GDI_OBJ:
-      case PROCINFO_USER_OBJ:
-         if (imp_GetGuiResources == NULL)
-            return FALSE;     // No appropriate function available, probably we are running on NT4
-         break;
-      case PROCINFO_IO_READ_B:
-      case PROCINFO_IO_READ_OP:
-      case PROCINFO_IO_WRITE_B:
-      case PROCINFO_IO_WRITE_OP:
-      case PROCINFO_IO_OTHER_B:
-      case PROCINFO_IO_OTHER_OP:
-         if (imp_GetProcessIoCounters == NULL)
-            return FALSE;     // No appropriate function available, probably we are running on NT4
-         break;
-      default:
-         break;
-   }
-
-   return TRUE;
-}
-
-
-//
 // Get specific process attribute
 //
 
@@ -107,30 +77,30 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
          break;
       case PROCINFO_GDI_OBJ:
       case PROCINFO_USER_OBJ:
-         value = imp_GetGuiResources(hProcess, attr == PROCINFO_GDI_OBJ ? GR_GDIOBJECTS : GR_USEROBJECTS);
+         value = GetGuiResources(hProcess, attr == PROCINFO_GDI_OBJ ? GR_GDIOBJECTS : GR_USEROBJECTS);
          break;
       case PROCINFO_IO_READ_B:
-         imp_GetProcessIoCounters(hProcess, &ioCounters);
+         GetProcessIoCounters(hProcess, &ioCounters);
          value = ioCounters.ReadTransferCount;
          break;
       case PROCINFO_IO_READ_OP:
-         imp_GetProcessIoCounters(hProcess, &ioCounters);
+         GetProcessIoCounters(hProcess, &ioCounters);
          value = ioCounters.ReadOperationCount;
          break;
       case PROCINFO_IO_WRITE_B:
-         imp_GetProcessIoCounters(hProcess, &ioCounters);
+         GetProcessIoCounters(hProcess, &ioCounters);
          value = ioCounters.WriteTransferCount;
          break;
       case PROCINFO_IO_WRITE_OP:
-         imp_GetProcessIoCounters(hProcess, &ioCounters);
+         GetProcessIoCounters(hProcess, &ioCounters);
          value = ioCounters.WriteOperationCount;
          break;
       case PROCINFO_IO_OTHER_B:
-         imp_GetProcessIoCounters(hProcess, &ioCounters);
+         GetProcessIoCounters(hProcess, &ioCounters);
          value = ioCounters.OtherTransferCount;
          break;
       case PROCINFO_IO_OTHER_OP:
-         imp_GetProcessIoCounters(hProcess, &ioCounters);
+         GetProcessIoCounters(hProcess, &ioCounters);
          value = ioCounters.OtherOperationCount;
          break;
       default:       // Unknown attribute
@@ -367,11 +337,6 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    HMODULE *modList;
    static TCHAR *typeList[]={ _T("min"), _T("max"), _T("avg"), _T("sum"), NULL };
 
-   // Check attribute
-   attr = CAST_FROM_POINTER(arg, int);
-   if (!IsAttributeSupported(attr))
-      return SYSINFO_RC_UNSUPPORTED;     // Unsupported attribute
-
    // Get parameter type arguments
    AgentGetParameterArg(cmd, 2, buffer, 255);
    if (buffer[0] == 0)     // Omited type
@@ -393,6 +358,7 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 	AgentGetParameterArg(cmd, 4, windowTitle, MAX_PATH - 1);
 
    // Gather information
+   attr = CAST_FROM_POINTER(arg, int);
    attrVal = 0;
    pdwProcList = (DWORD *)malloc(MAX_PROCESSES * sizeof(DWORD));
    modList = (HMODULE *)malloc(MAX_MODULES * sizeof(HMODULE));
@@ -433,21 +399,19 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for System.ProcessCount
-//
-
+/**
+ * Handler for System.ProcessCount
+ */
 LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    DWORD dwSize, *pdwProcList;
    PERFORMANCE_INFORMATION pi;
 
    // On Windows XP and higher, use new method
-   if (imp_GetPerformanceInfo != NULL)
+   if (GetPerformanceInfo != NULL)
    {
       pi.cb = sizeof(PERFORMANCE_INFORMATION);
-      if (!imp_GetPerformanceInfo(&pi, sizeof(PERFORMANCE_INFORMATION)))
+      if (!GetPerformanceInfo(&pi, sizeof(PERFORMANCE_INFORMATION)))
          return SYSINFO_RC_ERROR;
       ret_uint(value, pi.ProcessCount);
    }

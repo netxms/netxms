@@ -409,11 +409,9 @@ static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
 
 #endif   /* _WIN32 */
 
-
-//
-// Restart agent
-//
-
+/**
+ * Restart agent
+ */
 static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *data)
 {
 	DebugPrintf(INVALID_INDEX, 1, _T("H_RestartAgent() called"));
@@ -495,11 +493,9 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 #endif
 }
 
-
-//
-// This function writes message from subagent to agent's log
-//
-
+/**
+ * This function writes message from subagent to agent's log
+ */
 static void WriteSubAgentMsg(int logLevel, int debugLevel, const TCHAR *pszMsg)
 {
 	if (logLevel == EVENTLOG_DEBUG_TYPE)
@@ -513,11 +509,9 @@ static void WriteSubAgentMsg(int logLevel, int debugLevel, const TCHAR *pszMsg)
 	}
 }
 
-
-//
-// Signal handler for UNIX platforms
-//
-
+/**
+ * Signal handler for UNIX platforms
+ */
 #if !defined(_WIN32)
 
 static THREAD_RESULT THREAD_CALL SignalHandler(void *pArg)
@@ -565,42 +559,14 @@ stop_handler:
 
 #endif
 
-
-//
-// Load subagent for Windows NT or Windows 9x or platform subagent on UNIX
-//
-
+/**
+ * Load platform subagent
+ */
+static void LoadPlatformSubagent()
+{
 #ifdef _WIN32
-
-void LoadWindowsSubagent()
-{
-   OSVERSIONINFO ver;
-
-   ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-   if (GetVersionEx(&ver))
-   {
-      switch(ver.dwPlatformId)
-      {
-         case VER_PLATFORM_WIN32_WINDOWS:    // Windows 9x
-            LoadSubAgent(_T("WIN9X.NSM"));
-            break;
-         case VER_PLATFORM_WIN32_NT:   // Windows NT or higher
-            LoadSubAgent(_T("WINNT.NSM"));
-            break;
-         default:
-            break;
-      }
-   }
-   else
-   {
-      nxlog_write(MSG_GETVERSION_FAILED, EVENTLOG_WARNING_TYPE, "e", GetLastError());
-   }
-}
-
+   LoadSubAgent(_T("WINNT.NSM"));
 #else
-
-void LoadPlatformSubagent()
-{
 #if HAVE_SYS_UTSNAME_H && !defined(_STATIC_AGENT)
    struct utsname un;
    TCHAR szName[MAX_PATH];
@@ -617,15 +583,12 @@ void LoadPlatformSubagent()
       LoadSubAgent(szName);
    }
 #endif
+#endif
 }
 
-#endif
-
-
-//
-// Send file to server (subagent API)
-//
-
+/**
+ * Send file to server (subagent API)
+ */
 static BOOL SendFileToServer(void *session, DWORD requestId, const TCHAR *file, long offset)
 {
 	if (session == NULL)
@@ -823,11 +786,7 @@ BOOL Initialize()
 #endif
 		if (g_dwFlags & AF_ENABLE_AUTOLOAD)
 		{
-#ifdef _WIN32
-	      LoadWindowsSubagent();
-#else
 		   LoadPlatformSubagent();
-#endif
 		}
 	}
 

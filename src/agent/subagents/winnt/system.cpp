@@ -74,52 +74,35 @@ LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    return iResult;
 }
 
-
-//
-// Handler for System.ThreadCount
-//
-
+/**
+ * Handler for System.ThreadCount
+ */
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    PERFORMANCE_INFORMATION pi;
-
-   if (imp_GetPerformanceInfo != NULL)
-   {
-      pi.cb = sizeof(PERFORMANCE_INFORMATION);
-      if (!imp_GetPerformanceInfo(&pi, sizeof(PERFORMANCE_INFORMATION)))
-         return SYSINFO_RC_ERROR;
-      ret_uint(value, pi.ThreadCount);
-      return SYSINFO_RC_SUCCESS;
-   }
-   else
-   {
-      return SYSINFO_RC_UNSUPPORTED;
-   }
+   pi.cb = sizeof(PERFORMANCE_INFORMATION);
+   if (!GetPerformanceInfo(&pi, sizeof(PERFORMANCE_INFORMATION)))
+      return SYSINFO_RC_ERROR;
+   ret_uint(value, pi.ThreadCount);
+   return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for System.ConnectedUsers parameter
-//
-
+/**
+ * Handler for System.ConnectedUsers parameter
+ */
 LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
    LONG nRet;
    WTS_SESSION_INFO *pSessionList;
    DWORD i, dwNumSessions, dwCount;
 
-	if ((imp_WTSEnumerateSessionsW == NULL) ||
-		 (imp_WTSFreeMemory == NULL))
-		return SYSINFO_RC_UNSUPPORTED;
-
-   if (imp_WTSEnumerateSessionsW(WTS_CURRENT_SERVER_HANDLE, 0, 1,
-                                 &pSessionList, &dwNumSessions))
+   if (WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &pSessionList, &dwNumSessions))
    {
       for(i = 0, dwCount = 0; i < dwNumSessions; i++)
          if ((pSessionList[i].State == WTSActive) ||
              (pSessionList[i].State == WTSConnected))
             dwCount++;
-      imp_WTSFreeMemory(pSessionList);
+      WTSFreeMemory(pSessionList);
       ret_uint(pValue, dwCount);
       nRet = SYSINFO_RC_SUCCESS;
    }
@@ -130,11 +113,9 @@ LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
    return nRet;
 }
 
-
-//
-// Handler for System.ActiveUserSessions enum
-//
-
+/**
+ * Handler for System.ActiveUserSessions enum
+ */
 LONG H_ActiveUserSessions(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
 {
    LONG nRet;
@@ -142,25 +123,20 @@ LONG H_ActiveUserSessions(const TCHAR *pszCmd, const TCHAR *pArg, StringList *va
    DWORD i, dwNumSessions, dwBytes;
    TCHAR *pszClientName, *pszUserName, szBuffer[1024];
 
-	if ((imp_WTSEnumerateSessionsW == NULL) ||
-		 (imp_WTSQuerySessionInformationW == NULL) ||
-		 (imp_WTSFreeMemory == NULL))
-		return SYSINFO_RC_UNSUPPORTED;
-
-   if (imp_WTSEnumerateSessionsW(WTS_CURRENT_SERVER_HANDLE, 0, 1,
-                                 &pSessionList, &dwNumSessions))
+   if (WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &pSessionList, &dwNumSessions))
    {
       for(i = 0; i < dwNumSessions; i++)
+		{
          if ((pSessionList[i].State == WTSActive) ||
              (pSessionList[i].State == WTSConnected))
          {
-            if (!imp_WTSQuerySessionInformationW(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
-                                                 WTSClientName, &pszClientName, &dwBytes))
+            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
+                                            WTSClientName, &pszClientName, &dwBytes))
             {
                pszClientName = NULL;
             }
-            if (!imp_WTSQuerySessionInformationW(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
-                                                 WTSUserName, &pszUserName, &dwBytes))
+            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
+                                            WTSUserName, &pszUserName, &dwBytes))
             {
                pszUserName = NULL;
             }
@@ -172,11 +148,12 @@ LONG H_ActiveUserSessions(const TCHAR *pszCmd, const TCHAR *pArg, StringList *va
             value->add(szBuffer);
 
             if (pszUserName != NULL)
-               imp_WTSFreeMemory(pszUserName);
+               WTSFreeMemory(pszUserName);
             if (pszClientName != NULL)
-               imp_WTSFreeMemory(pszClientName);
+               WTSFreeMemory(pszClientName);
          }
-      imp_WTSFreeMemory(pSessionList);
+		}
+      WTSFreeMemory(pSessionList);
       nRet = SYSINFO_RC_SUCCESS;
    }
    else
@@ -186,11 +163,9 @@ LONG H_ActiveUserSessions(const TCHAR *pszCmd, const TCHAR *pArg, StringList *va
    return nRet;
 }
 
-
-//
-// Handler for System.AppAddressSpace
-//
-
+/**
+ * Handler for System.AppAddressSpace
+ */
 LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
 	SYSTEM_INFO si;

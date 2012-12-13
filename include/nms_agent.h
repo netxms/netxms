@@ -27,11 +27,9 @@
 #include <nms_util.h>
 #include <nxconfig.h>
 
-
-//
-// Initialization function declaration macro
-//
-
+/**
+ * Initialization function declaration macro
+ */
 #if defined(_STATIC_AGENT) || defined(_NETWARE)
 #define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" BOOL NxSubAgentRegister_##name(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 #else
