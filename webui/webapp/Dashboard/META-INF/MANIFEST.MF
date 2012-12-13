@@ -5,12 +5,12 @@ Bundle-SymbolicName: org.netxms.ui.eclipse.dashboard;singleton:=true
 Bundle-Version: 1.2.5
 Bundle-Activator: org.netxms.ui.eclipse.dashboard.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.eclipse.core.runtime,
- org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.4",
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.5",
  org.netxms.ui.eclipse.charts;bundle-version="1.2.5",
  org.netxms.ui.eclipse.osm;bundle-version="1.2.5",
- org.netxms.ui.eclipse.datacollection;bundle-version="1.2.4",
- org.netxms.ui.eclipse.alarmviewer;bundle-version="1.2.2",
+ org.netxms.ui.eclipse.datacollection;bundle-version="1.2.5",
+ org.netxms.ui.eclipse.alarmviewer;bundle-version="1.2.4",
  org.netxms.webui.core;bundle-version="1.2.5",
  org.eclipse.rap.ui;bundle-version="2.0.0",
  org.netxms.ui.eclipse.networkmaps;bundle-version="1.2.5",

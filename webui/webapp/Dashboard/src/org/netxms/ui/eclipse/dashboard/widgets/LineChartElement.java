@@ -85,7 +85,7 @@ public class LineChartElement extends ElementWidget
 		
 		chart = ChartFactory.createLineChart(this, SWT.NONE);
 		chart.setZoomEnabled(false);
-		chart.setTitleVisible(true);
+		chart.setTitleVisible(config.isShowTitle());
 		chart.setChartTitle(config.getTitle());
 		chart.setLegendVisible(config.isShowLegend());
 		chart.setLegendPosition(config.getLegendPosition());

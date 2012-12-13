@@ -53,7 +53,7 @@ public class TablePieChartElement extends TableComparisonChartElement
 		setLayout(new FillLayout());
 		
 		chart = ChartFactory.createPieChart(this, SWT.NONE);
-		chart.setTitleVisible(true);
+		chart.setTitleVisible(config.isShowTitle());
 		chart.setChartTitle(config.getTitle());
 		chart.setLegendPosition(config.getLegendPosition());
 		chart.setLegendVisible(config.isShowLegend());

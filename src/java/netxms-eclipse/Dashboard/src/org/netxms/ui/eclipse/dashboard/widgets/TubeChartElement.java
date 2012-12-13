@@ -55,7 +55,7 @@ public class TubeChartElement extends ComparisonChartElement
 		refreshInterval = config.getRefreshRate() * 1000;
 		
 		chart = ChartFactory.createTubeChart(this, SWT.NONE);
-		chart.setTitleVisible(true);
+		chart.setTitleVisible(config.isShowTitle());
 		chart.setChartTitle(config.getTitle());
 		chart.setLegendPosition(config.getLegendPosition());
 		chart.setLegendVisible(config.isShowLegend());

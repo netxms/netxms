@@ -129,7 +129,6 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		// Title
 		Text tc = chart.getTitle().getLabel().getCaption();
 		tc.setValue(getChartTitle());
-		tc.getFont().setSize(11);
 		tc.getFont().setName(CHART_FONT_NAME);
 		tc.getFont().setSize(CHART_FONT_SIZE_TITLE);
 		tc.getFont().setBold(false);

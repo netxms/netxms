@@ -56,7 +56,7 @@ public class BarChartElement extends ComparisonChartElement
 
 		refreshInterval = config.getRefreshRate() * 1000;
 		chart = ChartFactory.createBarChart(this, SWT.NONE);
-		chart.setTitleVisible(true);
+		chart.setTitleVisible(config.isShowTitle());
 		chart.setChartTitle(config.getTitle());
 		chart.setLegendPosition(config.getLegendPosition());
 		chart.setLegendVisible(config.isShowLegend());
