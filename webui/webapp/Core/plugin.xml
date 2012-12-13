@@ -13,6 +13,14 @@
             visible="true">
          <run
                class="org.netxms.webui.core.Application">
+            <parameter
+                  name="path"
+                  value="/nxmc">
+            </parameter>
+            <parameter
+                  name="brandingId"
+                  value="org.netxms.webui.design.branding.classic">
+            </parameter>
          </run>
       </application>
    </extension>
@@ -121,7 +129,6 @@
       <branding
             favicon="icons/favicon.png"
             id="org.netxms.webui.design.branding.classic"
-            servletName="nxmc"
             themeId="org.netxms.webui.design.theme.classic"
             title="NetXMS Management Console">
       </branding>
