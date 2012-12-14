@@ -84,7 +84,7 @@ bool Serial::open(const TCHAR *pszPort)
 	if (m_hPort != INVALID_HANDLE_VALUE)
 	{
 #else // UNIX
-	m_hPort = _topen(pszPort, O_RDWR | O_NOCTTY | O_NDELAY); 
+	m_hPort = ::_topen(pszPort, O_RDWR | O_NOCTTY | O_NDELAY); 
 	if (m_hPort != -1)
 	{
 		tcgetattr(m_hPort, &m_originalSettings);
@@ -252,7 +252,7 @@ void Serial::close()
 		CloseHandle(m_hPort);
 #else // UNIX
 		tcsetattr(m_hPort, TCSANOW, &m_originalSettings);
-		close(m_hPort);
+		::close(m_hPort);
 #endif // _WIN32s
 		m_hPort = INVALID_HANDLE_VALUE;
 	}
@@ -340,7 +340,7 @@ int Serial::read(char *pBuff, int nSize)
 	tv.tv_usec = 0;
 	nRet = select(m_hPort + 1, &rdfs, NULL, NULL, &tv);
 	if (nRet > 0)
-		nRet = read(m_hPort, pBuff, nSize);
+		nRet = ::read(m_hPort, pBuff, nSize);
 	else
 		nRet = -1;  // Timeout is an error
 	
@@ -391,7 +391,7 @@ int Serial::readAll(char *pBuff, int nSize)
 		nRet = select(m_hPort + 1, &rdfs, NULL, NULL, &tv);
 		if (nRet > 0)
 		{
-			got = read(m_hPort, pBuff + offset, nSize - offset);
+			got = ::read(m_hPort, pBuff + offset, nSize - offset);
 			if (got >= 0)
 			{
 				offset += got;
@@ -451,13 +451,13 @@ bool Serial::write(const char *pBuff, int nSize)
 #else // UNIX
 	usleep(100);
 	
-	if (write(m_hPort, (char *)pBuff, nSize) == nSize)
+	if (::write(m_hPort, (char *)pBuff, nSize) == nSize)
 	{
 		bRet = true;
 	}
 	else
 	{
-		Restart();
+		restart();
 	}
 	
 #endif // _WIN32

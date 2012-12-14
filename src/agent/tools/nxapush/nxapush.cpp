@@ -344,7 +344,7 @@ static BOOL Send()
 		msg.SetVariable(varId++, s_data->getKeyByIndex(i));
 		msg.SetVariable(varId++, s_data->getValueByIndex(i));
 		if (optVerbose > 2)
-			_tprintf(_T("Record #%d: \"%s\" = \"%s\"\n"), i + 1, s_data->getKeyByIndex(i), s_data->getValueByIndex(i));
+			_tprintf(_T("Record #%d: \"%s\" = \"%s\"\n"), (int)i + 1, s_data->getKeyByIndex(i), s_data->getValueByIndex(i));
 	}
 
 	// Send response to pipe
