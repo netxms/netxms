@@ -19,8 +19,11 @@
 package org.netxms.ui.eclipse.charts;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -34,8 +37,8 @@ public class Activator extends AbstractUIPlugin
 	// The shared instance
 	private static Activator plugin;
 	
-	private Font chartTitleFont;
-	private Font chartFont;
+	private Font chartTitleFont = null;
+	private Font chartFont = null;
 
 	/*
 	 * (non-Javadoc)
@@ -48,11 +51,6 @@ public class Activator extends AbstractUIPlugin
 	{
 		super.start(context);
 		plugin = this;
-
-		/*
-	   chartTitleFont = new Font(Display.getDefault(), "Verdana", 9, SWT.NORMAL);
-	   chartFont = new Font(Display.getDefault(), "Verdana", 8, SWT.NORMAL);
-	   */
 	}
 
 	/*
@@ -94,16 +92,20 @@ public class Activator extends AbstractUIPlugin
 	/**
 	 * @return the chartTitleFont
 	 */
-	public Font getChartTitleFont()
+	public Font getChartTitleFont(Display display)
 	{
+		if (chartTitleFont == null)
+			chartTitleFont = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 16), SWT.BOLD);
 		return chartTitleFont;
 	}
 
 	/**
 	 * @return the chartFont
 	 */
-	public Font getChartFont()
+	public Font getChartFont(Display display)
 	{
+		if (chartFont == null)
+			chartFont = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 12), SWT.NORMAL);
 		return chartFont;
 	}
 }

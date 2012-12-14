@@ -64,7 +64,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	private static final long serialVersionUID = 1L;
 
 	private static final String CHART_FONT_NAME = "Verdana";
-	private static final int CHART_FONT_SIZE_TITLE = 9;
+	private static final int CHART_FONT_SIZE_TITLE = 10;
 	private static final int CHART_FONT_SIZE_LEGEND = 8;
 	private static final int CHART_FONT_SIZE_AXIS = 8;
 	
@@ -132,8 +132,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		Text tc = chart.getTitle().getLabel().getCaption();
 		tc.setValue(getChartTitle());
 		tc.getFont().setName(CHART_FONT_NAME);
-		tc.getFont().setSize(CHART_FONT_SIZE_TITLE * 4);
-		tc.getFont().setBold(false);
+		tc.getFont().setSize(CHART_FONT_SIZE_TITLE);
+		tc.getFont().setBold(true);
 		chart.getTitle().setVisible(isTitleVisible());
 		
 		// Legend
@@ -198,7 +198,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		tc.setValue(getChartTitle());
 		tc.getFont().setName(CHART_FONT_NAME);
 		tc.getFont().setSize(CHART_FONT_SIZE_TITLE);
-		tc.getFont().setBold(false);
+		tc.getFont().setBold(true);
 		chart.getTitle().setVisible(isTitleVisible());
 		
 		// Legend

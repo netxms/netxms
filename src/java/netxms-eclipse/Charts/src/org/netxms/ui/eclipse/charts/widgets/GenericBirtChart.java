@@ -180,6 +180,9 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			return;
 		
 		Rectangle clientArea = this.getClientArea();
+		if ((clientArea.width == 0) || (clientArea.height == 0))
+			return;
+		
 		if (fullRepaint)
 		{
 			//if resized
@@ -192,7 +195,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			gcImage = new GC(imgChart);
 			deviceRenderer.setProperty(IDeviceRenderer.GRAPHICS_CONTEXT, gcImage);
 			final Bounds bounds = BoundsImpl.create(0, 0, clientArea.width, clientArea.height);
-			bounds.scale(72d / deviceRenderer.getDisplayServer().getDpiResolution());
+			bounds.scale(72.0 / deviceRenderer.getDisplayServer().getDpiResolution());
 
 			try
 			{
@@ -201,7 +204,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			}
 			catch(ChartException e)
 			{
-				/* TODO: add logging and/or user notification */
+				// TODO: add logging and/or user notification
 				e.printStackTrace();
 			}
 			

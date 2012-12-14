@@ -123,12 +123,12 @@ public class LineChart extends Chart implements HistoricalDataChart
 		ITitle title = getTitle();
 		title.setVisible(preferenceStore.getBoolean("Chart.ShowTitle")); //$NON-NLS-1$
 		title.setForeground(getColorFromPreferences("Chart.Colors.Title")); //$NON-NLS-1$
-		title.setFont(Activator.getDefault().getChartTitleFont());
+		title.setFont(Activator.getDefault().getChartTitleFont(getDisplay()));
 		
 		// Setup legend
 		ILegend legend = getLegend();
 		legend.setPosition(swtPositionFromInternal(legendPosition));
-		legend.setFont(Activator.getDefault().getChartFont());
+		legend.setFont(Activator.getDefault().getChartFont(getDisplay()));
 		
 		// Default time range
 		timeTo = System.currentTimeMillis();
@@ -143,12 +143,12 @@ public class LineChart extends Chart implements HistoricalDataChart
 		xTick.setForeground(getColorFromPreferences("Chart.Axis.X.Color")); //$NON-NLS-1$
 		DateFormat format = new SimpleDateFormat(Messages.LineChart_ShortTimeFormat);
 		xTick.setFormat(format);
-		xTick.setFont(Activator.getDefault().getChartFont());
+		xTick.setFont(Activator.getDefault().getChartFont(getDisplay()));
 		
 		final IAxis yAxis = axisSet.getYAxis(0);
 		yAxis.getTitle().setVisible(false);
 		yAxis.getTick().setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
-		yAxis.getTick().setFont(Activator.getDefault().getChartFont());
+		yAxis.getTick().setFont(Activator.getDefault().getChartFont(getDisplay()));
 		
 		// Setup grid
 		xAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.X.Style")); //$NON-NLS-1$

@@ -57,7 +57,7 @@ public class Activator extends AbstractUIPlugin
 		IProgressService service = PlatformUI.getWorkbench().getProgressService();
 	   service.registerIconForFamily(getImageDescriptor("icons/graph.png"), Activator.PLUGIN_ID); //$NON-NLS-1$
 	   
-	   chartTitleFont = new Font(Display.getDefault(), "Verdana", 9, SWT.NORMAL); //$NON-NLS-1$
+	   chartTitleFont = new Font(Display.getDefault(), "Verdana", 9, SWT.BOLD); //$NON-NLS-1$
 	   chartFont = new Font(Display.getDefault(), "Verdana", 8, SWT.NORMAL); //$NON-NLS-1$
 	}
 
