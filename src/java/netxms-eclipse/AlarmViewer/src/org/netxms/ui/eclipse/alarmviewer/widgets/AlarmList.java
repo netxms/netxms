@@ -61,6 +61,7 @@ import org.netxms.ui.eclipse.alarmviewer.AlarmListFilter;
 import org.netxms.ui.eclipse.alarmviewer.AlarmListLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmComments;
+import org.netxms.ui.eclipse.alarmviewer.views.AlarmDetails;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -312,7 +313,15 @@ public class AlarmList extends Composite
 			@Override
 			public void run()
 			{
-				openComments();
+				openAlarmDetailsView(AlarmComments.ID);
+			}
+		};
+
+		actionShowAlarmDetails = new Action("Alarm &details") {
+			@Override
+			public void run()
+			{
+				openAlarmDetailsView(AlarmDetails.ID);
 			}
 		};
 
@@ -410,6 +419,7 @@ public class AlarmList extends Composite
 		if (selection.size() == 1)
 		{
 			manager.add(new Separator());
+			manager.add(actionShowAlarmDetails);
 			manager.add(actionComments);
 		}
 	}
@@ -466,7 +476,7 @@ public class AlarmList extends Composite
 	/**
 	 * Open comments for selected alarm
 	 */
-	private void openComments()
+	private void openAlarmDetailsView(String viewId)
 	{
 		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
 		if (selection.size() != 1)
@@ -476,7 +486,7 @@ public class AlarmList extends Composite
 		IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 		try
 		{
-			page.showView(AlarmComments.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
+			page.showView(viewId, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
 		}
 		catch(PartInitException e)
 		{
