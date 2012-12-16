@@ -22,7 +22,6 @@
 
 #include "nxdbmgr.h"
 
-
 /**
  * Externals
  */
@@ -260,6 +259,26 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 	free(escMessage);
 	free(escDescription);
 	return SQLQuery(query);
+}
+
+/**
+ * Upgrade from V264 to V265
+ */
+static BOOL H_UpgradeFromV264(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateTable(_T("CREATE TABLE alarm_events (")
+	                     _T("alarm_id integer not null,")
+								_T("event_id $SQL:INT64 not null,")
+	                     _T("event_code integer not null,")
+	                     _T("event_name varchar(63) null,")
+	                     _T("severity integer not null,")
+	                     _T("source_object_id integer not null,")
+	                     _T("event_timestamp integer not null,")
+	                     _T("message varchar(255) null,")
+	                     _T("PRIMARY KEY(alarm_id,event_id))")));
+	CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_alarm_events_alarm_id ON alarm_events(alarm_id)")));
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='265' WHERE var_name='SchemaVersion'")));
+	return TRUE;
 }
 
 /**
@@ -6468,6 +6487,7 @@ static struct
 	{ 261, 262, H_UpgradeFromV261 },
 	{ 262, 263, H_UpgradeFromV262 },
 	{ 263, 264, H_UpgradeFromV263 },
+	{ 264, 265, H_UpgradeFromV264 },
    { 0, 0, NULL }
 };
 

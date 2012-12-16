@@ -22,18 +22,14 @@
 
 #include "nxcore.h"
 
-
-//
-// Global instance of alarm manager
-//
-
+/**
+ * Global instance of alarm manager
+ */
 AlarmManager g_alarmMgr;
 
-
-//
-// Fill CSCP message with alarm data
-//
-
+/**
+ * Fill NXCP message with alarm data
+ */
 void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 {
    pMsg->SetVariable(VID_ALARM_ID, pAlarm->dwAlarmId);
@@ -59,11 +55,89 @@ void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 	pMsg->SetVariable(VID_NUM_COMMENTS, pAlarm->noteCount);
 }
 
+/**
+ * Fill NXCP message with event data from SQL query
+ * Expected field order: event_id,event_code,event_name,severity,source_object_id,event_timestamp,message
+ */
+static void FillEventData(CSCPMessage *msg, DWORD baseId, DB_RESULT hResult, int row, QWORD rootId)
+{
+	TCHAR buffer[MAX_DB_STRING];
 
-//
-// Alarm manager constructor
-//
+	msg->SetVariable(baseId, DBGetFieldUInt64(hResult, row, 0));
+	msg->SetVariable(baseId + 1, rootId);
+	msg->SetVariable(baseId + 2, DBGetFieldULong(hResult, row, 1));
+	msg->SetVariable(baseId + 3, DBGetField(hResult, row, 2, buffer, MAX_DB_STRING));
+	msg->SetVariable(baseId + 4, (WORD)DBGetFieldLong(hResult, row, 3));	// severity
+	msg->SetVariable(baseId + 5, DBGetFieldULong(hResult, row, 4));  // source object
+	msg->SetVariable(baseId + 6, DBGetFieldULong(hResult, row, 5));  // timestamp
+	msg->SetVariable(baseId + 7, DBGetField(hResult, row, 6, buffer, MAX_DB_STRING));
+}
 
+/**
+ * Get events correlated to given event into NXCP message
+ *
+ * @return number of consumed variable identifiers
+ */
+static DWORD GetCorrelatedEvents(QWORD eventId, CSCPMessage *msg, DWORD baseId, DB_HANDLE hdb)
+{
+	DWORD varId = baseId;
+	DB_STATEMENT hStmt = DBPrepare(hdb, 
+		_T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message ")
+		_T("FROM event_log e,event_cfg c WHERE e.root_event_id=? AND c.event_code=e.event_code"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, eventId);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			int count = DBGetNumRows(hResult);
+			for(int i = 0; i < count; i++)
+			{
+				FillEventData(msg, varId, hResult, i, eventId);
+				varId += 10;
+				QWORD eventId = DBGetFieldUInt64(hResult, i, 0);
+				varId += GetCorrelatedEvents(eventId, msg, varId, hdb);
+			}
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
+	return varId - baseId;
+}
+
+/**
+ * Fill NXCP message with alarm's related events
+ */
+static void FillAlarmEventsMessage(CSCPMessage *msg, DWORD alarmId)
+{
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT event_id,event_code,event_name,severity,source_object_id,event_timestamp,message FROM alarm_events WHERE alarm_id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			int count = DBGetNumRows(hResult);
+			DWORD varId = VID_ELEMENT_LIST_BASE;
+			for(int i = 0; i < count; i++)
+			{
+				FillEventData(msg, varId, hResult, i, 0);
+				varId += 10;
+				QWORD eventId = DBGetFieldUInt64(hResult, i, 0);
+				varId += GetCorrelatedEvents(eventId, msg, varId, hdb);
+			}
+			DBFreeResult(hResult);
+			msg->SetVariable(VID_NUM_ELEMENTS, (varId - VID_ELEMENT_LIST_BASE) / 10);
+		}
+		DBFreeStatement(hStmt);
+	}
+	DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Alarm manager constructor
+ */
 AlarmManager::AlarmManager()
 {
    m_dwNumAlarms = 0;
@@ -73,11 +147,9 @@ AlarmManager::AlarmManager()
 	m_hWatchdogThread = INVALID_THREAD_HANDLE;
 }
 
-
-//
-// Alarm manager destructor
-//
-
+/**
+ * Alarm manager destructor
+ */
 AlarmManager::~AlarmManager()
 {
    safe_free(m_pAlarmList);
@@ -86,22 +158,18 @@ AlarmManager::~AlarmManager()
 	ThreadJoin(m_hWatchdogThread);
 }
 
-
-//
-// Watchdog thread starter
-//
-
+/**
+ * Watchdog thread starter
+ */
 static THREAD_RESULT THREAD_CALL WatchdogThreadStarter(void *pArg)
 {
 	((AlarmManager *)pArg)->watchdogThread();
 	return THREAD_OK;
 }
 
-
-//
-// Get number of notes for alarm
-//
-
+/**
+ * Get number of notes for alarm
+ */
 static DWORD GetNoteCount(DB_HANDLE hdb, DWORD alarmId)
 {
 	DWORD value = 0;
@@ -121,11 +189,9 @@ static DWORD GetNoteCount(DB_HANDLE hdb, DWORD alarmId)
 	return value;
 }
 
-
-//
-// Initialize alarm manager at system startup
-//
-
+/**
+ * Initialize alarm manager at system startup
+ */
 BOOL AlarmManager::init()
 {
    DB_RESULT hResult;
@@ -177,11 +243,9 @@ BOOL AlarmManager::init()
    return TRUE;
 }
 
-
-//
-// Create new alarm
-//
-
+/**
+ * Create new alarm
+ */
 void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
                             int iSeverity, DWORD dwTimeout,
 									 DWORD dwTimeoutEvent, Event *pEvent)
@@ -284,15 +348,26 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
    if ((dwObjectId != 0) && ((alarm.nState & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED))
       updateObjectStatus(dwObjectId);
 
+	// Add record to alarm_events table
+	TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
+	const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, pEvent->getName(), valSeverity, valSource, valTimestamp, pEvent->getMessage() };
+	_sntprintf(valAlarmId, 16, _T("%d"), (int)alarm.dwAlarmId);
+	_sntprintf(valEventId, 32, UINT64_FMT, pEvent->getId());
+	_sntprintf(valEventCode, 16, _T("%d"), (int)pEvent->getCode());
+	_sntprintf(valSeverity, 16, _T("%d"), (int)pEvent->getSeverity());
+	_sntprintf(valSource, 16, _T("%d"), pEvent->getSourceId());
+	_sntprintf(valTimestamp, 16, _T("%u"), (DWORD)pEvent->getTimeStamp());
+	static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
+	QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"),
+	                8, sqlTypes, values);
+
 	free(pszExpMsg);
    free(pszExpKey);
 }
 
-
-//
-// Acknowledge alarm with given ID
-//
-
+/**
+ * Acknowledge alarm with given ID
+ */
 DWORD AlarmManager::ackById(DWORD dwAlarmId, DWORD dwUserId, bool sticky)
 {
    DWORD i, dwObject, dwRet = RCC_INVALID_ALARM_ID;
@@ -326,12 +401,10 @@ DWORD AlarmManager::ackById(DWORD dwAlarmId, DWORD dwUserId, bool sticky)
    return dwRet;
 }
 
-
-//
-// Resolve and possibly terminate alarm with given ID
-// Should return RCC which can be sent to client
-//
-
+/**
+ * Resolve and possibly terminate alarm with given ID
+ * Should return RCC which can be sent to client
+ */
 DWORD AlarmManager::resolveById(DWORD dwAlarmId, DWORD dwUserId, bool terminate)
 {
    DWORD i, dwObject, dwRet = RCC_INVALID_ALARM_ID;
@@ -372,11 +445,9 @@ DWORD AlarmManager::resolveById(DWORD dwAlarmId, DWORD dwUserId, bool terminate)
    return dwRet;
 }
 
-
-//
-// Resolve and possibly terminate all alarms with given key
-//
-
+/**
+ * Resolve and possibly terminate all alarms with given key
+ */
 void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool terminate)
 {
    DWORD i, j, dwNumObjects, *pdwObjectList, dwCurrTime;
@@ -400,7 +471,7 @@ void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool termin
             pdwObjectList[dwNumObjects++] = m_pAlarmList[i].dwSourceObject;
          }
 
-         // Terminate alarm
+         // Resolve or terminate alarm
 			m_pAlarmList[i].nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
          m_pAlarmList[i].dwLastChangeTime = dwCurrTime;
 			if (terminate)
@@ -424,11 +495,9 @@ void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool termin
    free(pdwObjectList);
 }
 
-
-//
-// Delete alarm with given ID
-//
-
+/**
+ * Delete alarm with given ID
+ */
 void AlarmManager::deleteAlarm(DWORD dwAlarmId)
 {
    DWORD i, dwObject;
@@ -448,7 +517,9 @@ void AlarmManager::deleteAlarm(DWORD dwAlarmId)
    unlock();
 
    // Delete from database
-   _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%d"), dwAlarmId);
+   _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%d"), (int)dwAlarmId);
+   QueueSQLRequest(szQuery);
+   _sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), (int)dwAlarmId);
    QueueSQLRequest(szQuery);
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -458,11 +529,9 @@ void AlarmManager::deleteAlarm(DWORD dwAlarmId)
    updateObjectStatus(dwObject);
 }
 
-
-//
-// Update alarm information in database
-//
-
+/**
+ * Update alarm information in database
+ */
 void AlarmManager::updateAlarmInDB(NXC_ALARM *pAlarm)
 {
    TCHAR szQuery[2048];
@@ -479,24 +548,26 @@ void AlarmManager::updateAlarmInDB(NXC_ALARM *pAlarm)
 			     (const TCHAR *)DBPrepareString(g_hCoreDB, pAlarm->szMessage),
 				  pAlarm->dwResolvedByUser, pAlarm->dwAlarmId);
    QueueSQLRequest(szQuery);
+
+	if (pAlarm->nState == ALARM_STATE_TERMINATED)
+	{
+		_sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), (int)pAlarm->dwAlarmId);
+		QueueSQLRequest(szQuery);
+	}
 }
 
-
-//
-// Callback for client session enumeration
-//
-
+/**
+ * Callback for client session enumeration
+ */
 void AlarmManager::sendAlarmNotification(ClientSession *pSession, void *pArg)
 {
    pSession->onAlarmUpdate(((AlarmManager *)pArg)->m_dwNotifyCode,
                            ((AlarmManager *)pArg)->m_pNotifyAlarmInfo);
 }
 
-
-//
-// Notify connected clients about changes
-//
-
+/**
+ * Notify connected clients about changes
+ */
 void AlarmManager::notifyClients(DWORD dwCode, NXC_ALARM *pAlarm)
 {
    m_dwNotifyCode = dwCode;
@@ -504,11 +575,9 @@ void AlarmManager::notifyClients(DWORD dwCode, NXC_ALARM *pAlarm)
    EnumerateClientSessions(sendAlarmNotification, this);
 }
 
-
-//
-// Send all alarms to client
-//
-
+/**
+ * Send all alarms to client
+ */
 void AlarmManager::sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession)
 {
    DWORD i, dwUserId;
@@ -542,12 +611,10 @@ void AlarmManager::sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession)
    pSession->sendMessage(&msg);
 }
 
-
-//
-// Get alarm with given ID into NXCP message
-// Should return RCC which can be sent to client
-//
-
+/**
+ * Get alarm with given ID into NXCP message
+ * Should return RCC that can be sent to client
+ */
 DWORD AlarmManager::getAlarm(DWORD dwAlarmId, CSCPMessage *msg)
 {
    DWORD i, dwRet = RCC_INVALID_ALARM_ID;
@@ -565,11 +632,34 @@ DWORD AlarmManager::getAlarm(DWORD dwAlarmId, CSCPMessage *msg)
 	return dwRet;
 }
 
+/**
+ * Get all related events for alarm with given ID into NXCP message
+ * Should return RCC that can be sent to client
+ */
+DWORD AlarmManager::getAlarmEvents(DWORD dwAlarmId, CSCPMessage *msg)
+{
+   DWORD i, dwRet = RCC_INVALID_ALARM_ID;
 
-//
-// Get source object for given alarm id
-//
+   lock();
+   for(i = 0; i < m_dwNumAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
+      {
+			dwRet = RCC_SUCCESS;
+         break;
+      }
+   unlock();
 
+	// we don't call FillAlarmEventsMessage from within loop
+	// to prevent alarm list lock for a long time
+	if (dwRet == RCC_SUCCESS)
+		FillAlarmEventsMessage(msg, dwAlarmId);
+
+	return dwRet;
+}
+
+/**
+ * Get source object for given alarm id
+ */
 NetObj *AlarmManager::getAlarmSourceObject(DWORD dwAlarmId)
 {
    DWORD i, dwObjectId = 0;
@@ -604,12 +694,10 @@ NetObj *AlarmManager::getAlarmSourceObject(DWORD dwAlarmId)
    return FindObjectById(dwObjectId);
 }
 
-
-//
-// Get most critical status among active alarms for given object
-// Will return STATUS_UNKNOWN if there are no active alarms
-//
-
+/**
+ * Get most critical status among active alarms for given object
+ * Will return STATUS_UNKNOWN if there are no active alarms
+ */
 int AlarmManager::getMostCriticalStatusForObject(DWORD dwObjectId)
 {
    DWORD i;

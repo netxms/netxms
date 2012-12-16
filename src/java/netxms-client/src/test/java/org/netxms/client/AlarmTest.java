@@ -19,6 +19,7 @@
 package org.netxms.client;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.events.EventInfo;
 
 /**
  * Alarm management tests
@@ -45,6 +47,25 @@ public class AlarmTest extends SessionTest
 		session.disconnect();
 	}
 
+	// NOTE: server must have at least 1 active alarm for this test.
+	public void testGetEvents() throws Exception
+	{
+		final NXCSession session = connect();
+		
+		HashMap<Long, Alarm> list = session.getAlarms();
+		if (list.size() > 0)
+		{
+			final Long alarmId = list.keySet().iterator().next();
+			List<EventInfo> events = session.getAlarmEvents(alarmId);
+			for(EventInfo e : events)
+			{
+				System.out.println(e.getTimeStamp() + " " + e.getName() + " " + e.getMessage());
+			}
+		}
+		
+		session.disconnect();
+	}
+	
 	// NOTE: server must have at least 1 active alarm for this test.
 	//       This alarm  will be terminated during test.
 	public void testAlarmUpdate() throws Exception

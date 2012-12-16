@@ -87,6 +87,7 @@ import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmNote;
 import org.netxms.client.events.Event;
+import org.netxms.client.events.EventInfo;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
@@ -211,6 +212,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private int clientType = DESKTOP_CLIENT;
 
 	// Information about logged in user
+	private int sessionId;
 	private int userId;
 	private int userSystemRights;
 	private boolean passwordExpired;
@@ -1413,6 +1415,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				throw new NXCException(rcc);
 			}
 			userId = response.getVariableAsInteger(NXCPCodes.VID_USER_ID);
+			sessionId = response.getVariableAsInteger(NXCPCodes.VID_SESSION_ID);
 			userSystemRights = response.getVariableAsInteger(NXCPCodes.VID_USER_SYS_RIGHTS);
 			passwordExpired = response.getVariableAsBoolean(NXCPCodes.VID_CHANGE_PASSWD_FLAG);
 			zoningEnabled = response.getVariableAsBoolean(NXCPCodes.VID_ZONING_ENABLED);
@@ -2059,6 +2062,44 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		return new Alarm(response);
+	}
+
+	/**
+	 * Get information about events related to single active alarm. Information for terminated alarms cannot be accessed with this call.
+	 * User must have "view alarms" permission on alarm's source node and "view event log" system-wide access.
+	 * 
+	 * @param alarmId alarm ID
+	 * @return list of related events
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<EventInfo> getAlarmEvents(long alarmId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALARM_EVENTS);
+		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
+		List<EventInfo> list = new ArrayList<EventInfo>(count);
+		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			EventInfo parent = null;
+			long rootId = response.getVariableAsInt64(varId + 1);
+			if (rootId != 0)
+			{
+				for(EventInfo e : list)
+					if (e.getId() == rootId)
+					{
+						parent = e;
+						break;
+					}
+			}
+			list.add(new EventInfo(response, varId, parent));
+			varId += 10;
+		}
+		return list;
 	}
 
 	/**
@@ -6241,5 +6282,15 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		for(GenericObject o : objectList.values())
 			o.setSession(target);
 		objectList = null;
+	}
+
+	/**
+	 * Get this session's ID on server.
+	 *  
+	 * @return the sessionId
+	 */
+	public int getSessionId()
+	{
+		return sessionId;
 	}
 }

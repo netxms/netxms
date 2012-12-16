@@ -34,6 +34,8 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
@@ -56,12 +58,12 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
-import org.netxms.ui.eclipse.alarmviewer.AlarmComparator;
-import org.netxms.ui.eclipse.alarmviewer.AlarmListFilter;
-import org.netxms.ui.eclipse.alarmviewer.AlarmListLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmComments;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmDetails;
+import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmComparator;
+import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListFilter;
+import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -133,6 +135,13 @@ public class AlarmList extends Composite
 			public void widgetDisposed(DisposeEvent e)
 			{
 				WidgetHelper.saveTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
+			}
+		});
+		alarmViewer.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				actionShowAlarmDetails.run();
 			}
 		});
 		

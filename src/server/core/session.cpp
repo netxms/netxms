@@ -137,8 +137,8 @@ DEFINE_THREAD_STARTER(getCollectedData)
 DEFINE_THREAD_STARTER(getTableCollectedData)
 DEFINE_THREAD_STARTER(clearDCIData)
 DEFINE_THREAD_STARTER(queryL2Topology)
-DEFINE_THREAD_STARTER(SendEventLog)
-DEFINE_THREAD_STARTER(SendSyslog)
+DEFINE_THREAD_STARTER(sendEventLog)
+DEFINE_THREAD_STARTER(sendSyslog)
 DEFINE_THREAD_STARTER(createObject)
 DEFINE_THREAD_STARTER(getServerFile)
 DEFINE_THREAD_STARTER(getAgentFile)
@@ -736,16 +736,16 @@ void ClientSession::processingThread()
             sendSelectedObjects(pMsg);
             break;
          case CMD_GET_EVENTS:
-            CALL_IN_NEW_THREAD(SendEventLog, pMsg);
+            CALL_IN_NEW_THREAD(sendEventLog, pMsg);
             break;
          case CMD_GET_CONFIG_VARLIST:
-            SendAllConfigVars(pMsg->GetId());
+            sendAllConfigVars(pMsg->GetId());
             break;
          case CMD_SET_CONFIG_VARIABLE:
-            SetConfigVariable(pMsg);
+            setConfigVariable(pMsg);
             break;
          case CMD_DELETE_CONFIG_VARIABLE:
-            DeleteConfigVariable(pMsg);
+            deleteConfigVariable(pMsg);
             break;
 			case CMD_CONFIG_GET_CLOB:
 				getConfigCLOB(pMsg);
@@ -772,25 +772,25 @@ void ClientSession::processingThread()
             changeObjectMgmtStatus(pMsg);
             break;
          case CMD_LOAD_USER_DB:
-            SendUserDB(pMsg->GetId());
+            sendUserDB(pMsg->GetId());
             break;
          case CMD_CREATE_USER:
-            CreateUser(pMsg);
+            createUser(pMsg);
             break;
          case CMD_UPDATE_USER:
-            UpdateUser(pMsg);
+            updateUser(pMsg);
             break;
          case CMD_DELETE_USER:
-            DeleteUser(pMsg);
+            deleteUser(pMsg);
             break;
          case CMD_LOCK_USER_DB:
-            LockUserDB(pMsg->GetId(), TRUE);
+            lockUserDB(pMsg->GetId(), TRUE);
             break;
          case CMD_UNLOCK_USER_DB:
-            LockUserDB(pMsg->GetId(), FALSE);
+            lockUserDB(pMsg->GetId(), FALSE);
             break;
          case CMD_SET_PASSWORD:
-            SetPassword(pMsg);
+            setPassword(pMsg);
             break;
          case CMD_GET_NODE_DCI_LIST:
             openNodeDCIList(pMsg);
@@ -863,6 +863,9 @@ void ClientSession::processingThread()
          case CMD_GET_ALARM:
             getAlarm(pMsg);
             break;
+         case CMD_GET_ALARM_EVENTS:
+            getAlarmEvents(pMsg);
+            break;
          case CMD_ACK_ALARM:
             acknowledgeAlarm(pMsg);
             break;
@@ -897,10 +900,10 @@ void ClientSession::processingThread()
             forcedNodePoll(pMsg);
             break;
          case CMD_TRAP:
-            OnTrap(pMsg);
+            onTrap(pMsg);
             break;
          case CMD_WAKEUP_NODE:
-            OnWakeUpNode(pMsg);
+            onWakeUpNode(pMsg);
             break;
          case CMD_CREATE_TRAP:
             EditTrap(TRAP_CREATE, pMsg);
@@ -999,13 +1002,13 @@ void ClientSession::processingThread()
             generateObjectToolId(pMsg->GetId());
             break;
          case CMD_CHANGE_SUBSCRIPTION:
-            ChangeSubscription(pMsg);
+            changeSubscription(pMsg);
             break;
          case CMD_GET_SYSLOG:
-            CALL_IN_NEW_THREAD(SendSyslog, pMsg);
+            CALL_IN_NEW_THREAD(sendSyslog, pMsg);
             break;
          case CMD_GET_SERVER_STATS:
-            SendServerStats(pMsg->GetId());
+            sendServerStats(pMsg->GetId());
             break;
          case CMD_GET_SCRIPT_LIST:
             sendScriptList(pMsg->GetId());
@@ -1113,7 +1116,7 @@ void ClientSession::processingThread()
 				CALL_IN_NEW_THREAD(queryL2Topology, pMsg);
 				break;
 			case CMD_SEND_SMS:
-				SendSMS(pMsg);
+				sendSMS(pMsg);
 				break;
 			case CMD_GET_COMMUNITY_LIST:
 				SendCommunityList(pMsg->GetId());
@@ -1610,6 +1613,7 @@ void ClientSession::login(CSCPMessage *pRequest)
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          msg.SetVariable(VID_USER_SYS_RIGHTS, m_dwSystemAccess);
          msg.SetVariable(VID_USER_ID, m_dwUserId);
+			msg.SetVariable(VID_SESSION_ID, m_dwIndex);
 			msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
          msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? 0 : 1));
 			msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
@@ -2005,12 +2009,10 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
 	}
 }
 
-
-//
-// Send event log records to client
-//
-
-void ClientSession::SendEventLog(CSCPMessage *pRequest)
+/**
+ * Send event log records to client
+ */
+void ClientSession::sendEventLog(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DB_ASYNC_RESULT hResult = NULL;
@@ -2117,12 +2119,10 @@ void ClientSession::SendEventLog(CSCPMessage *pRequest)
    MutexUnlock(m_mutexSendEvents);
 }
 
-
-//
-// Send all configuration variables to client
-//
-
-void ClientSession::SendAllConfigVars(DWORD dwRqId)
+/**
+ * Send all configuration variables to client
+ */
+void ClientSession::sendAllConfigVars(DWORD dwRqId)
 {
    DWORD i, dwId, dwNumRecords;
    CSCPMessage msg;
@@ -2164,12 +2164,10 @@ void ClientSession::SendAllConfigVars(DWORD dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Set configuration variable's value
-//
-
-void ClientSession::SetConfigVariable(CSCPMessage *pRequest)
+/**
+ * Set configuration variable's value
+ */
+void ClientSession::setConfigVariable(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szName[MAX_OBJECT_NAME], szValue[MAX_DB_STRING];
@@ -2203,12 +2201,10 @@ void ClientSession::SetConfigVariable(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Delete configuration variable
-//
-
-void ClientSession::DeleteConfigVariable(CSCPMessage *pRequest)
+/**
+ * Delete configuration variable
+ */
+void ClientSession::deleteConfigVariable(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szName[MAX_OBJECT_NAME], szQuery[1024];
@@ -2376,11 +2372,9 @@ void ClientSession::onObjectChange(NetObj *pObject)
       }
 }
 
-
-//
-// Send notification message to server
-//
-
+/**
+ * Send notification message to server
+ */
 void ClientSession::notify(DWORD dwCode, DWORD dwData)
 {
    CSCPMessage msg;
@@ -2391,11 +2385,9 @@ void ClientSession::notify(DWORD dwCode, DWORD dwData)
    sendMessage(&msg);
 }
 
-
-//
-// Modify object
-//
-
+/**
+ * Modify object
+ */
 void ClientSession::modifyObject(CSCPMessage *pRequest)
 {
    DWORD dwObjectId, dwResult = RCC_SUCCESS;
@@ -2465,12 +2457,10 @@ void ClientSession::modifyObject(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send users database to client
-//
-
-void ClientSession::SendUserDB(DWORD dwRqId)
+/**
+ * Send users database to client
+ */
+void ClientSession::sendUserDB(DWORD dwRqId)
 {
    CSCPMessage msg;
 	UserDatabaseObject **users;
@@ -2499,12 +2489,10 @@ void ClientSession::SendUserDB(DWORD dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Create new user
-//
-
-void ClientSession::CreateUser(CSCPMessage *pRequest)
+/**
+ * Create new user
+ */
+void ClientSession::createUser(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 
@@ -2548,12 +2536,10 @@ void ClientSession::CreateUser(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Update existing user's data
-//
-
-void ClientSession::UpdateUser(CSCPMessage *pRequest)
+/**
+ * Update existing user's data
+ */
+void ClientSession::updateUser(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 
@@ -2581,12 +2567,10 @@ void ClientSession::UpdateUser(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Delete user
-//
-
-void ClientSession::DeleteUser(CSCPMessage *pRequest)
+/**
+ * Delete user
+ */
+void ClientSession::deleteUser(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwUserId;
@@ -2629,12 +2613,10 @@ void ClientSession::DeleteUser(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Lock/unlock user database
-//
-
-void ClientSession::LockUserDB(DWORD dwRqId, BOOL bLock)
+/**
+ * Lock/unlock user database
+ */
+void ClientSession::lockUserDB(DWORD dwRqId, BOOL bLock)
 {
    CSCPMessage msg;
    TCHAR szBuffer[256];
@@ -2762,7 +2744,7 @@ void ClientSession::changeObjectMgmtStatus(CSCPMessage *pRequest)
 /**
  * Set user's password
  */
-void ClientSession::SetPassword(CSCPMessage *pRequest)
+void ClientSession::setPassword(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwUserId;
@@ -4557,11 +4539,9 @@ void ClientSession::onAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
    }
 }
 
-
-//
-// Send all alarms to client
-//
-
+/**
+ * Send all alarms to client
+ */
 void ClientSession::sendAllAlarms(DWORD dwRqId)
 {
    MutexLock(m_mutexSendAlarms);
@@ -4569,28 +4549,24 @@ void ClientSession::sendAllAlarms(DWORD dwRqId)
    MutexUnlock(m_mutexSendAlarms);
 }
 
-
-//
-// Get specific alarm object
-//
-
-void ClientSession::getAlarm(CSCPMessage *pRequest)
+/**
+ * Get specific alarm object
+ */
+void ClientSession::getAlarm(CSCPMessage *request)
 {
    CSCPMessage msg;
-   NetObj *pObject;
-   DWORD dwAlarmId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(pRequest->GetId());
+   msg.SetId(request->GetId());
 
    // Get alarm id and it's source object
-   dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
-   pObject = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
-   if (pObject != NULL)
+   DWORD dwAlarmId = request->GetVariableLong(VID_ALARM_ID);
+   NetObj *object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
+   if (object != NULL)
    {
       // User should have "view alarm" right to the object
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+      if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
          msg.SetVariable(VID_RCC, g_alarmMgr.getAlarm(dwAlarmId, &msg));
       }
@@ -4610,11 +4586,47 @@ void ClientSession::getAlarm(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
+/**
+ * Get all related events for specific alarm object
+ */
+void ClientSession::getAlarmEvents(CSCPMessage *request)
+{
+   CSCPMessage msg;
 
-//
-// Acknowledge alarm
-//
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
 
+   // Get alarm id and it's source object
+   DWORD dwAlarmId = request->GetVariableLong(VID_ALARM_ID);
+   NetObj *object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
+   if (object != NULL)
+   {
+      // User should have "view alarm" right to the object and
+		// system-wide "view event log" access
+      if ((m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG) && object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+      {
+         msg.SetVariable(VID_RCC, g_alarmMgr.getAlarmEvents(dwAlarmId, &msg));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms pObject will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Acknowledge alarm
+ */
 void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -5127,12 +5139,10 @@ void ClientSession::pollerThread(Node *pNode, int iPollType, DWORD dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Receive event from user
-//
-
-void ClientSession::OnTrap(CSCPMessage *pRequest)
+/**
+ * Receive event from user
+ */
+void ClientSession::onTrap(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwObjectId, dwEventCode;
@@ -5221,12 +5231,10 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Wake up node
-//
-
-void ClientSession::OnWakeUpNode(CSCPMessage *pRequest)
+/**
+ * Wake up node
+ */
+void ClientSession::onWakeUpNode(CSCPMessage *pRequest)
 {
    NetObj *pObject;
    CSCPMessage msg;
@@ -7017,12 +7025,10 @@ void ClientSession::execTableTool(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Change current subscription
-//
-
-void ClientSession::ChangeSubscription(CSCPMessage *pRequest)
+/**
+ * Change current subscription
+ */
+void ClientSession::changeSubscription(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwFlags;
@@ -7044,17 +7050,18 @@ void ClientSession::ChangeSubscription(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send server statistics
-//
-
+/**
+ * Callback for counting DCIs in the system
+ */
 static void DciCountCallback(NetObj *object, void *data)
 {
 	*((DWORD *)data) += ((Node *)object)->getItemCount();
 }
 
-void ClientSession::SendServerStats(DWORD dwRqId)
+/**
+ * Send server statistics
+ */
+void ClientSession::sendServerStats(DWORD dwRqId)
 {
    CSCPMessage msg;
 #ifdef _WIN32
@@ -7361,11 +7368,9 @@ void ClientSession::deleteScript(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Copy session data to message
-//
-
+/**
+ * Copy session data to message
+ */
 static void CopySessionData(ClientSession *pSession, void *pArg)
 {
    DWORD dwId, dwIndex;
@@ -7380,11 +7385,9 @@ static void CopySessionData(ClientSession *pSession, void *pArg)
    ((CSCPMessage *)pArg)->SetVariable(dwId++, (TCHAR *)pSession->getClientInfo());
 }
 
-
-//
-// Send list of connected client sessions
-//
-
+/**
+ * Send list of connected client sessions
+ */
 void ClientSession::SendSessionList(DWORD dwRqId)
 {
    CSCPMessage msg;
@@ -7443,12 +7446,10 @@ void ClientSession::onSyslogMessage(NX_SYSLOG_RECORD *pRec)
    }
 }
 
-
-//
-// Get latest syslog records
-//
-
-void ClientSession::SendSyslog(CSCPMessage *pRequest)
+/**
+ * Get latest syslog records
+ */
+void ClientSession::sendSyslog(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwMaxRecords, dwNumRows, dwId;
@@ -9692,12 +9693,10 @@ void ClientSession::queryL2Topology(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Send SMS
-//
-
-void ClientSession::SendSMS(CSCPMessage *pRequest)
+/**
+ * Send SMS
+ */
+void ClientSession::sendSMS(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	TCHAR phone[256], message[256];
@@ -11074,7 +11073,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 
 	if (rcc == RCC_SUCCESS)
 	{
-		EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid, this);
+		EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid);
 	}
 }
 
@@ -11137,15 +11136,13 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 
 	if (rcc == RCC_SUCCESS)
 	{
-		EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid, this);
+		EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid);
 	}
 }
 
-
-//
-// Send list of available images (in category)
-//
-
+/**
+ * Send list of available images (in category)
+ */
 void ClientSession::listLibraryImages(CSCPMessage *request)
 {
 	CSCPMessage msg;
@@ -11209,11 +11206,9 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Execute server side command on object
-//
-
+/**
+ * Execute server side command on object
+ */
 static THREAD_RESULT THREAD_CALL RunCommand(void *arg)
 {
 	DbgPrintf(5, _T("Running server-side command: %s"), (TCHAR *)arg);

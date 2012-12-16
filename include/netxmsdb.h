@@ -23,6 +23,6 @@
 #ifndef _netxmsdb_h
 #define _netxmsdb_h
 
-#define DB_FORMAT_VERSION   264
+#define DB_FORMAT_VERSION   265
 
 #endif

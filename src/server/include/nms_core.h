@@ -453,8 +453,8 @@ private:
 	DECLARE_THREAD_STARTER(queryParameter)
 	DECLARE_THREAD_STARTER(queryAgentTable)
 	DECLARE_THREAD_STARTER(queryL2Topology)
-	DECLARE_THREAD_STARTER(SendEventLog)
-	DECLARE_THREAD_STARTER(SendSyslog)
+	DECLARE_THREAD_STARTER(sendEventLog)
+	DECLARE_THREAD_STARTER(sendSyslog)
 	DECLARE_THREAD_STARTER(createObject)
 	DECLARE_THREAD_STARTER(getServerFile)
 	DECLARE_THREAD_STARTER(getAgentFile)
@@ -485,17 +485,17 @@ private:
    void login(CSCPMessage *pRequest);
    void sendAllObjects(CSCPMessage *pRequest);
    void sendSelectedObjects(CSCPMessage *pRequest);
-   void SendEventLog(CSCPMessage *pRequest);
-   void SendAllConfigVars(DWORD dwRqId);
-   void SetConfigVariable(CSCPMessage *pRequest);
-   void DeleteConfigVariable(CSCPMessage *pRequest);
-   void SendUserDB(DWORD dwRqId);
+   void sendEventLog(CSCPMessage *pRequest);
+   void sendAllConfigVars(DWORD dwRqId);
+   void setConfigVariable(CSCPMessage *pRequest);
+   void deleteConfigVariable(CSCPMessage *pRequest);
+   void sendUserDB(DWORD dwRqId);
    void sendAllAlarms(DWORD dwRqId);
-   void CreateUser(CSCPMessage *pRequest);
-   void UpdateUser(CSCPMessage *pRequest);
-   void DeleteUser(CSCPMessage *pRequest);
-   void SetPassword(CSCPMessage *pRequest);
-   void LockUserDB(DWORD dwRqId, BOOL bLock);
+   void createUser(CSCPMessage *pRequest);
+   void updateUser(CSCPMessage *pRequest);
+   void deleteUser(CSCPMessage *pRequest);
+   void setPassword(CSCPMessage *pRequest);
+   void lockUserDB(DWORD dwRqId, BOOL bLock);
    void sendEventDB(DWORD dwRqId);
    void modifyEventTemplate(CSCPMessage *pRequest);
    void deleteEventTemplate(CSCPMessage *pRequest);
@@ -521,13 +521,14 @@ private:
    void processEPPRecord(CSCPMessage *pRequest);
    void sendMIBTimestamp(DWORD dwRqId);
    void sendMib(CSCPMessage *request);
-   void createObject(CSCPMessage *pRequest);
-   void changeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
-   void deleteObject(CSCPMessage *pRequest);
-   void getAlarm(CSCPMessage *pRequest);
-   void acknowledgeAlarm(CSCPMessage *pRequest);
-   void resolveAlarm(CSCPMessage *pRequest, bool terminate);
-   void deleteAlarm(CSCPMessage *pRequest);
+   void createObject(CSCPMessage *request);
+   void changeObjectBinding(CSCPMessage *request, BOOL bBind);
+   void deleteObject(CSCPMessage *request);
+   void getAlarm(CSCPMessage *request);
+   void getAlarmEvents(CSCPMessage *request);
+   void acknowledgeAlarm(CSCPMessage *request);
+   void resolveAlarm(CSCPMessage *request, bool terminate);
+   void deleteAlarm(CSCPMessage *request);
 	void getAlarmNotes(CSCPMessage *pRequest);
 	void updateAlarmNote(CSCPMessage *pRequest);
    void createAction(CSCPMessage *pRequest);
@@ -536,8 +537,8 @@ private:
    void sendAllActions(DWORD dwRqId);
    void SendContainerCategories(DWORD dwRqId);
    void forcedNodePoll(CSCPMessage *pRequest);
-   void OnTrap(CSCPMessage *pRequest);
-   void OnWakeUpNode(CSCPMessage *pRequest);
+   void onTrap(CSCPMessage *pRequest);
+   void onWakeUpNode(CSCPMessage *pRequest);
    void queryParameter(CSCPMessage *pRequest);
    void queryAgentTable(CSCPMessage *pRequest);
    void EditTrap(int iOperation, CSCPMessage *pRequest);
@@ -565,9 +566,9 @@ private:
    void deleteObjectTool(CSCPMessage *pRequest);
    void generateObjectToolId(DWORD dwRqId);
    void execTableTool(CSCPMessage *pRequest);
-   void ChangeSubscription(CSCPMessage *pRequest);
-   void SendSyslog(CSCPMessage *pRequest);
-   void SendServerStats(DWORD dwRqId);
+   void changeSubscription(CSCPMessage *pRequest);
+   void sendSyslog(CSCPMessage *pRequest);
+   void sendServerStats(DWORD dwRqId);
    void sendScriptList(DWORD dwRqId);
    void sendScript(CSCPMessage *pRequest);
    void updateScript(CSCPMessage *pRequest);
@@ -604,7 +605,7 @@ private:
 	void UpdateCertificateComments(CSCPMessage *pRequest);
 	void SendCertificateList(DWORD dwRqId);
 	void queryL2Topology(CSCPMessage *pRequest);
-	void SendSMS(CSCPMessage *pRequest);
+	void sendSMS(CSCPMessage *pRequest);
 	void SendCommunityList(DWORD dwRqId);
 	void UpdateCommunityList(CSCPMessage *pRequest);
 	void SendSituationList(DWORD dwRqId);
@@ -814,7 +815,7 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags, WORD a
                   WORD snmpPort, TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy, Cluster *pCluster, 
 						DWORD zoneId, bool doConfPoll, bool discoveredNode);
 
-void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg, ClientSession *current = NULL);
+void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData);
 int GetSessionCount();
 

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -23,11 +23,9 @@
 
 #include "libnetxms.h"
 
-
-//
-// Swap byte order in 64-bit integer
-//
-
+/**
+ * Swap byte order in 64-bit integer
+ */
 #if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
 
 QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal)

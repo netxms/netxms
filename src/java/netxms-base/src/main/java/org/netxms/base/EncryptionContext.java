@@ -74,6 +74,9 @@ public final class EncryptionContext
 					selectedCipher = i;
 					break;
 				}
+				else
+				{
+				}
 			}
 			catch(Exception e)
 			{

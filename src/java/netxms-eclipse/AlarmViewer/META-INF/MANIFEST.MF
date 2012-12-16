@@ -10,7 +10,8 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
  org.netxms.ui.eclipse.console;bundle-version="1.2.5",
  org.netxms.ui.eclipse.library;bundle-version="1.2.5",
  org.netxms.ui.eclipse.objectview;bundle-version="1.2.5",
- org.eclipse.ui.forms;bundle-version="3.5.100"
+ org.eclipse.ui.forms;bundle-version="3.5.100",
+ org.netxms.ui.eclipse.datacollection;bundle-version="1.2.5"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .

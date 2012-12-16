@@ -23,11 +23,9 @@
 #ifndef _nms_cscp_h_
 #define _nms_cscp_h_
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define NXCP_VERSION                   2
 
 #define SERVER_LISTEN_PORT_FOR_CLIENTS 4701
@@ -456,6 +454,7 @@ typedef struct
 #define CMD_FIND_IP_LOCATION           0x0108
 #define CMD_REPORT_DEVICE_STATUS       0x0109
 #define CMD_REPORT_DEVICE_INFO         0x010A
+#define CMD_GET_ALARM_EVENTS           0x010B
 
 /**
  * Variable identifiers

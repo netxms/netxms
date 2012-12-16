@@ -305,10 +305,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_RESOLVE_ALARM"),
 		_T("CMD_FIND_IP_LOCATION"),
 		_T("CMD_REPORT_DEVICE_STATUS"),
-		_T("CMD_REPORT_DEVICE_INFO")
+		_T("CMD_REPORT_DEVICE_INFO"),
+		_T("CMD_GET_ALARM_EVENTS")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_REPORT_DEVICE_INFO))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_ALARM_EVENTS))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

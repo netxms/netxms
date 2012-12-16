@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -24,19 +24,15 @@
 #include "libnetxms.h"
 #include "ice.h"
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define KEY_BUFFER_SIZE       4096
 
-
-//
-// Supported ciphers. By default, we support all ciphers compiled
-// into OpenSSL library.
-//
-
+/**
+ * Supported ciphers. By default, we support all ciphers compiled
+ * into OpenSSL library.
+ */
 static DWORD m_dwSupportedCiphers = 
 #ifdef _WITH_ENCRYPTION
 #ifndef OPENSSL_NO_AES
@@ -55,11 +51,9 @@ static DWORD m_dwSupportedCiphers =
 #endif   /* _WITH_ENCRYPTION */
    0;
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 #ifdef _WITH_ENCRYPTION
 
 typedef OPENSSL_CONST EVP_CIPHER * (*CIPHER_FUNC)();
@@ -94,11 +88,9 @@ static CIPHER_FUNC m_pfCipherList[NETXMS_MAX_CIPHERS] =
 static WORD m_wNoEncryptionFlag = 0;
 static MUTEX *m_pCryptoMutexList = NULL;
 
-
-//
-// Locking callback for CRYPTO library
-//
-
+/**
+ * Locking callback for CRYPTO library
+ */
 static void CryptoLockingCallback(int nMode, int nLock, const char *pszFile, int nLine)
 {
    if (nMode & CRYPTO_LOCK)
@@ -107,11 +99,9 @@ static void CryptoLockingCallback(int nMode, int nLock, const char *pszFile, int
       MutexUnlock(m_pCryptoMutexList[nLock]);
 }
 
-
-//
-// ID callback for CRYPTO library
-//
-
+/**
+ * ID callback for CRYPTO library
+ */
 #ifndef _WIN32
 
 static unsigned long CryptoIdCallback()
@@ -123,11 +113,9 @@ static unsigned long CryptoIdCallback()
 
 #endif   /* _WITH_ENCRYPTION */
 
-
-//
-// Initialize OpenSSL library
-//
-
+/**
+ * Initialize OpenSSL library
+ */
 BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(DWORD dwEnabledCiphers)
 {
 #ifdef _WITH_ENCRYPTION
@@ -151,21 +139,17 @@ BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(DWORD dwEnabledCiphers)
    return TRUE;
 }
 
-
-//
-// Get supported ciphers
-//
-
+/**
+ * Get supported ciphers
+ */
 DWORD LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers()
 {
    return m_dwSupportedCiphers;
 }
 
-
-//
-// Encrypt message
-//
-
+/**
+ * Encrypt message
+ */
 CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *CSCPEncryptMessage(NXCPEncryptionContext *pCtx, CSCP_MESSAGE *pMsg)
 {
 #ifdef _WITH_ENCRYPTION
@@ -258,14 +242,12 @@ BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(NXCPEncryptionContext *pCtx,
 #endif
 }
 
-
-//
-// Setup encryption context
-// Function will determine is it called on initiator or responder side
-// by message code. Initiator should provide it's private key,
-// and responder should provide pointer to response message.
-//
-
+/**
+ * Setup encryption context
+ * Function will determine is it called on initiator or responder side
+ * by message code. Initiator should provide it's private key,
+ * and responder should provide pointer to response message.
+ */
 DWORD LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg, 
                                                   NXCPEncryptionContext **ppCtx,
                                                   CSCPMessage **ppResponse,
@@ -356,11 +338,9 @@ DWORD LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
    return dwResult;
 }
 
-
-//
-// Prepare session key request message
-//
-
+/**
+ * Prepare session key request message
+ */
 void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKey, bool useX509Format)
 {
 #ifdef _WITH_ENCRYPTION

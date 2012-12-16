@@ -907,6 +907,26 @@ CREATE INDEX idx_alarm_notes_alarm_id ON alarm_notes(alarm_id);
 
 
 /*
+** Source events for alarms
+*/
+
+CREATE TABLE alarm_events
+(
+	alarm_id integer not null,
+	event_id SQL_INT64 not null,
+	event_code integer not null,
+	event_name varchar(63) null,
+	severity integer not null,
+	source_object_id integer not null,
+	event_timestamp integer not null,
+	message varchar(255) null,
+	PRIMARY KEY(alarm_id,event_id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_alarm_events_alarm_id ON alarm_events(alarm_id);
+
+
+/*
 ** SNMP trap configuration
 */
 

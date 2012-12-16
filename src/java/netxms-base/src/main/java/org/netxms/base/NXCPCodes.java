@@ -290,6 +290,7 @@ public final class NXCPCodes
 	public static final int CMD_FIND_IP_LOCATION         = 0x0108;
 	public static final int CMD_REPORT_DEVICE_STATUS     = 0x0109;
 	public static final int CMD_REPORT_DEVICE_INFO       = 0x010A;
+	public static final int CMD_GET_ALARM_EVENTS         = 0x010B;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
