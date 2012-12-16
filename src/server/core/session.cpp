@@ -155,6 +155,7 @@ DEFINE_THREAD_STARTER(deleteReportResults)
 DEFINE_THREAD_STARTER(renderReport)
 DEFINE_THREAD_STARTER(getNetworkPath)
 DEFINE_THREAD_STARTER(queryParameter)
+DEFINE_THREAD_STARTER(getAlarmEvents)
 
 /**
  * Client communication read thread starter
@@ -864,7 +865,7 @@ void ClientSession::processingThread()
             getAlarm(pMsg);
             break;
          case CMD_GET_ALARM_EVENTS:
-            getAlarmEvents(pMsg);
+            CALL_IN_NEW_THREAD(getAlarmEvents, pMsg);
             break;
          case CMD_ACK_ALARM:
             acknowledgeAlarm(pMsg);

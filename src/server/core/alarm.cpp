@@ -111,7 +111,20 @@ static DWORD GetCorrelatedEvents(QWORD eventId, CSCPMessage *msg, DWORD baseId, 
 static void FillAlarmEventsMessage(CSCPMessage *msg, DWORD alarmId)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT event_id,event_code,event_name,severity,source_object_id,event_timestamp,message FROM alarm_events WHERE alarm_id=?"));
+	const TCHAR *query;
+	switch(g_nDBSyntax)
+	{
+		case DB_SYNTAX_ORACLE:
+			query = _T("SELECT * FROM (SELECT event_id,event_code,event_name,severity,source_object_id,event_timestamp,message FROM alarm_events WHERE alarm_id=? ORDER BY event_timestamp DESC) WHERE ROWNUM<=200");
+			break;
+		case DB_SYNTAX_MSSQL:
+			query = _T("SELECT TOP 200 event_id,event_code,event_name,severity,source_object_id,event_timestamp,message FROM alarm_events WHERE alarm_id=? ORDER BY event_timestamp DESC");
+			break;
+		default:
+			query = _T("SELECT event_id,event_code,event_name,severity,source_object_id,event_timestamp,message FROM alarm_events WHERE alarm_id=? ORDER BY event_timestamp DESC LIMIT 200");
+			break;
+	}
+	DB_STATEMENT hStmt = DBPrepare(hdb, query);
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);

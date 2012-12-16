@@ -91,11 +91,9 @@ struct __console_ctx
 
 typedef __console_ctx * CONSOLE_CTX;
 
-
-//
-// Server includes
-//
-
+/**
+ * Server includes
+ */
 #include "nms_dcoll.h"
 #include "nms_users.h"
 #include "nms_objects.h"
@@ -107,11 +105,9 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nxcore_jobs.h"
 #include "nxcore_logs.h"
 
-
-//
-// Common constants and macros
-//
-
+/**
+ * Common constants and macros
+ */
 #define MAX_LINE_SIZE            4096
 #define GROUP_FLAG_BIT           ((DWORD)0x80000000)
 #define CHECKPOINT_SNMP_PORT     260
@@ -470,6 +466,7 @@ private:
 	DECLARE_THREAD_STARTER(deleteReportResults)
 	DECLARE_THREAD_STARTER(renderReport)
 	DECLARE_THREAD_STARTER(getNetworkPath)
+	DECLARE_THREAD_STARTER(getAlarmEvents)
 
    void readThread();
    void writeThread();
@@ -708,11 +705,9 @@ public:
 	void onLibraryImageChange(uuid_t *guid);
 };
 
-
-//
-// Delayed SQL request
-//
-
+/**
+ * Delayed SQL request
+ */
 typedef struct
 {
 	TCHAR *query;
@@ -721,11 +716,9 @@ typedef struct
 	TCHAR *bindings[1]; /* actual size determined by bindCount field */
 } DELAYED_SQL_REQUEST;
 
-
-//
-// Delayed request for idata_ INSERT
-//
-
+/**
+ * Delayed request for idata_ INSERT
+ */
 typedef struct
 {
 	time_t timestamp;
@@ -734,11 +727,9 @@ typedef struct
 	TCHAR value[MAX_RESULT_LENGTH];
 } DELAYED_IDATA_INSERT;
 
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
 #ifdef UNICODE
 BOOL NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault);
