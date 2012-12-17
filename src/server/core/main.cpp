@@ -988,12 +988,10 @@ static void DumpIndex(CONSOLE_CTX pCtx, ObjectIndex *index, bool indexByIp)
 	index->forEach(DumpIndexCallback, &data);
 }
 
-
-//
-// Process command entered from command line in standalone mode
-// Return TRUE if command was _T("down")
-//
-
+/**
+ * Process command entered from command line in standalone mode
+ * Return TRUE if command was _T("down")
+ */
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 {
 	const TCHAR *pArg;
@@ -1383,9 +1381,14 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 	{
 		pArg = ExtractWord(pArg, szBuffer);
 
+		bool libraryLocked = true;
+		g_pScriptLibrary->lock();
+
 		NXSL_Program *compiledScript = g_pScriptLibrary->findScript(szBuffer);
 		if (compiledScript == NULL)
 		{
+			g_pScriptLibrary->unlock();
+			libraryLocked = false;
 			char *script;
 			DWORD fileSize;
 			if ((script = (char *)LoadFile(szBuffer, &fileSize)) != NULL)
@@ -1437,6 +1440,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				ConsolePrintf(pCtx, _T("ERROR: Script finished with error: %s\n\n"), compiledScript->getErrorText());
 			}
 		}
+		if (libraryLocked)
+			g_pScriptLibrary->unlock();
 	}
 	else if (IsCommand(_T("TRACE"), szBuffer, 1))
 	{

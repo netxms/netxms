@@ -22,18 +22,14 @@
 
 #include "nxcore.h"
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define NUMBER_OF_GROUPS   22
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static MUTEX m_mutexTableAccess;
 static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 100, 1, FIRST_USER_EVENT_ID, 1, 1, 
                                                    1, 1, 0x80000000,

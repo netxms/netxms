@@ -122,11 +122,9 @@ void NXSL_Library::deleteScript(DWORD dwId)
       }
 }
 
-
-//
-// Find script by name
-//
-
+/**
+ * Find script by name
+ */
 NXSL_Program *NXSL_Library::findScript(const TCHAR *pszName)
 {
    DWORD i;
@@ -139,11 +137,9 @@ NXSL_Program *NXSL_Library::findScript(const TCHAR *pszName)
    return NULL;
 }
 
-
-//
-// Fill NXCP message with script data
-//
-
+/**
+ * Fill NXCP message with script data
+ */
 void NXSL_Library::fillMessage(CSCPMessage *pMsg)
 {
    DWORD i, dwId;
