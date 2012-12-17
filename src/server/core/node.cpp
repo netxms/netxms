@@ -2684,8 +2684,9 @@ end_loop:
 DWORD Node::getInternalItem(const TCHAR *param, DWORD bufSize, TCHAR *buffer)
 {
 	DWORD rc = DataCollectionTarget::getInternalItem(param, bufSize, buffer);
-	if (rc == RCC_SUCCESS)
-		return RCC_SUCCESS;
+	if (rc == DCE_SUCCESS)
+		return DCE_SUCCESS;
+	rc = DCE_SUCCESS;
 
    if (!_tcsicmp(param, _T("Status")))
    {
