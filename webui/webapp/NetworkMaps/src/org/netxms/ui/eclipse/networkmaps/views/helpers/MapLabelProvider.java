@@ -221,6 +221,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 					return new ObjectFigureSmallLabel((NetworkMapObject)element, this);
 				case ICON:
 					return new ObjectFigureIcon((NetworkMapObject)element, this);
+				default:
+					return null;
 			}
 		}
 		if (element instanceof NetworkMapResource)

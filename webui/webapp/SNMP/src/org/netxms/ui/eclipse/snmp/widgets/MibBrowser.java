@@ -88,7 +88,7 @@ public class MibBrowser extends Composite
 	 */
 	public void setSelection(MibObject object)
 	{
-		mibTree.setSelection(new StructuredSelection(object));
+		mibTree.setSelection(new StructuredSelection(object), true);
 	}
 
 	/**

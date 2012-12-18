@@ -138,7 +138,7 @@ public class AlarmDetails extends ViewPart
 		
 		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 		scroller.setExpandVertical(true);
-		scroller.getVerticalBar().setIncrement(20);
+		//scroller.getVerticalBar().setIncrement(20);
 		
 		formContainer = new Composite(scroller, SWT.NONE);
 		GridLayout containerLayout = new GridLayout();
@@ -147,6 +147,8 @@ public class AlarmDetails extends ViewPart
 		formContainer.setLayout(containerLayout);
 		scroller.setContent(formContainer);
 		scroller.addControlListener(new ControlAdapter() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void controlResized(ControlEvent e)
 			{
@@ -188,6 +190,8 @@ public class AlarmDetails extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

@@ -65,7 +65,7 @@ public class CreateSnmpDciDialog extends Dialog
 		dialogArea.setLayout(layout);
 
 		textDescription = new LabeledText(dialogArea, SWT.NONE);
-		textDescription.setText("Description");
+		textDescription.setLabel("Description");
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
