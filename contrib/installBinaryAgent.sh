@@ -40,6 +40,8 @@ platform=`uname -s`
 # Main code
 #
 
+rm -f $log
+
 # process args
 while test "x$1" != "x"; do
 	name=`echo $1|cut -d= -f1`
@@ -74,13 +76,11 @@ if test "x$pids" != "x"; then
 fi
 
 # install new files
-mkdir $prefix 2>/dev/null
+mkdir -p $prefix 2>/dev/null
 if test "x$platform" = "xAIX"; then
 	slibclean
-	cp -f -R * $prefix/ 2>>$log
-else
-	cp -R * $prefix/ 2>>$log
 fi
+tar cf - . | ( cd $prefix ; tar xf - )
 if test $? != 0; then
 	echo unable to copy new files to $prefix >>$log
 	exit 3
@@ -99,4 +99,3 @@ if test $ret != 0; then
 	echo nxagentd not started \($ret\) >>$log
 	exit 5
 fi
-rm -f $log.tmp
