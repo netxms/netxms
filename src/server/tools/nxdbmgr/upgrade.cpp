@@ -302,7 +302,7 @@ static BOOL H_UpgradeFromV265(int currVersion, int newVersion)
 	                     _T("table_id integer not null,")
 	                     _T("md_key varchar(63) not null,")
 	                     _T("md_value varchar(255) null,")
-	                     _T("description SQL_TEXT4K null,")
+	                     _T("description $SQL:TXT4K null,")
 	                     _T("PRIMARY KEY(table_id,md_key))")));
 
 	CHK_EXEC(SQLQuery(_T("DROP TABLE deleted_objects")));
@@ -6540,6 +6540,7 @@ static struct
 	{ 262, 263, H_UpgradeFromV262 },
 	{ 263, 264, H_UpgradeFromV263 },
 	{ 264, 265, H_UpgradeFromV264 },
+	{ 265, 266, H_UpgradeFromV265 },
    { 0, 0, NULL }
 };
 
