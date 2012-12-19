@@ -18,22 +18,17 @@
  */
 package org.netxms.ui.eclipse.objectmanager.actions;
 
-import java.io.IOException;
 import java.util.Iterator;
-
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -44,6 +39,7 @@ public abstract class MultipleObjectAction implements IObjectActionDelegate
 {
 	private IStructuredSelection selection;
 	private IWorkbenchWindow window;
+	private IWorkbenchPart part;
 	
 	/**
 	 * Returns job description (like "Deleting object ").
@@ -82,6 +78,7 @@ public abstract class MultipleObjectAction implements IObjectActionDelegate
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
+		part = targetPart;
 		window = targetPart.getSite().getWorkbenchWindow();
 	}
 
@@ -103,34 +100,19 @@ public abstract class MultipleObjectAction implements IObjectActionDelegate
 		{
 			final GenericObject object = it.next();
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new Job(jobDescription() + " " + object.getObjectName() + " [" + object.getObjectId() + "]") {
+			new ConsoleJob(jobDescription() + " " + object.getObjectName() + " [" + object.getObjectId() + "]", part, Activator.PLUGIN_ID, null) {
 				@Override
-				protected IStatus run(IProgressMonitor monitor)
+				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					IStatus status;
-					try
-					{
-						runObjectAction(session, object);
-						status = Status.OK_STATUS;
-					}
-					catch(NXCException e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID, e.getErrorCode(),
-									           errorPrefix() + " " + object.getObjectName() + ": " + e.getMessage(), null);
-					}
-					catch(IOException e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID, 0,
-									           errorPrefix() + " " + object.getObjectName() + ": I/O error (" + e.getMessage() + ")", null);
-					}
-					catch(Exception e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID, 0,
-						                    errorPrefix() + " " + object.getObjectName() + ": EXCEPTION (" + e.getMessage() + ")", null);
-					}
-					return status;
+					runObjectAction(session, object);
 				}
-			}.schedule();
+				
+				@Override
+				protected String getErrorMessage()
+				{
+					return errorPrefix() + " " + object.getObjectName();
+				}
+			}.start();
 		}
 	}
 

@@ -65,11 +65,11 @@ public class CreateInterface implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Create new interface", part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_INTERFACE, dlg.getName(), parentId);
 				cd.setMacAddress(dlg.getMacAddress());
 				cd.setIpAddress(dlg.getIpAddress());

@@ -67,11 +67,11 @@ public class CreateTemplateGroup implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.CreateTemplateGroup_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_TEMPLATEGROUP, dlg.getObjectName(), parentId);
 				session.createObject(cd);
 			}

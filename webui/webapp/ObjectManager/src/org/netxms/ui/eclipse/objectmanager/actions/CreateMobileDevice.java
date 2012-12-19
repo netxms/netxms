@@ -65,11 +65,11 @@ public class CreateMobileDevice implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Create new mobile device", part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_MOBILEDEVICE, dlg.getName(), parentId);
 				cd.setDeviceId(dlg.getDeviceId());
 				session.createObject(cd);
