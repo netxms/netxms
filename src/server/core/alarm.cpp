@@ -81,9 +81,13 @@ static void FillEventData(CSCPMessage *msg, DWORD baseId, DB_RESULT hResult, int
 static DWORD GetCorrelatedEvents(QWORD eventId, CSCPMessage *msg, DWORD baseId, DB_HANDLE hdb)
 {
 	DWORD varId = baseId;
-	DB_STATEMENT hStmt = DBPrepare(hdb, 
-		_T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message ")
-		_T("FROM event_log e,event_cfg c WHERE e.root_event_id=? AND c.event_code=e.event_code"));
+	DB_STATEMENT hStmt = DBPrepare(hdb,
+		(g_nDBSyntax == DB_SYNTAX_ORACLE) ?
+			_T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message ")
+			_T("FROM event_log e,event_cfg c WHERE zero_to_null(e.root_event_id)=? AND c.event_code=e.event_code")
+		:
+			_T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message ")
+			_T("FROM event_log e,event_cfg c WHERE e.root_event_id=? AND c.event_code=e.event_code"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, eventId);

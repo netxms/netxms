@@ -548,11 +548,9 @@ extern "C" void EXPORT DrvFreeStatement(ORACLE_STATEMENT *stmt)
 	free(stmt);
 }
 
-
-//
-// Perform non-SELECT query
-//
-
+/**
+ * Perform non-SELECT query
+ */
 extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
 	OCIStmt *handleStmt;

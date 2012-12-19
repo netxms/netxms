@@ -27,11 +27,9 @@
 #include <conio.h>
 #endif
 
-
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 DB_HANDLE g_hCoreDB;
 BOOL g_bIgnoreErrors = FALSE;
 BOOL g_bTrace = FALSE;
@@ -49,11 +47,9 @@ const TCHAR *g_pszSqlType[6][3] =
    { _T("long varchar"), _T("varchar(4000)"), _T("bigint") } // DB/2
 };
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static char m_szCodePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE_A;
 static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static TCHAR s_dbDriver[MAX_PATH] = _T("");
@@ -84,21 +80,17 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 };
 static BOOL m_bForce = FALSE;
 
-
-//
-// Show query if trace mode is ON
-//
-
+/**
+ * Show query if trace mode is ON
+ */
 void ShowQuery(const TCHAR *pszQuery)
 {
 	WriteToTerminalEx(_T("\x1b[1m>>> \x1b[32;1m%s\x1b[0m\n"), pszQuery);
 }
 
-
-//
-// Get Yes or No answer from keyboard
-//
-
+/**
+ * Get Yes or No answer from keyboard
+ */
 bool GetYesNo(const TCHAR *format, ...)
 {
 	va_list args;
@@ -162,11 +154,9 @@ bool GetYesNo(const TCHAR *format, ...)
 	}
 }
 
-
-//
-// Execute SQL SELECT query and print error message on screen if query failed
-//
-
+/**
+ * Execute SQL SELECT query and print error message on screen if query failed
+ */
 DB_RESULT SQLSelect(const TCHAR *pszQuery)
 {
    DB_RESULT hResult;
@@ -181,11 +171,9 @@ DB_RESULT SQLSelect(const TCHAR *pszQuery)
    return hResult;
 }
 
-
-//
-// Execute SQL SELECT query via DBAsyncSelect and print error message on screen if query failed
-//
-
+/**
+ * Execute SQL SELECT query via DBAsyncSelect and print error message on screen if query failed
+ */
 DB_ASYNC_RESULT SQLAsyncSelect(const TCHAR *pszQuery)
 {
    DB_ASYNC_RESULT hResult;
@@ -200,11 +188,9 @@ DB_ASYNC_RESULT SQLAsyncSelect(const TCHAR *pszQuery)
    return hResult;
 }
 
-
-//
-// Execute SQL query and print error message on screen if query failed
-//
-
+/**
+ * Execute SQL query and print error message on screen if query failed
+ */
 BOOL SQLQuery(const TCHAR *pszQuery)
 {
    BOOL bResult;
@@ -222,11 +208,9 @@ BOOL SQLQuery(const TCHAR *pszQuery)
    return bResult;
 }
 
-
-//
-// Execute SQL batch
-//
-
+/**
+ * Execute SQL batch
+ */
 BOOL SQLBatch(const TCHAR *pszBatch)
 {
    String batch(pszBatch);
@@ -282,11 +266,9 @@ BOOL SQLBatch(const TCHAR *pszBatch)
    return bRet;
 }
 
-
-//
-// Drop column from the table
-//
-
+/**
+ * Drop column from the table
+ */
 BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column)
 {
 	TCHAR query[1024];

@@ -820,6 +820,7 @@ BOOL SendMagicPacket(DWORD dwIpAddr, BYTE *pbMacAddr, int iNumPackets);
 BOOL InitIdTable();
 DWORD CreateUniqueId(int iGroup);
 QWORD CreateUniqueEventId();
+void SaveCurrentFreeId();
 
 void InitMailer();
 void ShutdownMailer();

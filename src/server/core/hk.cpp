@@ -23,45 +23,6 @@
 #include "nxcore.h"
 
 /**
- * Remove deleted objects which are no longer referenced
- */
-static void CleanDeletedObjects(DB_HANDLE hdb)
-{
-   DB_RESULT hResult;
-
-   hResult = DBSelect(hdb, _T("SELECT object_id FROM deleted_objects"));
-   if (hResult != NULL)
-   {
-      DB_ASYNC_RESULT hAsyncResult;
-      TCHAR szQuery[256];
-      int i, iNumRows;
-      DWORD dwObjectId;
-
-      iNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < iNumRows; i++)
-      {
-         dwObjectId = DBGetFieldULong(hResult, i, 0);
-
-         // Check if there are references to this object in event log
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT event_source FROM event_log WHERE event_source=%d"), dwObjectId);
-         hAsyncResult = DBAsyncSelect(hdb, szQuery);
-         if (hAsyncResult != NULL)
-         {
-            if (!DBFetch(hAsyncResult))
-            {
-               // No records with that source ID, so we can purge this object
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM deleted_objects WHERE object_id=%d"), dwObjectId);
-               QueueSQLRequest(szQuery);
-               DbgPrintf(4, _T("*HK* Deleted object with id %d was purged"), dwObjectId);
-            }
-            DBFreeAsyncResult(hAsyncResult);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-}
-
-/**
  * Delete empty subnets
  */
 static void DeleteEmptySubnets()
@@ -200,9 +161,6 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		if (g_dwFlags & AF_DELETE_EMPTY_SUBNETS)
 			DeleteEmptySubnets();
 
-		// Remove deleted objects which are no longer referenced
-		CleanDeletedObjects(hdb);
-
 		// Remove expired DCI data
 		g_idxNodeById.forEach(CleanDciData, NULL);
 		g_idxMobileDeviceById.forEach(CleanDciData, NULL);
@@ -212,6 +170,8 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          PGSQLMaintenance(hdb);
 
 		DBConnectionPoolReleaseConnection(hdb);
+
+		SaveCurrentFreeId();
    }
 
    DbgPrintf(1, _T("Housekeeper thread terminated"));

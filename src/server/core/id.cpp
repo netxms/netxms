@@ -80,6 +80,9 @@ BOOL InitIdTable()
    m_mutexTableAccess = MutexCreate();
 
    // Get first available network object ID
+	DWORD id = ConfigReadULong(_T("FirstFreeObjectId"), m_dwFreeIdTable[IDG_NETWORK_OBJECT]);
+	if (id > m_dwFreeIdTable[IDG_NETWORK_OBJECT])
+		m_dwFreeIdTable[IDG_NETWORK_OBJECT] = id;
    hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM nodes"));
    if (hResult != NULL)
    {
@@ -185,14 +188,6 @@ BOOL InitIdTable()
       DBFreeResult(hResult);
    }
    hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM mobile_devices"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         m_dwFreeIdTable[IDG_NETWORK_OBJECT] = max(m_dwFreeIdTable[IDG_NETWORK_OBJECT],
-                                                   DBGetFieldULong(hResult, 0, 0) + 1);
-      DBFreeResult(hResult);
-   }
-   hResult = DBSelect(g_hCoreDB, _T("SELECT max(object_id) FROM deleted_objects"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -423,11 +418,9 @@ BOOL InitIdTable()
    return TRUE;
 }
 
-
-//
-// Create unique ID
-//
-
+/**
+ * Create unique ID
+ */
 DWORD CreateUniqueId(int iGroup)
 {
    DWORD dwId;
@@ -447,11 +440,9 @@ DWORD CreateUniqueId(int iGroup)
    return dwId;
 }
 
-
-//
-// Create unique ID for event log record
-//
-
+/**
+ * Create unique ID for event log record
+ */
 QWORD CreateUniqueEventId()
 {
    QWORD qwId;
@@ -460,4 +451,14 @@ QWORD CreateUniqueEventId()
    qwId = m_qwFreeEventId++;
    MutexUnlock(m_mutexTableAccess);
    return qwId;
+}
+
+/**
+ * Save current first free IDs
+ */
+void SaveCurrentFreeId()
+{
+   MutexLock(m_mutexTableAccess);
+	ConfigWriteULong(_T("FirstFreeObjectId"), m_dwFreeIdTable[IDG_NETWORK_OBJECT], TRUE, FALSE, TRUE);
+   MutexUnlock(m_mutexTableAccess);
 }

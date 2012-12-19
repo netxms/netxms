@@ -667,7 +667,7 @@ CREATE TABLE event_cfg
 	event_name varchar(63) not null,	// Short event name
 	severity integer not null,
 	flags integer not null,
-	message varchar(255) not null,		// Message template
+	message varchar(255) not null,		/* Message template */
 	description SQL_TEXT not null,
 	PRIMARY KEY(event_code)
 ) TABLE_TYPE;
@@ -682,17 +682,34 @@ CREATE TABLE event_log
 	event_id SQL_INT64 not null,
 	event_code integer not null,
 	event_timestamp integer not null,
-	event_source integer not null,			// Source object ID
+	event_source integer not null,		/* Source object ID */
 	event_severity integer not null,
 	event_message varchar(255) null,
-	root_event_id SQL_INT64 not null,	
-		/* Non-zero if current event correlates to some other event */
+	root_event_id SQL_INT64 not null,	/* Non-zero if current event correlates to some other event */
 	user_tag varchar(63) null,
 	PRIMARY KEY(event_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_event_log_event_timestamp ON event_log(event_timestamp);
 
+#if defined(DB_MSSQL) || defined(DB_POSTGRESQL)
+CREATE INDEX idx_event_log_root_id ON event_log(root_event_id) WHERE root_event_id > 0;
+#elif defined(DB_ORACLE)
+CREATE OR REPLACE FUNCTION zero_to_null(id NUMBER)
+RETURN NUMBER
+DETERMINISTIC
+AS BEGIN
+   IF id > 0 THEN
+      RETURN id;
+   ELSE
+      RETURN NULL;
+   END IF;
+END;
+/
+CREATE INDEX idx_event_log_root_id ON event_log(zero_to_null(root_event_id));
+#else
+CREATE INDEX idx_event_log_root_id ON event_log(root_event_id);
+#endif
 
 /*
 ** Actions on events
@@ -814,21 +831,6 @@ CREATE TABLE time_ranges
 	month_mask integer not null,	// Bits 0 .. 11 for each month
 	time_range varchar(255) not null, // In format HHMMHHMM[,HHMMHHMM[,...]]
 	PRIMARY KEY(time_range_id)
-) TABLE_TYPE;
-
-
-/*
-** Deleted objects
-*/
-
-CREATE TABLE deleted_objects
-(
-	object_id integer not null,
-	object_class integer not null,
-	name varchar(63) not null,
-	ip_addr varchar(15) not null,
-	ip_netmask varchar(15) not null,
-	PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
 
@@ -1510,4 +1512,32 @@ CREATE TABLE licenses
 	id integer not null,
 	content SQL_TEXT null,
 	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
+** Mapping tables
+*/
+
+CREATE TABLE mapping_tables
+(
+	id integer not null,
+	name varchar(63) not null,
+	flags integer not null,
+	description SQL_TEXT4K null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
+** Mapping tables content
+*/
+
+CREATE TABLE mapping_data
+(
+	table_id integer not null,
+	md_key varchar(63) not null,
+	md_value varchar(255) null,
+	description SQL_TEXT4K null,
+	PRIMARY KEY(table_id,md_key)
 ) TABLE_TYPE;

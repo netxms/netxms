@@ -22,11 +22,9 @@
 
 #include "nxdbmgr.h"
 
-
-//
-// Check if query is empty
-//
-
+/**
+ * Check if query is empty
+ */
 static BOOL IsEmptyQuery(const char *pszQuery)
 {
    const char *ptr;
@@ -37,16 +35,16 @@ static BOOL IsEmptyQuery(const char *pszQuery)
    return TRUE;
 }
 
-
-//
-// Find end of query in batch
-//
-
+/**
+ * Find end of query in batch
+ */
 static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
 {
    BYTE *ptr;
    int iState;
 
+	bool inProc = false;
+	bool inCreate = false;
    for(ptr = pStart, iState = 0; (ptr < pBatchEnd) && (iState != -1); ptr++)
    {
       switch(iState)
@@ -54,8 +52,31 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
          case 0:
             if (*ptr == '\'')
                iState = 1;
-            if (*ptr == ';')
+            else if (((*ptr == ';') && !inProc) || (*ptr == '/'))
                iState = -1;
+				else if (!inCreate && !inProc && ((*ptr == 'c') || (*ptr == 'C')))
+				{
+					if (!strnicmp((char *)ptr, "CREATE", 6))
+						inCreate = true;
+				}
+				else if (inCreate && (*ptr == '('))
+				{
+					inCreate = false;
+				}
+				else if (inCreate && ((*ptr == 'p') || (*ptr == 'P') || (*ptr == 'f') || (*ptr == 'F')))
+				{
+					if (!strnicmp((char *)ptr, "FUNCTION", 8) || !strnicmp((char *)ptr, "PROCEDURE", 9))
+					{
+						inCreate = false;
+						inProc = true;
+					}
+				}
+				else if ((*ptr == '\r') || (*ptr == '\n'))
+				{
+					// CR/LF should be replaced with spaces, otherwise at least
+					// Oracle will fail on CREATE FUNCTION / CREATE PROCEDURE
+					*ptr = ' ';
+				}
             break;
          case 1:
             if (*ptr == '\'')
@@ -119,11 +140,9 @@ BOOL ExecSQLBatch(const char *pszFile)
    return bResult;
 }
 
-
-//
-// Initialize database
-//
-
+/**
+ * Initialize database
+ */
 void InitDatabase(const char *pszInitFile)
 {
    uuid_t guid;

@@ -1652,13 +1652,11 @@ void DumpObjects(CONSOLE_CTX pCtx)
 	free(data.buffer);
 }
 
-
-//
-// Check is given object class is a valid parent class for other object
-// This function is used to check manually created bindings, so it won't
-// return TRUE for node -- subnet for example
-//
-
+/**
+ * Check is given object class is a valid parent class for other object
+ * This function is used to check manually created bindings, so it won't
+ * return TRUE for node -- subnet for example
+ */
 BOOL IsValidParentClass(int iChildClass, int iParentClass)
 {
    switch(iParentClass)
@@ -1739,36 +1737,23 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
    return FALSE;
 }
 
-
-//
-// Delete object (final step)
-// This function should be called ONLY from syncer thread
-// Object will be removed from index by ID and destroyed.
-//
-
+/**
+ * Delete object (final step)
+ * This function should be called ONLY from syncer thread
+ * Object will be removed from index by ID and destroyed.
+ */
 void NetObjDelete(NetObj *pObject)
 {
-   TCHAR szQuery[256], szIpAddr[16], szNetMask[16];
-
-   // Write object to deleted objects table
-   _sntprintf(szQuery, 256, _T("INSERT INTO deleted_objects (object_id,object_class,name,")
-                               _T("ip_addr,ip_netmask) VALUES (%d,%d,%s,'%s','%s')"),
-              pObject->Id(), pObject->Type(), 
-				  (const TCHAR *)DBPrepareString(g_hCoreDB, pObject->Name()),
-              IpToStr(pObject->IpAddr(), szIpAddr),
-              IpToStr(GetObjectNetmask(pObject), szNetMask));
-   QueueSQLRequest(szQuery);
+	DbgPrintf(4, _T("Final delete step for object %s [%d]"), pObject->Name(), pObject->Id());
 
    // Delete object from index by ID and object itself
 	g_idxObjectById.remove(pObject->Id());
    delete pObject;
 }
 
-
-//
-// Update interface index when IP address changes
-//
-
+/**
+ * Update interface index when IP address changes
+ */
 void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, Interface *iface)
 {
 	if (IsZoningEnabled())
@@ -1791,11 +1776,9 @@ void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, Interface *iface
 	}
 }
 
-
-//
-// Calculate propagated status for object using default algorithm
-//
-
+/**
+ * Calculate propagated status for object using default algorithm
+ */
 int DefaultPropagatedStatus(int iObjectStatus)
 {
    int iStatus;
@@ -1839,11 +1822,9 @@ int DefaultPropagatedStatus(int iObjectStatus)
    return iStatus;
 }
 
-
-//
-// Get default data for status calculation
-//
-
+/**
+ * Get default data for status calculation
+ */
 int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds)
 {
    *pnSingleThreshold = m_iStatusSingleThreshold;
@@ -1851,11 +1832,9 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds)
    return m_iStatusCalcAlg;
 }
 
-
-//
-// Check if given object is an agent policy object
-//
-
+/**
+ * Check if given object is an agent policy object
+ */
 bool IsAgentPolicyObject(NetObj *object)
 {
 	return (object->Type() == OBJECT_AGENTPOLICY) || (object->Type() == OBJECT_AGENTPOLICY_CONFIG);

@@ -633,6 +633,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\mt.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ndd.cpp"
 				>
 			</File>
@@ -844,6 +848,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\include\netxms_maps.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\netxms_mt.h"
 				>
 			</File>
 			<File

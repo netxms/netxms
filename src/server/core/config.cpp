@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,19 +23,15 @@
 #include "nxcore.h"
 #include <nxconfig.h>
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 extern char g_szCodePage[];
 extern TCHAR *g_pszModLoadList;
 
-
-//
-// database connection parameters
-//
-
+/**
+ * database connection parameters
+ */
 TCHAR g_szDbDriver[MAX_PATH] = _T("");
 TCHAR g_szDbDrvParams[MAX_PATH] = _T("");
 TCHAR g_szDbServer[MAX_PATH] = _T("127.0.0.1");
@@ -44,12 +40,9 @@ TCHAR g_szDbPassword[MAX_DB_PASSWORD] = _T("");
 TCHAR g_szDbName[MAX_DB_NAME] = _T("netxms_db");
 TCHAR g_szDbSchema[MAX_DB_NAME] = _T("");
 
-
-//
-// Load and parse configuration file
-// Returns TRUE on success and FALSE on failure
-//
-
+/**
+ * Config file template
+ */
 static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
@@ -81,6 +74,10 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
+/**
+ * Load and parse configuration file
+ * Returns TRUE on success and FALSE on failure
+ */
 BOOL NXCORE_EXPORTABLE LoadConfig()
 {
    BOOL bSuccess = FALSE;
@@ -132,11 +129,9 @@ BOOL NXCORE_EXPORTABLE LoadConfig()
    return bSuccess;
 }
 
-
-//
-// Read string value from metadata table
-//
-
+/**
+ * Read string value from metadata table
+ */
 BOOL NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault)
 {
    DB_RESULT hResult;
@@ -165,11 +160,9 @@ BOOL NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int 
    return bSuccess;
 }
 
-
-//
-// Callback for configuration variables change
-//
-
+/**
+ * Callback for configuration variables change
+ */
 static void OnConfigVariableChange(BOOL isCLOB, const TCHAR *name, const TCHAR *value)
 {
 	// Restart syslog parser if configuration was changed
@@ -236,11 +229,9 @@ BOOL NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iB
 
 #endif
 
-
-//
-// Read integer value from configuration table
-//
-
+/**
+ * Read integer value from configuration table
+ */
 int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault)
 {
    TCHAR szBuffer[64];
@@ -251,11 +242,9 @@ int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault)
       return iDefault;
 }
 
-
-//
-// Read unsigned long value from configuration table
-//
-
+/**
+ * Read unsigned long value from configuration table 
+ */
 DWORD NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, DWORD dwDefault)
 {
    TCHAR szBuffer[64];
@@ -266,11 +255,9 @@ DWORD NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, DWORD dwDefault)
       return dwDefault;
 }
 
-
-//
-// Read byte array (in hex form) from configuration table into integer array
-//
-
+/**
+ * Read byte array (in hex form) from configuration table into integer array
+ */
 BOOL NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray, int nSize, int nDefault)
 {
    TCHAR szBuffer[256];
@@ -297,11 +284,9 @@ BOOL NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray, in
    return bResult;
 }
 
-
-//
-// Write string value to configuration table
-//
-
+/**
+ * Write string value to configuration table
+ */
 BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, BOOL bCreate,
 												  BOOL isVisible, BOOL needRestart)
 {
@@ -342,11 +327,9 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, 
 	return success;
 }
 
-
-//
-// Write integer value to configuration table
-//
-
+/**
+ * Write integer value to configuration table
+ */
 BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCreate, BOOL isVisible, BOOL needRestart)
 {
    TCHAR szBuffer[64];
@@ -355,11 +338,9 @@ BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCrea
    return ConfigWriteStr(szVar, szBuffer, bCreate, isVisible, needRestart);
 }
 
-
-//
-// Write unsigned long value to configuration table
-//
-
+/**
+ * Write unsigned long value to configuration table
+ */
 BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, DWORD dwValue, BOOL bCreate, BOOL isVisible, BOOL needRestart)
 {
    TCHAR szBuffer[64];
@@ -368,11 +349,9 @@ BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, DWORD dwValue, BOOL 
    return ConfigWriteStr(szVar, szBuffer, bCreate, isVisible, needRestart);
 }
 
-
-//
-// Write integer array to configuration table
-//
-
+/**
+ * Write integer array to configuration table
+ */
 BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray, int nSize, BOOL bCreate, BOOL isVisible, BOOL needRestart)
 {
    TCHAR szBuffer[256];
@@ -383,11 +362,9 @@ BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray, i
    return ConfigWriteStr(pszVar, szBuffer, bCreate, isVisible, needRestart);
 }
 
-
-//
-// Read large string (clob) value from configuration table
-//
-
+/**
+ * Read large string (clob) value from configuration table
+ */
 TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *var, const TCHAR *defValue)
 {
    DB_RESULT hResult;
@@ -417,11 +394,9 @@ TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *var, const TCHAR *defValue)
 	return result;
 }
 
-
-//
-// Write large string (clob) value to configuration table
-//
-
+/**
+ * Write large string (clob) value to configuration table
+ */
 BOOL NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, BOOL bCreate)
 {
    DB_RESULT hResult;

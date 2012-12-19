@@ -262,6 +262,58 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 /**
+ * Upgrade from V265 to V266
+ */
+static BOOL H_UpgradeFromV265(int currVersion, int newVersion)
+{
+	// create index on root event ID in event log
+	switch(g_iSyntax)
+	{
+		case DB_SYNTAX_MSSQL:
+		case DB_SYNTAX_PGSQL:
+			CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_event_log_root_id ON event_log(root_event_id) WHERE root_event_id > 0")));
+			break;
+		case DB_SYNTAX_ORACLE:
+			CHK_EXEC(SQLQuery(_T("CREATE OR REPLACE FUNCTION zero_to_null(id NUMBER) ")
+			                  _T("RETURN NUMBER ")
+			                  _T("DETERMINISTIC ")
+			                  _T("AS BEGIN")
+			                  _T("   IF id > 0 THEN")
+			                  _T("      RETURN id;")
+			                  _T("   ELSE")
+			                  _T("      RETURN NULL;")
+			                  _T("   END IF;")
+			                  _T("END;")));
+			CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_event_log_root_id ON event_log(zero_to_null(root_event_id))")));
+			break;
+		default:
+			CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_event_log_root_id ON event_log(root_event_id)")));
+			break;
+	}
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE mapping_tables (")
+	                     _T("id integer not null,")
+	                     _T("name varchar(63) not null,")
+	                     _T("flags integer not null,")
+								_T("description $SQL:TXT4K null,")
+	                     _T("PRIMARY KEY(id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE mapping_data (")
+	                     _T("table_id integer not null,")
+	                     _T("md_key varchar(63) not null,")
+	                     _T("md_value varchar(255) null,")
+	                     _T("description SQL_TEXT4K null,")
+	                     _T("PRIMARY KEY(table_id,md_key))")));
+
+	CHK_EXEC(SQLQuery(_T("DROP TABLE deleted_objects")));
+
+	CHK_EXEC(CreateConfigParam(_T("FirstFreeObjectId"), _T("100"), 0, 1, FALSE));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='266' WHERE var_name='SchemaVersion'")));
+	return TRUE;
+}
+
+/**
  * Upgrade from V264 to V265
  */
 static BOOL H_UpgradeFromV264(int currVersion, int newVersion)

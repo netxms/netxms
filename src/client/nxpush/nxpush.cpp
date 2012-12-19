@@ -188,11 +188,11 @@ int main(int argc, char *argv[])
 	{
 		if (optVerbose > 0)
 		{
-			printf("Not enough arguments\n\n");
+			_tprintf(_T("Not enough arguments\n\n"));
 #if HAVE_GETOPT_LONG
-			printf("Try `%s --help' for more information.\n", argv[0]);
+			_tprintf(_T("Try `%s --help' for more information.\n"), argv[0]);
 #else
-			printf("Try `%s -h' for more information.\n", argv[0]);
+			_tprintf(_T("Try `%s -h' for more information.\n"), argv[0]);
 #endif
 		}
 		exit(1);
@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
 				{
 					if (optVerbose > 0)
 					{
-						printf("Cannot open \"%s\": %s\n", p + 1, strerror(errno));
+						_tprintf(_T("Cannot open \"%s\": %s\n"), p + 1, _tcserror(errno));
 					}
 				}
 			}
@@ -259,7 +259,7 @@ int main(int argc, char *argv[])
 	{
 		if (optVerbose > 0)
 		{
-			printf("No valid pairs found; nothing to send\n");
+			_tprintf(_T("No valid pairs found; nothing to send\n"));
 			ret = 2;
 		}
 	}
@@ -335,7 +335,7 @@ BOOL AddValuePair(char *name, char *value)
 	{
 		if (optVerbose > 2)
 		{
-			printf("AddValuePair: dciID=\"%d\", nodeName=\"%s\", dciName=\"%s\", value=\"%s\"\n",
+			_tprintf(_T("AddValuePair: dciID=\"%d\", nodeName=\"%hs\", dciName=\"%hs\", value=\"%hs\"\n"),
 				dciId, nodeName, dciName, value);
 		}
 
@@ -415,7 +415,7 @@ BOOL Startup()
 	{
 		if (optVerbose > 0)
 		{
-			printf("Unable to initialize Windows sockets\n");
+			_tprintf(_T("Unable to initialize Windows sockets\n"));
 		}
 		return FALSE;
 	}
@@ -425,7 +425,7 @@ BOOL Startup()
 	{
 		if (optVerbose > 0)
 		{
-			printf("Failed to initialize NetXMS client library\n");
+			_tprintf(_T("Failed to initialize NetXMS client library\n"));
 		}
 	}
 	else
@@ -463,7 +463,7 @@ BOOL Startup()
 		{
 			if (optVerbose > 0)
 			{
-				printf("Unable to connect to the server: %s\n", NXCGetErrorText(dwResult));
+				_tprintf(_T("Unable to connect to the server: %s\n"), NXCGetErrorText(dwResult));
 			}
 		}
 		else
@@ -504,7 +504,7 @@ BOOL Send()
 
 		if (optVerbose > 1)
 		{
-			printf("Sending batch #%d with %d records\n", i + 1, size);
+			_tprintf(_T("Sending batch #%d with %d records\n"), i + 1, size);
 		}
 
 		if (optVerbose > 2)
@@ -527,7 +527,7 @@ BOOL Send()
 		{
 			if (optVerbose > 0)
 			{
-				printf("Push failed at record #%d (#%d in batch): %s.\n",
+				_tprintf(_T("Push failed at record #%d (#%d in batch): %s.\n"),
 					(i * optBatchSize) + errIdx + 1,
 					errIdx + 1,
 					NXCGetErrorText(dwResult));
@@ -540,7 +540,7 @@ BOOL Send()
 		{
 			if (optVerbose > 1)
 			{
-				printf("Done.\n");
+				_tprintf(_T("Done.\n"));
 			}
 		}
 	}
