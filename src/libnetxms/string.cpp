@@ -148,7 +148,11 @@ void String::addFormattedStringV(const TCHAR *format, va_list args)
 #else		/* UNICODE */
 
 #if HAVE_VASPRINTF && !defined(_IPSO)
-	vasprintf(&buffer, format, args);
+	if (vasprintf(&buffer, format, args) == -1)
+	{
+		buffer = (char *)malloc(1);
+		*buffer = 0;
+	}
 #elif HAVE_VSCPRINTF && HAVE_DECL_VA_COPY
 	va_list argsCopy;
 	va_copy(argsCopy, args);

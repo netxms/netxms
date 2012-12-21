@@ -64,7 +64,7 @@ static TCHAR *FormatLogTimestamp(TCHAR *buffer)
 	struct tm *loc = localtime(&t);
 #endif
 	_tcsftime(buffer, 32, _T("[%d-%b-%Y %H:%M:%S"), loc);
-	_sntprintf(&buffer[21], 8, _T(".%03d]"), now % 1000);
+	_sntprintf(&buffer[21], 8, _T(".%03d]"), (int)(now % 1000));
 	return buffer;
 }
 
