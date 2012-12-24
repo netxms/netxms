@@ -2428,7 +2428,7 @@ BOOL Node::connectToAgent(DWORD *error, DWORD *socketError)
    // Create new agent connection object if needed
    if (m_pAgentConnection == NULL)
 	{
-      m_pAgentConnection = new AgentConnectionEx(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+      m_pAgentConnection = new AgentConnectionEx(m_dwId, htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
 		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_szName, m_dwId);
 	}
 	else
@@ -3261,7 +3261,7 @@ AgentConnectionEx *Node::createAgentConnection()
       return NULL;
 
    DbgPrintf(6, _T("Node::createAgentConnection(%s [%d])"), m_szName, (int)m_dwId);
-   conn = new AgentConnectionEx(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+   conn = new AgentConnectionEx(m_dwId, htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
    setAgentProxy(conn);
    if (!conn->connect(g_pServerKey))
    {

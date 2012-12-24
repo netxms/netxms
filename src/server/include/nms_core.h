@@ -298,13 +298,15 @@ typedef struct
 class AgentConnectionEx : public AgentConnection
 {
 protected:
+	DWORD m_nodeId;
+
    virtual void onTrap(CSCPMessage *msg);
    virtual void onDataPush(CSCPMessage *msg);
 
 public:
-   AgentConnectionEx(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
+   AgentConnectionEx(DWORD nodeId, DWORD ipAddr, WORD wPort = AGENT_LISTEN_PORT,
                      int iAuthMethod = AUTH_NONE, TCHAR *pszSecret = NULL) :
-            AgentConnection(dwAddr, wPort, iAuthMethod, pszSecret) { }
+            AgentConnection(ipAddr, wPort, iAuthMethod, pszSecret) { m_nodeId = nodeId; }
    virtual ~AgentConnectionEx();
 
 	DWORD deployPolicy(AgentPolicy *policy);

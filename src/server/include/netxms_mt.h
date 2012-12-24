@@ -24,6 +24,28 @@
 #define _netxms_mt_h_
 
 /**
+ * Mapping table flags
+ */
+#define MTF_NUMERIC_KEYS	0x00000001
+
+/**
+ * Mapping table element
+ */
+class MappingTableElement
+{
+private:
+	TCHAR *m_value;
+	TCHAR *m_description;
+
+public:
+	MappingTableElement(TCHAR *value, TCHAR *description) { m_value = value; m_description = description; }
+	~MappingTableElement() { safe_free(m_value); safe_free(m_description); }
+
+	const TCHAR *getValue() { return m_value; }
+	const TCHAR *getDescription() { return m_description; }
+};
+
+/**
  * Mapping table
  */
 class NXCORE_EXPORTABLE MappingTable
@@ -33,14 +55,15 @@ private:
 	TCHAR *m_name;
 	DWORD m_flags;
 	TCHAR *m_description;
+	StringObjectMap<MappingTableElement> *m_data;
 
-	MappingTable(DB_RESULT hResult);
+	MappingTable(LONG id, TCHAR *name, DWORD flags, TCHAR *description);
 
 public:
 	~MappingTable();
 
-	MappingTable *createFromMessage(CSCPMessage *msg);
-	MappingTable *createFromDatabase(LONG id);
+	static MappingTable *createFromMessage(CSCPMessage *msg);
+	static MappingTable *createFromDatabase(LONG id);
 
 	bool saveToDatabase(DB_HANDLE hdb);
 	void fillMessage(CSCPMessage *msg);

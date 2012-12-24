@@ -24,11 +24,9 @@
 
 DECLARE_DRIVER_HEADER("ORACLE")
 
-
-//
-// Prepare string for using in SQL query - enclose in quotes and escape as needed
-//
-
+/**
+ * Prepare string for using in SQL query - enclose in quotes and escape as needed
+ */
 extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
@@ -95,20 +93,17 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 	return out;
 }
 
-
-//
-// Initialize driver
-//
-
+/**
+ * Initialize driver
+ */
 extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 {
 	return TRUE;
 }
 
-//
-// Unload handler
-//
-
+/**
+ * Unload handler
+ */
 extern "C" void EXPORT DrvUnload()
 {
 	OCITerminate(OCI_DEFAULT);
@@ -161,11 +156,9 @@ static DWORD IsConnectionError(ORACLE_CONN *pConn)
 	return (nStatus == OCI_SERVER_NOT_CONNECTED) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
 }
 
-
-//
-// Destroy query result
-//
-
+/**
+ * Destroy query result
+ */
 static void DestroyQueryResult(ORACLE_RESULT *pResult)
 {
 	int i, nCount;
@@ -182,11 +175,9 @@ static void DestroyQueryResult(ORACLE_RESULT *pResult)
 	free(pResult);
 }
 
-
-//
-// Connect to database
-//
-
+/**
+ * Connect to database
+ */
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *login, const char *password, 
                                               const char *database, const char *schema, WCHAR *errorText)
 {
@@ -529,11 +520,9 @@ extern "C" DWORD EXPORT DrvExecute(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, W
 	return dwResult;
 }
 
-
-//
-// Destroy prepared statement
-//
-
+/**
+ * Destroy prepared statement
+ */
 extern "C" void EXPORT DrvFreeStatement(ORACLE_STATEMENT *stmt)
 {
 	if (stmt == NULL)
@@ -596,11 +585,9 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, WCHAR *er
 	return dwResult;
 }
 
-
-//
-// Process SELECT results
-//
-
+/**
+ * Process SELECT results
+ */
 static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStmt, DWORD *pdwError)
 {
 	OCIParam *handleParam;
@@ -723,11 +710,9 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 	return pResult;
 }
 
-
-//
-// Perform SELECT query
-//
-
+/**
+ * Perform SELECT query
+ */
 extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	ORACLE_RESULT *pResult = NULL;
@@ -773,11 +758,9 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, D
 	return pResult;
 }
 
-
-//
-// Perform SELECT query using prepared statement
-//
-
+/**
+ * Perform SELECT query using prepared statement
+ */
 extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
 {
 	ORACLE_RESULT *pResult = NULL;
@@ -804,11 +787,9 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(ORACLE_CONN *pConn, ORACLE_STAT
 	return pResult;
 }
 
-
-//
-// Get field length from result
-//
-
+/**
+ * Get field length from result
+ */
 extern "C" LONG EXPORT DrvGetFieldLength(ORACLE_RESULT *pResult, int nRow, int nColumn)
 {
 	if (pResult == NULL)
@@ -821,11 +802,9 @@ extern "C" LONG EXPORT DrvGetFieldLength(ORACLE_RESULT *pResult, int nRow, int n
 	return 0;
 }
 
-
-//
-// Get field value from result
-//
-
+/**
+ * Get field value from result
+ */
 extern "C" WCHAR EXPORT *DrvGetField(ORACLE_RESULT *pResult, int nRow, int nColumn,
                                      WCHAR *pBuffer, int nBufLen)
 {
@@ -878,22 +857,18 @@ extern "C" const char EXPORT *DrvGetColumnName(ORACLE_RESULT *pResult, int colum
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->nCols)) ? pResult->columnNames[column] : NULL;
 }
 
-
-//
-// Free SELECT results
-//
-
+/**
+ * Free SELECT results
+ */
 extern "C" void EXPORT DrvFreeResult(ORACLE_RESULT *pResult)
 {
 	if (pResult != NULL)
 		DestroyQueryResult(pResult);
 }
 
-
-//
-// Perform asynchronous SELECT query
-//
-
+/**
+ * Perform asynchronous SELECT query
+ */
 extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery,
                                                  DWORD *pdwError, WCHAR *errorText)
 {

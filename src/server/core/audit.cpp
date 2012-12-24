@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static DWORD m_dwRecordId = 1;
 static DWORD m_auditServerAddr = 0;
 static WORD m_auditServerPort;
@@ -35,11 +33,9 @@ static int m_auditSeverity;
 static char m_auditTag[MAX_SYSLOG_TAG_LEN];
 static char m_localHostName[256];
 
-
-//
-// Send syslog record to audit server
-//
-
+/**
+ * Send syslog record to audit server
+ */
 static void SendSyslogRecord(const TCHAR *text)
 {
    static char month[12][5] = { "Jan ", "Feb ", "Mar ", "Apr ",
@@ -80,11 +76,9 @@ static void SendSyslogRecord(const TCHAR *text)
 	}
 }
 
-
-//
-// Initalize audit log
-//
-
+/**
+ * Initalize audit log
+ */
 void InitAuditLog()
 {
 	DB_RESULT hResult;
@@ -124,11 +118,9 @@ void InitAuditLog()
 	}
 }
 
-
-//
-// Handler for EnumerateSessions()
-//
-
+/**
+ * Handler for EnumerateSessions()
+ */
 static void SendNewRecord(ClientSession *pSession, void *pArg)
 {
    UPDATE_INFO *pUpdate;
@@ -142,11 +134,9 @@ static void SendNewRecord(ClientSession *pSession, void *pArg)
 	}
 }
 
-
-//
-// Write audit record
-//
-
+/**
+ * Write audit record
+ */
 void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, DWORD userId,
                                      const TCHAR *workstation, DWORD objectId,
                                      const TCHAR *format, ...)

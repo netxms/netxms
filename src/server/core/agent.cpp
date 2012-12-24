@@ -22,30 +22,29 @@
 
 #include "nxcore.h"
 
-
-//
-// Destructor for extended agent connection class
-//
-
+/**
+ * Destructor for extended agent connection class
+ */
 AgentConnectionEx::~AgentConnectionEx()
 {
 }
 
-
-//
-// Trap processor
-//
-
+/**
+ * Trap processor
+ */
 void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
 {
    DWORD dwEventCode;
    int i, iNumArgs;
-   Node *pNode;
+   Node *pNode = NULL;
    TCHAR *pszArgList[32], szBuffer[32];
    char szFormat[] = "ssssssssssssssssssssssssssssssss";
 
-	DbgPrintf(3, _T("AgentConnectionEx::onTrap(): Received trap message from agent at %s"), IpToStr(getIpAddr(), szBuffer));
-   pNode = FindNodeByIP(0, getIpAddr());	/* FIXME: is it possible to receive traps from other zones? */
+	DbgPrintf(3, _T("AgentConnectionEx::onTrap(): Received trap message from agent at %s, node ID %d"), IpToStr(getIpAddr(), szBuffer), m_nodeId);
+	if (m_nodeId != 0)
+		pNode = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
+	if (pNode == NULL)
+		pNode = FindNodeByIP(0, getIpAddr());
    if (pNode != NULL)
    {
 		// Check for duplicate traps - only accept traps with ID
@@ -105,11 +104,9 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Handler for data push
-//
-
+/**
+ * Handler for data push
+ */
 void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 {
 	TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
@@ -136,11 +133,9 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 	}
 }
 
-
-//
-// Deploy policy to agent
-//
-
+/**
+ * Deploy policy to agent
+ */
 DWORD AgentConnectionEx::deployPolicy(AgentPolicy *policy)
 {
 	DWORD rqId, rcc;
@@ -167,11 +162,9 @@ DWORD AgentConnectionEx::deployPolicy(AgentPolicy *policy)
    return rcc;
 }
 
-
-//
-// Uninstall policy from agent
-//
-
+/**
+ * Uninstall policy from agent
+ */
 DWORD AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
 {
 	DWORD rqId, rcc;
