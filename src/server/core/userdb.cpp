@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Password complexity options
-//
-
+/**
+ * Password complexity options
+ */
 #define PSWD_MUST_CONTAIN_DIGITS          0x0001
 #define PSWD_MUST_CONTAIN_UPPERCASE       0x0002
 #define PSWD_MUST_CONTAIN_LOWERCASE       0x0004
@@ -34,28 +32,22 @@
 #define PSWD_FORBID_ALPHABETICAL_SEQUENCE 0x0010
 #define PSWD_FORBID_KEYBOARD_SEQUENCE     0x0020
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 bool RadiusAuth(const TCHAR *pszLogin, const TCHAR *pszPasswd);
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static int m_userCount = 0;
 static UserDatabaseObject **m_users = NULL;
 static MUTEX m_mutexUserDatabaseAccess = INVALID_MUTEX_HANDLE;
 static THREAD m_statusUpdateThread = INVALID_THREAD_HANDLE;
 
-
-//
-// Upgrade user accounts status in background
-//
-
+/**
+ * Upgrade user accounts status in background
+ */
 static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 {
 	DbgPrintf(2, _T("User account status update thread started"));
@@ -74,7 +66,7 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 
 			User *user = (User *)m_users[i];
 
-			if (user->isDisabled() && (user->getReEnableTime() <= now))
+			if (user->isDisabled() && (user->getReEnableTime() > 0) && (user->getReEnableTime() <= now))
 			{
 				// Re-enable temporary disabled user
 				user->enable();
@@ -82,7 +74,7 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 				DbgPrintf(3, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
 			}
 
-			if ((blockInactiveAccounts > 0) && (user->getLastLoginTime() > 0) && (user->getLastLoginTime() + blockInactiveAccounts < now))
+			if (!user->isDisabled() && (blockInactiveAccounts > 0) && (user->getLastLoginTime() > 0) && (user->getLastLoginTime() + blockInactiveAccounts < now))
 			{
 				user->disable();
 				WriteAuditLog(AUDIT_SECURITY, TRUE, 0xFFFFFFFF, _T(""), 0, _T("User account \"%s\" disabled due to inactivity"), user->getName());
@@ -96,33 +88,27 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 	return THREAD_OK;
 }
 
-
-//
-// Initialize user handling subsystem
-//
-
+/**
+ * Initialize user handling subsystem
+ */
 void InitUsers()
 {
    m_mutexUserDatabaseAccess = MutexCreate();
 	m_statusUpdateThread = ThreadCreateEx(AccountStatusUpdater, 0, NULL);
 }
 
-
-//
-// Cleanup user handling subsystem
-//
-
+/**
+ * Cleanup user handling subsystem
+ */
 void CleanupUsers()
 {
 	ThreadJoin(m_statusUpdateThread);
 }
 
-
-//
-// Load user list from database
-//
-
-BOOL LoadUsers(void)
+/**
+ * Load user list from database
+ */
+BOOL LoadUsers()
 {
    int i;
    DB_RESULT hResult;
@@ -831,11 +817,9 @@ DWORD NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(DWORD id, const TCHAR *name)
 	return (value != NULL) ? _tcstoul(value, NULL, 0) : 0;
 }
 
-
-//
-// Set custom attribute's value
-//
-
+/**
+ * Set custom attribute's value
+ */
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(DWORD id, const TCHAR *name, const TCHAR *value)
 {
    MutexLock(m_mutexUserDatabaseAccess);

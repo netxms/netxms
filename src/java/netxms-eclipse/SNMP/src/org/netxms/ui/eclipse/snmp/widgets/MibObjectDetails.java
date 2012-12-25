@@ -38,6 +38,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class MibObjectDetails extends Composite
 {
 	private Text oid;
+	private Text oidText;
 	private Text description;
 	private Text type;
 	private Text status;
@@ -72,6 +73,8 @@ public class MibObjectDetails extends Composite
 					onManualOidChange();
 				}
 			});
+
+			oidText = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, "OID as text", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
 		}
 		else
 		{
