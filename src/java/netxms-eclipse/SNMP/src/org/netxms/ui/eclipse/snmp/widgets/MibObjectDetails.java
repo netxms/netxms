@@ -40,6 +40,7 @@ public class MibObjectDetails extends Composite
 	private Text oid;
 	private Text oidText;
 	private Text description;
+	private Text textualConvention;
 	private Text type;
 	private Text status;
 	private Text access;
@@ -75,6 +76,7 @@ public class MibObjectDetails extends Composite
 			});
 
 			oidText = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, "OID as text", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+			oidText.setEditable(false);
 		}
 		else
 		{
@@ -114,6 +116,22 @@ public class MibObjectDetails extends Composite
 		gd.verticalAlignment = SWT.FILL;
 		gd.heightHint = 150;
 		description.setLayoutData(gd);
+		
+		/* MIB object's textual convention */
+		gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessVerticalSpace = true;
+		gd.verticalAlignment = SWT.FILL;
+		textualConvention = WidgetHelper.createLabeledText(this, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.READ_ONLY,
+		                                                   500, "Textual Convention", "", gd);
+		gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessVerticalSpace = true;
+		gd.verticalAlignment = SWT.FILL;
+		gd.heightHint = 150;
+		textualConvention.setLayoutData(gd);
 	}
 
 	/**
@@ -144,7 +162,9 @@ public class MibObjectDetails extends Composite
 				SnmpObjectId objectId = object.getObjectId(); 
 				oid.setText((objectId != null) ? objectId.toString() : ""); //$NON-NLS-1$
 			}
+			oidText.setText(object.getFullName());
 			description.setText(object.getDescription());
+			textualConvention.setText(object.getTextualConvention());
 			type.setText(SnmpConstants.getObjectTypeName(object.getType()));
 			status.setText(SnmpConstants.getObjectStatusName(object.getStatus()));
 			access.setText(SnmpConstants.getObjectAccessName(object.getAccess()));
@@ -153,7 +173,10 @@ public class MibObjectDetails extends Composite
 		{
 			if (oid != null)
 				oid.setText(""); //$NON-NLS-1$
+			if (oidText != null)
+				oidText.setText(""); //$NON-NLS-1$
 			description.setText(""); //$NON-NLS-1$
+			textualConvention.setText(""); //$NON-NLS-1$
 			type.setText(""); //$NON-NLS-1$
 			status.setText(""); //$NON-NLS-1$
 			access.setText(""); //$NON-NLS-1$

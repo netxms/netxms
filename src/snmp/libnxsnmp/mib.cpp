@@ -23,46 +23,43 @@
 
 #include "libnxsnmp.h"
 
-
-//
-// Default constructor for SNMP_MIBObject
-//
-
-SNMP_MIBObject::SNMP_MIBObject(void)
+/**
+ * Default constructor for SNMP_MIBObject
+ */
+SNMP_MIBObject::SNMP_MIBObject()
 {
    Initialize();
 
    m_dwOID = 0;
    m_pszName = NULL;
    m_pszDescription = NULL;
+	m_pszTextualConvention = NULL;
    m_iStatus = -1;
    m_iAccess = -1;
    m_iType = -1;
 }
 
-
-//
-// Construct object with all data
-//
-
+/**
+ * Construct object with all data
+ */
 SNMP_MIBObject::SNMP_MIBObject(DWORD dwOID, const TCHAR *pszName, int iType, 
-                               int iStatus, int iAccess, const TCHAR *pszDescription)
+                               int iStatus, int iAccess, const TCHAR *pszDescription,
+										 const TCHAR *pszTextualConvention)
 {
    Initialize();
 
    m_dwOID = dwOID;
    m_pszName = (pszName != NULL) ? _tcsdup(pszName) : NULL;
    m_pszDescription = (pszDescription != NULL) ? _tcsdup(pszDescription) : NULL;
+   m_pszTextualConvention = (pszTextualConvention != NULL) ? _tcsdup(pszTextualConvention) : NULL;
    m_iStatus = iStatus;
    m_iAccess = iAccess;
    m_iType = iType;
 }
 
-
-//
-// Construct object with only ID and name
-//
-
+/**
+ * Construct object with only ID and name
+ */
 SNMP_MIBObject::SNMP_MIBObject(DWORD dwOID, const TCHAR *pszName)
 {
    Initialize();
@@ -70,16 +67,15 @@ SNMP_MIBObject::SNMP_MIBObject(DWORD dwOID, const TCHAR *pszName)
    m_dwOID = dwOID;
    m_pszName = (pszName != NULL) ? _tcsdup(pszName) : NULL;
    m_pszDescription = NULL;
+	m_pszTextualConvention = NULL;
    m_iStatus = -1;
    m_iAccess = -1;
    m_iType = -1;
 }
 
-
-//
-// Common initialization
-//
-
+/**
+ * Common initialization
+ */
 void SNMP_MIBObject::Initialize()
 {
    m_pParent = NULL;
@@ -89,30 +85,27 @@ void SNMP_MIBObject::Initialize()
    m_pLast = NULL;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 SNMP_MIBObject::~SNMP_MIBObject()
 {
    SNMP_MIBObject *pCurr, *pNext;
 
    for(pCurr = m_pFirst; pCurr != NULL; pCurr = pNext)
    {
-      pNext = pCurr->Next();
+      pNext = pCurr->getNext();
       delete pCurr;
    }
    safe_free(m_pszName);
    safe_free(m_pszDescription);
+	safe_free(m_pszTextualConvention);
 }
 
-
-//
-// Add child object
-//
-
-void SNMP_MIBObject::AddChild(SNMP_MIBObject *pObject)
+/**
+ * Add child object
+ */
+void SNMP_MIBObject::addChild(SNMP_MIBObject *pObject)
 {
    if (m_pLast == NULL)
    {
@@ -125,44 +118,40 @@ void SNMP_MIBObject::AddChild(SNMP_MIBObject *pObject)
       pObject->m_pNext = NULL;
       m_pLast = pObject;
    }
-   pObject->SetParent(this);
+   pObject->setParent(this);
 }
 
-
-//
-// Find child object by OID
-//
-
-SNMP_MIBObject *SNMP_MIBObject::FindChildByID(DWORD dwOID)
+/**
+ * Find child object by OID
+ */
+SNMP_MIBObject *SNMP_MIBObject::findChildByID(DWORD dwOID)
 {
    SNMP_MIBObject *pCurr;
 
-   for(pCurr = m_pFirst; pCurr != NULL; pCurr = pCurr->Next())
+   for(pCurr = m_pFirst; pCurr != NULL; pCurr = pCurr->getNext())
       if (pCurr->m_dwOID == dwOID)
          return pCurr;
    return NULL;
 }
 
-
-//
-// Set information
-//
-
-void SNMP_MIBObject::SetInfo(int iType, int iStatus, int iAccess, const TCHAR *pszDescription)
+/**
+ * Set information
+ */
+void SNMP_MIBObject::setInfo(int iType, int iStatus, int iAccess, const TCHAR *pszDescription, const TCHAR *pszTextualConvention)
 {
    safe_free(m_pszDescription);
+	safe_free(m_pszTextualConvention);
    m_iType = iType;
    m_iStatus = iStatus;
    m_iAccess = iAccess;
    m_pszDescription = (pszDescription != NULL) ? _tcsdup(pszDescription) : NULL;
+	m_pszTextualConvention = (pszTextualConvention != NULL) ? _tcsdup(pszTextualConvention) : NULL;
 }
 
-
-//
-// Print MIB subtree
-//
-
-void SNMP_MIBObject::Print(int nIndent)
+/**
+ * Print MIB subtree
+ */
+void SNMP_MIBObject::print(int nIndent)
 {
    SNMP_MIBObject *pCurr;
 
@@ -171,8 +160,8 @@ void SNMP_MIBObject::Print(int nIndent)
    else
       _tprintf(_T("%*s%s(%d)\n"), nIndent, _T(""), m_pszName, m_dwOID);
 
-   for(pCurr = m_pFirst; pCurr != NULL; pCurr = pCurr->Next())
-      pCurr->Print(nIndent + 2);
+   for(pCurr = m_pFirst; pCurr != NULL; pCurr = pCurr->getNext())
+      pCurr->print(nIndent + 2);
 }
 
 /**
@@ -202,7 +191,7 @@ static void WriteStringToFile(ZFile *pFile, TCHAR *pszStr)
 /**
  * Write object to file
  */
-void SNMP_MIBObject::WriteToFile(ZFile *pFile, DWORD dwFlags)
+void SNMP_MIBObject::writeToFile(ZFile *pFile, DWORD dwFlags)
 {
    SNMP_MIBObject *pCurr;
 
@@ -260,11 +249,18 @@ void SNMP_MIBObject::WriteToFile(ZFile *pFile, DWORD dwFlags)
       pFile->fputc(MIB_TAG_DESCRIPTION);
       WriteStringToFile(pFile, CHECK_NULL_EX(m_pszDescription));
       pFile->fputc(MIB_TAG_DESCRIPTION | MIB_END_OF_TAG);
+
+		if (m_pszTextualConvention != NULL)
+		{
+			pFile->fputc(MIB_TAG_TEXTUAL_CONVENTION);
+			WriteStringToFile(pFile, m_pszTextualConvention);
+			pFile->fputc(MIB_TAG_TEXTUAL_CONVENTION | MIB_END_OF_TAG);
+		}
    }
 
    // Save childs
-   for(pCurr = m_pFirst; pCurr != NULL; pCurr = pCurr->Next())
-      pCurr->WriteToFile(pFile, dwFlags);
+   for(pCurr = m_pFirst; pCurr != NULL; pCurr = pCurr->getNext())
+      pCurr->writeToFile(pFile, dwFlags);
 
    pFile->fputc(MIB_TAG_OBJECT | MIB_END_OF_TAG);
 }
@@ -290,7 +286,7 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject 
       memset(header.bReserved, 0, sizeof(header.bReserved));
       fwrite(&header, sizeof(SNMP_MIB_HEADER), 1, pFile);
       pZFile = new ZFile(pFile, dwFlags & SMT_COMPRESS_DATA, TRUE);
-      pRoot->WriteToFile(pZFile, dwFlags);
+      pRoot->writeToFile(pZFile, dwFlags);
       pZFile->close();
       delete pZFile;
    }
@@ -334,14 +330,12 @@ static TCHAR *ReadStringFromFile(ZFile *pFile)
    return pszStr;
 }
 
-
-//
-// Read object from file
-//
-
+/**
+ * Read object from file
+ */
 #define CHECK_NEXT_TAG(x) { ch = pFile->fgetc(); if (ch != (x)) nState--; }
 
-BOOL SNMP_MIBObject::ReadFromFile(ZFile *pFile)
+BOOL SNMP_MIBObject::readFromFile(ZFile *pFile)
 {
    int ch, nState = 0;
    WORD wTmp;
@@ -380,6 +374,11 @@ BOOL SNMP_MIBObject::ReadFromFile(ZFile *pFile)
             m_pszDescription = ReadStringFromFile(pFile);
             CHECK_NEXT_TAG(MIB_TAG_DESCRIPTION | MIB_END_OF_TAG);
             break;
+			case MIB_TAG_TEXTUAL_CONVENTION:
+				safe_free(m_pszTextualConvention);
+            m_pszTextualConvention = ReadStringFromFile(pFile);
+            CHECK_NEXT_TAG(MIB_TAG_TEXTUAL_CONVENTION | MIB_END_OF_TAG);
+            break;
          case MIB_TAG_TYPE:
             m_iType = pFile->fgetc();
             CHECK_NEXT_TAG(MIB_TAG_TYPE | MIB_END_OF_TAG);
@@ -394,9 +393,9 @@ BOOL SNMP_MIBObject::ReadFromFile(ZFile *pFile)
             break;
          case MIB_TAG_OBJECT:
             pObject = new SNMP_MIBObject;
-            if (pObject->ReadFromFile(pFile))
+            if (pObject->readFromFile(pFile))
             {
-               AddChild(pObject);
+               addChild(pObject);
             }
             else
             {
@@ -412,11 +411,9 @@ BOOL SNMP_MIBObject::ReadFromFile(ZFile *pFile)
    return (nState == 1) ? TRUE : FALSE;
 }
 
-
-//
-// Load MIB tree from file
-//
-
+/**
+ * Load MIB tree from file
+ */
 DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject **ppRoot)
 {
    FILE *pFile;
@@ -436,7 +433,7 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject 
          if (pZFile->fgetc() == MIB_TAG_OBJECT)
          {
             *ppRoot = new SNMP_MIBObject;
-            if (!(*ppRoot)->ReadFromFile(pZFile))
+            if (!(*ppRoot)->readFromFile(pZFile))
             {
                delete *ppRoot;
                dwRet = SNMP_ERR_BAD_FILE_DATA;
@@ -462,11 +459,9 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject 
    return dwRet;
 }
 
-
-//
-// Get timestamp from saved MIB tree
-//
-
+/**
+ * Get timestamp from saved MIB tree
+ */
 DWORD LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *pszFile, DWORD *pdwTimestamp)
 {
    FILE *pFile;

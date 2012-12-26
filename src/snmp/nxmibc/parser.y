@@ -648,6 +648,7 @@ TypeOrValueAssignment:
    {
       $$->pszName = $1->pszStr;
       $$->iSyntax = $1->nSyntax;
+      $$->pszDescription = $1->pszDescription;
       free($1);
    }
 }
@@ -660,6 +661,7 @@ TypeOrValueAssignment:
    {
       $$->iSyntax = $3->nSyntax;
       $$->pszDataType = $3->pszStr;
+      $$->pszDescription = $3->pszDescription;
       free($3);
    }
 }
@@ -672,6 +674,7 @@ TypeOrValueAssignment:
    {
       $$->iSyntax = $3->nSyntax;
       $$->pszDataType = $3->pszStr;
+      $$->pszDescription = $3->pszDescription;
       free($3);
    }
 }
@@ -860,6 +863,7 @@ TextualConventionAssignment:
     SnmpSyntaxPart
 {
    $$ = $6;
+   $$->pszDescription = $4;
 }
 ;
 

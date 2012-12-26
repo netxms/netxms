@@ -101,14 +101,14 @@ void BuildOIDString(SNMP_MIBObject *pNode, TCHAR *pszBuffer)
    int iBufPos = 0;
    SNMP_MIBObject *pCurr;
 
-   if (pNode->Parent() == NULL)
+   if (pNode->getParent() == NULL)
    {
       pszBuffer[0] = 0;
    }
    else
    {
-      for(dwPos = 0, pCurr = pNode; pCurr->Parent() != NULL; pCurr = pCurr->Parent())
-         dwSubIdList[dwPos++] = pCurr->OID();
+      for(dwPos = 0, pCurr = pNode; pCurr->getParent() != NULL; pCurr = pCurr->getParent())
+         dwSubIdList[dwPos++] = pCurr->getObjectId();
       while(dwPos > 0)
       {
          _stprintf(&pszBuffer[iBufPos], _T(".%u"), dwSubIdList[--dwPos]);
@@ -130,16 +130,16 @@ TCHAR *BuildSymbolicOIDString(SNMP_MIBObject *pNode, DWORD dwInstance)
    int iBufPos = 0;
    SNMP_MIBObject *pCurr;
 
-   if (pNode->Parent() == NULL)
+   if (pNode->getParent() == NULL)
    {
       pszBuffer = (TCHAR *)malloc(8);
       pszBuffer[0] = 0;
    }
    else
    {
-      for(dwPos = 0, dwSize = 0, pCurr = pNode; pCurr->Parent() != NULL; pCurr = pCurr->Parent())
+      for(dwPos = 0, dwSize = 0, pCurr = pNode; pCurr->getParent() != NULL; pCurr = pCurr->getParent())
       {
-         pszSubIdList[dwPos] = CHECK_NULL(pCurr->Name());
+         pszSubIdList[dwPos] = CHECK_NULL(pCurr->getName());
          dwSize += (DWORD)_tcslen(pszSubIdList[dwPos]) + 1;
          dwPos++;
       }

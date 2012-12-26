@@ -294,7 +294,7 @@ static DWORD WINAPI LoginThread(void *pArg)
       {
          if (SNMPLoadMIBTree(szFileName, &g_pMIBRoot) == SNMP_ERR_SUCCESS)
          {
-            g_pMIBRoot->SetName(_T("[root]"));
+            g_pMIBRoot->setName(_T("[root]"));
          }
          else
          {

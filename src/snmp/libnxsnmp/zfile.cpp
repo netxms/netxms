@@ -23,18 +23,14 @@
 
 #include "libnxsnmp.h"
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define DATA_BUFFER_SIZE      65536
 
-
-//
-// Constructor for ZFile
-//
-
+/**
+ * Constructor for ZFile
+ */
 ZFile::ZFile(FILE *pFile, BOOL bCompress, BOOL bWrite)
 {
    m_bCompress = bCompress;
@@ -63,22 +59,18 @@ ZFile::ZFile(FILE *pFile, BOOL bCompress, BOOL bWrite)
    }
 }
 
-
-//
-// Destructor for ZFile
-//
-
+/**
+ * Destructor for ZFile
+ */
 ZFile::~ZFile()
 {
    safe_free(m_pDataBuffer);
    safe_free(m_pCompBuffer);
 }
 
-
-//
-// Write block to compressed file
-//
-
+/**
+ * Write block to compressed file
+ */
 int ZFile::zwrite(void *pBuf, int nLen)
 {
    int nBytes, nSrcPos, nRet;
@@ -109,11 +101,9 @@ int ZFile::zwrite(void *pBuf, int nLen)
    return nRet;
 }
 
-
-//
-// Write single character to compressed file
-//
-
+/**
+ * Write single character to compressed file
+ */
 int ZFile::zputc(int ch)
 {
    BYTE bt;
@@ -122,12 +112,10 @@ int ZFile::zputc(int ch)
    return (zwrite(&bt, 1) == 1) ? ch : -1;
 }
 
-
-//
-// Fill data buffer with new data from file if buffer is empty
-//
-
-BOOL ZFile::FillDataBuffer(void)
+/**
+ * Fill data buffer with new data from file if buffer is empty
+ */
+BOOL ZFile::fillDataBuffer()
 {
    int nBytes, nRet;
 
@@ -158,18 +146,16 @@ BOOL ZFile::FillDataBuffer(void)
    return FALSE;
 }
 
-
-//
-// Read block from compressed file
-//
-
+/**
+ * Read block from compressed file
+ */
 int ZFile::zread(void *pBuf, int nLen)
 {
    int nBytes, nDstPos;
 
    for(nDstPos = 0; nDstPos < nLen; nDstPos += nBytes)
    {
-      if (!FillDataBuffer())
+      if (!fillDataBuffer())
          return 0;   // EOF or error
       nBytes = min(nLen - nDstPos, m_nBufferSize);
       memcpy((BYTE *)pBuf + nDstPos, m_pBufferPos, nBytes);
@@ -179,24 +165,20 @@ int ZFile::zread(void *pBuf, int nLen)
    return nLen;
 }
 
-
-//
-// Read one character from compressed file
-//
-
-int ZFile::zgetc(void)
+/**
+ * Read one character from compressed file
+ */
+int ZFile::zgetc()
 {
    BYTE ch;
 
    return (zread(&ch, 1) == 1) ? ch : -1;
 }
 
-
-//
-// Close compressed file
-//
-
-int ZFile::zclose(void)
+/**
+ * Close compressed file
+ */
+int ZFile::zclose()
 {
    int nRet;
 

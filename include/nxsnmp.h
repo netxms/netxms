@@ -308,44 +308,46 @@ private:
    DWORD m_dwOID;
    TCHAR *m_pszName;
    TCHAR *m_pszDescription;
+	TCHAR *m_pszTextualConvention;
    int m_iType;
    int m_iStatus;
    int m_iAccess;
 
-   void Initialize(void);
+   void Initialize();
 
 public:
-   SNMP_MIBObject(void);
+   SNMP_MIBObject();
    SNMP_MIBObject(DWORD dwOID, const TCHAR *pszName);
    SNMP_MIBObject(DWORD dwOID, const TCHAR *pszName, int iType, 
-                  int iStatus, int iAccess, const TCHAR *pszDescription);
+                  int iStatus, int iAccess, const TCHAR *pszDescription,
+						const TCHAR *pszTextualConvention);
    ~SNMP_MIBObject();
 
-   void SetParent(SNMP_MIBObject *pObject) { m_pParent = pObject; }
-   void AddChild(SNMP_MIBObject *pObject);
-   void SetInfo(int iType, int iStatus, int iAccess, const TCHAR *pszDescription);
-   void SetName(const TCHAR *pszName) { safe_free(m_pszName); m_pszName = _tcsdup(pszName); }
+   void setParent(SNMP_MIBObject *pObject) { m_pParent = pObject; }
+   void addChild(SNMP_MIBObject *pObject);
+   void setInfo(int iType, int iStatus, int iAccess, const TCHAR *pszDescription, const TCHAR *pszTextualConvention);
+   void setName(const TCHAR *pszName) { safe_free(m_pszName); m_pszName = _tcsdup(pszName); }
 
-   SNMP_MIBObject *Parent(void) { return m_pParent; }
-   SNMP_MIBObject *Next(void) { return m_pNext; }
-   SNMP_MIBObject *Prev(void) { return m_pPrev; }
-   SNMP_MIBObject *FirstChild(void) { return m_pFirst; }
-   SNMP_MIBObject *LastChild(void) { return m_pLast; }
+   SNMP_MIBObject *getParent() { return m_pParent; }
+   SNMP_MIBObject *getNext() { return m_pNext; }
+   SNMP_MIBObject *getPrev() { return m_pPrev; }
+   SNMP_MIBObject *getFirstChild() { return m_pFirst; }
+   SNMP_MIBObject *getLastChild() { return m_pLast; }
 
-   DWORD OID(void) { return m_dwOID; }
-   const TCHAR *Name(void) { return m_pszName; }
-   const TCHAR *Description(void) { return m_pszDescription; }
-   int Type(void) { return m_iType; }
-   int Status(void) { return m_iStatus; }
-   int Access(void) { return m_iAccess; }
+   DWORD getObjectId() { return m_dwOID; }
+   const TCHAR *getName() { return m_pszName; }
+   const TCHAR *getDescription() { return m_pszDescription; }
+   int getType() { return m_iType; }
+   int getStatus() { return m_iStatus; }
+   int getAccess() { return m_iAccess; }
 
-   SNMP_MIBObject *FindChildByID(DWORD dwOID);
+   SNMP_MIBObject *findChildByID(DWORD dwOID);
 
-   void Print(int nIndent);
+   void print(int nIndent);
 
    // File I/O, supposed to be callsed only from libnxsnmp functions
-   void WriteToFile(ZFile *pFile, DWORD dwFlags);
-   BOOL ReadFromFile(ZFile *pFile);
+   void writeToFile(ZFile *pFile, DWORD dwFlags);
+   BOOL readFromFile(ZFile *pFile);
 };
 
 

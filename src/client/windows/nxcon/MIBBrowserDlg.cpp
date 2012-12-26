@@ -156,9 +156,9 @@ void CMIBBrowserDlg::AddTreeNode(HTREEITEM hRoot, SNMP_MIBObject *pCurrNode)
    SNMP_MIBObject *pNode;
    HTREEITEM hItem;
 
-   hItem = m_wndTreeCtrl.InsertItem(CHECK_NULL(pCurrNode->Name()), 0, 0, hRoot, TVI_LAST);
+   hItem = m_wndTreeCtrl.InsertItem(CHECK_NULL(pCurrNode->getName()), 0, 0, hRoot, TVI_LAST);
    m_wndTreeCtrl.SetItemData(hItem, (DWORD)pCurrNode);
-   for(pNode = pCurrNode->FirstChild(); pNode != NULL; pNode = pNode->Next())
+   for(pNode = pCurrNode->getFirstChild(); pNode != NULL; pNode = pNode->getNext())
       AddTreeNode(hItem, pNode);
    m_wndTreeCtrl.SortChildren(hItem);
 }
@@ -184,14 +184,14 @@ void CMIBBrowserDlg::OnSelchangedTreeMib(NMHDR *pNMHDR, LRESULT *pResult)
       m_bDisableSelUpdate = FALSE;
    }
 
-   pszTemp = TranslateUNIXText(CHECK_NULL_EX(pNode->Description()));
+   pszTemp = TranslateUNIXText(CHECK_NULL_EX(pNode->getDescription()));
    m_wndEditDescription.SetWindowText(pszTemp);
    free(pszTemp);
 
-   m_wndEditStatus.SetWindowText(CodeToText(pNode->Status(), g_ctSnmpMibStatus, _T("")));
-   m_wndEditAccess.SetWindowText(CodeToText(pNode->Access(), g_ctSnmpMibAccess, _T("")));
-   m_wndEditType.SetWindowText(CodeToText(pNode->Type(), g_ctSnmpMibType, _T("")));
-   m_iSnmpDataType = pNode->Type();   // Store data type of current node
+   m_wndEditStatus.SetWindowText(CodeToText(pNode->getStatus(), g_ctSnmpMibStatus, _T("")));
+   m_wndEditAccess.SetWindowText(CodeToText(pNode->getAccess(), g_ctSnmpMibAccess, _T("")));
+   m_wndEditType.SetWindowText(CodeToText(pNode->getType(), g_ctSnmpMibType, _T("")));
+   m_iSnmpDataType = pNode->getType();   // Store data type of current node
 
    pszTemp = BuildSymbolicOIDString(pNode, m_dwInstance);
    m_wndEditOIDText.SetWindowText(pszTemp);
@@ -293,7 +293,7 @@ void CMIBBrowserDlg::SelectNode(HTREEITEM hRoot, DWORD *pdwOID, unsigned int uNa
        hItem = m_wndTreeCtrl.GetNextItem(hItem, TVGN_NEXT))
    {
       pNode = (SNMP_MIBObject *)m_wndTreeCtrl.GetItemData(hItem);
-      if (pNode->OID() == pdwOID[0])
+      if (pNode->getObjectId() == pdwOID[0])
       {
          bMatch = TRUE;
          if (uNameLen == 1)

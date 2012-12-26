@@ -91,15 +91,15 @@ public class SnmpTest extends SessionTest
 		assertTrue(objects.length > 0);
 		
 		for(int i = 0; i < objects.length; i++)
-			System.out.println(objects[i].getObjectId().toString() + " " + objects[i].getName());
+			System.out.println(objects[i].getObjectId().toString() + " " + objects[i].getName() + " " + objects[i].getFullName());
 		
 		MibObject o = tree.findObject(SnmpObjectId.parseSnmpObjectId(".1.3.6.1.2.1.1.1"), true);
 		assertNotNull(o);
-		System.out.println("Found: " + o.getObjectId().toString() + " " + o.getName());
+		System.out.println("Found: " + o.getObjectId().toString() + " " + o.getName() + " " + o.getFullName());
 
 		o = tree.findObject(SnmpObjectId.parseSnmpObjectId(".1.3.6.1.100.100.100"), false);
 		assertNotNull(o);
-		System.out.println("Found: " + o.getObjectId().toString() + " " + o.getName());
+		System.out.println("Found: " + o.getObjectId().toString() + " " + o.getName() + " " + o.getFullName());
 
 		o = tree.findObject(SnmpObjectId.parseSnmpObjectId(".1.3.6.1.100.100.100"), true);
 		assertNull(o);

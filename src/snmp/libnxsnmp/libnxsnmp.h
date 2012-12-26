@@ -33,22 +33,18 @@
 #include <netdb.h>
 #endif
 
-
-//
-// Buffer structure for BER_DecodeContent for ASN_OBJECT_ID type
-//
-
+/**
+ * Buffer structure for BER_DecodeContent for ASN_OBJECT_ID type
+ */
 typedef struct
 {
    DWORD dwLength;
    DWORD *pdwValue;
 } SNMP_OID;
 
-
-//
-// Header structure for compiled MIB file
-//
-
+/**
+ * Header structure for compiled MIB file
+ */
 typedef struct
 {
    char chMagic[6];
@@ -59,36 +55,31 @@ typedef struct
    DWORD dwTimeStamp;   // Server's timestamp
 } SNMP_MIB_HEADER;
 
-
-//
-// MIB file header constants
-//
-
+/**
+ * MIB file header constants
+ */
 #define MIB_FILE_MAGIC     "NXMIB "
-#define MIB_FILE_VERSION   1
+#define MIB_FILE_VERSION   2
 
+/**
+ * Tags for compiled MIB file
+ */
+#define MIB_TAG_OBJECT             0x01
+#define MIB_TAG_NAME               0x02
+#define MIB_TAG_DESCRIPTION        0x03
+#define MIB_TAG_ACCESS             0x04
+#define MIB_TAG_STATUS             0x05
+#define MIB_TAG_TYPE               0x06
+#define MIB_TAG_BYTE_OID           0x07     /* Used if OID < 256 */
+#define MIB_TAG_WORD_OID           0x08     /* Used if OID < 65536 */
+#define MIB_TAG_DWORD_OID          0x09
+#define MIB_TAG_TEXTUAL_CONVENTION 0x0A
 
-//
-// Tags for compiled MIB file
-//
+#define MIB_END_OF_TAG             0x80
 
-#define MIB_TAG_OBJECT        0x01
-#define MIB_TAG_NAME          0x02
-#define MIB_TAG_DESCRIPTION   0x03
-#define MIB_TAG_ACCESS        0x04
-#define MIB_TAG_STATUS        0x05
-#define MIB_TAG_TYPE          0x06
-#define MIB_TAG_BYTE_OID      0x07     /* Used if OID < 256 */
-#define MIB_TAG_WORD_OID      0x08     /* Used if OID < 65536 */
-#define MIB_TAG_DWORD_OID     0x09
-
-#define MIB_END_OF_TAG        0x80
-
-
-//
-// Class for compressed/uncompressed I/O
-//
-
+/**
+ * Class for compressed/uncompressed I/O
+ */
 class ZFile
 {
 private:
@@ -105,10 +96,10 @@ private:
    int zwrite(void *pBuf, int nLen);
    int zputc(int ch);
    int zread(void *pBuf, int nLen);
-   int zgetc(void);
-   int zclose(void);
+   int zgetc();
+   int zclose();
 
-   BOOL FillDataBuffer(void);
+   BOOL fillDataBuffer();
 
 public:
    ZFile(FILE *pFile, BOOL bCompress, BOOL bWrite);
@@ -118,18 +109,16 @@ public:
    int fputc(int ch) { return m_bCompress ? zputc(ch) : ::fputc(ch, m_pFile); }
 
    size_t read(void *pBuf, int nLen) { return m_bCompress ? zread(pBuf, nLen) : fread(pBuf, 1, nLen, m_pFile); }
-   int fgetc(void) { return m_bCompress ? zgetc() : ::fgetc(m_pFile); }
+   int fgetc() { return m_bCompress ? zgetc() : ::fgetc(m_pFile); }
 
-   int close(void) { return m_bCompress ? zclose() : fclose(m_pFile); }
+   int close() { return m_bCompress ? zclose() : fclose(m_pFile); }
 
-   int GetZLibError(void) { return m_nLastZLibError; }
+   int getZLibError() { return m_nLastZLibError; }
 };
 
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType, 
                           DWORD *pdwLength, BYTE **pData, DWORD *pdwIdLength);
 BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer);

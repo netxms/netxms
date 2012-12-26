@@ -64,6 +64,7 @@ typedef struct mp_syntax
 {
    int nSyntax;
    char *pszStr;
+	char *pszDescription;
 } MP_SYNTAX;
 
 
@@ -103,6 +104,7 @@ typedef struct mp_object
    int iType;
    char *pszName;
    char *pszDescription;
+	char *pszTextualConvention;
    int iSyntax;
    char *pszDataType;   // For defined types
    int iStatus;
@@ -144,7 +146,7 @@ typedef struct mp_import
 extern "C" {
 #endif
 
-void InitStateStack(void);
+void InitStateStack();
 MP_MODULE *ParseMIB(char *pszFilename);
 
 DynArray *da_create(void);

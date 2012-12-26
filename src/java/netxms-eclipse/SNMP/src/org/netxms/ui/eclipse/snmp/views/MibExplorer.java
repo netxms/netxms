@@ -219,6 +219,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		});
 
+		splitter.setWeights(new int[] { 70, 30 });
+		
 		createActions();
 		contributeToActionBars();
 		createTreePopupMenu();

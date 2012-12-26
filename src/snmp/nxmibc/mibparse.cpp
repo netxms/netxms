@@ -100,11 +100,9 @@ static MP_OBJECT *FindObjectByName(MP_MODULE *pModule, char *pszName, int *pnInd
    return NULL;
 }
 
-
-//
-// Find imported object in module
-//
-
+/**
+ * Find imported object in module
+ */
 static MP_OBJECT *FindImportedObjectByName(MP_MODULE *pModule, char *pszName,
                                            MP_MODULE **ppImportModule)
 {
@@ -126,13 +124,10 @@ static MP_OBJECT *FindImportedObjectByName(MP_MODULE *pModule, char *pszName,
    return NULL;
 }
 
-
-//
-// Find next module in chain, if symbol is imported and then re-exported
-//
-
-static MP_MODULE *FindNextImportModule(DynArray *pModuleList, MP_MODULE *pModule,
-                                       char *pszSymbol)
+/**
+ * Find next module in chain, if symbol is imported and then re-exported
+ */
+static MP_MODULE *FindNextImportModule(DynArray *pModuleList, MP_MODULE *pModule, char *pszSymbol)
 {
    int i, j, iNumImports, iNumSymbols;
    MP_IMPORT_MODULE *pImport;
@@ -149,11 +144,9 @@ static MP_MODULE *FindNextImportModule(DynArray *pModuleList, MP_MODULE *pModule
    return NULL;
 }
 
-
-//
-// Resolve imports
-//
-
+/**
+ * Resolve imports
+ */
 static void ResolveImports(DynArray *pModuleList, MP_MODULE *pModule)
 {
    int i, j, iNumImports, iNumSymbols;
@@ -203,11 +196,9 @@ static void ResolveImports(DynArray *pModuleList, MP_MODULE *pModule)
    }
 }
 
-
-//
-// Build full OID for object
-//
-
+/**
+ * Build full OID for object
+ */
 static void BuildFullOID(MP_MODULE *pModule, MP_OBJECT *pObject)
 {
    int iLen;
@@ -264,11 +255,9 @@ static void BuildFullOID(MP_MODULE *pModule, MP_OBJECT *pObject)
    }
 }
 
-
-//
-// Resolve syntax for object
-//
-
+/**
+ * Resolve syntax for object
+ */
 static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
 {
    MP_OBJECT *pType;
@@ -300,6 +289,8 @@ static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
    if (pType != NULL)
    {
       pObject->iSyntax = pType->iSyntax;
+		if (pType->iType == MIBC_TEXTUAL_CONVENTION)
+			pObject->pszTextualConvention = pType->pszDescription;
    }
    else
    {
@@ -307,11 +298,9 @@ static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
    }
 }
 
-
-//
-// Resolve object identifiers
-//
-
+/**
+ * Resolve object identifiers
+ */
 static void ResolveObjects(DynArray *pModuleList, MP_MODULE *pModule)
 {
    int i, iNumObjects;
@@ -349,7 +338,7 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
          for(j = 0, pCurrObj = pRoot; j < iLen; j++)
          {
             pSubId = (MP_SUBID *)da_get(pObject->pOID, j);
-            pNewObj = pCurrObj->FindChildByID(pSubId->dwValue);
+            pNewObj = pCurrObj->findChildByID(pSubId->dwValue);
             if (pNewObj == NULL)
             {
                if (j == iLen - 1)
@@ -357,19 +346,22 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
 #ifdef UNICODE
 						WCHAR *wname = (pObject->pszName != NULL) ? WideStringFromMBString(pObject->pszName) : NULL;
 						WCHAR *wdescr = (pObject->pszDescription != NULL) ? WideStringFromMBString(pObject->pszDescription) : NULL;
+						WCHAR *wtc = (pObject->pszTextualConvention != NULL) ? WideStringFromMBString(pObject->pszTextualConvention) : NULL;
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, wname,
                                                pObject->iSyntax,
                                                pObject->iStatus,
                                                pObject->iAccess,
-                                               wdescr);
+                                               wdescr, wtc);
 						safe_free(wname);
 						safe_free(wdescr);
+						safe_free(wtc);
 #else
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, pObject->pszName,
                                                pObject->iSyntax,
                                                pObject->iStatus,
                                                pObject->iAccess,
-                                               pObject->pszDescription);
+                                               pObject->pszDescription,
+															  pObject->pszTextualConvention);
 #endif
 					}
                else
@@ -382,7 +374,7 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, pSubId->pszName);
 #endif
 					}
-               pCurrObj->AddChild(pNewObj);
+               pCurrObj->addChild(pNewObj);
             }
             else
             {
@@ -391,19 +383,21 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
                   // Last OID in chain, update object information
 #ifdef UNICODE
 						WCHAR *wdescr = (pObject->pszDescription != NULL) ? WideStringFromMBString(pObject->pszDescription) : NULL;
-                  pNewObj->SetInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess, wdescr);
+						WCHAR *wtc = (pObject->pszTextualConvention != NULL) ? WideStringFromMBString(pObject->pszTextualConvention) : NULL;
+                  pNewObj->setInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess, wdescr, wtc);
 						safe_free(wdescr);
+						safe_free(wtc);
 #else
-                  pNewObj->SetInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess, pObject->pszDescription);
+                  pNewObj->setInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess, pObject->pszDescription, pObject->pszTextualConvention);
 #endif
-                  if (pNewObj->Name() == NULL)
+                  if (pNewObj->getName() == NULL)
 						{
 #ifdef UNICODE
 							WCHAR *wname = (pObject->pszName != NULL) ? WideStringFromMBString(pObject->pszName) : NULL;
-                     pNewObj->SetName(wname);
+                     pNewObj->setName(wname);
 							safe_free(wname);
 #else
-                     pNewObj->SetName(pObject->pszName);
+                     pNewObj->setName(pObject->pszName);
 #endif
 						}
                }
@@ -414,11 +408,9 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
    }
 }
 
-
-//
-// Interface to parser
-//
-
+/**
+ * Interface to parser
+ */
 int ParseMIBFiles(int nNumFiles, char **ppszFileList, SNMP_MIBObject **ppRoot)
 {
    int i, iNumModules, nRet;
