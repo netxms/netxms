@@ -109,11 +109,9 @@ extern "C" void EXPORT DrvUnload()
 	OCITerminate(OCI_DEFAULT);
 }
 
-
-//
-// Get error text from error handle
-//
-
+/**
+ * Get error text from error handle
+ */
 static void GetErrorTextFromHandle(OCIError *handle, WCHAR *errorText)
 {
 	sb4 nCode;
@@ -132,21 +130,17 @@ static void GetErrorTextFromHandle(OCIError *handle, WCHAR *errorText)
 	RemoveTrailingCRLFW(errorText);
 }
 
-
-//
-// Set last error text
-//
-
+/**
+ * Set last error text
+ */
 static void SetLastErrorText(ORACLE_CONN *pConn)
 {
 	GetErrorTextFromHandle(pConn->handleError, pConn->szLastError);
 }
 
-
-//
-// Check if last error was caused by lost connection to server
-//
-
+/**
+ * Check if last error was caused by lost connection to server
+ */
 static DWORD IsConnectionError(ORACLE_CONN *pConn)
 {
 	ub4 nStatus = 0;
@@ -351,11 +345,9 @@ static UCS2CHAR *ConvertQuery(WCHAR *query)
 	return dstQuery;
 }
 
-
-//
-// Prepare statement
-//
-
+/**
+ * Prepare statement
+ */
 extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	ORACLE_STATEMENT *stmt = NULL;

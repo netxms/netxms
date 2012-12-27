@@ -800,11 +800,9 @@ static void CheckTemplateNodeMapping()
    EndStage();
 }
 
-
-//
-// Check database for errors
-//
-
+/**
+ * Check database for errors
+ */
 void CheckDatabase()
 {
    DB_RESULT hResult;
@@ -857,69 +855,73 @@ void CheckDatabase()
                DBFreeResult(hResult);
             }
          }
+
+			if (bLocked)
+			{
+				if (GetYesNo(_T("Database is locked by server %s [%s]\nDo you wish to force database unlock?"), szLockStatus, szLockInfo))
+				{
+					if (SQLQuery(_T("UPDATE config SET var_value='UNLOCKED' where var_name='DBLockStatus'")))
+					{
+						bLocked = FALSE;
+						_tprintf(_T("Database lock removed\n"));
+					}
+				}
+			}
+
+			if (!bLocked)
+			{
+				DBBegin(g_hCoreDB);
+
+				CheckZones();
+				CheckNodes();
+				CheckComponents(_T("interface"), _T("interfaces"));
+				CheckComponents(_T("network service"), _T("network_services"));
+				CheckClusters();
+				CheckTemplateNodeMapping();
+				CheckObjectProperties();
+				CheckEPP();
+				if (g_checkData)
+					CheckIData();
+
+				if (m_iNumErrors == 0)
+				{
+					_tprintf(_T("Database doesn't contain any errors\n"));
+					DBCommit(g_hCoreDB);
+				}
+				else
+				{
+					_tprintf(_T("%d errors was found, %d errors was corrected\n"), m_iNumErrors, m_iNumFixes);
+					if (m_iNumFixes == m_iNumErrors)
+						_tprintf(_T("All errors in database was fixed\n"));
+					else
+						_tprintf(_T("Database still contain errors\n"));
+					if (m_iNumFixes > 0)
+					{
+						if (GetYesNo(_T("Commit changes?")))
+						{
+							_tprintf(_T("Committing changes...\n"));
+							if (DBCommit(g_hCoreDB))
+								_tprintf(_T("Changes was successfully committed to database\n"));
+						}
+						else
+						{
+							_tprintf(_T("Rolling back changes...\n"));
+							if (DBRollback(g_hCoreDB))
+								_tprintf(_T("All changes made to database was cancelled\n"));
+						}
+					}
+					else
+					{
+						DBRollback(g_hCoreDB);
+					}
+				}
+				bCompleted = TRUE;
+			}
       }
-
-      if (bLocked)
-      {
-         if (GetYesNo(_T("Database is locked by server %s [%s]\nDo you wish to force database unlock?"), szLockStatus, szLockInfo))
-         {
-            if (SQLQuery(_T("UPDATE config SET var_value='UNLOCKED' where var_name='DBLockStatus'")))
-            {
-               bLocked = FALSE;
-               _tprintf(_T("Database lock removed\n"));
-            }
-         }
-      }
-
-      if (!bLocked)
-      {
-         DBBegin(g_hCoreDB);
-
-			CheckZones();
-         CheckNodes();
-         CheckComponents(_T("interface"), _T("interfaces"));
-         CheckComponents(_T("network service"), _T("network_services"));
-			CheckClusters();
-         CheckTemplateNodeMapping();
-         CheckObjectProperties();
-         CheckEPP();
-			if (g_checkData)
-				CheckIData();
-
-         if (m_iNumErrors == 0)
-         {
-            _tprintf(_T("Database doesn't contain any errors\n"));
-            DBCommit(g_hCoreDB);
-         }
-         else
-         {
-            _tprintf(_T("%d errors was found, %d errors was corrected\n"), m_iNumErrors, m_iNumFixes);
-            if (m_iNumFixes == m_iNumErrors)
-               _tprintf(_T("All errors in database was fixed\n"));
-            else
-               _tprintf(_T("Database still contain errors\n"));
-            if (m_iNumFixes > 0)
-            {
-               if (GetYesNo(_T("Commit changes?")))
-               {
-                  _tprintf(_T("Committing changes...\n"));
-                  if (DBCommit(g_hCoreDB))
-                     _tprintf(_T("Changes was successfully committed to database\n"));
-               }
-               else
-               {
-                  _tprintf(_T("Rolling back changes...\n"));
-                  if (DBRollback(g_hCoreDB))
-                     _tprintf(_T("All changes made to database was cancelled\n"));
-               }
-            }
-            else
-            {
-               DBRollback(g_hCoreDB);
-            }
-         }
-         bCompleted = TRUE;
-      }
+		else
+		{
+			_tprintf(_T("Unable to get database lock status\n"));
+		}
    }
 
    _tprintf(_T("Database check %s\n"), bCompleted ? _T("completed") : _T("aborted"));
