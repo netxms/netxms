@@ -22,18 +22,14 @@
 
 #include "nxcore.h"
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 extern Queue g_nodePollerQueue;
 
-
-//
-// Discovery class
-//
-
+/**
+ * Discovery class
+ */
 class NXSL_DiscoveryClass : public NXSL_Class
 {
 public:
@@ -42,11 +38,9 @@ public:
    virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
 };
 
-
-//
-// Implementation of discovery class
-//
-
+/**
+ * Implementation of discovery class
+ */
 NXSL_DiscoveryClass::NXSL_DiscoveryClass()
                      :NXSL_Class()
 {
@@ -125,7 +119,6 @@ NXSL_Value *NXSL_DiscoveryClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    }
    return pValue;
 }
-
 
 /**
  * Discovery class object
@@ -321,7 +314,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
    ConfigReadStr(_T("DiscoveryFilter"), szFilter, MAX_DB_STRING, _T(""));
    StrStrip(szFilter);
 
-   // Run filter script
+   // Check for filter script
    if ((szFilter[0] == 0) || (!_tcsicmp(szFilter, _T("none"))))
 	{
 		DbgPrintf(4, _T("AcceptNewNode(%s): no filtering, node accepted"), szIpAddr);
@@ -333,6 +326,43 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
    data.dwIpAddr = dwIpAddr;
    data.dwNetMask = dwNetMask;
    data.dwSubnetAddr = dwIpAddr & dwNetMask;
+
+   // Check for address range if we use simple filter instead of script
+	DWORD autoFilterFlags;
+   if (!_tcsicmp(szFilter, _T("auto")))
+   {
+      autoFilterFlags = ConfigReadULong(_T("DiscoveryFilterFlags"), DFF_ALLOW_AGENT | DFF_ALLOW_SNMP);
+		DbgPrintf(4, _T("AcceptNewNode(%s): auto filter, flags=%04X"), szIpAddr, autoFilterFlags);
+
+		if (autoFilterFlags & DFF_ONLY_RANGE)
+      {
+			DbgPrintf(4, _T("AcceptNewNode(%s): auto filter - checking range"), szIpAddr);
+         DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=2"));
+         if (hResult != NULL)
+         {
+            int nRows = DBGetNumRows(hResult);
+            for(int i = 0; (i < nRows) && (!bResult); i++)
+            {
+               int nType = DBGetFieldLong(hResult, i, 0);
+               if (nType == 0)
+               {
+                  // Subnet
+                  bResult = (data.dwIpAddr & DBGetFieldIPAddr(hResult, i, 2)) == DBGetFieldIPAddr(hResult, i, 1);
+               }
+               else
+               {
+                  // Range
+                  bResult = ((data.dwIpAddr >= DBGetFieldIPAddr(hResult, i, 1)) &&
+                             (data.dwIpAddr <= DBGetFieldIPAddr(hResult, i, 2)));
+               }
+            }
+            DBFreeResult(hResult);
+         }
+      }
+		DbgPrintf(4, _T("AcceptNewNode(%s): auto filter - range check result is %d"), szIpAddr, bResult);
+		if (!bResult)
+			return FALSE;
+   }
 
    // Check SNMP support
 	DbgPrintf(4, _T("AcceptNewNode(%s): checking SNMP support"), szIpAddr);
@@ -421,56 +451,23 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
    // Check if we use simple filter instead of script
    if (!_tcsicmp(szFilter, _T("auto")))
    {
-      DWORD dwFlags;
-      DB_RESULT hResult;
-      int i, nRows, nType;
-
-      dwFlags = ConfigReadULong(_T("DiscoveryFilterFlags"), DFF_ALLOW_AGENT | DFF_ALLOW_SNMP);
-		DbgPrintf(4, _T("AcceptNewNode(%s): auto filter, dwFlags=%04X"), szIpAddr, dwFlags);
-
-      if ((dwFlags & (DFF_ALLOW_AGENT | DFF_ALLOW_SNMP)) == 0)
+		bResult = FALSE;
+      if ((autoFilterFlags & (DFF_ALLOW_AGENT | DFF_ALLOW_SNMP)) == 0)
       {
          bResult = TRUE;
       }
       else
       {
-         if (dwFlags & DFF_ALLOW_AGENT)
+         if (autoFilterFlags & DFF_ALLOW_AGENT)
          {
             if (data.dwFlags & NNF_IS_AGENT)
                bResult = TRUE;
          }
 
-         if (dwFlags & DFF_ALLOW_SNMP)
+         if (autoFilterFlags & DFF_ALLOW_SNMP)
          {
             if (data.dwFlags & NNF_IS_SNMP)
                bResult = TRUE;
-         }
-      }
-
-      // Check range
-      if ((dwFlags & DFF_ONLY_RANGE) && bResult)
-      {
-			DbgPrintf(4, _T("AcceptNewNode(%s): auto filter - checking range"), szIpAddr);
-         hResult = DBSelect(g_hCoreDB, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=2"));
-         if (hResult != NULL)
-         {
-            nRows = DBGetNumRows(hResult);
-            for(i = 0, bResult = FALSE; (i < nRows) && (!bResult); i++)
-            {
-               nType = DBGetFieldLong(hResult, i, 0);
-               if (nType == 0)
-               {
-                  // Subnet
-                  bResult = (data.dwIpAddr & DBGetFieldIPAddr(hResult, i, 2)) == DBGetFieldIPAddr(hResult, i, 1);
-               }
-               else
-               {
-                  // Range
-                  bResult = ((data.dwIpAddr >= DBGetFieldIPAddr(hResult, i, 1)) &&
-                             (data.dwIpAddr <= DBGetFieldIPAddr(hResult, i, 2)));
-               }
-            }
-            DBFreeResult(hResult);
          }
       }
 		DbgPrintf(4, _T("AcceptNewNode(%s): auto filter - bResult=%d"), szIpAddr, bResult);
