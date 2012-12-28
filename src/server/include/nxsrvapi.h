@@ -291,11 +291,9 @@ public:
 	void resolvePort(int index, DWORD sp, DWORD ifIndex, DWORD id);
 };
 
-
-//
-// Vlan list
-//
-
+/**
+ * Vlan list
+ */
 class LIBNXSRV_EXPORTABLE VlanList : public RefCountObject
 {
 private:
@@ -321,11 +319,9 @@ public:
 	void fillMessage(CSCPMessage *msg);
 };
 
-
-//
-// Route information
-//
-
+/**
+ * Route information
+ */
 typedef struct
 {
    DWORD dwDestAddr;
@@ -335,22 +331,18 @@ typedef struct
    DWORD dwRouteType;
 } ROUTE;
 
-
-//
-// Routing table
-//
-
+/**
+ * Routing table
+ */
 typedef struct
 {
    int iNumEntries;     // Number of entries
    ROUTE *pRoutes;      // Route list
 } ROUTING_TABLE;
 
-
-//
-// Information about policies installed on agent
-//
-
+/**
+ * Information about policies installed on agent
+ */
 class LIBNXSRV_EXPORTABLE AgentPolicyInfo
 {
 private:
@@ -369,11 +361,9 @@ public:
 	const TCHAR *getServer(int index) { return ((index >= 0) && (index < m_size)) ? m_serverList[index] : NULL; }
 };
 
-
-//
-// Agent connection
-//
-
+/**
+ * Agent connection
+ */
 class LIBNXSRV_EXPORTABLE AgentConnection
 {
 private:
@@ -412,8 +402,8 @@ private:
 	bool m_deleteFileOnDownloadFailure;
 	bool m_fileUploadInProgress;
 
-   void ReceiverThread();
-   static THREAD_RESULT THREAD_CALL ReceiverThreadStarter(void *);
+   void receiverThread();
+   static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *);
 
 protected:
    void destroyResultData();
@@ -426,14 +416,14 @@ protected:
    DWORD getIpAddr() { return ntohl(m_dwAddr); }
 	DWORD prepareFileDownload(const TCHAR *fileName, DWORD rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void *cbArg);
 
-   virtual void PrintMsg(const TCHAR *pszFormat, ...);
+   virtual void printMsg(const TCHAR *pszFormat, ...);
    virtual void onTrap(CSCPMessage *pMsg);
 	virtual void onDataPush(CSCPMessage *msg);
 	virtual bool processCustomMessage(CSCPMessage *pMsg);
 	virtual void onFileDownload(BOOL success);
 
-   void Lock() { MutexLock(m_mutexDataLock); }
-   void Unlock() { MutexUnlock(m_mutexDataLock); }
+   void lock() { MutexLock(m_mutexDataLock); }
+   void unlock() { MutexUnlock(m_mutexDataLock); }
 	NXCPEncryptionContext *acquireEncryptionContext();
 
 public:
@@ -487,11 +477,9 @@ public:
 	void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
 };
 
-
-//
-// Proxy SNMP transport
-//
-
+/**
+ * Proxy SNMP transport
+ */
 class LIBNXSRV_EXPORTABLE SNMP_ProxyTransport : public SNMP_Transport
 {
 protected:

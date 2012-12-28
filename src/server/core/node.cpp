@@ -775,11 +775,9 @@ Interface *Node::findConnectionPoint(DWORD *localIfId, BYTE *localMacAddr, bool 
    return cp;
 }
 
-
-//
-// Check if given IP address is one of node's interfaces
-//
-
+/**
+ * Check if given IP address is one of node's interfaces
+ */
 BOOL Node::isMyIP(DWORD dwIpAddr)
 {
    DWORD i;
@@ -798,11 +796,9 @@ BOOL Node::isMyIP(DWORD dwIpAddr)
    return FALSE;
 }
 
-
-//
-// Create new interface
-//
-
+/**
+ * Create new interface
+ */
 Interface *Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name, const TCHAR *descr,
                                     DWORD dwIndex, DWORD dwType, BYTE *pbMacAddr, DWORD bridgePort, 
 										      DWORD slot, DWORD port, bool physPort, bool manuallyCreated)
@@ -918,11 +914,9 @@ Interface *Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR
 	return pInterface;
 }
 
-
-//
-// Delete interface from node
-//
-
+/**
+ * Delete interface from node
+ */
 void Node::deleteInterface(Interface *pInterface)
 {
    DWORD i;
@@ -1413,11 +1407,9 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 	}
 }
 
-
-//
-// Update primary IP address from primary name
-//
-
+/**
+ * Update primary IP address from primary name
+ */
 void Node::updatePrimaryIpAddr()
 {
 	if (m_primaryName[0] == 0)
@@ -1432,6 +1424,10 @@ void Node::updatePrimaryIpAddr()
 			m_szName, (int)m_dwId, IpToStr(m_dwIpAddr, buffer1), IpToStr(ipAddr, buffer2));
 		PostEvent(EVENT_IP_ADDRESS_CHANGED, m_dwId, "aa", ipAddr, m_dwIpAddr);
 		m_dwIpAddr = ipAddr;
+
+		agentLock();
+		delete_and_null(m_pAgentConnection);
+		agentUnlock();
 	}
 }
 
@@ -1572,22 +1568,22 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 		SendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n"), m_szName);
 		SendPollerMsg(dwRqId, _T("Node configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
 
+		// Call hooks in loaded modules
+		for(DWORD i = 0; i < g_dwNumModules; i++)
+		{
+			if (g_pModuleList[i].pfConfPollHook != NULL)
+			{
+				DbgPrintf(5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_szName, m_dwId, g_pModuleList[i].szName);
+				g_pModuleList[i].pfConfPollHook(this, pSession, dwRqId, nPoller);
+			}
+		}
+
+		// Execute hook script
+		SetPollerInfo(nPoller, _T("hook"));
+		executeHookScript(_T("ConfigurationPoll"));
+
 		m_dwDynamicFlags |= NDF_CONFIGURATION_POLL_PASSED;
    }
-
-   // Call hooks in loaded modules
-   for(DWORD i = 0; i < g_dwNumModules; i++)
-	{
-		if (g_pModuleList[i].pfConfPollHook != NULL)
-		{
-			DbgPrintf(5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_szName, m_dwId, g_pModuleList[i].szName);
-			g_pModuleList[i].pfConfPollHook(this, pSession, dwRqId, nPoller);
-		}
-	}
-
-	// Execute hook script
-   SetPollerInfo(nPoller, _T("hook"));
-	executeHookScript(_T("ConfigurationPoll"));
 
    // Finish configuration poll
    SetPollerInfo(nPoller, _T("cleanup"));
@@ -2416,11 +2412,9 @@ void Node::updateContainerMembership()
 	g_idxObjectById.forEach(UpdateContainerBinding, this);
 }
 
-
-//
-// Connect to native agent
-//
-
+/**
+ * Connect to native agent. Assumes that access to agent connection is already locked.
+ */
 BOOL Node::connectToAgent(DWORD *error, DWORD *socketError)
 {
    BOOL bRet;
@@ -2464,11 +2458,9 @@ BOOL Node::connectToAgent(DWORD *error, DWORD *socketError)
    return bRet;
 }
 
-
-//
-// Get item's value via SNMP
-//
-
+/**
+ * Get DCI value via SNMP
+ */
 DWORD Node::getItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer, int interpretRawValue)
 {
    DWORD dwResult;
@@ -2893,11 +2885,9 @@ void Node::CreateMessage(CSCPMessage *pMsg)
 	}
 }
 
-
-//
-// Modify object from message
-//
-
+/**
+ * Modify object from NXCP message
+ */
 DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
@@ -2930,7 +2920,11 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		{
 			IpToStr(m_dwIpAddr, m_primaryName);
 		}
-   }
+
+		agentLock();
+		delete_and_null(m_pAgentConnection);
+		agentUnlock();
+	}
 
    // Change primary host name
    if (pRequest->IsVariableExist(VID_PRIMARY_NAME))

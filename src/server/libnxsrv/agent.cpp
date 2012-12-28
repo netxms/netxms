@@ -32,29 +32,23 @@
 #define _tell(f) lseek(f,0,SEEK_CUR)
 #endif
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define RECEIVER_BUFFER_SIZE        262144
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 #ifdef _WITH_ENCRYPTION
 static int m_iDefaultEncryptionPolicy = ENCRYPTION_ALLOWED;
 #else
 static int m_iDefaultEncryptionPolicy = ENCRYPTION_DISABLED;
 #endif
 
-
-//
-// Set default encryption policy for agent communication
-//
-
+/**
+ * Set default encryption policy for agent communication
+ */
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy)
 {
 #ifdef _WITH_ENCRYPTION
@@ -62,24 +56,19 @@ void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy)
 #endif
 }
 
-
-//
-// Receiver thread starter
-//
-
-THREAD_RESULT THREAD_CALL AgentConnection::ReceiverThreadStarter(void *pArg)
+/**
+ * Receiver thread starter
+ */
+THREAD_RESULT THREAD_CALL AgentConnection::receiverThreadStarter(void *pArg)
 {
-   ((AgentConnection *)pArg)->ReceiverThread();
+   ((AgentConnection *)pArg)->receiverThread();
    return THREAD_OK;
 }
 
-
-//
-// Constructor for AgentConnection
-//
-
-AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
-                                 int iAuthMethod, const TCHAR *pszSecret)
+/**
+ * Constructor for AgentConnection
+ */
+AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, const TCHAR *pszSecret)
 {
    m_dwAddr = dwAddr;
    m_wPort = wPort;
@@ -120,11 +109,9 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
 	m_fileUploadInProgress = false;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 AgentConnection::~AgentConnection()
 {
    // Disconnect from peer
@@ -134,17 +121,17 @@ AgentConnection::~AgentConnection()
    ThreadJoin(m_hReceiverThread);
    
 	// Close socket if active
-	Lock();
+	lock();
    if (m_hSocket != -1)
 	{
       closesocket(m_hSocket);
 		m_hSocket = -1;
 	}
-	Unlock();
+	unlock();
 
-   Lock();
+   lock();
    destroyResultData();
-   Unlock();
+   unlock();
 
    delete m_pMsgWaitQueue;
 	if (m_pCtx != NULL)
@@ -161,13 +148,11 @@ AgentConnection::~AgentConnection()
 	ConditionDestroy(m_condFileDownload);
 }
 
-
-//
-// Print message. This function is virtual and can be overrided in
-// derived classes. Default implementation will print message to stdout.
-//
-
-void AgentConnection::PrintMsg(const TCHAR *pszFormat, ...)
+/**
+ * Print message. This method is virtual and can be overrided in
+ * derived classes. Default implementation will print message to stdout.
+ */
+void AgentConnection::printMsg(const TCHAR *pszFormat, ...)
 {
    va_list args;
 
@@ -177,12 +162,10 @@ void AgentConnection::PrintMsg(const TCHAR *pszFormat, ...)
    _tprintf(_T("\n"));
 }
 
-
-//
-// Receiver thread
-//
-
-void AgentConnection::ReceiverThread()
+/**
+ * Receiver thread
+ */
+void AgentConnection::receiverThread()
 {
    CSCPMessage *pMsg;
    CSCP_MESSAGE *pRawMsg;
@@ -206,9 +189,9 @@ void AgentConnection::ReceiverThread()
    while(1)
    {
       // Receive raw message
-      Lock();
+      lock();
 		nSocket = m_hSocket;
-		Unlock();
+		unlock();
       if ((error = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
                                   &m_pCtx, pDecryptionBuffer, m_dwRecvTimeout)) <= 0)
 		{
@@ -220,7 +203,7 @@ void AgentConnection::ReceiverThread()
       // Check if we get too large message
       if (error == 1)
       {
-         PrintMsg(_T("Received too large message %s (%d bytes)"), 
+         printMsg(_T("Received too large message %s (%d bytes)"), 
                   NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                   ntohl(pRawMsg->dwSize));
          continue;
@@ -229,7 +212,7 @@ void AgentConnection::ReceiverThread()
       // Check if we are unable to decrypt message
       if (error == 2)
       {
-         PrintMsg(_T("Unable to decrypt received message"));
+         printMsg(_T("Unable to decrypt received message"));
          continue;
       }
 
@@ -238,14 +221,14 @@ void AgentConnection::ReceiverThread()
       {
 			if (m_fileUploadInProgress)
 				continue;	// Receive timeout may occur when uploading large files via slow links
-         PrintMsg(_T("Timed out waiting for message"));
+         printMsg(_T("Timed out waiting for message"));
          break;
       }
 
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != error)
       {
-         PrintMsg(_T("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]"), ntohl(pRawMsg->dwSize), error);
+         printMsg(_T("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]"), ntohl(pRawMsg->dwSize), error);
          continue;   // Bad packet, wait for next
       }
 
@@ -316,7 +299,7 @@ void AgentConnection::ReceiverThread()
    }
 
    // Close socket and mark connection as disconnected
-   Lock();
+   lock();
 	if (m_hCurrFile != -1)
 	{
 		close(m_hCurrFile);
@@ -334,7 +317,7 @@ void AgentConnection::ReceiverThread()
 		m_pCtx = NULL;
 	}
    m_bIsConnected = FALSE;
-   Unlock();
+   unlock();
 
    free(pRawMsg);
    free(pMsgBuffer);
@@ -343,11 +326,9 @@ void AgentConnection::ReceiverThread()
 #endif
 }
 
-
-//
-// Connect to agent
-//
-
+/**
+ * Connect to agent
+ */
 BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError, DWORD *pdwSocketError)
 {
    struct sockaddr_in sa;
@@ -377,7 +358,7 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError, D
    m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
    if (m_hSocket == -1)
    {
-      PrintMsg(_T("Call to socket() failed"));
+      printMsg(_T("Call to socket() failed"));
       goto connect_cleanup;
    }
 
@@ -399,7 +380,7 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError, D
 	if (ConnectEx(m_hSocket, (struct sockaddr *)&sa, sizeof(sa), m_connectionTimeout) == -1)
    {
       if (bVerbose)
-         PrintMsg(_T("Cannot establish connection with agent %s"),
+         printMsg(_T("Cannot establish connection with agent %s"),
                   IpToStr(ntohl(m_bUseProxy ? m_dwProxyAddr : m_dwAddr), szBuffer));
       dwError = ERR_CONNECT_FAILED;
       goto connect_cleanup;
@@ -412,7 +393,7 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError, D
    }
 
    // Start receiver thread
-   m_hReceiverThread = ThreadCreateEx(ReceiverThreadStarter, 0, this);
+   m_hReceiverThread = ThreadCreateEx(receiverThreadStarter, 0, this);
 
    // Setup encryption
 setup_encryption:
@@ -446,7 +427,7 @@ setup_encryption:
          bForceEncryption = TRUE;
          goto setup_encryption;
       }
-      PrintMsg(_T("Authentication to agent %s failed (%s)"), IpToStr(ntohl(m_dwAddr), szBuffer),
+      printMsg(_T("Authentication to agent %s failed (%s)"), IpToStr(ntohl(m_dwAddr), szBuffer),
                AgentErrorCodeToText(dwError));
       goto connect_cleanup;
    }
@@ -460,7 +441,7 @@ setup_encryption:
          bForceEncryption = TRUE;
          goto setup_encryption;
       }
-      PrintMsg(_T("Communication with agent %s failed (%s)"), IpToStr(ntohl(m_dwAddr), szBuffer),
+      printMsg(_T("Communication with agent %s failed (%s)"), IpToStr(ntohl(m_dwAddr), szBuffer),
                AgentErrorCodeToText(dwError));
       goto connect_cleanup;
    }
@@ -470,13 +451,13 @@ setup_encryption:
       dwError = setupProxyConnection();
       if (dwError != ERR_SUCCESS)
          goto connect_cleanup;
-		Lock();
+		lock();
 		if (m_pCtx != NULL)
 		{
 			m_pCtx->decRefCount();
 	      m_pCtx = NULL;
 		}
-		Unlock();
+		unlock();
       bSecondPass = TRUE;
       bForceEncryption = FALSE;
       goto setup_encryption;
@@ -491,14 +472,14 @@ connect_cleanup:
 		if (pdwSocketError != NULL)
 			*pdwSocketError = (DWORD)WSAGetLastError();
 
-      Lock();
+      lock();
       if (m_hSocket != -1)
          shutdown(m_hSocket, SHUT_RDWR);
-      Unlock();
+      unlock();
       ThreadJoin(m_hReceiverThread);
       m_hReceiverThread = INVALID_THREAD_HANDLE;
 
-      Lock();
+      lock();
       if (m_hSocket != -1)
       {
          closesocket(m_hSocket);
@@ -511,7 +492,7 @@ connect_cleanup:
 	      m_pCtx = NULL;
 		}
 
-      Unlock();
+      unlock();
    }
    m_bIsConnected = bSuccess;
    if (pdwError != NULL)
@@ -526,7 +507,7 @@ connect_cleanup:
 
 void AgentConnection::disconnect()
 {
-   Lock();
+   lock();
 	if (m_hCurrFile != -1)
 	{
 		close(m_hCurrFile);
@@ -540,7 +521,7 @@ void AgentConnection::disconnect()
    }
    destroyResultData();
    m_bIsConnected = FALSE;
-   Unlock();
+   unlock();
 }
 
 
@@ -644,9 +625,9 @@ InterfaceList *AgentConnection::getInterfaceList()
 			pIfList->add(&iface);
       }
 
-      Lock();
+      lock();
       destroyResultData();
-      Unlock();
+      unlock();
    }
 
    return pIfList;
@@ -749,9 +730,9 @@ ARP_CACHE *AgentConnection::getArpCache()
             pArpCache->pEntries[i].dwIndex = _tcstoul(pChar + 1, NULL, 10);
       }
 
-      Lock();
+      lock();
       destroyResultData();
-      Unlock();
+      unlock();
    }
    return pArpCache;
 }
@@ -1478,9 +1459,9 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
          pRT->pRoutes[i].dwRouteType = _tcstoul(pBuf, NULL, 10);
       }
 
-      Lock();
+      lock();
       destroyResultData();
-      Unlock();
+      unlock();
    }
 
    return pRT;
@@ -1725,10 +1706,10 @@ DWORD AgentConnection::uninstallPolicy(uuid_t guid)
 
 NXCPEncryptionContext *AgentConnection::acquireEncryptionContext()
 {
-	Lock();
+	lock();
 	NXCPEncryptionContext *ctx = m_pCtx;
 	if (ctx != NULL)
 		ctx->incRefCount();
-	Unlock();
+	unlock();
 	return ctx;
 }
