@@ -135,6 +135,7 @@ void CorrelateEvent(Event *pEvent)
          }
          break;
       case EVENT_NODE_DOWN:
+		case EVENT_NODE_UNREACHABLE:
          node->setLastEventId(LAST_EVENT_NODE_DOWN, pEvent->getId());
          C_SysNodeDown(node, pEvent);
          break;

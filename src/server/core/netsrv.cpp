@@ -22,13 +22,10 @@
 
 #include "nxcore.h"
 
-
-//
-// Default constructor
-//
-
-NetworkService::NetworkService()
-               :NetObj()
+/**
+ * Default constructor
+ */
+NetworkService::NetworkService() : NetObj()
 {
    m_iServiceType = NETSRV_HTTP;
    m_pHostNode = NULL;
@@ -49,7 +46,7 @@ NetworkService::NetworkService()
  */
 NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
                                TCHAR *pszRequest, TCHAR *pszResponse,
-                               Node *pHostNode, DWORD dwPollerNode)
+										 Node *pHostNode, DWORD dwPollerNode) : NetObj()
 {
    m_iServiceType = iServiceType;
    m_pHostNode = pHostNode;
@@ -64,22 +61,18 @@ NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
    m_bIsHidden = TRUE;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 NetworkService::~NetworkService()
 {
    safe_free(m_pszRequest);
    safe_free(m_pszResponse);
 }
 
-
-//
-// Save object to database
-//
-
+/**
+ * Save object to database
+ */
 BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR *pszEscRequest, *pszEscResponse, szQuery[16384], szIpAddr[32];
@@ -138,11 +131,9 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
    return TRUE;
 }
 
-
-//
-// Load properties from database
-//
-
+/**
+ * Load properties from database
+ */
 BOOL NetworkService::CreateFromDB(DWORD dwId)
 {
    TCHAR szQuery[256];
@@ -229,11 +220,9 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
    return bResult;
 }
 
-
-//
-// Delete object from database
-//
-
+/**
+ * Delete object from database
+ */
 BOOL NetworkService::DeleteFromDB()
 {
    TCHAR szQuery[128];
@@ -248,11 +237,9 @@ BOOL NetworkService::DeleteFromDB()
    return bSuccess;
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create NXCP message with object's data
+ */
 void NetworkService::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
@@ -265,11 +252,9 @@ void NetworkService::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
 }
 
-
-//
-// Modify object from message
-//
-
+/**
+ * Modify object from message
+ */
 DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
@@ -347,13 +332,10 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
 
-
-//
-// Perform status poll on network service
-//
-
-void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
-                                Node *pPollerNode, Queue *pEventQueue)
+/**
+ * Perform status poll on network service
+ */
+void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPollerNode, Queue *pEventQueue)
 {
    int oldStatus = m_iStatus, newStatus;
    Node *pNode;
@@ -411,6 +393,13 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
       newStatus = STATUS_UNKNOWN;
    }
 
+	// Reset status to unknown if node has known network connectivity problems
+	if ((newStatus == STATUS_CRITICAL) && (pNode->getRuntimeFlags() & NDF_NETWORK_PATH_PROBLEM))
+	{
+		newStatus = STATUS_UNKNOWN;
+		DbgPrintf(6, _T("StatusPoll(%s): Status for network service %s reset to UNKNOWN"), pNode->Name(), m_szName);
+	}
+   
    if (newStatus != oldStatus)
    {
 		if (newStatus == m_iPendingStatus)
@@ -439,11 +428,9 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
    SendPollerMsg(dwRqId, _T("   Finished status poll on network service %s\r\n"), m_szName);
 }
 
-
-//
-// Handler for object deletion
-//
-
+/**
+ * Handler for object deletion
+ */
 void NetworkService::OnObjectDelete(DWORD dwObjectId)
 {
 	LockData();

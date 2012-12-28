@@ -988,12 +988,11 @@ void Node::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    DWORD i, dwPollListSize, dwOldFlags = m_dwFlags;
    NetObj *pPollerNode = NULL, **ppPollList;
    BOOL bAllDown;
-   Queue *pQueue;    // Delayed event queue
 	SNMP_Transport *pTransport;
 	Cluster *pCluster;
    time_t tNow, tExpire;
 
-   pQueue = new Queue;
+   Queue *pQueue = new Queue;     // Delayed event queue
    SetPollerInfo(nPoller, _T("wait for lock"));
    pollerLock();
    m_pPollRequestor = pSession;
@@ -1206,6 +1205,8 @@ skip_snmp_check:
 		    (!(m_dwFlags & NF_DISABLE_SNMP)))
 		   if (!(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))
 		      bAllDown = FALSE;
+
+		DbgPrintf(6, _T("StatusPoll(%s): bAllDown=%s, dynFlags=0x%08X"), m_szName, bAllDown ? _T("true") : _T("false"), m_dwDynamicFlags);
 		if (bAllDown)
 		{
 		   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
@@ -1213,8 +1214,36 @@ skip_snmp_check:
 		      m_dwDynamicFlags |= NDF_UNREACHABLE;
 				m_tDownSince = time(NULL);
 			   SetPollerInfo(nPoller, _T("check network path"));
-				checkNetworkPath(dwRqId);
-		      PostEvent(EVENT_NODE_DOWN, m_dwId, NULL);
+				if (checkNetworkPath(dwRqId))
+				{
+			      m_dwDynamicFlags |= NDF_NETWORK_PATH_PROBLEM;
+
+					// Set interfaces and network services to UNKNOWN state
+					LockChildList(FALSE);
+					for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
+						if (((m_pChildList[i]->Type() == OBJECT_INTERFACE) || (m_pChildList[i]->Type() == OBJECT_NETWORKSERVICE)) &&
+							 (m_pChildList[i]->Status() == STATUS_CRITICAL))
+						{
+							m_pChildList[i]->resetStatus();
+						}
+					UnlockChildList();
+
+					// Clear delayed event queue
+					while(1)
+					{
+						Event *pEvent = (Event *)pQueue->Get();
+						if (pEvent == NULL)
+							break;
+						delete pEvent;
+					}
+					delete_and_null(pQueue);
+
+					PostEvent(EVENT_NODE_UNREACHABLE, m_dwId, NULL);
+				}
+				else
+				{
+					PostEvent(EVENT_NODE_DOWN, m_dwId, NULL);
+				}
 		      SendPollerMsg(dwRqId, POLLER_ERROR _T("Node is unreachable\r\n"));
 		   }
 		   else
@@ -1227,7 +1256,7 @@ skip_snmp_check:
 			m_tDownSince = 0;
 		   if (m_dwDynamicFlags & NDF_UNREACHABLE)
 		   {
-		      m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_AGENT_UNREACHABLE);
+		      m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_AGENT_UNREACHABLE | NDF_NETWORK_PATH_PROBLEM);
 		      PostEvent(EVENT_NODE_UP, m_dwId, NULL);
 		      SendPollerMsg(dwRqId, POLLER_INFO _T("Node recovered from unreachable state\r\n"));
 				goto restart_agent_check;
@@ -1240,8 +1269,11 @@ skip_snmp_check:
 	}
 
    // Send delayed events and destroy delayed event queue
-   ResendEvents(pQueue);
-   delete pQueue;
+	if (pQueue != NULL)
+	{
+		ResendEvents(pQueue);
+		delete pQueue;
+	}
 
    // Call hooks in loaded modules
    for(DWORD i = 0; i < g_dwNumModules; i++)
@@ -1282,21 +1314,23 @@ skip_snmp_check:
 
 /**
  * Check network path between node and management server to detect possible intermediate node failure
+ *
+ * @return true if network path problems found
  */
-void Node::checkNetworkPath(DWORD dwRqId)
+bool Node::checkNetworkPath(DWORD dwRqId)
 {
    Node *mgmtNode = (Node *)FindObjectById(g_dwMgmtNode);
    if (mgmtNode == NULL)
 	{
 		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): cannot find management node"), m_szName, m_dwId);
-		return;
+		return false;
 	}
 
 	NetworkPath *trace = TraceRoute(mgmtNode, this);
    if (trace == NULL)
 	{
 		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): trace not available"), m_szName, m_dwId);
-		return;
+		return false;
 	}
 	DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): trace available, %d hops, %s"),
 	          m_szName, m_dwId, trace->getHopCount(), trace->isComplete() ? _T("complete") : _T("incomplete"));
@@ -1341,6 +1375,7 @@ restart:
 		goto restart;
 	}
    delete trace;
+	return pathProblemFound;
 }
 
 /**

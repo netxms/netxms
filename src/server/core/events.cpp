@@ -870,29 +870,23 @@ BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, const char 
    return bResult;
 }
 
-
-//
-// Resend events from specific queue to system event queue
-//
-
+/**
+ * Resend events from specific queue to system event queue
+ */
 void ResendEvents(Queue *pQueue)
 {
-   void *pEvent;
-
    while(1)
    {
-      pEvent = pQueue->Get();
+      void *pEvent = pQueue->Get();
       if (pEvent == NULL)
          break;
       g_pEventQueue->Put(pEvent);
    }
 }
 
-
-//
-// Create NXMP record for event
-//
-
+/**
+ * Create NXMP record for event
+ */
 void CreateNXMPEventRecord(String &str, DWORD dwCode)
 {
    EVENT_TEMPLATE *p;
@@ -923,11 +917,9 @@ void CreateNXMPEventRecord(String &str, DWORD dwCode)
    RWLockUnlock(m_rwlockTemplateAccess);
 }
 
-
-//
-// Resolve event name
-//
-
+/**
+ * Resolve event name
+ */
 BOOL EventNameFromCode(DWORD dwCode, TCHAR *pszBuffer)
 {
    EVENT_TEMPLATE *p;

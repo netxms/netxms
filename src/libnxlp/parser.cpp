@@ -24,18 +24,14 @@
 #include "libnxlp.h"
 #include <expat.h>
 
-
-//
-// Context state texts
-//
-
+/**
+ * Context state texts
+ */
 static const TCHAR *s_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
 
-
-//
-// XML parser state for creating LogParser object from XML
-//
-
+/**
+ * XML parser state for creating LogParser object from XML
+ */
 #define XML_STATE_INIT        -1
 #define XML_STATE_END         -2
 #define XML_STATE_ERROR       -255
@@ -52,7 +48,6 @@ static const TCHAR *s_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
 #define XML_STATE_MACROS      10
 #define XML_STATE_MACRO       11
 #define XML_STATE_DESCRIPTION 12
-
 
 struct XML_PARSER_STATE
 {

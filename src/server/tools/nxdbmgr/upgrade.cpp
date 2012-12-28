@@ -262,6 +262,18 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 /**
+ * Upgrade from V266 to V267
+ */
+static BOOL H_UpgradeFromV266(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateEventTemplate(EVENT_NODE_UNREACHABLE, _T("SYS_NODE_UNREACHABLE"), EVENT_SEVERITY_CRITICAL,
+	                             EF_LOG, _T("Node unreachable because of network failure"),
+										  _T("Generated when node is unreachable by management server because of network failure.\r\nParameters:\r\n   No event-specific parameters")));
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='267' WHERE var_name='SchemaVersion'")));
+	return TRUE;
+}
+
+/**
  * Upgrade from V265 to V266
  */
 static BOOL H_UpgradeFromV265(int currVersion, int newVersion)
@@ -6541,6 +6553,7 @@ static struct
 	{ 263, 264, H_UpgradeFromV263 },
 	{ 264, 265, H_UpgradeFromV264 },
 	{ 265, 266, H_UpgradeFromV265 },
+	{ 266, 267, H_UpgradeFromV266 },
    { 0, 0, NULL }
 };
 

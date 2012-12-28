@@ -101,8 +101,9 @@ extern Node a;
 #define NDF_CONFIGURATION_POLL_PASSED  0x1000
 #define NDF_QUEUED_FOR_TOPOLOGY_POLL   0x2000
 #define NDF_DELETE_IN_PROGRESS         0x4000
+#define NDF_NETWORK_PATH_PROBLEM       0x8000
 
-#define NDF_PERSISTENT (NDF_UNREACHABLE | NDF_AGENT_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_CPSNMP_UNREACHABLE)
+#define NDF_PERSISTENT (NDF_UNREACHABLE | NDF_NETWORK_PATH_PROBLEM | NDF_AGENT_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_CPSNMP_UNREACHABLE)
 
 #define __NDF_FLAGS_DEFINED
 
@@ -878,7 +879,7 @@ protected:
 	void checkBridgeMib(SNMP_Transport *pTransport);
 	void checkIfXTable(SNMP_Transport *pTransport);
 	void executeHookScript(const TCHAR *hookName);
-	void checkNetworkPath(DWORD dwRqId);
+	bool checkNetworkPath(DWORD dwRqId);
 
 	void applyUserTemplates();
 

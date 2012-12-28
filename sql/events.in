@@ -217,7 +217,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
-		EVENT_SNMP_FAIL, 'SYS_SNMP_UNREACHEABLE', 
+		EVENT_SNMP_FAIL, 'SYS_SNMP_UNREACHABLE', 
 		EVENT_SEVERITY_WARNING, 1,
 		'SNMP agent is not responding',
 		'Generated when node#27s SNMP agent is not responding.#0D#0A' CONCAT
@@ -226,7 +226,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
-		EVENT_AGENT_FAIL, 'SYS_AGENT_UNREACHEABLE',
+		EVENT_AGENT_FAIL, 'SYS_AGENT_UNREACHABLE',
 		EVENT_SEVERITY_WARNING, 1,
 		'Native agent is not responding',
 		'Generated when node#27s native agent is not responding.#0D#0A' CONCAT
@@ -752,6 +752,15 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'   2) Node name#0D#0A' CONCAT
 		'   3) Template ID#0D#0A' CONCAT
 		'   4) Template name'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_NODE_UNREACHABLE, 'SYS_NODE_UNREACHABLE',
+		EVENT_SEVERITY_CRITICAL, 1,
+		'Node unreachable because of network failure',
+		'Generated when node is unreachable by management server because of network failure.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No event-specific parameters'
 	);
 
 

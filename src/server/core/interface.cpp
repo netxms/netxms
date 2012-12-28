@@ -512,6 +512,13 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
 		if ((m_dot1xPaeAuthState == PAE_STATE_FORCE_UNAUTH) && (newStatus < STATUS_MAJOR))
 			newStatus = STATUS_MAJOR;
 	}
+
+	// Reset status to unknown if node has known network connectivity problems
+	if ((newStatus == STATUS_CRITICAL) && (pNode->getRuntimeFlags() & NDF_NETWORK_PATH_PROBLEM))
+	{
+		newStatus = STATUS_UNKNOWN;
+		DbgPrintf(6, _T("StatusPoll(%s): Status for interface %s reset to UNKNOWN"), pNode->Name(), m_szName);
+	}
    
 	if (newStatus == m_iPendingStatus)
 	{
