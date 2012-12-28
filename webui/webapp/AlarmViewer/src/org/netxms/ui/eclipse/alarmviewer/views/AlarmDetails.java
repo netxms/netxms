@@ -79,9 +79,10 @@ public class AlarmDetails extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.AlarmDetails"; //$NON-NLS-1$
 	
 	public static final int EV_COLUMN_SEVERITY = 0;
-	public static final int EV_COLUMN_NAME = 1;
-	public static final int EV_COLUMN_MESSAGE = 2;
-	public static final int EV_COLUMN_TIMESTAMP = 3;
+	public static final int EV_COLUMN_SOURCE = 1;
+	public static final int EV_COLUMN_NAME = 2;
+	public static final int EV_COLUMN_MESSAGE = 3;
+	public static final int EV_COLUMN_TIMESTAMP = 4;
 	
 	private static final String[] stateImage = { "icons/outstanding.png", "icons/acknowledged.png", "icons/terminated.png" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, Messages.AlarmListLabelProvider_AlarmState_Terminated };	
@@ -339,8 +340,8 @@ public class AlarmDetails extends ViewPart
 			}
 		});
 		
-		final String[] names = { "Severity", "Name", "Message", "Timestamp" };
-		final int[] widths = { 140, 120, 400, 120 };
+		final String[] names = { "Severity", "Source", "Name", "Message", "Timestamp" };
+		final int[] widths = { 130, 160, 160, 400, 120 };
 		eventViewer = new SortableTreeViewer(section, names, widths, 0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION);
 		section.setClient(eventViewer.getControl());
 		eventViewer.setContentProvider(new EventTreeContentProvider());
@@ -422,6 +423,7 @@ public class AlarmDetails extends ViewPart
 						}
 						
 						eventViewer.setInput(events);
+						eventViewer.expandAll();
 						
 						updateLayout();
 					}
