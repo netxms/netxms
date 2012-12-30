@@ -147,15 +147,19 @@ public class AlarmListAdapter extends BaseAdapter
 	 */
 	private int compareSeverity(Alarm alarm1, Alarm alarm2)
 	{
-		int rc = alarm1.getCurrentSeverity() - alarm2.getCurrentSeverity();
-		if (rc == 0)
+		int rc = 0;
+		if (alarm1 != null && alarm2 != null)
 		{
-			rc = (int)(alarm1.getSourceObjectId() - alarm2.getSourceObjectId());
+			rc = alarm1.getCurrentSeverity() - alarm2.getCurrentSeverity();
 			if (rc == 0)
 			{
-				rc = compareDate(alarm1, alarm2);
+				rc = (int)(alarm1.getSourceObjectId() - alarm2.getSourceObjectId());
 				if (rc == 0)
-					rc = alarm1.getState() - alarm2.getState();
+				{
+					rc = compareDate(alarm1, alarm2);
+					if (rc == 0)
+						rc = alarm1.getState() - alarm2.getState();
+				}
 			}
 		}
 		return rc;
@@ -169,7 +173,10 @@ public class AlarmListAdapter extends BaseAdapter
 	 */
 	private int compareDate(Alarm alarm1, Alarm alarm2)
 	{
-		return alarm1.getLastChangeTime().compareTo(alarm2.getLastChangeTime());
+		int rc = 0;
+		if (alarm1 != null && alarm2 != null)
+			rc = alarm1.getLastChangeTime().compareTo(alarm2.getLastChangeTime());
+		return rc;
 	}
 
 	/**
@@ -180,7 +187,10 @@ public class AlarmListAdapter extends BaseAdapter
 	 */
 	private int compareName(Alarm alarm1, Alarm alarm2)
 	{
-		return getObjectName(alarm1.getSourceObjectId()).compareTo(getObjectName(alarm2.getSourceObjectId()));
+		int rc = 0;
+		if (alarm1 != null && alarm2 != null)
+			rc = getObjectName(alarm1.getSourceObjectId()).compareTo(getObjectName(alarm2.getSourceObjectId()));
+		return rc;
 	}
 
 	private String getObjectName(long objectId)
