@@ -26,6 +26,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
@@ -49,7 +50,7 @@ public class NetworkServicePolling extends PropertyPage
 	private LabeledText request;
 	private LabeledText response;
 	private ObjectSelector pollerNode;
-	private LabeledText pollCount;
+	private Spinner pollCount;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -117,13 +118,11 @@ public class NetworkServicePolling extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		pollerNode.setLayoutData(gd);
       
-		pollCount = new LabeledText(dialogArea, SWT.NONE);
-		pollCount.setLabel("Required poll count");
-		pollCount.setText(Integer.toString(object.getPollCount()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = false;
-		pollCount.setLayoutData(gd);
+      pollCount = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Required poll count", 0, 1000, gd);
+      pollCount.setSelection(object.getPollCount());
 		
 		return dialogArea;
 	}
@@ -150,19 +149,7 @@ public class NetworkServicePolling extends PropertyPage
 			return false;
 		}
 		
-		try
-		{
-			int requiredPolls = Integer.parseInt(pollCount.getText());
-			if ((requiredPolls < 0) || (requiredPolls > 65535))
-				throw new NumberFormatException();
-			md.setRequiredPolls(requiredPolls);
-		}
-		catch(NumberFormatException e)
-		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid port poll count (0 .. 65535)");
-			return false;
-		}
-		
+		md.setRequiredPolls(pollCount.getSelection());
 		md.setServiceType(serviceType.getSelectionIndex());
 		md.setRequest(request.getText());
 		md.setResponse(response.getText());

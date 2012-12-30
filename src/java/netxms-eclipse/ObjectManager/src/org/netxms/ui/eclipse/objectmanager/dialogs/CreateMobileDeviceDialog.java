@@ -83,7 +83,7 @@ public class CreateMobileDeviceDialog extends Dialog
 		
 		deviceIdField = new LabeledText(dialogArea, SWT.NONE);
 		deviceIdField.setLabel("Device ID (IMEI or ESN)");
-		deviceIdField.getTextControl().setTextLimit(12);
+		deviceIdField.getTextControl().setTextLimit(64);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
