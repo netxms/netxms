@@ -24,7 +24,7 @@ CREATE TABLE metadata
 CREATE TABLE config
 (
 	var_name varchar(63) not null,
-	var_value varchar(255) not null,
+	var_value varchar(255) null,
 #ifdef DB_ORACLE
 	is_visible integer default 1 not null,
 	need_server_restart integer default 0 not null,
@@ -357,8 +357,8 @@ CREATE TABLE network_services
 	ip_bind_addr varchar(15) not null,
 	ip_proto integer not null,
 	ip_port integer not null,
-	check_request SQL_TEXT not null,
-	check_responce SQL_TEXT not null,
+	check_request SQL_TEXT null,
+	check_responce SQL_TEXT null,
 	poller_node_id integer not null,
 	required_polls integer not null,
 	PRIMARY KEY(id)
@@ -634,7 +634,7 @@ CREATE TABLE dci_schedules
 (
 	schedule_id integer not null,
 	item_id integer not null,
-	schedule varchar(255) not null,
+	schedule varchar(255) null,
 	PRIMARY KEY(item_id,schedule_id)
 ) TABLE_TYPE;
 

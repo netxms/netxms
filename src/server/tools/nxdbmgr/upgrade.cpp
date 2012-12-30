@@ -145,7 +145,7 @@ static BOOL DropPrimaryKey(const TCHAR *table)
 /**
  * Convert strings from # encoded form to normal form
  */
-static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *idColumn2, const TCHAR *column)
+static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *idColumn2, const TCHAR *column, bool isStringId)
 {
 	DB_RESULT hResult;
 	TCHAR *query;
@@ -194,17 +194,38 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 				queryLen = newValue.getSize() + 256;
 				query = (TCHAR *)realloc(query, queryLen * sizeof(TCHAR));
 			}
-			INT64 id = DBGetFieldInt64(hResult, i, 0);
-			if (idColumn2 != NULL)
+			if (isStringId)
 			{
-				INT64 id2 = DBGetFieldInt64(hResult, i, 2);
-				_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT _T(" AND %s=") INT64_FMT, 
-				           table, column, (const TCHAR *)newValue, idColumn, id, idColumn2, id2);
+				TCHAR *id = DBGetField(hResult, i, 0, NULL, 0);
+				if (idColumn2 != NULL)
+				{
+					TCHAR *id2 = DBGetField(hResult, i, 2, NULL, 0);
+					_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=%s AND %s=%s"),
+								  table, column, (const TCHAR *)newValue,
+								  idColumn, (const TCHAR *)DBPrepareString(g_hCoreDB, id), 
+								  idColumn2, (const TCHAR *)DBPrepareString(g_hCoreDB, id2));
+				}
+				else
+				{
+					_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=%s"), table, column,
+								  (const TCHAR *)newValue, idColumn, (const TCHAR *)DBPrepareString(g_hCoreDB, id));
+				}
+				free(id);
 			}
 			else
 			{
-				_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT, table, column,
-							  (const TCHAR *)newValue, idColumn, id);
+				INT64 id = DBGetFieldInt64(hResult, i, 0);
+				if (idColumn2 != NULL)
+				{
+					INT64 id2 = DBGetFieldInt64(hResult, i, 2);
+					_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT _T(" AND %s=") INT64_FMT, 
+								  table, column, (const TCHAR *)newValue, idColumn, id, idColumn2, id2);
+				}
+				else
+				{
+					_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT, table, column,
+								  (const TCHAR *)newValue, idColumn, id);
+				}
 			}
 			if (!SQLQuery(query))
 				goto cleanup;
@@ -220,7 +241,7 @@ cleanup:
 
 static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *column)
 {
-	return ConvertStrings(table, idColumn, NULL, column);
+	return ConvertStrings(table, idColumn, NULL, column, false);
 }
 
 /**
@@ -259,6 +280,29 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 	free(escMessage);
 	free(escDescription);
 	return SQLQuery(query);
+}
+
+/**
+ * Upgrade from V267 to V268
+ */
+static BOOL H_UpgradeFromV267(int currVersion, int newVersion)
+{
+	CHK_EXEC(SetColumnNullable(_T("network_services"), _T("check_request"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(SetColumnNullable(_T("network_services"), _T("check_responce"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_request")));
+	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_responce")));
+
+	CHK_EXEC(SetColumnNullable(_T("config"), _T("var_value"), _T("varchar(255)")));
+	CHK_EXEC(ConvertStrings(_T("config"), _T("var_name"), NULL, _T("var_value"), true));
+
+	CHK_EXEC(SetColumnNullable(_T("config"), _T("var_value"), _T("varchar(255)")));
+	CHK_EXEC(ConvertStrings(_T("config"), _T("var_name"), NULL, _T("var_value"), true));
+
+	CHK_EXEC(SetColumnNullable(_T("dci_schedules"), _T("schedule"), _T("varchar(255)")));
+	CHK_EXEC(ConvertStrings(_T("dci_schedules"), _T("schedule_id"), _T("item_id"), _T("schedule"), false));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='268' WHERE var_name='SchemaVersion'")));
+	return TRUE;
 }
 
 /**
@@ -514,11 +558,9 @@ static BOOL H_UpgradeFromV253(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V252 to V253
-//
-
+/**
+ * Upgrade from V252 to V253
+ */
 static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 {
 	CHK_EXEC(SetColumnNullable(_T("templates"), _T("apply_filter"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
@@ -902,11 +944,9 @@ static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V245 to V246
-//
-
+/**
+ * Upgrade from V245 to V246
+ */
 static BOOL H_UpgradeFromV245(int currVersion, int newVersion)
 {
 	static TCHAR batch[] = 
@@ -917,20 +957,18 @@ static BOOL H_UpgradeFromV245(int currVersion, int newVersion)
 	CHK_EXEC(SQLBatch(batch));
 
 	CHK_EXEC(SetColumnNullable(_T("snmp_trap_pmap"), _T("description"), _T("varchar(255)")));
-	CHK_EXEC(ConvertStrings(_T("snmp_trap_pmap"), _T("trap_id"), _T("parameter"), _T("description")));
+	CHK_EXEC(ConvertStrings(_T("snmp_trap_pmap"), _T("trap_id"), _T("parameter"), _T("description"), false));
 	
 	CHK_EXEC(SetColumnNullable(_T("cluster_resources"), _T("resource_name"), _T("varchar(255)")));
-	CHK_EXEC(ConvertStrings(_T("cluster_resources"), _T("cluster_id"), _T("resource_id"), _T("resource_name")));
+	CHK_EXEC(ConvertStrings(_T("cluster_resources"), _T("cluster_id"), _T("resource_id"), _T("resource_name"), false));
 	
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='246' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
 
-
-//
-// Upgrade from V244 to V245
-//
-
+/**
+ * Upgrade from V244 to V245
+ */
 static BOOL H_UpgradeFromV244(int currVersion, int newVersion)
 {
 	static TCHAR batch[] = 
@@ -6554,6 +6592,7 @@ static struct
 	{ 264, 265, H_UpgradeFromV264 },
 	{ 265, 266, H_UpgradeFromV265 },
 	{ 266, 267, H_UpgradeFromV266 },
+	{ 267, 268, H_UpgradeFromV267 },
    { 0, 0, NULL }
 };
 

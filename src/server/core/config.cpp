@@ -194,7 +194,6 @@ BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
 			if (DBGetNumRows(hResult) > 0)
 			{
 				DBGetField(hResult, 0, 0, szBuffer, iBufSize);
-				DecodeSQLString(szBuffer);
 				DbgPrintf(8, _T("ConfigReadStr: name=%s value=\"%s\""), szVar, szBuffer);
 				bSuccess = TRUE;
 			}
@@ -287,43 +286,53 @@ BOOL NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray, in
 /**
  * Write string value to configuration table
  */
-BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, BOOL bCreate,
-												  BOOL isVisible, BOOL needRestart)
+BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *varName, const TCHAR *value, BOOL bCreate, BOOL isVisible, BOOL needRestart)
 {
-   DB_RESULT hResult;
-   TCHAR *pszEscValue, szQuery[1024];
-   BOOL bVarExist = FALSE, success;
-
-   if (_tcslen(szVar) > 127)
+   if (_tcslen(varName) > 63)
       return FALSE;
 
    // Check for variable existence
-   _sntprintf(szQuery, 1024, _T("SELECT var_value FROM config WHERE var_name='%s'"), szVar);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name=?"));
+	if (hStmt == NULL)
+		return FALSE;
+	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
+	DB_RESULT hResult = DBSelectPrepared(hStmt);
+   BOOL bVarExist = FALSE;
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
          bVarExist = TRUE;
       DBFreeResult(hResult);
    }
+	DBFreeStatement(hStmt);
 
    // Don't create non-existing variable if creation flag not set
    if (!bCreate && !bVarExist)
       return FALSE;
 
    // Create or update variable value
-   pszEscValue = EncodeSQLString(szValue);
    if (bVarExist)
-      _sntprintf(szQuery, 1024, _T("UPDATE config SET var_value='%s' WHERE var_name='%s'"),
-              pszEscValue, szVar);
+	{
+		hStmt = DBPrepare(g_hCoreDB, _T("UPDATE config SET var_value=? WHERE var_name=?"));
+		if (hStmt == NULL)
+			return FALSE;
+		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
+	}
    else
-      _sntprintf(szQuery, 1024, _T("INSERT INTO config (var_name,var_value,is_visible,")
-                                _T("need_server_restart) VALUES ('%s','%s',%d,%d)"),
-                 szVar, pszEscValue, isVisible, needRestart);
-   free(pszEscValue);
-   success = DBQuery(g_hCoreDB, szQuery);
+	{
+		hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (?,?,?,?)"));
+		if (hStmt == NULL)
+			return FALSE;
+		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(isVisible ? 1 : 0));
+		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(needRestart ? 1 : 0));
+	}
+   BOOL success = DBExecute(hStmt);
+	DBFreeStatement(hStmt);
 	if (success)
-		OnConfigVariableChange(FALSE, szVar, szValue);
+		OnConfigVariableChange(FALSE, varName, value);
 	return success;
 }
 

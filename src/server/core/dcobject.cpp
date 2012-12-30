@@ -220,7 +220,6 @@ BOOL DCObject::loadCustomSchedules()
       for(DWORD i = 0; i < m_dwNumSchedules; i++)
       {
          m_ppScheduleList[i] = DBGetField(hResult, i, 0, NULL, 0);
-         DecodeSQLString(m_ppScheduleList[i]);
       }
       DBFreeResult(hResult);
    }
@@ -786,15 +785,10 @@ BOOL DCObject::saveToDB(DB_HANDLE hdb)
    BOOL success = DBQuery(hdb, query);
 	if (success && (m_flags & DCF_ADVANCED_SCHEDULE))
    {
-      TCHAR *pszEscSchedule;
-      DWORD i;
-
-      for(i = 0; i < m_dwNumSchedules; i++)
+      for(DWORD i = 0; i < m_dwNumSchedules; i++)
       {
-         pszEscSchedule = EncodeSQLString(m_ppScheduleList[i]);
-         _sntprintf(query, 1024, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES (%d,%d,'%s')"),
-                    m_dwId, i + 1, pszEscSchedule);
-         free(pszEscSchedule);
+         _sntprintf(query, 1024, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES (%d,%d,%s)"),
+                    m_dwId, i + 1, (const TCHAR *)DBPrepareString(hdb, m_ppScheduleList[i]));
          success = DBQuery(hdb, query);
 			if (!success)
 				break;

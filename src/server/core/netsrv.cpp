@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -75,52 +75,46 @@ NetworkService::~NetworkService()
  */
 BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR *pszEscRequest, *pszEscResponse, szQuery[16384], szIpAddr[32];
-   DB_RESULT hResult;
-   BOOL bNewObject = TRUE;
-
    LockData();
 
    saveCommonProperties(hdb);
 
-   // Check for object's existence in database
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM network_services WHERE id=%d"), m_dwId);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         bNewObject = FALSE;
-      DBFreeResult(hResult);
-   }
-
    // Form and execute INSERT or UPDATE query
-   pszEscRequest = EncodeSQLString(CHECK_NULL_EX(m_pszRequest));
-   pszEscResponse = EncodeSQLString(CHECK_NULL_EX(m_pszResponse));
-   if (bNewObject)
+	DB_STATEMENT hStmt;
+   if (IsDatabaseRecordExist(hdb, _T("network_services"), _T("id"), m_dwId))
    {
-      _sntprintf(szQuery, 16384, _T("INSERT INTO network_services (id,node_id,")
-                                    _T("service_type,ip_bind_addr,ip_proto,ip_port,")
-                                    _T("check_request,check_responce,poller_node_id,")
-		                              _T("required_polls) VALUES ")
-                                    _T("(%d,%d,%d,'%s',%d,%d,'%s','%s',%d,%d)"),
-                 m_dwId, m_pHostNode->Id(), m_iServiceType,
-                 IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
-                 pszEscResponse, m_dwPollerNode, m_iRequiredPollCount);
+		hStmt = DBPrepare(hdb, _T("UPDATE network_services SET node_id=?,")
+                             _T("service_type=?,ip_bind_addr=?,")
+                             _T("ip_proto=?,ip_port=?,check_request=?,")
+                             _T("check_responce=?,poller_node_id=?,")
+		                       _T("required_polls=? WHERE id=?"));
    }
    else
    {
-      _sntprintf(szQuery, 16384, _T("UPDATE network_services SET node_id=%d,")
-                                    _T("service_type=%d,ip_bind_addr='%s',")
-                                    _T("ip_proto=%d,ip_port=%d,check_request='%s',")
-                                    _T("check_responce='%s',poller_node_id=%d,")
-		                              _T("required_polls=%d WHERE id=%d"),
-                 m_pHostNode->Id(), m_iServiceType,
-                 IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
-                 pszEscResponse, m_dwPollerNode, m_iRequiredPollCount, m_dwId);
+		hStmt = DBPrepare(hdb, _T("INSERT INTO network_services (node_id,")
+                             _T("service_type,ip_bind_addr,ip_proto,ip_port,")
+                             _T("check_request,check_responce,poller_node_id,")
+		                       _T("required_polls,id) VALUES (?,?,?,?,?,?,?,?,?,?)"));
    }
-   free(pszEscRequest);
-   free(pszEscResponse);
-   DBQuery(hdb, szQuery);
+	if (hStmt != NULL)
+	{
+	   TCHAR szIpAddr[32];
+
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_pHostNode->Id());
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_iServiceType);
+		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, IpToStr(m_dwIpAddr, szIpAddr), DB_BIND_STATIC);
+		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (DWORD)m_wProto);
+		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (DWORD)m_wPort);
+		DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_pszRequest, DB_BIND_STATIC);
+		DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_pszResponse, DB_BIND_STATIC);
+		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_dwPollerNode);
+		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_iRequiredPollCount);
+		DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_dwId);
+
+		DBExecute(hStmt);
+
+		DBFreeStatement(hStmt);
+	}
                  
    // Save access list
    saveACLToDB(hdb);
@@ -162,9 +156,7 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
       m_wProto = (WORD)DBGetFieldULong(hResult, 0, 3);
       m_wPort = (WORD)DBGetFieldULong(hResult, 0, 4);
       m_pszRequest = DBGetField(hResult, 0, 5, NULL, 0);
-      DecodeSQLString(m_pszRequest);
       m_pszResponse = DBGetField(hResult, 0, 6, NULL, 0);
-      DecodeSQLString(m_pszResponse);
       m_dwPollerNode = DBGetFieldULong(hResult, 0, 7);
       m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 8);
 
