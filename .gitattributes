@@ -10,10 +10,6 @@ android/src/agent/.project -text
 android/src/agent/.settings/org.eclipse.jdt.core.prefs -text
 android/src/agent/AndroidManifest.xml -text
 android/src/agent/libs/acra-4.2.3.jar -text
-android/src/agent/libs/netxms-base-1.2.5.jar -text
-android/src/agent/libs/netxms-client-1.2.5.jar -text
-android/src/agent/libs/netxms-client-api-1.2.5.jar -text
-android/src/agent/libs/netxms-mobile-agent-1.2.5.jar -text
 android/src/agent/libs/simple-xml-2.6.4.jar -text
 android/src/agent/lint.xml -text
 android/src/agent/project.properties -text
