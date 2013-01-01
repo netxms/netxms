@@ -137,6 +137,9 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	private Action actionFiguresIcons;
 	private Action actionFiguresSmallLabels;
 	private Action actionFiguresLargeLabels;
+	private Action actionShowGrid;
+	private Action actionAlignToGrid;
+	private Action actionSnapToGrid;
 	
 	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
@@ -397,8 +400,9 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				Object data = ((GraphNode)o).getData();
 				if (data instanceof NetworkMapElement)
 				{
-					Point loc = ((GraphNode)o).getFigure().getBounds().getCenter();
-					((NetworkMapElement)data).setLocation(loc.x + 1, loc.y);
+					Point loc = ((GraphNode)o).getLocation();
+					Dimension size = ((GraphNode)o).getSize();
+					((NetworkMapElement)data).setLocation(loc.x + (size.width + 1) / 2, loc.y + (size.height + 1) / 2);
 				}
 			}
 		}
@@ -606,6 +610,35 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			}
 		};
 		actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.LARGE_LABEL);
+		
+		actionShowGrid = new Action("Show &grid", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				viewer.showGrid(actionShowGrid.isChecked());
+			}
+		};
+		actionShowGrid.setImageDescriptor(Activator.getImageDescriptor("icons/grid.png"));
+		actionShowGrid.setChecked(viewer.isGridVisible());
+		
+		actionSnapToGrid = new Action("S&nap to grid", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				viewer.setSnapToGrid(actionSnapToGrid.isChecked());
+			}
+		};
+		actionSnapToGrid.setImageDescriptor(Activator.getImageDescriptor("icons/snap_to_grid.png"));
+		actionSnapToGrid.setChecked(viewer.isSnapToGrid());
+		
+		actionAlignToGrid = new Action("&Align to grid", Activator.getImageDescriptor("icons/align_to_grid.gif")) {
+			@Override
+			public void run()
+			{
+				viewer.alignToGrid(false);
+				updateObjectPositions();
+			}
+		};
 	}
 	
 	/**
@@ -676,6 +709,10 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		manager.add(zoom);
 		manager.add(figureType);
 		manager.add(new Separator());
+		manager.add(actionAlignToGrid);
+		manager.add(actionSnapToGrid);
+		manager.add(actionShowGrid);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -687,6 +724,10 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	{
 		manager.add(actionZoomIn);
 		manager.add(actionZoomOut);
+		manager.add(new Separator());
+		manager.add(actionAlignToGrid);
+		manager.add(actionSnapToGrid);
+		manager.add(actionShowGrid);
 		manager.add(new Separator());
 		if (allowManualLayout)
 		{
@@ -803,6 +844,10 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		manager.add(createRoutingSubmenu());
 		manager.add(zoom);
 		manager.add(figureType);
+		manager.add(new Separator());
+		manager.add(actionAlignToGrid);
+		manager.add(actionSnapToGrid);
+		manager.add(actionShowGrid);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());

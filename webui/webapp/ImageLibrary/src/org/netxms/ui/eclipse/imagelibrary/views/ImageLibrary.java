@@ -262,7 +262,6 @@ public class ImageLibrary extends ViewPart
 					final FileInputStream stream = new FileInputStream(fileName);
 					byte imageData[] = new byte[(int)fileSize];
 					stream.read(imageData);
-
 					image.setBinaryData(imageData);
 				}
 

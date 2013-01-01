@@ -12,13 +12,14 @@
 	- DCIs can be created from MIB Explorer
 	- Textual conventions for selected MIB object displayed in MIB explorer
 	- Fixed bug with chart titles in dashboards
+	- "Snap to grid" and "Align to grid" options in network maps
 - Android client:
 	- Select all/unselect all in alarms list
 	- Multipliers for graphs and last values: binary (power of two) and decimal (power of ten)
 	- Show number of pending alarms in home screen
 - API for creating embedded application agents
-- Fixed issues: #23, #47, #49, #131, #162, #163, #175, #177, #178, #180, #186,
-                #187, #188, #189, #192, #196
+- Fixed issues: #23, #47, #49, #131, #162, #163, #172, #175, #177, #178, #180,
+                #186, #187, #188, #189, #192, #196
 
 
 *

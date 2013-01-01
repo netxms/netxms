@@ -1426,6 +1426,8 @@ src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/Sin
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/StyledTextContentAdapter.java -text
 src/java/netxms-eclipse/NetworkMaps/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/NetworkMaps/build.properties -text
+src/java/netxms-eclipse/NetworkMaps/icons/align_to_grid.gif -text
+src/java/netxms-eclipse/NetworkMaps/icons/grid.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/layer2.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/link_add.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/netmap.png -text
@@ -1448,6 +1450,7 @@ src/java/netxms-eclipse/NetworkMaps/icons/resources/cluster_res.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/route.gif -text
 src/java/netxms-eclipse/NetworkMaps/icons/service_components.gif -text
 src/java/netxms-eclipse/NetworkMaps/icons/service_deps.gif -text
+src/java/netxms-eclipse/NetworkMaps/icons/snap_to_grid.png -text
 src/java/netxms-eclipse/NetworkMaps/plugin.xml -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/Activator.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/NetworkMapOpenHandler.java -text

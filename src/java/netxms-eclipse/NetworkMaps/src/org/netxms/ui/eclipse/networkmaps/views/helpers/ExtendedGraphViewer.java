@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
 import org.eclipse.zest.core.viewers.internal.IStylingGraphModelFactory;
 import org.eclipse.zest.core.widgets.GraphConnection;
+import org.eclipse.zest.core.widgets.custom.CGraphNode;
 import org.eclipse.zest.core.widgets.zooming.ZoomManager;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
@@ -82,9 +83,14 @@ public class ExtendedGraphViewer extends GraphViewer
 	private int crosshairX;
 	private int crosshairY;
 	private Crosshair crosshairFigure;
+	private GridFigure gridFigure;
+	private int gridSize = 96;
+	private boolean snapToGrid = false;
+	private MouseListener snapToGridListener;
 	private List<NetworkMapDecoration> mapDecorations;
 	private Set<NetworkMapDecoration> selectedDecorations = new HashSet<NetworkMapDecoration>();
 	private Map<Long, DecorationFigure> decorationFigures = new HashMap<Long, DecorationFigure>();
+	private MouseListener backgroundMouseListener;
 	
 	/**
 	 * @param composite
@@ -130,6 +136,9 @@ public class ExtendedGraphViewer extends GraphViewer
 
 				if (backgroundLocation != null)
 					reloadMapBackground();
+				
+				if (gridFigure != null)
+					gridFigure.setSize(getGraphControl().getRootLayer().getSize());
 			}
 		};
 		
@@ -141,7 +150,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			}
 		});
 		
-		backgroundFigure.addMouseListener(new MouseListener() {
+		backgroundMouseListener = new MouseListener() {
 			@Override
 			public void mouseReleased(MouseEvent me)
 			{
@@ -150,6 +159,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void mousePressed(MouseEvent me)
 			{
+				clearDecorationSelection();
 				ExtendedGraphViewer.this.setSelection(new StructuredSelection(), true);
 			}
 			
@@ -157,7 +167,8 @@ public class ExtendedGraphViewer extends GraphViewer
 			public void mouseDoubleClicked(MouseEvent me)
 			{
 			}
-		});
+		};
+		backgroundFigure.addMouseListener(backgroundMouseListener);
 		
 		getGraphControl().addSelectionListener(new SelectionListener() {
 			@Override
@@ -169,8 +180,35 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
+				widgetSelected(e);
 			}
 		});
+		
+		snapToGridListener = new MouseListener() {
+			@Override
+			public void mouseReleased(MouseEvent me)
+			{
+				if (snapToGrid && (getGraphControl().getRootLayer().findFigureAt(me.x, me.y) != null))
+					alignToGrid(true);
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent me)
+			{
+				for(Object o : getGraphControl().getGraph().getNodes())
+				{
+					if (!(o instanceof CGraphNode))
+						continue;
+					CGraphNode n = (CGraphNode)o;
+					((ObjectFigure)n.getFigure()).readMovedState();
+				}
+			}
+			
+			@Override
+			public void mouseDoubleClicked(MouseEvent me)
+			{
+			}
+		};
 	}
 
 	/* (non-Javadoc)
@@ -469,7 +507,109 @@ public class ExtendedGraphViewer extends GraphViewer
 			crosshairFigure = null;
 		}
 	}
+	
+	/**
+	 * Show/hide grid
+	 * 
+	 * @param show
+	 */
+	public void showGrid(boolean show)
+	{
+		if (show)
+		{
+			if (gridFigure == null)
+			{
+				gridFigure = new GridFigure();
+				backgroundLayer.add(gridFigure, null, 1);
+				gridFigure.setSize(getGraphControl().getRootLayer().getSize());
+			}
+		}
+		else
+		{
+			if (gridFigure != null)
+			{
+				backgroundLayer.remove(gridFigure);
+				gridFigure = null;
+			}
+		}
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isGridVisible()
+	{
+		return gridFigure != null;
+	}
+	
+	/**
+	 * Align objects to grid
+	 */
+	public void alignToGrid(boolean movedOnly)
+	{
+		for(Object o : getGraphControl().getGraph().getNodes())
+		{
+			if (!(o instanceof CGraphNode))
+				continue;
+			CGraphNode n = (CGraphNode)o;
+			if (movedOnly)
+			{
+				ObjectFigure f = (ObjectFigure)n.getFigure();
+				if (!f.readMovedState() || !f.isElementSelected())
+					continue;
+			}
+			org.eclipse.draw2d.geometry.Point p = n.getLocation();
+			Dimension size = n.getSize();
 
+			int dx = p.x % gridSize;
+			if (dx < gridSize / 2)
+				dx = - dx;
+			else
+				dx = gridSize - dx;
+			dx += (gridSize - size.width) / 2;
+			
+			int dy = p.y % gridSize;
+			if (dy < gridSize / 2)
+				dy = - dy;
+			else
+				dy = gridSize - dy;
+			dy += (gridSize - size.height) / 2;
+			
+			n.setLocation(p.x + dx, p.y + dy);
+		}
+	}
+	
+	/**
+	 * Set snap-to-grid flag
+	 * 
+	 * @param snap
+	 */
+	public void setSnapToGrid(boolean snap)
+	{
+		if (snap == snapToGrid)
+			return;
+		
+		snapToGrid = snap;
+		if (snap)
+		{
+			getGraphControl().getLightweightSystem().getRootFigure().addMouseListener(snapToGridListener);			
+		}
+		else
+		{
+			getGraphControl().getLightweightSystem().getRootFigure().removeMouseListener(snapToGridListener);			
+		}
+	}
+	
+	/**
+	 * Get snap-to-grid flag
+	 * 
+	 * @return
+	 */
+	public boolean isSnapToGrid()
+	{
+		return snapToGrid;
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.zest.core.viewers.GraphViewer#getFactory()
 	 */
@@ -526,6 +666,35 @@ public class ExtendedGraphViewer extends GraphViewer
 			Dimension size = getSize();
 			gc.drawLine(0, crosshairY, size.width, crosshairY);
 			gc.drawLine(crosshairX, 0, crosshairX, size.height);
+		}
+	}
+
+	/**
+	 * Grid
+	 */
+	private class GridFigure extends Figure
+	{
+		/**
+		 * 
+		 */
+		public GridFigure()
+		{
+			setOpaque(false);
+			addMouseListener(backgroundMouseListener);
+		}
+		
+		/* (non-Javadoc)
+		 * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+		 */
+		@Override
+		protected void paintFigure(Graphics gc)
+		{
+			gc.setLineStyle(SWT.LINE_DOT);
+			Dimension size = getSize();
+			for(int x = gridSize; x < size.width; x += gridSize)
+				gc.drawLine(x, 0, x, size.height);
+			for(int y = gridSize; y < size.height; y += gridSize)
+				gc.drawLine(0, y, size.width, y);
 		}
 	}
 }
