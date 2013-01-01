@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="org.netxms.agent.android" android:versionName="1.0.0" android:versionCode="1">
+	<uses-sdk android:targetSdkVersion="17" android:minSdkVersion="8"></uses-sdk>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.READ_LOGS"/>
+	<uses-permission android:name="android.permission.READ_PHONE_STATE" /> 
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> 
+    <application android:icon="@drawable/icon" 
+        android:allowBackup="true"
+    	android:theme="@style/AppTheme"
+    	android:label="@string/app_name" 
+    	android:enabled="true" android:hardwareAccelerated="true" android:name="org.netxms.agent.android.NXApplication">
+    	<receiver android:name="org.netxms.agent.android.receiver.BootCompletedIntentReceiver">  
+			<intent-filter>  
+		 		<action android:name="android.intent.action.BOOT_COMPLETED" />
+		 		<category android:name="android.intent.category.HOME" /> 		
+		 	</intent-filter>  
+		</receiver>
+		<receiver android:name="org.netxms.agent.android.receiver.ConnectivityChangeIntentReceiver"> 
+   			<intent-filter> 
+      			<action android:name="android.net.conn.CONNECTIVITY_CHANGE" /> 
+      		</intent-filter> 
+		</receiver> 
+		<receiver android:name="org.netxms.agent.android.receivers.AlarmIntentReceiver">
+		</receiver> 
+		<service android:name="org.netxms.agent.android.service.ClientConnectorService"
+    	         android:label="@string/app_name"
+    	         android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+    	</service>
+        <activity android:label="@string/app_name"
+                  android:launchMode="singleTop"
+                  android:name=".main.activities.HomeScreen">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="org.netxms.agent.android.main.activities.ConsolePreferences"
+                  android:label="@string/settings">
+        </activity>
+   	</application>
+</manifest>
