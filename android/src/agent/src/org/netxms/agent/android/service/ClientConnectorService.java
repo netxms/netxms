@@ -40,6 +40,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -226,7 +227,7 @@ public class ClientConnectorService extends Service
 					new PushDataTask(
 							sp.getString("connection.server", ""),
 							SafeParser.parseInt(sp.getString("connection.port", "4747"), 4747),
-							getImei(),
+							getDeviceId(),
 							sp.getString("connection.login", ""),
 							sp.getString("connection.password", ""),
 							sp.getBoolean("connection.encrypt", false)).execute();
@@ -380,10 +381,15 @@ public class ClientConnectorService extends Service
 	/**
 	 * Get IMEI number
 	 */
-	private String getImei()
+	private String getDeviceId()
 	{
 		TelephonyManager tman = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-		return tman != null ? tman.getDeviceId() : "NO-IMEI";
+		String id = (tman != null) ? tman.getDeviceId() : null;
+		if (id == null)
+		{
+			id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
+		}
+		return id;
 	}
 
 	/**

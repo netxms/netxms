@@ -7,8 +7,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="lib" path="libs/netxms-base-1.2.5.jar"/>
-	<classpathentry kind="lib" path="libs/netxms-client-1.2.5.jar"/>
-	<classpathentry kind="lib" path="libs/netxms-client-api-1.2.5.jar"/>
 	<classpathentry kind="lib" path="libs/netxms-mobile-agent-1.2.5.jar" sourcepath="C:/Projects/NetXMS/netxms-trunk/src/java"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
