@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.draw2d.Figure;
+import org.eclipse.draw2d.FigureListener;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
@@ -38,7 +39,9 @@ public abstract class ObjectFigure extends Figure
 	protected NetworkMapObject element;
 	protected GenericObject object;
 	protected MapLabelProvider labelProvider;
-
+	
+	private boolean moved = false;
+	
 	/**
 	 * Constructor
 	 */
@@ -54,6 +57,14 @@ public abstract class ObjectFigure extends Figure
 
 		setFocusTraversable(true);
 		setToolTip(new ObjectTooltip(object));
+		
+		addFigureListener(new FigureListener() {
+			@Override
+			public void figureMoved(IFigure source)
+			{
+				moved = true;
+			}
+		});
 	}
 	
 	/* (non-Javadoc)
@@ -66,6 +77,31 @@ public abstract class ObjectFigure extends Figure
 		// this check is to prevent overriding it by the viewer
 		if ((f == null) || (f instanceof ObjectTooltip))
 			super.setToolTip(f);
+	}
+	
+	/**
+	 * Check if associated map element is currently selected.
+	 * 
+	 * @return
+	 */
+	public boolean isElementSelected()
+	{
+		return labelProvider.isElementSelected(element);
+	}
+	
+	/**
+	 * Read figure's "moved" state. State reset to false after read.
+	 * 
+	 * @return
+	 */
+	public boolean readMovedState()
+	{
+		if (moved)
+		{
+			moved = false;
+			return true;
+		}
+		return false;
 	}
 
 	/**

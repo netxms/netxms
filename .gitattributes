@@ -2984,6 +2984,8 @@ webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/ScriptEditor.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/ScriptSelector.java -text
 webui/webapp/NetworkMaps/META-INF/MANIFEST.MF -text
 webui/webapp/NetworkMaps/build.properties -text
+webui/webapp/NetworkMaps/icons/align_to_grid.gif -text
+webui/webapp/NetworkMaps/icons/grid.png -text
 webui/webapp/NetworkMaps/icons/layer2.png -text
 webui/webapp/NetworkMaps/icons/link_add.png -text
 webui/webapp/NetworkMaps/icons/netmap.png -text
@@ -3006,6 +3008,7 @@ webui/webapp/NetworkMaps/icons/resources/cluster_res.png -text
 webui/webapp/NetworkMaps/icons/route.gif -text
 webui/webapp/NetworkMaps/icons/service_components.gif -text
 webui/webapp/NetworkMaps/icons/service_deps.gif -text
+webui/webapp/NetworkMaps/icons/snap_to_grid.png -text
 webui/webapp/NetworkMaps/plugin.xml -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/Activator.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/NetworkMapOpenHandler.java -text

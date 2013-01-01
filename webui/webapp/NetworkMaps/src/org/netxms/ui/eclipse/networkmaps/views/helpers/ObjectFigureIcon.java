@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@ public class ObjectFigureIcon extends ObjectFigure
 
 			rect = new Rectangle(getBounds());
 		}
-		else if (labelProvider.isElementSelected(element))
+		else if (isElementSelected())
 		{
 			rect.x += imageOffset - BACKGROUND_MARGIN_X;
 			rect.y += IMAGE_MARGIN_Y - BACKGROUND_MARGIN_Y + 1;
