@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -306,11 +306,9 @@ void StopAgentService()
    CloseServiceHandle(mgr);
 }
 
-
-//
-// Install event source
-//
-
+/**
+ * Install event source
+ */
 void InstallEventSource(const TCHAR *path)
 {
    HKEY hKey;
@@ -327,7 +325,7 @@ void InstallEventSource(const TCHAR *path)
    }
 
    RegSetValueEx(hKey, _T("TypesSupported"), 0, REG_DWORD, (BYTE *)&dwTypes, sizeof(DWORD));
-   RegSetValueEx(hKey, _T("EventMessageFile"), 0, REG_EXPAND_SZ, (BYTE *)path, (DWORD)(_tcslen(path) + 1));
+   RegSetValueEx(hKey, _T("EventMessageFile"), 0, REG_EXPAND_SZ, (BYTE *)path, (DWORD)((_tcslen(path) + 1) * sizeof(TCHAR)));
 
    RegCloseKey(hKey);
    _tprintf(_T("Event source \"%s\" installed successfully\n"), g_windowsEventSourceName);

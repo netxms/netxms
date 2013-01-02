@@ -437,7 +437,7 @@ void InstallEventSource(const TCHAR *path)
    }
 
    RegSetValueEx(hKey, _T("TypesSupported"), 0, REG_DWORD,(BYTE *)&dwTypes, sizeof(DWORD));
-   RegSetValueEx(hKey, _T("EventMessageFile"), 0, REG_EXPAND_SZ,(BYTE *)path, (DWORD)_tcslen(path) + 1);
+   RegSetValueEx(hKey, _T("EventMessageFile"), 0, REG_EXPAND_SZ,(BYTE *)path, (DWORD)((_tcslen(path) + 1) * sizeof(TCHAR)));
 
    RegCloseKey(hKey);
    _tprintf(_T("Event source \"") CORE_EVENT_SOURCE _T("\" installed successfully\n"));
