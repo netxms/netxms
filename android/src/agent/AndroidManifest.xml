@@ -44,7 +44,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="org.netxms.agent.android.main.activities.ConsolePreferences"
+        <activity android:name="org.netxms.agent.android.main.activities.Preferences"
                   android:label="@string/settings">
         </activity>
    	</application>

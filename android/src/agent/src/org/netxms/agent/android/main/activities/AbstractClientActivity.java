@@ -102,7 +102,7 @@ public abstract class AbstractClientActivity extends Activity implements Service
 
 		if (item.getItemId() == R.id.settings)
 		{
-			startActivity(new Intent(this, ConsolePreferences.class));
+			startActivity(new Intent(this, Preferences.class));
 			return true;
 		}
 		return super.onOptionsItemSelected(item);

@@ -9,6 +9,7 @@ android/src/agent/.externalToolBuilders/run.exe -text
 android/src/agent/.project -text
 android/src/agent/.settings/org.eclipse.jdt.core.prefs -text
 android/src/agent/AndroidManifest.xml -text
+android/src/agent/default.properties -text
 android/src/agent/libs/acra-4.2.3.jar -text
 android/src/agent/libs/simple-xml-2.6.4.jar -text
 android/src/agent/lint.xml -text
@@ -41,8 +42,8 @@ android/src/agent/src/org/netxms/agent/android/NXApplication.java -text
 android/src/agent/src/org/netxms/agent/android/helpers/Multipliers.java -text
 android/src/agent/src/org/netxms/agent/android/helpers/SafeParser.java -text
 android/src/agent/src/org/netxms/agent/android/main/activities/AbstractClientActivity.java -text
-android/src/agent/src/org/netxms/agent/android/main/activities/ConsolePreferences.java -text
 android/src/agent/src/org/netxms/agent/android/main/activities/HomeScreen.java -text
+android/src/agent/src/org/netxms/agent/android/main/activities/Preferences.java -text
 android/src/agent/src/org/netxms/agent/android/main/settings/TimePreference.java -text
 android/src/agent/src/org/netxms/agent/android/main/views/CheckableLinearLayout.java -text
 android/src/agent/src/org/netxms/agent/android/receivers/AlarmIntentReceiver.java -text

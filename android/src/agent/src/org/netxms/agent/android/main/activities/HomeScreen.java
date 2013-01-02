@@ -26,7 +26,6 @@ public class HomeScreen extends AbstractClientActivity
 {
 	public static final String INTENTIONAL_EXIT_KEY = "IntentionalExit";
 
-	private static final String TAG = "nxagent/HomeScreen";
 	private TextView statusText;
 
 	/*
