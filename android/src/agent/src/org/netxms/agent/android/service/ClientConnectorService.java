@@ -63,7 +63,6 @@ public class ClientConnectorService extends Service
 	public static final String ACTION_FORCE_CONNECT = "org.netxms.ui.android.ACTION_FORCE_CONNECT";
 	public static final String ACTION_RESCHEDULE = "org.netxms.ui.android.ACTION_RESCHEDULE";
 	private static final String TAG = "nxagent/ClientConnectorService";
-	private static final String LASTALARM_KEY = "LastALarmIdNotified";
 
 	private static final int ONE_DAY_MINUTES = 24 * 60;
 	private static final int NETXMS_REQUEST_CODE = 123456;
@@ -72,9 +71,10 @@ public class ClientConnectorService extends Service
 	private final Binder binder = new ClientConnectorBinder();
 	private Handler uiThreadHandler;
 	private final ConnectionStatus connectionStatus = ConnectionStatus.CS_DISCONNECTED;
-	private long lastAlarmIdNotified;
 	private BroadcastReceiver receiver = null;
 	private SharedPreferences sp;
+	private LocationManager locationManager = null;
+	private final LocationManagerHelper lmh = new LocationManagerHelper();
 
 	/**
 	 * Class for clients to access. Because we know this service always runs in
@@ -104,7 +104,21 @@ public class ClientConnectorService extends Service
 		showToast(getString(R.string.notify_started));
 
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
-		lastAlarmIdNotified = sp.getInt(LASTALARM_KEY, 0);
+
+		locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+
+		try
+		{
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1800, 1000, lmh);
+		}
+		catch (IllegalArgumentException e)
+		{
+			e.printStackTrace();
+		}
+		catch (RuntimeException e)
+		{
+			e.printStackTrace();
+		}
 
 		receiver = new BroadcastReceiver()
 		{
@@ -164,20 +178,10 @@ public class ClientConnectorService extends Service
 	 */
 	public void shutdown()
 	{
+		locationManager.removeUpdates(lmh);
 		cancelSchedule();
-		savePreferences();
 		unregisterReceiver(receiver);
 		stopSelf();
-	}
-
-	/**
-	 * 
-	 */
-	public void savePreferences()
-	{
-		SharedPreferences.Editor editor = sp.edit();
-		editor.putInt(LASTALARM_KEY, (int)lastAlarmIdNotified);
-		editor.commit();
 	}
 
 	/**
@@ -455,32 +459,14 @@ public class ClientConnectorService extends Service
 	}
 
 	/**
-	 * Get geo location. NB must rub on a UI thread.
+	 * Get geo location.
 	 */
 	private GeoLocation getGeoLocation()
 	{
-		final LocationManager locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-		final LocationManagerHelper lmh = new LocationManagerHelper();
-
-		String mlocProvider;
 		Criteria hdCrit = new Criteria();
-
 		hdCrit.setAccuracy(Criteria.ACCURACY_COARSE);
-		mlocProvider = locationManager.getBestProvider(hdCrit, true);
-		try
-		{
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 1000, lmh);
-		}
-		catch (IllegalArgumentException e)
-		{
-			e.printStackTrace();
-		}
-		catch (RuntimeException e)
-		{
-			e.printStackTrace();
-		}
+		String mlocProvider = locationManager.getBestProvider(hdCrit, true);
 		Location currLocation = locationManager.getLastKnownLocation(mlocProvider);
-		locationManager.removeUpdates(lmh);
 		if (currLocation != null)
 			return new GeoLocation(currLocation.getLatitude(), currLocation.getLongitude());
 		return new GeoLocation(0, 0);
@@ -548,7 +534,6 @@ public class ClientConnectorService extends Service
 		private final boolean encrypt;
 		private String error = "";
 		private Session session = null;
-		private InetAddress inetAddress = null;
 
 		protected PushDataTask(String server, Integer port, String deviceId, String login, String password, boolean encrypt)
 		{
@@ -560,6 +545,7 @@ public class ClientConnectorService extends Service
 			this.encrypt = encrypt;
 		}
 
+		@SuppressLint("NewApi")
 		@Override
 		protected Boolean doInBackground(Object... params)
 		{
@@ -573,7 +559,9 @@ public class ClientConnectorService extends Service
 					{
 						session.connect();
 						statusNotification(ConnectionStatus.CS_CONNECTED, "");
-						inetAddress = getInetAddress(); // Cannot get it on UI thread (as per honeycomb constraint)
+						String serial = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ? Build.SERIAL : "";
+						session.reportDeviceSystemInfo(Build.MANUFACTURER, Build.MODEL, getOSName(Build.VERSION.SDK_INT), Build.VERSION.RELEASE, serial, Build.USER);
+						session.reportDeviceStatus(getInetAddress(), getGeoLocation(), getFlags(), getBatteryLevel()); // getGeoLocation must run on UI thread
 						return true;
 					}
 				}
@@ -595,37 +583,20 @@ public class ClientConnectorService extends Service
 			return false;
 		}
 
-		@SuppressLint("NewApi")
 		@Override
 		protected void onPostExecute(Boolean result)
 		{
 			if (result == true)
 			{
-				try
-				{
-					String serial = "";
-					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-						serial = Build.SERIAL;
-					session.reportDeviceSystemInfo(Build.MANUFACTURER, Build.MODEL, getOSName(Build.VERSION.SDK_INT), Build.VERSION.RELEASE, serial, Build.USER);
-					session.reportDeviceStatus(inetAddress, getGeoLocation(), getFlags(), getBatteryLevel()); // getGeoLocation must run on UI thread
-				}
-				catch (IOException e)
-				{
-					Log.e(TAG, "IOException while executing PushDataTask.doInBackground on connect", e);
-				}
-				catch (MobileAgentException e)
-				{
-					Log.e(TAG, "MobileAgentException while executing PushDataTask.doInBackground on connect", e);
-				}
 				session.disconnect();
 				Log.i(TAG, "Disconnected.");
 				statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
-				schedule(ACTION_RESCHEDULE);
 			}
 			else
 			{
 				statusNotification(ConnectionStatus.CS_ERROR, error);
 			}
+			schedule(ACTION_RESCHEDULE);
 		}
 	}
 }
