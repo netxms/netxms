@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -235,11 +235,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
-
-//
-// Help text
-//
-
+/**
+ * Help text
+ */
 static TCHAR m_szHelpText[] =
    _T("Usage: nxagentd [options]\n")
    _T("Where valid options are:\n")

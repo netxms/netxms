@@ -455,6 +455,8 @@ typedef struct
 #define CMD_REPORT_DEVICE_STATUS       0x0109
 #define CMD_REPORT_DEVICE_INFO         0x010A
 #define CMD_GET_ALARM_EVENTS           0x010B
+#define CMD_GET_ENUM_LIST              0x010C
+#define CMD_GET_TABLE_LIST             0x010D
 
 /**
  * Variable identifiers

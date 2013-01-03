@@ -343,11 +343,9 @@
 #define DCTDESC_FILESYSTEM_VOLUMES                _T("File system volumes")
 #define DCTDESC_SYSTEM_PROCESSES                  _T("Process table")
 
-
-//
-// Subagent's parameter information
-//
-
+/**
+ * Subagent's parameter information
+ */
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
@@ -357,11 +355,9 @@ typedef struct
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_PARAM;
 
-
-//
-// Subagent's push parameter information
-//
-
+/**
+ * Subagent's push parameter information
+ */
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
@@ -369,11 +365,9 @@ typedef struct
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_PUSHPARAM;
 
-
-//
-// Subagent's list information
-//
-
+/**
+ * Subagent's list information
+ */
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
@@ -381,11 +375,9 @@ typedef struct
    const TCHAR *arg;
 } NETXMS_SUBAGENT_LIST;
 
-
-//
-// Subagent's table information
-//
-
+/**
+ * Subagent's table information
+ */
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
@@ -395,11 +387,9 @@ typedef struct
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_TABLE;
 
-
-//
-// Subagent's action information
-//
-
+/**
+ * Subagent's action information
+ */
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
@@ -408,11 +398,9 @@ typedef struct
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;
 
-
-//
-// Subagent initialization structure
-//
-
+/**
+ * Subagent initialization structure
+ */
 #define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0x20110301)
 
 class CSCPMessage;
@@ -438,11 +426,9 @@ typedef struct
 	NETXMS_SUBAGENT_PUSHPARAM *pushParameters;
 } NETXMS_SUBAGENT_INFO;
 
-
-//
-// Inline functions for returning parameters
-//
-
+/**
+ * Inline functions for returning parameters
+ */
 inline void ret_string(TCHAR *rbuf, const TCHAR *value)
 {
 	nx_strncpy(rbuf, value, MAX_RESULT_LENGTH);

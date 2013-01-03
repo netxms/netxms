@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,29 +27,23 @@
 #define close	_close
 #endif
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 void UnregisterSession(DWORD dwIndex);
 void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse);
 DWORD DeployPolicy(CommSession *session, CSCPMessage *request);
 DWORD UninstallPolicy(CommSession *session, CSCPMessage *request);
 DWORD GetPolicyInventory(CommSession *session, CSCPMessage *msg);
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define RAW_MSG_SIZE    262144
 
-
-//
-// Client communication read thread
-//
-
+/**
+ * Client communication read thread
+ */
 THREAD_RESULT THREAD_CALL CommSession::readThreadStarter(void *pArg)
 {
    ((CommSession *)pArg)->readThread();
@@ -470,6 +464,14 @@ void CommSession::processingThread()
                msg.SetVariable(VID_RCC, ERR_SUCCESS);
                GetParameterList(&msg);
                break;
+            case CMD_GET_ENUM_LIST:
+               msg.SetVariable(VID_RCC, ERR_SUCCESS);
+               GetEnumList(&msg);
+               break;
+            case CMD_GET_TABLE_LIST:
+               msg.SetVariable(VID_RCC, ERR_SUCCESS);
+               GetTableList(&msg);
+               break;
             case CMD_GET_AGENT_CONFIG:
                getConfig(&msg);
                break;
@@ -658,11 +660,9 @@ void CommSession::getParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
       pMsg->SetVariable(VID_VALUE, szValue);
 }
 
-
-//
-// Get list of values
-//
-
+/**
+ * Get list of values
+ */
 void CommSession::getList(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    TCHAR szParameter[MAX_PARAM_NAME];    //
@@ -680,11 +680,9 @@ void CommSession::getList(CSCPMessage *pRequest, CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Get table
-//
-
+/**
+ * Get table
+ */
 void CommSession::getTable(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    TCHAR szParameter[MAX_PARAM_NAME];
@@ -700,11 +698,9 @@ void CommSession::getTable(CSCPMessage *pRequest, CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Perform action on request
-//
-
+/**
+ * Perform action on request
+ */
 void CommSession::action(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    TCHAR szAction[MAX_PARAM_NAME];         //
@@ -729,11 +725,9 @@ void CommSession::action(CSCPMessage *pRequest, CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Send local file to server
-//
-
+/**
+ * Send local file to server
+ */
 void CommSession::getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
 	if (m_bMasterServer)

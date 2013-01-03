@@ -371,23 +371,19 @@ static BOOL SubAgentInit(Config *config)
 	return TRUE;
 }
 
-
-//
-// Handler for subagent unload
-//
-
-static void SubAgentShutdown(void)
+/**
+ * Handler for subagent unload
+ */
+static void SubAgentShutdown()
 {
    if (g_hCondShutdown != NULL)
       SetEvent(g_hCondShutdown);
    Sleep(500);
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("PDH.CounterValue(*)"), H_PdhCounterValue, NULL, DCI_DT_INT, _T("") },
@@ -450,11 +446,9 @@ BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR 
    return TRUE;
 }
 
-
-//
-// Add predefined counters
-//
-
+/**
+ * Add predefined counters
+ */
 static void AddPredefinedCounters()
 {
    DWORD i;
@@ -484,11 +478,9 @@ static void AddPredefinedCounters()
    }
 }
 
-
-//
-// Configuration file template
-//
-
+/**
+ * Configuration file template
+ */
 static TCHAR *m_pszCounterList = NULL;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
@@ -497,13 +489,10 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
-extern "C" BOOL __declspec(dllexport) __cdecl 
-   NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
+/**
+ * Entry point for NetXMS agent
+ */
+DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
 {
    DWORD i, dwBufferSize, dwBytes, dwType, dwStatus;
 	TCHAR *pBuffer, *newName;
@@ -576,11 +565,9 @@ extern "C" BOOL __declspec(dllexport) __cdecl
    return success;
 }
 
-
-//
-// DLL entry point
-//
-
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)

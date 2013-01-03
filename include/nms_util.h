@@ -201,12 +201,16 @@ private:
 	LONG *m_colFormats;
 	TCHAR *m_title;
 
+	void createFromMessage(CSCPMessage *msg);
+	void destroy();
+
 public:
    Table();
    Table(CSCPMessage *msg);
    ~Table();
 
 	int fillMessage(CSCPMessage &msg, int offset, int rowLimit);
+	void updateFromMessage(CSCPMessage *msg);
 
    int getNumRows() { return m_nNumRows; }
    int getNumColumns() { return m_nNumCols; }

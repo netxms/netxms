@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,20 +22,55 @@
 
 #include "nxagentd.h"
 
-
 /**
  * Handler for CMD_GET_PARAMETER command
  */
 static void H_GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
-   TCHAR szParameter[MAX_PARAM_NAME], szValue[MAX_RESULT_LENGTH];
+   TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
    DWORD dwErrorCode;
 
-   pRequest->GetVariableStr(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
-   dwErrorCode = GetParameterValue(0, szParameter, szValue);
+   pRequest->GetVariableStr(VID_PARAMETER, name, MAX_PARAM_NAME);
+   dwErrorCode = GetParameterValue(0, name, value);
    pMsg->SetVariable(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
-      pMsg->SetVariable(VID_VALUE, szValue);
+      pMsg->SetVariable(VID_VALUE, value);
+}
+
+/**
+ * Handler for CMD_GET_TABLE command
+ */
+static void H_GetTable(CSCPMessage *pRequest, CSCPMessage *pMsg)
+{
+   TCHAR name[MAX_PARAM_NAME];
+	Table value;
+   DWORD dwErrorCode;
+
+   pRequest->GetVariableStr(VID_PARAMETER, name, MAX_PARAM_NAME);
+   dwErrorCode = GetTableValue(0, name, &value);
+   pMsg->SetVariable(VID_RCC, dwErrorCode);
+   if (dwErrorCode == ERR_SUCCESS)
+		value.fillMessage(*pMsg, 0, -1);
+}
+
+/**
+ * Handler for CMD_GET_LIST command
+ */
+static void H_GetList(CSCPMessage *pRequest, CSCPMessage *pMsg)
+{
+   TCHAR name[MAX_PARAM_NAME];
+	StringList value;
+   DWORD dwErrorCode;
+
+   pRequest->GetVariableStr(VID_PARAMETER, name, MAX_PARAM_NAME);
+   dwErrorCode = GetListValue(0, name, &value);
+   pMsg->SetVariable(VID_RCC, dwErrorCode);
+   if (dwErrorCode == ERR_SUCCESS)
+   {
+		pMsg->SetVariable(VID_NUM_STRINGS, (DWORD)value.getSize());
+		for(int i = 0; i < value.getSize(); i++)
+			pMsg->SetVariable(VID_ENUM_VALUE_BASE + i, value.getValue(i));
+   }
 }
 
 /**
@@ -72,9 +107,23 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 					case CMD_GET_PARAMETER:
 						H_GetParameter(msg, &response);
 						break;
+					case CMD_GET_TABLE:
+						H_GetTable(msg, &response);
+						break;
+					case CMD_GET_LIST:
+						H_GetList(msg, &response);
+						break;
 					case CMD_GET_PARAMETER_LIST:
 						response.SetVariable(VID_RCC, ERR_SUCCESS);
 						GetParameterList(&response);
+						break;
+					case CMD_GET_ENUM_LIST:
+						response.SetVariable(VID_RCC, ERR_SUCCESS);
+						GetEnumList(&response);
+						break;
+					case CMD_GET_TABLE_LIST:
+						response.SetVariable(VID_RCC, ERR_SUCCESS);
+						GetTableList(&response);
 						break;
 					default:
 						response.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);

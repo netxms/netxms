@@ -7206,11 +7206,9 @@ void ClientSession::sendScript(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Update script
-//
-
+/**
+ * Update script in library
+ */
 void ClientSession::updateScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -7276,11 +7274,9 @@ void ClientSession::updateScript(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Rename script
-//
-
+/**
+ * Rename script
+ */
 void ClientSession::renameScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -7326,11 +7322,9 @@ void ClientSession::renameScript(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Delete script
-//
-
+/**
+ * Delete script from library
+ */
 void ClientSession::deleteScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxagentd.h"
 
-
-//
-// Externals
-//
-
+/**
+ * Parameter handlers
+ */
 LONG H_ActiveConnections(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue);
 LONG H_AgentStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
@@ -58,11 +56,9 @@ LONG H_PhysicalDiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
 #endif
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static NETXMS_SUBAGENT_PARAM *m_pParamList = NULL;
 static int m_iNumParams = 0;
 static NETXMS_SUBAGENT_PUSHPARAM *m_pPushParamList = NULL;
@@ -77,33 +73,27 @@ static DWORD m_dwProcessedRequests = 0;
 static DWORD m_dwFailedRequests = 0;
 static DWORD m_dwUnsupportedRequests = 0;
 
-
-//
-// Handler for parameters which always returns string constant
-//
-
+/**
+ * Handler for parameters which always returns string constant
+ */
 static LONG H_StringConstant(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    ret_string(value, arg);
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for parameters which returns DWORD value from specific variable
-//
-
+/**
+ * Handler for parameters which returns DWORD value from specific variable
+ */
 static LONG H_UIntPtr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    ret_uint(value, *((DWORD *)arg));
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for Agent.SupportedCiphers
-// 
-
+/**
+ * Handler for Agent.SupportedCiphers
+ */ 
 static LONG H_SupportedCiphers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
    DWORD dwCiphers;
@@ -131,11 +121,9 @@ static LONG H_SupportedCiphers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pV
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for parameters list
-//
-
+/**
+ * Handler for parameters list
+ */
 static LONG H_ParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    int i;
@@ -148,11 +136,9 @@ static LONG H_ParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for push parameters list
-//
-
+/**
+ * Handler for push parameters list
+ */
 static LONG H_PushParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    int i;
@@ -162,39 +148,35 @@ static LONG H_PushParamList(const TCHAR *cmd, const TCHAR *arg, StringList *valu
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for enums list
-//
-
+/**
+ * Handler for enums list
+ */
 static LONG H_EnumList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    int i;
 
    for(i = 0; i < m_iNumEnums; i++)
 		value->add(m_pEnumList[i].name);
+	ListListsFromExtSubagents(value);
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for table list
-//
-
+/**
+ * Handler for table list
+ */
 static LONG H_TableList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    int i;
 
    for(i = 0; i < m_iNumTables; i++)
 		value->add(m_pTableList[i].name);
+	ListTablesFromExtSubagents(value);
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Standard agent's parameters
-//
-
+/**
+ * Standard agent's parameters
+ */
 static NETXMS_SUBAGENT_PARAM m_stdParams[] =
 {
 #ifdef _WIN32
@@ -508,11 +490,9 @@ BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec) //to be TCHAR
    return TRUE;
 }
 
-
-//
-// Get parameter's value
-//
-
+/**
+ * Get parameter's value
+ */
 DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
 {
    int i, rc;
@@ -563,7 +543,7 @@ DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
 		}
    }
 
-   if (dwErrorCode == ERR_UNKNOWN_PARAMETER && i == m_iNumParams)
+   if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == m_iNumParams))
    {
 		dwErrorCode = GetParameterValueFromExtSubagent(pszParam, pszValue);
 		if (dwErrorCode == ERR_SUCCESS)
@@ -585,11 +565,9 @@ DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
    return dwErrorCode;
 }
 
-
-//
-// Get list's value
-//
-
+/**
+ * Get list's value
+ */
 DWORD GetListValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue)
 {
    int i, rc;
@@ -597,6 +575,7 @@ DWORD GetListValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue)
 
    DebugPrintf(dwSessionId, 5, _T("Requesting list \"%s\""), pszParam);
    for(i = 0; i < m_iNumEnums; i++)
+	{
       if (MatchString(m_pEnumList[i].name, pszParam, FALSE))
       {
          rc = m_pEnumList[i].handler(pszParam, m_pEnumList[i].arg, pValue);
@@ -622,10 +601,23 @@ DWORD GetListValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue)
          }
          break;
       }
-   if (i == m_iNumEnums)
+	}
+
+	if (i == m_iNumEnums)
    {
-      dwErrorCode = ERR_UNKNOWN_PARAMETER;
-      m_dwUnsupportedRequests++;
+		dwErrorCode = GetListValueFromExtSubagent(pszParam, pValue);
+		if (dwErrorCode == ERR_SUCCESS)
+		{
+         m_dwProcessedRequests++;
+		}
+		else if (dwErrorCode == ERR_UNKNOWN_PARAMETER)
+		{
+			m_dwUnsupportedRequests++;
+		}
+		else
+		{
+         m_dwFailedRequests++;
+		}
    }
 
 	DebugPrintf(dwSessionId, 7, _T("GetListValue(): result is %d (%s)"), (int)dwErrorCode,
@@ -633,11 +625,9 @@ DWORD GetListValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue)
    return dwErrorCode;
 }
 
-
-//
-// Get table's value
-//
-
+/**
+ * Get table's value
+ */
 DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue)
 {
    int i, rc;
@@ -645,6 +635,7 @@ DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue)
 
    DebugPrintf(dwSessionId, 5, _T("Requesting table \"%s\""), pszParam);
    for(i = 0; i < m_iNumTables; i++)
+	{
       if (MatchString(m_pTableList[i].name, pszParam, FALSE))
       {
          rc = m_pTableList[i].handler(pszParam, m_pTableList[i].arg, pValue);
@@ -670,10 +661,23 @@ DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue)
          }
          break;
       }
-   if (i == m_iNumTables)
+	}
+
+	if (i == m_iNumTables)
    {
-      dwErrorCode = ERR_UNKNOWN_PARAMETER;
-      m_dwUnsupportedRequests++;
+		dwErrorCode = GetTableValueFromExtSubagent(pszParam, pValue);
+		if (dwErrorCode == ERR_SUCCESS)
+		{
+         m_dwProcessedRequests++;
+		}
+		else if (dwErrorCode == ERR_UNKNOWN_PARAMETER)
+		{
+			m_dwUnsupportedRequests++;
+		}
+		else
+		{
+         m_dwFailedRequests++;
+		}
    }
 
 	DebugPrintf(dwSessionId, 7, _T("GetTableValue(): result is %d (%s)"), (int)dwErrorCode,
@@ -681,11 +685,9 @@ DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue)
    return dwErrorCode;
 }
 
-
-//
-// Put complete list of supported parameters into CSCP message
-//
-
+/**
+ * Put complete list of supported parameters into NXCP message
+ */
 void GetParameterList(CSCPMessage *pMsg)
 {
    int i;
@@ -721,6 +723,7 @@ void GetParameterList(CSCPMessage *pMsg)
    {
       pMsg->SetVariable(dwId++, m_pEnumList[i].name);
    }
+	ListListsFromExtSubagents(pMsg, &dwId, &count);
 
 	// Tables
    pMsg->SetVariable(VID_NUM_TABLES, (DWORD)m_iNumTables);
@@ -730,4 +733,39 @@ void GetParameterList(CSCPMessage *pMsg)
 		pMsg->SetVariable(dwId++, m_pTableList[i].instanceColumn);
 		pMsg->SetVariable(dwId++, m_pTableList[i].description);
    }
+	ListTablesFromExtSubagents(pMsg, &dwId, &count);
+}
+
+/**
+ * Put list of supported tables into NXCP message
+ */
+void GetTableList(CSCPMessage *pMsg)
+{
+   int i;
+   DWORD dwId, count;
+
+   pMsg->SetVariable(VID_NUM_TABLES, (DWORD)m_iNumTables);
+   for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
+   {
+      pMsg->SetVariable(dwId++, m_pTableList[i].name);
+		pMsg->SetVariable(dwId++, m_pTableList[i].instanceColumn);
+		pMsg->SetVariable(dwId++, m_pTableList[i].description);
+   }
+	ListTablesFromExtSubagents(pMsg, &dwId, &count);
+}
+
+/**
+ * Put list of supported lists (enums) into NXCP message
+ */
+void GetEnumList(CSCPMessage *pMsg)
+{
+   int i;
+   DWORD dwId, count;
+
+   pMsg->SetVariable(VID_NUM_ENUMS, (DWORD)m_iNumEnums);
+   for(i = 0, dwId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
+   {
+      pMsg->SetVariable(dwId++, m_pEnumList[i].name);
+   }
+	ListListsFromExtSubagents(pMsg, &dwId, &count);
 }

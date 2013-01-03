@@ -115,20 +115,16 @@ typedef __console_ctx * CONSOLE_CTX;
 
 typedef void * HSNMPSESSION;
 
-
-//
-// Prefixes for poller messages
-//
-
+/**
+ * Prefixes for poller messages
+ */
 #define POLLER_ERROR    _T("\x7F") _T("e")
 #define POLLER_WARNING  _T("\x7Fw")
 #define POLLER_INFO     _T("\x7Fi")
 
-
-//
-// Unique identifier group codes
-//
-
+/**
+ * Unique identifier group codes
+ */
 #define IDG_NETWORK_OBJECT    0
 #define IDG_CONTAINER_CAT     1
 #define IDG_EVENT             2
@@ -151,30 +147,25 @@ typedef void * HSNMPSESSION;
 #define IDG_CERTIFICATE			19
 #define IDG_SITUATION         20
 #define IDG_DCT_COLUMN        21
+#define IDG_MAPPING_TABLE     22
 
-
-//
-// Exit codes for console commands
-//
-
+/**
+ * Exit codes for console commands
+ */
 #define CMD_EXIT_CONTINUE        0
 #define CMD_EXIT_CLOSE_SESSION   1
 #define CMD_EXIT_SHUTDOWN        2
 
-
-//
-// Network discovery mode
-//
-
+/**
+ * Network discovery mode
+ */
 #define DISCOVERY_DISABLED       0
 #define DISCOVERY_PASSIVE_ONLY   1
 #define DISCOVERY_ACTIVE         2
 
-
-//
-// Client session flags
-//
-
+/**
+ * Client session flags
+ */
 #define CSF_EPP_LOCKED           ((DWORD)0x0002)
 #define CSF_PACKAGE_DB_LOCKED    ((DWORD)0x0004)
 #define CSF_USER_DB_LOCKED       ((DWORD)0x0008)
@@ -184,20 +175,16 @@ typedef void * HSNMPSESSION;
 #define CSF_RECEIVING_MAP_DATA   ((DWORD)0x0200)
 #define CSF_SYNC_OBJECT_COMMENTS ((DWORD)0x0400)
 
-
-//
-// Client session states
-//
-
+/**
+ * Client session states
+ */
 #define SESSION_STATE_INIT       0
 #define SESSION_STATE_IDLE       1
 #define SESSION_STATE_PROCESSING 2
 
-
-//
-// Information categories for UPDATE_INFO structure
-//
-
+/**
+ * Information categories for UPDATE_INFO structure
+ */
 #define INFO_CAT_EVENT           1
 #define INFO_CAT_OBJECT_CHANGE   2
 #define INFO_CAT_ALARM           3
@@ -208,38 +195,30 @@ typedef void * HSNMPSESSION;
 #define INFO_CAT_SITUATION       8
 #define INFO_CAT_LIBRARY_IMAGE   9
 
-
-//
-// Certificate types
-//
-
+/**
+ * Certificate types
+ */
 #define CERT_TYPE_TRUSTED_CA		0
 #define CERT_TYPE_USER				1
 
-
-//
-// Audit subsystems
-//
-
+/**
+ * Audit subsystems
+ */
 #define AUDIT_SECURITY     _T("SECURITY")
 #define AUDIT_OBJECTS      _T("OBJECTS")
 #define AUDIT_SYSCFG       _T("SYSCFG")
 #define AUDIT_CONSOLE      _T("CONSOLE")
 
-
-//
-// Event handling subsystem definitions
-//
-
+/**
+ * Event handling subsystem definitions
+ */
 #include "nms_events.h"
 #include "nms_actions.h"
 #include "nms_alarm.h"
 
-
-//
-// New node information
-//
-
+/**
+ * New node information
+ */
 typedef struct
 {
    DWORD dwIpAddr;
@@ -249,11 +228,9 @@ typedef struct
 	BYTE bMacAddr[MAC_ADDR_LENGTH];
 } NEW_NODE;
 
-
-//
-// New node flags
-//
-
+/**
+ * New node flags
+ */
 #define NNF_IS_SNMP           0x0001
 #define NNF_IS_AGENT          0x0002
 #define NNF_IS_ROUTER         0x0004
@@ -263,11 +240,9 @@ typedef struct
 #define NNF_IS_SONMP          0x0040
 #define NNF_IS_LLDP           0x0080
 
-
-//
-// Node information for autodiscovery filter
-//
-
+/**
+ * Node information for autodiscovery filter
+ */
 typedef struct
 {
    DWORD dwIpAddr;
@@ -280,11 +255,9 @@ typedef struct
    TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
 } DISCOVERY_FILTER_DATA;
 
-
-//
-// Data update structure for client sessions
-//
-
+/**
+ * Data update structure for client sessions
+ */
 typedef struct
 {
    DWORD dwCategory;    // Data category - event, network object, etc.

@@ -261,11 +261,9 @@ struct SUBAGENT
 #endif
 };
 
-
-//
-// External subagent information
-//
-
+/**
+ * External subagent information
+ */
 class ExternalSubagent
 {
 private:
@@ -284,6 +282,8 @@ private:
 	CSCPMessage *waitForMessage(WORD code, DWORD id);
 	DWORD waitForRCC(DWORD id);
 	NETXMS_SUBAGENT_PARAM *getSupportedParameters(DWORD *count);
+	NETXMS_SUBAGENT_LIST *getSupportedLists(DWORD *count);
+	NETXMS_SUBAGENT_TABLE *getSupportedTables(DWORD *count);
 
 public:
 	ExternalSubagent(const TCHAR *name, const TCHAR *user);
@@ -296,15 +296,19 @@ public:
 	const TCHAR *getUserName() { return m_user; }
 
 	DWORD getParameter(const TCHAR *name, TCHAR *buffer);
+	DWORD getTable(const TCHAR *name, Table *value);
+	DWORD getList(const TCHAR *name, StringList *value);
 	void listParameters(CSCPMessage *msg, DWORD *baseId, DWORD *count);
 	void listParameters(StringList *list);
+	void listLists(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+	void listLists(StringList *list);
+	void listTables(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+	void listTables(StringList *list);
 };
 
-
-//
-// Server information
-//
-
+/**
+ * Server information
+ */
 struct SERVER_INFO
 {
    DWORD dwIpAddr;
@@ -313,11 +317,9 @@ struct SERVER_INFO
    BOOL bControlServer;
 };
 
-
-//
-// Communication session
-//
-
+/**
+ * Communication session
+ */
 class CommSession
 {
 private:
@@ -388,11 +390,9 @@ public:
    BOOL canAcceptTraps() { return m_bAcceptTraps; }
 };
 
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 BOOL Initialize();
 void Shutdown();
 void Main();
@@ -415,6 +415,8 @@ DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue);
 DWORD GetListValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue);
 DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue);
 void GetParameterList(CSCPMessage *pMsg);
+void GetEnumList(CSCPMessage *pMsg);
+void GetTableList(CSCPMessage *pMsg);
 BOOL LoadSubAgent(TCHAR *szModuleName);
 void UnloadAllSubAgents();
 BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
@@ -437,8 +439,14 @@ void ListParametersFromExtProviders(StringList *list);
 
 bool AddExternalSubagent(const TCHAR *config);
 DWORD GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer);
+DWORD GetTableValueFromExtSubagent(const TCHAR *name, Table *value);
+DWORD GetListValueFromExtSubagent(const TCHAR *name, StringList *value);
 void ListParametersFromExtSubagents(CSCPMessage *msg, DWORD *baseId, DWORD *count);
 void ListParametersFromExtSubagents(StringList *list);
+void ListListsFromExtSubagents(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+void ListListsFromExtSubagents(StringList *list);
+void ListTablesFromExtSubagents(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+void ListTablesFromExtSubagents(StringList *list);
 CSCPMessage *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent);
 
 BOOL WaitForProcess(const TCHAR *name);

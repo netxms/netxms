@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -25,11 +25,9 @@
 
 #define ALLOCATION_STEP		16
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 StringList::StringList()
 {
 	m_count = 0;
@@ -38,11 +36,9 @@ StringList::StringList()
 	memset(m_values, 0, sizeof(TCHAR *) * m_allocated);
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 StringList::~StringList()
 {
 	for(int i = 0; i < m_count; i++)
@@ -50,11 +46,9 @@ StringList::~StringList()
 	safe_free(m_values);
 }
 
-
-//
-// Clear list
-//
-
+/**
+ * Clear list
+ */
 void StringList::clear()
 {
 	for(int i = 0; i < m_count; i++)
@@ -63,11 +57,9 @@ void StringList::clear()
 	memset(m_values, 0, sizeof(TCHAR *) * m_allocated);
 }
 
-
-//
-// Add preallocated string to list
-//
-
+/**
+ * Add preallocated string to list
+ */
 void StringList::addPreallocated(TCHAR *value)
 {
 	if (m_allocated == m_count)
@@ -78,21 +70,17 @@ void StringList::addPreallocated(TCHAR *value)
 	m_values[m_count++] = (value != NULL) ? value : _tcsdup(_T(""));
 }
 
-
-//
-// Add string to list
-//
-
+/**
+ * Add string to list
+ */
 void StringList::add(const TCHAR *value)
 {
 	addPreallocated(_tcsdup(value));
 }
 
-
-//
-// Add signed 32-bit integer as string
-//
-
+/**
+ * Add signed 32-bit integer as string
+ */
 void StringList::add(LONG value)
 {
 	TCHAR buffer[32];
@@ -101,11 +89,9 @@ void StringList::add(LONG value)
 	add(buffer);
 }
 
-
-//
-// Add unsigned 32-bit integer as string
-//
-
+/**
+ * Add unsigned 32-bit integer as string
+ */
 void StringList::add(DWORD value)
 {
 	TCHAR buffer[32];
@@ -114,11 +100,9 @@ void StringList::add(DWORD value)
 	add(buffer);
 }
 
-
-//
-// Add signed 64-bit integer as string
-//
-
+/**
+ * Add signed 64-bit integer as string
+ */
 void StringList::add(INT64 value)
 {
 	TCHAR buffer[32];
@@ -127,11 +111,9 @@ void StringList::add(INT64 value)
 	add(buffer);
 }
 
-
-//
-// Add unsigned 64-bit integer as string
-//
-
+/**
+ * Add unsigned 64-bit integer as string
+ */
 void StringList::add(QWORD value)
 {
 	TCHAR buffer[32];
@@ -140,11 +122,9 @@ void StringList::add(QWORD value)
 	add(buffer);
 }
 
-
-//
-// Add floating point number as string
-//
-
+/**
+ * Add floating point number as string
+ */
 void StringList::add(double value)
 {
 	TCHAR buffer[64];
@@ -153,11 +133,9 @@ void StringList::add(double value)
 	add(buffer);
 }
 
-
-//
-// Replace string at given position
-//
-
+/**
+ * Replace string at given position
+ */
 void StringList::replace(int index, const TCHAR *value)
 {
 	if ((index < 0) || (index >= m_count))
@@ -167,13 +145,11 @@ void StringList::replace(int index, const TCHAR *value)
 	m_values[index] = _tcsdup(value);
 }
 
-
-//
-// Get index of given value. Returns zero-based index ot -1 
-// if given value not found in the list. If list contains duplicate values,
-// index of first occurence will be returned.
-//
-
+/**
+ * Get index of given value. Returns zero-based index ot -1 
+ * if given value not found in the list. If list contains duplicate values,
+ * index of first occurence will be returned.
+ */
 int StringList::getIndex(const TCHAR *value)
 {
 	for(int i = 0; i < m_count; i++)
@@ -182,6 +158,11 @@ int StringList::getIndex(const TCHAR *value)
 	return -1;
 }
 
+/**
+ * Get index of given value using case-insensetive compare. Returns zero-based index ot -1 
+ * if given value not found in the list. If list contains duplicate values,
+ * index of first occurence will be returned.
+ */
 int StringList::getIndexIgnoreCase(const TCHAR *value)
 {
 	for(int i = 0; i < m_count; i++)

@@ -37,12 +37,46 @@ Table::Table()
 	m_title = NULL;
 }
 
-
-//
-// Create table from NXCP message
-//
-
+/**
+ * Create table from NXCP message
+ */
 Table::Table(CSCPMessage *msg)
+{
+	createFromMessage(msg);
+}
+
+/**
+ * Table destructor
+ */
+Table::~Table()
+{
+	destroy();
+}
+
+/**
+ * Destroy table data
+ */
+void Table::destroy()
+{
+   int i;
+
+   for(i = 0; i < m_nNumCols; i++)
+      safe_free(m_ppColNames[i]);
+   safe_free(m_ppColNames);
+
+	safe_free(m_colFormats);
+
+   for(i = 0; i < m_nNumRows * m_nNumCols; i++)
+      safe_free(m_ppData[i]);
+   safe_free(m_ppData);
+
+	safe_free(m_title);
+}
+
+/**
+ * Create table from NXCP message
+ */
+void Table::createFromMessage(CSCPMessage *msg)
 {
 	int i;
 	DWORD dwId;
@@ -64,33 +98,18 @@ Table::Table(CSCPMessage *msg)
 		m_ppData[i] = msg->GetVariableStr(dwId++);
 }
 
-
-//
-// Table destructor
-//
-
-Table::~Table()
+/**
+ * Update table from NXCP message
+ */
+void Table::updateFromMessage(CSCPMessage *msg)
 {
-   int i;
-
-   for(i = 0; i < m_nNumCols; i++)
-      safe_free(m_ppColNames[i]);
-   safe_free(m_ppColNames);
-
-	safe_free(m_colFormats);
-
-   for(i = 0; i < m_nNumRows * m_nNumCols; i++)
-      safe_free(m_ppData[i]);
-   safe_free(m_ppData);
-
-	safe_free(m_title);
+	destroy();
+	createFromMessage(msg);
 }
 
-
-//
-// Fill NXCP message with table data
-//
-
+/**
+ * Fill NXCP message with table data
+ */
 int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
 {
 	int i, row, col;
@@ -127,11 +146,9 @@ int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
 	return row;
 }
 
-
-//
-// Add new column
-//
-
+/**
+ * Add new column
+ */
 int Table::addColumn(const TCHAR *name, LONG format)
 {
    m_ppColNames = (TCHAR **)realloc(m_ppColNames, sizeof(TCHAR *) * (m_nNumCols + 1));
