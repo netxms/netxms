@@ -32,6 +32,7 @@ import org.netxms.client.objects.ServiceContainer;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -108,6 +109,10 @@ public class GeneralInfo extends TableElement
 				break;
 			case GenericObject.OBJECT_MOBILEDEVICE:
 				MobileDevice md = (MobileDevice)object;
+				if (md.getLastReportTime().getTime() == 0)
+					addPair("Last Report", "never");
+				else
+					addPair("Last Report", RegionalSettings.getDateTimeFormat().format(md.getLastReportTime()));
 				addPair("Device ID", md.getDeviceId());
 				addPair("Vendor", md.getVendor());
 				addPair("Model", md.getModel());

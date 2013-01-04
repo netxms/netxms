@@ -215,6 +215,8 @@ void MobileDevice::updateSystemInfo(CSCPMessage *msg)
 {
 	LockData();
 
+	m_lastReportTime = time(NULL);
+
 	safe_free(m_vendor);
 	m_vendor = msg->GetVariableStr(VID_VENDOR);
 
@@ -243,6 +245,8 @@ void MobileDevice::updateSystemInfo(CSCPMessage *msg)
 void MobileDevice::updateStatus(CSCPMessage *msg)
 {
 	LockData();
+
+	m_lastReportTime = time(NULL);
 
 	if (msg->IsVariableExist(VID_BATTERY_LEVEL))
 		m_batteryLevel = (int)msg->GetVariableLong(VID_BATTERY_LEVEL);

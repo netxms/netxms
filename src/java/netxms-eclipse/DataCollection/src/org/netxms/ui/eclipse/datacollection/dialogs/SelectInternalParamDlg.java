@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.AgentParameter;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -68,6 +69,19 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 			list.add(new AgentParameter("AverageDCIQueuingTime", Messages.SelectInternalParamDlg_DCI_AvgDCIQueueTime, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
 			list.add(new AgentParameter("AverageDCPollerQueueSize", Messages.SelectInternalParamDlg_DCI_AvgDCQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
 			list.add(new AgentParameter("AverageStatusPollerQueueSize", Messages.SelectInternalParamDlg_DCI_AvgStatusPollerQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+		}
+
+		if ((object instanceof Template) || (object instanceof MobileDevice))
+		{
+			list.add(new AgentParameter("MobileDevice.BatteryLevel", "Battery level", DataCollectionItem.DT_INT));
+			list.add(new AgentParameter("MobileDevice.DeviceId", "Device ID", DataCollectionItem.DT_STRING));
+			list.add(new AgentParameter("MobileDevice.LastReportTime", "Last report time", DataCollectionItem.DT_INT64));
+			list.add(new AgentParameter("MobileDevice.Model", "Model", DataCollectionItem.DT_STRING));
+			list.add(new AgentParameter("MobileDevice.OS.Name", "Operating system", DataCollectionItem.DT_STRING));
+			list.add(new AgentParameter("MobileDevice.OS.Version", "Operating system version", DataCollectionItem.DT_STRING));
+			list.add(new AgentParameter("MobileDevice.SerialNumber", "Serial number", DataCollectionItem.DT_STRING));
+			list.add(new AgentParameter("MobileDevice.Vendor", "Vendor", DataCollectionItem.DT_STRING));
+			list.add(new AgentParameter("MobileDevice.UserId", "User ID", DataCollectionItem.DT_STRING));
 		}
 		
 		viewer.setInput(list.toArray());
