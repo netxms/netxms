@@ -38,6 +38,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -170,8 +171,8 @@ public class SelectDciDialog extends Dialog
 				public void selectionChanged(SelectionChangedEvent event)
 				{
 					GenericObject object = objectTree.getFirstSelectedObject2();
-					if ((object != null) && (object instanceof Node))
-						dciList.setNode((Node)object);
+					if ((object != null) && ((object instanceof Node) || (object instanceof MobileDevice)))
+						dciList.setNode(object);
 					else
 						dciList.setNode(null);
 				}
