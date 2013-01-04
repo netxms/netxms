@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -194,6 +194,7 @@ void MobileDevice::CreateMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_OS_VERSION, CHECK_NULL_EX(m_osVersion));
 	msg->SetVariable(VID_USER_ID, CHECK_NULL_EX(m_userId));
 	msg->SetVariable(VID_BATTERY_LEVEL, (DWORD)m_batteryLevel);
+	msg->SetVariable(VID_LAST_CHANGE_TIME, (QWORD)m_lastReportTime);
 }
 
 /**
@@ -261,4 +262,58 @@ void MobileDevice::updateStatus(CSCPMessage *msg)
 
 	Modify();
 	UnlockData();
+}
+
+/**
+ * Get value for server's internal parameter
+ */
+DWORD MobileDevice::getInternalItem(const TCHAR *param, DWORD bufSize, TCHAR *buffer)
+{
+	DWORD rc = DataCollectionTarget::getInternalItem(param, bufSize, buffer);
+	if (rc == DCE_SUCCESS)
+		return DCE_SUCCESS;
+	rc = DCE_SUCCESS;
+
+   if (!_tcsicmp(param, _T("MobileDevice.BatteryLevel")))
+   {
+      _sntprintf(buffer, bufSize, _T("%d"), m_batteryLevel);
+   }
+   else if (!_tcsicmp(param, _T("MobileDevice.DeviceId")))
+   {
+		nx_strncpy(buffer, CHECK_NULL_EX(m_deviceId), bufSize);
+   }
+   else if (!_tcsicmp(param, _T("MobileDevice.LastReportTime")))
+   {
+		_sntprintf(buffer, bufSize, INT64_FMT, (INT64)m_lastReportTime);
+   }
+   else if (!_tcsicmp(param, _T("MobileDevice.Model")))
+   {
+		nx_strncpy(buffer, CHECK_NULL_EX(m_model), bufSize);
+   }
+   else if (!_tcsicmp(param, _T("MobileDevice.OS.Name")))
+   {
+		nx_strncpy(buffer, CHECK_NULL_EX(m_osName), bufSize);
+   }
+   else if (!_tcsicmp(param, _T("MobileDevice.OS.Version")))
+   {
+		nx_strncpy(buffer, CHECK_NULL_EX(m_osVersion), bufSize);
+   }
+   else if (!_tcsicmp(param, _T("MobileDevice.SerialNumber")))
+   {
+		nx_strncpy(buffer, CHECK_NULL_EX(m_serialNumber), bufSize);
+   }
+   else if (!_tcsicmp(param, _T("MobileDevice.Vendor")))
+   {
+		nx_strncpy(buffer, CHECK_NULL_EX(m_vendor), bufSize);
+   }
+   else if (!_tcsicmp(param, _T("MobileDevice.UserId")))
+   {
+		nx_strncpy(buffer, CHECK_NULL_EX(m_userId), bufSize);
+   }
+   else
+   {
+      rc = DCE_NOT_SUPPORTED;
+   }
+
+   return rc;
 }

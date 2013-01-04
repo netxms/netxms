@@ -2715,15 +2715,7 @@ DWORD Node::getInternalItem(const TCHAR *param, DWORD bufSize, TCHAR *buffer)
 		return DCE_SUCCESS;
 	rc = DCE_SUCCESS;
 
-   if (!_tcsicmp(param, _T("Status")))
-   {
-      _sntprintf(buffer, bufSize, _T("%d"), m_iStatus);
-   }
-   else if (!_tcsicmp(param, _T("Dummy")))
-   {
-      _tcscpy(buffer, _T("0"));
-   }
-   else if (MatchString(_T("Net.IP.NextHop(*)"), param, FALSE))
+   if (MatchString(_T("Net.IP.NextHop(*)"), param, FALSE))
    {
       if ((m_dwFlags & NF_IS_NATIVE_AGENT) || (m_dwFlags & NF_IS_SNMP))
 		{

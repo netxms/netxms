@@ -18,6 +18,7 @@
  */
 package org.netxms.client.objects;
 
+import java.util.Date;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
@@ -35,6 +36,7 @@ public class MobileDevice extends GenericObject
 	private String osVersion;
 	private String userId;
 	private int batteryLevel;
+	private Date lastReportTime;
 	
 	/**
 	 * @param msg
@@ -51,6 +53,7 @@ public class MobileDevice extends GenericObject
 		osVersion = msg.getVariableAsString(NXCPCodes.VID_OS_VERSION);
 		userId = msg.getVariableAsString(NXCPCodes.VID_USER_ID);
 		batteryLevel = msg.getVariableAsInteger(NXCPCodes.VID_BATTERY_LEVEL);
+		lastReportTime = msg.getVariableAsDate(NXCPCodes.VID_LAST_CHANGE_TIME);
 	}
 
 	/**
@@ -124,5 +127,13 @@ public class MobileDevice extends GenericObject
 	public String getObjectClassName()
 	{
 		return "MobileDevice";
+	}
+
+	/**
+	 * @return the lastReportTime
+	 */
+	public final Date getLastReportTime()
+	{
+		return lastReportTime;
 	}
 }
