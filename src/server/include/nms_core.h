@@ -550,10 +550,10 @@ private:
    void KillSession(CSCPMessage *pRequest);
    void SendTrapLog(CSCPMessage *pRequest);
    void StartSnmpWalk(CSCPMessage *pRequest);
-   void ResolveDCINames(CSCPMessage *pRequest);
-   DWORD ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName);
+   void resolveDCINames(CSCPMessage *pRequest);
+   DWORD resolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName);
    void SendConfigForAgent(CSCPMessage *pRequest);
-   void SendAgentCfgList(DWORD dwRqId);
+   void sendAgentCfgList(DWORD dwRqId);
    void OpenAgentConfig(CSCPMessage *pRequest);
    void SaveAgentConfig(CSCPMessage *pRequest);
    void DeleteAgentConfig(CSCPMessage *pRequest);

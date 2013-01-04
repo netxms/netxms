@@ -1039,7 +1039,7 @@ void ClientSession::processingThread()
             StartSnmpWalk(pMsg);
             break;
          case CMD_RESOLVE_DCI_NAMES:
-            ResolveDCINames(pMsg);
+            resolveDCINames(pMsg);
             break;
 			case CMD_GET_DCI_INFO:
 				SendDCIInfo(pMsg);
@@ -1057,7 +1057,7 @@ void ClientSession::processingThread()
             pushDCIData(pMsg);
             break;
          case CMD_GET_AGENT_CFG_LIST:
-            SendAgentCfgList(pMsg->GetId());
+            sendAgentCfgList(pMsg->GetId());
             break;
          case CMD_OPEN_AGENT_CONFIG:
             OpenAgentConfig(pMsg);
@@ -7809,12 +7809,10 @@ void ClientSession::StartSnmpWalk(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Resolve single DCI name
-//
-
-DWORD ClientSession::ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName)
+/**
+ * Resolve single DCI name
+ */
+DWORD ClientSession::resolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName)
 {
    NetObj *pObject;
    DCObject *pItem;
@@ -7825,6 +7823,7 @@ DWORD ClientSession::ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName
    {
 		if ((pObject->Type() == OBJECT_NODE) ||
 			 (pObject->Type() == OBJECT_CLUSTER) ||
+			 (pObject->Type() == OBJECT_MOBILEDEVICE) ||
 			 (pObject->Type() == OBJECT_TEMPLATE))
 		{
 			if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -7857,12 +7856,10 @@ DWORD ClientSession::ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName
    return dwResult;
 }
 
-
-//
-// Resolve DCI identifiers to names
-//
-
-void ClientSession::ResolveDCINames(CSCPMessage *pRequest)
+/**
+ * Resolve DCI identifiers to names
+ */
+void ClientSession::resolveDCINames(CSCPMessage *pRequest)
 {
    DWORD i, dwId, dwNumDCI, *pdwNodeList, *pdwDCIList, dwResult = RCC_INVALID_ARGUMENT;
    TCHAR *pszName;
@@ -7879,7 +7876,7 @@ void ClientSession::ResolveDCINames(CSCPMessage *pRequest)
    
    for(i = 0, dwId = VID_DCI_LIST_BASE; i < dwNumDCI; i++)
    {
-      dwResult = ResolveDCIName(pdwNodeList[i], pdwDCIList[i], &pszName);
+      dwResult = resolveDCIName(pdwNodeList[i], pdwDCIList[i], &pszName);
       if (dwResult != RCC_SUCCESS)
          break;
       msg.SetVariable(dwId++, pszName);
@@ -7892,12 +7889,10 @@ void ClientSession::ResolveDCINames(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send list of available agent configs to client
-//
-
-void ClientSession::SendAgentCfgList(DWORD dwRqId)
+/**
+ * Send list of available agent configs to client
+ */
+void ClientSession::sendAgentCfgList(DWORD dwRqId)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
