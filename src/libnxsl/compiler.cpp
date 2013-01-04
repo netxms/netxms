@@ -94,7 +94,6 @@ NXSL_Program *NXSL_Compiler::compile(const TCHAR *pszSourceCode)
    pResult = new NXSL_Program;
 	yylex_init(&scanner);
 	yyset_extra(m_pLexer, scanner);
-//yydebug=1;
    if (yyparse(scanner, m_pLexer, this, pResult) == 0)
    {
       pResult->resolveFunctions();

@@ -132,6 +132,20 @@ Script:
 		pLexer->setErrorState();
 	}
 }
+|
+{
+	char szErrorText[256];
+
+	// Add implicit return
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_RET_NULL));
+
+	// Add implicit main() function
+	if (!pScript->addFunction("$main", 0, szErrorText))
+	{
+		pCompiler->error(szErrorText);
+		pLexer->setErrorState();
+	}
+}
 ;
 
 Module:

@@ -38,18 +38,13 @@
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
-
-//
-// Interface to compiler
-// Source must be in UTF-8
-//
-
+/**
+ * Interface to compiler
+ */
 NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszError, int nBufSize)
 {
    NXSL_Compiler compiler;
-   NXSL_Program *pResult;
-
-   pResult = compiler.compile(pszSource);
+   NXSL_Program *pResult = compiler.compile(pszSource);
    if (pResult == NULL)
    {
       if (pszError != NULL)
