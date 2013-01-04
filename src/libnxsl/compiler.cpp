@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,22 +23,18 @@
 
 #include "libnxsl.h"
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 int yyparse(yyscan_t scanner, NXSL_Lexer *, NXSL_Compiler *, NXSL_Program *);
 extern int yydebug;
 void yyset_extra(NXSL_Lexer *, yyscan_t);
 int yylex_init(yyscan_t *);
 int yylex_destroy(yyscan_t);
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 NXSL_Compiler::NXSL_Compiler()
 {
    m_pszErrorText = NULL;
@@ -47,11 +43,9 @@ NXSL_Compiler::NXSL_Compiler()
 	m_pBreakStack = new NXSL_Stack;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 NXSL_Compiler::~NXSL_Compiler()
 {
    safe_free(m_pszErrorText);
@@ -60,11 +54,9 @@ NXSL_Compiler::~NXSL_Compiler()
 	delete m_pBreakStack;
 }
 
-
-//
-// Error handler
-//
-
+/**
+ * Error handler
+ */
 void NXSL_Compiler::error(const char *pszMsg)
 {
    char szText[1024];
@@ -80,11 +72,9 @@ void NXSL_Compiler::error(const char *pszMsg)
    }
 }
 
-
-//
-// Compile source code
-//
-
+/**
+ * Compile source code
+ */
 NXSL_Program *NXSL_Compiler::compile(const TCHAR *pszSourceCode)
 {
    NXSL_Program *pResult;
@@ -108,22 +98,18 @@ NXSL_Program *NXSL_Compiler::compile(const TCHAR *pszSourceCode)
    return pResult;
 }
 
-
-//
-// yyerror() for parser
-//
-
+/**
+ * yyerror() for parser
+ */
 void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
              NXSL_Program *pScript, const char *pszText)
 {
    pCompiler->error(pszText);
 }
 
-
-//
-// Pop address
-//
-
+/**
+ * Pop address
+ */
 DWORD NXSL_Compiler::popAddr()
 {
    void *pAddr;
@@ -132,11 +118,9 @@ DWORD NXSL_Compiler::popAddr()
    return pAddr ? CAST_FROM_POINTER(pAddr, DWORD) : INVALID_ADDRESS;
 }
 
-
-//
-// Peek address
-//
-
+/**
+ * Peek address
+ */
 DWORD NXSL_Compiler::peekAddr()
 {
    void *pAddr;
@@ -145,11 +129,9 @@ DWORD NXSL_Compiler::peekAddr()
    return pAddr ? CAST_FROM_POINTER(pAddr, DWORD) : INVALID_ADDRESS;
 }
 
-
-//
-// Add "break" statement address
-//
-
+/**
+ * Add "break" statement address
+ */
 void NXSL_Compiler::addBreakAddr(DWORD dwAddr)
 {
 	Queue *pQueue;
@@ -161,11 +143,9 @@ void NXSL_Compiler::addBreakAddr(DWORD dwAddr)
 	}
 }
 
-
-//
-// Resolve all breal statements at current level
-//
-
+/**
+ * Resolve all breal statements at current level
+ */
 void NXSL_Compiler::closeBreakLevel(NXSL_Program *pScript)
 {
 	Queue *pQueue;

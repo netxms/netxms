@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -24,31 +24,24 @@
 #include "libnxsl.h"
 #include <math.h>
 
-
-//
-// Global data
-//
-
+/**
+ * NXSL type names
+ */
 const TCHAR *g_szTypeNames[] = { _T("null"), _T("object"), _T("array"), _T("iterator"), _T("string"),
                                  _T("real"), _T("int32"), _T("int64"), _T("uint32"), _T("uint64") };
 
-
-
-//
-// Type of value
-//
-
+/**
+ * NXSL function: Type of value
+ */
 int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    *ppResult = new NXSL_Value(g_szTypeNames[argv[0]->getDataType()]);
    return 0;
 }
 
-
-//
-// Class of an object
-//
-
+/**
+ * NXSL function: Class of an object
+ */
 int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -58,11 +51,9 @@ int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *
    return 0;
 }
 
-
-//
-// Absolute value
-//
-
+/**
+ * NXSL function: Absolute value
+ */
 int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
@@ -969,37 +960,32 @@ static int F_index_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	return 0;
 }
 
-
-//
-// index(string, substring, [position])
-// Returns the position of the first occurrence of SUBSTRING in STRING at or after POSITION.
-// If you don't specify POSITION, the search starts at the beginning of STRING. If SUBSTRING
-// is not found, returns 0.
-//
-
+/**
+ * index(string, substring, [position])
+ * Returns the position of the first occurrence of SUBSTRING in STRING at or after POSITION.
+ * If you don't specify POSITION, the search starts at the beginning of STRING. If SUBSTRING
+ * is not found, returns 0.
+ */
 int F_index(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	return F_index_rindex(argc, argv, ppResult, program, false);
 }
 
 
-//
-// rindex(string, substring, [position])
-// Returns the position of the last occurrence of SUBSTRING in STRING at or before POSITION.
-// If you don't specify POSITION, the search starts at the end of STRING. If SUBSTRING
-// is not found, returns 0.
-//
-
+/**
+ * rindex(string, substring, [position])
+ * Returns the position of the last occurrence of SUBSTRING in STRING at or before POSITION.
+ * If you don't specify POSITION, the search starts at the end of STRING. If SUBSTRING
+ * is not found, returns 0.
+ */
 int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	return F_index_rindex(argc, argv, ppResult, program, true);
 }
 
-
-//
-// Generate random number in given range
-//
-
+/**
+ * NXSL function: Generate random number in given range
+ */
 int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isInteger() || !argv[1]->isInteger())
@@ -1041,5 +1027,97 @@ int F_sys(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
 	}
 
 	*ppResult = new NXSL_Value;
+	return 0;
+}
+
+/**
+ * NXSL function: floor
+ */
+int F_floor(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isNumeric())
+		return NXSL_ERR_NOT_NUMBER;
+
+	*ppResult = new NXSL_Value(floor(argv[0]->getValueAsReal()));
+	return 0;
+}
+
+/**
+ * NXSL function: ceil
+ */
+int F_ceil(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isNumeric())
+		return NXSL_ERR_NOT_NUMBER;
+
+	*ppResult = new NXSL_Value(ceil(argv[0]->getValueAsReal()));
+	return 0;
+}
+
+/**
+ * NXSL function: round
+ */
+int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if ((argc != 1) && (argc != 2))
+		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+	if (!argv[0]->isNumeric())
+		return NXSL_ERR_NOT_NUMBER;
+
+	double d = argv[0]->getValueAsReal();
+	if (argc == 1)
+	{
+		// round to whole number
+		*ppResult = new NXSL_Value((d > 0.0) ? floor(d + 0.5) : ceil(d - 0.5));
+	}
+	else
+	{
+		// round with given number of decimal places
+		if (!argv[1]->isInteger())
+			return NXSL_ERR_NOT_INTEGER;
+
+		int p = argv[1]->getValueAsInt32();
+		if (p < 0)
+			p = 0;
+
+		d *= pow(10.0, p);
+		d = (d > 0.0) ? floor(d + 0.5) : ceil(d - 0.5);
+		d *= pow(10.0, -p);
+		*ppResult = new NXSL_Value(d);
+	}
+	return 0;
+}
+
+/**
+ * NXSL function: format
+ */
+int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if ((argc < 1) || (argc > 3))
+		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+	if (!argv[0]->isNumeric())
+		return NXSL_ERR_NOT_NUMBER;
+
+	int width = 0;
+	int precision = 0;
+	if (argc >= 2)
+	{
+		if (!argv[1]->isInteger())
+			return NXSL_ERR_NOT_INTEGER;
+		width = argv[1]->getValueAsInt32();
+		if (argc == 3)
+		{
+			if (!argv[2]->isInteger())
+				return NXSL_ERR_NOT_INTEGER;
+			precision = argv[2]->getValueAsInt32();
+		}
+	}
+
+	TCHAR format[32], buffer[64];
+	_sntprintf(format, 32, _T("%%%d.%df"), width, precision);
+	_sntprintf(buffer, 64, format, argv[0]->getValueAsReal());
+	*ppResult = new NXSL_Value(buffer);
 	return 0;
 }

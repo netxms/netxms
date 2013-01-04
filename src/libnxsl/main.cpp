@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -28,12 +28,10 @@
 #define close	_close
 #endif
 
-
-//
-// For unknown reasons, min() becames undefined on Linux, despite the fact
-// that it is defined in nms_common.h
-//
-
+/**
+ * For unknown reasons, min() becames undefined on Linux, despite the fact
+ * that it is defined in nms_common.h
+ */
 #ifndef min
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #endif
@@ -53,11 +51,9 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszE
    return pResult;
 }
 
-
-//
-// Load file into memory
-//
-
+/**
+ * Load file into memory
+ */
 TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize)
 {
    int fd, iBufPos, iNumBytes, iBytesRead;

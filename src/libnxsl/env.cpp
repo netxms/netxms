@@ -23,16 +23,17 @@
 
 #include "libnxsl.h"
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_ceil(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_floor(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_index(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
@@ -48,6 +49,7 @@ int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
 int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
@@ -62,18 +64,19 @@ int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Progr
 int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 
-
-//
-// Default built-in function list
-//
-
+/**
+ * Default built-in function list
+ */
 static NXSL_ExtFunction m_builtinFunctions[] =
 {
 	{ _T("_exit"), F_exit, -1 },
    { _T("abs"), F_abs, 1 },
+   { _T("ceil"), F_ceil, 1 },
    { _T("classof"), F_classof, 1 },
 	{ _T("d2x"), F_d2x, -1 },
    { _T("exp"), F_exp, 1 },
+   { _T("floor"), F_floor, 1 },
+   { _T("format"), F_format, -1 },
    { _T("gmtime"), F_gmtime, -1 },
    { _T("index"), F_index, -1 },
    { _T("left"), F_left, -1 },
@@ -89,6 +92,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("random"), F_random, 2 },
    { _T("right"), F_right, -1 },
    { _T("rindex"), F_rindex, -1 },
+   { _T("round"), F_round, -1 },
 	{ _T("rtrim"), F_rtrim, 1 },
 	{ _T("sleep"), F_sleep, 1 },
 	{ _T("strftime"), F_strftime, -1 },
