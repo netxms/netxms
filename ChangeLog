@@ -14,6 +14,7 @@
 	- Textual conventions for selected MIB object displayed in MIB explorer
 	- Fixed bug with chart titles in dashboards
 	- "Snap to grid" and "Align to grid" options in network maps
+	- Improved Y-range adjustment in line charts
 - Android client:
 	- Select all/unselect all in alarms list
 	- Multipliers for graphs and last values: binary (power of two) and decimal (power of ten)
