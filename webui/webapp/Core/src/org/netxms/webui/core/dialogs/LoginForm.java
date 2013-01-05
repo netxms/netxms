@@ -18,6 +18,8 @@
  */
 package org.netxms.webui.core.dialogs;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Properties;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -136,8 +138,21 @@ public class LoginForm extends Window
 		gd.horizontalSpan = 2;
 		title.setLayoutData(gd);
 		
+		Image userImage = null;
+		try
+		{
+			ImageDescriptor d = ImageDescriptor.createFromURL(new URL("https://127.0.0.1/netxms_login.png"));
+			if (d != null)
+				userImage = d.createImage();
+		}
+		catch(MalformedURLException e1)
+		{
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		final ImageDescriptor customImage = BrandingManager.getInstance().getLoginTitleImage();
-		final Image loginImage = (customImage != null) ? customImage.createImage() : Activator.getImageDescriptor("icons/login.jpg").createImage();
+		final Image loginImage = (userImage != null) ? userImage : ((customImage != null) ? customImage.createImage() : Activator.getImageDescriptor("icons/login.jpg").createImage());
 		Label logo = new Label(content, SWT.NONE);
 		logo.setImage(loginImage);
 		

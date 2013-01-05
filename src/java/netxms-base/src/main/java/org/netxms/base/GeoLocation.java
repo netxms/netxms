@@ -253,9 +253,9 @@ public class GeoLocation
 		{
 			// Hemisphere sign
 			char ch;
-			if ((m.group(1) != null) && !m.group(1).isEmpty())
+			if ((m.group(1) != null) && (m.group(1).length() > 0))
 				ch = m.group(1).charAt(0);
-			else if ((m.group(5) != null) && !m.group(5).isEmpty())
+			else if ((m.group(5) != null) && (m.group(5).length() > 0))
 				ch = m.group(5).charAt(0);
 			else
 				throw new GeoLocationFormatException();
