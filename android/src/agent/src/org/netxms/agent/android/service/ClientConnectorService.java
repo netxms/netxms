@@ -461,16 +461,21 @@ public class ClientConnectorService extends Service
 
 	/**
 	 * Get geo location. Currently it uses a last known location (it could be very old)
+	 * 
+	 * @return last known location or null if not known
 	 */
 	private GeoLocation getGeoLocation()
 	{
 		Criteria hdCrit = new Criteria();
 		hdCrit.setAccuracy(Criteria.ACCURACY_COARSE);
 		String mlocProvider = locationManager.getBestProvider(hdCrit, true);
-		Location currLocation = locationManager.getLastKnownLocation(mlocProvider);
-		if (currLocation != null)
-			return new GeoLocation(currLocation.getLatitude(), currLocation.getLongitude());
-		return new GeoLocation(0, 0);
+		if (mlocProvider != null)
+		{
+			Location currLocation = locationManager.getLastKnownLocation(mlocProvider);
+			if (currLocation != null)
+				return new GeoLocation(currLocation.getLatitude(), currLocation.getLongitude());
+		}
+		return null;
 	}
 
 	/**
