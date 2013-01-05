@@ -84,7 +84,7 @@ public class TimePreference extends DialogPreference
 			lastHour = picker.getCurrentHour();
 			lastMinute = picker.getCurrentMinute();
 
-			String time = String.valueOf(lastHour) + ":" + String.valueOf(lastMinute);
+			String time = (lastHour < 9 ? "0" : "") + String.valueOf(lastHour) + (lastMinute < 9 ? ":0" : ":") + String.valueOf(lastMinute);
 
 			if (callChangeListener(time))
 				persistString(time);

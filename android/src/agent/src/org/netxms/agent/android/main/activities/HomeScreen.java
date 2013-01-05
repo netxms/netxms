@@ -1,5 +1,7 @@
 package org.netxms.agent.android.main.activities;
 
+import java.util.Calendar;
+
 import org.netxms.agent.android.R;
 import org.netxms.base.NXCommon;
 
@@ -26,7 +28,10 @@ public class HomeScreen extends AbstractClientActivity
 {
 	public static final String INTENTIONAL_EXIT_KEY = "IntentionalExit";
 
-	private TextView statusText;
+	private SharedPreferences sp;
+	private TextView agentStatusText;
+	private TextView lastConnText;
+	private TextView nextConnText;
 
 	/*
 	 * (non-Javadoc)
@@ -39,10 +44,14 @@ public class HomeScreen extends AbstractClientActivity
 		setIntentionalExit(false); // Allow autorestart on change connectivity status for premature exit
 		setContentView(R.layout.homescreen);
 
-		statusText = (TextView)findViewById(R.id.ScreenTitleSecondary);
+		sp = PreferenceManager.getDefaultSharedPreferences(this);
 
+		agentStatusText = (TextView)findViewById(R.id.AgentStatus);
+		lastConnText = (TextView)findViewById(R.id.LastConnection);
+		nextConnText = (TextView)findViewById(R.id.NextConnection);
 		TextView buildName = (TextView)findViewById(R.id.MainScreenVersion);
 		buildName.setText(getString(R.string.version, getAppVersion(), NXCommon.VERSION, getString(R.string.build_number)));
+		refreshStatus();
 	}
 
 	/*
@@ -55,6 +64,7 @@ public class HomeScreen extends AbstractClientActivity
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
 		super.onServiceConnected(name, binder);
+		service.registerHomeScreen(this);
 	}
 
 	/*
@@ -99,14 +109,45 @@ public class HomeScreen extends AbstractClientActivity
 	}
 
 	/**
-	 * @param text
 	 */
-	public void setStatusText(String text, int color)
+	@SuppressWarnings("deprecation")
+	public void refreshStatus()
 	{
-		statusText.setTextColor(color);
-		statusText.setText(text);
+		long last = sp.getLong("global.scheduler.last_activation", 0);
+		if (last != 0)
+		{
+			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
+			cal.setTimeInMillis(last);
+			lastConnText.setText(
+					getString(R.string.info_last_connection,
+							cal.getTime().toLocaleString(),
+							sp.getString("global.scheduler.last_activation_msg",
+									getString(R.string.ok))));
+		}
+		if (sp.getBoolean("global.activate", false))
+		{
+			String status = getString(R.string.pref_global_activate_enabled);
+			String minutes = sp.getString("global.scheduler.interval", "15");
+			String range = "";
+			if (sp.getBoolean("global.scheduler.daily.enable", false))
+				range = getString(R.string.info_agent_range, sp.getString("global.scheduler.daily.on", "00:00"), sp.getString("global.scheduler.daily.off", "00:00"));
+			else
+				range = getString(R.string.info_agent_whole_day);
+			agentStatusText.setText(getString(R.string.info_agent_status, status, minutes, range));
+			long next = sp.getLong("global.scheduler.next_activation", 0);
+			if (next != 0)
+			{
+				Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
+				cal.setTimeInMillis(next);
+				nextConnText.setText(getString(R.string.info_next_connection, cal.getTime().toLocaleString()));
+			}
+		}
+		else
+		{
+			agentStatusText.setText(getString(R.string.pref_global_activate_disabled));
+			nextConnText.setText(getString(R.string.info_next_connection_unscheduled));
+		}
 	}
-
 	public void showToast(final String text)
 	{
 		new Handler(getMainLooper()).post(new Runnable()

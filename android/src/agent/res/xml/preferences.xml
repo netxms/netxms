@@ -2,28 +2,26 @@
 <PreferenceScreen
 	  xmlns:android="http://schemas.android.com/apk/res/android">
 	<PreferenceCategory android:title="@string/pref_global">
-	    <CheckBoxPreference android:summaryOff="@string/pref_global_autostart_disabled" android:summaryOn="@string/pref_global_autostart_enabled" android:key="global.autostart" android:enabled="true" android:defaultValue="false" android:title="@string/pref_global_autostart"/>
-	</PreferenceCategory>
+	    <CheckBoxPreference android:summaryOff="@string/pref_global_activate_disabled" android:summaryOn="@string/pref_global_activate_enabled" android:key="global.activate" android:enabled="true" android:defaultValue="false" android:title="@string/pref_global_activate"/>
+	    <CheckBoxPreference android:summaryOff="@string/pref_global_autostart_disabled" android:summaryOn="@string/pref_global_autostart_enabled" android:key="global.autostart" android:enabled="true" android:defaultValue="false" android:title="@string/pref_global_autostart" android:dependency="global.activate"/>
+   	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/pref_connection">
-		<PreferenceScreen android:title="@string/pref_parameters">
-    		<EditTextPreference android:title="@string/pref_server" android:summary="@string/pref_server_summary" android:enabled="true" android:key="connection.server"></EditTextPreference>
-		    <EditTextPreference android:title="@string/pref_port" android:summary="@string/pref_port_summary" android:enabled="true"  android:defaultValue="4747" android:key="connection.port" android:digits="0123456789"></EditTextPreference>
-			<EditTextPreference android:title="@string/pref_login" android:summary="@string/pref_login_summary" android:enabled="true" android:defaultValue="admin" android:key="connection.login"></EditTextPreference>
-			<EditTextPreference android:enabled="true" android:key="connection.password" android:title="@string/pref_password" android:summary="@string/pref_password_summary" android:password="true"></EditTextPreference>
-			<CheckBoxPreference android:title="@string/pref_encrypt" android:key="connection.encrypt" android:enabled="true" android:summaryOn="@string/pref_encrypt_summary_enabled" android:summaryOff="@string/pref_encrypt_summary_disabled" android:defaultValue="false"></CheckBoxPreference>
+		<PreferenceScreen android:title="@string/pref_parameters" android:dependency="global.activate">
+    		<EditTextPreference android:title="@string/pref_server" android:summary="@string/pref_server_summary" android:enabled="true" android:key="connection.server"/>
+		    <EditTextPreference android:title="@string/pref_port" android:summary="@string/pref_port_summary" android:enabled="true"  android:defaultValue="4747" android:key="connection.port" android:digits="0123456789"/>
+			<EditTextPreference android:title="@string/pref_login" android:summary="@string/pref_login_summary" android:enabled="true" android:defaultValue="admin" android:key="connection.login"/>
+			<EditTextPreference android:enabled="true" android:key="connection.password" android:title="@string/pref_password" android:summary="@string/pref_password_summary" android:password="true"/>
+			<CheckBoxPreference android:title="@string/pref_encrypt" android:key="connection.encrypt" android:enabled="true" android:summaryOn="@string/pref_encrypt_summary_enabled" android:summaryOff="@string/pref_encrypt_summary_disabled" android:defaultValue="false"/>
 		</PreferenceScreen>
-		<PreferenceScreen android:title="@string/pref_scheduler" android:enabled="true">
+		<PreferenceScreen android:title="@string/pref_scheduler" android:enabled="true" android:dependency="global.activate">
 			<CheckBoxPreference android:summaryOn="@string/pref_scheduler_enabled" android:key="global.scheduler.enable" android:title="@string/pref_scheduler_enable" android:summaryOff="@string/pref_scheduler_disabled" android:defaultValue="false"/>
-			<EditTextPreference android:title="@string/pref_scheduler_activation_interval" android:summary="@string/pref_scheduler_activation_interval_summary" android:enabled="true" android:defaultValue="15" android:key="global.scheduler.interval" android:digits="0123456789" android:dependency="global.scheduler.enable"></EditTextPreference>
+			<EditTextPreference android:title="@string/pref_scheduler_activation_interval" android:summary="@string/pref_scheduler_activation_interval_summary" android:enabled="true" android:defaultValue="15" android:key="global.scheduler.interval" android:digits="0123456789" android:dependency="global.scheduler.enable"/>
 			<CheckBoxPreference android:summaryOn="@string/pref_scheduler_daily_enabled" android:key="global.scheduler.daily.enable" android:title="@string/pref_scheduler_daily_enabled" android:summaryOff="@string/pref_scheduler_daily_disabled" android:defaultValue="false" android:dependency="global.scheduler.enable"/>
 			<org.netxms.agent.android.main.settings.TimePreference android:key="global.scheduler.daily.on" android:title="@string/pref_scheduler_daily_on" android:dependency="global.scheduler.daily.enable"/> 
 			<org.netxms.agent.android.main.settings.TimePreference android:key="global.scheduler.daily.off" android:title="@string/pref_scheduler_daily_off" android:dependency="global.scheduler.daily.enable"/>
 		</PreferenceScreen>
 	</PreferenceCategory>
-	<PreferenceCategory android:title="@string/pref_notifications">
-	    <PreferenceScreen android:title="@string/pref_status">
-			<ListPreference android:dialogTitle="@string/pref_global_notification_status" android:key="global.notification.status" android:title="@string/pref_global_notification_status" android:entryValues="@array/notification_status_values" android:entries="@array/notification_status_labels" android:defaultValue="0" />
-	        <CheckBoxPreference android:summaryOff="@string/pref_global_notification_toast_disabled" android:summaryOn="@string/pref_global_notification_toast_enabled" android:key="global.notification.toast" android:enabled="true" android:defaultValue="true" android:title="@string/pref_global_notification_toast"/>
-		</PreferenceScreen>
+	<PreferenceCategory android:title="@string/pref_notifications" android:dependency="global.activate">
+        <CheckBoxPreference android:summaryOff="@string/pref_notification_toast_disabled" android:summaryOn="@string/pref_notification_toast_enabled" android:key="global.notification.toast" android:enabled="true" android:defaultValue="true" android:title="@string/pref_notification_toast"/>
 	</PreferenceCategory>
 </PreferenceScreen>

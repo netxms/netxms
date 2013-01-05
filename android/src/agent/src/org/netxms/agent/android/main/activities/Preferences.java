@@ -4,7 +4,9 @@
 package org.netxms.agent.android.main.activities;
 
 import org.netxms.agent.android.R;
+import org.netxms.agent.android.service.ClientConnectorService;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -13,7 +15,10 @@ import android.preference.PreferenceScreen;
 /**
  * Console preferences
  *
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
+ *
  */
+
 public class Preferences extends PreferenceActivity
 {
 	/* (non-Javadoc)
@@ -34,7 +39,18 @@ public class Preferences extends PreferenceActivity
 	protected void onPause()
 	{
 		super.onPause();
+	}
 
+	/* (non-Javadoc)
+	 * @see android.preference.PreferenceActivity#onDestroy()
+	 */
+	@Override
+	protected void onDestroy()
+	{
+		Intent i = new Intent(this, ClientConnectorService.class);
+		i.setAction(ClientConnectorService.ACTION_FORCE_CONNECT);
+		startService(i);
+		super.onDestroy();
 	}
 
 	@SuppressWarnings("deprecation")

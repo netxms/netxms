@@ -10,7 +10,7 @@ android/src/agent/.project -text
 android/src/agent/.settings/org.eclipse.jdt.core.prefs -text
 android/src/agent/AndroidManifest.xml -text
 android/src/agent/default.properties -text
-android/src/agent/libs/acra-4.2.3.jar -text
+android/src/agent/libs/acra-4.4.0.jar -text
 android/src/agent/lint.xml -text
 android/src/agent/project.properties -text
 android/src/agent/res/drawable-hdpi/ic_menu_preferences.png -text
@@ -34,17 +34,14 @@ android/src/agent/res/values-v11/styles.xml -text
 android/src/agent/res/values/build_number.xml -text
 android/src/agent/res/values/colors.xml -text
 android/src/agent/res/values/strings.xml -text
-android/src/agent/res/values/strings_arrays.xml -text
 android/src/agent/res/values/styles.xml -text
 android/src/agent/res/xml/preferences.xml -text
 android/src/agent/src/org/netxms/agent/android/NXApplication.java -text
-android/src/agent/src/org/netxms/agent/android/helpers/Multipliers.java -text
 android/src/agent/src/org/netxms/agent/android/helpers/SafeParser.java -text
 android/src/agent/src/org/netxms/agent/android/main/activities/AbstractClientActivity.java -text
 android/src/agent/src/org/netxms/agent/android/main/activities/HomeScreen.java -text
 android/src/agent/src/org/netxms/agent/android/main/activities/Preferences.java -text
 android/src/agent/src/org/netxms/agent/android/main/settings/TimePreference.java -text
-android/src/agent/src/org/netxms/agent/android/main/views/CheckableLinearLayout.java -text
 android/src/agent/src/org/netxms/agent/android/receivers/AlarmIntentReceiver.java -text
 android/src/agent/src/org/netxms/agent/android/receivers/BootCompletedIntentReceiver.java -text
 android/src/agent/src/org/netxms/agent/android/receivers/ConnectivityChangeIntentReceiver.java -text

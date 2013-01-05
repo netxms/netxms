@@ -1,12 +1,11 @@
 package org.netxms.agent.android;
 
 import org.acra.ACRA;
-import org.acra.ErrorReporter;
 import org.acra.annotation.ReportsCrashes;
 
 import android.app.Application;
 
-@ReportsCrashes(formKey = "dEhRMG50MjhWTXBWSU5jaDVubzlxT1E6MQ")
+@ReportsCrashes(formKey = "dGJ5RFRpbmg2ZVRvT2tERU9seHVlTWc6MQ")
 public class NXApplication extends Application
 {
 	private static boolean activityVisible;
@@ -15,7 +14,6 @@ public class NXApplication extends Application
 	public void onCreate()
 	{
 		ACRA.init(this);
-		ErrorReporter.getInstance().checkReportsOnApplicationStart();
 		super.onCreate();
 	}
 

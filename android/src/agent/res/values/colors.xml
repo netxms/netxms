@@ -9,16 +9,4 @@
 	<color name="notify_connecting">#FFFFFF00</color>
 	<color name="notify_connection_failed">#FFFF0000</color>
 	<color name="notify_no_connection">#FFFF0000</color>
-	<color name="status_normal">#FF00FF00</color>
-	<color name="status_warning">#FFFF0000</color>
-	<color name="status_minor">#FFFF0000</color>
-	<color name="status_major">#FFFF0000</color>
-	<color name="status_critical">#FFFF0000</color>
-	<color name="status_unknown">#FF0000FF</color>
-	<color name="status_unmanaged">#FF404040</color>
-	<color name="status_disabled">#FF404040</color>
-	<color name="status_testing">#FF404040</color>
-	<color name="if_up">#FF00FF00</color>
-	<color name="if_down">#FFFF0000</color>
-	<color name="if_ignore">#FF404040</color>
 </resources>

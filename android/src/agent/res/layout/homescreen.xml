@@ -1,21 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout android:id="@+id/MainScreenLayout" 
-		android:orientation="vertical" 
-		android:gravity="fill_horizontal" 
-		android:layout_width="fill_parent" 
-		android:layout_height="fill_parent" 
-		xmlns:android="http://schemas.android.com/apk/res/android">
-	<include layout="@layout/screen_header_full" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/MainScreenLayout"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:gravity="fill_horizontal"
+    android:orientation="vertical" >
 
-	<TextView android:id="@+id/MainScreenVersion" 
-			android:textSize="8sp" 
-			android:textColor="#ffffff" 
-			android:background="@drawable/header_background" 
-			android:paddingTop="2sp" 
-			android:paddingBottom="2sp" 
-			android:paddingLeft="5sp" 
-			android:paddingRight="5sp" 
-			android:layout_width="fill_parent" 
-			android:layout_height="wrap_content">
-	</TextView>	
+    <include layout="@layout/screen_header_full" />
+
+    <TextView
+        android:id="@+id/AgentStatus"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/item_home_background"
+        android:paddingBottom="2sp"
+        android:paddingLeft="5sp"
+        android:paddingRight="5sp"
+        android:paddingTop="2sp"
+        android:textColor="@color/text_color"
+        android:textSize="10sp" />
+    
+    <TextView
+        android:id="@+id/LastConnection"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/item_home_background"
+        android:paddingBottom="2sp"
+        android:paddingLeft="5sp"
+        android:paddingRight="5sp"
+        android:paddingTop="2sp"
+        android:textColor="@color/text_color"
+        android:textSize="10sp" />
+    
+    <TextView
+        android:id="@+id/NextConnection"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/item_home_background"
+        android:paddingBottom="2sp"
+        android:paddingLeft="5sp"
+        android:paddingRight="5sp"
+        android:paddingTop="2sp"
+        android:textColor="@color/text_color"
+        android:textSize="10sp" />
+
+    <LinearLayout
+        android:id="@+id/MainScreenInfo"
+        android:layout_width="fill_parent"
+        android:layout_height="0dip"
+        android:layout_weight="0.64"
+        android:background="@color/item_home_background"
+        android:paddingBottom="2sp"
+        android:paddingLeft="5sp"
+        android:paddingRight="5sp"
+        android:paddingTop="2sp"
+        android:textColor="#ffffff"
+        android:textSize="10sp" >
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/MainScreenVersion"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/header_background"
+        android:paddingBottom="2sp"
+        android:paddingLeft="5sp"
+        android:paddingRight="5sp"
+        android:paddingTop="2sp"
+        android:textColor="#ffffff"
+        android:textSize="8sp" >
+    </TextView>
+
 </LinearLayout>

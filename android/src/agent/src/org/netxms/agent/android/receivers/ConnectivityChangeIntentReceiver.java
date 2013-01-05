@@ -25,7 +25,7 @@ public class ConnectivityChangeIntentReceiver extends BroadcastReceiver
 	public void onReceive(Context context, Intent intent)
 	{
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-		if (!sp.getBoolean(HomeScreen.INTENTIONAL_EXIT_KEY, false))
+		if (!sp.getBoolean(HomeScreen.INTENTIONAL_EXIT_KEY, false) && sp.getBoolean("global.activate", false))
 			if (intent.getExtras() != null)
 			{
 				if (!sp.getBoolean("global.scheduler.enable", false)) // Try to connect only when the scheduler is disabled

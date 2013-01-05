@@ -10,6 +10,7 @@ import java.util.Calendar;
 
 import org.netxms.agent.android.R;
 import org.netxms.agent.android.helpers.SafeParser;
+import org.netxms.agent.android.main.activities.HomeScreen;
 import org.netxms.agent.android.receivers.AlarmIntentReceiver;
 import org.netxms.agent.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.agent.android.service.helpers.LocationManagerHelper;
@@ -61,20 +62,21 @@ public class ClientConnectorService extends Service
 
 	public static final String ACTION_CONNECT = "org.netxms.ui.android.ACTION_CONNECT";
 	public static final String ACTION_FORCE_CONNECT = "org.netxms.ui.android.ACTION_FORCE_CONNECT";
-	public static final String ACTION_RESCHEDULE = "org.netxms.ui.android.ACTION_RESCHEDULE";
+	public static final String ACTION_SCHEDULE = "org.netxms.ui.android.ACTION_SCHEDULE";
 	private static final String TAG = "nxagent/ClientConnectorService";
 
 	private static final int ONE_DAY_MINUTES = 24 * 60;
 	private static final int NETXMS_REQUEST_CODE = 123456;
 
-	private final String mutex = "MUTEX";
 	private final Binder binder = new ClientConnectorBinder();
 	private Handler uiThreadHandler;
-	private final ConnectionStatus connectionStatus = ConnectionStatus.CS_DISCONNECTED;
+	private ConnectionStatus connectionStatus = ConnectionStatus.CS_DISCONNECTED;
 	private BroadcastReceiver receiver = null;
 	private SharedPreferences sp;
 	private LocationManager locationManager = null;
 	private final LocationManagerHelper lmh = new LocationManagerHelper();
+	private HomeScreen homeScreen = null;
+	private boolean firstConnection = true;
 
 	/**
 	 * Class for clients to access. Because we know this service always runs in
@@ -101,23 +103,22 @@ public class ClientConnectorService extends Service
 		Logger.setLoggingFacility(new AndroidLoggingFacility());
 		uiThreadHandler = new Handler(getMainLooper());
 
-		showToast(getString(R.string.notify_started));
-
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
-
 		locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-
 		try
 		{
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1800, 1000, lmh);
+			// Try to gather an "immediate" position
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, lmh);
+			getGeoLocation();
+			locationManager.removeUpdates(lmh);
 		}
 		catch (IllegalArgumentException e)
 		{
-			e.printStackTrace();
+			Log.e(TAG, "IllegalArgumentException during onCreate(): ", e);
 		}
 		catch (RuntimeException e)
 		{
-			e.printStackTrace();
+			Log.e(TAG, "RuntimeException during onCreate()", e);
 		}
 
 		receiver = new BroadcastReceiver()
@@ -126,11 +127,12 @@ public class ClientConnectorService extends Service
 			public void onReceive(Context context, Intent intent)
 			{
 				Intent i = new Intent(context, ClientConnectorService.class);
-				i.setAction(ACTION_RESCHEDULE);
+				i.setAction(ACTION_SCHEDULE);
 				context.startService(i);
 			}
 		};
 		registerReceiver(receiver, new IntentFilter(Intent.ACTION_TIME_TICK));
+		showToast(getString(R.string.notify_started));
 	}
 
 	/*
@@ -146,7 +148,7 @@ public class ClientConnectorService extends Service
 				reconnect(false);
 			else if (intent.getAction().equals(ACTION_FORCE_CONNECT))
 				reconnect(true);
-			else if (intent.getAction().equals(ACTION_RESCHEDULE))
+			else if (intent.getAction().equals(ACTION_SCHEDULE))
 				reconnect(false);
 		return super.onStartCommand(intent, flags, startId);
 	}
@@ -178,7 +180,6 @@ public class ClientConnectorService extends Service
 	 */
 	public void shutdown()
 	{
-		locationManager.removeUpdates(lmh);
 		cancelSchedule();
 		unregisterReceiver(receiver);
 		stopSelf();
@@ -192,11 +193,12 @@ public class ClientConnectorService extends Service
 	 */
 	public void statusNotification(ConnectionStatus status, String extra)
 	{
+		connectionStatus = status;
 		String text = "";
 		switch (status)
 		{
 			case CS_CONNECTED:
-				text = getString(R.string.notify_connected);
+				text = getString(R.string.notify_connected, extra);
 				break;
 			case CS_ERROR:
 				text = getString(R.string.notify_connection_failed, extra);
@@ -214,29 +216,48 @@ public class ClientConnectorService extends Service
 	/**
 	 * Reconnect to server.
 	 * 
-	 * @param forceReconnect if set to true forces disconnection before connecting
+	 * @param force if set to true forces reconnection bypassing the scheduler
 	 */
 	public void reconnect(boolean force)
 	{
-		if (force || (isScheduleExpired()) &&
-				connectionStatus != ConnectionStatus.CS_CONNECTED &&
-				connectionStatus != ConnectionStatus.CS_ALREADYCONNECTED)
+		if ((force || isScheduleExpired() && sp.getBoolean("global.activate", false)) &&
+				connectionStatus != ConnectionStatus.CS_INPROGRESS &&
+				connectionStatus != ConnectionStatus.CS_CONNECTED)
 		{
 			Log.i(TAG, "Reconnecting...");
-			synchronized (mutex)
+			new PushDataTask(
+					sp.getString("connection.server", ""),
+					SafeParser.parseInt(sp.getString("connection.port", "4747"), 4747),
+					getDeviceId(),
+					sp.getString("connection.login", ""),
+					sp.getString("connection.password", ""),
+					sp.getBoolean("connection.encrypt", false)).execute();
+		}
+	}
+
+	/**
+	 * @param homeScreen
+	 */
+	public void registerHomeScreen(HomeScreen homeScreen)
+	{
+		this.homeScreen = homeScreen;
+	}
+
+	/**
+	 * Refresh homescreen  activity
+	 */
+	private void refreshHomeScreen()
+	{
+		if (homeScreen != null)
+		{
+			homeScreen.runOnUiThread(new Runnable()
 			{
-				if (connectionStatus != ConnectionStatus.CS_INPROGRESS)
+				@Override
+				public void run()
 				{
-					statusNotification(ConnectionStatus.CS_INPROGRESS, "");
-					new PushDataTask(
-							sp.getString("connection.server", ""),
-							SafeParser.parseInt(sp.getString("connection.port", "4747"), 4747),
-							getDeviceId(),
-							sp.getString("connection.login", ""),
-							sp.getString("connection.password", ""),
-							sp.getBoolean("connection.encrypt", false)).execute();
+					homeScreen.refreshStatus();
 				}
-			}
+			});
 		}
 	}
 
@@ -285,9 +306,7 @@ public class ClientConnectorService extends Service
 		else
 		{
 			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-			if (action == ACTION_RESCHEDULE)
-				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.postpone", "1")));
-			else if (!sp.getBoolean("global.scheduler.daily.enable", false))
+			if (!sp.getBoolean("global.scheduler.daily.enable", false))
 				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.interval", "15")));
 			else
 			{
@@ -326,9 +345,7 @@ public class ClientConnectorService extends Service
 		PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		((AlarmManager)getSystemService(ALARM_SERVICE)).set(AlarmManager.RTC_WAKEUP, milliseconds, sender);
 		// Update status
-		long last = sp.getLong("global.scheduler.next_activation", 0);
 		Editor e = sp.edit();
-		e.putLong("global.scheduler.last_activation", last);
 		e.putLong("global.scheduler.next_activation", milliseconds);
 		e.commit();
 	}
@@ -347,22 +364,6 @@ public class ClientConnectorService extends Service
 			e.putLong("global.scheduler.next_activation", 0);
 			e.commit();
 		}
-	}
-
-	@SuppressWarnings("deprecation")
-	public String getNextConnectionRetry()
-	{
-		long next = sp.getLong("global.scheduler.next_activation", 0);
-		if (next != 0)
-		{
-			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-			if (cal.getTimeInMillis() < next)
-			{
-				cal.setTimeInMillis(next);
-				return " " + getString(R.string.notify_next_connection_schedule, cal.getTime().toLocaleString());
-			}
-		}
-		return "";
 	}
 
 	/**
@@ -452,14 +453,14 @@ public class ClientConnectorService extends Service
 		}
 		catch (UnknownHostException e)
 		{
-			// TODO Auto-generated catch block
+			Log.e(TAG, "UnknownHostException during getInetAddress()", e);
 			e.printStackTrace();
 		}
 		return null;
 	}
 
 	/**
-	 * Get geo location.
+	 * Get geo location. Currently it uses a last known location (it could be very old)
 	 */
 	private GeoLocation getGeoLocation()
 	{
@@ -532,7 +533,7 @@ public class ClientConnectorService extends Service
 		private final String login;
 		private final String password;
 		private final boolean encrypt;
-		private String error = "";
+		private String connMsg = "";
 		private Session session = null;
 
 		protected PushDataTask(String server, Integer port, String deviceId, String login, String password, boolean encrypt)
@@ -549,6 +550,7 @@ public class ClientConnectorService extends Service
 		@Override
 		protected Boolean doInBackground(Object... params)
 		{
+			statusNotification(ConnectionStatus.CS_INPROGRESS, "");
 			if (isInternetOn())
 			{
 				session = new Session(server, port, deviceId, login, password, encrypt);
@@ -558,27 +560,33 @@ public class ClientConnectorService extends Service
 					if (session != null)
 					{
 						session.connect();
-						statusNotification(ConnectionStatus.CS_CONNECTED, "");
-						String serial = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ? Build.SERIAL : "";
-						session.reportDeviceSystemInfo(Build.MANUFACTURER, Build.MODEL, getOSName(Build.VERSION.SDK_INT), Build.VERSION.RELEASE, serial, Build.USER);
-						session.reportDeviceStatus(getInetAddress(), getGeoLocation(), getFlags(), getBatteryLevel()); // getGeoLocation must run on UI thread
+						statusNotification(ConnectionStatus.CS_CONNECTED, getString(R.string.notify_pushing_data));
+						if (firstConnection)
+						{
+							String serial = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ? Build.SERIAL : "";
+							session.reportDeviceSystemInfo(Build.MANUFACTURER, Build.MODEL, getOSName(Build.VERSION.SDK_INT), Build.VERSION.RELEASE, serial, Build.USER);
+							firstConnection = false;
+						}
+						session.reportDeviceStatus(getInetAddress(), getGeoLocation(), getFlags(), getBatteryLevel());
+						connMsg = getString(R.string.notify_connected, server + ":" + port);
 						return true;
 					}
 				}
 				catch (IOException e)
 				{
 					Log.e(TAG, "IOException while executing PushDataTask.doInBackground on connect", e);
-					error = e.getLocalizedMessage();
+					connMsg = e.getLocalizedMessage();
 				}
 				catch (MobileAgentException e)
 				{
 					Log.e(TAG, "MobileAgentException while executing PushDataTask.doInBackground on connect", e);
-					error = e.getLocalizedMessage();
+					connMsg = e.getLocalizedMessage();
 				}
 			}
 			else
 			{
 				Log.d(TAG, "PushDataTask.doInBackground: no internet connection");
+				connMsg = getString(R.string.notify_no_connection);
 			}
 			return false;
 		}
@@ -588,15 +596,21 @@ public class ClientConnectorService extends Service
 		{
 			if (result == true)
 			{
+				Log.i(TAG, "Disconnecting...");
 				session.disconnect();
-				Log.i(TAG, "Disconnected.");
 				statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
 			}
 			else
-			{
-				statusNotification(ConnectionStatus.CS_ERROR, error);
-			}
-			schedule(ACTION_RESCHEDULE);
+				statusNotification(ConnectionStatus.CS_ERROR, connMsg);
+			Editor e = sp.edit();
+			e.putLong("global.scheduler.last_activation", Calendar.getInstance().getTimeInMillis());
+			e.putString("global.scheduler.last_activation_msg", connMsg);
+			e.commit();
+			if (sp.getBoolean("global.activate", false))
+				schedule(ACTION_SCHEDULE);
+			else
+				cancelSchedule();
+			refreshHomeScreen();
 		}
 	}
 }

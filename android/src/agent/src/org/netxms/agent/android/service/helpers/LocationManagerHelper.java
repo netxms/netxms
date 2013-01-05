@@ -4,6 +4,13 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
 
+/**
+ * Location manager helper to receive position updates messages
+ * 
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
+ * 
+ */
+
 public class LocationManagerHelper implements LocationListener
 {
 

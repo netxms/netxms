@@ -21,7 +21,7 @@ public class BootCompletedIntentReceiver extends BroadcastReceiver
 	public void onReceive(Context context, Intent intent)
 	{
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-		if (sp.getBoolean("global.autostart", false))
+		if (sp.getBoolean("global.autostart", false) && sp.getBoolean("global.activate", false))
 		{
 			Intent serviceIntent = new Intent(context, ClientConnectorService.class);
 			context.startService(serviceIntent);
