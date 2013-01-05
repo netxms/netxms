@@ -758,15 +758,10 @@ public class LineChart extends Chart implements HistoricalDataChart
 		double adjustedUpper = upper;
       for(double d = 0.00001; d < 10000000000000000000.0; d *= 10)
 		{
-         if ((upper >= d) && (upper <= d * 10))
+         if ((upper > d) && (upper <= d * 10))
          {
          	adjustedUpper -= adjustedUpper % d;
          	adjustedUpper += d;
-
-            // For integer values, Y axis step cannot be less than 1
-            //if (d < 1)
-            //   d = 1;
-
             break;
          }
 		}

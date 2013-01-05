@@ -81,13 +81,15 @@ public class LineSeries extends Series implements ILineSeries
 	private static final int DEFAULT_ANTIALIAS = SWT.DEFAULT;
 
 	/** the margin in pixels attached at the minimum/maximum plot */
-	private static final int MARGIN_AT_MIN_MAX_PLOT = 6;
+	//private static final int MARGIN_AT_MIN_MAX_PLOT = 6;
 
 	/**
 	 * Constructor.
 	 * 
-	 * @param chart the chart
-	 * @param id the series id
+	 * @param chart
+	 *           the chart
+	 * @param id
+	 *           the series id
 	 */
 	protected LineSeries(Chart chart, String id)
 	{
@@ -367,11 +369,16 @@ public class LineSeries extends Series implements ILineSeries
 		{
 			range = getYRange();
 		}
+		
+		return range;
 
+		/* line chart widget will do adjustment
+ 
 		int lowerPlotMargin = getSymbolSize() + MARGIN_AT_MIN_MAX_PLOT;
 		int upperPlotMargin = getSymbolSize() + MARGIN_AT_MIN_MAX_PLOT;
 
 		return getRangeWithMargin(lowerPlotMargin, upperPlotMargin, length, axis, range);
+		*/
 	}
 
 	/*
@@ -397,12 +404,18 @@ public class LineSeries extends Series implements ILineSeries
 	/**
 	 * Gets the line points to draw line and area.
 	 * 
-	 * @param xseries the horizontal series
-	 * @param yseries the vertical series
-	 * @param indexes the series indexes
-	 * @param index the index of series
-	 * @param xAxis the X axis
-	 * @param yAxis the Y axis
+	 * @param xseries
+	 *           the horizontal series
+	 * @param yseries
+	 *           the vertical series
+	 * @param indexes
+	 *           the series indexes
+	 * @param index
+	 *           the index of series
+	 * @param xAxis
+	 *           the X axis
+	 * @param yAxis
+	 *           the Y axis
 	 * @return the line points
 	 */
 	private int[] getLinePoints(double[] xseries, double[] yseries, int[] indexes, int index, Axis xAxis, Axis yAxis)
@@ -475,11 +488,16 @@ public class LineSeries extends Series implements ILineSeries
 	/**
 	 * Draws the line and area.
 	 * 
-	 * @param gc the graphics context
-	 * @param width the width to draw series
-	 * @param height the height to draw series
-	 * @param xAxis the x axis
-	 * @param yAxis the y axis
+	 * @param gc
+	 *           the graphics context
+	 * @param width
+	 *           the width to draw series
+	 * @param height
+	 *           the height to draw series
+	 * @param xAxis
+	 *           the x axis
+	 * @param yAxis
+	 *           the y axis
 	 */
 	private void drawLineAndArea(GC gc, int width, int height, Axis xAxis, Axis yAxis)
 	{
@@ -569,9 +587,12 @@ public class LineSeries extends Series implements ILineSeries
 	/**
 	 * Draws the area.
 	 * 
-	 * @param gc the graphic context
-	 * @param p the line points
-	 * @param isHorizontal true if orientation is horizontal
+	 * @param gc
+	 *           the graphic context
+	 * @param p
+	 *           the line points
+	 * @param isHorizontal
+	 *           true if orientation is horizontal
 	 */
 	private void drawArea(GC gc, int[] p, boolean isHorizontal)
 	{
@@ -603,11 +624,16 @@ public class LineSeries extends Series implements ILineSeries
 	/**
 	 * Draws series symbol, label and error bars.
 	 * 
-	 * @param gc the graphics context
-	 * @param width the width to draw series
-	 * @param height the height to draw series
-	 * @param xAxis the x axis
-	 * @param yAxis the y axis
+	 * @param gc
+	 *           the graphics context
+	 * @param width
+	 *           the width to draw series
+	 * @param height
+	 *           the height to draw series
+	 * @param xAxis
+	 *           the x axis
+	 * @param yAxis
+	 *           the y axis
 	 */
 	private void drawSymbolAndLabel(GC gc, int width, int height, Axis xAxis, Axis yAxis)
 	{
@@ -665,10 +691,14 @@ public class LineSeries extends Series implements ILineSeries
 	/**
 	 * Draws series symbol.
 	 * 
-	 * @param gc the GC object
-	 * @param h the horizontal coordinate to draw symbol
-	 * @param v the vertical coordinate to draw symbol
-	 * @param color the symbol color
+	 * @param gc
+	 *           the GC object
+	 * @param h
+	 *           the horizontal coordinate to draw symbol
+	 * @param v
+	 *           the vertical coordinate to draw symbol
+	 * @param color
+	 *           the symbol color
 	 */
 	public void drawSeriesSymbol(GC gc, int h, int v, Color color)
 	{
