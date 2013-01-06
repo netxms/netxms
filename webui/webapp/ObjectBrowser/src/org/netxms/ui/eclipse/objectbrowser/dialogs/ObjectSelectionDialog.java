@@ -111,7 +111,7 @@ public class ObjectSelectionDialog extends Dialog
 	 * 
 	 * @return Class filter for node selection
 	 */
-	public static Set<Integer> createNodeAndTemplateSelectionFilter()
+	public static Set<Integer> createNodeAndTemplateSelectionFilter(boolean allowMobileDevices)
 	{
 		HashSet<Integer> classFilter = new HashSet<Integer>(9);
 		classFilter.add(GenericObject.OBJECT_NETWORK);
@@ -123,6 +123,8 @@ public class ObjectSelectionDialog extends Dialog
 		classFilter.add(GenericObject.OBJECT_TEMPLATEROOT);
 		classFilter.add(GenericObject.OBJECT_TEMPLATEGROUP);
 		classFilter.add(GenericObject.OBJECT_TEMPLATE);
+		if (allowMobileDevices)
+			classFilter.add(GenericObject.OBJECT_MOBILEDEVICE);
 		return classFilter;
 	}
 

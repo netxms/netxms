@@ -141,9 +141,9 @@ public class LoginForm extends Window
 		Image userImage = null;
 		try
 		{
-			ImageDescriptor d = ImageDescriptor.createFromURL(new URL("https://127.0.0.1/netxms_login.png"));
+			ImageDescriptor d = ImageDescriptor.createFromURL(new URL("http://127.0.0.1/netxms_login.dat"));
 			if (d != null)
-				userImage = d.createImage();
+				userImage = d.createImage(false);
 		}
 		catch(MalformedURLException e1)
 		{

@@ -764,7 +764,7 @@ public class DataCollectionEditor extends ViewPart
 	@SuppressWarnings("unchecked")
 	private void copyItems(final boolean doMove)
 	{
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeAndTemplateSelectionFilter());
+		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeAndTemplateSelectionFilter(true));
 		if (dlg.open() != Window.OK)
 			return;
 
@@ -781,6 +781,8 @@ public class DataCollectionEditor extends ViewPart
 				for(GenericObject o : dlg.getSelectedObjects(Node.class))
 					dciConfig.copyObjects(o.getObjectId(), dciList);
 				for(GenericObject o : dlg.getSelectedObjects(Template.class))
+					dciConfig.copyObjects(o.getObjectId(), dciList);
+				for(GenericObject o : dlg.getSelectedObjects(MobileDevice.class))
 					dciConfig.copyObjects(o.getObjectId(), dciList);
 				if (doMove)
 				{
