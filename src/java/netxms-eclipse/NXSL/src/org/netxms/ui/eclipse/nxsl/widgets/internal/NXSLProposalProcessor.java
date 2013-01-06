@@ -41,12 +41,15 @@ public class NXSLProposalProcessor implements IContentAssistProcessor
 	private static final int CONSTANT = 3;
 	
 	private static final String[] BUILTIN_SYSTEM_VARIABLES = { "$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9" };
-	private static final String[] BUILTIN_FUNCTIONS = { "abs", "classof", "d2x", "exit", "exp", "gmtime",
-		"index", "left", "length", "localtime", "log", "log10", "lower", "ltrim", "max", "min", "pow",
-		"right", "rindex", "rtrim", "strftime", "substr", "time", "trace", "trim", "typeof", "upper",
-		"AddrInRange", "AddrInSubnet", "GetCustomAttribute", "GetEventParameter", "GetInterfaceName", 
-		"GetInterfaceObject", "GetNodeInterfaces", "GetNodeParents", "FindNodeObject", "PostEvent",
-		"SetCustomAttribute", "SetEventParameter", "SecondsToUptime" };
+	private static final String[] BUILTIN_FUNCTIONS = { "abs", "ceil", "classof", "d2x", "exit", "exp", "floor",
+		"format", "gmtime", "index", "left", "length", "localtime", "log", "log10", "lower", "ltrim", "max", "min", "pow",
+		"right", "rindex", "round", "rtrim", "sleep", "strftime", "substr", "time", "trace", "trim", "typeof", "upper",
+		"AddrInRange", "AddrInSubnet", "BindObject", "CreateContainer", "CreateSNMPTransport", "FindDCIByDescription",
+		"FindDCIByName", "FindNodeObject", "FindObject", "FindSituation", "GetAvgDCIValue", "GetConfigurationVariable",
+		"GetCustomAttribute", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName", "GetEventParameter",
+		"GetInterfaceName", "GetInterfaceObject", "GetMaxDCIValue", "GetMinDCIValue", "GetNodeInterfaces", "GetNodeParents",
+		"GetObjectChildren", "GetObjectParents", "GetSituationAttribute", "PostEvent", "RemoveContainer", "RenameObject",
+		"SetCustomAttribute", "SetEventParameter", "SecondsToUptime", "SNMPGet", "SNMPGetValue", "SNMPSet", "SNMPWalk", "UnbindObject" };
 	private static final String[] BUILTIN_CONSTANTS = { "null", "true", "false" };
 	
 	private ScriptEditor scriptEditor;
