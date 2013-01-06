@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
@@ -53,7 +52,6 @@ import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
-import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.swtchart.Chart;
@@ -63,14 +61,13 @@ import org.swtchart.IAxisTick;
 import org.swtchart.ICustomPaintListener;
 import org.swtchart.ILegend;
 import org.swtchart.ILineSeries;
+import org.swtchart.ILineSeries.PlotSymbolType;
 import org.swtchart.IPlotArea;
+import org.swtchart.ISeries.SeriesType;
 import org.swtchart.ISeriesSet;
 import org.swtchart.ITitle;
 import org.swtchart.LineStyle;
 import org.swtchart.Range;
-import org.swtchart.IAxis.Direction;
-import org.swtchart.ILineSeries.PlotSymbolType;
-import org.swtchart.ISeries.SeriesType;
 
 /**
  * Line chart widget
@@ -178,13 +175,15 @@ public class LineChart extends Chart implements HistoricalDataChart
 				{
 					Date timestamp = new Date((long)xAxis.getDataCoordinate(e.x));
 					double value = yAxis.getDataCoordinate(e.y);
-					getPlotArea().setToolTipText(RegionalSettings.getDateTimeFormat().format(timestamp) + "\n" + value); //$NON-NLS-1$
+					getPlotArea().setToolTipText(RegionalSettings.getDateTimeFormat().format(timestamp) + "\n" + Chart.roundedDecimalValue(value, cachedTickStep)); //$NON-NLS-1$
 				}
 			});
 			*/
 		}
 		
 		zoomMouseListener = new MouseListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{
@@ -206,6 +205,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 		};
 		
 		zoomPaintListener = new PaintListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void paintControl(PaintEvent e)
 			{
@@ -217,6 +218,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 		setZoomEnabled(zoomEnabled);
 		
 		((IPlotArea)plotArea).addCustomPaintListener(new ICustomPaintListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void paintControl(PaintEvent e)
 			{
@@ -232,6 +235,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 		});
 		
 		addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
