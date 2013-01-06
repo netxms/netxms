@@ -5,9 +5,9 @@ package org.netxms.agent.android.service;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.NetworkInterface;
 import java.util.Calendar;
-
+import java.util.Enumeration;
 import org.netxms.agent.android.R;
 import org.netxms.agent.android.helpers.SafeParser;
 import org.netxms.agent.android.main.activities.HomeScreen;
@@ -18,7 +18,6 @@ import org.netxms.base.GeoLocation;
 import org.netxms.base.Logger;
 import org.netxms.mobile.agent.MobileAgentException;
 import org.netxms.mobile.agent.Session;
-
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -435,12 +434,23 @@ public class ClientConnectorService extends Service
 	{
 		try
 		{
+			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+			while(interfaces.hasMoreElements())
+			{
+				NetworkInterface iface = interfaces.nextElement();
+				Enumeration<InetAddress> addrList = iface.getInetAddresses();
+				while(addrList.hasMoreElements())
+				{
+					InetAddress addr = addrList.nextElement();
+					if (!addr.isAnyLocalAddress() && !addr.isLinkLocalAddress() && !addr.isLoopbackAddress() && !addr.isMulticastAddress())
+						return addr;
+				}
+			}
 			return InetAddress.getLocalHost();
 		}
-		catch (UnknownHostException e)
+		catch(Exception e)
 		{
-			Log.e(TAG, "UnknownHostException during getInetAddress()", e);
-			e.printStackTrace();
+			Log.e(TAG, "Exception in getInetAddress()", e);
 		}
 		return null;
 	}
