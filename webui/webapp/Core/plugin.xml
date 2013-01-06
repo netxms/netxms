@@ -149,4 +149,13 @@
             name="%page.regionalSettings">
       </page>
    </extension>
+   <extension
+         point="org.eclipse.rap.ui.entrypoint">
+      <entrypoint
+            applicationId="org.netxms.webui.core.nxmc"
+            brandingId="org.netxms.webui.design.branding.classic"
+            id="org.netxms.webui.entrypoint"
+            path="/nxmc">
+      </entrypoint>
+   </extension>
 </plugin>
