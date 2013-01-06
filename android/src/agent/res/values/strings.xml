@@ -27,9 +27,6 @@
     <string name="pref_connection">Connection</string>
     <string name="pref_parameters">Parameters</string>
     <string name="pref_scheduler">Scheduler</string>
-    <string name="pref_scheduler_enable">Enable scheduler</string>
-    <string name="pref_scheduler_enabled">Scheduler is enabled</string>
-    <string name="pref_scheduler_disabled">Scheduler is disabled</string>
     <string name="pref_scheduler_daily_enable">Enable scheduler</string>
     <string name="pref_scheduler_daily_enabled">Daily scheduler is enabled</string>
     <string name="pref_scheduler_daily_disabled">Daily scheduler is disabled</string>
@@ -37,8 +34,6 @@
 	<string name="pref_scheduler_daily_off">Daily activation off</string>
 	<string name="pref_scheduler_activation_interval">Frequency (min)</string>
 	<string name="pref_scheduler_activation_interval_summary">How often connection should be established</string>
-	<string name="pref_scheduler_activation_duration">Duration (min)</string>
-	<string name="pref_scheduler_activation_duration_summary">For how much it should be kept on</string>
 	<string name="pref_global_autostart">Auto start on boot</string>
 	<string name="pref_global_autostart_enabled">Auto start service on boot</string>
 	<string name="pref_global_autostart_disabled">Do not auto start service on boot</string>
@@ -50,19 +45,14 @@
 	<string name="pref_notification_toast">Toast notification</string>
 	<string name="pref_notification_toast_enabled">Toast notification enabled</string>
 	<string name="pref_notification_toast_disabled">Toast notification disabled</string>
-	<string name="pref_notification_status">Notification behaviour</string>
 	
-	<string name="notification_title">NetXMS</string>
 	<string name="notify_started">NetXMS agent started</string>
 	<string name="notify_disconnected">Disconnected from server</string>
 	<string name="notify_connected">Connected to server: %1$s</string>
 	<string name="notify_connecting">Connecting to server&#8230;</string>
 	<string name="notify_connection_failed">Connection failed: %1$s</string>
 	<string name="notify_no_connection">Data connection not available!"</string>
-	<string name="notify_action_exec_fail">Cannot execute action: %1$s</string>
-	<string name="notify_action_exec_success">Action executed successfully</string>
-	<string name="notify_service_obj_sync_success">Objects synchronized</string>
-	<string name="notify_service_obj_sync_fail">Failed to synchronize objects with server.</string>
+	<string name="notify_allocation_error">Out of memory!"</string>
 	<string name="notify_pushing_data">pushing data&#8230;</string>
 		
 	<string name="info_last_connection">Last connection attempted on %1$s (%2$s)</string>
@@ -71,5 +61,4 @@
 	<string name="info_agent_status">%1$s, push every %2$s minutes, between %3$s</string>
 	<string name="info_agent_range">%1$s and %2$s</string>
 	<string name="info_agent_whole_day">whole day</string>
-
 </resources>

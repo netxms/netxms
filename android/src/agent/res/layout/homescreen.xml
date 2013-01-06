@@ -18,7 +18,7 @@
         android:paddingRight="5sp"
         android:paddingTop="2sp"
         android:textColor="@color/text_color"
-        android:textSize="10sp" />
+        android:textSize="12sp" />
     
     <TextView
         android:id="@+id/LastConnection"
@@ -30,7 +30,7 @@
         android:paddingRight="5sp"
         android:paddingTop="2sp"
         android:textColor="@color/text_color"
-        android:textSize="10sp" />
+        android:textSize="12sp" />
     
     <TextView
         android:id="@+id/NextConnection"
@@ -42,7 +42,7 @@
         android:paddingRight="5sp"
         android:paddingTop="2sp"
         android:textColor="@color/text_color"
-        android:textSize="10sp" />
+        android:textSize="12sp" />
 
     <LinearLayout
         android:id="@+id/MainScreenInfo"
@@ -55,7 +55,7 @@
         android:paddingRight="5sp"
         android:paddingTop="2sp"
         android:textColor="#ffffff"
-        android:textSize="10sp" >
+        android:textSize="12sp" >
     </LinearLayout>
 
     <TextView

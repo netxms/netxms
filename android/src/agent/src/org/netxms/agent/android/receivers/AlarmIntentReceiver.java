@@ -1,12 +1,12 @@
 package org.netxms.agent.android.receivers;
 
+import org.netxms.agent.android.main.activities.HomeScreen;
 import org.netxms.agent.android.service.ClientConnectorService;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Bundle;
 import android.preference.PreferenceManager;
 
 /**
@@ -21,13 +21,12 @@ public class AlarmIntentReceiver extends BroadcastReceiver
 	@Override
 	public void onReceive(Context context, Intent intent)
 	{
-		Bundle bundle = intent.getExtras();
-		Intent i = new Intent(context, ClientConnectorService.class);
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-		String action = ClientConnectorService.ACTION_CONNECT;
-		if (sp.getBoolean("global.scheduler.enable", false))
-			action = bundle.getString("action");
-		i.setAction(action);
-		context.startService(i);
+		if (!sp.getBoolean(HomeScreen.INTENTIONAL_EXIT_KEY, false) && sp.getBoolean("global.activate", false))
+		{
+			Intent i = new Intent(context, ClientConnectorService.class);
+			i.setAction(ClientConnectorService.ACTION_CONNECT);
+			context.startService(i);
+		}
 	}
 }

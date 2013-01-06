@@ -28,15 +28,12 @@ public class ConnectivityChangeIntentReceiver extends BroadcastReceiver
 		if (!sp.getBoolean(HomeScreen.INTENTIONAL_EXIT_KEY, false) && sp.getBoolean("global.activate", false))
 			if (intent.getExtras() != null)
 			{
-				if (!sp.getBoolean("global.scheduler.enable", false)) // Try to connect only when the scheduler is disabled
+				NetworkInfo ni = (NetworkInfo)intent.getExtras().get(ConnectivityManager.EXTRA_NETWORK_INFO);
+				if (ni != null && ni.getState() == NetworkInfo.State.CONNECTED)
 				{
-					NetworkInfo ni = (NetworkInfo)intent.getExtras().get(ConnectivityManager.EXTRA_NETWORK_INFO);
-					if (ni != null && ni.getState() == NetworkInfo.State.CONNECTED)
-					{
-						Intent i = new Intent(context, ClientConnectorService.class);
-						i.setAction(ClientConnectorService.ACTION_FORCE_CONNECT);
-						context.startService(i);
-					}
+					Intent i = new Intent(context, ClientConnectorService.class);
+					i.setAction(ClientConnectorService.ACTION_FORCE_CONNECT);
+					context.startService(i);
 				}
 			}
 	}

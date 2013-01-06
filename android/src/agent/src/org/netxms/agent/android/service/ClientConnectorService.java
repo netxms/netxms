@@ -224,7 +224,6 @@ public class ClientConnectorService extends Service
 				connectionStatus != ConnectionStatus.CS_INPROGRESS &&
 				connectionStatus != ConnectionStatus.CS_CONNECTED)
 		{
-			Log.i(TAG, "Reconnecting...");
 			new PushDataTask(
 					sp.getString("connection.server", ""),
 					SafeParser.parseInt(sp.getString("connection.port", "4747"), 4747),
@@ -266,12 +265,8 @@ public class ClientConnectorService extends Service
 	 */
 	private boolean isScheduleExpired()
 	{
-		if (sp.getBoolean("global.scheduler.enable", false))
-		{
-			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-			return cal.getTimeInMillis() > sp.getLong("global.scheduler.next_activation", 0);
-		}
-		return true;
+		Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
+		return cal.getTimeInMillis() > sp.getLong("global.scheduler.next_activation", 0);
 	}
 
 	/**
@@ -298,53 +293,46 @@ public class ClientConnectorService extends Service
 	/**
 	 * Schedule a new connection/disconnection
 	 */
-	public void schedule(String action)
+	public void schedule()
 	{
-		Log.i(TAG, "Schedule: " + action);
-		if (!sp.getBoolean("global.scheduler.enable", false))
-			cancelSchedule();
+		Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
+		if (!sp.getBoolean("global.scheduler.daily.enable", false))
+			cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.interval", "15")));
 		else
 		{
-			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-			if (!sp.getBoolean("global.scheduler.daily.enable", false))
-				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.interval", "15")));
-			else
+			int on = getMinutes("global.scheduler.daily.on");
+			int off = getMinutes("global.scheduler.daily.off");
+			if (off < on)
+				off += ONE_DAY_MINUTES; // Next day!
+			Calendar calOn = (Calendar)cal.clone();
+			setDayOffset(calOn, on);
+			Calendar calOff = (Calendar)cal.clone();
+			setDayOffset(calOff, off);
+			cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.interval", "15")));
+			if (cal.before(calOn))
 			{
-				int on = getMinutes("global.scheduler.daily.on");
-				int off = getMinutes("global.scheduler.daily.off");
-				if (off < on)
-					off += ONE_DAY_MINUTES; // Next day!
-				Calendar calOn = (Calendar)cal.clone();
-				setDayOffset(calOn, on);
-				Calendar calOff = (Calendar)cal.clone();
-				setDayOffset(calOff, off);
-				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.interval", "15")));
-				if (cal.before(calOn))
-				{
-					cal = (Calendar)calOn.clone();
-					Log.i(TAG, "schedule (before): rescheduled for daily interval");
-				}
-				else if (cal.after(calOff))
-				{
-					cal = (Calendar)calOn.clone();
-					setDayOffset(cal, on + ONE_DAY_MINUTES); // Move to the next activation of the excluded range
-					Log.i(TAG, "schedule (after): rescheduled for daily interval");
-				}
+				cal = (Calendar)calOn.clone();
+				Log.i(TAG, "schedule (before): rescheduled for daily interval");
 			}
-			setSchedule(cal.getTimeInMillis(), action);
+			else if (cal.after(calOff))
+			{
+				cal = (Calendar)calOn.clone();
+				setDayOffset(cal, on + ONE_DAY_MINUTES); // Move to the next activation of the excluded range
+				Log.i(TAG, "schedule (after): rescheduled for daily interval");
+			}
 		}
+		setSchedule(cal.getTimeInMillis());
 	}
 
 	/**
 	 * Set a connection schedule
 	 */
-	private void setSchedule(long milliseconds, String action)
+	private void setSchedule(long milliseconds)
 	{
+		Log.i(TAG, "setSchedule to: " + milliseconds);
 		Intent intent = new Intent(this, AlarmIntentReceiver.class);
-		intent.putExtra("action", action);
 		PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		((AlarmManager)getSystemService(ALARM_SERVICE)).set(AlarmManager.RTC_WAKEUP, milliseconds, sender);
-		// Update status
 		Editor e = sp.edit();
 		e.putLong("global.scheduler.next_activation", milliseconds);
 		e.commit();
@@ -355,15 +343,13 @@ public class ClientConnectorService extends Service
 	 */
 	public void cancelSchedule()
 	{
+		Log.i(TAG, "cancelSchedule");
 		Intent intent = new Intent(this, AlarmIntentReceiver.class);
 		PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		((AlarmManager)getSystemService(ALARM_SERVICE)).cancel(sender);
-		if (sp.getLong("global.scheduler.next_activation", 0) != 0)
-		{
-			Editor e = sp.edit();
-			e.putLong("global.scheduler.next_activation", 0);
-			e.commit();
-		}
+		Editor e = sp.edit();
+		e.putLong("global.scheduler.next_activation", 0);
+		e.commit();
 	}
 
 	/**
@@ -555,14 +541,14 @@ public class ClientConnectorService extends Service
 		@Override
 		protected Boolean doInBackground(Object... params)
 		{
+			Log.d(TAG, "PushDataTask.doInBackground: reconnecting...");
 			statusNotification(ConnectionStatus.CS_INPROGRESS, "");
 			if (isInternetOn())
 			{
 				session = new Session(server, port, deviceId, login, password, encrypt);
-				try
+				if (session != null)
 				{
-					Log.d(TAG, "PushDataTask.doInBackground: calling session.connect()");
-					if (session != null)
+					try
 					{
 						session.connect();
 						statusNotification(ConnectionStatus.CS_CONNECTED, getString(R.string.notify_pushing_data));
@@ -576,16 +562,21 @@ public class ClientConnectorService extends Service
 						connMsg = getString(R.string.notify_connected, server + ":" + port);
 						return true;
 					}
+					catch (IOException e)
+					{
+						Log.e(TAG, "IOException while executing PushDataTask.doInBackground on connect", e);
+						connMsg = e.getLocalizedMessage();
+					}
+					catch (MobileAgentException e)
+					{
+						Log.e(TAG, "MobileAgentException while executing PushDataTask.doInBackground on connect", e);
+						connMsg = e.getLocalizedMessage();
+					}
 				}
-				catch (IOException e)
+				else
 				{
-					Log.e(TAG, "IOException while executing PushDataTask.doInBackground on connect", e);
-					connMsg = e.getLocalizedMessage();
-				}
-				catch (MobileAgentException e)
-				{
-					Log.e(TAG, "MobileAgentException while executing PushDataTask.doInBackground on connect", e);
-					connMsg = e.getLocalizedMessage();
+					Log.d(TAG, "PushDataTask.doInBackground: unable to instantiate new Session");
+					connMsg = getString(R.string.notify_allocation_error);
 				}
 			}
 			else
@@ -601,18 +592,21 @@ public class ClientConnectorService extends Service
 		{
 			if (result == true)
 			{
-				Log.i(TAG, "Disconnecting...");
+				Log.d(TAG, "PushDataTask.onPostExecute: disconnecting...");
 				session.disconnect();
 				statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
 			}
 			else
+			{
+				Log.d(TAG, "PushDataTask.onPostExecute: error: " + connMsg);
 				statusNotification(ConnectionStatus.CS_ERROR, connMsg);
+			}
 			Editor e = sp.edit();
 			e.putLong("global.scheduler.last_activation", Calendar.getInstance().getTimeInMillis());
 			e.putString("global.scheduler.last_activation_msg", connMsg);
 			e.commit();
 			if (sp.getBoolean("global.activate", false))
-				schedule(ACTION_SCHEDULE);
+				schedule();
 			else
 				cancelSchedule();
 			refreshHomeScreen();

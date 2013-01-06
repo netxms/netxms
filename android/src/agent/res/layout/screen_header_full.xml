@@ -17,15 +17,4 @@
 			android:layout_width="fill_parent" 
 			android:layout_height="wrap_content">
 	</TextView>
-	<TextView android:id="@+id/ScreenTitleSecondary" 
-			android:text="@string/main_title" 
-			android:textSize="12sp" 
-			android:textColor="#ffffff" 
-			android:paddingTop="0sp" 
-			android:paddingBottom="4sp" 
-			android:paddingLeft="5sp" 
-			android:paddingRight="5sp" 
-			android:layout_width="fill_parent" 
-			android:layout_height="wrap_content">
-	</TextView>
 </LinearLayout>
