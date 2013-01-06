@@ -178,7 +178,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 				{
 					Date timestamp = new Date((long)xAxis.getDataCoordinate(e.x));
 					double value = yAxis.getDataCoordinate(e.y);
-					getPlotArea().setToolTipText(RegionalSettings.getDateTimeFormat().format(timestamp) + "\n" + value); //$NON-NLS-1$
+					getPlotArea().setToolTipText(RegionalSettings.getDateTimeFormat().format(timestamp) + "\n" + Chart.roundedDecimalValue(value, cachedTickStep)); //$NON-NLS-1$
 				}
 			});
 		}
