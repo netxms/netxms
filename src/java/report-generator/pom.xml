@@ -18,6 +18,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.0</version>
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
@@ -26,6 +27,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
+        <version>2.0</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -52,40 +54,24 @@
 
   <dependencies>
     <dependency>
-      <groupId>jasperreports</groupId>
+      <groupId>net.sf.jasperreports</groupId>
       <artifactId>jasperreports</artifactId>
-      <version>4.7.0</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-digester</groupId>
-      <artifactId>commons-digester</artifactId>
-      <version>2.1</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-collections</groupId>
-      <artifactId>commons-collections</artifactId>
-      <version>20040616</version>
+      <version>5.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.codehaus.groovy</groupId>
       <artifactId>groovy-all</artifactId>
-      <version>1.8.1</version>
+      <version>2.0.4</version>
     </dependency>
-    <dependency>
-      <groupId>com.lowagie</groupId>
-      <artifactId>itext</artifactId>
-      <version>2.1.7</version>
-    </dependency>
-
     <dependency>
       <groupId>postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>8.4-702.jdbc4</version>
+      <version>9.1-901.jdbc4</version>
     </dependency>
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>5.1.6</version>
+      <version>5.1.22</version>
     </dependency>
     <dependency>
       <groupId>org.xerial</groupId>
@@ -94,28 +80,28 @@
     </dependency>
     <dependency>
       <groupId>com.oracle</groupId>
-      <artifactId>oracle</artifactId>
-      <version>11.2.0.3.0</version>
+      <artifactId>ojdbc5</artifactId>
+      <version>11.2.0.3</version>
     </dependency>
     <dependency>
       <groupId>com.microsoft</groupId>
-      <artifactId>sqljdbc</artifactId>
-      <version>3.0.1301.101</version>
+      <artifactId>sqljdbc4</artifactId>
+      <version>4.0.2206.100</version>
     </dependency>
     <dependency>
       <groupId>com.ibm</groupId>
-      <artifactId>db2jcc</artifactId>
-      <version>9.7.4</version>
+      <artifactId>db2jcc4</artifactId>
+      <version>4.13.127</version>
     </dependency>
     <dependency>
       <groupId>com.informix</groupId>
       <artifactId>ifxjdbc</artifactId>
-      <version>3.00.J</version>		
+      <version>3.70.JC5DE</version>		
     </dependency>
     <dependency>
       <groupId>jfree</groupId>
       <artifactId>jfreechart</artifactId>
-      <version>1.0.12</version>		
+      <version>1.0.13</version>		
     </dependency>
   </dependencies>
 
@@ -124,6 +110,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9</version>
         <configuration>
           <show>protected</show>
         </configuration>
