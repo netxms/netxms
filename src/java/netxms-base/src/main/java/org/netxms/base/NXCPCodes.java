@@ -291,6 +291,12 @@ public final class NXCPCodes
 	public static final int CMD_REPORT_DEVICE_STATUS     = 0x0109;
 	public static final int CMD_REPORT_DEVICE_INFO       = 0x010A;
 	public static final int CMD_GET_ALARM_EVENTS         = 0x010B;
+	public static final int CMD_GET_ENUM_LIST            = 0x010C;
+	public static final int CMD_GET_TABLE_LIST           = 0x010D;
+	public static final int CMD_GET_MAPPING_TABLE        = 0x010E;
+	public static final int CMD_UPDATE_MAPPING_TABLE     = 0x010F;
+	public static final int CMD_DELETE_MAPPING_TABLE     = 0x0110;
+	public static final int CMD_LIST_MAPPING_TABLES      = 0x0111;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
@@ -726,6 +732,7 @@ public final class NXCPCodes
 	public static final long VID_OS_VERSION              = 431;
 	public static final long VID_SERIAL_NUMBER           = 432;
 	public static final long VID_DEVICE_ID               = 433;
+	public static final long VID_MAPPING_TABLE_ID        = 434;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

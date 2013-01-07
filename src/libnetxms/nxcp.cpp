@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -308,10 +308,14 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_REPORT_DEVICE_INFO"),
 		_T("CMD_GET_ALARM_EVENTS"),
 		_T("CMD_GET_ENUM_LIST"),
-		_T("CMD_GET_TABLE_LIST")
+		_T("CMD_GET_TABLE_LIST"),
+		_T("CMD_GET_MAPPING_TABLE"),
+		_T("CMD_UPDATE_MAPPING_TABLE"),
+		_T("CMD_DELETE_MAPPING_TABLE"),
+		_T("CMD_LIST_MAPPING_TABLES")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_TABLE_LIST))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_LIST_MAPPING_TABLES))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

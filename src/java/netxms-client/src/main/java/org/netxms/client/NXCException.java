@@ -128,7 +128,8 @@ public class NXCException extends NetXMSClientException
 		"Cannot delete non-empty zone object",
 		"No physical component data",
 		"Invalid alarm note ID",
-		"Encryption error"
+		"Encryption error",
+		"Invalid mapping table ID"
 	};
 	private static final String[] extendedErrorTexts_en =
 	{
@@ -236,7 +237,8 @@ public class NXCException extends NetXMSClientException
       "No es posible eliminar zonas con algún contenido",
       "Sin datos en el componente físico",
       "ID del comentario de la alarma inválido",
-      "Error de cifrado"
+      "Error de cifrado",
+      "ID de tabla de asignación inválido"
 	};
 	private static final String[] extendedErrorTexts_es =
 	{

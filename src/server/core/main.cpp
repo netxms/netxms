@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 NetXMS Team
+** Copyright (C) 2003-2013 NetXMS Team
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <netxmsdb.h>
+#include <netxms_mt.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>
@@ -353,11 +354,9 @@ static void LoadGlobalConfig()
 	g_nRequiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
 }
 
-
-//
-// Initialize cryptografic functions
-//
-
+/**
+ * Initialize cryptografic functions
+ */
 static BOOL InitCryptografy()
 {
 #ifdef _WITH_ENCRYPTION
@@ -518,11 +517,9 @@ static void LogConsoleWriter(const TCHAR *format, ...)
 	EnumerateClientSessions(SendConsoleMessage, buffer);
 }
 
-
-//
-// Server initialization
-//
-
+/**
+ * Server initialization
+ */
 BOOL NXCORE_EXPORTABLE Initialize()
 {
 	int i, iDBVersion;
@@ -756,6 +753,7 @@ retry_db_lock:
 
 	InitLogAccess();
 	FileUploadJob::init();
+	InitMappingTables();
 
 	// Check if management node object presented in database
 	CheckForMgmtNode();
@@ -933,12 +931,10 @@ void NXCORE_EXPORTABLE FastShutdown()
 	nxlog_close();
 }
 
-
-//
-// Compare given string to command template with abbreviation possibility
-//
-
-static BOOL IsCommand(const TCHAR *pszTemplate, TCHAR *pszString, int iMinChars)
+/**
+ * Compare given string to command template with abbreviation possibility
+ */
+static bool IsCommand(const TCHAR *pszTemplate, TCHAR *pszString, int iMinChars)
 {
 	int i;
 
@@ -947,17 +943,15 @@ static BOOL IsCommand(const TCHAR *pszTemplate, TCHAR *pszString, int iMinChars)
 
 	for(i = 0; pszString[i] != 0; i++)
 		if (pszString[i] != pszTemplate[i])
-			return FALSE;
+			return false;
 	if (i < iMinChars)
-		return FALSE;
-	return TRUE;
+		return false;
+	return true;
 }
 
-
-//
-// Dump index
-//
-
+/**
+ * Dump index
+ */
 struct __dump_index_data
 {
 	CONSOLE_CTX console;
@@ -1546,11 +1540,9 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 	return nExitCode;
 }
 
-
-//
-// Signal handler for UNIX platforms
-//
-
+/**
+ * Signal handler for UNIX platforms
+ */
 #ifndef _WIN32
 
 void SignalHandlerStub(int nSignal)
@@ -1629,11 +1621,9 @@ stop_handler:
 
 #endif
 
-
-//
-// Common main()
-//
-
+/**
+ * Common main()
+ */
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 {
 	nxlog_write(MSG_SERVER_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
@@ -1721,11 +1711,9 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 	return THREAD_OK;
 }
 
-
-//
-// Initiate server shutdown
-//
-
+/**
+ * Initiate server shutdown
+ */
 void InitiateShutdown()
 {
 #ifdef _WIN32
@@ -1742,11 +1730,9 @@ void InitiateShutdown()
 #endif
 }
 
-
-//
-// DLL Entry point
-//
-
+/**
+ *DLL Entry point
+ */
 #ifdef _WIN32
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)

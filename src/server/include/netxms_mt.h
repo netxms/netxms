@@ -41,8 +41,8 @@ public:
 	MappingTableElement(TCHAR *value, TCHAR *description) { m_value = value; m_description = description; }
 	~MappingTableElement() { safe_free(m_value); safe_free(m_description); }
 
-	const TCHAR *getValue() { return m_value; }
-	const TCHAR *getDescription() { return m_description; }
+	const TCHAR *getValue() { return CHECK_NULL_EX(m_value); }
+	const TCHAR *getDescription() { return CHECK_NULL_EX(m_description); }
 };
 
 /**
@@ -68,7 +68,22 @@ public:
 	bool saveToDatabase(DB_HANDLE hdb);
 	void fillMessage(CSCPMessage *msg);
 
+	void createUniqueId() { m_id = CreateUniqueId(IDG_MAPPING_TABLE); }
+
 	const TCHAR *get(const TCHAR *key);
+	LONG getId() { return m_id; }
+	const TCHAR *getName() { return CHECK_NULL(m_name); }
+	const TCHAR *getDescription() { return CHECK_NULL_EX(m_description); }
+	DWORD getFlags() { return m_flags; }
 };
+
+/**
+ * Mapping tables API
+ */
+void InitMappingTables();
+DWORD UpdateMappingTable(CSCPMessage *msg, LONG *newId);
+DWORD DeleteMappingTable(LONG id);
+DWORD GetMappingTable(LONG id, CSCPMessage *msg);
+DWORD ListMappingTables(CSCPMessage *msg);
 
 #endif

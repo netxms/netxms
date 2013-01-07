@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,18 +23,14 @@
 
 #include "libnxcl.h"
 
-
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 NXC_DEBUG_CALLBACK g_pDebugCallBack = NULL;
 
-
-//
-// Print debug messages
-//
-
+/**
+ * Print debug messages
+ */
 void DebugPrintf(const TCHAR *format, ...)
 {
    va_list args;
@@ -49,132 +45,106 @@ void DebugPrintf(const TCHAR *format, ...)
    g_pDebugCallBack(buffer);
 }
 
-
-//
-// Initialization function
-//
-
+/**
+ * Initialization function
+ */
 BOOL LIBNXCL_EXPORTABLE NXCInitialize()
 {
    return InitCryptoLib(0xFFFF);
 }
 
-
-//
-// Shutdown function
-//
-
+/**
+ * Shutdown function
+ */
 void LIBNXCL_EXPORTABLE NXCShutdown()
 {
 }
 
-
-//
-// Get library version
-//
-
+/**
+ * Get library version
+ */
 DWORD LIBNXCL_EXPORTABLE NXCGetVersion()
 {
    return (NETXMS_VERSION_MAJOR << 24) | (NETXMS_VERSION_MINOR << 16) | NETXMS_VERSION_BUILD;
 }
 
-
-//
-// Set event handler
-//
-
+/**
+ * Set event handler
+ */
 void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_SESSION hSession, NXC_EVENT_HANDLER pHandler)
 {
    ((NXCL_Session *)hSession)->m_pEventHandler = pHandler;
 }
 
-
-//
-// Set callback for debug messages
-//
-
+/**
+ * Set callback for debug messages
+ */
 void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc)
 {
    g_pDebugCallBack = pFunc;
 }
 
-
-//
-// Set command timeout
-//
-
+/**
+ * Set command timeout
+ */
 void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(NXC_SESSION hSession, DWORD dwTimeout)
 {
    if ((dwTimeout >= 1000) && (dwTimeout <= 60000))
       ((NXCL_Session *)hSession)->m_dwCommandTimeout = dwTimeout;
 }
 
-
-//
-// Get server ID
-//
-
+/**
+ * Get server ID
+ */
 void LIBNXCL_EXPORTABLE NXCGetServerID(NXC_SESSION hSession, BYTE *pbsId)
 {
    memcpy(pbsId, ((NXCL_Session *)hSession)->m_bsServerId, 8);
 }
 
-
-//
-// Subscribe to channel
-//
-
+/**
+ * Subscribe to channel
+ */
 DWORD LIBNXCL_EXPORTABLE NXCSubscribe(NXC_SESSION hSession, DWORD dwChannels)
 {
    return ((NXCL_Session *)hSession)->SetSubscriptionStatus(dwChannels, 1);
 }
 
-
-//
-// Unsubscribe from channel
-//
-
+/**
+ * Unsubscribe from channel
+ */
 DWORD LIBNXCL_EXPORTABLE NXCUnsubscribe(NXC_SESSION hSession, DWORD dwChannels)
 {
    return ((NXCL_Session *)hSession)->SetSubscriptionStatus(dwChannels, 0);
 }
 
-
-//
-// Set client data
-//
-
+/**
+ * Set client data
+ */
 void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData)
 {
 	if (hSession != NULL)
 		((NXCL_Session *)hSession)->SetClientData(pData);
 }
 
-
-//
-// Get client data
-//
-
+/**
+ * Get client data
+ */
 void LIBNXCL_EXPORTABLE *NXCGetClientData(NXC_SESSION hSession)
 {
 	return (hSession != NULL) ? ((NXCL_Session *)hSession)->GetClientData() : NULL;
 }
 
-
-//
-// Check if password needs to be changed
-//
-
+/**
+ * Check if password needs to be changed
+ */
 BOOL LIBNXCL_EXPORTABLE NXCNeedPasswordChange(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->NeedPasswordChange();
 }
 
-
-//
-// Check if server has problems with backend database connection
-//
-
+/**
+ * Check if server has problems with backend database connection
+ */
 BOOL LIBNXCL_EXPORTABLE NXCIsDBConnLost(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->IsDBConnLost();
@@ -304,11 +274,9 @@ DWORD LIBNXCL_EXPORTABLE NXCWaitForRCC(NXC_SESSION hSession, DWORD dwRqId)
 	return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
-
-//
-// Get text for error
-//
-
+/**
+ * Get text for error
+ */
 const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 {
    static const TCHAR *pszErrorText[] =
@@ -411,16 +379,15 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Cannot delete non-empty zone object"),
 		_T("No physical component data"),
 		_T("Invalid alarm note ID"),
-		_T("Encryption error")
+		_T("Encryption error"),
+		_T("Invalid mapping table ID")
    };
-	return (dwError <= RCC_ENCRYPTION_ERROR) ? pszErrorText[dwError] : _T("No text message for this error");
+	return (dwError <= RCC_INVALID_MAPPING_TABLE_ID) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
-
-//
-// Decrypt password
-//
-
+/**
+ * Decrypt password
+ */
 BOOL LIBNXCL_EXPORTABLE NXCDecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd)
 {
 	if (_tcslen(encryptedPasswd) != 44)

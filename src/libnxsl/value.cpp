@@ -501,11 +501,9 @@ bool NXSL_Value::convert(int nDataType)
    return bRet;
 }
 
-
-//
-// Get value as ASCIIZ string
-//
-
+/**
+ * Get value as ASCIIZ string
+ */
 const TCHAR *NXSL_Value::getValueAsCString()
 {
    if (isNull() || isObject() || isArray())
@@ -516,11 +514,9 @@ const TCHAR *NXSL_Value::getValueAsCString()
    return m_pszValStr;
 }
 
-
-//
-// Get value as multibyte string
-//
-
+/**
+ * Get value as multibyte string
+ */
 #ifdef UNICODE
 
 const char *NXSL_Value::getValueAsMBString()
@@ -540,11 +536,9 @@ const char *NXSL_Value::getValueAsMBString()
 
 #endif
 
-
-//
-// Get value as string
-//
-
+/**
+ * Get value as string
+ */
 const TCHAR *NXSL_Value::getValueAsString(DWORD *pdwLen)
 {
    if (isNull() || isObject() || isArray())

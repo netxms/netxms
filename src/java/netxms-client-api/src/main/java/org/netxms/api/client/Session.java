@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,12 +20,14 @@ package org.netxms.api.client;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.List;
 
+import org.netxms.api.client.mt.MappingTable;
+import org.netxms.api.client.mt.MappingTableDescriptor;
 import org.netxms.base.NXCPMessage;
 
 /**
  * Base client session interface. All client APIs for NetXMS based products expected to provide this interface.
- *
  */
 public interface Session
 {
@@ -253,4 +255,40 @@ public interface Session
     * @return
     */
    public abstract String getTimeFormat();
+   
+   /**
+    * Get list of all configured mapping tables.
+    * 
+    * @return
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
+    */
+   public abstract List<MappingTableDescriptor> listMappingTables() throws IOException, NetXMSClientException;
+   
+   /**
+    * @param id
+    * @return
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
+    */
+   public abstract MappingTable getMappingTable(int id) throws IOException, NetXMSClientException;
+   
+   /**
+    * Create or update mapping table. If table ID is 0, new table will be created on server.
+    * 
+    * @param table mapping table
+    * @return ID of new table object
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
+    */
+   public abstract int updateMappingTable(MappingTable table) throws IOException, NetXMSClientException;
+
+   /**
+    * Delete mapping table
+    * 
+    * @param id mapping table ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
+    */
+   public abstract void deleteMappingTable(int id) throws IOException, NetXMSClientException;
 }

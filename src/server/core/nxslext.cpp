@@ -22,21 +22,19 @@
 
 #include "nxcore.h"
 
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 extern DWORD g_nxslNumSituationFunctions;
 extern NXSL_ExtFunction g_nxslSituationFunctions[];
 
 void RegisterDCIFunctions(NXSL_Environment *pEnv);
+int F_map(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 
-
-//
-// Get node's custom attribute
-// First argument is a node object, and second is an attribute name
-//
-
+/**
+ * Get node's custom attribute
+ * First argument is a node object, and second is an attribute name
+ */
 static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	NXSL_Object *object;
@@ -68,13 +66,11 @@ static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	return 0;
 }
 
-
-//
-// Set node's custom attribute
-// First argument is a node object, second is an attribute name, third is new value
-// Returns previous value
-//
-
+/**
+ * Set node's custom attribute
+ * First argument is a node object, second is an attribute name, third is new value
+ * Returns previous value
+ */
 static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	NXSL_Object *object;
@@ -915,17 +911,16 @@ finish:
 	return 0;
 }
 
-//
-// Do SNMP walk starting from the given oid
-// Syntax:
-//    SNMPWalk(transport, oid)
-// where:
-//     transport - NXSL transport object
-//		 oid - SNMP object id
-// Return value:
-//     an array of VarBind objects
-//
-
+/**
+ * Do SNMP walk starting from the given oid
+ * Syntax:
+ *    SNMPWalk(transport, oid)
+ * where:
+ *     transport - NXSL transport object
+ *		 oid - SNMP object id
+ * Return value:
+ *     an array of VarBind objects
+ */
 static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	static DWORD requestId = 1;
@@ -1025,14 +1020,12 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
 	return 0;
 }
 
-
-//
-// Get server's configuration variable
-// First argument is a variable name
-// Optional second argumet is default value
-// Returns variable's value if found, default value if not found, and null if not found and no default value given
-//
-
+/**
+ * Get server's configuration variable
+ * First argument is a variable name
+ * Optional second argumet is default value
+ * Returns variable's value if found, default value if not found, and null if not found and no default value given
+ */
 static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if ((argc == 0) || (argc > 2))
@@ -1054,13 +1047,12 @@ static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **
 	return 0;
 }
 
-
-//
-// Additional server functions to use within all scripts
-//
-
+/**
+ * Additional server functions to use within all scripts
+ */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
+	{ _T("map"), F_map, 2 },
 	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, 1 },
    { _T("GetConfigurationVariable"), F_GetConfigurationVariable, -1 },
    { _T("GetCustomAttribute"), F_GetCustomAttribute, 2 },
@@ -1082,11 +1074,9 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ _T("SNMPWalk"), F_SNMPWalk, 2 }
 };
 
-
-//
-// Additional server functions to manage containers (disabled by default)
-//
-
+/**
+ * Additional server functions to manage containers (disabled by default)
+ */
 static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 {
 	{ _T("BindObject"), F_BindObject, 2 },
@@ -1099,8 +1089,7 @@ static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 /**
  * Constructor for server default script environment
  */
-NXSL_ServerEnv::NXSL_ServerEnv()
-               : NXSL_Environment()
+NXSL_ServerEnv::NXSL_ServerEnv() : NXSL_Environment()
 {
 	m_console = NULL;
 	setLibrary(g_pScriptLibrary);

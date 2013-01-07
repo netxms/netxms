@@ -407,11 +407,9 @@ enum
 #define STATE_CONNECTED       2
 #define STATE_AUTHENTICATED   3
 
-
-//
-// Notification codes
-//
-
+/**
+ * Notification codes
+ */
 #define NX_NOTIFY_SHUTDOWN          1
 #define NX_NOTIFY_EVENTDB_CHANGED   2
 #define NX_NOTIFY_ALARM_DELETED     3
@@ -430,117 +428,116 @@ enum
 #define NX_NOTIFY_TRAPCFG_CREATED   16
 #define NX_NOTIFY_TRAPCFG_MODIFIED  17
 #define NX_NOTIFY_TRAPCFG_DELETED   18
+#define NX_NOTIFY_MAPTBL_CHANGED    19
+#define NX_NOTIFY_MAPTBL_DELETED    20
 
+/**
+ * Request completion codes
+ */
+#define RCC_SUCCESS                  ((DWORD)0)
+#define RCC_COMPONENT_LOCKED         ((DWORD)1)
+#define RCC_ACCESS_DENIED            ((DWORD)2)
+#define RCC_INVALID_REQUEST          ((DWORD)3)
+#define RCC_TIMEOUT                  ((DWORD)4)
+#define RCC_OUT_OF_STATE_REQUEST     ((DWORD)5)
+#define RCC_DB_FAILURE               ((DWORD)6)
+#define RCC_INVALID_OBJECT_ID        ((DWORD)7)
+#define RCC_ALREADY_EXIST            ((DWORD)8)
+#define RCC_COMM_FAILURE             ((DWORD)9)
+#define RCC_SYSTEM_FAILURE           ((DWORD)10)
+#define RCC_INVALID_USER_ID          ((DWORD)11)
+#define RCC_INVALID_ARGUMENT         ((DWORD)12)
+#define RCC_DUPLICATE_DCI            ((DWORD)13)
+#define RCC_INVALID_DCI_ID           ((DWORD)14)
+#define RCC_OUT_OF_MEMORY            ((DWORD)15)
+#define RCC_IO_ERROR                 ((DWORD)16)
+#define RCC_INCOMPATIBLE_OPERATION   ((DWORD)17)
+#define RCC_OBJECT_CREATION_FAILED   ((DWORD)18)
+#define RCC_OBJECT_LOOP              ((DWORD)19)
+#define RCC_INVALID_OBJECT_NAME      ((DWORD)20)
+#define RCC_INVALID_ALARM_ID         ((DWORD)21)
+#define RCC_INVALID_ACTION_ID        ((DWORD)22)
+#define RCC_OPERATION_IN_PROGRESS    ((DWORD)23)
+#define RCC_DCI_COPY_ERRORS          ((DWORD)24)
+#define RCC_INVALID_EVENT_CODE       ((DWORD)25)
+#define RCC_NO_WOL_INTERFACES        ((DWORD)26)
+#define RCC_NO_MAC_ADDRESS           ((DWORD)27)
+#define RCC_NOT_IMPLEMENTED          ((DWORD)28)
+#define RCC_INVALID_TRAP_ID          ((DWORD)29)
+#define RCC_DCI_NOT_SUPPORTED        ((DWORD)30)
+#define RCC_VERSION_MISMATCH         ((DWORD)31)
+#define RCC_NPI_PARSE_ERROR          ((DWORD)32)
+#define RCC_DUPLICATE_PACKAGE        ((DWORD)33)
+#define RCC_PACKAGE_FILE_EXIST       ((DWORD)34)
+#define RCC_RESOURCE_BUSY            ((DWORD)35)
+#define RCC_INVALID_PACKAGE_ID       ((DWORD)36)
+#define RCC_INVALID_IP_ADDR          ((DWORD)37)
+#define RCC_ACTION_IN_USE            ((DWORD)38)
+#define RCC_VARIABLE_NOT_FOUND       ((DWORD)39)
+#define RCC_BAD_PROTOCOL             ((DWORD)40)
+#define RCC_ADDRESS_IN_USE           ((DWORD)41)
+#define RCC_NO_CIPHERS               ((DWORD)42)
+#define RCC_INVALID_PUBLIC_KEY       ((DWORD)43)
+#define RCC_INVALID_SESSION_KEY      ((DWORD)44)
+#define RCC_NO_ENCRYPTION_SUPPORT    ((DWORD)45)
+#define RCC_INTERNAL_ERROR           ((DWORD)46)
+#define RCC_EXEC_FAILED              ((DWORD)47)
+#define RCC_INVALID_TOOL_ID          ((DWORD)48)
+#define RCC_SNMP_ERROR               ((DWORD)49)
+#define RCC_BAD_REGEXP               ((DWORD)50)
+#define RCC_UNKNOWN_PARAMETER        ((DWORD)51)
+#define RCC_FILE_IO_ERROR            ((DWORD)52)
+#define RCC_CORRUPTED_MIB_FILE       ((DWORD)53)
+#define RCC_TRANSFER_IN_PROGRESS     ((DWORD)54)
+#define RCC_INVALID_JOB_ID           ((DWORD)55)
+#define RCC_INVALID_SCRIPT_ID        ((DWORD)56)
+#define RCC_INVALID_SCRIPT_NAME      ((DWORD)57)
+#define RCC_UNKNOWN_MAP_NAME         ((DWORD)58)
+#define RCC_INVALID_MAP_ID           ((DWORD)59)
+#define RCC_ACCOUNT_DISABLED         ((DWORD)60)
+#define RCC_NO_GRACE_LOGINS          ((DWORD)61)
+#define RCC_CONNECTION_BROKEN        ((DWORD)62)
+#define RCC_INVALID_CONFIG_ID        ((DWORD)63)
+#define RCC_DB_CONNECTION_LOST       ((DWORD)64)
+#define RCC_ALARM_OPEN_IN_HELPDESK   ((DWORD)65)
+#define RCC_ALARM_NOT_OUTSTANDING    ((DWORD)66)
+#define RCC_NOT_PUSH_DCI             ((DWORD)67)
+#define RCC_CONFIG_PARSE_ERROR       ((DWORD)68)
+#define RCC_CONFIG_VALIDATION_ERROR  ((DWORD)69)
+#define RCC_INVALID_GRAPH_ID         ((DWORD)70)
+#define RCC_LOCAL_CRYPTO_ERROR		 ((DWORD)71)
+#define RCC_UNSUPPORTED_AUTH_TYPE	 ((DWORD)72)
+#define RCC_BAD_CERTIFICATE			 ((DWORD)73)
+#define RCC_INVALID_CERT_ID          ((DWORD)74)
+#define RCC_SNMP_FAILURE             ((DWORD)75)
+#define RCC_NO_L2_TOPOLOGY_SUPPORT	 ((DWORD)76)
+#define RCC_INVALID_SITUATION_ID     ((DWORD)77)
+#define RCC_INSTANCE_NOT_FOUND       ((DWORD)78)
+#define RCC_INVALID_EVENT_ID         ((DWORD)79)
+#define RCC_AGENT_ERROR              ((DWORD)80)
+#define RCC_UNKNOWN_VARIABLE         ((DWORD)81)
+#define RCC_RESOURCE_NOT_AVAILABLE   ((DWORD)82)
+#define RCC_JOB_CANCEL_FAILED        ((DWORD)83)
+#define RCC_INVALID_POLICY_ID        ((DWORD)84)
+#define RCC_UNKNOWN_LOG_NAME         ((DWORD)85)
+#define RCC_INVALID_LOG_HANDLE       ((DWORD)86)
+#define RCC_WEAK_PASSWORD            ((DWORD)87)
+#define RCC_REUSED_PASSWORD          ((DWORD)88)
+#define RCC_INVALID_SESSION_HANDLE   ((DWORD)89)
+#define RCC_CLUSTER_MEMBER_ALREADY   ((DWORD)90)
+#define RCC_JOB_HOLD_FAILED          ((DWORD)91)
+#define RCC_JOB_UNHOLD_FAILED        ((DWORD)92)
+#define RCC_ZONE_ID_ALREADY_IN_USE   ((DWORD)93)
+#define RCC_INVALID_ZONE_ID          ((DWORD)94)
+#define RCC_ZONE_NOT_EMPTY           ((DWORD)95)
+#define RCC_NO_COMPONENT_DATA        ((DWORD)96)
+#define RCC_INVALID_ALARM_NOTE_ID    ((DWORD)97)
+#define RCC_ENCRYPTION_ERROR         ((DWORD)98)
+#define RCC_INVALID_MAPPING_TABLE_ID ((DWORD)99)
 
-//
-// Request completion codes
-//
-
-#define RCC_SUCCESS                 ((DWORD)0)
-#define RCC_COMPONENT_LOCKED        ((DWORD)1)
-#define RCC_ACCESS_DENIED           ((DWORD)2)
-#define RCC_INVALID_REQUEST         ((DWORD)3)
-#define RCC_TIMEOUT                 ((DWORD)4)
-#define RCC_OUT_OF_STATE_REQUEST    ((DWORD)5)
-#define RCC_DB_FAILURE              ((DWORD)6)
-#define RCC_INVALID_OBJECT_ID       ((DWORD)7)
-#define RCC_ALREADY_EXIST           ((DWORD)8)
-#define RCC_COMM_FAILURE            ((DWORD)9)
-#define RCC_SYSTEM_FAILURE          ((DWORD)10)
-#define RCC_INVALID_USER_ID         ((DWORD)11)
-#define RCC_INVALID_ARGUMENT        ((DWORD)12)
-#define RCC_DUPLICATE_DCI           ((DWORD)13)
-#define RCC_INVALID_DCI_ID          ((DWORD)14)
-#define RCC_OUT_OF_MEMORY           ((DWORD)15)
-#define RCC_IO_ERROR                ((DWORD)16)
-#define RCC_INCOMPATIBLE_OPERATION  ((DWORD)17)
-#define RCC_OBJECT_CREATION_FAILED  ((DWORD)18)
-#define RCC_OBJECT_LOOP             ((DWORD)19)
-#define RCC_INVALID_OBJECT_NAME     ((DWORD)20)
-#define RCC_INVALID_ALARM_ID        ((DWORD)21)
-#define RCC_INVALID_ACTION_ID       ((DWORD)22)
-#define RCC_OPERATION_IN_PROGRESS   ((DWORD)23)
-#define RCC_DCI_COPY_ERRORS         ((DWORD)24)
-#define RCC_INVALID_EVENT_CODE      ((DWORD)25)
-#define RCC_NO_WOL_INTERFACES       ((DWORD)26)
-#define RCC_NO_MAC_ADDRESS          ((DWORD)27)
-#define RCC_NOT_IMPLEMENTED         ((DWORD)28)
-#define RCC_INVALID_TRAP_ID         ((DWORD)29)
-#define RCC_DCI_NOT_SUPPORTED       ((DWORD)30)
-#define RCC_VERSION_MISMATCH        ((DWORD)31)
-#define RCC_NPI_PARSE_ERROR         ((DWORD)32)
-#define RCC_DUPLICATE_PACKAGE       ((DWORD)33)
-#define RCC_PACKAGE_FILE_EXIST      ((DWORD)34)
-#define RCC_RESOURCE_BUSY           ((DWORD)35)
-#define RCC_INVALID_PACKAGE_ID      ((DWORD)36)
-#define RCC_INVALID_IP_ADDR         ((DWORD)37)
-#define RCC_ACTION_IN_USE           ((DWORD)38)
-#define RCC_VARIABLE_NOT_FOUND      ((DWORD)39)
-#define RCC_BAD_PROTOCOL            ((DWORD)40)
-#define RCC_ADDRESS_IN_USE          ((DWORD)41)
-#define RCC_NO_CIPHERS              ((DWORD)42)
-#define RCC_INVALID_PUBLIC_KEY      ((DWORD)43)
-#define RCC_INVALID_SESSION_KEY     ((DWORD)44)
-#define RCC_NO_ENCRYPTION_SUPPORT   ((DWORD)45)
-#define RCC_INTERNAL_ERROR          ((DWORD)46)
-#define RCC_EXEC_FAILED             ((DWORD)47)
-#define RCC_INVALID_TOOL_ID         ((DWORD)48)
-#define RCC_SNMP_ERROR              ((DWORD)49)
-#define RCC_BAD_REGEXP              ((DWORD)50)
-#define RCC_UNKNOWN_PARAMETER       ((DWORD)51)
-#define RCC_FILE_IO_ERROR           ((DWORD)52)
-#define RCC_CORRUPTED_MIB_FILE      ((DWORD)53)
-#define RCC_TRANSFER_IN_PROGRESS    ((DWORD)54)
-#define RCC_INVALID_JOB_ID          ((DWORD)55)
-#define RCC_INVALID_SCRIPT_ID       ((DWORD)56)
-#define RCC_INVALID_SCRIPT_NAME     ((DWORD)57)
-#define RCC_UNKNOWN_MAP_NAME        ((DWORD)58)
-#define RCC_INVALID_MAP_ID          ((DWORD)59)
-#define RCC_ACCOUNT_DISABLED        ((DWORD)60)
-#define RCC_NO_GRACE_LOGINS         ((DWORD)61)
-#define RCC_CONNECTION_BROKEN       ((DWORD)62)
-#define RCC_INVALID_CONFIG_ID       ((DWORD)63)
-#define RCC_DB_CONNECTION_LOST      ((DWORD)64)
-#define RCC_ALARM_OPEN_IN_HELPDESK  ((DWORD)65)
-#define RCC_ALARM_NOT_OUTSTANDING   ((DWORD)66)
-#define RCC_NOT_PUSH_DCI            ((DWORD)67)
-#define RCC_CONFIG_PARSE_ERROR      ((DWORD)68)
-#define RCC_CONFIG_VALIDATION_ERROR ((DWORD)69)
-#define RCC_INVALID_GRAPH_ID        ((DWORD)70)
-#define RCC_LOCAL_CRYPTO_ERROR		((DWORD)71)
-#define RCC_UNSUPPORTED_AUTH_TYPE	((DWORD)72)
-#define RCC_BAD_CERTIFICATE			((DWORD)73)
-#define RCC_INVALID_CERT_ID         ((DWORD)74)
-#define RCC_SNMP_FAILURE            ((DWORD)75)
-#define RCC_NO_L2_TOPOLOGY_SUPPORT	((DWORD)76)
-#define RCC_INVALID_SITUATION_ID    ((DWORD)77)
-#define RCC_INSTANCE_NOT_FOUND      ((DWORD)78)
-#define RCC_INVALID_EVENT_ID        ((DWORD)79)
-#define RCC_AGENT_ERROR             ((DWORD)80)
-#define RCC_UNKNOWN_VARIABLE        ((DWORD)81)
-#define RCC_RESOURCE_NOT_AVAILABLE  ((DWORD)82)
-#define RCC_JOB_CANCEL_FAILED       ((DWORD)83)
-#define RCC_INVALID_POLICY_ID       ((DWORD)84)
-#define RCC_UNKNOWN_LOG_NAME        ((DWORD)85)
-#define RCC_INVALID_LOG_HANDLE      ((DWORD)86)
-#define RCC_WEAK_PASSWORD           ((DWORD)87)
-#define RCC_REUSED_PASSWORD         ((DWORD)88)
-#define RCC_INVALID_SESSION_HANDLE  ((DWORD)89)
-#define RCC_CLUSTER_MEMBER_ALREADY  ((DWORD)90)
-#define RCC_JOB_HOLD_FAILED         ((DWORD)91)
-#define RCC_JOB_UNHOLD_FAILED       ((DWORD)92)
-#define RCC_ZONE_ID_ALREADY_IN_USE  ((DWORD)93)
-#define RCC_INVALID_ZONE_ID         ((DWORD)94)
-#define RCC_ZONE_NOT_EMPTY          ((DWORD)95)
-#define RCC_NO_COMPONENT_DATA       ((DWORD)96)
-#define RCC_INVALID_ALARM_NOTE_ID   ((DWORD)97)
-#define RCC_ENCRYPTION_ERROR        ((DWORD)98)
-
-
-//
-// Mask bits for NXCModifyEventTemplate()
-//
-
+/**
+ * Mask bits for NXCModifyEventTemplate()
+ */
 #define EM_SEVERITY        ((DWORD)0x01)
 #define EM_FLAGS           ((DWORD)0x02)
 #define EM_NAME            ((DWORD)0x04)
@@ -548,11 +545,9 @@ enum
 #define EM_DESCRIPTION     ((DWORD)0x10)
 #define EM_ALL             ((DWORD)0x1F)
 
-
-//
-// Mask bits (flags) for NXCModifyObject()
-//
-
+/**
+ * Mask bits (flags) for NXCModifyObject()
+ */
 #define OBJ_UPDATE_NAME             ((QWORD)_ULL(0x0000000001))
 #define OBJ_UPDATE_AGENT_PORT       ((QWORD)_ULL(0x0000000002))
 #define OBJ_UPDATE_AGENT_AUTH       ((QWORD)_ULL(0x0000000004))
@@ -622,8 +617,9 @@ enum
 #define SYSTEM_ACCESS_READ_FILES          0x00100000
 #define SYSTEM_ACCESS_SERVER_CONSOLE      0x00200000
 #define SYSTEM_ACCESS_MANAGE_FILES        0x00400000
+#define SYSTEM_ACCESS_MANAGE_MAPPING_TBLS 0x00800000
 
-#define SYSTEM_ACCESS_FULL                0x007FFFFF
+#define SYSTEM_ACCESS_FULL                0x00FFFFFF
 
 #endif	/* LIBNXCL_CUSTOM_USER_RIGHTS */
 

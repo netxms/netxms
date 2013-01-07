@@ -52,6 +52,8 @@ import org.netxms.api.client.Session;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.images.ImageLibraryManager;
 import org.netxms.api.client.images.LibraryImage;
+import org.netxms.api.client.mt.MappingTable;
+import org.netxms.api.client.mt.MappingTableDescriptor;
 import org.netxms.api.client.scripts.Script;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.api.client.servermanager.ServerManager;
@@ -642,7 +644,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		private void processNotificationMessage(final NXCPMessage msg)
 		{
 			int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
-			int data = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_DATA);
+			long data = msg.getVariableAsInt64(NXCPCodes.VID_NOTIFICATION_DATA);
 			sendNotification(new NXCNotification(code, data));
 		}
 
@@ -6292,5 +6294,62 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	public int getSessionId()
 	{
 		return sessionId;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.Session#listMappingTables()
+	 */
+	@Override
+	public List<MappingTableDescriptor> listMappingTables() throws IOException, NetXMSClientException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_MAPPING_TABLES);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
+		final List<MappingTableDescriptor> list = new ArrayList<MappingTableDescriptor>(count);
+		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			list.add(new MappingTableDescriptor(response, varId));
+			varId += 10;
+		}
+		return list;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.Session#getMappingTable(int)
+	 */
+	@Override
+	public MappingTable getMappingTable(int id) throws IOException, NetXMSClientException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_MAPPING_TABLE);
+		msg.setVariableInt32(NXCPCodes.VID_MAPPING_TABLE_ID, id);
+		sendMessage(msg);
+		return new MappingTable(waitForRCC(msg.getMessageId()));
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.Session#updateMappingTable(org.netxms.api.client.mt.MappingTable)
+	 */
+	@Override
+	public int updateMappingTable(MappingTable table) throws IOException, NetXMSClientException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_MAPPING_TABLE);
+		table.fillMessage(msg);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsInteger(NXCPCodes.VID_MAPPING_TABLE_ID);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.Session#deleteMappingTable(int)
+	 */
+	@Override
+	public void deleteMappingTable(int id) throws IOException, NetXMSClientException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_MAPPING_TABLE);
+		msg.setVariableInt32(NXCPCodes.VID_MAPPING_TABLE_ID, id);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
 	}
 }

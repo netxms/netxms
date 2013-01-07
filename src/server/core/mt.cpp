@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 NetXMS Team
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -233,5 +233,206 @@ const TCHAR *MappingTable::get(const TCHAR *key)
 /**
  * Defined mapping tables
  */
-static ObjectArray<MappingTable> s_mappingTables;
+static ObjectArray<MappingTable> s_mappingTables(0, 16, true);
 static RWLOCK s_mappingTablesLock;
+
+/**
+ * Init mapping tables
+ */
+void InitMappingTables()
+{
+	s_mappingTablesLock = RWLockCreate();
+
+	DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM mapping_tables"));
+	if (hResult == NULL)
+		return;
+
+	int count = DBGetNumRows(hResult);
+	for(int i = 0; i < count; i++)
+	{
+		MappingTable *mt = MappingTable::createFromDatabase(DBGetFieldLong(hResult, i, 0));
+		if (mt != NULL)
+			s_mappingTables.add(mt);
+	}
+	DBFreeResult(hResult);
+	DbgPrintf(2, _T("%d mapping tables loaded"), s_mappingTables.size());
+}
+
+/**
+ * Notification data structure
+ */
+struct NOTIFICATION_DATA
+{
+	DWORD code;
+	LONG id;
+};
+
+/**
+ * Callback for client notification
+ */
+static void NotifyClients(ClientSession *session, void *arg)
+{
+	session->notify(((NOTIFICATION_DATA *)arg)->code, ((NOTIFICATION_DATA *)arg)->id);
+}
+
+/**
+ * Create/update mapping table. If table ID is 0, new table will be craeted, 
+ * otherwise existing table with same ID updated.
+ *
+ * @param msg NXCP message with table's data
+ * @return RCC
+ */
+DWORD UpdateMappingTable(CSCPMessage *msg, LONG *newId)
+{
+	DWORD rcc;
+	MappingTable *mt = MappingTable::createFromMessage(msg);
+	RWLockWriteLock(s_mappingTablesLock, INFINITE);
+	if (mt->getId() != 0)
+	{
+		rcc = RCC_INVALID_MAPPING_TABLE_ID;
+		for(int i = 0; i < s_mappingTables.size(); i++)
+		{
+			if (s_mappingTables.get(i)->getId() == mt->getId())
+			{
+				s_mappingTables.set(i, mt);
+				*newId = mt->getId();
+				rcc = RCC_SUCCESS;
+				DbgPrintf(4, _T("Mapping table updated, name=\"%s\", id=%d"), mt->getName(), mt->getId());
+				break;
+			}
+		}
+	}
+	else
+	{
+		mt->createUniqueId();
+		s_mappingTables.add(mt);
+		*newId = mt->getId();
+		rcc = RCC_SUCCESS;
+		DbgPrintf(4, _T("New mapping table added, name=\"%s\", id=%d"), mt->getName(), mt->getId());
+	}
+
+	NOTIFICATION_DATA data;
+	data.code = NX_NOTIFY_MAPTBL_CHANGED;
+	data.id = mt->getId();
+
+	RWLockUnlock(s_mappingTablesLock);
+
+	if (rcc == RCC_SUCCESS)
+	{
+		EnumerateClientSessions(NotifyClients, &data);
+	}
+	else
+	{
+		delete mt;
+	}
+
+	return rcc;
+}
+
+/**
+ * Delete mapping table
+ *
+ * @param id mapping table ID
+ * @return RCC
+ */
+DWORD DeleteMappingTable(LONG id)
+{
+	DWORD rcc = RCC_INVALID_MAPPING_TABLE_ID;
+	RWLockWriteLock(s_mappingTablesLock, INFINITE);
+	for(int i = 0; i < s_mappingTables.size(); i++)
+	{
+		if (s_mappingTables.get(i)->getId() == id)
+		{
+			s_mappingTables.remove(i);
+			rcc = RCC_SUCCESS;
+			DbgPrintf(4, _T("Mapping table deleted, id=%d"), id);
+			break;
+		}
+	}
+	RWLockUnlock(s_mappingTablesLock);
+	if (rcc == RCC_SUCCESS)
+	{
+		NOTIFICATION_DATA data;
+		data.code = NX_NOTIFY_MAPTBL_DELETED;
+		data.id = id;
+		EnumerateClientSessions(NotifyClients, &data);
+	}
+	return rcc;
+}
+
+/**
+ * Get single mapping table
+ *
+ * @param id mapping table ID
+ * @param msg NXCP message to fill
+ * @return RCC
+ */
+DWORD GetMappingTable(LONG id, CSCPMessage *msg)
+{
+	DWORD rcc = RCC_INVALID_MAPPING_TABLE_ID;
+	RWLockReadLock(s_mappingTablesLock, INFINITE);
+	for(int i = 0; i < s_mappingTables.size(); i++)
+	{
+		if (s_mappingTables.get(i)->getId() == id)
+		{
+			s_mappingTables.get(i)->fillMessage(msg);
+			rcc = RCC_SUCCESS;
+			break;
+		}
+	}
+	RWLockUnlock(s_mappingTablesLock);
+	return rcc;
+}
+
+/**
+ * List all mapping tables
+ *
+ * @param msg NXCP mesage to fill
+ * @return RCC
+ */
+DWORD ListMappingTables(CSCPMessage *msg)
+{
+	DWORD varId = VID_ELEMENT_LIST_BASE;
+	RWLockReadLock(s_mappingTablesLock, INFINITE);
+	msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)s_mappingTables.size());
+	for(int i = 0; i < s_mappingTables.size(); i++)
+	{
+		MappingTable *mt = s_mappingTables.get(i);
+		msg->SetVariable(varId++, (DWORD)mt->getId());
+		msg->SetVariable(varId++, mt->getName());
+		msg->SetVariable(varId++, mt->getDescription());
+		msg->SetVariable(varId++, mt->getFlags());
+		varId += 6;
+	}
+	RWLockUnlock(s_mappingTablesLock);
+	return RCC_SUCCESS;
+}
+
+/**
+ * NXSL API: function map
+ * Format: map(table, key)
+ * Returns mapped value or null if table or key not found
+ * Table can be referenced by name or ID
+ */
+int F_map(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isString() || !argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	LONG tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
+	const TCHAR *value = NULL;
+	RWLockReadLock(s_mappingTablesLock, INFINITE);
+	for(int i = 0; i < s_mappingTables.size(); i++)
+	{
+		MappingTable *mt = s_mappingTables.get(i);
+		if (((tableId > 0) && (mt->getId() == tableId)) || !_tcsicmp(argv[0]->getValueAsCString(), mt->getName()))
+		{
+			value = mt->get(argv[1]->getValueAsCString());
+			break;
+		}
+	}
+	*ppResult = (value != NULL) ? new NXSL_Value(value) : new NXSL_Value;
+	RWLockUnlock(s_mappingTablesLock);
+
+	return 0;
+}

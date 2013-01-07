@@ -513,21 +513,21 @@ private:
    void onWakeUpNode(CSCPMessage *pRequest);
    void queryParameter(CSCPMessage *pRequest);
    void queryAgentTable(CSCPMessage *pRequest);
-   void EditTrap(int iOperation, CSCPMessage *pRequest);
+   void editTrap(int iOperation, CSCPMessage *pRequest);
    void LockTrapCfg(DWORD dwRqId, BOOL bLock);
-   void SendAllTraps(DWORD dwRqId);
-   void SendAllTraps2(DWORD dwRqId);
+   void sendAllTraps(DWORD dwRqId);
+   void sendAllTraps2(DWORD dwRqId);
    void LockPackageDB(DWORD dwRqId, BOOL bLock);
    void SendAllPackages(DWORD dwRqId);
    void InstallPackage(CSCPMessage *pRequest);
    void RemovePackage(CSCPMessage *pRequest);
    void DeployPackage(CSCPMessage *pRequest);
    void SendParametersList(CSCPMessage *pRequest);
-   void GetUserVariable(CSCPMessage *pRequest);
-   void SetUserVariable(CSCPMessage *pRequest);
-   void CopyUserVariable(CSCPMessage *pRequest);
-   void EnumUserVariables(CSCPMessage *pRequest);
-   void DeleteUserVariable(CSCPMessage *pRequest);
+   void getUserVariable(CSCPMessage *pRequest);
+   void setUserVariable(CSCPMessage *pRequest);
+   void copyUserVariable(CSCPMessage *pRequest);
+   void enumUserVariables(CSCPMessage *pRequest);
+   void deleteUserVariable(CSCPMessage *pRequest);
    void changeObjectZone(CSCPMessage *pRequest);
    void getAgentConfig(CSCPMessage *pRequest);
    void updateAgentConfig(CSCPMessage *pRequest);
@@ -628,6 +628,10 @@ private:
 	void renderReport(CSCPMessage *request);
 	void getNetworkPath(CSCPMessage *request);
 	void getNodeComponents(CSCPMessage *request);
+	void listMappingTables(CSCPMessage *request);
+	void getMappingTable(CSCPMessage *request);
+	void updateMappingTable(CSCPMessage *request);
+	void deleteMappingTable(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

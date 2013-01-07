@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -457,6 +457,10 @@ typedef struct
 #define CMD_GET_ALARM_EVENTS           0x010B
 #define CMD_GET_ENUM_LIST              0x010C
 #define CMD_GET_TABLE_LIST             0x010D
+#define CMD_GET_MAPPING_TABLE          0x010E
+#define CMD_UPDATE_MAPPING_TABLE       0x010F
+#define CMD_DELETE_MAPPING_TABLE       0x0110
+#define CMD_LIST_MAPPING_TABLES        0x0111
 
 /**
  * Variable identifiers

@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <netxms_mt.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -907,19 +908,19 @@ void ClientSession::processingThread()
             onWakeUpNode(pMsg);
             break;
          case CMD_CREATE_TRAP:
-            EditTrap(TRAP_CREATE, pMsg);
+            editTrap(TRAP_CREATE, pMsg);
             break;
          case CMD_MODIFY_TRAP:
-            EditTrap(TRAP_UPDATE, pMsg);
+            editTrap(TRAP_UPDATE, pMsg);
             break;
          case CMD_DELETE_TRAP:
-            EditTrap(TRAP_DELETE, pMsg);
+            editTrap(TRAP_DELETE, pMsg);
             break;
          case CMD_LOAD_TRAP_CFG:
-            SendAllTraps(pMsg->GetId());
+            sendAllTraps(pMsg->GetId());
             break;
 			case CMD_GET_TRAP_CFG_RO:
-				SendAllTraps2(pMsg->GetId());
+				sendAllTraps2(pMsg->GetId());
 				break;
          case CMD_QUERY_PARAMETER:
             CALL_IN_NEW_THREAD(queryParameter, pMsg);
@@ -955,19 +956,19 @@ void ClientSession::processingThread()
 				getThresholdSummary(pMsg);
 				break;
          case CMD_GET_USER_VARIABLE:
-            GetUserVariable(pMsg);
+            getUserVariable(pMsg);
             break;
          case CMD_SET_USER_VARIABLE:
-            SetUserVariable(pMsg);
+            setUserVariable(pMsg);
             break;
          case CMD_DELETE_USER_VARIABLE:
-            DeleteUserVariable(pMsg);
+            deleteUserVariable(pMsg);
             break;
          case CMD_ENUM_USER_VARIABLES:
-            EnumUserVariables(pMsg);
+            enumUserVariables(pMsg);
             break;
          case CMD_COPY_USER_VARIABLE:
-            CopyUserVariable(pMsg);
+            copyUserVariable(pMsg);
             break;
          case CMD_CHANGE_ZONE:
             changeObjectZone(pMsg);
@@ -1262,6 +1263,18 @@ void ClientSession::processingThread()
 				break;
 			case CMD_GET_NODE_COMPONENTS:
 				getNodeComponents(pMsg);
+				break;
+			case CMD_LIST_MAPPING_TABLES:
+				listMappingTables(pMsg);
+				break;
+			case CMD_GET_MAPPING_TABLE:
+				getMappingTable(pMsg);
+				break;
+			case CMD_UPDATE_MAPPING_TABLE:
+				updateMappingTable(pMsg);
+				break;
+			case CMD_DELETE_MAPPING_TABLE:
+				deleteMappingTable(pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -5384,12 +5397,10 @@ void ClientSession::queryAgentTable(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Edit trap configuration record
-//
-
-void ClientSession::EditTrap(int iOperation, CSCPMessage *pRequest)
+/**
+ * Edit trap configuration record
+ */
+void ClientSession::editTrap(int iOperation, CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwTrapId, dwResult;
@@ -5431,12 +5442,10 @@ void ClientSession::EditTrap(int iOperation, CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send all trap configuration records to client
-//
-
-void ClientSession::SendAllTraps(DWORD dwRqId)
+/**
+ * Send all trap configuration records to client
+ */
+void ClientSession::sendAllTraps(DWORD dwRqId)
 {
    CSCPMessage msg;
    BOOL bSuccess = FALSE;
@@ -5463,13 +5472,11 @@ void ClientSession::SendAllTraps(DWORD dwRqId)
       sendMessage(&msg);
 }
 
-
-//
-// Send all trap configuration records to client
-// Send all in one message with less information and don't need a lock
-//
-
-void ClientSession::SendAllTraps2(DWORD dwRqId)
+/**
+ * Send all trap configuration records to client
+ * Send all in one message with less information and don't need a lock
+ */
+void ClientSession::sendAllTraps2(DWORD dwRqId)
 {
    CSCPMessage msg;
 
@@ -6025,12 +6032,10 @@ void ClientSession::applyTemplate(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Get user variable
-//
-
-void ClientSession::GetUserVariable(CSCPMessage *pRequest)
+/**
+ * Get user variable
+ */
+void ClientSession::getUserVariable(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[MAX_VARIABLE_NAME + 256];
@@ -6082,12 +6087,10 @@ void ClientSession::GetUserVariable(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Set user variable
-//
-
-void ClientSession::SetUserVariable(CSCPMessage *pRequest)
+/**
+ * Set user variable
+ */
+void ClientSession::setUserVariable(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[8192], *pszValue, *pszRawValue;
@@ -6156,12 +6159,10 @@ void ClientSession::SetUserVariable(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Enum user variables
-//
-
-void ClientSession::EnumUserVariables(CSCPMessage *pRequest)
+/**
+ * Enum user variables
+ */
+void ClientSession::enumUserVariables(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szPattern[MAX_VARIABLE_NAME], szQuery[256], szName[MAX_DB_STRING];
@@ -6208,12 +6209,10 @@ void ClientSession::EnumUserVariables(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Delete user variable(s)
-//
-
-void ClientSession::DeleteUserVariable(CSCPMessage *pRequest)
+/**
+ * Delete user variable(s)
+ */
+void ClientSession::deleteUserVariable(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[MAX_VARIABLE_NAME + 256];
@@ -6250,12 +6249,10 @@ void ClientSession::DeleteUserVariable(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Copy or move user variable(s) to another user
-//
-
-void ClientSession::CopyUserVariable(CSCPMessage *pRequest)
+/**
+ * Copy or move user variable(s) to another user
+ */
+void ClientSession::copyUserVariable(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szVarName[MAX_VARIABLE_NAME], szCurrVar[MAX_VARIABLE_NAME],
@@ -12031,6 +12028,96 @@ void ClientSession::getThresholdSummary(CSCPMessage *request)
    {
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * List configured mapping tables
+ */
+void ClientSession::listMappingTables(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
+	{
+		msg.SetVariable(VID_RCC, ListMappingTables(&msg));
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Get content of specific mapping table
+ */
+void ClientSession::getMappingTable(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+	msg.SetVariable(VID_RCC, GetMappingTable((LONG)request->GetVariableLong(VID_MAPPING_TABLE_ID), &msg));
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Create or update mapping table
+ */
+void ClientSession::updateMappingTable(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
+	{
+		LONG id;
+		msg.SetVariable(VID_RCC, UpdateMappingTable(request, &id));
+		msg.SetVariable(VID_MAPPING_TABLE_ID, (DWORD)id);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Delete mapping table
+ */
+void ClientSession::deleteMappingTable(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
+	{
+		msg.SetVariable(VID_RCC, DeleteMappingTable((LONG)request->GetVariableLong(VID_MAPPING_TABLE_ID)));
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
 
    // Send response
    sendMessage(&msg);

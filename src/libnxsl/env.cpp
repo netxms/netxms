@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -108,11 +108,9 @@ static NXSL_ExtFunction m_builtinFunctions[] =
 	{ _T("SecondsToUptime"), F_SecondsToUptime, 1 }
 };
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 NXSL_Environment::NXSL_Environment()
 {
    m_dwNumFunctions = sizeof(m_builtinFunctions) / sizeof(NXSL_ExtFunction);
