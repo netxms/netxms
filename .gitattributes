@@ -2548,7 +2548,6 @@ webui/webapp/Core/src/org/netxms/webui/core/messages.properties -text
 webui/webapp/Core/src/org/netxms/webui/core/messages_es.properties -text
 webui/webapp/Core/src/org/netxms/webui/core/messages_ru.properties -text
 webui/webapp/Core/src/org/netxms/webui/core/nxmc.properties -text
-webui/webapp/Core/src/org/netxms/webui/tools/RWTHelper.java -text
 webui/webapp/Core/theme/resources/arrows/down.gif -text
 webui/webapp/Core/theme/resources/button/arrow-down.png -text
 webui/webapp/Core/theme/resources/button/arrow-left.png -text
@@ -3390,11 +3389,10 @@ webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/widgets/helpers/MibTreeContentP
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/widgets/helpers/MibTreeLabelProvider.java -text
 webui/webapp/ServerConfig/META-INF/MANIFEST.MF -text
 webui/webapp/ServerConfig/build.properties -text
-webui/webapp/ServerConfig/icons/add_variable.png -text
-webui/webapp/ServerConfig/icons/delete_variable.png -text
-webui/webapp/ServerConfig/icons/edit_variable.png -text
 webui/webapp/ServerConfig/icons/export.gif -text
 webui/webapp/ServerConfig/icons/import.gif -text
+webui/webapp/ServerConfig/icons/mapping_table.png -text
+webui/webapp/ServerConfig/icons/mapping_table_edit.png -text
 webui/webapp/ServerConfig/icons/network_discovery.gif -text
 webui/webapp/ServerConfig/icons/server_config.png -text
 webui/webapp/ServerConfig/icons/syslog_cfg.gif -text

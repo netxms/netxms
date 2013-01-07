@@ -25,11 +25,11 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
-import org.netxms.webui.tools.RWTHelper;
 
 /**
  * Login job
@@ -41,7 +41,7 @@ public class LoginJob implements IRunnableWithProgress
 		@Override
 		public void run()
 		{
-			final Session session = (Session)RWTHelper.getSessionAttribute(display, "netxms.sesion");
+			final Session session = (Session)RWT.getUISession(display).getAttribute("netxms.sesion");
 			try
 			{
 				session.checkConnection();
@@ -125,7 +125,7 @@ public class LoginJob implements IRunnableWithProgress
 			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS | NXCSession.CHANNEL_EVENTS);
 			monitor.worked(5);
 
-			RWTHelper.setSessionAttribute(display, "netxms.session", session);
+			RWT.getUISession(display).setAttribute("netxms.session", session);
 			
 			monitor.setTaskName("Initializing extensions...");
 			//TweakletManager.postLogin(session);

@@ -118,6 +118,8 @@ public class MappingTables extends ViewPart
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		WidgetHelper.restoreTableViewerSettings(viewer, settings, "MappingTablesList");
 		viewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -191,6 +193,8 @@ public class MappingTables extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction(this) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -199,6 +203,8 @@ public class MappingTables extends ViewPart
 		};
 		
 		actionNewTable = new Action("&New table...", SharedIcons.ADD_OBJECT) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -207,6 +213,8 @@ public class MappingTables extends ViewPart
 		};
 		
 		actionEditTable = new Action("&Edit", SharedIcons.EDIT) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -216,6 +224,8 @@ public class MappingTables extends ViewPart
 		actionEditTable.setEnabled(false);
 		
 		actionDeleteTables = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -264,6 +274,8 @@ public class MappingTables extends ViewPart
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

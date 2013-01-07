@@ -46,7 +46,6 @@ import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
 import org.netxms.webui.core.dialogs.LoginForm;
 import org.netxms.webui.core.dialogs.PasswordExpiredDialog;
-import org.netxms.webui.tools.RWTHelper;
 
 /**
  * Configures the initial size and appearance of a workbench window.
@@ -169,7 +168,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		if (success)
 		{
 			// Suggest user to change password if it is expired
-			final Session session = (Session)RWT.getSessionStore().getAttribute("netxms.session");
+			final Session session = (Session)RWT.getUISession().getAttribute("netxms.session");
 			if (session.isPasswordExpired())
 			{
 				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
@@ -183,7 +182,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 						{
 							try
 							{
-								NXCSession session = (NXCSession)RWTHelper.getSessionAttribute(display, "netxms.session");
+								NXCSession session = (NXCSession)RWT.getUISession(display).getAttribute("netxms.session");
 								session.setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
 							}
 							catch(Exception e)

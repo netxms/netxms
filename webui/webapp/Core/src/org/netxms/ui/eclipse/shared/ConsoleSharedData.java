@@ -33,6 +33,6 @@ public class ConsoleSharedData
 	 */
 	public static Session getSession()
 	{
-		return (Session)RWT.getSessionStore().getAttribute("netxms.session");
+		return (Session)RWT.getUISession().getAttribute("netxms.session");
 	}
 }

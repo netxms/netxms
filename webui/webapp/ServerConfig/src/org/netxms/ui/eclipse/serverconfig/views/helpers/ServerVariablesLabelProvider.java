@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,9 +26,8 @@ import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
 
 /**
  * Label provider for server configuration variables
- * 
  */
-public class ViewLabelProvider extends LabelProvider implements ITableLabelProvider
+public class ServerVariablesLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	private static final long serialVersionUID = 1L;
 

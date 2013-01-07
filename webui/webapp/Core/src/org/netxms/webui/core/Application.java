@@ -43,7 +43,7 @@ public class Application implements IApplication
 	public Object start(IApplicationContext context) throws Exception
 	{
 		Display display = PlatformUI.createDisplay();
-		RWT.getSessionStore().getHttpSession().setMaxInactiveInterval(120);
+		RWT.getUISession().getHttpSession().setMaxInactiveInterval(120);
 		display.disposeExec(new Runnable() {
 			public void run()
 			{

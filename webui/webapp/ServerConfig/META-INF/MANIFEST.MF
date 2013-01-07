@@ -2,17 +2,17 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Server Configuration Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.serverconfig;singleton:=true
-Bundle-Version: 1.2.4
+Bundle-Version: 1.2.5
 Bundle-Activator: org.netxms.ui.eclipse.serverconfig.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.eclipse.core.runtime,
- org.eclipse.rap.ui;bundle-version="1.5.0",
- org.netxms.webui.core;bundle-version="1.2.4",
- org.eclipse.rap.ui.forms;bundle-version="1.5.0",
- org.eclipse.rap.rwt.supplemental.filedialog;bundle-version="1.5.0",
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.9.0",
+ org.eclipse.rap.ui;bundle-version="2.0.0",
+ org.netxms.webui.core;bundle-version="1.2.5",
+ org.eclipse.rap.ui.forms;bundle-version="1.5.100",
+ org.eclipse.rap.rwt.supplemental.filedialog;bundle-version="1.5.100",
  org.netxms.ui.eclipse.filemanager;bundle-version="1.2.4",
  org.netxms.ui.eclipse.eventmanager;bundle-version="1.2.0",
- org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.4",
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.5",
  org.netxms.ui.eclipse.nxsl;bundle-version="1.2.4"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

@@ -158,6 +158,8 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 				
 		actionRefresh = new RefreshAction(this) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -169,6 +171,8 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		};
 		
 		actionNewRow = new Action("&New row", SharedIcons.ADD_OBJECT) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -180,6 +184,8 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		handlerService.activateHandler(actionNewRow.getActionDefinitionId(), new ActionHandler(actionNewRow));
 		
 		actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -191,6 +197,8 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		handlerService.activateHandler(actionDelete.getActionDefinitionId(), new ActionHandler(actionDelete));
 		
 		actionSave = new Action("&Save", SharedIcons.SAVE) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -241,6 +249,8 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
+			private static final long serialVersionUID = 1L;
+
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

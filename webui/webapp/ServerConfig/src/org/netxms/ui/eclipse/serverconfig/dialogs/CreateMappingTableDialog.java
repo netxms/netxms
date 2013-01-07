@@ -29,25 +29,23 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Create/edit variable
+ * Create mapping table
  */
-public class VariableEditDialog extends Dialog
+public class CreateMappingTableDialog extends Dialog
 {
 	private static final long serialVersionUID = 1L;
-	
+
 	private LabeledText textName;
-	private LabeledText textValue;
-	private String varName;
-	private String varValue;
+	private LabeledText textDescription;
+	private String name;
+	private String description;
 	
 	/**
 	 * @param parentShell
 	 */
-	public VariableEditDialog(Shell parentShell, String varName, String varValue)
+	public CreateMappingTableDialog(Shell parentShell)
 	{
 		super(parentShell);
-		this.varName = varName;
-		this.varValue = varValue;
 	}
 
 	/* (non-Javadoc)
@@ -67,29 +65,18 @@ public class VariableEditDialog extends Dialog
       textName = new LabeledText(dialogArea, SWT.NONE);
       textName.setLabel("Name");
       textName.getTextControl().setTextLimit(63);
-      if (varName != null)
-      {
-      	textName.setText(varName);
-      	textName.getTextControl().setEditable(false);
-      }
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 300;
       textName.setLayoutData(gd);
       
-      textValue = new LabeledText(dialogArea, SWT.NONE);
-      textValue.setLabel("Value");
-      textValue.getTextControl().setTextLimit(255);
-      if (varValue != null)
-      	textValue.setText(varValue);
+      textDescription = new LabeledText(dialogArea, SWT.NONE);
+      textDescription.setLabel("Description");
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      textValue.setLayoutData(gd);
-      
-      if (varName != null)
-      	textValue.setFocus();
+      textDescription.setLayoutData(gd);
       
 		return dialogArea;
 	}
@@ -101,25 +88,25 @@ public class VariableEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((varName == null) ? "Create Variable" : "Edit Variable");
+		newShell.setText("Create Mapping Table");
 	}
 	
 	/**
-	 * Get variable name
+	 * Get table name
 	 * 
 	 */
-	public String getVarName()
+	public String getName()
 	{
-		return varName;
+		return name;
 	}
 	
 	/**
-	 * Get variable value
+	 * Get table description
 	 * 
 	 */
-	public String getVarValue()
+	public String getDescription()
 	{
-		return varValue;
+		return description;
 	}
 
 	/* (non-Javadoc)
@@ -128,8 +115,8 @@ public class VariableEditDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		varName = textName.getText();
-		varValue = textValue.getText();
+		name = textName.getText();
+		description = textDescription.getText();
 		super.okPressed();
 	}
 }
