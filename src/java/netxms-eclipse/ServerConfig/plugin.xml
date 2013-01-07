@@ -35,6 +35,24 @@
             name="Export Configuration"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.serverconfig.views.MappingTables"
+            icon="icons/mapping_table.png"
+            id="org.netxms.ui.eclipse.serverconfig.views.MappingTables"
+            name="MappingTables"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.serverconfig.views.MappingTableEditor"
+            icon="icons/mapping_table_edit.png"
+            id="org.netxms.ui.eclipse.serverconfig.views.MappingTableEditor"
+            name="Mapping Table"
+            restorable="false">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -76,6 +94,20 @@
             id="org.netxms.ui.eclipse.serverconfig.commands.open_syslog_config"
             name="Syslog Parser">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open mapping tables configuration"
+            id="org.netxms.ui.eclipse.serverconfig.commands.open_mapping_tables"
+            name="Mapping Tables">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.add_new_row"
+            name="New row">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.delete_rows"
+            name="Delete rows">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -111,6 +143,17 @@
            toolbarPath="config/additions"
            tooltip="Open syslog parser configuration">
      </action>
+     <action
+           class="org.netxms.ui.eclipse.serverconfig.actions.OpenMappingTables"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_mapping_tables"
+           icon="icons/mapping_table.png"
+           id="org.netxms.ui.eclipse.serverconfig.actions.open_mapping_tables"
+           label="Mapping Tables"
+           menubarPath="config/additions"
+           style="push"
+           toolbarPath="config/additions"
+           tooltip="Open mapping tables editor">
+     </action>
 	   </actionSet>
 	   <actionSet id="org.netxms.ui.eclipse.action_set.export_import_configuration"
 		   label="Configuration export/import"
@@ -135,43 +178,29 @@
      </action>
 	   </actionSet>
    </extension>
-
    <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            id="org.netxms.ui.eclipse.serverconfig.actions.popup.delete_variable"
-            objectClass="org.netxms.api.client.servermanager.ServerVariable">
-         <menu
-               id="org.netxms.ui.eclipse.serverconfig.menu.variables"
-               label="Delete"
-               path="additions">
-         </menu>
-         <action
-               class="org.netxms.ui.eclipse.serverconfig.actions.DeleteVariable"
-               id="org.netxms.ui.eclipse.serverconfig.popupActions.DeleteVariable"
-               label="Delete"
-   		       icon="icons/delete_variable.png"
-               menubarPath="org.netxms.ui.eclipse.serverconfig.menu.variables"
-               enablesFor="+">
-         </action>
-      </objectContribution>
-      <objectContribution
-            id="org.netxms.ui.eclipse.serverconfig.actions.popup.edit_variable"
-            objectClass="org.netxms.api.client.servermanager.ServerVariable">
-         <menu
-               id="org.netxms.ui.eclipse.serverconfig.menu.variables"
-               label="Edit..."
-               path="additions">
-         </menu>
-         <action
-               class="org.netxms.ui.eclipse.serverconfig.actions.EditVariable"
-               id="org.netxms.ui.eclipse.serverconfig.popupActions.EditVariable"
-               label="Edit..."
-   		       icon="icons/edit_variable.png"
-               menubarPath="org.netxms.ui.eclipse.serverconfig.menu.variables"
-               enablesFor="1">
-         </action>
-      </objectContribution>
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.serverconfig.context.MappingTableEditor"
+            name="Mapping Table Editor"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.serverconfig.commands.add_new_row"
+            contextId="org.netxms.ui.eclipse.serverconfig.context.MappingTableEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="F2">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.serverconfig.commands.delete_rows"
+            contextId="org.netxms.ui.eclipse.serverconfig.context.MappingTableEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="DEL">
+      </key>
+   </extension>
+
 
 </plugin>

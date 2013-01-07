@@ -4,7 +4,8 @@
 
 - Topology-based event correlation improved
 - Network discovery improved
-- New NXSL functions: ceil, floor, round, format
+- Mapping tables
+- New NXSL functions: ceil, floor, round, format, map
 - Management console:
 	- "Alarm Details" view
 	- "Area" option implemented on line charts

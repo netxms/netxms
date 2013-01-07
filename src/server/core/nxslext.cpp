@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -104,12 +104,10 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	return 0;
 }
 
-
-//
-// Get interface name by index
-// Parameters: node object and interface index
-//
-
+/**
+ * Get interface name by index
+ * Parameters: node object and interface index
+ */
 static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -136,12 +134,10 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 	return 0;
 }
 
-
-//
-// Get interface object by index
-// Parameters: node object and interface index
-//
-
+/**
+ * Get interface object by index
+ * Parameters: node object and interface index
+ */
 static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -168,14 +164,12 @@ static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	return 0;
 }
 
-
-//
-// Find node object
-// First argument: current node object or null
-// Second argument: node id or name
-// Returns node object or null if requested node was not found or access to it was denied
-//
-
+/**
+ * Find node object
+ * First argument: current node object or null
+ * Second argument: node id or name
+ * Returns node object or null if requested node was not found or access to it was denied
+ */
 static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	Node *currNode = NULL, *node = NULL;
@@ -237,14 +231,12 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 	return 0;
 }
 
-
-//
-// Find object
-// First argument: object id or name
-// Second argument (optional): current node object or null
-// Returns generic object or null if requested object was not found or access to it was denied
-//
-
+/**
+ * Find object
+ * First argument: object id or name
+ * Second argument (optional): current node object or null
+ * Returns generic object or null if requested object was not found or access to it was denied
+ */
 static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	NetObj *object = NULL;
@@ -308,13 +300,11 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	return 0;
 }
 
-
-//
-// Get node object's parents
-// First argument: node object
-// Returns array of accessible parent objects
-//
-
+/**
+ * Get node object's parents
+ * First argument: node object
+ * Returns array of accessible parent objects
+ */
 static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -329,13 +319,11 @@ static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 	return 0;
 }
 
-
-//
-// Get object's parents
-// First argument: NetXMS object (NetObj, Node, or Interface)
-// Returns array of accessible parent objects
-//
-
+/**
+ * Get object's parents
+ * First argument: NetXMS object (NetObj, Node, or Interface)
+ * Returns array of accessible parent objects
+ */
 static int F_GetObjectParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -352,13 +340,11 @@ static int F_GetObjectParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 	return 0;
 }
 
-
-//
-// Get object's children
-// First argument: NetXMS object (NetObj, Node, or Interface)
-// Returns array of accessible child objects
-//
-
+/**
+ * Get object's children
+ * First argument: NetXMS object (NetObj, Node, or Interface)
+ * Returns array of accessible child objects
+ */
 static int F_GetObjectChildren(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -375,13 +361,11 @@ static int F_GetObjectChildren(int argc, NXSL_Value **argv, NXSL_Value **ppResul
 	return 0;
 }
 
-
-//
-// Get node's interfaces
-// First argument: node object
-// Returns array of interface objects
-//
-
+/**
+ * Get node's interfaces
+ * First argument: node object
+ * Returns array of interface objects
+ */
 static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -396,14 +380,12 @@ static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **ppResul
 	return 0;
 }
 
-
-//
-// Get event's named parameter
-// First argument: event object
-// Second argument: parameter's name
-// Returns parameter's value or null
-//
-
+/**
+ * Get event's named parameter
+ * First argument: event object
+ * Second argument: parameter's name
+ * Returns parameter's value or null
+ */
 static int F_GetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -422,14 +404,12 @@ static int F_GetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResul
 	return 0;
 }
 
-
-//
-// Set event's named parameter
-// First argument: event object
-// Second argument: parameter's name
-// Third argument: new value
-//
-
+/**
+ * Set event's named parameter
+ * First argument: event object
+ * Second argument: parameter's name
+ * Third argument: new value
+ */
 static int F_SetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -448,18 +428,16 @@ static int F_SetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResul
 	return 0;
 }
 
-
-//
-// Post event
-// Syntax:
-//    PostEvent(node, event, tag, ...)
-// where:
-//     node - node object to send event on behalf of
-//     event - event code
-//     tag - user tag (optional)
-//     ... - optional parameters, will be passed as %1, %2, etc.
-//
-
+/**
+ * Post event
+ * Syntax:
+ *    PostEvent(node, event, tag, ...)
+ * where:
+ *     node - node object to send event on behalf of
+ *     event - event code
+ *     tag - user tag (optional)
+ *     ... - optional parameters, will be passed as %1, %2, etc.
+ */
 static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (argc < 2)
@@ -509,18 +487,16 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	return 0;
 }
 
-
-//
-// Create container object
-// Syntax:
-//    CreateContainer(parent, name)
-// where:
-//     parent - parent object
-//     name   - name for new container
-// Return value:
-//     new container object
-//
-
+/**
+ * Create container object
+ * Syntax:
+ *    CreateContainer(parent, name)
+ * where:
+ *     parent - parent object
+ *     name   - name for new container
+ * Return value:
+ *     new container object
+ */
 static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -550,16 +526,15 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	return 0;
 }
 
-//
-// Remove container object
-// Syntax:
-//    RemoveContainer(container)
-// where:
-//     container - container to remove
-// Return value:
-//     null
-//
-
+/**
+ * Remove container object
+ * Syntax:
+ *    RemoveContainer(container)
+ * where:
+ *     container - container to remove
+ * Return value:
+ *     null
+ */
 static int F_RemoveContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -580,17 +555,16 @@ static int F_RemoveContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	return 0;
 }
 
-//
-// Bind object to container
-// Syntax:
-//    BindObject(parent, child)
-// where:
-//     parent - container object
-//     child  - either node or container or subnet to be bound to parent
-// Return value:
-//     null
-//
-
+/**
+ * Bind object to container
+ * Syntax:
+ *    BindObject(parent, child)
+ * where:
+ *     parent - container object
+ *     child  - either node or container or subnet to be bound to parent
+ * Return value:
+ *     null
+ */
 static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject() || !argv[1]->isObject())
@@ -625,17 +599,16 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	return 0;
 }
 
-//
-// Remove (unbind) object from container
-// Syntax:
-//    UnbindObject(parent, child)
-// where:
-//     parent - container object
-//     child  - either node or container or subnet to be removed from container
-// Return value:
-//     null
-//
-
+/**
+ * Remove (unbind) object from container
+ * Syntax:
+ *    UnbindObject(parent, child)
+ * where:
+ *     parent - container object
+ *     child  - either node or container or subnet to be removed from container
+ * Return value:
+ *     null
+ */
 static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject() || !argv[1]->isObject())
@@ -666,17 +639,16 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	return 0;
 }
 
-//
-// Rename object
-// Syntax:
-//    RenameObject(object, name)
-// where:
-//     object - NetXMS object (Node, Interface, or NetObj)
-//     name   - new name for object
-// Return value:
-//     null
-//
-
+/**
+ * Rename object
+ * Syntax:
+ *    RenameObject(object, name)
+ * where:
+ *     object - NetXMS object (Node, Interface, or NetObj)
+ *     name   - new name for object
+ * Return value:
+ *     null
+ */
 static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -698,16 +670,15 @@ static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	return 0;
 }
 
-//
-// Create new SNMP transport object
-// Syntax:
-//    CreateSNMPTransport(node)
-// where:
-//     node - node to create SNMP transport for
-// Return value:
-//     new SNMP_Transport object
-//
-
+/**
+ * Create new SNMP transport object
+ * Syntax:
+ *    CreateSNMPTransport(node)
+ * where:
+ *     node - node to create SNMP transport for
+ * Return value:
+ *     new SNMP_Transport object
+ */
 static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -731,17 +702,16 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
 	return 0;
 }
 
-//
-// Do SNMP GET for the given object id
-// Syntax:
-//    SNMPGet(transport, oid)
-// where:
-//     transport - NXSL transport object
-//		 oid - SNMP object id
-// Return value:
-//     new SNMP_VarBind object
-//
-
+/**
+ * Do SNMP GET for the given object id
+ * Syntax:
+ *    SNMPGet(transport, oid)
+ * where:
+ *     transport - NXSL transport object
+ *		 oid - SNMP object id
+ * Return value:
+ *     new SNMP_VarBind object
+ */
 static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	SNMP_PDU *rspPDU;
@@ -784,17 +754,16 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Pr
 	return 0;
 }
 
-//
-// Do SNMP GET for the given object id
-// Syntax:
-//    SNMPGetValue(transport, oid)
-// where:
-//     transport - NXSL transport object
-//		 oid - SNMP object id
-// Return value:
-//     value for the given oid
-//
-
+/**
+ * Do SNMP GET for the given object id
+ * Syntax:
+ *    SNMPGetValue(transport, oid)
+ * where:
+ *     transport - NXSL transport object
+ *		 oid - SNMP object id
+ * Return value:
+ *     value for the given oid
+ */
 static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	TCHAR buffer[4096];
@@ -824,19 +793,18 @@ static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	return 0;
 }
 
-//
-// Do SNMP SET for the given object id
-// Syntax:
-//    SNMPSet(transport, oid, value, [data_type])
-// where:
-//     transport - NXSL transport object
-//		 oid - SNMP object id
-//		 value - value to set
-//		 data_type (optional)
-// Return value:
-//     value for the given oid
-//
-
+/**
+ * Do SNMP SET for the given object id
+ * Syntax:
+ *    SNMPSet(transport, oid, value, [data_type])
+ * where:
+ *     transport - NXSL transport object
+ *		 oid - SNMP object id
+ *		 value - value to set
+ *		 data_type (optional)
+ * Return value:
+ *     value for the given oid
+ */
 static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	SNMP_PDU *request, *response;
@@ -1052,7 +1020,7 @@ static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **
  */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
-	{ _T("map"), F_map, 2 },
+	{ _T("map"), F_map, -1 },
 	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, 1 },
    { _T("GetConfigurationVariable"), F_GetConfigurationVariable, -1 },
    { _T("GetCustomAttribute"), F_GetCustomAttribute, 2 },

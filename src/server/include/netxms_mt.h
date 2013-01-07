@@ -65,7 +65,8 @@ public:
 	static MappingTable *createFromMessage(CSCPMessage *msg);
 	static MappingTable *createFromDatabase(LONG id);
 
-	bool saveToDatabase(DB_HANDLE hdb);
+	bool saveToDatabase();
+	bool deleteFromDatabase();
 	void fillMessage(CSCPMessage *msg);
 
 	void createUniqueId() { m_id = CreateUniqueId(IDG_MAPPING_TABLE); }

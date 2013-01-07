@@ -42,8 +42,8 @@ public class NXSLProposalProcessor implements IContentAssistProcessor
 	
 	private static final String[] BUILTIN_SYSTEM_VARIABLES = { "$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9" };
 	private static final String[] BUILTIN_FUNCTIONS = { "abs", "ceil", "classof", "d2x", "exit", "exp", "floor",
-		"format", "gmtime", "index", "left", "length", "localtime", "log", "log10", "lower", "ltrim", "max", "min", "pow",
-		"right", "rindex", "round", "rtrim", "sleep", "strftime", "substr", "time", "trace", "trim", "typeof", "upper",
+		"format", "gmtime", "index", "left", "length", "localtime", "log", "log10", "lower", "ltrim", "map", "max", "min",
+		"pow", "right", "rindex", "round", "rtrim", "sleep", "strftime", "substr", "time", "trace", "trim", "typeof", "upper",
 		"AddrInRange", "AddrInSubnet", "BindObject", "CreateContainer", "CreateSNMPTransport", "FindDCIByDescription",
 		"FindDCIByName", "FindNodeObject", "FindObject", "FindSituation", "GetAvgDCIValue", "GetConfigurationVariable",
 		"GetCustomAttribute", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName", "GetEventParameter",

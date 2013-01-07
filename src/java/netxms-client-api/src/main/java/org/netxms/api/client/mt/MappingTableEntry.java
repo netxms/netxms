@@ -77,4 +77,28 @@ public class MappingTableEntry
 	{
 		return description;
 	}
+
+	/**
+	 * @param key the key to set
+	 */
+	public final void setKey(String key)
+	{
+		this.key = key;
+	}
+
+	/**
+	 * @param value the value to set
+	 */
+	public final void setValue(String value)
+	{
+		this.value = value;
+	}
+
+	/**
+	 * @param description the description to set
+	 */
+	public final void setDescription(String description)
+	{
+		this.description = description;
+	}
 }

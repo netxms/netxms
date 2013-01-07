@@ -6329,6 +6329,17 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
+	 * @see org.netxms.api.client.Session#createMappingTable(java.lang.String, java.lang.String, int)
+	 */
+	@Override
+	public int createMappingTable(String name, String description, int flags) throws IOException, NetXMSClientException
+	{
+		MappingTable mt = new MappingTable(name, description);
+		mt.setFlags(flags);
+		return updateMappingTable(mt);
+	}
+
+	/* (non-Javadoc)
 	 * @see org.netxms.api.client.Session#updateMappingTable(org.netxms.api.client.mt.MappingTable)
 	 */
 	@Override

@@ -159,10 +159,15 @@ void MappingTable::fillMessage(CSCPMessage *msg)
 /**
  * Save mapping table to database
  */
-bool MappingTable::saveToDatabase(DB_HANDLE hdb)
+bool MappingTable::saveToDatabase()
 {
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 	if (!DBBegin(hdb))
+	{
+		DBConnectionPoolReleaseConnection(hdb);
 		return false;
+	}
 
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("mapping_tables"), _T("id"), (DWORD)m_id))
@@ -211,6 +216,7 @@ bool MappingTable::saveToDatabase(DB_HANDLE hdb)
 	DBFreeStatement(hStmt);
 
 	DBCommit(hdb);
+	DBConnectionPoolReleaseConnection(hdb);
 	return true;
 
 failure:
@@ -218,7 +224,52 @@ failure:
 
 failure2:
 	DBRollback(hdb);
+	DBConnectionPoolReleaseConnection(hdb);
 	return false;
+}
+
+/**
+ * Delete from database
+ */
+bool MappingTable::deleteFromDatabase()
+{
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+	if (!DBBegin(hdb))
+	{
+		DBConnectionPoolReleaseConnection(hdb);
+		return false;
+	}
+
+	BOOL success = FALSE;
+
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM mapping_tables WHERE id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+		success = DBExecute(hStmt);
+		DBFreeStatement(hStmt);
+	}
+
+	if (success)
+	{
+		success = FALSE;
+		DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM mapping_data WHERE table_id=?"));
+		if (hStmt != NULL)
+		{
+			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+			success = DBExecute(hStmt);
+			DBFreeStatement(hStmt);
+		}
+	}
+
+	if (success)
+		DBCommit(hdb);
+	else
+		DBRollback(hdb);
+
+	DBConnectionPoolReleaseConnection(hdb);
+	return success ? true : false;
 }
 
 /**
@@ -294,10 +345,17 @@ DWORD UpdateMappingTable(CSCPMessage *msg, LONG *newId)
 		{
 			if (s_mappingTables.get(i)->getId() == mt->getId())
 			{
-				s_mappingTables.set(i, mt);
-				*newId = mt->getId();
-				rcc = RCC_SUCCESS;
-				DbgPrintf(4, _T("Mapping table updated, name=\"%s\", id=%d"), mt->getName(), mt->getId());
+				if (mt->saveToDatabase())
+				{
+					s_mappingTables.set(i, mt);
+					*newId = mt->getId();
+					rcc = RCC_SUCCESS;
+					DbgPrintf(4, _T("Mapping table updated, name=\"%s\", id=%d"), mt->getName(), mt->getId());
+				}
+				else
+				{
+					rcc = RCC_DB_FAILURE;
+				}
 				break;
 			}
 		}
@@ -305,10 +363,17 @@ DWORD UpdateMappingTable(CSCPMessage *msg, LONG *newId)
 	else
 	{
 		mt->createUniqueId();
-		s_mappingTables.add(mt);
-		*newId = mt->getId();
-		rcc = RCC_SUCCESS;
-		DbgPrintf(4, _T("New mapping table added, name=\"%s\", id=%d"), mt->getName(), mt->getId());
+		if (mt->saveToDatabase())
+		{
+			s_mappingTables.add(mt);
+			*newId = mt->getId();
+			rcc = RCC_SUCCESS;
+			DbgPrintf(4, _T("New mapping table added, name=\"%s\", id=%d"), mt->getName(), mt->getId());
+		}
+		else
+		{
+			rcc = RCC_DB_FAILURE;
+		}
 	}
 
 	NOTIFICATION_DATA data;
@@ -341,11 +406,19 @@ DWORD DeleteMappingTable(LONG id)
 	RWLockWriteLock(s_mappingTablesLock, INFINITE);
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
-		if (s_mappingTables.get(i)->getId() == id)
+		MappingTable *mt = s_mappingTables.get(i);
+		if (mt->getId() == id)
 		{
-			s_mappingTables.remove(i);
-			rcc = RCC_SUCCESS;
-			DbgPrintf(4, _T("Mapping table deleted, id=%d"), id);
+			if (mt->deleteFromDatabase())
+			{
+				s_mappingTables.remove(i);
+				rcc = RCC_SUCCESS;
+				DbgPrintf(4, _T("Mapping table deleted, id=%d"), id);
+			}
+			else
+			{
+				rcc = RCC_DB_FAILURE;
+			}
 			break;
 		}
 	}
@@ -410,12 +483,15 @@ DWORD ListMappingTables(CSCPMessage *msg)
 
 /**
  * NXSL API: function map
- * Format: map(table, key)
- * Returns mapped value or null if table or key not found
+ * Format: map(table, key, [default])
+ * Returns: mapped value if key found; otherwise default value or null if default value is not provided
  * Table can be referenced by name or ID
  */
 int F_map(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
+	if ((argc < 2) || (argc > 3))
+		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
 	if (!argv[0]->isString() || !argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
@@ -431,7 +507,7 @@ int F_map(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
 			break;
 		}
 	}
-	*ppResult = (value != NULL) ? new NXSL_Value(value) : new NXSL_Value;
+	*ppResult = (value != NULL) ? new NXSL_Value(value) : ((argc == 3) ? new NXSL_Value(argv[2]) : new NXSL_Value);
 	RWLockUnlock(s_mappingTablesLock);
 
 	return 0;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -160,14 +160,13 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	 */
 	private void createActions()
 	{
-		actionSave = new Action("&Save") {
+		actionSave = new Action("&Save", SharedIcons.SAVE) {
 			@Override
 			public void run()
 			{
 				save();
 			}
 		};
-		actionSave.setImageDescriptor(SharedIcons.SAVE);
 	}
 	
 	/**

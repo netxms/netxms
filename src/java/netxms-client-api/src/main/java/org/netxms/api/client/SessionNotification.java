@@ -30,6 +30,8 @@ public class SessionNotification
 	public static final int NOTIFY_BASE = 1000;	// Base value for notifications used as subcode for NXC_EVENT_NOTIFICATION in C library
 	public static final int SERVER_SHUTDOWN = 1001;
 	public static final int DBCON_STATUS_CHANGED = 1010;
+	public static final int MAPPING_TABLE_UPDATED = 1019;
+	public static final int MAPPING_TABLE_DELETED = 1020;
 
 	public static final int CUSTOM_MESSAGE = 2000;
 	

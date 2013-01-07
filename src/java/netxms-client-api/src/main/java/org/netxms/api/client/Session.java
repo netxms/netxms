@@ -274,6 +274,18 @@ public interface Session
    public abstract MappingTable getMappingTable(int id) throws IOException, NetXMSClientException;
    
    /**
+    * Create new mapping table.
+    * 
+    * @param name name of new table
+    * @param description description for new table
+    * @param flags flags for new table
+    * @return ID of new table object
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
+    */
+   public abstract int createMappingTable(String name, String description, int flags) throws IOException, NetXMSClientException;
+
+   /**
     * Create or update mapping table. If table ID is 0, new table will be created on server.
     * 
     * @param table mapping table

@@ -76,7 +76,7 @@ BOOL MobileDevice::CreateFromDB(DWORD dwId)
 
    if (!loadCommonProperties())
    {
-      DbgPrintf(2, _T("Cannot load common properties for cluster object %d"), dwId);
+      DbgPrintf(2, _T("Cannot load common properties for mobile device object %d"), dwId);
       return FALSE;
    }
 
