@@ -18,14 +18,15 @@
 	- Improved Y-range adjustment in line charts
 	- Improved tooltips in line charts
 	- Custom logo can be set on login screen in web console
+	- Fixed performance and stability issues with image library
 - Android client:
 	- Select all/unselect all in alarms list
 	- Multipliers for graphs and last values: binary (power of two) and decimal (power of ten)
 	- Show number of pending alarms in home screen
 - API for creating embedded application agents
 - Initial (alpha) version of mobile agent for Android devices
-- Fixed issues: #23, #47, #49, #131, #162, #163, #172, #175, #177, #178, #180,
-                #186, #187, #188, #189, #192, #196
+- Fixed issues: #23, #47, #49, #131, #154, #162, #163, #172, #175, #177, #178,
+                #180, #186, #187, #188, #189, #192, #196
 
 
 *

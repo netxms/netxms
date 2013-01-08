@@ -44,7 +44,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.base.NXCommon;
@@ -634,7 +633,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	@Override
 	public void imageUpdated(final UUID guid)
 	{
-		PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+		getSite().getShell().getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run()
 			{

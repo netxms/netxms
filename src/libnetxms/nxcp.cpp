@@ -523,11 +523,9 @@ CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, DWORD dwId, 
    return pMsg;
 }
 
-
-//
-// Send file over CSCP
-//
-
+/**
+ * Send file over CSCP
+ */
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCHAR *pszFile,
                                            NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
@@ -649,11 +647,9 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCH
    return bResult;
 }
 
-
-//
-// Get version of NXCP used by peer
-//
-
+/**
+ * Get version of NXCP used by peer
+ */
 BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex)
 {
    CSCP_MESSAGE msg;

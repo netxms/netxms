@@ -22,7 +22,6 @@ import org.netxms.api.client.SessionNotification;
 
 /**
  * Client library notification
- *
  */
 public class NXCNotification extends SessionNotification
 {
@@ -59,8 +58,6 @@ public class NXCNotification extends SessionNotification
 	public static final int TRAP_CONFIGURATION_CREATED = 1016;
 	public static final int TRAP_CONFIGURATION_MODIFIED = 1017;
 	public static final int TRAP_CONFIGURATION_DELETED = 1018;
-	public static final int MAPPING_TABLE_UPDATED = 1019;
-	public static final int MAPPING_TABLE_DELETED = 1020;
 	public static final int IMAGE_UPDATED = 1021;
 	public static final int IMAGE_DELETED = 1022;
 

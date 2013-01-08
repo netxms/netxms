@@ -831,12 +831,10 @@ int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText)
    return -1;     // Invalid data type
 }
 
-
-//
-// Extended send() - send all data even if single call to send()
-// cannot handle them all
-//
-
+/**
+ * Extended send() - send all data even if single call to send()
+ * cannot handle them all
+ */
 int LIBNETXMS_EXPORTABLE SendEx(SOCKET nSocket, const void *pBuff, size_t nSize, int nFlags, MUTEX mutex)
 {
 	int nLeft = (int)nSize;
@@ -880,11 +878,9 @@ retry:
 	return nLeft == 0 ? (int)nSize : nRet;
 }
 
-
-//
-// Extended recv() - receive data with timeout
-//
-
+/**
+ * Extended recv() - receive data with timeout
+ */
 int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
                                 size_t nSize, int nFlags, DWORD dwTimeout)
 {

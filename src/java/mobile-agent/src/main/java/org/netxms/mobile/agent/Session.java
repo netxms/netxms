@@ -415,6 +415,13 @@ public class Session
 			{
 				connSocket.shutdownInput();
 				connSocket.shutdownOutput();
+			}
+			catch(IOException e)
+			{
+			}
+			
+			try
+			{
 				connSocket.close();
 			}
 			catch(IOException e)

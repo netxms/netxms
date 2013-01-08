@@ -616,6 +616,7 @@ public class ClientConnectorService extends Service
 				try
 				{
 					session.connect();
+					Log.d(TAG, "PushDataTask.doInBackground: connected");
 					statusNotification(ConnectionStatus.CS_CONNECTED, getString(R.string.notify_pushing_data));
 					if (firstConnection)
 					{
@@ -623,8 +624,9 @@ public class ClientConnectorService extends Service
 						firstConnection = false;
 					}
 					session.reportDeviceStatus(getInetAddress(), getGeoLocation(), getFlags(), getBatteryLevel());
-					if (Build.VERSION.SDK_INT > Build.VERSION_CODES.FROYO)
-						session.disconnect();
+					//if (Build.VERSION.SDK_INT > Build.VERSION_CODES.FROYO)
+					session.disconnect();
+					Log.d(TAG, "PushDataTask.doInBackground: data transfer completed");
 					connMsg = getString(R.string.notify_connected, server + ":" + port);
 					return true;
 				}

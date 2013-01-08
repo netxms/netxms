@@ -73,6 +73,48 @@ public class ImageLibraryTest extends SessionTest
 		session.disconnect();
 	}
 
+	public void testGetImageParallel() throws Exception
+	{
+		Runnable r = new Runnable() {
+			@Override
+			public void run()
+			{
+				try
+				{
+					final NXCSession session = connect();
+					System.out.println(Thread.currentThread().getName() + ": connected");
+	
+					final LibraryImage image = session.getImage(UUID.fromString("1ddb76a3-a05f-4a42-acda-22021768feaf")); // ATM
+					assertEquals("1ddb76a3-a05f-4a42-acda-22021768feaf", image.getGuid().toString());
+					assertEquals("ATM", image.getName());
+					assertEquals("Network Objects", image.getCategory());
+					assertEquals(true, image.isProtected());
+					assertEquals(true, image.isComplete());
+					assertEquals("image/png", image.getMimeType());
+					assertEquals(2718, image.getBinaryData().length);
+					System.out.println(Thread.currentThread().getName() + ": download " + image.getBinaryData().length);
+					
+					session.disconnect();
+					
+					System.out.println(Thread.currentThread().getName() + ": stopped");
+				}
+				catch(Exception e)
+				{
+					e.printStackTrace();
+				}
+			}
+		};
+	
+		Thread[] t = new Thread[16];
+		for(int i = 0; i < t.length; i++)
+		{
+			t[i] = new Thread(null, r, "Worker " + i);
+			t[i].start();
+		}
+		for(int i = 0; i < t.length; i++)
+			t[i].join();
+	}
+
 	public void testDeleteStockImage() throws Exception
 	{
 		final NXCSession session = connect();

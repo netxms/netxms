@@ -272,12 +272,20 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			{
 				if (fileName != null)
 				{
-					final long fileSize = new File(fileName).length();
-					final FileInputStream stream = new FileInputStream(fileName);
-					byte imageData[] = new byte[(int)fileSize];
-					stream.read(imageData);
-
-					image.setBinaryData(imageData);
+					FileInputStream stream = null;
+					try
+					{
+						final long fileSize = new File(fileName).length();
+						stream = new FileInputStream(fileName);
+						byte imageData[] = new byte[(int)fileSize];
+						stream.read(imageData);
+						image.setBinaryData(imageData);
+					}
+					finally
+					{
+						if (stream != null)
+							stream.close();
+					}
 				}
 
 				if (!image.isProtected())
@@ -334,13 +342,22 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 				final LibraryImage image = new LibraryImage();
 
 				final long fileSize = new File(fileName).length();
-				final FileInputStream stream = new FileInputStream(fileName);
-				byte imageData[] = new byte[(int)fileSize];
-				stream.read(imageData);
-
-				image.setBinaryData(imageData);
-				image.setName(name);
-				image.setCategory(category);
+				FileInputStream stream = null;
+				try
+				{
+					stream = new FileInputStream(fileName);
+					byte imageData[] = new byte[(int)fileSize];
+					stream.read(imageData);
+	
+					image.setBinaryData(imageData);
+					image.setName(name);
+					image.setCategory(category);
+				}
+				finally
+				{
+					if (stream != null)
+						stream.close();
+				}
 
 				session.createImage(image, new ProgressListener()
 				{

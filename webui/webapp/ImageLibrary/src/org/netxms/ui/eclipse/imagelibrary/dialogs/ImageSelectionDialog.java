@@ -226,7 +226,7 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 			}
 		}
 		// this.knownCategories = categories.keySet();
-
+		
 		gallery.removeAll();
 		for(String category : categories.keySet())
 		{

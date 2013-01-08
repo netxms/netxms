@@ -20,7 +20,6 @@ import org.netxms.api.client.images.LibraryImage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
-import org.netxms.ui.eclipse.imagelibrary.views.ImageLibrary;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 
 public class ImageProvider

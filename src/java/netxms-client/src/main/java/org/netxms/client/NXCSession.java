@@ -1446,6 +1446,15 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		{
 			try
 			{
+				connSocket.shutdownInput();
+				connSocket.shutdownOutput();
+			}
+			catch(IOException e)
+			{
+			}
+			
+			try
+			{
 				connSocket.close();
 			}
 			catch(IOException e)

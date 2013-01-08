@@ -258,11 +258,20 @@ public class ImageLibrary extends ViewPart
 			{
 				if (fileName != null)
 				{
-					final long fileSize = new File(fileName).length();
-					final FileInputStream stream = new FileInputStream(fileName);
-					byte imageData[] = new byte[(int)fileSize];
-					stream.read(imageData);
-					image.setBinaryData(imageData);
+					FileInputStream stream = null;
+					try
+					{
+						final long fileSize = new File(fileName).length();
+						stream = new FileInputStream(fileName);
+						byte imageData[] = new byte[(int)fileSize];
+						stream.read(imageData);
+						image.setBinaryData(imageData);
+					}
+					finally
+					{
+						if (stream != null)
+							stream.close();
+					}
 				}
 
 				if (!image.isProtected())
@@ -288,7 +297,8 @@ public class ImageLibrary extends ViewPart
 					}
 				});
 
-				ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
+				//ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
+				ImageProvider.getInstance().syncMetaData();
 				refreshImages();	/* TODO: update single element */                      
 				
 				monitor.done();
@@ -316,13 +326,22 @@ public class ImageLibrary extends ViewPart
 				final LibraryImage image = new LibraryImage();
 
 				final long fileSize = new File(fileName).length();
-				final FileInputStream stream = new FileInputStream(fileName);
-				byte imageData[] = new byte[(int)fileSize];
-				stream.read(imageData);
+				FileInputStream stream = null;
+				try
+				{
+					stream = new FileInputStream(fileName);
+					byte imageData[] = new byte[(int)fileSize];
+					stream.read(imageData);
 
-				image.setBinaryData(imageData);
-				image.setName(name);
-				image.setCategory(category);
+					image.setBinaryData(imageData);
+					image.setName(name);
+					image.setCategory(category);
+				}
+				finally
+				{
+					if (stream != null)
+						stream.close();
+				}
 
 				session.createImage(image, new ProgressListener() {
 					private long prevDone = 0;
@@ -341,7 +360,9 @@ public class ImageLibrary extends ViewPart
 					}
 				});
 				
-				ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
+				///ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
+				// TODO: check
+				ImageProvider.getInstance().syncMetaData();
 				refreshImages();	/* TODO: update local copy */
 
 				monitor.done();
