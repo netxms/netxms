@@ -405,6 +405,7 @@ private:
    DWORD m_dwFileRqId;
    DWORD m_dwUploadCommand;
    DWORD m_dwUploadData;
+   uuid_t m_uploadImageGuid;
    TCHAR m_szCurrFileName[MAX_PATH];
    DWORD m_dwRefCount;
    DWORD m_dwEncryptionRqId;

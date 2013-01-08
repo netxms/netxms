@@ -1347,27 +1347,31 @@ void ClientSession::respondToKeepalive(DWORD dwRqId)
 /**
  * Process received file
  */
+static void SendLibraryImageUpdate(ClientSession *pSession, void *pArg);
 void ClientSession::onFileUpload(BOOL bSuccess)
 {
-   // Do processing specific to command initiated file upload
-   switch(m_dwUploadCommand)
-   {
-      case CMD_INSTALL_PACKAGE:
-         if (!bSuccess)
-         {
-            TCHAR szQuery[256];
+  // Do processing specific to command initiated file upload
+  switch(m_dwUploadCommand)
+  {
+    case CMD_INSTALL_PACKAGE:
+      if (!bSuccess)
+      {
+        TCHAR szQuery[256];
 
-            _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%d"), m_dwUploadData);
-            DBQuery(g_hCoreDB, szQuery);
-         }
-         break;
-      default:
-         break;
-   }
+        _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%d"), m_dwUploadData);
+        DBQuery(g_hCoreDB, szQuery);
+      }
+      break;
+    case CMD_MODIFY_IMAGE:
+      EnumerateClientSessions(SendLibraryImageUpdate, (void *)&m_uploadImageGuid);
+      break;
+    default:
+      break;
+  }
 
-   // Remove received file in case of failure
-   if (!bSuccess)
-      _tunlink(m_szCurrFileName);
+  // Remove received file in case of failure
+  if (!bSuccess)
+    _tunlink(m_szCurrFileName);
 }
 
 /**
@@ -11053,7 +11057,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 						{
 							m_dwFileRqId = request->GetId();
 							m_dwUploadCommand = CMD_MODIFY_IMAGE;
-							m_dwUploadData = 0;
+              memcpy(m_uploadImageGuid, guid, UUID_LENGTH);
 						}
 						else
 						{
@@ -11089,7 +11093,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 
 	if (rcc == RCC_SUCCESS)
 	{
-		EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid);
+		//EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid);
 	}
 }
 
