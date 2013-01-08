@@ -36,15 +36,6 @@ public class LoginListener implements ConsoleLoginListener
 			{
 				final UUID guid = (UUID)n.getObject();
 				final ImageProvider imageProvider = ImageProvider.getInstance();
-				// TODO:remove
-				if (n.getSubCode() == NXCNotification.IMAGE_DELETED) {
-					System.out.println("LL Deleted image: " + guid);
-				}
-				else
-				{
-					System.out.println("LL Updated image: " + guid);
-				}
-				// TODO: remove-end
 				imageProvider.invalidateImage(guid, n.getSubCode() == NXCNotification.IMAGE_DELETED);
 			}
 		}

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
@@ -19,6 +20,8 @@ import org.netxms.api.client.images.LibraryImage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
+import org.netxms.ui.eclipse.imagelibrary.views.ImageLibrary;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 
 public class ImageProvider
 {
@@ -116,9 +119,24 @@ public class ImageProvider
 		else
 		{
 			image = missingImage;
+			cache.put(guid, image);
 			if (libraryIndex.containsKey(guid))
 			{
-				loadImageFromServer(guid);
+				new ConsoleJob("Load Image", null, Activator.PLUGIN_ID, null) {
+					
+					@Override
+					protected void runInternal(IProgressMonitor monitor) throws Exception
+					{
+						loadImageFromServer(guid);
+					}
+					
+					@Override
+					protected String getErrorMessage()
+					{
+						// TODO Auto-generated method stub
+						return null;
+					}
+				}.start();
 			}
 		}
 		return image;
@@ -130,23 +148,22 @@ public class ImageProvider
 		try
 		{
 			libraryImage = session.getImage(guid);
-			libraryIndex.put(guid, libraryImage); // replace existing half-loaded object w/o image data
+			//libraryIndex.put(guid, libraryImage); // replace existing half-loaded object w/o image data
 			final ByteArrayInputStream stream = new ByteArrayInputStream(libraryImage.getBinaryData());
 			try
 			{
 				cache.put(guid, new Image(display, stream));
+				notifySubscribers(guid);
 			}
 			catch(SWTException e)
 			{
 				Activator.logError("Cannot decode image", e);
 				cache.put(guid, missingImage);
 			}
-			notifySubscribers(guid);
 		}
 		catch(Exception e)
 		{
 			Activator.logError("Cannot retrive image from server", e);
-			cache.put(guid, missingImage);
 		}
 	}
 
@@ -180,10 +197,11 @@ public class ImageProvider
 	public void invalidateImage(UUID guid, boolean removed)
 	{
 		Image image = cache.get(guid);
-		if (image != null && image != missingImage) {
+		if (image != null && image != missingImage)
+		{
 			image.dispose();
-			cache.remove(guid);
 		}
+		cache.remove(guid);
 		if (removed)
 		{
 			libraryIndex.remove(guid);

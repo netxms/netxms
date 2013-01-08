@@ -700,7 +700,8 @@ void ClientSession::updateThread()
               }
               sendMessage(&msg);
               msg.DeleteAllVariables();
-              delete info;
+              free(info->guid);
+              free(info);
             }
             break;
          default:
@@ -10925,9 +10926,10 @@ void ClientSession::onLibraryImageChange(uuid_t *guid, bool removed)
   {
     pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
     pUpdate->dwCategory = INFO_CAT_LIBRARY_IMAGE;
-    LIBRARY_IMAGE_UPDATE_INFO *info = new LIBRARY_IMAGE_UPDATE_INFO;
+    LIBRARY_IMAGE_UPDATE_INFO *info = (LIBRARY_IMAGE_UPDATE_INFO *)malloc(sizeof(LIBRARY_IMAGE_UPDATE_INFO));
     info->guid = (uuid_t *)(nx_memdup(guid, UUID_LENGTH));
     info->removed = removed;
+    pUpdate->pData = info;
     m_pUpdateQueue->Put(pUpdate);
   }
 }

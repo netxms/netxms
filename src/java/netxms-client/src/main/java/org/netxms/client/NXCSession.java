@@ -815,7 +815,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			final UUID imageGuid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
 			final int flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
 			sendNotification(new NXCNotification(NXCNotification.IMAGE_LIBRARY_CHANGED, flags == 0 ? NXCNotification.IMAGE_UPDATED
-					: NXCNotification.IMAGE_UPDATED, imageGuid));
+					: NXCNotification.IMAGE_DELETED, imageGuid));
 		}
 	}
 
