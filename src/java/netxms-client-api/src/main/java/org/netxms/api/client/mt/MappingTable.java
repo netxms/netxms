@@ -19,7 +19,9 @@
 package org.netxms.api.client.mt;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
@@ -38,6 +40,7 @@ public class MappingTable
 	private String description;
 	private int flags;
 	private List<MappingTableEntry> data;
+	private Map<String, String> hashMap = null;
 	
 	/**
 	 * Create new empty mapping table with ID 0.
@@ -97,6 +100,27 @@ public class MappingTable
 			msg.setVariable(varId++, e.getDescription());
 			varId += 7;
 		}
+	}
+	
+	/**
+	 * @param key
+	 * @return
+	 */
+	public String lookup(String key)
+	{
+		if (hashMap == null)
+			buildHash();
+		return hashMap.get(key);
+	}
+	
+	/**
+	 * Build has for fast lookup
+	 */
+	public void buildHash()
+	{
+		hashMap = new HashMap<String, String>(data.size());
+		for(MappingTableEntry e : data)
+			hashMap.put(e.getKey(), e.getValue());
 	}
 
 	/**
