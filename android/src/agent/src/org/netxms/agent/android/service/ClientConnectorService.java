@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.regex.Pattern;
 
 import org.netxms.agent.android.R;
 import org.netxms.agent.android.helpers.SafeParser;
@@ -20,6 +21,8 @@ import org.netxms.base.Logger;
 import org.netxms.mobile.agent.MobileAgentException;
 import org.netxms.mobile.agent.Session;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -45,6 +48,7 @@ import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.util.Patterns;
 import android.widget.Toast;
 
 /**
@@ -404,11 +408,23 @@ public class ClientConnectorService extends Service
 	}
 
 	/**
-	 * Get device main Google account user. Still to be done!!!!
+	 * Get device main Google account user.
 	 */
 	public String getUser()
 	{
-		return Build.USER;
+		try
+		{
+			Pattern emailPattern = Patterns.EMAIL_ADDRESS; // API level 8+
+			Account[] accounts = AccountManager.get(getApplicationContext()).getAccounts();
+			for (Account account : accounts)
+				if (emailPattern.matcher(account.name).matches())
+					return account.name;
+		}
+		catch (Exception e)
+		{
+			Log.e(TAG, "Exception in getUser()", e);
+		}
+		return "";
 	}
 
 	/**
@@ -578,7 +594,6 @@ public class ClientConnectorService extends Service
 		private final String password;
 		private final boolean encrypt;
 		private String connMsg = "";
-		private Session session = null;
 
 		protected PushDataTask(String server, Integer port, String deviceId, String login, String password, boolean encrypt)
 		{
@@ -597,38 +612,31 @@ public class ClientConnectorService extends Service
 			statusNotification(ConnectionStatus.CS_INPROGRESS, "");
 			if (isInternetOn())
 			{
-				session = new Session(server, port, deviceId, login, password, encrypt);
-				if (session != null)
+				Session session = new Session(server, port, deviceId, login, password, encrypt);
+				try
 				{
-					try
+					session.connect();
+					statusNotification(ConnectionStatus.CS_CONNECTED, getString(R.string.notify_pushing_data));
+					if (firstConnection)
 					{
-						session.connect();
-						statusNotification(ConnectionStatus.CS_CONNECTED, getString(R.string.notify_pushing_data));
-						if (firstConnection)
-						{
-							session.reportDeviceSystemInfo(getManufacturer(), getModel(), getOSName(), getRelease(), getSerial(), getUser());
-							firstConnection = false;
-						}
-						session.reportDeviceStatus(getInetAddress(), getGeoLocation(), getFlags(), getBatteryLevel());
+						session.reportDeviceSystemInfo(getManufacturer(), getModel(), getOSName(), getRelease(), getSerial(), getUser());
+						firstConnection = false;
+					}
+					session.reportDeviceStatus(getInetAddress(), getGeoLocation(), getFlags(), getBatteryLevel());
+					if (Build.VERSION.SDK_INT > Build.VERSION_CODES.FROYO)
 						session.disconnect();
-						connMsg = getString(R.string.notify_connected, server + ":" + port);
-						return true;
-					}
-					catch (IOException e)
-					{
-						Log.e(TAG, "IOException while executing PushDataTask.doInBackground on connect", e);
-						connMsg = e.getLocalizedMessage();
-					}
-					catch (MobileAgentException e)
-					{
-						Log.e(TAG, "MobileAgentException while executing PushDataTask.doInBackground on connect", e);
-						connMsg = e.getLocalizedMessage();
-					}
+					connMsg = getString(R.string.notify_connected, server + ":" + port);
+					return true;
 				}
-				else
+				catch (IOException e)
 				{
-					Log.d(TAG, "PushDataTask.doInBackground: unable to instantiate new Session");
-					connMsg = getString(R.string.notify_allocation_error);
+					Log.e(TAG, "IOException while executing PushDataTask.doInBackground on connect", e);
+					connMsg = e.getLocalizedMessage();
+				}
+				catch (MobileAgentException e)
+				{
+					Log.e(TAG, "MobileAgentException while executing PushDataTask.doInBackground on connect", e);
+					connMsg = e.getLocalizedMessage();
 				}
 			}
 			else
