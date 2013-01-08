@@ -61,4 +61,7 @@
 	<string name="info_agent_status">%1$s, push every %2$s minutes, between %3$s</string>
 	<string name="info_agent_range">%1$s and %2$s</string>
 	<string name="info_agent_whole_day">whole day</string>
+	
+	<string name="info_device_id">Device ID: %1$s</string>
+	<string name="info_device_serial">Device Serial: %1$s</string>
 </resources>

@@ -65,6 +65,7 @@ public class HomeScreen extends AbstractClientActivity
 	{
 		super.onServiceConnected(name, binder);
 		service.registerHomeScreen(this);
+		showDeviceInfo();
 	}
 
 	/*
@@ -109,6 +110,7 @@ public class HomeScreen extends AbstractClientActivity
 	}
 
 	/**
+	 * Refresh device status info (agent status and schedules)
 	 */
 	@SuppressWarnings("deprecation")
 	public void refreshStatus()
@@ -148,6 +150,20 @@ public class HomeScreen extends AbstractClientActivity
 			nextConnText.setText(getString(R.string.info_next_connection_unscheduled));
 		}
 	}
+
+	/**
+	 * Refresh device status info (agent status and schedules)
+	 */
+	public void showDeviceInfo()
+	{
+		if (service != null)
+		{
+			((TextView)findViewById(R.id.Imei)).setText(getString(R.string.info_device_id, service.getDeviceId()));
+			if (service.getSerial().length() > 0)
+				((TextView)findViewById(R.id.Serial)).setText(getString(R.string.info_device_serial, service.getSerial()));
+		}
+	}
+
 	public void showToast(final String text)
 	{
 		new Handler(getMainLooper()).post(new Runnable()

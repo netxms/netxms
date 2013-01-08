@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Calendar;
 import java.util.Enumeration;
+
 import org.netxms.agent.android.R;
 import org.netxms.agent.android.helpers.SafeParser;
 import org.netxms.agent.android.main.activities.HomeScreen;
@@ -18,6 +19,7 @@ import org.netxms.base.GeoLocation;
 import org.netxms.base.Logger;
 import org.netxms.mobile.agent.MobileAgentException;
 import org.netxms.mobile.agent.Session;
+
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -369,9 +371,50 @@ public class ClientConnectorService extends Service
 	}
 
 	/**
-	 * Get IMEI number
+	 * Get device serial number
 	 */
-	private String getDeviceId()
+	@SuppressLint("NewApi")
+	public String getSerial()
+	{
+		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ? Build.SERIAL : "";
+	}
+
+	/**
+	 * Get device manufacturer
+	 */
+	public String getManufacturer()
+	{
+		return Build.MANUFACTURER;
+	}
+
+	/**
+	 * Get device model
+	 */
+	public String getModel()
+	{
+		return Build.MODEL;
+	}
+
+	/**
+	 * Get device OS relese
+	 */
+	public String getRelease()
+	{
+		return Build.VERSION.RELEASE;
+	}
+
+	/**
+	 * Get device main Google account user. Still to be done!!!!
+	 */
+	public String getUser()
+	{
+		return Build.USER;
+	}
+
+	/**
+	 * Get device id: IMEI number or Android ID for phoneless devices
+	 */
+	public String getDeviceId()
 	{
 		TelephonyManager tman = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
 		String id = (tman != null) ? tman.getDeviceId() : null;
@@ -385,9 +428,9 @@ public class ClientConnectorService extends Service
 	/**
 	 * Get OS nickname
 	 */
-	private String getOSName(int sdk)
+	public String getOSName()
 	{
-		switch (sdk)
+		switch (Build.VERSION.SDK_INT)
 		{
 			case Build.VERSION_CODES.BASE:
 				return "ANDROID (BASE)";
@@ -435,11 +478,11 @@ public class ClientConnectorService extends Service
 		try
 		{
 			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-			while(interfaces.hasMoreElements())
+			while (interfaces.hasMoreElements())
 			{
 				NetworkInterface iface = interfaces.nextElement();
 				Enumeration<InetAddress> addrList = iface.getInetAddresses();
-				while(addrList.hasMoreElements())
+				while (addrList.hasMoreElements())
 				{
 					InetAddress addr = addrList.nextElement();
 					if (!addr.isAnyLocalAddress() && !addr.isLinkLocalAddress() && !addr.isLoopbackAddress() && !addr.isMulticastAddress())
@@ -448,7 +491,7 @@ public class ClientConnectorService extends Service
 			}
 			return InetAddress.getLocalHost();
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			Log.e(TAG, "Exception in getInetAddress()", e);
 		}
@@ -547,7 +590,6 @@ public class ClientConnectorService extends Service
 			this.encrypt = encrypt;
 		}
 
-		@SuppressLint("NewApi")
 		@Override
 		protected Boolean doInBackground(Object... params)
 		{
@@ -564,11 +606,11 @@ public class ClientConnectorService extends Service
 						statusNotification(ConnectionStatus.CS_CONNECTED, getString(R.string.notify_pushing_data));
 						if (firstConnection)
 						{
-							String serial = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ? Build.SERIAL : "";
-							session.reportDeviceSystemInfo(Build.MANUFACTURER, Build.MODEL, getOSName(Build.VERSION.SDK_INT), Build.VERSION.RELEASE, serial, Build.USER);
+							session.reportDeviceSystemInfo(getManufacturer(), getModel(), getOSName(), getRelease(), getSerial(), getUser());
 							firstConnection = false;
 						}
 						session.reportDeviceStatus(getInetAddress(), getGeoLocation(), getFlags(), getBatteryLevel());
+						session.disconnect();
 						connMsg = getString(R.string.notify_connected, server + ":" + port);
 						return true;
 					}
@@ -603,7 +645,6 @@ public class ClientConnectorService extends Service
 			if (result == true)
 			{
 				Log.d(TAG, "PushDataTask.onPostExecute: disconnecting...");
-				session.disconnect();
 				statusNotification(ConnectionStatus.CS_DISCONNECTED, "");
 			}
 			else
