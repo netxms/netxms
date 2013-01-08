@@ -112,6 +112,15 @@ struct GRAPH_ACL_ENTRY
 };
 
 /**
+ *
+ */
+typedef struct
+{
+  uuid_t *guid;
+  bool removed;
+} LIBRARY_IMAGE_UPDATE_INFO;
+
+/**
  * Additional message processing thread starters
  */
 #define CALL_IN_NEW_THREAD(func, msg) \
@@ -676,13 +685,24 @@ void ClientSession::updateThread()
             MutexUnlock(m_mutexSendSituations);
             delete (CSCPMessage *)pUpdate->pData;
             break;
-			case INFO_CAT_LIBRARY_IMAGE:
-				msg.SetCode(CMD_IMAGE_LIBRARY_UPDATE);
-				msg.SetVariable(VID_GUID, (BYTE *)pUpdate->pData, UUID_LENGTH);
-				sendMessage(&msg);
-				msg.DeleteAllVariables();
-            free(pUpdate->pData);
-				break;
+         case INFO_CAT_LIBRARY_IMAGE:
+            {
+              LIBRARY_IMAGE_UPDATE_INFO *info = (LIBRARY_IMAGE_UPDATE_INFO *)pUpdate->pData;
+              msg.SetCode(CMD_IMAGE_LIBRARY_UPDATE);
+              msg.SetVariable(VID_GUID, (BYTE *)info->guid, UUID_LENGTH);
+              if (info->removed)
+              {
+                msg.SetVariable(VID_FLAGS, (DWORD)1);
+              }
+              else
+              {
+                msg.SetVariable(VID_FLAGS, (DWORD)0);
+              }
+              sendMessage(&msg);
+              msg.DeleteAllVariables();
+              delete info;
+            }
+            break;
          default:
             break;
       }
@@ -10897,17 +10917,19 @@ void ClientSession::sendLibraryImage(CSCPMessage *request)
 		sendFile(absFileName, request->GetId());
 }
 
-void ClientSession::onLibraryImageChange(uuid_t *guid)
+void ClientSession::onLibraryImageChange(uuid_t *guid, bool removed)
 {
-	UPDATE_INFO *pUpdate;
+  UPDATE_INFO *pUpdate;
 
-	if (guid != NULL && isAuthenticated())
-	{
-		pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-		pUpdate->dwCategory = INFO_CAT_LIBRARY_IMAGE;
-		pUpdate->pData = nx_memdup(guid, UUID_LENGTH);
-      m_pUpdateQueue->Put(pUpdate);
-		}
+  if (guid != NULL && isAuthenticated())
+  {
+    pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+    pUpdate->dwCategory = INFO_CAT_LIBRARY_IMAGE;
+    LIBRARY_IMAGE_UPDATE_INFO *info = new LIBRARY_IMAGE_UPDATE_INFO;
+    info->guid = (uuid_t *)(nx_memdup(guid, UUID_LENGTH));
+    info->removed = removed;
+    m_pUpdateQueue->Put(pUpdate);
+  }
 }
 
 
@@ -10917,7 +10939,12 @@ void ClientSession::onLibraryImageChange(uuid_t *guid)
 
 static void SendLibraryImageUpdate(ClientSession *pSession, void *pArg)
 {
-	pSession->onLibraryImageChange((uuid_t *)pArg);
+	pSession->onLibraryImageChange((uuid_t *)pArg, false);
+}
+
+static void SendLibraryImageDelete(ClientSession *pSession, void *pArg)
+{
+	pSession->onLibraryImageChange((uuid_t *)pArg, true);
 }
 
 
@@ -11123,7 +11150,7 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 
 	if (rcc == RCC_SUCCESS)
 	{
-		EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid);
+		EnumerateClientSessions(SendLibraryImageDelete, (void *)&guid);
 	}
 }
 

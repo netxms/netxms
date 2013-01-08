@@ -1,6 +1,5 @@
 package org.netxms.ui.eclipse.imagelibrary;
 
-import java.io.IOException;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -9,7 +8,6 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
@@ -34,34 +32,20 @@ public class LoginListener implements ConsoleLoginListener
 		@Override
 		public void notificationHandler(SessionNotification n)
 		{
-			if (n.getCode() == NXCNotification.IMAGE_LIBRARY_UPDATED)
+			if (n.getCode() == NXCNotification.IMAGE_LIBRARY_CHANGED)
 			{
 				final UUID guid = (UUID)n.getObject();
-				System.out.println("Updated image: " + guid);
-				// final ImageProvider imageProvider = ImageProvider.getInstance();
-				// imageProvider.invalidateImage(session, guid);
-
-				new Thread()
+				final ImageProvider imageProvider = ImageProvider.getInstance();
+				// TODO:remove
+				if (n.getSubCode() == NXCNotification.IMAGE_DELETED) {
+					System.out.println("LL Deleted image: " + guid);
+				}
+				else
 				{
-					@Override
-					public void run()
-					{
-						try
-						{
-							ImageProvider.getInstance().syncMetaData(session, display);
-						}
-						catch(NXCException e)
-						{
-							// FIXME
-							e.printStackTrace();
-						}
-						catch(IOException e)
-						{
-							// FIXME
-							e.printStackTrace();
-						}
-					}
-				}.start();
+					System.out.println("LL Updated image: " + guid);
+				}
+				// TODO: remove-end
+				imageProvider.invalidateImage(guid, n.getSubCode() == NXCNotification.IMAGE_DELETED);
 			}
 		}
 	}
@@ -69,15 +53,14 @@ public class LoginListener implements ConsoleLoginListener
 	@Override
 	public void afterLogin(final NXCSession session, final Display display)
 	{
-		ImageProvider.createInstance(display);
-		Job job = new Job("Initialize image library")
-		{
+		ImageProvider.createInstance(display, session);
+		Job job = new Job("Initialize image library") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
 				try
 				{
-					ImageProvider.getInstance().syncMetaData(session, display);
+					ImageProvider.getInstance().syncMetaData();
 					session.addListener(new ImageLibraryListener(display, session));
 				}
 				catch(Exception e)

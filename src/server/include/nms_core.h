@@ -265,6 +265,7 @@ typedef struct
    void *pData;         // Pointer to data block
 } UPDATE_INFO;
 
+
 /**
  * Extended agent connection
  */
@@ -680,8 +681,8 @@ public:
    void onUserDBUpdate(int code, DWORD id, UserDatabaseObject *user);
    void onAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
    void onActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction);
-	void onSituationChange(CSCPMessage *msg);
-	void onLibraryImageChange(uuid_t *guid);
+   void onSituationChange(CSCPMessage *msg);
+   void onLibraryImageChange(uuid_t *guid, bool removed = false);
 };
 
 /**

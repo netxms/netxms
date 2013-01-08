@@ -443,7 +443,7 @@ typedef struct
 #define CMD_CHANGE_ZONE                0x00FD
 #define CMD_GET_AGENT_FILE             0x00FE
 #define CMD_GET_FILE_DETAILS           0x00FF
-#define CMD_IMAGE_LIBRARY_UPDATE			0x0100
+#define CMD_IMAGE_LIBRARY_UPDATE       0x0100
 #define CMD_GET_NODE_COMPONENTS        0x0101
 #define CMD_UPDATE_ALARM_NOTE          0x0102
 #define CMD_GET_ALARM                  0x0103

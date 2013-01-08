@@ -2,6 +2,7 @@ package org.netxms.ui.eclipse.imagelibrary.shared;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,11 +26,11 @@ public class ImageProvider
 
 	private static final Map<UUID, Image> cache = Collections.synchronizedMap(new HashMap<UUID, Image>());
 	private static final Map<UUID, LibraryImage> libraryIndex = Collections.synchronizedMap(new HashMap<UUID, LibraryImage>());
-	
-	public static void createInstance(Display display)
+
+	public static void createInstance(Display display, NXCSession session)
 	{
 		if (instance == null)
-			instance = new ImageProvider(display);
+			instance = new ImageProvider(display, session);
 	}
 
 	/**
@@ -43,13 +44,16 @@ public class ImageProvider
 	private final Image missingImage;
 	private final Set<ImageUpdateListener> updateListeners;
 
-	private List<LibraryImage> imageLibrary;
+	private NXCSession session;
+	private Display display;
 
 	/**
 	 * 
 	 */
-	private ImageProvider(Display display)
+	private ImageProvider(Display display, NXCSession session)
 	{
+		this.display = display;
+		this.session = session;
 		final ImageDescriptor imageDescriptor = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/missing.png");
 		missingImage = imageDescriptor.createImage(display);
 		updateListeners = new HashSet<ImageUpdateListener>();
@@ -75,40 +79,27 @@ public class ImageProvider
 	 * @throws NXCException
 	 * @throws IOException
 	 */
-	public void syncMetaData(final NXCSession session, final Display display) throws NXCException, IOException
+	public void syncMetaData() throws NXCException, IOException
 	{
-		imageLibrary = session.getImageLibrary();
+		List<LibraryImage> imageLibrary = session.getImageLibrary();
+		libraryIndex.clear();
+		clearCache();
 		for(final LibraryImage libraryImage : imageLibrary)
 		{
 			libraryIndex.put(libraryImage.getGuid(), libraryImage);
-			if (!libraryImage.isComplete())
-			{
-				try
-				{
-					final LibraryImage completeLibraryImage = session.getImage(libraryImage.getGuid());
-					final ByteArrayInputStream stream = new ByteArrayInputStream(completeLibraryImage.getBinaryData());
-					try
-					{
-						final Image image = new Image(display, stream);
-						cache.put(completeLibraryImage.getGuid(), image);
-					}
-					catch(SWTException e)
-					{
-						Activator.logError("Exception in ImageProvider.syncMetaData()", e);
-						cache.put(completeLibraryImage.getGuid(), missingImage);
-					}
+		}
+	}
 
-					for(final ImageUpdateListener listener : updateListeners)
-					{
-						listener.imageUpdated(completeLibraryImage.getGuid());
-					}
-				}
-				catch(Exception e)
-				{
-					Activator.logError("Exception in ImageProvider.syncMetaData()", e);
-				}
+	private void clearCache()
+	{
+		for(Image image : cache.values())
+		{
+			if (image != missingImage)
+			{
+				image.dispose();
 			}
 		}
+		cache.clear();
 	}
 
 	/**
@@ -125,17 +116,53 @@ public class ImageProvider
 		else
 		{
 			image = missingImage;
+			if (libraryIndex.containsKey(guid))
+			{
+				loadImageFromServer(guid);
+			}
 		}
 		return image;
+	}
+
+	private void loadImageFromServer(final UUID guid)
+	{
+		LibraryImage libraryImage;
+		try
+		{
+			libraryImage = session.getImage(guid);
+			libraryIndex.put(guid, libraryImage); // replace existing half-loaded object w/o image data
+			final ByteArrayInputStream stream = new ByteArrayInputStream(libraryImage.getBinaryData());
+			try
+			{
+				cache.put(guid, new Image(display, stream));
+			}
+			catch(SWTException e)
+			{
+				Activator.logError("Cannot decode image", e);
+				cache.put(guid, missingImage);
+			}
+			notifySubscribers(guid);
+		}
+		catch(Exception e)
+		{
+			Activator.logError("Cannot retrive image from server", e);
+			cache.put(guid, missingImage);
+		}
+	}
+
+	private void notifySubscribers(final UUID guid)
+	{
+		for(final ImageUpdateListener listener : updateListeners)
+		{
+			listener.imageUpdated(guid);
+		}
 	}
 
 	/**
 	 * Get image library object
 	 * 
-	 * @param guid
-	 *           image GUID
-	 * @return image library element or null if there are no image with given
-	 *         GUID
+	 * @param guid image GUID
+	 * @return image library element or null if there are no image with given GUID
 	 */
 	public LibraryImage getLibraryImageObject(final UUID guid)
 	{
@@ -147,6 +174,20 @@ public class ImageProvider
 	 */
 	public List<LibraryImage> getImageLibrary()
 	{
-		return imageLibrary;
+		return new ArrayList<LibraryImage>(libraryIndex.values());
+	}
+
+	public void invalidateImage(UUID guid, boolean removed)
+	{
+		Image image = cache.get(guid);
+		if (image != null && image != missingImage) {
+			image.dispose();
+			cache.remove(guid);
+		}
+		if (removed)
+		{
+			libraryIndex.remove(guid);
+		}
+		notifySubscribers(guid);
 	}
 }

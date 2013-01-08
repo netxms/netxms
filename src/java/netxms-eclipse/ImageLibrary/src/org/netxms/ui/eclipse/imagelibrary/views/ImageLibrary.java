@@ -304,7 +304,8 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					}
 				});
 
-				ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
+				//ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
+				ImageProvider.getInstance().syncMetaData();
 				refreshImages(); /* TODO: update single element */
 
 				monitor.done();
@@ -359,7 +360,9 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					}
 				});
 
-				ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
+				///ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
+				// TODO: check
+				ImageProvider.getInstance().syncMetaData();
 				refreshImages(); /* TODO: update local copy */
 
 				monitor.done();

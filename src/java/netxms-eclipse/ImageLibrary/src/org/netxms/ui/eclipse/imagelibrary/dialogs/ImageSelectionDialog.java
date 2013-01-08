@@ -128,7 +128,7 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		gallery.addMouseListener(this);
 		ImageProvider.getInstance().addUpdateListener(this);
 
-		refreshImages();
+		//refreshImages();
 
 		return dialogArea;
 	}
@@ -212,7 +212,7 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 			}
 		}
 		// this.knownCategories = categories.keySet();
-
+		
 		gallery.removeAll();
 		for(String category : categories.keySet())
 		{
