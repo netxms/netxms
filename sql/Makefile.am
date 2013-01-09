@@ -66,4 +66,5 @@ clean:
 
 EXTRA_DIST = \
 	$(sql_DATA) \
-	$(SOURCE)
+	$(SOURCE) \
+	change-ansi-event_log.sql

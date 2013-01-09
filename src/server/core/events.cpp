@@ -22,30 +22,24 @@
 
 #include "nxcore.h"
 
-
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 Queue *g_pEventQueue = NULL;
 EventPolicy *g_pEventPolicy = NULL;
 const TCHAR *g_szStatusText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL"), _T("UNKNOWN"), _T("UNMANAGED"), _T("DISABLED"), _T("TESTING") };
 const TCHAR *g_szStatusTextSmall[] = { _T("Normal"), _T("Warning"), _T("Minor"), _T("Major"), _T("Critical"), _T("Unknown"), _T("Unmanaged"), _T("Disabled"), _T("Testing") };
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static DWORD m_dwNumTemplates = 0;
 static EVENT_TEMPLATE *m_pEventTemplates = NULL;
 static RWLOCK m_rwlockTemplateAccess;
 
-
-//
-// Default constructor for event
-//
-
+/**
+ * Default constructor for event
+ */
 Event::Event()
 {
    m_qwId = 0;
@@ -988,12 +982,10 @@ EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName)
    return p;
 }
 
-
-//
-// Translate event name to code
-// If event with given name does not exist, returns supplied default value
-//
-
+/**
+ * Translate event name to code
+ * If event with given name does not exist, returns supplied default value
+ */
 DWORD EventCodeFromName(const TCHAR *name, DWORD defaultValue)
 {
 	EVENT_TEMPLATE *p = FindEventTemplateByName(name);

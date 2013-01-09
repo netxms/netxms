@@ -453,35 +453,53 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 
 	Node *node = (Node *)object->getData();
 
-	// Validate secod argument - event code
-	if (!argv[1]->isInteger())
-		return NXSL_ERR_NOT_INTEGER;
+	// Event code
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
 
-	// User tag
-	const TCHAR *userTag = NULL;
-	if (argc > 2)
+	DWORD eventCode = 0;
+	if (argv[1]->isInteger())
 	{
-		if (!argv[2]->isString())
-			return NXSL_ERR_NOT_STRING;
-		userTag = argv[2]->getValueAsCString();
+		eventCode = argv[1]->getValueAsUInt32();
+	}
+	else
+	{
+		eventCode = EventCodeFromName(argv[1]->getValueAsCString(), 0);
 	}
 
-	// Post event
-	char format[] = "ssssssssssssssssssssssssssssssss";
-	const TCHAR *plist[32];
-	int eargc = 0;
-	for(int i = 3; (i < argc) && (eargc < 32); i++)
-		plist[eargc++] = argv[i]->getValueAsCString();
-	format[eargc] = 0;
-	BOOL success = PostEventWithTag(argv[1]->getValueAsUInt32(), node->Id(), userTag, format,
-	                                plist[0], plist[1], plist[2], plist[3],
-	                                plist[4], plist[5], plist[6], plist[7],
-	                                plist[8], plist[9], plist[10], plist[11],
-	                                plist[12], plist[13], plist[14], plist[15],
-	                                plist[16], plist[17], plist[18], plist[19],
-	                                plist[20], plist[21], plist[22], plist[23],
-	                                plist[24], plist[25], plist[26], plist[27],
-	                                plist[28], plist[29], plist[30], plist[31]);
+	BOOL success;
+	if (eventCode > 0)
+	{
+		// User tag
+		const TCHAR *userTag = NULL;
+		if ((argc > 2) && !argv[2]->isNull())
+		{
+			if (!argv[2]->isString())
+				return NXSL_ERR_NOT_STRING;
+			userTag = argv[2]->getValueAsCString();
+		}
+
+		// Post event
+		char format[] = "ssssssssssssssssssssssssssssssss";
+		const TCHAR *plist[32];
+		int eargc = 0;
+		for(int i = 3; (i < argc) && (eargc < 32); i++)
+			plist[eargc++] = argv[i]->getValueAsCString();
+		format[eargc] = 0;
+		success = PostEventWithTag(eventCode, node->Id(), userTag, format,
+		                           plist[0], plist[1], plist[2], plist[3],
+		                           plist[4], plist[5], plist[6], plist[7],
+		                           plist[8], plist[9], plist[10], plist[11],
+		                           plist[12], plist[13], plist[14], plist[15],
+		                           plist[16], plist[17], plist[18], plist[19],
+		                           plist[20], plist[21], plist[22], plist[23],
+		                           plist[24], plist[25], plist[26], plist[27],
+		                           plist[28], plist[29], plist[30], plist[31]);
+	}
+	else
+	{
+		success = FALSE;
+	}
 
 	*ppResult = new NXSL_Value((LONG)success);
 	return 0;

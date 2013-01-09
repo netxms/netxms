@@ -4702,11 +4702,9 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Resolve/Terminate alarm
-//
-
+/**
+ * Resolve/Terminate alarm
+ */
 void ClientSession::resolveAlarm(CSCPMessage *pRequest, bool terminate)
 {
    CSCPMessage msg;
