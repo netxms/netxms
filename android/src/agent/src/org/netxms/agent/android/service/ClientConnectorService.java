@@ -624,7 +624,6 @@ public class ClientConnectorService extends Service
 						firstConnection = false;
 					}
 					session.reportDeviceStatus(getInetAddress(), getGeoLocation(), getFlags(), getBatteryLevel());
-					//if (Build.VERSION.SDK_INT > Build.VERSION_CODES.FROYO)
 					session.disconnect();
 					Log.d(TAG, "PushDataTask.doInBackground: data transfer completed");
 					connMsg = getString(R.string.notify_connected, server + ":" + port);

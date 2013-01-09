@@ -1,7 +1,7 @@
 ; Installation script for NetXMS WebUI / Windows
 
 #include "setup-webui.iss"
-OutputBaseFilename=netxms-webui-1.2.4
+OutputBaseFilename=netxms-webui-1.2.5
 
 [Files]
 Source: files\jre\*; DestDir: "{app}\bin\jre"; BeforeInstall: StopAllServices; Flags: ignoreversion recursesubdirs; Components: jre
