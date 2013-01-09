@@ -189,10 +189,9 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 	return 0;
 }
 
-//
-// Get min, max or average of DCI values for a period
-//
-
+/**
+ * Get min, max or average of DCI values for a period
+ */
 typedef enum { DCI_MIN, DCI_MAX, DCI_AVG } DciSqlFunc_t;
 
 static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program, DciSqlFunc_t sqlFunc)
@@ -227,6 +226,12 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 			_sntprintf(query, 1024, _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u ")
 				_T("WHERE item_id=? and idata_timestamp between ? and ?"), 
 				sqlFunc == DCI_MAX ? _T("max"): (sqlFunc == DCI_MIN ? _T("min") : _T("avg")), node->Id());
+		}
+		else if (g_nDBSyntax == DB_SYNTAX_PGSQL)
+		{
+			_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value::double precision,0)) FROM idata_%u ")
+				_T("WHERE item_id=? and idata_timestamp between ? and ?"), 
+				sqlFunc == DCI_MAX ? _T("max"): (sqlFunc == DCI_MIN ? _T("min") : _T("avg")),	node->Id());
 		}
 		else
 		{
@@ -268,37 +273,33 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	return 0;
 }
 
-//
-// Get min of DCI values for a period
-//
-
+/**
+ * Get min of DCI values for a period
+ */
 static int F_GetMinDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	return F_GetDCIValueStat(argc, argv, ppResult, program, DCI_MIN);
 }
 
-//
-// Get max of DCI values for a period
-//
-
+/**
+ * Get max of DCI values for a period
+ */
 static int F_GetMaxDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	return F_GetDCIValueStat(argc, argv, ppResult, program, DCI_MAX);
 }
 
-//
-// Get average of DCI values for a period
-//
-
+/**
+ * Get average of DCI values for a period
+ */
 static int F_GetAvgDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	return F_GetDCIValueStat(argc, argv, ppResult, program, DCI_AVG);
 }
 
-//
-// Additional functions or use within transformation scripts
-//
-
+/**
+ * Additional functions or use within transformation scripts
+ */
 static NXSL_ExtFunction m_nxslDCIFunctions[] =
 {
    { _T("FindDCIByName"), F_FindDCIByName, 2 },
@@ -317,11 +318,9 @@ void RegisterDCIFunctions(NXSL_Environment *pEnv)
 	pEnv->registerFunctionSet(sizeof(m_nxslDCIFunctions) / sizeof(NXSL_ExtFunction), m_nxslDCIFunctions);
 }
 
-
-//
-// Default constructor for DCItem
-//
-
+/**
+ * Default constructor for DCItem
+ */
 DCItem::DCItem() : DCObject()
 {
    m_dwNumThresholds = 0;
@@ -341,11 +340,9 @@ DCItem::DCItem() : DCObject()
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
 }
 
-
-//
-// Create DCItem from another DCItem
-//
-
+/**
+ * Create DCItem from another DCItem
+ */
 DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
 {
    DWORD i;
@@ -375,16 +372,14 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
    }
 }
 
-
-//
-// Constructor for creating DCItem from database
-// Assumes that fields in SELECT query are in following order:
-//    item_id,name,source,datatype,polling_interval,retention_time,status,
-//    delta_calculation,transformation,template_id,description,instance,
-//    template_item_id,flags,resource_id,proxy_node,base_units,unit_multiplier,
-//    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type
-//
-
+/**
+ * Constructor for creating DCItem from database
+ * Assumes that fields in SELECT query are in following order:
+ *    item_id,name,source,datatype,polling_interval,retention_time,status,
+ *    delta_calculation,transformation,template_id,description,instance,
+ *    template_item_id,flags,resource_id,proxy_node,base_units,unit_multiplier,
+ *    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type
+ */
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
