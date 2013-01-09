@@ -107,16 +107,17 @@ static void CpuUsageCollector()
 		uint64_t iowaitDelta, irqDelta, softirqDelta, stealDelta;
 		uint64_t guestDelta;
 
-		// TODO: handle overflow
-		userDelta = user - m_user[cpu];
-		niceDelta = nice - m_nice[cpu];
-		systemDelta = system - m_system[cpu];
-		idleDelta = idle - m_idle[cpu];
-		iowaitDelta = iowait - m_iowait[cpu];
-		irqDelta = irq - m_irq[cpu];
-		softirqDelta = softirq - m_softirq[cpu];
-		stealDelta = steal - m_steal[cpu]; // steal=time spent in virtualization stuff (xen).
-		guestDelta = guest - m_guest[cpu]; //
+#define DELTA(x, y) (((x) > (y)) ? ((x) - (y)) : 1)
+		userDelta = DELTA(user, m_user[cpu]);
+		niceDelta = DELTA(nice, m_nice[cpu]);
+		systemDelta = DELTA(system, m_system[cpu]);
+		idleDelta = DELTA(idle, m_idle[cpu]);
+		iowaitDelta = DELTA(iowait, m_iowait[cpu]);
+		irqDelta = DELTA(irq, m_irq[cpu]);
+		softirqDelta = DELTA(softirq, m_softirq[cpu]);
+		stealDelta = DELTA(steal, m_steal[cpu]); // steal=time spent in virtualization stuff (xen).
+		guestDelta = DELTA(guest, m_guest[cpu]); //
+#undef DELTA
 
 		uint64_t totalDelta = userDelta + niceDelta + systemDelta + idleDelta + iowaitDelta + irqDelta + softirqDelta + stealDelta + guestDelta;
 
