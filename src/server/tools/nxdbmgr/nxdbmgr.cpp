@@ -392,7 +392,6 @@ BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TC
    if (DBGetNumRows(hResult) > 0)
    {
       DBGetField(hResult, 0, 0, pszBuffer, iBufSize);
-      DecodeSQLString(pszBuffer);
       bSuccess = TRUE;
    }
 
@@ -465,7 +464,6 @@ BOOL ValidateDatabase()
       if (DBGetNumRows(hResult) > 0)
       {
          DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
-         DecodeSQLString(szLockStatus);
          bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
       }
       DBFreeResult(hResult);
@@ -478,7 +476,6 @@ BOOL ValidateDatabase()
             if (DBGetNumRows(hResult) > 0)
             {
                DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
-               DecodeSQLString(szLockInfo);
             }
             DBFreeResult(hResult);
          }

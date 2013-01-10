@@ -50,7 +50,7 @@ static BOOL CreateTable(const TCHAR *pszQuery)
 BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
                        int iVisible, int iNeedRestart, BOOL bForceUpdate)
 {
-   TCHAR szQuery[1024], *pszEscValue;
+   TCHAR szQuery[1024];
    DB_RESULT hResult;
    BOOL bVarExist = FALSE, bResult = TRUE;
 
@@ -66,19 +66,16 @@ BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
 
    if (!bVarExist)
    {
-      pszEscValue = EncodeSQLString(pszValue);
       _sntprintf(szQuery, 1024, _T("INSERT INTO config (var_name,var_value,is_visible,")
-                                _T("need_server_restart) VALUES ('%s','%s',%d,%d)"), 
-                pszName, pszEscValue, iVisible, iNeedRestart);
-      free(pszEscValue);
+                                _T("need_server_restart) VALUES (%s,%s,%d,%d)"), 
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, pszName, 63), 
+					  (const TCHAR *)DBPrepareString(g_hCoreDB, pszValue, 255), iVisible, iNeedRestart);
       bResult = SQLQuery(szQuery);
    }
 	else if (bForceUpdate)
 	{
-      pszEscValue = EncodeSQLString(pszValue);
-      _sntprintf(szQuery, 1024, _T("UPDATE config SET var_value='%s' WHERE var_name='%s'"),
-                pszEscValue, pszName);
-      free(pszEscValue);
+      _sntprintf(szQuery, 1024, _T("UPDATE config SET var_value=%s WHERE var_name=%s"),
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, pszValue, 255), (const TCHAR *)DBPrepareString(g_hCoreDB, pszName, 63));
       bResult = SQLQuery(szQuery);
 	}
    return bResult;

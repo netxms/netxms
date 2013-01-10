@@ -151,51 +151,57 @@ static BOOL DBQueryEx(DB_HANDLE hConn, TCHAR *pszQuery)
 }
 
 
-//
-// Write string value to configuration table
-//
-
-static BOOL WriteConfigStr(DB_HANDLE hConn, TCHAR *pszVar, TCHAR *pszValue,
-                           BOOL bIsVisible, BOOL bNeedRestart)
+/**
+ * Write string value to configuration table
+ */
+BOOL WriteConfigStr(DB_HANDLE hConn, const TCHAR *varName, const TCHAR *value, BOOL isVisible, BOOL needRestart)
 {
-   DB_RESULT hResult;
-   TCHAR *pszEscValue, szQuery[1024];
-   BOOL bVarExist = FALSE;
-
-   if (_tcslen(pszVar) > 127)
+   if (_tcslen(varName) > 63)
       return FALSE;
 
    // Check for variable existence
-   _sntprintf(szQuery, 1024, _T("SELECT var_value FROM config WHERE var_name='%s'"), pszVar);
-   hResult = DBSelect(hConn, szQuery);
-   if (hResult != 0)
+	DB_STATEMENT hStmt = DBPrepare(hConn, _T("SELECT var_value FROM config WHERE var_name=?"));
+	if (hStmt == NULL)
+		return FALSE;
+	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
+	DB_RESULT hResult = DBSelectPrepared(hStmt);
+   BOOL bVarExist = FALSE;
+   if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
          bVarExist = TRUE;
       DBFreeResult(hResult);
    }
+	DBFreeStatement(hStmt);
 
    // Create or update variable value
-   pszEscValue = EncodeSQLString(pszValue);
    if (bVarExist)
-      _sntprintf(szQuery, 1024, 
-                 _T("UPDATE config SET var_value='%s' WHERE var_name='%s'"),
-                 pszEscValue, pszVar);
+	{
+		hStmt = DBPrepare(hConn, _T("UPDATE config SET var_value=? WHERE var_name=?"));
+		if (hStmt == NULL)
+			return FALSE;
+		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
+	}
    else
-      _sntprintf(szQuery, 1024, 
-                 _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('%s','%s',%d,%d)"),
-                 pszVar, pszEscValue, bIsVisible, bNeedRestart);
-   free(pszEscValue);
-   return DBQueryEx(hConn, szQuery);
+	{
+		hStmt = DBPrepare(hConn, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (?,?,?,?)"));
+		if (hStmt == NULL)
+			return FALSE;
+		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(isVisible ? 1 : 0));
+		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(needRestart ? 1 : 0));
+	}
+   BOOL success = DBExecute(hStmt);
+	DBFreeStatement(hStmt);
+	return success;
 }
 
-
-//
-// Write integer value to configuration table
-//
-
-static BOOL WriteConfigInt(DB_HANDLE hConn, TCHAR *pszVar, int iValue,
-                           BOOL bIsVisible, BOOL bNeedRestart)
+/**
+ * Write integer value to configuration table
+ */
+static BOOL WriteConfigInt(DB_HANDLE hConn, TCHAR *pszVar, int iValue, BOOL bIsVisible, BOOL bNeedRestart)
 {
    TCHAR szBuffer[64];
 
@@ -203,11 +209,9 @@ static BOOL WriteConfigInt(DB_HANDLE hConn, TCHAR *pszVar, int iValue,
    return WriteConfigStr(hConn, pszVar, szBuffer, bIsVisible, bNeedRestart);
 }
 
-
-//
-// Write unsigned long value to configuration table
-//
-
+/**
+ * Write unsigned long value to configuration table
+ */
 static BOOL WriteConfigULong(DB_HANDLE hConn, TCHAR *pszVar, DWORD dwValue,
                              BOOL bIsVisible, BOOL bNeedRestart)
 {
