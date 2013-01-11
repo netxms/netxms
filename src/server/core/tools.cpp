@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,11 +30,9 @@
 # endif
 #endif
 
-
-//
-// Get system information string
-//
-
+/**
+ * Get system information string
+ */
 void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize)
 {
 #ifdef _WIN32
@@ -69,11 +67,9 @@ void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize)
 #endif
 }
 
-
-//
-// Get hostname for local machine
-//
-
+/**
+ * Get hostname for local machine
+ */
 TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize)
 {
 #ifdef _WIN32
@@ -128,11 +124,9 @@ DWORD GetLocalIpAddr()
    return dwAddr;
 }
 
-
-//
-// Execute external command
-//
-
+/**
+ * Execute external command
+ */
 BOOL ExecCommand(TCHAR *pszCommand)
 {
    BOOL bSuccess = TRUE;

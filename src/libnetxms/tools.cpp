@@ -1764,11 +1764,9 @@ INT64 LIBNETXMS_EXPORTABLE GetProcessRSS()
 
 #endif
 
-
-//
-// Write to terminal with support for ANSI color codes
-//
-
+/**
+ * Apply terminal attributes to console - Win32 API specific
+ */
 #ifdef _WIN32
 
 #define BG_MASK 0xF0
@@ -1845,6 +1843,9 @@ static WORD ApplyTerminalAttribute(HANDLE out, WORD currAttr, long code)
 
 #endif
 
+/**
+ * Write to terminal with support for ANSI color codes
+ */
 void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 {
 #ifdef _WIN32
@@ -1917,6 +1918,9 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 #endif
 }
 
+/**
+ * Write to terminal with support for ANSI color codes
+ */
 void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
 {
 	TCHAR buffer[8192];
@@ -1928,14 +1932,12 @@ void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
 	WriteToTerminal(buffer);
 }
 
-
-//
-// RefCountObject implementation
-//
-// Auxilliary class for objects which counts references and
-// destroys itself wheren reference count falls to 0
-//
-
+/**
+ * RefCountObject implementation
+ *
+ * Auxilliary class for objects which counts references and
+ * destroys itself wheren reference count falls to 0
+ */
 RefCountObject::RefCountObject()
 {
 	m_refCount = 1;
@@ -1969,10 +1971,9 @@ void RefCountObject::decRefCount()
 	}
 }
 
-
-//
-// mkstemp() implementation for Windows
-
+/**
+ * mkstemp() implementation for Windows
+ */
 #ifdef _WIN32
 
 int LIBNETXMS_EXPORTABLE mkstemp(char *tmpl)

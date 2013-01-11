@@ -141,10 +141,9 @@ DWORD g_dwThresholdRepeatInterval = 0;	// Disabled by default
 int g_nRequiredPolls = 1;
 DB_DRIVER g_dbDriver = NULL;
 
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
 static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
@@ -554,7 +553,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	}
 	else
 	{
-		nxlog_write(MSG_CODEPAGE_ERROR, EVENTLOG_WARNING_TYPE, "s", g_szCodePage);
+		nxlog_write(MSG_CODEPAGE_ERROR, EVENTLOG_WARNING_TYPE, "m", g_szCodePage);
 	}
 #endif
 
@@ -1690,7 +1689,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 			}
 			else
 			{
-				printf("\n");
+				_tprintf(_T("\n"));
 			}
 		}
 

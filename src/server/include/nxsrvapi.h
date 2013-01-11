@@ -44,11 +44,9 @@
 #include <nxsnmp.h>
 #include <netxms_isc.h>
 
-
-//
-// Default files
-//
-
+/**
+ * Default files
+ */
 #ifdef _WIN32
 
 #define DEFAULT_CONFIG_FILE   _T("C:\\netxmsd.conf")
@@ -110,11 +108,9 @@
 
 #endif   /* _WIN32 */
 
-
-//
-// Application flags
-//
-
+/**
+ * Application flags
+ */
 #define AF_DAEMON                         0x00000001
 #define AF_USE_SYSLOG                     0x00000002
 #define AF_ENABLE_NETWORK_DISCOVERY       0x00000004
@@ -140,32 +136,26 @@
 #define AF_SERVER_INITIALIZED             0x40000000
 #define AF_SHUTDOWN                       0x80000000
 
-
-//
-// Encryption usage policies
-//
-
+/**
+ * Encryption usage policies
+ */
 #define ENCRYPTION_DISABLED   0
 #define ENCRYPTION_ALLOWED    1
 #define ENCRYPTION_PREFERRED  2
 #define ENCRYPTION_REQUIRED   3
 
-
-//
-// Flags for SnmpGet
-//
-
+/**
+ * Flags for SnmpGet
+ */
 #define SG_VERBOSE        0x0001
 #define SG_STRING_RESULT  0x0002
 #define SG_RAW_RESULT     0x0004
 #define SG_HSTRING_RESULT 0x0008
 #define SG_PSTRING_RESULT 0x0010
 
-
-//
-// Win32 service and syslog constants
-//
-
+/**
+ * Win32 service and syslog constants
+ */
 #ifdef _WIN32
 
 #define CORE_SERVICE_NAME     _T("NetXMSCore")
@@ -178,11 +168,9 @@
 
 #endif   /* _WIN32 */
 
-
-//
-// Single ARP cache entry
-//
-
+/**
+ * Single ARP cache entry
+ */
 typedef struct
 {
    DWORD dwIndex;       // Interface index
@@ -190,22 +178,18 @@ typedef struct
    BYTE bMacAddr[MAC_ADDR_LENGTH];
 } ARP_ENTRY;
 
-
-//
-// ARP cache structure used by discovery functions and AgentConnection class
-//
-
+/**
+ * ARP cache structure used by discovery functions and AgentConnection class
+ */
 typedef struct
 {
    DWORD dwNumEntries;
    ARP_ENTRY *pEntries;
 } ARP_CACHE;
 
-
-//
-// Interface information structure used by discovery functions and AgentConnection class
-//
-
+/**
+ * Interface information structure used by discovery functions and AgentConnection class
+ */
 typedef struct
 {
    TCHAR szName[MAX_DB_STRING];			// Interface display name
@@ -222,11 +206,9 @@ typedef struct
 	bool isPhysicalPort;
 } NX_INTERFACE_INFO;
 
-
-//
-// Interface list used by discovery functions and AgentConnection class
-//
-
+/**
+ * Interface list used by discovery functions and AgentConnection class
+ */
 class LIBNXSRV_EXPORTABLE InterfaceList
 {
 private:
@@ -250,11 +232,9 @@ public:
 	void *getData() { return m_data; }
 };
 
-
-//
-// Vlan information
-//
-
+/**
+ * Vlan information
+ */
 #define VLAN_PRM_IFINDEX   0
 #define VLAN_PRM_SLOTPORT  1
 #define VLAN_PRM_BPORT     2

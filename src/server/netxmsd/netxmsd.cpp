@@ -35,20 +35,16 @@
 #include <signal.h>
 #endif
 
-
-//
-// Global data
-//
-
+/**
+ * Global data
+ */
 BOOL g_bCheckDB = FALSE;
 
-
-//
-// Help text
-//
-
+/**
+ * Help text
+ */
 static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T("\n")
-                           _T("Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 NetXMS Team\n\n")
+                           _T("Copyright (c) 2003-2013 NetXMS Team\n\n")
                            _T("Usage: netxmsd [<options>]\n\n")
                            _T("Valid options are:\n")
                            _T("   -e          : Run database check on startup\n")
@@ -72,11 +68,9 @@ static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T
                            _T("   -v          : Display version and exit\n")
                            _T("\n");
 
-
-//
-// Execute command and wait
-//
-
+/**
+ * Execute command and wait
+ */
 static BOOL ExecAndWait(char *pszCommand)
 {
    BOOL bSuccess = TRUE;

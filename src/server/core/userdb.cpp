@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -370,11 +370,9 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
    return dwResult;
 }
 
-
-//
-// Check if user is a member of specific group
-//
-
+/**
+ * Check if user is a member of specific group
+ */
 bool NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
 {
    bool result = false;
@@ -396,11 +394,9 @@ bool NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
    return result;
 }
 
-
-//
-// Resolve user's ID to login name
-//
-
+/**
+ * Resolve user's ID to login name
+ */
 bool NXCORE_EXPORTABLE ResolveUserId(DWORD id, TCHAR *buffer, int bufSize)
 {
 	bool found = false;
@@ -418,11 +414,11 @@ bool NXCORE_EXPORTABLE ResolveUserId(DWORD id, TCHAR *buffer, int bufSize)
 	return found;
 }
 
-
-//
-// Dump user list to stdout
-//
-
+/**
+ * Dump user list to console
+ *
+ * @param pCtx console context
+ */
 void DumpUsers(CONSOLE_CTX pCtx)
 {
    int i;
@@ -439,12 +435,12 @@ void DumpUsers(CONSOLE_CTX pCtx)
    ConsolePrintf(pCtx, _T("\n"));
 }
 
-
-//
-// Delete user or group
-// Will return RCC code
-//
-
+/**
+ * Delete user or group
+ *
+ * @param id user database object ID
+ * @return RCC ready to be sent to client
+ */
 DWORD NXCORE_EXPORTABLE DeleteUserDatabaseObject(DWORD id)
 {
    int i, j;
@@ -479,11 +475,9 @@ DWORD NXCORE_EXPORTABLE DeleteUserDatabaseObject(DWORD id)
    return RCC_SUCCESS;
 }
 
-
-//
-// Create new user or group
-//
-
+/**
+ * Create new user or group
+ */
 DWORD NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwId)
 {
    DWORD dwResult = RCC_SUCCESS;
@@ -526,11 +520,9 @@ DWORD NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwI
 	return dwResult;
 }
 
-
-//
-// Modify user database object
-//
-
+/**
+ * Modify user database object
+ */
 DWORD NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg)
 {
    DWORD id, fields, dwResult = RCC_INVALID_USER_ID;
@@ -567,11 +559,9 @@ DWORD NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg)
    return dwResult;
 }
 
-
-//
-// Check if string contains subsequence of given sequence
-//
-
+/**
+ * Check if string contains subsequence of given sequence
+ */
 static bool IsStringContainsSubsequence(const TCHAR *str, const TCHAR *sequence, int len)
 {
 	int sequenceLen = (int)_tcslen(sequence);
@@ -589,11 +579,9 @@ static bool IsStringContainsSubsequence(const TCHAR *str, const TCHAR *sequence,
 	return false;
 }
 
-
-//
-// Check password's complexity
-//
-
+/**
+ * Check password's complexity
+ */
 static bool CheckPasswordComplexity(const TCHAR *password)
 {
 	int flags = ConfigReadInt(_T("PasswordComplexity"), 0);
@@ -641,12 +629,10 @@ static bool CheckPasswordComplexity(const TCHAR *password)
 	return true;
 }
 
-
-//
-// Set user's password
-// For non-UNICODE build, passwords must be UTF-8 encoded
-//
-
+/**
+ * Set user's password
+ * For non-UNICODE build, passwords must be UTF-8 encoded
+ */
 DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword)
 {
 	int i;
