@@ -496,11 +496,9 @@ static void SendConsoleMessage(ClientSession *session, void *arg)
 	}
 }
 
-
-//
-// Console writer
-//
-
+/**
+ * Console writer
+ */
 static void LogConsoleWriter(const TCHAR *format, ...)
 {
 	TCHAR buffer[8192];

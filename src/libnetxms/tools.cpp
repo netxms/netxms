@@ -1909,9 +1909,13 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 	}
 #else
 #ifdef UNICODE
+#if HAVE_FPUTWS
+	fputws(text, stdout);
+#else
 	char *mbtext = MBStringFromWideString(text);
 	fputs(mbtext, stdout);
 	free(mbtext);
+#endif
 #else
 	fputs(text, stdout);
 #endif

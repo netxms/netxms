@@ -10,6 +10,7 @@
 
 EXTRA_DIST = \
 	local_admin.h \
+	netxms_mt.h \
 	nms_actions.h \
 	nms_alarm.h \
 	nms_core.h \
