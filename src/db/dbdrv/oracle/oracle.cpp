@@ -62,7 +62,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 
 extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 {
-	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
+	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
 	char *out = (char *)malloc(bufferSize);
 	out[0] = '\'';
@@ -429,7 +429,7 @@ extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int
 #else
 			{
 				char temp[64];
-				snprintf(temp, 64, INT64_FMT, *((INT64 *)buffer));
+				snprintf(temp, 64, INT64_FMTA, *((INT64 *)buffer));
 				sqlBuffer = UCS2StringFromMBString(temp);
 			}
 #endif
@@ -447,7 +447,7 @@ extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int
 #else
 			{
 				char temp[64];
-				snprintf(temp, 64, UINT64_FMT, *((QWORD *)buffer));
+				snprintf(temp, 64, UINT64_FMTA, *((QWORD *)buffer));
 				sqlBuffer = UCS2StringFromMBString(temp);
 			}
 #endif
