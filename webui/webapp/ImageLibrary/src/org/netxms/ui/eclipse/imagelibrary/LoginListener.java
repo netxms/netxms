@@ -41,10 +41,19 @@ public class LoginListener implements ConsoleLoginListener
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.console.api.ConsoleLoginListener#afterLogin(org.netxms.client.NXCSession, org.eclipse.swt.widgets.Display)
+	 */
 	@Override
 	public void afterLogin(final NXCSession session, final Display display)
 	{
-		ImageProvider.createInstance(display, session);
+		display.syncExec(new Runnable() {
+			@Override
+			public void run()
+			{
+				ImageProvider.createInstance(display, session);
+			}
+		});
 		Job job = new Job("Initialize image library") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)

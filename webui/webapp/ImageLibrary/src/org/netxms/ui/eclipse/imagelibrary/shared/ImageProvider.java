@@ -155,7 +155,9 @@ public class ImageProvider
 					@Override
 					public void run()
 					{
-						cache.put(guid, new Image(display, stream));
+						final Image image = new Image(display, stream);
+						if (image != null)
+							cache.put(guid, image);
 					}
 				});
 				notifySubscribers(guid);
