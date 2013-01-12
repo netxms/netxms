@@ -4,7 +4,7 @@
 package org.netxms.agent.android.main.activities;
 
 import org.netxms.agent.android.R;
-import org.netxms.agent.android.service.ClientConnectorService;
+import org.netxms.agent.android.service.AgentConnectorService;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -47,8 +47,8 @@ public class Preferences extends PreferenceActivity
 	@Override
 	protected void onDestroy()
 	{
-		Intent i = new Intent(this, ClientConnectorService.class);
-		i.setAction(ClientConnectorService.ACTION_FORCE_CONNECT);
+		Intent i = new Intent(this, AgentConnectorService.class);
+		i.setAction(AgentConnectorService.ACTION_CONFIGURE);
 		startService(i);
 		super.onDestroy();
 	}

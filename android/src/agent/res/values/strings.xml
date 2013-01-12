@@ -34,12 +34,24 @@
 	<string name="pref_scheduler_daily_off">Daily activation off</string>
 	<string name="pref_scheduler_activation_interval">Frequency (min)</string>
 	<string name="pref_scheduler_activation_interval_summary">How often connection should be established</string>
+    <string name="pref_scheduler_override">Override scheduler</string>
+    <string name="pref_scheduler_override_enabled">Override scheduler on connection activation is enabled</string>
+    <string name="pref_scheduler_override_disabled">Override scheduler on connection activation is disabled</string>
 	<string name="pref_global_autostart">Auto start on boot</string>
 	<string name="pref_global_autostart_enabled">Auto start service on boot</string>
 	<string name="pref_global_autostart_disabled">Do not auto start service on boot</string>
 	<string name="pref_global_activate">Activate agent</string>
 	<string name="pref_global_activate_enabled">Agent is active</string>
 	<string name="pref_global_activate_disabled">Agent is not active</string>
+	<string name="pref_locations">Locations</string>
+	<string name="pref_location_force">Force position update</string>
+	<string name="pref_location_force_enabled">Force provider to acquire a new position (drains more battery but is more accurate)</string>
+	<string name="pref_location_force_disabled">Relay on position updated from other apps (saves battery but is less accurate)</string>
+	<string name="pref_location_activation_interval">Frequency</string>
+	<string name="pref_location_activation_interval_summary">How often should try to acquire a new position</string>
+	<string name="pref_location_activation_duration">Duration</string>
+	<string name="pref_location_activation_duration_summary">For how long should wait to acquire a new position</string>
+	<string name="pref_location_strategy">Location strategy</string>
 	<string name="pref_notifications">Notifications</string>
 	<string name="pref_status">Connection status</string>
 	<string name="pref_notification_toast">Toast notification</string>
@@ -58,10 +70,12 @@
 	<string name="info_last_connection">Last connection attempted on %1$s (%2$s)</string>
 	<string name="info_next_connection">Next connection scheduled for %1$s</string>
 	<string name="info_next_connection_unscheduled">Next connection not scheduled</string>
-	<string name="info_agent_status">%1$s, push every %2$s minutes, between %3$s</string>
+	<string name="info_agent_status">%1$s: push every %2$s minutes, between %3$s. %4$s</string>
 	<string name="info_agent_range">%1$s and %2$s</string>
 	<string name="info_agent_whole_day">whole day</string>
-	
+	<string name="info_agent_location_active">Forcing to acquire position every %1$s minutes for a maximum of %2$s minutes using location strategy: %3$s</string>
+	<string name="info_agent_location_passive">Do not force to update position</string>
+		
 	<string name="info_device_id">Device ID: %1$s</string>
 	<string name="info_device_serial">Device Serial: %1$s</string>
 </resources>

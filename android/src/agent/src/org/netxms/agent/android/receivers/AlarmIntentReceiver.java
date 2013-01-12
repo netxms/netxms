@@ -1,7 +1,7 @@
 package org.netxms.agent.android.receivers;
 
 import org.netxms.agent.android.main.activities.HomeScreen;
-import org.netxms.agent.android.service.ClientConnectorService;
+import org.netxms.agent.android.service.AgentConnectorService;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -24,8 +24,8 @@ public class AlarmIntentReceiver extends BroadcastReceiver
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
 		if (!sp.getBoolean(HomeScreen.INTENTIONAL_EXIT_KEY, false) && sp.getBoolean("global.activate", false))
 		{
-			Intent i = new Intent(context, ClientConnectorService.class);
-			i.setAction(ClientConnectorService.ACTION_CONNECT);
+			Intent i = new Intent(context, AgentConnectorService.class);
+			i.setAction(AgentConnectorService.ACTION_CONNECT);
 			context.startService(i);
 		}
 	}

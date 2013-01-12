@@ -2,7 +2,7 @@ package org.netxms.agent.android.main.activities;
 
 import org.netxms.agent.android.NXApplication;
 import org.netxms.agent.android.R;
-import org.netxms.agent.android.service.ClientConnectorService;
+import org.netxms.agent.android.service.AgentConnectorService;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -24,7 +24,7 @@ public abstract class AbstractClientActivity extends Activity implements Service
 {
 	private static final String TAG = "nxagent/AbstractClientActivity";
 
-	protected ClientConnectorService service;
+	protected AgentConnectorService service;
 
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -34,8 +34,8 @@ public abstract class AbstractClientActivity extends Activity implements Service
 	{
 		super.onCreate(savedInstanceState);
 		onCreateStep2(savedInstanceState);
-		startService(new Intent(this, ClientConnectorService.class));
-		bindService(new Intent(this, ClientConnectorService.class), this, 0);
+		startService(new Intent(this, AgentConnectorService.class));
+		bindService(new Intent(this, AgentConnectorService.class), this, 0);
 
 		// the following is required if target API version is 14:
 		//getActionBar().setHomeButtonEnabled(true);
@@ -114,7 +114,7 @@ public abstract class AbstractClientActivity extends Activity implements Service
 	@Override
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
-		service = ((ClientConnectorService.ClientConnectorBinder)binder).getService();
+		service = ((AgentConnectorService.ClientConnectorBinder)binder).getService();
 		if (service != null)
 			service.reconnect(false);
 	}

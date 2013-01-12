@@ -3,6 +3,7 @@ package org.netxms.agent.android.main.activities;
 import java.util.Calendar;
 
 import org.netxms.agent.android.R;
+import org.netxms.agent.android.helpers.SafeParser;
 import org.netxms.base.NXCommon;
 
 import android.content.ComponentName;
@@ -36,7 +37,7 @@ public class HomeScreen extends AbstractClientActivity
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
+	 * @see org.netxms.agent.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
 	 */
 	@Override
 	public void onCreateStep2(Bundle savedInstanceState)
@@ -57,7 +58,7 @@ public class HomeScreen extends AbstractClientActivity
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onServiceConnected(android.content.ComponentName,
+	 * @see org.netxms.agent.android.main.activities.AbstractClientActivity#onServiceConnected(android.content.ComponentName,
 	 * android.os.IBinder)
 	 */
 	@Override
@@ -115,7 +116,7 @@ public class HomeScreen extends AbstractClientActivity
 	@SuppressWarnings("deprecation")
 	public void refreshStatus()
 	{
-		long last = sp.getLong("global.scheduler.last_activation", 0);
+		long last = sp.getLong("scheduler.last_activation", 0);
 		if (last != 0)
 		{
 			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
@@ -123,20 +124,34 @@ public class HomeScreen extends AbstractClientActivity
 			lastConnText.setText(
 					getString(R.string.info_last_connection,
 							cal.getTime().toLocaleString(),
-							sp.getString("global.scheduler.last_activation_msg",
+							sp.getString("scheduler.last_activation_msg",
 									getString(R.string.ok))));
 		}
 		if (sp.getBoolean("global.activate", false))
 		{
 			String status = getString(R.string.pref_global_activate_enabled);
-			String minutes = sp.getString("global.scheduler.interval", "15");
+			String minutes = sp.getString("scheduler.interval", "15");
 			String range = "";
-			if (sp.getBoolean("global.scheduler.daily.enable", false))
-				range = getString(R.string.info_agent_range, sp.getString("global.scheduler.daily.on", "00:00"), sp.getString("global.scheduler.daily.off", "00:00"));
+			if (sp.getBoolean("scheduler.daily.enable", false))
+				range = getString(R.string.info_agent_range, sp.getString("scheduler.daily.on", "00:00"), sp.getString("scheduler.daily.off", "00:00"));
 			else
 				range = getString(R.string.info_agent_whole_day);
-			agentStatusText.setText(getString(R.string.info_agent_status, status, minutes, range));
-			long next = sp.getLong("global.scheduler.next_activation", 0);
+			String location = "";
+			if (sp.getBoolean("location.force", false))
+			{
+				String interval = sp.getString("location.interval", "30");
+				String duration = sp.getString("location.duration", "2");
+				String strategies[] = getResources().getStringArray(R.array.locations_strategy_labels);
+				String strategy = "";
+				int type = SafeParser.parseInt(sp.getString("location.strategy", "0"), 0);
+				if (type < strategies.length)
+					strategy = strategies[type];
+				location = getString(R.string.info_agent_location_active, interval, duration, strategy);
+			}
+			else
+				location = getString(R.string.info_agent_location_passive);
+			agentStatusText.setText(getString(R.string.info_agent_status, status, minutes, range, location));
+			long next = sp.getLong("scheduler.next_activation", 0);
 			if (next != 0)
 			{
 				Calendar cal = Calendar.getInstance(); // get a Calendar object with current time

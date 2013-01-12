@@ -14,13 +14,20 @@
 			<CheckBoxPreference android:title="@string/pref_encrypt" android:key="connection.encrypt" android:enabled="true" android:summaryOn="@string/pref_encrypt_summary_enabled" android:summaryOff="@string/pref_encrypt_summary_disabled" android:defaultValue="false"/>
 		</PreferenceScreen>
 		<PreferenceScreen android:title="@string/pref_scheduler" android:enabled="true" android:dependency="global.activate">
-			<EditTextPreference android:title="@string/pref_scheduler_activation_interval" android:summary="@string/pref_scheduler_activation_interval_summary" android:enabled="true" android:defaultValue="15" android:key="global.scheduler.interval" android:digits="0123456789" android:dependency="global.activate"/>
-			<CheckBoxPreference android:summaryOn="@string/pref_scheduler_daily_enabled" android:key="global.scheduler.daily.enable" android:title="@string/pref_scheduler_daily_enabled" android:summaryOff="@string/pref_scheduler_daily_disabled" android:defaultValue="false" android:dependency="global.activate"/>
-			<org.netxms.agent.android.main.settings.TimePreference android:key="global.scheduler.daily.on" android:title="@string/pref_scheduler_daily_on" android:dependency="global.scheduler.daily.enable"/> 
-			<org.netxms.agent.android.main.settings.TimePreference android:key="global.scheduler.daily.off" android:title="@string/pref_scheduler_daily_off" android:dependency="global.scheduler.daily.enable"/>
+			<EditTextPreference android:title="@string/pref_scheduler_activation_interval" android:summary="@string/pref_scheduler_activation_interval_summary" android:enabled="true" android:defaultValue="15" android:key="scheduler.interval" android:digits="0123456789"/>
+			<CheckBoxPreference android:summaryOn="@string/pref_scheduler_daily_enabled" android:key="scheduler.daily.enable" android:title="@string/pref_scheduler_daily_enabled" android:summaryOff="@string/pref_scheduler_daily_disabled" android:defaultValue="false" android:dependency="global.activate"/>
+			<org.netxms.agent.android.main.settings.TimePreference android:key="scheduler.daily.on" android:title="@string/pref_scheduler_daily_on" android:dependency="scheduler.daily.enable"/> 
+			<org.netxms.agent.android.main.settings.TimePreference android:key="scheduler.daily.off" android:title="@string/pref_scheduler_daily_off" android:dependency="scheduler.daily.enable"/>
 		</PreferenceScreen>
+		<CheckBoxPreference android:summaryOn="@string/pref_scheduler_override_enabled" android:key="scheduler.override" android:title="@string/pref_scheduler_override" android:summaryOff="@string/pref_scheduler_override_disabled" android:defaultValue="false" android:dependency="global.activate"/>
 	</PreferenceCategory>
-	<PreferenceCategory android:title="@string/pref_notifications" android:dependency="global.activate">
-        <CheckBoxPreference android:summaryOff="@string/pref_notification_toast_disabled" android:summaryOn="@string/pref_notification_toast_enabled" android:key="global.notification.toast" android:enabled="true" android:defaultValue="true" android:title="@string/pref_notification_toast"/>
+	<PreferenceCategory android:title="@string/pref_locations" android:dependency="global.activate">
+		<CheckBoxPreference android:summaryOn="@string/pref_location_force_enabled" android:key="location.force" android:title="@string/pref_location_force" android:summaryOff="@string/pref_location_force_disabled" android:defaultValue="false" android:dependency="global.activate"/>
+	    <EditTextPreference android:title="@string/pref_location_activation_interval" android:summary="@string/pref_location_activation_interval_summary" android:enabled="true" android:defaultValue="30" android:key="location.interval" android:digits="0123456789" android:dependency="location.force"/>
+		<EditTextPreference android:title="@string/pref_location_activation_duration" android:summary="@string/pref_location_activation_duration_summary" android:enabled="true" android:defaultValue="2" android:key="location.duration" android:digits="0123456789" android:dependency="location.force"/>
+		<ListPreference android:dialogTitle="@string/pref_location_strategy" android:title="@string/pref_location_strategy" android:entryValues="@array/location_strategy_values" android:entries="@array/locations_strategy_labels" android:defaultValue="0" android:key="location.strategy" android:dependency="location.force"/>
+	</PreferenceCategory>
+	<PreferenceCategory android:title="@string/pref_notifications">
+        <CheckBoxPreference android:summaryOff="@string/pref_notification_toast_disabled" android:summaryOn="@string/pref_notification_toast_enabled" android:key="notification.toast" android:enabled="true" android:defaultValue="true" android:title="@string/pref_notification_toast" android:dependency="global.activate"/>
 	</PreferenceCategory>
 </PreferenceScreen>

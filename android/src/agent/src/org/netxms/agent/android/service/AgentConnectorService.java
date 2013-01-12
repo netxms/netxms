@@ -15,7 +15,6 @@ import org.netxms.agent.android.helpers.SafeParser;
 import org.netxms.agent.android.main.activities.HomeScreen;
 import org.netxms.agent.android.receivers.AlarmIntentReceiver;
 import org.netxms.agent.android.service.helpers.AndroidLoggingFacility;
-import org.netxms.agent.android.service.helpers.LocationManagerHelper;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.Logger;
 import org.netxms.mobile.agent.MobileAgentException;
@@ -35,6 +34,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -42,6 +42,7 @@ import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -58,30 +59,46 @@ import android.widget.Toast;
  * 
  */
 
-public class ClientConnectorService extends Service
+public class AgentConnectorService extends Service implements LocationListener
 {
 	public enum ConnectionStatus
 	{
 		CS_NOCONNECTION, CS_INPROGRESS, CS_ALREADYCONNECTED, CS_CONNECTED, CS_DISCONNECTED, CS_ERROR
 	};
 
-	public static final String ACTION_CONNECT = "org.netxms.ui.android.ACTION_CONNECT";
-	public static final String ACTION_FORCE_CONNECT = "org.netxms.ui.android.ACTION_FORCE_CONNECT";
-	public static final String ACTION_SCHEDULE = "org.netxms.ui.android.ACTION_SCHEDULE";
-	private static final String TAG = "nxagent/ClientConnectorService";
+	public static final String ACTION_CONNECT = "org.netxms.agent.android.ACTION_CONNECT";
+	public static final String ACTION_FORCE_CONNECT = "org.netxms.agent.android.ACTION_FORCE_CONNECT";
+	public static final String ACTION_SCHEDULE = "org.netxms.agent.android.ACTION_SCHEDULE";
+	public static final String ACTION_CONFIGURE = "org.netxms.agent.android.ACTION_CONFIGURE";
 
+	public static boolean gettingNewLocation = false;
+
+	private static final String TAG = "nxagent/ClientConnectorService";
 	private static final int ONE_DAY_MINUTES = 24 * 60;
 	private static final int NETXMS_REQUEST_CODE = 123456;
 
 	private final Binder binder = new ClientConnectorBinder();
 	private Handler uiThreadHandler;
+	private Handler locationHandler = null;
 	private ConnectionStatus connectionStatus = ConnectionStatus.CS_DISCONNECTED;
 	private BroadcastReceiver receiver = null;
 	private SharedPreferences sp;
 	private LocationManager locationManager = null;
-	private final LocationManagerHelper lmh = new LocationManagerHelper();
 	private HomeScreen homeScreen = null;
 	private boolean firstConnection = true;
+	private boolean agentActive;
+	private boolean notifyToast;
+	private String connectionServer;
+	private int connectionPort;
+	private String connectionLogin;
+	private String connectionPassword;
+	private boolean connectionEncrypt;
+	private boolean schedulerDaily;
+	private int schedulerInterval;
+	private boolean locationForce;
+	private int locationInterval;
+	private int locationDuration;
+	private int locationStrategy;
 
 	/**
 	 * Class for clients to access. Because we know this service always runs in
@@ -89,9 +106,9 @@ public class ClientConnectorService extends Service
 	 */
 	public class ClientConnectorBinder extends Binder
 	{
-		public ClientConnectorService getService()
+		public AgentConnectorService getService()
 		{
-			return ClientConnectorService.this;
+			return AgentConnectorService.this;
 		}
 	}
 
@@ -104,34 +121,20 @@ public class ClientConnectorService extends Service
 	public void onCreate()
 	{
 		super.onCreate();
-
+		sp = PreferenceManager.getDefaultSharedPreferences(this);
 		Logger.setLoggingFacility(new AndroidLoggingFacility());
+
 		uiThreadHandler = new Handler(getMainLooper());
 
-		sp = PreferenceManager.getDefaultSharedPreferences(this);
 		locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-		try
-		{
-			// Try to gather an "immediate" position
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, lmh);
-			getGeoLocation();
-			locationManager.removeUpdates(lmh);
-		}
-		catch (IllegalArgumentException e)
-		{
-			Log.e(TAG, "IllegalArgumentException during onCreate(): ", e);
-		}
-		catch (RuntimeException e)
-		{
-			Log.e(TAG, "RuntimeException during onCreate()", e);
-		}
+		configure();
 
 		receiver = new BroadcastReceiver()
 		{
 			@Override
 			public void onReceive(Context context, Intent intent)
 			{
-				Intent i = new Intent(context, ClientConnectorService.class);
+				Intent i = new Intent(context, AgentConnectorService.class);
 				i.setAction(ACTION_SCHEDULE);
 				context.startService(i);
 			}
@@ -155,6 +158,11 @@ public class ClientConnectorService extends Service
 				reconnect(true);
 			else if (intent.getAction().equals(ACTION_SCHEDULE))
 				reconnect(false);
+			else if (intent.getAction().equals(ACTION_CONFIGURE))
+			{
+				configure();
+				reconnect(true);
+			}
 		return super.onStartCommand(intent, flags, startId);
 	}
 
@@ -178,6 +186,35 @@ public class ClientConnectorService extends Service
 	public void onDestroy()
 	{
 		super.onDestroy();
+	}
+
+	/**
+	 * Configure background service
+	 */
+	void configure()
+	{
+		agentActive = sp.getBoolean("global.activate", false);
+		notifyToast = sp.getBoolean("notification.toast", true);
+		connectionServer = sp.getString("connection.server", "");
+		connectionPort = SafeParser.parseInt(sp.getString("connection.port", "4747"), 4747);
+		connectionLogin = sp.getString("connection.login", "");
+		connectionPassword = sp.getString("connection.password", "");
+		connectionEncrypt = sp.getBoolean("connection.encrypt", false);
+		schedulerDaily = sp.getBoolean("scheduler.daily.enable", false);
+		schedulerInterval = Integer.parseInt(sp.getString("scheduler.interval", "15"));
+		locationStrategy = SafeParser.parseInt(sp.getString("location.strategy", "0"), 0);
+		locationInterval = SafeParser.parseInt(sp.getString("location.interval", "30"), 30) * 60 * 1000;
+		locationDuration = SafeParser.parseInt(sp.getString("location.duration", "2"), 2) * 60 * 1000;
+		locationForce = sp.getBoolean("location.force", false);
+		if (locationManager != null)
+		{
+			if (locationHandler == null)
+				locationHandler = new Handler(getMainLooper());
+			if (locationForce)
+				locationHandler.post(locationTask);
+			else
+				locationHandler.removeCallbacks(locationTask);
+		}
 	}
 
 	/**
@@ -214,7 +251,7 @@ public class ClientConnectorService extends Service
 			default:
 				return;
 		}
-		if (sp.getBoolean("global.notification.toast", true))
+		if (notifyToast)
 			showToast(text);
 	}
 
@@ -225,17 +262,11 @@ public class ClientConnectorService extends Service
 	 */
 	public void reconnect(boolean force)
 	{
-		if ((force || isScheduleExpired() && sp.getBoolean("global.activate", false)) &&
+		if (agentActive && (force || isScheduleExpired()) &&
 				connectionStatus != ConnectionStatus.CS_INPROGRESS &&
 				connectionStatus != ConnectionStatus.CS_CONNECTED)
 		{
-			new PushDataTask(
-					sp.getString("connection.server", ""),
-					SafeParser.parseInt(sp.getString("connection.port", "4747"), 4747),
-					getDeviceId(),
-					sp.getString("connection.login", ""),
-					sp.getString("connection.password", ""),
-					sp.getBoolean("connection.encrypt", false)).execute();
+			new PushDataTask(connectionServer, connectionPort, getDeviceId(), connectionLogin, connectionPassword, connectionEncrypt).execute();
 		}
 	}
 
@@ -271,7 +302,7 @@ public class ClientConnectorService extends Service
 	private boolean isScheduleExpired()
 	{
 		Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-		return cal.getTimeInMillis() > sp.getLong("global.scheduler.next_activation", 0);
+		return cal.getTimeInMillis() > sp.getLong("scheduler.next_activation", 0);
 	}
 
 	/**
@@ -301,19 +332,19 @@ public class ClientConnectorService extends Service
 	public void schedule()
 	{
 		Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-		if (!sp.getBoolean("global.scheduler.daily.enable", false))
-			cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.interval", "15")));
+		if (!schedulerDaily)
+			cal.add(Calendar.MINUTE, schedulerInterval);
 		else
 		{
-			int on = getMinutes("global.scheduler.daily.on");
-			int off = getMinutes("global.scheduler.daily.off");
+			int on = getMinutes("scheduler.daily.on");
+			int off = getMinutes("scheduler.daily.off");
 			if (off < on)
 				off += ONE_DAY_MINUTES; // Next day!
 			Calendar calOn = (Calendar)cal.clone();
 			setDayOffset(calOn, on);
 			Calendar calOff = (Calendar)cal.clone();
 			setDayOffset(calOff, off);
-			cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.interval", "15")));
+			cal.add(Calendar.MINUTE, schedulerInterval);
 			if (cal.before(calOn))
 			{
 				cal = (Calendar)calOn.clone();
@@ -339,7 +370,7 @@ public class ClientConnectorService extends Service
 		PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		((AlarmManager)getSystemService(ALARM_SERVICE)).set(AlarmManager.RTC_WAKEUP, milliseconds, sender);
 		Editor e = sp.edit();
-		e.putLong("global.scheduler.next_activation", milliseconds);
+		e.putLong("scheduler.next_activation", milliseconds);
 		e.commit();
 	}
 
@@ -353,7 +384,7 @@ public class ClientConnectorService extends Service
 		PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		((AlarmManager)getSystemService(ALARM_SERVICE)).cancel(sender);
 		Editor e = sp.edit();
-		e.putLong("global.scheduler.next_activation", 0);
+		e.putLong("scheduler.next_activation", 0);
 		e.commit();
 	}
 
@@ -515,20 +546,26 @@ public class ClientConnectorService extends Service
 	}
 
 	/**
-	 * Get geo location. Currently it uses a last known location (it could be very old)
+	 * Get last known geo location (depending on strategy used it could be very old)
 	 * 
 	 * @return last known location or null if not known
 	 */
 	private GeoLocation getGeoLocation()
 	{
-		Criteria hdCrit = new Criteria();
-		hdCrit.setAccuracy(Criteria.ACCURACY_COARSE);
-		String mlocProvider = locationManager.getBestProvider(hdCrit, true);
-		if (mlocProvider != null)
+		if (locationManager != null)
 		{
-			Location currLocation = locationManager.getLastKnownLocation(mlocProvider);
-			if (currLocation != null)
-				return new GeoLocation(currLocation.getLatitude(), currLocation.getLongitude());
+			Criteria hdCrit = new Criteria();
+			if (hdCrit != null)
+			{
+				hdCrit.setAccuracy(Criteria.ACCURACY_COARSE);
+				String mlocProvider = locationManager.getBestProvider(hdCrit, true);
+				if (mlocProvider != null)
+				{
+					Location currLocation = locationManager.getLastKnownLocation(mlocProvider);
+					if (currLocation != null)
+						return new GeoLocation(currLocation.getLatitude(), currLocation.getLongitude());
+				}
+			}
 		}
 		return null;
 	}
@@ -642,7 +679,7 @@ public class ClientConnectorService extends Service
 			}
 			else
 			{
-				Log.d(TAG, "PushDataTask.doInBackground: no internet connection");
+				Log.w(TAG, "PushDataTask.doInBackground: no internet connection");
 				connMsg = getString(R.string.notify_no_connection);
 			}
 			return false;
@@ -658,18 +695,115 @@ public class ClientConnectorService extends Service
 			}
 			else
 			{
-				Log.d(TAG, "PushDataTask.onPostExecute: error: " + connMsg);
+				Log.e(TAG, "PushDataTask.onPostExecute: error: " + connMsg);
 				statusNotification(ConnectionStatus.CS_ERROR, connMsg);
 			}
 			Editor e = sp.edit();
-			e.putLong("global.scheduler.last_activation", Calendar.getInstance().getTimeInMillis());
-			e.putString("global.scheduler.last_activation_msg", connMsg);
+			e.putLong("scheduler.last_activation", Calendar.getInstance().getTimeInMillis());
+			e.putString("scheduler.last_activation_msg", connMsg);
 			e.commit();
-			if (sp.getBoolean("global.activate", false))
+			if (agentActive)
 				schedule();
 			else
 				cancelSchedule();
 			refreshHomeScreen();
 		}
+	}
+
+	/**
+	 * Internal handler to get new location based on location strategy set
+	 */
+	private final Runnable locationTask = new Runnable()
+	{
+		@Override
+		public void run()
+		{
+			if (agentActive && locationForce)
+			{
+				if (AgentConnectorService.gettingNewLocation)
+				{
+					Log.d(TAG, "Timeout expired while trying to get a new location...");
+					locationManager.removeUpdates(AgentConnectorService.this);
+					AgentConnectorService.gettingNewLocation = false;
+					locationHandler.postDelayed(locationTask, locationInterval);
+				}
+				else
+				{
+					String provider = "";
+					switch (locationStrategy)
+					{
+						case 0:
+							if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+								locationManager.requestLocationUpdates(provider = LocationManager.NETWORK_PROVIDER, locationInterval, 100, AgentConnectorService.this);
+							break;
+						case 1:
+							if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+								locationManager.requestLocationUpdates(provider = LocationManager.GPS_PROVIDER, locationInterval, 100, AgentConnectorService.this);
+							break;
+						case 2:
+							if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+								locationManager.requestLocationUpdates(provider = LocationManager.NETWORK_PROVIDER, locationInterval, 100, AgentConnectorService.this);
+							else if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+								locationManager.requestLocationUpdates(provider = LocationManager.GPS_PROVIDER, locationInterval, 100, AgentConnectorService.this);
+							break;
+						case 3:
+							if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+								locationManager.requestLocationUpdates(provider = LocationManager.GPS_PROVIDER, locationInterval, 100, AgentConnectorService.this);
+							else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+								locationManager.requestLocationUpdates(provider = LocationManager.NETWORK_PROVIDER, locationInterval, 100, AgentConnectorService.this);
+							break;
+					}
+					if (provider.length() > 0)
+					{
+						Log.d(TAG, "Trying to get a new location from '" + provider + "' provider...");
+						AgentConnectorService.gettingNewLocation = true;
+						locationHandler.postDelayed(locationTask, locationDuration);
+					}
+					else
+					{
+						Log.w(TAG, "No available location provider!");
+						locationHandler.postDelayed(locationTask, locationInterval);
+					}
+				}
+			}
+			else
+			{
+				locationHandler.removeCallbacks(locationTask);
+				AgentConnectorService.gettingNewLocation = false;
+				locationManager.removeUpdates(AgentConnectorService.this);
+			}
+
+		}
+	};
+
+	@Override
+	public void onLocationChanged(Location location)
+	{
+		Log.d(TAG, "Got a new location at Lat: " + location.getLatitude() + ", Lon: " + location.getLongitude());
+		if (gettingNewLocation)
+		{
+			locationManager.removeUpdates(AgentConnectorService.this);
+			gettingNewLocation = false;
+			locationHandler.removeCallbacks(locationTask);
+			locationHandler.postDelayed(locationTask, locationInterval);
+		}
+	}
+
+	@Override
+	public void onProviderDisabled(String provider)
+	{
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void onProviderEnabled(String provider)
+	{
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras)
+	{
+		// TODO Auto-generated method stub
 	}
 }
