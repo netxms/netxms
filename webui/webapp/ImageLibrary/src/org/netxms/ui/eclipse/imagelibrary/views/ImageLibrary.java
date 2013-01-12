@@ -24,7 +24,6 @@ import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
@@ -297,8 +296,7 @@ public class ImageLibrary extends ViewPart
 					}
 				});
 
-				//ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
-				ImageProvider.getInstance().syncMetaData();
+				ImageProvider.getInstance(getSite().getShell().getDisplay()).syncMetaData();
 				refreshImages();	/* TODO: update single element */                      
 				
 				monitor.done();
@@ -360,9 +358,8 @@ public class ImageLibrary extends ViewPart
 					}
 				});
 				
-				///ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
 				// TODO: check
-				ImageProvider.getInstance().syncMetaData();
+				ImageProvider.getInstance(getSite().getShell().getDisplay()).syncMetaData();
 				refreshImages();	/* TODO: update local copy */
 
 				monitor.done();
@@ -551,17 +548,17 @@ public class ImageLibrary extends ViewPart
 					final ByteArrayInputStream stream = new ByteArrayInputStream(binaryData);
 					try
 					{
-						imageItem.setImage(new Image(Display.getDefault(), stream));
+						imageItem.setImage(new Image(getSite().getShell().getDisplay(), stream));
 					}
 					catch(SWTException e)
 					{
 						Activator.logError("Exception in ImageLibrary.refreshUI()", e);
-						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
+						imageItem.setImage(ImageProvider.getInstance(getSite().getShell().getDisplay()).getImage(null)); // show as "missing"
 					}
 				}
 				else
 				{
-					imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
+					imageItem.setImage(ImageProvider.getInstance(getSite().getShell().getDisplay()).getImage(null)); // show as "missing"
 				}
 				imageItem.setData(image);
 			}

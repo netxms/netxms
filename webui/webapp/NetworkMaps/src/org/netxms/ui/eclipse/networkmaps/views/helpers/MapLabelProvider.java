@@ -163,7 +163,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				final UUID objectImageGuid = object.getImage();
 				if (objectImageGuid != null && !objectImageGuid.equals(NXCommon.EMPTY_GUID))
 				{
-					return ImageProvider.getInstance().getImage(objectImageGuid);
+					return ImageProvider.getInstance(viewer.getControl().getDisplay()).getImage(objectImageGuid);
 				}
 
 				switch(object.getObjectClass())

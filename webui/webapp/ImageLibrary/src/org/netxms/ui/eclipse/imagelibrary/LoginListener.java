@@ -21,12 +21,14 @@ public class LoginListener implements ConsoleLoginListener
 	private final class ImageLibraryListener implements SessionListener
 	{
 		private final Display display;
-		private final NXCSession session;
 
-		private ImageLibraryListener(Display display, NXCSession session)
+		/**
+		 * @param display
+		 * @param session
+		 */
+		private ImageLibraryListener(Display display)
 		{
 			this.display = display;
-			this.session = session;
 		}
 
 		@Override
@@ -35,7 +37,7 @@ public class LoginListener implements ConsoleLoginListener
 			if (n.getCode() == NXCNotification.IMAGE_LIBRARY_CHANGED)
 			{
 				final UUID guid = (UUID)n.getObject();
-				final ImageProvider imageProvider = ImageProvider.getInstance();
+				final ImageProvider imageProvider = ImageProvider.getInstance(display);
 				imageProvider.invalidateImage(guid, n.getSubCode() == NXCNotification.IMAGE_DELETED);
 			}
 		}
@@ -47,21 +49,15 @@ public class LoginListener implements ConsoleLoginListener
 	@Override
 	public void afterLogin(final NXCSession session, final Display display)
 	{
-		display.syncExec(new Runnable() {
-			@Override
-			public void run()
-			{
-				ImageProvider.createInstance(display, session);
-			}
-		});
+		ImageProvider.createInstance(display, session);
 		Job job = new Job("Initialize image library") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
 				try
 				{
-					ImageProvider.getInstance().syncMetaData();
-					session.addListener(new ImageLibraryListener(display, session));
+					ImageProvider.getInstance(display).syncMetaData();
+					session.addListener(new ImageLibraryListener(display));
 				}
 				catch(Exception e)
 				{

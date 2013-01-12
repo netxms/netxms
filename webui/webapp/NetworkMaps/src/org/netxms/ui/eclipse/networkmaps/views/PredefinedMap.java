@@ -86,6 +86,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	private Action actionLinkProperties;
 	private Color backgroundColor = null;
 	private Color defaultLinkColor = null;
+	private ImageProvider imageProvider;
 
 	/**
 	 * Create predefined map view
@@ -143,14 +144,15 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		if (mapObject.getMapType() == org.netxms.client.objects.NetworkMap.TYPE_CUSTOM)
 			addDropSupport();
 			
-		ImageProvider.getInstance().addUpdateListener(this);
+		imageProvider = ImageProvider.getInstance(parent.getDisplay());
+		imageProvider.addUpdateListener(this);
 		
 		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
 		{
 			if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
 				viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
 			else
-				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+				viewer.setBackgroundImage(imageProvider.getImage(mapObject.getBackground()));
 		}
 		
 		if (mapObject.getDefaultLinkColor() >= 0)
@@ -638,7 +640,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			public void run()
 			{
 				if (guid.equals(mapObject.getBackground()))
-					viewer.setBackgroundImage(ImageProvider.getInstance().getImage(guid));
+					viewer.setBackgroundImage(imageProvider.getImage(guid));
 			}
 		});
 	}
@@ -649,7 +651,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	@Override
 	public void dispose()
 	{
-		ImageProvider.getInstance().removeUpdateListener(this);
+		imageProvider.removeUpdateListener(this);
 		if (defaultLinkColor != null)
 			defaultLinkColor.dispose();
 		super.dispose();
@@ -680,7 +682,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			}
 			else
 			{
-				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+				viewer.setBackgroundImage(imageProvider.getImage(mapObject.getBackground()));
 			}
 		}
 
@@ -706,7 +708,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
 				viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
 			else
-				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+				viewer.setBackgroundImage(imageProvider.getImage(mapObject.getBackground()));
 		}
 
 		setLayoutAlgorithm(mapObject.getLayout(), false);

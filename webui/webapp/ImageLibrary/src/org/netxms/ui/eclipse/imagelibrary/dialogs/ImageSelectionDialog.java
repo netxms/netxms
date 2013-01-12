@@ -106,7 +106,7 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 	@Override
 	public boolean close()
 	{
-		ImageProvider.getInstance().removeUpdateListener(this);
+		ImageProvider.getInstance(getShell().getDisplay()).removeUpdateListener(this);
 		return super.close();
 	}
 
@@ -137,7 +137,7 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 
 		gallery.addSelectionListener(this);
 		gallery.addMouseListener(this);
-		ImageProvider.getInstance().addUpdateListener(this);
+		ImageProvider.getInstance(getShell().getDisplay()).addUpdateListener(this);
 
 		refreshImages();
 
@@ -205,9 +205,12 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		getButton(IDialogConstants.OK_ID).setEnabled(false);
 	}
 
+	/**
+	 * 
+	 */
 	private void refreshImages()
 	{
-		final ImageProvider provider = ImageProvider.getInstance();
+		final ImageProvider provider = ImageProvider.getInstance(getShell().getDisplay());
 		final List<LibraryImage> imageLibrary = provider.getImageLibrary();
 
 		Map<String, List<LibraryImage>> categories = new HashMap<String, List<LibraryImage>>();

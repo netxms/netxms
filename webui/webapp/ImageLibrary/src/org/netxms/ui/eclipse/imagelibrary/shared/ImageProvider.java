@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.rap.rwt.SingletonUtil;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -24,41 +25,79 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 
 public class ImageProvider
 {
-	private static ImageProvider instance = null;
-
 	private static final Map<UUID, Image> cache = Collections.synchronizedMap(new HashMap<UUID, Image>());
 	private static final Map<UUID, LibraryImage> libraryIndex = Collections.synchronizedMap(new HashMap<UUID, LibraryImage>());
 
-	public static void createInstance(Display display, NXCSession session)
+	/**
+	 * @param display
+	 * @param session
+	 */
+	public static void createInstance(final Display display, final NXCSession session)
 	{
-		if (instance == null)
-			instance = new ImageProvider(display, session);
+		display.syncExec(new Runnable() {
+			@Override
+			public void run()
+			{
+				ImageProvider p = SingletonUtil.getSessionInstance(ImageProvider.class);
+				p.init(display, session);
+			}
+		});
 	}
 
 	/**
+	 * Get image provider's instance for specific display
+	 * 
 	 * @return
 	 */
-	public static ImageProvider getInstance()
+	public static ImageProvider getInstance(Display display)
 	{
-		return instance;
+		InstanceQuery q = new InstanceQuery();
+		display.syncExec(q);
+		return q.instance;
+	}
+	
+	/**
+	 * Helper class for query instance on UI thread
+	 */
+	private static class InstanceQuery implements Runnable
+	{
+		public ImageProvider instance;
+
+		@Override
+		public void run()
+		{
+			instance = SingletonUtil.getSessionInstance(ImageProvider.class);
+		}
 	}
 
-	private final Image missingImage;
-	private final Set<ImageUpdateListener> updateListeners;
+	private Image missingImage;
+	private Set<ImageUpdateListener> updateListeners;
 
+	private boolean initialized = false;
 	private NXCSession session;
 	private Display display;
+	
+	/**
+	 * 
+	 */
+	private ImageProvider()
+	{
+	}
 
 	/**
 	 * 
 	 */
-	private ImageProvider(Display display, NXCSession session)
+	private void init(Display display, NXCSession session)
 	{
+		if (initialized)
+			return;
+		
 		this.display = display;
 		this.session = session;
 		final ImageDescriptor imageDescriptor = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/missing.png");
 		missingImage = imageDescriptor.createImage(display);
 		updateListeners = new HashSet<ImageUpdateListener>();
+		initialized = true;
 	}
 
 	/**
@@ -92,6 +131,9 @@ public class ImageProvider
 		}
 	}
 
+	/**
+	 * 
+	 */
 	private void clearCache()
 	{
 		for(Image image : cache.values())
@@ -141,6 +183,9 @@ public class ImageProvider
 		return image;
 	}
 
+	/**
+	 * @param guid
+	 */
 	private void loadImageFromServer(final UUID guid)
 	{
 		LibraryImage libraryImage;
@@ -174,6 +219,9 @@ public class ImageProvider
 		}
 	}
 
+	/**
+	 * @param guid
+	 */
 	private void notifySubscribers(final UUID guid)
 	{
 		for(final ImageUpdateListener listener : updateListeners)

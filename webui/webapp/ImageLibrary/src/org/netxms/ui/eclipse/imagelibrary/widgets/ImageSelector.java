@@ -41,17 +41,21 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 
 	private UUID imageGuid = NXCommon.EMPTY_GUID;
 	
+	/**
+	 * @param parent
+	 * @param style
+	 */
 	public ImageSelector(Composite parent, int style)
 	{
 		super(parent, style, 0);
-		ImageProvider.getInstance().addUpdateListener(this);
+		ImageProvider.getInstance(getDisplay()).addUpdateListener(this);
 		addDisposeListener(new DisposeListener() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				ImageProvider.getInstance().removeUpdateListener(ImageSelector.this);
+				ImageProvider.getInstance(ImageSelector.this.getDisplay()).removeUpdateListener(ImageSelector.this);
 			}
 		});
 	}
@@ -115,11 +119,11 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 		}
 		else
 		{
-			LibraryImage image = ImageProvider.getInstance().getLibraryImageObject(imageGuid);
+			LibraryImage image = ImageProvider.getInstance(getDisplay()).getLibraryImageObject(imageGuid);
 			if (image != null)
 			{
 				setText(image.getName());
-				setImage(ImageProvider.getInstance().getImage(imageGuid));
+				setImage(ImageProvider.getInstance(getDisplay()).getImage(imageGuid));
 			}
 			else
 			{
@@ -140,7 +144,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 	{
 		if (guid.equals(imageGuid))
 		{
-			setImage(ImageProvider.getInstance().getImage(imageGuid));
+			setImage(ImageProvider.getInstance(getDisplay()).getImage(imageGuid));
 			getParent().layout();
 		}
 	}
