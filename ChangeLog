@@ -3,6 +3,13 @@
 *
 
 - NXSL function PostEvent can use event names instead of event codes
+- Android Agent:
+	- Changed name of configuration parameters (NB needs reconfiguration of agent!!!)
+	- New location strategy: relay on updates from other apps or force update (frequency, duration and provider selectable).
+	- Show location strategy on home screen.
+	- Fixed bug in automatic connection on first start when agent was disabled
+	- Override for connection schedule on detecting change of connectivity (selectable)
+	
 
 
 *
