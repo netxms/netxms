@@ -60,7 +60,7 @@ void VlanList::add(VlanInfo *vlan)
  * Add member port to VLAN
  *
  * @param vlanId VLAN ID
- * @param ifIndex port's 32bit identifier (usually ifIndex or slot/port pair)
+ * @param portId port's 32bit identifier (usually ifIndex or slot/port pair)
  */
 void VlanList::addMemberPort(int vlanId, DWORD portId)
 {
