@@ -1,4 +1,5 @@
 * text=auto !eol
+/Doxyfile -text
 android/keystore/keystore -text
 android/src/agent/.classpath -text
 android/src/agent/.externalToolBuilders/Generate[!!-~]build_number.xml[!!-~]from[!!-~]SVN[!!-~]revision.launch -text
