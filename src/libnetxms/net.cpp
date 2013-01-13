@@ -68,7 +68,7 @@ SocketConnection::~SocketConnection()
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
-bool SocketConnection::connectTCP(const TCHAR *hostName, unsigned short port, DWORD timeout)
+bool SocketConnection::connectTCP(const TCHAR *hostName, WORD port, DWORD timeout)
 {
 	m_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_socket != INVALID_SOCKET)
