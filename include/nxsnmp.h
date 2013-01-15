@@ -38,6 +38,9 @@
 #define LIBNXSNMP_EXPORTABLE
 #endif
 
+/** \ingroup SNMP
+ * @{
+ */
 
 /***************************************************************
  Following part of the file may conflict with net-snmp includes,
@@ -695,5 +698,7 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType);
 TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(DWORD type, TCHAR *buffer, size_t bufferSize);
 
 #endif   /* __cplusplus */
+
+/** @} */
 
 #endif

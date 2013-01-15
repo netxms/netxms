@@ -280,6 +280,7 @@ contrib/startup/debian/netxmsd.in -text
 contrib/startup/debian/nxagentd.in -text
 doc/RadenSolutions.xml -text
 doc/comparison_netxms_nnm.doc -text
+doc/doxygen.md -text
 doc/integration/HPOM_Integration.docx -text
 doc/internal/NetworkDeviceDrivers.docx -text
 doc/internal/build.w64 -text
