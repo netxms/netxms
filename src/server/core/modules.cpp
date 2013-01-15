@@ -31,11 +31,9 @@ TCHAR *g_pszModLoadList = NULL;
 DWORD g_dwNumModules = 0;
 NXMODULE *g_pModuleList = NULL;
 
-
-//
-// Starter for module's main thread
-//
-
+/**
+ * Starter for module's main thread
+ */
 static THREAD_RESULT THREAD_CALL ModuleThreadStarter(void *pArg)
 {
    if (((NXMODULE *)pArg)->pfMain != NULL)
@@ -43,12 +41,10 @@ static THREAD_RESULT THREAD_CALL ModuleThreadStarter(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// Load all registered modules
-//
-
-void LoadNetXMSModules(void)
+/**
+ * Load all registered modules
+ */
+void LoadNetXMSModules()
 {
    TCHAR szErrorText[256], *curr, *next;
    NXMODULE module;

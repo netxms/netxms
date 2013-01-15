@@ -93,7 +93,7 @@ public class CreateCluster implements IObjectActionDelegate
 		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
 			final Object object = ((IStructuredSelection)selection).getFirstElement();
-			if ((object instanceof Container) || (object instanceof ServiceRoot) || (object instanceof Cluster))
+			if ((object instanceof Container) || (object instanceof ServiceRoot))
 			{
 				parentId = ((GenericObject)object).getObjectId();
 			}

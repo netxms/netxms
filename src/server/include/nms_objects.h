@@ -48,7 +48,6 @@ extern DWORD g_dwConfigurationPollingInterval;
 extern DWORD g_dwRoutingTableUpdateInterval;
 extern DWORD g_dwTopologyPollingInterval;
 extern DWORD g_dwConditionPollingInterval;
-extern Node a;
 
 /**
  * Constants
@@ -57,20 +56,16 @@ extern Node a;
 #define MAX_ATTR_NAME_LEN     128
 #define INVALID_INDEX         0xFFFFFFFF
 
-
-//
-// Last events
-//
-
+/**
+ * Last events
+ */
 #define MAX_LAST_EVENTS       8
 
 #define LAST_EVENT_NODE_DOWN  0
 
-
-//
-// Built-in object IDs
-//
-
+/**
+ * Built-in object IDs
+ */
 #define BUILTIN_OID_NETWORK               1
 #define BUILTIN_OID_SERVICEROOT           2
 #define BUILTIN_OID_TEMPLATEROOT          3
@@ -152,7 +147,7 @@ struct TEMPLATE_UPDATE_INFO
 };
 
 /**
- * Object index structure
+ * Object index element
  */
 struct INDEX_ELEMENT
 {
@@ -160,6 +155,9 @@ struct INDEX_ELEMENT
    NetObj *object;
 };
 
+/**
+ * Object index
+ */
 class NXCORE_EXPORTABLE ObjectIndex
 {
 private:
@@ -218,6 +216,9 @@ public:
 	void print(CONSOLE_CTX console, int level);
 };
 
+/**
+ * Node component tree
+ */
 class ComponentTree : public RefCountObject
 {
 private:
