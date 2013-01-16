@@ -18,7 +18,6 @@
  */
 package org.netxms.webui.core;
 
-import java.util.Locale;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.rap.rwt.RWT;
@@ -43,7 +42,6 @@ public class Application implements IApplication
 	 */
 	public Object start(IApplicationContext context) throws Exception
 	{
-		RWT.setLocale(new Locale("es"));
 		Display display = PlatformUI.createDisplay();
 		RWT.getUISession().getHttpSession().setMaxInactiveInterval(120);
 		display.disposeExec(new Runnable() {

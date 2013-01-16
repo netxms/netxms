@@ -2544,7 +2544,6 @@ webui/webapp/Core/src/org/netxms/webui/core/BrandingManager.java -text
 webui/webapp/Core/src/org/netxms/webui/core/ExtendedContributionComparator.java -text
 webui/webapp/Core/src/org/netxms/webui/core/LoginJob.java -text
 webui/webapp/Core/src/org/netxms/webui/core/Messages.java -text
-webui/webapp/Core/src/org/netxms/webui/core/RedirectServlet.java -text
 webui/webapp/Core/src/org/netxms/webui/core/dialogs/LoginForm.java -text
 webui/webapp/Core/src/org/netxms/webui/core/dialogs/LoginSettingsDialog.java -text
 webui/webapp/Core/src/org/netxms/webui/core/dialogs/PasswordExpiredDialog.java -text

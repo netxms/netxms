@@ -116,13 +116,6 @@
       </context>
    </extension>
 
-  <extension
-      point="org.eclipse.equinox.http.registry.servlets">
-    <servlet
-         alias="/"
-         class="org.netxms.webui.core.RedirectServlet">
-    </servlet>
-  </extension>
 
    <extension
          point="org.eclipse.rap.ui.branding">
@@ -152,8 +145,8 @@
    <extension
          point="org.eclipse.rap.ui.entrypoint">
       <entrypoint
+            applicationId="org.netxms.webui.core.nxmc"
             brandingId="org.netxms.webui.design.branding.classic"
-            class="org.netxms.webui.core.NXMCEntryPoint"
             id="org.netxms.webui.entrypoint"
             path="/nxmc">
       </entrypoint>
