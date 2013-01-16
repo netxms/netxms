@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,11 +23,9 @@
 
 #include "libnxsnmp.h"
 
-
-//
-// Report to SNMP error mapping
-//
-
+/**
+ * Report to SNMP error mapping
+ */
 static struct
 {
 	const TCHAR *oid;
@@ -43,11 +41,9 @@ static struct
 	{ NULL, 0 }
 };
 
-
-//
-// Constructor
-//
-
+/**
+ * Create new SNMP transport.
+ */
 SNMP_Transport::SNMP_Transport()
 {
 	m_authoritativeEngine = NULL;
@@ -58,11 +54,9 @@ SNMP_Transport::SNMP_Transport()
 	m_snmpVersion = SNMP_VERSION_2C;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 SNMP_Transport::~SNMP_Transport()
 {
 	delete m_authoritativeEngine;
@@ -70,23 +64,20 @@ SNMP_Transport::~SNMP_Transport()
 	delete m_securityContext;
 }
 
-
-//
-// Set security context
-//
-
+/**
+ * Set security context. Previous security context will be destroyed.
+ *
+ * @param ctx new security context
+ */
 void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
 {
 	delete m_securityContext;
 	m_securityContext = ctx;
 }
 
-
-//
-// Send a request and wait for respone
-// with respect for timeouts and retransmissions
-//
-
+/**
+ * Send a request and wait for respone with respect for timeouts and retransmissions
+ */
 DWORD SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, DWORD timeout, int numRetries)
 {
    DWORD rc;
@@ -225,13 +216,10 @@ retry:
    return rc;
 }
 
-
-//
-// SNMP_UDPTransport default constructor
-//
-
-SNMP_UDPTransport::SNMP_UDPTransport()
-                  :SNMP_Transport()
+/**
+ * SNMP_UDPTransport default constructor
+ */
+SNMP_UDPTransport::SNMP_UDPTransport() : SNMP_Transport()
 {
    m_hSocket = -1;
    m_dwBufferSize = SNMP_DEFAULT_MSG_MAX_SIZE;
@@ -241,13 +229,10 @@ SNMP_UDPTransport::SNMP_UDPTransport()
 	m_connected = false;
 }
 
-
-//
-// Create SNMP_UDPTransport for existing socket
-//
-
-SNMP_UDPTransport::SNMP_UDPTransport(SOCKET hSocket)
-                  :SNMP_Transport()
+/**
+ * Create SNMP_UDPTransport for existing socket
+ */
+SNMP_UDPTransport::SNMP_UDPTransport(SOCKET hSocket) : SNMP_Transport()
 {
    m_hSocket = hSocket;
    m_dwBufferSize = SNMP_DEFAULT_MSG_MAX_SIZE;
@@ -257,14 +242,12 @@ SNMP_UDPTransport::SNMP_UDPTransport(SOCKET hSocket)
 	m_connected = false;
 }
 
-
-//
-// Create SNMP_UDPTransport transport connected to given host
-// Will try to resolve host name if it's not null, otherwise
-// IP address will be used
-//
-
-DWORD SNMP_UDPTransport::createUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr, WORD wPort)
+/**
+ * Create SNMP_UDPTransport transport connected to given host
+ * Will try to resolve host name if it's not null, otherwise
+ * IP address will be used
+ */
+DWORD SNMP_UDPTransport::createUDPTransport(const TCHAR *pszHostName, DWORD dwHostAddr, WORD wPort)
 {
    DWORD dwResult;
 
@@ -378,11 +361,9 @@ void SNMP_UDPTransport::clearBuffer()
    m_dwBufferPos = 0;
 }
 
-
-//
-// Receive data from socket
-//
-
+/**
+ * Receive data from socket
+ */
 int SNMP_UDPTransport::recvData(DWORD dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize)
 {
    fd_set rdfs;
@@ -448,11 +429,9 @@ retry_wait:
 	return rc;
 }
 
-
-//
-// Pre-parse PDU
-//
-
+/**
+ * Pre-parse PDU
+ */
 DWORD SNMP_UDPTransport::preParsePDU()
 {
    DWORD dwType, dwLength, dwIdLength;
@@ -467,11 +446,9 @@ DWORD SNMP_UDPTransport::preParsePDU()
    return dwLength + dwIdLength;
 }
 
-
-//
-// Read PDU from socket
-//
-
+/**
+ * Read PDU from socket
+ */
 int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout, 
                                    struct sockaddr *pSender, socklen_t *piAddrSize,
                                    SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
@@ -537,11 +514,9 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout,
    return dwPDULength;
 }
 
-
-//
-// Send PDU to socket
-//
-
+/**
+ * Send PDU to socket
+ */
 int SNMP_UDPTransport::sendMessage(SNMP_PDU *pPDU)
 {
    BYTE *pBuffer;

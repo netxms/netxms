@@ -169,6 +169,9 @@ typedef void * NXC_SESSION;
 #define OBJECT_SLMCHECK             30
 #define OBJECT_MOBILEDEVICE         31
 
+/** Base value for custom object classes */
+#define OBJECT_CUSTOM               10000
+
 /**
  * Object's status
  */

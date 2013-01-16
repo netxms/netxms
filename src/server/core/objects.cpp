@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Global data
-//
-
+/**
+ * Global data
+ */
 BOOL g_bModificationsLocked = FALSE;
 
 Network NXCORE_EXPORTABLE *g_pEntireNet = NULL;
@@ -67,11 +65,9 @@ const TCHAR *g_szClassName[]={ _T("Generic"), _T("Subnet"), _T("Node"), _T("Inte
                                _T("ServiceCheck"), _T("MobileDevice")
 };
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static int m_iStatusCalcAlg = SA_CALCULATE_MOST_CRITICAL;
 static int m_iStatusPropAlg = SA_PROPAGATE_UNCHANGED;
 static int m_iFixedStatus;        // Status if propagation is "Fixed"
@@ -403,7 +399,19 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 				g_idxNetMapById.put(pObject->Id(), pObject);
             break;
          default:
-            nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
+				{
+					bool processed = false;
+					for(DWORD i = 0; i < g_dwNumModules; i++)
+					{
+						if (g_pModuleList[i].pfNetObjInsert != NULL)
+						{
+							if (g_pModuleList[i].pfNetObjInsert(pObject))
+								processed = true;
+						}
+					}
+					if (!processed)
+						nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
+				}
             break;
       }
    }
@@ -518,7 +526,19 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 			g_idxNetMapById.remove(pObject->Id());
          break;
       default:
-         nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
+			{
+				bool processed = false;
+				for(DWORD i = 0; i < g_dwNumModules; i++)
+				{
+					if (g_pModuleList[i].pfNetObjDelete != NULL)
+					{
+						if (g_pModuleList[i].pfNetObjDelete(pObject))
+							processed = true;
+					}
+				}
+				if (!processed)
+					nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
+			}
          break;
    }
 }
@@ -907,11 +927,9 @@ static void LinkChildObjectsCallback(NetObj *object, void *data)
 	}
 }
 
-
-//
-// Load objects from database at stratup
-//
-
+/**
+ * Load objects from database at stratup
+ */
 BOOL LoadObjects()
 {
    DB_RESULT hResult;
@@ -1538,6 +1556,13 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
+	// Load custom object classes provided by modules
+   for(i = 0; i < g_dwNumModules; i++)
+	{
+		if (g_pModuleList[i].pfLoadObjects != NULL)
+			g_pModuleList[i].pfLoadObjects();
+	}
+
    // Link childs to container and template group objects
    DbgPrintf(2, _T("Linking objects..."));
 	g_idxObjectById.forEach(LinkChildObjectsCallback, NULL);
@@ -1550,6 +1575,13 @@ BOOL LoadObjects()
 	g_pDashboardRoot->LinkChildObjects();
 	g_pReportRoot->LinkChildObjects();
 	g_pBusinessServiceRoot->LinkChildObjects();
+
+	// Link custom object classes provided by modules
+   for(i = 0; i < g_dwNumModules; i++)
+	{
+		if (g_pModuleList[i].pfLinkObjects != NULL)
+			g_pModuleList[i].pfLinkObjects();
+	}
 
    // Allow objects to change it's modification flag
    g_bModificationsLocked = FALSE;
@@ -1608,7 +1640,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
 
 	ConsolePrintf(pCtx, _T("Object ID %d \"%s\"\n")
                        _T("   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
-                 object->Id(), object->Name(), g_szClassName[object->Type()],
+					  object->Id(), object->Name(), (object->Type() < OBJECT_CUSTOM) ? g_szClassName[object->Type()] : _T("Custom"),
                  IpToStr(object->IpAddr(), dd->buffer),
                  g_szStatusTextSmall[object->Status()],
                  object->isModified(), object->isDeleted());
@@ -1734,6 +1766,17 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
             return TRUE;   // OK only for nodes, because parent subnet will be created automatically
          break;
    }
+
+   // Additional check by loaded modules
+   for(DWORD i = 0; i < g_dwNumModules; i++)
+	{
+		if (g_pModuleList[i].pfIsValidParentClass != NULL)
+		{
+			if (g_pModuleList[i].pfIsValidParentClass(iChildClass, iParentClass))
+				return TRUE;	// accepted by module
+		}
+	}
+
    return FALSE;
 }
 

@@ -353,11 +353,9 @@ public:
    BOOL readFromFile(ZFile *pFile);
 };
 
-
-//
-// Object identifier
-//
-
+/**
+ * Object identifier (OID)
+ */
 class LIBNXSNMP_EXPORTABLE SNMP_ObjectId
 {
 private:
@@ -376,17 +374,15 @@ public:
    const DWORD *getValue() { return m_pdwValue; }
    const TCHAR *getValueAsText() { return CHECK_NULL(m_pszTextValue); }
    void setValue(DWORD *pdwValue, DWORD dwLength);
-   void extend(DWORD dwSubId);
+   void extend(DWORD subId);
 
-   int compare(TCHAR *pszOid);
+   int compare(const TCHAR *pszOid);
    int compare(DWORD *pdwOid, DWORD dwLen);
 };
 
-
-//
-// SNMP variable
-//
-
+/**
+ * SNMP variable (varbind)
+ */
 class LIBNXSNMP_EXPORTABLE SNMP_Variable
 {
 private:
@@ -421,11 +417,9 @@ public:
    void SetValueFromString(DWORD dwType, const TCHAR *pszValue);
 };
 
-
-//
-// SNMP engine
-//
-
+/**
+ * SNMP engine
+ */
 class LIBNXSNMP_EXPORTABLE SNMP_Engine
 {
 private:
@@ -678,15 +672,13 @@ public:
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pPDU);
 
-   DWORD createUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = SNMP_DEFAULT_PORT);
+   DWORD createUDPTransport(const TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = SNMP_DEFAULT_PORT);
 	bool isConnected() { return m_connected; }
 };
 
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize);
 DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, DWORD *pdwBuffer, DWORD dwBufferSize);
 BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText);

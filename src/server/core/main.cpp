@@ -155,22 +155,21 @@ static int m_nShutdownReason = SHUTDOWN_DEFAULT;
 static pthread_t m_signalHandlerThread;
 #endif
 
-
-//
-// Sleep for specified number of seconds or until system shutdown arrives
-// Function will return TRUE if shutdown event occurs
-//
-
-BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds)
+/**
+ * Sleep for specified number of seconds or until system shutdown arrives
+ * Function will return TRUE if shutdown event occurs
+ *
+ * @param seconds seconds to sleep
+ * @return true if server is shutting down
+ */
+BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int seconds)
 {
-	return ConditionWait(m_condShutdown, iSeconds * 1000);
+	return ConditionWait(m_condShutdown, seconds * 1000);
 }
 
-
-//
-// Disconnect from database (exportable function for startup module)
-//
-
+/**
+ * Disconnect from database (exportable function for startup module)
+ */
 void NXCORE_EXPORTABLE ShutdownDB()
 {
 	if (g_hCoreDB != NULL)
@@ -178,11 +177,9 @@ void NXCORE_EXPORTABLE ShutdownDB()
 	DBUnloadDriver(g_dbDriver);
 }
 
-
-//
-// Check data directory for existence
-//
-
+/**
+ * Check data directory for existence
+ */
 static BOOL CheckDataDir()
 {
 	TCHAR szBuffer[MAX_PATH];
@@ -282,11 +279,9 @@ static BOOL CheckDataDir()
 	return TRUE;
 }
 
-
-//
-// Load global configuration parameters
-//
-
+/**
+ * Load global configuration parameters
+ */
 static void LoadGlobalConfig()
 {
 	g_dwDiscoveryPollingInterval = ConfigReadInt(_T("DiscoveryPollingInterval"), 900);
@@ -416,11 +411,9 @@ static BOOL InitCryptografy()
 #endif
 }
 
-
-//
-// Check if process with given PID exists and is a NetXMS server process
-//
-
+/**
+ * Check if process with given PID exists and is a NetXMS server process
+ */
 static BOOL IsNetxmsdProcess(DWORD dwPID)
 {
 #ifdef _WIN32
@@ -449,11 +442,9 @@ static BOOL IsNetxmsdProcess(DWORD dwPID)
 #endif
 }
 
-
-//
-// Database event handler
-//
-
+/**
+ * Database event handler
+ */
 static void DBEventHandler(DWORD dwEvent, const WCHAR *pszArg1, const WCHAR *pszArg2, void *userArg)
 {
 	if (!(g_dwFlags & AF_SERVER_INITIALIZED))
@@ -479,11 +470,9 @@ static void DBEventHandler(DWORD dwEvent, const WCHAR *pszArg1, const WCHAR *psz
 	}
 }
 
-
-//
-// Send console message to session with open console
-//
-
+/**
+ * Send console message to session with open console
+ */
 static void SendConsoleMessage(ClientSession *session, void *arg)
 {
 	if (session->isConsoleOpen())
@@ -841,6 +830,13 @@ void NXCORE_EXPORTABLE Shutdown()
 		pthread_kill(m_signalHandlerThread, SIGUSR1);   // Terminate signal handler
 	}
 #endif
+
+	// Call shutdown functions for the modules
+   for(DWORD i = 0; i < g_dwNumModules; i++)
+	{
+		if (g_pModuleList[i].pfShutdown != NULL)
+			g_pModuleList[i].pfShutdown();
+	}
 
 	// Stop event processor
 	g_pEventQueue->Clear();

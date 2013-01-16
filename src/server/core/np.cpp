@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -310,6 +310,16 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
 		return FALSE;
 	}
 
+   // Allow filtering by loaded modules
+   for(DWORD i = 0; i < g_dwNumModules; i++)
+	{
+		if (g_pModuleList[i].pfAcceptNewNode != NULL)
+		{
+			if (!g_pModuleList[i].pfAcceptNewNode(dwIpAddr, dwNetMask, zoneId, macAddr))
+				return FALSE;	// filtered out by module
+		}
+	}
+
    // Read configuration
    ConfigReadStr(_T("DiscoveryFilter"), szFilter, MAX_DB_STRING, _T(""));
    StrStrip(szFilter);
@@ -503,11 +513,9 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
    return bResult;
 }
 
-
-//
-// Node poller thread (poll new nodes and put them into the database)
-//
-
+/**
+ * Node poller thread (poll new nodes and put them into the database)
+ */
 THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 {
    NEW_NODE *pInfo;

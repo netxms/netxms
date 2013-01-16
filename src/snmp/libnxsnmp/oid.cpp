@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,11 +23,9 @@
 
 #include "libnxsnmp.h"
 
-
-//
-// SNMP_ObjectId default constructor
-//
-
+/**
+ * Create empty OID with length 0
+ */
 SNMP_ObjectId::SNMP_ObjectId()
 {
    m_dwLength = 0;
@@ -35,11 +33,9 @@ SNMP_ObjectId::SNMP_ObjectId()
    m_pszTextValue = NULL;
 }
 
-
-//
-// SNMP_ObjectId constructor from existing gvalue
-//
-
+/**
+ * Create OID from existing binary value
+ */
 SNMP_ObjectId::SNMP_ObjectId(DWORD dwLength, const DWORD *pdwValue)
 {
    m_dwLength = dwLength;
@@ -48,34 +44,28 @@ SNMP_ObjectId::SNMP_ObjectId(DWORD dwLength, const DWORD *pdwValue)
    convertToText();
 }
 
-
-//
-// SNMP_ObjectId destructor
-//
-
+/**
+ * SNMP_ObjectId destructor
+ */
 SNMP_ObjectId::~SNMP_ObjectId()
 {
    safe_free(m_pdwValue);
    safe_free(m_pszTextValue);
 }
 
-
-//
-// Convert binary representation to text
-//
-
+/**
+ * Convert binary representation to text
+ */
 void SNMP_ObjectId::convertToText()
 {
    m_pszTextValue = (TCHAR *)realloc(m_pszTextValue, sizeof(TCHAR) * (m_dwLength * 6 + 1));
    SNMPConvertOIDToText(m_dwLength, m_pdwValue, m_pszTextValue, m_dwLength * 6 + 1);
 }
 
-
-//
-// Compare OID with another
-//
-
-int SNMP_ObjectId::compare(TCHAR *pszOid)
+/**
+ * Compare this OID with another
+ */
+int SNMP_ObjectId::compare(const TCHAR *pszOid)
 {
    DWORD dwBuffer[MAX_OID_LEN], dwLength;
 
@@ -85,11 +75,9 @@ int SNMP_ObjectId::compare(TCHAR *pszOid)
    return compare(dwBuffer, dwLength);
 }
 
-
-//
-// Compare OID to another
-//
-
+/**
+ * Compare this OID to another
+ */
 int SNMP_ObjectId::compare(DWORD *pdwOid, DWORD dwLen)
 {
    if ((pdwOid == NULL) || (dwLen == 0) || (m_pdwValue == NULL))
@@ -102,11 +90,9 @@ int SNMP_ObjectId::compare(DWORD *pdwOid, DWORD dwLen)
             ((dwLen < m_dwLength) ? OID_SHORTER : OID_LONGER);
 }
 
-
-//
-// Set new value
-//
-
+/**
+ * Set new value
+ */
 void SNMP_ObjectId::setValue(DWORD *pdwValue, DWORD dwLength)
 {
    safe_free(m_pdwValue);
@@ -115,14 +101,14 @@ void SNMP_ObjectId::setValue(DWORD *pdwValue, DWORD dwLength)
    convertToText();
 }
 
-
-//
-// Extend value by one subid
-//
-
-void SNMP_ObjectId::extend(DWORD dwSubId)
+/**
+ * Extend value by one subid
+ *
+ * @param subId sub-identifier to add
+ */
+void SNMP_ObjectId::extend(DWORD subId)
 {
    m_pdwValue = (DWORD *)realloc(m_pdwValue, sizeof(DWORD) * (m_dwLength + 1));
-   m_pdwValue[m_dwLength++] = dwSubId;
+   m_pdwValue[m_dwLength++] = subId;
    convertToText();
 }

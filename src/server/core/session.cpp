@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -4242,6 +4242,16 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 																								true);
 								break;
 							default:
+								// Try to create unknown classes by modules
+								for(DWORD i = 0; i < g_dwNumModules; i++)
+								{
+									if (g_pModuleList[i].pfCreateObject != NULL)
+									{
+										pObject = g_pModuleList[i].pfCreateObject(iClass, szObjectName, pParent, pRequest);
+										if (pObject != NULL)
+											break;
+									}
+								}
 								break;
 						}
 

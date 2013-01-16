@@ -30,6 +30,7 @@ class ClientSession;
 class MobileDeviceSession;
 class Node;
 class Event;
+class NetObj;
 
 /**
  * Command handler return codes
@@ -46,6 +47,9 @@ typedef struct
    DWORD dwSize;           // Size of structure in bytes
    TCHAR szName[MAX_OBJECT_NAME];
    void (* pfMain)();  // Pointer to module's main()
+	void (* pfShutdown)();
+	void (* pfLoadObjects)();
+	void (* pfLinkObjects)();
    int (* pfClientCommandHandler)(DWORD dwCommand, CSCPMessage *pMsg, ClientSession *pSession);
    int (* pfMobileDeviceCommandHandler)(DWORD dwCommand, CSCPMessage *pMsg, MobileDeviceSession *pSession);
    BOOL (* pfTrapHandler)(SNMP_PDU *pdu, Node *pNode);
@@ -53,6 +57,11 @@ typedef struct
 	void (* pfStatusPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
 	void (* pfConfPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
 	void (* pfTopologyPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
+	BOOL (* pfNetObjInsert)(NetObj *object);
+	BOOL (* pfNetObjDelete)(NetObj *object);
+	NetObj *(* pfCreateObject)(int objectClass, const TCHAR *name, NetObj *parent, CSCPMessage *msg);
+	BOOL (* pfIsValidParentClass)(int childClass, int parentClass);
+	BOOL (* pfAcceptNewNode)(DWORD ipAddr, DWORD ipNetMask, DWORD zoneId, BYTE *macAddr);
    HMODULE hModule;
 } NXMODULE;
 

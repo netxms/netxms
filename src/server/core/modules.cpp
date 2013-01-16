@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// List of loaded modules
-//
-
+/**
+ * List of loaded modules
+ */
 TCHAR *g_pszModLoadList = NULL;
 DWORD g_dwNumModules = 0;
 NXMODULE *g_pModuleList = NULL;
@@ -87,8 +85,7 @@ void LoadNetXMSModules()
 						if (module.pfMain != NULL)
 							ThreadCreate(ModuleThreadStarter, 0, &g_pModuleList[g_dwNumModules]);
 
-                  nxlog_write(MSG_MODULE_LOADED, EVENTLOG_INFORMATION_TYPE,
-                              "s", g_pModuleList[g_dwNumModules].szName);
+                  nxlog_write(MSG_MODULE_LOADED, EVENTLOG_INFORMATION_TYPE, "s", g_pModuleList[g_dwNumModules].szName);
                   g_dwNumModules++;
                }
                else

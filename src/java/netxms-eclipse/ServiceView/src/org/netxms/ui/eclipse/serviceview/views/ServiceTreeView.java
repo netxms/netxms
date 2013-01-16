@@ -32,7 +32,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ServiceTreeView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.serviceview.views.ServiceTreeView";
+	public static final String ID = "org.netxms.ui.eclipse.serviceview.views.ServiceTreeView"; //$NON-NLS-1$
 	
 	private NXCSession session;
 	private ServiceTree serviceTree;
