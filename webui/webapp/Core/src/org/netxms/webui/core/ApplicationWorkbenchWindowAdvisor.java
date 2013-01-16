@@ -83,7 +83,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		configurer.setShowCoolBar(true);
 		configurer.setShowPerspectiveBar(true);
 		configurer.setShowStatusLine(false);
-		configurer.setTitle("NetXMS Management Console");
+		configurer.setTitle(Messages.get().ApplicationWorkbenchWindowAdvisor_AppTitle);
 		configurer.setShellStyle(SWT.NO_TRIM);
 	}
 
@@ -99,7 +99,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		BindingManager bindingManager = service.getBindingManager();
 		try
 		{
-			bindingManager.setActiveScheme(service.getScheme("org.netxms.ui.eclipse.defaultKeyBinding"));
+			bindingManager.setActiveScheme(service.getScheme("org.netxms.ui.eclipse.defaultKeyBinding")); //$NON-NLS-1$
 		}
 		catch(NotDefinedException e)
 		{
@@ -111,20 +111,20 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		
 		for(Control ctrl : shell.getChildren())
 		{
-			ctrl.setData(RWT.CUSTOM_VARIANT, "gray");
+			ctrl.setData(RWT.CUSTOM_VARIANT, "gray"); //$NON-NLS-1$
 			if (ctrl instanceof CBanner)
 			{
 				for(Control cc : ((CBanner)ctrl).getChildren())
-					cc.setData(RWT.CUSTOM_VARIANT, "gray");
+					cc.setData(RWT.CUSTOM_VARIANT, "gray"); //$NON-NLS-1$
 			}
-			else if (ctrl.getClass().getName().equals("org.eclipse.swt.widgets.Composite"))
+			else if (ctrl.getClass().getName().equals("org.eclipse.swt.widgets.Composite")) //$NON-NLS-1$
 			{
 				for(Control cc : ((Composite)ctrl).getChildren())
-					cc.setData(RWT.CUSTOM_VARIANT, "gray");
+					cc.setData(RWT.CUSTOM_VARIANT, "gray"); //$NON-NLS-1$
 			}
 		}
 		
-		shell.getMenuBar().setData(RWT.CUSTOM_VARIANT, "menuBar");
+		shell.getMenuBar().setData(RWT.CUSTOM_VARIANT, "menuBar"); //$NON-NLS-1$
 	}
 
 	/**
@@ -156,19 +156,19 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			}
 			catch(InvocationTargetException e)
 			{
-				MessageDialog.openError(null, "Connection Error", e.getCause().getLocalizedMessage());
+				MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, e.getCause().getLocalizedMessage());
 			}
 			catch(Exception e)
 			{
 				e.printStackTrace();
-				MessageDialog.openError(null, "Exception", e.toString());
+				MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
 			}
 		} while(!success);
 
 		if (success)
 		{
 			// Suggest user to change password if it is expired
-			final Session session = (Session)RWT.getUISession().getAttribute("netxms.session");
+			final Session session = (Session)RWT.getUISession().getAttribute("netxms.session"); //$NON-NLS-1$
 			if (session.isPasswordExpired())
 			{
 				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
@@ -182,7 +182,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 						{
 							try
 							{
-								NXCSession session = (NXCSession)RWT.getUISession(display).getAttribute("netxms.session");
+								NXCSession session = (NXCSession)RWT.getUISession(display).getAttribute("netxms.session"); //$NON-NLS-1$
 								session.setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
 							}
 							catch(Exception e)
@@ -198,15 +198,15 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 					try
 					{
 						new ProgressMonitorDialog(null).run(true, true, job);
-						MessageDialog.openInformation(null, "Information", "Password changed successfully");
+						MessageDialog.openInformation(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Information, Messages.get().ApplicationWorkbenchWindowAdvisor_PasswordChanged);
 					}
 					catch(InvocationTargetException e)
 					{
-						MessageDialog.openError(null, "Error", "Cannot change password: " + e.getCause().getLocalizedMessage());
+						MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, Messages.get().ApplicationWorkbenchWindowAdvisor_CannotChangePswd + e.getCause().getLocalizedMessage());
 					}
 					catch(InterruptedException e)
 					{
-						MessageDialog.openError(null, "Exception", e.toString());
+						MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
 					}
 				}
 			}
@@ -222,7 +222,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		InputStream in = null;
 		try
 		{
-			in = getClass().getResourceAsStream("nxmc.properties");
+			in = getClass().getResourceAsStream("nxmc.properties"); //$NON-NLS-1$
 			if (in != null)
 				properties.load(in);
 		}

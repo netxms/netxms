@@ -69,13 +69,13 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		actionExit = ActionFactory.QUIT.create(window);
 		register(actionExit);
 
-		actionAbout = new Action("&About NetXMS Management Console") {
+		actionAbout = new Action(Messages.get().ApplicationActionBarAdvisor_AboutActionName) {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
 			public void run()
 			{
-				MessageDialog.openInformation(window.getShell(), "About", "NetXMS Management Console (Web Edition)\nVersion " + NXCommon.VERSION + "\nCopyright (c) 2003-2012 Raden Solutions");
+				MessageDialog.openInformation(window.getShell(), Messages.get().ApplicationActionBarAdvisor_About, Messages.get().ApplicationActionBarAdvisor_AboutText1 + NXCommon.VERSION + Messages.get().ApplicationActionBarAdvisor_AboutText2);
 			}
 		};
 		
@@ -140,7 +140,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 				}
 			}
 		};
-		actionOpenProgressView.setText("Progress");
+		actionOpenProgressView.setText(Messages.get().ApplicationActionBarAdvisor_Progress);
 		actionOpenProgressView.setImageDescriptor(Activator.getImageDescriptor("icons/pview.gif")); //$NON-NLS-1$
 	}
 
@@ -150,13 +150,13 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	@Override
 	protected void fillMenuBar(IMenuManager menuBar)
 	{
-		MenuManager fileMenu = new MenuManager("&File", IWorkbenchActionConstants.M_FILE);
-		MenuManager viewMenu = new MenuManager("&View", IActionConstants.M_VIEW);
-		MenuManager monitorMenu = new MenuManager("&Monitor", IActionConstants.M_MONITOR);
-		MenuManager configMenu = new MenuManager("&Configuration", IActionConstants.M_CONFIG);
-		MenuManager toolsMenu = new MenuManager("&Tools", IActionConstants.M_TOOLS);
-		MenuManager windowMenu = new MenuManager("&Window", IWorkbenchActionConstants.M_WINDOW);
-		MenuManager helpMenu = new MenuManager("&Help", IWorkbenchActionConstants.M_HELP);
+		MenuManager fileMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_File, IWorkbenchActionConstants.M_FILE);
+		MenuManager viewMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_View, IActionConstants.M_VIEW);
+		MenuManager monitorMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Monitor, IActionConstants.M_MONITOR);
+		MenuManager configMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Config, IActionConstants.M_CONFIG);
+		MenuManager toolsMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Tools, IActionConstants.M_TOOLS);
+		MenuManager windowMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Window, IWorkbenchActionConstants.M_WINDOW);
+		MenuManager helpMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Help, IWorkbenchActionConstants.M_HELP);
 
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
@@ -193,11 +193,11 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		toolsMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		
 		// Window
-		MenuManager openPerspectiveMenuMgr = new MenuManager("Open Perspective", "openPerspective");
+		MenuManager openPerspectiveMenuMgr = new MenuManager(Messages.get().ApplicationActionBarAdvisor_OpenPerspective, "openPerspective"); //$NON-NLS-2$
 		openPerspectiveMenuMgr.add(contribItemOpenPerspective);
 		windowMenu.add(openPerspectiveMenuMgr);
 		
-		final MenuManager showViewMenuMgr = new MenuManager("Show View", "showView");
+		final MenuManager showViewMenuMgr = new MenuManager(Messages.get().ApplicationActionBarAdvisor_ShowView, "showView"); //$NON-NLS-2$
 		showViewMenuMgr.add(contribItemShowView);
 		windowMenu.add(showViewMenuMgr);
 		
@@ -209,7 +209,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		windowMenu.add(actionCloseAllPerspectives);
 		windowMenu.add(new Separator());
 		
-		final MenuManager navMenu = new MenuManager("Navigation", IWorkbenchActionConstants.M_NAVIGATE);
+		final MenuManager navMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Navigation, IWorkbenchActionConstants.M_NAVIGATE);
 		windowMenu.add(navMenu);
 		navMenu.add(actionShowViewMenu);
 		navMenu.add(new Separator());

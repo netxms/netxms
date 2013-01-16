@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.webui.core.Messages;
 
 /**
  * Advanced login settings dialog
@@ -55,7 +56,7 @@ public class LoginSettingsDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Advanced Login Options");
+		newShell.setText(Messages.get().LoginSettingsDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -72,8 +73,8 @@ public class LoginSettingsDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		serverAddress = new LabeledText(dialogArea, SWT.NONE);
-		serverAddress.setLabel("NetXMS server address");
-		serverAddress.setText(properties.getProperty("server", "127.0.0.1"));
+		serverAddress.setLabel(Messages.get().LoginSettingsDialog_ServerAddress);
+		serverAddress.setText(properties.getProperty("server", "127.0.0.1")); //$NON-NLS-1$ //$NON-NLS-2$
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -89,7 +90,7 @@ public class LoginSettingsDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		properties.setProperty("server", serverAddress.getText());
+		properties.setProperty("server", serverAddress.getText()); //$NON-NLS-1$
 		super.okPressed();
 	}
 }

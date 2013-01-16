@@ -41,7 +41,7 @@ public class LoginJob implements IRunnableWithProgress
 		@Override
 		public void run()
 		{
-			final Session session = (Session)RWT.getUISession(display).getAttribute("netxms.sesion");
+			final Session session = (Session)RWT.getUISession(display).getAttribute("netxms.sesion"); //$NON-NLS-1$
 			try
 			{
 				session.checkConnection();
@@ -109,25 +109,25 @@ public class LoginJob implements IRunnableWithProgress
 			session.connect();
 			monitor.worked(40);
 
-			monitor.setTaskName("Synchronizing objects...");
+			monitor.setTaskName(Messages.get().LoginJob_SyncObjects);
 			session.syncObjects();
 			monitor.worked(25);
 
-			monitor.setTaskName("Synchronizing users...");
+			monitor.setTaskName(Messages.get().LoginJob_SyncUsers);
 			session.syncUserDatabase();
 			monitor.worked(5);
 
-			monitor.setTaskName("Loading event configuration...");
+			monitor.setTaskName(Messages.get().LoginJob_LoadingEvents);
 			session.syncEventTemplates();
 			monitor.worked(5);
 
-			monitor.setTaskName("Subscribing to notifications...");
+			monitor.setTaskName(Messages.get().LoginJob_Subscribing);
 			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS | NXCSession.CHANNEL_EVENTS);
 			monitor.worked(5);
 
-			RWT.getUISession(display).setAttribute("netxms.session", session);
+			RWT.getUISession(display).setAttribute("netxms.session", session); //$NON-NLS-1$
 			
-			monitor.setTaskName("Initializing extensions...");
+			monitor.setTaskName(Messages.get().LoginJob_InitExtensions);
 			//TweakletManager.postLogin(session);
 			callLoginListeners(session);
 			monitor.worked(5);

@@ -71,7 +71,7 @@ public class BrandingManager
 			{
 				final BrandingProvider p = (BrandingProvider)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
 				int priority = 65535;
-				String value = elements[i].getAttribute("priority");
+				String value = elements[i].getAttribute("priority"); //$NON-NLS-1$
 				if (value != null)
 				{
 					try

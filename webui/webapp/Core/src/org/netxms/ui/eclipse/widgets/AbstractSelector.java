@@ -214,7 +214,7 @@ public class AbstractSelector extends Composite
 	 */
 	protected String getButtonToolTip()
 	{
-		return Messages.AbstractSelector_Select;
+		return Messages.get().AbstractSelector_Select;
 	}
 
 	/**

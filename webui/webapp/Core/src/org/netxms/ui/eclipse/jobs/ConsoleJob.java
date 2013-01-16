@@ -206,7 +206,7 @@ public abstract class ConsoleJob extends Job
 			Throwable cause = e.getCause();
 			if (cause == null)
 				cause = e;
-			MessageDialog.openError(null, Messages.ConsoleJob_ErrorDialogTitle, getErrorMessage() + ": " + cause.getLocalizedMessage()); //$NON-NLS-1$
+			MessageDialog.openError(null, Messages.get().ConsoleJob_ErrorDialogTitle, getErrorMessage() + ": " + cause.getLocalizedMessage()); //$NON-NLS-1$
 		}
 		catch(InterruptedException e)
 		{

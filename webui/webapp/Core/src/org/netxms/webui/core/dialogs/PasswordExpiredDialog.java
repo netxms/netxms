@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.webui.core.Activator;
+import org.netxms.webui.core.Messages;
 
 /**
  * "Password expired" dialog
@@ -77,13 +78,13 @@ public class PasswordExpiredDialog extends Dialog
 		editArea.setLayout(editAreaLayout);
 		
 		Label msg = new Label(editArea, SWT.WRAP);
-		msg.setText("Your password was expired. Please change your password now.");
+		msg.setText(Messages.get().PasswordExpiredDialog_Prompt);
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		msg.setLayoutData(gd);
-		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, "New password:", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, "Confirm new password:", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.get().PasswordExpiredDialog_NewPassword, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-2$
+		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.get().PasswordExpiredDialog_ConfirmNewPassword, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-2$
 
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -130,7 +131,7 @@ public class PasswordExpiredDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Change password");
+		newShell.setText(Messages.get().PasswordExpiredDialog_Title);
 	}
 
 	@Override

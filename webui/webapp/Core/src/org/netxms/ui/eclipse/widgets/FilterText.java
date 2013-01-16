@@ -65,14 +65,14 @@ public class FilterText extends Composite
 		setLayout(layout);
 		
 		final Label label = new Label(this, SWT.NONE);
-		label.setText(Messages.FilterText_Filter);
+		label.setText(Messages.get().FilterText_Filter);
 		GridData gd = new GridData();
 		gd.verticalAlignment = SWT.CENTER;
 		label.setLayoutData(gd);
 		
 		text = new Text(this, SWT.BORDER);
 		text.setTextLimit(64);
-		text.setMessage(Messages.FilterText_FilterIsEmpty);
+		text.setMessage(Messages.get().FilterText_FilterIsEmpty);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -100,7 +100,7 @@ public class FilterText extends Composite
 		closeButton.setBackground(getBackground());
 		closeButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		closeButton.setImage(SharedIcons.IMG_CLOSE);
-		closeButton.setToolTipText(Messages.FilterText_CloseFilter);
+		closeButton.setToolTipText(Messages.get().FilterText_CloseFilter);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.CENTER;
 		gd.horizontalAlignment = SWT.CENTER;

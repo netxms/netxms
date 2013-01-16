@@ -53,6 +53,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.webui.core.Activator;
 import org.netxms.webui.core.BrandingManager;
+import org.netxms.webui.core.Messages;
 
 /**
  *	Login form
@@ -77,7 +78,7 @@ public class LoginForm extends Window
 		super(parentShell);
 		setBlockOnOpen(true);
 		this.properties = properties;
-		advancedSettingsEnabled = Boolean.parseBoolean(properties.getProperty("enableAdvancedSettings", "true"));
+		advancedSettingsEnabled = Boolean.parseBoolean(properties.getProperty("enableAdvancedSettings", "true")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/* (non-Javadoc)
@@ -98,7 +99,7 @@ public class LoginForm extends Window
 	{
 		colors = new ColorCache(parent);
 		
-		final Font headerFont = new Font(parent.getDisplay(), "Verdana", 18, SWT.BOLD);
+		final Font headerFont = new Font(parent.getDisplay(), "Verdana", 18, SWT.BOLD); //$NON-NLS-1$
 		
 		parent.setBackground(colors.create(50, 99, 134));
 		
@@ -129,7 +130,7 @@ public class LoginForm extends Window
 		
 		Label title = new Label(content, SWT.CENTER);
 		final String customTitle = BrandingManager.getInstance().getLoginTitle();
-		title.setText((customTitle != null) ? customTitle : "NetXMS Server Login");
+		title.setText((customTitle != null) ? customTitle : Messages.get().LoginForm_Title);
 		title.setFont(headerFont);
 		title.setForeground(colors.create(57, 33, 89));
 		gd = new GridData();
@@ -141,7 +142,7 @@ public class LoginForm extends Window
 		Image userImage = null;
 		try
 		{
-			ImageDescriptor d = ImageDescriptor.createFromURL(new URL("http://127.0.0.1/netxms_login.dat"));
+			ImageDescriptor d = ImageDescriptor.createFromURL(new URL("http://127.0.0.1/netxms_login.dat")); //$NON-NLS-1$
 			if (d != null)
 				userImage = d.createImage(false);
 		}
@@ -152,7 +153,7 @@ public class LoginForm extends Window
 		}
 		
 		final ImageDescriptor customImage = BrandingManager.getInstance().getLoginTitleImage();
-		final Image loginImage = (userImage != null) ? userImage : ((customImage != null) ? customImage.createImage() : Activator.getImageDescriptor("icons/login.jpg").createImage());
+		final Image loginImage = (userImage != null) ? userImage : ((customImage != null) ? customImage.createImage() : Activator.getImageDescriptor("icons/login.jpg").createImage()); //$NON-NLS-1$
 		Label logo = new Label(content, SWT.NONE);
 		logo.setImage(loginImage);
 		
@@ -166,21 +167,21 @@ public class LoginForm extends Window
 		loginArea.setLayoutData(gd);
 		
 		textLogin = new LabeledText(loginArea, SWT.NONE);
-		textLogin.setLabel("User name");
+		textLogin.setLabel(Messages.get().LoginForm_UserName);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		textLogin.setLayoutData(gd);
 		
 		textPassword = new LabeledText(loginArea, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
-		textPassword.setLabel("Password");
+		textPassword.setLabel(Messages.get().LoginForm_Password);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		textPassword.setLayoutData(gd);
 		
 		Button okButton = new Button(loginArea, SWT.PUSH);
-		okButton.setText("Login");
+		okButton.setText(Messages.get().LoginForm_LoginButton);
 		okButton.addSelectionListener(new SelectionListener() {
 			private static final long serialVersionUID = 1L;
 
@@ -202,9 +203,9 @@ public class LoginForm extends Window
 		gd.verticalIndent = 5;
 		okButton.setLayoutData(gd);
 		
-		final Image setupImage = Activator.getImageDescriptor("icons/app_settings.png").createImage();
+		final Image setupImage = Activator.getImageDescriptor("icons/app_settings.png").createImage(); //$NON-NLS-1$
 		ImageHyperlink setupLink = new ImageHyperlink(loginArea, SWT.NONE);
-		setupLink.setText("Options");
+		setupLink.setText(Messages.get().LoginForm_Options);
 		setupLink.setImage(setupImage);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.RIGHT;
@@ -222,7 +223,7 @@ public class LoginForm extends Window
 				}
 				else
 				{
-					MessageDialog.openError(getShell(), "Error", "Advanced login options was disabled by server administrator");
+					MessageDialog.openError(getShell(), Messages.get().LoginForm_Error, Messages.get().LoginForm_AdvOptionsDisabled);
 				}
 			}
 		});
@@ -240,7 +241,7 @@ public class LoginForm extends Window
 		});
 		
 		Label version = new Label(parent, SWT.NONE);
-		version.setText("Version " + NXCommon.VERSION);
+		version.setText(Messages.get().LoginForm_Version + NXCommon.VERSION);
 		version.setBackground(parent.getBackground());
 		version.setForeground(colors.create(255, 255, 255));
 		gd = new GridData();

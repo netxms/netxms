@@ -38,7 +38,7 @@ public class RefreshAction extends Action
 	 */
 	public RefreshAction()
 	{
-		super(Messages.RefreshAction_Name, Activator.getImageDescriptor("icons/refresh.gif")); //$NON-NLS-1$
+		super(Messages.get().RefreshAction_Name, Activator.getImageDescriptor("icons/refresh.gif")); //$NON-NLS-1$
 	}
 
 	/**
@@ -48,7 +48,7 @@ public class RefreshAction extends Action
 	 */
 	public RefreshAction(IViewPart viewPart)
 	{
-		super(Messages.RefreshAction_Name, Activator.getImageDescriptor("icons/refresh.gif")); //$NON-NLS-1$
+		super(Messages.get().RefreshAction_Name, Activator.getImageDescriptor("icons/refresh.gif")); //$NON-NLS-1$
 
 		final IHandlerService handlerService = (IHandlerService)viewPart.getSite().getService(IHandlerService.class);
       setActionDefinitionId("org.netxms.ui.eclipse.library.commands.refresh");

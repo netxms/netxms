@@ -13,7 +13,7 @@ import org.eclipse.ui.model.IContributionService;
  */
 public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 {
-	private static final String PERSPECTIVE_ID = "org.netxms.ui.eclipse.console.DefaultPerspective";
+	private static final String PERSPECTIVE_ID = "org.netxms.ui.eclipse.console.DefaultPerspective"; //$NON-NLS-1$
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.application.WorkbenchAdvisor#createWorkbenchWindowAdvisor(org.eclipse.ui.application.IWorkbenchWindowConfigurer)

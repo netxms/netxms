@@ -38,9 +38,9 @@ public class RedirectServlet extends HttpServlet
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
 	{
 		final String path = req.getRequestURI().substring(req.getContextPath().length());
-		if (path == null || path.isEmpty() || "/".equals(path)) 
+		if (path == null || path.isEmpty() || "/".equals(path))  //$NON-NLS-1$
 		{
-			resp.sendRedirect(resp.encodeRedirectURL("nxmc"));
+			resp.sendRedirect(resp.encodeRedirectURL("nxmc")); //$NON-NLS-1$
 		}
 	}
 }
