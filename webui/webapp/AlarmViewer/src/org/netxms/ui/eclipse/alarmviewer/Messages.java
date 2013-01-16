@@ -1,69 +1,71 @@
 package org.netxms.ui.eclipse.alarmviewer;
 
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.rap.rwt.RWT;
 
 public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.alarmviewer.messages"; //$NON-NLS-1$
-	public static String AcknowledgeAlarm_ErrorMessage;
-	public static String AcknowledgeAlarm_JobName;
-	public static String AcknowledgeAlarm_TaskName;
-	public static String AlarmComments_AddCommentJob;
-	public static String AlarmComments_AddCommentLink;
-	public static String AlarmComments_AddError;
-	public static String AlarmComments_Comments;
-	public static String AlarmComments_Details;
-	public static String AlarmComments_GetComments;
-	public static String AlarmComments_GetError;
-	public static String AlarmComments_InternalError;
-	public static String AlarmCommentsEditor_Edit;
-	public static String AlarmCommentsEditor_Unknown;
-	public static String AlarmComparator_Unknown;
-	public static String AlarmDetailsProvider_Error;
-	public static String AlarmDetailsProvider_ErrorOpeningView;
-	public static String AlarmList_AckBy;
-	public static String AlarmList_Acknowledge;
-	public static String AlarmList_CannotResoveAlarm;
-	public static String AlarmList_ColumnCount;
-	public static String AlarmList_ColumnCreated;
-	public static String AlarmList_ColumnLastChange;
-	public static String AlarmList_ColumnMessage;
-	public static String AlarmList_ColumnSeverity;
-	public static String AlarmList_ColumnSource;
-	public static String AlarmList_ColumnState;
-	public static String AlarmList_Comments;
-	public static String AlarmList_CopyMsgToClipboard;
-	public static String AlarmList_CopyToClipboard;
-	public static String AlarmList_Error;
-	public static String AlarmList_ErrorText;
-	public static String AlarmList_Resolve;
-	public static String AlarmList_ResolveAlarm;
-	public static String AlarmList_Resolving;
-	public static String AlarmList_StickyAck;
-	public static String AlarmList_SyncJobError;
-	public static String AlarmList_SyncJobName;
-	public static String AlarmList_Terminate;
-	public static String AlarmListLabelProvider_AlarmState_Acknowledged;
-	public static String AlarmListLabelProvider_AlarmState_Outstanding;
-	public static String AlarmListLabelProvider_AlarmState_Resolved;
-	public static String AlarmListLabelProvider_AlarmState_Terminated;
-	public static String AlarmNotifier_ToolTip_Header;
-	public static String AlarmReminderDialog_Dismiss;
-	public static String AlarmReminderDialog_OutstandingAlarms;
-	public static String Alarms_Blinking;
-	public static String Alarms_ShowPopup;
-	public static String Alarms_ShowReminder;
-	public static String EditCommentDialog_Comment;
-	public static String EditCommentDialog_EditComment;
-	public static String ObjectAlarmBrowser_TitlePrefix;
-	public static String OpenAlarmBrowser_Error;
-	public static String OpenAlarmBrowser_ErrorOpeningView;
-	public static String ShowObjectAlarms_Error;
-	public static String ShowObjectAlarms_ErrorOpeningView;
-	public static String Startup_JobName;
-	public static String TerminateAlarm_ErrorMessage;
-	public static String TerminateAlarm_JobTitle;
-	public static String TerminateAlarm_TaskName;
+	
+	public String AcknowledgeAlarm_ErrorMessage;
+	public String AcknowledgeAlarm_JobName;
+	public String AcknowledgeAlarm_TaskName;
+	public String AlarmComments_AddCommentJob;
+	public String AlarmComments_AddCommentLink;
+	public String AlarmComments_AddError;
+	public String AlarmComments_Comments;
+	public String AlarmComments_Details;
+	public String AlarmComments_GetComments;
+	public String AlarmComments_GetError;
+	public String AlarmComments_InternalError;
+	public String AlarmCommentsEditor_Edit;
+	public String AlarmCommentsEditor_Unknown;
+	public String AlarmComparator_Unknown;
+	public String AlarmDetailsProvider_Error;
+	public String AlarmDetailsProvider_ErrorOpeningView;
+	public String AlarmList_AckBy;
+	public String AlarmList_Acknowledge;
+	public String AlarmList_CannotResoveAlarm;
+	public String AlarmList_ColumnCount;
+	public String AlarmList_ColumnCreated;
+	public String AlarmList_ColumnLastChange;
+	public String AlarmList_ColumnMessage;
+	public String AlarmList_ColumnSeverity;
+	public String AlarmList_ColumnSource;
+	public String AlarmList_ColumnState;
+	public String AlarmList_Comments;
+	public String AlarmList_CopyMsgToClipboard;
+	public String AlarmList_CopyToClipboard;
+	public String AlarmList_Error;
+	public String AlarmList_ErrorText;
+	public String AlarmList_Resolve;
+	public String AlarmList_ResolveAlarm;
+	public String AlarmList_Resolving;
+	public String AlarmList_StickyAck;
+	public String AlarmList_SyncJobError;
+	public String AlarmList_SyncJobName;
+	public String AlarmList_Terminate;
+	public String AlarmListLabelProvider_AlarmState_Acknowledged;
+	public String AlarmListLabelProvider_AlarmState_Outstanding;
+	public String AlarmListLabelProvider_AlarmState_Resolved;
+	public String AlarmListLabelProvider_AlarmState_Terminated;
+	public String AlarmNotifier_ToolTip_Header;
+	public String AlarmReminderDialog_Dismiss;
+	public String AlarmReminderDialog_OutstandingAlarms;
+	public String Alarms_Blinking;
+	public String Alarms_ShowPopup;
+	public String Alarms_ShowReminder;
+	public String EditCommentDialog_Comment;
+	public String EditCommentDialog_EditComment;
+	public String ObjectAlarmBrowser_TitlePrefix;
+	public String OpenAlarmBrowser_Error;
+	public String OpenAlarmBrowser_ErrorOpeningView;
+	public String ShowObjectAlarms_Error;
+	public String ShowObjectAlarms_ErrorOpeningView;
+	public String Startup_JobName;
+	public String TerminateAlarm_ErrorMessage;
+	public String TerminateAlarm_JobTitle;
+	public String TerminateAlarm_TaskName;
 	static
 	{
 		// initialize resource bundle
@@ -72,5 +74,15 @@ public class Messages extends NLS
 
 	private Messages()
 	{
+	}
+	
+	/**
+	 * Get message class for current locale
+	 * 
+	 * @return
+	 */
+	public static Messages get()
+	{
+		return RWT.NLS.getISO8859_1Encoded(BUNDLE_NAME, Messages.class);
 	}
 }

@@ -67,7 +67,7 @@ public class AlarmCommentsEditor extends Composite
 		final CLabel user = new CLabel(this, SWT.NONE);
 		toolkit.adapt(user);
 		user.setImage(imageCache.add(Activator.getImageDescriptor("icons/user.png"))); //$NON-NLS-1$
-		user.setText((userObject != null) ? userObject.getName() : Messages.AlarmCommentsEditor_Unknown);
+		user.setText((userObject != null) ? userObject.getName() : Messages.get().AlarmCommentsEditor_Unknown);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = false;
@@ -80,7 +80,7 @@ public class AlarmCommentsEditor extends Composite
 		time.setLayoutData(gd);
 		
 		final ImageHyperlink linkEdit = toolkit.createImageHyperlink(this, SWT.NONE);
-		linkEdit.setText(Messages.AlarmCommentsEditor_Edit);
+		linkEdit.setText(Messages.get().AlarmCommentsEditor_Edit);
 		linkEdit.setImage(SharedIcons.IMG_EDIT);
 		linkEdit.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override

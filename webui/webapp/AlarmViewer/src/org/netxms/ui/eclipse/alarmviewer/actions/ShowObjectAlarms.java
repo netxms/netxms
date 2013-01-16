@@ -69,7 +69,7 @@ public class ShowObjectAlarms implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(window.getShell(), Messages.ShowObjectAlarms_Error, Messages.ShowObjectAlarms_ErrorOpeningView + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.get().ShowObjectAlarms_Error, Messages.get().ShowObjectAlarms_ErrorOpeningView + e.getMessage());
 			}
 		}
 	}

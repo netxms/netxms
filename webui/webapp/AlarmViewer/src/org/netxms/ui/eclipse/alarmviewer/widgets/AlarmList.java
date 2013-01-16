@@ -118,7 +118,7 @@ public class AlarmList extends Composite
 		this.viewPart = viewPart;		
 		
 		// Setup table columns
-		final String[] names = { Messages.AlarmList_ColumnSeverity, Messages.AlarmList_ColumnState, Messages.AlarmList_ColumnSource, Messages.AlarmList_ColumnMessage, Messages.AlarmList_ColumnCount, Messages.AlarmList_Comments, Messages.AlarmList_AckBy, Messages.AlarmList_ColumnCreated, Messages.AlarmList_ColumnLastChange };
+		final String[] names = { Messages.get().AlarmList_ColumnSeverity, Messages.get().AlarmList_ColumnState, Messages.get().AlarmList_ColumnSource, Messages.get().AlarmList_ColumnMessage, Messages.get().AlarmList_ColumnCount, Messages.get().AlarmList_Comments, Messages.get().AlarmList_AckBy, Messages.get().AlarmList_ColumnCreated, Messages.get().AlarmList_ColumnLastChange };
 		final int[] widths = { 100, 100, 150, 300, 70, 70, 100, 100, 100 };
 		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
@@ -263,7 +263,7 @@ public class AlarmList extends Composite
 	 */
 	private void createActions()
 	{
-		actionCopy = new Action(Messages.AlarmList_CopyToClipboard) {
+		actionCopy = new Action(Messages.get().AlarmList_CopyToClipboard) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -290,7 +290,7 @@ public class AlarmList extends Composite
 			}
 		};
 
-		actionCopyMessage = new Action(Messages.AlarmList_CopyMsgToClipboard) {
+		actionCopyMessage = new Action(Messages.get().AlarmList_CopyMsgToClipboard) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -312,7 +312,7 @@ public class AlarmList extends Composite
 			}
 		};
 		
-		actionComments = new Action(Messages.AlarmList_Comments, Activator.getImageDescriptor("icons/comments.png")) { //$NON-NLS-1$
+		actionComments = new Action(Messages.get().AlarmList_Comments, Activator.getImageDescriptor("icons/comments.png")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -332,7 +332,7 @@ public class AlarmList extends Composite
 			}
 		};
 
-		actionAcknowledge = new Action(Messages.AlarmList_Acknowledge, Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$
+		actionAcknowledge = new Action(Messages.get().AlarmList_Acknowledge, Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -342,7 +342,7 @@ public class AlarmList extends Composite
 			}
 		};
 
-		actionStickyAcknowledge = new Action(Messages.AlarmList_StickyAck, Activator.getImageDescriptor("icons/acknowledged_sticky.png")) { //$NON-NLS-1$
+		actionStickyAcknowledge = new Action(Messages.get().AlarmList_StickyAck, Activator.getImageDescriptor("icons/acknowledged_sticky.png")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -352,7 +352,7 @@ public class AlarmList extends Composite
 			}
 		};
 
-		actionResolve = new Action(Messages.AlarmList_Resolve, Activator.getImageDescriptor("icons/resolved.png")) { //$NON-NLS-1$
+		actionResolve = new Action(Messages.get().AlarmList_Resolve, Activator.getImageDescriptor("icons/resolved.png")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -362,7 +362,7 @@ public class AlarmList extends Composite
 			}
 		};
 
-		actionTerminate = new Action(Messages.AlarmList_Terminate, Activator.getImageDescriptor("icons/terminated.png")) { //$NON-NLS-1$
+		actionTerminate = new Action(Messages.get().AlarmList_Terminate, Activator.getImageDescriptor("icons/terminated.png")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -462,7 +462,7 @@ public class AlarmList extends Composite
 	 */
 	public void refresh()
 	{
-		new ConsoleJob(Messages.AlarmList_SyncJobName, viewPart, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.get().AlarmList_SyncJobName, viewPart, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -487,7 +487,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.AlarmList_SyncJobError;
+				return Messages.get().AlarmList_SyncJobError;
 			}
 		}.start();
 	}
@@ -509,7 +509,7 @@ public class AlarmList extends Composite
 		}
 		catch(PartInitException e)
 		{
-			MessageDialog.openError(getShell(), Messages.AlarmList_Error, Messages.AlarmList_ErrorText + e.getLocalizedMessage());
+			MessageDialog.openError(getShell(), Messages.get().AlarmList_Error, Messages.get().AlarmList_ErrorText + e.getLocalizedMessage());
 		}
 	}
 	
@@ -525,11 +525,11 @@ public class AlarmList extends Composite
 			return;
 		
 		final Object[] alarms = selection.toArray();
-		new ConsoleJob(Messages.AcknowledgeAlarm_JobName, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+		new ConsoleJob(Messages.get().AcknowledgeAlarm_JobName, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.AcknowledgeAlarm_TaskName, alarms.length);
+				monitor.beginTask(Messages.get().AcknowledgeAlarm_TaskName, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
@@ -544,7 +544,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.AcknowledgeAlarm_ErrorMessage;
+				return Messages.get().AcknowledgeAlarm_ErrorMessage;
 			}
 		}.start();
 	}
@@ -560,11 +560,11 @@ public class AlarmList extends Composite
 			return;
 		
 		final Object[] alarms = selection.toArray();
-		new ConsoleJob(Messages.AlarmList_Resolving, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+		new ConsoleJob(Messages.get().AlarmList_Resolving, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.AlarmList_ResolveAlarm, alarms.length);
+				monitor.beginTask(Messages.get().AlarmList_ResolveAlarm, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
@@ -579,7 +579,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.AlarmList_CannotResoveAlarm;
+				return Messages.get().AlarmList_CannotResoveAlarm;
 			}
 		}.start();
 	}
@@ -594,11 +594,11 @@ public class AlarmList extends Composite
 			return;
 		
 		final Object[] alarms = selection.toArray();
-		new ConsoleJob(Messages.TerminateAlarm_JobTitle, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+		new ConsoleJob(Messages.get().TerminateAlarm_JobTitle, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.TerminateAlarm_TaskName, alarms.length);
+				monitor.beginTask(Messages.get().TerminateAlarm_TaskName, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
@@ -613,7 +613,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.TerminateAlarm_ErrorMessage;
+				return Messages.get().TerminateAlarm_ErrorMessage;
 			}
 		}.start();
 	}
@@ -637,7 +637,7 @@ public class AlarmList extends Composite
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(getShell(), Messages.AlarmList_Error, "Cannot open object details view: " + e.getLocalizedMessage());
+				MessageDialog.openError(getShell(), Messages.get().AlarmList_Error, "Cannot open object details view: " + e.getLocalizedMessage());
 			}
 		}
 	}

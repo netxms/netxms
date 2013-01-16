@@ -85,7 +85,7 @@ public class AlarmDetails extends ViewPart
 	public static final int EV_COLUMN_TIMESTAMP = 4;
 	
 	private static final String[] stateImage = { "icons/outstanding.png", "icons/acknowledged.png", "icons/terminated.png" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, Messages.AlarmListLabelProvider_AlarmState_Terminated };	
+	private static final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };	
 	
 	private NXCSession session;
 	private long alarmId;
@@ -123,7 +123,7 @@ public class AlarmDetails extends ViewPart
 		}
 		catch(NumberFormatException e)
 		{
-			throw new PartInitException(Messages.AlarmComments_InternalError, e);
+			throw new PartInitException(Messages.get().AlarmComments_InternalError, e);
 		}
 		
 		setPartName(getPartName() + " [" + Long.toString(alarmId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -289,7 +289,7 @@ public class AlarmDetails extends ViewPart
 	private void createCommentsSection()
 	{
 		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
-		section.setText(Messages.AlarmComments_Comments);
+		section.setText(Messages.get().AlarmComments_Comments);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
@@ -304,7 +304,7 @@ public class AlarmDetails extends ViewPart
 		
 		linkAddComment = toolkit.createImageHyperlink(editorsArea, SWT.NONE);
 		linkAddComment.setImage(imageCache.add(Activator.getImageDescriptor("icons/new_comment.png"))); //$NON-NLS-1$
-		linkAddComment.setText(Messages.AlarmComments_AddCommentLink);
+		linkAddComment.setText(Messages.get().AlarmComments_AddCommentLink);
 		linkAddComment.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -477,7 +477,7 @@ public class AlarmDetails extends ViewPart
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob(Messages.AlarmComments_AddCommentJob, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().AlarmComments_AddCommentJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -494,7 +494,7 @@ public class AlarmDetails extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.AlarmComments_AddError;
+				return Messages.get().AlarmComments_AddError;
 			}
 		}.start();
 	}

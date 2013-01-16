@@ -49,7 +49,7 @@ public class AlarmDetailsProvider implements ObjectDetailsProvider
 		}
 		catch(PartInitException e)
 		{
-			MessageDialog.openError((viewPart != null) ? viewPart.getSite().getShell() : null, Messages.AlarmDetailsProvider_Error, Messages.AlarmDetailsProvider_ErrorOpeningView + e.getMessage());
+			MessageDialog.openError((viewPart != null) ? viewPart.getSite().getShell() : null, Messages.get().AlarmDetailsProvider_Error, Messages.get().AlarmDetailsProvider_ErrorOpeningView + e.getMessage());
 		}
 	}
 }
