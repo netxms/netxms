@@ -10,7 +10,6 @@
       <plugin id="org.apache.commons.io"/>
       <plugin id="org.apache.felix.gogo.runtime"/>
       <plugin id="org.apache.felix.gogo.shell"/>
-      <plugin id="org.eclipse.birt.chart"/>
       <plugin id="org.eclipse.birt.chart.device.extension"/>
       <plugin id="org.eclipse.birt.chart.engine"/>
       <plugin id="org.eclipse.birt.chart.engine.extension"/>
@@ -34,9 +33,15 @@
       <plugin id="org.eclipse.equinox.http.servletbridge"/>
       <plugin id="org.eclipse.equinox.preferences"/>
       <plugin id="org.eclipse.equinox.registry"/>
-      <plugin id="org.eclipse.equinox.servletbridge"/>
       <plugin id="org.eclipse.equinox.servletbridge.extensionbundle" fragment="true"/>
       <plugin id="org.eclipse.help"/>
+      <plugin id="org.eclipse.jetty.continuation"/>
+      <plugin id="org.eclipse.jetty.http"/>
+      <plugin id="org.eclipse.jetty.io"/>
+      <plugin id="org.eclipse.jetty.security"/>
+      <plugin id="org.eclipse.jetty.server"/>
+      <plugin id="org.eclipse.jetty.servlet"/>
+      <plugin id="org.eclipse.jetty.util"/>
       <plugin id="org.eclipse.osgi"/>
       <plugin id="org.eclipse.osgi.services"/>
       <plugin id="org.eclipse.rap.draw2d"/>
@@ -94,7 +99,6 @@
       <plugin id="org.apache.commons.io" autoStart="true" startLevel="0" />
       <plugin id="org.apache.felix.gogo.runtime" autoStart="true" startLevel="0" />
       <plugin id="org.apache.felix.gogo.shell" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.birt.chart" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.birt.chart.device.extension" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.birt.chart.engine" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.birt.chart.engine.extension" autoStart="true" startLevel="0" />
@@ -118,8 +122,14 @@
       <plugin id="org.eclipse.equinox.http.servletbridge" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.preferences" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.registry" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.equinox.servletbridge" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.help" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.jetty.continuation" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.jetty.http" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.jetty.io" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.jetty.security" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.jetty.server" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.jetty.servlet" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.jetty.util" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.osgi" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.osgi.services" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.draw2d" autoStart="true" startLevel="0" />
