@@ -112,5 +112,4 @@ public:
 	virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, int module, NDD_MODULE_LAYOUT *layout);
 };
 
-
 #endif   /* _nddrv_h_ */

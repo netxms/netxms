@@ -40,7 +40,7 @@ public class RedirectServlet extends HttpServlet
 		final String path = req.getRequestURI().substring(req.getContextPath().length());
 		if (path == null || path.isEmpty() || "/".equals(path))  //$NON-NLS-1$
 		{
-			resp.sendRedirect(resp.encodeRedirectURL("nxmc")); //$NON-NLS-1$
+			resp.sendRedirect(resp.encodeRedirectURL(BrandingManager.getInstance().getRedirectionURL())); //$NON-NLS-1$
 		}
 	}
 }

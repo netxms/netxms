@@ -86,10 +86,9 @@ void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, 
 {
 }
 
-//
-// Handler for enumerating indexes
-//
-
+/**
+ * Handler for enumerating indexes
+ */
 static DWORD HandlerIndex(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
 	NX_INTERFACE_INFO info;
@@ -99,11 +98,9 @@ static DWORD HandlerIndex(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *
    return SNMP_ERR_SUCCESS;
 }
 
-
-//
-// Handler for enumerating IP addresses
-//
-
+/**
+ * Handler for enumerating IP addresses
+ */
 static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    DWORD dwIndex, dwNetMask, dwNameLen, dwResult;

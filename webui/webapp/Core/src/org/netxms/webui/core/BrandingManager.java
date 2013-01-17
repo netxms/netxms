@@ -157,4 +157,20 @@ public class BrandingManager
 		}
 		return null;
 	}
+	
+	/**
+	 * Get redirection URL for web console.
+	 * 
+	 * @return redirection URL for web console
+	 */
+	public String getRedirectionURL()
+	{
+		for(BrandingProvider p : providers.values())
+		{
+			String t = p.getRedirectionURL();
+			if (t != null)
+				return t;
+		}
+		return "nxmc";
+	}
 }

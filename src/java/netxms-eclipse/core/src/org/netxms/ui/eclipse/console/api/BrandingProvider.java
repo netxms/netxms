@@ -31,26 +31,33 @@ public interface BrandingProvider
 	 * 
 	 * @return default perspective ID or null to use default.
 	 */
-	public abstract String getDefaultPerspective();
+	public String getDefaultPerspective();
 	
 	/**
 	 * Get image to be displayed in login dialog.
 	 * 
 	 * @return image descriptor for image to be displayed in login dialog or null to use default
 	 */
-	public abstract ImageDescriptor getLoginTitleImage();
+	public ImageDescriptor getLoginTitleImage();
 	
 	/**
 	 * Get filler color for login dialog title image.
 	 * 
 	 * @return filler color for login dialog title image or null to use default
 	 */
-	public abstract RGB getLoginTitleColor();
+	public RGB getLoginTitleColor();
 	
 	/**
 	 * Get login dialog title.
 	 * 
 	 * @return login dialog title or null to use default
 	 */
-	public abstract String getLoginTitle();
+	public String getLoginTitle();
+	
+	/**
+	 * Get redirection URL for web console. Has no effect on RCP console.
+	 * 
+	 * @return redirection URL or null to use default
+	 */
+	public String getRedirectionURL();
 }

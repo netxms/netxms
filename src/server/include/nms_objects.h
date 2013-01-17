@@ -825,6 +825,7 @@ protected:
 	TCHAR *m_sysName;				// SNMP sysName
 	TCHAR *m_lldpNodeId;			// lldpLocChassisId combined with lldpLocChassisIdSubtype, or NULL for non-LLDP nodes
 	NetworkDeviceDriver *m_driver;
+	void *m_driverData;
    StructArray<NXC_AGENT_PARAM> *m_paramList; // List of supported parameters
    StructArray<NXC_AGENT_TABLE> *m_tableList; // List of supported tables
    time_t m_tLastDiscoveryPoll;
@@ -1036,13 +1037,14 @@ public:
 
 	ServerJobQueue *getJobQueue() { return m_jobQueue; }
 	int getJobCount(const TCHAR *type = NULL) { return m_jobQueue->getJobCount(type); }
+
+	void *getDriverData() { return m_driverData; }
+	void setDriverData(void *data) { m_driverData = data; }
 };
 
-
-//
-// Inline functions for Node class
-//
-
+/**
+ * Set timestamp of last discovery poll to current time
+ */
 inline void Node::setDiscoveryPollTimeStamp()
 {
    m_tLastDiscoveryPoll = time(NULL);
