@@ -72,6 +72,8 @@ public class GenericObject
 	public static final int OBJECT_NODELINK            = 29;
 	public static final int OBJECT_SLMCHECK            = 30;
 	public static final int OBJECT_MOBILEDEVICE        = 31;
+
+	public static final int OBJECT_CUSTOM              = 10000;
 	
 	// Status codes
 	public static final int STATUS_NORMAL         = 0;
