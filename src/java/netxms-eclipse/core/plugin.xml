@@ -4,6 +4,7 @@
    <extension-point id="org.netxms.ui.eclipse.tweaklets" name="NXMC Tweaklets" schema="schema/org.netxms.ui.eclipse.tweaklets.exsd"/>
    <extension-point id="org.netxms.ui.eclipse.loginlisteners" name="NXMC Login Listeners" schema="schema/org.netxms.ui.eclipse.loginlisteners.exsd"/>
    <extension-point id="org.netxms.ui.eclipse.branding" name="NetXMS Console Branding" schema="schema/org.netxms.ui.eclipse.branding.exsd"/>
+   <extension-point id="org.netxms.ui.eclipse.sessionproviders" name="Session Providers" schema="schema/org.netxms.ui.eclipse.sessionproviders.exsd"/>
    <extension
          id="org.netxms.ui.eclipse.console.application"
          point="org.eclipse.core.runtime.applications">

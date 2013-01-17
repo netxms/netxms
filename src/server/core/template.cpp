@@ -62,11 +62,9 @@ Template::Template(const TCHAR *pszName) : NetObj()
 	m_mutexDciAccess = MutexCreateRecursive();
 }
 
-
-//
-// Create template object from import file
-//
-
+/**
+ * Create template object from import file
+ */
 Template::Template(ConfigEntry *config) : NetObj()
 {
    m_bIsHidden = TRUE;
@@ -99,11 +97,9 @@ Template::Template(ConfigEntry *config) : NetObj()
 	}
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 Template::~Template()
 {
 	delete m_dcObjects;
@@ -112,21 +108,19 @@ Template::~Template()
 	MutexDestroy(m_mutexDciAccess);
 }
 
-
-//
-// Destroy all related data collection items
-//
-
+/**
+ * Destroy all related data collection items.
+ */
 void Template::destroyItems()
 {
 	m_dcObjects->clear();
 }
 
-
-//
-// Set auto apply filter
-//
-
+/**
+ * Set auto apply filter.
+ *
+ * @param filter new filter script code or NULL to clear filter
+ */
 void Template::setAutoApplyFilter(const TCHAR *filter)
 {
 	LockData();
@@ -150,11 +144,11 @@ void Template::setAutoApplyFilter(const TCHAR *filter)
 	UnlockData();
 }
 
-
-//
-// Create object from database data
-//
-
+/**
+ * Create template object from database data
+ *
+ * @param dwId object ID
+ */
 BOOL Template::CreateFromDB(DWORD dwId)
 {
    TCHAR szQuery[256];

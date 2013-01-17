@@ -272,12 +272,26 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		byte[] bytes = addr.getAddress();
 		return ((long)bytes[0] << 24) | ((long)bytes[1] << 16) | ((long)bytes[2] << 8) | (long)bytes[3];
 	}
+	
+	/**
+	 * Create custom object from NXCP message. May be overridden by derived classes to create custom
+	 * NetXMS objects. Default implementation will always create GenericObject class. Implementation
+	 * in derived class must either always return object or call base implementation for unknown 
+	 * NetXMS object classes.
+	 * 
+	 * @param objectClass NetXMS object class ID
+	 * @param msg Source NXCP message
+	 * @return NetXMS object
+	 */
+	protected GenericObject createCustomObjectFromMessage(int objectClass, NXCPMessage msg)
+	{
+		return new GenericObject(msg, this);
+	}
 
 	/**
 	 * Create object from message
 	 * 
-	 * @param msg
-	 *           Source NXCP message
+	 * @param msg Source NXCP message
 	 * @return NetXMS object
 	 */
 	private GenericObject createObjectFromMessage(NXCPMessage msg)
@@ -378,7 +392,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				object = new ServiceCheck(msg, this);
 				break;
 			default:
-				object = new GenericObject(msg, this);
+				object = createCustomObjectFromMessage(objectClass, msg);
 				break;
 		}
 
@@ -3067,19 +3081,29 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		return new Table(response);
 	}
-
+	
 	/**
-	 * Create object
-	 * 
-	 * @param data
-	 *           Object creation data
-	 * @return ID of new object
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * Hook method to allow adding of custom object creation data to NXCP message.
+	 * Default implementation does nothing.
+	 *  
+	 * @param data object creation data passed to createObject
+	 * @param userData user-defined data for object creation passed to createObject
+	 * @param msg NXCP message that will be sent to server
 	 */
-	public long createObject(final NXCObjectCreationData data) throws IOException, NXCException
+	protected void createCustomObject(NXCObjectCreationData data, Object userData, NXCPMessage msg)
+	{
+	}
+	
+	/**
+	 * Create new NetXMS object.
+	 * 
+	 * @param data Object creation data
+	 * @param userData User-defined data for custom object creation
+	 * @return ID of new object
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long createObject(final NXCObjectCreationData data, final Object userData) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_OBJECT);
 
@@ -3137,10 +3161,26 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				msg.setVariable(NXCPCodes.VID_DEVICE_ID, data.getDeviceId());
 				break;
 		}
+		
+		if (userData != null)
+			createCustomObject(data, userData, msg);
 
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		return response.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID);
+	}
+
+	/**
+	 * Create new NetXMS object. Equivalent of calling createObject(data, null).
+	 * 
+	 * @param data Object creation data
+	 * @return ID of new object
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long createObject(final NXCObjectCreationData data) throws IOException, NXCException
+	{
+		return createObject(data, null);
 	}
 
 	/**
@@ -3170,17 +3210,27 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/**
-	 * Modify object (generic interface, in most cases wrapper functions should
-	 * be used instead)
+	 * Hook method to populate NXCP message with custom object's data on object modification.
+	 * Default implementation does nothing.
 	 * 
-	 * @param data
-	 *           Object modification data
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @param data object modification data passed to modifyObject
+	 * @param userData user-defined data passed to modifyObject
+	 * @param msg NXCP message to be sent to server
 	 */
-	public void modifyObject(final NXCObjectModificationData data) throws IOException, NXCException
+	protected void modifyCustomObject(NXCObjectModificationData data, Object userData, NXCPMessage msg)
+	{
+	}
+	
+	/**
+	 * Modify object (generic interface, in most cases wrapper functions should
+	 * be used instead).
+	 * 
+	 * @param data Object modification data
+	 * @param userData user-defined data for custom object modification
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void modifyObject(final NXCObjectModificationData data, final Object userData) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_OBJECT);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)data.getObjectId());
@@ -3536,10 +3586,26 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			msg.setVariableInt32(NXCPCodes.VID_DISCOVERY_RADIUS, data.getDiscoveryRadius());
 		}
 
+		if (userData != null)
+			modifyCustomObject(data, userData, msg);
+		
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
 
+	/**
+	 * Modify object (generic interface, in most cases wrapper functions should
+	 * be used instead). Equivalent of calling modifyObject(data, null).
+	 * 
+	 * @param data Object modification data
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void modifyObject(final NXCObjectModificationData data) throws IOException, NXCException
+	{
+		modifyObject(data, null);
+	}
+	
 	/**
 	 * Change object's name (wrapper for modifyObject())
 	 * 

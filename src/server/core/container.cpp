@@ -83,11 +83,11 @@ Container::~Container()
 	delete m_bindFilter;
 }
 
-
-//
-// Create object from database data
-//
-
+/**
+ * Create container object from database data.
+ *
+ * @param dwId object ID
+ */
 BOOL Container::CreateFromDB(DWORD dwId)
 {
    TCHAR szQuery[256];
@@ -152,11 +152,11 @@ BOOL Container::CreateFromDB(DWORD dwId)
    return TRUE;
 }
 
-
-//
-// Save object to database
-//
-
+/**
+ * Save object to database
+ *
+ * @param hdb database connection handle
+ */
 BOOL Container::SaveToDB(DB_HANDLE hdb)
 {
    // Lock object's access

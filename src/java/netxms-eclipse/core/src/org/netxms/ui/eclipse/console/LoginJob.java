@@ -30,6 +30,7 @@ import org.netxms.api.client.Session;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
+import org.netxms.ui.eclipse.console.api.SessionProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -105,7 +106,7 @@ public class LoginJob implements IRunnableWithProgress
 				hostName = server;
 			}
 
-			NXCSession session = new NXCSession(hostName, port, loginName, password, encryptSession);
+			NXCSession session = createSession(hostName, port);
 			session.setConnClientInfo("nxmc/" + NXCommon.VERSION); //$NON-NLS-1$
 			monitor.worked(10);
 
@@ -148,6 +149,59 @@ public class LoginJob implements IRunnableWithProgress
 		{
 			monitor.done();
 		}
+	}
+	
+	/**
+	 * Create new session object.
+	 * 
+	 * @param hostName
+	 * @param port
+	 * @return
+	 */
+	private NXCSession createSession(String hostName, int port)
+	{
+		// Read all registered extensions and create provider with minimal priority
+		IConfigurationElement currentElement = null;
+		int currentPriotity = 65536;
+		
+		final IExtensionRegistry reg = Platform.getExtensionRegistry();
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.sessionproviders"); //$NON-NLS-1$
+		for(int i = 0; i < elements.length; i++)
+		{
+			int priority = 65535;
+			String value = elements[i].getAttribute("priority"); //$NON-NLS-1$
+			if (value != null)
+			{
+				try
+				{
+					priority = Integer.parseInt(value);
+					if ((priority < 0) || (priority > 65535))
+						priority = 65535;
+				}
+				catch(NumberFormatException e)
+				{
+				}
+			}
+			if (priority < currentPriotity)
+			{
+				currentElement = elements[i];
+				currentPriotity = priority;
+			}
+		}
+		
+		if (currentElement != null)
+		{
+			try
+			{
+				SessionProvider p = (SessionProvider)currentElement.createExecutableExtension("class");
+				return p.createSession(hostName, port, loginName, password, encryptSession);
+			}
+			catch(CoreException e)
+			{
+			}
+		}
+		
+		return new NXCSession(hostName, port, loginName, password, encryptSession);
 	}
 	
 	/**
