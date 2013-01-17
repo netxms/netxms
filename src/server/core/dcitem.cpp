@@ -1618,7 +1618,7 @@ void DCItem::createNXMPRecord(String &str)
 		str += _T("</transformation>\n");
 	}
 
-	if (m_flags & DCF_ADVANCED_SCHEDULE)
+	if (m_dwNumThresholds > 0)
    {
       str += _T("\t\t\t\t\t<schedules>\n");
       for(i = 0; i < m_dwNumSchedules; i++)

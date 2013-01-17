@@ -89,9 +89,18 @@ DCObject::DCObject(const DCObject *pSrc)
 
    // Copy schedules
    m_dwNumSchedules = pSrc->m_dwNumSchedules;
-   m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
-   for(i = 0; i < m_dwNumSchedules; i++)
-      m_ppScheduleList[i] = _tcsdup(pSrc->m_ppScheduleList[i]);
+   if (m_dwNumSchedules > 0)
+   {
+      m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
+      for(i = 0; i < m_dwNumSchedules; i++)
+      {
+         m_ppScheduleList[i] = _tcsdup(pSrc->m_ppScheduleList[i]);
+      }
+   }
+   else
+   {
+      m_ppScheduleList = NULL;
+   }
 }
 
 
@@ -161,6 +170,8 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 	m_dwProxyNode = 0;
 	m_pszPerfTabSettings = NULL;
 	m_snmpPort = (WORD)config->getSubEntryValueInt(_T("snmpPort"));
+   m_dwNumSchedules = 0;
+   m_ppScheduleList = NULL;
 
 	if (config->getSubEntryValueInt(_T("advancedSchedule")))
 		m_flags |= DCF_ADVANCED_SCHEDULE;
@@ -171,16 +182,14 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 	if (schedules != NULL)
 	{
 		m_dwNumSchedules = (DWORD)schedules->getValueCount();
-		m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
-		for(int i = 0; i < (int)m_dwNumSchedules; i++)
-		{
-			m_ppScheduleList[i] = _tcsdup(schedules->getValue(i));
-		}
-	}
-	else
-	{
-		m_dwNumSchedules = 0;
-		m_ppScheduleList = NULL;
+      if (m_dwNumSchedules > 0)
+      {
+         m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
+         for(int i = 0; i < (int)m_dwNumSchedules; i++)
+         {
+            m_ppScheduleList[i] = _tcsdup(schedules->getValue(i));
+         }
+      }
 	}
 }
 
@@ -191,9 +200,14 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 
 DCObject::~DCObject()
 {
-   for(DWORD i = 0; i < m_dwNumSchedules; i++)
-      free(m_ppScheduleList[i]);
-   safe_free(m_ppScheduleList);
+   if (m_dwNumSchedules > 0)
+   {
+      for(DWORD i = 0; i < m_dwNumSchedules; i++)
+      {
+         free(m_ppScheduleList[i]);
+      }
+      safe_free(m_ppScheduleList);
+   }
 	safe_free(m_pszPerfTabSettings);
    MutexDestroy(m_hMutex);
 }
@@ -216,10 +230,17 @@ BOOL DCObject::loadCustomSchedules()
    if (hResult != NULL)
    {
       m_dwNumSchedules = (DWORD)DBGetNumRows(hResult);
-      m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
-      for(DWORD i = 0; i < m_dwNumSchedules; i++)
+      if (m_dwNumSchedules > 0)
       {
-         m_ppScheduleList[i] = DBGetField(hResult, i, 0, NULL, 0);
+         m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
+         for(DWORD i = 0; i < m_dwNumSchedules; i++)
+         {
+            m_ppScheduleList[i] = DBGetField(hResult, i, 0, NULL, 0);
+         }
+      }
+      else
+      {
+         m_ppScheduleList = NULL;
       }
       DBFreeResult(hResult);
    }
@@ -703,12 +724,9 @@ void DCObject::createMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_SNMP_PORT, m_snmpPort);
 	if (m_pszPerfTabSettings != NULL)
 		pMsg->SetVariable(VID_PERFTAB_SETTINGS, m_pszPerfTabSettings);
-   if (m_flags & DCF_ADVANCED_SCHEDULE)
-   {
-      pMsg->SetVariable(VID_NUM_SCHEDULES, m_dwNumSchedules);
-      for(DWORD i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
-         pMsg->SetVariable(dwId, m_ppScheduleList[i]);
-   }
+   pMsg->SetVariable(VID_NUM_SCHEDULES, m_dwNumSchedules);
+   for(DWORD i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
+      pMsg->SetVariable(dwId, m_ppScheduleList[i]);
    unlock();
 }
 
@@ -738,11 +756,12 @@ void DCObject::updateFromMessage(CSCPMessage *pMsg)
    // Update schedules
    for(DWORD i = 0; i < m_dwNumSchedules; i++)
       free(m_ppScheduleList[i]);
+   safe_free_and_null(m_ppScheduleList);
 
-   if (m_flags & DCF_ADVANCED_SCHEDULE)
+   m_dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
+   if (m_dwNumSchedules > 0)
    {
-      m_dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
-      m_ppScheduleList = (TCHAR **)realloc(m_ppScheduleList, sizeof(TCHAR *) * m_dwNumSchedules);
+      m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
       for(DWORD i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
       {
          TCHAR *pszStr = pMsg->GetVariableStr(dwId);
@@ -755,15 +774,6 @@ void DCObject::updateFromMessage(CSCPMessage *pMsg)
             m_ppScheduleList[i] = _tcsdup(_T("(null)"));
          }
       }
-   }
-   else
-   {
-      if (m_ppScheduleList != NULL)
-      {
-         free(m_ppScheduleList);
-         m_ppScheduleList = NULL;
-      }
-      m_dwNumSchedules = 0;
    }
 
 	unlock();
@@ -783,7 +793,7 @@ BOOL DCObject::saveToDB(DB_HANDLE hdb)
    // Save schedules
    _sntprintf(query, 1024, _T("DELETE FROM dci_schedules WHERE item_id=%d"), (int)m_dwId);
    BOOL success = DBQuery(hdb, query);
-	if (success && (m_flags & DCF_ADVANCED_SCHEDULE))
+	if (success)
    {
       for(DWORD i = 0; i < m_dwNumSchedules; i++)
       {
@@ -871,11 +881,16 @@ void DCObject::updateFromTemplate(DCObject *src)
 	DWORD i;
    for(i = 0; i < m_dwNumSchedules; i++)
       safe_free(m_ppScheduleList[i]);
-   safe_free(m_ppScheduleList);
+   safe_free_and_null(m_ppScheduleList);
    m_dwNumSchedules = src->m_dwNumSchedules;
-   m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
-   for(i = 0; i < m_dwNumSchedules; i++)
-      m_ppScheduleList[i] = _tcsdup(src->m_ppScheduleList[i]);
+   if (m_dwNumSchedules > 0)
+   {
+      m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
+      for(i = 0; i < m_dwNumSchedules; i++)
+      {
+         m_ppScheduleList[i] = _tcsdup(src->m_ppScheduleList[i]);
+      }
+   }
 
 	unlock();
 }
