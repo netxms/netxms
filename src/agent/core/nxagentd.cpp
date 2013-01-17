@@ -1501,10 +1501,27 @@ int main(int argc, char *argv[])
          }
          break;
       case ACTION_CHECK_CONFIG:
-			if (!g_config->loadIniConfig(g_szConfigFile, _T("agent")) || !g_config->parseTemplate(_T("agent"), m_cfgTemplate))
          {
-            ConsolePrintf(_T("Configuration file check failed\n"));
-            iExitCode = 2;
+            bool validConfig = g_config->loadConfig(g_szConfigFile, _T("agent"), false);
+            if (validConfig)
+            {
+               const TCHAR *dir = g_config->getValue(_T("/agent/ConfigIncludeDir"));
+               if (dir != NULL)
+               {
+                  validConfig = g_config->loadConfigDirectory(g_szConfigIncludeDir, _T("agent"), false);
+               }
+            }
+
+            if (validConfig)
+            {
+               validConfig = g_config->parseTemplate(_T("agent"), m_cfgTemplate);
+            }
+
+            if (!validConfig)
+            {
+               ConsolePrintf(_T("Configuration file check failed\n"));
+               iExitCode = 2;
+            }
          }
          break;
 		case ACTION_RUN_WATCHDOG:

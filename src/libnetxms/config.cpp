@@ -828,12 +828,13 @@ static TCHAR *FindComment(TCHAR *str)
 // Load INI-style config
 //
 
-bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection)
+bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors)
 {
 	FILE *cfg;
 	TCHAR buffer[4096], *ptr;
 	ConfigEntry *currentSection;
 	int sourceLine = 0;
+   bool validConfig = true;
 
    cfg = _tfopen(file, _T("r"));
    if (cfg == NULL)
@@ -895,6 +896,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection)
          if (ptr == NULL)
          {
             error(_T("Syntax error in configuration file %s at line %d"), file, sourceLine);
+            validConfig = false;
             continue;
          }
          *ptr = 0;
@@ -911,7 +913,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection)
       }
    }
    fclose(cfg);
-	return true;
+	return ignoreErrors || validConfig;
 }
 
 
@@ -1067,7 +1069,7 @@ bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag)
 // Load config file with format auto detection
 //
 
-bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection)
+bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors)
 {
 	FILE *f;
 	int ch;
@@ -1088,7 +1090,7 @@ bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection)
 	fclose(f);
 
 	// If first non-space character is < assume XML format, otherwise assume INI format
-	return (ch == '<') ? loadXmlConfig(file) : loadIniConfig(file, defaultIniSection);
+	return (ch == '<') ? loadXmlConfig(file) : loadIniConfig(file, defaultIniSection, ignoreErrors);
 }
 
 
@@ -1096,7 +1098,7 @@ bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection)
 // Load all files in given directory
 //
 
-bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection)
+bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection, bool ignoreErrors)
 {
 	_TDIR *dir;
    struct _tdirent *file;
@@ -1124,7 +1126,10 @@ bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSecti
          _tcscat(fileName, FS_PATH_SEPARATOR);
          _tcscat(fileName, file->d_name);
 
-			success = success && loadConfig(fileName, defaultIniSection);
+			if (!loadConfig(fileName, defaultIniSection, ignoreErrors))
+         {
+            success = false;
+         }
       }
       _tclosedir(dir);
    }

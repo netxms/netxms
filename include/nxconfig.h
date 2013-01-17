@@ -146,10 +146,10 @@ public:
 
 	bool loadXmlConfig(const TCHAR *file, const char *topLevelTag = NULL);
 	bool loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name = NULL, const char *topLevelTag = NULL);
-	bool loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection);
-	bool loadConfig(const TCHAR *file, const TCHAR *defaultIniSection);
+	bool loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors = true);
+	bool loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors = true);
 
-	bool loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection);
+	bool loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection, bool ignoreErrors = true);
 
 	void deleteEntry(const TCHAR *path);
 
