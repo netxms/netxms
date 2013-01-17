@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Display;
 import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
+import org.netxms.ui.eclipse.console.api.SessionProvider;
 
 /**
  * Login job
@@ -103,7 +104,7 @@ public class LoginJob implements IRunnableWithProgress
 				hostName = server;
 			}
 
-			NXCSession session = new NXCSession(hostName, port, loginName, password);
+			NXCSession session = createSession(hostName, port);
 			monitor.worked(10);
 
 			session.connect();
@@ -145,6 +146,59 @@ public class LoginJob implements IRunnableWithProgress
 		{
 			monitor.done();
 		}
+	}
+	
+	/**
+	 * Create new session object.
+	 * 
+	 * @param hostName
+	 * @param port
+	 * @return
+	 */
+	private NXCSession createSession(String hostName, int port)
+	{
+		// Read all registered extensions and create provider with minimal priority
+		IConfigurationElement currentElement = null;
+		int currentPriotity = 65536;
+		
+		final IExtensionRegistry reg = Platform.getExtensionRegistry();
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.sessionproviders"); //$NON-NLS-1$
+		for(int i = 0; i < elements.length; i++)
+		{
+			int priority = 65535;
+			String value = elements[i].getAttribute("priority"); //$NON-NLS-1$
+			if (value != null)
+			{
+				try
+				{
+					priority = Integer.parseInt(value);
+					if ((priority < 0) || (priority > 65535))
+						priority = 65535;
+				}
+				catch(NumberFormatException e)
+				{
+				}
+			}
+			if (priority < currentPriotity)
+			{
+				currentElement = elements[i];
+				currentPriotity = priority;
+			}
+		}
+		
+		if (currentElement != null)
+		{
+			try
+			{
+				SessionProvider p = (SessionProvider)currentElement.createExecutableExtension("class");
+				return p.createSession(hostName, port, loginName, password, false);
+			}
+			catch(CoreException e)
+			{
+			}
+		}
+		
+		return new NXCSession(hostName, port, loginName, password, false);
 	}
 	
 	/**

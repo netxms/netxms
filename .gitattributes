@@ -2494,6 +2494,7 @@ webui/webapp/Core/jar/simple-xml-2.6.4.jar -text
 webui/webapp/Core/plugin.xml -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.branding.exsd -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.loginlisteners.exsd -text
+webui/webapp/Core/schema/org.netxms.ui.eclipse.sessionproviders.exsd -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/BrandingProvider.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/ConsoleLoginListener.java -text

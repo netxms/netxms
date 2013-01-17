@@ -3,6 +3,7 @@
 <plugin>
    <extension-point id="org.netxms.ui.eclipse.loginlisteners" name="NXMC Login Listeners" schema="schema/org.netxms.ui.eclipse.loginlisteners.exsd"/>
    <extension-point id="org.netxms.ui.eclipse.branding" name="NetXMS Console Branding" schema="schema/org.netxms.ui.eclipse.branding.exsd"/>
+   <extension-point id="org.netxms.ui.eclipse.sessionproviders" name="Session Providers" schema="schema/org.netxms.ui.eclipse.sessionproviders.exsd"/>
    <extension
          id="nxmc"
          name="NetXMS Management Console"
