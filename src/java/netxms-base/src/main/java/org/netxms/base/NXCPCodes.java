@@ -21,7 +21,7 @@ package org.netxms.base;
 /**
  * NXCP codes
  */
-public final class NXCPCodes
+public class NXCPCodes
 {
 	// NXCP command codes
 	public static final int CMD_LOGIN                    = 0x0001;
