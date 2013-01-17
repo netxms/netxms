@@ -690,6 +690,9 @@ retry_db_lock:
 	// Initialize watchdog
 	WatchdogInit();
 
+	// Load modules
+	LoadNetXMSModules();
+
 	// Initialize mailer and SMS sender
 	InitMailer();
 	InitSMSSender();
@@ -776,9 +779,6 @@ retry_db_lock:
 	if (ConfigReadInt(_T("EnableAdminInterface"), 1))
 		ThreadCreate(LocalAdminListener, 0, NULL);
 
-	// Load modules
-	LoadNetXMSModules();
-
 	// Start beacon host poller
 	ThreadCreate(BeaconPoller, 0, NULL);
 
@@ -806,6 +806,13 @@ retry_db_lock:
 	DbgPrintf(2, _T("Java VM: %s"), g_szJavaPath);
 	DbgPrintf(2, _T("Java LIBDIR: %s"), g_szJavaLibDir);
 	DbgPrintf(2, _T("LIBDIR: %s"), g_szLibDir);
+
+	// Call shutdown functions for the modules
+   for(DWORD i = 0; i < g_dwNumModules; i++)
+	{
+		if (g_pModuleList[i].pfServerStarted != NULL)
+			g_pModuleList[i].pfServerStarted();
+	}
 
 	g_dwFlags |= AF_SERVER_INITIALIZED;
 	DbgPrintf(1, _T("Server initialization completed"));

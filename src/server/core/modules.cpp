@@ -30,16 +30,6 @@ DWORD g_dwNumModules = 0;
 NXMODULE *g_pModuleList = NULL;
 
 /**
- * Starter for module's main thread
- */
-static THREAD_RESULT THREAD_CALL ModuleThreadStarter(void *pArg)
-{
-   if (((NXMODULE *)pArg)->pfMain != NULL)
-      ((NXMODULE *)pArg)->pfMain();
-   return THREAD_OK;
-}
-
-/**
  * Load all registered modules
  */
 void LoadNetXMSModules()
@@ -80,10 +70,6 @@ void LoadNetXMSModules()
                                                       sizeof(NXMODULE) * (g_dwNumModules + 1));
                   memcpy(&g_pModuleList[g_dwNumModules], &module, sizeof(NXMODULE));
                   g_pModuleList[g_dwNumModules].hModule = hModule;
-
-                  // Start module's main thread
-						if (module.pfMain != NULL)
-							ThreadCreate(ModuleThreadStarter, 0, &g_pModuleList[g_dwNumModules]);
 
                   nxlog_write(MSG_MODULE_LOADED, EVENTLOG_INFORMATION_TYPE, "s", g_pModuleList[g_dwNumModules].szName);
                   g_dwNumModules++;

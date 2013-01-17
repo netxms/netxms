@@ -46,7 +46,7 @@ typedef struct
 {
    DWORD dwSize;           // Size of structure in bytes
    TCHAR szName[MAX_OBJECT_NAME];
-   void (* pfMain)();  // Pointer to module's main()
+   void (* pfServerStarted)();
 	void (* pfShutdown)();
 	void (* pfLoadObjects)();
 	void (* pfLinkObjects)();
