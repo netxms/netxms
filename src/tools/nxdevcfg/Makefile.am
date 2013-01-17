@@ -8,10 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-INCLUDES=-I@top_srcdir@/include
-
 bin_PROGRAMS = nxdevcfg
 nxdevcfg_SOURCES = nxdevcfg.cpp
+nxdevcfg_CPPFLAGS=-I@top_srcdir@/include
 nxdevcfg_LDADD = ../../libnetxms/libnetxms.la
 
 if USE_INTERNAL_LIBTRE

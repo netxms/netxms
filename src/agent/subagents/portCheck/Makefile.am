@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include
-
 SUBAGENT = portcheck
 
 pkglib_LTLIBRARIES = portcheck.la
 portcheck_la_SOURCES = custom.cpp http.cpp main.cpp net.cpp pop3.cpp smtp.cpp ssh.cpp telnet.cpp
+portcheck_la_CPPFLAGS=-I@top_srcdir@/include
 portcheck_la_LDFLAGS = -module -avoid-version
 portcheck_la_LIBADD = ../../../libnetxms/libnetxms.la
 if USE_INTERNAL_LIBTRE

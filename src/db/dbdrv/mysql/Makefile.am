@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-
 DRIVER = mysql
 
 pkglib_LTLIBRARIES = mysql.la
 mysql_la_SOURCES = mysql.cpp
+mysql_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 mysql_la_LDFLAGS = -module -avoid-version
 mysql_la_LIBADD = ../../../libnetxms/libnetxms.la @MYSQL_LIBS@
 

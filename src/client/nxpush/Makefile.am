@@ -8,10 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-INCLUDES=-I@top_srcdir@/include
-
 bin_PROGRAMS = nxpush
 nxpush_SOURCES = nxpush.cpp
+nxpush_CPPFLAGS=-I@top_srcdir@/include
 nxpush_LDADD = ../../libnetxms/libnetxms.la ../../libnxmap/libnxmap.la ../../libnxcl/libnxcl.la
 
 EXTRA_DIST = nxpush.vcproj

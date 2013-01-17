@@ -1,7 +1,3 @@
-INCLUDES=-I@top_srcdir@/include
-if USE_INTERNAL_EXPAT
-INCLUDES += -I@top_srcdir@/src/libexpat/libexpat
-endif
 SOURCES = agent.cpp array.cpp base64.cpp config.cpp crypto.cpp dirw_unix.c \
 	  gen_uuid.c geolocation.cpp getopt.c dload.cpp hash.cpp ice.c \
 	  icmp.cpp log.cpp main.cpp md5.cpp message.cpp msgwq.cpp net.cpp \
@@ -13,6 +9,10 @@ SOURCES = agent.cpp array.cpp base64.cpp config.cpp crypto.cpp dirw_unix.c \
 lib_LTLIBRARIES = libnetxms.la
 
 libnetxms_la_SOURCES = $(SOURCES)
+libnetxms_la_CPPFLAGS=-I@top_srcdir@/include
+if USE_INTERNAL_EXPAT
+libnetxms_la_CPPFLAGS+=-I@top_srcdir@/src/libexpat/libexpat
+endif
 libnetxms_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnetxms_la_LIBADD =
 if USE_INTERNAL_EXPAT

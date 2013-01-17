@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-
 DRIVER = pgsql
 
 pkglib_LTLIBRARIES = pgsql.la
 pgsql_la_SOURCES = pgsql.cpp
+pgsql_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 pgsql_la_LDFLAGS = -module -avoid-version
 pgsql_la_LIBADD = ../../../libnetxms/libnetxms.la @PGSQL_LIBS@
 

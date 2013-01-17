@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-
 DRIVER = procurve
 
 pkglib_LTLIBRARIES = procurve.la
 procurve_la_SOURCES = procurve.cpp
+procurve_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 procurve_la_LDFLAGS = -module -avoid-version
 procurve_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \

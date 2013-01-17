@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-
 DRIVER = netscreen
 
 pkglib_LTLIBRARIES = netscreen.la
 netscreen_la_SOURCES = netscreen.cpp
+netscreen_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 netscreen_la_LDFLAGS = -module -avoid-version
 netscreen_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \

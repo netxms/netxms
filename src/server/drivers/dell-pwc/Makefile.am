@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-
 DRIVER = dell-pwc
 
 pkglib_LTLIBRARIES = dell-pwc.la
 dell_pwc_la_SOURCES = dell-pwc.cpp
+dell_pwc_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 dell_pwc_la_LDFLAGS = -module -avoid-version
 dell_pwc_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \

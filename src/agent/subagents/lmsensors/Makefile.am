@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include
-
 SUBAGENT = lmsensors
 
 pkglib_LTLIBRARIES = lmsensors.la
 lmsensors_la_SOURCES = main.cpp
+lmsensors_la_CPPFLAGS=-I@top_srcdir@/include
 lmsensors_la_LDFLAGS = -module -avoid-version
 lmsensors_la_LIBADD = ../../../libnetxms/libnetxms.la -lsensors
 

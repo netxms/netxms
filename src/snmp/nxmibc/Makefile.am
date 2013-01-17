@@ -8,10 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-INCLUDES=-I@top_srcdir@/include
-
 bin_PROGRAMS = nxmibc
 nxmibc_SOURCES = array.cpp lex.parser.cpp mibparse.cpp nxmibc.cpp parser.tab.cpp
+nxmibc_CPPFLAGS=-I@top_srcdir@/include
 nxmibc_LDADD = ../../libnetxms/libnetxms.la ../libnxsnmp/libnxsnmp.la
 
 EXTRA_DIST = nxmibc.vcproj nxmibc.h mibparse.h parser.l parser.y parser.tab.hpp

@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-
 DRIVER = db2
 
 pkglib_LTLIBRARIES = db2.la
 db2_la_SOURCES = db2.cpp
+db2_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 db2_la_LDFLAGS = -module -avoid-version
 db2_la_LIBADD = ../../../libnetxms/libnetxms.la @DB2_LIBS@
 

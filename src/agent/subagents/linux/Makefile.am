@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include
-
 SUBAGENT = linux
 
 pkglib_LTLIBRARIES = linux.la
 linux_la_SOURCES = cpu.cpp disk.cpp drbd.cpp hddinfo.cpp iostat.cpp linux.cpp net.cpp proc.cpp system.cpp
+linux_la_CPPFLAGS=-I@top_srcdir@/include
 linux_la_LDFLAGS = -module -avoid-version
 linux_la_LIBADD = ../../../libnetxms/libnetxms.la
 

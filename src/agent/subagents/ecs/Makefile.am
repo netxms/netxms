@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include
-
 SUBAGENT = ecs
 
 pkglib_LTLIBRARIES = ecs.la
 ecs_la_SOURCES = ecs.cpp
+ecs_la_CPPFLAGS=-I@top_srcdir@/include
 ecs_la_LDFLAGS = -module -avoid-version
 ecs_la_LIBADD = ../../../libnetxms/libnetxms.la
 

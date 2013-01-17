@@ -8,13 +8,13 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-INCLUDES=-I@top_srcdir@/include
 AM_CXXFLAGS=-fpermissive 
 
 SUBAGENT = openbsd
 
 pkglib_LTLIBRARIES = openbsd.la
 openbsd_la_SOURCES = openbsd.cpp system.cpp disk.cpp net.cpp
+openbsd_la_CPPFLAGS=-I@top_srcdir@/include
 openbsd_la_LDFLAGS = -module -avoid-version -lkvm
 openbsd_la_LIBADD = ../../../libnetxms/libnetxms.la
 

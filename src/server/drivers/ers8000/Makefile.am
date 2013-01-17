@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-
 DRIVER = ers8000
 
 pkglib_LTLIBRARIES = ers8000.la
 ers8000_la_SOURCES = ers8000.cpp
+ers8000_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 ers8000_la_LDFLAGS = -module -avoid-version
 ers8000_la_LIBADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../lib/avaya-ers/libavaya-ers.la
 

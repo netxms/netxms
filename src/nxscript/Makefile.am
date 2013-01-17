@@ -8,10 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-INCLUDES=-I@top_srcdir@/include
-
 bin_PROGRAMS = nxscript
 nxscript_SOURCES = class.cpp nxscript.cpp
+nxscript_CPPFLAGS=-I@top_srcdir@/include
 nxscript_LDADD = ../libnetxms/libnetxms.la ../libnxsl/libnxsl.la
 
 if USE_INTERNAL_LIBTRE

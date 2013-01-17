@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include
-
 SUBAGENT = ping
 
 pkglib_LTLIBRARIES = ping.la
 ping_la_SOURCES = ping.cpp
+ping_la_CPPFLAGS=-I@top_srcdir@/include
 ping_la_LDFLAGS = -module -avoid-version
 ping_la_LIBADD = ../../../libnetxms/libnetxms.la
 

@@ -14,12 +14,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-INCLUDES=-I@top_srcdir@/include
-
 SUBAGENT = sunos
 
 pkglib_LTLIBRARIES = sunos.la
 sunos_la_SOURCES = cpu.cpp disk.cpp iostat.cpp mac_dlpi.cpp main.cpp net.cpp process.cpp system.cpp
+sunos_la_CPPFLAGS=-I@top_srcdir@/include
 sunos_la_LDFLAGS = -module -avoid-version
 sunos_la_LIBADD = ../../../libnetxms/libnetxms.la
 

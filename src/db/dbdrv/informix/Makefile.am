@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-
 DRIVER = informix
 
 pkglib_LTLIBRARIES = informix.la
 informix_la_SOURCES = informix.cpp
+informix_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 informix_la_LDFLAGS = -module -avoid-version
 informix_la_LIBADD = ../../../libnetxms/libnetxms.la @INFORMIX_LIBS@
 

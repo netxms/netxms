@@ -1,7 +1,5 @@
 # vim:ts=3:sw=3
 
-INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-
 lib_LTLIBRARIES = libnxcore.la
 libnxcore_la_SOURCES =  acl.cpp agent.cpp agent_policy.cpp actions.cpp \
 			admin.cpp alarm.cpp audit.cpp ap_config.cpp \
@@ -28,6 +26,7 @@ libnxcore_la_SOURCES =  acl.cpp agent.cpp agent_policy.cpp actions.cpp \
 			tools.cpp tracert.cpp uniroot.cpp upload_job.cpp \
 			uptimecalc.cpp userdb.cpp userdb_objects.cpp \
 			vpnconn.cpp vrrp.cpp watchdog.cpp zone.cpp
+libnxcore_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxcore_la_LIBADD = ../../libnetxms/libnetxms.la \
 		      ../../snmp/libnxsnmp/libnxsnmp.la \

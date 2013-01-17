@@ -1,5 +1,4 @@
-INCLUDES=-I@top_srcdir@/include
-
+AM_CPPFLAGS=-I@top_srcdir@/include
 bin_PROGRAMS = nxagentd
 nxagentd_SOURCES = messages.c actions.cpp comm.cpp config.cpp epp.cpp exec.cpp \
                    extagent.cpp getparam.cpp master.cpp nxagentd.cpp \
@@ -18,7 +17,6 @@ else
 nxagentd_LDFLAGS = -static
 endif
 endif
-AM_CPPFLAGS = $(all_includes)
 CLEANFILES = messages.c messages.h static_subagents.cpp
 
 messages.c: messages.h

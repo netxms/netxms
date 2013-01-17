@@ -14,13 +14,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-INCLUDES=-I@top_srcdir@/include
-
 SUBAGENT = hpux
 
 pkglib_LTLIBRARIES = hpux.la
 hpux_la_SOURCES = disk.cpp iostat.cpp main.cpp net.cpp proc.cpp system.cpp
-hpux_la_CPPFLAGS = -D_PSTAT64
+hpux_la_CPPFLAGS = -I@top_srcdir@/include -D_PSTAT64
 hpux_la_LIBADD = ../../../libnetxms/libnetxms.la -lnm
 hpux_la_LDFLAGS = -module -avoid-version -lnm
 

@@ -1,9 +1,8 @@
-INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-
 DRIVER = cisco-esw
 
 pkglib_LTLIBRARIES = cisco-esw.la
 cisco_esw_la_SOURCES = cisco-esw.cpp
+cisco_esw_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 cisco_esw_la_LDFLAGS = -module -avoid-version
 cisco_esw_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \
