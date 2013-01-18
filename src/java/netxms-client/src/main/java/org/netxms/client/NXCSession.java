@@ -3236,7 +3236,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)data.getObjectId());
 
 		long flags = data.getFlags();
-		if (flags == 0)
+		if ((flags == 0) && (userData == null))
 			return; // Nothing to change
 
 		// Object name
