@@ -171,6 +171,6 @@ public class BrandingManager
 			if (t != null)
 				return t;
 		}
-		return "nxmc";
+		return "nxmc"; //$NON-NLS-1$
 	}
 }

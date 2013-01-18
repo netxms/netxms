@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.usermanager.Messages;
 
 public class ChangePasswordDialog extends Dialog
 {
@@ -72,7 +73,7 @@ public class ChangePasswordDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		Label pic = new Label(dialogArea, SWT.NONE);
-		pic.setImage(Activator.getImageDescriptor("icons/password.png").createImage());
+		pic.setImage(Activator.getImageDescriptor("icons/password.png").createImage()); //$NON-NLS-1$
 		GridData gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		pic.setLayoutData(gd);
@@ -85,10 +86,10 @@ public class ChangePasswordDialog extends Dialog
 		
 		if (changeOwnPassword)
 		{
-			textOldPassword = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, "Old password:", "", null);
+			textOldPassword = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.ChangePasswordDialog_OldPassword, "", null); //$NON-NLS-2$
 		}
-		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, "New password:", "", null);
-		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, "Confirm new password:", "", null);
+		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.ChangePasswordDialog_NewPassword, "", null); //$NON-NLS-2$
+		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.ChangePasswordDialog_ConfirmNewPassword, "", null); //$NON-NLS-2$
 
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -140,7 +141,7 @@ public class ChangePasswordDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Change password");
+		newShell.setText(Messages.ChangePasswordDialog_Title);
 	}
 
 	/* (non-Javadoc)

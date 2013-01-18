@@ -31,7 +31,7 @@ import org.osgi.framework.BundleContext;
 public class Activator extends AbstractUIPlugin
 {
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.logviewer";
+	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.logviewer"; //$NON-NLS-1$
 
 	// The shared instance
 	private static Activator plugin;
@@ -57,7 +57,7 @@ public class Activator extends AbstractUIPlugin
 		
 		// Register icon for our jobs
 		IProgressService service = PlatformUI.getWorkbench().getProgressService();
-	   service.registerIconForFamily(getImageDescriptor("icons/log_viewer_job.png"), LogViewer.JOB_FAMILY);
+	   service.registerIconForFamily(getImageDescriptor("icons/log_viewer_job.png"), LogViewer.JOB_FAMILY); //$NON-NLS-1$
 	}
 
 	/*

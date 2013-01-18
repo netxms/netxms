@@ -59,7 +59,7 @@ public class EventTreeLabelProvider extends LabelProvider implements ITableLabel
 				return StatusDisplayInfo.getStatusText(((EventInfo)element).getSeverity());
 			case AlarmDetails.EV_COLUMN_SOURCE:
 				GenericObject o = session.findObjectById(((EventInfo)element).getSourceObjectId());
-				return (o != null) ? o.getObjectName() : ("[" + ((EventInfo)element).getSourceObjectId() + "]");
+				return (o != null) ? o.getObjectName() : ("[" + ((EventInfo)element).getSourceObjectId() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case AlarmDetails.EV_COLUMN_NAME:
 				return ((EventInfo)element).getName();
 			case AlarmDetails.EV_COLUMN_MESSAGE:

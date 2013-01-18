@@ -235,7 +235,7 @@ public class AlarmDetails extends ViewPart
 	private void createAlarmDetailsSection()
 	{
 		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
-		section.setText("Overview");
+		section.setText(Messages.AlarmDetails_Overview);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -316,7 +316,7 @@ public class AlarmDetails extends ViewPart
 	private void createEventsSection()
 	{
 		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
-		section.setText("Related Events");
+		section.setText(Messages.AlarmDetails_RelatedEvents);
 		final GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -336,7 +336,7 @@ public class AlarmDetails extends ViewPart
 			}
 		});
 		
-		final String[] names = { "Severity", "Source", "Name", "Message", "Timestamp" };
+		final String[] names = { Messages.AlarmDetails_Column_Severity, Messages.AlarmDetails_Column_Source, Messages.AlarmDetails_Column_Name, Messages.AlarmDetails_Column_Message, Messages.AlarmDetails_Column_Timestamp };
 		final int[] widths = { 130, 160, 160, 400, 120 };
 		eventViewer = new SortableTreeViewer(section, names, widths, 0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION);
 		section.setClient(eventViewer.getControl());
@@ -350,7 +350,7 @@ public class AlarmDetails extends ViewPart
 	private void createDataSection()
 	{
 		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
-		section.setText("Last Values");
+		section.setText(Messages.AlarmDetails_LastValues);
 		final GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -389,7 +389,7 @@ public class AlarmDetails extends ViewPart
 	 */
 	private void refresh()
 	{
-		new ConsoleJob("Reading alarm details", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.AlarmDetails_RefreshJobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -413,7 +413,7 @@ public class AlarmDetails extends ViewPart
 							GenericObject object = session.findObjectById(alarm.getSourceObjectId());
 							if (object != null)
 							{
-								lastValuesWidget = new LastValuesWidget(AlarmDetails.this, dataArea, SWT.BORDER, object, "AlarmDetails.LastValues");
+								lastValuesWidget = new LastValuesWidget(AlarmDetails.this, dataArea, SWT.BORDER, object, "AlarmDetails.LastValues"); //$NON-NLS-1$
 								lastValuesWidget.refresh();
 							}
 						}
@@ -429,7 +429,7 @@ public class AlarmDetails extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get alarm details from server";
+				return Messages.AlarmDetails_RefreshJobError;
 			}
 		}.start();
 	}

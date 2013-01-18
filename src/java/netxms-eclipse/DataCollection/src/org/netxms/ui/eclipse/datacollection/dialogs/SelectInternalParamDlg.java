@@ -72,15 +72,15 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 
 		if ((object instanceof Template) || (object instanceof MobileDevice))
 		{
-			list.add(new AgentParameter("MobileDevice.BatteryLevel", "Battery level", DataCollectionItem.DT_INT));
-			list.add(new AgentParameter("MobileDevice.DeviceId", "Device ID", DataCollectionItem.DT_STRING));
-			list.add(new AgentParameter("MobileDevice.LastReportTime", "Last report time", DataCollectionItem.DT_INT64));
-			list.add(new AgentParameter("MobileDevice.Model", "Model", DataCollectionItem.DT_STRING));
-			list.add(new AgentParameter("MobileDevice.OS.Name", "Operating system", DataCollectionItem.DT_STRING));
-			list.add(new AgentParameter("MobileDevice.OS.Version", "Operating system version", DataCollectionItem.DT_STRING));
-			list.add(new AgentParameter("MobileDevice.SerialNumber", "Serial number", DataCollectionItem.DT_STRING));
-			list.add(new AgentParameter("MobileDevice.Vendor", "Vendor", DataCollectionItem.DT_STRING));
-			list.add(new AgentParameter("MobileDevice.UserId", "User ID", DataCollectionItem.DT_STRING));
+			list.add(new AgentParameter("MobileDevice.BatteryLevel", Messages.SelectInternalParamDlg_DCI_BatteryLevel, DataCollectionItem.DT_INT)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.DeviceId", Messages.SelectInternalParamDlg_DCI_DeviceID, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.LastReportTime", Messages.SelectInternalParamDlg_DCI_LastReportTime, DataCollectionItem.DT_INT64)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.Model", Messages.SelectInternalParamDlg_DCI_Model, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.OS.Name", Messages.SelectInternalParamDlg_DCI_OSName, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.OS.Version", Messages.SelectInternalParamDlg_DCI_OSVersion, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.SerialNumber", Messages.SelectInternalParamDlg_DCI_SerialNumber, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.Vendor", Messages.SelectInternalParamDlg_DCI_Vendor, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.UserId", Messages.SelectInternalParamDlg_DCI_UserID, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
 		}
 		
 		viewer.setInput(list.toArray());

@@ -25,6 +25,7 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.widgets.ImageCombo;
 
 /**
@@ -32,7 +33,7 @@ import org.netxms.ui.eclipse.widgets.ImageCombo;
  */
 public class SeverityConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { "IS", "IS NOT", "BELOW", "ABOVE" };
+	private static final String[] OPERATIONS = { Messages.SeverityConditionEditor_Is, Messages.SeverityConditionEditor_IsNot, Messages.SeverityConditionEditor_Below, Messages.SeverityConditionEditor_Above };
 	
 	private ImageCombo severity;
 	

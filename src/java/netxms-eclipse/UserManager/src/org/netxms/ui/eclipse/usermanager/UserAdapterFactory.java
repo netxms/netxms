@@ -72,7 +72,7 @@ public class UserAdapterFactory implements IAdapterFactory
 					@Override
 					public ImageDescriptor getImageDescriptor(Object object)
 					{
-						return Activator.getImageDescriptor("icons/user.png");
+						return Activator.getImageDescriptor("icons/user.png"); //$NON-NLS-1$
 					}
 
 					@Override
@@ -106,7 +106,7 @@ public class UserAdapterFactory implements IAdapterFactory
 					@Override
 					public ImageDescriptor getImageDescriptor(Object object)
 					{
-						return Activator.getImageDescriptor("icons/group.png");
+						return Activator.getImageDescriptor("icons/group.png"); //$NON-NLS-1$
 					}
 
 					@Override
@@ -137,7 +137,7 @@ public class UserAdapterFactory implements IAdapterFactory
 					public ImageDescriptor getImageDescriptor(Object object)
 					{
 						long userId = ((AbstractAccessListElement)object).getUserId();
-						return Activator.getImageDescriptor((userId < 0x80000000L) ? "icons/user.png" : "icons/group.png");
+						return Activator.getImageDescriptor((userId < 0x80000000L) ? "icons/user.png" : "icons/group.png"); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 
 					@Override
@@ -146,7 +146,7 @@ public class UserAdapterFactory implements IAdapterFactory
 						long userId = ((AbstractAccessListElement)object).getUserId();
 						UserManager umgr = (UserManager)ConsoleSharedData.getSession();
 						AbstractUserObject dbo = umgr.findUserDBObjectById(userId);
-						return (dbo != null) ? dbo.getName() : ("{" + Long.toString(userId) + "}");
+						return (dbo != null) ? dbo.getName() : ("{" + Long.toString(userId) + "}"); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 
 					@Override

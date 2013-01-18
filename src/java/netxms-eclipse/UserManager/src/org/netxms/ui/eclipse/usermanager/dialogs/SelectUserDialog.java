@@ -43,6 +43,7 @@ import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.usermanager.Messages;
 import org.netxms.ui.eclipse.usermanager.UserComparator;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -81,7 +82,7 @@ public class SelectUserDialog extends Dialog
 	@Override
 	protected void configureShell(Shell newShell)
 	{
-		newShell.setText("Select users");
+		newShell.setText(Messages.SelectUserDialog_Title);
 		super.configureShell(newShell);
 	}
 
@@ -99,9 +100,9 @@ public class SelectUserDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText("Available users");
+		new Label(dialogArea, SWT.NONE).setText(Messages.SelectUserDialog_AvailableUsers);
 		
-      final String[] columnNames = { "Login Name" };
+      final String[] columnNames = { Messages.SelectUserDialog_LoginName };
       final int[] columnWidths = { 250 };
       userList = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                          SWT.BORDER | (multiSelection ? SWT.MULTI : 0) | SWT.FULL_SELECTION);
@@ -145,7 +146,7 @@ public class SelectUserDialog extends Dialog
 		IStructuredSelection sel = (IStructuredSelection)userList.getSelection();
 		if (sel.size() == 0)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "You must select at least one user from list and then press OK.");
+			MessageDialog.openWarning(getShell(), Messages.SelectUserDialog_Warning, Messages.SelectUserDialog_WarningText);
 			return;
 		}
 		selection = new AbstractUserObject[sel.size()];

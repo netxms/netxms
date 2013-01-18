@@ -73,8 +73,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class LogViewer extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.logviewer.view.log_viewer";
-	public static final String JOB_FAMILY = "LogViewerJob";
+	public static final String ID = "org.netxms.ui.eclipse.logviewer.view.log_viewer"; //$NON-NLS-1$
+	public static final String JOB_FAMILY = "LogViewerJob"; //$NON-NLS-1$
 	
 	private static final int PAGE_SIZE = 400;
 		
@@ -104,8 +104,8 @@ public class LogViewer extends ViewPart
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		logName = site.getSecondaryId();
-		setPartName(Messages.getString("LogViewer_" + logName));
-		final ImageDescriptor img = Activator.getImageDescriptor("icons/" + logName + ".png");
+		setPartName(Messages.getString(Messages.LogViewer_2 + logName));
+		final ImageDescriptor img = Activator.getImageDescriptor("icons/" + logName + ".png"); //$NON-NLS-1$ //$NON-NLS-2$
 		if (img != null)
 		{
 			titleImage = img.createImage();
@@ -114,7 +114,7 @@ public class LogViewer extends ViewPart
 		filter = new LogFilter();
 
 		// Initiate loading of user manager plugin if it was not loaded before
-		Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter");
+		Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)
@@ -149,7 +149,7 @@ public class LogViewer extends ViewPart
 			public void widgetDisposed(DisposeEvent e)
 			{
 				if (logHandle != null)
-					WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "LogViewer." + logHandle.getName());
+					WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "LogViewer." + logHandle.getName()); //$NON-NLS-1$
 			}
 		});
 
@@ -171,11 +171,11 @@ public class LogViewer extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
-		new ConsoleJob("Open log \"" + logName + "\"", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.LogViewer_7 + logName + Messages.LogViewer_8, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot open server log file \"" + logName + "\"";
+				return Messages.LogViewer_9 + logName + Messages.LogViewer_10;
 			}
 
 			@Override
@@ -213,7 +213,7 @@ public class LogViewer extends ViewPart
 		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
 		if (contextService != null)
 		{
-			contextService.activateContext("org.netxms.ui.eclipse.logviewer.context.LogViewer");
+			contextService.activateContext("org.netxms.ui.eclipse.logviewer.context.LogViewer"); //$NON-NLS-1$
 		}
 	}
 
@@ -253,7 +253,7 @@ public class LogViewer extends ViewPart
 			column.setData(lc);
 			column.setWidth(estimateColumnWidth(lc));
 		}
-		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), "LogViewer." + logHandle.getName());
+		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), "LogViewer." + logHandle.getName()); //$NON-NLS-1$
 		viewer.setLabelProvider(new LogLabelProvider(logHandle));
 		filterBuilder.setLogHandle(logHandle);
 	}
@@ -352,17 +352,17 @@ public class LogViewer extends ViewPart
 		};
 		actionRefresh.setEnabled(false);
 
-		actionExecute = new Action("&Execute query", SharedIcons.EXECUTE) {
+		actionExecute = new Action(Messages.LogViewer_ActionExec, SharedIcons.EXECUTE) {
 			@Override
 			public void run()
 			{
 				doQuery();
 			}
 		};
-		actionExecute.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.execute");
+		actionExecute.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.execute"); //$NON-NLS-1$
 		handlerService.activateHandler(actionExecute.getActionDefinitionId(), new ActionHandler(actionExecute));
 
-		actionClearFilter = new Action("&Clear filter", SharedIcons.CLEAR_LOG) {
+		actionClearFilter = new Action(Messages.LogViewer_ActionClearFilter, SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
 			{
@@ -370,7 +370,7 @@ public class LogViewer extends ViewPart
 			}
 		};
 
-		actionGetMoreData = new Action("Get &more data", Activator.getImageDescriptor("icons/get_more_data.png")) {
+		actionGetMoreData = new Action(Messages.LogViewer_ActionGetMoreData, Activator.getImageDescriptor("icons/get_more_data.png")) { //$NON-NLS-2$
 			@Override
 			public void run()
 			{
@@ -378,10 +378,10 @@ public class LogViewer extends ViewPart
 			}
 		};
 		actionGetMoreData.setEnabled(false);
-		actionGetMoreData.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.get_more_data");
+		actionGetMoreData.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.get_more_data"); //$NON-NLS-1$
 		handlerService.activateHandler(actionGetMoreData.getActionDefinitionId(), new ActionHandler(actionGetMoreData));
 
-		actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
+		actionShowFilter = new Action(Messages.LogViewer_ActionShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -389,17 +389,17 @@ public class LogViewer extends ViewPart
 			}
 		};
 		actionShowFilter.setChecked(true);
-      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.show_filter");
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.show_filter"); //$NON-NLS-1$
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 		
-		actionCopyToClipboard = new Action("&Copy to clipboard", SharedIcons.COPY) {
+		actionCopyToClipboard = new Action(Messages.LogViewer_ActionCopy, SharedIcons.COPY) {
 			@Override
 			public void run()
 			{
 				copySelectionToClipboard();
 			}
 		};
-      actionCopyToClipboard.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.copy");
+      actionCopyToClipboard.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.copy"); //$NON-NLS-1$
 		handlerService.activateHandler(actionCopyToClipboard.getActionDefinitionId(), new ActionHandler(actionCopyToClipboard));
 	}
 	
@@ -411,11 +411,11 @@ public class LogViewer extends ViewPart
 		actionRefresh.setEnabled(false);
 		actionGetMoreData.setEnabled(false);
 		filter = filterBuilder.createFilter();
-		new ConsoleJob("Query server log", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.LogViewer_QueryJob, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot query server log " + logName;
+				return Messages.LogViewer_QueryJobError + logName;
 			}
 
 			@Override
@@ -446,11 +446,11 @@ public class LogViewer extends ViewPart
 		if (noData)
 			return;	// we already know that there will be no more data
 		
-		new ConsoleJob("Get log data from server", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.LogViewer_GetDataJob, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot query server log " + logName;
+				return Messages.LogViewer_QueryError + logName;
 			}
 
 			@Override
@@ -476,11 +476,11 @@ public class LogViewer extends ViewPart
 	 */
 	private void refreshData()
 	{
-		new ConsoleJob("Get log data from server", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.LogViewer_RefreshJob, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot query server log " + logName;
+				return Messages.LogViewer_RefreshError + logName;
 			}
 
 			@Override
@@ -541,7 +541,7 @@ public class LogViewer extends ViewPart
 		if (selection.length > 0)
 		{
 			StringBuilder sb = new StringBuilder();
-			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n";
+			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
 			for(int i = 0; i < selection.length; i++)
 			{
 				if (i > 0)

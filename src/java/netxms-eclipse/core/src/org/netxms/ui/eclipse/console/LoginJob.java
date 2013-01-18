@@ -193,7 +193,7 @@ public class LoginJob implements IRunnableWithProgress
 		{
 			try
 			{
-				SessionProvider p = (SessionProvider)currentElement.createExecutableExtension("class");
+				SessionProvider p = (SessionProvider)currentElement.createExecutableExtension("class"); //$NON-NLS-1$
 				return p.createSession(hostName, port, loginName, password, encryptSession);
 			}
 			catch(CoreException e)

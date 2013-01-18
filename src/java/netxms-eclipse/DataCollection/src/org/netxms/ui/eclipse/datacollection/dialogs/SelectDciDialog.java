@@ -97,7 +97,7 @@ public class SelectDciDialog extends Dialog
 	{
 		if (enableEmptySelection)
 		{
-			Button button = createButton(parent, 1000, "&None", false);
+			Button button = createButton(parent, 1000, Messages.SelectDciDialog_None, false);
 			button.addSelectionListener(new SelectionListener() {
 				@Override
 				public void widgetSelected(SelectionEvent e)

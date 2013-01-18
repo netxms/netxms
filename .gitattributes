@@ -1965,6 +1965,7 @@ src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/widgets/Devi
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/widgets/SlotView.java -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/widgets/helpers/PortInfo.java -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/widgets/helpers/PortSelectionListener.java -text
+src/java/netxms-eclipse/UserManager/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/UserManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/UserManager/build.properties -text
 src/java/netxms-eclipse/UserManager/icons/change_password.png -text
@@ -1986,6 +1987,7 @@ src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/action
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/dialogs/ChangePasswordDialog.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/dialogs/CreateObjectDialog.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/dialogs/SelectUserDialog.java -text
+src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/messages.properties -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/propertypages/Authentication.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/propertypages/General.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/propertypages/Members.java -text

@@ -149,7 +149,7 @@ public class TerminalReader extends Reader
 	 */
 	private void clearInput()
 	{
-		writeToTerminal("\u001b[" + command.length() + "D\u001b[0J");
+		writeToTerminal("\u001b[" + command.length() + "D\u001b[0J"); //$NON-NLS-1$ //$NON-NLS-2$
 		command = new StringBuilder();
 	}
 	

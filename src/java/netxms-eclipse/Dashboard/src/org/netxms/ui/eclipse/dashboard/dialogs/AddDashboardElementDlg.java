@@ -73,7 +73,7 @@ public class AddDashboardElementDlg extends Dialog
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_BarChartForTable);
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_PieChartForTable);
 		elementTypeSelector.add(Messages.AddDashboardElementDlg_TubeChartForTable);
-		elementTypeSelector.add("Separator");
+		elementTypeSelector.add(Messages.AddDashboardElementDlg_Separator);
 		elementTypeSelector.select(1);
 		
 		return dialogArea;

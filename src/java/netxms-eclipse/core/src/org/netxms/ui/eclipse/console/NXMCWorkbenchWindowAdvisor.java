@@ -103,15 +103,15 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		final Shell shell = getWindowConfigurer().getWindow().getShell();
 		boolean success = false;
 		boolean autoConnect = false;
-		String password = "";
+		String password = ""; //$NON-NLS-1$
 		
 		for(String s : Platform.getCommandLineArgs())
 		{
-			if (s.startsWith("-server="))
+			if (s.startsWith("-server=")) //$NON-NLS-1$
 			{
 		      settings.put("Connect.Server", s.substring(8)); //$NON-NLS-1$
 			}
-			else if (s.startsWith("-login="))
+			else if (s.startsWith("-login=")) //$NON-NLS-1$
 			{
 				settings.put("Connect.Login", s.substring(7)); //$NON-NLS-1$
 			}
