@@ -37,6 +37,7 @@ public class Messages extends NLS
 	public static String AddDashboardElementDlg_NetworkMap;
 	public static String AddDashboardElementDlg_PieChart;
 	public static String AddDashboardElementDlg_PieChartForTable;
+	public static String AddDashboardElementDlg_Separator;
 	public static String AddDashboardElementDlg_StatusChart;
 	public static String AddDashboardElementDlg_StatusIndicator;
 	public static String AddDashboardElementDlg_TubeChart;
@@ -108,6 +109,7 @@ public class Messages extends NLS
 	public static String DashboardElementsLabelProvider_TypeLineChart;
 	public static String DashboardElementsLabelProvider_TypeNetworkMap;
 	public static String DashboardElementsLabelProvider_TypePieChart;
+	public static String DashboardElementsLabelProvider_TypeSeparator;
 	public static String DashboardElementsLabelProvider_TypeStatusChart;
 	public static String DashboardElementsLabelProvider_TypeStatusIndicator;
 	public static String DashboardElementsLabelProvider_TypeTableBarChart;
@@ -237,6 +239,11 @@ public class Messages extends NLS
 	public static String ObjectStatusChart_Transposed;
 	public static String OpenDashboard_Error;
 	public static String OpenDashboard_ErrorText;
+	public static String SeparatorProperties_BottomMargin;
+	public static String SeparatorProperties_LeftMargin;
+	public static String SeparatorProperties_LineWidth;
+	public static String SeparatorProperties_RightMargin;
+	public static String SeparatorProperties_TopMargin;
 	public static String StatusIndicator_Object;
 	public static String StatusIndicator_Title;
 	public static String TableComparisonChart_3DView;

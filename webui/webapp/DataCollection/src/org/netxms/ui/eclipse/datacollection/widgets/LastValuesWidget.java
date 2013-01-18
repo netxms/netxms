@@ -538,14 +538,14 @@ public class LastValuesWidget extends Composite
 	{
 		// Read all registered extensions and create tabs
 		final IExtensionRegistry reg = Platform.getExtensionRegistry();
-		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.datacollection.dciOpenHandlers");
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.datacollection.dciOpenHandlers"); //$NON-NLS-1$
 		for(int i = 0; i < elements.length; i++)
 		{
 			try
 			{
 				final OpenHandlerData h = new OpenHandlerData();
-				h.handler = (DciOpenHandler)elements[i].createExecutableExtension("class");
-				h.priority = safeParseInt(elements[i].getAttribute("priority"));
+				h.handler = (DciOpenHandler)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
+				h.priority = safeParseInt(elements[i].getAttribute("priority")); //$NON-NLS-1$
 				openHandlers.add(h);
 			}
 			catch(CoreException e)

@@ -47,6 +47,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.CreateSnmpDciDialog;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -82,7 +83,7 @@ public class CreateSnmpDci implements IObjectActionDelegate
 		MibObject mibObject = MibCache.findObject(objects.get(0).getName(), false);
 		String description = (mibObject != null) ? mibObject.getName() : objects.get(0).getName();
 		if (objects.size() > 1)
-			description += " @@instance@@";
+			description += " @@instance@@"; //$NON-NLS-1$
 		
 		final CreateSnmpDciDialog dlg = new CreateSnmpDciDialog(shell, description);
 		if (dlg.open() != Window.OK)
@@ -111,20 +112,20 @@ public class CreateSnmpDci implements IObjectActionDelegate
 			lockRequired.put(n.getObjectId(), !((ref != null) && (ref.getView(false) != null)));
 		}
 		
-		new ConsoleJob("Creating new SNMP DCI...", viewPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateSnmpDci_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create DCI";
+				return Messages.CreateSnmpDci_ErrorMessage;
 			}
 
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask("Creating data collection items", values.size());
+				monitor.beginTask(Messages.CreateSnmpDci_TaskTitle, values.size());
 				for(SnmpValue v : values)
 				{
-					final String description = dlg.getDescription().replaceAll("@@instance@@", Long.toString(v.getObjectId().getIdFromPos(v.getObjectId().getLength() - 1)));
+					final String description = dlg.getDescription().replaceAll("@@instance@@", Long.toString(v.getObjectId().getIdFromPos(v.getObjectId().getLength() - 1))); //$NON-NLS-1$
 					createDci(session, v, description, dlg.getPollingInterval(), 
 							dlg.getRetentionTime(), dlg.getDeltaCalculation(), lockRequired);
 					monitor.worked(1);

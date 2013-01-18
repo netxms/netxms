@@ -322,7 +322,7 @@ public class AlarmList extends Composite
 			}
 		};
 
-		actionShowAlarmDetails = new Action("Alarm &details") {
+		actionShowAlarmDetails = new Action(Messages.get().AlarmList_ActionAlarmDetails) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -372,7 +372,7 @@ public class AlarmList extends Composite
 			}
 		};
 		
-		actionShowObjectDetails = new Action("Show &object details") {
+		actionShowObjectDetails = new Action(Messages.get().AlarmList_ActionObjectDetails) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -637,7 +637,7 @@ public class AlarmList extends Composite
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(getShell(), Messages.get().AlarmList_Error, "Cannot open object details view: " + e.getLocalizedMessage());
+				MessageDialog.openError(getShell(), Messages.get().AlarmList_Error, Messages.get().AlarmList_OpenDetailsError + e.getLocalizedMessage());
 			}
 		}
 	}

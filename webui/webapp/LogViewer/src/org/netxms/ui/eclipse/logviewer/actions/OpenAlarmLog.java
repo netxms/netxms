@@ -25,6 +25,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
+import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.views.LogViewer;
 
 /**
@@ -61,11 +62,11 @@ public class OpenAlarmLog implements IWorkbenchWindowActionDelegate
 		{	
 			try 
 			{
-				window.getActivePage().showView(LogViewer.ID, "AlarmLog", IWorkbenchPage.VIEW_ACTIVATE);
+				window.getActivePage().showView(LogViewer.ID, "AlarmLog", IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.OpenAlarmLog_Error, Messages.OpenAlarmLog_ErrorText + e.getMessage());
 			}
 		}
 	}

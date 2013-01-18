@@ -50,7 +50,7 @@ public class CreateSnmpDciDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create SNMP DCI");
+		newShell.setText(Messages.CreateSnmpDciDialog_ShellTitle);
 	}
 
 	/* (non-Javadoc)
@@ -65,7 +65,7 @@ public class CreateSnmpDciDialog extends Dialog
 		dialogArea.setLayout(layout);
 
 		textDescription = new LabeledText(dialogArea, SWT.NONE);
-		textDescription.setLabel("Description");
+		textDescription.setLabel(Messages.CreateSnmpDciDialog_Description);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -102,7 +102,7 @@ public class CreateSnmpDciDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		textRetention.setLayoutData(gd);
 
-      deltaCalculationSelector = WidgetHelper.createLabeledCombo(optionsGroup, SWT.BORDER | SWT.READ_ONLY, "Delta calculation",
+      deltaCalculationSelector = WidgetHelper.createLabeledCombo(optionsGroup, SWT.BORDER | SWT.READ_ONLY, Messages.CreateSnmpDciDialog_DeltaCalculation,
             WidgetHelper.DEFAULT_LAYOUT_DATA);
       deltaCalculationSelector.add(Messages.Transformation_DeltaNone);
       deltaCalculationSelector.add(Messages.Transformation_DeltaSimple);

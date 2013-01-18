@@ -21,10 +21,22 @@ public class Messages extends NLS
 	public String AlarmCommentsEditor_Edit;
 	public String AlarmCommentsEditor_Unknown;
 	public String AlarmComparator_Unknown;
+	public String AlarmDetails_Column_Message;
+	public String AlarmDetails_Column_Name;
+	public String AlarmDetails_Column_Severity;
+	public String AlarmDetails_Column_Source;
+	public String AlarmDetails_Column_Timestamp;
+	public String AlarmDetails_LastValues;
+	public String AlarmDetails_Overview;
+	public String AlarmDetails_RefreshJobError;
+	public String AlarmDetails_RefreshJobTitle;
+	public String AlarmDetails_RelatedEvents;
 	public String AlarmDetailsProvider_Error;
 	public String AlarmDetailsProvider_ErrorOpeningView;
 	public String AlarmList_AckBy;
 	public String AlarmList_Acknowledge;
+	public String AlarmList_ActionAlarmDetails;
+	public String AlarmList_ActionObjectDetails;
 	public String AlarmList_CannotResoveAlarm;
 	public String AlarmList_ColumnCount;
 	public String AlarmList_ColumnCreated;
@@ -38,6 +50,7 @@ public class Messages extends NLS
 	public String AlarmList_CopyToClipboard;
 	public String AlarmList_Error;
 	public String AlarmList_ErrorText;
+	public String AlarmList_OpenDetailsError;
 	public String AlarmList_Resolve;
 	public String AlarmList_ResolveAlarm;
 	public String AlarmList_Resolving;
@@ -66,11 +79,6 @@ public class Messages extends NLS
 	public String TerminateAlarm_ErrorMessage;
 	public String TerminateAlarm_JobTitle;
 	public String TerminateAlarm_TaskName;
-	static
-	{
-		// initialize resource bundle
-		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
-	}
 
 	private Messages()
 	{

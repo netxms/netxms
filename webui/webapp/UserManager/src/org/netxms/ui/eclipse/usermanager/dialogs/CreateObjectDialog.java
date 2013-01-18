@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.usermanager.Messages;
 
 /**
  * User database object creation dialog
@@ -64,7 +65,7 @@ public class CreateObjectDialog extends Dialog
 		dialogArea.setLayout(layout);
 
 		Label label = new Label(dialogArea, SWT.NONE);
-		label.setText("Login name");
+		label.setText(Messages.CreateObjectDialog_LoginName);
 
 		textLogin = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
 		textLogin.setTextLimit(63);
@@ -72,10 +73,10 @@ public class CreateObjectDialog extends Dialog
 		textLogin.setFocus();
 
 		label = new Label(dialogArea, SWT.NONE);
-		label.setText("");
+		label.setText(""); //$NON-NLS-1$
 
 		checkEdit = new Button(dialogArea, SWT.CHECK);
-		checkEdit.setText("Define additional properties");
+		checkEdit.setText(Messages.CreateObjectDialog_DefAddProp);
 		checkEdit.setSelection(true);
 
 		return dialogArea;
@@ -88,7 +89,7 @@ public class CreateObjectDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(isUser ? "Create New User" : "Create New Group");
+		newShell.setText(isUser ? Messages.CreateObjectDialog_NewUser : Messages.CreateObjectDialog_NewGroup);
 	}
 
 	/**

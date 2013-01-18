@@ -114,7 +114,7 @@ public class SeparatorProperties extends PropertyPage
       lineWidthGroup.setLayoutData(gd);
       
       Label label = new Label(lineWidthGroup, SWT.NONE);
-      label.setText("Line width:");
+      label.setText(Messages.SeparatorProperties_LineWidth);
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
       gd.horizontalSpan = 2;
@@ -164,16 +164,16 @@ public class SeparatorProperties extends PropertyPage
 			}
 		});
       
-      marginLeft = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Left margin", 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      marginLeft = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.SeparatorProperties_LeftMargin, 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
       marginLeft.setSelection(config.getLeftMargin());
 		
-      marginRight = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Right margin", 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      marginRight = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.SeparatorProperties_RightMargin, 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
       marginRight.setSelection(config.getRightMargin());
 		
-      marginTop = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Top margin", 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      marginTop = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.SeparatorProperties_TopMargin, 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
       marginTop.setSelection(config.getTopMargin());
 		
-      marginBottom = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Bottom margin", 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      marginBottom = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.SeparatorProperties_BottomMargin, 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
       marginBottom.setSelection(config.getBottomMargin());
 		
 		return dialogArea;

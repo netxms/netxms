@@ -357,7 +357,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		if (titleVisible && (title != null))
 		{
 			gc.setFont(Activator.getDefault().getChartTitleFont(getDisplay()));
-			gc.setForeground(getColorFromPreferences("Chart.Colors.Title"));
+			gc.setForeground(getColorFromPreferences("Chart.Colors.Title")); //$NON-NLS-1$
 			Point ext = gc.textExtent(title);
 			int x = (ext.x < size.x) ? (size.x - ext.x) / 2 : 0;
 			gc.drawText(title, x, top, true);

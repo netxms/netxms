@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.log.OrderingColumn;
+import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
@@ -54,7 +55,7 @@ public class OrderingListLabelProvider implements ITableLabelProvider
 			case 0:
 				return ((OrderingColumn)element).getDescription();
 			case 1:
-				return ((OrderingColumn)element).isDescending() ? "Yes" : "No";
+				return ((OrderingColumn)element).isDescending() ? Messages.OrderingListLabelProvider_Yes : Messages.OrderingListLabelProvider_No;
 			default:
 				return null;
 		}

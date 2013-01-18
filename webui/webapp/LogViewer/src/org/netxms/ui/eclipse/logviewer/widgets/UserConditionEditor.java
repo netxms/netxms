@@ -33,6 +33,7 @@ import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.log.ColumnFilter;
+import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
@@ -43,8 +44,8 @@ import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
 public class UserConditionEditor extends ConditionEditor
 {
 	private static final long serialVersionUID = 1L;
-	private static final String[] OPERATIONS = { "IS", "IS NOT" };
-	private static final String EMPTY_SELECTION_TEXT = "<none>";
+	private static final String[] OPERATIONS = { Messages.UserConditionEditor_Is, Messages.UserConditionEditor_IsNot };
+	private static final String EMPTY_SELECTION_TEXT = Messages.UserConditionEditor_None;
 	
 	private WorkbenchLabelProvider labelProvider;
 	private long userId = 0;

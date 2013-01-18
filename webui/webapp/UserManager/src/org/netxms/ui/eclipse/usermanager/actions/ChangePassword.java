@@ -30,6 +30,7 @@ import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.usermanager.Messages;
 import org.netxms.ui.eclipse.usermanager.dialogs.ChangePasswordDialog;
 
 /**
@@ -67,11 +68,11 @@ public class ChangePassword implements IWorkbenchWindowActionDelegate
 		if (dlg.open() == Window.OK)
 		{
 			final Session session = ConsoleSharedData.getSession();
-			ConsoleJob job = new ConsoleJob("Change password for current user", null, Activator.PLUGIN_ID, null) {
+			ConsoleJob job = new ConsoleJob(Messages.ChangePassword_JobTitle, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot change password";
+					return Messages.ChangePassword_Error;
 				}
 
 				@Override
@@ -82,7 +83,7 @@ public class ChangePassword implements IWorkbenchWindowActionDelegate
 						@Override
 						public void run()
 						{
-							MessageDialog.openInformation(window.getShell(), "Information", "Password changed successfully");
+							MessageDialog.openInformation(window.getShell(), Messages.ChangePassword_Information, Messages.ChangePassword_SuccessMessage);
 						}
 					});
 				}

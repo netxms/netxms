@@ -52,7 +52,7 @@ public class UserComparator extends ViewerComparator
 	{
 		if (object instanceof User)
 			return ((User) object).getFullName();
-		return "";
+		return ""; //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -63,7 +63,7 @@ public class UserComparator extends ViewerComparator
 	{
 		int result;
 
-		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case UserManagementView.COLUMN_NAME:
 				result = ((AbstractUserObject)e1).getName().compareToIgnoreCase(((AbstractUserObject) e2).getName());

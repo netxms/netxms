@@ -139,7 +139,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 					long i = Long.parseLong(element.getValue());
 					if ((i >= 10000000000000L) || (i <= -10000000000000L))
 					{
-						return Long.toString(i / 1000000000000L) + " T";
+						return Long.toString(i / 1000000000000L) + " T"; //$NON-NLS-1$
 					}
 					if ((i >= 10000000000L) || (i <= -10000000000L))
 					{
@@ -166,7 +166,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 					nf.setMaximumFractionDigits(2);
 					if ((d >= 10000000000000.0) || (d <= -10000000000000.0))
 					{
-						return nf.format(d / 1000000000000.0) + " T";
+						return nf.format(d / 1000000000000.0) + " T"; //$NON-NLS-1$
 					}
 					if ((d >= 10000000000.0) || (d <= -10000000000.0))
 					{
