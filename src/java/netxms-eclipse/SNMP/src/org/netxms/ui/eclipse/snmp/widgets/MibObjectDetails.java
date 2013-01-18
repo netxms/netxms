@@ -162,7 +162,10 @@ public class MibObjectDetails extends Composite
 				SnmpObjectId objectId = object.getObjectId(); 
 				oid.setText((objectId != null) ? objectId.toString() : ""); //$NON-NLS-1$
 			}
-			oidText.setText(object.getFullName());
+			if (oidText != null)
+			{
+				oidText.setText(object.getFullName());
+			}
 			description.setText(object.getDescription());
 			textualConvention.setText(object.getTextualConvention());
 			type.setText(SnmpConstants.getObjectTypeName(object.getType()));
