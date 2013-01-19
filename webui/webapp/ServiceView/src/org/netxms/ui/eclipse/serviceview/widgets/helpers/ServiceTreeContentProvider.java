@@ -27,6 +27,8 @@ import org.eclipse.zest.core.viewers.IGraphEntityContentProvider;
  */
 public class ServiceTreeContentProvider implements IGraphEntityContentProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.zest.core.viewers.IGraphEntityContentProvider#getConnectedTo(java.lang.Object)
 	 */

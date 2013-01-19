@@ -3496,6 +3496,14 @@ webui/webapp/UserManager/src/org/netxms/ui/eclipse/usermanager/propertypages/Gen
 webui/webapp/UserManager/src/org/netxms/ui/eclipse/usermanager/propertypages/Members.java -text
 webui/webapp/UserManager/src/org/netxms/ui/eclipse/usermanager/propertypages/SystemRights.java -text
 webui/webapp/UserManager/src/org/netxms/ui/eclipse/usermanager/views/UserManagementView.java -text
+webui/webapp/Zest/.settings/org.eclipse.jdt.core.prefs -text
+webui/webapp/Zest/META-INF/MANIFEST.MF -text
+webui/webapp/Zest/build.properties -text
+webui/webapp/Zest/src/icons/home.gif -text
+webui/webapp/Zest/src/icons/tree_hanging.gif -text
+webui/webapp/Zest/src/icons/tree_hanging_inverse.gif -text
+webui/webapp/Zest/src/icons/tree_normal.gif -text
+webui/webapp/Zest/src/icons/tree_normal_inverse.gif -text
 webui/webapp/nebula/org.netxms.nebula.widgets.gallery/META-INF/MANIFEST.MF -text
 webui/webapp/nebula/org.netxms.nebula.widgets.gallery/build.properties -text
 webui/webapp/nebula/org.netxms.nebula.widgets.gallery/pom.xml -text

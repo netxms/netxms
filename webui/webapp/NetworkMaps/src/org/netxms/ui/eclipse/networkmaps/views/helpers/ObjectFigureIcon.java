@@ -70,7 +70,7 @@ public class ObjectFigureIcon extends ObjectFigure
 		final Image image = labelProvider.getImage(element);
 		imageWidth = image.getImageData().width;
 		imageHeight = image.getImageData().height;
-
+		
 		Dimension ls = label.getPreferredSize(-1, -1);
 		if (ls.width > imageWidth * 2)
 			ls.width = imageWidth * 2;
@@ -114,7 +114,7 @@ public class ObjectFigureIcon extends ObjectFigure
 			
 			gc.setForegroundColor(StatusDisplayInfo.getStatusColor(object.getStatus()));
 			gc.setLineWidth(FRAME_LINE_WIDTH);
-			//gc.setLineStyle(labelProvider.isElementSelected(element) ? SWT.LINE_DOT : SWT.LINE_SOLID);
+			gc.setLineStyle(labelProvider.isElementSelected(element) ? Graphics.LINE_DOT : Graphics.LINE_SOLID);
 			gc.drawRoundRectangle(rect, 16, 16);
 
 			rect = new Rectangle(getBounds());
@@ -128,7 +128,7 @@ public class ObjectFigureIcon extends ObjectFigure
 			
 			gc.setForegroundColor(SELECTION_COLOR);
 			gc.setLineWidth(FRAME_LINE_WIDTH);
-			//gc.setLineStyle(labelProvider.isElementSelected(element) ? SWT.LINE_DOT : SWT.LINE_SOLID);
+			gc.setLineStyle(labelProvider.isElementSelected(element) ? Graphics.LINE_DOT : Graphics.LINE_SOLID);
 			gc.drawRoundRectangle(rect, 16, 16);
 
 			rect = new Rectangle(getBounds());

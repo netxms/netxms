@@ -37,6 +37,8 @@ import org.netxms.ui.eclipse.serviceview.Activator;
  */
 public class ServiceTreeLabelProvider extends LabelProvider implements IFigureProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	private GraphViewer viewer;
 	private IServiceFigureListener figureListener;
 	private ILabelProvider workbenchLabelProvider;

@@ -18,15 +18,14 @@
  */
 package org.netxms.ui.eclipse.networkmaps.widgets;
 
-import java.util.Comparator;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.zest.layouts.LayoutAlgorithm;
-import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.GridLayoutAlgorithm;
-import org.eclipse.zest.layouts.algorithms.HorizontalTreeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.RadialLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
@@ -34,7 +33,6 @@ import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
 import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
-import org.netxms.ui.eclipse.networkmaps.views.helpers.GraphLayoutFilter;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 
@@ -81,7 +79,7 @@ public class NetworkMapWidget extends Composite
 	{
 		if (layout == org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL)
 		{
-			viewer.setLayoutAlgorithm(new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
+			viewer.setLayoutAlgorithm(new ManualLayout());
 		}
 		else
 		{
@@ -93,7 +91,6 @@ public class NetworkMapWidget extends Composite
 	 * Set layout algorithm for map
 	 * @param alg
 	 */
-	@SuppressWarnings("rawtypes")
 	private void setLayoutAlgorithm(int alg)
 	{
 		LayoutAlgorithm algorithm;
@@ -101,38 +98,34 @@ public class NetworkMapWidget extends Composite
 		switch(alg)
 		{
 			case LAYOUT_SPRING:
-				algorithm = new SpringLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
+				algorithm = new SpringLayoutAlgorithm();
 				break;
 			case LAYOUT_RADIAL:
-				algorithm = new RadialLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
+				algorithm = new RadialLayoutAlgorithm();
 				break;
 			case LAYOUT_HTREE:
-				algorithm = new HorizontalTreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
+				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.LEFT_RIGHT);
 				break;
 			case LAYOUT_VTREE:
-				algorithm = new TreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
+				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
 				break;
 			case LAYOUT_SPARSE_VTREE:
-				TreeLayoutAlgorithm mainLayoutAlgorithm = new TreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
-				mainLayoutAlgorithm.setComparator(new Comparator() {
+				TreeLayoutAlgorithm mainLayoutAlgorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
+				viewer.setComparator(new ViewerComparator() {
 					@Override
-					public int compare(Object arg0, Object arg1)
+					public int compare(Viewer viewer, Object e1, Object e2)
 					{
-						return arg0.toString().compareToIgnoreCase(arg1.toString());
+						return e1.toString().compareToIgnoreCase(e2.toString());
 					}
 				});
-				algorithm = new CompositeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING, 
+				algorithm = new CompositeLayoutAlgorithm( 
 						new LayoutAlgorithm[] { mainLayoutAlgorithm,
-						                        new SparseTree(LayoutStyles.NO_LAYOUT_NODE_RESIZING) });
+						                        new SparseTree() });
 				break;
 			default:
-				algorithm = new GridLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
+				algorithm = new GridLayoutAlgorithm();
 				break;
 		}
-		algorithm.setFilter(new GraphLayoutFilter(true));
-		ManualLayout decorationLayoutAlgorithm = new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
-		decorationLayoutAlgorithm.setFilter(new GraphLayoutFilter(false));
-		viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING, 
-				new LayoutAlgorithm[] { algorithm, decorationLayoutAlgorithm }), true);
+		viewer.setLayoutAlgorithm(algorithm);
 	}
 }

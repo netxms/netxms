@@ -27,6 +27,7 @@ import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.layouts.LayoutAlgorithm;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.SpaceTreeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
@@ -71,7 +72,8 @@ public class ServiceTree extends Composite implements IServiceFigureListener
 		viewer = new GraphViewer(this, SWT.NONE);
 		viewer.setContentProvider(new ServiceTreeContentProvider());
 		viewer.setLabelProvider(new ServiceTreeLabelProvider(viewer, this));
-		TreeLayoutAlgorithm mainLayoutAlgorithm = new TreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
+		/*
+		TreeLayoutAlgorithm mainLayoutAlgorithm = new SpaceTreeLayoutAlgorithm();
 		mainLayoutAlgorithm.setComparator(new Comparator() {
 			@Override
 			public int compare(Object arg0, Object arg1)
@@ -82,6 +84,8 @@ public class ServiceTree extends Composite implements IServiceFigureListener
 		viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING, 
 				new LayoutAlgorithm[] { mainLayoutAlgorithm,
 				                        new SparseTree(LayoutStyles.NO_LAYOUT_NODE_RESIZING) }));
+      */
+		viewer.setLayoutAlgorithm(new SpaceTreeLayoutAlgorithm());
 		
 		model = new ServiceTreeModel(rootObject);
 		viewer.setInput(model);

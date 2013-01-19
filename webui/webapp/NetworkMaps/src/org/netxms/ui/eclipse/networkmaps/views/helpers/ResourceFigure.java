@@ -112,7 +112,7 @@ public class ResourceFigure extends Figure
 			
 			gc.setForegroundColor(StatusDisplayInfo.getStatusColor(getElementStatus()));
 			gc.setLineWidth(3);
-			//gc.setLineStyle(labelProvider.isElementSelected(element) ? SWT.LINE_DOT : SWT.LINE_SOLID);
+			gc.setLineStyle(labelProvider.isElementSelected(element) ? Graphics.LINE_DOT : Graphics.LINE_SOLID);
 			gc.drawRoundRectangle(rect, 16, 16);
 
 			rect = new Rectangle(getBounds());
@@ -126,7 +126,7 @@ public class ResourceFigure extends Figure
 			
 			gc.setForegroundColor(SELECTION_COLOR);
 			gc.setLineWidth(3);
-			//gc.setLineStyle(labelProvider.isElementSelected(element) ? SWT.LINE_DOT : SWT.LINE_SOLID);
+			gc.setLineStyle(labelProvider.isElementSelected(element) ? Graphics.LINE_DOT : Graphics.LINE_SOLID);
 			gc.drawRoundRectangle(rect, 16, 16);
 
 			rect = new Rectangle(getBounds());

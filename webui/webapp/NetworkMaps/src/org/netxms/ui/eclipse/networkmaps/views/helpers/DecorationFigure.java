@@ -20,14 +20,16 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.Graphics;
-import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
-import org.eclipse.draw2d.TreeSearch;
+import org.eclipse.draw2d.MouseEvent;
+import org.eclipse.draw2d.MouseListener;
+import org.eclipse.draw2d.MouseMotionListener;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -35,25 +37,37 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
 /**
  * Map decoration figure
  */
-public class DecorationFigure extends Figure
+public class DecorationFigure extends Figure implements MouseListener, MouseMotionListener
 {
 	private static final int MARGIN_X = 4;
 	private static final int MARGIN_Y = 4;
 	private static final int LABEL_MARGIN = 5;
 	private static final int TITLE_OFFSET = MARGIN_X + 10;
 	
+	private static final int TOP_LEFT = 0;
+	private static final int TOP_RIGHT = 1;
+	private static final int BOTTOM_LEFT = 2;
+	private static final int BOTTOM_RIGHT = 3;
+	
 	private NetworkMapDecoration decoration;
 	private MapLabelProvider labelProvider;
+	private ExtendedGraphViewer viewer;
 	private Label label;
+	private boolean drag = false;
+	private boolean resize = true;
+	private boolean selected = false;
+	private int lastX;
+	private int lastY;
 	
 	/**
 	 * @param decoration
 	 * @param labelProvider
 	 */
-	public DecorationFigure(NetworkMapDecoration decoration, MapLabelProvider labelProvider)
+	public DecorationFigure(NetworkMapDecoration decoration, MapLabelProvider labelProvider, ExtendedGraphViewer viewer)
 	{
 		this.decoration = decoration;
 		this.labelProvider = labelProvider;
+		this.viewer = viewer;
 		
 		setSize(decoration.getWidth(), decoration.getHeight());
 
@@ -66,6 +80,121 @@ public class DecorationFigure extends Figure
 		label.setLocation(new Point(TITLE_OFFSET, 0));
 		label.setBackgroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(decoration.getColor())));
 		label.setForegroundColor(SharedColors.WHITE);
+		
+		createResizeHandle(BOTTOM_RIGHT);
+		
+		addMouseListener(this);
+	}
+	
+	/**
+	 * Create resize handle
+	 */
+	private void createResizeHandle(int pos)
+	{
+		final Figure handle = new Figure();
+		add(handle);
+		Dimension size = getSize();
+		handle.setSize(8, 8);
+		
+		switch(pos)
+		{
+			case TOP_LEFT:
+				handle.setLocation(new Point(-1, -1));
+				handle.setCursor(Display.getCurrent().getSystemCursor(SWT.CURSOR_SIZENWSE));
+				break;
+			case TOP_RIGHT:
+				handle.setLocation(new Point(size.width - 7, -1));
+				handle.setCursor(Display.getCurrent().getSystemCursor(SWT.CURSOR_SIZENESW));
+				break;
+			case BOTTOM_LEFT:
+				handle.setLocation(new Point(-1, size.height - 7));
+				handle.setCursor(Display.getCurrent().getSystemCursor(SWT.CURSOR_SIZENESW));
+				break;
+			case BOTTOM_RIGHT:
+				handle.setLocation(new Point(size.width - 7, size.height - 7));
+				handle.setCursor(Display.getCurrent().getSystemCursor(SWT.CURSOR_SIZENWSE));
+				break;
+		}
+		
+		handle.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseReleased(MouseEvent me)
+			{
+				if (resize)
+				{
+					resize = false;
+					Dimension size = getSize();
+					decoration.setSize(size.width, size.height);
+				}
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent me)
+			{
+				if (me.button == 1)
+				{
+					resize = true;
+					lastX = me.x;
+					lastY = me.y;
+					me.consume();
+				}
+			}
+			
+			@Override
+			public void mouseDoubleClicked(MouseEvent me)
+			{
+			}
+		});
+		handle.addMouseMotionListener(new MouseMotionListener() {
+			@Override
+			public void mouseMoved(MouseEvent me)
+			{
+			}
+			
+			@Override
+			public void mouseHover(MouseEvent me)
+			{
+			}
+			
+			@Override
+			public void mouseExited(MouseEvent me)
+			{
+			}
+			
+			@Override
+			public void mouseEntered(MouseEvent me)
+			{
+			}
+			
+			@Override
+			public void mouseDragged(MouseEvent me)
+			{
+				if (resize)
+				{
+					Dimension size = getSize();
+					
+					int dx = me.x - lastX;
+					int dy = me.y - lastY;
+					
+					if ((dx < 0) && (size.width <= 40))
+						dx = 0;
+					if ((dy < 0) && (size.height <= 20))
+						dy = 0;
+					
+					size.width += dx;
+					size.height += dy;
+					setSize(size);
+					
+					Point p = handle.getLocation();
+					p.performTranslate(dx, dy);
+					handle.setLocation(p);
+					
+					lastX = me.x;
+					lastY = me.y;
+					me.consume();
+				}
+			}
+		});
 	}
 
 	/* (non-Javadoc)
@@ -110,7 +239,7 @@ public class DecorationFigure extends Figure
 		
 		gc.setForegroundColor(color);
 		gc.setLineWidth(3);
-		//gc.setLineStyle(labelProvider.isElementSelected(decoration) ? SWT.LINE_DOT : SWT.LINE_SOLID);
+		gc.setLineStyle(selected ? Graphics.LINE_DOT : Graphics.LINE_SOLID);
 		gc.drawRoundRectangle(rect, 8, 8);
 		
 		gc.setBackgroundColor(color);
@@ -125,30 +254,121 @@ public class DecorationFigure extends Figure
 		
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.Figure#containsPoint(int, int)
+	/**
+	 * Stop dragging
 	 */
-	@Override
-	public boolean containsPoint(int x, int y)
+	private void stopDragging()
 	{
-		return label.containsPoint(x, y);
+		removeMouseMotionListener(this);
+		drag = false;
+		Point loc = getLocation();
+		decoration.setLocation(loc.x, loc.y);
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.Figure#findFigureAt(int, int, org.eclipse.draw2d.TreeSearch)
+	 * @see org.eclipse.draw2d.MouseListener#mousePressed(org.eclipse.draw2d.MouseEvent)
 	 */
 	@Override
-	public IFigure findFigureAt(int x, int y, TreeSearch search)
+	public void mousePressed(MouseEvent me)
 	{
-		if (!containsPoint(x, y))
-			return null;
-		if (search.prune(this))
-			return null;
-		IFigure child = findDescendantAtExcluding(x, y, search);
-		if (child != null)
-			return child;
-		if (label.containsPoint(x, y) && search.accept(this))
-			return this;
-		return null;
+		if (!selected)
+		{
+			viewer.setDecorationSelection(decoration, (me.button == 1) && ((me.getState() & SWT.MOD1) != 0));
+			setSelected(true);
+		}
+		if ((me.button == 1) && ((me.getState() & SWT.MOD1) == 0))
+		{
+			addMouseMotionListener(this);
+			drag = true;
+			lastX = me.x;
+			lastY = me.y;
+			me.consume();
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.draw2d.MouseListener#mouseReleased(org.eclipse.draw2d.MouseEvent)
+	 */
+	@Override
+	public void mouseReleased(MouseEvent me)
+	{
+		if ((me.button == 1) && drag)
+			stopDragging();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.draw2d.MouseListener#mouseDoubleClicked(org.eclipse.draw2d.MouseEvent)
+	 */
+	@Override
+	public void mouseDoubleClicked(MouseEvent me)
+	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.draw2d.MouseMotionListener#mouseDragged(org.eclipse.draw2d.MouseEvent)
+	 */
+	@Override
+	public void mouseDragged(MouseEvent me)
+	{
+		if (drag)
+		{
+			Point p = getLocation();
+			p.performTranslate(me.x - lastX, me.y - lastY);
+			setLocation(p);
+			lastX = me.x;
+			lastY = me.y;
+			me.consume();
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.draw2d.MouseMotionListener#mouseEntered(org.eclipse.draw2d.MouseEvent)
+	 */
+	@Override
+	public void mouseEntered(MouseEvent me)
+	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.draw2d.MouseMotionListener#mouseExited(org.eclipse.draw2d.MouseEvent)
+	 */
+	@Override
+	public void mouseExited(MouseEvent me)
+	{
+		if (drag)
+			stopDragging();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.draw2d.MouseMotionListener#mouseHover(org.eclipse.draw2d.MouseEvent)
+	 */
+	@Override
+	public void mouseHover(MouseEvent me)
+	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.draw2d.MouseMotionListener#mouseMoved(org.eclipse.draw2d.MouseEvent)
+	 */
+	@Override
+	public void mouseMoved(MouseEvent me)
+	{
+	}
+
+	/**
+	 * @return the selected
+	 */
+	public final boolean isSelected()
+	{
+		return selected;
+	}
+
+	/**
+	 * @param selected the selected to set
+	 */
+	public final void setSelected(boolean selected)
+	{
+		this.selected = selected;
+		repaint();
 	}
 }

@@ -18,6 +18,11 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.FigureListener;
@@ -29,20 +34,25 @@ import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
 import org.eclipse.zest.core.viewers.internal.IStylingGraphModelFactory;
-import org.eclipse.zest.core.viewers.internal.ZoomManager;
-import org.eclipse.zest.core.widgets.CGraphNode;
 import org.eclipse.zest.core.widgets.GraphConnection;
+import org.eclipse.zest.core.widgets.custom.CGraphNode;
+import org.eclipse.zest.core.widgets.zooming.ZoomManager;
 import org.netxms.base.GeoLocation;
+import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
@@ -54,7 +64,6 @@ import org.netxms.ui.eclipse.osm.tools.TileSet;
  * (https://bugs.eclipse.org/bugs/show_bug.cgi?id=244496) 
  *
  */
-@SuppressWarnings("restriction")
 public class ExtendedGraphViewer extends GraphViewer
 {
 	private static final long serialVersionUID = 1L;
@@ -68,10 +77,18 @@ public class ExtendedGraphViewer extends GraphViewer
 	private IFigure zestRootLayer;
 	private MapLoader mapLoader;
 	private Layer backgroundLayer;
+	private Layer decorationLayer;
+	private Layer indicatorLayer;
+	private int crosshairX;
+	private int crosshairY;
+	private Crosshair crosshairFigure;
 	private GridFigure gridFigure;
 	private int gridSize = 96;
 	private boolean snapToGrid = false;
 	private MouseListener snapToGridListener;
+	private List<NetworkMapDecoration> mapDecorations;
+	private Set<NetworkMapDecoration> selectedDecorations = new HashSet<NetworkMapDecoration>();
+	private Map<Long, DecorationFigure> decorationFigures = new HashMap<Long, DecorationFigure>();
 	private MouseListener backgroundMouseListener;
 	
 	/**
@@ -98,6 +115,12 @@ public class ExtendedGraphViewer extends GraphViewer
 		backgroundFigure = new BackgroundFigure();
 		backgroundFigure.setSize(10, 10);
 		backgroundLayer.add(backgroundFigure);
+		
+		decorationLayer = new FreeformLayer();
+		getGraphControl().getRootLayer().add(decorationLayer, null, 1);
+		
+		indicatorLayer = new FreeformLayer();
+		getGraphControl().getRootLayer().add(indicatorLayer, null, 2);
 		
 		getZoomManager().setZoomLevels(zoomLevels);
 		
@@ -148,6 +171,22 @@ public class ExtendedGraphViewer extends GraphViewer
 		};
 		backgroundFigure.addMouseListener(backgroundMouseListener);
 		
+		getGraphControl().addSelectionListener(new SelectionListener() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				clearDecorationSelection();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
+		
 		snapToGridListener = new MouseListener() {
 			@Override
 			public void mouseReleased(MouseEvent me)
@@ -174,15 +213,106 @@ public class ExtendedGraphViewer extends GraphViewer
 			}
 		};
 	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.GraphViewer#inputChanged(java.lang.Object, java.lang.Object)
+	 */
+	@Override
+	protected void inputChanged(Object input, Object oldInput)
+	{
+		super.inputChanged(input, oldInput);
+		
+		decorationLayer.removeAll();
+		decorationFigures.clear();
+		if ((getContentProvider() instanceof MapContentProvider) && (getLabelProvider() instanceof MapLabelProvider))
+		{
+			mapDecorations = ((MapContentProvider)getContentProvider()).getDecorations(input);
+			if (mapDecorations != null)
+			{
+				MapLabelProvider lp = (MapLabelProvider)getLabelProvider();
+				for(NetworkMapDecoration d : mapDecorations)
+				{
+					DecorationFigure figure = (DecorationFigure)lp.getFigure(d);
+					figure.setLocation(new org.eclipse.draw2d.geometry.Point(d.getX(), d.getY()));
+					decorationLayer.add(figure);
+					decorationFigures.put(d.getId(), figure);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Set selection on decoration layer. Intended to be called from decoration figure.
+	 * 
+	 * @param d decoartion object
+	 * @param addToExisting if true, add to existing selection
+	 */
+	protected void setDecorationSelection(NetworkMapDecoration d, boolean addToExisting)
+	{
+		if (!addToExisting)
+		{
+			clearDecorationSelection();
+			getGraphControl().setSelection(null);
+		}
+		selectedDecorations.add(d);
+
+		SelectionChangedEvent event = new SelectionChangedEvent(this, getSelection());
+		fireSelectionChanged(event);
+		firePostSelectionChanged(event);
+	}
 	
 	/**
 	 * Clear selection on decoration layer
 	 */
 	private void clearDecorationSelection()
 	{
-		/* TODO: stub to be replaced when RAP console will be migrated to Zest 2.0 */
+		for(NetworkMapDecoration d : selectedDecorations)
+		{
+			DecorationFigure f = decorationFigures.get(d.getId());
+			if (f != null)
+				f.setSelected(false);
+		}
+		selectedDecorations.clear();
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.GraphViewer#setSelectionToWidget(java.util.List, boolean)
+	 */
+	@SuppressWarnings("rawtypes")
+	@Override
+	protected void setSelectionToWidget(List l, boolean reveal)
+	{
+		selectedDecorations.clear();
+		if (l != null)
+		{
+			clearDecorationSelection();
+			for(Object o : l)
+			{
+				if (o instanceof NetworkMapDecoration)
+				{
+					selectedDecorations.add((NetworkMapDecoration)o);
+					DecorationFigure f = decorationFigures.get(((NetworkMapDecoration)o).getId());
+					if (f != null)
+						f.setSelected(true);
+				}
+			}
+		}
+		super.setSelectionToWidget(l, reveal);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.AbstractStructuredGraphViewer#getSelectionFromWidget()
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	protected List getSelectionFromWidget()
+	{
+		List selection = super.getSelectionFromWidget();
+		for(NetworkMapDecoration d : selectedDecorations)
+			selection.add(d);
+		return selection;
+	}
+
 	/**
 	 * Set background image for graph
 	 * 
@@ -228,17 +358,17 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		final Rectangle controlSize = getGraphControl().getClientArea();
 		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
-		final Point mapSize = new Point(Math.max(controlSize.width, rootLayerSize.width), Math.max(controlSize.height, rootLayerSize.height)); 
+		final Point mapSize = new Point(Math.min(controlSize.width, rootLayerSize.width), Math.max(controlSize.height, rootLayerSize.height)); 
 		ConsoleJob job = new ConsoleJob("Download map tiles", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final TileSet tiles = mapLoader.getAllTiles(mapSize, backgroundLocation, MapLoader.TOP_LEFT, backgroundZoom, false);
-				runInUIThread(new Runnable() {
+				Display.getDefault().asyncExec(new Runnable() {
 					@Override
 					public void run()
 					{
-						if (backgroundLocation == null)
+						if ((backgroundLocation == null) || getGraphControl().isDisposed())
 							return;
 						
 						final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
@@ -252,7 +382,7 @@ public class ExtendedGraphViewer extends GraphViewer
 						}
 						backgroundTiles = tiles;
 						backgroundFigure.setSize(mapSize.x, mapSize.y);
-						backgroundFigure.repaint();
+						backgroundFigure.repaint();					
 					}
 				});
 			}
@@ -286,7 +416,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			getFactory().refresh(getGraphControl(), element, updateLabels);
 		}
 	}
-	
+
 	/**
 	 * Zoom to next level
 	 */
@@ -318,6 +448,37 @@ public class ExtendedGraphViewer extends GraphViewer
 				actions[i].setChecked(true);
 		}
 		return actions;
+	}
+	
+	/**
+	 * Show crosshair at given location
+	 * 
+	 * @param x
+	 * @param y
+	 */
+	public void showCrosshair(int x, int y)
+	{
+		if (crosshairFigure == null)
+		{
+			crosshairFigure = new Crosshair();
+			indicatorLayer.add(crosshairFigure);
+			crosshairFigure.setSize(getGraphControl().getRootLayer().getSize());
+		}
+		crosshairX = x;
+		crosshairY = y;
+		crosshairFigure.repaint();
+	}
+	
+	/**
+	 * Hide crosshair
+	 */
+	public void hideCrosshair()
+	{
+		if (crosshairFigure != null)
+		{
+			indicatorLayer.remove(crosshairFigure);
+			crosshairFigure = null;
+		}
 	}
 	
 	/**
@@ -484,6 +645,32 @@ public class ExtendedGraphViewer extends GraphViewer
 					}
 				}
 			}
+		}		
+	}
+	
+	/**
+	 * Crosshair
+	 */
+	private class Crosshair extends Figure
+	{
+		/**
+		 * 
+		 */
+		public Crosshair()
+		{
+			setOpaque(false);
+		}
+		
+		/* (non-Javadoc)
+		 * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+		 */
+		@Override
+		protected void paintFigure(Graphics gc)
+		{
+			gc.setLineStyle(Graphics.LINE_DOT);
+			Dimension size = getSize();
+			gc.drawLine(0, crosshairY, size.width, crosshairY);
+			gc.drawLine(crosshairX, 0, crosshairX, size.height);
 		}
 	}
 
@@ -507,7 +694,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		@Override
 		protected void paintFigure(Graphics gc)
 		{
-			//gc.setLineStyle(SWT.LINE_DOT);
+			gc.setLineStyle(Graphics.LINE_DOT);
 			Dimension size = getSize();
 			for(int x = gridSize; x < size.width; x += gridSize)
 				gc.drawLine(x, 0, x, size.height);

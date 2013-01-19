@@ -29,7 +29,6 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
  * Tooltip for object on map
- *
  */
 public class ObjectTooltip extends Figure
 {

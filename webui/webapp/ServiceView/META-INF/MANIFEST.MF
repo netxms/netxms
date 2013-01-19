@@ -2,14 +2,14 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Service View Plug-in for NXMC
 Bundle-SymbolicName: org.netxms.ui.eclipse.serviceview;singleton:=true
-Bundle-Version: 1.2.0
+Bundle-Version: 1.2.6
 Bundle-Activator: org.netxms.ui.eclipse.serviceview.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.eclipse.core.runtime,
- org.netxms.ui.eclipse.networkmaps;bundle-version="1.1.0",
- org.eclipse.rap.ui;bundle-version="1.5.0",
- org.netxms.webui.core;bundle-version="1.2.0",
- org.eclipse.rap.zest.core;bundle-version="1.5.0",
- org.eclipse.rap.zest.layouts;bundle-version="1.5.0"
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.9.0",
+ org.netxms.ui.eclipse.networkmaps;bundle-version="1.2.5",
+ org.eclipse.rap.ui;bundle-version="2.0.0",
+ org.netxms.webui.core;bundle-version="1.2.5",
+ org.eclipse.zest;bundle-version="2.0.0",
+ org.eclipse.rap.draw2d;bundle-version="1.5.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
