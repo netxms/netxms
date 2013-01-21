@@ -22,7 +22,8 @@ import org.eclipse.swt.widgets.Widget;
  * @author Chris Callendar
  */
 public abstract class GraphItem extends Item {
-
+	private static final long serialVersionUID = 1L;
+	
 	public static final int GRAPH = 0;
 	public static final int NODE = 1;
 	public static final int CONNECTION = 2;

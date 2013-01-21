@@ -26,6 +26,7 @@ import org.eclipse.zest.core.widgets.GraphNode;
 // @tag bug.154580-Content.fix
 // @tag bug.160367-Refreshing.fix : updated to use new
 // AbstractStylingModelFactory
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class GraphModelEntityRelationshipFactory extends
 		AbstractStylingModelFactory {
 

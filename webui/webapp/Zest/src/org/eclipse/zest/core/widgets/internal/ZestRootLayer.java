@@ -27,6 +27,7 @@ import org.eclipse.draw2d.IFigure;
  * </ol>
  * 
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class ZestRootLayer extends FreeformLayer {
 
 	public static final int CONNECTIONS_LAYER = 0;

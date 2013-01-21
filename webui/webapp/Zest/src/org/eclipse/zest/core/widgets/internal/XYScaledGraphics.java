@@ -37,6 +37,7 @@ import org.eclipse.swt.widgets.Display;
  * 
  * @author irbull
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class XYScaledGraphics extends ScaledGraphics {
 
 	public static final double MAX_TEXT_SIZE = 0.45; // MAX size, when to stop

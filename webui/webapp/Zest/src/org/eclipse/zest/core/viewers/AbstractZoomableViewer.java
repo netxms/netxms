@@ -24,6 +24,8 @@ import org.eclipse.zest.core.widgets.zooming.ZoomManager;
  */
 // @tag bug.156286-Zooming.fix
 public abstract class AbstractZoomableViewer extends StructuredViewer {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * Returns a ZoomManager that zooming can be done on. May return null if
 	 * none is available.

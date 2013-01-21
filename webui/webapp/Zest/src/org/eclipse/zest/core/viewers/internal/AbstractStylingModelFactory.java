@@ -40,6 +40,7 @@ import org.eclipse.zest.core.widgets.GraphNode;
  */
 // @tag zest.bug.160367-Refreshing.fix : update the factory to use the
 // IStylingGraphModelFactory
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public abstract class AbstractStylingModelFactory implements
 		IStylingGraphModelFactory {
 	private AbstractStructuredGraphViewer viewer;

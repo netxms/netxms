@@ -40,7 +40,10 @@ import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
  * 
  * @author Ian Bull
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class GraphNode extends GraphItem {
+	private static final long serialVersionUID = 1L;
+	
 	public static final int HIGHLIGHT_NONE = 0;
 	public static final int HIGHLIGHT_ON = 1;
 

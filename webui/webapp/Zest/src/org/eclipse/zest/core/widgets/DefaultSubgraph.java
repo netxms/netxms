@@ -38,6 +38,7 @@ import org.eclipse.zest.layouts.interfaces.SubgraphLayout;
  * 
  * @since 2.0
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class DefaultSubgraph implements SubgraphLayout {
 
 	/**

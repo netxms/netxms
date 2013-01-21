@@ -44,6 +44,7 @@ import org.eclipse.zest.layouts.interfaces.NodeLayout;
  * 
  * @since 2.0
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class DAGExpandCollapseManager implements ExpandCollapseManager {
 
 	private InternalLayoutContext context;

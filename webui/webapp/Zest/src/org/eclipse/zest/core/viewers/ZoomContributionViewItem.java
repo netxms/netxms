@@ -41,6 +41,8 @@ import org.eclipse.zest.core.widgets.zooming.ZoomManager;
 // zooming on Zest views.
 public class ZoomContributionViewItem extends ContributionItem implements
 		ZoomListener {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * Zooms to fit the width.
 	 */
@@ -59,6 +61,8 @@ public class ZoomContributionViewItem extends ContributionItem implements
 	private Combo combo;
 	private Menu fMenu;
 	private MenuAdapter menuAdapter = new MenuAdapter() {
+		private static final long serialVersionUID = 1L;
+
 		public void menuShown(MenuEvent e) {
 			refresh(true);
 		}
@@ -129,6 +133,11 @@ public class ZoomContributionViewItem extends ContributionItem implements
 		zoomLevels = zoomManager.getZoomLevelsAsText();
 		this.combo.setItems(zoomLevels);
 		this.combo.addSelectionListener(new SelectionAdapter() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			/*
 			 * (non-Javadoc)
 			 * 
@@ -185,6 +194,11 @@ public class ZoomContributionViewItem extends ContributionItem implements
 				item.setText(zoomLevels[i]);
 				item.setData(this);
 				item.addSelectionListener(new SelectionAdapter() {
+					/**
+					 * 
+					 */
+					private static final long serialVersionUID = 1L;
+
 					public void widgetSelected(SelectionEvent e) {
 						MenuItem source = (MenuItem) e.getSource();
 						doZoom(source.getText());

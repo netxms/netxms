@@ -27,6 +27,7 @@ import org.eclipse.zest.layouts.interfaces.LayoutContext;
 import org.eclipse.zest.layouts.interfaces.NodeLayout;
 import org.eclipse.zest.layouts.interfaces.SubgraphLayout;
 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 
 	class ExtendedDirectedGraphLayout extends DirectedGraphLayout {

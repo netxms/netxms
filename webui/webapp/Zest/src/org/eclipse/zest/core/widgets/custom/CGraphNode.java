@@ -21,7 +21,8 @@ import org.eclipse.zest.core.widgets.GraphNode;
  * @since 2.0
  */
 public class CGraphNode extends GraphNode {
-
+	private static final long serialVersionUID = 1L;
+	
 	IFigure figure = null;
 
 	/**

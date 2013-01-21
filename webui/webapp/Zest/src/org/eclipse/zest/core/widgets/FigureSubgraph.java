@@ -30,6 +30,7 @@ import org.eclipse.zest.layouts.interfaces.NodeLayout;
  * 
  * @since 2.0
  */
+@SuppressWarnings({ "rawtypes" })
 public abstract class FigureSubgraph extends DefaultSubgraph {
 
 	protected IFigure figure;

@@ -42,7 +42,8 @@ import org.eclipse.zest.layouts.interfaces.NodeLayout;
  * @author Ian Bull
  */
 public class GraphConnection extends GraphItem {
-
+	private static final long serialVersionUID = 1L;
+	
 	private Font font;
 	private GraphNode sourceNode;
 	private GraphNode destinationNode;

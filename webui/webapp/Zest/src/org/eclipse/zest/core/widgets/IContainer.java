@@ -21,6 +21,7 @@ import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
  * @noimplement This interface is not intended to be implemented by clients.
  * 
  */
+@SuppressWarnings({ "rawtypes" })
 public interface IContainer {
 
 	public abstract Graph getGraph();

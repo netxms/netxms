@@ -45,6 +45,7 @@ import org.eclipse.zest.layouts.interfaces.SubgraphLayout;
  * <code>ExpandCollapseManager</code>s could also work, but the algorithm's
  * functionality would be very limited.
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm {
 
 	/**

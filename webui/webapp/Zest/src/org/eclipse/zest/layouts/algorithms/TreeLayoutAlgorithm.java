@@ -29,6 +29,7 @@ import org.eclipse.zest.layouts.interfaces.LayoutContext;
  * @author Casey Best and Rob Lintern (version 2.0)
  * @author Jingwei Wu (version 1.0)
  */
+@SuppressWarnings("rawtypes")
 public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 
 	/**

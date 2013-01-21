@@ -63,6 +63,7 @@ import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Label provider for map
@@ -128,8 +129,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage();
 		imgResCluster = Activator.getImageDescriptor("icons/resources/cluster_res.png").createImage();
 
-		fontLabel = new Font(Display.getDefault(), "Verdana", 7, SWT.NORMAL);
-		fontTitle = new Font(Display.getDefault(), "Verdana", 10, SWT.NORMAL);
+		fontLabel = new Font(Display.getDefault(), "Verdana", WidgetHelper.fontPixelsToPoints(viewer.getControl().getDisplay(), 9), SWT.NORMAL);
+		fontTitle = new Font(Display.getDefault(), "Verdana", WidgetHelper.fontPixelsToPoints(viewer.getControl().getDisplay(), 15), SWT.NORMAL);
 
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		showStatusIcons = store.getBoolean("NetMap.ShowStatusIcon");

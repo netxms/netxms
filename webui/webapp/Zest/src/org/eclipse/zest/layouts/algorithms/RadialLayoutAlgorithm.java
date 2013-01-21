@@ -24,6 +24,7 @@ import org.eclipse.zest.layouts.interfaces.LayoutContext;
  * @author Casey Best
  * @auhtor Rob Lintern
  */
+@SuppressWarnings("deprecation")
 public class RadialLayoutAlgorithm implements LayoutAlgorithm {
 
 	private static final double MAX_DEGREES = Math.PI * 2;

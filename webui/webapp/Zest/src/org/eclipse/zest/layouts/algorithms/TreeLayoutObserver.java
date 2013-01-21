@@ -31,6 +31,7 @@ import org.eclipse.zest.layouts.interfaces.NodeLayout;
  * information about the tree structure - children of each node and several
  * other parameters.
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class TreeLayoutObserver {
 
 	/**

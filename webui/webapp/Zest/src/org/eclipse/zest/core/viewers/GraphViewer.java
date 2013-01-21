@@ -49,9 +49,11 @@ import org.eclipse.zest.layouts.LayoutAlgorithm;
  * 
  * @noextend This class is not intended to be subclassed by clients.
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class GraphViewer extends AbstractStructuredGraphViewer implements
 		ISelectionProvider {
-
+	private static final long serialVersionUID = 1L;
+	
 	protected Graph graph = null;
 	private IStylingGraphModelFactory modelFactory = null;
 	private List selectionChangedListeners = null;
@@ -94,6 +96,7 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements
 
 		selectionChangedListeners = new ArrayList();
 		getGraphControl().addSelectionListener(new SelectionAdapter() {
+			private static final long serialVersionUID = 1L;
 
 			public void widgetSelected(SelectionEvent e) {
 				Iterator iterator = selectionChangedListeners.iterator();
@@ -113,6 +116,7 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements
 		});
 
 		control.addMouseListener(new MouseListener() {
+			private static final long serialVersionUID = 1L;
 
 			public void mouseDoubleClick(MouseEvent e) {
 				DoubleClickEvent doubleClickEvent = new DoubleClickEvent(

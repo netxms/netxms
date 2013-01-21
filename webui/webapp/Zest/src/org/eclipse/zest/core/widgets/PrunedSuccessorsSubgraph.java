@@ -37,6 +37,7 @@ import org.eclipse.zest.layouts.interfaces.NodeLayout;
  * subgraph a node is pruned to, so the factory for this subgraph uses one
  * instance for whole layout context.
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 class PrunedSuccessorsSubgraph extends DefaultSubgraph {
 
 	private class LabelAncestorListener extends AncestorListener.Stub {

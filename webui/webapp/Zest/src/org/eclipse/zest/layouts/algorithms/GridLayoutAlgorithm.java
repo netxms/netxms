@@ -22,6 +22,7 @@ import org.eclipse.zest.layouts.interfaces.LayoutContext;
  * @author Ian Bull
  * @author Casey Best and Rob Lintern
  */
+@SuppressWarnings("deprecation")
 public class GridLayoutAlgorithm implements LayoutAlgorithm {
 
 	private static final double PADDING_PERCENTAGE = 0.95;

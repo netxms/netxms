@@ -22,6 +22,8 @@ import org.eclipse.zest.core.widgets.zooming.ZoomManager;
  * @since 2.0
  */
 public class ZoomGestureListener implements GestureListener {
+	private static final long serialVersionUID = 1L;
+
 	ZoomManager manager;
 
 	double zoom = 1.0;

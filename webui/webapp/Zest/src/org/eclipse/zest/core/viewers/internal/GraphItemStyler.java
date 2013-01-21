@@ -34,6 +34,7 @@ import org.eclipse.zest.core.widgets.ZestStyles;
  * @author Del Myers
  */
 // @tag bug(151327-Styles) : created to help resolve this bug
+@SuppressWarnings("deprecation")
 public class GraphItemStyler {
 	public static void styleItem(GraphItem item,
 			final IBaseLabelProvider labelProvider) {

@@ -26,8 +26,10 @@ import org.eclipse.zest.core.widgets.GraphNode;
  * @author Zoltan Ujhelyi
  * 
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class RotateGestureListener implements GestureListener {
-
+	private static final long serialVersionUID = 1L;
+	
 	Graph graph;
 	double rotate;
 	List /* <GraphNode> */nodes;

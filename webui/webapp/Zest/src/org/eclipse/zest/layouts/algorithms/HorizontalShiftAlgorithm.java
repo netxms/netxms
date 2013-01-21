@@ -27,6 +27,7 @@ import org.eclipse.zest.layouts.interfaces.LayoutContext;
  * 
  * @author Ian Bull
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class HorizontalShiftAlgorithm implements LayoutAlgorithm {
 
 	private static final double DELTA = 10;

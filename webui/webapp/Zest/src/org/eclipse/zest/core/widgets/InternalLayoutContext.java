@@ -29,6 +29,7 @@ import org.eclipse.zest.layouts.interfaces.NodeLayout;
 import org.eclipse.zest.layouts.interfaces.PruningListener;
 import org.eclipse.zest.layouts.interfaces.SubgraphLayout;
 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 class InternalLayoutContext implements LayoutContext {
 
 	final IContainer container;

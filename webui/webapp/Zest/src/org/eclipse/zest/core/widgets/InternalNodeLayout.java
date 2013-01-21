@@ -26,6 +26,7 @@ import org.eclipse.zest.layouts.interfaces.EntityLayout;
 import org.eclipse.zest.layouts.interfaces.NodeLayout;
 import org.eclipse.zest.layouts.interfaces.SubgraphLayout;
 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 class InternalNodeLayout implements NodeLayout {
 
 	/**

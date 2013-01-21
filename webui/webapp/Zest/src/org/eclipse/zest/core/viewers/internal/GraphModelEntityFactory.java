@@ -27,6 +27,7 @@ import org.eclipse.zest.core.widgets.GraphNode;
  * 
  * @author Ian Bull
  */
+@SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
 public class GraphModelEntityFactory extends AbstractStylingModelFactory {
 
 	AbstractStructuredGraphViewer viewer = null;

@@ -56,7 +56,9 @@ import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
  * 
  * @author Ian Bull
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class GraphContainer extends GraphNode implements IContainer {
+	private static final long serialVersionUID = 1L;
 
 	static class ExpandGraphLabel extends Figure implements ActionListener {
 
@@ -835,6 +837,11 @@ public class GraphContainer extends GraphNode implements IContainer {
 	private void createSelectionListener() {
 		if (selectionListener == null) {
 			selectionListener = new SelectionListener() {
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = 1L;
+
 				public void widgetSelected(SelectionEvent e) {
 					if (e.item instanceof GraphContainer) {
 						// set focus to expand label so that pressing space

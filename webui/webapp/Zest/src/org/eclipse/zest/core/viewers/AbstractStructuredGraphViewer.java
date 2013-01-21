@@ -43,8 +43,11 @@ import org.eclipse.zest.layouts.LayoutAlgorithm;
  * @author Del Myers
  * @since 2.0
  */
+@SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
 public abstract class AbstractStructuredGraphViewer extends
 		AbstractZoomableViewer {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * Contains top-level styles for the entire graph. Set in the constructor. *
 	 */

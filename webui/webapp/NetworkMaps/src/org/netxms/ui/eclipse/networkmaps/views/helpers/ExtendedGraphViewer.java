@@ -147,6 +147,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void figureMoved(IFigure source)
 			{
+				getGraphControl().getDisplay().timerExec(-1, timer);
 				getGraphControl().getDisplay().timerExec(1000, timer);
 			}
 		});

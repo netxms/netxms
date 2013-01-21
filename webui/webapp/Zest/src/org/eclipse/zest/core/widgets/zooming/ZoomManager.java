@@ -48,6 +48,7 @@ import org.eclipse.zest.core.widgets.internal.SharedMessages;
  * @author Eric Bordeau
  * @since 2.0
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class ZoomManager {
 
 	/** Style bit meaning don't animate any zooms */

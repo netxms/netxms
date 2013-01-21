@@ -42,6 +42,7 @@ import org.eclipse.zest.layouts.interfaces.SubgraphLayout;
  * @author Ian Bull
  * @author Casey Best (version 1.0 by Jingwei Wu/Rob Lintern)
  */
+@SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
 public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 
 	/**
@@ -411,11 +412,13 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 
 	private long startTime = 0;
 
+	/*
 	private int[] counter;
 
 	private int[] counterX;
 
 	private int[] counterY;
+	*/
 
 	private void initLayout() {
 		entities = context.getEntities();
@@ -469,8 +472,8 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 			sizeH = new double[length];
 			forcesX = new double[length];
 			forcesY = new double[length];
-			counterX = new int[length];
-			counterY = new int[length];
+			//counterX = new int[length];
+			//counterY = new int[length];
 		}
 		for (int i = 0; i < entities.length; i++) {
 			DisplayIndependentPoint location = entities[i].getLocation();

@@ -65,8 +65,10 @@ import org.eclipse.zest.layouts.interfaces.ExpandCollapseManager;
 /**
  * @since 1.0
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class Graph extends FigureCanvas implements IContainer {
-
+	private static final long serialVersionUID = 1L;
+	
 	// CLASS CONSTANTS
 	public static final int ANIMATION_TIME = 500;
 	public static final int FISHEYE_ANIMATION_TIME = 100;
@@ -128,12 +130,22 @@ public class Graph extends FigureCanvas implements IContainer {
 		this.setViewport(new FreeformViewport());
 
 		this.getVerticalBar().addSelectionListener(new SelectionAdapter() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public void widgetSelected(SelectionEvent e) {
 				Graph.this.redraw();
 			}
 
 		});
 		this.getHorizontalBar().addSelectionListener(new SelectionAdapter() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public void widgetSelected(SelectionEvent e) {
 				Graph.this.redraw();
 			}
@@ -185,6 +197,11 @@ public class Graph extends FigureCanvas implements IContainer {
 
 		ControlPaintHandler helper = new ControlPaintHandler(this);
 		helper.addPaintListener(new PaintListener() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public void paintControl(PaintEvent e) {
 				if (shouldSheduleLayout) {
 					applyLayoutInternal(true);
@@ -194,6 +211,11 @@ public class Graph extends FigureCanvas implements IContainer {
 		});
 
 		this.addControlListener(new ControlListener() {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
 
 			public void controlResized(ControlEvent e) {
 				if (preferredSize.width == -1 || preferredSize.height == -1) {
@@ -211,6 +233,11 @@ public class Graph extends FigureCanvas implements IContainer {
 			this.addGestureListener(new RotateGestureListener());
 		}
 		this.addDisposeListener(new DisposeListener() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public void widgetDisposed(DisposeEvent e) {
 				release();
 			}
