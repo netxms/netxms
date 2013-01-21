@@ -133,6 +133,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			@Override
 			public void handleEvent(Event event)
 			{
+				getDisplay().timerExec(-1, timer);
 				getDisplay().timerExec(1000, timer);
 
 				if (bufferImage != null)

@@ -68,11 +68,11 @@ public class OpenServerConsole implements IWorkbenchWindowActionDelegate
 			{
 				if (window.getActivePage().findView(ServerConsole.ID) == null)
 				{
+					final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 					new ConsoleJob(Messages.getString("OpenServerConsole.JobTitle"), null, Activator.PLUGIN_ID, null) { //$NON-NLS-1$
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
-							final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 							session.openConsole();
 							runInUIThread(new Runnable() {
 								@Override

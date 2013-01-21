@@ -167,9 +167,11 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 										PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().hideView(ServerConsole.this);
 									}
 								});
+								break;
 							}
 						}
 					}
+					in.close();
 				}
 				catch(Exception e)
 				{
@@ -281,8 +283,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
