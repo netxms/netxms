@@ -27,11 +27,13 @@ import org.eclipse.draw2d.BendpointConnectionRouter;
 import org.eclipse.draw2d.ConnectionEndpointLocator;
 import org.eclipse.draw2d.ConnectionLocator;
 import org.eclipse.draw2d.ConnectionRouter;
+import org.eclipse.draw2d.FigureUtilities;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -269,6 +271,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	@Override
 	public void dispose()
 	{
+		// Bug #376478 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=376478) somehow still presented in draw 2D
+		// This call should reset last used font
+		// It can be removed after updating draw 2D to version with this bug fixes
+		FigureUtilities.getTextExtents("", JFaceResources.getDefaultFont());
+		
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i].dispose();
 
