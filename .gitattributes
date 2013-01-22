@@ -2000,11 +2000,6 @@ src/java/netxms-eclipse/core/OSGI-INF/l10n/bundle_es.properties -text
 src/java/netxms-eclipse/core/OSGI-INF/l10n/bundle_ru.properties -text
 src/java/netxms-eclipse/core/OSGI-INF/l10n/bundle_zh_CN.properties -text
 src/java/netxms-eclipse/core/build.properties -text
-src/java/netxms-eclipse/core/icons/alt_about.gif -text
-src/java/netxms-eclipse/core/icons/alt_launcher.icns -text
-src/java/netxms-eclipse/core/icons/alt_launcher.ico -text
-src/java/netxms-eclipse/core/icons/alt_window_16.gif -text
-src/java/netxms-eclipse/core/icons/alt_window_32.gif -text
 src/java/netxms-eclipse/core/icons/information.png -text
 src/java/netxms-eclipse/core/icons/lang/es.png -text
 src/java/netxms-eclipse/core/icons/lang/gb.png -text

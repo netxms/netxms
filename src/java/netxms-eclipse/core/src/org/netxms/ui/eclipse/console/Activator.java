@@ -117,7 +117,7 @@ public class Activator extends AbstractUIPlugin
 		{
 			TrayItem item = new TrayItem(tray, SWT.NONE);
 			item.setToolTipText(Messages.getString("Activator.TrayTooltip")); //$NON-NLS-1$
-			item.setImage(getImageDescriptor("icons/alt_window_16.gif").createImage()); //$NON-NLS-1$
+			item.setImage(getImageDescriptor("icons/launcher/16x16.png").createImage()); //$NON-NLS-1$
 			item.addSelectionListener(new SelectionListener() {
 				@Override
 				public void widgetSelected(SelectionEvent e)
