@@ -391,7 +391,9 @@ public class LastValuesWidget extends Composite
 	public void setAutoRefreshEnabled(boolean autoRefreshEnabled)
 	{
 		this.autoRefreshEnabled = autoRefreshEnabled;
-		getDisplay().timerExec(autoRefreshEnabled ? autoRefreshInterval : -1, refreshTimer);
+		getDisplay().timerExec(-1, refreshTimer);
+		if (autoRefreshEnabled)
+			getDisplay().timerExec(autoRefreshInterval, refreshTimer);
 	}
 
 	/**
