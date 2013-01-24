@@ -112,6 +112,8 @@ public class NetworkMapWidget extends Composite
 			case LAYOUT_SPARSE_VTREE:
 				TreeLayoutAlgorithm mainLayoutAlgorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
 				viewer.setComparator(new ViewerComparator() {
+					private static final long serialVersionUID = 1L;
+
 					@Override
 					public int compare(Viewer viewer, Object e1, Object e2)
 					{

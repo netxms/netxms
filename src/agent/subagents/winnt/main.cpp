@@ -27,7 +27,12 @@
  */
 LONG H_ActiveUserSessions(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
+LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
+LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_IPRoutingTable(const TCHAR *cmd, const TCHAR *arg, StringList *pValue);
+LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_RemoteShareStatus(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
 LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value);
@@ -36,6 +41,43 @@ LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+
+/**
+ * Optional imports
+ */
+DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD) = NULL;
+DWORD (__stdcall *imp_GetIfEntry2)(PMIB_IF_ROW2) = NULL;
+
+/**
+ * Import symbols
+ */
+static void ImportSymbols()
+{
+   HMODULE hModule;
+
+   // NETMAN.DLL
+   hModule = LoadLibrary(_T("NETMAN.DLL"));
+   if (hModule != NULL)
+   {
+      imp_HrLanConnectionNameFromGuidOrPath = 
+         (DWORD (__stdcall *)(LPWSTR, LPWSTR, LPWSTR, LPDWORD))GetProcAddress(hModule, "HrLanConnectionNameFromGuidOrPath");
+   }
+   else
+   {
+		AgentWriteLog(NXLOG_WARNING, _T("Unable to load NETMAN.DLL"));
+   }
+
+   // IPHLPAPI.DLL
+   hModule = LoadLibrary(_T("IPHLPAPI.DLL"));
+   if (hModule != NULL)
+   {
+      imp_GetIfEntry2 = (DWORD (__stdcall *)(PMIB_IF_ROW2))GetProcAddress(hModule, "GetIfEntry2");
+   }
+   else
+   {
+		AgentWriteLog(NXLOG_WARNING, _T("Unable to load IPHLPAPI.DLL"));
+   }
+}
 
 /**
  * Set or clear current privilege
@@ -98,6 +140,23 @@ static LONG H_ActionShutdown(const TCHAR *pszAction, StringList *pArgList, const
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+   { _T("Net.Interface.AdminStatus(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
+   { _T("Net.Interface.BytesIn(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
+   { _T("Net.Interface.BytesIn64(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_BYTES_IN_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESIN },
+   { _T("Net.Interface.BytesOut(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_BYTES_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
+   { _T("Net.Interface.BytesOut64(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_BYTES_OUT_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESOUT },
+   { _T("Net.Interface.Description(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_DESCR, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
+   { _T("Net.Interface.InErrors(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_IN_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_INERRORS },
+   { _T("Net.Interface.Link(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_OPER_STATUS, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Net.Interface.MTU(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_MTU, DCI_DT_UINT, DCIDESC_NET_INTERFACE_MTU },
+   { _T("Net.Interface.OperStatus(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
+   { _T("Net.Interface.OutErrors(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_OUT_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
+   { _T("Net.Interface.PacketsIn(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_PACKETS_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
+   { _T("Net.Interface.PacketsIn64(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_PACKETS_IN_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSIN },
+   { _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
+   { _T("Net.Interface.PacketsOut64(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_PACKETS_OUT_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSOUT },
+   { _T("Net.Interface.Speed(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_SPEED, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_SPEED },
+   { _T("Net.IP.Forwarding"), H_NetIPStats, (TCHAR *)NETINFO_IP_FORWARDING, DCI_DT_INT, DCIDESC_NET_IP_FORWARDING },
 	{ _T("Net.RemoteShareStatus(*)"), H_RemoteShareStatus, _T("C"), DCI_DT_INT, _T("Status of remote shared resource") },
 	{ _T("Net.RemoteShareStatusText(*)"), H_RemoteShareStatus, _T("T"), DCI_DT_STRING, _T("Status of remote shared resource as text") },
 	{ _T("Process.Count(*)"), H_ProcCountSpecific, _T("N"), DCI_DT_INT, DCIDESC_PROCESS_COUNT },
@@ -124,6 +183,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 };
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {
+   { _T("Net.ArpCache"), H_ArpCache, NULL },
+   { _T("Net.InterfaceList"), H_InterfaceList, NULL },
+   { _T("Net.IP.RoutingTable"), H_IPRoutingTable, NULL },
 	{ _T("System.ActiveUserSessions"), H_ActiveUserSessions, NULL },
 	{ _T("System.ProcessList"), H_ProcessList, NULL }
 };
@@ -159,6 +221,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(WINNT)
 {
 	*ppInfo = &m_info;
+	ImportSymbols();
 	return TRUE;
 }
 

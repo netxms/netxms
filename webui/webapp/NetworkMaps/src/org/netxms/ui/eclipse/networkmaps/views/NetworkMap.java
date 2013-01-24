@@ -494,6 +494,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionShowStatusFrame.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 	
 		actionZoomIn = new Action("Zoom &in") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -503,6 +505,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 
 		actionZoomOut = new Action("Zoom &out") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -518,6 +522,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		{
 			final int alg = i;
 			actionSetAlgorithm[i] = new Action(layoutAlgorithmNames[i], Action.AS_RADIO_BUTTON) {
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void run()
 				{
@@ -534,6 +540,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		{
 			final int alg = i + 1;
 			actionSetRouter[i] = new Action(connectionRouterNames[i], Action.AS_RADIO_BUTTON) {
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void run()
 				{
@@ -544,6 +552,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		}
 		
 		actionEnableAutomaticLayout = new Action("Enable &automatic layout", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -561,6 +571,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
 		
 		actionSaveLayout = new Action("&Save layout") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -572,6 +584,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionSaveLayout.setEnabled(!automaticLayoutEnabled);
 		
 		actionOpenSubmap = new Action("Open s&ubmap") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -581,6 +595,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionOpenSubmap.setEnabled(false);
 		
 		actionFiguresIcons = new Action("&Icons", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -594,6 +610,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionFiguresIcons.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 		
 		actionFiguresSmallLabels = new Action("&Small labels", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -607,6 +625,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionFiguresSmallLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.SMALL_LABEL);
 		
 		actionFiguresLargeLabels = new Action("&Large labels", Action.AS_RADIO_BUTTON) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -620,6 +640,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.LARGE_LABEL);
 		
 		actionShowGrid = new Action("Show &grid", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -630,6 +652,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionShowGrid.setChecked(viewer.isGridVisible());
 		
 		actionSnapToGrid = new Action("S&nap to grid", Action.AS_CHECK_BOX) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{
@@ -640,6 +664,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionSnapToGrid.setChecked(viewer.isSnapToGrid());
 		
 		actionAlignToGrid = new Action("&Align to grid", Activator.getImageDescriptor("icons/align_to_grid.gif")) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

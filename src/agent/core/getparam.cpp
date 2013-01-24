@@ -42,15 +42,10 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
 #ifdef _WIN32
-LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value);
-LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
-LONG H_IPRoutingTable(const TCHAR *cmd, const TCHAR *arg, StringList *pValue);
 LONG H_DiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_HostName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_CPUCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_PhysicalDiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
@@ -190,19 +185,6 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("FileSystem.Total(*)"), H_DiskInfo, (TCHAR *)DISKINFO_TOTAL_BYTES, DCI_DT_UINT64, DCIDESC_FS_TOTAL },
    { _T("FileSystem.Used(*)"), H_DiskInfo, (TCHAR *)DISKINFO_USED_BYTES, DCI_DT_UINT64, DCIDESC_FS_USED },
    { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISKINFO_USED_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
-   { _T("Net.Interface.AdminStatus(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
-   { _T("Net.Interface.BytesIn(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
-   { _T("Net.Interface.BytesOut(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_BYTES_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
-   { _T("Net.Interface.Description(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_DESCR, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
-   { _T("Net.Interface.InErrors(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_IN_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_INERRORS },
-   { _T("Net.Interface.Link(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_OPER_STATUS, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { _T("Net.Interface.MTU(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_MTU, DCI_DT_UINT, DCIDESC_NET_INTERFACE_MTU },
-   { _T("Net.Interface.OperStatus(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
-   { _T("Net.Interface.OutErrors(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_OUT_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
-   { _T("Net.Interface.PacketsIn(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_PACKETS_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
-   { _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
-   { _T("Net.Interface.Speed(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_SPEED, DCI_DT_UINT, DCIDESC_NET_INTERFACE_SPEED },
-   { _T("Net.IP.Forwarding"), H_NetIPStats, (TCHAR *)NETINFO_IP_FORWARDING, DCI_DT_INT, DCIDESC_NET_IP_FORWARDING },
    { _T("PhysicalDisk.Firmware(*)"), H_PhysicalDiskInfo, _T("F"), DCI_DT_STRING, DCIDESC_PHYSICALDISK_FIRMWARE },
    { _T("PhysicalDisk.Model(*)"), H_PhysicalDiskInfo, _T("M"), DCI_DT_STRING, DCIDESC_PHYSICALDISK_MODEL },
    { _T("PhysicalDisk.SerialNumber(*)"), H_PhysicalDiskInfo, _T("N"), DCI_DT_STRING, DCIDESC_PHYSICALDISK_SERIALNUMBER },
@@ -254,18 +236,11 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("System.PlatformName"), H_PlatformName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME }
 };
 
-
-//
-// Standard agent's lists
-//
-
+/**
+ * Standard agent's lists
+ */
 static NETXMS_SUBAGENT_LIST m_stdLists[] =
 {
-#ifdef _WIN32
-   { _T("Net.ArpCache"), H_ArpCache, NULL },
-   { _T("Net.InterfaceList"), H_InterfaceList, NULL },
-   { _T("Net.IP.RoutingTable"), H_IPRoutingTable, NULL },
-#endif
    { _T("Agent.ActionList"), H_ActionList, NULL },
    { _T("Agent.SubAgentList"), H_SubAgentList, NULL },
    { _T("Agent.SupportedLists"), H_EnumList, NULL },
@@ -274,13 +249,9 @@ static NETXMS_SUBAGENT_LIST m_stdLists[] =
    { _T("Agent.SupportedTables"), H_TableList, NULL }
 };
 
-
-
-
-//
-// Standard agent's tables
-//
-
+/**
+ * Standard agent's tables
+ */
 static NETXMS_SUBAGENT_TABLE m_stdTables[] =
 {
 #ifdef _WIN32
@@ -288,11 +259,9 @@ static NETXMS_SUBAGENT_TABLE m_stdTables[] =
 #endif
 };
 
-
-//
-// Initialize dynamic parameters list from default static list
-//
-
+/**
+ * Initialize dynamic parameters list from default static list
+ */
 BOOL InitParameterList()
 {
    if ((m_pParamList != NULL) || (m_pEnumList != NULL) || (m_pTableList != NULL))

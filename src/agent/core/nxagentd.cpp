@@ -142,15 +142,9 @@ DWORD g_dwIdleTimeout = 120;   // Session idle timeout
 TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxagentd.pid");
 #endif
 
-#ifdef _WIN32
-DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
-#endif   /* _WIN32 */
-
-
-//
-// Static variables
-//
-
+/**
+ * Static variables
+ */
 static TCHAR *m_pszActionList = NULL;
 static TCHAR *m_pszShellActionList = NULL;
 static TCHAR *m_pszServerList = NULL;
@@ -367,29 +361,6 @@ static FARPROC GetProcAddressAndLog(HMODULE hModule, LPCSTR procName)
    if ((ptr == NULL) && (g_dwFlags & AF_LOG_UNRESOLVED_SYMBOLS))
       nxlog_write(MSG_NO_FUNCTION, EVENTLOG_WARNING_TYPE, "s", procName);
    return ptr;
-}
-
-
-//
-// Import symbols
-//
-
-static void ImportSymbols()
-{
-   HMODULE hModule;
-
-   // NETMAN.DLL
-   hModule = LoadLibrary(_T("NETMAN.DLL"));
-   if (hModule != NULL)
-   {
-      imp_HrLanConnectionNameFromGuidOrPath = 
-         (DWORD (__stdcall *)(LPWSTR, LPWSTR, LPWSTR, LPDWORD))GetProcAddressAndLog(hModule,
-            "HrLanConnectionNameFromGuidOrPath");
-   }
-   else
-   {
-      nxlog_write(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", _T("NETMAN.DLL"));
-   }
 }
 
 

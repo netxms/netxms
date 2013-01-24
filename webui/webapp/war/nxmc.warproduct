@@ -196,8 +196,8 @@
       <plugin id="org.eclipse.rap.ui.workbench.nl_es" fragment="true"/>
       <plugin id="org.eclipse.rap.ui.workbench.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.rap.ui.workbench.nl_zh" fragment="true"/>
-      <plugin id="org.eclipse.rap.zest.core"/>
-      <plugin id="org.eclipse.rap.zest.layouts"/>
+      <plugin id="org.eclipse.tm.terminal"/>
+      <plugin id="org.eclipse.zest"/>
       <plugin id="org.mozilla.javascript"/>
       <plugin id="org.netxms.nebula.widgets.gallery"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
@@ -285,8 +285,8 @@
       <plugin id="org.eclipse.rap.ui" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.ui.forms" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.ui.workbench" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.rap.zest.core" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.rap.zest.layouts" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.tm.terminal" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.zest" autoStart="true" startLevel="0" />
       <plugin id="org.mozilla.javascript" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.nebula.widgets.gallery" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.actionmanager" autoStart="true" startLevel="0" />

@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="netapi32.lib psapi.lib wtsapi32.lib"
+				AdditionalDependencies="netapi32.lib psapi.lib wtsapi32.lib ws2_32.lib iphlpapi.lib"
 				OutputFile="$(OutDir)\$(ProjectName).nsm"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -143,7 +143,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="netapi32.lib psapi.lib wtsapi32.lib ntdll.lib"
+				AdditionalDependencies="netapi32.lib psapi.lib wtsapi32.lib ws2_32.lib iphlpapi.lib ntdll.lib"
 				OutputFile="$(OutDir)\$(ProjectName).nsm"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -219,7 +219,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="netapi32.lib psapi.lib wtsapi32.lib"
+				AdditionalDependencies="netapi32.lib psapi.lib wtsapi32.lib ws2_32.lib iphlpapi.lib"
 				OutputFile="$(OutDir)\$(ProjectName).nsm"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -298,7 +298,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="netapi32.lib psapi.lib wtsapi32.lib ntdll.lib"
+				AdditionalDependencies="netapi32.lib psapi.lib wtsapi32.lib ws2_32.lib iphlpapi.lib ntdll.lib"
 				OutputFile="$(OutDir)\$(ProjectName).nsm"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"

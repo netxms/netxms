@@ -137,26 +137,6 @@
 
 #ifdef _WIN32
 
-
-//
-// Attributes for H_NetIPStats and H_NetInterfacStats
-//
-
-#define NETINFO_IP_FORWARDING        1
-
-#define NETINFO_IF_BYTES_IN          1
-#define NETINFO_IF_BYTES_OUT         2
-#define NETINFO_IF_DESCR             3
-#define NETINFO_IF_IN_ERRORS         4
-#define NETINFO_IF_OPER_STATUS       5
-#define NETINFO_IF_OUT_ERRORS        6
-#define NETINFO_IF_PACKETS_IN        7
-#define NETINFO_IF_PACKETS_OUT       8
-#define NETINFO_IF_SPEED             9
-#define NETINFO_IF_ADMIN_STATUS      10
-#define NETINFO_IF_MTU               11
-
-
 //
 // Request types for H_MemoryInfo
 //
@@ -211,11 +191,9 @@
 #define AGENT_ACTION_SUBAGENT    2
 #define AGENT_ACTION_SHELLEXEC	3
 
-
-//
-// Pipe handle
-//
-
+/**
+ * Pipe handle
+ */
 #ifdef _WIN32
 #define HPIPE HANDLE
 #define INVALID_PIPE_HANDLE INVALID_HANDLE_VALUE
@@ -224,11 +202,9 @@
 #define INVALID_PIPE_HANDLE (-1)
 #endif
 
-
-//
-// Action definition structure
-//
-
+/**
+ * Action definition structure
+ */
 typedef struct
 {
    TCHAR szName[MAX_PARAM_NAME];
@@ -246,11 +222,9 @@ typedef struct
    TCHAR szDescription[MAX_DB_STRING];
 } ACTION;
 
-
-//
-// Loaded subagent information
-//
-
+/**
+ * Loaded subagent information
+ */
 struct SUBAGENT
 {
    HMODULE hModule;              // Subagent's module handle
@@ -518,7 +492,6 @@ extern CommSession **g_pSessionList;
 extern MUTEX g_hSessionListAccess;
 
 #ifdef _WIN32
-extern DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
 extern TCHAR g_windowsEventSourceName[];
 #endif   /* _WIN32 */
 

@@ -48,6 +48,11 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
+            description="%actionDescription.OpenServerConsole"
+            id="org.netxms.ui.eclipse.console.commands.open_server_console"
+            name="%action.OpenServerConsole">
+      </command>
+      <command
             description="%command.ToggleTraceFilter"
             id="org.netxms.ui.eclipse.library.commands.show_trace_filter"
             name="%command.ToggleTraceFilter">
@@ -66,6 +71,10 @@
             description="Refresh"
             id="org.netxms.ui.eclipse.library.commands.refresh"
             name="Refresh">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.console.commands.send_sms"
+            name="Send SMS">
       </command>
    </extension>
    <extension
@@ -109,6 +118,21 @@
       </context>
    </extension>
 
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.console.action_set"
+            label="%actionSet.core"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.console.actions.SendSMS"
+               definitionId="org.netxms.ui.eclipse.console.commands.send_sms"
+               id="org.netxms.ui.eclipse.console.actions.send_sms"
+               label="%action.SendSMS"
+               menubarPath="tools/additions">
+         </action>
+      </actionSet>
+   </extension>
 
    <extension
          point="org.eclipse.rap.ui.branding">

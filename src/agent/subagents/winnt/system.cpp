@@ -22,11 +22,9 @@
 
 #include "winnt_subagent.h"
 
-
-//
-// Handler for System.ServiceState parameter
-//
-
+/**
+ * Handler for System.ServiceState parameter
+ */
 LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    SC_HANDLE hManager, hService;

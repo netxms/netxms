@@ -24,11 +24,17 @@
 #define _winnt_subagent_h_
 
 #define PSAPI_VERSION 1
+#define NTDDI_VERSION NTDDI_VISTA
+#define _WIN32_WINNT 0x0600
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <nxlog.h>
 #include <psapi.h>
 #include <wtsapi32.h>
+#include <iphlpapi.h>
+#include <iprtrmib.h>
+#include <rtinfo.h>
 
 
 #define MAX_PROCESSES      4096
@@ -58,6 +64,27 @@
 #define INFOTYPE_SUM             3
 
 /**
+ * Attributes for H_NetIPStats and H_NetInterfacStats
+ */
+#define NETINFO_IP_FORWARDING        1
+
+#define NETINFO_IF_BYTES_IN          1
+#define NETINFO_IF_BYTES_OUT         2
+#define NETINFO_IF_DESCR             3
+#define NETINFO_IF_IN_ERRORS         4
+#define NETINFO_IF_OPER_STATUS       5
+#define NETINFO_IF_OUT_ERRORS        6
+#define NETINFO_IF_PACKETS_IN        7
+#define NETINFO_IF_PACKETS_OUT       8
+#define NETINFO_IF_SPEED             9
+#define NETINFO_IF_ADMIN_STATUS      10
+#define NETINFO_IF_MTU               11
+#define NETINFO_IF_BYTES_IN_64       12
+#define NETINFO_IF_BYTES_OUT_64      13
+#define NETINFO_IF_PACKETS_IN_64     14
+#define NETINFO_IF_PACKETS_OUT_64    15
+
+/**
  * Window list
  */
 struct WINDOW_LIST
@@ -65,5 +92,11 @@ struct WINDOW_LIST
 	DWORD dwPID;
 	StringList *pWndList;
 };
+
+/**
+ * Optional imports
+ */
+extern DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
+extern DWORD (__stdcall *imp_GetIfEntry2)(PMIB_IF_ROW2);
 
 #endif   /* _winnt_subagent_h_ */

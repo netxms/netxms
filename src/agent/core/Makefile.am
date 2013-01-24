@@ -34,5 +34,4 @@ EXTRA_DIST = \
     win32.cpp resource.h \
     nxagentd.h \
     hddinfo.cpp \
-    netinfo.cpp \
     service.cpp
