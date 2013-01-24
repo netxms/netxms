@@ -340,7 +340,7 @@ LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 
 				memset(&info, 0, sizeof(MIB_IF_ROW2));
 				info.InterfaceIndex = dwIndex;
-				if (GetIfEntry2(&info) == NO_ERROR)
+				if (imp_GetIfEntry2(&info) == NO_ERROR)
 				{
 					switch(metric)
 					{
