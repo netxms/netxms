@@ -733,11 +733,6 @@ BOOL Initialize()
 		if (!InitParameterList())
 			return FALSE;
 
-#ifdef _WIN32
-		// Dynamically import functions that may not be presented in all Windows versions
-		ImportSymbols();
-#endif
-
 		// Parse server lists
 		if (m_pszServerList != NULL)
 			ParseServerList(m_pszServerList, FALSE, FALSE);
