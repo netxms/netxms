@@ -39,6 +39,25 @@ import org.netxms.client.NXCSession;
  */
 public class GenericObject
 {
+	// Built-in object IDs
+	/** Entire network */
+	public static final int NETWORK                    = 1;
+	/** Infrastructure Services */
+	public static final int SERVICEROOT                = 2;
+	/** Templates */
+	public static final int TEMPLATEROOT               = 3;
+	public static final int ZONE0                      = 4;
+	/** Configuration Policies */
+	public static final int POLICYROOT                 = 5;
+	/** Network Maps */
+	public static final int NETWORKMAPROOT             = 6;
+	/** Dashboards */
+	public static final int DASHBOARDROOT              = 7;
+	/** Reports */
+	public static final int REPORTROOT                 = 8;
+	/** Business Services */
+	public static final int BUSINESSSERVICEROOT        = 9;
+
 	// Object classes
 	public static final int OBJECT_GENERIC             = 0;
 	public static final int OBJECT_SUBNET              = 1;
