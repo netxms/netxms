@@ -388,6 +388,7 @@ src/client/nxalarm/nxalarm.vcproj -text
 src/client/nxevent/nxevent.vcproj -text
 src/client/nxlexer/nxlexer.vcproj -text
 src/client/nxpush/nxpush.vcproj -text
+src/client/nxshell/pom.xml -text
 src/client/nxsms/nxsms.vcproj -text
 src/client/scilexer/LexHTML.cpp -text
 src/client/scilexer/Makefile.am -text
