@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Poller state structure
-//
-
+/**
+ * Poller state structure
+ */
 struct __poller_state
 {
    int iType;
@@ -35,11 +33,9 @@ struct __poller_state
    TCHAR szInfo[128];
 };
 
-
-//
-// Global data
-//
-
+/**
+ * Poller queues
+ */
 Queue g_statusPollQueue;
 Queue g_configPollQueue;
 Queue g_topologyPollQueue;
@@ -49,20 +45,16 @@ Queue g_nodePollerQueue;
 Queue g_conditionPollerQueue;
 Queue g_businessServicePollerQueue;
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static __poller_state *m_pPollerState = NULL;
 static int m_iNumPollers = 0;
 static DWORD m_dwNewNodeId = 1;
 
-
-//
-// Create management node object
-//
-
+/**
+ * Create management node object
+ */
 static void CreateManagementNode(DWORD ipAddr, DWORD netMask)
 {
 	TCHAR buffer[256];
@@ -112,11 +104,9 @@ static void CreateManagementNode(DWORD ipAddr, DWORD netMask)
                                  _T("Configuration poller queue for last minute")));
 }
 
-
-//
-// Check if management server node presented in node list
-//
-
+/**
+ * Check if management server node presented in node list
+ */
 static void CheckMgmtFlagCallback(NetObj *object, void *data)
 {
 	if ((g_dwMgmtNode != object->Id()) && ((Node *)object)->isLocalManagement())
@@ -190,11 +180,9 @@ void CheckForMgmtNode()
 	}
 }
 
-
-//
-// Set poller's state
-//
-
+/**
+ * Set poller's state
+ */
 static void SetPollerState(int nIdx, const TCHAR *pszMsg)
 {
    nx_strncpy(m_pPollerState[nIdx].szMsg, pszMsg, 128);
@@ -202,11 +190,9 @@ static void SetPollerState(int nIdx, const TCHAR *pszMsg)
    m_pPollerState[nIdx].timestamp = time(NULL);
 }
 
-
-//
-// Set poller's info
-//
-
+/**
+ * Set poller's info
+ */
 void SetPollerInfo(int nIdx, const TCHAR *pszMsg)
 {
    if (nIdx != -1)
@@ -216,11 +202,9 @@ void SetPollerInfo(int nIdx, const TCHAR *pszMsg)
    }
 }
 
-
-//
-// Display current poller threads state
-//
-
+/**
+ * Display current poller threads state
+ */
 void ShowPollerState(CONSOLE_CTX pCtx)
 {
    int i;
@@ -245,11 +229,9 @@ void ShowPollerState(CONSOLE_CTX pCtx)
    ConsolePrintf(pCtx, _T("\n"));
 }
 
-
-//
-// Status poll thread
-//
-
+/**
+ * Status poll thread
+ */
 static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
 {
    NetObj *pObject;
@@ -825,11 +807,9 @@ static void QueueForPolling(NetObj *object, void *data)
 	}
 }
 
-
-//
-// Node and condition queuing thread
-//
-
+/**
+ * Node and condition queuing thread
+ */
 THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 {
    DWORD dwWatchdogId;
@@ -933,11 +913,9 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// Reset discovery poller after configuration change
-//
-
+/**
+ * Reset discovery poller after configuration change
+ */
 void ResetDiscoveryPoller()
 {
    Node *pNode;
