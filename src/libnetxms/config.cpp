@@ -353,11 +353,9 @@ void ConfigEntry::print(FILE *file, int level)
 		_tprintf(_T("%*svalue: %s\n"), level * 4 + 2, _T(""), m_values[i]);
 }
 
-
-//
-// Create XML element(s) from config entry
-//
-
+/**
+ * Create XML element(s) from config entry
+ */
 void ConfigEntry::createXml(String &xml, int level)
 {
 	TCHAR *name = _tcsdup(m_name);
@@ -1152,11 +1150,9 @@ void Config::print(FILE *file)
 		m_root->print(file, 0);
 }
 
-
-//
-// Create XML from config
-//
-
+/**
+ * Create XML from config
+ */
 String Config::createXml()
 {
 	String xml;

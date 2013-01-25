@@ -232,6 +232,10 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags,
 				nRet = 0;
 			}
 		}
+		else
+		{
+			nRet = cchByteChar - outbytes;
+		}
 		if ((cchWideChar == -1) && (outbytes > 0))
 		{
 			*outbuf = 0;
@@ -308,11 +312,16 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const
 				nRet = 0;
 			}
 		}
+		else
+		{
+			nRet = (cchWideChar * sizeof(WCHAR) - outbytes) / sizeof(WCHAR);
+		}
 		if (((char *)outbuf - (char *)pWideCharStr > sizeof(WCHAR)) && (*pWideCharStr == 0xFEFF))
 		{
 			// Remove UNICODE byte order indicator if presented
 			memmove(pWideCharStr, &pWideCharStr[1], (char *)outbuf - (char *)pWideCharStr - sizeof(WCHAR));
 			outbuf -= sizeof(WCHAR);
+			nRet--;
 		}
 		if ((cchByteChar == -1) && (outbytes >= sizeof(WCHAR)))
 		{
