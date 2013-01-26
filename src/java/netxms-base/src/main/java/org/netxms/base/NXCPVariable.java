@@ -1,12 +1,33 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.base;
 
-import java.io.*;
-import java.net.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.UUID;
 
 /**
- * @author victor
+ * NXCP message field (variable)
  */
 public class NXCPVariable
 {
@@ -224,6 +245,7 @@ public class NXCPVariable
 	 * @param nxcpDataField
 	 * @throws java.io.IOException
 	 */
+	@SuppressWarnings("resource")
 	public NXCPVariable(final byte[] nxcpDataField) throws IOException
 	{
 		NXCPDataInputStream in = new NXCPDataInputStream(nxcpDataField);
@@ -347,6 +369,7 @@ public class NXCPVariable
 	 * 
 	 * @return Variable's value as UUID
 	 */
+	@SuppressWarnings("resource")
 	public UUID getAsUUID()
 	{
 		if ((variableType != TYPE_BINARY) || (binaryValue == null) || (binaryValue.length != 16))
@@ -374,6 +397,7 @@ public class NXCPVariable
 	 * 
 	 * @return Variable's value as array of long integers
 	 */
+	@SuppressWarnings("resource")
 	public long[] getAsUInt32Array()
 	{
 		if ((variableType != TYPE_BINARY) || (binaryValue == null))
@@ -399,6 +423,7 @@ public class NXCPVariable
 	 * 
 	 * @return Variable's value as array of long integers
 	 */
+	@SuppressWarnings("resource")
 	public Long[] getAsUInt32ArrayEx()
 	{
 		if ((variableType != TYPE_BINARY) || (binaryValue == null))

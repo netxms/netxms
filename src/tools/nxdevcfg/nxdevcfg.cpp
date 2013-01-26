@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 NetXMS Team
+** Copyright (C) 2003-2013 NetXMS Team
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,16 +99,16 @@ int main(int argc, char *argv[])
 		switch(ch)
 		{
 			case 'b':
-				printf("%s\n", BINDIR);
+				_tprintf(_T("%s\n"), BINDIR);
 				return 0;
 			case 'd':
-				printf("%s\n", DATADIR);
+				_tprintf(_T("%s\n"), DATADIR);
 				return 0;
 			case 'L':
-				printf("%s\n", LIBDIR);
+				_tprintf(_T("%s\n"), LIBDIR);
 				return 0;
 			case 'P':
-				printf("%s\n", PREFIX);
+				_tprintf(_T("%s\n"), PREFIX);
 				return 0;
 			case '?':
 				ShowHelp();
@@ -117,6 +117,6 @@ int main(int argc, char *argv[])
 				break;
 		}
 	}
-	printf("\n");
+	_tprintf(_T("\n"));
 	return 0;
 }

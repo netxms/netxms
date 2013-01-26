@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,6 +80,7 @@ public class NXCPMessage
 	 * @throws GeneralSecurityException 
 	 * @throws NXCPException 
 	 */
+	@SuppressWarnings("resource")
 	public NXCPMessage(final byte[] nxcpMessage, EncryptionContext ectx) throws IOException, NXCPException
 	{
 		final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nxcpMessage);

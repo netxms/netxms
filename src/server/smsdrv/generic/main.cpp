@@ -274,7 +274,7 @@ static BOOL SMSDriverSendPDU(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 		char pduBuffer[bufferSize];
 		SMSCreatePDUString(phoneNumber, text, pduBuffer, bufferSize);
 
-		snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", strlen(pduBuffer)/2-1);
+		snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", (int)strlen(pduBuffer) / 2 - 1);
 		m_serial.write(szTmp, (int)strlen(szTmp)); 
 		DbgPrintf(4, _T("SMS send: %hs sent"), szTmp);
 		snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pduBuffer, 0x1A);

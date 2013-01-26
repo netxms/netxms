@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS MIB compiler
-** Copyright (C) 2005-2010 Victor Kirhenshtein
+** Copyright (C) 2005-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -418,11 +418,11 @@ int ParseMIBFiles(int nNumFiles, char **ppszFileList, SNMP_MIBObject **ppRoot)
    MP_MODULE *pModule;
    SNMP_MIBObject *pRoot;
 
-   printf("Parsing source files:\n");
+   _tprintf(_T("Parsing source files:\n"));
    pModuleList = da_create();
    for(i = 0; i < nNumFiles; i++)
    {
-      printf("   %s\n", ppszFileList[i]);
+      _tprintf(_T("   %hs\n"), ppszFileList[i]);
       pModule = ParseMIB(ppszFileList[i]);
       if (pModule == NULL)
       {
@@ -433,28 +433,28 @@ int ParseMIBFiles(int nNumFiles, char **ppszFileList, SNMP_MIBObject **ppRoot)
    }
 
    iNumModules = da_size(pModuleList);
-   printf("Resolving imports:\n");
+   _tprintf(_T("Resolving imports:\n"));
    for(i = 0; i < iNumModules; i++)
    {
       pModule = (MP_MODULE *)da_get(pModuleList, i);
-      printf("   %s\n", pModule->pszName);
+      _tprintf(_T("   %hs\n"), pModule->pszName);
       ResolveImports(pModuleList, pModule);
    }
 
-   printf("Resolving object identifiers:\n");
+   _tprintf(_T("Resolving object identifiers:\n"));
    for(i = 0; i < iNumModules; i++)
    {
       pModule = (MP_MODULE *)da_get(pModuleList, i);
-      printf("   %s\n", pModule->pszName);
+      _tprintf(_T("   %hs\n"), pModule->pszName);
       ResolveObjects(pModuleList, pModule);
    }
 
-   printf("Creating MIB tree:\n");
+   _tprintf(_T("Creating MIB tree:\n"));
    pRoot = new SNMP_MIBObject;
    for(i = 0; i < iNumModules; i++)
    {
       pModule = (MP_MODULE *)da_get(pModuleList, i);
-      printf("   %s\n", pModule->pszName);
+      _tprintf(_T("   %hs\n"), pModule->pszName);
       BuildMIBTree(pRoot, pModule);
    }
 

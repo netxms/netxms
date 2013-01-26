@@ -226,7 +226,7 @@ static BOOL SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const T
 	char pduBuffer[bufferSize];
 	SMSCreatePDUString(phoneNumber, text, pduBuffer, bufferSize);
 
-	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", strlen(pduBuffer) / 2 - 1);
+	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", (int)strlen(pduBuffer) / 2 - 1);
 	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0);
 	__chk(conn->waitForText(">", 10000));
 	DbgPrintf(4, _T("SMS: %hs sent"), szTmp);

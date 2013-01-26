@@ -2757,7 +2757,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 */
 	private int parseDataRows(final byte[] input, DciData data)
 	{
-		// noinspection IOResourceOpenedButNotSafelyClosed
+		@SuppressWarnings("resource")
 		final NXCPDataInputStream inputStream = new NXCPDataInputStream(input);
 		int rows = 0;
 

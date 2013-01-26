@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="NetXMS Management Console" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.2.5" useFeatures="false" includeLaunchers="true">
+<product name="NetXMS Management Console" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.2.6" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/nxmc-core/icons/launcher/128x128.png"/>
       <text>
          NetXMS Management Console
 
-Version 1.2.5
+Version 1.2.6
 Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
       </text>
    </aboutInfo>

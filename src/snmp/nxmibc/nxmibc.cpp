@@ -53,61 +53,55 @@ static int m_iNumFiles = 0;
 static char **m_ppFileList = NULL;
 static bool s_pauseBeforeExit = false;
 
-
-//
-// Errors
-//
-
+/**
+ * Errors
+ */
 static struct
 {
    int nSeverity;
-   const char *pszText;
+   const TCHAR *pszText;
 } m_errorList[] =
 {
-   { MIBC_INFO, "Operation completed successfully" },
-   { MIBC_ERROR, "Import symbol \"%s\" unresolved" },
-   { MIBC_ERROR, "Import module \"%s\" unresolved" },
-   { MIBC_ERROR, "Parser error - %s in line %d" },
-   { MIBC_ERROR, "Cannot open input file (%s)" },
-   { MIBC_ERROR, "Cannot resolve symbol %s" },
-   { MIBC_WARNING, "Cannot resolve data type \"%s\" for object \"%s\"" }
+   { MIBC_INFO, _T("Operation completed successfully") },
+   { MIBC_ERROR, _T("Import symbol \"%hs\" unresolved") },
+   { MIBC_ERROR, _T("Import module \"%hs\" unresolved") },
+   { MIBC_ERROR, _T("Parser error - %hs in line %d") },
+   { MIBC_ERROR, _T("Cannot open input file (%hs)") },
+   { MIBC_ERROR, _T("Cannot resolve symbol %hs") },
+   { MIBC_WARNING, _T("Cannot resolve data type \"%hs\" for object \"%hs\"") }
 };
 
-
-//
-// Pause if needed
-//
-
+/**
+ * Pause if needed
+ */
 static void Pause()
 {
 	if (s_pauseBeforeExit)
 	{
 #ifdef _WIN32
-		printf("Press any key to continue...\n");
+		_tprintf(_T("Press any key to continue...\n"));
 		_getch();
 #else
-		printf("Press ENTER to continue...\n");
+		_tprintf(_T("Press ENTER to continue...\n"));
 		char temp[256];
 		fgets(temp, 255, stdin);
 #endif
 	}
 }
 
-
-//
-// Display error text and abort compilation
-//
-
+/**
+ * Display error text and abort compilation
+ */
 extern "C" void Error(int nError, char *pszModule, ...)
 {
    va_list args;
-   static const char *m_szSeverityText[] = { "INFO", "WARNING", "ERROR" };
+   static const TCHAR *severityText[] = { _T("INFO"), _T("WARNING"), _T("ERROR") };
 
-   printf("%s: %s %03d: ", pszModule, m_szSeverityText[m_errorList[nError].nSeverity], nError);
+   _tprintf(_T("%hs: %s %03d: "), pszModule, severityText[m_errorList[nError].nSeverity], nError);
    va_start(args, pszModule);
-   vprintf(m_errorList[nError].pszText, args);
+   _vtprintf(m_errorList[nError].pszText, args);
    va_end(args);
-   printf("\n");
+   _tprintf(_T("\n"));
    if (m_errorList[nError].nSeverity == MIBC_ERROR)
 	{
 		Pause();
@@ -115,42 +109,36 @@ extern "C" void Error(int nError, char *pszModule, ...)
 	}
 }
 
-
-//
-// Display help and exit
-//
-
-static void Help(void)
+/**
+ * Display help and exit
+ */
+static void Help()
 {
-   printf("Usage:\n\n"
-          "nxmibc [options] source1 ... sourceN\n\n"
-          "Valid options:\n"
-          "   -d <dir>  : Include all MIB files from given directory to compilation\n"
-          "   -o <file> : Set output file name (default is netxms.mib)\n"
-			 "   -P        : Pause before exit\n"
-          "   -s        : Strip descriptions from MIB objects\n"
-          "   -z        : Compress output file\n"
-          "\n");
+   _tprintf(_T("Usage:\n\n")
+		      _T("nxmibc [options] source1 ... sourceN\n\n")
+		      _T("Valid options:\n")
+		      _T("   -d <dir>  : Include all MIB files from given directory to compilation\n")
+		      _T("   -o <file> : Set output file name (default is netxms.mib)\n")
+		      _T("   -P        : Pause before exit\n")
+		      _T("   -s        : Strip descriptions from MIB objects\n")
+		      _T("   -z        : Compress output file\n")
+		      _T("\n"));
    exit(0);
 }
 
-
-//
-// Add file to compilation list
-//
-
+/**
+ * Add file to compilation list
+ */
 static void AddFileToList(char *pszFile)
 {
    m_ppFileList = (char **)realloc(m_ppFileList, sizeof(char *) * (m_iNumFiles + 1));
    m_ppFileList[m_iNumFiles++] = strdup(pszFile);
 }
 
-
-//
-// Scan directory for MIB files
-//
-
-static void ScanDirectory(char *pszPath)
+/**
+ * Scan directory for MIB files
+ */
+static void ScanDirectory(const char *pszPath)
 {
    DIR *pDir;
    struct dirent *pFile;
@@ -178,19 +166,17 @@ static void ScanDirectory(char *pszPath)
    }
 }
 
-
-//
-// Entry point
-//
-
+/**
+ * Entry point
+ */
 int main(int argc, char *argv[])
 {
    SNMP_MIBObject *pRoot;
    DWORD dwFlags = 0, dwRet;
    int i, ch, rc = 0;
 
-   printf("NetXMS MIB Compiler  Version " NETXMS_VERSION_STRING_A "\n"
-          "Copyright (c) 2005-2012 Victor Kirhenshtein\n\n");
+   _tprintf(_T("NetXMS MIB Compiler  Version ") NETXMS_VERSION_STRING _T("\n")
+            _T("Copyright (c) 2005-2013 Victor Kirhenshtein\n\n"));
 
    // Parse command line
    opterr = 1;
@@ -241,13 +227,12 @@ int main(int argc, char *argv[])
          dwRet = SNMPSaveMIBTree(m_szOutFile, pRoot, dwFlags);
 #endif
          if (dwRet != SNMP_ERR_SUCCESS)
-            printf("ERROR: Cannot save output file %s (%s)\n", m_szOutFile,
-                   SNMPGetErrorText(dwRet));
+            _tprintf(_T("ERROR: Cannot save output file %hs (%s)\n"), m_szOutFile, SNMPGetErrorText(dwRet));
       }
    }
    else
    {
-      printf("ERROR: No source files given\n");
+      _tprintf(_T("ERROR: No source files given\n"));
       rc = 1;
    }
 
