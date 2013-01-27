@@ -27,14 +27,20 @@
 #include <getopt.h>
 #endif
 
-
 #define VALID_OPTIONS "bcClLPX"
 
+/**
+ * Externals
+ */
+extern const char *g_cFlags;
+extern const char *g_cxxFlags;
+extern const char *g_cppFlags;
+extern const char *g_ldFlags;
+extern const char *g_libs;
 
-//
-// Show help
-//
-
+/**
+ * Show help
+ */
 static void ShowHelp()
 {
 	printf("Available options:\n");
@@ -101,6 +107,18 @@ int main(int argc, char *argv[])
 			case 'b':
 				_tprintf(_T("%s\n"), BINDIR);
 				return 0;
+         case 'c':
+            _tprintf(_T("%hs\n"), g_cFlags);
+            return 0;
+         case 'C':
+            _tprintf(_T("%hs\n"), g_cppFlags);
+            return 0;
+         case 'X':
+            _tprintf(_T("%hs\n"), g_cxxFlags);
+            return 0;
+         case 'l':
+            _tprintf(_T("%hs\n"), g_ldFlags);
+            return 0;
 			case 'd':
 				_tprintf(_T("%s\n"), DATADIR);
 				return 0;

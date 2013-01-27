@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 bin_PROGRAMS = nxdevcfg
-nxdevcfg_SOURCES = nxdevcfg.cpp
+nxdevcfg_SOURCES = flags.cpp nxdevcfg.cpp
 nxdevcfg_CPPFLAGS=-I@top_srcdir@/include
 nxdevcfg_LDADD = ../../libnetxms/libnetxms.la
 
