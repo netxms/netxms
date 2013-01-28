@@ -216,11 +216,9 @@ stop_processing:
    return success;
 }
 
-
-//
-// Import event
-//
-
+/**
+ * Import event
+ */
 static DWORD ImportEvent(ConfigEntry *event)
 {
 	const TCHAR *name = event->getSubEntryValue(_T("name"));
@@ -235,47 +233,34 @@ static DWORD ImportEvent(ConfigEntry *event)
 	if ((code == 0) || (code >= FIRST_USER_EVENT_ID))
 		code = CreateUniqueId(IDG_EVENT);
 
-   // Check if event with specific code exists
-	bool eventExist = false;
-	TCHAR query[4096];
-   _sntprintf(query, 256, _T("SELECT event_code FROM event_cfg WHERE event_code=%d"), code);
-   DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         eventExist = true;
-      DBFreeResult(hResult);
-   }
-
 	// Create or update event template in database
-   TCHAR *escMsg = EncodeSQLString(event->getSubEntryValue(_T("message"), 0, name));
-   TCHAR *escDescr = EncodeSQLString(event->getSubEntryValue(_T("description")));
-   if (eventExist)
+   const TCHAR *msg = event->getSubEntryValue(_T("message"), 0, name);
+   const TCHAR *descr = event->getSubEntryValue(_T("description"));
+	TCHAR query[8192];
+   if (IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), code))
    {
-      _sntprintf(query, 4096, _T("UPDATE event_cfg SET event_name=%s,severity=%d,flags=%d,message='%s',description='%s' WHERE event_code=%d"),
+      _sntprintf(query, 8192, _T("UPDATE event_cfg SET event_name=%s,severity=%d,flags=%d,message=%s,description=%s WHERE event_code=%d"),
                  (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueInt(_T("severity")),
-					  event->getSubEntryValueInt(_T("flags")), escMsg, escDescr, code);
+					  event->getSubEntryValueInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
+					  (const TCHAR *)DBPrepareString(hdb, descr), code);
    }
    else
    {
-      _sntprintf(query, 4096, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,")
-                              _T("message,description) VALUES (%d,%s,%d,%d,'%s','%s')"),
+      _sntprintf(query, 8192, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,")
+                              _T("message,description) VALUES (%d,%s,%d,%d,%s,%s)"),
                  code, (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueInt(_T("severity")),
-					  event->getSubEntryValueInt(_T("flags")), escMsg, escDescr);
+					  event->getSubEntryValueInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
+					  (const TCHAR *)DBPrepareString(hdb, descr));
    }
-   free(escMsg);
-   free(escDescr);
 	DWORD rcc = DBQuery(hdb, query) ? RCC_SUCCESS : RCC_DB_FAILURE;
 
 	DBConnectionPoolReleaseConnection(hdb);
 	return rcc;
 }
 
-
-//
-// Import SNMP trap configuration
-//
-
+/**
+ * Import SNMP trap configuration
+ */
 static DWORD ImportTrap(ConfigEntry *trap)
 {
 	NXC_TRAP_CFG_ENTRY tc;

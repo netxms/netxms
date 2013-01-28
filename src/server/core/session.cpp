@@ -1689,7 +1689,7 @@ void ClientSession::sendEventDB(DWORD dwRqId)
 {
    DB_ASYNC_RESULT hResult;
    CSCPMessage msg;
-   TCHAR szBuffer[1024];
+   TCHAR szBuffer[4096];
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -1717,12 +1717,10 @@ void ClientSession::sendEventDB(DWORD dwRqId)
                msg.SetVariable(VID_SEVERITY, DBGetFieldAsyncULong(hResult, 2));
                msg.SetVariable(VID_FLAGS, DBGetFieldAsyncULong(hResult, 3));
 
-               DBGetFieldAsync(hResult, 4, szBuffer, 1024);
-               DecodeSQLString(szBuffer);
+               DBGetFieldAsync(hResult, 4, szBuffer, 4096);
                msg.SetVariable(VID_MESSAGE, szBuffer);
 
-               DBGetFieldAsync(hResult, 5, szBuffer, 1024);
-               DecodeSQLString(szBuffer);
+               DBGetFieldAsync(hResult, 5, szBuffer, 4096);
                msg.SetVariable(VID_DESCRIPTION, szBuffer);
 
                sendMessage(&msg);
@@ -1747,17 +1745,18 @@ void ClientSession::sendEventDB(DWORD dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Update event template
-//
-
+/**
+ * Callback for sending event configuration change notifications
+ */
 static void SendEventDBChangeNotification(ClientSession *session, void *arg)
 {
 	if (session->isAuthenticated() && session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP))
 		session->postMessage((CSCPMessage *)arg);
 }
 
+/**
+ * Update event template
+ */
 void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -1769,21 +1768,11 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
    {
-      TCHAR szQuery[4096], szName[MAX_EVENT_NAME];
-      DWORD dwEventCode;
-      BOOL bEventExist = FALSE;
-      DB_RESULT hResult;
+      TCHAR szQuery[8192], szName[MAX_EVENT_NAME];
 
       // Check if event with specific code exists
-      dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT event_code FROM event_cfg WHERE event_code=%d"), dwEventCode);
-      hResult = DBSelect(g_hCoreDB, szQuery);
-      if (hResult != NULL)
-      {
-         if (DBGetNumRows(hResult) > 0)
-            bEventExist = TRUE;
-         DBFreeResult(hResult);
-      }
+      DWORD dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
+		bool bEventExist = IsDatabaseRecordExist(g_hCoreDB, _T("event_cfg"), _T("event_code"), dwEventCode);
 
       // Check that we are not trying to create event below 100000
       if (bEventExist || (dwEventCode >= FIRST_USER_EVENT_ID))
@@ -1792,31 +1781,28 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
          pRequest->GetVariableStr(VID_NAME, szName, MAX_EVENT_NAME);
          if (IsValidObjectName(szName))
          {
-            TCHAR szMessage[MAX_DB_STRING], *pszDescription, *pszEscMsg, *pszEscDescr;
+				TCHAR szMessage[MAX_EVENT_MSG_LENGTH], *pszDescription;
 
-            pRequest->GetVariableStr(VID_MESSAGE, szMessage, MAX_DB_STRING);
-            pszEscMsg = EncodeSQLString(szMessage);
-
+            pRequest->GetVariableStr(VID_MESSAGE, szMessage, MAX_EVENT_MSG_LENGTH);
             pszDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
-            pszEscDescr = EncodeSQLString(pszDescription);
-            safe_free(pszDescription);
 
             if (bEventExist)
             {
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE event_cfg SET event_name='%s',severity=%d,flags=%d,message='%s',description='%s' WHERE event_code=%d"),
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE event_cfg SET event_name='%s',severity=%d,flags=%d,message=%s,description=%s WHERE event_code=%d"),
                        szName, pRequest->GetVariableLong(VID_SEVERITY), pRequest->GetVariableLong(VID_FLAGS),
-                       pszEscMsg, pszEscDescr, dwEventCode);
+							  (const TCHAR *)DBPrepareString(g_hCoreDB, szMessage),
+							  (const TCHAR *)DBPrepareString(g_hCoreDB, pszDescription), dwEventCode);
             }
             else
             {
                _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,")
-                                _T("message,description) VALUES (%d,'%s',%d,%d,'%s','%s')"),
+                                _T("message,description) VALUES (%d,'%s',%d,%d,%s,%s)"),
                        dwEventCode, szName, pRequest->GetVariableLong(VID_SEVERITY),
-                       pRequest->GetVariableLong(VID_FLAGS), pszEscMsg, pszEscDescr);
+                       pRequest->GetVariableLong(VID_FLAGS), (const TCHAR *)DBPrepareString(g_hCoreDB, szMessage),
+							  (const TCHAR *)DBPrepareString(g_hCoreDB, pszDescription));
             }
 
-            free(pszEscMsg);
-            free(pszEscDescr);
+            safe_free(pszDescription);
 
             if (DBQuery(g_hCoreDB, szQuery))
             {
@@ -1853,11 +1839,9 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Delete event template
-//
-
+/**
+ * Delete event template
+ */
 void ClientSession::deleteEventTemplate(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -1905,11 +1889,9 @@ void ClientSession::deleteEventTemplate(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Generate event code for new event template
-//
-
+/**
+ * Generate event code for new event template
+ */
 void ClientSession::generateEventCode(DWORD dwRqId)
 {
    CSCPMessage msg;

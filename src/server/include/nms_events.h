@@ -111,11 +111,9 @@ public:
    void setCustomMessage(const TCHAR *message) { safe_free(m_pszCustomMessage); m_pszCustomMessage = (message != NULL) ? _tcsdup(message) : NULL; }
 };
 
-
-//
-// Event policy rule
-//
-
+/**
+ * Event policy rule
+ */
 class EPRule
 {
 private:
@@ -131,7 +129,7 @@ private:
    TCHAR *m_pszScript;
    NXSL_Program *m_pScript;
 
-   TCHAR m_szAlarmMessage[MAX_DB_STRING];
+   TCHAR m_szAlarmMessage[MAX_EVENT_MSG_LENGTH];
    int m_iAlarmSeverity;
    TCHAR m_szAlarmKey[MAX_DB_STRING];
 	DWORD m_dwAlarmTimeout;
@@ -154,21 +152,19 @@ public:
    EPRule(CSCPMessage *pMsg);
    ~EPRule();
 
-   DWORD Id(void) { return m_dwId; }
+   DWORD Id() { return m_dwId; }
    void SetId(DWORD dwNewId) { m_dwId = dwNewId; }
-   BOOL LoadFromDB(void);
-   void SaveToDB(void);
+   BOOL LoadFromDB();
+	void SaveToDB(DB_HANDLE hdb);
    BOOL ProcessEvent(Event *pEvent);
    void CreateMessage(CSCPMessage *pMsg);
 
    BOOL ActionInUse(DWORD dwActionId);
 };
 
-
-//
-// Event policy
-//
-
+/**
+ * Event policy
+ */
 class EventPolicy
 {
 private:

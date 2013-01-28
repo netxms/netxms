@@ -613,9 +613,7 @@ static BOOL LoadEvents()
          m_pEventTemplates[i].dwSeverity = DBGetFieldLong(hResult, i, 1);
          m_pEventTemplates[i].dwFlags = DBGetFieldLong(hResult, i, 2);
          m_pEventTemplates[i].pszMessageTemplate = DBGetField(hResult, i, 3, NULL, 0);
-         DecodeSQLString(m_pEventTemplates[i].pszMessageTemplate);
          m_pEventTemplates[i].pszDescription = DBGetField(hResult, i, 4, NULL, 0);
-         DecodeSQLString(m_pEventTemplates[i].pszDescription);
          DBGetField(hResult, i, 5, m_pEventTemplates[i].szName, MAX_EVENT_NAME);
       }
 

@@ -32,11 +32,9 @@ void NetworkMapGroup::calculateCompoundStatus(BOOL bForcedRecalc)
    m_iStatus = STATUS_NORMAL;
 }
 
-
-//
-// Network map object default constructor
-//
-
+/**
+ * Network map object default constructor
+ */
 NetworkMap::NetworkMap() : NetObj()
 {
 	m_mapType = NETMAP_USER_DEFINED;

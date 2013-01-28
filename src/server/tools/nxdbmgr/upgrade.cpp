@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2012 Victor Kirhenshtein
+** Copyright (C) 2004-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -244,7 +244,7 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 /**
  * Set column nullable (currently Oracle only implementation)
  */
-static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCHAR *type)
+static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column)
 {
 	TCHAR query[1024] = _T("");
 
@@ -256,7 +256,40 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 											_T("BEGIN EXECUTE IMMEDIATE 'ALTER TABLE %s MODIFY %s null'; ")
 											_T("EXCEPTION WHEN already_null THEN null; END;"), table, column);
 			break;
+		case DB_SYNTAX_PGSQL:
+			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL"), table, column);
+			break;
 		default:
+			break;
+	}
+
+	return (query[0] != 0) ? SQLQuery(query) : TRUE;
+}
+
+/**
+ * Resize varchar column
+ */
+static BOOL ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize)
+{
+	TCHAR query[1024];
+
+	switch(g_iSyntax)
+	{
+		case DB_SYNTAX_DB2:
+			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET DATA TYPE varchar(%d)"), table, column, newSize);
+			break;
+		case DB_SYNTAX_MSSQL:
+			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s varchar(%d)"), table, column, newSize);
+			break;
+		case DB_SYNTAX_PGSQL:
+			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s TYPE varchar(%d)"), table, column, newSize);
+			break;
+		case DB_SYNTAX_SQLITE:
+			/* TODO: add SQLite support */
+			query[0] = 0;
+			break;
+		default:
+			_sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY %s varchar(%d)"), table, column, newSize);
 			break;
 	}
 
@@ -268,15 +301,95 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
  */
 static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int flags, const TCHAR *message, const TCHAR *description)
 {
-	TCHAR query[4096], *escMessage, *escDescription;
+	TCHAR query[4096];
 
-	escMessage = EncodeSQLString(message);
-	escDescription = EncodeSQLString(description);
-	_sntprintf(query, 4096, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES (%d,'%s',%d,%d,'%s','%s')"),
-	           code, name, severity, flags, escMessage, escDescription);
-	free(escMessage);
-	free(escDescription);
+	_sntprintf(query, 4096, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES (%d,'%s',%d,%d,%s,%s)"),
+	           code, name, severity, flags, (const TCHAR *)DBPrepareString(g_hCoreDB, message),
+				  (const TCHAR *)DBPrepareString(g_hCoreDB, description));
 	return SQLQuery(query);
+}
+
+/**
+ * Upgrade from V268 to V269
+ */
+static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
+{
+	CHK_EXEC(ResizeColumn(_T("alarms"), _T("message"), 2000));
+	CHK_EXEC(ResizeColumn(_T("alarm_events"), _T("message"), 2000));
+	CHK_EXEC(ResizeColumn(_T("event_log"), _T("event_message"), 2000));
+	CHK_EXEC(ResizeColumn(_T("event_cfg"), _T("message"), 2000));
+	CHK_EXEC(ResizeColumn(_T("event_policy"), _T("alarm_message"), 2000));
+	CHK_EXEC(ResizeColumn(_T("items"), _T("name"), 1024));
+	CHK_EXEC(ResizeColumn(_T("dc_tables"), _T("name"), 1024));
+
+	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("alarm_key")));
+	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("alarm_message")));
+	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("comments")));
+	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("situation_instance")));
+	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("script")));
+	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("alarm_key")));
+	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("alarm_message")));
+	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("comments")));
+	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("situation_instance")));
+	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("script")));
+
+	CHK_EXEC(SetColumnNullable(_T("policy_situation_attr_list"), _T("attr_value")));
+	// convert strings in policy_situation_attr_list
+	DB_RESULT hResult = SQLSelect(_T("SELECT rule_id,situation_id,attr_name,attr_value FROM policy_situation_attr_list"));
+	if (hResult != NULL)
+	{
+		if (SQLQuery(_T("DELETE FROM policy_situation_attr_list")))
+		{
+			TCHAR name[MAX_DB_STRING], value[MAX_DB_STRING], query[1024];
+			int count = DBGetNumRows(hResult);
+			for(int i = 0; i < count; i++)
+			{
+				LONG ruleId = DBGetFieldLong(hResult, i, 0);
+				LONG situationId = DBGetFieldLong(hResult, i, 1);
+				DBGetField(hResult, i, 2, name, MAX_DB_STRING);
+				DBGetField(hResult, i, 3, value, MAX_DB_STRING);
+
+				DecodeSQLString(name);
+				DecodeSQLString(value);
+
+				if (name[0] == 0)
+					_tcscpy(name, _T("noname"));
+
+				_sntprintf(query, 1024, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (%d,%d,%s,%s)"),
+				           ruleId, situationId, (const TCHAR *)DBPrepareString(g_hCoreDB, name), (const TCHAR *)DBPrepareString(g_hCoreDB, value));
+				if (!SQLQuery(query))
+				{
+					if (!g_bIgnoreErrors)
+					{
+						DBFreeResult(hResult);
+						return FALSE;
+					}
+				}
+			}
+		}
+		else
+		{
+			if (!g_bIgnoreErrors)
+			{
+				DBFreeResult(hResult);
+				return FALSE;
+			}
+		}
+		DBFreeResult(hResult);
+	}
+	else
+	{
+		if (!g_bIgnoreErrors)
+			return FALSE;
+	}
+
+	CHK_EXEC(SetColumnNullable(_T("event_cfg"), _T("description")));
+	CHK_EXEC(SetColumnNullable(_T("event_cfg"), _T("message")));
+	CHK_EXEC(ConvertStrings(_T("event_cfg"), _T("event_code"), _T("description")));
+	CHK_EXEC(ConvertStrings(_T("event_cfg"), _T("event_code"), _T("message")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='269' WHERE var_name='SchemaVersion'")));
+	return TRUE;
 }
 
 /**
@@ -284,18 +397,18 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
  */
 static BOOL H_UpgradeFromV267(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("network_services"), _T("check_request"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
-	CHK_EXEC(SetColumnNullable(_T("network_services"), _T("check_responce"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(SetColumnNullable(_T("network_services"), _T("check_request")));
+	CHK_EXEC(SetColumnNullable(_T("network_services"), _T("check_responce")));
 	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_request")));
 	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_responce")));
 
-	CHK_EXEC(SetColumnNullable(_T("config"), _T("var_value"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("config"), _T("var_value")));
 	CHK_EXEC(ConvertStrings(_T("config"), _T("var_name"), NULL, _T("var_value"), true));
 
-	CHK_EXEC(SetColumnNullable(_T("config"), _T("var_value"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("config"), _T("var_value")));
 	CHK_EXEC(ConvertStrings(_T("config"), _T("var_name"), NULL, _T("var_value"), true));
 
-	CHK_EXEC(SetColumnNullable(_T("dci_schedules"), _T("schedule"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("dci_schedules"), _T("schedule")));
 	CHK_EXEC(ConvertStrings(_T("dci_schedules"), _T("schedule_id"), _T("item_id"), _T("schedule"), false));
 
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='268' WHERE var_name='SchemaVersion'")));
@@ -457,8 +570,8 @@ static BOOL H_UpgradeFromV258(int currVersion, int newVersion)
 	// have to made these columns nullable again because
 	// because they was forgotten as NOT NULL in schema.in
 	// and so some databases can still have them as NOT NULL
-	CHK_EXEC(SetColumnNullable(_T("templates"), _T("apply_filter"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
-	CHK_EXEC(SetColumnNullable(_T("containers"), _T("auto_bind_filter"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(SetColumnNullable(_T("templates"), _T("apply_filter")));
+	CHK_EXEC(SetColumnNullable(_T("containers"), _T("auto_bind_filter")));
 
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='259' WHERE var_name='SchemaVersion'")));
 	return TRUE;
@@ -514,11 +627,9 @@ static BOOL H_UpgradeFromV255(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V254 to V255
-//
-
+/**
+ * Upgrade from V254 to V255
+ */
 static BOOL H_UpgradeFromV254(int currVersion, int newVersion)
 {
 	static TCHAR batch[] = 
@@ -560,10 +671,10 @@ static BOOL H_UpgradeFromV253(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("templates"), _T("apply_filter"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(SetColumnNullable(_T("templates"), _T("apply_filter")));
 	CHK_EXEC(ConvertStrings(_T("templates"), _T("id"), _T("apply_filter")));
 
-	CHK_EXEC(SetColumnNullable(_T("containers"), _T("auto_bind_filter"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(SetColumnNullable(_T("containers"), _T("auto_bind_filter")));
 	CHK_EXEC(ConvertStrings(_T("containers"), _T("id"), _T("auto_bind_filter")));
 
 	static TCHAR batch[] = 
@@ -711,8 +822,8 @@ static BOOL H_UpgradeFromV250(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SetColumnNullable(_T("thresholds"), _T("fire_value"), _T("varchar(255)")));
-	CHK_EXEC(SetColumnNullable(_T("thresholds"), _T("rearm_value"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("thresholds"), _T("fire_value")));
+	CHK_EXEC(SetColumnNullable(_T("thresholds"), _T("rearm_value")));
 	CHK_EXEC(ConvertStrings(_T("thresholds"), _T("threshold_id"), _T("fire_value")));
 	CHK_EXEC(ConvertStrings(_T("thresholds"), _T("threshold_id"), _T("rearm_value")));
 
@@ -819,11 +930,9 @@ static BOOL H_UpgradeFromV248(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V247 to V248
-//
-
+/**
+ * Upgrade from V247 to V248
+ */
 static BOOL H_UpgradeFromV247(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateTable(_T("CREATE TABLE dc_tables (")
@@ -858,16 +967,14 @@ static BOOL H_UpgradeFromV247(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V246 to V247
-//
-
+/**
+ * Upgrade from V246 to V247
+ */
 static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
 {
 	static TCHAR insertQuery[] = _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)");
 
-	CHK_EXEC(SetColumnNullable(_T("object_custom_attributes"), _T("attr_value"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(SetColumnNullable(_T("object_custom_attributes"), _T("attr_value")));
 
 	// Convert strings in object_custom_attributes table
 	DB_RESULT hResult = SQLSelect(_T("SELECT object_id,attr_name,attr_value FROM object_custom_attributes"));
@@ -953,10 +1060,10 @@ static BOOL H_UpgradeFromV245(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SetColumnNullable(_T("snmp_trap_pmap"), _T("description"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("snmp_trap_pmap"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_pmap"), _T("trap_id"), _T("parameter"), _T("description"), false));
 	
-	CHK_EXEC(SetColumnNullable(_T("cluster_resources"), _T("resource_name"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("cluster_resources"), _T("resource_name")));
 	CHK_EXEC(ConvertStrings(_T("cluster_resources"), _T("cluster_id"), _T("resource_id"), _T("resource_name"), false));
 	
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='246' WHERE var_name='SchemaVersion'")));
@@ -975,9 +1082,9 @@ static BOOL H_UpgradeFromV244(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SetColumnNullable(_T("actions"), _T("rcpt_addr"), _T("varchar(255)")));
-	CHK_EXEC(SetColumnNullable(_T("actions"), _T("email_subject"), _T("varchar(255)")));
-	CHK_EXEC(SetColumnNullable(_T("actions"), _T("action_data"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(SetColumnNullable(_T("actions"), _T("rcpt_addr")));
+	CHK_EXEC(SetColumnNullable(_T("actions"), _T("email_subject")));
+	CHK_EXEC(SetColumnNullable(_T("actions"), _T("action_data")));
 
 	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("rcpt_addr")));
 	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("email_subject")));
@@ -1805,25 +1912,21 @@ static BOOL H_UpgradeFromV218(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V217 to V218
-//
-
+/**
+ * Upgrade from V217 to V218
+ */
 static BOOL H_UpgradeFromV217(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("snmp_communities"), _T("community"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("snmp_communities"), _T("community")));
 	CHK_EXEC(ConvertStrings(_T("snmp_communities"), _T("id"), _T("community")));
 
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='218' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
 
-
-//
-// Upgrade from V216 to V217
-//
-
+/**
+ * Upgrade from V216 to V217
+ */
 static BOOL H_UpgradeFromV216(int currVersion, int newVersion)
 {
 	static TCHAR batch[] = 
@@ -1835,60 +1938,58 @@ static BOOL H_UpgradeFromV216(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("community"), _T("varchar(127)")));
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("community")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("community")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("usm_auth_password"), _T("varchar(127)")));
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("usm_auth_password")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("usm_auth_password")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("usm_priv_password"), _T("varchar(127)")));
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("usm_priv_password")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("usm_priv_password")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("snmp_oid"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("snmp_oid")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("snmp_oid")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("secret"), _T("varchar(64)")));
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("secret")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("secret")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("agent_version"), _T("varchar(63)")));
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("agent_version")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("agent_version")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("platform_name"), _T("varchar(63)")));
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("platform_name")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("platform_name")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("uname"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("uname")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("uname")));
 
-	CHK_EXEC(SetColumnNullable(_T("items"), _T("name"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("items"), _T("name")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("name")));
 
-	CHK_EXEC(SetColumnNullable(_T("items"), _T("description"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("items"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("description")));
 
-	CHK_EXEC(SetColumnNullable(_T("items"), _T("transformation"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(SetColumnNullable(_T("items"), _T("transformation")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("transformation")));
 
-	CHK_EXEC(SetColumnNullable(_T("items"), _T("instance"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("items"), _T("instance")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("instance")));
 
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='217' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
 
-
-//
-// Upgrade from V215 to V216
-//
-
+/**
+ * Upgrade from V215 to V216
+ */
 static BOOL H_UpgradeFromV215(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("ap_common"), _T("description"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(SetColumnNullable(_T("ap_common"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("ap_common"), _T("id"), _T("description")));
 
 	if (g_iSyntax != DB_SYNTAX_SQLITE)
 		CHK_EXEC(SQLQuery(_T("ALTER TABLE ap_config_files DROP COLUMN file_name")));
 
-	CHK_EXEC(SetColumnNullable(_T("ap_config_files"), _T("file_content"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(SetColumnNullable(_T("ap_config_files"), _T("file_content")));
 	CHK_EXEC(ConvertStrings(_T("ap_config_files"), _T("policy_id"), _T("file_content")));
 
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE object_properties ADD guid varchar(36)")));
@@ -1951,17 +2052,15 @@ static BOOL H_UpgradeFromV214(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V213 to V214
-//
-
+/**
+ * Upgrade from V213 to V214
+ */
 static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("script_library"), _T("script_code"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(SetColumnNullable(_T("script_library"), _T("script_code")));
 	CHK_EXEC(ConvertStrings(_T("script_library"), _T("script_id"), _T("script_code")));
 
-	CHK_EXEC(SetColumnNullable(_T("raw_dci_values"), _T("raw_value"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("raw_dci_values"), _T("raw_value")));
 	CHK_EXEC(ConvertStrings(_T("raw_dci_values"), _T("item_id"), _T("raw_value")));
 
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) null)' WHERE var_name='IDataTableCreationCommand'")));
@@ -1976,7 +2075,7 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 
 			DWORD nodeId = DBGetFieldULong(hResult, i, 0);
 			_sntprintf(table, 32, _T("idata_%d"), nodeId);
-			CHK_EXEC(SetColumnNullable(table, _T("idata_value"), _T("varchar(255)")));
+			CHK_EXEC(SetColumnNullable(table, _T("idata_value")));
 		}
 		DBFreeResult(hResult);
 	}
@@ -2023,15 +2122,13 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V212 to V213
-//
-
+/**
+ * Upgrade from V212 to V213
+ */
 static BOOL H_UpgradeFromV212(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("items"), _T("custom_units_name"), _T("varchar(63)")));
-	CHK_EXEC(SetColumnNullable(_T("items"), _T("perftab_settings"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(SetColumnNullable(_T("items"), _T("custom_units_name")));
+	CHK_EXEC(SetColumnNullable(_T("items"), _T("perftab_settings")));
 
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("custom_units_name")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("perftab_settings")));
@@ -2041,16 +2138,14 @@ static BOOL H_UpgradeFromV212(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V211 to V212
-//
-
+/**
+ * Upgrade from V211 to V212
+ */
 static BOOL H_UpgradeFromV211(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("snmp_trap_cfg"), _T("snmp_oid"), _T("varchar(255)")));
-	CHK_EXEC(SetColumnNullable(_T("snmp_trap_cfg"), _T("user_tag"), _T("varchar(63)")));
-	CHK_EXEC(SetColumnNullable(_T("snmp_trap_cfg"), _T("description"), _T("varchar(255)")));
+	CHK_EXEC(SetColumnNullable(_T("snmp_trap_cfg"), _T("snmp_oid")));
+	CHK_EXEC(SetColumnNullable(_T("snmp_trap_cfg"), _T("user_tag")));
+	CHK_EXEC(SetColumnNullable(_T("snmp_trap_cfg"), _T("description")));
 
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_cfg"), _T("trap_id"), _T("user_tag")));
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_cfg"), _T("trap_id"), _T("description")));
@@ -2060,11 +2155,9 @@ static BOOL H_UpgradeFromV211(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V210 to V211
-//
-
+/**
+ * Upgrade from V210 to V211
+ */
 static BOOL H_UpgradeFromV210(int currVersion, int newVersion)
 {
 	static TCHAR batch[] = 
@@ -6590,6 +6683,7 @@ static struct
 	{ 265, 266, H_UpgradeFromV265 },
 	{ 266, 267, H_UpgradeFromV266 },
 	{ 267, 268, H_UpgradeFromV267 },
+	{ 268, 269, H_UpgradeFromV268 },
    { 0, 0, NULL }
 };
 

@@ -61,7 +61,7 @@ void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
  */
 static void FillEventData(CSCPMessage *msg, DWORD baseId, DB_RESULT hResult, int row, QWORD rootId)
 {
-	TCHAR buffer[MAX_DB_STRING];
+	TCHAR buffer[MAX_EVENT_MSG_LENGTH];
 
 	msg->SetVariable(baseId, DBGetFieldUInt64(hResult, row, 0));
 	msg->SetVariable(baseId + 1, rootId);
@@ -70,7 +70,7 @@ static void FillEventData(CSCPMessage *msg, DWORD baseId, DB_RESULT hResult, int
 	msg->SetVariable(baseId + 4, (WORD)DBGetFieldLong(hResult, row, 3));	// severity
 	msg->SetVariable(baseId + 5, DBGetFieldULong(hResult, row, 4));  // source object
 	msg->SetVariable(baseId + 6, DBGetFieldULong(hResult, row, 5));  // timestamp
-	msg->SetVariable(baseId + 7, DBGetField(hResult, row, 6, buffer, MAX_DB_STRING));
+	msg->SetVariable(baseId + 7, DBGetField(hResult, row, 6, buffer, MAX_EVENT_MSG_LENGTH));
 }
 
 /**
@@ -236,7 +236,7 @@ BOOL AlarmManager::init()
          m_pAlarmList[i].dwSourceObject = DBGetFieldULong(hResult, i, 1);
          m_pAlarmList[i].dwSourceEventCode = DBGetFieldULong(hResult, i, 2);
          m_pAlarmList[i].qwSourceEventId = DBGetFieldUInt64(hResult, i, 3);
-         DBGetField(hResult, i, 4, m_pAlarmList[i].szMessage, MAX_DB_STRING);
+         DBGetField(hResult, i, 4, m_pAlarmList[i].szMessage, MAX_EVENT_MSG_LENGTH);
          m_pAlarmList[i].nOriginalSeverity = (BYTE)DBGetFieldLong(hResult, i, 5);
          m_pAlarmList[i].nCurrentSeverity = (BYTE)DBGetFieldLong(hResult, i, 6);
          DBGetField(hResult, i, 7, m_pAlarmList[i].szKey, MAX_DB_STRING);
@@ -292,7 +292,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
             m_pAlarmList[i].nCurrentSeverity = iSeverity;
 				m_pAlarmList[i].dwTimeout = dwTimeout;
 				m_pAlarmList[i].dwTimeoutEvent = dwTimeoutEvent;
-            nx_strncpy(m_pAlarmList[i].szMessage, pszExpMsg, MAX_DB_STRING);
+            nx_strncpy(m_pAlarmList[i].szMessage, pszExpMsg, MAX_EVENT_MSG_LENGTH);
             
             notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
             updateAlarmInDB(&m_pAlarmList[i]);
@@ -322,7 +322,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 		alarm.dwTimeout = dwTimeout;
 		alarm.dwTimeoutEvent = dwTimeoutEvent;
 		alarm.noteCount = 0;
-      nx_strncpy(alarm.szMessage, pszExpMsg, MAX_DB_STRING);
+      nx_strncpy(alarm.szMessage, pszExpMsg, MAX_EVENT_MSG_LENGTH);
       nx_strncpy(alarm.szKey, pszExpKey, MAX_DB_STRING);
 
       // Add new alarm to active alarm list if needed
@@ -551,9 +551,9 @@ void AlarmManager::deleteAlarm(DWORD dwAlarmId)
  */
 void AlarmManager::updateAlarmInDB(NXC_ALARM *pAlarm)
 {
-   TCHAR szQuery[2048];
+   TCHAR szQuery[4096];
 
-   _sntprintf(szQuery, 2048, _T("UPDATE alarms SET alarm_state=%d,ack_by=%d,term_by=%d,")
+   _sntprintf(szQuery, 4096, _T("UPDATE alarms SET alarm_state=%d,ack_by=%d,term_by=%d,")
                              _T("last_change_time=%d,current_severity=%d,repeat_count=%d,")
                              _T("hd_state=%d,hd_ref=%s,timeout=%d,timeout_event=%d,")
 									  _T("message=%s,resolved_by=%d WHERE alarm_id=%d"),

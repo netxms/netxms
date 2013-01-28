@@ -744,8 +744,7 @@ void CAlarmBrowser::DeleteAlarmFromList(DWORD dwAlarmId)
       {
          PlayAlarmSound(&m_pAlarmList[i], FALSE, g_hSession, &g_soundCfg);
          m_dwNumAlarms--;
-         memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1],
-                 sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
+         memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
          break;
       }
 }

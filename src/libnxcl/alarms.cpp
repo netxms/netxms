@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,11 +23,9 @@
 
 #include "libnxcl.h"
 
-
-//
-// Fill alarm record from message
-//
-
+/**
+ * Fill alarm record from message
+ */
 static void AlarmFromMsg(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 {
    pAlarm->dwAckByUser = pMsg->GetVariableLong(VID_ACK_BY_USER);
@@ -39,7 +37,7 @@ static void AlarmFromMsg(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
    pAlarm->dwCreationTime = pMsg->GetVariableLong(VID_CREATION_TIME);
    pAlarm->dwLastChangeTime = pMsg->GetVariableLong(VID_LAST_CHANGE_TIME);
    pMsg->GetVariableStr(VID_ALARM_KEY, pAlarm->szKey, MAX_DB_STRING);
-   pMsg->GetVariableStr(VID_ALARM_MESSAGE, pAlarm->szMessage, MAX_DB_STRING);
+	pMsg->GetVariableStr(VID_ALARM_MESSAGE, pAlarm->szMessage, MAX_EVENT_MSG_LENGTH);
    pAlarm->nState = (BYTE)pMsg->GetVariableShort(VID_STATE);
    pAlarm->nCurrentSeverity = (BYTE)pMsg->GetVariableShort(VID_CURRENT_SEVERITY);
    pAlarm->nOriginalSeverity = (BYTE)pMsg->GetVariableShort(VID_ORIGINAL_SEVERITY);
@@ -52,11 +50,9 @@ static void AlarmFromMsg(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
    pAlarm->pUserData = NULL;
 }
 
-
-//
-// Process CMD_ALARM_UPDATE message
-//
-
+/**
+ * Process CMD_ALARM_UPDATE message
+ */
 void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    NXC_ALARM alarm;
@@ -68,11 +64,9 @@ void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
    pSession->callEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &alarm);
 }
 
-
-//
-// Load all alarms from server
-//
-
+/**
+ * Load all alarms from server
+ */
 DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, DWORD *pdwNumAlarms, NXC_ALARM **ppAlarmList)
 {
    CSCPMessage msg, *pResponse;
@@ -124,11 +118,9 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, DWORD *pdwNumAla
    return dwRetCode;
 }
 
-
-//
-// Acknowledge alarm by ID
-//
-
+/**
+ * Acknowledge alarm by ID
+ */
 DWORD LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
 {
    CSCPMessage msg;

@@ -1196,11 +1196,9 @@ BOOL LIBNXDB_EXPORTABLE DBExecute(DB_STATEMENT hStmt)
 	return DBExecuteEx(hStmt, errorText);
 }
 
-
-//
-// Execute prepared statement (SELECT)
-//
-
+/**
+ * Execute prepared SELECT statement
+ */
 DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *errorText)
 {
    DBDRV_RESULT hResult;
@@ -1260,17 +1258,18 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 #undef wcErrorText
 }
 
+/**
+ * Execute prepared SELECT statement
+ */
 DB_RESULT LIBNXDB_EXPORTABLE DBSelectPrepared(DB_STATEMENT hStmt)
 {
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 	return DBSelectPreparedEx(hStmt, errorText);
 }
 
-
-//
-// Begin transaction
-//
-
+/**
+ * Begin transaction
+ */
 BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
 {
    DWORD dwResult;
@@ -1306,11 +1305,9 @@ BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
    return bRet;
 }
 
-
-//
-// Commit transaction
-//
-
+/**
+ * Commit transaction
+ */
 BOOL LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
 {
    BOOL bRet = FALSE;
@@ -1330,11 +1327,9 @@ BOOL LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
    return bRet;
 }
 
-
-//
-// Begin transaction
-//
-
+/**
+ * Rollback transaction
+ */
 BOOL LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
 {
    BOOL bRet = FALSE;
@@ -1354,11 +1349,9 @@ BOOL LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
    return bRet;
 }
 
-
-//
-// Prepare string for using in SQL statement
-//
-
+/**
+ * Prepare string for using in SQL statement
+ */
 String LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int maxSize)
 {
 	String out;
@@ -1384,6 +1377,9 @@ String LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int 
 	return out;
 }
 
+/**
+ * Prepare string for using in SQL statement (multi-byte string version)
+ */
 #ifdef UNICODE
 
 String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int maxSize)
@@ -1396,22 +1392,19 @@ String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int 
 
 #endif
 
-
-//
-// Characters to be escaped before writing to SQL
-//
-
+/**
+ * Characters to be escaped before writing to SQL
+ */
 static TCHAR m_szSpecialChars[] = _T("\x01\x02\x03\x04\x05\x06\x07\x08")
                                   _T("\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10")
                                   _T("\x11\x12\x13\x14\x15\x16\x17\x18")
                                   _T("\x19\x1A\x1B\x1C\x1D\x1E\x1F")
                                   _T("#%\\'\x7F");
 
-
-//
-// Escape some special characters in string for writing into database
-//
-
+/**
+ * Escape some special characters in string for writing into database.
+ * DEPRECATED!
+ */
 TCHAR LIBNXDB_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn)
 {
    TCHAR *pszOut;
@@ -1449,12 +1442,10 @@ TCHAR LIBNXDB_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn)
    return pszOut;
 }
 
-
-//
-// Restore characters encoded by EncodeSQLString()
-// Characters are decoded "in place"
-//
-
+/**
+ * Restore characters encoded by EncodeSQLString()
+ * Characters are decoded "in place"
+ */
 void LIBNXDB_EXPORTABLE DecodeSQLString(TCHAR *pszStr)
 {
    int iPosIn, iPosOut;
@@ -1480,12 +1471,10 @@ void LIBNXDB_EXPORTABLE DecodeSQLString(TCHAR *pszStr)
    pszStr[iPosOut] = 0;
 }
 
-
-//
-// Get database schema version
-// Will return 0 for unknown and -1 in case of SQL errors
-//
-
+/**
+ * Get database schema version
+ * Will return 0 for unknown and -1 in case of SQL errors
+ */
 int LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn)
 {
 	DB_RESULT hResult;
@@ -1523,11 +1512,9 @@ int LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn)
 	return version;
 }
 
-
-//
-// Get database syntax
-//
-
+/**
+ * Get database syntax
+ */
 int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
 {
 	DB_RESULT hResult;

@@ -97,11 +97,9 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 	return THREAD_OK;
 }
 
-
-//
-// Event logger
-//
-
+/**
+ * Event logger
+ */
 static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 {
    while(!IsShutdownInProgress())
@@ -114,14 +112,13 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		int syntaxId = DBGetSyntax(hdb);
 		if (syntaxId == DB_SYNTAX_SQLITE)
 		{ 
-			TCHAR szQuery[2048], szMessage[256], szUserTag[64];
-			nx_strncpy(szMessage, CHECK_NULL_EX(pEvent->getMessage()), 256);
-			nx_strncpy(szUserTag, CHECK_NULL_EX(pEvent->getUserTag()), 64);
-			_sntprintf(szQuery, 2048, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,")
+			TCHAR szQuery[4096];
+			_sntprintf(szQuery, 4096, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,")
 											  _T("event_severity,event_message,root_event_id,user_tag) VALUES (") UINT64_FMT 
 											  _T(",%d,%d,%d,%d,'%s',") UINT64_FMT _T(",'%s')"), pEvent->getId(), pEvent->getCode(), 
-											  (DWORD)pEvent->getTimeStamp(), pEvent->getSourceId(), pEvent->getSeverity(),szMessage,
-											  pEvent->getRootId(), szUserTag);
+											  (DWORD)pEvent->getTimeStamp(), pEvent->getSourceId(), pEvent->getSeverity(), 
+											  (const TCHAR *)DBPrepareString(hdb, pEvent->getMessage(), MAX_EVENT_MSG_LENGTH - 1),
+											  pEvent->getRootId(), (const TCHAR *)DBPrepareString(hdb, pEvent->getUserTag(), 63));
 			DBQuery(hdb, szQuery);
 			DbgPrintf(8, _T("EventLogger: DBQuery: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
 			delete pEvent;
@@ -140,14 +137,14 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (DWORD)pEvent->getTimeStamp());
 					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, pEvent->getSourceId());
 					DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pEvent->getSeverity());
-					if (_tcslen(pEvent->getMessage()) <= 255)
+					if (_tcslen(pEvent->getMessage()) < MAX_EVENT_MSG_LENGTH)
 					{
 						DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC);
 					}
 					else
 					{
 						TCHAR *temp = _tcsdup(pEvent->getMessage());
-						temp[255] = 0;
+						temp[MAX_EVENT_MSG_LENGTH - 1] = 0;
 						DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, temp, DB_BIND_DYNAMIC);
 					}
 					DBBind(hStmt, 7, DB_SQLTYPE_BIGINT, pEvent->getRootId());
@@ -182,11 +179,9 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 	return THREAD_OK;
 }
 
-
-//
-// Event processing thread
-//
-
+/**
+ * Event processing thread
+ */
 THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 {
 	s_loggerQueue = new Queue;

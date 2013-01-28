@@ -23,11 +23,9 @@
 
 #include "libnxcl.h"
 
-
-//
-// Process event log records coming from server
-//
-
+/**
+ * Process event log records coming from server
+ */
 void ProcessEventLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    DWORD i, dwNumRecords, dwId;

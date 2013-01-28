@@ -52,30 +52,26 @@
 
 #endif /* not LIBNXCL_CONSTANTS_ONLY */
 
-
-//
-// Session handle type
-//
-
+/**
+ * Session handle type
+ */
 #ifndef LIBNXCL_CONSTANTS_ONLY
 typedef void * NXC_SESSION;
 #endif
 
-
-//
-// Some constants
-//
-
+/**
+ * Some constants
+ */
 #define MAX_COMMUNITY_LENGTH     128
 #define MAX_OID_LENGTH           1024
-#define MAX_EVENT_MSG_LENGTH     256
+#define MAX_EVENT_MSG_LENGTH     2000
 #define MAX_EVENT_NAME           64
 #define MAX_USERTAG_LENGTH       64
 #define MAX_SESSION_NAME         256
 #define MAX_USER_NAME            64
 #define MAX_USER_FULLNAME        128
 #define MAX_USER_DESCR           256
-#define MAX_ITEM_NAME            256
+#define MAX_ITEM_NAME            1024
 #define MAX_STRING_VALUE         256
 #define MAX_VARIABLE_NAME        256
 #define MAX_AGENT_VERSION_LEN    64
@@ -843,30 +839,24 @@ enum
 #define ACTION_FORWARD_EVENT  4
 #define ACTION_NXSL_SCRIPT    5
 
-
-//
-// Network map types
-//
-
+/**
+ * Network map types
+ */
 #define NETMAP_USER_DEFINED   0
 #define NETMAP_IP_TOPOLOGY    1
 #define NETMAP_L2_TOPOLOGY    2
 
-
-//
-// Network map flags
-//
-
+/**
+ * Network map flags
+ */
 #define MF_SHOW_STATUS_ICON      0x00000001
 #define MF_SHOW_STATUS_FRAME     0x00000002
 #define MF_SHOW_STATUS_BKGND     0x00000004
 #define MF_SHOW_END_NODES        0x00000008
 
-
-//
-// Network map layouts
-//
-
+/**
+ * Network map layouts
+ */
 #define MAP_LAYOUT_MANUAL        0x7FFF
 #define MAP_LAYOUT_SPRING        0
 #define MAP_LAYOUT_RADIAL        1
@@ -998,11 +988,9 @@ typedef struct
    TCHAR *pszData;
 } NXC_ACTION;
 
-
-//
-// Alarm structure
-//
-
+/**
+ * Alarm structure
+ */
 typedef struct
 {
    QWORD qwSourceEventId;  // Originating event ID
@@ -1021,18 +1009,16 @@ typedef struct
    DWORD dwRepeatCount;
 	DWORD dwTimeout;
 	DWORD dwTimeoutEvent;
-   TCHAR szMessage[MAX_DB_STRING];
+   TCHAR szMessage[MAX_EVENT_MSG_LENGTH];
    TCHAR szKey[MAX_DB_STRING];
    TCHAR szHelpDeskRef[MAX_HELPDESK_REF_LEN];
    void *pUserData;        // Can be freely used by client application
 	DWORD noteCount;        // Number of notes added to alarm
 } NXC_ALARM;
 
-
-//
-// Trap parameter mapping entry
-//
-
+/**
+ * Trap parameter mapping entry
+ */
 typedef struct
 {
    DWORD *pdwObjectId;     // Trap OID
@@ -1041,11 +1027,9 @@ typedef struct
    TCHAR szDescription[MAX_DB_STRING];
 } NXC_OID_MAP;
 
-
-//
-// Trap configuration entry
-//
-
+/**
+ * Trap configuration entry
+ */
 typedef struct
 {
    DWORD dwId;             // Entry ID
@@ -1123,11 +1107,9 @@ typedef struct
 typedef void (* NXC_EVENT_HANDLER)(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode, void *pArg);
 typedef void (* NXC_DEBUG_CALLBACK)(TCHAR *pMsg);
 
-
-//
-// Event log record structure
-//
-
+/**
+ * Event log record structure
+ */
 typedef struct
 {
    QWORD qwEventId;
@@ -1139,11 +1121,9 @@ typedef struct
 	TCHAR szUserTag[MAX_USERTAG_LENGTH];
 } NXC_EVENT;
 
-
-//
-// Syslog record structure
-//
-
+/**
+ * Syslog record structure
+ */
 typedef struct
 {
    QWORD qwMsgId;
@@ -1156,11 +1136,9 @@ typedef struct
    TCHAR *pszText;
 } NXC_SYSLOG_RECORD;
 
-
-//
-// Server's configuration variable
-//
-
+/**
+ * Server's configuration variable
+ */
 typedef struct
 {
    TCHAR szName[MAX_OBJECT_NAME];
@@ -1168,11 +1146,9 @@ typedef struct
    BOOL bNeedRestart;
 } NXC_SERVER_VARIABLE;
 
-
-//
-// Agent package information
-//
-
+/**
+ * Agent package information
+ */
 typedef struct
 {
    DWORD dwId;
@@ -1183,11 +1159,9 @@ typedef struct
    TCHAR szDescription[MAX_DB_STRING];
 } NXC_PACKAGE_INFO;
 
-
-//
-// Event configuration structure
-//
-
+/**
+ * Event configuration structure
+ */
 typedef struct
 {
    DWORD dwCode;

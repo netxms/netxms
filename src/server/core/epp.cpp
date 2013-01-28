@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Default event policy rule constructor
-//
-
+/**
+ * Default event policy rule constructor
+ */
 EPRule::EPRule(DWORD dwId)
 {
    m_dwId = dwId;
@@ -47,27 +45,21 @@ EPRule::EPRule(DWORD dwId)
 	m_szSituationInstance[0] = 0;
 }
 
-
-//
-// Construct event policy rule from database record
-// Assuming the following field order:
-// rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,
-// alarm_timeout,alarm_timeout_event,situation_id,situation_instance
-//
-
+/**
+ * Construct event policy rule from database record
+ * Assuming the following field order:
+ * rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,
+ * alarm_timeout,alarm_timeout_event,situation_id,situation_instance
+ */
 EPRule::EPRule(DB_RESULT hResult, int iRow)
 {
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    m_dwFlags = DBGetFieldULong(hResult, iRow, 1);
    m_pszComment = DBGetField(hResult, iRow, 2, NULL, 0);
-   DecodeSQLString(m_pszComment);
-   DBGetField(hResult, iRow, 3, m_szAlarmMessage, MAX_DB_STRING);
-   DecodeSQLString(m_szAlarmMessage);
+	DBGetField(hResult, iRow, 3, m_szAlarmMessage, MAX_EVENT_MSG_LENGTH);
    m_iAlarmSeverity = DBGetFieldLong(hResult, iRow, 4);
    DBGetField(hResult, iRow, 5, m_szAlarmKey, MAX_DB_STRING);
-   DecodeSQLString(m_szAlarmKey);
    m_pszScript = DBGetField(hResult, iRow, 6, NULL, 0);
-   DecodeSQLString(m_pszScript);
    if ((m_pszScript != NULL) && (*m_pszScript != 0))
    {
       TCHAR szError[256];
@@ -91,14 +83,11 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
 	m_dwAlarmTimeoutEvent = DBGetFieldULong(hResult, iRow, 8);
 	m_dwSituationId = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 10, m_szSituationInstance, MAX_DB_STRING);
-	DecodeSQLString(m_szSituationInstance);
 }
 
-
-//
-// Construct event policy rule from CSCP message
-//
-
+/**
+ * Construct event policy rule from NXCP message
+ */
 EPRule::EPRule(CSCPMessage *pMsg)
 {
 	DWORD i, id, count;
@@ -158,11 +147,9 @@ EPRule::EPRule(CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Event policy rule destructor
-//
-
+/**
+ * Event policy rule destructor
+ */
 EPRule::~EPRule()
 {
    safe_free(m_pdwSourceList);
@@ -173,11 +160,9 @@ EPRule::~EPRule()
    delete m_pScript;
 }
 
-
-//
-// Check if source object's id match to the rule
-//
-
+/**
+ * Check if source object's id match to the rule
+ */
 BOOL EPRule::MatchSource(DWORD dwObjectId)
 {
    DWORD i;
@@ -401,11 +386,9 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
    return bStopProcessing;
 }
 
-
-//
-// Generate alarm from event
-//
-
+/**
+ * Generate alarm from event
+ */
 void EPRule::GenerateAlarm(Event *pEvent)
 {
    // Terminate alarms with key == our ack_key
@@ -424,11 +407,9 @@ void EPRule::GenerateAlarm(Event *pEvent)
 	}
 }
 
-
-//
-// Load rule from database
-//
-
+/**
+ * Load rule from database
+ */
 BOOL EPRule::LoadFromDB()
 {
    DB_RESULT hResult;
@@ -493,9 +474,7 @@ BOOL EPRule::LoadFromDB()
       for(i = 0; i < count; i++)
       {
          DBGetField(hResult, i, 0, name, MAX_DB_STRING);
-         DecodeSQLString(name);
          DBGetField(hResult, i, 1, value, MAX_DB_STRING);
-         DecodeSQLString(value);
          m_situationAttrList.set(name, value);
       }
       DBFreeResult(hResult);
@@ -508,47 +487,33 @@ BOOL EPRule::LoadFromDB()
    return bSuccess;
 }
 
-
-//
-// Save rule to database
-//
-
-void EPRule::SaveToDB()
+/**
+ * Save rule to database
+ */
+void EPRule::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR *pszComment, *pszEscKey, *pszEscMessage,
-	      *pszEscScript, *pszQuery, *pszEscSituationInstance,
-			*pszEscName, *pszEscValue;
-   DWORD i, len;
-
-	len = (DWORD)(_tcslen(CHECK_NULL(m_pszComment)) + _tcslen(CHECK_NULL(m_pszScript)) + 4096);
-   pszQuery = (TCHAR *)malloc(len * sizeof(TCHAR));
+	DWORD len = (DWORD)(_tcslen(CHECK_NULL(m_pszComment)) + _tcslen(CHECK_NULL(m_pszScript)) + 4096);
+   TCHAR *pszQuery = (TCHAR *)malloc(len * sizeof(TCHAR));
 
    // General attributes
-   pszComment = EncodeSQLString(m_pszComment);
-   pszEscKey = EncodeSQLString(m_szAlarmKey);
-   pszEscMessage = EncodeSQLString(m_szAlarmMessage);
-   pszEscScript = EncodeSQLString(m_pszScript);
-	pszEscSituationInstance = EncodeSQLString(m_szSituationInstance);
    _sntprintf(pszQuery, len, _T("INSERT INTO event_policy (rule_id,flags,comments,alarm_message,")
                        _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
 							  _T("situation_id,situation_instance) ")
-                       _T("VALUES (%d,%d,'%s','%s',%d,'%s','%s',%d,%d,%d,'%s')"),
-             m_dwId, m_dwFlags, pszComment, pszEscMessage, m_iAlarmSeverity,
-             pszEscKey, pszEscScript, m_dwAlarmTimeout, m_dwAlarmTimeoutEvent,
-				 m_dwSituationId, pszEscSituationInstance);
-   free(pszComment);
-   free(pszEscMessage);
-   free(pszEscKey);
-   free(pszEscScript);
-	free(pszEscSituationInstance);
-   DBQuery(g_hCoreDB, pszQuery);
+                       _T("VALUES (%d,%d,%s,%s,%d,%s,%s,%d,%d,%d,%s)"),
+	           m_dwId, m_dwFlags, (const TCHAR *)DBPrepareString(hdb, m_pszComment),
+				  (const TCHAR *)DBPrepareString(hdb, m_szAlarmMessage), m_iAlarmSeverity,
+	           (const TCHAR *)DBPrepareString(hdb, m_szAlarmKey),
+	           (const TCHAR *)DBPrepareString(hdb, m_pszScript), m_dwAlarmTimeout, m_dwAlarmTimeoutEvent,
+	           m_dwSituationId, (const TCHAR *)DBPrepareString(hdb, m_szSituationInstance));
+   DBQuery(hdb, pszQuery);
 
    // Actions
+	DWORD i;
    for(i = 0; i < m_dwNumActions; i++)
    {
       _sntprintf(pszQuery, len, _T("INSERT INTO policy_action_list (rule_id,action_id) VALUES (%d,%d)"),
                 m_dwId, m_pdwActionList[i]);
-      DBQuery(g_hCoreDB, pszQuery);
+      DBQuery(hdb, pszQuery);
    }
 
    // Events
@@ -556,7 +521,7 @@ void EPRule::SaveToDB()
    {
       _sntprintf(pszQuery, len, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"),
                 m_dwId, m_pdwEventList[i]);
-      DBQuery(g_hCoreDB, pszQuery);
+      DBQuery(hdb, pszQuery);
    }
 
    // Sources
@@ -564,29 +529,25 @@ void EPRule::SaveToDB()
    {
       _sntprintf(pszQuery, len, _T("INSERT INTO policy_source_list (rule_id,object_id) VALUES (%d,%d)"),
                 m_dwId, m_pdwSourceList[i]);
-      DBQuery(g_hCoreDB, pszQuery);
+      DBQuery(hdb, pszQuery);
    }
 
 	// Situation attributes
 	for(i = 0; i < m_situationAttrList.getSize(); i++)
 	{
-		pszEscName = EncodeSQLString(m_situationAttrList.getKeyByIndex(i));
-		pszEscValue = EncodeSQLString(m_situationAttrList.getValueByIndex(i));
-      _sntprintf(pszQuery, len, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (%d,%d,'%s','%s')"),
-                m_dwId, m_dwSituationId, pszEscName, pszEscValue);
-		free(pszEscName);
-		free(pszEscValue);
-      DBQuery(g_hCoreDB, pszQuery);
+      _sntprintf(pszQuery, len, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (%d,%d,%s,%s)"),
+                m_dwId, m_dwSituationId, 
+					 (const TCHAR *)DBPrepareString(hdb, m_situationAttrList.getKeyByIndex(i)), 
+					 (const TCHAR *)DBPrepareString(hdb, m_situationAttrList.getValueByIndex(i)));
+      DBQuery(hdb, pszQuery);
 	}
 
    free(pszQuery);
 }
 
-
-//
-// Create CSCP message with rule's data
-//
-
+/**
+ * Create NXCP message with rule's data
+ */
 void EPRule::CreateMessage(CSCPMessage *pMsg)
 {
 	DWORD i, id;
@@ -669,11 +630,9 @@ void EventPolicy::Clear()
    m_ppRuleList = NULL;
 }
 
-
-//
-// Load event processing policy from database
-//
-
+/**
+ * Load event processing policy from database
+ */
 BOOL EventPolicy::LoadFromDB()
 {
    DB_RESULT hResult;
@@ -701,26 +660,27 @@ BOOL EventPolicy::LoadFromDB()
    return bSuccess;
 }
 
-
-//
-// Save event processing policy to database
-//
-
+/**
+ * Save event processing policy to database
+ */
 void EventPolicy::SaveToDB()
 {
    DWORD i;
 
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    ReadLock();
-   DBBegin(g_hCoreDB);
-   DBQuery(g_hCoreDB, _T("DELETE FROM event_policy"));
-   DBQuery(g_hCoreDB, _T("DELETE FROM policy_action_list"));
-   DBQuery(g_hCoreDB, _T("DELETE FROM policy_event_list"));
-   DBQuery(g_hCoreDB, _T("DELETE FROM policy_source_list"));
-   DBQuery(g_hCoreDB, _T("DELETE FROM policy_situation_attr_list"));
+   DBBegin(hdb);
+   DBQuery(hdb, _T("DELETE FROM event_policy"));
+   DBQuery(hdb, _T("DELETE FROM policy_action_list"));
+   DBQuery(hdb, _T("DELETE FROM policy_event_list"));
+   DBQuery(hdb, _T("DELETE FROM policy_source_list"));
+   DBQuery(hdb, _T("DELETE FROM policy_situation_attr_list"));
    for(i = 0; i < m_dwNumRules; i++)
-      m_ppRuleList[i]->SaveToDB();
-   DBCommit(g_hCoreDB);
+      m_ppRuleList[i]->SaveToDB(hdb);
+   DBCommit(hdb);
    Unlock();
+	DBConnectionPoolReleaseConnection(hdb);
 }
 
 

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,31 +22,33 @@
 
 #include "nxcore.h"
 
-
-//
-// Static members
-//
-
+/**
+ * Column ID cache
+ */
 TC_ID_MAP_ENTRY *DCTable::m_cache = NULL;
 int DCTable::m_cacheSize = 0;
 int DCTable::m_cacheAllocated = 0;
 MUTEX DCTable::m_cacheMutex = MutexCreate();
 
-
-//
-// Get column ID from column name
-//
-
+/**
+ * Compare cache element's name to string key
+ */
 static int CompareCacheElements(const void *key, const void *element)
 {
 	return _tcsicmp((const TCHAR *)key, ((TC_ID_MAP_ENTRY *)element)->name);
 }
 
+/**
+ * Compare names of two cache elements
+ */
 static int CompareCacheElements2(const void *e1, const void *e2)
 {
 	return _tcsicmp(((TC_ID_MAP_ENTRY *)e1)->name, ((TC_ID_MAP_ENTRY *)e2)->name);
 }
 
+/**
+ * Get column ID from column name
+ */
 LONG DCTable::columnIdFromName(const TCHAR *name)
 {
 	TC_ID_MAP_ENTRY buffer;
@@ -116,11 +118,9 @@ LONG DCTable::columnIdFromName(const TCHAR *name)
 	return (entry != NULL) ? entry->id : 0;
 }
 
-
-//
-// Default constructor
-//
-
+/**
+ * Default constructor
+ */
 DCTable::DCTable() : DCObject()
 {
 	m_instanceColumn[0] = 0;
@@ -128,11 +128,9 @@ DCTable::DCTable() : DCObject()
 	m_lastValue = NULL;
 }
 
-
-//
-// Copy constructor
-//
-
+/**
+ * Copy constructor
+ */
 DCTable::DCTable(const DCTable *src) : DCObject(src)
 {
 	nx_strncpy(m_instanceColumn, src->m_instanceColumn, MAX_COLUMN_NAME);
@@ -142,11 +140,9 @@ DCTable::DCTable(const DCTable *src) : DCObject(src)
 	m_lastValue = NULL;
 }
 
-
-//
-// Constructor for creating new DCTable from scratch
-//
-
+/**
+ * Constructor for creating new DCTable from scratch
+ */
 DCTable::DCTable(DWORD id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
 	              Template *node, const TCHAR *instanceColumn, const TCHAR *description, const TCHAR *systemTag)
         : DCObject(id, name, source, pollingInterval, retentionTime, node, description, systemTag)
@@ -156,15 +152,13 @@ DCTable::DCTable(DWORD id, const TCHAR *name, int source, int pollingInterval, i
 	m_lastValue = NULL;
 }
 
-
-//
-// Constructor for creating DCTable from database
-// Assumes that fields in SELECT query are in following order:
-//    item_id,template_id,template_item_id,name,instance_column,
-//    description,flags,source,snmp_port,polling_interval,retention_time,
-//    status,system_tag,resource_id,proxy_node,perftab_settings
-//
-
+/**
+ * Constructor for creating DCTable from database
+ * Assumes that fields in SELECT query are in following order:
+ *    item_id,template_id,template_item_id,name,instance_column,
+ *    description,flags,source,snmp_port,polling_interval,retention_time,
+ *    status,system_tag,resource_id,proxy_node,perftab_settings
+ */
 DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
@@ -206,22 +200,18 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	loadCustomSchedules();
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 DCTable::~DCTable()
 {
 	delete m_columns;
 	delete m_lastValue;
 }
 
-
-//
-// Clean expired data
-//
-
+/**
+ * Clean expired data
+ */
 void DCTable::deleteExpiredData()
 {
    TCHAR szQuery[256];
@@ -235,11 +225,9 @@ void DCTable::deleteExpiredData()
    QueueSQLRequest(szQuery);
 }
 
-
-//
-// Delete all collected data
-//
-
+/**
+ * Delete all collected data
+ */
 bool DCTable::deleteAllData()
 {
    TCHAR szQuery[256];
@@ -252,11 +240,9 @@ bool DCTable::deleteAllData()
 	return success;
 }
 
-
-//
-// Process new collected value
-//
-
+/**
+ * Process new collected value
+ */
 void DCTable::processNewValue(time_t nTimeStamp, void *value)
 {
    lock();
@@ -312,21 +298,17 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
 	DBConnectionPoolReleaseConnection(hdb);
 }
 
-
-//
-// Process new data collection error
-//
-
+/**
+ * Process new data collection error
+ */
 void DCTable::processNewError()
 {
 	m_dwErrorCount++;
 }
 
-
-//
-// Save to database
-//
-
+/**
+ * Save to database
+ */
 BOOL DCTable::saveToDB(DB_HANDLE hdb)
 {
 	DB_STATEMENT hStmt;
@@ -417,11 +399,9 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 	return result ? DCObject::saveToDB(hdb) : FALSE;
 }
 
-
-//
-// Delete table object and collected data from database
-//
-
+/**
+ * Delete table object and collected data from database
+ */
 void DCTable::deleteFromDB()
 {
    TCHAR szQuery[256];
@@ -436,11 +416,9 @@ void DCTable::deleteFromDB()
    QueueSQLRequest(szQuery);
 }
 
-
-//
-// Create NXCP message with item data
-//
-
+/**
+ * Create NXCP message with item data
+ */
 void DCTable::createMessage(CSCPMessage *pMsg)
 {
 	DCObject::createMessage(pMsg);
@@ -465,11 +443,9 @@ void DCTable::createMessage(CSCPMessage *pMsg)
    unlock();
 }
 
-
-//
-// Update data collection object from NXCP message
-//
-
+/**
+ * Update data collection object from NXCP message
+ */
 void DCTable::updateFromMessage(CSCPMessage *pMsg)
 {
 	DCObject::updateFromMessage(pMsg);
@@ -490,11 +466,9 @@ void DCTable::updateFromMessage(CSCPMessage *pMsg)
 	unlock();
 }
 
-
-//
-// Get last collected value
-//
-
+/**
+ * Get last collected value
+ */
 void DCTable::getLastValue(CSCPMessage *msg)
 {
 	if (m_lastValue != NULL)
@@ -505,11 +479,9 @@ void DCTable::getLastValue(CSCPMessage *msg)
 	}
 }
 
-
-//
-// Get summary of last collcted value (to show along simple DCI values)
-//
-
+/**
+ * Get summary of last collected value (to show along simple DCI values)
+ */
 void DCTable::getLastValueSummary(CSCPMessage *pMsg, DWORD dwId)
 {
 	lock();
@@ -528,11 +500,9 @@ void DCTable::getLastValueSummary(CSCPMessage *pMsg, DWORD dwId)
 	unlock();
 }
 
-
-//
-// Get ID of instance column
-//
-
+/**
+ * Get ID of instance column
+ */
 LONG DCTable::getInstanceColumnId()
 {
 	if (m_instanceColumn[0] != 0)

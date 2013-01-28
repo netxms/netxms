@@ -616,7 +616,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    String escInstance = DBPrepareString(g_hCoreDB, m_szInstance);
 	String escCustomUnitName = DBPrepareString(g_hCoreDB, m_pszCustomUnitName);
 	String escPerfTabSettings = DBPrepareString(g_hCoreDB, m_pszPerfTabSettings);
-	int qlen = escScript.getSize() + escPerfTabSettings.getSize() + 2048;
+	int qlen = escName.getSize() + escScript.getSize() + escPerfTabSettings.getSize() + 2048;
 	pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * qlen);
 
    // Prepare and execute query
