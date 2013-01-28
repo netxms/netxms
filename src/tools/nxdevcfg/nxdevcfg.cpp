@@ -27,16 +27,16 @@
 #include <getopt.h>
 #endif
 
-#define VALID_OPTIONS "bcClLPX"
+#define VALID_OPTIONS "bcCdilLPX"
 
 /**
  * Externals
  */
-extern const char *g_cFlags;
-extern const char *g_cxxFlags;
-extern const char *g_cppFlags;
-extern const char *g_ldFlags;
-extern const char *g_libs;
+extern const TCHAR *g_cFlags;
+extern const TCHAR *g_cxxFlags;
+extern const TCHAR *g_cppFlags;
+extern const TCHAR *g_ldFlags;
+extern const TCHAR *g_libs;
 
 /**
  * Show help
@@ -50,8 +50,9 @@ static void ShowHelp()
 	       "   -C, --cppflags  C/C++ compiler flags\n"
 	       "   -X, --cxxflags  C++ compiler flags\n"
 	       "   -d, --datadir   Data directory\n"
-	       "   -l, --ldflags   Linker flags\n"
+	       "   -l, --ldflags   Linker flags (all except -l)\n"
 	       "   -L, --libdir    Library directory\n"
+	       "   -i, --libs      Linker flags (only -l)\n"
 	       "   -P, --prefix    Installation prefix\n"
 	      );
 #else
@@ -59,7 +60,8 @@ static void ShowHelp()
 	       "   -c  C compiler flags\n"
 	       "   -C  C/C++ compiler flags\n"
 	       "   -d  Data directory\n"
-	       "   -l  Linker flags\n"
+	       "   -i  Linker flags (only -l)\n"
+	       "   -l  Linker flags (all except -l)\n"
 	       "   -L  Library directory\n"
 	       "   -P  Installation prefix\n"
 	       "   -X  C++ compiler flags\n"
@@ -67,11 +69,23 @@ static void ShowHelp()
 #endif
 }
 
+/**
+ * Print "flags" string
+ */
+static void PrintFlags(const TCHAR *src)
+{
+	String s = src;
+	s.translate(_T("${bindir}"), BINDIR);
+	s.translate(_T("${libdir}"), LIBDIR);
+	s.translate(_T("${pkgdatadir}"), DATADIR);
+	s.translate(_T("${pkglibdir}"), PKGLIBDIR);
+	s.translate(_T("${prefix}"), PREFIX);
+	_tprintf(_T("%s\n"), (const TCHAR *)s);
+}
 
-//
-// main
-//
-
+/**
+ * main
+ */
 int main(int argc, char *argv[])
 {
 #if HAVE_DECL_GETOPT_LONG
@@ -84,6 +98,7 @@ int main(int argc, char *argv[])
 		{ (char *)"datadir", 0, NULL, 'd' },
 		{ (char *)"ldflags", 0, NULL, 'l' },
 		{ (char *)"libdir", 0, NULL, 'L' },
+		{ (char *)"libs", 0, NULL, 'i' },
 		{ (char *)"prefix", 0, NULL, 'P' },
 		{ NULL, 0, 0, 0 }
 	};
@@ -108,16 +123,19 @@ int main(int argc, char *argv[])
 				_tprintf(_T("%s\n"), BINDIR);
 				return 0;
          case 'c':
-            _tprintf(_T("%hs\n"), g_cFlags);
+            PrintFlags(g_cFlags);
             return 0;
          case 'C':
-            _tprintf(_T("%hs\n"), g_cppFlags);
+            PrintFlags(g_cppFlags);
             return 0;
          case 'X':
-            _tprintf(_T("%hs\n"), g_cxxFlags);
+            PrintFlags(g_cxxFlags);
             return 0;
          case 'l':
-            _tprintf(_T("%hs\n"), g_ldFlags);
+            PrintFlags(g_ldFlags);
+            return 0;
+         case 'i':
+            PrintFlags(g_libs);
             return 0;
 			case 'd':
 				_tprintf(_T("%s\n"), DATADIR);
