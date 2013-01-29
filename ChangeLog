@@ -5,6 +5,7 @@
 - NXSL function PostEvent can use event names instead of event codes
 - Management console:
 	- Network map functionality in web console now in sync with desktop version
+	- Alarm details view improved
 - 64bit interface counters in Windows agent
 - Android Agent:
 	- Changed name of configuration parameters (NB needs reconfiguration of agent!!!)

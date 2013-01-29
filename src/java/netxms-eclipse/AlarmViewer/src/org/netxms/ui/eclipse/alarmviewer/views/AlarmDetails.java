@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -98,7 +99,7 @@ public class AlarmDetails extends ViewPart
 	private CLabel alarmSeverity;
 	private CLabel alarmState;
 	private CLabel alarmSource;
-	private Label alarmText;
+	private Text alarmText;
 	private Composite editorsArea;
 	private ImageHyperlink linkAddComment;
 	private Map<Long, AlarmCommentsEditor> editors = new HashMap<Long, AlarmCommentsEditor>();
@@ -240,12 +241,12 @@ public class AlarmDetails extends ViewPart
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
+		gd.verticalAlignment = SWT.FILL;
 		section.setLayoutData(gd);
 
 		final Composite clientArea = toolkit.createComposite(section);
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		layout.makeColumnsEqualWidth = true;
+		layout.numColumns = 3;
 		clientArea.setLayout(layout);
 		section.setClient(clientArea);
 
@@ -253,30 +254,60 @@ public class AlarmDetails extends ViewPart
 		toolkit.adapt(alarmSeverity);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
+		gd.verticalAlignment = SWT.TOP;
 		alarmSeverity.setLayoutData(gd);
+		
+		Label sep = new Label(clientArea, SWT.VERTICAL | SWT.SEPARATOR);
+		gd = new GridData();
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessVerticalSpace = true;
+		gd.verticalSpan = 3;
+		sep.setLayoutData(gd);
+		
+		final ScrolledComposite textContainer = new ScrolledComposite(clientArea, SWT.H_SCROLL | SWT.V_SCROLL);
+		textContainer.setExpandHorizontal(true);
+		textContainer.getHorizontalBar().setIncrement(20);
+		textContainer.setExpandVertical(true);
+		textContainer.getVerticalBar().setIncrement(20);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.verticalAlignment = SWT.FILL;
+		gd.verticalSpan = 3;
+		textContainer.setLayoutData(gd);
+		textContainer.addControlListener(new ControlAdapter() {
+			@Override
+			public void controlResized(ControlEvent e)
+			{
+				Point size = alarmText.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+				if (size.y > 300)
+					size.y = 300;
+				alarmText.setSize(size.x, size.y);
+				textContainer.setMinWidth(size.x);
+				textContainer.setMinHeight(size.y);
+			}
+		});
+
+		int bs = toolkit.getBorderStyle();
+		toolkit.setBorderStyle(SWT.NONE);
+		alarmText = toolkit.createText(textContainer, "", SWT.MULTI); //$NON-NLS-1$
+		toolkit.setBorderStyle(bs);
+		alarmText.setEditable(false);
+		textContainer.setContent(alarmText);
 
 		alarmState = new CLabel(clientArea, SWT.NONE);
 		toolkit.adapt(alarmState);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
+		gd.verticalAlignment = SWT.TOP;
 		alarmState.setLayoutData(gd);
 		
 		alarmSource = new CLabel(clientArea, SWT.NONE);
 		toolkit.adapt(alarmSource);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
+		gd.verticalAlignment = SWT.TOP;
 		alarmSource.setLayoutData(gd);
-
-		alarmText = toolkit.createLabel(clientArea, "", SWT.WRAP); //$NON-NLS-1$
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		alarmText.setLayoutData(gd);
 	}
 	
 	/**
