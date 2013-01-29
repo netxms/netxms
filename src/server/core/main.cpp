@@ -393,7 +393,15 @@ static BOOL InitCryptografy()
 				free(pKeyBuffer);
 				bResult = TRUE;
 			}
+      else
+      {
+        DbgPrintf(0, _T("Failed to open %s for writing"), szKeyFile);
+      }
 		}
+    else
+    {
+      DbgPrintf(0, _T("Failed to generate RSA key"));
+    }
 	}
 	else
 	{
