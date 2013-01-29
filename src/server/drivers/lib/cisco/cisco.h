@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Generic driver for Cisco devices
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@
 class CISCO_EXPORTABLE CiscoDeviceDriver : public NetworkDeviceDriver
 {
 public:
-	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes);
+	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
 };
 
 #endif

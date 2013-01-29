@@ -92,6 +92,7 @@ Node::Node() : DataCollectionTarget()
 	m_fdb = NULL;
 	m_vlans = NULL;
 	m_driver = NULL;
+	m_driverData = NULL;
 	m_components = NULL;
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 }
@@ -158,6 +159,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_fdb = NULL;
 	m_vlans = NULL;
 	m_driver = NULL;
+	m_driverData = NULL;
 	m_components = NULL;
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 }
@@ -167,6 +169,8 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
  */
 Node::~Node()
 {
+	if ((m_driver != NULL) && (m_driverData != NULL))
+		m_driver->destroyDriverData(m_driverData);
    MutexDestroy(m_hPollerMutex);
    MutexDestroy(m_hAgentAccessMutex);
    MutexDestroy(m_mutexRTAccess);
@@ -525,7 +529,7 @@ InterfaceList *Node::getInterfaceList()
 			}
 
 			int useAliases = ConfigReadInt(_T("UseInterfaceAliases"), 0);
-			pIfList = m_driver->getInterfaces(pTransport, &m_customAttributes, useAliases, useIfXTable);
+			pIfList = m_driver->getInterfaces(pTransport, &m_customAttributes, m_driverData, useAliases, useIfXTable);
 
 			if ((pIfList != NULL) && (m_dwFlags & NF_IS_BRIDGE))
 			{
@@ -1839,7 +1843,7 @@ bool Node::confPollSnmp(DWORD dwRqId)
 		UnlockData();
 
 		// Allow driver to gather additional info
-		m_driver->analyzeDevice(pTransport, m_szObjectId, &m_customAttributes);
+		m_driver->analyzeDevice(pTransport, m_szObjectId, &m_customAttributes, &m_driverData);
 
 		// Get sysName
 		if (SnmpGet(m_snmpVersion, pTransport,
@@ -4104,7 +4108,7 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 		SNMP_Transport *snmp = createSnmpTransport();
 		if (snmp != NULL)
 		{
-			VlanList *vlanList = m_driver->getVlans(snmp, &m_customAttributes);
+			VlanList *vlanList = m_driver->getVlans(snmp, &m_customAttributes, m_driverData);
 			delete snmp;
 
 			MutexLock(m_mutexTopoAccess);

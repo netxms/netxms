@@ -189,7 +189,7 @@ static DWORD HandlerAccessPorts(DWORD version, SNMP_Variable *var, SNMP_Transpor
 /**
  * Get VLANs 
  */
-VlanList *CiscoDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes)
+VlanList *CiscoDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
 {
 	VlanList *list = new VlanList();
 	

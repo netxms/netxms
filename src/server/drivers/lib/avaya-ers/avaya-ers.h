@@ -48,7 +48,7 @@ protected:
 	void getVlanInterfaces(SNMP_Transport *pTransport, InterfaceList *pIfList);
 
 public:
-	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes);
+	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
 };
 
 #endif

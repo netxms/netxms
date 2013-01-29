@@ -100,7 +100,7 @@ static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transpor
 /**
  * Get VLANs 
  */
-VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes)
+VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
 {
 	VlanList *list = new VlanList();
 	DWORD slotSize = getSlotSize(attributes);

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -76,13 +76,14 @@ bool NetworkDeviceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *o
 
 /**
  * Do additional checks on the device required by driver.
- * Driver can set device's custom attributes from within
- * this function.
+ * Driver can set device's custom attributes and driver's data from within this method.
+ * Driver is responsible for destroying previously created data object.
  *
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
+ * @param driverData pointer to pointer to driver-specific data
  */
-void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes)
+void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
 {
 }
 
@@ -168,7 +169,7 @@ static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport 
  * @param useAliases policy for interface alias usage
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable)
+InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
 {
    LONG i, iNumIf;
    TCHAR szOid[128], szBuffer[256];
@@ -396,9 +397,10 @@ static DWORD HandlerVlanEgressPorts(DWORD version, SNMP_Variable *var, SNMP_Tran
  *
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
  * @return VLAN list or NULL
  */
-VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes)
+VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
 {
 	VlanList *list = new VlanList();
 	
@@ -420,9 +422,10 @@ failure:
  *
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
  * @return module orientation
  */
-int NetworkDeviceDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes)
+int NetworkDeviceDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
 {
 	return NDD_ORIENTATION_HORIZONTAL;
 }
@@ -432,11 +435,21 @@ int NetworkDeviceDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *
  *
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void NetworkDeviceDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, int module, NDD_MODULE_LAYOUT *layout)
+void NetworkDeviceDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
 	layout->numberingScheme = NDD_PN_UNKNOWN;
 	layout->rows = 2;
+}
+
+/**
+ * Destroy driver data. Default implementation do nothing.
+ *
+ * @param driverData driver-specific data previously created in analyzeDevice
+ */
+void NetworkDeviceDriver::destroyDriverData(void *driverData)
+{
 }

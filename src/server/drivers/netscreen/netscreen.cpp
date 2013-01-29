@@ -76,7 +76,7 @@ bool NetscreenDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-void NetscreenDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes)
+void NetscreenDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
 {
 }
 
@@ -126,10 +126,10 @@ static DWORD HandlerIfList(DWORD snmpVersion, SNMP_Variable *varbind, SNMP_Trans
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable)
+InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *stdIfList = NetworkDeviceDriver::getInterfaces(snmp, attributes, 0, false);
+	InterfaceList *stdIfList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, 0, false);
 	if (stdIfList == NULL)
 		return NULL;
 

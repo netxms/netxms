@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -30,7 +30,7 @@
 /**
  *API version
  */
-#define NDDRV_API_VERSION           2
+#define NDDRV_API_VERSION           3
 
 /**
  * Driver header
@@ -105,11 +105,12 @@ public:
 
 	virtual int isPotentialDevice(const TCHAR *oid);
 	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes);
-	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable);
-	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes);
-	virtual int getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes);
-	virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, int module, NDD_MODULE_LAYOUT *layout);
+	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData);
+	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable);
+	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+	virtual int getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+	virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int module, NDD_MODULE_LAYOUT *layout);
+	virtual void destroyDriverData(void *driverData);
 };
 
 #endif   /* _nddrv_h_ */
