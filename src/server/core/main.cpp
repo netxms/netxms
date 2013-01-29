@@ -74,6 +74,8 @@ extern Queue g_nodePollerQueue;
 extern Queue g_conditionPollerQueue;
 extern Queue *g_pItemQueue;
 
+extern BOOL g_bDisableInput;
+
 void InitClientListeners();
 void InitMobileDeviceListeners();
 void InitCertificates();
@@ -1636,7 +1638,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 {
 	nxlog_write(MSG_SERVER_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
 
-	if (IsStandalone())
+	if (IsStandalone() && g_bDisableInput == FALSE)
 	{
 		char *ptr, szCommand[256];
 		struct __console_ctx ctx;

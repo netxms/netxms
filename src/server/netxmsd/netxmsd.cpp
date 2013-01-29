@@ -39,6 +39,7 @@
  * Global data
  */
 BOOL g_bCheckDB = FALSE;
+BOOL g_bDisableInput = FALSE;
 
 /**
  * Help text
@@ -52,6 +53,7 @@ static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T
                            _T("               : Default is ") DEFAULT_CONFIG_FILE _T("\n")
                            _T("   -d          : Run as daemon/service\n")
                            _T("   -D <level>  : Set debug level (valid levels are 0..9)\n")
+                           _T("   -q          : Disable interactive console\n")
                            _T("   -h          : Display help and exit\n")
 #ifdef _WIN32
                            _T("   -I          : Install Windows service\n")
@@ -150,9 +152,9 @@ static void CreateMiniDump(DWORD pid)
 //
 
 #ifdef _WIN32
-#define VALID_OPTIONS   "c:CdD:ehIL:P:RsSv"
+#define VALID_OPTIONS   "c:CdD:qehIL:P:RsSv"
 #else
-#define VALID_OPTIONS   "c:CdD:ehp:v"
+#define VALID_OPTIONS   "c:CdD:qehp:v"
 #endif
 
 static BOOL ParseCommandLine(int argc, char *argv[])
@@ -172,6 +174,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 		{ (char *)"daemon", 0, NULL, 'd' },
 		{ (char *)"debug", 1, NULL, 'D' },
 		{ (char *)"help", 0, NULL, 'h' },
+		{ (char *)"quiet", 1, NULL, 'q' },
 #ifdef _WIN32
 		{ (char *)"check-service", 0, NULL, '!' },
 		{ (char *)"dump", 1, NULL, '~' },
@@ -226,6 +229,8 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 					g_nDebugLevel = 0;
 				}
 				break;
+      case 'q': // disable interactive console
+        g_bDisableInput = TRUE;
 			case 'e':
 				g_bCheckDB = TRUE;
 				break;
