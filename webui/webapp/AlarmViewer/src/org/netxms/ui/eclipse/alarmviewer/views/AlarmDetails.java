@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.window.Window;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -139,7 +140,6 @@ public class AlarmDetails extends ViewPart
 		
 		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 		scroller.setExpandVertical(true);
-		//scroller.getVerticalBar().setIncrement(20);
 		
 		formContainer = new Composite(scroller, SWT.NONE);
 		GridLayout containerLayout = new GridLayout();
@@ -244,12 +244,12 @@ public class AlarmDetails extends ViewPart
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
+		gd.verticalAlignment = SWT.FILL;
 		section.setLayoutData(gd);
 
 		final Composite clientArea = toolkit.createComposite(section);
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		layout.makeColumnsEqualWidth = true;
+		layout.numColumns = 3;
 		clientArea.setLayout(layout);
 		section.setClient(clientArea);
 
@@ -257,30 +257,69 @@ public class AlarmDetails extends ViewPart
 		toolkit.adapt(alarmSeverity);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
+		gd.verticalAlignment = SWT.TOP;
 		alarmSeverity.setLayoutData(gd);
+		
+		Label sep = new Label(clientArea, SWT.VERTICAL | SWT.SEPARATOR);
+		gd = new GridData();
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessVerticalSpace = true;
+		gd.verticalSpan = 3;
+		sep.setLayoutData(gd);
+		
+		final ScrolledComposite textContainer = new ScrolledComposite(clientArea, SWT.H_SCROLL | SWT.V_SCROLL) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Point computeSize(int wHint, int hHint, boolean changed)
+			{
+				Point size = super.computeSize(wHint, hHint, changed);
+				if (size.y > 200)
+					size.y = 200;
+				return size;
+			}
+		};
+		textContainer.setExpandHorizontal(true);
+		textContainer.setExpandVertical(true);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.verticalAlignment = SWT.FILL;
+		gd.verticalSpan = 3;
+		textContainer.setLayoutData(gd);
+		textContainer.addControlListener(new ControlAdapter() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void controlResized(ControlEvent e)
+			{
+				Point size = alarmText.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+				alarmText.setSize(size.x, size.y);
+				textContainer.setMinWidth(size.x);
+				textContainer.setMinHeight(size.y);
+			}
+		});
+
+		int bs = toolkit.getBorderStyle();
+		toolkit.setBorderStyle(SWT.NONE);
+		alarmText = toolkit.createLabel(textContainer, "", SWT.NONE); //$NON-NLS-1$
+		toolkit.setBorderStyle(bs);
+		alarmText.setData(RWT.MARKUP_ENABLED, Boolean.TRUE);
+		textContainer.setContent(alarmText);
 
 		alarmState = new CLabel(clientArea, SWT.NONE);
 		toolkit.adapt(alarmState);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
+		gd.verticalAlignment = SWT.TOP;
 		alarmState.setLayoutData(gd);
 		
 		alarmSource = new CLabel(clientArea, SWT.NONE);
 		toolkit.adapt(alarmSource);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
+		gd.verticalAlignment = SWT.TOP;
 		alarmSource.setLayoutData(gd);
-
-		alarmText = toolkit.createLabel(clientArea, "", SWT.WRAP); //$NON-NLS-1$
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		alarmText.setLayoutData(gd);
 	}
 	
 	/**
@@ -516,7 +555,7 @@ public class AlarmDetails extends ViewPart
 		alarmSource.setImage((object != null) ? wbLabelProvider.getImage(object) : SharedIcons.IMG_UNKNOWN_OBJECT);
 		alarmSource.setText((object != null) ? object.getObjectName() : ("[" + Long.toString(alarm.getSourceObjectId()) + "]")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		alarmText.setText(alarm.getMessage());
+		alarmText.setText(alarm.getMessage().replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\r", "").replace("\n", "<br/>"));
 	}
 
 	/* (non-Javadoc)

@@ -264,7 +264,16 @@ public class AlarmDetails extends ViewPart
 		gd.verticalSpan = 3;
 		sep.setLayoutData(gd);
 		
-		final ScrolledComposite textContainer = new ScrolledComposite(clientArea, SWT.H_SCROLL | SWT.V_SCROLL);
+		final ScrolledComposite textContainer = new ScrolledComposite(clientArea, SWT.H_SCROLL | SWT.V_SCROLL) {
+			@Override
+			public Point computeSize(int wHint, int hHint, boolean changed)
+			{
+				Point size = super.computeSize(wHint, hHint, changed);
+				if (size.y > 200)
+					size.y = 200;
+				return size;
+			}
+		};
 		textContainer.setExpandHorizontal(true);
 		textContainer.getHorizontalBar().setIncrement(20);
 		textContainer.setExpandVertical(true);
@@ -280,8 +289,6 @@ public class AlarmDetails extends ViewPart
 			public void controlResized(ControlEvent e)
 			{
 				Point size = alarmText.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-				if (size.y > 300)
-					size.y = 300;
 				alarmText.setSize(size.x, size.y);
 				textContainer.setMinWidth(size.x);
 				textContainer.setMinHeight(size.y);
