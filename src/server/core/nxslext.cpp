@@ -684,7 +684,58 @@ static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	((NetObj *)object->getData())->setName(argv[1]->getValueAsCString());
 
 	*ppResult = new NXSL_Value;
+	return 0;
+}
 
+/**
+ * Manage object (set to managed state)
+ * Syntax:
+ *    ManageObject(object)
+ * where:
+ *     object - NetXMS object (Node, Interface, or NetObj)
+ * Return value:
+ *     null
+ */
+static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	((NetObj *)object->getData())->setMgmtStatus(TRUE);
+
+	*ppResult = new NXSL_Value;
+	return 0;
+}
+
+/**
+ * Unmanage object (set to unmanaged state)
+ * Syntax:
+ *    UnmanageObject(object)
+ * where:
+ *     object - NetXMS object (Node, Interface, or NetObj)
+ * Return value:
+ *     null
+ */
+static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	((NetObj *)object->getData())->setMgmtStatus(FALSE);
+
+	*ppResult = new NXSL_Value;
 	return 0;
 }
 
@@ -1007,6 +1058,37 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
 }
 
 /**
+ * Read parameter's value from agent
+ * Syntax:
+ *    AgentReadParameter(object, name)
+ * where:
+ *     object - NetXMS node object
+ *     name   - name of the parameter
+ * Return value:
+ *     paramater's value on success and null on failure
+ */
+static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	TCHAR buffer[MAX_RESULT_LENGTH];
+	DWORD rcc = ((Node *)object->getData())->getItemFromAgent(argv[1]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
+	if (rcc == DCE_SUCCESS)
+		*ppResult = new NXSL_Value(buffer);
+	else
+		*ppResult = new NXSL_Value;
+	return 0;
+}
+
+/**
  * Get server's configuration variable
  * First argument is a variable name
  * Optional second argumet is default value
@@ -1039,6 +1121,7 @@ static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **
 static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
 	{ _T("map"), F_map, -1 },
+	{ _T("AgentReadParameter"), F_AgentReadParameter, 2 },
 	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, 1 },
    { _T("GetConfigurationVariable"), F_GetConfigurationVariable, -1 },
    { _T("GetCustomAttribute"), F_GetCustomAttribute, 2 },
@@ -1051,25 +1134,27 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { _T("GetObjectParents"), F_GetObjectParents, 1 },
 	{ _T("FindNodeObject"), F_FindNodeObject, 2 },
 	{ _T("FindObject"), F_FindObject, -1 },
+   { _T("ManageObject"), F_ManageObject, 1 },
 	{ _T("PostEvent"), F_PostEvent, -1 },
+	{ _T("RenameObject"), F_RenameObject, 2 },
    { _T("SetCustomAttribute"), F_SetCustomAttribute, 3 },
    { _T("SetEventParameter"), F_SetEventParameter, 3 },
 	{ _T("SNMPGet"), F_SNMPGet, 2 },
 	{ _T("SNMPGetValue"), F_SNMPGetValue, 2 },
 	{ _T("SNMPSet"), F_SNMPSet, -1 /* 3 or 4 */ },
-	{ _T("SNMPWalk"), F_SNMPWalk, 2 }
+	{ _T("SNMPWalk"), F_SNMPWalk, 2 },
+   { _T("UnmanageObject"), F_UnmanageObject, 1 }
 };
 
 /**
- * Additional server functions to manage containers (disabled by default)
+ * Additional server functions to manage objects (disabled by default)
  */
 static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 {
 	{ _T("BindObject"), F_BindObject, 2 },
 	{ _T("CreateContainer"), F_CreateContainer, 2 },
 	{ _T("RemoveContainer"), F_RemoveContainer, 1 },
-	{ _T("RenameObject"), F_RenameObject, 2 },
-	{ _T("UnbindObject"), F_UnbindObject, 2 },
+	{ _T("UnbindObject"), F_UnbindObject, 2 }
 };
 
 /**

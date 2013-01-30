@@ -51,20 +51,16 @@ extern unsigned int g_dwNumMessages;
 extern const TCHAR *g_szMessages[];
 #endif
 
-
-//
-// Shutdown reasons
-//
-
+/**
+ * Shutdown reasons
+ */
 #define SHUTDOWN_DEFAULT	0
 #define SHUTDOWN_FROM_CONSOLE	1
 #define SHUTDOWN_BY_SIGNAL	2
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 extern Queue g_statusPollQueue;
 extern Queue g_configPollQueue;
 extern Queue g_topologyPollQueue;

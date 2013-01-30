@@ -3,6 +3,7 @@
 *
 
 - NXSL function PostEvent can use event names instead of event codes
+- New NXSL functions: AgentReadParameter, ManageObject, UnmanageObject
 - Management console:
 	- Network map functionality in web console now in sync with desktop version
 	- Alarm details view improved
