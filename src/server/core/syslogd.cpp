@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,18 +24,14 @@
 #include <nxlog.h>
 #include <nxlpapi.h>
 
-
-//
-// Constants
-//
-
+/**
+ * Max syslog message length
+ */
 #define MAX_SYSLOG_MSG_LEN    1024
 
-
-//
-// Queued syslog message structure
-//
-
+/**
+ * Queued syslog message structure
+ */
 struct QUEUED_SYSLOG_MESSAGE
 {
    DWORD dwSourceIP;
@@ -43,16 +39,13 @@ struct QUEUED_SYSLOG_MESSAGE
    char *psMsg;
 };
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static QWORD m_qwMsgId = 1;
 static Queue *m_pSyslogQueue = NULL;
 static LogParser *m_parser = NULL;
 static MUTEX m_mutexParserAccess = INVALID_MUTEX_HANDLE;
-
 
 /**
  * Parse timestamp field
@@ -298,6 +291,7 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
    NX_SYSLOG_RECORD record;
    TCHAR szQuery[4096];
 
+	DbgPrintf(6, _T("ProcessSyslogMessage: Raw syslog message to process:\n%hs"), psMsg);
    if (ParseSyslogMessage(psMsg, nMsgLen, &record))
    {
       record.qwMsgId = m_qwMsgId++;
@@ -316,6 +310,10 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
       // Send message to all connected clients
       EnumerateClientSessions(BroadcastSyslogMessage, &record);
 
+		TCHAR ipAddr[32];
+		DbgPrintf(6, _T("Syslog message: ipAddr=%s objectId=%d tag=\"%hs\" msg=\"%hs\""),
+		          IpToStr(dwSourceIP, ipAddr), record.dwSourceObject, record.szTag, record.szMessage);
+
 		MutexLock(m_mutexParserAccess);
 		if ((record.dwSourceObject != 0) && (m_parser != NULL))
 		{
@@ -333,6 +331,10 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 		}
 		MutexUnlock(m_mutexParserAccess);
    }
+	else
+	{
+		DbgPrintf(6, _T("ProcessSyslogMessage: Cannot parse syslog message"));
+	}
 }
 
 /**
@@ -355,11 +357,9 @@ static THREAD_RESULT THREAD_CALL SyslogProcessingThread(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// Queue syslog message for processing
-//
-
+/**
+ * Queue syslog message for processing
+ */
 static void QueueSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 {
    QUEUED_SYSLOG_MESSAGE *pMsg;
@@ -367,15 +367,13 @@ static void QueueSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
    pMsg = (QUEUED_SYSLOG_MESSAGE *)malloc(sizeof(QUEUED_SYSLOG_MESSAGE));
    pMsg->dwSourceIP = dwSourceIP;
    pMsg->nBytes = nMsgLen;
-   pMsg->psMsg = (char *)nx_memdup(psMsg, nMsgLen);
+   pMsg->psMsg = (char *)nx_memdup(psMsg, nMsgLen + 1);
    m_pSyslogQueue->Put(pMsg);
 }
 
-
-//
-// Callback for syslog parser
-//
-
+/**
+ * Callback for syslog parser
+ */
 static void SyslogParserCallback(DWORD eventCode, const TCHAR *eventName, const TCHAR *line, int paramCount,
 										   TCHAR **params, DWORD objectId, void *userArg)
 {
@@ -398,11 +396,9 @@ static void SyslogParserCallback(DWORD eventCode, const TCHAR *eventName, const 
 	          plist[28], plist[29], plist[30], plist[31]);
 }
 
-
-//
-// Event name resolver
-//
-
+/**
+ * Event name resolver
+ */
 static bool EventNameResolver(const TCHAR *name, DWORD *code)
 {
 	EVENT_TEMPLATE *event;
@@ -417,11 +413,9 @@ static bool EventNameResolver(const TCHAR *name, DWORD *code)
 	return success;
 }
 
-
-//
-// Create syslog parser from config
-//
-
+/**
+ * Create syslog parser from config
+ */
 static void CreateParserFromConfig()
 {
 	char *xml;
@@ -445,36 +439,33 @@ static void CreateParserFromConfig()
 	if (xml != NULL)
 	{
 		TCHAR parseError[256];
-
-		m_parser = new LogParser;
-		m_parser->setEventNameResolver(EventNameResolver);
-		if (m_parser->createFromXml(xml, -1, parseError, 256))
+		ObjectArray<LogParser> *parsers = LogParser::createFromXml(xml, -1, parseError, 256, EventNameResolver);
+		if ((parsers != NULL) && (parsers->size() > 0))
 		{
+			m_parser = parsers->get(0);
 			m_parser->setCallback(SyslogParserCallback);
 			DbgPrintf(3, _T("syslogd: parser successfully created from config"));
 		}
 		else
 		{
-			delete_and_null(m_parser);
 			nxlog_write(MSG_SYSLOG_PARSER_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", parseError);
 		}
 		free(xml);
+		delete parsers;
 	}
 	MutexUnlock(m_mutexParserAccess);
 }
 
-
-//
-// Syslog messages receiver thread
-//
-
+/**
+ * Syslog messages receiver thread
+ */
 THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
 {
    SOCKET hSocket;
    struct sockaddr_in addr;
    int nBytes, nPort, nRet;
    socklen_t nAddrLen;
-   char sMsg[MAX_SYSLOG_MSG_LEN];
+   char sMsg[MAX_SYSLOG_MSG_LEN + 1];
    DB_RESULT hResult;
    THREAD hProcessingThread;
    fd_set rdfs;
@@ -546,6 +537,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
                            (struct sockaddr *)&addr, &nAddrLen);
          if (nBytes > 0)
          {
+				sMsg[nBytes] = 0;
             QueueSyslogMessage(sMsg, nBytes, ntohl(addr.sin_addr.s_addr));
          }
          else
@@ -571,11 +563,9 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// Create NXCP message from NX_SYSLOG_RECORD structure
-//
-
+/**
+ * Create NXCP message from NX_SYSLOG_RECORD structure
+ */
 void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_SYSLOG_RECORD *pRec)
 {
    DWORD dwId = VID_SYSLOG_MSG_BASE;
@@ -591,11 +581,9 @@ void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_SYSLOG_RECORD *pRec)
 	pMsg->SetVariableFromMBString(dwId++, pRec->szMessage);
 }
 
-
-//
-// Reinitialize parser on configuration change
-//
-
+/**
+ * Reinitialize parser on configuration change
+ */
 void ReinitializeSyslogParser()
 {
 	if (m_mutexParserAccess == INVALID_MUTEX_HANDLE)

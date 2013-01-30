@@ -191,7 +191,8 @@ public:
 	LogParser(LogParser *src);
 	~LogParser();
 	
-	static ObjectArray<LogParser> *createFromXml(const char *xml, int xmlLen = -1, TCHAR *errorText = NULL, int errBufSize = 0);
+	static ObjectArray<LogParser> *createFromXml(const char *xml, int xmlLen = -1, 
+		TCHAR *errorText = NULL, int errBufSize = 0, bool (*eventResolver)(const TCHAR *, DWORD *) = NULL);
 
 	void setFileName(const TCHAR *name);
 	const TCHAR *getFileName() { return m_fileName; }

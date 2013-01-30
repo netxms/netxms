@@ -684,14 +684,15 @@ static void CharData(void *userData, const XML_Char *s, int len)
  * Create parser configuration from XML. Returns array of identical parsers,
  * one for each <file> tag in source XML. Resulting parsers only differs with file names.
  */
-ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TCHAR *errorText, int errBufSize)
+ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TCHAR *errorText, int errBufSize, bool (*eventResolver)(const TCHAR *, DWORD *))
 {
-	ObjectArray<LogParser>* parsers = NULL;
+	ObjectArray<LogParser> *parsers = NULL;
 	bool success;
 
 	XML_Parser parser = XML_ParserCreate(NULL);
 	XML_PARSER_STATE state;
 	state.parser = new LogParser;
+	state.parser->setEventNameResolver(eventResolver);
 	state.state = -1;
 	XML_SetUserData(parser, &state);
 	XML_SetElementHandler(parser, StartElement, EndElement);
@@ -708,25 +709,26 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 	{
 		success = false;
 		if (errorText != NULL)
-			_tcsncpy(errorText, state.errorText, errBufSize);
+			nx_strncpy(errorText, state.errorText, errBufSize);
 	}
 	else if (success)
 	{ 
-		if (parsers == NULL)
-			parsers = new ObjectArray<LogParser>;
-		for(int i = 0; i < state.files.getSize(); i++)
+		parsers = new ObjectArray<LogParser>;
+		if (state.files.getSize() > 0)
 		{
-			LogParser *p = (i > 0) ? new LogParser(state.parser) : state.parser;
-			p->setFileName(state.files.getValue(i));
-			p->setFileEncoding(*state.encodings.get(i));
-			parsers->add(p);
+			for(int i = 0; i < state.files.getSize(); i++)
+			{
+				LogParser *p = (i > 0) ? new LogParser(state.parser) : state.parser;
+				p->setFileName(state.files.getValue(i));
+				p->setFileEncoding(*state.encodings.get(i));
+				parsers->add(p);
+			}
 		}
-	}
-
-	if (!success && parsers != NULL)
-	{
-		delete parsers;
-		parsers = NULL;
+		else
+		{
+			// It is possible to have parser without <file> tag, syslog parser for example
+			parsers->add(state.parser);
+		}
 	}
 
 	return parsers;

@@ -367,11 +367,10 @@ BOOL LIBNXDB_EXPORTABLE DBGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column
 	return name != NULL;
 }
 
-
-//
-// Get field's value
-//
-
+/**
+ * Get field's value. If buffer is NULL, dynamically allocated string will be returned.
+ * Caller is responsible for destroying it by calling free().
+ */
 TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, TCHAR *pszBuffer, int nBufLen)
 {
 #ifdef UNICODE
