@@ -298,7 +298,7 @@ public class AlarmComments extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().AlarmComments_GetError;
+				return Messages.get(getDisplay()).AlarmComments_GetError;
 			}
 		}.start();
 	}
@@ -356,7 +356,7 @@ public class AlarmComments extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().AlarmComments_AddError;
+				return Messages.get(getDisplay()).AlarmComments_AddError;
 			}
 		}.start();
 	}

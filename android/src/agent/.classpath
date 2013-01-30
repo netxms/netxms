@@ -4,8 +4,8 @@
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
-	<classpathentry kind="lib" path="libs/netxms-base-1.2.5.jar"/>
-	<classpathentry kind="lib" path="libs/netxms-mobile-agent-1.2.5.jar"/>
 	<classpathentry kind="lib" path="libs/acra-4.4.0.jar"/>
+	<classpathentry kind="lib" path="libs/netxms-base-1.2.6.jar"/>
+	<classpathentry kind="lib" path="libs/netxms-mobile-agent-1.2.6.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

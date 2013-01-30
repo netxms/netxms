@@ -472,7 +472,7 @@ public class AlarmDetails extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().AlarmDetails_RefreshJobError;
+				return Messages.get(getDisplay()).AlarmDetails_RefreshJobError;
 			}
 		}.start();
 	}
@@ -533,7 +533,7 @@ public class AlarmDetails extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().AlarmComments_AddError;
+				return Messages.get(getDisplay()).AlarmComments_AddError;
 			}
 		}.start();
 	}

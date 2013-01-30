@@ -110,25 +110,25 @@ public class LoginJob implements IRunnableWithProgress
 			session.connect();
 			monitor.worked(40);
 
-			monitor.setTaskName(Messages.get().LoginJob_SyncObjects);
+			monitor.setTaskName(Messages.get(display).LoginJob_SyncObjects);
 			session.syncObjects();
 			monitor.worked(25);
 
-			monitor.setTaskName(Messages.get().LoginJob_SyncUsers);
+			monitor.setTaskName(Messages.get(display).LoginJob_SyncUsers);
 			session.syncUserDatabase();
 			monitor.worked(5);
 
-			monitor.setTaskName(Messages.get().LoginJob_LoadingEvents);
+			monitor.setTaskName(Messages.get(display).LoginJob_LoadingEvents);
 			session.syncEventTemplates();
 			monitor.worked(5);
 
-			monitor.setTaskName(Messages.get().LoginJob_Subscribing);
+			monitor.setTaskName(Messages.get(display).LoginJob_Subscribing);
 			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS | NXCSession.CHANNEL_EVENTS);
 			monitor.worked(5);
 
 			RWT.getUISession(display).setAttribute("netxms.session", session); //$NON-NLS-1$
 			
-			monitor.setTaskName(Messages.get().LoginJob_InitExtensions);
+			monitor.setTaskName(Messages.get(display).LoginJob_InitExtensions);
 			//TweakletManager.postLogin(session);
 			callLoginListeners(session);
 			monitor.worked(5);

@@ -487,7 +487,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().AlarmList_SyncJobError;
+				return Messages.get(getDisplay()).AlarmList_SyncJobError;
 			}
 		}.start();
 	}
@@ -529,7 +529,7 @@ public class AlarmList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get().AcknowledgeAlarm_TaskName, alarms.length);
+				monitor.beginTask(Messages.get(getDisplay()).AcknowledgeAlarm_TaskName, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
@@ -544,7 +544,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().AcknowledgeAlarm_ErrorMessage;
+				return Messages.get(getDisplay()).AcknowledgeAlarm_ErrorMessage;
 			}
 		}.start();
 	}
@@ -564,7 +564,7 @@ public class AlarmList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get().AlarmList_ResolveAlarm, alarms.length);
+				monitor.beginTask(Messages.get(getDisplay()).AlarmList_ResolveAlarm, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
@@ -579,7 +579,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().AlarmList_CannotResoveAlarm;
+				return Messages.get(getDisplay()).AlarmList_CannotResoveAlarm;
 			}
 		}.start();
 	}
@@ -598,7 +598,7 @@ public class AlarmList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get().TerminateAlarm_TaskName, alarms.length);
+				monitor.beginTask(Messages.get(getDisplay()).TerminateAlarm_TaskName, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
@@ -613,7 +613,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().TerminateAlarm_ErrorMessage;
+				return Messages.get(getDisplay()).TerminateAlarm_ErrorMessage;
 			}
 		}.start();
 	}
