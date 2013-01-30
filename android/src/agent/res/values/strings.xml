@@ -4,7 +4,7 @@
 	<string name="exit">Disconnect &amp; Exit</string>
 	<string name="set">Set</string>
 	<string name="cancel">Cancel</string>
-	<string name="version">Version: %1$s (library %2$s, build %3$s)</string>
+	<string name="version">Version</string>
 	<string name="reconnect">Reconnect</string>
 	<string name="ok">OK</string>
 			
@@ -47,9 +47,9 @@
 	<string name="pref_location_force">Force position update</string>
 	<string name="pref_location_force_enabled">Force provider to acquire a new position (drains more battery but is more accurate)</string>
 	<string name="pref_location_force_disabled">Relay on position updated from other apps (saves battery but is less accurate)</string>
-	<string name="pref_location_activation_interval">Frequency</string>
+	<string name="pref_location_activation_interval">Frequency (min)</string>
 	<string name="pref_location_activation_interval_summary">How often should try to acquire a new position</string>
-	<string name="pref_location_activation_duration">Duration</string>
+	<string name="pref_location_activation_duration">Duration (min)</string>
 	<string name="pref_location_activation_duration_summary">For how long should wait to acquire a new position</string>
 	<string name="pref_location_strategy">Location strategy</string>
 	<string name="pref_notifications">Notifications</string>

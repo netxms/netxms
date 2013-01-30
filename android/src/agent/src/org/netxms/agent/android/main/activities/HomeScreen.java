@@ -8,7 +8,6 @@ import org.netxms.base.NXCommon;
 
 import android.content.ComponentName;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -51,7 +50,7 @@ public class HomeScreen extends AbstractClientActivity
 		lastConnText = (TextView)findViewById(R.id.LastConnection);
 		nextConnText = (TextView)findViewById(R.id.NextConnection);
 		TextView buildName = (TextView)findViewById(R.id.MainScreenVersion);
-		buildName.setText(getString(R.string.version, getAppVersion(), NXCommon.VERSION, getString(R.string.build_number)));
+		buildName.setText(getString(R.string.version) + " " + NXCommon.VERSION + " (" + getString(R.string.build_number) + ")");
 		refreshStatus();
 	}
 
@@ -204,23 +203,4 @@ public class HomeScreen extends AbstractClientActivity
 		editor.putBoolean(INTENTIONAL_EXIT_KEY, flag);
 		editor.commit();
 	}
-
-	/**
-	 * Get app version as defined in manifest
-	 * 
-	 */
-	private String getAppVersion()
-	{
-		String version = "";
-		try
-		{
-			version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
-		}
-		catch (PackageManager.NameNotFoundException e)
-		{
-			e.printStackTrace();
-		}
-		return version;
-	}
-
 }
