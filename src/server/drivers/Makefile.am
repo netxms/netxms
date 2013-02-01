@@ -8,4 +8,5 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = lib baystack cat2900xl catalyst cisco-esw dell-pwc ers8000 netscreen procurve
+SUBDIRS = lib baystack cat2900xl catalyst cisco-esw dell-pwc dlink \
+          ers8000 netscreen procurve
