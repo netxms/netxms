@@ -29,6 +29,16 @@ class Node;
 class Interface;
 
 /**
+ * LLDP local port info
+ */
+struct LLDP_LOCAL_PORT_INFO
+{
+	BYTE localId[256];
+	size_t localIdLen;
+	TCHAR ifDescr[192];
+};
+
+/**
  * Hop information structure
  */
 struct HOP_INFO
@@ -230,6 +240,8 @@ NetworkPath *TraceRoute(Node *pSrc, Node *pDest);
 void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth, bool includeEndNodes);
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
 Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch);
+
+ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp);
 
 LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node);
 void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs);

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,35 +23,11 @@
 #include "nxcore.h"
 
 /**
- * Local port info
- */
-struct LOCAL_PORT_INFO
-{
-	BYTE localId[256];
-	size_t localIdLen;
-	TCHAR ifDescr[192];
-};
-
-struct LOCAL_PORT_INFO_CACHE
-{
-	int count;
-	int allocated;
-	LOCAL_PORT_INFO *ports;
-};
-
-/**
  * Handler for walking local port table
  */
-static DWORD PortIdLookupHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static DWORD PortLocalInfoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
-	LOCAL_PORT_INFO_CACHE *pc = (LOCAL_PORT_INFO_CACHE *)arg;
-	if (pc->count == pc->allocated)
-	{
-		pc->allocated += 64;
-		pc->ports = (LOCAL_PORT_INFO *)realloc(pc->ports, sizeof(LOCAL_PORT_INFO) * pc->allocated);
-	}
-	
-	LOCAL_PORT_INFO *port = &pc->ports[pc->count++];
+	LLDP_LOCAL_PORT_INFO *port = new LLDP_LOCAL_PORT_INFO;
 	port->localIdLen = var->getRawValue(port->localId, 256);
 
 	SNMP_ObjectId *oid = var->GetName();
@@ -75,43 +51,32 @@ static DWORD PortIdLookupHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Tra
 		_tcscpy(port->ifDescr, _T("###error###"));
 	}
 
+	((ObjectArray<LLDP_LOCAL_PORT_INFO> *)arg)->add(port);
 	return SNMP_ERR_SUCCESS;
 }
 
 /**
- * Lookup interface description from local ID
+ * Get information about LLDP local ports
  */
-static bool LookupInterfaceDescription(LinkLayerNeighbors *nbs, BYTE *id, size_t idLen, TCHAR *ifName)
+ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp)
 {
-	LOCAL_PORT_INFO_CACHE *pc = (LOCAL_PORT_INFO_CACHE *)nbs->getData(1);
-	if (pc == NULL)
+	ObjectArray<LLDP_LOCAL_PORT_INFO> *ports = new ObjectArray<LLDP_LOCAL_PORT_INFO>(64, 64, true);
+	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.0.8802.1.1.2.1.3.7.1.3"), PortLocalInfoHandler, ports, FALSE) != SNMP_ERR_SUCCESS)
 	{
-		// local port info not cached yet
-		pc = (LOCAL_PORT_INFO_CACHE *)malloc(sizeof(LOCAL_PORT_INFO_CACHE));
-		memset(pc, 0, sizeof(LOCAL_PORT_INFO_CACHE));
-		SNMP_Transport *snmp = (SNMP_Transport *)nbs->getData(2);
-		if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.0.8802.1.1.2.1.3.7.1.3"), PortIdLookupHandler, pc, FALSE) != SNMP_ERR_SUCCESS)
-		{
-			safe_free(pc->ports);
-			free(pc);
-			return false;
-		}
-		nbs->setData(1, pc);
-		Node *node = (Node *)nbs->getData();
-		DbgPrintf(5, _T("LLDP: local port table cached for node %s [%d]"), node->Name(), (int)node->Id());
+		delete ports;
+		return false;
 	}
-	
-	for(int i = 0; i < pc->count; i++)
-		if ((idLen == pc->ports[i].localIdLen) && !memcmp(id, pc->ports[i].localId, idLen))
-		{
-			nx_strncpy(ifName, pc->ports[i].ifDescr, 130);
-			return true;
-		}
-	return false;
+	return ports;
 }
 
 /**
  * Find remote interface
+ *
+ * @param node remote node
+ * @param idType port ID type (value of lldpRemPortIdSubtype)
+ * @param id port ID
+ * @param idLen port ID length in bytes
+ * @param nbs link layer neighbors list which is being built
  */
 static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t idLen, LinkLayerNeighbors *nbs)
 {
@@ -153,7 +118,7 @@ static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t
 			}
 			return ifc;
 		case 7:	// local identifier
-			if (LookupInterfaceDescription(nbs, id, idLen, ifName))
+			if (node->ifDescrFromLldpLocalId(id, idLen, ifName))
 			{
 				ifc = node->findInterface(ifName);	/* TODO: find by cached ifName value */
 			}
@@ -261,11 +226,5 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 	nbs->setData(0, node);
 	nbs->setData(1, NULL);	// local port info cache
 	node->CallSnmpEnumerate(_T(".1.0.8802.1.1.2.1.4.1.1.5"), LLDPTopoHandler, nbs);
-	LOCAL_PORT_INFO_CACHE *pc = (LOCAL_PORT_INFO_CACHE *)nbs->getData(1);
-	if (pc != NULL)
-	{
-		safe_free(pc->ports);
-		free(pc);
-	}
 	DbgPrintf(5, _T("LLDP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
 }

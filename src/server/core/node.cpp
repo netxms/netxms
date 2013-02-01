@@ -70,6 +70,7 @@ Node::Node() : DataCollectionTarget()
 	m_sysDescription = NULL;
 	m_sysName = NULL;
 	m_lldpNodeId = NULL;
+	m_lldpLocalPortInfo = NULL;
    m_paramList = NULL;
 	m_tableList = NULL;
    m_dwPollerNode = 0;
@@ -136,6 +137,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_sysDescription = NULL;
 	m_sysName = NULL;
 	m_lldpNodeId = NULL;
+	m_lldpLocalPortInfo = NULL;
    m_paramList = NULL;
 	m_tableList = NULL;
    m_dwPollerNode = 0;
@@ -191,6 +193,7 @@ Node::~Node()
 	if (m_vlans != NULL)
 		m_vlans->decRefCount();
 	delete m_components;
+	delete m_lldpLocalPortInfo;
 }
 
 /**
@@ -1971,6 +1974,12 @@ bool Node::confPollSnmp(DWORD dwRqId)
 					UnlockData();
 				}
 			}
+
+			ObjectArray<LLDP_LOCAL_PORT_INFO> *lldpPorts = GetLLDPLocalPortInfo(pTransport);
+			LockData();
+			delete m_lldpLocalPortInfo;
+			m_lldpLocalPortInfo = lldpPorts;
+			UnlockData();
 		}
 		else
 		{
@@ -4810,4 +4819,32 @@ void Node::executeHookScript(const TCHAR *hookName)
 bool Node::isDataCollectionDisabled()
 {
 	return (m_dwFlags & NF_DISABLE_DATA_COLLECT) != 0;
+}
+
+/**
+ * Lookup interface description from LLDP local ID
+ *
+ * @param id port ID
+ * @param idLen port ID length in bytes
+ * @param ifName buffer for storing interface description
+ */
+bool Node::ifDescrFromLldpLocalId(BYTE *id, size_t idLen, TCHAR *ifName)
+{
+	bool result = false;
+	LockData();	
+	if (m_lldpLocalPortInfo != NULL)
+	{
+		for(int i = 0; i < m_lldpLocalPortInfo->size(); i++)
+		{
+			LLDP_LOCAL_PORT_INFO *port = m_lldpLocalPortInfo->get(i);
+			if ((idLen == port->localIdLen) && !memcmp(id, port->localId, idLen))
+			{
+				nx_strncpy(ifName, port->ifDescr, 130);
+				result = true;
+				break;
+			}
+		}
+	}
+	UnlockData();
+	return result;
 }

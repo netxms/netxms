@@ -156,6 +156,8 @@ mibs_DATA = \
 	JUNIPER-IVE-MIB.txt \
 	JVM-MANAGEMENT-MIB.txt \
 	LANNET-MIB.txt \
+	LLDP-EXT-DOT1-MIB.txt \
+	LLDP-EXT-DOT3-MIB.txt \
 	LLDP-MIB.txt \
 	LLDP-V2-MIB.txt \
 	LLDP-V2-TC-MIB.txt \

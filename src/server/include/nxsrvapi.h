@@ -111,30 +111,31 @@
 /**
  * Application flags
  */
-#define AF_DAEMON                         0x00000001
-#define AF_USE_SYSLOG                     0x00000002
-#define AF_ENABLE_NETWORK_DISCOVERY       0x00000004
-#define AF_ACTIVE_NETWORK_DISCOVERY       0x00000008
-#define AF_LOG_SQL_ERRORS                 0x00000010
-#define AF_DELETE_EMPTY_SUBNETS           0x00000020
-#define AF_ENABLE_SNMP_TRAPD              0x00000040
-#define AF_ENABLE_ZONING                  0x00000080
-#define AF_SYNC_NODE_NAMES_WITH_DNS       0x00000100
-#define AF_CHECK_TRUSTED_NODES            0x00000200
-#define AF_ENABLE_NXSL_CONTAINER_FUNCS		0x00000400
-#define AF_USE_FQDN_FOR_NODE_NAMES			0x00000800
-#define AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE	0x00001000
-#define AF_WRITE_FULL_DUMP                0x00080000
-#define AF_RESOLVE_NODE_NAMES             0x00100000
-#define AF_CATCH_EXCEPTIONS               0x00200000
-#define AF_INTERNAL_CA                    0x00400000
-#define AF_DB_LOCKED                      0x01000000
-#define AF_ENABLE_MULTIPLE_DB_CONN        0x02000000
-#define AF_DB_CONNECTION_LOST             0x04000000
-#define AF_NO_NETWORK_CONNECTIVITY        0x08000000
-#define AF_EVENT_STORM_DETECTED           0x10000000
-#define AF_SERVER_INITIALIZED             0x40000000
-#define AF_SHUTDOWN                       0x80000000
+#define AF_DAEMON                              0x00000001
+#define AF_USE_SYSLOG                          0x00000002
+#define AF_ENABLE_NETWORK_DISCOVERY            0x00000004
+#define AF_ACTIVE_NETWORK_DISCOVERY            0x00000008
+#define AF_LOG_SQL_ERRORS                      0x00000010
+#define AF_DELETE_EMPTY_SUBNETS                0x00000020
+#define AF_ENABLE_SNMP_TRAPD                   0x00000040
+#define AF_ENABLE_ZONING                       0x00000080
+#define AF_SYNC_NODE_NAMES_WITH_DNS            0x00000100
+#define AF_CHECK_TRUSTED_NODES                 0x00000200
+#define AF_ENABLE_NXSL_CONTAINER_FUNCS         0x00000400
+#define AF_USE_FQDN_FOR_NODE_NAMES             0x00000800
+#define AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE 0x00001000
+#define AF_DEBUG_CONSOLE_DISABLED              0x00002000
+#define AF_WRITE_FULL_DUMP                     0x00080000
+#define AF_RESOLVE_NODE_NAMES                  0x00100000
+#define AF_CATCH_EXCEPTIONS                    0x00200000
+#define AF_INTERNAL_CA                         0x00400000
+#define AF_DB_LOCKED                           0x01000000
+#define AF_ENABLE_MULTIPLE_DB_CONN             0x02000000
+#define AF_DB_CONNECTION_LOST                  0x04000000
+#define AF_NO_NETWORK_CONNECTIVITY             0x08000000
+#define AF_EVENT_STORM_DETECTED                0x10000000
+#define AF_SERVER_INITIALIZED                  0x40000000
+#define AF_SHUTDOWN                            0x80000000
 
 /**
  * Encryption usage policies

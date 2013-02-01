@@ -39,7 +39,6 @@
  * Global data
  */
 BOOL g_bCheckDB = FALSE;
-BOOL g_bDisableInput = FALSE;
 
 /**
  * Help text
@@ -229,8 +228,9 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 					g_nDebugLevel = 0;
 				}
 				break;
-      case 'q': // disable interactive console
-        g_bDisableInput = TRUE;
+			case 'q': // disable interactive console
+				g_dwFlags |= AF_DEBUG_CONSOLE_DISABLED;
+				break;
 			case 'e':
 				g_bCheckDB = TRUE;
 				break;

@@ -27,27 +27,21 @@
 #include <conio.h>
 #endif
 
-
-//
-// Severity codes
-//
-
+/**
+ * Severity codes
+ */
 #define MIBC_INFO      0
 #define MIBC_WARNING   1
 #define MIBC_ERROR     2
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 int ParseMIBFiles(int nNumFiles, char **ppszFileList, SNMP_MIBObject **ppRoot);
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static char m_szOutFile[MAX_PATH] = "netxms.mib";
 static int m_iNumFiles = 0;
 static char **m_ppFileList = NULL;

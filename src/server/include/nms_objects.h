@@ -824,6 +824,7 @@ protected:
 	TCHAR *m_sysDescription;  // Agent's System.Uname or SNMP sysDescr
 	TCHAR *m_sysName;				// SNMP sysName
 	TCHAR *m_lldpNodeId;			// lldpLocChassisId combined with lldpLocChassisIdSubtype, or NULL for non-LLDP nodes
+	ObjectArray<LLDP_LOCAL_PORT_INFO> *m_lldpLocalPortInfo;
 	NetworkDeviceDriver *m_driver;
 	void *m_driverData;
    StructArray<NXC_AGENT_PARAM> *m_paramList; // List of supported parameters
@@ -967,6 +968,7 @@ public:
    BOOL getNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
                    DWORD *pdwIfIndex, BOOL *pbIsVPN);
 	ComponentTree *getComponents();
+	bool ifDescrFromLldpLocalId(BYTE *id, size_t idLen, TCHAR *ifName);
 
 	void setRecheckCapsFlag() { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
    void setDiscoveryPollTimeStamp();
