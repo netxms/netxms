@@ -41,6 +41,7 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -559,8 +560,16 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		ImageSelectionDialog dlg = new ImageSelectionDialog(getSite().getShell());
 		if (dlg.open() != Window.OK)
 			return;
+		
+		UUID imageGuid = dlg.getLibraryImage().getGuid();
+		Rectangle imageBounds = dlg.getImage().getBounds();
 
-		// dlg.getImageObject();
+		NetworkMapDecoration element = new NetworkMapDecoration(mapPage.createElementId(), NetworkMapDecoration.IMAGE);
+		element.setSize(imageBounds.width, imageBounds.height);
+		element.setTitle(imageGuid.toString());
+		mapPage.addElement(element);
+
+		saveMap();
 	}
 
 	/**
@@ -630,6 +639,18 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			{
 				if (guid.equals(mapObject.getBackground()))
 					viewer.setBackgroundImage(ImageProvider.getInstance().getImage(guid));
+				
+				final String guidText = guid.toString();
+				for(NetworkMapElement e : mapPage.getElements())
+				{
+					if ((e instanceof NetworkMapDecoration) && 
+					    (((NetworkMapDecoration)e).getDecorationType() == NetworkMapDecoration.IMAGE) &&
+					    ((NetworkMapDecoration)e).getTitle().equals(guidText))
+					{
+						viewer.updateDecorationFigure((NetworkMapDecoration)e);
+						break;
+					}
+				}
 			}
 		});
 	}

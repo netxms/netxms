@@ -17,7 +17,7 @@
 	- Fixed bug in automatic connection on first start when agent was disabled
 	- Override for connection schedule on detecting change of connectivity (selectable)
 - New MIBs added: LLDP-EXT-DOT1-MIB, LLDP-EXT-DOT3-MIB
-- Fixed issues: #197, #204, #219, #222, #227, #229	
+- Fixed issues: #197, #204, #219, #222, #225, #227, #229	
 
 
 *

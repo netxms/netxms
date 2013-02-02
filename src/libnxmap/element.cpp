@@ -174,11 +174,9 @@ NetworkMapDecoration::NetworkMapDecoration(DWORD id, LONG decorationType) : Netw
 	m_height = 20;
 }
 
-
-//
-// Decoration element config constructor
-//
-
+/**
+ * Decoration element config constructor
+ */
 NetworkMapDecoration::NetworkMapDecoration(DWORD id, Config *config) : NetworkMapElement(id, config)
 {
 	m_decorationType = config->getValueInt(_T("/decorationType"), 0);
@@ -188,11 +186,9 @@ NetworkMapDecoration::NetworkMapDecoration(DWORD id, Config *config) : NetworkMa
 	m_height = config->getValueInt(_T("/height"), 0);
 }
 
-
-//
-// Decoration element NXCP constructor
-//
-
+/**
+ * Decoration element NXCP constructor
+ */
 NetworkMapDecoration::NetworkMapDecoration(CSCPMessage *msg, DWORD baseId) : NetworkMapElement(msg, baseId)
 {
 	m_decorationType = (LONG)msg->GetVariableLong(baseId + 10);
@@ -202,11 +198,9 @@ NetworkMapDecoration::NetworkMapDecoration(CSCPMessage *msg, DWORD baseId) : Net
 	m_height = (LONG)msg->GetVariableLong(baseId + 14);
 }
 
-
-//
-// Decoration element destructor
-//
-
+/**
+ * Decoration element destructor
+ */
 NetworkMapDecoration::~NetworkMapDecoration()
 {
 	safe_free(m_title);
