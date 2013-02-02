@@ -213,6 +213,18 @@ public class ExtendedGraphViewer extends GraphViewer
 			}
 		};
 	}
+	
+	/**
+	 * Update decoration figure
+	 * 
+	 * @param d map decoration element
+	 */
+	public void updateDecorationFigure(NetworkMapDecoration d)
+	{
+		DecorationFigure figure = decorationFigures.get(d.getId());
+		if (figure != null)
+			figure.refresh();
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.zest.core.viewers.GraphViewer#inputChanged(java.lang.Object, java.lang.Object)

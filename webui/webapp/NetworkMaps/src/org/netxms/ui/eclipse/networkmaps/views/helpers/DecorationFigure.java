@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import java.util.UUID;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Label;
@@ -29,8 +30,10 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
+import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
@@ -69,19 +72,35 @@ public class DecorationFigure extends Figure implements MouseListener, MouseMoti
 		this.labelProvider = labelProvider;
 		this.viewer = viewer;
 		
-		setSize(decoration.getWidth(), decoration.getHeight());
-
-		label = new Label(decoration.getTitle());
-		label.setFont(labelProvider.getTitleFont());
-		add(label);
-		
-		Dimension d = label.getPreferredSize();
-		label.setSize(d.width + LABEL_MARGIN * 2, d.height + 2);
-		label.setLocation(new Point(TITLE_OFFSET, 0));
-		label.setBackgroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(decoration.getColor())));
-		label.setForegroundColor(SharedColors.WHITE);
-		
-		createResizeHandle(BOTTOM_RIGHT);
+		if (decoration.getDecorationType() == NetworkMapDecoration.GROUP_BOX)
+		{
+			setSize(decoration.getWidth(), decoration.getHeight());
+	
+			label = new Label(decoration.getTitle());
+			label.setFont(labelProvider.getTitleFont());
+			add(label);
+			
+			Dimension d = label.getPreferredSize();
+			label.setSize(d.width + LABEL_MARGIN * 2, d.height + 2);
+			label.setLocation(new Point(TITLE_OFFSET, 0));
+			label.setBackgroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(decoration.getColor())));
+			label.setForegroundColor(SharedColors.WHITE);
+			
+			createResizeHandle(BOTTOM_RIGHT);
+		}
+		else	// Image
+		{
+			try
+			{
+				UUID guid = UUID.fromString(decoration.getTitle());
+				org.eclipse.swt.graphics.Rectangle bounds = ImageProvider.getInstance(Display.getCurrent()).getImage(guid).getBounds();
+				setSize(bounds.width, bounds.height);
+			}
+			catch(IllegalArgumentException e)
+			{			
+				setSize(decoration.getWidth(), decoration.getHeight());
+			}
+		}
 		
 		addMouseListener(this);
 	}
@@ -251,7 +270,16 @@ public class DecorationFigure extends Figure implements MouseListener, MouseMoti
 	 */
 	private void drawImage(Graphics gc)
 	{
-		
+		try
+		{
+			UUID guid = UUID.fromString(decoration.getTitle());
+			Image image = ImageProvider.getInstance(Display.getCurrent()).getImage(guid);
+			Rectangle rect = new Rectangle(getBounds());
+			gc.drawImage(image, rect.x, rect.y);
+		}
+		catch(IllegalArgumentException e)
+		{			
+		}
 	}
 
 	/**
@@ -369,6 +397,36 @@ public class DecorationFigure extends Figure implements MouseListener, MouseMoti
 	public final void setSelected(boolean selected)
 	{
 		this.selected = selected;
+		repaint();
+	}
+	
+	/**
+	 * Refresh figure
+	 */
+	public void refresh()
+	{
+		if (decoration.getDecorationType() == NetworkMapDecoration.GROUP_BOX)
+		{
+			setSize(decoration.getWidth(), decoration.getHeight());
+
+			label.setText(decoration.getTitle());
+			Dimension d = label.getPreferredSize();
+			label.setSize(d.width + LABEL_MARGIN * 2, d.height + 2);
+			label.setBackgroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(decoration.getColor())));
+		}
+		else	// Image
+		{
+			try
+			{
+				UUID guid = UUID.fromString(decoration.getTitle());
+				org.eclipse.swt.graphics.Rectangle bounds = ImageProvider.getInstance(Display.getCurrent()).getImage(guid).getBounds();
+				setSize(bounds.width, bounds.height);
+			}
+			catch(IllegalArgumentException e)
+			{			
+				setSize(decoration.getWidth(), decoration.getHeight());
+			}
+		}
 		repaint();
 	}
 }
