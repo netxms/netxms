@@ -183,6 +183,10 @@ public class PerformanceTab extends ObjectTab
 			}
 		}
 		
+		// Parent DCI ID can be template DCI ID. Replace it with real DCI ID.
+		for(PerfTabGraphSettings s : settings)
+			s.fixParentDciId(settings);
+		
 		Collections.sort(settings, new Comparator<PerfTabGraphSettings>() {
 			@Override
 			public int compare(PerfTabGraphSettings o1, PerfTabGraphSettings o2)

@@ -37,9 +37,11 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.DciList;
@@ -61,6 +63,7 @@ public class SelectDciDialog extends Dialog
 	private int dcObjectType = -1;
 	private long fixedNode;
 	private boolean enableEmptySelection = false;
+	private boolean allowTemplateItems = false;
 	
 	/**
 	 * @param parentShell
@@ -171,16 +174,22 @@ public class SelectDciDialog extends Dialog
 				public void selectionChanged(SelectionChangedEvent event)
 				{
 					GenericObject object = objectTree.getFirstSelectedObject2();
-					if ((object != null) && ((object instanceof Node) || (object instanceof MobileDevice)))
+					if ((object != null) && 
+					    ((object instanceof Node) || (object instanceof MobileDevice) ||
+					     (allowTemplateItems && ((object instanceof Template) || (object instanceof Cluster)))))
+					{
 						dciList.setNode(object);
+					}
 					else
+					{
 						dciList.setNode(null);
+					}
 				}
 			});
 		}
 		else
 		{
-			dciList.setNode((Node)((NXCSession)ConsoleSharedData.getSession()).findObjectById(fixedNode, Node.class));
+			dciList.setNode(((NXCSession)ConsoleSharedData.getSession()).findObjectById(fixedNode));
 		}
 		
 		return dialogArea;
@@ -272,5 +281,21 @@ public class SelectDciDialog extends Dialog
 	public final void setEnableEmptySelection(boolean enableEmptySelection)
 	{
 		this.enableEmptySelection = enableEmptySelection;
+	}
+
+	/**
+	 * @return the allowTemplateItems
+	 */
+	public final boolean isAllowTemplateItems()
+	{
+		return allowTemplateItems;
+	}
+
+	/**
+	 * @param allowTemplateItems the allowTemplateItems to set
+	 */
+	public final void setAllowTemplateItems(boolean allowTemplateItems)
+	{
+		this.allowTemplateItems = allowTemplateItems;
 	}
 }
