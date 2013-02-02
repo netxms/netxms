@@ -62,7 +62,7 @@ public class ObjectStatusChart extends PropertyPage
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
+		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
 		objectSelector.setLabel(Messages.ObjectStatusChart_RootObject);
 		objectSelector.setObjectClass(GenericObject.class);
 		objectSelector.setObjectId(config.getRootObject());

@@ -31,7 +31,6 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 /**
  * Event selector widget. Provides uniform way to display selected
  * event and change selection.
- *
  */
 public class EventSelector extends AbstractSelector
 {
@@ -53,7 +52,7 @@ public class EventSelector extends AbstractSelector
 	 */
 	public EventSelector(Composite parent, int style, boolean useHyperlink)
 	{
-		super(parent, style, useHyperlink ? USE_HYPERLINK : 0);
+		super(parent, style, (useHyperlink ? USE_HYPERLINK : 0) | SHOW_CLEAR_BUTTON);
 		setText(Messages.EventSelector_None);
 	}
 
@@ -83,6 +82,18 @@ public class EventSelector extends AbstractSelector
 				getTextControl().setToolTipText(null);
 			}
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
+	 */
+	@Override
+	protected void clearButtonHandler()
+	{
+		eventCode = 0;
+		setText(Messages.EventSelector_None);
+		setImage(null);
+		getTextControl().setToolTipText(null);
 	}
 
 	/**
@@ -146,10 +157,10 @@ public class EventSelector extends AbstractSelector
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getButtonToolTip()
+	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
 	 */
 	@Override
-	protected String getButtonToolTip()
+	protected String getSelectionButtonToolTip()
 	{
 		return Messages.EventSelector_Tooltip;
 	}

@@ -61,11 +61,14 @@ public class AbstractSelector extends Composite
 	public static final int USE_HYPERLINK = 0x0001;
 	public static final int HIDE_LABEL = 0x0002;
 	public static final int USE_TEXT = 0x0004;
+	public static final int SHOW_CLEAR_BUTTON = 0x0008;
 	
 	private Label label;
 	private Control text;
-	private Button button;
-	private ImageHyperlink link;
+	private Button selectionButton;
+	private Button clearingButton;
+	private ImageHyperlink selectionLink;
+	private ImageHyperlink clearingLink;
 	private Action actionCopy;
 	private Image scaledImage = null;
 	private Set<ModifyListener> modifyListeners = new HashSet<ModifyListener>(0);
@@ -88,7 +91,7 @@ public class AbstractSelector extends Composite
 		layout.marginBottom = 0;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
-		layout.numColumns = 2;
+		layout.numColumns = ((options & SHOW_CLEAR_BUTTON) != 0) ? 3 : 2;
 		setLayout(layout);
 		
 		if ((options & HIDE_LABEL) == 0)
@@ -96,7 +99,7 @@ public class AbstractSelector extends Composite
 			label = new Label(this, SWT.NONE);
 			GridData gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
-			gd.horizontalSpan = 2;
+			gd.horizontalSpan = layout.numColumns;
 			label.setLayoutData(gd);
 		}
 		
@@ -109,29 +112,46 @@ public class AbstractSelector extends Composite
 		
 		if ((options & USE_HYPERLINK) != 0)
 		{
-			link = new ImageHyperlink(this, SWT.NONE);
+			selectionLink = new ImageHyperlink(this, SWT.NONE);
 			gd = new GridData();
 			gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
-			link.setLayoutData(gd);
-			link.setImage(SharedIcons.IMG_FIND);
-			link.setToolTipText(getButtonToolTip());
-			link.addHyperlinkListener(new HyperlinkAdapter() {
+			selectionLink.setLayoutData(gd);
+			selectionLink.setImage(SharedIcons.IMG_FIND);
+			selectionLink.setToolTipText(getSelectionButtonToolTip());
+			selectionLink.addHyperlinkListener(new HyperlinkAdapter() {
 				@Override
 				public void linkActivated(HyperlinkEvent e)
 				{
 					selectionButtonHandler();
 				}
 			});
+			
+			if ((options & SHOW_CLEAR_BUTTON) != 0)
+			{
+				clearingLink = new ImageHyperlink(this, SWT.NONE);
+				gd = new GridData();
+				gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
+				clearingLink.setLayoutData(gd);
+				clearingLink.setImage(SharedIcons.IMG_CLEAR);
+				clearingLink.setToolTipText(getClearingButtonToolTip());
+				clearingLink.addHyperlinkListener(new HyperlinkAdapter() {
+					@Override
+					public void linkActivated(HyperlinkEvent e)
+					{
+						clearButtonHandler();
+					}
+				});
+			}			
 		}
 		else
 		{
-			button = new Button(this, SWT.PUSH);
+			selectionButton = new Button(this, SWT.PUSH);
 			gd = new GridData();
 			gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
-			button.setLayoutData(gd);
-			button.setText("..."); //$NON-NLS-1$
-			button.setToolTipText(getButtonToolTip());
-			button.addSelectionListener(new SelectionListener() {
+			selectionButton.setLayoutData(gd);
+			selectionButton.setImage(SharedIcons.IMG_FIND);
+			selectionButton.setToolTipText(getSelectionButtonToolTip());
+			selectionButton.addSelectionListener(new SelectionListener() {
 				@Override
 				public void widgetDefaultSelected(SelectionEvent e)
 				{
@@ -144,6 +164,29 @@ public class AbstractSelector extends Composite
 					selectionButtonHandler();
 				}
 			});
+			
+			if ((options & SHOW_CLEAR_BUTTON) != 0)
+			{
+				clearingButton = new Button(this, SWT.PUSH);
+				gd = new GridData();
+				gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
+				clearingButton.setLayoutData(gd);
+				clearingButton.setImage(SharedIcons.IMG_CLEAR);
+				clearingButton.setToolTipText(getClearingButtonToolTip());
+				clearingButton.addSelectionListener(new SelectionListener() {
+					@Override
+					public void widgetDefaultSelected(SelectionEvent e)
+					{
+						widgetSelected(e);
+					}
+		
+					@Override
+					public void widgetSelected(SelectionEvent e)
+					{
+						clearButtonHandler();
+					}
+				});
+			}
 		}
 		
 		createActions();
@@ -218,12 +261,29 @@ public class AbstractSelector extends Composite
 	}
 	
 	/**
+	 * Handler for clear button. This method intended to be overriden by subclasses.
+	 * Default implementation does nothing.
+	 */
+	protected void clearButtonHandler()
+	{
+	}
+	
+	/**
 	 * Returns tooltip text for selection button. Can be overridden by subclasses.
 	 * @return tooltip text for selection button
 	 */
-	protected String getButtonToolTip()
+	protected String getSelectionButtonToolTip()
 	{
 		return Messages.AbstractSelector_Select;
+	}
+
+	/**
+	 * Returns tooltip text for clear button. Can be overridden by subclasses.
+	 * @return tooltip text for clear button
+	 */
+	protected String getClearingButtonToolTip()
+	{
+		return "Clear selection";
 	}
 
 	/**
@@ -335,10 +395,10 @@ public class AbstractSelector extends Composite
 	public void setEnabled(boolean enabled)
 	{
 		text.setEnabled(enabled);
-		if (button != null)
-			button.setEnabled(enabled);
-		if (link != null)
-			link.setEnabled(enabled);
+		if (selectionButton != null)
+			selectionButton.setEnabled(enabled);
+		if (selectionLink != null)
+			selectionLink.setEnabled(enabled);
 		super.setEnabled(enabled);
 	}
 	

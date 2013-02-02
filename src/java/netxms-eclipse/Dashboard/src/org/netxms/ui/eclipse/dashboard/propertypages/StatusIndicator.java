@@ -52,7 +52,7 @@ public class StatusIndicator extends PropertyPage
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
 		
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
+		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
 		objectSelector.setLabel(Messages.StatusIndicator_Object);
 		objectSelector.setObjectClass(GenericObject.class);
 		objectSelector.setObjectId(config.getObjectId());

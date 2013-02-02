@@ -43,9 +43,9 @@ public class ObjectSelector extends AbstractSelector
 	 * @param parent
 	 * @param style
 	 */
-	public ObjectSelector(Composite parent, int style)
+	public ObjectSelector(Composite parent, int style, boolean showClearButton)
 	{
-		super(parent, style, 0);
+		super(parent, style, showClearButton ? SHOW_CLEAR_BUTTON : 0);
 		setText(emptySelectionName);
 	}
 
@@ -72,6 +72,17 @@ public class ObjectSelector extends AbstractSelector
 			}
 			fireModifyListeners();
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
+	 */
+	@Override
+	protected void clearButtonHandler()
+	{
+		objectId = 0;
+		setText(emptySelectionName);
+		fireModifyListeners();
 	}
 
 	/**

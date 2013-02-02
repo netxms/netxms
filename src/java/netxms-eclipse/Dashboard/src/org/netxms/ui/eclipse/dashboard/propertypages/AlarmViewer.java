@@ -52,7 +52,7 @@ public class AlarmViewer extends PropertyPage
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
 		
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
+		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
 		objectSelector.setLabel(Messages.AlarmViewer_RootObject);
 		objectSelector.setObjectClass(GenericObject.class);
 		objectSelector.setObjectId(config.getObjectId());

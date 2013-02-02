@@ -57,7 +57,7 @@ public class AvailabilityChart extends PropertyPage
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
 		
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
+		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
 		objectSelector.setLabel(Messages.AvailabilityChart_Object);
 		objectSelector.setObjectClass(ServiceContainer.class);
 		objectSelector.setObjectId(config.getObjectId());

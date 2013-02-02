@@ -66,7 +66,7 @@ public class LocalFileSelector extends AbstractSelector
 	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getButtonToolTip()
 	 */
 	@Override
-	protected String getButtonToolTip()
+	protected String getSelectionButtonToolTip()
 	{
 		return Messages.LocalFileSelector_Tooltip;
 	}

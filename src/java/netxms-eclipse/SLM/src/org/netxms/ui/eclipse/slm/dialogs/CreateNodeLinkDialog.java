@@ -86,7 +86,7 @@ public class CreateNodeLinkDialog extends Dialog
 		gd.widthHint = 300;
 		nameField.setLayoutData(gd);
 		
-		nodeField = new ObjectSelector(dialogArea, SWT.NONE);
+		nodeField = new ObjectSelector(dialogArea, SWT.NONE, false);
 		nodeField.setLabel(Messages.CreateNodeLinkDialog_Node);
 		nodeField.setObjectClass(Node.class);
 		gd = new GridData();

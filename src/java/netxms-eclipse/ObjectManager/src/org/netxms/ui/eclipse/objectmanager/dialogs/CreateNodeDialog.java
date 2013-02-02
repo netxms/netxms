@@ -190,8 +190,8 @@ public class CreateNodeDialog extends Dialog
 		checkDisablePing = new Button(optionsGroup, SWT.CHECK);
 		checkDisablePing.setText("Disable usage of &ICMP ping for all polls");
 		
-		agentProxySelector = new ObjectSelector(dialogArea, SWT.NONE);
-		agentProxySelector.setLabel("Proxy for NetXMS agent");
+		agentProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+		agentProxySelector.setLabel("Proxy for NetXMS agents");
 		agentProxySelector.setObjectClass(Node.class);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -199,7 +199,7 @@ public class CreateNodeDialog extends Dialog
 		gd.horizontalSpan = 2;
 		agentProxySelector.setLayoutData(gd);
 		
-		snmpProxySelector = new ObjectSelector(dialogArea, SWT.NONE);
+		snmpProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
 		snmpProxySelector.setLabel("Proxy for SNMP");
 		snmpProxySelector.setObjectClass(Node.class);
 		gd = new GridData();
@@ -210,7 +210,7 @@ public class CreateNodeDialog extends Dialog
 		
 		if (session.isZoningEnabled())
 		{
-			zoneSelector = new ObjectSelector(dialogArea, SWT.NONE);
+			zoneSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
 			zoneSelector.setLabel("Zone");
 			zoneSelector.setObjectClass(Zone.class);
 			gd = new GridData();

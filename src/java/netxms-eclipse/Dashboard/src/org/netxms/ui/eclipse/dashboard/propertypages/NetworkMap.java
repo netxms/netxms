@@ -51,7 +51,7 @@ public class NetworkMap extends PropertyPage
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
 		
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
+		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
 		objectSelector.setLabel(Messages.NetworkMap_NetworkMap);
 		objectSelector.setObjectClass(org.netxms.client.objects.NetworkMap.class);
 		objectSelector.setObjectId(config.getObjectId());

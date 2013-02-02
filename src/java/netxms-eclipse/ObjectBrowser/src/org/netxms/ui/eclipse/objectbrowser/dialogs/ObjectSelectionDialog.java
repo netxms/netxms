@@ -77,13 +77,27 @@ public class ObjectSelectionDialog extends Dialog
 	/**
 	 * Create filter for zone selection - it allows only zone and entire network obejcts.
 	 * 
-	 * @return Class filter for node selection
+	 * @return Class filter for zone selection
 	 */
 	public static Set<Integer> createZoneSelectionFilter()
 	{
-		HashSet<Integer> classFilter = new HashSet<Integer>(7);
+		HashSet<Integer> classFilter = new HashSet<Integer>(2);
 		classFilter.add(GenericObject.OBJECT_NETWORK);
 		classFilter.add(GenericObject.OBJECT_ZONE);
+		return classFilter;
+	}
+
+	/**
+	 * Create filter for network map selection.
+	 * 
+	 * @return Class filter for network map selection
+	 */
+	public static Set<Integer> createNetworkMapSelectionFilter()
+	{
+		HashSet<Integer> classFilter = new HashSet<Integer>(3);
+		classFilter.add(GenericObject.OBJECT_NETWORKMAPROOT);
+		classFilter.add(GenericObject.OBJECT_NETWORKMAPGROUP);
+		classFilter.add(GenericObject.OBJECT_NETWORKMAP);
 		return classFilter;
 	}
 

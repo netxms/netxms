@@ -108,7 +108,7 @@ public class NetworkServicePolling extends PropertyPage
 		gd.horizontalSpan = 2;
 		response.setLayoutData(gd);
 		
-		pollerNode = new ObjectSelector(dialogArea, SWT.NONE);
+		pollerNode = new ObjectSelector(dialogArea, SWT.NONE, true);
 		pollerNode.setLabel("Poller node");
 		pollerNode.setEmptySelectionName("<default>");
 		pollerNode.setObjectClass(Node.class);

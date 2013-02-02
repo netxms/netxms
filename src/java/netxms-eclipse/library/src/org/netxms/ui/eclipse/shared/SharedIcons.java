@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import org.netxms.ui.eclipse.library.Activator;
 
 /**
  * Shared console icons
- *
  */
 public class SharedIcons
 {
@@ -32,6 +31,7 @@ public class SharedIcons
 	public static ImageDescriptor ALARM;
 	public static ImageDescriptor CHECKBOX_OFF;
 	public static ImageDescriptor CHECKBOX_ON;
+	public static ImageDescriptor CLEAR;
 	public static ImageDescriptor CLEAR_LOG;
 	public static ImageDescriptor CLOSE;
 	public static ImageDescriptor COLLAPSE;
@@ -61,6 +61,7 @@ public class SharedIcons
 	public static Image IMG_ALARM;
 	public static Image IMG_CHECKBOX_OFF;
 	public static Image IMG_CHECKBOX_ON;
+	public static Image IMG_CLEAR;
 	public static Image IMG_CLEAR_LOG;
 	public static Image IMG_CLOSE;
 	public static Image IMG_COLLAPSE;
@@ -95,6 +96,7 @@ public class SharedIcons
 		ADD_OBJECT = Activator.getImageDescriptor("icons/add_obj.gif"); //$NON-NLS-1$
 		CHECKBOX_OFF = Activator.getImageDescriptor("icons/checkbox_off.png"); //$NON-NLS-1$
 		CHECKBOX_ON = Activator.getImageDescriptor("icons/checkbox_on.png"); //$NON-NLS-1$
+		CLEAR = Activator.getImageDescriptor("icons/clear.gif"); //$NON-NLS-1$
 		CLEAR_LOG = Activator.getImageDescriptor("icons/clear_log.gif"); //$NON-NLS-1$
 		CLOSE = Activator.getImageDescriptor("icons/close.gif"); //$NON-NLS-1$
 		COLLAPSE = Activator.getImageDescriptor("icons/collapse.png"); //$NON-NLS-1$
@@ -124,6 +126,7 @@ public class SharedIcons
 		IMG_ALARM = ALARM.createImage();
 		IMG_CHECKBOX_OFF = CHECKBOX_OFF.createImage();
 		IMG_CHECKBOX_ON = CHECKBOX_ON.createImage();
+		IMG_CLEAR = CLEAR.createImage();
 		IMG_CLEAR_LOG = CLEAR_LOG.createImage();
 		IMG_CLOSE = CLOSE.createImage();
 		IMG_COLLAPSE = COLLAPSE.createImage();
