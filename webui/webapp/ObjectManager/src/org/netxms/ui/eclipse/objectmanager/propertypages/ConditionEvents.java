@@ -98,7 +98,7 @@ public class ConditionEvents extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		deactivationEvent.setLayoutData(gd);
 
-		sourceObject = new ObjectSelector(eventGroup, SWT.NONE);
+		sourceObject = new ObjectSelector(eventGroup, SWT.NONE, true);
 		sourceObject.setLabel("Source object for events");
 		sourceObject.setEmptySelectionName("<server>");
 		sourceObject.setObjectId(object.getEventSourceObject());

@@ -94,7 +94,7 @@ public class EnterIpAddressDlg extends Dialog
 
       if (zoningEnabled)
       {
-	      objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
+	      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
 	      objectSelector.setLabel("Zone");
 	      objectSelector.setObjectClass(Zone.class);
 	      objectSelector.setClassFilter(ObjectSelectionDialog.createZoneSelectionFilter());

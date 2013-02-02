@@ -31,6 +31,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -75,10 +76,11 @@ public class MapAppearance extends PropertyPage
       image.setImageGuid(object.getImage(), false);
       
       // Submap
-      submap = new ObjectSelector(dialogArea, SWT.NONE);
+      submap = new ObjectSelector(dialogArea, SWT.NONE, true);
       submap.setLabel("Drill-down submap");
       submap.setObjectClass(NetworkMap.class);
       submap.setObjectId(object.getSubmapId());
+      submap.setClassFilter(ObjectSelectionDialog.createNetworkMapSelectionFilter());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

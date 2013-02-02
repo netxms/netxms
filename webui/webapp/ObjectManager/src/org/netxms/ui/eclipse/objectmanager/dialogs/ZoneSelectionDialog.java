@@ -77,7 +77,7 @@ public class ZoneSelectionDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
       objectSelector.setLabel("Zone object");
       objectSelector.setObjectClass(Zone.class);
       objectSelector.setClassFilter(ObjectSelectionDialog.createZoneSelectionFilter());

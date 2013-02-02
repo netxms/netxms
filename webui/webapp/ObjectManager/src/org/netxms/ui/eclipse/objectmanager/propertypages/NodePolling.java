@@ -82,7 +82,7 @@ public class NodePolling extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		servicePollGroup.setLayoutData(gd);
 		
-		pollerNode = new ObjectSelector(servicePollGroup, SWT.NONE);
+		pollerNode = new ObjectSelector(servicePollGroup, SWT.NONE, true);
 		pollerNode.setLabel("Poller node");
 		pollerNode.setObjectClass(Node.class);
 		pollerNode.setEmptySelectionName("<server>");

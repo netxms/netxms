@@ -59,7 +59,7 @@ public class ZoneCommunications extends PropertyPage
 		dialogLayout.marginHeight = 0;
 		dialogArea.setLayout(dialogLayout);
 
-		agentProxy = new ObjectSelector(dialogArea, SWT.NONE);
+		agentProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
 		agentProxy.setLabel("Default agent proxy");
 		agentProxy.setObjectId(zone.getAgentProxy());
 		GridData gd = new GridData();
@@ -67,7 +67,7 @@ public class ZoneCommunications extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		agentProxy.setLayoutData(gd);
 		
-		snmpProxy = new ObjectSelector(dialogArea, SWT.NONE);
+		snmpProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
 		snmpProxy.setLabel("Default SNMP proxy");
 		snmpProxy.setObjectId(zone.getSnmpProxy());
 		gd = new GridData();
@@ -75,7 +75,7 @@ public class ZoneCommunications extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		snmpProxy.setLayoutData(gd);
 		
-		icmpProxy = new ObjectSelector(dialogArea, SWT.NONE);
+		icmpProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
 		icmpProxy.setLabel("Default ICMP proxy");
 		icmpProxy.setObjectId(zone.getIcmpProxy());
 		gd = new GridData();

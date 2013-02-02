@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@ import org.netxms.ui.eclipse.epp.dialogs.SituationSelectionDialog;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
 
 /**
- * Event selector widget. Provides uniform way to display selected
- * event and change selection.
+ * Situation selector widget. Provides uniform way to display selected
+ * situation object and change selection.
  *
  */
 public class SituationSelector extends AbstractSelector
@@ -43,7 +43,7 @@ public class SituationSelector extends AbstractSelector
 	 */
 	public SituationSelector(Composite parent, int style)
 	{
-		super(parent, style, USE_TEXT);
+		super(parent, style, USE_TEXT | SHOW_CLEAR_BUTTON);
 		setText(Messages.SituationSelector_None);
 	}
 
@@ -71,6 +71,17 @@ public class SituationSelector extends AbstractSelector
 				getTextControl().setToolTipText(null);
 			}
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
+	 */
+	@Override
+	protected void clearButtonHandler()
+	{
+		situationId = 0;
+		setText(Messages.SituationSelector_None);
+		getTextControl().setToolTipText(null);
 	}
 
 	/**
@@ -102,10 +113,10 @@ public class SituationSelector extends AbstractSelector
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getButtonToolTip()
+	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
 	 */
 	@Override
-	protected String getButtonToolTip()
+	protected String getSelectionButtonToolTip()
 	{
 		return Messages.SituationSelector_Tooltip;
 	}

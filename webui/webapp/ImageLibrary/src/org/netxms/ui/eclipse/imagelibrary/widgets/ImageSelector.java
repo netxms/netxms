@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 
 /**
  * Image selector
- *
  */
 public class ImageSelector extends AbstractSelector implements ImageUpdateListener
 {
@@ -47,7 +46,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 	 */
 	public ImageSelector(Composite parent, int style)
 	{
-		super(parent, style, 0);
+		super(parent, style, SHOW_CLEAR_BUTTON);
 		ImageProvider.getInstance(getDisplay()).addUpdateListener(this);
 		addDisposeListener(new DisposeListener() {
 			private static final long serialVersionUID = 1L;
@@ -87,10 +86,22 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getButtonToolTip()
+	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
 	 */
 	@Override
-	protected String getButtonToolTip()
+	protected void clearButtonHandler()
+	{
+		setText("<default>");
+		setImage(null);
+		imageGuid = NXCommon.EMPTY_GUID;
+		getParent().layout();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
+	 */
+	@Override
+	protected String getSelectionButtonToolTip()
 	{
 		return "Select image from image library";
 	}

@@ -108,7 +108,7 @@ public class CreateNetworkMapDialog extends Dialog
 			}
       });
       
-      seedObjectSelector = new ObjectSelector(dialogArea, SWT.NONE);
+      seedObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
       seedObjectSelector.setLabel("Seed node");
       seedObjectSelector.setObjectClass(Node.class);
       seedObjectSelector.setEnabled(false);

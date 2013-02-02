@@ -2450,6 +2450,7 @@ webui/webapp/Core/icons/alarm.png -text
 webui/webapp/Core/icons/app_settings.png -text
 webui/webapp/Core/icons/checkbox_off.png -text
 webui/webapp/Core/icons/checkbox_on.png -text
+webui/webapp/Core/icons/clear.gif -text
 webui/webapp/Core/icons/clear_log.gif -text
 webui/webapp/Core/icons/close.gif -text
 webui/webapp/Core/icons/collapse.png -text

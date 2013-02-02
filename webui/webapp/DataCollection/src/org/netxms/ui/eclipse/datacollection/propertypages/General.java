@@ -317,7 +317,7 @@ public class General extends PropertyPage
       fd.top = new FormAttachment(checkUseCustomSnmpPort, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       customSnmpPort.setLayoutData(fd);
       
-      proxyNode = new ObjectSelector(groupData, SWT.NONE);
+      proxyNode = new ObjectSelector(groupData, SWT.NONE, true);
       proxyNode.setLabel(Messages.General_ProxyNode);
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);

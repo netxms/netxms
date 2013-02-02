@@ -118,7 +118,7 @@ public class MapLinkGeneral extends PropertyPage
 		radioColorObject.setSelection(object.getStatusObject() != 0);
 		radioColorObject.addSelectionListener(listener);
 
-		statusObject = new ObjectSelector(colorGroup, SWT.NONE);
+		statusObject = new ObjectSelector(colorGroup, SWT.NONE, true);
 		statusObject.setLabel("Status object");
 		statusObject.setObjectClass(GenericObject.class);
 		statusObject.setObjectId(object.getStatusObject());

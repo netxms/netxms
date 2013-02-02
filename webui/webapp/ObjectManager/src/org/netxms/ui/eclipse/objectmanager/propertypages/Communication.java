@@ -133,7 +133,7 @@ public class Communication extends PropertyPage
 		fd.top = new FormAttachment(0, 0);
 		agentPort.setLayoutData(fd);
 		
-		agentProxy = new ObjectSelector(agentGroup, SWT.NONE);
+		agentProxy = new ObjectSelector(agentGroup, SWT.NONE, true);
 		agentProxy.setLabel("Proxy");
 		agentProxy.setObjectId(node.getProxyNodeId());
 		fd = new FormData();
@@ -247,7 +247,7 @@ public class Communication extends PropertyPage
 		snmpPriv.select(node.getSnmpPrivMethod());
 		snmpPriv.setEnabled(node.getSnmpVersion() == Node.SNMP_VERSION_3);
 		
-		snmpProxy = new ObjectSelector(snmpGroup, SWT.NONE);
+		snmpProxy = new ObjectSelector(snmpGroup, SWT.NONE, true);
 		snmpProxy.setLabel("Proxy");
 		snmpProxy.setObjectId(node.getSnmpProxyId());
 		fd = new FormData();
