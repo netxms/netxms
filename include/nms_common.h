@@ -816,11 +816,9 @@ typedef struct tagPOINT
 #define IFTYPE_IEEE80212            55
 #define IFTYPE_FIBRECHANNEL         56
 
-
-//
-// IP Header -- RFC 791
-//
-
+/**
+ * IP Header -- RFC 791
+ */
 typedef struct tagIPHDR
 {
 	BYTE m_cVIHL;	         // Version and IHL
@@ -835,11 +833,9 @@ typedef struct tagIPHDR
 	struct in_addr m_iaDst;	// Internet Address - Destination
 } IPHDR;
 
-
-//
-// ICMP Header - RFC 792
-//
-
+/**
+ * ICMP Header - RFC 792
+ */
 typedef struct tagICMPHDR
 {
 	BYTE m_cType;			// Type
@@ -849,52 +845,40 @@ typedef struct tagICMPHDR
 	WORD m_wSeq;			// Sequence
 } ICMPHDR;
 
-
-//
-// INADDR_NONE can be undefined on some systems
-//
-
+/**
+ * INADDR_NONE can be undefined on some systems
+ */
 #ifndef INADDR_NONE
 #define INADDR_NONE	(0xFFFFFFFF)
 #endif
 
-
-//
-// Check if IP address is a broadcast
-//
-
+/**
+ * Check if IP address is a broadcast
+ */
 #define IsBroadcastAddress(addr, mask) (((addr) & (~(mask))) == (~(mask)))
 
-
-//
-// Check if given string is NULL and always return valid pointer
-//
-
+/**
+ * Check if given string is NULL and always return valid pointer
+ */
 #define CHECK_NULL(x)      ((x) == NULL ? ((TCHAR *)_T("(null)")) : (x))
 #define CHECK_NULL_A(x)    ((x) == NULL ? ((char *)"(null)") : (x))
 #define CHECK_NULL_EX(x)   ((x) == NULL ? ((TCHAR *)_T("")) : (x))
 #define CHECK_NULL_EX_A(x) ((x) == NULL ? ((char *)"") : (x))
 
-
-//
-// Free memory block if it isn't NULL
-//
-
+/**
+ * Free memory block if it isn't NULL
+ */
 #define safe_free(x) { if ((x) != NULL) free(x); }
 #define safe_free_and_null(x) { if ((x) != NULL) { free(x); x = NULL; } }
 
-
-//
-// delete object and nullify pointer
-//
-
+/**
+ * delete object and nullify pointer
+ */
 #define delete_and_null(x) { delete x; x = NULL; }
 
-
-//
-// Convert half-byte's value to hex digit and vice versa
-//
-
+/**
+ * Convert half-byte's value to hex digit and vice versa
+ */
 #define bin2hex(x) ((x) < 10 ? ((x) + _T('0')) : ((x) + (_T('A') - 10)))
 #ifdef UNICODE
 #define hex2bin(x) ((((x) >= _T('0')) && ((x) <= _T('9'))) ? ((x) - _T('0')) : \
@@ -904,11 +888,9 @@ typedef struct tagICMPHDR
                     (((toupper(x) >= 'A') && (toupper(x) <= 'F')) ? (toupper(x) - 'A' + 10) : 0))
 #endif
 
-
-//
-// Define min() and max() if needed
-//
-
+/**
+ * Define min() and max() if needed
+ */
 #ifndef min
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #endif
@@ -916,11 +898,9 @@ typedef struct tagICMPHDR
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
-
-//
-// Define _tcsicmp() for non-windows
-//
-
+/**
+ * Define _tcsicmp() for non-windows
+ */
 #ifndef _WIN32
 #define stricmp   strcasecmp
 #define strnicmp  strncasecmp
@@ -928,32 +908,24 @@ typedef struct tagICMPHDR
 #define wcsnicmp  wcsncasecmp
 #endif
 
-
-//
-// Compare two numbers and return -1, 0, or 1
-//
-
+/**
+ * Compare two numbers and return -1, 0, or 1
+ */
 #define COMPARE_NUMBERS(n1,n2) (((n1) < (n2)) ? -1 : (((n1) > (n2)) ? 1 : 0))
 
-
-//
-// Increment pointer for given number of bytes
-//
-
+/**
+ * Increment pointer for given number of bytes
+ */
 #define inc_ptr(ptr, step, ptype) ptr = (ptype *)(((char *)ptr) + step)
 
-
-//
-// Validate numerical value
-//
-
+/**
+ * Validate numerical value
+ */
 #define VALIDATE_VALUE(var,x,y,z) { if ((var < x) || (var > y)) var = z; }
 
-
-//
-// DCI (data collection item) data types
-//
-
+/**
+ * DCI (data collection item) data types
+ */
 #define DCI_DT_INT         0
 #define DCI_DT_UINT        1
 #define DCI_DT_INT64       2
@@ -963,22 +935,18 @@ typedef struct tagICMPHDR
 #define DCI_DT_NULL        6
 #define DCI_DT_DEPRECATED  255	/* used internally by agent */
 
-
-//
-// Insert parameter as string
-//
-
+/**
+ * Insert parameter as string
+ */
 #ifdef UNICODE
 #define STRING(x)   L#x
 #else
 #define STRING(x)   #x
 #endif
 
-
-//
-// Memory debug
-//
-
+/**
+ * Memory debug
+ */
 #ifdef NETXMS_MEMORY_DEBUG												
 
 #ifdef __cplusplus												

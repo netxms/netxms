@@ -705,37 +705,29 @@ enum
 #define SITUATION_INSTANCE_UPDATE   4
 #define SITUATION_INSTANCE_DELETE   5
 
-
-//
-// Report rendering formats
-//
-
+/**
+ * Report rendering formats
+ */
 #define REPORT_FORMAT_PDF           1
 #define REPORT_FORMAT_HTML          2
 
-
-//
-// Data collection object types
-//
-
+/**
+ * Data collection object types
+ */
 #define DCO_TYPE_GENERIC   0
 #define DCO_TYPE_ITEM      1
 #define DCO_TYPE_TABLE     2
 
-
-//
-// DCI flags
-//
-
+/**
+ * DCI flags
+ */
 #define DCF_ADVANCED_SCHEDULE       0x0001
 #define DCF_ALL_THRESHOLDS          0x0002
 #define DCF_RAW_VALUE_OCTET_STRING  0x0004
 
-
-//
-// SNMP raw types
-//
-
+/**
+ * SNMP raw types
+ */
 #define SNMP_RAWTYPE_NONE           0
 #define SNMP_RAWTYPE_INT32          1
 #define SNMP_RAWTYPE_UINT32         2
@@ -745,31 +737,25 @@ enum
 #define SNMP_RAWTYPE_IP_ADDR        6
 #define SNMP_RAWTYPE_MAC_ADDR       7
 
-
-//
-// Data sources
-//
-
+/**
+ * Data sources
+ */
 #define DS_INTERNAL           0
 #define DS_NATIVE_AGENT       1
 #define DS_SNMP_AGENT         2
 #define DS_CHECKPOINT_AGENT   3
 #define DS_PUSH_AGENT         4
 
-
-//
-// Item status
-//
-
+/**
+ * Item status
+ */
 #define ITEM_STATUS_ACTIVE          0
 #define ITEM_STATUS_DISABLED        1
 #define ITEM_STATUS_NOT_SUPPORTED   2
 
-
-//
-// Delta calculation methods for DCIs
-//
-
+/**
+ * Delta calculation methods for DCIs
+ */
 #define DCM_ORIGINAL_VALUE       0
 #define DCM_SIMPLE               1
 #define DCM_AVERAGE_PER_SECOND   2

@@ -3,11 +3,12 @@
 *
 
 - NXSL function PostEvent can use event names instead of event codes
-- New NXSL functions: AgentReadParameter, ManageObject, UnmanageObject
+- New NXSL functions: AgentReadParameter, CreateDCI, ManageObject, UnmanageObject
 - Management console:
 	- Network map functionality in web console now in sync with desktop version
 	- Alarm details view improved
 - 64bit interface counters in Windows agent
+- Improved LLDP support
 - Driver for D-Link switches
 - Android Agent:
 	- Changed name of configuration parameters (NB needs reconfiguration of agent!!!)
@@ -16,7 +17,7 @@
 	- Fixed bug in automatic connection on first start when agent was disabled
 	- Override for connection schedule on detecting change of connectivity (selectable)
 - New MIBs added: LLDP-EXT-DOT1-MIB, LLDP-EXT-DOT3-MIB
-- Fixed issues: #197, #222, #227	
+- Fixed issues: #197, #219, #222, #227	
 
 
 *

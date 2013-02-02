@@ -852,7 +852,8 @@ Interface *Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR
 
 				// Create new subnet object
 				// Ignore mask 255.255.255.255 - some point-to-point interfaces can have such mask
-				if ((dwIpAddr < 0xE0000000) && (dwNetMask != 0xFFFFFFFF))
+				// Ignore mask 255.255.255.254 - it's invalid
+				if ((dwIpAddr < 0xE0000000) && (dwNetMask != 0xFFFFFFFF) && (dwNetMask != 0xFFFFFFFE))
 				{
 					pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask, m_zoneId, bSyntheticMask);
 					NetObjInsert(pSubnet, TRUE);

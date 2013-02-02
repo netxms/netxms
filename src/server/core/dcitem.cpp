@@ -22,13 +22,11 @@
 
 #include "nxcore.h"
 
-
-//
-// Get DCI object
-// First argument is a node object (usually passed to script via $node variable),
-// and second is DCI ID
-//
-
+/**
+ * NXSL function: Get DCI object
+ * First argument is a node object (usually passed to script via $node variable),
+ * and second is DCI ID
+ */
 static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -55,13 +53,11 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	return 0;
 }
 
-
-//
-// Get DCI value from within transformation script
-// First argument is a node object (passed to script via $node variable),
-// and second is DCI ID
-//
-
+/**
+ * NXSL function: Get DCI value from within transformation script
+ * First argument is a node object (passed to script via $node variable),
+ * and second is DCI ID
+ */
 static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -88,11 +84,9 @@ static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 	return 0;
 }
 
-
-//
-// Internal implementation of GetDCIValueByName and GetDCIValueByDescription
-//
-
+/**
+ * Internal implementation of GetDCIValueByName and GetDCIValueByDescription
+ */
 static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 {
 	if (!argv[0]->isObject())
@@ -119,35 +113,29 @@ static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Valu
 	return 0;
 }
 
-
-//
-// Get DCI value from within transformation script
-// First argument is a node object (passed to script via $node variable),
-// and second is DCI name
-//
-
+/**
+ * NXSL function: Get DCI value from within transformation script
+ * First argument is a node object (passed to script via $node variable),
+ * and second is DCI name
+ */
 static int F_GetDCIValueByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	return GetDciValueExImpl(true, argc, argv, ppResult);
 }
 
-
-//
-// Get DCI value from within transformation script
-// First argument is a node object (passed to script via $node variable),
-// and second is DCI description
-//
-
+/**
+ * NXSL function: Get DCI value from within transformation script
+ * First argument is a node object (passed to script via $node variable),
+ * and second is DCI description
+ */
 static int F_GetDCIValueByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	return GetDciValueExImpl(false, argc, argv, ppResult);
 }
 
-
-//
-// Find DCI by name
-//
-
+/**
+ * NXSL function: Find DCI by name
+ */
 static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -166,11 +154,9 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 	return 0;
 }
 
-
-//
-// Find DCI by description
-//
-
+/**
+ * NXSL function: Find DCI by description
+ */
 static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (!argv[0]->isObject())
@@ -298,10 +284,73 @@ static int F_GetAvgDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 }
 
 /**
- * Additional functions or use within transformation scripts
+ * NXSL function: create new DCI
+ * Format: CreateDCI(node, origin, name, description, dataType, pollingInterval, retentionTime)
+ * Possible origin values: "agent", "snmp", "internal", "push"
+ * Possible dataType values: "int32", "uint32", "int64", "uint64", "float", "string"
+ * Returns DCI object on success and NULL of failure
+ */
+static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isString() || !argv[2]->isString() || !argv[3]->isString() || !argv[4]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	if (!argv[5]->isInteger() || !argv[6]->isInteger())
+		return NXSL_ERR_NOT_INTEGER;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+	Node *node = (Node *)object->getData();
+
+	// Origin
+	static TCHAR *originNames[] = { _T("internal"), _T("agent"), _T("snmp"), _T("cpsnmp"), _T("push"), NULL };
+	int origin = -1;
+	const TCHAR *name = argv[1]->getValueAsCString();
+	for(int i = 0; originNames[i] != NULL; i++)
+		if (!_tcsicmp(originNames[i], name))
+		{
+			origin = i;
+			break;
+		}
+
+	// Data types
+	static TCHAR *dtNames[] = { _T("int32"), _T("uint32"), _T("int64"), _T("uint64"), _T("string"), _T("float"), NULL };
+	int dataType = -1;
+	name = argv[4]->getValueAsCString();
+	for(int i = 0; dtNames[i] != NULL; i++)
+		if (!_tcsicmp(dtNames[i], name))
+		{
+			dataType = i;
+			break;
+		}
+
+	int pollingInterval = argv[5]->getValueAsInt32();
+	int retentionTime = argv[6]->getValueAsInt32();
+
+	if ((origin != -1) && (dataType != -1) && (pollingInterval > 0) && (retentionTime > 0))
+	{
+		DCItem *dci = new DCItem(CreateUniqueId(IDG_ITEM), argv[2]->getValueAsCString(), 
+			origin, dataType, pollingInterval, retentionTime, node, argv[3]->getValueAsCString());
+		node->addDCObject(dci);
+		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci));
+	}
+	else
+	{
+		*ppResult = new NXSL_Value;
+	}
+	return 0;
+}
+
+/**
+ * Additional NXSL functions for DCI manipulation
  */
 static NXSL_ExtFunction m_nxslDCIFunctions[] =
 {
+   { _T("CreateDCI"), F_CreateDCI, 7 },
    { _T("FindDCIByName"), F_FindDCIByName, 2 },
    { _T("FindDCIByDescription"), F_FindDCIByDescription, 2 },
    { _T("GetDCIObject"), F_GetDCIObject, 2 },
@@ -313,6 +362,9 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
 	{ _T("GetAvgDCIValue"), F_GetAvgDCIValue, 4 }
 };
 
+/**
+ * Register DCI-related functions in NXSL environment
+ */
 void RegisterDCIFunctions(NXSL_Environment *pEnv)
 {
 	pEnv->registerFunctionSet(sizeof(m_nxslDCIFunctions) / sizeof(NXSL_ExtFunction), m_nxslDCIFunctions);

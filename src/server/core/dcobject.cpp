@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Default constructor for DCObject
-//
-
+/**
+ * Default constructor for DCObject
+ */
 DCObject::DCObject()
 {
    m_dwId = 0;
@@ -55,11 +53,9 @@ DCObject::DCObject()
 	m_snmpPort = 0;	// use default
 }
 
-
-//
-// Create DCObject from another DCObject
-//
-
+/**
+ * Create DCObject from another DCObject
+ */
 DCObject::DCObject(const DCObject *pSrc)
 {
    DWORD i;
@@ -103,11 +99,9 @@ DCObject::DCObject(const DCObject *pSrc)
    }
 }
 
-
-//
-// Constructor for creating new DCObject from scratch
-//
-
+/**
+ * Constructor for creating new DCObject from scratch
+ */
 DCObject::DCObject(DWORD dwId, const TCHAR *szName, int iSource, 
                int iPollingInterval, int iRetentionTime, Template *pNode,
                const TCHAR *pszDescription, const TCHAR *systemTag)
@@ -141,11 +135,9 @@ DCObject::DCObject(DWORD dwId, const TCHAR *szName, int iSource,
 	m_snmpPort = 0;	// use default
 }
 
-
-//
-// Create DCObject from import file
-//
-
+/**
+ * Create DCObject from import file
+ */
 DCObject::DCObject(ConfigEntry *config, Template *owner)
 {
    m_dwId = CreateUniqueId(IDG_ITEM);

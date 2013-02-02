@@ -32,20 +32,16 @@
 #define DCE_COMM_ERROR     1
 #define DCE_NOT_SUPPORTED  2
 
-
-//
-// Threshold check results
-//
-
+/**
+ * Threshold check results
+ */
 #define THRESHOLD_REACHED  0
 #define THRESHOLD_REARMED  1
 #define NO_ACTION          2
 
-
-//
-// DCI value
-//
-
+/**
+ * DCI value
+ */
 class NXCORE_EXPORTABLE ItemValue
 {
 private:
@@ -85,12 +81,11 @@ public:
 };
 
 
-//
-// Threshold definition class
-//
-
 class DCItem;
 
+/**
+ * Threshold definition class
+ */
 class NXCORE_EXPORTABLE Threshold
 {
 private:
@@ -165,13 +160,11 @@ public:
 	void setValue(const TCHAR *value) { m_value = value; }
 };
 
-
-//
-// Generic data collection object
-//
-
 class Template;
 
+/**
+ * Generic data collection object
+ */
 class NXCORE_EXPORTABLE DCObject
 {
 protected:
@@ -281,11 +274,9 @@ private:
   BOOL matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp);
 };
 
-
-//
-// Data collection item class
-//
-
+/**
+ * Data collection item class
+ */
 class NXCORE_EXPORTABLE DCItem : public DCObject
 {
 protected:
@@ -370,11 +361,9 @@ public:
 	BOOL testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };
 
-
-//
-// Table column definition
-//
-
+/**
+ * Table column definition
+ */
 class NXCORE_EXPORTABLE DCTableColumn
 {
 private:
