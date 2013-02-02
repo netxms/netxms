@@ -34,6 +34,7 @@ public class ColumnFilter
 	public static final int LIKE = 3;
 	public static final int LESS = 4;
 	public static final int GREATER = 5;
+	public static final int CHILDOF = 6;
 	
 	public static final int AND = 0;
 	public static final int OR = 1;
@@ -48,7 +49,7 @@ public class ColumnFilter
 	private boolean negated = false;
 	
 	/**
-	 * Create filter of type EQUALS, LESS, or GREATER
+	 * Create filter of type EQUALS, LESS, GREATER, or CHILDOF
 	 * 
 	 * @param value
 	 */
@@ -119,6 +120,7 @@ public class ColumnFilter
 			case EQUALS:
 			case LESS:
 			case GREATER:
+			case CHILDOF:
 				msg.setVariableInt64(baseId + 1, numericValue);
 				msg.setVariableInt16(baseId + 2, negated ? 1 : 0);
 				varCount += 2;

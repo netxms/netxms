@@ -25,11 +25,9 @@
 
 #define MAX_COLUMN_NAME_LEN    64
 
-
-//
-// Column types
-//
-
+/**
+ * Column types
+ */
 #define LC_TEXT            0
 #define LC_SEVERITY        1
 #define LC_OBJECT_ID       2
@@ -40,31 +38,26 @@
 #define LC_ALARM_STATE     7
 #define LC_ALARM_HD_STATE  8
 
-
-//
-// Column filter types
-//
-
+/**
+ * Column filter types
+ */
 #define FILTER_EQUALS      0
 #define FILTER_RANGE       1
 #define FILTER_SET         2
 #define FILTER_LIKE        3
 #define FILTER_LESS        4
 #define FILTER_GREATER     5
+#define FILTER_CHILDOF     6
 
-
-//
-// Set operations
-//
-
+/**
+ * Filter set operations
+ */
 #define SET_OPERATION_AND  0
 #define SET_OPERATION_OR   1
 
-
-//
-// Log definition structure
-//
-
+/**
+ * Log column definition structure
+ */
 struct LOG_COLUMN
 {
 	const TCHAR *name;
@@ -72,6 +65,9 @@ struct LOG_COLUMN
 	int type;
 };
 
+/**
+ * Log definition structure
+ */
 struct NXCORE_LOG
 {
 	const TCHAR *name;
@@ -81,17 +77,18 @@ struct NXCORE_LOG
 	LOG_COLUMN columns[32];
 };
 
-
-//
-// Log filter
-//
-
+/**
+ * Ordering column information
+ */
 struct OrderingColumn
 {
 	TCHAR name[MAX_COLUMN_NAME_LEN];
 	bool descending;
 };
 
+/**
+ * Column filter
+ */
 class ColumnFilter
 {
 private:
@@ -125,6 +122,9 @@ public:
 	String generateSql();
 };
 
+/**
+ * Log filter
+ */
 class LogFilter
 {
 private:

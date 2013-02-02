@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// NetObj class constructor
-//
-
+/**
+ * Default constructor
+ */
 NetObj::NetObj()
 {
    int i;
@@ -69,11 +67,9 @@ NetObj::NetObj()
 	m_submapId = 0;
 }
 
-
-//
-// NetObj class destructor
-//
-
+/**
+ * Destructor
+ */
 NetObj::~NetObj()
 {
    MutexDestroy(m_mutexData);
@@ -88,31 +84,25 @@ NetObj::~NetObj()
    safe_free(m_pszComments);
 }
 
-
-//
-// Create object from database data
-//
-
+/**
+ * Create object from database data
+ */
 BOOL NetObj::CreateFromDB(DWORD dwId)
 {
    return FALSE;     // Abstract objects cannot be loaded from database
 }
 
-
-//
-// Save object to database
-//
-
+/**
+ * Save object to database
+ */
 BOOL NetObj::SaveToDB(DB_HANDLE hdb)
 {
    return FALSE;     // Abstract objects cannot be saved to database
 }
 
-
-//
-// Delete object from database
-//
-
+/**
+ * Delete object from database
+ */
 BOOL NetObj::DeleteFromDB()
 {
    TCHAR szQuery[256];
@@ -127,11 +117,9 @@ BOOL NetObj::DeleteFromDB()
    return TRUE;
 }
 
-
-//
-// Load common object properties from database
-//
-
+/**
+ * Load common object properties from database
+ */
 BOOL NetObj::loadCommonProperties()
 {
    BOOL bResult = FALSE;
@@ -1452,11 +1440,9 @@ NXSL_Array *NetObj::getParentsForNXSL()
 	return parents;
 }
 
-
-//
-// Get list of parent objects for NXSL script
-//
-
+/**
+ * Get list of child objects for NXSL script
+ */
 NXSL_Array *NetObj::getChildrenForNXSL()
 {
 	NXSL_Array *children = new NXSL_Array;
@@ -1481,4 +1467,29 @@ NXSL_Array *NetObj::getChildrenForNXSL()
 	UnlockChildList();
 
 	return children;
+}
+
+/**
+ * Get full list of child objects (including both direct and indirect childs)
+ */
+void NetObj::getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly)
+{
+	LockChildList(FALSE);
+	for(DWORD i = 0; i < m_dwChildCount; i++)
+	{
+		if (!eventSourceOnly || IsEventSource(m_pChildList[i]->Type()))
+			list->put(m_pChildList[i]->Id(), m_pChildList[i]);
+		m_pChildList[i]->getFullChildListInternal(list, eventSourceOnly);
+	}
+	UnlockChildList();
+}
+
+/**
+ * Get full list of child objects (including both direct and indirect childs)
+ */
+ObjectArray<NetObj> *NetObj::getFullChildList(bool eventSourceOnly)
+{
+	ObjectIndex list;
+	getFullChildListInternal(&list, eventSourceOnly);
+	return list.getObjects();
 }

@@ -260,11 +260,9 @@ bool DCObject::matchClusterResource()
 	return pCluster->isResourceOnNode(m_dwResourceId, m_pNode->Id());
 }
 
-
-//
-// Expand macros in text
-//
-
+/**
+ * Expand macros in text
+ */
 void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 {
 	String temp;
@@ -364,30 +362,24 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 	nx_strncpy(dst, temp, dstLen);
 }
 
-
-//
-// Delete all collected data
-//
-
+/**
+ * Delete all collected data
+ */
 bool DCObject::deleteAllData()
 {
 	return false;
 }
 
-
-//
-// Clean expired data
-//
-
+/**
+ * Clean expired data
+ */
 void DCObject::deleteExpiredData()
 {
 }
 
-
-//
-// Add schedule
-//
-
+/**
+ * Add schedule
+ */
 void DCObject::addSchedule(const TCHAR *pszSchedule)
 {
 	m_dwNumSchedules++;
@@ -395,11 +387,9 @@ void DCObject::addSchedule(const TCHAR *pszSchedule)
 	m_ppScheduleList[m_dwNumSchedules - 1] = _tcsdup(pszSchedule);
 }
 
-
-//
-// Set new ID and node/template association
-//
-
+/**
+ * Set new ID and node/template association
+ */
 void DCObject::changeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpansion)
 {
    lock();
@@ -416,14 +406,12 @@ void DCObject::changeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpa
    unlock();
 }
 
-
-//
-// Set DCI status
-//
-
+/**
+ * Set DCI status
+ */
 void DCObject::setStatus(int status, bool generateEvent)
 {
-	if (generateEvent && (m_pNode != NULL) && (m_status != (BYTE)status))
+	if (generateEvent && (m_pNode != NULL) && (m_status != (BYTE)status) && IsEventSource(m_pNode->Type()))
 	{
 		static DWORD eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
 		static const TCHAR *originName[5] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push") };
@@ -434,11 +422,9 @@ void DCObject::setStatus(int status, bool generateEvent)
 	m_status = (BYTE)status;
 }
 
-
-//
-// Get step size for "%" and "/" crontab cases
-//
-
+/**
+ * Get step size for "%" and "/" crontab cases
+ */
 static int GetStepSize(TCHAR *str)
 {
   int step = 0;

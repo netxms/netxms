@@ -243,6 +243,8 @@ class NXCORE_EXPORTABLE NetObj
 private:
 	static void onObjectDeleteCallback(NetObj *object, void *data);
 
+	void getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly);
+
 protected:
    DWORD m_dwId;
 	uuid_t m_guid;
@@ -394,6 +396,8 @@ public:
    void setCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); Modify(); }
    void setCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); Modify(); }
    void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
+
+	ObjectArray<NetObj> *getFullChildList(bool eventSourceOnly);
 
 	virtual NXSL_Array *getParentsForNXSL();
 	virtual NXSL_Array *getChildrenForNXSL();
@@ -1947,17 +1951,16 @@ void DumpObjects(CONSOLE_CTX pCtx);
 
 void DeleteUserFromAllObjects(DWORD dwUserId);
 
-BOOL IsValidParentClass(int iChildClass, int iParentClass);
+bool IsValidParentClass(int iChildClass, int iParentClass);
 bool IsAgentPolicyObject(NetObj *object);
+bool IsEventSource(int objectClass);
 
 int DefaultPropagatedStatus(int iObjectStatus);
 int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);
 
-
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 extern Network NXCORE_EXPORTABLE *g_pEntireNet;
 extern ServiceRoot NXCORE_EXPORTABLE *g_pServiceRoot;
 extern TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot;

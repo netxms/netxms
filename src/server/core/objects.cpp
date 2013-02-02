@@ -1689,13 +1689,13 @@ void DumpObjects(CONSOLE_CTX pCtx)
  * This function is used to check manually created bindings, so it won't
  * return TRUE for node -- subnet for example
  */
-BOOL IsValidParentClass(int iChildClass, int iParentClass)
+bool IsValidParentClass(int iChildClass, int iParentClass)
 {
    switch(iParentClass)
    {
 		case OBJECT_NETWORK:
 			if ((iChildClass == OBJECT_ZONE) && (g_dwFlags & AF_ENABLE_ZONING))
-				return TRUE;
+				return true;
 			break;
       case OBJECT_SERVICEROOT:
       case OBJECT_CONTAINER:
@@ -1704,66 +1704,66 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
              (iChildClass == OBJECT_CLUSTER) ||
              (iChildClass == OBJECT_MOBILEDEVICE) ||
              (iChildClass == OBJECT_CONDITION))
-            return TRUE;
+            return true;
          break;
       case OBJECT_TEMPLATEROOT:
       case OBJECT_TEMPLATEGROUP:
          if ((iChildClass == OBJECT_TEMPLATEGROUP) || 
              (iChildClass == OBJECT_TEMPLATE))
-            return TRUE;
+            return true;
          break;
       case OBJECT_NETWORKMAPROOT:
       case OBJECT_NETWORKMAPGROUP:
          if ((iChildClass == OBJECT_NETWORKMAPGROUP) || 
              (iChildClass == OBJECT_NETWORKMAP))
-            return TRUE;
+            return true;
          break;
       case OBJECT_DASHBOARDROOT:
       case OBJECT_DASHBOARD:
          if (iChildClass == OBJECT_DASHBOARD)
-            return TRUE;
+            return true;
          break;
       case OBJECT_POLICYROOT:
       case OBJECT_POLICYGROUP:
          if ((iChildClass == OBJECT_POLICYGROUP) || 
              (iChildClass == OBJECT_AGENTPOLICY) ||
              (iChildClass == OBJECT_AGENTPOLICY_CONFIG))
-            return TRUE;
+            return true;
          break;
       case OBJECT_NODE:
          if ((iChildClass == OBJECT_NETWORKSERVICE) ||
              (iChildClass == OBJECT_VPNCONNECTOR) ||
 				 (iChildClass == OBJECT_INTERFACE))
-            return TRUE;
+            return true;
          break;
       case OBJECT_CLUSTER:
          if (iChildClass == OBJECT_NODE)
-            return TRUE;
+            return true;
          break;
       case OBJECT_REPORTROOT:
       case OBJECT_REPORTGROUP:
          if ((iChildClass == OBJECT_REPORTGROUP) || 
              (iChildClass == OBJECT_REPORT))
-            return TRUE;
+            return true;
          break;
 		case OBJECT_BUSINESSSERVICEROOT:
 			if ((iChildClass == OBJECT_BUSINESSSERVICE) || 
 			    (iChildClass == OBJECT_NODELINK))
-            return TRUE;
+            return true;
          break;
 		case OBJECT_BUSINESSSERVICE:
 			if ((iChildClass == OBJECT_BUSINESSSERVICE) || 
 			    (iChildClass == OBJECT_NODELINK) ||
 			    (iChildClass == OBJECT_SLMCHECK))
-            return TRUE;
+            return true;
          break;
 		case OBJECT_NODELINK:
 			if (iChildClass == OBJECT_SLMCHECK)
-            return TRUE;
+            return true;
          break;
       case -1:    // Creating object without parent
          if (iChildClass == OBJECT_NODE)
-            return TRUE;   // OK only for nodes, because parent subnet will be created automatically
+            return true;   // OK only for nodes, because parent subnet will be created automatically
          break;
    }
 
@@ -1773,11 +1773,11 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
 		if (g_pModuleList[i].pfIsValidParentClass != NULL)
 		{
 			if (g_pModuleList[i].pfIsValidParentClass(iChildClass, iParentClass))
-				return TRUE;	// accepted by module
+				return true;	// accepted by module
 		}
 	}
 
-   return FALSE;
+   return false;
 }
 
 /**
@@ -1881,4 +1881,15 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds)
 bool IsAgentPolicyObject(NetObj *object)
 {
 	return (object->Type() == OBJECT_AGENTPOLICY) || (object->Type() == OBJECT_AGENTPOLICY_CONFIG);
+}
+
+/**
+ * Returns true if object of given class can be event source
+ */
+bool IsEventSource(int objectClass)
+{
+	return (objectClass == OBJECT_NODE) || 
+	       (objectClass == OBJECT_CONTAINER) || 
+	       (objectClass == OBJECT_CLUSTER) || 
+			 (objectClass == OBJECT_MOBILEDEVICE);
 }

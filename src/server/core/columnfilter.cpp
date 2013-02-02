@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Constructor
-//
-
+/**
+ * Create column filter object from NXCP message
+ */
 ColumnFilter::ColumnFilter(CSCPMessage *msg, const TCHAR *column, DWORD baseId)
 {
 	DWORD varId;
@@ -38,6 +36,7 @@ ColumnFilter::ColumnFilter(CSCPMessage *msg, const TCHAR *column, DWORD baseId)
 		case FILTER_EQUALS:
 		case FILTER_LESS:
 		case FILTER_GREATER:
+		case FILTER_CHILDOF:
 			m_value.numericValue = msg->GetVariableInt64(baseId + 1);
 			m_negated = msg->GetVariableShort(baseId + 2) ? true : false;
 			m_varCount = 3;
@@ -73,11 +72,9 @@ ColumnFilter::ColumnFilter(CSCPMessage *msg, const TCHAR *column, DWORD baseId)
 	}
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 ColumnFilter::~ColumnFilter()
 {
 	safe_free(m_column);
@@ -94,11 +91,15 @@ ColumnFilter::~ColumnFilter()
 	}
 }
 
+static String BuildFullChildList(DWORD objectId)
+{
+	String list;
+	return list;
+}
 
-//
-// Generate SQL for column filter
-//
-
+/**
+ * Generate SQL for column filter
+ */
 String ColumnFilter::generateSql()
 {
 	String sql;
@@ -161,6 +162,41 @@ String ColumnFilter::generateSql()
 						sql += subExpr;
 						sql += _T(")");
 					}
+				}
+			}
+			break;
+		case FILTER_CHILDOF:
+			if (m_negated)
+				sql += _T("NOT ");
+
+			{
+				NetObj *object = FindObjectById((DWORD)m_value.numericValue);
+				if (object != NULL)
+				{
+					ObjectArray<NetObj> *childObjects = object->getFullChildList(true);
+					if (childObjects->size() > 0)
+					{
+						sql += m_column;
+						sql += _T(" IN (");
+						for(int i = 0; i < childObjects->size(); i++)
+						{
+							if (i > 0)
+								sql += _T(", ");
+							TCHAR buffer[32];
+							_sntprintf(buffer, 32, _T("%d"), (int)childObjects->get(i)->Id());
+							sql += (const TCHAR *)buffer;
+						}
+						sql += _T(")");
+					}
+					else
+					{
+						sql += _T("0=1");
+					}
+					delete childObjects;
+				}
+				else
+				{
+					sql += _T("0=1");
 				}
 			}
 			break;

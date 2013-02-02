@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Constructor
-//
-
+/**
+ * Create log filter object from NXCP message
+ */
 LogFilter::LogFilter(CSCPMessage *msg)
 {
 	m_numColumnFilters = (int)msg->GetVariableLong(VID_NUM_FILTERS);
@@ -50,11 +48,9 @@ LogFilter::LogFilter(CSCPMessage *msg)
 	}
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 LogFilter::~LogFilter()
 {
 	for(int i = 0; i < m_numColumnFilters; i++)
@@ -63,11 +59,9 @@ LogFilter::~LogFilter()
 	safe_free(m_orderingColumns);
 }
 
-
-//
-// Build ORDER BY clause
-//
-
+/**
+ * Build ORDER BY clause
+ */
 String LogFilter::buildOrderClause()
 {
 	String result;

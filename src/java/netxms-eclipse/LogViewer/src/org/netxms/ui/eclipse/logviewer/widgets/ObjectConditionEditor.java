@@ -42,7 +42,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ObjectConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { "IS", "IS NOT" };
+	private static final String[] OPERATIONS = { "IS", "IS NOT", "WITHIN", "NOT WITHIN" };
 	private static final String EMPTY_SELECTION_TEXT = "<none>";
 	
 	private WorkbenchLabelProvider labelProvider;
@@ -146,8 +146,9 @@ public class ObjectConditionEditor extends ConditionEditor
 	@Override
 	public ColumnFilter createFilter()
 	{
-		ColumnFilter filter = new ColumnFilter(ColumnFilter.EQUALS, objectId);
-		filter.setNegated(getSelectedOperation() == 1);
+		int op = getSelectedOperation();
+		ColumnFilter filter = new ColumnFilter(((op == 2) || (op == 3)) ? ColumnFilter.CHILDOF : ColumnFilter.EQUALS, objectId);
+		filter.setNegated((op == 1) || (op == 3));
 		return filter;
 	}
 }
