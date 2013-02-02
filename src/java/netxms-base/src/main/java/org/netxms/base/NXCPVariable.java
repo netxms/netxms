@@ -245,7 +245,6 @@ public class NXCPVariable
 	 * @param nxcpDataField
 	 * @throws java.io.IOException
 	 */
-	@SuppressWarnings("resource")
 	public NXCPVariable(final byte[] nxcpDataField) throws IOException
 	{
 		NXCPDataInputStream in = new NXCPDataInputStream(nxcpDataField);
@@ -369,7 +368,6 @@ public class NXCPVariable
 	 * 
 	 * @return Variable's value as UUID
 	 */
-	@SuppressWarnings("resource")
 	public UUID getAsUUID()
 	{
 		if ((variableType != TYPE_BINARY) || (binaryValue == null) || (binaryValue.length != 16))
@@ -397,7 +395,6 @@ public class NXCPVariable
 	 * 
 	 * @return Variable's value as array of long integers
 	 */
-	@SuppressWarnings("resource")
 	public long[] getAsUInt32Array()
 	{
 		if ((variableType != TYPE_BINARY) || (binaryValue == null))
@@ -423,7 +420,6 @@ public class NXCPVariable
 	 * 
 	 * @return Variable's value as array of long integers
 	 */
-	@SuppressWarnings("resource")
 	public Long[] getAsUInt32ArrayEx()
 	{
 		if ((variableType != TYPE_BINARY) || (binaryValue == null))

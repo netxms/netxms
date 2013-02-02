@@ -109,39 +109,6 @@ void DataCollectionTarget::cleanDCIData()
 }
 
 /**
- * Get last collected values of all DCIs
- */
-DWORD DataCollectionTarget::getLastValues(CSCPMessage *msg)
-{
-   lockDciAccess();
-
-	DWORD dwId = VID_DCI_VALUES_BASE, dwCount = 0;
-   for(int i = 0; i < m_dcObjects->size(); i++)
-	{
-		DCObject *object = m_dcObjects->get(i);
-		if (_tcsnicmp(object->getDescription(), _T("@system."), 8))
-		{
-			if (object->getType() == DCO_TYPE_ITEM)
-			{
-				((DCItem *)object)->getLastValue(msg, dwId);
-				dwId += 50;
-				dwCount++;
-			}
-			else if (object->getType() == DCO_TYPE_TABLE)
-			{
-				((DCTable *)object)->getLastValueSummary(msg, dwId);
-				dwId += 50;
-				dwCount++;
-			}
-		}
-	}
-   msg->SetVariable(VID_NUM_ITEMS, dwCount);
-
-   unlockDciAccess();
-   return RCC_SUCCESS;
-}
-
-/**
  * Get last collected values of given table
  */
 DWORD DataCollectionTarget::getTableLastValues(DWORD dciId, CSCPMessage *msg)
@@ -327,7 +294,8 @@ DWORD DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
 			pMsg->SetVariable(dwId++, (WORD)object->getStatus());
 			pMsg->SetVariable(dwId++, object->getPerfTabSettings());
 			pMsg->SetVariable(dwId++, (WORD)object->getType());
-			dwId += 5;
+			pMsg->SetVariable(dwId++, object->getTemplateItemId());
+			dwId += 4;
 			dwCount++;
 		}
 	}

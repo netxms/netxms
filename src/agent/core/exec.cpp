@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,11 +29,9 @@
 #include <sys/wait.h>
 #endif
 
-
-//
-// Information for process starter
-//
-
+/**
+ * Information for process starter
+ */
 struct PROCESS_START_INFO
 {
 	char *cmdLine;
@@ -41,11 +39,9 @@ struct PROCESS_START_INFO
 	CONDITION condProcessStarted;
 };
 
-
-//
-// Execute external command
-//
-
+/**
+ * Execute external command
+ */
 #if !defined(_WIN32) && !defined(_NETWARE) /* unix-only hack */
 static THREAD_RESULT THREAD_CALL Waiter(void *arg)
 {
@@ -298,11 +294,9 @@ DWORD ExecuteCommand(TCHAR *pszCommand, StringList *args, pid_t *pid)
    return dwRetCode;
 }
 
-
-//
-// Structure for passing data to popen() worker
-//
-
+/**
+ * Structure for passing data to popen() worker
+ */
 struct POPEN_WORKER_DATA
 {
 	int status;
@@ -312,11 +306,9 @@ struct POPEN_WORKER_DATA
 	CONDITION released;
 };
 
-
-//
-// Worker thread for executing external parameter handler
-//
-
+/**
+ * Worker thread for executing external parameter handler
+ */
 static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 {
 	FILE *hPipe;
@@ -362,11 +354,9 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 	return THREAD_OK;
 }
 
-
-//
-// Handler function for external (user-defined) parameters
-//
-
+/**
+ * Handler function for external (user-defined) parameters
+ */
 LONG H_ExternalParameter(const TCHAR *pszCmd, const TCHAR *pszArg, TCHAR *pValue)
 {
 	TCHAR *pszCmdLine, szBuffer[1024], szTempFile[MAX_PATH];

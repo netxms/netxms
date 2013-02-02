@@ -29,6 +29,7 @@ public abstract class DciValue
 {
 	private long id;					// DCI id
 	private long nodeId;				// related node object id
+	private long templateDciId;	// related template DCI ID
 	private String name;				// name
 	private String description;	// description
 	private String value;			// value
@@ -74,7 +75,7 @@ public abstract class DciValue
 		long var = base;
 	
 		this.nodeId = nodeId;
-		id = msg.getVariableAsInteger(var++);
+		id = msg.getVariableAsInt64(var++);
 		name = msg.getVariableAsString(var++);
 		description = msg.getVariableAsString(var++);
 		source = msg.getVariableAsInteger(var++);
@@ -84,6 +85,7 @@ public abstract class DciValue
 		status = msg.getVariableAsInteger(var++);
 		dcObjectType = msg.getVariableAsInteger(var++);
 		errorCount = msg.getVariableAsInteger(var++);
+		templateDciId = msg.getVariableAsInt64(var++);
 		if (msg.getVariableAsBoolean(var++))
 			activeThreshold = new Threshold(msg, var);
 		else
@@ -184,5 +186,13 @@ public abstract class DciValue
 	public int getErrorCount()
 	{
 		return errorCount;
+	}
+
+	/**
+	 * @return the templateDciId
+	 */
+	public final long getTemplateDciId()
+	{
+		return templateDciId;
 	}
 }

@@ -1015,3 +1015,39 @@ BOOL Template::isApplicable(Node *node)
 	UnlockData();
 	return result;
 }
+
+/**
+ * Get last (current) DCI values. Moved to Template from DataCollectionTarget to allow 
+ * simplified creation of DCI selection dialog in management console. For classes not
+ * derived from DataCollectionTarget actual values will always be empty strings
+ * with data type DCI_DT_NULL.
+ */
+DWORD Template::getLastValues(CSCPMessage *msg)
+{
+   lockDciAccess();
+
+	DWORD dwId = VID_DCI_VALUES_BASE, dwCount = 0;
+   for(int i = 0; i < m_dcObjects->size(); i++)
+	{
+		DCObject *object = m_dcObjects->get(i);
+		if (_tcsnicmp(object->getDescription(), _T("@system."), 8))
+		{
+			if (object->getType() == DCO_TYPE_ITEM)
+			{
+				((DCItem *)object)->getLastValue(msg, dwId);
+				dwId += 50;
+				dwCount++;
+			}
+			else if (object->getType() == DCO_TYPE_TABLE)
+			{
+				((DCTable *)object)->getLastValueSummary(msg, dwId);
+				dwId += 50;
+				dwCount++;
+			}
+		}
+	}
+   msg->SetVariable(VID_NUM_ITEMS, dwCount);
+
+   unlockDciAccess();
+   return RCC_SUCCESS;
+}

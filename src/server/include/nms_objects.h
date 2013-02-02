@@ -507,6 +507,8 @@ public:
 	
 	bool enumDCObjects(bool (* pfCallback)(DCObject *, DWORD, void *), void *pArg);
 	void associateItems();
+
+   DWORD getLastValues(CSCPMessage *msg);
 };
 
 /**
@@ -742,7 +744,6 @@ public:
 
    virtual DWORD getInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
 
-   DWORD getLastValues(CSCPMessage *msg);
    DWORD getTableLastValues(DWORD dciId, CSCPMessage *msg);
 	DWORD getThresholdSummary(CSCPMessage *msg, DWORD baseId);
 	DWORD getPerfTabDCIList(CSCPMessage *pMsg);

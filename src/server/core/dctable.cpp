@@ -495,6 +495,7 @@ void DCTable::getLastValueSummary(CSCPMessage *pMsg, DWORD dwId)
    pMsg->SetVariable(dwId++, (WORD)m_status);
 	pMsg->SetVariable(dwId++, (WORD)getType());
 	pMsg->SetVariable(dwId++, m_dwErrorCount);
+	pMsg->SetVariable(dwId++, m_dwTemplateItemId);
    pMsg->SetVariable(dwId++, (WORD)0);            // compatibility: number of thresholds
 
 	unlock();

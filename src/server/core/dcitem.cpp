@@ -1391,6 +1391,7 @@ void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
    pMsg->SetVariable(dwId++, (WORD)m_status);
 	pMsg->SetVariable(dwId++, (WORD)getType());
 	pMsg->SetVariable(dwId++, m_dwErrorCount);
+	pMsg->SetVariable(dwId++, m_dwTemplateItemId);
 
 	DWORD i;
    for(i = 0; i < m_dwNumThresholds; i++)

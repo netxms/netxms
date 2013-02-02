@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.perfview;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.List;
 
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.PerfTabDci;
@@ -247,5 +248,28 @@ public class PerfTabGraphSettings
 	public final void setName(String name)
 	{
 		this.name = name;
+	}
+
+	/**
+	 * Fix parent DCI ID (it can be template DCI ID - replace it with real DCI ID).
+	 * 
+	 * @param settings list of all DCIs for performance tab
+	 */
+	public final void fixParentDciId(List<PerfTabGraphSettings> settings)
+	{
+		if (parentDciId == 0)
+			return;
+		
+		for(PerfTabGraphSettings s : settings)
+		{
+			if (parentDciId == s.getRuntimeDciInfo().getId())
+				return;	// found valid parent ID
+			if (parentDciId == s.getRuntimeDciInfo().getTemplateDciId())
+			{
+				// found parent ID from template
+				parentDciId = s.getRuntimeDciInfo().getId();
+				return;
+			}
+		}
 	}
 }

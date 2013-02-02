@@ -3728,9 +3728,10 @@ void ClientSession::getLastValues(CSCPMessage *pRequest)
    {
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE))
+         if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE) ||
+             (pObject->Type() == OBJECT_TEMPLATE) || (pObject->Type() == OBJECT_CLUSTER))
          {
-            msg.SetVariable(VID_RCC, ((DataCollectionTarget *)pObject)->getLastValues(&msg));
+            msg.SetVariable(VID_RCC, ((Template *)pObject)->getLastValues(&msg));
          }
          else
          {
@@ -9331,11 +9332,9 @@ void ClientSession::DeleteGraph(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send list of system DCIs
-//
-
+/**
+ * Send list of DCIs to be shown in performance tab
+ */
 void ClientSession::sendPerfTabDCIList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;

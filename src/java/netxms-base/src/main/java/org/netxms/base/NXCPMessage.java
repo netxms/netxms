@@ -80,7 +80,6 @@ public class NXCPMessage
 	 * @throws GeneralSecurityException 
 	 * @throws NXCPException 
 	 */
-	@SuppressWarnings("resource")
 	public NXCPMessage(final byte[] nxcpMessage, EncryptionContext ectx) throws IOException, NXCPException
 	{
 		final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nxcpMessage);
