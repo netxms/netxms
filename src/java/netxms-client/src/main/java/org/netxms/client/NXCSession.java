@@ -4628,6 +4628,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PARAMETER_LIST);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariableInt16(NXCPCodes.VID_FLAGS, 0x01);	// Indicates request for parameters list
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 
@@ -4643,7 +4644,34 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 	
 	/**
-	 * Get all events used in data collection by given node, cluster, or template obejct.
+	 * Get list of tables supported by agent running on given node.
+	 * 
+	 * @param nodeId Node ID
+	 * @return List of tables supported by agent
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<AgentTable> getSupportedTables(long nodeId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PARAMETER_LIST);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariableInt16(NXCPCodes.VID_FLAGS, 0x02);	// Indicates request for table list
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_TABLES);
+		List<AgentTable> list = new ArrayList<AgentTable>(count);
+		long baseId = NXCPCodes.VID_TABLE_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			list.add(new AgentTable(response, baseId));
+			baseId += 3;
+		}
+		return list;
+	}
+	
+	/**
+	 * Get all events used in data collection by given node, cluster, or template object.
 	 * 
 	 * @param objectId node, cluster, or template object ID
 	 * @return list of used event codes 

@@ -487,12 +487,10 @@ bool User::validateHashedPassword(const BYTE *password)
 	return !memcmp(password, m_passwordHash, SHA1_DIGEST_SIZE);
 }
 
-
-//
-// Set user's password
-// For non-UNICODE build, password must be UTF-8 encoded
-//
-
+/**
+ * Set user's password
+ * For non-UNICODE build, password must be UTF-8 encoded
+ */
 void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
 {
 #ifdef UNICODE
@@ -509,11 +507,9 @@ void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
 		m_flags &= ~UF_CHANGE_PASSWORD;
 }
 
-
-//
-// Fill CSCP message with user data
-//
-
+/**
+ * Fill NXCP message with user data
+ */
 void User::fillMessage(CSCPMessage *msg)
 {
 	UserDatabaseObject::fillMessage(msg);
@@ -529,11 +525,9 @@ void User::fillMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_AUTH_FAILURES, (DWORD)m_authFailures);
 }
 
-
-//
-// Modify user object from NXCP message
-//
-
+/**
+ * Modify user object from NXCP message
+ */
 void User::modifyFromMessage(CSCPMessage *msg)
 {
 	UserDatabaseObject::modifyFromMessage(msg);
@@ -556,11 +550,9 @@ void User::modifyFromMessage(CSCPMessage *msg)
 	}
 }
 
-
-//
-// Increase auth failures and lockout account if threshold reached
-//
-
+/**
+ * Increase auth failures and lockout account if threshold reached
+ */
 void User::increaseAuthFailures()
 {
 	m_authFailures++;
@@ -575,11 +567,9 @@ void User::increaseAuthFailures()
 	m_flags |= UF_MODIFIED;
 }
 
-
-//
-// Enable user account
-//
-
+/**
+ * Enable user account
+ */
 void User::enable()
 {
 	m_authFailures = 0;

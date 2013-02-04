@@ -394,22 +394,79 @@ static void UpdateParamList(NetObj *object, void *data)
 	((Node *)object)->closeParamList();
 }
 
-void WriteFullParamListToMessage(CSCPMessage *pMsg)
+struct __table_list
+{
+	DWORD size;
+	NXC_AGENT_TABLE *data;
+};
+
+static void UpdateTableList(NetObj *object, void *data)
+{
+	struct __table_list *fullList = (struct __table_list *)data;
+
+	StructArray<NXC_AGENT_TABLE> *tableList;
+	((Node *)object)->openTableList(&tableList);
+	if ((tableList != NULL) && (tableList->size() > 0))
+	{
+		fullList->data = (NXC_AGENT_TABLE *)realloc(fullList->data, sizeof(NXC_AGENT_TABLE) * (fullList->size + tableList->size()));
+		for(int i = 0; i < tableList->size(); i++)
+		{
+			DWORD j;
+			for(j = 0; j < fullList->size; j++)
+			{
+				if (!_tcsicmp(tableList->get(i)->name, fullList->data[j].name))
+					break;
+			}
+
+			if (j == fullList->size)
+			{
+				memcpy(&fullList->data[j], tableList->get(i), sizeof(NXC_AGENT_TABLE));
+				fullList->size++;
+			}
+		}
+	}
+	((Node *)object)->closeTableList();
+}
+
+void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags)
 {
    // Gather full parameter list
-	struct __param_list fullList;
-	fullList.size = 0;
-	fullList.data = NULL;
-	g_idxNodeById.forEach(UpdateParamList, &fullList);
+	if (flags & 0x01)
+	{
+		struct __param_list fullList;
+		fullList.size = 0;
+		fullList.data = NULL;
+		g_idxNodeById.forEach(UpdateParamList, &fullList);
 
-   // Put list into the message
-   pMsg->SetVariable(VID_NUM_PARAMETERS, fullList.size);
-   for(DWORD i = 0, varId = VID_PARAM_LIST_BASE; i < fullList.size; i++)
-   {
-		pMsg->SetVariable(varId++, fullList.data[i].szName);
-		pMsg->SetVariable(varId++, fullList.data[i].szDescription);
-		pMsg->SetVariable(varId++, (WORD)fullList.data[i].iDataType);
-   }
+		// Put list into the message
+		pMsg->SetVariable(VID_NUM_PARAMETERS, fullList.size);
+		for(DWORD i = 0, varId = VID_PARAM_LIST_BASE; i < fullList.size; i++)
+		{
+			pMsg->SetVariable(varId++, fullList.data[i].szName);
+			pMsg->SetVariable(varId++, fullList.data[i].szDescription);
+			pMsg->SetVariable(varId++, (WORD)fullList.data[i].iDataType);
+		}
 
-	safe_free(fullList.data);
+		safe_free(fullList.data);
+	}
+
+   // Gather full table list
+	if (flags & 0x02)
+	{
+		struct __table_list fullList;
+		fullList.size = 0;
+		fullList.data = NULL;
+		g_idxNodeById.forEach(UpdateTableList, &fullList);
+
+		// Put list into the message
+		pMsg->SetVariable(VID_NUM_TABLES, fullList.size);
+		for(DWORD i = 0, varId = VID_TABLE_LIST_BASE; i < fullList.size; i++)
+		{
+			pMsg->SetVariable(varId++, fullList.data[i].name);
+			pMsg->SetVariable(varId++, fullList.data[i].instanceColumn);
+			pMsg->SetVariable(varId++, fullList.data[i].description);
+		}
+
+		safe_free(fullList.data);
+	}
 }

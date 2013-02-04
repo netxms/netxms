@@ -43,6 +43,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.AgentParameter;
+import org.netxms.client.AgentTable;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -50,6 +51,8 @@ import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentParameterComparator;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentParameterFilter;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentParameterLabelProvider;
+import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentTableComparator;
+import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentTableLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -63,19 +66,22 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	public static final int COLUMN_TYPE = 1;
 	public static final int COLUMN_DESCRIPTION = 2;
 	
+	protected boolean selectTables;
 	protected GenericObject object;
 	protected Text filterText;
 	protected SortableTableViewer viewer;
-	private AgentParameter selectedParameter;
+	
+	private Object selection;
 	private AgentParameterFilter filter;
 
 	/**
 	 * @param parentShell
 	 * @param nodeId
 	 */
-	public AbstractSelectParamDlg(Shell parentShell, long nodeId)
+	public AbstractSelectParamDlg(Shell parentShell, long nodeId, boolean selectTables)
 	{
 		super(parentShell);
+		this.selectTables = selectTables;
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 		object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
 	}
@@ -87,7 +93,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.AbstractSelectParamDlg_Title);
+		newShell.setText(selectTables ? "Table Selection" : Messages.AbstractSelectParamDlg_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		final String prefix = getConfigurationPrefix();
 		try
@@ -114,7 +120,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	   dialogArea.setLayout(layout);
 	   
 	   Label label = new Label(dialogArea, SWT.NONE);
-	   label.setText(Messages.AbstractSelectParamDlg_AvailableParameters);
+	   label.setText(selectTables ? "Available tables" : Messages.AbstractSelectParamDlg_AvailableParameters);
 	   
 	   filterText = new Text(dialogArea, SWT.BORDER);
 	   GridData gd = new GridData();
@@ -130,13 +136,13 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 			}
 	   });
 		
-		final String[] names = { Messages.AbstractSelectParamDlg_Name, Messages.AbstractSelectParamDlg_Type, Messages.AbstractSelectParamDlg_Description };
-		final int[] widths = { 150, 100, 350 };
+		final String[] names = { Messages.AbstractSelectParamDlg_Name, selectTables ? "Instance Column" : Messages.AbstractSelectParamDlg_Type, Messages.AbstractSelectParamDlg_Description };
+		final int[] widths = { 150, selectTables ? 150 : 100, 350 };
 	   viewer = new SortableTableViewer(dialogArea, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.BORDER);
 	   WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), getConfigurationPrefix() + ".viewer"); //$NON-NLS-1$
 	   viewer.setContentProvider(new ArrayContentProvider());
-	   viewer.setLabelProvider(new AgentParameterLabelProvider());
-	   viewer.setComparator(new AgentParameterComparator());
+	   viewer.setLabelProvider(selectTables ? new AgentTableLabelProvider() : new AgentParameterLabelProvider());
+	   viewer.setComparator(selectTables ? new AgentTableComparator() : new AgentParameterComparator());
 	   
 	   filter = new AgentParameterFilter();
 	   viewer.addFilter(filter);
@@ -215,7 +221,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	@Override
 	public int getParameterDataType()
 	{
-		return selectedParameter.getDataType();
+		return selectTables ? 0 : ((AgentParameter)selection).getDataType();
 	}
 
 	/* (non-Javadoc)
@@ -224,7 +230,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	@Override
 	public String getParameterDescription()
 	{
-		return selectedParameter.getDescription();
+		return selectTables ? ((AgentTable)selection).getDescription() : ((AgentParameter)selection).getDescription();
 	}
 
 	/* (non-Javadoc)
@@ -233,7 +239,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	@Override
 	public String getParameterName()
 	{
-		return selectedParameter.getName();
+		return selectTables ? ((AgentTable)selection).getName() : ((AgentParameter)selection).getName();
 	}
 
 	/* (non-Javadoc)
@@ -248,7 +254,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 			MessageDialog.openWarning(getShell(), Messages.AbstractSelectParamDlg_Warning, Messages.AbstractSelectParamDlg_WarningText);
 			return;
 		}
-		selectedParameter = (AgentParameter)selection.getFirstElement();
+		this.selection = selection.getFirstElement();
 		saveSettings();
 		super.okPressed();
 	}

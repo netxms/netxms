@@ -962,7 +962,7 @@ void ClientSession::processingThread()
             RemovePackage(pMsg);
             break;
          case CMD_GET_PARAMETER_LIST:
-            SendParametersList(pMsg);
+            getParametersList(pMsg);
             break;
          case CMD_DEPLOY_PACKAGE:
             DeployPackage(pMsg);
@@ -5776,12 +5776,10 @@ void ClientSession::RemovePackage(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send list of parameters supported by given node to client
-//
-
-void ClientSession::SendParametersList(CSCPMessage *pRequest)
+/**
+ * Get list of parameters supported by given node
+ */
+void ClientSession::getParametersList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
@@ -5797,12 +5795,12 @@ void ClientSession::SendParametersList(CSCPMessage *pRequest)
       {
          case OBJECT_NODE:
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            ((Node *)pObject)->writeParamListToMessage(&msg);
+				((Node *)pObject)->writeParamListToMessage(&msg, pRequest->GetVariableShort(VID_FLAGS));
             break;
          case OBJECT_CLUSTER:
          case OBJECT_TEMPLATE:
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            WriteFullParamListToMessage(&msg);
+            WriteFullParamListToMessage(&msg, pRequest->GetVariableShort(VID_FLAGS));
             break;
          default:
             msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);

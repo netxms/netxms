@@ -872,8 +872,8 @@ protected:
    void routingTableLock() { MutexLock(m_mutexRTAccess); }
    void routingTableUnlock() { MutexUnlock(m_mutexRTAccess); }
 
-   BOOL CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID, int nValue);
-   void CheckOSPFSupport(SNMP_Transport *pTransport);
+   BOOL checkSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID, int nValue);
+   void checkOSPFSupport(SNMP_Transport *pTransport);
 	void addVrrpInterfaces(InterfaceList *ifList);
 	BOOL resolveName(BOOL useOnlyDNS);
    void setAgentProxy(AgentConnection *pConn);
@@ -1014,13 +1014,16 @@ public:
    void openParamList(StructArray<NXC_AGENT_PARAM> **paramList);
    void closeParamList() { UnlockData(); }
 
+	void openTableList(StructArray<NXC_AGENT_TABLE> **tableList);
+   void closeTableList() { UnlockData(); }
+
    AgentConnectionEx *createAgentConnection();
 	SNMP_Transport *createSnmpTransport(WORD port = 0);
 	SNMP_SecurityContext *getSnmpSecurityContext();
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-   void writeParamListToMessage(CSCPMessage *pMsg);
+   void writeParamListToMessage(CSCPMessage *pMsg, WORD flags);
 
    DWORD wakeUp();
 

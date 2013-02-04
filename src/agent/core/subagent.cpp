@@ -100,7 +100,9 @@ BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
 					for(i = 0; i < pInfo->numTables; i++)
 						AddTable(pInfo->tables[i].name, 
 								   pInfo->tables[i].handler,
-								   pInfo->tables[i].arg);
+								   pInfo->tables[i].arg,
+									pInfo->tables[i].instanceColumn,
+									pInfo->tables[i].description);
 
 					// Add actions provided by this subagent to common list
 					for(i = 0; i < pInfo->numActions; i++)

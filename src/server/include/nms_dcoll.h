@@ -452,7 +452,7 @@ public:
 
 BOOL InitDataCollector();
 void DeleteAllItemsForNode(DWORD dwNodeId);
-void WriteFullParamListToMessage(CSCPMessage *pMsg);
+void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags);
 
 void CalculateItemValueDiff(ItemValue &result, int nDataType,
                             ItemValue &value1, ItemValue &value2);

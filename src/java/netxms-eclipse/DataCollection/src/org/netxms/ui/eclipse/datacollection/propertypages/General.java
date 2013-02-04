@@ -469,7 +469,7 @@ public class General extends PropertyPage
 				dlg = new SelectInternalParamDlg(getShell(), dci.getNodeId());
 				break;
 			case DataCollectionItem.AGENT:
-				dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId());
+				dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), false);
 				break;
 			case DataCollectionItem.SNMP:
 			case DataCollectionItem.CHECKPOINT_SNMP:

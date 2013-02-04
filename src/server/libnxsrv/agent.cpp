@@ -1157,11 +1157,9 @@ DWORD AgentConnection::checkNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int
    return dwResult;
 }
 
-
-//
-// Get list of supported parameters from subagent
-//
-
+/**
+ * Get list of supported parameters from subagent
+ */
 DWORD AgentConnection::getSupportedParameters(StructArray<NXC_AGENT_PARAM> **paramList, StructArray<NXC_AGENT_TABLE> **tableList)
 {
    DWORD dwRqId, dwResult;
@@ -1224,11 +1222,9 @@ DWORD AgentConnection::getSupportedParameters(StructArray<NXC_AGENT_PARAM> **par
    return dwResult;
 }
 
-
-//
-// Setup encryption
-//
-
+/**
+ * Setup encryption
+ */
 DWORD AgentConnection::setupEncryption(RSA *pServerKey)
 {
 #ifdef _WITH_ENCRYPTION

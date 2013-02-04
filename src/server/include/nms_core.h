@@ -524,7 +524,7 @@ private:
    void InstallPackage(CSCPMessage *pRequest);
    void RemovePackage(CSCPMessage *pRequest);
    void DeployPackage(CSCPMessage *pRequest);
-   void SendParametersList(CSCPMessage *pRequest);
+   void getParametersList(CSCPMessage *pRequest);
    void getUserVariable(CSCPMessage *pRequest);
    void setUserVariable(CSCPMessage *pRequest);
    void copyUserVariable(CSCPMessage *pRequest);

@@ -1477,8 +1477,7 @@ void Node::updatePrimaryIpAddr()
 /**
  * Perform configuration poll on node
  */
-void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
-                             int nPoller, DWORD dwNetMask)
+void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller, DWORD dwNetMask)
 {
 	if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
 	{
@@ -1865,7 +1864,7 @@ bool Node::confPollSnmp(DWORD dwRqId)
 		}
 
       // Check IP forwarding
-      if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.4.1.0"), 1))
+      if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.4.1.0"), 1))
       {
 			LockData();
          m_dwFlags |= NF_IS_ROUTER;
@@ -1924,7 +1923,7 @@ bool Node::confPollSnmp(DWORD dwRqId)
       }
 
       // Check for CDP (Cisco Discovery Protocol) support
-      if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), 1))
+      if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), 1))
       {
 			LockData();
          m_dwFlags |= NF_IS_CDP;
@@ -1938,7 +1937,7 @@ bool Node::confPollSnmp(DWORD dwRqId)
       }
 
       // Check for NDP (Nortel Discovery Protocol) support
-      if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), 1))
+      if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), 1))
       {
 			LockData();
          m_dwFlags |= NF_IS_NDP;
@@ -1990,7 +1989,7 @@ bool Node::confPollSnmp(DWORD dwRqId)
 		}
 
       // Check for 802.1x support
-      if (CheckSNMPIntegerValue(pTransport, _T(".1.0.8802.1.1.1.1.1.1.0"), 1))
+      if (checkSNMPIntegerValue(pTransport, _T(".1.0.8802.1.1.1.1.1.1.0"), 1))
       {
 			LockData();
          m_dwFlags |= NF_IS_8021X;
@@ -2003,7 +2002,7 @@ bool Node::confPollSnmp(DWORD dwRqId)
 			UnlockData();
       }
 
-      CheckOSPFSupport(pTransport);
+      checkOSPFSupport(pTransport);
 
 		// Get VRRP information
 		VrrpInfo *vrrpInfo = GetVRRPInfo(this);
@@ -2060,7 +2059,7 @@ void Node::checkBridgeMib(SNMP_Transport *pTransport)
 		UnlockData();
 
 		// Check for Spanning Tree (IEEE 802.1d) MIB support
-		if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.17.2.1.0"), 3))
+		if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.17.2.1.0"), 3))
 		{
 			LockData();
 			m_dwFlags |= NF_IS_STP;
@@ -3145,16 +3144,14 @@ void Node::getInterfaceStatusFromAgent(DWORD dwIndex, int *adminState, int *oper
    }
 }
 
-
-//
-// Put list of supported parameters into CSCP message
-//
-
-void Node::writeParamListToMessage(CSCPMessage *pMsg)
+/**
+ * Put list of supported parameters into NXCP message
+ */
+void Node::writeParamListToMessage(CSCPMessage *pMsg, WORD flags)
 {
    LockData();
 
-	if (m_paramList != NULL)
+	if ((flags & 0x01) && (m_paramList != NULL))
    {
       pMsg->SetVariable(VID_NUM_PARAMETERS, (DWORD)m_paramList->size());
 
@@ -3175,7 +3172,7 @@ void Node::writeParamListToMessage(CSCPMessage *pMsg)
       pMsg->SetVariable(VID_NUM_PARAMETERS, (DWORD)0);
    }
 
-	if (m_tableList != NULL)
+	if ((flags & 0x02) && (m_tableList != NULL))
    {
 		pMsg->SetVariable(VID_NUM_TABLES, (DWORD)m_tableList->size());
 
@@ -3199,22 +3196,27 @@ void Node::writeParamListToMessage(CSCPMessage *pMsg)
 	UnlockData();
 }
 
-
-//
-// Open list of supported parameters for reading
-//
-
+/**
+ * Open list of supported parameters for reading
+ */
 void Node::openParamList(StructArray<NXC_AGENT_PARAM> **paramList)
 {
    LockData();
    *paramList = m_paramList;
 }
 
+/**
+ * Open list of supported tables for reading
+ */
+void Node::openTableList(StructArray<NXC_AGENT_TABLE> **tableList)
+{
+   LockData();
+   *tableList = m_tableList;
+}
 
-//
-// Check status of network service
-//
-
+/**
+ * Check status of network service
+ */
 DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType,
                                 WORD wPort, WORD wProto, TCHAR *pszRequest,
                                 TCHAR *pszResponse)
@@ -3239,11 +3241,9 @@ DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceTy
    return dwError;
 }
 
-
-//
-// Handler for object deletion
-//
-
+/**
+ * Handler for object deletion
+ */
 void Node::OnObjectDelete(DWORD dwObjectId)
 {
 	LockData();
@@ -3257,12 +3257,10 @@ void Node::OnObjectDelete(DWORD dwObjectId)
 	UnlockData();
 }
 
-
-//
-// Check node for OSPF support
-//
-
-void Node::CheckOSPFSupport(SNMP_Transport *pTransport)
+/**
+ * Check node for OSPF support
+ */
+void Node::checkOSPFSupport(SNMP_Transport *pTransport)
 {
    LONG nAdminStatus;
 
@@ -3697,7 +3695,7 @@ void Node::PrepareForDeletion()
  * Check if specified SNMP variable set to specified value.
  * If variable doesn't exist at all, will return FALSE
  */
-BOOL Node::CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID, int nValue)
+BOOL Node::checkSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID, int nValue)
 {
    DWORD dwTemp;
 
@@ -4799,7 +4797,7 @@ void Node::executeHookScript(const TCHAR *hookName)
 	NXSL_Program *script = g_pScriptLibrary->findScript(scriptName);
 	if (script == NULL)
 	{
-		DbgPrintf(6, _T("Node::executeHookScript(%s [%u]): hook script \"%s\" not found"), m_szName, m_dwId, scriptName);
+		DbgPrintf(7, _T("Node::executeHookScript(%s [%u]): hook script \"%s\" not found"), m_szName, m_dwId, scriptName);
 		return;
 	}
 

@@ -297,11 +297,10 @@ BOOL InitParameterList()
    return TRUE;
 }
 
-
-//
-// Add push parameter to list
-// by LWX
-
+/**
+ * Add push parameter to list
+ * by LWX
+ */
 void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
 {
    int i;
@@ -327,11 +326,9 @@ void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
    }
 }
 
-
-//
-// Add parameter to list
-// 
-
+/**
+ * Add parameter to list
+ */ 
 void AddParameter(const TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *), const TCHAR *pArg,
                   int iDataType, const TCHAR *pszDescription)
 {
@@ -372,11 +369,9 @@ void AddParameter(const TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const 
    }
 }
 
-
-//
-// Add list
-// 
-
+/**
+ * Add list
+ */ 
 void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *), const TCHAR *arg)
 {
    int i;
@@ -402,12 +397,11 @@ void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, S
    }
 }
 
-
-//
-// Add table
-// 
-
-void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *), const TCHAR *arg)
+/**
+ * Add table
+ */ 
+void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *), const TCHAR *arg,
+				  const TCHAR *instanceColumn, const TCHAR *description)
 {
    int i;
 
@@ -425,18 +419,18 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
    {
       // Add new enum
       m_pTableList = (NETXMS_SUBAGENT_TABLE *)realloc(m_pTableList, sizeof(NETXMS_SUBAGENT_TABLE) * (m_iNumTables + 1));
-      nx_strncpy(m_pTableList[m_iNumTables].name, name, MAX_PARAM_NAME - 1);
+      nx_strncpy(m_pTableList[m_iNumTables].name, name, MAX_PARAM_NAME);
       m_pTableList[m_iNumTables].handler = handler;
       m_pTableList[m_iNumTables].arg = arg;
+		nx_strncpy(m_pTableList[m_iNumTables].instanceColumn, instanceColumn, MAX_COLUMN_NAME);
+		nx_strncpy(m_pTableList[m_iNumTables].description, description, MAX_DB_STRING);
       m_iNumTables++;
    }
 }
 
-
-//
-// Add external parameter
-//  
-
+/**
+ * Add external parameter
+ */  
 BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec) //to be TCHAR
 {
    TCHAR *pszCmdLine, *pszArg;
