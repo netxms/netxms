@@ -7,6 +7,7 @@
 - Management console:
 	- Network map functionality in web console now in sync with desktop version
 	- Alarm details view improved
+	- Configurable chart ordering on performance tab
 - 64bit interface counters in Windows agent
 - Improved LLDP support
 - Driver for D-Link switches

@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -54,6 +55,7 @@ public class PerfTab extends PropertyPage
 	private LabeledText name;
 	private ColorSelector color;
 	private Combo type;
+	private Spinner orderNumber;
 	private Button checkShowThresholds;
 	private DciSelector parentDci;
 	
@@ -79,14 +81,14 @@ public class PerfTab extends PropertyPage
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
-		layout.numColumns = 3;
+		layout.numColumns = 4;
       dialogArea.setLayout(layout);
       
       checkShow = new Button(dialogArea, SWT.CHECK);
       checkShow.setText("&Show on performance tab");
       checkShow.setSelection(settings.isEnabled());
       GridData gd = new GridData();
-      gd.horizontalSpan = 3;
+      gd.horizontalSpan = layout.numColumns;
       checkShow.setLayoutData(gd);
       
       title = new LabeledText(dialogArea, SWT.NONE);
@@ -107,13 +109,16 @@ public class PerfTab extends PropertyPage
       type.add("Line");
       type.add("Area");
       type.select(settings.getType());
+      
+      orderNumber = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Order", 0, 65535, new GridData(SWT.LEFT, SWT.CENTER, false, false));
+      orderNumber.setSelection(settings.getOrder());
 
       parentDci = new DciSelector(dialogArea, SWT.NONE, false);
       parentDci.setDciId(dci.getNodeId(), settings.getParentDciId());
       parentDci.setFixedNode(true);
       parentDci.setLabel("Attach to another DCI");
       gd = new GridData();
-      gd.horizontalSpan = 3;
+      gd.horizontalSpan = layout.numColumns;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       parentDci.setLayoutData(gd);
@@ -124,14 +129,14 @@ public class PerfTab extends PropertyPage
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      gd.horizontalSpan = 3;
+      gd.horizontalSpan = layout.numColumns;
       name.setLayoutData(gd);
       
       checkShowThresholds = new Button(dialogArea, SWT.CHECK);
       checkShowThresholds.setText("&Show thresholds on graph");
       checkShowThresholds.setSelection(settings.isShowThresholds());
       gd = new GridData();
-      gd.horizontalSpan = 3;
+      gd.horizontalSpan = layout.numColumns;
       checkShowThresholds.setLayoutData(gd);
       
       return dialogArea;
@@ -152,6 +157,7 @@ public class PerfTab extends PropertyPage
 		settings.setName(name.getText());
 		settings.setColor(ColorConverter.rgbToInt(color.getColorValue()));
 		settings.setType(type.getSelectionIndex());
+		settings.setOrder(orderNumber.getSelection());
 		settings.setShowThresholds(checkShowThresholds.getSelection());
 
 		settings.setParentDciId(parentDci.getDciId());

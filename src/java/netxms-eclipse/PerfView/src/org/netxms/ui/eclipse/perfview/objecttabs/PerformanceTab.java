@@ -185,11 +185,17 @@ public class PerformanceTab extends ObjectTab
 		for(PerfTabGraphSettings s : settings)
 			s.fixParentDciId(settings);
 		
+		// Sort DCIs: put top-level first, then by order number, then alphabetically
 		Collections.sort(settings, new Comparator<PerfTabGraphSettings>() {
 			@Override
 			public int compare(PerfTabGraphSettings o1, PerfTabGraphSettings o2)
 			{
-				return (int)(o1.getParentDciId() - o2.getParentDciId());
+				int result = Long.signum(o1.getParentDciId() - o2.getParentDciId());
+				if (result == 0)
+					result = Integer.signum(o1.getOrder() - o2.getOrder());
+				if (result == 0)
+					result = o1.getName().compareToIgnoreCase(o2.getName());
+				return result;
 			}
 		});
 		
