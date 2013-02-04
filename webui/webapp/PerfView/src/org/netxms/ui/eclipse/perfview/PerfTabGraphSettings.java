@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,6 +58,9 @@ public class PerfTabGraphSettings
 
 	@Element(required=false)
 	private String parentDciName = null;
+	
+	@Element(required=false)
+	private int order = 0;
 	
 	private PerfTabDci runtimeDciInfo = null;
 
@@ -271,5 +274,21 @@ public class PerfTabGraphSettings
 				return;
 			}
 		}
+	}
+
+	/**
+	 * @return the order
+	 */
+	public final int getOrder()
+	{
+		return order;
+	}
+
+	/**
+	 * @param order the order to set
+	 */
+	public final void setOrder(int order)
+	{
+		this.order = order;
 	}
 }
