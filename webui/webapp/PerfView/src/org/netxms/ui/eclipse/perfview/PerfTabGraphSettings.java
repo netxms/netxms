@@ -60,7 +60,7 @@ public class PerfTabGraphSettings
 	private String parentDciName = null;
 	
 	@Element(required=false)
-	private int order = 0;
+	private int order = 100;
 	
 	private PerfTabDci runtimeDciInfo = null;
 
