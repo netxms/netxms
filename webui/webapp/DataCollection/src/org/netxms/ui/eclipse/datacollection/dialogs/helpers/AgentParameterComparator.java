@@ -12,8 +12,7 @@ import org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * @author victor
- *
+ * Comparator for agent parameters
  */
 public class AgentParameterComparator extends ViewerComparator
 {

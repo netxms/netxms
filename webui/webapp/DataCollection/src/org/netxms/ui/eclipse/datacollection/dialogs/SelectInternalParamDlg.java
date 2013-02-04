@@ -42,7 +42,7 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 	 */
 	public SelectInternalParamDlg(Shell parentShell, long nodeId)
 	{
-		super(parentShell, nodeId);
+		super(parentShell, nodeId, false);
 	}
 
 	/**

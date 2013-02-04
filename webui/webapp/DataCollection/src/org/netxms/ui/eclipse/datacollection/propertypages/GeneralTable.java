@@ -20,8 +20,9 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -46,8 +47,13 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
+import org.netxms.client.snmp.SnmpObjectId;
+import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
+import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
+import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -401,18 +407,14 @@ public class GeneralTable extends PropertyPage
 	 */
 	private void selectParameter()
 	{
-		/*
 		Dialog dlg;
 		switch(origin.getSelectionIndex())
 		{
-			case DataCollectionItem.INTERNAL:
-				dlg = new SelectInternalParamDlg(getShell(), dci.getNodeId());
+			case DataCollectionObject.AGENT:
+				dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), true);
 				break;
-			case DataCollectionItem.AGENT:
-				dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId());
-				break;
-			case DataCollectionItem.SNMP:
-			case DataCollectionItem.CHECKPOINT_SNMP:
+			case DataCollectionObject.SNMP:
+			case DataCollectionObject.CHECKPOINT_SNMP:
 				SnmpObjectId oid;
 				try
 				{
@@ -435,7 +437,6 @@ public class GeneralTable extends PropertyPage
 			description.setText(pd.getParameterDescription());
 			parameter.setText(pd.getParameterName());
 		}
-		*/
 	}
 	
 	/**

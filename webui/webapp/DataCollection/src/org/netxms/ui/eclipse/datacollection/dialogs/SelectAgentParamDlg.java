@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.AgentParameter;
+import org.netxms.client.AgentTable;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -43,7 +44,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * Dialog for selecting parameters provided by NetXMS agent
+ * Dialog for selecting parameters/tables provided by NetXMS agent
  */
 public class SelectAgentParamDlg extends AbstractSelectParamDlg
 {
@@ -56,9 +57,9 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 	 * @param parentShell
 	 * @param nodeId
 	 */
-	public SelectAgentParamDlg(Shell parentShell, long nodeId)
+	public SelectAgentParamDlg(Shell parentShell, long nodeId, boolean selectTables)
 	{
-		super(parentShell, nodeId);
+		super(parentShell, nodeId, selectTables);
 		
 		actionQuery = new Action(Messages.SelectAgentParamDlg_Query) {
 			private static final long serialVersionUID = 1L;
@@ -77,30 +78,32 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 	@Override
 	protected void createButtonsForButtonBar(Composite parent)
 	{
-		((GridLayout)parent.getLayout()).numColumns++;
-		
-		queryButton = new Button(parent, SWT.PUSH);
-		queryButton.setText(Messages.SelectAgentParamDlg_Query);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		queryButton.setLayoutData(gd);
-		queryButton.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				querySelectedParameter();
-			}
+		if (!selectTables)
+		{
+			((GridLayout)parent.getLayout()).numColumns++;
 			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
-		
+			queryButton = new Button(parent, SWT.PUSH);
+			queryButton.setText(Messages.SelectAgentParamDlg_Query);
+			GridData gd = new GridData();
+			gd.horizontalAlignment = SWT.FILL;
+			gd.grabExcessHorizontalSpace = true;
+			queryButton.setLayoutData(gd);
+			queryButton.addSelectionListener(new SelectionListener() {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void widgetSelected(SelectionEvent e)
+				{
+					querySelectedParameter();
+				}
+				
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e)
+				{
+					widgetSelected(e);
+				}
+			});
+		}		
 		super.createButtonsForButtonBar(parent);
 	}
 
@@ -111,7 +114,8 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		super.fillContextMenu(manager);
-		manager.add(actionQuery);
+		if (!selectTables)
+			manager.add(actionQuery);
 	}
 
 	/* (non-Javadoc)
@@ -131,14 +135,28 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<AgentParameter> parameters = session.getSupportedParameters(object.getObjectId());
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						viewer.setInput(parameters.toArray());
-					}
-				});
+				if (selectTables)
+				{
+					final List<AgentTable> tables = session.getSupportedTables(object.getObjectId());
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
+						{
+							viewer.setInput(tables.toArray());
+						}
+					});
+				}
+				else
+				{
+					final List<AgentParameter> parameters = session.getSupportedParameters(object.getObjectId());
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
+						{
+							viewer.setInput(parameters.toArray());
+						}
+					});
+				}
 			}
 		}.start();
 	}
@@ -197,6 +215,6 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 	@Override
 	protected String getConfigurationPrefix()
 	{
-		return "SelectAgentParamDlg"; //$NON-NLS-1$
+		return selectTables ? "SelectAgentTableDlg" : "SelectAgentParamDlg"; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }
