@@ -518,21 +518,17 @@ void NetObj::deleteObject()
    DbgPrintf(4, _T("Object %d successfully deleted"), m_dwId);
 }
 
-
-//
-// Default handler for object deletion notification
-//
-
+/**
+ * Default handler for object deletion notification
+ */
 void NetObj::OnObjectDelete(DWORD dwObjectId)
 {
 }
 
-
-//
-// Print childs IDs
-//
-
-const TCHAR *NetObj::getChildList(TCHAR *szBuffer)
+/**
+ * Get childs IDs in printable form
+ */
+const TCHAR *NetObj::dbgGetChildList(TCHAR *szBuffer)
 {
    DWORD i;
    TCHAR *pBuf = szBuffer;
@@ -551,12 +547,10 @@ const TCHAR *NetObj::getChildList(TCHAR *szBuffer)
    return szBuffer;
 }
 
-
-//
-// Print parents IDs
-//
-
-const TCHAR *NetObj::getParentList(TCHAR *szBuffer)
+/**
+ * Get parents IDs in printable form
+ */
+const TCHAR *NetObj::dbgGetParentList(TCHAR *szBuffer)
 {
    DWORD i;
    TCHAR *pBuf = szBuffer;
@@ -575,11 +569,9 @@ const TCHAR *NetObj::getParentList(TCHAR *szBuffer)
    return szBuffer;
 }
 
-
-//
-// Calculate status for compound object based on childs' status
-//
-
+/**
+ * Calculate status for compound object based on childs' status
+ */
 void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    DWORD i;
@@ -687,11 +679,9 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
    }
 }
 
-
-//
-// Load ACL from database
-//
-
+/**
+ * Load ACL from database
+ */
 BOOL NetObj::loadACLFromDB()
 {
    BOOL bSuccess = FALSE;
@@ -1214,11 +1204,9 @@ void NetObj::hide()
    UnlockData();
 }
 
-
-//
-// Unhide object and all its childs
-//
-
+/**
+ * Unhide object and all its childs
+ */
 void NetObj::unhide()
 {
    DWORD i;
@@ -1234,11 +1222,9 @@ void NetObj::unhide()
    UnlockChildList();
 }
 
-
-//
-// Return status propagated to parent
-//
-
+/**
+ * Return status propagated to parent
+ */
 int NetObj::getPropagatedStatus()
 {
    int iStatus;
@@ -1289,22 +1275,18 @@ int NetObj::getPropagatedStatus()
    return iStatus;
 }
 
-
-//
-// Prepare object for deletion. Function should return only
-// when object deletion is safe
-//
-
+/**
+ * Prepare object for deletion. Method should return only
+ * when object deletion is safe
+ */
 void NetObj::PrepareForDeletion()
 {
 }
 
-
-//
-// Set object's comments. 
-// NOTE: pszText should be dynamically allocated or NULL
-//
-
+/**
+ * Set object's comments. 
+ * NOTE: pszText should be dynamically allocated or NULL
+ */
 void NetObj::setComments(TCHAR *pszText)
 {
    LockData();
@@ -1314,11 +1296,9 @@ void NetObj::setComments(TCHAR *pszText)
    UnlockData();
 }
 
-
-//
-// Get object's comments
-//
-
+/**
+ * Get object's comments
+ */
 void NetObj::CommentsToMessage(CSCPMessage *pMsg)
 {
    LockData();
@@ -1326,11 +1306,9 @@ void NetObj::CommentsToMessage(CSCPMessage *pMsg)
    UnlockData();
 }
 
-
-//
-// Load trusted nodes list from database
-//
-
+/**
+ * Load trusted nodes list from database
+ */
 BOOL NetObj::loadTrustedNodes()
 {
 	DB_RESULT hResult;
@@ -1356,11 +1334,9 @@ BOOL NetObj::loadTrustedNodes()
 	return (hResult != NULL);
 }
 
-
-//
-// Save list of trusted nodes to database
-//
-
+/**
+ * Save list of trusted nodes to database
+ */
 BOOL NetObj::saveTrustedNodes(DB_HANDLE hdb)
 {
 	TCHAR query[256];
@@ -1383,12 +1359,10 @@ BOOL NetObj::saveTrustedNodes(DB_HANDLE hdb)
 	return rc;
 }
 
-
-//
-// Check if given node is in trust list
-// Will always return TRUE if system parameter CheckTrustedNodes set to 0
-//
-
+/**
+ * Check if given node is in trust list
+ * Will always return TRUE if system parameter CheckTrustedNodes set to 0
+ */
 BOOL NetObj::IsTrustedNode(DWORD id)
 {
 	BOOL rc;
@@ -1415,11 +1389,9 @@ BOOL NetObj::IsTrustedNode(DWORD id)
 	return rc;
 }
 
-
-//
-// Get list of parent objects for NXSL script
-//
-
+/**
+ * Get list of parent objects for NXSL script
+ */
 NXSL_Array *NetObj::getParentsForNXSL()
 {
 	NXSL_Array *parents = new NXSL_Array;
@@ -1485,11 +1457,34 @@ void NetObj::getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly)
 }
 
 /**
- * Get full list of child objects (including both direct and indirect childs)
+ * Get full list of child objects (including both direct and indirect childs).
+ *  Returned array is dynamically allocated and must be deleted by the caller.
+ *
+ * @param eventSourceOnly if true, only objects that can be event source will be included
  */
 ObjectArray<NetObj> *NetObj::getFullChildList(bool eventSourceOnly)
 {
 	ObjectIndex list;
 	getFullChildListInternal(&list, eventSourceOnly);
 	return list.getObjects();
+}
+
+/**
+ * Get list of child objects (direct only). Returned array is
+ * dynamically allocated and must be deleted by the caller.
+ *
+ * @param typeFilter Only return objects with class ID equals given value. 
+ *                   Set to -1 to disable filtering.
+ */
+ObjectArray<NetObj> *NetObj::getChildList(int typeFilter)
+{
+	LockChildList(FALSE);
+	ObjectArray<NetObj> *list = new ObjectArray<NetObj>((int)m_dwChildCount, 16, false);
+	for(DWORD i = 0; i < m_dwChildCount; i++)
+	{
+		if ((typeFilter == -1) || (typeFilter == m_pChildList[i]->Type()))
+			list->add(m_pChildList[i]);
+	}
+	UnlockChildList();
+	return list;
 }

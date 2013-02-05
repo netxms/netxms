@@ -1645,7 +1645,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
                  g_szStatusTextSmall[object->Status()],
                  object->isModified(), object->isDeleted());
    ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 
-                 object->getParentList(dd->buffer), object->getChildList(&dd->buffer[4096]));
+                 object->dbgGetParentList(dd->buffer), object->dbgGetChildList(&dd->buffer[4096]));
 	time_t t = object->TimeStamp();
 	struct tm *ltm = localtime(&t);
 	_tcsftime(dd->buffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);

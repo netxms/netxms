@@ -397,21 +397,20 @@ public:
    void setCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); Modify(); }
    void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
 
+	ObjectArray<NetObj> *getChildList(int typeFilter);
 	ObjectArray<NetObj> *getFullChildList(bool eventSourceOnly);
 
 	virtual NXSL_Array *getParentsForNXSL();
 	virtual NXSL_Array *getChildrenForNXSL();
 
    // Debug methods
-   const TCHAR *getParentList(TCHAR *szBuffer);
-   const TCHAR *getChildList(TCHAR *szBuffer);
+   const TCHAR *dbgGetParentList(TCHAR *szBuffer);
+   const TCHAR *dbgGetChildList(TCHAR *szBuffer);
 };
 
-
-//
-// Inline functions of NetObj class
-//
-
+/**
+ * Get object's reference count
+ */
 inline DWORD NetObj::RefCount()
 { 
    DWORD dwRefCount;
@@ -422,6 +421,9 @@ inline DWORD NetObj::RefCount()
    return dwRefCount; 
 }
 
+/**
+ * Increment object's reference count
+ */
 inline void NetObj::IncRefCount()
 { 
    MutexLock(m_mutexRefCount);
@@ -429,6 +431,9 @@ inline void NetObj::IncRefCount()
    MutexUnlock(m_mutexRefCount);
 }
 
+/**
+ * Decrement object's reference count
+ */
 inline void NetObj::DecRefCount()
 { 
    MutexLock(m_mutexRefCount);
