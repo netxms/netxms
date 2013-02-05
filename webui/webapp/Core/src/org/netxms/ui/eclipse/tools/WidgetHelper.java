@@ -539,7 +539,8 @@ public class WidgetHelper
 		// Looks like RAP measures font size in pixels, not points:
 		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=309945
 		// so for RCP compatibility we just returns pixels
-		return px;
-		//return (int)Math.round(px * 72.0 / device.getDPI().y);
+		// UPD: looks like it's back to normal in RAP 2.0 RC2
+		//return px;
+		return (int)Math.round(px * 72.0 / device.getDPI().y);
 	}
 }
