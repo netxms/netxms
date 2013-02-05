@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.android.R;
 
@@ -47,26 +48,42 @@ public class OverviewAdapter extends BaseAdapter
 	 * 
 	 * @param alarms
 	 */
-	public void setValues(Node node)
+	public void setValues(GenericObject obj)
 	{
 		labels.clear();
 		values.clear();
-		addPair(r.getString(R.string.overview_id), Integer.toString((int)node.getObjectId()));
-		addPair(r.getString(R.string.overview_guid), node.getGuid().toString());
-		addPair(r.getString(R.string.overview_class), node.getClass().getSimpleName());
-		addPair(r.getString(R.string.overview_status), getNodeStatus(node.getStatus()));
-		addPair(r.getString(R.string.overview_zone_id), Long.toString(node.getZoneId()));
-		addPair(r.getString(R.string.overview_primary_hostname), node.getPrimaryName());
-		addPair(r.getString(R.string.overview_primary_ip), node.getPrimaryIP().getHostAddress().toString());
-		if (node.hasAgent())
-			addPair(r.getString(R.string.overview_netxms_agent_version), node.getAgentVersion());
-		addPair(r.getString(R.string.overview_system_description), node.getSystemDescription(), false);
-		addPair(r.getString(R.string.overview_platform_name), node.getPlatformName(), false);
-		addPair(r.getString(R.string.overview_snmp_sysname), node.getSnmpSysName(), false);
-		addPair(r.getString(R.string.overview_snmp_oid), node.getSnmpOID(), false);
-		if ((node.getFlags() & Node.NF_IS_BRIDGE) != 0)
-			addPair(r.getString(R.string.overview_bridge_base_address), node.getBridgeBaseAddress().toString());
-		addPair(r.getString(R.string.overview_driver), node.getDriverName(), false);
+		addPair(r.getString(R.string.overview_id), Integer.toString((int)obj.getObjectId()));
+		addPair(r.getString(R.string.overview_guid), obj.getGuid().toString());
+		addPair(r.getString(R.string.overview_class), obj.getClass().getSimpleName());
+		addPair(r.getString(R.string.overview_status), getNodeStatus(obj.getStatus()));
+		addPair(r.getString(R.string.overview_primary_ip), obj.getPrimaryIP().getHostAddress().toString());
+		switch (obj.getObjectClass())
+		{
+			case GenericObject.OBJECT_NODE:
+				addPair(r.getString(R.string.overview_zone_id), Long.toString(((Node)obj).getZoneId()));
+				addPair(r.getString(R.string.overview_primary_hostname), ((Node)obj).getPrimaryName());
+				if (((Node)obj).hasAgent())
+					addPair(r.getString(R.string.overview_netxms_agent_version), ((Node)obj).getAgentVersion());
+				addPair(r.getString(R.string.overview_system_description), ((Node)obj).getSystemDescription(), false);
+				addPair(r.getString(R.string.overview_platform_name), ((Node)obj).getPlatformName(), false);
+				addPair(r.getString(R.string.overview_snmp_sysname), ((Node)obj).getSnmpSysName(), false);
+				addPair(r.getString(R.string.overview_snmp_oid), ((Node)obj).getSnmpOID(), false);
+				if ((((Node)obj).getFlags() & Node.NF_IS_BRIDGE) != 0)
+					addPair(r.getString(R.string.overview_bridge_base_address), ((Node)obj).getBridgeBaseAddress().toString());
+				addPair(r.getString(R.string.overview_driver), ((Node)obj).getDriverName(), false);
+				break;
+			case GenericObject.OBJECT_MOBILEDEVICE:
+				addPair(r.getString(R.string.overview_last_report), ((MobileDevice)obj).getLastReportTime().toLocaleString());
+				addPair(r.getString(R.string.overview_device_id), ((MobileDevice)obj).getDeviceId());
+				addPair(r.getString(R.string.overview_vendor), ((MobileDevice)obj).getVendor());
+				addPair(r.getString(R.string.overview_model), ((MobileDevice)obj).getModel());
+				addPair(r.getString(R.string.overview_serial_number), ((MobileDevice)obj).getSerialNumber());
+				addPair(r.getString(R.string.overview_os_name), ((MobileDevice)obj).getOsName());
+				addPair(r.getString(R.string.overview_os_version), ((MobileDevice)obj).getOsVersion());
+				addPair(r.getString(R.string.overview_user), ((MobileDevice)obj).getUserId());
+				addPair(r.getString(R.string.overview_battery_level), Integer.toString(((MobileDevice)obj).getBatteryLevel()) + "%");
+				break;
+		}
 	}
 
 	private void addPair(String label, String value, boolean allowEmpty)

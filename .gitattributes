@@ -146,6 +146,7 @@ android/src/console/res/drawable/ni_overview_tab.png -text
 android/src/console/res/drawable/ni_thresholds_tab.png -text
 android/src/console/res/drawable/object_cluster.png -text
 android/src/console/res/drawable/object_container.png -text
+android/src/console/res/drawable/object_mobiledevice.png -text
 android/src/console/res/drawable/object_node.png -text
 android/src/console/res/drawable/object_unknown.png -text
 android/src/console/res/drawable/state_active.png -text

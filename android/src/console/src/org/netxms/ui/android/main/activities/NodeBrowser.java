@@ -82,7 +82,7 @@ public class NodeBrowser extends AbstractClientActivity
 					currentParent = obj;
 					refreshList();
 				}
-				else if (obj.getObjectClass() == GenericObject.OBJECT_NODE)
+				else if (obj.getObjectClass() == GenericObject.OBJECT_NODE || obj.getObjectClass() == GenericObject.OBJECT_MOBILEDEVICE)
 				{
 					showNodeInfo(obj.getObjectId());
 				}

@@ -193,6 +193,9 @@ public class ObjectListAdapter extends BaseAdapter
 				case GenericObject.OBJECT_DASHBOARD:
 					objectIconId = R.drawable.dashboard;
 					break;
+				case GenericObject.OBJECT_MOBILEDEVICE:
+					objectIconId = R.drawable.object_mobiledevice;
+					break;
 			}
 		}
 

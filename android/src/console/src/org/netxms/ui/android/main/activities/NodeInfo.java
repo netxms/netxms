@@ -11,7 +11,6 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.AlarmListAdapter;
 import org.netxms.ui.android.main.adapters.InterfacesAdapter;
@@ -93,7 +92,7 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	private String TAB_INTERFACES;
 	private int tabId;
 	private long nodeId;
-	private Node node = null;
+	private GenericObject obj = null;
 	private boolean recreateOptionsMenu = false;
 	private Spinner sortBy;
 
@@ -363,12 +362,19 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 		super.onServiceConnected(name, binder);
 		if (service != null)
 		{
-			node = (Node)service.findObjectById(nodeId);
+			try
+			{
+				obj = service.findObjectById(nodeId);
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
 			service.registerNodeInfo(this);
 			alarmsAdapter.setService(service);
 			TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
-			if (node != null)
-				title.setText(node.getObjectName());
+			if (obj != null)
+				title.setText(obj.getObjectName());
 			refreshOverview();
 			refreshLastValues();
 			refreshAlarms();
@@ -381,9 +387,9 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	 */
 	public void refreshOverview()
 	{
-		if (node != null)
+		if (obj != null)
 		{
-			overviewAdapter.setValues(node);
+			overviewAdapter.setValues(obj);
 			overviewAdapter.notifyDataSetChanged();
 		}
 	}
@@ -401,10 +407,10 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	 */
 	public void refreshAlarms()
 	{
-		if (node != null)
+		if (obj != null)
 		{
 			ArrayList<Integer> id = new ArrayList<Integer>(0);
-			id.add((int)node.getObjectId());
+			id.add((int)obj.getObjectId());
 			alarmsAdapter.setFilter(id);
 			alarmsAdapter.setAlarms(service.getAlarms());
 			alarmsAdapter.notifyDataSetChanged();
@@ -416,8 +422,8 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	 */
 	public void refreshInterfaces()
 	{
-		if (node != null)
-			new LoadChildrenTask(node.getObjectId(), GenericObject.OBJECT_INTERFACE).execute();
+		if (obj != null)
+			new LoadChildrenTask(obj.getObjectId(), GenericObject.OBJECT_INTERFACE).execute();
 	}
 
 	/*
@@ -731,11 +737,11 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 		{
 			try
 			{
-				GenericObject obj = service.getSession().findObjectById(nodeId);
-				if (obj != null)
+				GenericObject go = service.getSession().findObjectById(nodeId);
+				if (go != null)
 				{
-					service.getSession().syncMissingObjects(obj.getChildIdList(), false, NXCSession.OBJECT_SYNC_WAIT);
-					return obj.getAllChilds(classFilter);
+					service.getSession().syncMissingObjects(go.getChildIdList(), false, NXCSession.OBJECT_SYNC_WAIT);
+					return go.getAllChilds(classFilter);
 				}
 			}
 			catch (Exception e)
