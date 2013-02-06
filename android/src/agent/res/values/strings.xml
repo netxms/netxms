@@ -52,6 +52,7 @@
 	<string name="pref_location_activation_duration">Duration (min)</string>
 	<string name="pref_location_activation_duration_summary">For how long should wait to acquire a new position</string>
 	<string name="pref_location_strategy">Location strategy</string>
+	<string name="pref_location_provider_priority">Provider availability order</string>
 	<string name="pref_notifications">Notifications</string>
 	<string name="pref_status">Connection status</string>
 	<string name="pref_notification_toast">Toast notification</string>

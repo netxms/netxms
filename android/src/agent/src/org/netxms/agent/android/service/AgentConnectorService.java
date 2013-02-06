@@ -32,7 +32,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -77,6 +76,10 @@ public class AgentConnectorService extends Service implements LocationListener
 	private static final int ONE_DAY_MINUTES = 24 * 60;
 	private static final int NETXMS_REQUEST_CODE = 123456;
 	private static final int MIN_DISTANCE = 50; // Mininum distance for acquiring a new position (meters)
+	private static final int STRATEGY_NET_ONLY = 0;
+	private static final int STRATEGY_GPS_ONLY = 1;
+	private static final int STRATEGY_NET_THEN_GPS = 2;
+	private static final int STRATEGY_GPS_THEN_NET = 3;
 
 	private final Binder binder = new AgentConnectorBinder();
 	private Handler uiThreadHandler;
@@ -100,6 +103,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	private int locationInterval;
 	private int locationDuration;
 	private int locationStrategy;
+	private String locationProvider;
 
 	/**
 	 * Class for clients to access. Because we know this service always runs in
@@ -368,6 +372,8 @@ public class AgentConnectorService extends Service implements LocationListener
 
 	/**
 	 * Set a connection schedule
+	 * 
+	 * @param time for new schedule
 	 */
 	private void setSchedule(long milliseconds)
 	{
@@ -412,7 +418,9 @@ public class AgentConnectorService extends Service implements LocationListener
 	}
 
 	/**
-	 * Get device serial number
+	 * Get device serial number (starting from HoneyComb)
+	 * 
+	 * @return Device serial number if available 
 	 */
 	@SuppressLint("NewApi")
 	public String getSerial()
@@ -422,6 +430,8 @@ public class AgentConnectorService extends Service implements LocationListener
 
 	/**
 	 * Get device manufacturer
+	 * 
+	 * @return Device manufacturer 
 	 */
 	public String getManufacturer()
 	{
@@ -430,6 +440,8 @@ public class AgentConnectorService extends Service implements LocationListener
 
 	/**
 	 * Get device model
+	 * 
+	 * @return Device model
 	 */
 	public String getModel()
 	{
@@ -438,6 +450,8 @@ public class AgentConnectorService extends Service implements LocationListener
 
 	/**
 	 * Get device OS relese
+	 * 
+	 * @return OS release number
 	 */
 	public String getRelease()
 	{
@@ -445,7 +459,9 @@ public class AgentConnectorService extends Service implements LocationListener
 	}
 
 	/**
-	 * Get device main Google account user.
+	 * Get device user
+	 * 
+	 * @return main Google account user
 	 */
 	public String getUser()
 	{
@@ -465,7 +481,9 @@ public class AgentConnectorService extends Service implements LocationListener
 	}
 
 	/**
-	 * Get device id: IMEI number or Android ID for phoneless devices
+	 * Get device id
+	 * 
+	 * @return IMEI number or Android ID for phoneless devices 
 	 */
 	public String getDeviceId()
 	{
@@ -480,6 +498,8 @@ public class AgentConnectorService extends Service implements LocationListener
 
 	/**
 	 * Get OS nickname
+	 * 
+	 * @return OS nick name 
 	 */
 	public String getOSName()
 	{
@@ -525,6 +545,8 @@ public class AgentConnectorService extends Service implements LocationListener
 
 	/**
 	 * Get internet address. NB must run on background thread (as per honeycomb specs)
+	 * 
+	 * @return Internet address, null if not addresses are available
 	 */
 	private InetAddress getInetAddress()
 	{
@@ -559,20 +581,15 @@ public class AgentConnectorService extends Service implements LocationListener
 	private GeoLocation getGeoLocation()
 	{
 		if (locationManager != null)
-		{
-			Criteria hdCrit = new Criteria();
-			if (hdCrit != null)
+			if (locationProvider.length() > 0)
 			{
-				hdCrit.setAccuracy(Criteria.ACCURACY_COARSE);
-				String mlocProvider = locationManager.getBestProvider(hdCrit, true);
-				if (mlocProvider != null)
+				Location currLocation = locationManager.getLastKnownLocation(locationProvider);
+				if (currLocation != null)
 				{
-					Location currLocation = locationManager.getLastKnownLocation(mlocProvider);
-					if (currLocation != null)
-						return new GeoLocation(currLocation.getLatitude(), currLocation.getLongitude());
+					Log.i(TAG, "getGeoLocation, last known location at lat: " + Double.toString(currLocation.getLatitude()) + ", lon: " + Double.toString(currLocation.getLongitude()));
+					return new GeoLocation(currLocation.getLatitude(), currLocation.getLongitude());
 				}
 			}
-		}
 		return null;
 	}
 
@@ -585,7 +602,9 @@ public class AgentConnectorService extends Service implements LocationListener
 	}
 
 	/**
-	 * Get battery level as percentage. -1 if value is not available
+	 * Get battery level as percentage
+	 * 
+	 * @return battery level (percentage), -1 if value is not available
 	 */
 	private int getBatteryLevel()
 	{
@@ -609,6 +628,8 @@ public class AgentConnectorService extends Service implements LocationListener
 
 	/**
 	 * Check for internet connectivity 
+	 * 
+	 * @return true if access to internet is available
 	 */
 	private boolean isInternetOn()
 	{
@@ -718,6 +739,38 @@ public class AgentConnectorService extends Service implements LocationListener
 	}
 
 	/**
+	 * Get location provider based on selected strategy
+	 */
+	private String getLocationProvider(int strategy)
+	{
+		String provider = "";
+		switch (strategy)
+		{
+			case STRATEGY_NET_ONLY:
+				if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+					provider = LocationManager.NETWORK_PROVIDER;
+				break;
+			case STRATEGY_GPS_ONLY:
+				if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+					provider = LocationManager.GPS_PROVIDER;
+				break;
+			case STRATEGY_NET_THEN_GPS:
+				if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+					provider = LocationManager.NETWORK_PROVIDER;
+				else if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+					provider = LocationManager.GPS_PROVIDER;
+				break;
+			case STRATEGY_GPS_THEN_NET:
+				if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+					provider = LocationManager.GPS_PROVIDER;
+				else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+					provider = LocationManager.NETWORK_PROVIDER;
+				break;
+		}
+		return provider;
+	}
+
+	/**
 	 * Internal handler to get new location based on location strategy set
 	 */
 	private final Runnable locationTask = new Runnable()
@@ -736,33 +789,11 @@ public class AgentConnectorService extends Service implements LocationListener
 				}
 				else
 				{
-					String provider = "";
-					switch (locationStrategy)
+					locationProvider = getLocationProvider(locationStrategy);
+					if (locationProvider.length() > 0)
 					{
-						case 0:
-							if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-								locationManager.requestLocationUpdates(provider = LocationManager.NETWORK_PROVIDER, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
-							break;
-						case 1:
-							if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-								locationManager.requestLocationUpdates(provider = LocationManager.GPS_PROVIDER, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
-							break;
-						case 2:
-							if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-								locationManager.requestLocationUpdates(provider = LocationManager.NETWORK_PROVIDER, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
-							else if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-								locationManager.requestLocationUpdates(provider = LocationManager.GPS_PROVIDER, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
-							break;
-						case 3:
-							if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-								locationManager.requestLocationUpdates(provider = LocationManager.GPS_PROVIDER, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
-							else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-								locationManager.requestLocationUpdates(provider = LocationManager.NETWORK_PROVIDER, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
-							break;
-					}
-					if (provider.length() > 0)
-					{
-						Log.d(TAG, "Trying to get a new location from '" + provider + "' provider...");
+						locationManager.requestLocationUpdates(locationProvider, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
+						Log.d(TAG, "Trying to get a new location from '" + locationProvider + "' provider...");
 						AgentConnectorService.gettingNewLocation = true;
 						locationHandler.postDelayed(locationTask, locationDuration);
 					}
