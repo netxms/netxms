@@ -73,11 +73,11 @@ public class AgentConnectorService extends Service implements LocationListener
 
 	public static boolean gettingNewLocation = false;
 
-	private static final String TAG = "nxagent/ClientConnectorService";
+	private static final String TAG = "nxagent/AgentConnectorService";
 	private static final int ONE_DAY_MINUTES = 24 * 60;
 	private static final int NETXMS_REQUEST_CODE = 123456;
 
-	private final Binder binder = new ClientConnectorBinder();
+	private final Binder binder = new AgentConnectorBinder();
 	private Handler uiThreadHandler;
 	private Handler locationHandler = null;
 	private ConnectionStatus connectionStatus = ConnectionStatus.CS_DISCONNECTED;
@@ -85,7 +85,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	private SharedPreferences sp;
 	private LocationManager locationManager = null;
 	private HomeScreen homeScreen = null;
-	private boolean firstConnection = true;
+	private boolean sendDeviceSystemInfo = true;
 	private boolean agentActive;
 	private boolean notifyToast;
 	private String connectionServer;
@@ -104,7 +104,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	 * Class for clients to access. Because we know this service always runs in
 	 * the same process as its clients, we don't need to deal with IPC.
 	 */
-	public class ClientConnectorBinder extends Binder
+	public class AgentConnectorBinder extends Binder
 	{
 		public AgentConnectorService getService()
 		{
@@ -152,17 +152,22 @@ public class AgentConnectorService extends Service implements LocationListener
 	public int onStartCommand(Intent intent, int flags, int startId)
 	{
 		if ((intent != null) && (intent.getAction() != null))
+		{
+			Log.i(TAG, "onStartCommand: " + intent.getAction());
 			if (intent.getAction().equals(ACTION_CONNECT))
 				reconnect(false);
 			else if (intent.getAction().equals(ACTION_FORCE_CONNECT))
+			{
+				sendDeviceSystemInfo = true;
 				reconnect(true);
-			else if (intent.getAction().equals(ACTION_SCHEDULE))
-				reconnect(false);
+			}
 			else if (intent.getAction().equals(ACTION_CONFIGURE))
 			{
+				sendDeviceSystemInfo = true;
 				configure();
 				reconnect(true);
 			}
+		}
 		return super.onStartCommand(intent, flags, startId);
 	}
 
@@ -329,7 +334,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	/**
 	 * Schedule a new connection/disconnection
 	 */
-	public void schedule()
+	private void schedule()
 	{
 		Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
 		if (!schedulerDaily)
@@ -377,7 +382,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	/**
 	 * Cancel a pending connection schedule (if any)
 	 */
-	public void cancelSchedule()
+	private void cancelSchedule()
 	{
 		Log.i(TAG, "cancelSchedule");
 		Intent intent = new Intent(this, AlarmIntentReceiver.class);
@@ -655,10 +660,11 @@ public class AgentConnectorService extends Service implements LocationListener
 					session.connect();
 					Log.d(TAG, "PushDataTask.doInBackground: connected");
 					statusNotification(ConnectionStatus.CS_CONNECTED, getString(R.string.notify_pushing_data));
-					if (firstConnection)
+					if (sendDeviceSystemInfo)
 					{
+						Log.d(TAG, "PushDataTask.doInBackground: sending DeviceSystemInfo");
 						session.reportDeviceSystemInfo(getManufacturer(), getModel(), getOSName(), getRelease(), getSerial(), getUser());
-						firstConnection = false;
+						sendDeviceSystemInfo = false;
 					}
 					session.reportDeviceStatus(getInetAddress(), getGeoLocation(), getFlags(), getBatteryLevel());
 					session.disconnect();

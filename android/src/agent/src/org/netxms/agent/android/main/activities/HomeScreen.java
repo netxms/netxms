@@ -4,9 +4,11 @@ import java.util.Calendar;
 
 import org.netxms.agent.android.R;
 import org.netxms.agent.android.helpers.SafeParser;
+import org.netxms.agent.android.service.AgentConnectorService;
 import org.netxms.base.NXCommon;
 
 import android.content.ComponentName;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -93,8 +95,9 @@ public class HomeScreen extends AbstractClientActivity
 	{
 		if (item.getItemId() == R.string.reconnect)
 		{
-			if (service != null)
-				service.reconnect(true);
+			Intent i = new Intent(this, AgentConnectorService.class);
+			i.setAction(AgentConnectorService.ACTION_FORCE_CONNECT);
+			startService(i);
 			return true;
 		}
 		else if (item.getItemId() == R.string.exit)

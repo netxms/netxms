@@ -114,7 +114,7 @@ public abstract class AbstractClientActivity extends Activity implements Service
 	@Override
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
-		service = ((AgentConnectorService.ClientConnectorBinder)binder).getService();
+		service = ((AgentConnectorService.AgentConnectorBinder)binder).getService();
 		if (service != null)
 			service.reconnect(false);
 	}
