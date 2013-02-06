@@ -80,7 +80,7 @@ ServerJob::~ServerJob()
 void ServerJob::sendNotification(ClientSession *session, void *arg)
 {
 	ServerJob *job = (ServerJob *)arg;
-	if (job->m_resolvedObject->CheckAccessRights(session->getUserId(), OBJECT_ACCESS_READ))
+	if (job->m_resolvedObject->checkAccessRights(session->getUserId(), OBJECT_ACCESS_READ))
 		session->postMessage(&job->m_notificationMessage);
 }
 

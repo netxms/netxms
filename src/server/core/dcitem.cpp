@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -375,11 +375,10 @@ void RegisterDCIFunctions(NXSL_Environment *pEnv)
  */
 DCItem::DCItem() : DCObject()
 {
-   m_dwNumThresholds = 0;
-   m_ppThresholdList = NULL;
+   m_thresholds = NULL;
    m_dataType = DCI_DT_INT;
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
-   m_szInstance[0] = 0;
+   m_instance[0] = 0;
    m_pszScript = NULL;
    m_pScript = NULL;
    m_dwCacheSize = 0;
@@ -388,7 +387,7 @@ DCItem::DCItem() : DCObject()
    m_bCacheLoaded = false;
 	m_nBaseUnits = DCI_BASEUNITS_OTHER;
 	m_nMultiplier = 1;
-	m_pszCustomUnitName = NULL;
+	m_customUnitName = NULL;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
 }
 
@@ -397,11 +396,9 @@ DCItem::DCItem() : DCObject()
  */
 DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
 {
-   DWORD i;
-
    m_dataType = pSrc->m_dataType;
    m_deltaCalculation = pSrc->m_deltaCalculation;
-	_tcscpy(m_szInstance, pSrc->m_szInstance);
+	_tcscpy(m_instance, pSrc->m_instance);
    m_pszScript = NULL;
    m_pScript = NULL;
    setTransformationScript(pSrc->m_pszScript);
@@ -411,17 +408,24 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
    m_bCacheLoaded = false;
 	m_nBaseUnits = pSrc->m_nBaseUnits;
 	m_nMultiplier = pSrc->m_nMultiplier;
-	m_pszCustomUnitName = (pSrc->m_pszCustomUnitName != NULL) ? _tcsdup(pSrc->m_pszCustomUnitName) : NULL;
+	m_customUnitName = (pSrc->m_customUnitName != NULL) ? _tcsdup(pSrc->m_customUnitName) : NULL;
 	m_snmpRawValueType = pSrc->m_snmpRawValueType;
 
    // Copy thresholds
-   m_dwNumThresholds = pSrc->m_dwNumThresholds;
-   m_ppThresholdList = (Threshold **)malloc(sizeof(Threshold *) * m_dwNumThresholds);
-   for(i = 0; i < m_dwNumThresholds; i++)
-   {
-      m_ppThresholdList[i] = new Threshold(pSrc->m_ppThresholdList[i]);
-      m_ppThresholdList[i]->createId();
-   }
+	if (pSrc->getThresholdCount() > 0)
+	{
+		m_thresholds = new ObjectArray<Threshold>(pSrc->m_thresholds->size(), 8, true);
+		for(int i = 0; i < pSrc->m_thresholds->size(); i++)
+		{
+			Threshold *t = new Threshold(pSrc->m_thresholds->get(i));
+			t->createId();
+			m_thresholds->add(t);
+		}
+	}
+	else
+	{
+		m_thresholds = NULL;
+	}
 }
 
 /**
@@ -449,10 +453,9 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
    free(pszTmp);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 10, m_szDescription, MAX_DB_STRING);
-   DBGetField(hResult, iRow, 11, m_szInstance, MAX_DB_STRING);
+   DBGetField(hResult, iRow, 11, m_instance, MAX_DB_STRING);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 12);
-   m_dwNumThresholds = 0;
-   m_ppThresholdList = NULL;
+   m_thresholds = NULL;
    m_pNode = pNode;
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
@@ -463,7 +466,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	m_dwProxyNode = DBGetFieldULong(hResult, iRow, 15);
 	m_nBaseUnits = DBGetFieldLong(hResult, iRow, 16);
 	m_nMultiplier = DBGetFieldLong(hResult, iRow, 17);
-	m_pszCustomUnitName = DBGetField(hResult, iRow, 18, NULL, 0);
+	m_customUnitName = DBGetField(hResult, iRow, 18, NULL, 0);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 19, NULL, 0);
 	DBGetField(hResult, iRow, 20, m_systemTag, MAX_DB_STRING);
 	m_snmpPort = (WORD)DBGetFieldLong(hResult, iRow, 21);
@@ -488,43 +491,38 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	loadCustomSchedules();
 }
 
-
-//
-// Constructor for creating new DCItem from scratch
-//
-
+/**
+ * Constructor for creating new DCItem from scratch
+ */
 DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType, 
                int iPollingInterval, int iRetentionTime, Template *pNode,
                const TCHAR *pszDescription, const TCHAR *systemTag)
 	: DCObject(dwId, szName, iSource, iPollingInterval, iRetentionTime, pNode, pszDescription, systemTag)
 {
-   m_szInstance[0] = 0;
+   m_instance[0] = 0;
    m_dataType = iDataType;
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
    m_pszScript = NULL;
    m_pScript = NULL;
-   m_dwNumThresholds = 0;
-   m_ppThresholdList = NULL;
+   m_thresholds = NULL;
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
 	m_nBaseUnits = DCI_BASEUNITS_OTHER;
 	m_nMultiplier = 1;
-	m_pszCustomUnitName = NULL;
+	m_customUnitName = NULL;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
 
    updateCacheSize();
 }
 
-
-//
-// Create DCItem from import file
-//
-
+/**
+ * Create DCItem from import file
+ */
 DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 {
-   nx_strncpy(m_szInstance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
+   nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
    m_dataType = (BYTE)config->getSubEntryValueInt(_T("dataType"));
    m_deltaCalculation = (BYTE)config->getSubEntryValueInt(_T("delta"));
    m_dwCacheSize = 0;
@@ -533,7 +531,7 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
    m_bCacheLoaded = false;
 	m_nBaseUnits = DCI_BASEUNITS_OTHER;
 	m_nMultiplier = 1;
-	m_pszCustomUnitName = NULL;
+	m_customUnitName = NULL;
 	m_snmpRawValueType = (WORD)config->getSubEntryValueInt(_T("snmpRawValueType"));
 
 	if (config->getSubEntryValueInt(_T("allThresholds")))
@@ -549,59 +547,46 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 	if (thresholdsRoot != NULL)
 	{
 		ConfigEntryList *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
-		m_dwNumThresholds = (DWORD)thresholds->getSize();
-		m_ppThresholdList = (Threshold **)malloc(sizeof(Threshold *) * m_dwNumThresholds);
+		m_thresholds = new ObjectArray<Threshold>(thresholds->getSize(), 8, true);
 		for(int i = 0; i < thresholds->getSize(); i++)
 		{
-			m_ppThresholdList[i] = new Threshold(thresholds->getEntry(i), this);
+			m_thresholds->add(new Threshold(thresholds->getEntry(i), this));
 		}
 		delete thresholds;
 	}
 	else
 	{
-		m_dwNumThresholds = 0;
-		m_ppThresholdList = NULL;
+		m_thresholds = NULL;
 	}
 
    updateCacheSize();
 }
 
-
-//
-// Destructor for DCItem
-//
-
+/**
+ * Destructor
+ */
 DCItem::~DCItem()
 {
-   for(DWORD i = 0; i < m_dwNumThresholds; i++)
-      delete m_ppThresholdList[i];
-   safe_free(m_ppThresholdList);
+	delete m_thresholds;
    safe_free(m_pszScript);
    delete m_pScript;
-	safe_free(m_pszCustomUnitName);
+	safe_free(m_customUnitName);
    clearCache();
 }
 
-
-//
-// Delete all thresholds
-//
-
+/**
+ * Delete all thresholds
+ */
 void DCItem::deleteAllThresholds()
 {
 	lock();
-   for(DWORD i = 0; i < m_dwNumThresholds; i++)
-      delete m_ppThresholdList[i];
-   safe_free_and_null(m_ppThresholdList);
-	m_dwNumThresholds = 0;
+   delete_and_null(m_thresholds);
 	unlock();
 }
 
-
-//
-// Clear data cache
-//
-
+/**
+ * Clear data cache
+ */
 void DCItem::clearCache()
 {
    DWORD i;
@@ -613,11 +598,9 @@ void DCItem::clearCache()
    m_dwCacheSize = 0;
 }
 
-
-//
-// Load data collection items thresholds from database
-//
-
+/**
+ * Load data collection items thresholds from database
+ */
 bool DCItem::loadThresholdsFromDB()
 {
    bool result = false;
@@ -634,12 +617,12 @@ bool DCItem::loadThresholdsFromDB()
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{
-			m_dwNumThresholds = DBGetNumRows(hResult);
-			if (m_dwNumThresholds > 0)
+			int count = DBGetNumRows(hResult);
+			if (count > 0)
 			{
-				m_ppThresholdList = (Threshold **)malloc(sizeof(Threshold *) * m_dwNumThresholds);
-				for(DWORD i = 0; i < m_dwNumThresholds; i++)
-					m_ppThresholdList[i] = new Threshold(hResult, i, this);
+				m_thresholds = new ObjectArray<Threshold>(count, 8, true);
+				for(int i = 0; i < count; i++)
+					m_thresholds->add(new Threshold(hResult, i, this));
 			}
 			DBFreeResult(hResult);
 			result = true;
@@ -649,11 +632,9 @@ bool DCItem::loadThresholdsFromDB()
    return result;
 }
 
-
-//
-// Save to database
-//
-
+/**
+ * Save to database
+ */
 BOOL DCItem::saveToDB(DB_HANDLE hdb)
 {
 	TCHAR *pszQuery;
@@ -665,8 +646,8 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    String escName = DBPrepareString(g_hCoreDB, m_szName);
    String escScript = DBPrepareString(g_hCoreDB, m_pszScript);
    String escDescr = DBPrepareString(g_hCoreDB, m_szDescription);
-   String escInstance = DBPrepareString(g_hCoreDB, m_szInstance);
-	String escCustomUnitName = DBPrepareString(g_hCoreDB, m_pszCustomUnitName);
+   String escInstance = DBPrepareString(g_hCoreDB, m_instance);
+	String escCustomUnitName = DBPrepareString(g_hCoreDB, m_customUnitName);
 	String escPerfTabSettings = DBPrepareString(g_hCoreDB, m_pszPerfTabSettings);
 	int qlen = escName.getSize() + escScript.getSize() + escPerfTabSettings.getSize() + 2048;
 	pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * qlen);
@@ -710,12 +691,10 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    bResult = DBQuery(hdb, pszQuery);
 
    // Save thresholds
-   if (bResult)
+   if (bResult && (m_thresholds != NULL))
    {
-      DWORD i;
-
-      for(i = 0; i < m_dwNumThresholds; i++)
-         m_ppThresholdList[i]->saveToDB(hdb, i);
+		for(int i = 0; i < m_thresholds->size(); i++)
+         m_thresholds->get(i)->saveToDB(hdb, i);
    }
 
    // Delete non-existing thresholds
@@ -723,17 +702,15 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    hResult = DBSelect(hdb, pszQuery);
    if (hResult != NULL)
    {
-      int i, iNumRows;
-      DWORD j, dwId;
-
-      iNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < iNumRows; i++)
+      int iNumRows = DBGetNumRows(hResult);
+      for(int i = 0; i < iNumRows; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         for(j = 0; j < m_dwNumThresholds; j++)
-            if (m_ppThresholdList[j]->getId() == dwId)
-               break;
-         if (j == m_dwNumThresholds)
+         DWORD dwId = DBGetFieldULong(hResult, i, 0);
+			int j;
+			for(j = 0; j < getThresholdCount(); j++)
+				if (m_thresholds->get(j)->getId() == dwId)
+					break;
+         if (j == getThresholdCount())
          {
             _sntprintf(pszQuery, qlen, _T("DELETE FROM thresholds WHERE threshold_id=%d"), dwId);
             DBQuery(hdb, pszQuery);
@@ -761,62 +738,64 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 	return bResult ? DCObject::saveToDB(hdb) : FALSE;
 }
 
-
-//
-// Check last value for threshold breaches
-//
-
+/**
+ * Check last value for threshold violations
+ */
 void DCItem::checkThresholds(ItemValue &value)
 {
 	const TCHAR *paramNamesReach[] = { _T("dciName"), _T("dciDescription"), _T("thresholdValue"), _T("currentValue"), _T("dciId"), _T("instance"), _T("isRepeatedEvent") };
 	const TCHAR *paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue") };
 
-   DWORD i, iResult, dwInterval;
+	if (m_thresholds == NULL)
+		return;
+
+   DWORD dwInterval;
    ItemValue checkValue;
 	EVENT_TEMPLATE *evt;
 	time_t now = time(NULL);
 
-   for(i = 0; i < m_dwNumThresholds; i++)
+   for(int i = 0; i < m_thresholds->size(); i++)
    {
-      iResult = m_ppThresholdList[i]->check(value, m_ppValueCache, checkValue);
+		Threshold *thr = m_thresholds->get(i);
+      int iResult = thr->check(value, m_ppValueCache, checkValue);
       switch(iResult)
       {
          case THRESHOLD_REACHED:
-            PostEventWithNames(m_ppThresholdList[i]->getEventCode(), m_pNode->Id(), "ssssisd",
-					paramNamesReach, m_szName, m_szDescription, m_ppThresholdList[i]->getStringValue(), 
-               (const TCHAR *)checkValue, m_dwId, m_szInstance, 0);
-				evt = FindEventTemplateByCode(m_ppThresholdList[i]->getEventCode());
+            PostEventWithNames(thr->getEventCode(), m_pNode->Id(), "ssssisd",
+					paramNamesReach, m_szName, m_szDescription, thr->getStringValue(), 
+               (const TCHAR *)checkValue, m_dwId, m_instance, 0);
+				evt = FindEventTemplateByCode(thr->getEventCode());
 				if (evt != NULL)
-					m_ppThresholdList[i]->markLastEvent((int)evt->dwSeverity);
+					thr->markLastEvent((int)evt->dwSeverity);
             if (!(m_flags & DCF_ALL_THRESHOLDS))
-               i = m_dwNumThresholds;  // Stop processing
+               i = m_thresholds->size();  // Stop processing
             break;
          case THRESHOLD_REARMED:
-            PostEventWithNames(m_ppThresholdList[i]->getRearmEventCode(), m_pNode->Id(), "ssisss",
-					paramNamesRearm, m_szName, m_szDescription, m_dwId, m_szInstance, 
-					m_ppThresholdList[i]->getStringValue(), (const TCHAR *)checkValue);
+            PostEventWithNames(thr->getRearmEventCode(), m_pNode->Id(), "ssisss",
+					paramNamesRearm, m_szName, m_szDescription, m_dwId, m_instance, 
+					thr->getStringValue(), (const TCHAR *)checkValue);
             break;
          case NO_ACTION:
-            if (m_ppThresholdList[i]->isReached())
+            if (thr->isReached())
 				{
 					// Check if we need to re-sent threshold violation event
-					if (m_ppThresholdList[i]->getRepeatInterval() == -1)
+					if (thr->getRepeatInterval() == -1)
 						dwInterval = g_dwThresholdRepeatInterval;
 					else
-						dwInterval = (DWORD)m_ppThresholdList[i]->getRepeatInterval();
-					if ((dwInterval != 0) && (m_ppThresholdList[i]->getLastEventTimestamp() + (time_t)dwInterval < now))
+						dwInterval = (DWORD)thr->getRepeatInterval();
+					if ((dwInterval != 0) && (thr->getLastEventTimestamp() + (time_t)dwInterval < now))
 					{
-						PostEventWithNames(m_ppThresholdList[i]->getEventCode(), m_pNode->Id(), "ssssisd", 
-							paramNamesReach, m_szName, m_szDescription, m_ppThresholdList[i]->getStringValue(), 
-							(const TCHAR *)checkValue, m_dwId, m_szInstance, 1);
-						evt = FindEventTemplateByCode(m_ppThresholdList[i]->getEventCode());
+						PostEventWithNames(thr->getEventCode(), m_pNode->Id(), "ssssisd", 
+							paramNamesReach, m_szName, m_szDescription, thr->getStringValue(), 
+							(const TCHAR *)checkValue, m_dwId, m_instance, 1);
+						evt = FindEventTemplateByCode(thr->getEventCode());
 						if (evt != NULL)
-							m_ppThresholdList[i]->markLastEvent((int)evt->dwSeverity);
+							thr->markLastEvent((int)evt->dwSeverity);
 					}
 
 					if (!(m_flags & DCF_ALL_THRESHOLDS))
 					{
-						i = m_dwNumThresholds;  // Threshold condition still true, stop processing
+						i = m_thresholds->size();  // Threshold condition still true, stop processing
 					}
 				}
             break;
@@ -824,36 +803,40 @@ void DCItem::checkThresholds(ItemValue &value)
    }
 }
 
-
-//
-// Create NXCP message with item data
-//
-
+/**
+ * Create NXCP message with item data
+ */
 void DCItem::createMessage(CSCPMessage *pMsg)
 {
 	DCObject::createMessage(pMsg);
 
    lock();
-   pMsg->SetVariable(VID_INSTANCE, m_szInstance);
+   pMsg->SetVariable(VID_INSTANCE, m_instance);
    pMsg->SetVariable(VID_DCI_DATA_TYPE, (WORD)m_dataType);
    pMsg->SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)m_deltaCalculation);
    pMsg->SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(m_pszScript));
 	pMsg->SetVariable(VID_BASE_UNITS, (WORD)m_nBaseUnits);
 	pMsg->SetVariable(VID_MULTIPLIER, (DWORD)m_nMultiplier);
 	pMsg->SetVariable(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
-	if (m_pszCustomUnitName != NULL)
-		pMsg->SetVariable(VID_CUSTOM_UNITS_NAME, m_pszCustomUnitName);
-   pMsg->SetVariable(VID_NUM_THRESHOLDS, m_dwNumThresholds);
-   for(DWORD i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, dwId += 20)
-      m_ppThresholdList[i]->createMessage(pMsg, dwId);
+	if (m_customUnitName != NULL)
+		pMsg->SetVariable(VID_CUSTOM_UNITS_NAME, m_customUnitName);
+	if (m_thresholds != NULL)
+	{
+		pMsg->SetVariable(VID_NUM_THRESHOLDS, (DWORD)m_thresholds->size());
+		DWORD dwId = VID_DCI_THRESHOLD_BASE;
+		for(int i = 0; i < m_thresholds->size(); i++, dwId += 20)
+			m_thresholds->get(i)->createMessage(pMsg, dwId);
+	}
+	else
+	{
+		pMsg->SetVariable(VID_NUM_THRESHOLDS, (DWORD)0);
+	}
    unlock();
 }
 
-
-//
-// Delete item and collected data from database
-//
-
+/**
+ * Delete item and collected data from database
+ */
 void DCItem::deleteFromDB()
 {
    TCHAR szQuery[256];
@@ -868,19 +851,16 @@ void DCItem::deleteFromDB()
    QueueSQLRequest(szQuery);
 }
 
-
-//
-// Update item from NXCP message
-//
-
-void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, 
-                               DWORD **ppdwMapIndex, DWORD **ppdwMapId)
+/**
+ * Update item from NXCP message
+ */
+void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId)
 {
 	DCObject::updateFromMessage(pMsg);
 
    lock();
 
-   pMsg->GetVariableStr(VID_INSTANCE, m_szInstance, MAX_DB_STRING);
+   pMsg->GetVariableStr(VID_INSTANCE, m_instance, MAX_DB_STRING);
    m_dataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
    m_deltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
    TCHAR *pszStr = pMsg->GetVariableStr(VID_DCI_FORMULA);
@@ -888,8 +868,8 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    free(pszStr);
 	m_nBaseUnits = pMsg->GetVariableShort(VID_BASE_UNITS);
 	m_nMultiplier = (int)pMsg->GetVariableLong(VID_MULTIPLIER);
-	safe_free(m_pszCustomUnitName);
-	m_pszCustomUnitName = pMsg->GetVariableStr(VID_CUSTOM_UNITS_NAME);
+	safe_free(m_customUnitName);
+	m_customUnitName = pMsg->GetVariableStr(VID_CUSTOM_UNITS_NAME);
 	m_snmpRawValueType = pMsg->GetVariableShort(VID_SNMP_RAW_VALUE_TYPE);
 
    // Update thresholds
@@ -907,56 +887,70 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    
    // Check if some thresholds was deleted, and reposition others if needed
    Threshold **ppNewList = (Threshold **)malloc(sizeof(Threshold *) * dwNum);
-   for(DWORD i = 0; i < m_dwNumThresholds; i++)
+   for(int i = 0; i < getThresholdCount(); i++)
    {
 		DWORD j;
       for(j = 0; j < dwNum; j++)
-         if (m_ppThresholdList[i]->getId() == newThresholds[j])
+         if (m_thresholds->get(i)->getId() == newThresholds[j])
             break;
       if (j == dwNum)
       {
          // No threshold with that id in new list, delete it
-         delete m_ppThresholdList[i];
-         m_dwNumThresholds--;
-         memmove(&m_ppThresholdList[i], &m_ppThresholdList[i + 1], sizeof(Threshold *) * (m_dwNumThresholds - i));
+			m_thresholds->remove(i);
          i--;
       }
       else
       {
          // Move existing thresholds to appropriate positions in new list
-         ppNewList[j] = m_ppThresholdList[i];
+         ppNewList[j] = m_thresholds->get(i);
       }
    }
-   safe_free(m_ppThresholdList);
-   m_ppThresholdList = ppNewList;
-   m_dwNumThresholds = dwNum;
 
    // Add or update thresholds
    for(DWORD i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
    {
       if (newThresholds[i] == 0)    // New threshold?
       {
-         m_ppThresholdList[i] = new Threshold(this);
-         m_ppThresholdList[i]->createId();
+         ppNewList[i] = new Threshold(this);
+         ppNewList[i]->createId();
 
          // Add index -> id mapping
          (*ppdwMapIndex)[*pdwNumMaps] = i;
-         (*ppdwMapId)[*pdwNumMaps] = m_ppThresholdList[i]->getId();
+         (*ppdwMapId)[*pdwNumMaps] = ppNewList[i]->getId();
          (*pdwNumMaps)++;
       }
-      m_ppThresholdList[i]->updateFromMessage(pMsg, dwId);
+      ppNewList[i]->updateFromMessage(pMsg, dwId);
    }
-      
+
+	if (dwNum > 0)
+	{
+		if (m_thresholds != NULL)
+		{
+			m_thresholds->setOwner(false);
+			m_thresholds->clear();
+			m_thresholds->setOwner(true);
+		}
+		else
+		{
+			m_thresholds = new ObjectArray<Threshold>((int)dwNum, 8, true);
+		}
+		for(DWORD i = 0; i < dwNum; i++)
+			m_thresholds->add(ppNewList[i]);
+	}
+	else
+	{
+		delete_and_null(m_thresholds);
+	}
+
+	safe_free(ppNewList);     
    safe_free(newThresholds);
    updateCacheSize();
    unlock();
 }
 
-
-//
-// Process new value
-//
-
+/**
+ * Process new value
+ */
 void DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
 {
 	static int updateRawValueTypes[] = { DB_SQLTYPE_VARCHAR, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER };
@@ -1030,15 +1024,11 @@ void DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
    unlock();
 }
 
-
-//
-// Process new data collection error
-//
-
+/**
+ * Process new data collection error
+ */
 void DCItem::processNewError()
 {
-   DWORD i, iResult;
-
    lock();
 
    // Normally m_pNode shouldn't be NULL for polled items, but who knows...
@@ -1050,25 +1040,25 @@ void DCItem::processNewError()
 
    m_dwErrorCount++;
 
-   for(i = 0; i < m_dwNumThresholds; i++)
+	for(int i = 0; i < getThresholdCount(); i++)
    {
-      iResult = m_ppThresholdList[i]->checkError(m_dwErrorCount);
+		Threshold *thr = m_thresholds->get(i);
+      int iResult = thr->checkError(m_dwErrorCount);
       switch(iResult)
       {
          case THRESHOLD_REACHED:
-            PostEvent(m_ppThresholdList[i]->getEventCode(), m_pNode->Id(), "ssssis", m_szName,
-                      m_szDescription, _T(""), _T(""), m_dwId, m_szInstance);
+            PostEvent(thr->getEventCode(), m_pNode->Id(), "ssssis", m_szName,
+                      m_szDescription, _T(""), _T(""), m_dwId, m_instance);
             if (!(m_flags & DCF_ALL_THRESHOLDS))
-               i = m_dwNumThresholds;  // Stop processing
+               i = m_thresholds->size();  // Stop processing
             break;
          case THRESHOLD_REARMED:
-            PostEvent(m_ppThresholdList[i]->getRearmEventCode(), m_pNode->Id(), "ssis", m_szName,
-                      m_szDescription, m_dwId, m_szInstance);
+            PostEvent(thr->getRearmEventCode(), m_pNode->Id(), "ssis", m_szName,
+                      m_szDescription, m_dwId, m_instance);
             break;
          case NO_ACTION:
-            if ((m_ppThresholdList[i]->isReached()) &&
-					(!(m_flags & DCF_ALL_THRESHOLDS)))
-               i = m_dwNumThresholds;  // Threshold condition still true, stop processing
+            if (thr->isReached() && !(m_flags & DCF_ALL_THRESHOLDS))
+               i = m_thresholds->size();  // Threshold condition still true, stop processing
             break;
       }
    }
@@ -1076,11 +1066,9 @@ void DCItem::processNewError()
    unlock();
 }
 
-
-//
-// Transform received value
-//
-
+/**
+ * Transform received value
+ */
 void DCItem::transform(ItemValue &value, time_t nElapsedTime)
 {
    switch(m_deltaCalculation)
@@ -1212,12 +1200,12 @@ void DCItem::changeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpans
    lock();
 	if (dwNewId != 0)
 	{
-		for(DWORD i = 0; i < m_dwNumThresholds; i++)
-			m_ppThresholdList[i]->bindToItem(m_dwId);
+		for(int i = 0; i < getThresholdCount(); i++)
+			m_thresholds->get(i)->bindToItem(m_dwId);
 	}
 
 	if (doMacroExpansion)
-		expandMacros(m_szInstance, m_szInstance, MAX_DB_STRING);
+		expandMacros(m_instance, m_instance, MAX_DB_STRING);
 
    clearCache();
    updateCacheSize();
@@ -1232,7 +1220,7 @@ void DCItem::changeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpans
  */
 void DCItem::updateCacheSize(DWORD dwCondId)
 {
-   DWORD i, dwSize, dwRequiredSize;
+   DWORD dwSize, dwRequiredSize;
 
    // Sanity check
    if (m_pNode == NULL)
@@ -1248,12 +1236,12 @@ void DCItem::updateCacheSize(DWORD dwCondId)
       dwRequiredSize = 1;
 
       // Calculate required cache size
-      for(i = 0; i < m_dwNumThresholds; i++)
-         if (dwRequiredSize < m_ppThresholdList[i]->getRequiredCacheSize())
-            dwRequiredSize = m_ppThresholdList[i]->getRequiredCacheSize();
+      for(int i = 0; i < getThresholdCount(); i++)
+         if (dwRequiredSize < m_thresholds->get(i)->getRequiredCacheSize())
+            dwRequiredSize = m_thresholds->get(i)->getRequiredCacheSize();
 
 		ObjectArray<NetObj> *conditions = g_idxConditionById.getObjects();
-		for(i = 0; i < (DWORD)conditions->size(); i++)
+		for(int i = 0; i < conditions->size(); i++)
       {
 			Condition *c = (Condition *)conditions->get(i);
 			dwSize = c->getCacheSizeForDCI(m_dwId, dwCondId == c->Id());
@@ -1272,8 +1260,10 @@ void DCItem::updateCacheSize(DWORD dwCondId)
    {
       // Destroy unneeded values
       if (m_dwCacheSize > 0)
-         for(i = dwRequiredSize; i < m_dwCacheSize; i++)
+		{
+         for(DWORD i = dwRequiredSize; i < m_dwCacheSize; i++)
             delete m_ppValueCache[i];
+		}
 
       m_dwCacheSize = dwRequiredSize;
       if (m_dwCacheSize > 0)
@@ -1290,7 +1280,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
    {
       // Expand cache
       m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * dwRequiredSize);
-      for(i = m_dwCacheSize; i < dwRequiredSize; i++)
+      for(DWORD i = m_dwCacheSize; i < dwRequiredSize; i++)
          m_ppValueCache[i] = NULL;
 
       // Load missing values from database
@@ -1329,6 +1319,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
          if (hResult != NULL)
          {
             // Skip already cached values
+				DWORD i;
             for(i = 0, bHasData = TRUE; i < m_dwCacheSize; i++)
                bHasData = DBFetch(hResult);
 
@@ -1356,7 +1347,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
          else
          {
             // Error reading data from database, fill cache with empty values
-            for(i = m_dwCacheSize; i < dwRequiredSize; i++)
+            for(DWORD i = m_dwCacheSize; i < dwRequiredSize; i++)
                m_ppValueCache[i] = new ItemValue(_T(""), 1);
          }
 			DBConnectionPoolReleaseConnection(hdb);
@@ -1393,16 +1384,16 @@ void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
 	pMsg->SetVariable(dwId++, m_dwErrorCount);
 	pMsg->SetVariable(dwId++, m_dwTemplateItemId);
 
-	DWORD i;
-   for(i = 0; i < m_dwNumThresholds; i++)
+	int i;
+   for(i = 0; i < getThresholdCount(); i++)
    {
-		if (m_ppThresholdList[i]->isReached())
+		if (m_thresholds->get(i)->isReached())
 			break;
    }
-	if (i < m_dwNumThresholds)
+	if (i < getThresholdCount())
 	{
       pMsg->SetVariable(dwId++, (WORD)1);
-		m_ppThresholdList[i]->createMessage(pMsg, dwId);
+		m_thresholds->get(i)->createMessage(pMsg, dwId);
 	}
 	else
 	{
@@ -1514,11 +1505,9 @@ bool DCItem::deleteAllData()
 	return success;
 }
 
-
-//
-// Update from template item
-//
-
+/**
+ * Update from template item
+ */
 void DCItem::updateFromTemplate(DCObject *src)
 {
 	DCObject::updateFromTemplate(src);
@@ -1538,45 +1527,44 @@ void DCItem::updateFromTemplate(DCObject *src)
 
 	m_nBaseUnits = item->m_nBaseUnits;
 	m_nMultiplier = item->m_nMultiplier;
-	safe_free(m_pszCustomUnitName);
-	m_pszCustomUnitName = (item->m_pszCustomUnitName != NULL) ? _tcsdup(item->m_pszCustomUnitName) : NULL;
+	safe_free(m_customUnitName);
+	m_customUnitName = (item->m_customUnitName != NULL) ? _tcsdup(item->m_customUnitName) : NULL;
 
    // Copy thresholds
    // ***************************
    // First, skip matching thresholds
-   DWORD dwCount = min(m_dwNumThresholds, item->m_dwNumThresholds);
-	DWORD i;
-   for(i = 0; i < dwCount; i++)
-      if (!m_ppThresholdList[i]->compare(item->m_ppThresholdList[i]))
+	int count = min(getThresholdCount(), item->getThresholdCount());
+	int i;
+   for(i = 0; i < count; i++)
+      if (!m_thresholds->get(i)->compare(item->m_thresholds->get(i)))
          break;
-   dwCount = i;   // First unmatched threshold's position
+   count = i;   // First unmatched threshold's position
 
    // Delete all original thresholds starting from first unmatched
-   for(; i < m_dwNumThresholds; i++)
-      delete m_ppThresholdList[i];
+	while(count < getThresholdCount())
+		m_thresholds->remove(count);
 
    // (Re)create thresholds starting from first unmatched
-   m_dwNumThresholds = item->m_dwNumThresholds;
-   m_ppThresholdList = (Threshold **)realloc(m_ppThresholdList, sizeof(Threshold *) * m_dwNumThresholds);
-   for(i = dwCount; i < m_dwNumThresholds; i++)
+	if ((m_thresholds == NULL) && (item->getThresholdCount() > 0))
+		m_thresholds = new ObjectArray<Threshold>(item->getThresholdCount(), 8, true);
+	for(i = count; i < item->getThresholdCount(); i++)
    {
-      m_ppThresholdList[i] = new Threshold(item->m_ppThresholdList[i]);
-      m_ppThresholdList[i]->createId();
-      m_ppThresholdList[i]->bindToItem(m_dwId);
+      Threshold *t = new Threshold(item->m_thresholds->get(i));
+      t->createId();
+      t->bindToItem(m_dwId);
+		m_thresholds->add(t);
    }
 
-   expandMacros(item->m_szInstance, m_szInstance, MAX_DB_STRING);
+   expandMacros(item->m_instance, m_instance, MAX_DB_STRING);
 
    updateCacheSize();
    
    unlock();
 }
 
-
-//
-// Set new transformation script
-//
-
+/**
+ * Set new transformation script
+ */
 void DCItem::setTransformationScript(const TCHAR *pszScript)
 {
    safe_free(m_pszScript);
@@ -1602,37 +1590,31 @@ void DCItem::setTransformationScript(const TCHAR *pszScript)
    }
 }
 
-
-//
-// Get list of used events
-//
-
+/**
+ * Get list of used events
+ */
 void DCItem::getEventList(DWORD **ppdwList, DWORD *pdwSize)
 {
-   DWORD i, j;
-
    lock();
 
-   if (m_dwNumThresholds > 0)
+   if (getThresholdCount() > 0)
    {
-      *ppdwList = (DWORD *)realloc(*ppdwList, sizeof(DWORD) * (*pdwSize + m_dwNumThresholds * 2));
-      j = *pdwSize;
-      *pdwSize += m_dwNumThresholds * 2;
-      for(i = 0; i < m_dwNumThresholds; i++)
+      *ppdwList = (DWORD *)realloc(*ppdwList, sizeof(DWORD) * (*pdwSize + m_thresholds->size() * 2));
+      DWORD j = *pdwSize;
+      *pdwSize += m_thresholds->size() * 2;
+      for(int i = 0; i < m_thresholds->size(); i++)
       {
-         (*ppdwList)[j++] = m_ppThresholdList[i]->getEventCode();
-			(*ppdwList)[j++] = m_ppThresholdList[i]->getRearmEventCode();
+         (*ppdwList)[j++] = m_thresholds->get(i)->getEventCode();
+			(*ppdwList)[j++] = m_thresholds->get(i)->getRearmEventCode();
       }
    }
 
    unlock();
 }
 
-
-//
-// Create management pack record
-//
-
+/**
+ * Create management pack record
+ */
 void DCItem::createNXMPRecord(String &str)
 {
 	DWORD i;
@@ -1657,7 +1639,7 @@ void DCItem::createNXMPRecord(String &str)
 								  (int)m_dwId, (const TCHAR *)EscapeStringForXML2(m_szName),
                           (const TCHAR *)EscapeStringForXML2(m_szDescription),
                           m_dataType, (int)m_source, m_iPollingInterval, m_iRetentionTime,
-                          (const TCHAR *)EscapeStringForXML2(m_szInstance),
+                          (const TCHAR *)EscapeStringForXML2(m_instance),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
 								  (int)m_deltaCalculation, (m_flags & DCF_ADVANCED_SCHEDULE) ? 1 : 0,
                           (m_flags & DCF_ALL_THRESHOLDS) ? 1 : 0, 
@@ -1671,7 +1653,7 @@ void DCItem::createNXMPRecord(String &str)
 		str += _T("</transformation>\n");
 	}
 
-	if (m_dwNumThresholds > 0)
+	if (m_dwNumSchedules > 0)
    {
       str += _T("\t\t\t\t\t<schedules>\n");
       for(i = 0; i < m_dwNumSchedules; i++)
@@ -1679,72 +1661,56 @@ void DCItem::createNXMPRecord(String &str)
       str += _T("\t\t\t\t\t</schedules>\n");
    }
 
-   str += _T("\t\t\t\t\t<thresholds>\n");
-   for(i = 0; i < m_dwNumThresholds; i++)
-   {
-      m_ppThresholdList[i]->createNXMPRecord(str, i + 1);
-   }
-   str += _T("\t\t\t\t\t</thresholds>\n");
+	if (m_thresholds != NULL)
+	{
+	   str += _T("\t\t\t\t\t<thresholds>\n");
+		for(i = 0; i < (DWORD)m_thresholds->size(); i++)
+		{
+			m_thresholds->get(i)->createNXMPRecord(str, i + 1);
+		}
+	   str += _T("\t\t\t\t\t</thresholds>\n");
+	}
 
    unlock();
    str += _T("\t\t\t\t</dci>\n");
 }
 
-
-//
-// Modify item - intended for updating items in system templates
-//
-
-void DCItem::systemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType)
-{
-   m_dataType = nDataType;
-   m_iPollingInterval = nInterval;
-   m_iRetentionTime = nRetention;
-   m_source = nOrigin;
-	nx_strncpy(m_szName, pszName, MAX_ITEM_NAME);
-}
-
-
-//
-// Add threshold to the list
-//
-
+/**
+ * Add threshold to the list
+ */
 void DCItem::addThreshold(Threshold *pThreshold)
 {
-	m_dwNumThresholds++;
-	m_ppThresholdList = (Threshold **)realloc(m_ppThresholdList, sizeof(Threshold *) * m_dwNumThresholds);
-   m_ppThresholdList[m_dwNumThresholds - 1] = pThreshold;
+	if (m_thresholds == NULL)
+		m_thresholds = new ObjectArray<Threshold>(8, 8, true);
+	m_thresholds->add(pThreshold);
 }
 
-
-//
-// Enumerate all thresholds
-//
-
+/**
+ * Enumerate all thresholds
+ */
 BOOL DCItem::enumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), void *pArg)
 {
-	DWORD i;
 	BOOL bRet = TRUE;
 
 	lock();
-	for(i = 0; i < m_dwNumThresholds; i++)
+	if (m_thresholds != NULL)
 	{
-		if (!pfCallback(m_ppThresholdList[i], i, pArg))
+		for(int i = 0; i < m_thresholds->size(); i++)
 		{
-			bRet = FALSE;
-			break;
+			if (!pfCallback(m_thresholds->get(i), i, pArg))
+			{
+				bRet = FALSE;
+				break;
+			}
 		}
 	}
 	unlock();
 	return bRet;
 }
 
-
-//
-// Test DCI's transformation script
-// Runs 
-//
-
+/**
+ * Test DCI's transformation script
+ */
 BOOL DCItem::testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
 {
 	BOOL success = FALSE;
@@ -1801,38 +1767,33 @@ BOOL DCItem::testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *
 	return success;
 }
 
-
-//
-// Fill NXCP message with thresholds
-//
-
+/**
+ * Fill NXCP message with thresholds
+ */
 void DCItem::fillMessageWithThresholds(CSCPMessage *msg)
 {
-	DWORD i, id;
-
 	lock();
 
-	msg->SetVariable(VID_NUM_THRESHOLDS, m_dwNumThresholds);
-	for(i = 0, id = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, id += 20)
+	msg->SetVariable(VID_NUM_THRESHOLDS, (DWORD)getThresholdCount());
+	DWORD id = VID_DCI_THRESHOLD_BASE;
+	for(int i = 0; i < getThresholdCount(); i++, id += 20)
 	{
-		m_ppThresholdList[i]->createMessage(msg, id);
+		m_thresholds->get(i)->createMessage(msg, id);
 	}
 
 	unlock();
 }
 
-
-//
-// Fill NXCP message with active threshold, if any
-//
-
+/**
+ * Check if DCI has active threshold
+ */
 bool DCItem::hasActiveThreshold()
 {
 	bool result = false;
 	lock();
-	for(DWORD i = 0; i < m_dwNumThresholds; i++)
+	for(int i = 0; i < getThresholdCount(); i++)
 	{
-		if (m_ppThresholdList[i]->isReached())
+		if (m_thresholds->get(i)->isReached())
 		{
 			result = true;
 			break;
@@ -1842,12 +1803,10 @@ bool DCItem::hasActiveThreshold()
 	return result;
 }
 
-
-//
-// Returns true if internal cache is loaded. If data collection object
-// does not have cache should return true
-//
-
+/**
+ * Returns true if internal cache is loaded. If data collection object
+ * does not have cache should return true
+ */
 bool DCItem::isCacheLoaded()
 {
 	return m_bCacheLoaded;

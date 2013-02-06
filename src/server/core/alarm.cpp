@@ -613,7 +613,7 @@ void AlarmManager::sendAlarmsToClient(DWORD dwRqId, ClientSession *pSession)
       pObject = FindObjectById(m_pAlarmList[i].dwSourceObject);
       if (pObject != NULL)
       {
-         if (pObject->CheckAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS))
+         if (pObject->checkAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS))
          {
             FillAlarmInfoMessage(&msg, &m_pAlarmList[i]);
             pSession->sendMessage(&msg);

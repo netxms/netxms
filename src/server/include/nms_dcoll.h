@@ -280,11 +280,10 @@ private:
 class NXCORE_EXPORTABLE DCItem : public DCObject
 {
 protected:
-   TCHAR m_szInstance[MAX_DB_STRING];
+   TCHAR m_instance[MAX_DB_STRING];
    BYTE m_deltaCalculation;      // Delta calculation method
    BYTE m_dataType;
-   DWORD m_dwNumThresholds;
-   Threshold **m_ppThresholdList;
+	ObjectArray<Threshold> *m_thresholds;
    TCHAR *m_pszScript;           // Transformation script
    NXSL_Program *m_pScript;      // Compiled transformation script
    DWORD m_dwCacheSize;          // Number of items in cache
@@ -294,8 +293,12 @@ protected:
    bool m_bCacheLoaded;
 	int m_nBaseUnits;
 	int m_nMultiplier;
-	TCHAR *m_pszCustomUnitName;
+	TCHAR *m_customUnitName;
 	WORD m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
+	WORD m_instanceDiscoveryMethod;
+	TCHAR *m_instanceDiscoveryData;
+	TCHAR *m_instanceFilterSource;
+	NXSL_Program *m_instanceFilter;
 
    void transform(ItemValue &value, time_t nElapsedTime);
    void checkThresholds(ItemValue &value);
@@ -328,8 +331,6 @@ public:
 	WORD getSnmpRawValueType() { return m_snmpRawValueType; }
 	bool hasActiveThreshold();
 
-	void systemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType);
-
    void processNewValue(time_t nTimeStamp, void *value);
    void processNewError();
 
@@ -348,9 +349,10 @@ public:
    virtual void getEventList(DWORD **ppdwList, DWORD *pdwSize);
    virtual void createNXMPRecord(String &str);
 
+	int getThresholdCount() const { return (m_thresholds != NULL) ? m_thresholds->size() : 0; }
 	BOOL enumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), void *pArg);
 
-	void setInstance(const TCHAR *pszInstance) { nx_strncpy(m_szInstance, pszInstance, MAX_DB_STRING); }
+	void setInstance(const TCHAR *instance) { nx_strncpy(m_instance, instance, MAX_DB_STRING); }
 	void setDataType(int dataType) { m_dataType = dataType; }
 	void setDeltaCalcMethod(int method) { m_deltaCalculation = method; }
 	void setAllThresholdsFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ALL_THRESHOLDS; else m_flags &= ~DCF_ALL_THRESHOLDS; }

@@ -335,7 +335,7 @@ public:
    const TCHAR *Name() { return m_szName; }
    int Status() { return m_iStatus; }
    int getPropagatedStatus();
-   DWORD TimeStamp() { return m_dwTimeStamp; }
+   DWORD getTimeStamp() { return m_dwTimeStamp; }
 	void getGuid(uuid_t out) { memcpy(out, m_guid, UUID_LENGTH); }
 	const TCHAR *getComments() { return CHECK_NULL_EX(m_pszComments); }
 
@@ -383,11 +383,11 @@ public:
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 	virtual void postModify();
 
-   void CommentsToMessage(CSCPMessage *pMsg);
+   void commentsToMessage(CSCPMessage *pMsg);
 
-   DWORD GetUserRights(DWORD dwUserId);
-   BOOL CheckAccessRights(DWORD dwUserId, DWORD dwRequiredRights);
-   void DropUserAccess(DWORD dwUserId);
+   DWORD getUserRights(DWORD dwUserId);
+   BOOL checkAccessRights(DWORD dwUserId, DWORD dwRequiredRights);
+   void dropUserAccess(DWORD dwUserId);
 
    void addChildNodesToList(ObjectArray<Node> *nodeList, DWORD dwUserId);
    void addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList, DWORD dwUserId);

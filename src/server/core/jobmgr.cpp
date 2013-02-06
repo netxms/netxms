@@ -113,7 +113,7 @@ static DWORD ChangeJobStatus(DWORD userId, CSCPMessage *msg, int operation)
 		ServerJobQueue *queue = node->getJobQueue();
 		if (queue->findJob(jobId) != NULL)
 		{
-			if (node->CheckAccessRights(userId, OBJECT_ACCESS_CONTROL))
+			if (node->checkAccessRights(userId, OBJECT_ACCESS_CONTROL))
 			{
 				switch(operation)
 				{

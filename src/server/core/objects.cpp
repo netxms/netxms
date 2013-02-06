@@ -1606,32 +1606,34 @@ BOOL LoadObjects()
    return TRUE;
 }
 
-
-//
-// Delete user or group from all objects' ACLs
-//
-
+/**
+ * Callback for DeleteUserFromAllObjects
+ */
 static void DropUserAccess(NetObj *object, void *userId)
 {
-	object->DropUserAccess(CAST_FROM_POINTER(userId, DWORD));
+	object->dropUserAccess(CAST_FROM_POINTER(userId, DWORD));
 }
 
+/**
+ * Delete user or group from all objects' ACLs
+ */
 void DeleteUserFromAllObjects(DWORD dwUserId)
 {
 	g_idxObjectById.forEach(DropUserAccess, CAST_TO_POINTER(dwUserId, void *));
 }
 
-
-//
-// Dump objects to console in standalone mode
-//
-
+/**
+ * User data for DumpObjectCallback
+ */
 struct __dump_objects_data
 {
 	CONSOLE_CTX console;
 	TCHAR *buffer;
 };
 
+/**
+ * Enumeration callback for DumpObjects
+ */
 static void DumpObjectCallback(NetObj *object, void *data)
 {
 	struct __dump_objects_data *dd = (struct __dump_objects_data *)data;
@@ -1646,7 +1648,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
                  object->isModified(), object->isDeleted());
    ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 
                  object->dbgGetParentList(dd->buffer), object->dbgGetChildList(&dd->buffer[4096]));
-	time_t t = object->TimeStamp();
+	time_t t = object->getTimeStamp();
 	struct tm *ltm = localtime(&t);
 	_tcsftime(dd->buffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);
    ConsolePrintf(pCtx, _T("   Last change: %s\n"), dd->buffer);
@@ -1674,6 +1676,9 @@ static void DumpObjectCallback(NetObj *object, void *data)
    }
 }
 
+/**
+ * Dump objects to debug console
+ */
 void DumpObjects(CONSOLE_CTX pCtx)
 {
 	struct __dump_objects_data data;

@@ -651,7 +651,7 @@ void ClientSession::updateThread()
             msg.SetCode(CMD_OBJECT_UPDATE);
             ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
             if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
-               ((NetObj *)pUpdate->pData)->CommentsToMessage(&msg);
+               ((NetObj *)pUpdate->pData)->commentsToMessage(&msg);
             sendMessage(&msg);
             MutexUnlock(m_mutexSendObjects);
             msg.DeleteAllVariables();
@@ -1914,11 +1914,9 @@ void ClientSession::generateEventCode(DWORD dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Send all objects to client
-//
-
+/**
+ * Send all objects to client
+ */
 void ClientSession::sendAllObjects(CSCPMessage *pRequest)
 {
    DWORD dwTimeStamp;
@@ -1949,13 +1947,13 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
 	for(int i = 0; i < objects->size(); i++)
 	{
 		NetObj *object = objects->get(i);
-      if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
-          (object->TimeStamp() >= dwTimeStamp) &&
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
+          (object->getTimeStamp() >= dwTimeStamp) &&
           !object->isHidden())
       {
          object->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
-            object->CommentsToMessage(&msg);
+            object->commentsToMessage(&msg);
          sendMessage(&msg);
          msg.DeleteAllVariables();
       }
@@ -1969,11 +1967,9 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
    MutexUnlock(m_mutexSendObjects);
 }
 
-
-//
-// Send selected objects to client
-//
-
+/**
+ * Send selected objects to client
+ */
 void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -2007,13 +2003,13 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
 	{
 		NetObj *object = FindObjectById(objects[i]);
       if ((object != NULL) && 
-		    object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
-          (object->TimeStamp() >= dwTimeStamp) &&
+		    object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
+          (object->getTimeStamp() >= dwTimeStamp) &&
           !object->isHidden())
       {
          object->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
-            object->CommentsToMessage(&msg);
+            object->commentsToMessage(&msg);
          sendMessage(&msg);
          msg.DeleteAllVariables();
       }
@@ -2383,7 +2379,7 @@ void ClientSession::onObjectChange(NetObj *pObject)
    UPDATE_INFO *pUpdate;
 
    if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_OBJECTS))
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
          pUpdate->dwCategory = INFO_CAT_OBJECT_CHANGE;
@@ -2423,12 +2419,12 @@ void ClientSession::modifyObject(CSCPMessage *pRequest)
    pObject = FindObjectById(dwObjectId);
    if (pObject != NULL)
    {
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
          // If user attempts to change object's ACL, check
          // if he has OBJECT_ACCESS_ACL permission
          if (pRequest->IsVariableExist(VID_ACL_SIZE))
-            if (!pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACL))
+            if (!pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACL))
                dwResult = RCC_ACCESS_DENIED;
 
 			// If user attempts to rename object, check object's name
@@ -2731,7 +2727,7 @@ void ClientSession::changeObjectMgmtStatus(CSCPMessage *pRequest)
    pObject = FindObjectById(dwObjectId);
    if (pObject != NULL)
    {
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
 			if ((pObject->Type() != OBJECT_TEMPLATE) &&
 				 (pObject->Type() != OBJECT_TEMPLATEGROUP) &&
@@ -2832,7 +2828,7 @@ void ClientSession::openNodeDCIList(CSCPMessage *pRequest)
           (pObject->Type() == OBJECT_MOBILEDEVICE) ||
           (pObject->Type() == OBJECT_TEMPLATE))
       {
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             // Try to lock DCI list
             if (((Template *)pObject)->lockDCIList(m_dwIndex, m_szUserName, szLockInfo))
@@ -2897,7 +2893,7 @@ void ClientSession::closeNodeDCIList(CSCPMessage *pRequest)
           (pObject->Type() == OBJECT_MOBILEDEVICE) ||
           (pObject->Type() == OBJECT_TEMPLATE))
       {
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             BOOL bSuccess;
 
@@ -2969,7 +2965,7 @@ void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
       {
          if (((Template *)pObject)->isLockedBySession(m_dwIndex))
          {
-            if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+            if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
                DWORD i, dwItemId, dwNumMaps, *pdwMapId, *pdwMapIndex;
                DCObject *dcObject;
@@ -3095,7 +3091,7 @@ void ClientSession::changeDCIStatus(CSCPMessage *pRequest)
       {
          if (((Template *)pObject)->isLockedBySession(m_dwIndex))
          {
-            if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+            if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
                DWORD dwNumItems, *pdwItemList;
                int iStatus;
@@ -3153,7 +3149,7 @@ void ClientSession::clearDCIData(CSCPMessage *pRequest)
    {
       if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE))
       {
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
          {
 				dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
 				debugPrintf(4, _T("ClearDCIData: request for DCI %d at node %d"), dwItemId, pObject->Id()); 
@@ -3215,8 +3211,8 @@ void ClientSession::copyDCI(CSCPMessage *pRequest)
          {
             bMove = pRequest->GetVariableShort(VID_MOVE_FLAG);
             // Check access rights
-            if ((pSource->CheckAccessRights(m_dwUserId, bMove ? (OBJECT_ACCESS_READ | OBJECT_ACCESS_MODIFY) : OBJECT_ACCESS_READ)) &&
-                (pDestination->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
+            if ((pSource->checkAccessRights(m_dwUserId, bMove ? (OBJECT_ACCESS_READ | OBJECT_ACCESS_MODIFY) : OBJECT_ACCESS_READ)) &&
+                (pDestination->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
             {
                // Attempt to lock destination's DCI list
                if ((pDestination->Id() == pSource->Id()) ||
@@ -3340,7 +3336,7 @@ void ClientSession::sendDCIThresholds(CSCPMessage *request)
    object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
    if (object != NULL)
    {
-      if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
 			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE))
 			{
@@ -3630,7 +3626,7 @@ void ClientSession::getCollectedData(CSCPMessage *request)
    NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
    if (object != NULL)
    {
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
 			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE))
 			{
@@ -3678,7 +3674,7 @@ void ClientSession::getTableCollectedData(CSCPMessage *request)
    NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
    if (object != NULL)
    {
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
 			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE))
 			{
@@ -3726,7 +3722,7 @@ void ClientSession::getLastValues(CSCPMessage *pRequest)
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE) ||
              (pObject->Type() == OBJECT_TEMPLATE) || (pObject->Type() == OBJECT_CLUSTER))
@@ -3768,7 +3764,7 @@ void ClientSession::getTableLastValues(CSCPMessage *pRequest)
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE))
          {
@@ -4063,8 +4059,8 @@ void ClientSession::createObject(CSCPMessage *pRequest)
    {
       // User should have create access to parent object
       if ((pParent != NULL) ? 
-            pParent->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE) :
-            g_pEntireNet->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE))
+            pParent->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE) :
+            g_pEntireNet->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE))
       {
          // Parent object should be of valid type
          if (bParentAlwaysValid || IsValidParentClass(iClass, (pParent != NULL) ? pParent->Type() : -1))
@@ -4344,8 +4340,8 @@ void ClientSession::addClusterNode(CSCPMessage *request)
 		{
 			if (((Node *)node)->getMyCluster() == NULL)
 			{
-				if (cluster->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) &&
-					 node->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+				if (cluster->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) &&
+					 node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
 				{
 					((Cluster *)cluster)->applyToTarget((Node *)node);
 					((Node *)node)->setRecheckCapsFlag();
@@ -4403,8 +4399,8 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
    if ((pParent != NULL) && (pChild != NULL))
    {
       // User should have modify access to both objects
-      if ((pParent->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)) &&
-          (pChild->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
+      if ((pParent->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)) &&
+          (pChild->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
       {
          // Parent object should be container or service root,
 			// or template group/root for templates and template groups
@@ -4515,7 +4511,7 @@ void ClientSession::deleteObject(CSCPMessage *pRequest)
       if (pObject->Id() >= 10)  // FIXME: change to 100
       {
          // Check access rights
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
          {
 				if ((pObject->Type() != OBJECT_ZONE) || pObject->isEmpty())
 				{
@@ -4560,7 +4556,7 @@ void ClientSession::onAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
    {
       pObject = FindObjectById(pAlarm->dwSourceObject);
       if (pObject != NULL)
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
          {
             pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
             pUpdate->dwCategory = INFO_CAT_ALARM;
@@ -4598,7 +4594,7 @@ void ClientSession::getAlarm(CSCPMessage *request)
    if (object != NULL)
    {
       // User should have "view alarm" right to the object
-      if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
          msg.SetVariable(VID_RCC, g_alarmMgr.getAlarm(dwAlarmId, &msg));
       }
@@ -4636,7 +4632,7 @@ void ClientSession::getAlarmEvents(CSCPMessage *request)
    {
       // User should have "view alarm" right to the object and
 		// system-wide "view event log" access
-      if ((m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG) && object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+      if ((m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
          msg.SetVariable(VID_RCC, g_alarmMgr.getAlarmEvents(dwAlarmId, &msg));
       }
@@ -4675,7 +4671,7 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
    if (pObject != NULL)
    {
       // User should have "acknowledge alarm" right to the object
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+      if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
 			msg.SetVariable(VID_RCC, g_alarmMgr.ackById(dwAlarmId, m_dwUserId, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0));
       }
@@ -4714,7 +4710,7 @@ void ClientSession::resolveAlarm(CSCPMessage *pRequest, bool terminate)
    if (pObject != NULL)
    {
       // User should have "terminate alarm" right to the object
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS))
+      if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS))
       {
          msg.SetVariable(VID_RCC, g_alarmMgr.resolveById(dwAlarmId, m_dwUserId, terminate));
       }
@@ -4756,7 +4752,7 @@ void ClientSession::deleteAlarm(CSCPMessage *pRequest)
    {
       // User should have "terminate alarm" right to the object
       // and system right "delete alarms"
-      if ((pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS)) &&
+      if ((pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS)) &&
           (m_dwSystemAccess & SYSTEM_ACCESS_DELETE_ALARMS))
       {
          g_alarmMgr.deleteAlarm(dwAlarmId);
@@ -4797,7 +4793,7 @@ void ClientSession::getAlarmNotes(CSCPMessage *request)
    if (object != NULL)
    {
       // User should have "view alarms" right to the object
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
 			msg.SetVariable(VID_RCC, g_alarmMgr.getAlarmNotes(alarmId, &msg));
       }
@@ -4836,7 +4832,7 @@ void ClientSession::updateAlarmNote(CSCPMessage *request)
    if (object != NULL)
    {
       // User should have "acknowledge alarm" right to the object
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
 			DWORD noteId = request->GetVariableLong(VID_NOTE_ID);
 			TCHAR *text = request->GetVariableStr(VID_COMMENTS);
@@ -5081,7 +5077,7 @@ void ClientSession::forcedNodePoll(CSCPMessage *pRequest)
 			  (pData->iPollType == POLL_INTERFACE_NAMES)))
       {
          // Check access rights
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
             ((Node *)pObject)->IncRefCount();
             m_dwRefCount++;
@@ -5214,7 +5210,7 @@ void ClientSession::onTrap(CSCPMessage *pRequest)
    if (pObject != NULL)
    {
       // User should have SEND_EVENTS access right to object
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_SEND_EVENTS))
+      if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_SEND_EVENTS))
       {
          dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
 			if ((dwEventCode == 0) && pRequest->IsVariableExist(VID_EVENT_NAME))
@@ -5280,7 +5276,7 @@ void ClientSession::onWakeUpNode(CSCPMessage *pRequest)
       if ((pObject->Type() == OBJECT_NODE) ||
           (pObject->Type() == OBJECT_INTERFACE))
       {
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
             DWORD dwResult;
 
@@ -5329,7 +5325,7 @@ void ClientSession::queryParameter(CSCPMessage *pRequest)
    {
       if (pObject->Type() == OBJECT_NODE)
       {
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             DWORD dwResult;
             TCHAR szBuffer[256], szName[MAX_PARAM_NAME];
@@ -5380,7 +5376,7 @@ void ClientSession::queryAgentTable(CSCPMessage *pRequest)
    {
       if (pObject->Type() == OBJECT_NODE)
       {
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
 				TCHAR name[MAX_PARAM_NAME];
 				pRequest->GetVariableStr(VID_NAME, name, MAX_PARAM_NAME);
@@ -5863,7 +5859,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
                   pObject = FindObjectById(pdwObjectList[i]);
                   if (pObject != NULL)
                   {
-                     if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+                     if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
                      {
                         if (pObject->Type() == OBJECT_NODE)
                         {
@@ -6001,8 +5997,8 @@ void ClientSession::applyTemplate(CSCPMessage *pRequest)
          if (bLockSucceed)
          {
             // Check access rights
-            if ((pSource->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
-                (pDestination->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
+            if ((pSource->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
+                (pDestination->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
             {
                // Attempt to lock destination's DCI list
                if (((DataCollectionTarget *)pDestination)->lockDCIList(m_dwIndex, m_szUserName, szLockInfo))
@@ -6367,7 +6363,7 @@ void ClientSession::changeObjectZone(CSCPMessage *pRequest)
    NetObj *object = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (object != NULL)
    {
-      if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
 			if (object->Type() == OBJECT_NODE)
 			{
@@ -6467,7 +6463,7 @@ void ClientSession::getAgentConfig(CSCPMessage *pRequest)
    {
       if (pObject->Type() == OBJECT_NODE)
       {
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             AgentConnection *pConn;
 
@@ -6537,7 +6533,7 @@ void ClientSession::updateAgentConfig(CSCPMessage *pRequest)
    {
       if (pObject->Type() == OBJECT_NODE)
       {
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
             AgentConnection *pConn;
 
@@ -6620,7 +6616,7 @@ void ClientSession::executeAction(CSCPMessage *pRequest)
    {
       if (pObject->Type() == OBJECT_NODE)
       {
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
             AgentConnection *pConn;
 
@@ -7788,7 +7784,7 @@ void ClientSession::StartSnmpWalk(CSCPMessage *pRequest)
    {
       if (pObject->Type() == OBJECT_NODE)
       {
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
             
@@ -7837,7 +7833,7 @@ DWORD ClientSession::resolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName
 			 (pObject->Type() == OBJECT_MOBILEDEVICE) ||
 			 (pObject->Type() == OBJECT_TEMPLATE))
 		{
-			if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+			if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 			{
 				pItem = ((Template *)pObject)->getDCObjectById(dwItem);
 				if (pItem != NULL)
@@ -8341,10 +8337,10 @@ void ClientSession::SendObjectComments(CSCPMessage *pRequest)
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         pObject->CommentsToMessage(&msg);
+         pObject->commentsToMessage(&msg);
       }
       else
       {
@@ -8373,7 +8369,7 @@ void ClientSession::updateObjectComments(CSCPMessage *pRequest)
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
          pObject->setComments(pRequest->GetVariableStr(VID_COMMENTS));
       }
@@ -8443,7 +8439,7 @@ void ClientSession::pushDCIData(CSCPMessage *pRequest)
          {
             if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE))
             {
-               if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_PUSH_DATA))
+               if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_PUSH_DATA))
                {
                   dcTargetList[i] = (DataCollectionTarget *)pObject;
 
@@ -8679,7 +8675,7 @@ void ClientSession::sendDCIEventList(CSCPMessage *request)
    pObject = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          if ((pObject->Type() == OBJECT_NODE) ||
              (pObject->Type() == OBJECT_CLUSTER) ||
@@ -8751,7 +8747,7 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
          {
             if (pObject->Type() == OBJECT_TEMPLATE)
             {
-               if (!pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+               if (!pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
                {
                   msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
                   break;
@@ -8916,7 +8912,7 @@ void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          if ((pObject->Type() == OBJECT_NODE) ||
              (pObject->Type() == OBJECT_CLUSTER) ||
@@ -9344,7 +9340,7 @@ void ClientSession::sendPerfTabDCIList(CSCPMessage *pRequest)
 	pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
 	if (pObject != NULL)
 	{
-		if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
 			if (pObject->Type() == OBJECT_NODE)
 			{
@@ -9648,7 +9644,7 @@ void ClientSession::queryL2Topology(CSCPMessage *pRequest)
 	pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
 	if (pObject != NULL)
 	{
-		if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
 			if (pObject->Type() == OBJECT_NODE)
 			{
@@ -10116,7 +10112,7 @@ void ClientSession::getAgentFile(CSCPMessage *request)
 	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
 	if (object != NULL)
 	{
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
 		{
 			if (object->Type() == OBJECT_NODE)
 			{
@@ -10163,7 +10159,7 @@ void ClientSession::testDCITransformation(CSCPMessage *pRequest)
    {
       if (pObject->Type() == OBJECT_NODE)
       {
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
 				DCObject *dci = ((Node *)pObject)->getDCObjectById(pRequest->GetVariableLong(VID_DCI_ID));
 				if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
@@ -10292,8 +10288,8 @@ void ClientSession::deployAgentPolicy(CSCPMessage *request, bool uninstallFlag)
 		NetObj *target = FindObjectById(targetId);
 		if ((target != NULL) && (target->Type() == OBJECT_NODE))
 		{
-			if (target->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL) &&
-			    policy->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+			if (target->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL) &&
+			    policy->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 			{
 				if (((Node *)target)->isNativeAgent())
 				{
@@ -10655,7 +10651,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 	NetObj *object = FindObjectById(objectId);
 	if ((object != NULL) && !object->isDeleted())
 	{
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
 			debugPrintf(5, _T("findNodeConnection: objectId=%d class=%d name=\"%s\""), objectId, object->Type(), object->Name());
 			Interface *iface = NULL;
@@ -11235,7 +11231,7 @@ void ClientSession::executeServerCommand(CSCPMessage *request)
 	NetObj *object = FindObjectById(nodeId);
 	if (object != NULL)
 	{
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
 		{
 			if (object->Type() == OBJECT_NODE)
 			{
@@ -11281,7 +11277,7 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 	NetObj *object = FindObjectById(nodeId);
 	if (object != NULL)
 	{
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
 		{
 			if (object->Type() == OBJECT_NODE)
 			{
@@ -11516,7 +11512,7 @@ void ClientSession::getVlans(CSCPMessage *request)
 	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
 	if (object != NULL)
 	{
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
 			if (object->Type() == OBJECT_NODE)
 			{
@@ -11660,7 +11656,7 @@ void ClientSession::executeReport(CSCPMessage *request)
 	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
 	if (object != NULL)
 	{
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
 		{
 			if (object->Type() == OBJECT_REPORT)
 			{
@@ -11712,7 +11708,7 @@ void ClientSession::getReportResults(CSCPMessage *request)
 	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
 	if (object != NULL)
 	{
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
 			if (object->Type() == OBJECT_REPORT)
 			{
@@ -11781,7 +11777,7 @@ void ClientSession::deleteReportResults(CSCPMessage *request)
 	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
 	if (object != NULL)
 	{
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
 		{
 			if (object->Type() == OBJECT_REPORT)
 			{
@@ -11923,8 +11919,8 @@ void ClientSession::getNetworkPath(CSCPMessage *request)
 
 	if ((node1 != NULL) && (node2 != NULL))
 	{
-		if (node1->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
-		    node2->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		if (node1->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
+		    node2->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
 			if ((node1->Type() == OBJECT_NODE) && (node2->Type() == OBJECT_NODE))
 			{
@@ -11975,7 +11971,7 @@ void ClientSession::getNodeComponents(CSCPMessage *request)
    Node *node = (Node *)FindObjectById(request->GetVariableLong(VID_OBJECT_ID), OBJECT_NODE);
    if (node != NULL)
    {
-      if (node->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
 			ComponentTree *components = node->getComponents();
 			if (components != NULL)
@@ -12018,7 +12014,7 @@ void ClientSession::getThresholdSummary(CSCPMessage *request)
    NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
    if (object != NULL)
    {
-      if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
 			if ((object->Type() == OBJECT_CONTAINER) || (object->Type() == OBJECT_SERVICEROOT) || 
 			    (object->Type() == OBJECT_SUBNET) || (object->Type() == OBJECT_NETWORK) || (object->Type() == OBJECT_ZONE))
@@ -12028,7 +12024,7 @@ void ClientSession::getThresholdSummary(CSCPMessage *request)
 				DWORD varId = VID_THRESHOLD_BASE;
 				for(int i = 0; i < targets->size(); i++)
 				{
-					if (targets->get(i)->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+					if (targets->get(i)->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 						varId = targets->get(i)->getThresholdSummary(&msg, varId);
 					targets->get(i)->DecRefCount();
 				}

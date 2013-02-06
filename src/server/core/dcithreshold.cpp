@@ -218,15 +218,13 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, DWORD dwIndex)
 	return success;
 }
 
-
-//
-// Check threshold
-// Function will return the following codes:
-//    THRESHOLD_REACHED - when item's value match the threshold condition while previous check doesn't
-//    THRESHOLD_REARMED - when item's value doesn't match the threshold condition while previous check do
-//    NO_ACTION - when there are no changes in item's value match to threshold's condition
-//
-
+/**
+ * Check threshold
+ * Method will return the following codes:
+ *    THRESHOLD_REACHED - when item's value match the threshold condition while previous check doesn't
+ *    THRESHOLD_REARMED - when item's value doesn't match the threshold condition while previous check do
+ *    NO_ACTION - when there are no changes in item's value match to threshold's condition
+ */
 int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue)
 {
    BOOL bMatch = FALSE;

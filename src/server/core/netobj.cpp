@@ -941,26 +941,24 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    return RCC_SUCCESS;
 }
 
-
-//
-// Post-modify hook
-//
-
+/**
+ * Post-modify hook
+ */
 void NetObj::postModify()
 {
 }
 
-
-//
-// Get rights to object for specific user
-//
-
-DWORD NetObj::GetUserRights(DWORD dwUserId)
+/**
+ * Get rights to object for specific user
+ *
+ * @param userId user object ID
+ */
+DWORD NetObj::getUserRights(DWORD userId)
 {
    DWORD dwRights;
 
    // Admin always has all rights to any object
-   if (dwUserId == 0)
+   if (userId == 0)
       return 0xFFFFFFFF;
 
 	// Non-admin users have no rights to system objects
@@ -970,7 +968,7 @@ DWORD NetObj::GetUserRights(DWORD dwUserId)
    LockACL();
 
    // Check if have direct right assignment
-   if (!m_pAccessList->GetUserRights(dwUserId, &dwRights))
+   if (!m_pAccessList->GetUserRights(userId, &dwRights))
    {
       // We don't. If this object inherit rights from parents, get them
       if (m_bInheritAccessRights)
@@ -979,7 +977,7 @@ DWORD NetObj::GetUserRights(DWORD dwUserId)
 
          LockParentList(FALSE);
          for(i = 0, dwRights = 0; i < m_dwParentCount; i++)
-            dwRights |= m_pParentList[i]->GetUserRights(dwUserId);
+            dwRights |= m_pParentList[i]->getUserRights(userId);
          UnlockParentList();
       }
    }
@@ -988,23 +986,23 @@ DWORD NetObj::GetUserRights(DWORD dwUserId)
    return dwRights;
 }
 
-
-//
-// Check if given user has specific rights on this object
-//
-
-BOOL NetObj::CheckAccessRights(DWORD dwUserId, DWORD dwRequiredRights)
+/**
+ * Check if given user has specific rights on this object
+ *
+ * @param userId user object ID
+ * @param requiredRights bit mask of requested right
+ * @return true if user has all rights specified in requested rights bit mask
+ */
+BOOL NetObj::checkAccessRights(DWORD userId, DWORD requiredRights)
 {
-   DWORD dwRights = GetUserRights(dwUserId);
-   return (dwRights & dwRequiredRights) == dwRequiredRights;
+   DWORD effectiveRights = getUserRights(userId);
+   return (effectiveRights & requiredRights) == requiredRights;
 }
 
-
-//
-// Drop all user privileges on current object
-//
-
-void NetObj::DropUserAccess(DWORD dwUserId)
+/**
+ * Drop all user privileges on current object
+ */
+void NetObj::dropUserAccess(DWORD dwUserId)
 {
    LockACL();
    if (m_pAccessList->DeleteElement(dwUserId))
@@ -1012,11 +1010,9 @@ void NetObj::DropUserAccess(DWORD dwUserId)
    UnlockACL();
 }
 
-
-//
-// Set object's management status
-//
-
+/**
+ * Set object's management status
+ */
 void NetObj::setMgmtStatus(BOOL bIsManaged)
 {
    DWORD i;
@@ -1144,7 +1140,7 @@ void NetObj::addChildNodesToList(ObjectArray<Node> *nodeList, DWORD dwUserId)
       }
       else
       {
-         if (m_pChildList[i]->CheckAccessRights(dwUserId, OBJECT_ACCESS_READ))
+         if (m_pChildList[i]->checkAccessRights(dwUserId, OBJECT_ACCESS_READ))
             m_pChildList[i]->addChildNodesToList(nodeList, dwUserId);
       }
    }
@@ -1179,7 +1175,7 @@ void NetObj::addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList,
       }
       else
       {
-         if (m_pChildList[i]->CheckAccessRights(dwUserId, OBJECT_ACCESS_READ))
+         if (m_pChildList[i]->checkAccessRights(dwUserId, OBJECT_ACCESS_READ))
             m_pChildList[i]->addChildDCTargetsToList(dctList, dwUserId);
       }
    }
@@ -1297,9 +1293,9 @@ void NetObj::setComments(TCHAR *pszText)
 }
 
 /**
- * Get object's comments
+ * Copy object's comments to NXCP message
  */
-void NetObj::CommentsToMessage(CSCPMessage *pMsg)
+void NetObj::commentsToMessage(CSCPMessage *pMsg)
 {
    LockData();
    pMsg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
