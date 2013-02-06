@@ -310,6 +310,23 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 /**
+ * Upgrade from V269 to V270
+ */
+static BOOL H_UpgradeFromV269(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE items ADD instd_method integer\n")
+		_T("ALTER TABLE items ADD instd_data varchar(255)\n")
+		_T("ALTER TABLE items ADD instd_filter $SQL:TEXT\n")
+		_T("UPDATE items SET instd_method=0\n")
+		_T("<END>");
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='270' WHERE var_name='SchemaVersion'")));
+	return TRUE;
+}
+
+/**
  * Upgrade from V268 to V269
  */
 static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
@@ -6684,6 +6701,7 @@ static struct
 	{ 266, 267, H_UpgradeFromV266 },
 	{ 267, 268, H_UpgradeFromV267 },
 	{ 268, 269, H_UpgradeFromV268 },
+	{ 269, 270, H_UpgradeFromV269 },
    { 0, 0, NULL }
 };
 

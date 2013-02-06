@@ -379,8 +379,8 @@ DCItem::DCItem() : DCObject()
    m_dataType = DCI_DT_INT;
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
    m_instance[0] = 0;
-   m_pszScript = NULL;
-   m_pScript = NULL;
+   m_transformerSource = NULL;
+   m_transformer = NULL;
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
@@ -389,6 +389,10 @@ DCItem::DCItem() : DCObject()
 	m_nMultiplier = 1;
 	m_customUnitName = NULL;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
+	m_instanceDiscoveryMethod = IDM_NONE;
+	m_instanceDiscoveryData = NULL;
+	m_instanceFilterSource = NULL;
+	m_instanceFilter = NULL;
 }
 
 /**
@@ -399,9 +403,9 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
    m_dataType = pSrc->m_dataType;
    m_deltaCalculation = pSrc->m_deltaCalculation;
 	_tcscpy(m_instance, pSrc->m_instance);
-   m_pszScript = NULL;
-   m_pScript = NULL;
-   setTransformationScript(pSrc->m_pszScript);
+   m_transformerSource = NULL;
+   m_transformer = NULL;
+   setTransformationScript(pSrc->m_transformerSource);
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
@@ -410,6 +414,11 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
 	m_nMultiplier = pSrc->m_nMultiplier;
 	m_customUnitName = (pSrc->m_customUnitName != NULL) ? _tcsdup(pSrc->m_customUnitName) : NULL;
 	m_snmpRawValueType = pSrc->m_snmpRawValueType;
+	m_instanceDiscoveryMethod = pSrc->m_instanceDiscoveryMethod;
+	m_instanceDiscoveryData = (pSrc->m_instanceDiscoveryData != NULL) ? _tcsdup(pSrc->m_instanceDiscoveryData) : NULL;
+	m_instanceFilterSource = NULL;
+	m_instanceFilter = NULL;
+   setInstanceFilter(pSrc->m_instanceFilterSource);
 
    // Copy thresholds
 	if (pSrc->getThresholdCount() > 0)
@@ -434,7 +443,8 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
  *    item_id,name,source,datatype,polling_interval,retention_time,status,
  *    delta_calculation,transformation,template_id,description,instance,
  *    template_item_id,flags,resource_id,proxy_node,base_units,unit_multiplier,
- *    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type
+ *    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,
+ *    instd_method,instd_data,instd_filter
  */
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
@@ -446,8 +456,8 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
    m_iRetentionTime = DBGetFieldLong(hResult, iRow, 5);
    m_status = (BYTE)DBGetFieldLong(hResult, iRow, 6);
    m_deltaCalculation = (BYTE)DBGetFieldLong(hResult, iRow, 7);
-   m_pszScript = NULL;
-   m_pScript = NULL;
+   m_transformerSource = NULL;
+   m_transformer = NULL;
    TCHAR *pszTmp = DBGetField(hResult, iRow, 8, NULL, 0);
    setTransformationScript(pszTmp);
    free(pszTmp);
@@ -471,6 +481,13 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	DBGetField(hResult, iRow, 20, m_systemTag, MAX_DB_STRING);
 	m_snmpPort = (WORD)DBGetFieldLong(hResult, iRow, 21);
 	m_snmpRawValueType = (WORD)DBGetFieldLong(hResult, iRow, 22);
+	m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, iRow, 23);
+	m_instanceDiscoveryData = DBGetField(hResult, iRow, 24, NULL, 0);
+	m_instanceFilterSource = NULL;
+   m_instanceFilter = NULL;
+   pszTmp = DBGetField(hResult, iRow, 25, NULL, 0);
+	setInstanceFilter(pszTmp);
+   free(pszTmp);
 
    // Load last raw value from database
 	TCHAR szQuery[256];
@@ -502,8 +519,8 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
    m_instance[0] = 0;
    m_dataType = iDataType;
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
-   m_pszScript = NULL;
-   m_pScript = NULL;
+   m_transformerSource = NULL;
+   m_transformer = NULL;
    m_thresholds = NULL;
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
@@ -513,6 +530,10 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
 	m_nMultiplier = 1;
 	m_customUnitName = NULL;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
+	m_instanceDiscoveryMethod = IDM_NONE;
+	m_instanceDiscoveryData = NULL;
+	m_instanceFilterSource = NULL;
+	m_instanceFilter = NULL;
 
    updateCacheSize();
 }
@@ -533,14 +554,20 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 	m_nMultiplier = 1;
 	m_customUnitName = NULL;
 	m_snmpRawValueType = (WORD)config->getSubEntryValueInt(_T("snmpRawValueType"));
+	m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueInt(_T("instanceDiscoveryMethod"));
+	const TCHAR *value = config->getSubEntryValue(_T("instanceDiscoveryData"));
+	m_instanceDiscoveryData = (value != NULL) ? _tcsdup(value) : NULL;
+	m_instanceFilterSource = NULL;
+	m_instanceFilter = NULL;
+	setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
 
 	if (config->getSubEntryValueInt(_T("allThresholds")))
 		m_flags |= DCF_ALL_THRESHOLDS;
 	if (config->getSubEntryValueInt(_T("rawValueInOctetString")))
 		m_flags |= DCF_RAW_VALUE_OCTET_STRING;
 
-	m_pszScript = NULL;
-	m_pScript = NULL;
+	m_transformerSource = NULL;
+	m_transformer = NULL;
 	setTransformationScript(config->getSubEntryValue(_T("transformation")));
    
 	ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
@@ -568,8 +595,10 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 DCItem::~DCItem()
 {
 	delete m_thresholds;
-   safe_free(m_pszScript);
-   delete m_pScript;
+   safe_free(m_transformerSource);
+   delete m_transformer;
+	safe_free(m_instanceFilterSource);
+	delete m_instanceFilter;
 	safe_free(m_customUnitName);
    clearCache();
 }
@@ -637,58 +666,66 @@ bool DCItem::loadThresholdsFromDB()
  */
 BOOL DCItem::saveToDB(DB_HANDLE hdb)
 {
-	TCHAR *pszQuery;
-   DB_RESULT hResult;
-   BOOL bResult;
-
-   lock();
-
-   String escName = DBPrepareString(g_hCoreDB, m_szName);
-   String escScript = DBPrepareString(g_hCoreDB, m_pszScript);
-   String escDescr = DBPrepareString(g_hCoreDB, m_szDescription);
-   String escInstance = DBPrepareString(g_hCoreDB, m_instance);
-	String escCustomUnitName = DBPrepareString(g_hCoreDB, m_customUnitName);
-	String escPerfTabSettings = DBPrepareString(g_hCoreDB, m_pszPerfTabSettings);
-	int qlen = escName.getSize() + escScript.getSize() + escPerfTabSettings.getSize() + 2048;
-	pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * qlen);
-
    // Prepare and execute query
+	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("items"), _T("item_id"), m_dwId))
 	{
-      _sntprintf(pszQuery, qlen,
-		           _T("UPDATE items SET node_id=%d,template_id=%d,name=%s,source=%d,")
-                 _T("datatype=%d,polling_interval=%d,retention_time=%d,status=%d,")
-                 _T("delta_calculation=%d,transformation=%s,description=%s,")
-                 _T("instance=%s,template_item_id=%d,flags=%d,")
-                 _T("resource_id=%d,proxy_node=%d,base_units=%d,")
-		           _T("unit_multiplier=%d,custom_units_name=%s,perftab_settings=%s,")
-	              _T("system_tag=%s,snmp_port=%d,snmp_raw_value_type=%d WHERE item_id=%d"),
-                 (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
-                 (const TCHAR *)escName, m_source, m_dataType, m_iPollingInterval,
-                 m_iRetentionTime, m_status, m_deltaCalculation, (const TCHAR *)escScript,
-                 (const TCHAR *)escDescr, (const TCHAR *)escInstance, m_dwTemplateItemId,
-                 (int)m_flags, m_dwResourceId, m_dwProxyNode, m_nBaseUnits, m_nMultiplier, (const TCHAR *)escCustomUnitName,
-		           (const TCHAR *)escPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag),
-					  (int)m_snmpPort, (int)m_snmpRawValueType, m_dwId);
+		hStmt = DBPrepare(hdb, 
+		           _T("UPDATE items SET node_id=?,template_id=?,name=?,source=?,")
+                 _T("datatype=?,polling_interval=?,retention_time=?,status=?,")
+                 _T("delta_calculation=?,transformation=?,description=?,")
+                 _T("instance=?,template_item_id=?,flags=?,")
+                 _T("resource_id=?,proxy_node=?,base_units=?,")
+		           _T("unit_multiplier=?,custom_units_name=?,perftab_settings=?,")
+	              _T("system_tag=?,snmp_port=?,snmp_raw_value_type=?,")
+					  _T("instd_method=?,instd_data=?,instd_filter=? WHERE item_id=?"));
 	}
    else
 	{
-      _sntprintf(pszQuery, qlen, 
-		           _T("INSERT INTO items (item_id,node_id,template_id,name,description,source,")
+		hStmt = DBPrepare(hdb, 
+		           _T("INSERT INTO items (node_id,template_id,name,source,")
                  _T("datatype,polling_interval,retention_time,status,delta_calculation,")
-                 _T("transformation,instance,template_item_id,flags,")
+                 _T("transformation,description,instance,template_item_id,flags,")
                  _T("resource_id,proxy_node,base_units,unit_multiplier,")
-		           _T("custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type) VALUES ")
-		           _T("(%d,%d,%d,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%d,%d)"),
-                 m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
-                 (const TCHAR *)escName, (const TCHAR *)escDescr, m_source, m_dataType, m_iPollingInterval,
-                 m_iRetentionTime, m_status, m_deltaCalculation,
-                 (const TCHAR *)escScript, (const TCHAR *)escInstance, m_dwTemplateItemId,
-                 (int)m_flags, m_dwResourceId, m_dwProxyNode, m_nBaseUnits, m_nMultiplier, (const TCHAR *)escCustomUnitName,
-		           (const TCHAR *)escPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag), 
-					  (int)m_snmpPort, (int)m_snmpRawValueType);
+		           _T("custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,")
+					  _T("instd_method,instd_data,instd_filter,item_id) VALUES ")
+		           _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
-   bResult = DBQuery(hdb, pszQuery);
+	if (hStmt == NULL)
+		return FALSE;
+
+   lock();
+
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (m_pNode == NULL) ? 0 : m_pNode->Id());
+	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwTemplateId);
+	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_szName, DB_BIND_STATIC);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_source);
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_dataType);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_iPollingInterval);
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_iRetentionTime);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_status);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_deltaCalculation);
+	DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_transformerSource, DB_BIND_STATIC);
+	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_szDescription, DB_BIND_STATIC);
+	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_instance, DB_BIND_STATIC);
+	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (DWORD)m_flags);
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dwResourceId);
+	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_dwProxyNode);
+	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (LONG)m_nBaseUnits);
+	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (LONG)m_nMultiplier);
+	DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_customUnitName, DB_BIND_STATIC);
+	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_pszPerfTabSettings, DB_BIND_STATIC);
+	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC);
+	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, (LONG)m_snmpPort);
+	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, (LONG)m_snmpRawValueType);
+	DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (LONG)m_instanceDiscoveryMethod);
+	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_instanceDiscoveryData, DB_BIND_STATIC);
+	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_instanceFilterSource, DB_BIND_STATIC);
+	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, m_dwId);
+
+   BOOL bResult = DBExecute(hStmt);
+	DBFreeStatement(hStmt);
 
    // Save thresholds
    if (bResult && (m_thresholds != NULL))
@@ -698,8 +735,9 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    }
 
    // Delete non-existing thresholds
-   _sntprintf(pszQuery, qlen, _T("SELECT threshold_id FROM thresholds WHERE item_id=%d"), m_dwId);
-   hResult = DBSelect(hdb, pszQuery);
+	TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT threshold_id FROM thresholds WHERE item_id=%d"), m_dwId);
+   DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != NULL)
    {
       int iNumRows = DBGetNumRows(hResult);
@@ -712,29 +750,28 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 					break;
          if (j == getThresholdCount())
          {
-            _sntprintf(pszQuery, qlen, _T("DELETE FROM thresholds WHERE threshold_id=%d"), dwId);
-            DBQuery(hdb, pszQuery);
+            _sntprintf(query, 256, _T("DELETE FROM thresholds WHERE threshold_id=%d"), dwId);
+            DBQuery(hdb, query);
          }
       }
       DBFreeResult(hResult);
    }
 
    // Create record in raw_dci_values if needed
-   _sntprintf(pszQuery, qlen, _T("SELECT item_id FROM raw_dci_values WHERE item_id=%d"), m_dwId);
-   hResult = DBSelect(hdb, pszQuery);
+   _sntprintf(query, 256, _T("SELECT item_id FROM raw_dci_values WHERE item_id=%d"), m_dwId);
+   hResult = DBSelect(hdb, query);
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) == 0)
       {
-         _sntprintf(pszQuery, qlen, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time) VALUES (%d,%s,%ld)"),
+         _sntprintf(query, 256, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time) VALUES (%d,%s,%ld)"),
                  m_dwId, (const TCHAR *)DBPrepareString(hdb, m_prevRawValue.getString()), (long)m_tPrevValueTimeStamp);
-         DBQuery(hdb, pszQuery);
+         DBQuery(hdb, query);
       }
       DBFreeResult(hResult);
    }
 
    unlock();
-   free(pszQuery);
 	return bResult ? DCObject::saveToDB(hdb) : FALSE;
 }
 
@@ -814,7 +851,7 @@ void DCItem::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_INSTANCE, m_instance);
    pMsg->SetVariable(VID_DCI_DATA_TYPE, (WORD)m_dataType);
    pMsg->SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)m_deltaCalculation);
-   pMsg->SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(m_pszScript));
+   pMsg->SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(m_transformerSource));
 	pMsg->SetVariable(VID_BASE_UNITS, (WORD)m_nBaseUnits);
 	pMsg->SetVariable(VID_MULTIPLIER, (DWORD)m_nMultiplier);
 	pMsg->SetVariable(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
@@ -1138,19 +1175,19 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
          break;
    }
 
-   if (m_pScript != NULL)
+   if (m_transformer != NULL)
    {
       NXSL_Value *pValue;
       NXSL_ServerEnv *pEnv;
 
       pValue = new NXSL_Value((const TCHAR *)value);
       pEnv = new NXSL_ServerEnv;
-      m_pScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
-      m_pScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
+      m_transformer->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+      m_transformer->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
 	
-      if (m_pScript->run(pEnv, 1, &pValue) == 0)
+      if (m_transformer->run(pEnv, 1, &pValue) == 0)
       {
-         pValue = m_pScript->getResult();
+         pValue = m_transformer->getResult();
          if (pValue != NULL)
          {
             switch(m_dataType)
@@ -1185,7 +1222,7 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
          _sntprintf(szBuffer, 1024, _T("DCI::%s::%d"),
                     (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
          PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer,
-                   m_pScript->getErrorText(), m_dwId);
+                   m_transformer->getErrorText(), m_dwId);
       }
    }
 }
@@ -1523,7 +1560,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 
    m_dataType = item->m_dataType;
    m_deltaCalculation = item->m_deltaCalculation;
-   setTransformationScript(item->m_pszScript);
+   setTransformationScript(item->m_transformerSource);
 
 	m_nBaseUnits = item->m_nBaseUnits;
 	m_nMultiplier = item->m_nMultiplier;
@@ -1567,26 +1604,54 @@ void DCItem::updateFromTemplate(DCObject *src)
  */
 void DCItem::setTransformationScript(const TCHAR *pszScript)
 {
-   safe_free(m_pszScript);
-   delete m_pScript;
+   safe_free(m_transformerSource);
+   delete m_transformer;
    if (pszScript != NULL)
    {
-      m_pszScript = _tcsdup(pszScript);
-      StrStrip(m_pszScript);
-      if (m_pszScript[0] != 0)
+      m_transformerSource = _tcsdup(pszScript);
+      StrStrip(m_transformerSource);
+      if (m_transformerSource[0] != 0)
       {
 			/* TODO: add compilation error handling */
-         m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, NULL, 0);
+         m_transformer = (NXSL_Program *)NXSLCompile(m_transformerSource, NULL, 0);
       }
       else
       {
-         m_pScript = NULL;
+         m_transformer = NULL;
       }
    }
    else
    {
-      m_pszScript = NULL;
-      m_pScript = NULL;
+      m_transformerSource = NULL;
+      m_transformer = NULL;
+   }
+}
+
+/**
+ * Set new instance discovery filter script
+ */
+void DCItem::setInstanceFilter(const TCHAR *pszScript)
+{
+	safe_free(m_instanceFilterSource);
+	delete m_instanceFilter;
+   if (pszScript != NULL)
+   {
+      m_instanceFilterSource = _tcsdup(pszScript);
+      StrStrip(m_instanceFilterSource);
+      if (m_instanceFilterSource[0] != 0)
+      {
+			/* TODO: add compilation error handling */
+         m_instanceFilter = (NXSL_Program *)NXSLCompile(m_instanceFilterSource, NULL, 0);
+      }
+      else
+      {
+         m_instanceFilter = NULL;
+      }
+   }
+   else
+   {
+      m_instanceFilterSource = NULL;
+      m_instanceFilter = NULL;
    }
 }
 
@@ -1646,10 +1711,10 @@ void DCItem::createNXMPRecord(String &str)
 								  (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? 1 : 0, 
 								  (int)m_snmpRawValueType, (int)m_snmpPort);
 
-	if (m_pszScript != NULL)
+	if (m_transformerSource != NULL)
 	{
 		str += _T("\t\t\t\t\t<transformation>");
-		str.addDynamicString(EscapeStringForXML(m_pszScript, -1));
+		str.addDynamicString(EscapeStringForXML(m_transformerSource, -1));
 		str += _T("</transformation>\n");
 	}
 

@@ -284,8 +284,8 @@ protected:
    BYTE m_deltaCalculation;      // Delta calculation method
    BYTE m_dataType;
 	ObjectArray<Threshold> *m_thresholds;
-   TCHAR *m_pszScript;           // Transformation script
-   NXSL_Program *m_pScript;      // Compiled transformation script
+   TCHAR *m_transformerSource;   // Transformation script (source code)
+   NXSL_Program *m_transformer;  // Compiled transformation script
    DWORD m_dwCacheSize;          // Number of items in cache
    ItemValue **m_ppValueCache;
    ItemValue m_prevRawValue;     // Previous raw value (used for delta calculation)
@@ -359,6 +359,7 @@ public:
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
    void setTransformationScript(const TCHAR *pszScript);
+   void setInstanceFilter(const TCHAR *pszScript);
 
 	BOOL testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };

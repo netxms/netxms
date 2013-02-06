@@ -352,7 +352,8 @@ void Template::loadItemsFromDB()
               _T("status,delta_calculation,transformation,template_id,description,")
               _T("instance,template_item_id,flags,resource_id,")
               _T("proxy_node,base_units,unit_multiplier,custom_units_name,")
-	           _T("perftab_settings,system_tag,snmp_port,snmp_raw_value_type FROM items WHERE node_id=?"));
+	           _T("perftab_settings,system_tag,snmp_port,snmp_raw_value_type,")
+				  _T("instd_method,instd_data,instd_filter FROM items WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);

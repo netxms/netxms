@@ -566,8 +566,11 @@ CREATE TABLE items
 	proxy_node integer not null,   	// ID of proxy node (for SNMP and agent items)
 	base_units integer not null,		// bytes, seconds, etc.
 	unit_multiplier integer not null,	// kilo, mega, milli, etc.
-	custom_units_name varchar(63),	// units name of base_units = CUSTOM
-	perftab_settings SQL_TEXT,			// Settings for displaying graph on performance tab
+	custom_units_name varchar(63) null,	// units name of base_units = CUSTOM
+	perftab_settings SQL_TEXT null,			// Settings for displaying graph on performance tab
+	instd_method integer not null,
+	instd_data varchar(255) null,
+	instd_filter SQL_TEXT null,
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 

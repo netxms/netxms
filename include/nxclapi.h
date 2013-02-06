@@ -782,11 +782,9 @@ enum
 #define OP_LIKE      6
 #define OP_NOTLIKE   7
 
-
-//
-// DCI base units
-//
-
+/**
+ * DCI base units
+ */
 #define DCI_BASEUNITS_OTHER             0
 #define DCI_BASEUNITS_CUSTOM            1
 #define DCI_BASEUNITS_BYTES             2
@@ -796,11 +794,16 @@ enum
 #define DCI_BASEUNITS_BITS_PER_SECOND   6
 #define DCI_BASEUNITS_BYTES_PER_SECOND  7
 
+/**
+ * DCI instance discovery methods
+ */
+#define IDM_NONE                        0
+#define IDM_AGENT_LIST                  1
+#define IDM_SNMP_WALK                   2
 
-//
-// Event policy rule flags
-//
-
+/**
+ * Event policy rule flags
+ */
 #define RF_STOP_PROCESSING       0x0001
 #define RF_NEGATED_SOURCE        0x0002
 #define RF_NEGATED_EVENTS        0x0004

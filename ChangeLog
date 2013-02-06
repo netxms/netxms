@@ -18,7 +18,7 @@
 	- Fixed bug in automatic connection on first start when agent was disabled
 	- Override for connection schedule on detecting change of connectivity (selectable)
 - New MIBs added: LLDP-EXT-DOT1-MIB, LLDP-EXT-DOT3-MIB
-- Fixed issues: #197, #204, #219, #222, #225, #227, #229	
+- Fixed issues: #197, #204, #219, #222, #225, #227, #229, #231
 
 
 *
@@ -49,7 +49,7 @@
 - API for creating embedded application agents
 - Initial (alpha) version of mobile agent for Android devices
 - Fixed issues: #23, #47, #49, #131, #154, #162, #163, #172, #175, #177, #178,
-                #180, #186, #187, #188, #189, #192, #196
+                #180, #186, #187, #188, #189, #192, #194, #196
 
 
 *
