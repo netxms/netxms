@@ -76,6 +76,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	private static final String TAG = "nxagent/AgentConnectorService";
 	private static final int ONE_DAY_MINUTES = 24 * 60;
 	private static final int NETXMS_REQUEST_CODE = 123456;
+	private static final int MIN_DISTANCE = 50; // Mininum distance for acquiring a new position (meters)
 
 	private final Binder binder = new AgentConnectorBinder();
 	private Handler uiThreadHandler;
@@ -740,23 +741,23 @@ public class AgentConnectorService extends Service implements LocationListener
 					{
 						case 0:
 							if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-								locationManager.requestLocationUpdates(provider = LocationManager.NETWORK_PROVIDER, locationInterval, 100, AgentConnectorService.this);
+								locationManager.requestLocationUpdates(provider = LocationManager.NETWORK_PROVIDER, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
 							break;
 						case 1:
 							if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-								locationManager.requestLocationUpdates(provider = LocationManager.GPS_PROVIDER, locationInterval, 100, AgentConnectorService.this);
+								locationManager.requestLocationUpdates(provider = LocationManager.GPS_PROVIDER, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
 							break;
 						case 2:
 							if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-								locationManager.requestLocationUpdates(provider = LocationManager.NETWORK_PROVIDER, locationInterval, 100, AgentConnectorService.this);
+								locationManager.requestLocationUpdates(provider = LocationManager.NETWORK_PROVIDER, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
 							else if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-								locationManager.requestLocationUpdates(provider = LocationManager.GPS_PROVIDER, locationInterval, 100, AgentConnectorService.this);
+								locationManager.requestLocationUpdates(provider = LocationManager.GPS_PROVIDER, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
 							break;
 						case 3:
 							if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-								locationManager.requestLocationUpdates(provider = LocationManager.GPS_PROVIDER, locationInterval, 100, AgentConnectorService.this);
+								locationManager.requestLocationUpdates(provider = LocationManager.GPS_PROVIDER, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
 							else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-								locationManager.requestLocationUpdates(provider = LocationManager.NETWORK_PROVIDER, locationInterval, 100, AgentConnectorService.this);
+								locationManager.requestLocationUpdates(provider = LocationManager.NETWORK_PROVIDER, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
 							break;
 					}
 					if (provider.length() > 0)
