@@ -59,7 +59,12 @@ def processEnclosureStatus(root):
                 name = prop.get('name')
                 if name in ('enclosure-unit-number', 'type'):
                     continue
-                print prefix + 'Enclosure[%d].%s[%d].%s=%s' % (enclosureId, unitType, unitNumber, name, prop.text)
+                value = prop.text
+                if name == 'additional-data':
+                    name = 'current-value'
+                    if '=' in value:
+                        value = prop.text.split('=')[1]
+                print prefix + 'Enclosure[%d].%s[%d].%s=%s' % (enclosureId, unitType, unitNumber, name, value)
 
 
 def processStatistics(root, objectClass, objectName, durableIdName):
