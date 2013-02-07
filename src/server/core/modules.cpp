@@ -32,11 +32,12 @@ NXMODULE *g_pModuleList = NULL;
 /**
  * Load all registered modules
  */
-void LoadNetXMSModules()
+bool LoadNetXMSModules()
 {
-   TCHAR szErrorText[256], *curr, *next;
+   TCHAR szErrorText[256], *curr, *next, *ptr;
    NXMODULE module;
    HMODULE hModule;
+	bool success = true;
 
 	for(curr = g_pszModLoadList; curr != NULL; curr = next)
    {
@@ -50,7 +51,19 @@ void LoadNetXMSModules()
 		if (*curr == 0)
 			continue;
 
+		bool mandatory = false;
       memset(&module, 0, sizeof(NXMODULE));
+
+		// Check for "mandatory" option
+		ptr = _tcschr(curr, _T(','));
+		if (ptr != NULL)
+		{
+			*ptr = 0;
+			ptr++;
+			StrStrip(curr);
+			StrStrip(ptr);
+			mandatory = (*ptr == _T('1')) || (*ptr == _T('Y')) || (*ptr == _T('y'));
+		}
 
       hModule = DLOpen(curr, szErrorText);
       if (hModule != NULL)
@@ -78,23 +91,44 @@ void LoadNetXMSModules()
                {
                   nxlog_write(MSG_MODULE_BAD_MAGIC, EVENTLOG_ERROR_TYPE, "s", curr);
                   DLClose(hModule);
+						if (mandatory)
+						{
+							success = false;
+							break;
+						}
                }
             }
             else
             {
                nxlog_write(MSG_MODULE_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", curr);
                DLClose(hModule);
+					if (mandatory)
+					{
+						success = false;
+						break;
+					}
             }
          }
          else
          {
             nxlog_write(MSG_NO_MODULE_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", curr);
             DLClose(hModule);
+				if (mandatory)
+				{
+					success = false;
+					break;
+				}
          }
       }
       else
       {
          nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", curr, szErrorText);
+			if (mandatory)
+			{
+				success = false;
+				break;
+			}
       }
    }
+	return success;
 }

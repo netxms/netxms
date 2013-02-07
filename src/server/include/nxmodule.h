@@ -68,7 +68,7 @@ typedef struct
 /**
  * Functions
  */
-void LoadNetXMSModules();
+bool LoadNetXMSModules();
 
 /**
  * Global variables

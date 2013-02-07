@@ -693,7 +693,8 @@ retry_db_lock:
 	WatchdogInit();
 
 	// Load modules
-	LoadNetXMSModules();
+	if (!LoadNetXMSModules())
+		return FALSE;	// Mandatory module not loaded
 
 	// Initialize mailer and SMS sender
 	InitMailer();
