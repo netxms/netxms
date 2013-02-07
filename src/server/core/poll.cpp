@@ -386,10 +386,10 @@ static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex, BYTE *ma
 					memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
 				else
 					memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
-            g_nodePollerQueue.Put(pInfo);
 				DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%s"),
 				          IpToStr(pInfo->dwIpAddr, buf1), 
 				          IpToStr(pInfo->dwNetMask, buf2));
+            g_nodePollerQueue.Put(pInfo);
          }
 			else
 			{
