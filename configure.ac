@@ -2082,6 +2082,7 @@ AC_CONFIG_FILES([
 	contrib/backgrounds/Makefile
 	contrib/integration/Makefile
 	contrib/integration/HP_EVA/Makefile
+	contrib/integration/HP_P2000/Makefile
 	contrib/mibs/Makefile
 	contrib/startup/Makefile
 	contrib/startup/debian/Makefile
