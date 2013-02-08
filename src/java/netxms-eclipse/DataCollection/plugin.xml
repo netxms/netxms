@@ -259,6 +259,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.InstanceDiscovery"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.InstanceDiscovery#5"
+              name="Instance Discovery">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DataCollectionItem">
+              </instanceof>
+           </enabledWhen>
+        </page>
    </extension>
 
   <extension
