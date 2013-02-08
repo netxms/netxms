@@ -155,7 +155,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
    msg.SetVariable(VID_DESCRIPTION, pItem->szDescription);
    msg.SetVariable(VID_INSTANCE, pItem->szInstance);
    msg.SetVariable(VID_SYSTEM_TAG, pItem->szSystemTag);
-   msg.SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(pItem->pszFormula));
+	msg.SetVariable(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(pItem->pszFormula));
    msg.SetVariable(VID_FLAGS, pItem->wFlags);
 	msg.SetVariable(VID_SNMP_RAW_VALUE_TYPE, pItem->wSnmpRawType);
 	msg.SetVariable(VID_RESOURCE_ID, pItem->dwResourceId);

@@ -410,7 +410,7 @@ void NXCL_Session::processDCI(CSCPMessage *pMsg)
       m_pItemList->pItems[i].iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
 		m_pItemList->pItems[i].wFlags = pMsg->GetVariableShort(VID_FLAGS);
 		m_pItemList->pItems[i].wSnmpRawType = (BYTE)pMsg->GetVariableShort(VID_SNMP_RAW_VALUE_TYPE);
-      m_pItemList->pItems[i].pszFormula = pMsg->GetVariableStr(VID_DCI_FORMULA);
+		m_pItemList->pItems[i].pszFormula = pMsg->GetVariableStr(VID_TRANSFORMATION_SCRIPT);
       pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
       pMsg->GetVariableStr(VID_DESCRIPTION, m_pItemList->pItems[i].szDescription, MAX_DB_STRING);
       pMsg->GetVariableStr(VID_INSTANCE, m_pItemList->pItems[i].szInstance, MAX_DB_STRING);
