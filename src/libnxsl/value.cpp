@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,11 +23,9 @@
 
 #include "libnxsl.h"
 
-
-//
-// Assign value to correct number field
-//
-
+/**
+ * Assign value to correct number field
+ */
 #define ASSIGN_NUMERIC_VALUE(x) \
 { \
    switch(m_nDataType) \
@@ -52,11 +50,9 @@
    } \
 }
 
-
-//
-// Retrieve correct number field
-//
-
+/**
+ * Retrieve correct number field
+ */
 #define RETRIEVE_NUMERIC_VALUE(x, dt) \
 { \
    switch(m_nDataType) \
@@ -82,11 +78,9 @@
    } \
 }
 
-
-//
-// Constructors
-//
-
+/**
+ * Create "null" value
+ */
 NXSL_Value::NXSL_Value()
 {
    m_nDataType = NXSL_DT_NULL;
@@ -98,6 +92,9 @@ NXSL_Value::NXSL_Value()
    m_bStringIsValid = FALSE;
 }
 
+/**
+ * Create copy of given value
+ */
 NXSL_Value::NXSL_Value(const NXSL_Value *pValue)
 {
    if (pValue != NULL)
@@ -144,6 +141,9 @@ NXSL_Value::NXSL_Value(const NXSL_Value *pValue)
 #endif
 }
 
+/**
+ * Create "object" value
+ */
 NXSL_Value::NXSL_Value(NXSL_Object *pObject)
 {
    m_nDataType = NXSL_DT_OBJECT;
@@ -156,6 +156,9 @@ NXSL_Value::NXSL_Value(NXSL_Object *pObject)
 	m_name = NULL;
 }
 
+/**
+ * Create "array" value
+ */
 NXSL_Value::NXSL_Value(NXSL_Array *pArray)
 {
    m_nDataType = NXSL_DT_ARRAY;
@@ -169,6 +172,9 @@ NXSL_Value::NXSL_Value(NXSL_Array *pArray)
 	m_name = NULL;
 }
 
+/**
+ * Create "iterator" value
+ */
 NXSL_Value::NXSL_Value(NXSL_Iterator *pIterator)
 {
    m_nDataType = NXSL_DT_ITERATOR;
@@ -182,6 +188,9 @@ NXSL_Value::NXSL_Value(NXSL_Iterator *pIterator)
 	m_name = NULL;
 }
 
+/**
+ * Create "int32" value
+ */
 NXSL_Value::NXSL_Value(LONG nValue)
 {
    m_nDataType = NXSL_DT_INT32;
@@ -194,6 +203,9 @@ NXSL_Value::NXSL_Value(LONG nValue)
 	m_name = NULL;
 }
 
+/**
+ * Create "uint32" value
+ */
 NXSL_Value::NXSL_Value(DWORD uValue)
 {
    m_nDataType = NXSL_DT_UINT32;
@@ -206,6 +218,9 @@ NXSL_Value::NXSL_Value(DWORD uValue)
 	m_name = NULL;
 }
 
+/**
+ * Create "int64" value
+ */
 NXSL_Value::NXSL_Value(INT64 nValue)
 {
    m_nDataType = NXSL_DT_INT64;
@@ -218,6 +233,9 @@ NXSL_Value::NXSL_Value(INT64 nValue)
 	m_name = NULL;
 }
 
+/**
+ * Create "uint64" value
+ */
 NXSL_Value::NXSL_Value(QWORD uValue)
 {
    m_nDataType = NXSL_DT_UINT64;
@@ -230,6 +248,9 @@ NXSL_Value::NXSL_Value(QWORD uValue)
 	m_name = NULL;
 }
 
+/**
+ * Create "real" value
+ */
 NXSL_Value::NXSL_Value(double dValue)
 {
    m_nDataType = NXSL_DT_REAL;
@@ -242,6 +263,9 @@ NXSL_Value::NXSL_Value(double dValue)
 	m_name = NULL;
 }
 
+/**
+ * Create "string" value
+ */
 NXSL_Value::NXSL_Value(const TCHAR *pszValue)
 {
    m_nDataType = NXSL_DT_STRING;
@@ -265,6 +289,9 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue)
 
 #ifdef UNICODE
 
+/**
+ * Create "string" value from multibyte string
+ */
 NXSL_Value::NXSL_Value(const char *pszValue)
 {
    m_nDataType = NXSL_DT_STRING;
@@ -286,6 +313,9 @@ NXSL_Value::NXSL_Value(const char *pszValue)
 
 #endif
 
+/**
+ * Create "string" value from non null-terminated string
+ */
 NXSL_Value::NXSL_Value(const TCHAR *pszValue, DWORD dwLen)
 {
    m_nDataType = NXSL_DT_STRING;
@@ -308,11 +338,9 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue, DWORD dwLen)
 	m_name = NULL;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 NXSL_Value::~NXSL_Value()
 {
 	safe_free(m_name);
@@ -338,11 +366,9 @@ NXSL_Value::~NXSL_Value()
 	}
 }
 
-
-//
-// Set value
-//
-
+/**
+ * Set value to "int32"
+ */
 void NXSL_Value::set(LONG nValue)
 {
    m_nDataType = NXSL_DT_INT32;
@@ -354,11 +380,9 @@ void NXSL_Value::set(LONG nValue)
    m_value.nInt32 = nValue;
 }
 
-
-//
-// Update numeric value after string change
-//
-
+/**
+ * Update numeric value after string change
+ */
 void NXSL_Value::updateNumber()
 {
    TCHAR *eptr;
@@ -390,11 +414,9 @@ void NXSL_Value::updateNumber()
    }
 }
 
-
-//
-// Update string value
-//
-
+/**
+ * Update string value
+ */
 void NXSL_Value::updateString()
 {
    TCHAR szBuffer[64];
@@ -429,11 +451,9 @@ void NXSL_Value::updateString()
    m_bStringIsValid = TRUE;
 }
 
-
-//
-// Convert to another data type
-//
-
+/**
+ * Convert to another data type
+ */
 bool NXSL_Value::convert(int nDataType)
 {
    LONG nInt32;
@@ -553,11 +573,9 @@ const TCHAR *NXSL_Value::getValueAsString(DWORD *pdwLen)
    return m_pszValStr;
 }
 
-
-//
-// Get value as 32 bit integer
-//
-
+/**
+ * Get value as 32 bit integer
+ */
 LONG NXSL_Value::getValueAsInt32()
 {
    LONG nVal;
@@ -566,11 +584,9 @@ LONG NXSL_Value::getValueAsInt32()
    return nVal;
 }
 
-
-//
-// Get value as unsigned 32 bit integer
-//
-
+/**
+ * Get value as unsigned 32 bit integer
+ */
 DWORD NXSL_Value::getValueAsUInt32()
 {
    DWORD uVal;
@@ -579,11 +595,9 @@ DWORD NXSL_Value::getValueAsUInt32()
    return uVal;
 }
 
-
-//
-// Get value as 64 bit integer
-//
-
+/**
+ * Get value as 64 bit integer
+ */
 INT64 NXSL_Value::getValueAsInt64()
 {
    INT64 nVal;
@@ -592,11 +606,9 @@ INT64 NXSL_Value::getValueAsInt64()
    return nVal;
 }
 
-
-//
-// Get value as unsigned 64 bit integer
-//
-
+/**
+ * Get value as unsigned 64 bit integer
+ */
 QWORD NXSL_Value::getValueAsUInt64()
 {
    QWORD uVal;
@@ -605,11 +617,9 @@ QWORD NXSL_Value::getValueAsUInt64()
    return uVal;
 }
 
-
-//
-// Get value as real number
-//
-
+/**
+ * Get value as real number
+ */
 double NXSL_Value::getValueAsReal()
 {
    double dVal;
@@ -638,11 +648,9 @@ double NXSL_Value::getValueAsReal()
    return dVal;
 }
 
-
-//
-// Concatenate string value
-//
-
+/**
+ * Concatenate string value
+ */
 void NXSL_Value::concatenate(const TCHAR *pszString, DWORD dwLen)
 {
    if (!m_bStringIsValid)
@@ -662,11 +670,9 @@ void NXSL_Value::concatenate(const TCHAR *pszString, DWORD dwLen)
    updateNumber();
 }
 
-
-//
-// Increment value
-//
-
+/**
+ * Increment value
+ */
 void NXSL_Value::increment()
 {
    if (isNumeric())
@@ -695,11 +701,9 @@ void NXSL_Value::increment()
    }
 }
 
-
-//
-// Decrement value
-//
-
+/**
+ * Decrement value
+ */
 void NXSL_Value::decrement()
 {
    if (isNumeric())
@@ -728,11 +732,9 @@ void NXSL_Value::decrement()
    }
 }
 
-
-//
-// Negate value
-//
-
+/**
+ * Negate value
+ */
 void NXSL_Value::negate()
 {
    if (isNumeric())
@@ -763,11 +765,9 @@ void NXSL_Value::negate()
    }
 }
 
-
-//
-// Bitwise NOT
-//
-
+/**
+ * Bitwise NOT
+ */
 void NXSL_Value::bitNot()
 {
    if (isNumeric())

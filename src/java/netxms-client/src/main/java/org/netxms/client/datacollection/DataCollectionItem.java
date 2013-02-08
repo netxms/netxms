@@ -48,6 +48,11 @@ public class DataCollectionItem extends DataCollectionObject
 	public static final int SNMP_RAWTYPE_IP_ADDR = 6;
 	public static final int SNMP_RAWTYPE_MAC_ADDR = 7;
 	
+	// Instance discovery methods
+	public static final int IDM_NONE = 0;
+	public static final int IDM_AGENT_LIST = 1;
+	public static final int IDM_SNMP_WALK = 2;
+	
 	private int dataType;
 	private int deltaCalculation;
 	private String transformationScript;
@@ -57,6 +62,9 @@ public class DataCollectionItem extends DataCollectionObject
 	private String customUnitName;
 	private int snmpRawValueType;
 	private ArrayList<Threshold> thresholds;
+	private int instanceDiscoveryMethod;
+	private String instanceDiscoveryData;
+	private String instanceDiscoveryFilter;
 	
 	/**
 	 * Create data collection item object from NXCP message
@@ -70,12 +78,15 @@ public class DataCollectionItem extends DataCollectionObject
 		
 		dataType = msg.getVariableAsInteger(NXCPCodes.VID_DCI_DATA_TYPE);
 		deltaCalculation = msg.getVariableAsInteger(NXCPCodes.VID_DCI_DELTA_CALCULATION);
-		transformationScript = msg.getVariableAsString(NXCPCodes.VID_DCI_FORMULA);
+		transformationScript = msg.getVariableAsString(NXCPCodes.VID_TRANSFORMATION_SCRIPT);
 		instance = msg.getVariableAsString(NXCPCodes.VID_INSTANCE);
 		baseUnits = msg.getVariableAsInteger(NXCPCodes.VID_BASE_UNITS);
 		multiplier = msg.getVariableAsInteger(NXCPCodes.VID_MULTIPLIER);
 		customUnitName = msg.getVariableAsString(NXCPCodes.VID_CUSTOM_UNITS_NAME);
 		snmpRawValueType = msg.getVariableAsInteger(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE);
+		instanceDiscoveryMethod = msg.getVariableAsInteger(NXCPCodes.VID_INSTD_METHOD);
+		instanceDiscoveryData = msg.getVariableAsString(NXCPCodes.VID_INSTD_DATA);
+		instanceDiscoveryFilter = msg.getVariableAsString(NXCPCodes.VID_INSTD_FILTER);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<Threshold>(count);
@@ -120,12 +131,18 @@ public class DataCollectionItem extends DataCollectionObject
 		msg.setVariableInt16(NXCPCodes.VID_DCI_DATA_TYPE, dataType);
 		msg.setVariableInt16(NXCPCodes.VID_DCI_DELTA_CALCULATION, deltaCalculation);
 		msg.setVariable(NXCPCodes.VID_INSTANCE, instance);
-		msg.setVariable(NXCPCodes.VID_DCI_FORMULA, transformationScript);
+		msg.setVariable(NXCPCodes.VID_TRANSFORMATION_SCRIPT, transformationScript);
 		msg.setVariableInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
 		msg.setVariableInt16(NXCPCodes.VID_BASE_UNITS, baseUnits);
 		msg.setVariableInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
 		if (customUnitName != null)
 			msg.setVariable(NXCPCodes.VID_CUSTOM_UNITS_NAME, customUnitName);
+		
+		msg.setVariableInt16(NXCPCodes.VID_INSTD_METHOD, instanceDiscoveryMethod);
+		if (instanceDiscoveryData != null)
+			msg.setVariable(NXCPCodes.VID_INSTD_DATA, instanceDiscoveryData);
+		if (instanceDiscoveryFilter != null)
+			msg.setVariable(NXCPCodes.VID_INSTD_FILTER, instanceDiscoveryFilter);
 		
 		msg.setVariableInt32(NXCPCodes.VID_NUM_THRESHOLDS, thresholds.size());
 		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
@@ -309,5 +326,53 @@ public class DataCollectionItem extends DataCollectionObject
 	public void setSnmpRawValueType(int snmpRawValueType)
 	{
 		this.snmpRawValueType = snmpRawValueType;
+	}
+
+	/**
+	 * @return the instanceDiscoveryMethod
+	 */
+	public final int getInstanceDiscoveryMethod()
+	{
+		return instanceDiscoveryMethod;
+	}
+
+	/**
+	 * @param instanceDiscoveryMethod the instanceDiscoveryMethod to set
+	 */
+	public final void setInstanceDiscoveryMethod(int instanceDiscoveryMethod)
+	{
+		this.instanceDiscoveryMethod = instanceDiscoveryMethod;
+	}
+
+	/**
+	 * @return the instanceDiscoveryData
+	 */
+	public final String getInstanceDiscoveryData()
+	{
+		return instanceDiscoveryData;
+	}
+
+	/**
+	 * @param instanceDiscoveryData the instanceDiscoveryData to set
+	 */
+	public final void setInstanceDiscoveryData(String instanceDiscoveryData)
+	{
+		this.instanceDiscoveryData = instanceDiscoveryData;
+	}
+
+	/**
+	 * @return the instanceDiscoveryFilter
+	 */
+	public final String getInstanceDiscoveryFilter()
+	{
+		return instanceDiscoveryFilter;
+	}
+
+	/**
+	 * @param instanceDiscoveryFilter the instanceDiscoveryFilter to set
+	 */
+	public final void setInstanceDiscoveryFilter(String instanceDiscoveryFilter)
+	{
+		this.instanceDiscoveryFilter = instanceDiscoveryFilter;
 	}
 }

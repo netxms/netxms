@@ -851,10 +851,15 @@ void DCItem::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_INSTANCE, m_instance);
    pMsg->SetVariable(VID_DCI_DATA_TYPE, (WORD)m_dataType);
    pMsg->SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)m_deltaCalculation);
-   pMsg->SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(m_transformerSource));
+   pMsg->SetVariable(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformerSource));
 	pMsg->SetVariable(VID_BASE_UNITS, (WORD)m_nBaseUnits);
 	pMsg->SetVariable(VID_MULTIPLIER, (DWORD)m_nMultiplier);
 	pMsg->SetVariable(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
+	pMsg->SetVariable(VID_INSTD_METHOD, m_instanceDiscoveryMethod);
+	if (m_instanceDiscoveryData != NULL)
+		pMsg->SetVariable(VID_INSTD_DATA, m_instanceDiscoveryData);
+	if (m_instanceFilterSource != NULL)
+		pMsg->SetVariable(VID_INSTD_FILTER, m_instanceFilterSource);
 	if (m_customUnitName != NULL)
 		pMsg->SetVariable(VID_CUSTOM_UNITS_NAME, m_customUnitName);
 	if (m_thresholds != NULL)
@@ -900,14 +905,22 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppd
    pMsg->GetVariableStr(VID_INSTANCE, m_instance, MAX_DB_STRING);
    m_dataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
    m_deltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
-   TCHAR *pszStr = pMsg->GetVariableStr(VID_DCI_FORMULA);
+   TCHAR *pszStr = pMsg->GetVariableStr(VID_TRANSFORMATION_SCRIPT);
    setTransformationScript(pszStr);
-   free(pszStr);
+   safe_free(pszStr);
 	m_nBaseUnits = pMsg->GetVariableShort(VID_BASE_UNITS);
 	m_nMultiplier = (int)pMsg->GetVariableLong(VID_MULTIPLIER);
 	safe_free(m_customUnitName);
 	m_customUnitName = pMsg->GetVariableStr(VID_CUSTOM_UNITS_NAME);
 	m_snmpRawValueType = pMsg->GetVariableShort(VID_SNMP_RAW_VALUE_TYPE);
+	m_instanceDiscoveryMethod = pMsg->GetVariableShort(VID_INSTD_METHOD);
+
+	safe_free(m_instanceDiscoveryData);
+	m_instanceDiscoveryData = pMsg->GetVariableStr(VID_INSTD_DATA);
+
+   pszStr = pMsg->GetVariableStr(VID_INSTD_FILTER);
+	setInstanceFilter(pszStr);
+   safe_free(pszStr);
 
    // Update thresholds
    DWORD dwNum = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);

@@ -105,7 +105,7 @@ static void CreateManagementNode(DWORD ipAddr, DWORD netMask)
 }
 
 /**
- * Check if management server node presented in node list
+ * Callback to clear incorrectly set local management node flag
  */
 static void CheckMgmtFlagCallback(NetObj *object, void *data)
 {
@@ -117,11 +117,17 @@ static void CheckMgmtFlagCallback(NetObj *object, void *data)
 	}
 }
 
+/**
+ * Comparator to find management node object in existing nodes
+ */
 static bool LocalMgmtNodeComparator(NetObj *object, void *data)
 {
 	return ((Node *)object)->isLocalManagement();
 }
 
+/**
+ * Check if management server node presented in node list
+ */
 void CheckForMgmtNode()
 {
    InterfaceList *pIfList;
@@ -279,11 +285,9 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
    return THREAD_OK;
 }
 
-
-//
-// Configuration poll thread
-//
-
+/**
+ * Configuration poller
+ */
 static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
 {
    Node *pNode;
@@ -313,11 +317,9 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
    return THREAD_OK;
 }
 
-
-//
-// Routing table poll thread
-//
-
+/**
+ * Routing table poller
+ */
 static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
 {
    Node *pNode;
@@ -347,16 +349,17 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
    return THREAD_OK;
 }
 
-
-//
-// Check potential new node from ARP cache or routing table
-//
-
+/**
+ * Comparator for poller queue elements
+ */
 static bool PollerQueueElementComparator(void *key, void *element)
 {
 	return CAST_FROM_POINTER(key, DWORD) == ((NEW_NODE *)element)->dwIpAddr;
 }
 
+/**
+ * Check potential new node from ARP cache or routing table
+ */
 static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex, BYTE *macAddr = NULL)
 {
 	TCHAR buffer[32];
@@ -407,12 +410,10 @@ static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex, BYTE *ma
 	}
 }
 
-
-//
-// Check host route
-// Host will be added if it is directly connected
-//
-
+/**
+ * Check host route
+ * Host will be added if it is directly connected
+ */
 static void CheckHostRoute(Node *node, ROUTE *route)
 {
 	TCHAR buffer[16];
@@ -430,11 +431,9 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 	}
 }
 
-
-//
-// Discovery poll thread
-//
-
+/**
+ * Discovery poller
+ */
 static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 {
    Node *pNode;
@@ -507,11 +506,9 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
    return THREAD_OK;
 }
 
-
-//
-// Condition poll thread
-//
-
+/**
+ * Condition poller
+ */
 static THREAD_RESULT THREAD_CALL ConditionPoller(void *arg)
 {
    Condition *pCond;
@@ -538,11 +535,9 @@ static THREAD_RESULT THREAD_CALL ConditionPoller(void *arg)
    return THREAD_OK;
 }
 
-
-//
-// Topology poll thread
-//
-
+/**
+ * Topology poller
+ */
 static THREAD_RESULT THREAD_CALL TopologyPoller(void *arg)
 {
    TCHAR szBuffer[MAX_OBJECT_NAME + 64];
@@ -571,11 +566,9 @@ static THREAD_RESULT THREAD_CALL TopologyPoller(void *arg)
    return THREAD_OK;
 }
 
-
-//
-// Business service poll thread
-//
-
+/**
+ * Business service poller
+ */
 static THREAD_RESULT THREAD_CALL BusinessServicePoller(void *arg)
 {
    TCHAR szBuffer[MAX_OBJECT_NAME + 64];
@@ -604,11 +597,9 @@ static THREAD_RESULT THREAD_CALL BusinessServicePoller(void *arg)
    return THREAD_OK;
 }
 
-
-//
-// Check address range
-//
-
+/**
+ * Check given address range with ICMP ping for new nodes
+ */
 static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
 {
    DWORD dwAddr, dwFrom, dwTo;
@@ -674,11 +665,9 @@ static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
              IpToStr(dwFrom, szIpAddr1), IpToStr(dwTo, szIpAddr2));
 }
 
-
-//
-// Active discovery poll thread
-//
-
+/**
+ * Active discovery poller thread
+ */
 static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
 {
    int i, nRows, nInterval;
@@ -718,11 +707,9 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
    return THREAD_OK;
 }
 
-
-//
-// Callback for queueing objects for polling
-//
-
+/**
+ * Callback for queueing objects for polling
+ */
 static void QueueForPolling(NetObj *object, void *data)
 {
 	switch(object->Type())

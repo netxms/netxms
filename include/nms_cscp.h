@@ -570,7 +570,7 @@ typedef struct
 #define VID_CATEGORY_NAME           ((DWORD)103)
 #define VID_CATEGORY_ID             ((DWORD)104)
 #define VID_DCI_DELTA_CALCULATION   ((DWORD)105)
-#define VID_DCI_FORMULA             ((DWORD)106)
+#define VID_TRANSFORMATION_SCRIPT   ((DWORD)106)
 #define VID_POLL_TYPE               ((DWORD)107)
 #define VID_POLLER_MESSAGE          ((DWORD)108)
 #define VID_SOURCE_OBJECT_ID        ((DWORD)109)
@@ -899,6 +899,9 @@ typedef struct
 #define VID_SERIAL_NUMBER           ((DWORD)432)
 #define VID_DEVICE_ID               ((DWORD)433)
 #define VID_MAPPING_TABLE_ID        ((DWORD)434)
+#define VID_INSTD_METHOD            ((DWORD)435)
+#define VID_INSTD_DATA              ((DWORD)436)
+#define VID_INSTD_FILTER            ((DWORD)437)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

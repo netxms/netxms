@@ -404,7 +404,7 @@ public class NXCPCodes
 	public static final long VID_CATEGORY_NAME           = 103;
 	public static final long VID_CATEGORY_ID             = 104;
 	public static final long VID_DCI_DELTA_CALCULATION   = 105;
-	public static final long VID_DCI_FORMULA             = 106;
+	public static final long VID_TRANSFORMATION_SCRIPT   = 106;
 	public static final long VID_POLL_TYPE               = 107;
 	public static final long VID_POLLER_MESSAGE          = 108;
 	public static final long VID_SOURCE_OBJECT_ID        = 109;
@@ -733,6 +733,9 @@ public class NXCPCodes
 	public static final long VID_SERIAL_NUMBER           = 432;
 	public static final long VID_DEVICE_ID               = 433;
 	public static final long VID_MAPPING_TABLE_ID        = 434;
+	public static final long VID_INSTD_METHOD            = 435;
+	public static final long VID_INSTD_DATA              = 436;
+	public static final long VID_INSTD_FILTER            = 437;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
