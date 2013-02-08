@@ -34,5 +34,6 @@ enum
 
 LONG H_DiskInfo(const TCHAR *, const TCHAR *, TCHAR *);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 
 #endif // __DISK_H__

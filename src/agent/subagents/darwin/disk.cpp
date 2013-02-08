@@ -131,3 +131,29 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
 
   return rc;
 }
+
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+{
+  LONG rc = SYSINFO_RC_SUCCESS;
+
+  struct statfs *sf;
+
+  int count = getmntinfo(&sf, MNT_NOWAIT);
+  if (count > 0)
+  {
+    for (int i = 0; i < count; i++)
+    {
+      if (!(sf[i].f_flags & MNT_DONTBROWSE)) // ignore /dev, autofs, etc.
+      {
+        value->add(sf[i].f_mntonname); // mountpoint
+        //table->set(1, sf[i].f_mntfromname); // volume
+      }
+    }
+  }
+  else
+  {
+    rc = SYSINFO_RC_ERROR;
+  }
+
+  return rc;
+}

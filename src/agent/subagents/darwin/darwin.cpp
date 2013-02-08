@@ -148,6 +148,7 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
   { _T("Net.ArpCache"),                 H_NetArpCache,     NULL },
   { _T("Net.InterfaceList"),            H_NetIfList,       NULL },
   { _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL },
+  { _T("FileSystem.MountPoints"),       H_MountPoints,     NULL },
 };
 
 static NETXMS_SUBAGENT_TABLE m_tables[] =
