@@ -45,7 +45,7 @@ public class Transformation extends PropertyPage
 {
 	private static final long serialVersionUID = 1L;
 	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-	private static final String[] DCI_VARIABLES = { "$node" }; //$NON-NLS-1$
+	private static final String[] DCI_VARIABLES = { "$dci", "$node" }; //$NON-NLS-1$
 	
 	private DataCollectionItem dci;
 	private Combo deltaCalculation;
