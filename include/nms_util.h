@@ -390,6 +390,7 @@ public:
 	const TCHAR *getValue(int index) { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
 	int getIndex(const TCHAR *value);
 	int getIndexIgnoreCase(const TCHAR *value);
+	void remove(int index);
 };
 
 /**

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -427,11 +427,9 @@ bool Template::addDCObject(DCObject *object, bool alreadyLocked)
    return success;
 }
 
-
-//
-// Delete item from node
-//
-
+/**
+ * Delete data collection object from node
+ */
 bool Template::deleteDCObject(DWORD dcObjectId, bool needLock)
 {
    bool success = false;
@@ -470,11 +468,9 @@ bool Template::deleteDCObject(DWORD dcObjectId, bool needLock)
    return success;
 }
 
-
-//
-// Modify data collection item from NXCP message
-//
-
+/**
+ * Modify data collection object from NXCP message
+ */
 bool Template::updateDCObject(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId)
 {
    bool success = false;
@@ -904,11 +900,9 @@ DWORD *Template::getDCIEventsList(DWORD *pdwCount)
    return pdwList;
 }
 
-
-//
-// Create management pack record
-//
-
+/**
+ * Create management pack record
+ */
 void Template::CreateNXMPRecord(String &str)
 {
    str.addFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<name>%s</name>\n\t\t\t<flags>%s</flags>\n\t\t\t<dataCollection>\n"),
@@ -1031,7 +1025,7 @@ DWORD Template::getLastValues(CSCPMessage *msg)
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-		if (_tcsnicmp(object->getDescription(), _T("@system."), 8))
+		if (object->hasValue() && _tcsnicmp(object->getDescription(), _T("@system."), 8))
 		{
 			if (object->getType() == DCO_TYPE_ITEM)
 			{

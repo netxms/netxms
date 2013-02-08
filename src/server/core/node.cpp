@@ -1606,6 +1606,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller,
 
 		applyUserTemplates();
 		updateContainerMembership();
+		doInstanceDiscovery();
 
 		SendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n"), m_szName);
 		SendPollerMsg(dwRqId, _T("Node configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
@@ -2373,7 +2374,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 				pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
 				TCHAR szMac[20];
 				MACToStr(macAddr, szMac);
-				DbgPrintf(5, _T("Node::updateInterfaceConfiguration: got MAC for unknown interface: %s"), szMac);
+				DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_szName, m_dwId, szMac);
          	createNewInterface(m_dwIpAddr, dwNetMask, NULL, NULL, 0, 0, pMacAddr);
 			}
       }
@@ -2458,6 +2459,127 @@ static void UpdateContainerBinding(NetObj *object, void *node)
 void Node::updateContainerMembership()
 {
 	g_idxObjectById.forEach(UpdateContainerBinding, this);
+}
+
+/**
+ * Do instance discovery
+ */
+void Node::doInstanceDiscovery()
+{
+	// collect instance discovery DCIs
+	ObjectArray<DCItem> rootItems;
+   lockDciAccess();
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+		DCObject *object = m_dcObjects->get(i);
+		if ((object->getType() == DCO_TYPE_ITEM) && (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE))
+      {
+			object->setBusyFlag(TRUE);
+			rootItems.add((DCItem *)object);
+      }
+   }
+   unlockDciAccess();
+
+	// process instance discovery DCIs
+	// it should be done that way to prevent DCI list lock for long time
+	for(int i = 0; i < rootItems.size(); i++)
+	{
+		DCItem *dci = rootItems.get(i);
+		DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): Updating instances for instance discovery DCI %s [%d]"),
+		          m_szName, m_dwId, dci->getName(), dci->getId());
+		StringList *instances = getInstanceList(dci);
+		if (instances != NULL)
+		{
+			DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): read %d values"), m_szName, m_dwId, instances->getSize());
+			updateInstances(dci, instances);
+			delete instances;
+		}
+		else
+		{
+			DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): failed to get instance list for DCI %s [%d]"),
+						 m_szName, m_dwId, dci->getName(), dci->getId());
+		}
+		dci->setBusyFlag(FALSE);
+	}
+}
+
+/**
+ * Get instances for instance discovery DCI
+ */
+StringList *Node::getInstanceList(DCItem *dci)
+{
+	if (dci->getInstanceDiscoveryData() == NULL)
+		return NULL;
+
+	StringList *instances;
+	switch(dci->getInstanceDiscoveryMethod())
+	{
+		case IDM_AGENT_LIST:
+			getListFromAgent(dci->getInstanceDiscoveryData(), &instances);
+			break;
+		default:
+			instances = NULL;
+			break;
+	}
+	return instances;
+}
+
+/**
+ * Update instance DCIs created from instance discovery DCI
+ */
+void Node::updateInstances(DCItem *root, StringList *instances)
+{
+   lockDciAccess();
+
+	// Delete DCIs for missing instances and update existing
+	ObjectArray<void> deleteList;
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+		DCObject *object = m_dcObjects->get(i);
+		if ((object->getType() != DCO_TYPE_ITEM) || 
+			 (object->getTemplateId() != m_dwId) || 
+			 (object->getTemplateItemId() != root->getId()))
+			continue;
+
+		int j;
+		for(j = 0; j < instances->getSize(); j++)
+			if (!_tcscmp(((DCItem *)object)->getInstance(), instances->getValue(j)))
+				break;
+
+		if (j < instances->getSize())
+		{
+			// found, remove value from instances
+			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
+			          m_szName, m_dwId, root->getName(), root->getId(), instances->getValue(j));
+			instances->remove(j);
+		}
+		else
+		{
+			// not found, delete DCI
+			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCI will be deleted"),
+			          m_szName, m_dwId, root->getName(), root->getId(), instances->getValue(j));
+			deleteList.add(CAST_TO_POINTER(object->getId(), void *));
+		}
+   }
+
+	for(int i = 0; i < deleteList.size(); i++)
+		deleteDCObject(CAST_FROM_POINTER(deleteList.get(i), DWORD), false);
+
+	// Create new instances
+	for(int i = 0; i < instances->getSize(); i++)
+	{
+		DCItem *dci = new DCItem(root);
+		dci->setTemplateId(m_dwId, root->getId());
+		dci->setInstance(instances->getValue(i));
+		dci->setInstanceDiscoveryMethod(IDM_NONE);
+		dci->setInstanceDiscoveryData(NULL);
+		dci->setInstanceFilter(NULL);
+		dci->expandInstance();
+		dci->changeBinding(CreateUniqueId(IDG_ITEM), this, FALSE);
+		addDCObject(dci, true);
+	}
+
+   unlockDciAccess();
 }
 
 /**
@@ -2659,11 +2781,9 @@ end_loop:
    return dwResult;
 }
 
-
-//
-// Get table from agent
-//
-
+/**
+ * Get table from agent
+ */
 DWORD Node::getTableFromAgent(const TCHAR *name, Table **table)
 {
    DWORD dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
@@ -2715,6 +2835,66 @@ DWORD Node::getTableFromAgent(const TCHAR *name, Table **table)
 end_loop:
    agentUnlock();
    DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_szName, name, dwError, dwResult);
+   return dwResult;
+}
+
+/**
+ * Get list from agent
+ */
+DWORD Node::getListFromAgent(const TCHAR *name, StringList **list)
+{
+   DWORD dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
+   DWORD i, dwTries = 3;
+
+	*list = NULL;
+
+   if ((m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ||
+       (m_dwDynamicFlags & NDF_UNREACHABLE) ||
+		 (m_dwFlags & NF_DISABLE_NXCP) ||
+		 !(m_dwFlags & NF_IS_NATIVE_AGENT))
+      return DCE_COMM_ERROR;
+
+   agentLock();
+
+   // Establish connection if needed
+   if (m_pAgentConnection == NULL)
+      if (!connectToAgent())
+         goto end_loop;
+
+   // Get parameter from agent
+   while(dwTries-- > 0)
+   {
+		dwError = m_pAgentConnection->getList(name);
+      switch(dwError)
+      {
+         case ERR_SUCCESS:
+            dwResult = DCE_SUCCESS;
+				*list = new StringList;
+				for(i = 0; i < m_pAgentConnection->getNumDataLines(); i++)
+					(*list)->add(m_pAgentConnection->getDataLine(i));
+            goto end_loop;
+         case ERR_UNKNOWN_PARAMETER:
+            dwResult = DCE_NOT_SUPPORTED;
+            goto end_loop;
+         case ERR_NOT_CONNECTED:
+         case ERR_CONNECTION_BROKEN:
+            if (!connectToAgent())
+               goto end_loop;
+            break;
+         case ERR_REQUEST_TIMEOUT:
+				// Reset connection to agent after timeout
+				DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): timeout; resetting connection to agent..."), m_szName, name);
+				delete_and_null(m_pAgentConnection);
+            if (!connectToAgent())
+               goto end_loop;
+				DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_szName, name);
+            break;
+      }
+   }
+
+end_loop:
+   agentUnlock();
+   DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_szName, name, dwError, dwResult);
    return dwResult;
 }
 
@@ -2870,11 +3050,9 @@ DWORD Node::getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffe
    return dwResult;
 }
 
-
-//
-// Get table for client
-//
-
+/**
+ * Get table for client
+ */
 DWORD Node::getTableForClient(const TCHAR *name, Table **table)
 {
 	DWORD dwRetCode = getTableFromAgent(name, table);

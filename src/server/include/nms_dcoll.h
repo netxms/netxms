@@ -225,6 +225,8 @@ public:
    virtual void processNewValue(time_t nTimeStamp, void *value);
    virtual void processNewError();
 
+	virtual bool hasValue();
+
 	DWORD getId() { return m_dwId; }
    int getDataSource() { return m_source; }
    int getStatus() { return m_status; }
@@ -330,9 +332,17 @@ public:
 	bool isInterpretSnmpRawValue() { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
 	WORD getSnmpRawValueType() { return m_snmpRawValueType; }
 	bool hasActiveThreshold();
+	WORD getInstanceDiscoveryMethod() { return m_instanceDiscoveryMethod; }
+	const TCHAR *getInstanceDiscoveryData() { return m_instanceDiscoveryData; }
+	NXSL_Program *getInstanceFilter() { return m_instanceFilter; }
+	const TCHAR *getInstance() { return m_instance; }
+
+	void expandInstance();
 
    void processNewValue(time_t nTimeStamp, void *value);
    void processNewError();
+
+	virtual bool hasValue();
 
    void getLastValue(CSCPMessage *pMsg, DWORD dwId);
    NXSL_Value *getValueForNXSL(int nFunction, int nPolls);
@@ -359,6 +369,8 @@ public:
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
    void setTransformationScript(const TCHAR *pszScript);
+	void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
+	void setInstanceDiscoveryData(const TCHAR *data) { safe_free(m_instanceDiscoveryData); m_instanceDiscoveryData = (data != NULL) ? _tcsdup(data) : NULL; }
    void setInstanceFilter(const TCHAR *pszScript);
 
 	BOOL testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);

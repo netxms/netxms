@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -287,7 +287,7 @@ DWORD DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-		if (object->getPerfTabSettings() != NULL)
+		if ((object->getPerfTabSettings() != NULL) && object->hasValue())
 		{
 			pMsg->SetVariable(dwId++, object->getId());
 			pMsg->SetVariable(dwId++, object->getDescription());
@@ -320,7 +320,7 @@ DWORD DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, DWORD baseId)
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-		if (object->getType() == DCO_TYPE_ITEM)
+		if (object->hasValue() && (object->getType() == DCO_TYPE_ITEM))
 		{
 			if (((DCItem *)object)->hasActiveThreshold())
 			{

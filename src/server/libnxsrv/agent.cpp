@@ -544,11 +544,9 @@ void AgentConnection::destroyResultData()
    m_dwNumDataLines = 0;
 }
 
-
-//
-// Get interface list from agent
-//
-
+/**
+ * Get interface list from agent
+ */
 InterfaceList *AgentConnection::getInterfaceList()
 {
    InterfaceList *pIfList = NULL;
@@ -812,42 +810,34 @@ BOOL AgentConnection::sendMessage(CSCPMessage *pMsg)
    return bResult;
 }
 
-
-//
-// Trap handler. Should be overriden in derived classes to implement
-// actual trap processing. Default implementation do nothing.
-//
-
+/**
+ * Trap handler. Should be overriden in derived classes to implement
+ * actual trap processing. Default implementation do nothing.
+ */
 void AgentConnection::onTrap(CSCPMessage *pMsg)
 {
 }
 
-
-//
-// Data push handler. Should be overriden in derived classes to implement
-// actual data push processing. Default implementation do nothing.
-//
-
+/**
+ * Data push handler. Should be overriden in derived classes to implement
+ * actual data push processing. Default implementation do nothing.
+ */
 void AgentConnection::onDataPush(CSCPMessage *pMsg)
 {
 }
 
-
-//
-// Custom message handler
-// If returns true, message considered as processed and will not be placed in wait queue
-//
-
+/**
+ * Custom message handler
+ * If returns true, message considered as processed and will not be placed in wait queue
+ */
 bool AgentConnection::processCustomMessage(CSCPMessage *pMsg)
 {
 	return false;
 }
 
-
-//
-// Get list of values
-//
-
+/**
+ * Get list of values
+ */
 DWORD AgentConnection::getList(const TCHAR *pszParam)
 {
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
@@ -893,11 +883,9 @@ DWORD AgentConnection::getList(const TCHAR *pszParam)
    return dwRetCode;
 }
 
-
-//
-// Get table
-//
-
+/**
+ * Get table
+ */
 DWORD AgentConnection::getTable(const TCHAR *pszParam, Table **table)
 {
    CSCPMessage msg(m_nProtocolVersion), *pResponse;

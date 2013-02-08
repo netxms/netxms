@@ -897,6 +897,9 @@ protected:
 	bool checkNetworkPath(DWORD dwRqId);
 
 	void applyUserTemplates();
+	void doInstanceDiscovery();
+	StringList *getInstanceList(DCItem *dci);
+	void updateInstances(DCItem *root, StringList *instances);
 
 	void updateContainerMembership();
 	BOOL updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask);
@@ -1010,6 +1013,7 @@ public:
    DWORD getItemFromCheckPointSNMP(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
    DWORD getItemFromAgent(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
 	DWORD getTableFromAgent(const TCHAR *name, Table **table);
+	DWORD getListFromAgent(const TCHAR *name, StringList **list);
    DWORD getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, DWORD dwBufSize);
    DWORD getTableForClient(const TCHAR *name, Table **table);
 

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -185,11 +185,9 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 	}
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 DCObject::~DCObject()
 {
    if (m_dwNumSchedules > 0)
@@ -204,12 +202,10 @@ DCObject::~DCObject()
    MutexDestroy(m_hMutex);
 }
 
-
-//
-// Load custom schedules from database
-// (assumes that no schedules was created before this call)
-//
-
+/**
+ * Load custom schedules from database
+ * (assumes that no schedules was created before this call)
+ */
 BOOL DCObject::loadCustomSchedules()
 {
    if (!(m_flags & DCF_ADVANCED_SCHEDULE))
@@ -240,12 +236,10 @@ BOOL DCObject::loadCustomSchedules()
 	return hResult != NULL;
 }
 
-
-//
-// Check if associated cluster resource is active. Returns true also if
-// DCI has no resource association
-//
-
+/**
+ * Check if associated cluster resource is active. Returns true also if
+ * DCI has no resource association
+ */
 bool DCObject::matchClusterResource()
 {
 	Cluster *pCluster;
@@ -610,7 +604,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
    lock();
    if ((m_status != ITEM_STATUS_DISABLED) && (!m_busy) &&
        isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
-		 matchClusterResource())
+		 matchClusterResource() && hasValue())
    {
       if (m_flags & DCF_ADVANCED_SCHEDULE)
       {
@@ -678,11 +672,9 @@ bool DCObject::prepareForDeletion()
 	return canDelete;
 }
 
-
-//
-// Create NXCP message with object data
-//
-
+/**
+ * Create NXCP message with object data
+ */
 void DCObject::createMessage(CSCPMessage *pMsg)
 {
 	lock();
@@ -708,11 +700,9 @@ void DCObject::createMessage(CSCPMessage *pMsg)
    unlock();
 }
 
-
-//
-// Update data collection object from NXCP message
-//
-
+/**
+ * Update data collection object from NXCP message
+ */
 void DCObject::updateFromMessage(CSCPMessage *pMsg)
 {
    lock();
@@ -757,11 +747,9 @@ void DCObject::updateFromMessage(CSCPMessage *pMsg)
 	unlock();
 }
 
-
-//
-// Save to database
-//
-
+/**
+ * Save to database
+ */
 BOOL DCObject::saveToDB(DB_HANDLE hdb)
 {
 	TCHAR query[1024];
@@ -788,11 +776,9 @@ BOOL DCObject::saveToDB(DB_HANDLE hdb)
 	return success;
 }
 
-
-//
-// Delete object and collected data from database
-//
-
+/**
+ * Delete object and collected data from database
+ */
 void DCObject::deleteFromDB()
 {
 	TCHAR query[256];
@@ -800,41 +786,33 @@ void DCObject::deleteFromDB()
    QueueSQLRequest(query);
 }
 
-
-//
-// Get list of used events
-//
-
+/**
+ * Get list of used events
+ */
 void DCObject::getEventList(DWORD **ppdwList, DWORD *pdwSize)
 {
 	*ppdwList = NULL;
 	*pdwSize = 0;
 }
 
-
-//
-// Create management pack record
-//
-
+/**
+ * Create management pack record
+ */
 void DCObject::createNXMPRecord(String &str)
 {
 }
 
-
-//
-// Load data collection object thresholds from database
-//
-
+/**
+ * Load data collection object thresholds from database
+ */
 bool DCObject::loadThresholdsFromDB()
 {
 	return true;
 }
 
-
-//
-// Update DC object from template object
-//
-
+/**
+ * Update DC object from template object
+ */
 void DCObject::updateFromTemplate(DCObject *src)
 {
 	lock();
@@ -873,20 +851,24 @@ void DCObject::updateFromTemplate(DCObject *src)
 	unlock();
 }
 
-
-//
-// Process new collected value
-//
-
+/**
+ * Process new collected value
+ */
 void DCObject::processNewValue(time_t nTimeStamp, void *value)
 {
 }
 
-
-//
-// Process new data collection error
-//
-
+/**
+ * Process new data collection error
+ */
 void DCObject::processNewError()
 {
+}
+
+/**
+ * Should return true if object has (or can have) value
+ */
+bool DCObject::hasValue()
+{
+	return true;
 }

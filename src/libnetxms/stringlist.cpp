@@ -170,3 +170,16 @@ int StringList::getIndexIgnoreCase(const TCHAR *value)
 			return i;
 	return -1;
 }
+
+/**
+ * Remove element at given index
+ */
+void StringList::remove(int index)
+{
+	if ((index < 0) || (index >= m_count))
+		return;
+
+	safe_free(m_values[index]);
+	m_count--;
+	memmove(&m_values[index], &m_values[index + 1], (m_count - index) * sizeof(TCHAR *));
+}

@@ -3037,7 +3037,7 @@ void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
                      break;
                   case CMD_DELETE_NODE_DCI:
                      dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
-                     bSuccess = ((Template *)pObject)->deleteDCObject(dwItemId, TRUE);
+                     bSuccess = ((Template *)pObject)->deleteDCObject(dwItemId, true);
                      msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
                      break;
                }
