@@ -23,11 +23,9 @@
 
 #include "nxagentd.h"
 
-
-//
-// Handler for System.Memory.XXX parameters
-//
-
+/**
+ * Handler for System.Memory.XXX parameters
+ */
 LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    MEMORYSTATUSEX mse;
@@ -75,11 +73,9 @@ LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for System.Hostname parameter
-// 
-
+/**
+ * Handler for System.Hostname parameter
+ */ 
 LONG H_HostName(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
    DWORD dwSize;
@@ -91,11 +87,9 @@ LONG H_HostName(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for FileSystem.Stats table
-//
-
+/**
+ * Handler for FileSystem.Stats table
+ */
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
 {
 	LONG rc = SYSINFO_RC_SUCCESS;
@@ -180,11 +174,48 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
 	return rc;
 }
 
+/**
+ * Handler for FileSystem.MountPoints list
+ */
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+{
+	LONG rc = SYSINFO_RC_SUCCESS;
 
-//
-// Handler for disk space information parameters
-//
+	TCHAR volName[MAX_PATH];
+	HANDLE hVol = FindFirstVolume(volName, MAX_PATH);
+	if (hVol != INVALID_HANDLE_VALUE)
+	{
+		do
+		{
+			TCHAR mountPoints[MAX_PATH];
+			DWORD size;
+			if (GetVolumePathNamesForVolumeName(volName, mountPoints, MAX_PATH, &size))
+			{
+				if (mountPoints[0] != 0)
+					value->add(mountPoints);
+				else
+					value->add(volName);
+			}
+			else
+			{
+				TCHAR buffer[1024];
+				DebugPrintf(INVALID_INDEX, 4, _T("H_MountPoints: Call to GetVolumePathNamesForVolumeName(\"%s\") failed (%s)"), volName, GetSystemErrorText(GetLastError(), buffer, 1024));
+			}
+		} while(FindNextVolume(hVol, volName, MAX_PATH));
+		FindVolumeClose(hVol);
+	}
+	else
+	{
+		TCHAR buffer[1024];
+		DebugPrintf(INVALID_INDEX, 4, _T("H_MountPoints: Call to FindFirstVolume failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+		rc = SYSINFO_RC_ERROR;
+	}
+	return rc;
+}
 
+/**
+ * Handler for disk space information parameters
+ */
 LONG H_DiskInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
    TCHAR szPath[MAX_PATH];
@@ -229,11 +260,10 @@ LONG H_DiskInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
    return nRet;
 }
 
-
-//
-// Handler for System.Uname parameter
-// by LWX
-
+/**
+ * Handler for System.Uname parameter
+ * by LWX
+ */
 LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    DWORD dwSize;
@@ -300,11 +330,9 @@ LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for System.CPU.Count parameter
-//
-
+/**
+ * Handler for System.CPU.Count parameter
+ */
 LONG H_CPUCount(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
    SYSTEM_INFO sysInfo;

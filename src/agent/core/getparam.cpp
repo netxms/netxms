@@ -49,6 +49,7 @@ LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_CPUCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_PhysicalDiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 #endif
 
 /**
@@ -241,6 +242,9 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
  */
 static NETXMS_SUBAGENT_LIST m_stdLists[] =
 {
+#ifdef _WIN32
+   { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
+#endif
    { _T("Agent.ActionList"), H_ActionList, NULL },
    { _T("Agent.SubAgentList"), H_SubAgentList, NULL },
    { _T("Agent.SupportedLists"), H_EnumList, NULL },
