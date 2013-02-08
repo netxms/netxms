@@ -553,6 +553,42 @@ public class GenericObject
 	}
 
 	/**
+	 * Internal worker function for getAllParents
+	 * @param classFilter class filter
+	 * @param set result set
+	 */
+	private void getAllParentsInternal(int classFilter, Set<GenericObject> set)
+	{
+		synchronized(parents)
+		{
+			final Iterator<Long> it = parents.iterator();
+			while(it.hasNext())
+			{
+				GenericObject obj = session.findObjectById(it.next());
+				if (obj != null)
+				{
+					if ((classFilter == -1) || (obj.getObjectClass() == classFilter))
+						set.add(obj);
+					obj.getAllParentsInternal(classFilter, set);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Get all parent objects, direct and indirect
+	 * 
+	 * @param classFilter -1 to get all parents, or NetXMS class id to retrieve objects of given class
+	 * @return set of parent objects
+	 */
+	public Set<GenericObject> getAllParents(int classFilter)
+	{
+		Set<GenericObject> result = new HashSet<GenericObject>();
+		getAllParentsInternal(classFilter, result);
+		return result;
+	}
+	
+	/**
 	 * @return List of trusted nodes
 	 */
 	public GenericObject[] getTrustedNodes()
