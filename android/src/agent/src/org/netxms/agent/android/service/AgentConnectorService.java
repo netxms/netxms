@@ -4,14 +4,15 @@
 package org.netxms.agent.android.service;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Enumeration;
-import java.util.regex.Pattern;
+import java.util.List;
 
 import org.netxms.agent.android.R;
+import org.netxms.agent.android.helpers.DeviceInfoHelper;
+import org.netxms.agent.android.helpers.NetHelper;
 import org.netxms.agent.android.helpers.SafeParser;
+import org.netxms.agent.android.helpers.TimeHelper;
 import org.netxms.agent.android.main.activities.HomeScreen;
 import org.netxms.agent.android.receivers.AlarmIntentReceiver;
 import org.netxms.agent.android.service.helpers.AndroidLoggingFacility;
@@ -20,9 +21,6 @@ import org.netxms.base.Logger;
 import org.netxms.mobile.agent.MobileAgentException;
 import org.netxms.mobile.agent.Session;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -32,23 +30,17 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.os.BatteryManager;
 import android.os.Binder;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.provider.Settings.Secure;
-import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.util.Patterns;
 import android.widget.Toast;
 
 /**
@@ -75,11 +67,9 @@ public class AgentConnectorService extends Service implements LocationListener
 	private static final String TAG = "nxagent/AgentConnectorService";
 	private static final int ONE_DAY_MINUTES = 24 * 60;
 	private static final int NETXMS_REQUEST_CODE = 123456;
-	private static final int MIN_DISTANCE = 50; // Mininum distance for acquiring a new position (meters)
 	private static final int STRATEGY_NET_ONLY = 0;
 	private static final int STRATEGY_GPS_ONLY = 1;
-	private static final int STRATEGY_NET_THEN_GPS = 2;
-	private static final int STRATEGY_GPS_THEN_NET = 3;
+	private static final int STRATEGY_NET_AND_GPS = 2;
 
 	private final Binder binder = new AgentConnectorBinder();
 	private Handler uiThreadHandler;
@@ -103,7 +93,8 @@ public class AgentConnectorService extends Service implements LocationListener
 	private int locationInterval;
 	private int locationDuration;
 	private int locationStrategy;
-	private String locationProvider;
+	private String locationProvider = "";
+	private String allowedProviders = "";
 
 	/**
 	 * Class for clients to access. Because we know this service always runs in
@@ -126,11 +117,11 @@ public class AgentConnectorService extends Service implements LocationListener
 	public void onCreate()
 	{
 		super.onCreate();
+		uiThreadHandler = new Handler(getMainLooper());
+		showToast(getString(R.string.notify_started));
+
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
 		Logger.setLoggingFacility(new AndroidLoggingFacility());
-
-		uiThreadHandler = new Handler(getMainLooper());
-
 		locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 		configure();
 
@@ -145,7 +136,6 @@ public class AgentConnectorService extends Service implements LocationListener
 			}
 		};
 		registerReceiver(receiver, new IntentFilter(Intent.ACTION_TIME_TICK));
-		showToast(getString(R.string.notify_started));
 	}
 
 	/*
@@ -203,6 +193,8 @@ public class AgentConnectorService extends Service implements LocationListener
 	 */
 	void configure()
 	{
+		updateLastStatus("");
+		refreshHomeScreen();
 		agentActive = sp.getBoolean("global.activate", false);
 		notifyToast = sp.getBoolean("notification.toast", true);
 		connectionServer = sp.getString("connection.server", "");
@@ -220,10 +212,13 @@ public class AgentConnectorService extends Service implements LocationListener
 		{
 			if (locationHandler == null)
 				locationHandler = new Handler(getMainLooper());
-			if (locationForce)
-				locationHandler.post(locationTask);
-			else
+			if (locationHandler != null)
+			{
 				locationHandler.removeCallbacks(locationTask);
+				AgentConnectorService.gettingNewLocation = false;
+				locationProvider = "";
+				locationHandler.post(locationTask);
+			}
 		}
 	}
 
@@ -232,6 +227,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	 */
 	public void shutdown()
 	{
+		updateLastStatus("");
 		cancelSchedule();
 		unregisterReceiver(receiver);
 		stopSelf();
@@ -276,7 +272,9 @@ public class AgentConnectorService extends Service implements LocationListener
 				connectionStatus != ConnectionStatus.CS_INPROGRESS &&
 				connectionStatus != ConnectionStatus.CS_CONNECTED)
 		{
-			new PushDataTask(connectionServer, connectionPort, getDeviceId(), connectionLogin, connectionPassword, connectionEncrypt).execute();
+			new PushDataTask(connectionServer, connectionPort,
+					DeviceInfoHelper.getDeviceId(getApplicationContext()),
+					connectionLogin, connectionPassword, connectionEncrypt).execute();
 		}
 	}
 
@@ -286,6 +284,24 @@ public class AgentConnectorService extends Service implements LocationListener
 	public void registerHomeScreen(HomeScreen homeScreen)
 	{
 		this.homeScreen = homeScreen;
+	}
+
+	/**
+	 * Show toast with given text
+	 * 
+	 * @param text message text
+	 */
+	public void showToast(final String text)
+	{
+		if (uiThreadHandler != null)
+			uiThreadHandler.post(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+				}
+			});
 	}
 
 	/**
@@ -373,7 +389,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	/**
 	 * Set a connection schedule
 	 * 
-	 * @param time for new schedule
+	 * @param milliseconds	time for new schedule
 	 */
 	private void setSchedule(long milliseconds)
 	{
@@ -401,199 +417,6 @@ public class AgentConnectorService extends Service implements LocationListener
 	}
 
 	/**
-	 * Show toast with given text
-	 * 
-	 * @param text message text
-	 */
-	public void showToast(final String text)
-	{
-		uiThreadHandler.post(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
-			}
-		});
-	}
-
-	/**
-	 * Get device serial number (starting from HoneyComb)
-	 * 
-	 * @return Device serial number if available 
-	 */
-	@SuppressLint("NewApi")
-	public String getSerial()
-	{
-		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ? Build.SERIAL : "";
-	}
-
-	/**
-	 * Get device manufacturer
-	 * 
-	 * @return Device manufacturer 
-	 */
-	public String getManufacturer()
-	{
-		return Build.MANUFACTURER;
-	}
-
-	/**
-	 * Get device model
-	 * 
-	 * @return Device model
-	 */
-	public String getModel()
-	{
-		return Build.MODEL;
-	}
-
-	/**
-	 * Get device OS relese
-	 * 
-	 * @return OS release number
-	 */
-	public String getRelease()
-	{
-		return Build.VERSION.RELEASE;
-	}
-
-	/**
-	 * Get device user
-	 * 
-	 * @return main Google account user
-	 */
-	public String getUser()
-	{
-		try
-		{
-			Pattern emailPattern = Patterns.EMAIL_ADDRESS; // API level 8+
-			Account[] accounts = AccountManager.get(getApplicationContext()).getAccounts();
-			for (Account account : accounts)
-				if (emailPattern.matcher(account.name).matches())
-					return account.name;
-		}
-		catch (Exception e)
-		{
-			Log.e(TAG, "Exception in getUser()", e);
-		}
-		return "";
-	}
-
-	/**
-	 * Get device id
-	 * 
-	 * @return IMEI number or Android ID for phoneless devices 
-	 */
-	public String getDeviceId()
-	{
-		TelephonyManager tman = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-		String id = (tman != null) ? tman.getDeviceId() : null;
-		if (id == null)
-		{
-			id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
-		}
-		return id;
-	}
-
-	/**
-	 * Get OS nickname
-	 * 
-	 * @return OS nick name 
-	 */
-	public String getOSName()
-	{
-		switch (Build.VERSION.SDK_INT)
-		{
-			case Build.VERSION_CODES.BASE:
-				return "ANDROID (BASE)";
-			case Build.VERSION_CODES.BASE_1_1:
-				return "ANDROID (BASE_1_1)";
-			case Build.VERSION_CODES.CUR_DEVELOPMENT:
-				return "ANDROID (CUR_DEVELOPMENT)";
-			case Build.VERSION_CODES.DONUT:
-				return "ANDROID (DONUT)";
-			case Build.VERSION_CODES.ECLAIR:
-				return "ANDROID (ECLAIR)";
-			case Build.VERSION_CODES.ECLAIR_0_1:
-				return "ANDROID (ECLAIR_0_1)";
-			case Build.VERSION_CODES.ECLAIR_MR1:
-				return "ANDROID (ECLAIR_MR1)";
-			case Build.VERSION_CODES.FROYO:
-				return "ANDROID (FROYO)";
-			case Build.VERSION_CODES.GINGERBREAD:
-				return "ANDROID (GINGERBREAD)";
-			case Build.VERSION_CODES.GINGERBREAD_MR1:
-				return "ANDROID (GINGERBREAD_MR1)";
-			case Build.VERSION_CODES.HONEYCOMB:
-				return "ANDROID (HONEYCOMB)";
-			case Build.VERSION_CODES.HONEYCOMB_MR1:
-				return "ANDROID (HONEYCOMB_MR1)";
-			case Build.VERSION_CODES.HONEYCOMB_MR2:
-				return "ANDROID (HONEYCOMB_MR2)";
-			case Build.VERSION_CODES.ICE_CREAM_SANDWICH:
-				return "ANDROID (ICE_CREAM_SANDWICH)";
-			case Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1:
-				return "ANDROID (ICE_CREAM_SANDWICH_MR1)";
-			case Build.VERSION_CODES.JELLY_BEAN:
-				return "ANDROID (JELLY_BEAN)";
-			case Build.VERSION_CODES.JELLY_BEAN_MR1:
-				return "ANDROID (JELLY_BEAN_MR1)";
-		}
-		return "ANDROID (UNKNOWN)";
-	}
-
-	/**
-	 * Get internet address. NB must run on background thread (as per honeycomb specs)
-	 * 
-	 * @return Internet address, null if not addresses are available
-	 */
-	private InetAddress getInetAddress()
-	{
-		try
-		{
-			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-			while (interfaces.hasMoreElements())
-			{
-				NetworkInterface iface = interfaces.nextElement();
-				Enumeration<InetAddress> addrList = iface.getInetAddresses();
-				while (addrList.hasMoreElements())
-				{
-					InetAddress addr = addrList.nextElement();
-					if (!addr.isAnyLocalAddress() && !addr.isLinkLocalAddress() && !addr.isLoopbackAddress() && !addr.isMulticastAddress())
-						return addr;
-				}
-			}
-			return InetAddress.getLocalHost();
-		}
-		catch (Exception e)
-		{
-			Log.e(TAG, "Exception in getInetAddress()", e);
-		}
-		return null;
-	}
-
-	/**
-	 * Get last known geo location (depending on strategy used it could be very old)
-	 * 
-	 * @return last known location or null if not known
-	 */
-	private GeoLocation getGeoLocation()
-	{
-		if (locationManager != null)
-			if (locationProvider.length() > 0)
-			{
-				Location currLocation = locationManager.getLastKnownLocation(locationProvider);
-				if (currLocation != null)
-				{
-					Log.i(TAG, "getGeoLocation, last known location at lat: " + Double.toString(currLocation.getLatitude()) + ", lon: " + Double.toString(currLocation.getLongitude()));
-					return new GeoLocation(currLocation.getLatitude(), currLocation.getLongitude());
-				}
-			}
-		return null;
-	}
-
-	/**
 	 * Get flags. Currently not used.
 	 */
 	private int getFlags()
@@ -602,48 +425,15 @@ public class AgentConnectorService extends Service implements LocationListener
 	}
 
 	/**
-	 * Get battery level as percentage
+	 * Updates persistent last location status
 	 * 
-	 * @return battery level (percentage), -1 if value is not available
+	 * @pasam status	status of last location
 	 */
-	private int getBatteryLevel()
+	private void updateLastStatus(String status)
 	{
-		double level = -1;
-		Context context = getApplicationContext();
-		if (context != null)
-		{
-			Intent battIntent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-			if (battIntent != null)
-			{
-				int rawlevel = battIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-				double scale = battIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-//				int temp = battIntent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-//	            int voltage = battIntent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
-				if (rawlevel >= 0 && scale > 0)
-					level = (rawlevel * 100) / scale + 0.5; // + 0.5 for round on cast
-			}
-		}
-		return (int)level;
-	}
-
-	/**
-	 * Check for internet connectivity 
-	 * 
-	 * @return true if access to internet is available
-	 */
-	private boolean isInternetOn()
-	{
-		ConnectivityManager conn = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-		if (conn != null)
-		{
-			NetworkInfo wifi = conn.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-			if (wifi != null && wifi.getState() == NetworkInfo.State.CONNECTED)
-				return true;
-			NetworkInfo mobile = conn.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-			if (mobile != null && mobile.getState() == NetworkInfo.State.CONNECTED)
-				return true;
-		}
-		return false;
+		Editor e = sp.edit();
+		e.putString("location.last_status", status);
+		e.commit();
 	}
 
 	/**
@@ -674,7 +464,7 @@ public class AgentConnectorService extends Service implements LocationListener
 		{
 			Log.d(TAG, "PushDataTask.doInBackground: reconnecting...");
 			statusNotification(ConnectionStatus.CS_INPROGRESS, "");
-			if (isInternetOn())
+			if (NetHelper.isInternetOn(getApplicationContext()))
 			{
 				Session session = new Session(server, port, deviceId, login, password, encrypt);
 				try
@@ -685,10 +475,13 @@ public class AgentConnectorService extends Service implements LocationListener
 					if (sendDeviceSystemInfo)
 					{
 						Log.d(TAG, "PushDataTask.doInBackground: sending DeviceSystemInfo");
-						session.reportDeviceSystemInfo(getManufacturer(), getModel(), getOSName(), getRelease(), getSerial(), getUser());
+						session.reportDeviceSystemInfo(DeviceInfoHelper.getManufacturer(), DeviceInfoHelper.getModel(),
+								DeviceInfoHelper.getOSName(), DeviceInfoHelper.getRelease(), DeviceInfoHelper.getSerial(),
+								DeviceInfoHelper.getUser(getApplicationContext()));
 						sendDeviceSystemInfo = false;
 					}
-					session.reportDeviceStatus(getInetAddress(), getGeoLocation(), getFlags(), getBatteryLevel());
+					session.reportDeviceStatus(NetHelper.getInetAddress(), getGeoLocation(), getFlags(),
+							DeviceInfoHelper.getBatteryLevel(getApplicationContext()));
 					session.disconnect();
 					Log.d(TAG, "PushDataTask.doInBackground: data transfer completed");
 					connMsg = getString(R.string.notify_connected, server + ":" + port);
@@ -739,35 +532,74 @@ public class AgentConnectorService extends Service implements LocationListener
 	}
 
 	/**
-	 * Get location provider based on selected strategy
+	 * Get last known geo location (depending on strategy used it could be very old).
+	 * If no provider available, try to get a last position from any available provider
+	 * identifyed by the system using the ACCURACY_COARSE criteria.
+	 * 
+	 * @return last known location or null if not known
 	 */
-	private String getLocationProvider(int strategy)
+	private GeoLocation getGeoLocation()
 	{
-		String provider = "";
+		if (locationManager != null)
+		{
+			Location location = null;
+			if (locationProvider.length() > 0)
+				location = locationManager.getLastKnownLocation(locationProvider);
+			else
+			{
+				Criteria criteria = new Criteria();
+				if (criteria != null)
+				{
+					criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+					String bestProvider = locationManager.getBestProvider(criteria, true);
+					if (bestProvider != null)
+						location = locationManager.getLastKnownLocation(bestProvider);
+				}
+			}
+			if (location != null)
+			{
+				String locStatus = getString(R.string.info_location_good,
+						TimeHelper.getTimeString(location.getTime()),
+						location.getProvider(),
+						Float.toString((float)location.getLatitude()),
+						Float.toString((float)location.getLongitude()),
+						Float.toString(location.getAccuracy()));
+				Log.i(TAG, locStatus);
+				updateLastStatus(locStatus);
+				return new GeoLocation(location.getLatitude(), location.getLongitude());
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Get list of enabled location provider based on selected strategy
+	 * 
+	 * @param	strategy: provider location strategy
+	 * @return	List of enabled provider based on selected strategy
+	 */
+	private List<String> getLocationProviderList(int strategy)
+	{
+		List<String> providerList = new ArrayList<String>(0);
+		providerList.clear();
 		switch (strategy)
 		{
 			case STRATEGY_NET_ONLY:
 				if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-					provider = LocationManager.NETWORK_PROVIDER;
+					providerList.add(LocationManager.NETWORK_PROVIDER);
 				break;
 			case STRATEGY_GPS_ONLY:
 				if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-					provider = LocationManager.GPS_PROVIDER;
+					providerList.add(LocationManager.GPS_PROVIDER);
 				break;
-			case STRATEGY_NET_THEN_GPS:
+			case STRATEGY_NET_AND_GPS:
 				if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-					provider = LocationManager.NETWORK_PROVIDER;
-				else if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-					provider = LocationManager.GPS_PROVIDER;
-				break;
-			case STRATEGY_GPS_THEN_NET:
+					providerList.add(LocationManager.NETWORK_PROVIDER);
 				if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-					provider = LocationManager.GPS_PROVIDER;
-				else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-					provider = LocationManager.NETWORK_PROVIDER;
+					providerList.add(LocationManager.GPS_PROVIDER);
 				break;
 		}
-		return provider;
+		return providerList;
 	}
 
 	/**
@@ -778,70 +610,89 @@ public class AgentConnectorService extends Service implements LocationListener
 		@Override
 		public void run()
 		{
-			if (agentActive && locationForce)
+			if (agentActive)
 			{
+				locationHandler.removeCallbacks(locationTask);
 				if (AgentConnectorService.gettingNewLocation)
 				{
-					Log.d(TAG, "Timeout expired while trying to get a new location...");
-					locationManager.removeUpdates(AgentConnectorService.this);
 					AgentConnectorService.gettingNewLocation = false;
+					locationManager.removeUpdates(AgentConnectorService.this);
 					locationHandler.postDelayed(locationTask, locationInterval);
+					String locStatus = getString(R.string.info_location_timeout, allowedProviders);
+					Log.d(TAG, locStatus);
+					updateLastStatus(locStatus);
+					refreshHomeScreen();
 				}
 				else
 				{
-					locationProvider = getLocationProvider(locationStrategy);
-					if (locationProvider.length() > 0)
+					if (locationForce)
 					{
-						locationManager.requestLocationUpdates(locationProvider, locationInterval, MIN_DISTANCE, AgentConnectorService.this);
-						Log.d(TAG, "Trying to get a new location from '" + locationProvider + "' provider...");
-						AgentConnectorService.gettingNewLocation = true;
-						locationHandler.postDelayed(locationTask, locationDuration);
+						locationProvider = "";
+						String locStatus = getString(R.string.info_location_no_provider);
+						List<String> providerList = getLocationProviderList(locationStrategy);
+						if (providerList.size() > 0)
+						{
+							allowedProviders = "";
+							for (int i = 0; i < providerList.size(); i++)
+							{
+								allowedProviders += (i > 0 ? ", " : "") + providerList.get(i);
+								locationManager.requestLocationUpdates(providerList.get(i), 0, 0, AgentConnectorService.this); // 0, 0 to have it ASAP
+							}
+							AgentConnectorService.gettingNewLocation = true;
+							locationHandler.postDelayed(locationTask, locationDuration);
+							locStatus = getString(R.string.info_location_acquiring, allowedProviders);
+						}
+						else
+							locationHandler.postDelayed(locationTask, locationInterval);
+						Log.d(TAG, locStatus);
+						updateLastStatus(locStatus);
+						refreshHomeScreen();
 					}
 					else
-					{
-						Log.w(TAG, "No available location provider!");
-						locationHandler.postDelayed(locationTask, locationInterval);
-					}
+						locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, AgentConnectorService.this); // 0, 0 to have it ASAP
 				}
 			}
 			else
 			{
 				locationHandler.removeCallbacks(locationTask);
-				AgentConnectorService.gettingNewLocation = false;
 				locationManager.removeUpdates(AgentConnectorService.this);
 			}
-
 		}
 	};
 
 	@Override
 	public void onLocationChanged(Location location)
 	{
-		Log.d(TAG, "Got a new location at Lat: " + location.getLatitude() + ", Lon: " + location.getLongitude());
-		if (gettingNewLocation)
-		{
-			locationManager.removeUpdates(AgentConnectorService.this);
-			gettingNewLocation = false;
-			locationHandler.removeCallbacks(locationTask);
-			locationHandler.postDelayed(locationTask, locationInterval);
-		}
+		String locStatus = getString(R.string.info_location_good,
+				TimeHelper.getTimeString(location.getTime()),
+				locationProvider = location.getProvider(),
+				Float.toString((float)location.getLatitude()),
+				Float.toString((float)location.getLongitude()),
+				Float.toString(location.getAccuracy()));
+		Log.d(TAG, locStatus);
+		updateLastStatus(locStatus);
+		locationManager.removeUpdates(AgentConnectorService.this);
+		gettingNewLocation = false;
+		locationHandler.removeCallbacks(locationTask);
+		locationHandler.postDelayed(locationTask, locationInterval);
+		refreshHomeScreen();
 	}
 
 	@Override
 	public void onProviderDisabled(String provider)
 	{
-		// TODO Auto-generated method stub
+		Log.d(TAG, "onProviderDisabled: " + provider);
 	}
 
 	@Override
 	public void onProviderEnabled(String provider)
 	{
-		// TODO Auto-generated method stub
+		Log.d(TAG, "onProviderEnabled: " + provider);
 	}
 
 	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras)
 	{
-		// TODO Auto-generated method stub
+		Log.d(TAG, "onStatusChanged: " + provider + " status: " + status);
 	}
 }

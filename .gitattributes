@@ -39,7 +39,10 @@ android/src/agent/res/values/strings_arrays.xml -text
 android/src/agent/res/values/styles.xml -text
 android/src/agent/res/xml/preferences.xml -text
 android/src/agent/src/org/netxms/agent/android/NXApplication.java -text
+android/src/agent/src/org/netxms/agent/android/helpers/DeviceInfoHelper.java -text
+android/src/agent/src/org/netxms/agent/android/helpers/NetHelper.java -text
 android/src/agent/src/org/netxms/agent/android/helpers/SafeParser.java -text
+android/src/agent/src/org/netxms/agent/android/helpers/TimeHelper.java -text
 android/src/agent/src/org/netxms/agent/android/main/activities/AbstractClientActivity.java -text
 android/src/agent/src/org/netxms/agent/android/main/activities/HomeScreen.java -text
 android/src/agent/src/org/netxms/agent/android/main/activities/Preferences.java -text

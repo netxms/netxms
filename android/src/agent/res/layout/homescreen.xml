@@ -21,6 +21,18 @@
         android:textSize="12sp" />
     
     <TextView
+        android:id="@+id/LastLocation"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/item_home_background"
+        android:paddingBottom="2sp"
+        android:paddingLeft="5sp"
+        android:paddingRight="5sp"
+        android:paddingTop="2sp"
+        android:textColor="@color/text_color"
+        android:textSize="12sp" />
+    
+    <TextView
         android:id="@+id/LastConnection"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"

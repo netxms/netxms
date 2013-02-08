@@ -3,13 +3,11 @@
 	<string-array name="locations_strategy_labels"> 
 		<item>Network only</item> 
 		<item>GPS only</item> 
-		<item>Try Network then GPS</item> 
-		<item>Try GPS then Network</item> 
+		<item>Network and GPS</item> 
 	</string-array>
 	<string-array name="location_strategy_values"> 
 		<item>0</item> 
 		<item>1</item> 
 		<item>2</item> 
-		<item>3</item> 
 	</string-array>      
 </resources>

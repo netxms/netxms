@@ -23,8 +23,9 @@ public class BootCompletedIntentReceiver extends BroadcastReceiver
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
 		if (sp.getBoolean("global.autostart", false) && sp.getBoolean("global.activate", false))
 		{
-			Intent serviceIntent = new Intent(context, AgentConnectorService.class);
-			context.startService(serviceIntent);
+			Intent i = new Intent(context, AgentConnectorService.class);
+			i.setAction(AgentConnectorService.ACTION_FORCE_CONNECT);
+			context.startService(i);
 		}
 	}
 }

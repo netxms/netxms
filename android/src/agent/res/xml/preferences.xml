@@ -23,9 +23,9 @@
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/pref_locations" android:dependency="global.activate">
 		<CheckBoxPreference android:summaryOn="@string/pref_location_force_enabled" android:key="location.force" android:title="@string/pref_location_force" android:summaryOff="@string/pref_location_force_disabled" android:defaultValue="false" android:dependency="global.activate"/>
-	    <EditTextPreference android:title="@string/pref_location_activation_interval" android:summary="@string/pref_location_activation_interval_summary" android:enabled="true" android:defaultValue="30" android:key="location.interval" android:digits="0123456789" android:dependency="location.force"/>
+	    <EditTextPreference android:title="@string/pref_location_activation_interval" android:summary="@string/pref_location_activation_interval_summary" android:enabled="true" android:defaultValue="30" android:key="location.interval" android:digits="0123456789"/>
 		<EditTextPreference android:title="@string/pref_location_activation_duration" android:summary="@string/pref_location_activation_duration_summary" android:enabled="true" android:defaultValue="2" android:key="location.duration" android:digits="0123456789" android:dependency="location.force"/>
-		<ListPreference android:dialogTitle="@string/pref_location_provider_priority" android:title="@string/pref_location_strategy" android:entryValues="@array/location_strategy_values" android:entries="@array/locations_strategy_labels" android:defaultValue="0" android:key="location.strategy" android:dependency="location.force"/>
+		<ListPreference android:dialogTitle="@string/pref_location_provider_source" android:title="@string/pref_location_strategy" android:entryValues="@array/location_strategy_values" android:entries="@array/locations_strategy_labels" android:defaultValue="0" android:key="location.strategy" android:dependency="location.force"/>
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/pref_notifications">
         <CheckBoxPreference android:summaryOff="@string/pref_notification_toast_disabled" android:summaryOn="@string/pref_notification_toast_enabled" android:key="notification.toast" android:enabled="true" android:defaultValue="true" android:title="@string/pref_notification_toast" android:dependency="global.activate"/>

@@ -1,9 +1,9 @@
 package org.netxms.agent.android.main.activities;
 
-import java.util.Calendar;
-
 import org.netxms.agent.android.R;
+import org.netxms.agent.android.helpers.DeviceInfoHelper;
 import org.netxms.agent.android.helpers.SafeParser;
+import org.netxms.agent.android.helpers.TimeHelper;
 import org.netxms.agent.android.service.AgentConnectorService;
 import org.netxms.base.NXCommon;
 
@@ -32,6 +32,7 @@ public class HomeScreen extends AbstractClientActivity
 
 	private SharedPreferences sp;
 	private TextView agentStatusText;
+	private TextView locationStatusText;
 	private TextView lastConnText;
 	private TextView nextConnText;
 
@@ -49,6 +50,7 @@ public class HomeScreen extends AbstractClientActivity
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
 
 		agentStatusText = (TextView)findViewById(R.id.AgentStatus);
+		locationStatusText = (TextView)findViewById(R.id.LastLocation);
 		lastConnText = (TextView)findViewById(R.id.LastConnection);
 		nextConnText = (TextView)findViewById(R.id.NextConnection);
 		TextView buildName = (TextView)findViewById(R.id.MainScreenVersion);
@@ -115,20 +117,13 @@ public class HomeScreen extends AbstractClientActivity
 	/**
 	 * Refresh device status info (agent status and schedules)
 	 */
-	@SuppressWarnings("deprecation")
 	public void refreshStatus()
 	{
 		long last = sp.getLong("scheduler.last_activation", 0);
 		if (last != 0)
-		{
-			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-			cal.setTimeInMillis(last);
-			lastConnText.setText(
-					getString(R.string.info_last_connection,
-							cal.getTime().toLocaleString(),
-							sp.getString("scheduler.last_activation_msg",
-									getString(R.string.ok))));
-		}
+			lastConnText.setText(getString(R.string.info_last_connection,
+					TimeHelper.getTimeString(last),
+					sp.getString("scheduler.last_activation_msg", getString(R.string.ok))));
 		if (sp.getBoolean("global.activate", false))
 		{
 			String status = getString(R.string.pref_global_activate_enabled);
@@ -153,32 +148,26 @@ public class HomeScreen extends AbstractClientActivity
 			else
 				location = getString(R.string.info_agent_location_passive);
 			agentStatusText.setText(getString(R.string.info_agent_status, status, minutes, range, location));
+			locationStatusText.setText(getString(R.string.info_agent_last_location, sp.getString("location.last_status", "")));
 			long next = sp.getLong("scheduler.next_activation", 0);
 			if (next != 0)
-			{
-				Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-				cal.setTimeInMillis(next);
-				nextConnText.setText(getString(R.string.info_next_connection, cal.getTime().toLocaleString()));
-			}
+				nextConnText.setText(getString(R.string.info_next_connection, TimeHelper.getTimeString(next)));
 		}
 		else
 		{
 			agentStatusText.setText(getString(R.string.pref_global_activate_disabled));
+			locationStatusText.setText("");
 			nextConnText.setText(getString(R.string.info_next_connection_unscheduled));
 		}
 	}
-
 	/**
 	 * Refresh device status info (agent status and schedules)
 	 */
 	public void showDeviceInfo()
 	{
-		if (service != null)
-		{
-			((TextView)findViewById(R.id.Imei)).setText(getString(R.string.info_device_id, service.getDeviceId()));
-			if (service.getSerial().length() > 0)
-				((TextView)findViewById(R.id.Serial)).setText(getString(R.string.info_device_serial, service.getSerial()));
-		}
+		((TextView)findViewById(R.id.Imei)).setText(getString(R.string.info_device_id, DeviceInfoHelper.getDeviceId(getApplicationContext())));
+		if (DeviceInfoHelper.getSerial().length() > 0)
+			((TextView)findViewById(R.id.Serial)).setText(getString(R.string.info_device_serial, DeviceInfoHelper.getSerial()));
 	}
 
 	public void showToast(final String text)
