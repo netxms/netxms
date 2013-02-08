@@ -22,21 +22,25 @@
 
 #include "nxcore.h"
 
-
-//
-// Redefined status calculation for policy group
-//
-
+/**
+ * Redefined status calculation for policy group
+ */
 void PolicyGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
 
+/**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool PolicyGroup::showThresholdSummary()
+{
+	return false;
+}
 
-//
-// Agent policy default constructor
-//
-
+/**
+ * Agent policy default constructor
+ */
 AgentPolicy::AgentPolicy(int type)
             : NetObj()
 {

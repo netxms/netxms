@@ -368,3 +368,11 @@ bool Container::isSuitableForNode(Node *node)
 	UnlockData();
 	return result;
 }
+
+/**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool Container::showThresholdSummary()
+{
+	return true;
+}

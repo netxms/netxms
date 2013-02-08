@@ -24,18 +24,22 @@
 
 #define QUERY_LENGTH		(512)
 
+/**
+ * Service log record ID
+ */
 LONG ServiceContainer::logRecordId = -1;
 
-
-//
-// Constructor for service service object
-//
-
+/**
+ * Default constructor for service service object
+ */
 ServiceContainer::ServiceContainer() : Container()
 {
 	initServiceContainer();
 }
 
+/**
+ * Create new service container object
+ */
 ServiceContainer::ServiceContainer(const TCHAR *pszName) : Container(pszName, 0)
 {
 	initServiceContainer();
@@ -56,11 +60,9 @@ void ServiceContainer::initServiceContainer()
 	m_prevDiffMonth = 0;
 }
 
-
-//
-// Create object from database data
-//
-
+/**
+ * Create object from database data
+ */
 BOOL ServiceContainer::CreateFromDB(DWORD id)
 {
 	if (!Container::CreateFromDB(id))
@@ -423,4 +425,12 @@ LONG ServiceContainer::getSecondsInMonth()
 		days = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0) ? 29 : 28;
 
 	return LONG(days * 24 * 3600);
+}
+
+/**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool ServiceContainer::showThresholdSummary()
+{
+	return false;
 }

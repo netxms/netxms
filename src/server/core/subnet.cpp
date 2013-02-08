@@ -272,3 +272,11 @@ void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD 
 		n->DecRefCount();
 	}
 }
+
+/**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool Subnet::showThresholdSummary()
+{
+	return true;
+}

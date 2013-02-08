@@ -2491,6 +2491,7 @@ void Node::doInstanceDiscovery()
 		if (instances != NULL)
 		{
 			DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): read %d values"), m_szName, m_dwId, instances->getSize());
+			dci->filterInstanceList(instances);
 			updateInstances(dci, instances);
 			delete instances;
 		}
@@ -2557,7 +2558,7 @@ void Node::updateInstances(DCItem *root, StringList *instances)
 		{
 			// not found, delete DCI
 			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCI will be deleted"),
-			          m_szName, m_dwId, root->getName(), root->getId(), instances->getValue(j));
+			          m_szName, m_dwId, root->getName(), root->getId(), ((DCItem *)object)->getInstance());
 			deleteList.add(CAST_TO_POINTER(object->getId(), void *));
 		}
    }
@@ -2568,6 +2569,9 @@ void Node::updateInstances(DCItem *root, StringList *instances)
 	// Create new instances
 	for(int i = 0; i < instances->getSize(); i++)
 	{
+		DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): creating new DCI for instance \"%s\""),
+		          m_szName, m_dwId, root->getName(), root->getId(), instances->getValue(i));
+
 		DCItem *dci = new DCItem(root);
 		dci->setTemplateId(m_dwId, root->getId());
 		dci->setInstance(instances->getValue(i));

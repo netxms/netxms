@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,14 +22,20 @@
 
 #include "nxcore.h"
 
-
-//
-// Redefined status calculation for network maps group
-//
-
+/**
+ * Redefined status calculation for network maps group
+ */
 void NetworkMapGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
+}
+
+/**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool NetworkMapGroup::showThresholdSummary()
+{
+	return false;
 }
 
 /**

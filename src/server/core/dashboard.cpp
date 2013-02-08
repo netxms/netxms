@@ -238,3 +238,11 @@ DWORD Dashboard::ModifyFromMessage(CSCPMessage *request, BOOL alreadyLocked)
 
 	return Container::ModifyFromMessage(request, TRUE);
 }
+
+/**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool Dashboard::showThresholdSummary()
+{
+	return false;
+}

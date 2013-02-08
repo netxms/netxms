@@ -1232,7 +1232,7 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
       {
          TCHAR szBuffer[1024];
 
-         _sntprintf(szBuffer, 1024, _T("DCI::%s::%d"),
+			_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::Transformer"),
                     (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
          PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer,
                    m_transformer->getErrorText(), m_dwId);
@@ -1910,4 +1910,48 @@ void DCItem::expandInstance()
 	temp = m_szDescription;
 	temp.translate(_T("{instance}"), m_instance);
 	nx_strncpy(m_szDescription, (const TCHAR *)temp, MAX_DB_STRING);
+}
+
+/**
+ * Filter instance list
+ */
+void DCItem::filterInstanceList(StringList *instances)
+{
+   if (m_instanceFilter == NULL)
+		return;
+
+	for(int i = 0; i < instances->getSize(); i++)
+	{
+      NXSL_Value *pValue;
+      NXSL_ServerEnv *pEnv;
+
+		pValue = new NXSL_Value(instances->getValue(i));
+      pEnv = new NXSL_ServerEnv;
+      m_instanceFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+      m_instanceFilter->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
+	
+      if (m_instanceFilter->run(pEnv, 1, &pValue) == 0)
+      {
+         pValue = m_instanceFilter->getResult();
+         if (pValue != NULL)
+         {
+				if (pValue->getValueAsInt32() == 0)
+				{
+					DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance \"%s\" removed by filtering script"),
+					          m_szName, m_dwId, instances->getValue(i));
+					instances->remove(i);
+					i--;
+				}
+         }
+      }
+      else
+      {
+         TCHAR szBuffer[1024];
+
+			_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"),
+                    (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer,
+                   m_transformer->getErrorText(), m_dwId);
+      }
+   }
 }

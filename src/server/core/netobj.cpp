@@ -1484,3 +1484,12 @@ ObjectArray<NetObj> *NetObj::getChildList(int typeFilter)
 	UnlockChildList();
 	return list;
 }
+
+/**
+ * Called by client session handler to check if threshold summary should
+ * be shown for this object. Default implementation always returns false.
+ */
+bool NetObj::showThresholdSummary()
+{
+	return false;
+}

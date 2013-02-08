@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,20 +23,16 @@
 
 #include "libnxsrv.h"
 
-
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 DWORD LIBNXSRV_EXPORTABLE g_dwFlags = AF_USE_SYSLOG;
 DWORD LIBNXSRV_EXPORTABLE g_dwSNMPTimeout = 2000;
 int LIBNXSRV_EXPORTABLE g_nDebugLevel = 0;
 
-
-//
-// Agent result codes
-//
-
+/**
+ * Agent error codes
+ */
 static struct
 {
    int iCode;
@@ -77,11 +73,9 @@ static struct
    { -1, NULL }
 };
 
-
-//
-// Resolve agent's error code to text
-//
-
+/**
+ * Resolve agent's error code to text
+ */
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError)
 {
    int i;
@@ -92,11 +86,9 @@ const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError)
    return _T("Unknown error code");
 }
 
-
-//
-// Destroy ARP cache created by discovery functions
-//
-
+/**
+ * Destroy ARP cache created by discovery functions
+ */
 void LIBNXSRV_EXPORTABLE DestroyArpCache(ARP_CACHE *pArpCache)
 {
    if (pArpCache != NULL)
@@ -107,11 +99,9 @@ void LIBNXSRV_EXPORTABLE DestroyArpCache(ARP_CACHE *pArpCache)
    }
 }
 
-
-//
-// Destroy routing table
-//
-
+/**
+ * Destroy routing table
+ */
 void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT)
 {
    if (pRT != NULL)
@@ -121,31 +111,25 @@ void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT)
    }
 }
 
-
-//
-// Route comparision callback
-//
-
+/**
+ * Route comparision callback
+ */
 static int CompareRoutes(const void *p1, const void *p2)
 {
    return -(COMPARE_NUMBERS(((ROUTE *)p1)->dwDestMask, ((ROUTE *)p2)->dwDestMask));
 }
 
-
-//
-// Sort routing table (put most specific routes first)
-//
-
+/**
+ * Sort routing table (put most specific routes first)
+ */
 void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT)
 {
    qsort(pRT->pRoutes, pRT->iNumEntries, sizeof(ROUTE), CompareRoutes);
 }
 
-
-//
-// Debug printf - write debug record to log if level is less or equal current debug level
-//
-
+/**
+ * Debug printf - write debug record to log if level is less or equal current debug level
+ */
 void LIBNXSRV_EXPORTABLE DbgPrintf2(int level, const TCHAR *format, va_list args)
 {
    TCHAR buffer[4096];
@@ -157,6 +141,9 @@ void LIBNXSRV_EXPORTABLE DbgPrintf2(int level, const TCHAR *format, va_list args
    nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", buffer);
 }
 
+/**
+ * Debug printf - write debug record to log if level is less or equal current debug level
+ */
 void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...)
 {
    va_list args;
@@ -171,11 +158,9 @@ void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...)
    nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", buffer);
 }
 
-
-//
-// Log custom message (mostly used by modules)
-//
-
+/**
+ * Log custom message (mostly used by modules)
+ */
 void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...)
 {
    va_list args;
@@ -187,13 +172,11 @@ void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...)
    nxlog_write(MSG_OTHER, wType, "s", buffer);
 }
 
-
-//
-// DLL entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)

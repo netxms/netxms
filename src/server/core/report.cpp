@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,21 +22,25 @@
 
 #include "nxcore.h"
 
-
-//
-// Redefined status calculation for report group
-//
-
+/**
+ * Redefined status calculation for report group
+ */
 void ReportGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
 
+/**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool ReportGroup::showThresholdSummary()
+{
+	return false;
+}
 
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 Report::Report() : NetObj()
 {
    m_iStatus = STATUS_NORMAL;

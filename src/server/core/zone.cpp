@@ -227,3 +227,11 @@ void Zone::updateInterfaceIndex(DWORD oldIp, DWORD newIp, Interface *iface)
 	m_idxInterfaceByAddr->remove(oldIp);
 	m_idxInterfaceByAddr->put(newIp, iface);
 }
+
+/**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool Zone::showThresholdSummary()
+{
+	return true;
+}

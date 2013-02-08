@@ -12016,8 +12016,7 @@ void ClientSession::getThresholdSummary(CSCPMessage *request)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-			if ((object->Type() == OBJECT_CONTAINER) || (object->Type() == OBJECT_SERVICEROOT) || 
-			    (object->Type() == OBJECT_SUBNET) || (object->Type() == OBJECT_NETWORK) || (object->Type() == OBJECT_ZONE))
+			if (object->showThresholdSummary())
 			{
 				ObjectArray<DataCollectionTarget> *targets = new ObjectArray<DataCollectionTarget>();
 				object->addChildDCTargetsToList(targets, m_dwUserId);

@@ -31,6 +31,14 @@ void TemplateGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 }
 
 /**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool TemplateGroup::showThresholdSummary()
+{
+	return false;
+}
+
+/**
  * Template object constructor
  */
 Template::Template() : NetObj()

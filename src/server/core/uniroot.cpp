@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,32 +22,26 @@
 
 #include "nxcore.h"
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 UniversalRoot::UniversalRoot()
               :NetObj()
 {
 	uuid_generate(m_guid);
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 UniversalRoot::~UniversalRoot()
 {
 }
 
-
-//
-// Link child objects
-// This method is expected to be called only at startup, so we don't lock
-//
-
+/**
+ * Link child objects
+ * This method is expected to be called only at startup, so we don't lock
+ */
 void UniversalRoot::LinkChildObjects()
 {
    DWORD i, dwNumChilds, dwObjectId;
@@ -75,11 +69,9 @@ void UniversalRoot::LinkChildObjects()
    }
 }
 
-
-//
-// Save object to database
-//
-
+/**
+ * Save object to database
+ */
 BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024];
@@ -109,11 +101,9 @@ BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
    return TRUE;
 }
 
-
-//
-// Load properties from database
-//
-
+/**
+ * Load properties from database
+ */
 void UniversalRoot::LoadFromDB()
 {
    loadCommonProperties();

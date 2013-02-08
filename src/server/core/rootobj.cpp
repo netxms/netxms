@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,37 +16,39 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: rootobj.cpp
+** File: rootobj.cpp
 **
 **/
 
 #include "nxcore.h"
 
-
-//
-// Service root class default constructor
-//
-
+/**
+ * Service root class default constructor
+ */
 ServiceRoot::ServiceRoot() : UniversalRoot()
 {
    m_dwId = BUILTIN_OID_SERVICEROOT;
    _tcscpy(m_szName, _T("Infrastructure Services"));
 }
 
-
-//
-// Service root class destructor
-//
-
+/**
+ * Service root class destructor
+ */
 ServiceRoot::~ServiceRoot()
 {
 }
 
+/**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool ServiceRoot::showThresholdSummary()
+{
+	return true;
+}
 
-//
-// Template root class default constructor
-//
-
+/**
+ * Template root class default constructor
+ */
 TemplateRoot::TemplateRoot() : UniversalRoot()
 {
    m_dwId = BUILTIN_OID_TEMPLATEROOT;
@@ -54,30 +56,24 @@ TemplateRoot::TemplateRoot() : UniversalRoot()
 	m_iStatus = STATUS_NORMAL;
 }
 
-
-//
-// Template root class destructor
-//
-
+/**
+ * Template root class destructor
+ */
 TemplateRoot::~TemplateRoot()
 {
 }
 
-
-//
-// Redefined status calculation for template root
-//
-
+/**
+ * Redefined status calculation for template root
+ */
 void TemplateRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
 
-
-//
-// Policy root class default constructor
-//
-
+/**
+ * Policy root class default constructor
+ */
 PolicyRoot::PolicyRoot() : UniversalRoot()
 {
    m_dwId = BUILTIN_OID_POLICYROOT;

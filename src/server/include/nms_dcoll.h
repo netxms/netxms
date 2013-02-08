@@ -337,6 +337,7 @@ public:
 	NXSL_Program *getInstanceFilter() { return m_instanceFilter; }
 	const TCHAR *getInstance() { return m_instance; }
 
+	void filterInstanceList(StringList *instances);
 	void expandInstance();
 
    void processNewValue(time_t nTimeStamp, void *value);

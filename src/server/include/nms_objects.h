@@ -403,6 +403,8 @@ public:
 	virtual NXSL_Array *getParentsForNXSL();
 	virtual NXSL_Array *getChildrenForNXSL();
 
+	virtual bool showThresholdSummary();
+
    // Debug methods
    const TCHAR *dbgGetParentList(TCHAR *szBuffer);
    const TCHAR *dbgGetChildList(TCHAR *szBuffer);
@@ -1206,6 +1208,8 @@ public:
    void AddNode(Node *pNode) { AddChild(pNode); pNode->AddParent(this); }
    virtual void CreateMessage(CSCPMessage *pMsg);
 
+	virtual bool showThresholdSummary();
+
    DWORD getIpNetMask() { return m_dwIpNetMask; }
    DWORD getZoneId() { return m_zoneId; }
 	bool isSyntheticMask() { return m_bSyntheticMask; }
@@ -1241,6 +1245,8 @@ public:
    virtual ~ServiceRoot();
 
    virtual int Type() { return OBJECT_SERVICEROOT; }
+
+	virtual bool showThresholdSummary();
 };
 
 /**
@@ -1256,11 +1262,9 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
-
-//
-// Generic container object
-//
-
+/**
+ * Generic container object
+ */
 class NXCORE_EXPORTABLE Container : public NetObj
 {
 private:
@@ -1287,6 +1291,8 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
+	virtual bool showThresholdSummary();
+
    DWORD getCategory() { return m_dwCategory; }
 
    void linkChildObjects();
@@ -1299,11 +1305,9 @@ public:
 	void setAutoBindFilter(const TCHAR *script);
 };
 
-
-//
-// Template group object
-//
-
+/**
+ * Template group object
+ */
 class NXCORE_EXPORTABLE TemplateGroup : public Container
 {
 public:
@@ -1313,13 +1317,13 @@ public:
 
    virtual int Type() { return OBJECT_TEMPLATEGROUP; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+	virtual bool showThresholdSummary();
 };
 
-
-//
-// Zone object
-//
-
+/**
+ * Zone object
+ */
 class Zone : public NetObj
 {
 protected:
@@ -1345,6 +1349,8 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
+	virtual bool showThresholdSummary();
+
    DWORD getZoneId() { return m_zoneId; }
 	DWORD getAgentProxy() { return m_agentProxy; }
 	DWORD getSnmpProxy() { return m_snmpProxy; }
@@ -1365,11 +1371,9 @@ public:
 	Node *findNode(bool (*comparator)(NetObj *, void *), void *data) { return (Node *)m_idxNodeByAddr->find(comparator, data); }
 };
 
-
-//
-// Entire network
-//
-
+/**
+ * Entire network
+ */
 class NXCORE_EXPORTABLE Network : public NetObj
 {
 public:
@@ -1379,16 +1383,16 @@ public:
    virtual int Type(void) { return OBJECT_NETWORK; }
    virtual BOOL SaveToDB(DB_HANDLE hdb);
 
+	virtual bool showThresholdSummary();
+
    void AddSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
    void AddZone(Zone *pZone) { AddChild(pZone); pZone->AddParent(this); }
    void LoadFromDB(void);
 };
 
-
-//
-// Condition
-//
-
+/**
+ * Condition
+ */
 class NXCORE_EXPORTABLE Condition : public NetObj
 {
 protected:
@@ -1435,11 +1439,9 @@ public:
    int getCacheSizeForDCI(DWORD dwItemId, BOOL bNoLock);
 };
 
-
-//
-// Generic agent policy object
-//
-
+/**
+ * Generic agent policy object
+ */
 class NXCORE_EXPORTABLE AgentPolicy : public NetObj
 {
 protected:
@@ -1470,11 +1472,9 @@ public:
 	void unlinkNode(Node *node) { DeleteChild(node); node->DeleteParent(this); }
 };
 
-
-//
-// Agent config policy object
-//
-
+/**
+ * Agent config policy object
+ */
 class NXCORE_EXPORTABLE AgentPolicyConfig : public AgentPolicy
 {
 protected:
@@ -1498,11 +1498,9 @@ public:
 	virtual bool createUninstallMessage(CSCPMessage *msg);
 };
 
-
-//
-// Policy group object
-//
-
+/**
+ * Policy group object
+ */
 class NXCORE_EXPORTABLE PolicyGroup : public Container
 {
 public:
@@ -1512,13 +1510,13 @@ public:
 
    virtual int Type() { return OBJECT_POLICYGROUP; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+	virtual bool showThresholdSummary();
 };
 
-
-//
-// Policy root
-//
-
+/**
+ * Policy root
+ */
 class NXCORE_EXPORTABLE PolicyRoot : public UniversalRoot
 {
 public:
@@ -1529,11 +1527,9 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
-
-//
-// Network map root
-//
-
+/**
+ * Network map root
+ */
 class NXCORE_EXPORTABLE NetworkMapRoot : public UniversalRoot
 {
 public:
@@ -1544,11 +1540,9 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
-
-//
-// Network map group object
-//
-
+/**
+ * Network map group object
+ */
 class NXCORE_EXPORTABLE NetworkMapGroup : public Container
 {
 public:
@@ -1558,13 +1552,13 @@ public:
 
    virtual int Type() { return OBJECT_NETWORKMAPGROUP; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+	virtual bool showThresholdSummary();
 };
 
-
-//
-// Network map object
-//
-
+/**
+ * Network map object
+ */
 class NXCORE_EXPORTABLE NetworkMap : public NetObj
 {
 protected:
@@ -1606,11 +1600,9 @@ public:
 	void updateContent();
 };
 
-
-//
-// Dashboard tree root
-//
-
+/**
+ * Dashboard tree root
+ */
 class NXCORE_EXPORTABLE DashboardRoot : public UniversalRoot
 {
 public:
@@ -1621,11 +1613,9 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
-
-//
-// Dashboard object
-//
-
+/**
+ * Dashboard element
+ */
 class DashboardElement
 {
 public:
@@ -1637,6 +1627,9 @@ public:
 	~DashboardElement() { safe_free(m_data); safe_free(m_layout); }
 };
 
+/**
+ * Dashboard object
+ */
 class NXCORE_EXPORTABLE Dashboard : public Container
 {
 protected:
@@ -1658,13 +1651,13 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+	virtual bool showThresholdSummary();
 };
 
-
-//
-// Report root
-//
-
+/**
+ * Report root
+ */
 class NXCORE_EXPORTABLE ReportRoot : public UniversalRoot
 {
 public:
@@ -1675,11 +1668,9 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
-
-//
-// Report group object
-//
-
+/**
+ * Report group object
+ */
 class NXCORE_EXPORTABLE ReportGroup : public Container
 {
 public:
@@ -1689,13 +1680,13 @@ public:
 
    virtual int Type() { return OBJECT_REPORTGROUP; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+	virtual bool showThresholdSummary();
 };
 
-
-//
-// Report object
-//
-
+/**
+ * Report object
+ */
 class NXCORE_EXPORTABLE Report : public NetObj
 {
 protected:
@@ -1721,11 +1712,9 @@ public:
 	DWORD execute(StringMap *parameters, DWORD userId);
 };
 
-
-//
-// SLM check object
-//
-
+/**
+ * SLM check object
+ */
 class NXCORE_EXPORTABLE SlmCheck : public NetObj
 {
 protected:
@@ -1776,11 +1765,9 @@ public:
 	const TCHAR *getReason() { return m_reason; }
 };
 
-
-//
-// Service container - common logic for BusinessService, NodeLink and BusinessServiceRoot
-//
-
+/**
+ * Service container - common logic for BusinessService, NodeLink and BusinessServiceRoot
+ */
 class NXCORE_EXPORTABLE ServiceContainer : public Container 
 {
 	enum Period { DAY, WEEK, MONTH };
@@ -1820,6 +1807,8 @@ public:
 
 	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 	virtual void setStatus(int newStatus);
+
+	virtual bool showThresholdSummary();
 
 	void initUptimeStats();
 	void updateUptimeStats(time_t currentTime = 0, BOOL updateChilds = FALSE);
