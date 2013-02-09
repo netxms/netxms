@@ -799,7 +799,9 @@ enum
  */
 #define IDM_NONE                        0
 #define IDM_AGENT_LIST                  1
-#define IDM_SNMP_WALK                   2
+#define IDM_AGENT_TABLE                 2
+#define IDM_SNMP_WALK_VALUES            3
+#define IDM_SNMP_WALK_OIDS              4
 
 /**
  * Event policy rule flags

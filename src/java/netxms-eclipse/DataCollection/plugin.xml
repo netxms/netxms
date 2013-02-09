@@ -261,7 +261,7 @@
         </page>
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.InstanceDiscovery"
-              id="org.netxms.ui.eclipse.datacollection.propertypages.InstanceDiscovery#5"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.InstanceDiscovery#50"
               name="Instance Discovery">
            <enabledWhen>
               <instanceof

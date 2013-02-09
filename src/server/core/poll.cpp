@@ -50,7 +50,6 @@ Queue g_businessServicePollerQueue;
  */
 static __poller_state *m_pPollerState = NULL;
 static int m_iNumPollers = 0;
-static DWORD m_dwNewNodeId = 1;
 
 /**
  * Create management node object

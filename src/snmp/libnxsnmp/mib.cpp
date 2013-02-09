@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -424,27 +424,34 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject 
    pFile = _tfopen(pszFile, _T("rb"));
    if (pFile != NULL)
    {
-      fread(&header, 1, sizeof(SNMP_MIB_HEADER), pFile);
-      if (!memcmp(header.chMagic, MIB_FILE_MAGIC, 6))
+      if (fread(&header, 1, sizeof(SNMP_MIB_HEADER), pFile) == sizeof(SNMP_MIB_HEADER))
       {
-         header.wFlags = ntohs(header.wFlags);
-         fseek(pFile, header.bHeaderSize, SEEK_SET);
-         pZFile = new ZFile(pFile, header.wFlags & SMT_COMPRESS_DATA, FALSE);
-         if (pZFile->fgetc() == MIB_TAG_OBJECT)
+         if (!memcmp(header.chMagic, MIB_FILE_MAGIC, 6))
          {
-            *ppRoot = new SNMP_MIBObject;
-            if (!(*ppRoot)->readFromFile(pZFile))
+            header.wFlags = ntohs(header.wFlags);
+            fseek(pFile, header.bHeaderSize, SEEK_SET);
+            pZFile = new ZFile(pFile, header.wFlags & SMT_COMPRESS_DATA, FALSE);
+            if (pZFile->fgetc() == MIB_TAG_OBJECT)
             {
-               delete *ppRoot;
+               *ppRoot = new SNMP_MIBObject;
+               if (!(*ppRoot)->readFromFile(pZFile))
+               {
+                  delete *ppRoot;
+                  dwRet = SNMP_ERR_BAD_FILE_DATA;
+               }
+            }
+            else
+            {
                dwRet = SNMP_ERR_BAD_FILE_DATA;
             }
+            pZFile->close();
+            delete pZFile;
          }
          else
          {
-            dwRet = SNMP_ERR_BAD_FILE_DATA;
+            dwRet = SNMP_ERR_BAD_FILE_HEADER;
+            fclose(pFile);
          }
-         pZFile->close();
-         delete pZFile;
       }
       else
       {
@@ -471,10 +478,16 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *pszFile, DWORD *
    pFile = _tfopen(pszFile, _T("rb"));
    if (pFile != NULL)
    {
-      fread(&header, 1, sizeof(SNMP_MIB_HEADER), pFile);
-      if (!memcmp(header.chMagic, MIB_FILE_MAGIC, 6))
+      if (fread(&header, 1, sizeof(SNMP_MIB_HEADER), pFile) == sizeof(SNMP_MIB_HEADER))
       {
-         *pdwTimestamp = ntohl(header.dwTimeStamp);
+         if (!memcmp(header.chMagic, MIB_FILE_MAGIC, 6))
+         {
+            *pdwTimestamp = ntohl(header.dwTimeStamp);
+         }
+         else
+         {
+            dwRet = SNMP_ERR_BAD_FILE_HEADER;
+         }
       }
       else
       {

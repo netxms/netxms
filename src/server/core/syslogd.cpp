@@ -299,8 +299,8 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
       _sntprintf(szQuery, 4096, 
                  _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,")
                  _T("source_object_id,hostname,msg_tag,msg_text) VALUES ")
-                 _T("(") UINT64_FMT _T(",") TIME_T_FMT _T(",%d,%d,%d,%s,%s,%s)"),
-                 record.qwMsgId, record.tmTimeStamp, record.nFacility,
+                 _T("(") UINT64_FMT _T(",") INT64_FMT _T(",%d,%d,%d,%s,%s,%s)"),
+                 record.qwMsgId, (INT64)record.tmTimeStamp, record.nFacility,
                  record.nSeverity, record.dwSourceObject,
 					  (const TCHAR *)DBPrepareStringA(g_hCoreDB, record.szHostName),
 					  (const TCHAR *)DBPrepareStringA(g_hCoreDB, record.szTag),

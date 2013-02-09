@@ -162,11 +162,9 @@ DWORD LIBNXSRV_EXPORTABLE SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
    return dwResult;
 }
 
-
-//
-// Enumerate multiple values by walking through MIB, starting at given root
-//
-
+/**
+ * Enumerate multiple values by walking through MIB, starting at given root
+ */
 DWORD LIBNXSRV_EXPORTABLE SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
                                         DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
                                         void *pUserArg, BOOL bVerbose)

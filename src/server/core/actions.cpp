@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,31 +22,25 @@
 
 #include "nxcore.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static DWORD m_dwNumActions = 0;
 static NXC_ACTION *m_pActionList = NULL;
 static RWLOCK m_rwlockActionListAccess;
 static DWORD m_dwUpdateCode;
 
-
-//
-// Send updates to all connected clients
-//
-
+/**
+ * Send updates to all connected clients
+ */
 static void SendActionDBUpdate(ClientSession *pSession, void *pArg)
 {
    pSession->onActionDBUpdate(m_dwUpdateCode, (NXC_ACTION *)pArg);
 }
 
-
-//
-// Destroy action list
-//
-
+/**
+ * Destroy action list
+ */
 static void DestroyActionList()
 {
    DWORD i;
@@ -272,23 +266,20 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
    return dwError == ERR_SUCCESS;
 }
 
-
-//
-// Run external command via system()
-//
-
+/**
+ * Run external command via system()
+ */
 static THREAD_RESULT THREAD_CALL RunCommandThread(void *pArg)
 {
-	_tsystem((TCHAR *)pArg);
+	if (_tsystem((TCHAR *)pArg) == -1)
+	   DbgPrintf(5, _T("RunCommandThread: failed to execute command \"%s\""), (TCHAR *)pArg);
 	free(pArg);
 	return THREAD_OK;
 }
 
-
-//
-// Forward event to other server
-//
-
+/**
+ * Forward event to other server
+ */
 static BOOL ForwardEvent(const TCHAR *server, Event *event)
 {
 	ISC *isc;

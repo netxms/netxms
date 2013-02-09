@@ -23,11 +23,9 @@
 
 #include "libnetxms.h"
 
-
-//
-// Static members
-//
-
+/**
+ * Static members
+ */
 const int String::npos = -1;
 
 
@@ -86,11 +84,9 @@ const String& String::operator =(const String &src)
    return *this;
 }
 
-
-//
-// Operator +=
-//
-
+/**
+ * Append given string to the end
+ */
 const String& String::operator +=(const TCHAR *pszStr)
 {
    DWORD dwLen;
@@ -231,11 +227,9 @@ void String::addWideCharString(const WCHAR *pStr, DWORD dwSize)
 #endif
 }
 
-
-//
-// Escape given character
-//
-
+/**
+ * Escape given character
+ */
 void String::escapeCharacter(int ch, int esc)
 {
    int nCount;
@@ -261,11 +255,9 @@ void String::escapeCharacter(int ch, int esc)
    }
 }
 
-
-//
-// Set dynamically allocated string as a new buffer
-//
-
+/**
+ * Set dynamically allocated string as a new buffer
+ */
 void String::setBuffer(TCHAR *pszBuffer)
 {
    safe_free(m_pszBuffer);
@@ -273,60 +265,51 @@ void String::setBuffer(TCHAR *pszBuffer)
    m_dwBufSize = (m_pszBuffer != NULL) ? (DWORD)_tcslen(m_pszBuffer) + 1 : 1;
 }
 
-
-//
-// Translate given substring
-//
-
+/**
+ * Replace all occurences of source substring with destination substring
+ */
 void String::translate(const TCHAR *pszSrc, const TCHAR *pszDst)
 {
-   DWORD i, dwLenSrc, dwLenDst, dwDelta;
-
    if (m_pszBuffer == NULL)
       return;
 
-   dwLenSrc = (DWORD)_tcslen(pszSrc);
-   dwLenDst = (DWORD)_tcslen(pszDst);
+   int lenSrc = (int)_tcslen(pszSrc);
+   int lenDst = (int)_tcslen(pszDst);
 
-   if (m_dwBufSize <= dwLenSrc)
-      return;
-   
-   for(i = 0; i < m_dwBufSize - dwLenSrc; i++)
+   for(int i = 0; ((int)m_dwBufSize > lenSrc) && (i < (int)m_dwBufSize - lenSrc); i++)
    {
-      if (!memcmp(pszSrc, &m_pszBuffer[i], dwLenSrc * sizeof(TCHAR)))
+      if (!memcmp(pszSrc, &m_pszBuffer[i], lenSrc * sizeof(TCHAR)))
       {
-         if (dwLenSrc == dwLenDst)
+         if (lenSrc == lenDst)
          {
-            memcpy(&m_pszBuffer[i], pszDst, dwLenDst * sizeof(TCHAR));
-            i += dwLenDst - 1;
+            memcpy(&m_pszBuffer[i], pszDst, lenDst * sizeof(TCHAR));
+            i += lenDst - 1;
          }
-         else if (dwLenSrc > dwLenDst)
+         else if (lenSrc > lenDst)
          {
-            memcpy(&m_pszBuffer[i], pszDst, dwLenDst * sizeof(TCHAR));
-            i += dwLenDst;
-            dwDelta = dwLenSrc - dwLenDst;
-            m_dwBufSize -= dwDelta;
-            memmove(&m_pszBuffer[i], &m_pszBuffer[i + dwDelta], (m_dwBufSize - i) * sizeof(TCHAR));
+            memcpy(&m_pszBuffer[i], pszDst, lenDst * sizeof(TCHAR));
+            i += lenDst;
+            int delta = lenSrc - lenDst;
+            m_dwBufSize -= (DWORD)delta;
+            memmove(&m_pszBuffer[i], &m_pszBuffer[i + delta], (m_dwBufSize - (DWORD)i) * sizeof(TCHAR));
             i--;
          }
          else
          {
-            dwDelta = dwLenDst - dwLenSrc;
-            m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwDelta) * sizeof(TCHAR));
-            memmove(&m_pszBuffer[i + dwLenDst], &m_pszBuffer[i + dwLenSrc], (m_dwBufSize - i - dwLenSrc) * sizeof(TCHAR));
-            m_dwBufSize += dwDelta;
-            memcpy(&m_pszBuffer[i], pszDst, dwLenDst * sizeof(TCHAR));
-            i += dwLenDst - 1;
+            int delta = lenDst - lenSrc;
+            m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + (DWORD)delta) * sizeof(TCHAR));
+            memmove(&m_pszBuffer[i + lenDst], &m_pszBuffer[i + lenSrc], ((int)m_dwBufSize - i - lenSrc) * sizeof(TCHAR));
+            m_dwBufSize += (DWORD)delta;
+            memcpy(&m_pszBuffer[i], pszDst, lenDst * sizeof(TCHAR));
+            i += lenDst - 1;
          }
       }
    }
 }
 
-
-//
-// Extract substring into buffer
-//
-
+/**
+ * Extract substring into buffer
+ */
 TCHAR *String::subStr(int nStart, int nLen, TCHAR *pszBuffer)
 {
 	int nCount;

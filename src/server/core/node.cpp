@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 extern Queue g_statusPollQueue;
 extern Queue g_configPollQueue;
 extern Queue g_topologyPollQueue;
@@ -2386,7 +2384,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 }
 
 /**
- * Apply user templates
+ * Callback: apply template to nodes
  */
 static void ApplyTemplate(NetObj *object, void *node)
 {
@@ -2418,13 +2416,16 @@ static void ApplyTemplate(NetObj *object, void *node)
    }
 }
 
+/**
+ * Apply user templates
+ */
 void Node::applyUserTemplates()
 {
 	g_idxObjectById.forEach(ApplyTemplate, this);
 }
 
 /**
- * Update container membership
+ * Callback: update container membership
  */
 static void UpdateContainerBinding(NetObj *object, void *node)
 {
@@ -2456,6 +2457,9 @@ static void UpdateContainerBinding(NetObj *object, void *node)
    }
 }
 
+/**
+ * Update container membership
+ */
 void Node::updateContainerMembership()
 {
 	g_idxObjectById.forEach(UpdateContainerBinding, this);
@@ -2518,6 +2522,12 @@ StringList *Node::getInstanceList(DCItem *dci)
 		case IDM_AGENT_LIST:
 			getListFromAgent(dci->getInstanceDiscoveryData(), &instances);
 			break;
+		case IDM_SNMP_WALK_VALUES:
+		   getListFromSNMP(dci->getSnmpPort(), dci->getInstanceDiscoveryData(), &instances);
+		   break;
+      case IDM_SNMP_WALK_OIDS:
+         getOIDSuffixListFromSNMP(dci->getSnmpPort(), dci->getInstanceDiscoveryData(), &instances);
+         break;
 		default:
 			instances = NULL;
 			break;
@@ -2672,7 +2682,7 @@ DWORD Node::getItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TC
 							_sntprintf(szBuffer, dwBufSize, _T("%u"), ntohl(*((DWORD *)rawValue)));
 							break;
 						case SNMP_RAWTYPE_INT64:
-							_sntprintf(szBuffer, dwBufSize, INT64_FMT, ntohq(*((INT64 *)rawValue)));
+							_sntprintf(szBuffer, dwBufSize, INT64_FMT, (INT64)ntohq(*((INT64 *)rawValue)));
 							break;
 						case SNMP_RAWTYPE_UINT64:
 							_sntprintf(szBuffer, dwBufSize, UINT64_FMT, ntohq(*((QWORD *)rawValue)));
@@ -2702,6 +2712,95 @@ DWORD Node::getItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TC
    DbgPrintf(7, _T("Node(%s)->GetItemFromSNMP(%s): dwResult=%d"), m_szName, szParam, dwResult);
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
+}
+
+/**
+ * Callback for SnmpEnumerate in Node::getListFromSNMP
+ */
+static DWORD SNMPGetListCallback(DWORD snmpVersion, SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
+{
+   bool convert = false;
+   TCHAR buffer[256];
+   ((StringList *)arg)->add(varbind->getValueAsPrintableString(buffer, 256, &convert));
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Get list of values from SNMP
+ */
+DWORD Node::getListFromSNMP(WORD port, const TCHAR *oid, StringList **list)
+{
+   *list = NULL;
+   SNMP_Transport *snmp = createSnmpTransport(port);
+   if (snmp == NULL)
+      return DCE_COMM_ERROR;
+
+   *list = new StringList;
+   DWORD rc = SnmpEnumerate(snmp->getSnmpVersion(), snmp, oid, SNMPGetListCallback, *list, FALSE);
+   delete snmp;
+   if (rc != SNMP_ERR_SUCCESS)
+   {
+      delete *list;
+      *list = NULL;
+   }
+   return (rc == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : ((rc == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
+}
+
+/**
+ * Information for SNMPOIDSuffixListCallback
+ */
+struct SNMPOIDSuffixListCallback_Data
+{
+   DWORD oidLen;
+   StringList *values;
+};
+
+/**
+ * Callback for SnmpEnumerate in Node::getOIDSuffixListFromSNMP
+ */
+static DWORD SNMPOIDSuffixListCallback(DWORD snmpVersion, SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
+{
+   SNMPOIDSuffixListCallback_Data *data = (SNMPOIDSuffixListCallback_Data *)arg;
+   SNMP_ObjectId *oid = varbind->GetName();
+   if (oid->getLength() <= data->oidLen)
+      return SNMP_ERR_SUCCESS;
+   TCHAR buffer[256];
+   SNMPConvertOIDToText(oid->getLength() - data->oidLen, &(oid->getValue()[data->oidLen]), buffer, 256);
+   data->values->add((buffer[0] == _T('.')) ? &buffer[1] : buffer);
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Get list of OID suffixes from SNMP
+ */
+DWORD Node::getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringList **list)
+{
+   *list = NULL;
+   SNMP_Transport *snmp = createSnmpTransport(port);
+   if (snmp == NULL)
+      return DCE_COMM_ERROR;
+
+   SNMPOIDSuffixListCallback_Data data;
+   DWORD oidBin[256];
+   data.oidLen = SNMPParseOID(oid, oidBin, 256);
+   if (data.oidLen == 0)
+   {
+      delete snmp;
+      return DCE_NOT_SUPPORTED;
+   }
+
+   data.values = new StringList;
+   DWORD rc = SnmpEnumerate(snmp->getSnmpVersion(), snmp, oid, SNMPOIDSuffixListCallback, &data, FALSE);
+   delete snmp;
+   if (rc == SNMP_ERR_SUCCESS)
+   {
+      *list = data.values;
+   }
+   else
+   {
+      delete data.values;
+   }
+   return (rc == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : ((rc == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
 
 /**
@@ -3586,11 +3685,9 @@ void Node::changeZone(DWORD newZone)
    pollerUnlock();
 }
 
-
-//
-// Get number of interface objects and pointer to the last one
-//
-
+/**
+ * Get number of interface objects and pointer to the last one
+ */
 DWORD Node::getInterfaceCount(Interface **ppInterface)
 {
    DWORD i, dwCount;
@@ -3804,13 +3901,16 @@ void Node::setAgentProxy(AgentConnection *pConn)
 }
 
 /**
- * Prepare node object for deletion
+ * Callback for removing node from queue
  */
 static bool NodeQueueComparator(void *key, void *element)
 {
 	return key == element;
 }
 
+/**
+ * Prepare node object for deletion
+ */
 void Node::PrepareForDeletion()
 {
    // Prevent node from being queued for polling
@@ -3919,11 +4019,9 @@ Cluster *Node::getMyCluster()
 	return pCluster;
 }
 
-
-//
-// Create SNMP transport
-//
-
+/**
+ * Create SNMP transport
+ */
 SNMP_Transport *Node::createSnmpTransport(WORD port)
 {
 	SNMP_Transport *pTransport = NULL;
@@ -3975,13 +4073,11 @@ SNMP_Transport *Node::createSnmpTransport(WORD port)
 	return pTransport;
 }
 
-
-//
-// Get SNMP security context
-// ATTENTION: This method returns new copy of security context
-// which must be destroyed by the caller
-//
-
+/**
+ * Get SNMP security context
+ * ATTENTION: This method returns new copy of security context
+ * which must be destroyed by the caller
+ */
 SNMP_SecurityContext *Node::getSnmpSecurityContext()
 {
 	LockData();
@@ -3990,11 +4086,9 @@ SNMP_SecurityContext *Node::getSnmpSecurityContext()
 	return ctx;
 }
 
-
-//
-// Resolve node's name
-//
-
+/**
+ * Resolve node's name
+ */
 BOOL Node::resolveName(BOOL useOnlyDNS)
 {
 	BOOL bSuccess = FALSE;
@@ -4356,11 +4450,9 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	DbgPrintf(4, _T("Finished topology poll for node %s [%d]"), m_szName, m_dwId);
 }
 
-
-//
-// Update host connections using forwarding database information
-//
-
+/**
+ * Update host connections using forwarding database information
+ */
 void Node::addHostConnections(LinkLayerNeighbors *nbs)
 {
 	ForwardingDatabase *fdb = getSwitchForwardingDatabase();
@@ -4402,11 +4494,9 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
 	fdb->decRefCount();
 }
 
-
-//
-// Add existing connections to link layer neighbours table
-//
-
+/**
+ * Add existing connections to link layer neighbours table
+ */
 void Node::addExistingConnections(LinkLayerNeighbors *nbs)
 {
 	LockChildList(FALSE);
@@ -4435,11 +4525,9 @@ void Node::addExistingConnections(LinkLayerNeighbors *nbs)
 	UnlockChildList();
 }
 
-
-//
-// Resolve port indexes in VLAN list
-//
-
+/**
+ * Resolve port indexes in VLAN list
+ */
 void Node::resolveVlanPorts(VlanList *vlanList)
 {
 	for(int i = 0; i < vlanList->getSize(); i++)
@@ -4468,11 +4556,9 @@ void Node::resolveVlanPorts(VlanList *vlanList)
 	}
 }
 
-
-//
-// Check subnet bindings
-//
-
+/**
+ * Check subnet bindings
+ */
 void Node::checkSubnetBinding(InterfaceList *pIfList)
 {
 	Subnet *pSubnet;
@@ -4613,11 +4699,9 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 	safe_free(ppUnlinkList);
 }
 
-
-//
-// Update interface names
-//
-
+/**
+ * Update interface names
+ */
 void Node::updateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
 {
 	InterfaceList *pIfList;
@@ -4701,11 +4785,9 @@ NXSL_Array *Node::getParentsForNXSL()
 	return parents;
 }
 
-
-//
-// Get list of interface objects for NXSL script
-//
-
+/**
+ * Get list of interface objects for NXSL script
+ */
 NXSL_Array *Node::getInterfacesForNXSL()
 {
 	NXSL_Array *ifaces = new NXSL_Array;
@@ -4724,11 +4806,9 @@ NXSL_Array *Node::getInterfacesForNXSL()
 	return ifaces;
 }
 
-
-//
-// Get switch forwarding database
-//
-
+/**
+ * Get switch forwarding database
+ */
 ForwardingDatabase *Node::getSwitchForwardingDatabase()
 {
 	ForwardingDatabase *fdb;
@@ -4741,11 +4821,9 @@ ForwardingDatabase *Node::getSwitchForwardingDatabase()
 	return fdb;
 }
 
-
-//
-// Get link layer neighbors
-//
-
+/**
+ * Get link layer neighbors
+ */
 LinkLayerNeighbors *Node::getLinkLayerNeighbors()
 {
 	LinkLayerNeighbors *nbs;
@@ -4758,11 +4836,9 @@ LinkLayerNeighbors *Node::getLinkLayerNeighbors()
 	return nbs;
 }
 
-
-//
-// Get link layer neighbors
-//
-
+/**
+ * Get link layer neighbors
+ */
 VlanList *Node::getVlans()
 {
 	VlanList *vlans;
@@ -4775,11 +4851,9 @@ VlanList *Node::getVlans()
 	return vlans;
 }
 
-
-//
-// Substitute % macros in given text with actual values
-//
-
+/**
+ * Substitute % macros in given text with actual values
+ */
 TCHAR *Node::expandText(const TCHAR *pszTemplate)
 {
    const TCHAR *pCurr;

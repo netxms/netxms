@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -201,11 +201,9 @@ CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *CSCPEncryptMessage(NXCPEncryptionCo
 #endif
 }
 
-
-//
-// Decrypt message
-//
-
+/**
+ * Decrypt message
+ */
 BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(NXCPEncryptionContext *pCtx,
                                              CSCP_ENCRYPTED_MESSAGE *pMsg,
                                              BYTE *pDecryptionBuffer)
@@ -369,11 +367,9 @@ void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKe
 #endif
 }
 
-
-//
-// Load RSA key(s) from file
-//
-
+/**
+ * Load RSA key(s) from file
+ */
 RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile)
 {
 #ifdef _WITH_ENCRYPTION
@@ -393,18 +389,20 @@ RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile)
          {
             BYTE hash2[SHA1_DIGEST_SIZE];
 
-            fread(hash, 1, SHA1_DIGEST_SIZE, fp);
-            CalculateSHA1Hash(pKeyBuffer, dwLen, hash2);
-            if (!memcmp(hash, hash2, SHA1_DIGEST_SIZE))
+            if (fread(hash, 1, SHA1_DIGEST_SIZE, fp) == SHA1_DIGEST_SIZE)
             {
-               pKey = d2i_RSAPublicKey(NULL, (OPENSSL_CONST BYTE **)&pBufPos, dwLen);
-               if (pKey != NULL)
+               CalculateSHA1Hash(pKeyBuffer, dwLen, hash2);
+               if (!memcmp(hash, hash2, SHA1_DIGEST_SIZE))
                {
-                  if (d2i_RSAPrivateKey(&pKey, (OPENSSL_CONST BYTE **)&pBufPos,
-                                        dwLen - CAST_FROM_POINTER((pBufPos - pKeyBuffer), DWORD)) == NULL)
+                  pKey = d2i_RSAPublicKey(NULL, (OPENSSL_CONST BYTE **)&pBufPos, dwLen);
+                  if (pKey != NULL)
                   {
-                     RSA_free(pKey);
-                     pKey = NULL;
+                     if (d2i_RSAPrivateKey(&pKey, (OPENSSL_CONST BYTE **)&pBufPos,
+                                           dwLen - CAST_FROM_POINTER((pBufPos - pKeyBuffer), DWORD)) == NULL)
+                     {
+                        RSA_free(pKey);
+                        pKey = NULL;
+                     }
                   }
                }
             }
@@ -420,17 +418,15 @@ RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile)
 #endif
 }
 
-
-//
-// Create signature for message using certificate (MS CAPI version)
-// Paraeters:
-//    pMsg and dwMsgLen - message to sign and it's length
-//    pCert - certificate
-//    pBuffer - output buffer
-//    dwBufSize - buffer size
-//    pdwSigLen - actual signature size
-//
-
+/**
+ * Create signature for message using certificate (MS CAPI version)
+ * Paraeters:
+ *    pMsg and dwMsgLen - message to sign and it's length
+ *    pCert - certificate
+ *    pBuffer - output buffer
+ *    dwBufSize - buffer size
+ *    pdwSigLen - actual signature size
+ */
 #ifdef _WIN32
 
 BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, DWORD dwMsgLen, const CERT_CONTEXT *pCert,
@@ -468,11 +464,9 @@ BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, DWORD dwMsgLen, const 
 
 #endif
 
-
-//
-// Encrypt data block with ICE
-//
-
+/**
+ * Encrypt data block with ICE
+ */
 void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key)
 {
 	ICE_KEY *ice = ice_key_create(1);
@@ -495,11 +489,9 @@ void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, int inLen, BYTE *out, c
 	ice_key_destroy(ice);
 }
 
-
-//
-// Decrypt data block with ICE
-//
-
+/**
+ * Decrypt data block with ICE
+ */
 void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key)
 {
 	ICE_KEY *ice = ice_key_create(1);
@@ -522,31 +514,25 @@ void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, c
 	ice_key_destroy(ice);
 }
 
-
-//
-// Encryption context constructor
-//
-
+/**
+ * Encryption context constructor
+ */
 NXCPEncryptionContext::NXCPEncryptionContext()
 {
 	m_sessionKey = NULL;
 }
 
-
-//
-// Encryption context destructor
-//
-
+/**
+ * Encryption context destructor
+ */
 NXCPEncryptionContext::~NXCPEncryptionContext()
 {
 	safe_free(m_sessionKey);
 }
 
-
-//
-// Create encryption context from CMD_SESSION_KEY NXCP message
-//
-
+/**
+ * Create encryption context from CMD_SESSION_KEY NXCP message
+ */
 NXCPEncryptionContext *NXCPEncryptionContext::create(CSCPMessage *msg, RSA *privateKey)
 {
 #ifdef _WITH_ENCRYPTION
@@ -592,11 +578,9 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(CSCPMessage *msg, RSA *priv
 #endif
 }
 
-
-//
-// Create encryption context from CMD_REQUEST_SESSION_KEY NXCP message
-//
-
+/**
+ * Create encryption context from CMD_REQUEST_SESSION_KEY NXCP message
+ */
 NXCPEncryptionContext *NXCPEncryptionContext::create(DWORD ciphers)
 {
 	NXCPEncryptionContext *ctx = new NXCPEncryptionContext;

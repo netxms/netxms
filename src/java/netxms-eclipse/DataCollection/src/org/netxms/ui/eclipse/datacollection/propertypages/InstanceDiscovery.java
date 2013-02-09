@@ -70,7 +70,9 @@ public class InstanceDiscovery extends PropertyPage
                                                          WidgetHelper.DEFAULT_LAYOUT_DATA);
       discoveryMethod.add("None");
       discoveryMethod.add("Agent List");
-      discoveryMethod.add("SNMP Walk");
+      discoveryMethod.add("Agent Table");
+      discoveryMethod.add("SNMP Walk - Values");
+      discoveryMethod.add("SNMP Walk - OIDs");
       discoveryMethod.select(dci.getInstanceDiscoveryMethod());
       discoveryMethod.addSelectionListener(new SelectionListener() {
 			@Override
@@ -142,7 +144,10 @@ public class InstanceDiscovery extends PropertyPage
 				return "Discovery data";
 			case DataCollectionItem.IDM_AGENT_LIST:
 				return "List name";
-			case DataCollectionItem.IDM_SNMP_WALK:
+			case DataCollectionItem.IDM_AGENT_TABLE:
+				return "List name";
+			case DataCollectionItem.IDM_SNMP_WALK_VALUES:
+			case DataCollectionItem.IDM_SNMP_WALK_OIDS:
 				return "Base SNMP OID";
 		}
 		return "";

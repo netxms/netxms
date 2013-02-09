@@ -307,7 +307,7 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	Node *node = (Node *)object->getData();
 
 	// Origin
-	static TCHAR *originNames[] = { _T("internal"), _T("agent"), _T("snmp"), _T("cpsnmp"), _T("push"), NULL };
+	static const TCHAR *originNames[] = { _T("internal"), _T("agent"), _T("snmp"), _T("cpsnmp"), _T("push"), NULL };
 	int origin = -1;
 	const TCHAR *name = argv[1]->getValueAsCString();
 	for(int i = 0; originNames[i] != NULL; i++)
@@ -318,7 +318,7 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 		}
 
 	// Data types
-	static TCHAR *dtNames[] = { _T("int32"), _T("uint32"), _T("int64"), _T("uint64"), _T("string"), _T("float"), NULL };
+	static const TCHAR *dtNames[] = { _T("int32"), _T("uint32"), _T("int64"), _T("uint64"), _T("string"), _T("float"), NULL };
 	int dataType = -1;
 	name = argv[4]->getValueAsCString();
 	for(int i = 0; dtNames[i] != NULL; i++)

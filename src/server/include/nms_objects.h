@@ -1012,6 +1012,8 @@ public:
 
 	virtual DWORD getInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
    DWORD getItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer, int interpretRawValue);
+   DWORD getListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
+   DWORD getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
    DWORD getItemFromCheckPointSNMP(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
    DWORD getItemFromAgent(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
 	DWORD getTableFromAgent(const TCHAR *name, Table **table);

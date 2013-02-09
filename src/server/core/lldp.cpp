@@ -64,7 +64,7 @@ ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp)
 	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.0.8802.1.1.2.1.3.7.1.3"), PortLocalInfoHandler, ports, FALSE) != SNMP_ERR_SUCCESS)
 	{
 		delete ports;
-		return false;
+		return NULL;
 	}
 	return ports;
 }

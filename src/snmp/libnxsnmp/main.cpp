@@ -23,12 +23,10 @@
 
 #include "libnxsnmp.h"
 
-
-//
-// Convert OID to text
-//
-
-TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize)
+/**
+ * Convert OID to text
+ */
+TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(DWORD dwLength, const DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize)
 {
    DWORD i, dwBufPos, dwNumChars;
 
@@ -41,13 +39,11 @@ TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue
 	return pszBuffer;
 }
 
-
-//
-// Parse OID in text into binary format
-// Will return 0 if OID is invalid or empty, and OID length (in DWORDs) on success
-// Buffer size should be given in number of DWORDs
-//
-
+/**
+ * Parse OID in text into binary format
+ * Will return 0 if OID is invalid or empty, and OID length (in DWORDs) on success
+ * Buffer size should be given in number of DWORDs
+ */
 DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, DWORD *pdwBuffer, DWORD dwBufferSize)
 {
    TCHAR *pCurr = (TCHAR *)pszText, *pEnd, szNumber[32];
@@ -73,11 +69,9 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, DWORD *pdwBuffer, 
    return dwLength;
 }
 
-
-//
-// Check if given OID is syntaxically correct
-//
-
+/**
+ * Check if given OID is syntaxically correct
+ */
 BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText)
 {
    DWORD dwLength, *pdwBuffer;
@@ -88,11 +82,9 @@ BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText)
    return (dwLength > 0);
 }
 
-
-//
-// Get text for libnxsnmp error code
-//
-
+/**
+ * Get text for libnxsnmp error code
+ */
 const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError)
 {
    static const TCHAR *pszErrorText[] =
@@ -124,11 +116,9 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError)
       pszErrorText[dwError] : _T("Unknown error");
 }
 
-
-//
-// Resolve text representation of data type to integer value
-//
-
+/**
+ * Resolve text representation of data type to integer value
+ */
 DWORD LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType)
 {
 	static struct
@@ -160,11 +150,9 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType)
    return ASN_NULL;
 }
 
-
-//
-// Get type name
-//
-
+/**
+ * Get type name
+ */
 TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(DWORD type, TCHAR *buffer, size_t bufferSize)
 {
 	static struct
@@ -202,20 +190,16 @@ TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(DWORD type, TCHAR *buffer, size_t b
 	return buffer;
 }
 
-
-//
-// DLL entry point
-//
-
+/**
+ * DLL entry point
+ */
 #ifdef _WIN32
 
-#ifndef UNDER_CE // FIXME
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
       DisableThreadLibraryCalls(hInstance);
    return TRUE;
 }
-#endif // UNDER_CE
 
 #endif   /* _WIN32 */

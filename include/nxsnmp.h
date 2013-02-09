@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -595,11 +595,9 @@ public:
    void bindVariable(SNMP_Variable *pVar);
 };
 
-
-//
-// Generic SNMP transport
-//
-
+/**
+ * Generic SNMP transport
+ */
 class LIBNXSNMP_EXPORTABLE SNMP_Transport
 {
 protected:
@@ -642,11 +640,9 @@ public:
 	int getSnmpVersion() { return m_snmpVersion; }
 };
 
-
-//
-// UDP SNMP transport
-//
-
+/**
+ * UDP SNMP transport
+ */
 class LIBNXSNMP_EXPORTABLE SNMP_UDPTransport : public SNMP_Transport
 {
 private:
@@ -679,7 +675,7 @@ public:
 /**
  * Functions
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize);
+TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(DWORD dwLength, const DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize);
 DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, DWORD *pdwBuffer, DWORD dwBufferSize);
 BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText);
 const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError);
