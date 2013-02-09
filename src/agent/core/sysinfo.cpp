@@ -347,11 +347,9 @@ LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for System.PlatformName
-//
-
+/**
+ * Handler for System.PlatformName
+ */
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    LONG nResult = SYSINFO_RC_SUCCESS;
@@ -405,7 +403,7 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
       // Assume that we are running on PowerPC
       _sntprintf(value, MAX_RESULT_LENGTH, _T("%hs-powerpc"), info.sysname);
 #else
-      _sntprintf(value, MAX_RESULT_LENGTH, _T("%s-%s"), info.sysname, info.machine);
+      _sntprintf(value, MAX_RESULT_LENGTH, _T("%hs-%hs"), info.sysname, info.machine);
 #endif
    }
    else
@@ -432,11 +430,9 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    return nResult;
 }
 
-
-//
-// Handler for File.Time.* parameters
-//
-
+/**
+ * Handler for File.Time.* parameters
+ */
 LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	TCHAR szFilePath[MAX_PATH], szRealFilePath[MAX_PATH];

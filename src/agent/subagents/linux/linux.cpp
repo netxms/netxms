@@ -22,11 +22,9 @@
 
 #include "linux_subagent.h"
 
-
-//
-// Initalization callback
-//
-
+/**
+ * Initalization callback
+ */
 static BOOL SubAgentInit(Config *config)
 {
 	StartCpuUsageCollector();
@@ -35,11 +33,9 @@ static BOOL SubAgentInit(Config *config)
 	return TRUE;
 }
 
-
-//
-// Shutdown callback
-//
-
+/**
+ * Shutdown callback
+ */
 static void SubAgentShutdown()
 {
 	ShutdownCpuUsageCollector();
@@ -47,21 +43,17 @@ static void SubAgentShutdown()
 	StopDrbdCollector();
 }
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 LONG H_DRBDDeviceList(const TCHAR *pszParam, const TCHAR *pszArg, StringList *pValue);
 LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
 LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
 LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValue);
 
-
-//
-// Subagent information
-//
-
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("Disk.Avail(*)"),                H_DiskInfo,        (TCHAR *)DISK_AVAIL,

@@ -20,10 +20,9 @@
 
 #include "linux_subagent.h"
 
-//
-// Handler for System.ConnectedUsers parameter
-//
-
+/**
+ * Handler for System.ConnectedUsers parameter
+ */
 LONG H_ConnectedUsers(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
@@ -49,11 +48,9 @@ LONG H_ConnectedUsers(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return nRet;
 }
 
-
-//
-// Handler for System.ActiveUserSessions enum
-//
-
+/**
+ * Handler for System.ActiveUserSessions enum
+ */
 LONG H_ActiveUserSessions(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
@@ -80,11 +77,9 @@ LONG H_ActiveUserSessions(const TCHAR *pszParam, const TCHAR *pArg, StringList *
 	return nRet;
 }
 
-
-//
-// Handler for System.Uptime parameter
-//
-
+/**
+ * Handler for System.Uptime parameter
+ */
 LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	FILE *hFile;
@@ -117,6 +112,9 @@ LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return uUptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
+/**
+ * Handler for System.Uname parameter
+ */
 LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	struct utsname utsName;
@@ -139,6 +137,9 @@ LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return nRet;
 }
 
+/**
+ * Handler for System.Hostname parameter
+ */
 LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
@@ -153,6 +154,9 @@ LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return nRet;
 }
 
+/**
+ * Handler for System.CPU.LoadAvg parameters
+ */
 LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
@@ -198,6 +202,9 @@ LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return nRet;
 }
 
+/**
+ * Handler for System.Memory.* parameters
+ */
 LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
@@ -302,6 +309,9 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return nRet;
 }
 
+/**
+ * Handler for System.ProcessList list
+ */
 LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
@@ -327,9 +337,9 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 	return nRet;
 }
 
-//
-// stub
-//
+/**
+ * Handler for Agent.SourcePackageSupport parameter
+ */
 LONG H_SourcePkgSupport(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	ret_int(pValue, 1);
