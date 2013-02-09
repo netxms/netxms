@@ -382,11 +382,9 @@ extern "C" void EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, int
 	}
 }
 
-
-//
-// Execute prepared statement
-//
-
+/**
+ * Execute prepared statement
+ */
 extern "C" DWORD EXPORT DrvExecute(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, WCHAR *errorText)
 {
 	DWORD dwResult;

@@ -26,7 +26,6 @@
  * Parameter handlers
  */
 LONG H_ActiveConnections(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue);
-LONG H_AgentStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);

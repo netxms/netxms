@@ -23,18 +23,14 @@
 #include "nxdbmgr.h"
 #include "sqlite3.h"
 
-
-//
-// Tables to export
-//
-
+/**
+ * Tables to export
+ */
 extern const TCHAR *g_tables[];
 
-
-//
-// Escape string for SQLite
-//
-
+/**
+ * Escape string for SQLite
+ */
 static TCHAR *EscapeString(const TCHAR *str)
 {
 	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
@@ -68,11 +64,9 @@ static TCHAR *EscapeString(const TCHAR *str)
 	return out;
 }
 
-
-//
-// Export single database table
-//
-
+/**
+ * Export single database table
+ */
 static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 {
 	String query;
@@ -169,22 +163,18 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 	return success;
 }
 
-
-//
-// Callback for getting schema version
-//
-
+/**
+ * Callback for getting schema version
+ */
 static int GetSchemaVersionCB(void *arg, int cols, char **data, char **names)
 {
 	*((int *)arg) = strtol(data[0], NULL, 10);
 	return 0;
 }
 
-
-//
-// Callback for getting idata_xx table creation query
-//
-
+/**
+ * Callback for getting idata_xx table creation query
+ */
 static int GetIDataQueryCB(void *arg, int cols, char **data, char **names)
 {
 	strncpy((char *)arg, data[0], MAX_DB_STRING);
@@ -192,11 +182,9 @@ static int GetIDataQueryCB(void *arg, int cols, char **data, char **names)
 	return 0;
 }
 
-
-//
-// Export database
-//
-
+/**
+ * Export database
+ */
 void ExportDatabase(const char *file)
 {
 	sqlite3 *db;
@@ -217,6 +205,13 @@ void ExportDatabase(const char *file)
 		_tprintf(_T("ERROR: unable to open output file\n"));
 		return;
 	}
+
+   if (sqlite3_exec(db, "PRAGMA page_size=65536", NULL, NULL, &errmsg) != SQLITE_OK)
+   {
+      _tprintf(_T("ERROR: cannot set page size for export file (%hs)\n"), errmsg);
+      sqlite3_free(errmsg);
+      goto cleanup;
+   }
 
 	// Setup database schema
 #ifdef _WIN32
