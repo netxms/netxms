@@ -2,6 +2,7 @@
 * 1.2.6
 *
 
+- DCI instance discovery
 - NXSL function PostEvent can use event names instead of event codes
 - New NXSL functions: AgentReadParameter, CreateDCI, ManageObject, UnmanageObject
 - Management console:
