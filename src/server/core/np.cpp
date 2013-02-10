@@ -368,10 +368,10 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
             }
             DBFreeResult(hResult);
          }
+			DbgPrintf(4, _T("AcceptNewNode(%s): auto filter - range check result is %d"), szIpAddr, bResult);
+			if (!bResult)
+				return FALSE;
       }
-		DbgPrintf(4, _T("AcceptNewNode(%s): auto filter - range check result is %d"), szIpAddr, bResult);
-		if (!bResult)
-			return FALSE;
    }
 
    // Check SNMP support
