@@ -282,8 +282,6 @@ public:
 
    void addFormattedString(const TCHAR *format, ...);
    void addFormattedStringV(const TCHAR *format, va_list args);
-   void escapeCharacter(int ch, int esc);
-   void translate(const TCHAR *pszSrc, const TCHAR *pszDst);
 
 	DWORD getSize() { return m_dwBufSize > 0 ? m_dwBufSize - 1 : 0; }
 	BOOL isEmpty() { return m_dwBufSize <= 1; }
@@ -292,6 +290,8 @@ public:
 	TCHAR *subStr(int nStart, int nLen) { return subStr(nStart, nLen, NULL); }
 	int find(const TCHAR *pszStr, int nStart = 0);
 
+   void escapeCharacter(int ch, int esc);
+   void replace(const TCHAR *pszSrc, const TCHAR *pszDst);
 	void trim();
 	void shrink(int chars = 1);
 };

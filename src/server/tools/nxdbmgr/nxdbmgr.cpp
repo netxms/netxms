@@ -219,9 +219,9 @@ BOOL SQLBatch(const TCHAR *pszBatch)
    BOOL bRet = TRUE;
 	TCHAR table[128], column[128];
 
-   batch.translate(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
-   batch.translate(_T("$SQL:TXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
-   batch.translate(_T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
+   batch.replace(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
+   batch.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
+   batch.replace(_T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
 
    pszQuery = pszBuffer = batch.getBuffer();
    while(1)

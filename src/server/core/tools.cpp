@@ -203,8 +203,7 @@ BOOL ExecCommand(TCHAR *pszCommand)
 			}
 			pCmd[nCount] = NULL;
 
-			if (stat(pCmd[0], &st) == 0 &&
-					st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
+			if ((stat(pCmd[0], &st) == 0) && (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
 			{
 				switch ((nPid = fork()))
 				{
@@ -299,10 +298,10 @@ void EscapeString(String &str)
 {
    str.escapeCharacter(_T('\\'), _T('\\'));
    str.escapeCharacter(_T('"'), _T('\\'));
-   str.translate(_T("\b"), _T("\\b"));
-   str.translate(_T("\r"), _T("\\r"));
-   str.translate(_T("\n"), _T("\\n"));
-   str.translate(_T("\t"), _T("\\t"));
+   str.replace(_T("\b"), _T("\\b"));
+   str.replace(_T("\r"), _T("\\r"));
+   str.replace(_T("\n"), _T("\\n"));
+   str.replace(_T("\t"), _T("\\t"));
 }
 
 /**

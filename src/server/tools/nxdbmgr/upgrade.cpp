@@ -35,9 +35,9 @@ static BOOL CreateTable(const TCHAR *pszQuery)
    BOOL bResult;
 	String query(pszQuery);
 
-   query.translate(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
-   query.translate(_T("$SQL:TXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
-   query.translate(_T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
+   query.replace(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
+   query.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
+   query.replace(_T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
    if (g_iSyntax == DB_SYNTAX_MYSQL)
       query += g_pszTableSuffix;
    bResult = SQLQuery(query);

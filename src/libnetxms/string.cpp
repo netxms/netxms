@@ -268,7 +268,7 @@ void String::setBuffer(TCHAR *pszBuffer)
 /**
  * Replace all occurences of source substring with destination substring
  */
-void String::translate(const TCHAR *pszSrc, const TCHAR *pszDst)
+void String::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
 {
    if (m_pszBuffer == NULL)
       return;

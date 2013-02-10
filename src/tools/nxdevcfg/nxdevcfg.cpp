@@ -75,11 +75,11 @@ static void ShowHelp()
 static void PrintFlags(const TCHAR *src)
 {
 	String s = src;
-	s.translate(_T("${bindir}"), BINDIR);
-	s.translate(_T("${libdir}"), LIBDIR);
-	s.translate(_T("${pkgdatadir}"), DATADIR);
-	s.translate(_T("${pkglibdir}"), PKGLIBDIR);
-	s.translate(_T("${prefix}"), PREFIX);
+	s.replace(_T("${bindir}"), BINDIR);
+	s.replace(_T("${libdir}"), LIBDIR);
+	s.replace(_T("${pkgdatadir}"), DATADIR);
+	s.replace(_T("${pkglibdir}"), PKGLIBDIR);
+	s.replace(_T("${prefix}"), PREFIX);
 	_tprintf(_T("%s\n"), (const TCHAR *)s);
 }
 

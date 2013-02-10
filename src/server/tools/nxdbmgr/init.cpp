@@ -105,7 +105,7 @@ BOOL ExecSQLBatch(const char *pszFile)
 
 		String name;
 		name.addMultiByteString(pszFile, (DWORD)strlen(pszFile), CP_ACP);
-		name.translate(_T("@dbengine@"), dbengine[g_iSyntax]);
+		name.replace(_T("@dbengine@"), dbengine[g_iSyntax]);
 	   pBatch = LoadFile(name, &dwSize);
 	   if (pBatch == NULL)
 		   _tprintf(_T("ERROR: Cannot load SQL command file %s\n"), (const TCHAR *)name);

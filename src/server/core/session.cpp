@@ -1553,7 +1553,7 @@ void ClientSession::sendServerInfo(DWORD dwRqId)
 	ConfigReadStr(_T("WindowsConsoleUpgradeURL"), szBuffer, 1024,
 	              _T("http://www.netxms.org/download/netxms-console-%version%.exe"));
 	strURL = szBuffer;
-	strURL.translate(_T("%version%"), NETXMS_VERSION_STRING);
+	strURL.replace(_T("%version%"), NETXMS_VERSION_STRING);
 	msg.SetVariable(VID_CONSOLE_UPGRADE_URL, (const TCHAR *)strURL);
 
 	ConfigReadStr(_T("TileServerURL"), szBuffer, 1024, _T("http://tile.openstreetmap.org/"));
@@ -11210,16 +11210,20 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 }
 
 /**
- * Execute server side command on object
+ * Worker thread for server side command execution
  */
 static THREAD_RESULT THREAD_CALL RunCommand(void *arg)
 {
 	DbgPrintf(5, _T("Running server-side command: %s"), (TCHAR *)arg);
-	_tsystem((TCHAR *)arg);
+	if (_tsystem((TCHAR *)arg) == -1)
+	   DbgPrintf(5, _T("Failed to execute command \"%s\""), (TCHAR *)arg);
 	free(arg);
 	return THREAD_OK;
 }
 
+/**
+ * Execute server side command on object
+ */
 void ClientSession::executeServerCommand(CSCPMessage *request)
 {
 	CSCPMessage msg;

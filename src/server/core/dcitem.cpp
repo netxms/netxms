@@ -1904,11 +1904,11 @@ bool DCItem::hasValue()
 void DCItem::expandInstance()
 {
 	String temp = m_szName;
-	temp.translate(_T("{instance}"), m_instance);
+	temp.replace(_T("{instance}"), m_instance);
 	nx_strncpy(m_szName, (const TCHAR *)temp, MAX_ITEM_NAME);
 
 	temp = m_szDescription;
-	temp.translate(_T("{instance}"), m_instance);
+	temp.replace(_T("{instance}"), m_instance);
 	nx_strncpy(m_szDescription, (const TCHAR *)temp, MAX_DB_STRING);
 }
 
