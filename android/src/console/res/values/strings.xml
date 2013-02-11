@@ -143,7 +143,8 @@
 	<string name="overview_os_version">OS Version</string>
 	<string name="overview_user">User</string>
 	<string name="overview_battery_level">Battery Level</string>
-
+	<string name="overview_location">Location</string>
+	
 	<string name="ts_fn_last">last</string>
 	<string name="ts_fn_average">average</string>
 	<string name="ts_fn_deviation">deviation</string>

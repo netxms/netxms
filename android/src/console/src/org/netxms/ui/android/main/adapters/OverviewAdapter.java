@@ -6,6 +6,7 @@ package org.netxms.ui.android.main.adapters;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.netxms.base.GeoLocation;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
@@ -84,6 +85,13 @@ public class OverviewAdapter extends BaseAdapter
 				addPair(r.getString(R.string.overview_battery_level), Integer.toString(((MobileDevice)obj).getBatteryLevel()) + "%");
 				break;
 		}
+		addPair(r.getString(R.string.overview_location), ((MobileDevice)obj).getGeolocation());
+	}
+
+	private void addPair(String label, GeoLocation value)
+	{
+		if (value != null)
+			addPair(label, value.getLatitudeAsString() + " " + value.getLongitudeAsString());
 	}
 
 	private void addPair(String label, String value, boolean allowEmpty)
