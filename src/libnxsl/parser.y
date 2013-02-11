@@ -444,6 +444,7 @@ Expression:
 Operand:
 	FunctionCall
 |	TypeCast
+|	ArrayInitializer
 |	T_IDENTIFIER
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, $1));
@@ -458,6 +459,30 @@ TypeCast:
 	BuiltinType '(' Expression ')'
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CAST, (int)$1));
+}
+;
+
+ArrayInitializer:
+	'%' '(' 
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value(new NXSL_Array)));
+}
+	ArrayElements ')'
+|	'%' '(' ')'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value(new NXSL_Array)));
+}
+;
+
+ArrayElements:
+	Expression 
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_ADD_TO_ARRAY));
+}
+	',' ArrayElements
+|	Expression
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_ADD_TO_ARRAY));
 }
 ;
 

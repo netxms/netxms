@@ -47,7 +47,7 @@ static const char *m_szCommandMnemonic[] =
    "JNZ", "LIKE", "ILIKE", "MATCH",
    "IMATCH", "CASE", "ARRAY", "EGET",
 	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
-	"GLOBAL", "GARRAY", "JZP", "JNZP"
+	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR"
 };
 
 /**
@@ -361,6 +361,8 @@ void NXSL_Program::dump(FILE *pFile)
 			case OPCODE_CASE:
             if (m_ppInstructionSet[i]->m_operand.m_pConstant->isNull())
                fprintf(pFile, "<null>\n");
+            else if (m_ppInstructionSet[i]->m_operand.m_pConstant->isArray())
+               fprintf(pFile, "<array>\n");
             else
                _ftprintf(pFile, _T("\"%s\"\n"), m_ppInstructionSet[i]->m_operand.m_pConstant->getValueAsCString());
             break;
@@ -815,6 +817,37 @@ void NXSL_Program::execute()
             error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
 			break;
+		case OPCODE_ADD_TO_ARRAY:  // add element on stack top to array; stack should contain: array new_value (top)
+         pValue = (NXSL_Value *)m_pDataStack->pop();
+         if (pValue != NULL)
+         {
+            NXSL_Value *array;
+
+            array = (NXSL_Value *)m_pDataStack->peek();
+            if (array != NULL)
+            {
+               if (array->isArray())
+               {
+                  int index = array->getValueAsArray()->size();
+                  array->getValueAsArray()->set(index, pValue);
+                  pValue = NULL;    // Prevent deletion
+               }
+               else
+               {
+                  error(NXSL_ERR_NOT_ARRAY);
+               }
+            }
+            else
+            {
+               error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+            }
+            delete pValue;
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
       case OPCODE_CAST:
          pValue = (NXSL_Value *)m_pDataStack->peek();
          if (pValue != NULL)

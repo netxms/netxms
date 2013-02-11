@@ -23,11 +23,9 @@
 
 #include "libnxsl.h"
 
-
-//
-// Array constructors
-//
-
+/**
+ * Create empty array
+ */
 NXSL_Array::NXSL_Array()
 {
 	m_refCount = 0;
@@ -36,6 +34,9 @@ NXSL_Array::NXSL_Array()
 	m_data = NULL;
 }
 
+/**
+ *  Create copy of given array
+ */
 NXSL_Array::NXSL_Array(NXSL_Array *src)
 {
 	int i;
@@ -58,11 +59,9 @@ NXSL_Array::NXSL_Array(NXSL_Array *src)
 	}
 }
 
-
-//
-// Array destructor
-//
-
+/**
+ * Destructor
+ */
 NXSL_Array::~NXSL_Array()
 {
 	int i;
@@ -72,21 +71,17 @@ NXSL_Array::~NXSL_Array()
 	safe_free(m_data);
 }
 
-
-//
-// Compare two ints
-//
-
+/**
+ * Compare two indexes
+ */
 static int CompareElements(const void *p1, const void *p2)
 {
 	return COMPARE_NUMBERS(((NXSL_ArrayElement *)p1)->index, ((NXSL_ArrayElement *)p2)->index);
 }
 
-
-//
-// Get element
-//
-
+/**
+ * Get element by index
+ */
 NXSL_Value *NXSL_Array::get(int index)
 {
 	NXSL_ArrayElement *element, key;
@@ -96,11 +91,9 @@ NXSL_Value *NXSL_Array::get(int index)
 	return (element != NULL) ? element->value : NULL;
 }
 
-
-//
-// Get element by internal position (used by iterator)
-//
-
+/**
+ * Get element by internal position (used by iterator)
+ */
 NXSL_Value *NXSL_Array::getByPosition(int position)
 {
 	if ((position < 0) || (position >= m_size))
@@ -108,11 +101,9 @@ NXSL_Value *NXSL_Array::getByPosition(int position)
 	return m_data[position].value;
 }
 
-
-//
-// Set element
-//
-
+/**
+ * Set element
+ */
 void NXSL_Array::set(int index, NXSL_Value *value)
 {
 	NXSL_ArrayElement *element, key;

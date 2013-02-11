@@ -112,6 +112,7 @@ typedef void *yyscan_t;
 #define OPCODE_GLOBAL_ARRAY   56
 #define OPCODE_JZ_PEEK        57
 #define OPCODE_JNZ_PEEK       58
+#define OPCODE_ADD_TO_ARRAY   59
 
 
 //
