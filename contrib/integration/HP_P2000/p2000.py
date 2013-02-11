@@ -11,7 +11,7 @@ from lxml import etree
 
 
 socket.setdefaulttimeout(15)
-handler = urllib2.HTTPHandler(debuglevel=1)
+handler = urllib2.HTTPHandler(debuglevel=0)
 opener = urllib2.build_opener(handler)
 
 
