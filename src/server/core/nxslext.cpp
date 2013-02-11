@@ -204,7 +204,7 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 	{
 		if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
 		{
-			if ((currNode != NULL) && (node->IsTrustedNode(currNode->Id())))
+			if ((currNode != NULL) && (node->isTrustedNode(currNode->Id())))
 			{
 				*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
 			}
@@ -272,7 +272,7 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 
 				currNode = (Node *)o->getData();
 			}
-			if ((currNode != NULL) && (object->IsTrustedNode(currNode->Id())))
+			if ((currNode != NULL) && (object->isTrustedNode(currNode->Id())))
 			{
 				*ppResult = new NXSL_Value(new NXSL_Object((object->Type() == OBJECT_NODE) ? (NXSL_Class *)&g_nxslNodeClass : (NXSL_Class *)&g_nxslNetObjClass, object));
 			}
@@ -605,7 +605,7 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	if (child->Type() != OBJECT_CONTAINER && child->Type() != OBJECT_SUBNET && child->Type() != OBJECT_NODE)
 		return NXSL_ERR_BAD_CLASS;
 
-	if (child->IsChild(netobj->Id())) // prevent loops
+	if (child->isChild(netobj->Id())) // prevent loops
 		return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
 	netobj->AddChild(child);

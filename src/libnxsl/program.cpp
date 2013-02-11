@@ -530,11 +530,9 @@ int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
    return (m_dwCurrPos == INVALID_ADDRESS) ? -1 : 0;
 }
 
-
-//
-// Set global variale
-//
-
+/**
+ * Set global variale
+ */
 void NXSL_Program::setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue)
 {
    NXSL_Variable *pVar;
@@ -546,11 +544,9 @@ void NXSL_Program::setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue)
 		pVar->setValue(pValue);
 }
 
-
-//
-// Find variable
-//
-
+/**
+ * Find variable
+ */
 NXSL_Variable *NXSL_Program::findVariable(const TCHAR *pszName)
 {
    NXSL_Variable *pVar;
@@ -567,11 +563,9 @@ NXSL_Variable *NXSL_Program::findVariable(const TCHAR *pszName)
    return pVar;
 }
 
-
-//
-// Find variable or create if does not exist
-//
-
+/**
+ * Find variable or create if does not exist
+ */
 NXSL_Variable *NXSL_Program::findOrCreateVariable(const TCHAR *pszName)
 {
    NXSL_Variable *pVar = findVariable(pszName);
@@ -582,11 +576,9 @@ NXSL_Variable *NXSL_Program::findOrCreateVariable(const TCHAR *pszName)
    return pVar;
 }
 
-
-//
-// Create variable if it does not exist, otherwise return NULL
-//
-
+/**
+ * Create variable if it does not exist, otherwise return NULL
+ */
 NXSL_Variable *NXSL_Program::createVariable(const TCHAR *pszName)
 {
    NXSL_Variable *pVar = NULL;
@@ -604,11 +596,9 @@ NXSL_Variable *NXSL_Program::createVariable(const TCHAR *pszName)
    return pVar;
 }
 
-
-//
-// Execute single instruction
-//
-
+/**
+ * Execute single instruction
+ */
 void NXSL_Program::execute()
 {
    NXSL_Instruction *cp;
@@ -623,7 +613,10 @@ void NXSL_Program::execute()
    switch(cp->m_nOpCode)
    {
       case OPCODE_PUSH_CONSTANT:
-         m_pDataStack->push(new NXSL_Value(cp->m_operand.m_pConstant));
+         if (cp->m_operand.m_pConstant->isArray())
+            m_pDataStack->push(new NXSL_Value(new NXSL_Array(cp->m_operand.m_pConstant->getValueAsArray())));
+         else
+            m_pDataStack->push(new NXSL_Value(cp->m_operand.m_pConstant));
          break;
       case OPCODE_PUSH_VARIABLE:
          pVar = findOrCreateVariable(cp->m_operand.m_pszString);
@@ -1221,11 +1214,9 @@ void NXSL_Program::execute()
       m_dwCurrPos = dwNext;
 }
 
-
-//
-// Perform binary operation on two operands from stack and push result to stack
-//
-
+/**
+ * Perform binary operation on two operands from stack and push result to stack
+ */
 void NXSL_Program::doBinaryOperation(int nOpCode)
 {
    NXSL_Value *pVal1, *pVal2, *pRes = NULL;

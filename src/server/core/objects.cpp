@@ -134,7 +134,7 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
       if (bSuccess)
       {
 			DbgPrintf(8, _T("ApplyTemplateThread: success"));
-			pInfo->pTemplate->DecRefCount();
+			pInfo->pTemplate->decRefCount();
          free(pInfo);
       }
       else

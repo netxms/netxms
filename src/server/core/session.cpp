@@ -655,7 +655,7 @@ void ClientSession::updateThread()
             sendMessage(&msg);
             MutexUnlock(m_mutexSendObjects);
             msg.DeleteAllVariables();
-            ((NetObj *)pUpdate->pData)->DecRefCount();
+            ((NetObj *)pUpdate->pData)->decRefCount();
             break;
          case INFO_CAT_ALARM:
             MutexLock(m_mutexSendAlarms);
@@ -2384,7 +2384,7 @@ void ClientSession::onObjectChange(NetObj *pObject)
          pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
          pUpdate->dwCategory = INFO_CAT_OBJECT_CHANGE;
          pUpdate->pData = pObject;
-         pObject->IncRefCount();
+         pObject->incRefCount();
          m_pUpdateQueue->Put(pUpdate);
       }
 }
@@ -4419,7 +4419,7 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
             if (bBind)
             {
                // Prevent loops
-               if (!pChild->IsChild(pParent->Id()))
+               if (!pChild->isChild(pParent->Id()))
                {
                   pParent->AddChild(pChild);
                   pChild->AddParent(pParent);
@@ -5079,7 +5079,7 @@ void ClientSession::forcedNodePoll(CSCPMessage *pRequest)
          // Check access rights
          if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
-            ((Node *)pObject)->IncRefCount();
+            ((Node *)pObject)->incRefCount();
             m_dwRefCount++;
 
             pData->pNode = (Node *)pObject;
@@ -5157,7 +5157,7 @@ void ClientSession::pollerThread(Node *pNode, int iPollType, DWORD dwRqId)
          sendPollerMsg(dwRqId, _T("Invalid poll type requested\r\n"));
          break;
    }
-   pNode->DecRefCount();
+   pNode->decRefCount();
 
    msg.SetCode(CMD_POLLING_INFO);
    msg.SetId(dwRqId);
@@ -5870,7 +5870,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
                                  break;
                            if (j == nodeList->size())
                            {
-                              pObject->IncRefCount();
+                              pObject->incRefCount();
                               nodeList->add((Node *)pObject);
                            }
                         }
@@ -5941,7 +5941,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
 			if (nodeList != NULL)
 			{
 				for(int i = 0; i < nodeList->size(); i++)
-					nodeList->get(i)->DecRefCount();
+					nodeList->get(i)->decRefCount();
 				delete nodeList;
 			}
       }
@@ -7760,7 +7760,7 @@ static THREAD_RESULT THREAD_CALL WalkerThread(void *pArg)
    ((WALKER_THREAD_ARGS *)pArg)->pSession->sendMessage(&msg);
 
    ((WALKER_THREAD_ARGS *)pArg)->pSession->decRefCount();
-   ((WALKER_THREAD_ARGS *)pArg)->pObject->DecRefCount();
+   ((WALKER_THREAD_ARGS *)pArg)->pObject->decRefCount();
    free(pArg);
    return THREAD_OK;
 }
@@ -7788,7 +7788,7 @@ void ClientSession::StartSnmpWalk(CSCPMessage *pRequest)
          {
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
             
-            pObject->IncRefCount();
+            pObject->incRefCount();
             m_dwRefCount++;
 
             pArg = (WALKER_THREAD_ARGS *)malloc(sizeof(WALKER_THREAD_ARGS));
@@ -12029,7 +12029,7 @@ void ClientSession::getThresholdSummary(CSCPMessage *request)
 				{
 					if (targets->get(i)->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 						varId = targets->get(i)->getThresholdSummary(&msg, varId);
-					targets->get(i)->DecRefCount();
+					targets->get(i)->decRefCount();
 				}
 				delete targets;
 			}

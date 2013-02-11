@@ -22,13 +22,10 @@
 
 #include "nxcore.h"
 
-
-//
-// Constructor
-//
-
-Condition::Condition()
-          :NetObj()
+/**
+ * Default constructor
+ */
+Condition::Condition() : NetObj()
 {
    m_pszScript = NULL;
    m_pDCIList = NULL;
@@ -45,13 +42,10 @@ Condition::Condition()
    m_dwDeactivationEventCode = EVENT_CONDITION_DEACTIVATED;
 }
 
-
-//
-// Constructor for new objects
-//
-
-Condition::Condition(BOOL bHidden)
-          :NetObj()
+/**
+ * Constructor for new objects
+ */
+Condition::Condition(BOOL bHidden) : NetObj()
 {
    m_pszScript = NULL;
    m_pDCIList = NULL;
@@ -364,36 +358,30 @@ DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
 
-
-//
-// Lock for polling
-//
-
+/**
+ * Lock for polling
+ */
 void Condition::LockForPoll()
 {
-   IncRefCount();
+   incRefCount();
    m_bQueuedForPolling = TRUE;
 }
 
-
-//
-// This method should be callsed by poller thread when poll finish
-//
-
+/**
+ * This method should be called by poller thread when poll finish
+ */
 void Condition::EndPoll()
 {
    LockData();
    m_bQueuedForPolling = FALSE;
    m_tmLastPoll = time(NULL);
    UnlockData();
-   DecRefCount();
+   decRefCount();
 }
 
-
-//
-// Check condition
-//
-
+/**
+ * Check condition
+ */
 void Condition::check()
 {
    NXSL_ServerEnv *pEnv;

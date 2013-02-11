@@ -22,13 +22,10 @@
 
 #include "nxcore.h"
 
-
-//
-// Implementation of "NetXMS object" class
-//
-
-NXSL_NetObjClass::NXSL_NetObjClass()
-                 :NXSL_Class()
+/**
+ * Implementation of "NetXMS object" class
+ */
+NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
 {
    _tcscpy(m_szName, _T("NetObj"));
 }
@@ -328,7 +325,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 			if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
 			{
 				Node *parentNode = iface->getParentNode();
-				if ((parentNode != NULL) && (peerNode->IsTrustedNode(parentNode->Id())))
+				if ((parentNode != NULL) && (peerNode->isTrustedNode(parentNode->Id())))
 				{
 					pValue = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, peerNode));
 				}
@@ -361,7 +358,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 				Node *peerNode = peerIface->getParentNode();
 				if ((parentNode != NULL) && (peerNode != NULL))
 				{
-					if (peerNode->IsTrustedNode(parentNode->Id()))
+					if (peerNode->isTrustedNode(parentNode->Id()))
 					{
 						pValue = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, peerIface));
 					}

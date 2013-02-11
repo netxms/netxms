@@ -1935,7 +1935,35 @@ void DCItem::filterInstanceList(StringList *instances)
          pValue = m_instanceFilter->getResult();
          if (pValue != NULL)
          {
-				if (pValue->getValueAsInt32() == 0)
+            bool accepted;
+            if (pValue->isArray())
+            {
+               NXSL_Array *array = pValue->getValueAsArray();
+               if (array->size() > 0)
+               {
+                  accepted = array->get(0)->getValueAsInt32() ? true : false;
+                  if (accepted && (array->size() > 1))
+                  {
+                     // transformed value
+                     const TCHAR *newValue = array->get(1)->getValueAsCString();
+                     if (newValue != NULL)
+                     {
+                        DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance %d \"%s\" replaced by \"%s\""),
+                                  m_szName, m_dwId, i, instances->getValue(i), newValue);
+                        instances->replace(i, newValue);
+                     }
+                  }
+               }
+               else
+               {
+                  accepted = true;
+               }
+            }
+            else
+            {
+               accepted = pValue->getValueAsInt32() ? true : false;
+            }
+				if (!accepted)
 				{
 					DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance \"%s\" removed by filtering script"),
 					          m_szName, m_dwId, instances->getValue(i));

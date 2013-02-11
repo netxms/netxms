@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,40 +22,34 @@
 
 #include "nxcore.h"
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 PolicyDeploymentJob::PolicyDeploymentJob(Node *node, AgentPolicy *policy, DWORD userId)
                     : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node->Id(), userId, false)
 {
 	m_node = node;
 	m_policy = policy;
-	node->IncRefCount();
-	policy->IncRefCount();
+	node->incRefCount();
+	policy->incRefCount();
 
 	TCHAR buffer[1024];
 	_sntprintf(buffer, 1024, _T("Deploy policy %s"), policy->Name());
 	setDescription(buffer);
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 PolicyDeploymentJob::~PolicyDeploymentJob()
 {
-	m_node->DecRefCount();
-	m_policy->DecRefCount();
+	m_node->decRefCount();
+	m_policy->decRefCount();
 }
 
-
-//
-// Run job
-//
-
+/**
+ * Run job
+ */
 bool PolicyDeploymentJob::run()
 {
 	bool success = false;
@@ -81,40 +75,34 @@ bool PolicyDeploymentJob::run()
 	return success;
 }
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 PolicyUninstallJob::PolicyUninstallJob(Node *node, AgentPolicy *policy, DWORD userId)
                    : ServerJob(_T("UNINSTALL_AGENT_POLICY"), _T("Uninstall agent policy"), node->Id(), userId, false)
 {
 	m_node = node;
 	m_policy = policy;
-	node->IncRefCount();
-	policy->IncRefCount();
+	node->incRefCount();
+	policy->incRefCount();
 
 	TCHAR buffer[1024];
 	_sntprintf(buffer, 1024, _T("Uninstall policy %s"), policy->Name());
 	setDescription(buffer);
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 PolicyUninstallJob::~PolicyUninstallJob()
 {
-	m_node->DecRefCount();
-	m_policy->DecRefCount();
+	m_node->decRefCount();
+	m_policy->decRefCount();
 }
 
-
-//
-// Run job
-//
-
+/**
+ * Run job
+ */
 bool PolicyUninstallJob::run()
 {
 	bool success = false;

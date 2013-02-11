@@ -506,7 +506,7 @@ void Cluster::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       if ((m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
 			 (m_pChildList[i]->Type() == OBJECT_NODE))
       {
-         m_pChildList[i]->IncRefCount();
+         m_pChildList[i]->incRefCount();
 			((Node *)m_pChildList[i])->lockForStatusPoll();
          ppPollList[dwPollListSize++] = m_pChildList[i];
       }
@@ -623,7 +623,7 @@ void Cluster::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	// Cleanup
 	for(i = 0; i < dwPollListSize; i++)
 	{
-		ppPollList[i]->DecRefCount();
+		ppPollList[i]->decRefCount();
 	}
 	safe_free(ppPollList);
 

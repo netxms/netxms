@@ -278,7 +278,7 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
 		{
 			((Cluster *)pObject)->statusPoll(NULL, 0, (long)arg);
 		}
-      pObject->DecRefCount();
+      pObject->decRefCount();
    }
    SetPollerState((long)arg, _T("finished"));
    return THREAD_OK;
@@ -310,7 +310,7 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
       _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->Name(), pNode->Id());
       SetPollerState((long)arg, szBuffer);
       pNode->configurationPoll(NULL, 0, (long)arg, 0);
-      pNode->DecRefCount();
+      pNode->decRefCount();
    }
    SetPollerState((long)arg, _T("finished"));
    return THREAD_OK;
@@ -342,7 +342,7 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
       _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->Name(), pNode->Id());
       SetPollerState((long)arg, szBuffer);
       pNode->updateRoutingTable();
-      pNode->DecRefCount();
+      pNode->decRefCount();
    }
    SetPollerState((long)arg, _T("finished"));
    return THREAD_OK;
@@ -459,7 +459,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 		if (pNode->getRuntimeFlags() & NDF_DELETE_IN_PROGRESS)
 		{
 	      pNode->setDiscoveryPollTimeStamp();
-	      pNode->DecRefCount();
+	      pNode->decRefCount();
 			continue;
 		}
 
@@ -497,7 +497,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       DbgPrintf(4, _T("Finished discovery poll for node %s (%s)"),
                 pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
       pNode->setDiscoveryPollTimeStamp();
-      pNode->DecRefCount();
+      pNode->decRefCount();
    }
    g_nodePollerQueue.Clear();
    g_nodePollerQueue.Put(INVALID_POINTER_VALUE);
@@ -559,7 +559,7 @@ static THREAD_RESULT THREAD_CALL TopologyPoller(void *arg)
       _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), node->Name(), node->Id());
       SetPollerState((long)arg, szBuffer);
 		node->topologyPoll(NULL, 0, CAST_FROM_POINTER(arg, int));
-      node->DecRefCount();
+      node->decRefCount();
    }
    SetPollerState((long)arg, _T("finished"));
    return THREAD_OK;
@@ -590,7 +590,7 @@ static THREAD_RESULT THREAD_CALL BusinessServicePoller(void *arg)
       _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), service->Name(), service->Id());
       SetPollerState((long)arg, szBuffer);
 		service->poll(NULL, 0, CAST_FROM_POINTER(arg, int));
-      service->DecRefCount();
+      service->decRefCount();
    }
    SetPollerState((long)arg, _T("finished"));
    return THREAD_OK;
@@ -718,35 +718,35 @@ static void QueueForPolling(NetObj *object, void *data)
 				Node *node = (Node *)object;
 				if (node->isReadyForConfigurationPoll())
 				{
-					node->IncRefCount();
+					node->incRefCount();
 					node->lockForConfigurationPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for configuration poll"), (int)node->Id(), node->Name());
 					g_configPollQueue.Put(node);
 				}
 				if (node->isReadyForStatusPoll())
 				{
-					node->IncRefCount();
+					node->incRefCount();
 					node->lockForStatusPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for status poll"), (int)node->Id(), node->Name());
 					g_statusPollQueue.Put(node);
 				}
 				if (node->isReadyForRoutePoll())
 				{
-					node->IncRefCount();
+					node->incRefCount();
 					node->lockForRoutePoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for routing table poll"), (int)node->Id(), node->Name());
 					g_routePollQueue.Put(node);
 				}
 				if (node->isReadyForDiscoveryPoll())
 				{
-					node->IncRefCount();
+					node->incRefCount();
 					node->lockForDiscoveryPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for discovery poll"), (int)node->Id(), node->Name());
 					g_discoveryPollQueue.Put(node);
 				}
 				if (node->isReadyForTopologyPoll())
 				{
-					node->IncRefCount();
+					node->incRefCount();
 					node->lockForTopologyPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for topology poll"), (int)node->Id(), node->Name());
 					g_topologyPollQueue.Put(node);
@@ -769,7 +769,7 @@ static void QueueForPolling(NetObj *object, void *data)
 				Cluster *cluster = (Cluster *)object;
 				if (cluster->isReadyForStatusPoll())
 				{
-					cluster->IncRefCount();
+					cluster->incRefCount();
 					cluster->lockForStatusPoll();
 					DbgPrintf(6, _T("Cluster %d \"%s\" queued for status poll"), (int)cluster->Id(), cluster->Name());
 					g_statusPollQueue.Put(cluster);
@@ -781,7 +781,7 @@ static void QueueForPolling(NetObj *object, void *data)
 				BusinessService *service = (BusinessService *)object;
 				if (service->isReadyForPolling())
 				{
-					service->IncRefCount();
+					service->incRefCount();
 					service->lockForPolling();
 					DbgPrintf(6, _T("Business service %d \"%s\" queued for poll"), (int)object->Id(), object->Name());
 					g_businessServicePollerQueue.Put(service);
@@ -913,7 +913,7 @@ void ResetDiscoveryPoller()
       if (pNode != INVALID_POINTER_VALUE)
       {
          pNode->setDiscoveryPollTimeStamp();
-         pNode->DecRefCount();
+         pNode->decRefCount();
       }
    }
    while((pInfo = (NEW_NODE *)g_nodePollerQueue.Get()) != NULL)

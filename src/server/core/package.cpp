@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Check if package with specific parameters already installed
-//
-
+/**
+ * Check if package with specific parameters already installed
+ */
 BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform)
 {
    DB_RESULT hResult;
@@ -303,16 +301,14 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
          bSuccess ? (WORD)DEPLOYMENT_STATUS_COMPLETED : (WORD)DEPLOYMENT_STATUS_FAILED);
       msg.SetVariable(VID_ERROR_MESSAGE, pszErrorMsg);
       pStartup->pSession->sendMessage(&msg);
-      pNode->DecRefCount();
+      pNode->decRefCount();
    }
    return THREAD_OK;
 }
 
-
-//
-// Package deployment thread
-//
-
+/**
+ * Package deployment thread
+ */
 THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
 {
    DT_STARTUP_INFO *pStartup = (DT_STARTUP_INFO *)pArg;

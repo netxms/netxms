@@ -267,7 +267,7 @@ void NodeLink::applyTemplates()
 	{
 		SlmCheck *tmpl = templates.get(j);
 		applyTemplate(tmpl);
-		tmpl->DecRefCount();
+		tmpl->decRefCount();
 	}
 }
 

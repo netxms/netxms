@@ -24,10 +24,9 @@
 
 #define QUERY_LENGTH		(512)
 
-//
-// Service default constructor
-//
-
+/**
+ * Service default constructor
+ */
 BusinessService::BusinessService() : ServiceContainer()
 {
 	m_busy = false;
@@ -240,11 +239,9 @@ void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	m_busy = false;
 }
 
-
-//
-// Get template checks applicable for given target
-//
-
+/**
+ * Get template checks applicable for given target
+ */
 void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArray<SlmCheck> *templates)
 {
 	LockChildList(FALSE);
@@ -253,7 +250,7 @@ void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArr
 		if ((m_pChildList[i]->Type() == OBJECT_SLMCHECK) &&
           ((SlmCheck *)m_pChildList[i])->isTemplate())
 		{
-			m_pChildList[i]->IncRefCount();
+			m_pChildList[i]->incRefCount();
 			templates->add((SlmCheck *)m_pChildList[i]);
 		}
 	}

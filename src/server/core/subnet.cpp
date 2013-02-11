@@ -260,7 +260,7 @@ void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD 
 			continue;
 		if (!includeEndNodes && !((Node *)m_pChildList[i])->isRouter())
 			continue;
-		m_pChildList[i]->IncRefCount();
+		m_pChildList[i]->incRefCount();
 		nodes.add((Node *)m_pChildList[i]);
 	}
 	UnlockChildList();
@@ -269,7 +269,7 @@ void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, DWORD 
 	{
 		Node *n = nodes.get(j);
 		n->buildIPTopologyInternal(topology, nDepth - 1, m_dwId, includeEndNodes);
-		n->DecRefCount();
+		n->decRefCount();
 	}
 }
 

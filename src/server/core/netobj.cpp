@@ -349,15 +349,13 @@ void NetObj::AddChild(NetObj *pObject)
    m_pChildList = (NetObj **)realloc(m_pChildList, sizeof(NetObj *) * (m_dwChildCount + 1));
    m_pChildList[m_dwChildCount++] = pObject;
    UnlockChildList();
-	IncRefCount();
+	incRefCount();
    Modify();
 }
 
-
-//
-// Add reference to parent object
-//
-
+/**
+ * Add reference to parent object
+ */
 void NetObj::AddParent(NetObj *pObject)
 {
    DWORD i;
@@ -372,7 +370,7 @@ void NetObj::AddParent(NetObj *pObject)
    m_pParentList = (NetObj **)realloc(m_pParentList, sizeof(NetObj *) * (m_dwParentCount + 1));
    m_pParentList[m_dwParentCount++] = pObject;
    UnlockParentList();
-	IncRefCount();
+	incRefCount();
    Modify();
 }
 
@@ -407,15 +405,13 @@ void NetObj::DeleteChild(NetObj *pObject)
       m_pChildList = NULL;
    }
    UnlockChildList();
-	DecRefCount();
+	decRefCount();
    Modify();
 }
 
-
-//
-// Delete reference to parent object
-//
-
+/**
+ * Delete reference to parent object
+ */
 void NetObj::DeleteParent(NetObj *pObject)
 {
    DWORD i;
@@ -441,7 +437,7 @@ void NetObj::DeleteParent(NetObj *pObject)
       m_pParentList = NULL;
    }
    UnlockParentList();
-	DecRefCount();
+	decRefCount();
    Modify();
 }
 
@@ -480,7 +476,7 @@ void NetObj::deleteObject()
    {
       m_pParentList[i]->DeleteChild(this);
       m_pParentList[i]->calculateCompoundStatus();
-		DecRefCount();
+		decRefCount();
    }
    free(m_pParentList);
    m_pParentList = NULL;
@@ -493,7 +489,7 @@ void NetObj::deleteObject()
    for(i = 0; i < m_dwChildCount; i++)
    {
       m_pChildList[i]->DeleteParent(this);
-		DecRefCount();
+		decRefCount();
       if (m_pChildList[i]->isOrphaned())
 			m_pChildList[i]->deleteObject();
    }
@@ -1050,28 +1046,28 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
    UnlockParentList();
 }
 
-
-//
-// Check if given object is an our child (possibly indirect, i.e child of child)
-//
-
-BOOL NetObj::IsChild(DWORD dwObjectId)
+/**
+ * Check if given object is an our child (possibly indirect, i.e child of child)
+ *
+ * @param id object ID to test
+ */
+bool NetObj::isChild(DWORD id)
 {
    DWORD i;
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    // Check for our own ID (object ID should never change, so we may not lock object's data)
-   if (m_dwId == dwObjectId)
-      bResult = TRUE;
+   if (m_dwId == id)
+      bResult = true;
 
    // First, walk through our own child list
    if (!bResult)
    {
       LockChildList(FALSE);
       for(i = 0; i < m_dwChildCount; i++)
-         if (m_pChildList[i]->Id() == dwObjectId)
+         if (m_pChildList[i]->Id() == id)
          {
-            bResult = TRUE;
+            bResult = true;
             break;
          }
       UnlockChildList();
@@ -1082,9 +1078,9 @@ BOOL NetObj::IsChild(DWORD dwObjectId)
    {
       LockChildList(FALSE);
       for(i = 0; i < m_dwChildCount; i++)
-         if (m_pChildList[i]->IsChild(dwObjectId))
+         if (m_pChildList[i]->isChild(id))
          {
-            bResult = TRUE;
+            bResult = true;
             break;
          }
       UnlockChildList();
@@ -1093,13 +1089,11 @@ BOOL NetObj::IsChild(DWORD dwObjectId)
    return bResult;
 }
 
-
-//
-// Send message to client, who requests poll, if any
-// This method is used by Node and Interface class objects
-//
-
-void NetObj::SendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...)
+/**
+ * Send message to client, who requests poll, if any
+ * This method is used by Node and Interface class objects
+ */
+void NetObj::sendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...)
 {
    if (m_pPollRequestor != NULL)
    {
@@ -1134,7 +1128,7 @@ void NetObj::addChildNodesToList(ObjectArray<Node> *nodeList, DWORD dwUserId)
                break;
          if (j == nodeList->size())
          {
-            m_pChildList[i]->IncRefCount();
+            m_pChildList[i]->incRefCount();
 				nodeList->add((Node *)m_pChildList[i]);
          }
       }
@@ -1169,7 +1163,7 @@ void NetObj::addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList,
                break;
          if (j == dctList->size())
          {
-            m_pChildList[i]->IncRefCount();
+            m_pChildList[i]->incRefCount();
 				dctList->add((DataCollectionTarget *)m_pChildList[i]);
          }
       }
@@ -1359,20 +1353,20 @@ BOOL NetObj::saveTrustedNodes(DB_HANDLE hdb)
  * Check if given node is in trust list
  * Will always return TRUE if system parameter CheckTrustedNodes set to 0
  */
-BOOL NetObj::IsTrustedNode(DWORD id)
+bool NetObj::isTrustedNode(DWORD id)
 {
-	BOOL rc;
+	bool rc;
 
 	if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
 	{
 		DWORD i;
 
 		LockData();
-		for(i = 0, rc = FALSE; i < m_dwNumTrustedNodes; i++)
+		for(i = 0, rc = false; i < m_dwNumTrustedNodes; i++)
 		{
 			if (m_pdwTrustedNodes[i] == id)
 			{
-				rc = TRUE;
+				rc = true;
 				break;
 			}
 		}
@@ -1380,7 +1374,7 @@ BOOL NetObj::IsTrustedNode(DWORD id)
 	}
 	else
 	{
-		rc = TRUE;
+		rc = true;
 	}
 	return rc;
 }

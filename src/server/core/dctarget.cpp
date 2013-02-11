@@ -370,7 +370,7 @@ void DataCollectionTarget::queueItemsForPolling(Queue *pPollerQueue)
       if (object->isReadyForPolling(currTime))
       {
          object->setBusyFlag(TRUE);
-         IncRefCount();   // Increment reference count for each queued DCI
+         incRefCount();   // Increment reference count for each queued DCI
          pPollerQueue->Put(object);
 			DbgPrintf(8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_szName, object->getId(), object->getName());
       }
@@ -452,7 +452,7 @@ DWORD DataCollectionTarget::getInternalItem(const TCHAR *szParam, DWORD dwBufSiz
 
       if (pObject != NULL)
       {
-			if (pObject->IsTrustedNode(m_dwId))
+			if (pObject->isTrustedNode(m_dwId))
 			{
 				_sntprintf(szBuffer, dwBufSize, _T("%d"), pObject->Status());
 			}

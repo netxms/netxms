@@ -39,7 +39,7 @@ NetworkPath::~NetworkPath()
 {
 	for(int i = 0; i < m_hopCount; i++)
 		if (m_path[i].object != NULL)
-			m_path[i].object->DecRefCount();
+			m_path[i].object->decRefCount();
 	safe_free(m_path);
 }
 
@@ -59,7 +59,7 @@ void NetworkPath::addHop(DWORD nextHop, NetObj *currentObject, DWORD ifIndex, bo
 	m_path[m_hopCount].isVpn = isVpn;
 	m_hopCount++;
 	if (currentObject != NULL)
-		currentObject->IncRefCount();
+		currentObject->incRefCount();
 }
 
 /**

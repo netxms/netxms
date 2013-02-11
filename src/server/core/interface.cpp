@@ -333,8 +333,8 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
       return;     // Cannot find parent node, which is VERY strange
    }
 
-   SendPollerMsg(dwRqId, _T("   Starting status poll on interface %s\r\n"), m_szName);
-   SendPollerMsg(dwRqId, _T("      Current interface status is %s\r\n"), g_szStatusText[m_iStatus]);
+   sendPollerMsg(dwRqId, _T("   Starting status poll on interface %s\r\n"), m_szName);
+   sendPollerMsg(dwRqId, _T("      Current interface status is %s\r\n"), g_szStatusText[m_iStatus]);
 
 	int adminState = IF_ADMIN_STATE_UNKNOWN;
 	int operState = IF_OPER_STATE_UNKNOWN;
@@ -344,17 +344,17 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
    if ((pNode->getFlags() & NF_IS_NATIVE_AGENT) &&
        (!(pNode->getFlags() & NF_DISABLE_NXCP)) && (!(pNode->getRuntimeFlags() & NDF_AGENT_UNREACHABLE)))
    {
-      SendPollerMsg(dwRqId, _T("      Retrieving interface status from NetXMS agent\r\n"));
+      sendPollerMsg(dwRqId, _T("      Retrieving interface status from NetXMS agent\r\n"));
       pNode->getInterfaceStatusFromAgent(m_dwIfIndex, &adminState, &operState);
 		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new state from NetXMS agent: adinState=%d operState=%d"), m_dwId, m_szName, adminState, operState);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
-			SendPollerMsg(dwRqId, POLLER_INFO _T("      Interface status retrieved from NetXMS agent\r\n"));
+			sendPollerMsg(dwRqId, POLLER_INFO _T("      Interface status retrieved from NetXMS agent\r\n"));
          bNeedPoll = FALSE;
 		}
 		else
 		{
-			SendPollerMsg(dwRqId, POLLER_WARNING _T("      Unable to retrieve interface status from NetXMS agent\r\n"));
+			sendPollerMsg(dwRqId, POLLER_WARNING _T("      Unable to retrieve interface status from NetXMS agent\r\n"));
 		}
    }
 
@@ -362,17 +362,17 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
        (!(pNode->getFlags() & NF_DISABLE_SNMP)) && (!(pNode->getRuntimeFlags() & NDF_SNMP_UNREACHABLE)) &&
 		 (pTransport != NULL))
    {
-      SendPollerMsg(dwRqId, _T("      Retrieving interface status from SNMP agent\r\n"));
+      sendPollerMsg(dwRqId, _T("      Retrieving interface status from SNMP agent\r\n"));
       pNode->getInterfaceStatusFromSNMP(pTransport, m_dwIfIndex, &adminState, &operState);
 		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new state from SNMP: adminState=%d operState=%d"), m_dwId, m_szName, adminState, operState);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
-			SendPollerMsg(dwRqId, POLLER_INFO _T("      Interface status retrieved from SNMP agent\r\n"));
+			sendPollerMsg(dwRqId, POLLER_INFO _T("      Interface status retrieved from SNMP agent\r\n"));
          bNeedPoll = FALSE;
 		}
 		else
 		{
-			SendPollerMsg(dwRqId, POLLER_WARNING _T("      Unable to retrieve interface status from SNMP agent\r\n"));
+			sendPollerMsg(dwRqId, POLLER_WARNING _T("      Unable to retrieve interface status from SNMP agent\r\n"));
 		}
    }
    
@@ -382,7 +382,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
       if ((pNode->getFlags() & NF_DISABLE_ICMP) || bClusterSync || (m_dwIpAddr == 0) || isLoopback())
       {
 			// Interface doesn't have an IP address, so we can't ping it
-			SendPollerMsg(dwRqId, POLLER_WARNING _T("      Interface status cannot be determined\r\n"));
+			sendPollerMsg(dwRqId, POLLER_WARNING _T("      Interface status cannot be determined\r\n"));
 			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): cannot use ping for status check"), m_dwId, m_szName);
       }
       else
@@ -401,7 +401,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
 
 			if (icmpProxy != 0)
 			{
-				SendPollerMsg(dwRqId, _T("      Starting ICMP ping via proxy\r\n"));
+				sendPollerMsg(dwRqId, _T("      Starting ICMP ping via proxy\r\n"));
 				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): ping via proxy [%u]"), m_dwId, m_szName, icmpProxy);
 				Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
 				if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
@@ -438,18 +438,18 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
 					else
 					{
 						DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): cannot connect to agent on proxy node"), m_dwId, m_szName);
-						SendPollerMsg(dwRqId, POLLER_ERROR _T("      Unable to establish connection with proxy node\r\n"));
+						sendPollerMsg(dwRqId, POLLER_ERROR _T("      Unable to establish connection with proxy node\r\n"));
 					}
 				}
 				else
 				{
 					DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): proxy node not available"), m_dwId, m_szName);
-					SendPollerMsg(dwRqId, POLLER_ERROR _T("      ICMP proxy not available\r\n"));
+					sendPollerMsg(dwRqId, POLLER_ERROR _T("      ICMP proxy not available\r\n"));
 				}
 			}
 			else	// not using ICMP proxy
 			{
-				SendPollerMsg(dwRqId, _T("      Starting ICMP ping\r\n"));
+				sendPollerMsg(dwRqId, _T("      Starting ICMP ping\r\n"));
 				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,1500,NULL,%d)"), m_dwId, m_szName, htonl(m_dwIpAddr), g_dwPingSize);
 				DWORD dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL, g_dwPingSize);
 				if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
@@ -531,7 +531,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
 	}
 
 	int requiredPolls = (m_iRequiredPollCount > 0) ? m_iRequiredPollCount : g_nRequiredPolls;
-	SendPollerMsg(dwRqId, _T("      Interface is %s for %d poll%s (%d poll%s required for status change)\r\n"),
+	sendPollerMsg(dwRqId, _T("      Interface is %s for %d poll%s (%d poll%s required for status change)\r\n"),
 	              g_szStatusText[newStatus], m_iPollCount, (m_iPollCount == 1) ? _T("") : _T("s"),
 	              requiredPolls, (requiredPolls == 1) ? _T("") : _T("s"));
 	DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): newStatus=%d oldStatus=%d pollCount=%d requiredPolls=%d"),
@@ -567,7 +567,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
 		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_dwId, m_szName, m_iStatus, newStatus);
 		m_iStatus = newStatus;
 		m_iPendingStatus = -1;	// Invalidate pending status
-		SendPollerMsg(dwRqId, _T("      Interface status changed to %s\r\n"), g_szStatusText[m_iStatus]);
+		sendPollerMsg(dwRqId, _T("      Interface status changed to %s\r\n"), g_szStatusText[m_iStatus]);
 		PostEventEx(pEventQueue, 
 		            (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_iStatus] : statusToEvent[m_iStatus],
 						pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask, m_dwIfIndex);
@@ -588,8 +588,8 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
 	}
 	UnlockData();
 	
-	SendPollerMsg(dwRqId, _T("      Interface status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
-	SendPollerMsg(dwRqId, _T("   Finished status poll on interface %s\r\n"), m_szName);
+	sendPollerMsg(dwRqId, _T("      Interface status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
+	sendPollerMsg(dwRqId, _T("   Finished status poll on interface %s\r\n"), m_szName);
 }
 
 
@@ -628,7 +628,7 @@ void Interface::paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transp
 #define PAE_STATE_TEXT(x) ((((x) <= PAE_STATE_RESTART) && ((x) >= 0)) ? paeStateText[x] : paeStateText[0])
 #define BACKEND_STATE_TEXT(x) ((((x) <= BACKEND_STATE_IGNORE) && ((x) >= 0)) ? backendStateText[x] : backendStateText[0])
 
-   SendPollerMsg(dwRqId, _T("      Checking port 802.1x status...\r\n"));
+   sendPollerMsg(dwRqId, _T("      Checking port 802.1x status...\r\n"));
 
 	TCHAR oid[256];
 	LONG paeState = PAE_STATE_UNKNOWN, backendState = BACKEND_STATE_UNKNOWN;
@@ -642,7 +642,7 @@ void Interface::paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transp
 
 	if (m_dot1xPaeAuthState != (WORD)paeState)
 	{
-	   SendPollerMsg(dwRqId, _T("      Port PAE state changed to %s...\r\n"), PAE_STATE_TEXT(paeState));
+	   sendPollerMsg(dwRqId, _T("      Port PAE state changed to %s...\r\n"), PAE_STATE_TEXT(paeState));
 		modified = true;
 
 		PostEvent(EVENT_8021X_PAE_STATE_CHANGED, node->Id(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
@@ -656,7 +656,7 @@ void Interface::paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transp
 
 	if (m_dot1xBackendAuthState != (WORD)backendState)
 	{
-	   SendPollerMsg(dwRqId, _T("      Port backend state changed to %s...\r\n"), BACKEND_STATE_TEXT(backendState));
+	   sendPollerMsg(dwRqId, _T("      Port backend state changed to %s...\r\n"), BACKEND_STATE_TEXT(backendState));
 		modified = true;
 
 		PostEvent(EVENT_8021X_BACKEND_STATE_CHANGED, node->Id(), "dsdsds", backendState, BACKEND_STATE_TEXT(backendState),

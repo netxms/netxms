@@ -119,19 +119,15 @@ extern DWORD g_dwConditionPollingInterval;
 #define POLL_SNMP             1
 #define POLL_NATIVE_AGENT     2
 
-
-//
-// Zone types
-//
-
+/**
+ * Zone types
+ */
 #define ZONE_TYPE_PASSIVE     0
 #define ZONE_TYPE_ACTIVE      1
 
-
-//
-// Template update types
-//
-
+/**
+ * Template update types
+ */
 #define APPLY_TEMPLATE        0
 #define REMOVE_TEMPLATE       1
 
@@ -319,7 +315,7 @@ protected:
 	BOOL loadTrustedNodes();
 	BOOL saveTrustedNodes(DB_HANDLE hdb);
 
-   void SendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...);
+   void sendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...);
 
    virtual void PrepareForDeletion();
    virtual void OnObjectDelete(DWORD dwObjectId);
@@ -347,12 +343,12 @@ public:
 	BOOL isSystem() { return m_bIsSystem; }
 	void setSystemFlag(BOOL bFlag) { m_bIsSystem = bFlag; }
 
-   DWORD RefCount();
-   void IncRefCount();
-   void DecRefCount();
+   DWORD getRefCount();
+   void incRefCount();
+   void decRefCount();
 
-   BOOL IsChild(DWORD dwObjectId);
-	BOOL IsTrustedNode(DWORD id);
+   bool isChild(DWORD id);
+	bool isTrustedNode(DWORD id);
 
    void AddChild(NetObj *pObject);     // Add reference to child object
    void AddParent(NetObj *pObject);    // Add reference to parent object
@@ -413,7 +409,7 @@ public:
 /**
  * Get object's reference count
  */
-inline DWORD NetObj::RefCount()
+inline DWORD NetObj::getRefCount()
 { 
    DWORD dwRefCount;
 
@@ -426,7 +422,7 @@ inline DWORD NetObj::RefCount()
 /**
  * Increment object's reference count
  */
-inline void NetObj::IncRefCount()
+inline void NetObj::incRefCount()
 { 
    MutexLock(m_mutexRefCount);
    m_dwRefCount++;
@@ -436,7 +432,7 @@ inline void NetObj::IncRefCount()
 /**
  * Decrement object's reference count
  */
-inline void NetObj::DecRefCount()
+inline void NetObj::decRefCount()
 { 
    MutexLock(m_mutexRefCount);
    if (m_dwRefCount > 0) 

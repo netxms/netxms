@@ -51,7 +51,7 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
               : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node->Id(), userId, createOnHold)
 {
 	m_node = node;
-	node->IncRefCount();
+	node->incRefCount();
 
 	TCHAR buffer[1024];
 	_sntprintf(buffer, 1024, _T("Upload file %s"), GetCleanFileName(localFile));
@@ -71,7 +71,7 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
 
 FileUploadJob::~FileUploadJob()
 {
-	m_node->DecRefCount();
+	m_node->decRefCount();
 	safe_free(m_localFile);
 	safe_free(m_remoteFile);
 	safe_free(m_info);

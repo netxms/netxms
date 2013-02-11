@@ -186,7 +186,7 @@ BOOL EPRule::MatchSource(DWORD dwObjectId)
             pObject = FindObjectById(m_pdwSourceList[i]);
             if (pObject != NULL)
             {
-               if (pObject->IsChild(dwObjectId))
+               if (pObject->isChild(dwObjectId))
                {
                   bMatch = TRUE;
                   break;

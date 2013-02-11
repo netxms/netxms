@@ -137,10 +137,10 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 			if (object != NULL)
 			{
 				if ((object->Type() == OBJECT_NODE) &&
-					(object->IsTrustedNode((target != NULL) ? target->Id() : 0)))
+					(object->isTrustedNode((target != NULL) ? target->Id() : 0)))
 				{
 					target = (Node *)object;
-					target->IncRefCount();
+					target->incRefCount();
 				}
 				else
 				{
@@ -149,7 +149,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
 					if (target != NULL)
 					{
-						target->DecRefCount();
+						target->decRefCount();
 						target = NULL;
 					}
 				}
@@ -158,7 +158,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 			{
 				if (target != NULL)
 				{
-					target->DecRefCount();
+					target->decRefCount();
 					target = NULL;
 				}
 			}
@@ -201,10 +201,10 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
          }
 
          // Decrement node's usage counter
-         target->DecRefCount();
+         target->decRefCount();
 			if ((pItem->getProxyNode() != 0) && (pItem->getTarget() != NULL))
 			{
-				pItem->getTarget()->DecRefCount();
+				pItem->getTarget()->decRefCount();
 			}
       }
       else     /* target == NULL */

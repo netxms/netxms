@@ -339,14 +339,14 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
       return;     // Service without host node, which is VERY strange
    }
 
-   SendPollerMsg(dwRqId, _T("   Starting status poll on network service %s\r\n"), m_szName);
-   SendPollerMsg(dwRqId, _T("      Current service status is %s\r\n"), g_szStatusTextSmall[m_iStatus]);
+   sendPollerMsg(dwRqId, _T("   Starting status poll on network service %s\r\n"), m_szName);
+   sendPollerMsg(dwRqId, _T("      Current service status is %s\r\n"), g_szStatusTextSmall[m_iStatus]);
 
    if (m_dwPollerNode != 0)
    {
       pNode = (Node *)FindObjectById(m_dwPollerNode);
       if (pNode != NULL)
-         pNode->IncRefCount();
+         pNode->incRefCount();
       else
          pNode = pPollerNode;
    }
@@ -360,7 +360,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
       TCHAR szBuffer[16];
       DWORD dwStatus;
 
-      SendPollerMsg(dwRqId, _T("      Polling service from node %s [%s]\r\n"),
+      sendPollerMsg(dwRqId, _T("      Polling service from node %s [%s]\r\n"),
                     pNode->Name(), IpToStr(pNode->IpAddr(), szBuffer));
       if (pNode->CheckNetworkService(&dwStatus, 
                                      (m_dwIpAddr == 0) ? m_pHostNode->IpAddr() : m_dwIpAddr,
@@ -368,20 +368,20 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
                                      m_pszRequest, m_pszResponse) == ERR_SUCCESS)
       {
          newStatus = (dwStatus == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
-         SendPollerMsg(dwRqId, _T("      Agent reports service status [%d]\r\n"), dwStatus);
+         sendPollerMsg(dwRqId, _T("      Agent reports service status [%d]\r\n"), dwStatus);
       }
       else
       {
-         SendPollerMsg(dwRqId, _T("      Unable to check service status due to agent or communication error\r\n"));
+         sendPollerMsg(dwRqId, _T("      Unable to check service status due to agent or communication error\r\n"));
          newStatus = STATUS_UNKNOWN;
       }
 
       if (pNode != pPollerNode)
-         pNode->DecRefCount();
+         pNode->decRefCount();
    }
    else
    {
-      SendPollerMsg(dwRqId, _T("      Unable to find node object for poll\r\n"));
+      sendPollerMsg(dwRqId, _T("      Unable to find node object for poll\r\n"));
       newStatus = STATUS_UNKNOWN;
    }
 
@@ -408,7 +408,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
 		{
 			m_iStatus = newStatus;
 			m_iPendingStatus = -1;	// Invalidate pending status
-			SendPollerMsg(dwRqId, _T("      Service status changed to %s\r\n"), g_szStatusTextSmall[m_iStatus]);
+			sendPollerMsg(dwRqId, _T("      Service status changed to %s\r\n"), g_szStatusTextSmall[m_iStatus]);
 			PostEventEx(pEventQueue, m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : 
 							(m_iStatus == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
 							m_pHostNode->Id(), "sdd", m_szName, m_dwId, m_iServiceType);
@@ -417,7 +417,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
 			UnlockData();
 		}
    }
-   SendPollerMsg(dwRqId, _T("   Finished status poll on network service %s\r\n"), m_szName);
+   sendPollerMsg(dwRqId, _T("   Finished status poll on network service %s\r\n"), m_szName);
 }
 
 /**

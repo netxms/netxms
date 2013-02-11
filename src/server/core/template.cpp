@@ -803,7 +803,7 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
    BOOL bErrors = FALSE;
 
    // Link node to template
-   if (!IsChild(target->Id()))
+   if (!isChild(target->Id()))
    {
       AddChild(target);
       target->AddParent(this);
@@ -845,7 +845,7 @@ void Template::queueUpdate()
    for(i = 0; i < m_dwChildCount; i++)
       if ((m_pChildList[i]->Type() == OBJECT_NODE) || (m_pChildList[i]->Type() == OBJECT_MOBILEDEVICE))
       {
-         IncRefCount();
+         incRefCount();
          pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
          pInfo->iUpdateType = APPLY_TEMPLATE;
          pInfo->pTemplate = this;
@@ -863,7 +863,7 @@ void Template::queueRemoveFromTarget(DWORD targetId, BOOL bRemoveDCI)
    TEMPLATE_UPDATE_INFO *pInfo;
 
    LockData();
-   IncRefCount();
+   incRefCount();
    pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
    pInfo->iUpdateType = REMOVE_TEMPLATE;
    pInfo->pTemplate = this;

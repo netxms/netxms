@@ -22,18 +22,14 @@
 
 #include "nxcore.h"
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 void NetObjDelete(NetObj *pObject);
 
-
-//
-// Save objects to database
-//
-
+/**
+ * Save objects to database
+ */
 void SaveObjects(DB_HANDLE hdb)
 {
 	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
@@ -43,7 +39,7 @@ void SaveObjects(DB_HANDLE hdb)
    	NetObj *object = objects->get(i);
       if (object->isDeleted())
       {
-         if (object->RefCount() == 0)
+         if (object->getRefCount() == 0)
          {
             DbgPrintf(4, _T("* Syncer * Object %d \"%s\" deleted"), object->Id(), object->Name());
             object->DeleteFromDB();
@@ -52,7 +48,7 @@ void SaveObjects(DB_HANDLE hdb)
          else
          {
             DbgPrintf(3, _T("* Syncer * Unable to delete object with id %d because it is being referenced %d time(s)"),
-                      object->Id(), object->RefCount());
+                      object->Id(), object->getRefCount());
          }
       }
 		else if (object->isModified())
