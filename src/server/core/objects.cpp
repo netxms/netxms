@@ -333,7 +333,8 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(pObject->Id(), pObject);
-				g_idxNodeByAddr.put(pObject->IpAddr(), pObject);
+				if (pObject->IpAddr() != 0)
+					g_idxNodeByAddr.put(pObject->IpAddr(), pObject);
             break;
 			case OBJECT_MOBILEDEVICE:
 				g_idxMobileDeviceById.put(pObject->Id(), pObject);
@@ -460,7 +461,8 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 			break;
       case OBJECT_NODE:
 			g_idxNodeById.remove(pObject->Id());
-			g_idxNodeByAddr.remove(pObject->IpAddr());
+			if (pObject->IpAddr() != 0)
+				g_idxNodeByAddr.remove(pObject->IpAddr());
          break;
       case OBJECT_MOBILEDEVICE:
 			g_idxMobileDeviceById.remove(pObject->Id());

@@ -884,6 +884,7 @@ protected:
 	void addVrrpInterfaces(InterfaceList *ifList);
 	BOOL resolveName(BOOL useOnlyDNS);
    void setAgentProxy(AgentConnection *pConn);
+	void setPrimaryIPAddress(DWORD addr);
 
    DWORD getInterfaceCount(Interface **ppInterface);
 
@@ -1362,8 +1363,10 @@ public:
 
 	void addToIndex(Subnet *subnet) { m_idxSubnetByAddr->put(subnet->IpAddr(), subnet); }
 	void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->IpAddr(), iface); }
+	void addToIndex(Node *node) { m_idxNodeByAddr->put(node->IpAddr(), node); }
 	void removeFromIndex(Subnet *subnet) { m_idxSubnetByAddr->remove(subnet->IpAddr()); }
 	void removeFromIndex(Interface *iface) { m_idxInterfaceByAddr->remove(iface->IpAddr()); }
+	void removeFromIndex(Node *node) { m_idxNodeByAddr->remove(node->IpAddr()); }
 	void updateInterfaceIndex(DWORD oldIp, DWORD newIp, Interface *iface);
 	Subnet *getSubnetByAddr(DWORD ipAddr) { return(Subnet *) m_idxSubnetByAddr->get(ipAddr); }
 	Interface *getInterfaceByAddr(DWORD ipAddr) { return (Interface *)m_idxInterfaceByAddr->get(ipAddr); }

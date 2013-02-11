@@ -639,7 +639,7 @@ int main(int argc, char *argv[])
    if (((!strcmp(argv[optind], "init") || !strcmp(argv[optind], "batch") || !strcmp(argv[optind], "export") || !strcmp(argv[optind], "import") || !strcmp(argv[optind], "get")) && (argc - optind < 2)) ||
        (!strcmp(argv[optind], "set") && (argc - optind < 3)))
    {
-      _tprintf(_T("Required command argument missing\n"));
+      _tprintf(_T("Required command argument(s) missing\n"));
       return 1;
    }
 

@@ -1464,7 +1464,9 @@ void Node::updatePrimaryIpAddr()
 		DbgPrintf(4, _T("IP address for node %s [%d] changed from %s to %s"), 
 			m_szName, (int)m_dwId, IpToStr(m_dwIpAddr, buffer1), IpToStr(ipAddr, buffer2));
 		PostEvent(EVENT_IP_ADDRESS_CHANGED, m_dwId, "aa", ipAddr, m_dwIpAddr);
-		m_dwIpAddr = ipAddr;
+
+
+		setPrimaryIPAddress(ipAddr);
 
 		agentLock();
 		delete_and_null(m_pAgentConnection);
@@ -3234,7 +3236,7 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
          return RCC_INVALID_IP_ADDR;
       }
 
-      m_dwIpAddr = dwIpAddr;
+      setPrimaryIPAddress(dwIpAddr);
 
 		// Update primary name if it is not set with the same message
 		if (!pRequest->IsVariableExist(VID_PRIMARY_NAME))
@@ -3587,6 +3589,39 @@ AgentConnectionEx *Node::createAgentConnection()
 }
 
 /**
+ * Set node's primary IP address.
+ * Assumed that all necessary locks already in place
+ */
+void Node::setPrimaryIPAddress(DWORD addr)
+{
+	if (addr == m_dwIpAddr)
+		return;
+
+	if (IsZoningEnabled())
+	{
+		Zone *zone = FindZoneByGUID(m_zoneId);
+		if (zone == NULL)
+		{
+			DbgPrintf(1, _T("Internal error: zone is NULL in Node::setPrimaryIPAddress (zone ID = %d)"), (int)m_zoneId);
+			return;
+		}
+		if (m_dwIpAddr != 0)
+			zone->removeFromIndex(this);
+		m_dwIpAddr = addr;
+		if (m_dwIpAddr != 0)
+			zone->addToIndex(this);
+	}
+	else
+	{
+		if (m_dwIpAddr != 0)
+			g_idxNodeByAddr.remove(m_dwIpAddr);
+		m_dwIpAddr = addr;
+		if (m_dwIpAddr != 0)
+			g_idxNodeByAddr.put(m_dwIpAddr, this);
+	}
+}
+
+/**
  * Change node's IP address.
  *
  * @param dwIpAddr new IP address
@@ -3607,7 +3642,7 @@ void Node::changeIPAddress(DWORD dwIpAddr)
 		if (!_tcscmp(ipAddrText, m_primaryName))
 			IpToStr(dwIpAddr, m_primaryName);
 
-		m_dwIpAddr = dwIpAddr;
+		setPrimaryIPAddress(dwIpAddr);
 		m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
 
 		// Change status of node and all it's childs to UNKNOWN
