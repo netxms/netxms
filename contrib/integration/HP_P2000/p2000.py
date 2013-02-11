@@ -1,42 +1,29 @@
 #!/usr/bin/env python
 
-#
-# Config
-#
-
-confHostname = '127.0.0.1'
-confLogin = 'netxms'
-confPassword = 'password'
-ssl = True
-
-
-#
-# Main code
-#
-
-confUrl = ('https://' if ssl else 'http://') + confHostname + '/api/'
-prefix = 'P2000.'
+prefix = 'P2000'
 
 import hashlib
 import socket
 import urllib2
+import argparse
 
 from lxml import etree
 
 
 socket.setdefaulttimeout(15)
-handler = urllib2.HTTPHandler(debuglevel=0)
+handler = urllib2.HTTPHandler(debuglevel=1)
 opener = urllib2.build_opener(handler)
 
 
-def makeCall(url):
-    req = urllib2.Request(confUrl + url)
+def makeCall(command):
+    url = ('https://' if config.ssl else 'http://') + config.address + '/api/'
+    req = urllib2.Request(url + command)
     res = opener.open(req)
     return etree.XML(res.read())
 
 
 def login():
-    authToken = hashlib.md5(confLogin + '_' + confPassword).hexdigest()
+    authToken = hashlib.md5(config.user + '_' + config.password).hexdigest()
     root = makeCall('login/' + authToken)
     status = root.findtext(".//PROPERTY[@name='response-type-numeric']")
     token = root.findtext(".//PROPERTY[@name='response']")
@@ -93,6 +80,18 @@ def processVolumeStatistics(root):
     processStatistics(root, 'Volume', 'volume-statistics', 'volume-name')
 
 
+def parsecmdline():
+    global config
+    parser = argparse.ArgumentParser(description='Get status and performance data from HP P2000 disk arrays.')
+    parser.add_argument('-a', '--address', required=True, help='Array IP address')
+    parser.add_argument('-u', '--user', required=True, help='Username')
+    parser.add_argument('-p', '--password', required=True, help='Password')
+    parser.add_argument('-n', '--nossl', dest='ssl', action='store_false', help='Disable https')
+    parser.add_argument('-t', '--tag', help='Array tag, will be added to DCI name after prefix (e.g. "P2000[tag]."). Usefull for monitoring multiple arrays')
+    parser.add_argument('-d', '--debug', action='store_true', help='Enable debug output')
+    config = parser.parse_args()
+
+
 def main():
     token = login()
     if token:
@@ -104,8 +103,16 @@ def main():
         processVolumeStatistics(makeCall('show/volume-statistics'))
 
 if __name__ == "__main__":
+    parsecmdline()
+    if config.tag is not None:
+        prefix = "%s[%s]." % (prefix, config.tag, )
+    else:
+        prefix += '.'
+
     try:
         main()
-    except:
-        import sys
+    except Exception as e:
+        import sys, traceback
+        if config.debug:
+            traceback.print_exc(e);
         sys.exit(1)
