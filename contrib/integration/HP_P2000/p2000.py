@@ -10,7 +10,6 @@ import argparse
 from lxml import etree
 
 
-socket.setdefaulttimeout(15)
 handler = urllib2.HTTPHandler(debuglevel=0)
 opener = urllib2.build_opener(handler)
 
@@ -89,6 +88,7 @@ def parsecmdline():
     parser.add_argument('-n', '--nossl', dest='ssl', action='store_false', help='Disable https')
     parser.add_argument('-t', '--tag', help='Array tag, will be added to DCI name after prefix (e.g. "P2000[tag]."). Usefull for monitoring multiple arrays')
     parser.add_argument('-d', '--debug', action='store_true', help='Enable debug output')
+    parser.add_argument('-T', '--timeout', default=15, type=int, help='Network timeout in seconds, default value: 15.')
     config = parser.parse_args()
 
 
@@ -104,6 +104,9 @@ def main():
 
 if __name__ == "__main__":
     parsecmdline()
+    socket.setdefaulttimeout(config.timeout)
+    if config.debug:
+        handler.set_http_debuglevel(1)
     if config.tag is not None:
         prefix = "%s[%s]." % (prefix, config.tag, )
     else:
