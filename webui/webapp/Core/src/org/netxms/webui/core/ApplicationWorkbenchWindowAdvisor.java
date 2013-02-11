@@ -145,7 +145,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 
 			try
 			{
-				// TODO: read server address from app settings
 				LoginJob job = new LoginJob(properties.getProperty("server", "127.0.0.1"), loginDialog.getLogin(), //$NON-NLS-1$ //$NON-NLS-2$
 				                            loginDialog.getPassword(), Display.getCurrent());
 
@@ -197,7 +196,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 					};
 					try
 					{
-						new ProgressMonitorDialog(null).run(true, true, job);
+						// TODO: implement password change on non-UI thread
+						ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
+						pd.run(false, false, job);
 						MessageDialog.openInformation(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Information, Messages.get().ApplicationWorkbenchWindowAdvisor_PasswordChanged);
 					}
 					catch(InvocationTargetException e)
