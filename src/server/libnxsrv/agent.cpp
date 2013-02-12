@@ -35,7 +35,7 @@
 /**
  * Constants
  */
-#define RECEIVER_BUFFER_SIZE        262144
+#define MAX_MSG_SIZE    8388608
 
 /**
  * Static data
@@ -167,6 +167,7 @@ void AgentConnection::printMsg(const TCHAR *pszFormat, ...)
  */
 void AgentConnection::receiverThread()
 {
+	DWORD msgBufferSize = 1024;
    CSCPMessage *pMsg;
    CSCP_MESSAGE *pRawMsg;
    CSCP_BUFFER *pMsgBuffer;
@@ -180,20 +181,30 @@ void AgentConnection::receiverThread()
    RecvNXCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL, 0);
 
    // Allocate space for raw message
-   pRawMsg = (CSCP_MESSAGE *)malloc(RECEIVER_BUFFER_SIZE);
+   pRawMsg = (CSCP_MESSAGE *)malloc(msgBufferSize);
 #ifdef _WITH_ENCRYPTION
-   pDecryptionBuffer = (BYTE *)malloc(RECEIVER_BUFFER_SIZE);
+   pDecryptionBuffer = (BYTE *)malloc(msgBufferSize);
 #endif
 
    // Message receiving loop
    while(1)
    {
+		// Shrink buffer after receiving large message
+		if (msgBufferSize > 131072)
+		{
+			msgBufferSize = 131072;
+		   pRawMsg = (CSCP_MESSAGE *)realloc(pRawMsg, msgBufferSize);
+			if (pDecryptionBuffer != NULL)
+			   pDecryptionBuffer = (BYTE *)realloc(pDecryptionBuffer, msgBufferSize);
+		}
+
       // Receive raw message
       lock();
 		nSocket = m_hSocket;
 		unlock();
-      if ((error = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
-                                  &m_pCtx, pDecryptionBuffer, m_dwRecvTimeout)) <= 0)
+      if ((error = RecvNXCPMessageEx(nSocket, &pRawMsg, pMsgBuffer, &msgBufferSize,
+                                     &m_pCtx, (pDecryptionBuffer != NULL) ? &pDecryptionBuffer : NULL,
+											    m_dwRecvTimeout, MAX_MSG_SIZE)) <= 0)
 		{
 			if (WSAGetLastError() != WSAESHUTDOWN)
 				DbgPrintf(6, _T("AgentConnection::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), error, WSAGetLastError());
