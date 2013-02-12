@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<fragment>
+  <extension
+     point="org.eclipse.core.runtime.adapters">
+        <factory 
+           class="org.netxms.ui.eclipse.objectbrowser.ObjectAdapterFactory" 
+           adaptableType="org.netxms.client.objects.GenericObject">
+          <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
+        </factory>
+  </extension>
+</fragment>

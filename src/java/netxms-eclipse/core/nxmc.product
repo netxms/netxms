@@ -37,7 +37,6 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
       </win>
    </launcher>
 
-
    <vm>
    </vm>
 
@@ -303,6 +302,7 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.netxms.ui.eclipse.networkmaps"/>
       <plugin id="org.netxms.ui.eclipse.nxsl"/>
       <plugin id="org.netxms.ui.eclipse.objectbrowser"/>
+      <plugin id="org.netxms.ui.eclipse.objectbrowser.adapterfactory" fragment="true"/>
       <plugin id="org.netxms.ui.eclipse.objectmanager"/>
       <plugin id="org.netxms.ui.eclipse.objecttools"/>
       <plugin id="org.netxms.ui.eclipse.objectview"/>

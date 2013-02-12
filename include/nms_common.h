@@ -635,22 +635,18 @@ typedef struct hostent HOSTENT;
 
 #endif   /* _WIN32 */
 
-
-//
-// Value used to indicate invalid pointer where NULL is not appropriate
-//
-
+/**
+ * Value used to indicate invalid pointer where NULL is not appropriate
+ */
 #ifdef __64BIT__
 #define INVALID_POINTER_VALUE    ((void *)_ULL(0xFFFFFFFFFFFFFFFF))
 #else
 #define INVALID_POINTER_VALUE    ((void *)0xFFFFFFFF)
 #endif
 
-
-//
-// Casting between pointer and 32-bit integer
-//
-
+/**
+ * Casting between pointer and 32-bit integer
+ */
 #ifdef __64BIT__
 #define CAST_FROM_POINTER(p, t) ((t)((QWORD)(p)))
 #define CAST_TO_POINTER(v, t) ((t)((QWORD)(v)))

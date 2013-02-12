@@ -1527,6 +1527,10 @@ src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/views/LocationMap.java
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/views/WorldMap.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/widgets/GeoMapViewer.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/widgets/helpers/GeoMapListener.java -text
+src/java/netxms-eclipse/ObjectBrowser.AdapterFactory/.settings/org.eclipse.jdt.core.prefs -text
+src/java/netxms-eclipse/ObjectBrowser.AdapterFactory/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/ObjectBrowser.AdapterFactory/build.properties -text
+src/java/netxms-eclipse/ObjectBrowser.AdapterFactory/fragment.xml -text
 src/java/netxms-eclipse/ObjectBrowser/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectBrowser/build.properties -text
 src/java/netxms-eclipse/ObjectBrowser/icons/business_service.png -text
@@ -3082,6 +3086,10 @@ webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/views/LocationMap.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/views/WorldMap.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/widgets/GeoMapViewer.java -text
 webui/webapp/OSM/src/org/netxms/ui/eclipse/osm/widgets/helpers/GeoMapListener.java -text
+webui/webapp/ObjectBrowser.AdapterFactory/.settings/org.eclipse.jdt.core.prefs -text
+webui/webapp/ObjectBrowser.AdapterFactory/META-INF/MANIFEST.MF -text
+webui/webapp/ObjectBrowser.AdapterFactory/build.properties -text
+webui/webapp/ObjectBrowser.AdapterFactory/fragment.xml -text
 webui/webapp/ObjectBrowser/META-INF/MANIFEST.MF -text
 webui/webapp/ObjectBrowser/build.properties -text
 webui/webapp/ObjectBrowser/icons/business_service.png -text
