@@ -9,6 +9,13 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 
+/**
+ * Helper for network related tasks
+ * 
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
+ *
+ */
+
 public class NetHelper
 {
 	private static final String TAG = "NetHelper";

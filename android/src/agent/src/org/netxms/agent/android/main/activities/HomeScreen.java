@@ -121,9 +121,10 @@ public class HomeScreen extends AbstractClientActivity
 	{
 		long last = sp.getLong("scheduler.last_activation", 0);
 		if (last != 0)
-			lastConnText.setText(getString(R.string.info_last_connection,
-					TimeHelper.getTimeString(last),
-					sp.getString("scheduler.last_activation_msg", getString(R.string.ok))));
+			lastConnText.setText(getString(R.string.info_agent_last_connection,
+					getString(R.string.info_agent_connection_attempt,
+							TimeHelper.getTimeString(last),
+							sp.getString("scheduler.last_activation_msg", getString(R.string.ok)))));
 		if (sp.getBoolean("global.activate", false))
 		{
 			String status = getString(R.string.pref_global_activate_enabled);
@@ -151,13 +152,13 @@ public class HomeScreen extends AbstractClientActivity
 			locationStatusText.setText(getString(R.string.info_agent_last_location, sp.getString("location.last_status", "")));
 			long next = sp.getLong("scheduler.next_activation", 0);
 			if (next != 0)
-				nextConnText.setText(getString(R.string.info_next_connection, TimeHelper.getTimeString(next)));
+				nextConnText.setText(getString(R.string.info_agent_next_connection, getString(R.string.info_agent_connection_scheduled, TimeHelper.getTimeString(next))));
 		}
 		else
 		{
 			agentStatusText.setText(getString(R.string.pref_global_activate_disabled));
 			locationStatusText.setText("");
-			nextConnText.setText(getString(R.string.info_next_connection_unscheduled));
+			nextConnText.setText(getString(R.string.info_agent_next_connection, getString(R.string.info_agent_connection_unscheduled)));
 		}
 	}
 	/**

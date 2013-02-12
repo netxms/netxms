@@ -27,7 +27,7 @@ public class ConnectivityChangeIntentReceiver extends BroadcastReceiver
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
 		if (!sp.getBoolean(HomeScreen.INTENTIONAL_EXIT_KEY, false) &&
 				sp.getBoolean("global.activate", false) &&
-				sp.getBoolean("global.scheduler.override", false))
+				sp.getBoolean("connection.override", false))
 			if (intent.getExtras() != null)
 			{
 				NetworkInfo ni = (NetworkInfo)intent.getExtras().get(ConnectivityManager.EXTRA_NETWORK_INFO);

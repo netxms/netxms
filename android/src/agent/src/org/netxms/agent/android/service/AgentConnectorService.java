@@ -72,7 +72,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	private static final int STRATEGY_NET_AND_GPS = 2;
 
 	private final Binder binder = new AgentConnectorBinder();
-	private Handler uiThreadHandler;
+	private Handler uiThreadHandler = null;
 	private Handler locationHandler = null;
 	private ConnectionStatus connectionStatus = ConnectionStatus.CS_DISCONNECTED;
 	private BroadcastReceiver receiver = null;
@@ -88,7 +88,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	private String connectionPassword;
 	private boolean connectionEncrypt;
 	private boolean schedulerDaily;
-	private int schedulerInterval;
+	private int connectionInterval;
 	private boolean locationForce;
 	private int locationInterval;
 	private int locationDuration;
@@ -193,7 +193,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	 */
 	void configure()
 	{
-		updateLastStatus("");
+		updateLocationStatus("");
 		refreshHomeScreen();
 		agentActive = sp.getBoolean("global.activate", false);
 		notifyToast = sp.getBoolean("notification.toast", true);
@@ -202,24 +202,28 @@ public class AgentConnectorService extends Service implements LocationListener
 		connectionLogin = sp.getString("connection.login", "");
 		connectionPassword = sp.getString("connection.password", "");
 		connectionEncrypt = sp.getBoolean("connection.encrypt", false);
+		connectionInterval = SafeParser.parseInt(sp.getString("connection.interval", "15"), 15) * 60 * 1000;
 		schedulerDaily = sp.getBoolean("scheduler.daily.enable", false);
-		schedulerInterval = Integer.parseInt(sp.getString("scheduler.interval", "15"));
 		locationStrategy = SafeParser.parseInt(sp.getString("location.strategy", "0"), 0);
 		locationInterval = SafeParser.parseInt(sp.getString("location.interval", "30"), 30) * 60 * 1000;
 		locationDuration = SafeParser.parseInt(sp.getString("location.duration", "2"), 2) * 60 * 1000;
 		locationForce = sp.getBoolean("location.force", false);
+		if (locationHandler != null)
+			locationHandler.removeCallbacks(locationTask);
 		if (locationManager != null)
-		{
-			if (locationHandler == null)
-				locationHandler = new Handler(getMainLooper());
-			if (locationHandler != null)
+			if (agentActive)
 			{
-				locationHandler.removeCallbacks(locationTask);
-				AgentConnectorService.gettingNewLocation = false;
-				locationProvider = "";
-				locationHandler.post(locationTask);
+				if (locationHandler == null)
+					locationHandler = new Handler(getMainLooper());
+				if (locationHandler != null)
+				{
+					AgentConnectorService.gettingNewLocation = false;
+					locationProvider = "";
+					locationHandler.post(locationTask);
+				}
 			}
-		}
+			else
+				locationManager.removeUpdates(AgentConnectorService.this);
 	}
 
 	/**
@@ -227,8 +231,8 @@ public class AgentConnectorService extends Service implements LocationListener
 	 */
 	public void shutdown()
 	{
-		updateLastStatus("");
-		cancelSchedule();
+		updateLocationStatus("");
+		cancelConnectionSchedule();
 		unregisterReceiver(receiver);
 		stopSelf();
 	}
@@ -268,7 +272,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	 */
 	public void reconnect(boolean force)
 	{
-		if (agentActive && (force || isScheduleExpired()) &&
+		if (agentActive && (force || isConnectionScheduleExpired()) &&
 				connectionStatus != ConnectionStatus.CS_INPROGRESS &&
 				connectionStatus != ConnectionStatus.CS_CONNECTED)
 		{
@@ -323,15 +327,6 @@ public class AgentConnectorService extends Service implements LocationListener
 	}
 
 	/**
-	 * Check for expired pending connection schedule
-	 */
-	private boolean isScheduleExpired()
-	{
-		Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-		return cal.getTimeInMillis() > sp.getLong("scheduler.next_activation", 0);
-	}
-
-	/**
 	 * Gets stored time settings in minutes
 	 */
 	private int getMinutes(String time)
@@ -353,37 +348,48 @@ public class AgentConnectorService extends Service implements LocationListener
 	}
 
 	/**
-	 * Schedule a new connection/disconnection
+	 * Get the next schedule based on daily interval, if set
+	 * 
+	 * @param interval	expected schedule in milliseconds
+	 * @return new schedule in milliseconds adjusted as necessary
 	 */
-	private void schedule()
+	private long getNextSchedule(int interval)
+	{
+		if (!schedulerDaily)
+			return interval;
+		Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
+		long now = cal.getTimeInMillis();
+		int on = getMinutes("scheduler.daily.on");
+		int off = getMinutes("scheduler.daily.off");
+		if (off < on)
+			off += ONE_DAY_MINUTES; // Next day!
+		Calendar calOn = (Calendar)cal.clone();
+		setDayOffset(calOn, on);
+		Calendar calOff = (Calendar)cal.clone();
+		setDayOffset(calOff, off);
+		cal.add(Calendar.MILLISECOND, interval);
+		if (cal.before(calOn))
+		{
+			cal = (Calendar)calOn.clone();
+			Log.i(TAG, "Rescheduled for daily interval (before 'on')");
+		}
+		else if (cal.after(calOff))
+		{
+			cal = (Calendar)calOn.clone();
+			setDayOffset(cal, on + ONE_DAY_MINUTES); // Move to the next activation of the excluded range
+			Log.i(TAG, "Rescheduled for daily interval (after 'off')");
+		}
+		Log.i(TAG, "Next schedule in " + (cal.getTimeInMillis() - now) / 1000 + " seconds");
+		return cal.getTimeInMillis() - now;
+	}
+
+	/**
+	 * Check for expired pending connection schedule
+	 */
+	private boolean isConnectionScheduleExpired()
 	{
 		Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-		if (!schedulerDaily)
-			cal.add(Calendar.MINUTE, schedulerInterval);
-		else
-		{
-			int on = getMinutes("scheduler.daily.on");
-			int off = getMinutes("scheduler.daily.off");
-			if (off < on)
-				off += ONE_DAY_MINUTES; // Next day!
-			Calendar calOn = (Calendar)cal.clone();
-			setDayOffset(calOn, on);
-			Calendar calOff = (Calendar)cal.clone();
-			setDayOffset(calOff, off);
-			cal.add(Calendar.MINUTE, schedulerInterval);
-			if (cal.before(calOn))
-			{
-				cal = (Calendar)calOn.clone();
-				Log.i(TAG, "schedule (before): rescheduled for daily interval");
-			}
-			else if (cal.after(calOff))
-			{
-				cal = (Calendar)calOn.clone();
-				setDayOffset(cal, on + ONE_DAY_MINUTES); // Move to the next activation of the excluded range
-				Log.i(TAG, "schedule (after): rescheduled for daily interval");
-			}
-		}
-		setSchedule(cal.getTimeInMillis());
+		return cal.getTimeInMillis() > sp.getLong("scheduler.next_activation", 0);
 	}
 
 	/**
@@ -391,9 +397,9 @@ public class AgentConnectorService extends Service implements LocationListener
 	 * 
 	 * @param milliseconds	time for new schedule
 	 */
-	private void setSchedule(long milliseconds)
+	private void setConnectionSchedule(long milliseconds)
 	{
-		Log.i(TAG, "setSchedule to: " + milliseconds);
+		Log.i(TAG, "setSchedule to: " + TimeHelper.getTimeString(milliseconds));
 		Intent intent = new Intent(this, AlarmIntentReceiver.class);
 		PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		((AlarmManager)getSystemService(ALARM_SERVICE)).set(AlarmManager.RTC_WAKEUP, milliseconds, sender);
@@ -405,7 +411,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	/**
 	 * Cancel a pending connection schedule (if any)
 	 */
-	private void cancelSchedule()
+	private void cancelConnectionSchedule()
 	{
 		Log.i(TAG, "cancelSchedule");
 		Intent intent = new Intent(this, AlarmIntentReceiver.class);
@@ -422,18 +428,6 @@ public class AgentConnectorService extends Service implements LocationListener
 	private int getFlags()
 	{
 		return 0;
-	}
-
-	/**
-	 * Updates persistent last location status
-	 * 
-	 * @pasam status	status of last location
-	 */
-	private void updateLastStatus(String status)
-	{
-		Editor e = sp.edit();
-		e.putString("location.last_status", status);
-		e.commit();
 	}
 
 	/**
@@ -524,15 +518,27 @@ public class AgentConnectorService extends Service implements LocationListener
 			e.putString("scheduler.last_activation_msg", connMsg);
 			e.commit();
 			if (agentActive)
-				schedule();
+				setConnectionSchedule(Calendar.getInstance().getTimeInMillis() + getNextSchedule(connectionInterval));
 			else
-				cancelSchedule();
+				cancelConnectionSchedule();
 			refreshHomeScreen();
 		}
 	}
 
 	/**
-	 * Get last known geo location (depending on strategy used it could be very old).
+	 * Updates last location status
+	 * 
+	 * @pasam status	status of last location
+	 */
+	private void updateLocationStatus(String status)
+	{
+		Editor e = sp.edit();
+		e.putString("location.last_status", status);
+		e.commit();
+	}
+
+	/**
+	 * Get last known geolocation (depending on strategy used it could be very old).
 	 * If no provider available, try to get a last position from any available provider
 	 * identifyed by the system using the ACCURACY_COARSE criteria.
 	 * 
@@ -543,10 +549,10 @@ public class AgentConnectorService extends Service implements LocationListener
 		if (locationManager != null)
 		{
 			Location location = null;
-			if (locationProvider.length() > 0)
+			if (locationProvider.length() > 0) // Did we get an updated position?
 				location = locationManager.getLastKnownLocation(locationProvider);
 			else
-			{
+			{	// Try to get it using the best provider available
 				Criteria criteria = new Criteria();
 				if (criteria != null)
 				{
@@ -565,7 +571,7 @@ public class AgentConnectorService extends Service implements LocationListener
 						Float.toString((float)location.getLongitude()),
 						Float.toString(location.getAccuracy()));
 				Log.i(TAG, locStatus);
-				updateLastStatus(locStatus);
+				updateLocationStatus(locStatus);
 				return new GeoLocation(location.getLatitude(), location.getLongitude());
 			}
 		}
@@ -610,53 +616,42 @@ public class AgentConnectorService extends Service implements LocationListener
 		@Override
 		public void run()
 		{
-			if (agentActive)
+			locationHandler.removeCallbacks(locationTask);
+			if (AgentConnectorService.gettingNewLocation)
 			{
-				locationHandler.removeCallbacks(locationTask);
-				if (AgentConnectorService.gettingNewLocation)
+				AgentConnectorService.gettingNewLocation = false;
+				locationManager.removeUpdates(AgentConnectorService.this);
+				locationHandler.postDelayed(locationTask, getNextSchedule(locationInterval));
+				String locStatus = getString(R.string.info_location_timeout, allowedProviders);
+				Log.d(TAG, locStatus);
+				updateLocationStatus(locStatus);
+				refreshHomeScreen();
+			}
+			else if (locationForce)
+			{
+				locationProvider = "";
+				String locStatus = getString(R.string.info_location_no_provider);
+				List<String> providerList = getLocationProviderList(locationStrategy);
+				if (providerList.size() > 0)
 				{
-					AgentConnectorService.gettingNewLocation = false;
-					locationManager.removeUpdates(AgentConnectorService.this);
-					locationHandler.postDelayed(locationTask, locationInterval);
-					String locStatus = getString(R.string.info_location_timeout, allowedProviders);
-					Log.d(TAG, locStatus);
-					updateLastStatus(locStatus);
-					refreshHomeScreen();
+					allowedProviders = "";
+					for (int i = 0; i < providerList.size(); i++)
+					{
+						allowedProviders += (i > 0 ? ", " : "") + providerList.get(i);
+						locationManager.requestLocationUpdates(providerList.get(i), 0, 0, AgentConnectorService.this); // 0, 0 to have it ASAP
+					}
+					AgentConnectorService.gettingNewLocation = true;
+					locationHandler.postDelayed(locationTask, getNextSchedule(locationDuration));
+					locStatus = getString(R.string.info_location_acquiring, allowedProviders);
 				}
 				else
-				{
-					if (locationForce)
-					{
-						locationProvider = "";
-						String locStatus = getString(R.string.info_location_no_provider);
-						List<String> providerList = getLocationProviderList(locationStrategy);
-						if (providerList.size() > 0)
-						{
-							allowedProviders = "";
-							for (int i = 0; i < providerList.size(); i++)
-							{
-								allowedProviders += (i > 0 ? ", " : "") + providerList.get(i);
-								locationManager.requestLocationUpdates(providerList.get(i), 0, 0, AgentConnectorService.this); // 0, 0 to have it ASAP
-							}
-							AgentConnectorService.gettingNewLocation = true;
-							locationHandler.postDelayed(locationTask, locationDuration);
-							locStatus = getString(R.string.info_location_acquiring, allowedProviders);
-						}
-						else
-							locationHandler.postDelayed(locationTask, locationInterval);
-						Log.d(TAG, locStatus);
-						updateLastStatus(locStatus);
-						refreshHomeScreen();
-					}
-					else
-						locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, AgentConnectorService.this); // 0, 0 to have it ASAP
-				}
+					locationHandler.postDelayed(locationTask, getNextSchedule(locationInterval));
+				Log.d(TAG, locStatus);
+				updateLocationStatus(locStatus);
+				refreshHomeScreen();
 			}
 			else
-			{
-				locationHandler.removeCallbacks(locationTask);
-				locationManager.removeUpdates(AgentConnectorService.this);
-			}
+				locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, AgentConnectorService.this); // 0, 0 to have it ASAP
 		}
 	};
 
@@ -670,7 +665,7 @@ public class AgentConnectorService extends Service implements LocationListener
 				Float.toString((float)location.getLongitude()),
 				Float.toString(location.getAccuracy()));
 		Log.d(TAG, locStatus);
-		updateLastStatus(locStatus);
+		updateLocationStatus(locStatus);
 		locationManager.removeUpdates(AgentConnectorService.this);
 		gettingNewLocation = false;
 		locationHandler.removeCallbacks(locationTask);

@@ -2,6 +2,13 @@ package org.netxms.agent.android.helpers;
 
 import java.util.Calendar;
 
+/**
+ * Helper time related tasks
+ * 
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
+ *
+ */
+
 public class TimeHelper
 {
 	/**

@@ -15,6 +15,13 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.util.Patterns;
 
+/**
+ * Helper for gathering device info
+ * 
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
+ *
+ */
+
 public class DeviceInfoHelper
 {
 	private static final String TAG = "DeviceInfoHelper";
