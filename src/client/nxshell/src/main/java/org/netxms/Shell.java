@@ -27,12 +27,16 @@ public class Shell {
         final Shell shell = new Shell();
         try {
             shell.run(args);
+        } catch (org.python.core.PyException e) {
+            e.printStackTrace();
         } catch (Exception e) {
             System.out.println(e.getClass().getName() + ": " + e.getMessage());
         }
     }
 
     private void run(String[] args) throws IOException, NetXMSClientException {
+        initJython(args);
+
         readCredentials(args.length == 0 && isInteractive());
         final NXCSession session = connect();
 
@@ -106,12 +110,6 @@ public class Shell {
     }
 
     private InteractiveConsole createInterpreter(String args[]) {
-        final Properties postProperties = new Properties();
-        final String tempDirectory = System.getProperty("java.io.tmpdir") + "nxshell";
-        postProperties.setProperty("python.cachedir", tempDirectory);
-        postProperties.setProperty("python.cachedir.skip", "false");
-        PySystemState.initialize(PySystemState.getBaseProperties(), postProperties, args);
-
         final InteractiveConsole console;
         if (isInteractive()) {
             console = new JLineConsole();
@@ -124,7 +122,17 @@ public class Shell {
         console.exec("from org.netxms.client import *");
         console.exec("from org.netxms.api.client import *");
 
+        console.set("__name__", "__nxshell__");
+
         return console;
+    }
+
+    private void initJython(String[] args) {
+        final Properties postProperties = new Properties();
+        final String tempDirectory = System.getProperty("java.io.tmpdir") + "nxshell";
+        postProperties.setProperty("python.cachedir", tempDirectory);
+        postProperties.setProperty("python.cachedir.skip", "false");
+        PySystemState.initialize(PySystemState.getBaseProperties(), postProperties, args);
     }
 
 }
