@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Handler for ARP enumeration
-//
-
+/**
+ * Handler for ARP enumeration
+ */
 static DWORD HandlerArp(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    DWORD oidName[MAX_OID_LEN], dwNameLen, dwIndex = 0;
@@ -55,11 +53,9 @@ static DWORD HandlerArp(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pT
    return dwResult;
 }
 
-
-//
-// Get ARP cache via SNMP
-//
-
+/**
+ * Get ARP cache via SNMP
+ */
 ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, SNMP_Transport *pTransport)
 {
    ARP_CACHE *pArpCache;
@@ -80,11 +76,9 @@ ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, SNMP_Transport *pTransport)
    return pArpCache;
 }
 
-
-//
-// Get interface status via SNMP
-//
-
+/**
+ * Get interface status via SNMP
+ */
 void SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD dwIfIndex, int *adminState, int *operState)
 {
    DWORD dwAdminStatus = 0, dwOperStatus = 0;
@@ -130,11 +124,9 @@ void SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD d
    }
 }
 
-
-//
-// Handler for route enumeration
-//
-
+/**
+ * Handler for route enumeration
+ */
 static DWORD HandlerRoute(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    DWORD oidName[MAX_OID_LEN], dwNameLen, dwResult;
@@ -176,11 +168,9 @@ static DWORD HandlerRoute(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *
    return SNMP_ERR_SUCCESS;
 }
 
-
-//
-// Get routing table via SNMP
-//
-
+/**
+ * Get routing table via SNMP
+ */
 ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport)
 {
    ROUTING_TABLE *pRT;
@@ -201,11 +191,9 @@ ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport)
    return pRT;
 }
 
-
-//
-// Check SNMP v3 connectivity
-//
-
+/**
+ * Check SNMP v3 connectivity
+ */
 static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *originalContext)
 {
 	char buffer[1024];
@@ -261,13 +249,11 @@ static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport,
 	return NULL;
 }
 
-
-//
-// Determine SNMP parameters for node
-// On success, returns new security context object (dynamically created).
-// On failure, returns NULL
-//
-
+/**
+ * Determine SNMP parameters for node
+ * On success, returns new security context object (dynamically created).
+ * On failure, returns NULL
+ */
 SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *version, SNMP_SecurityContext *originalContext)
 {
 	int i, count, snmpVer = SNMP_VERSION_2C;
