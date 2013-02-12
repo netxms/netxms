@@ -35,10 +35,12 @@ public class GeoLocation
 	public static final int UNSET = 0;
 	public static final int MANUAL = 1;
 	public static final int GPS = 2;
+	public static final int NETWORK = 3;
 	
 	private int type;
 	private double latitude;
 	private double longitude;
+	private int accuracy;	// Location accuracy in meters
 	
 	/**
 	 * Create geolocation object from NXCP message
@@ -49,6 +51,7 @@ public class GeoLocation
 		type = msg.getVariableAsInteger(NXCPCodes.VID_GEOLOCATION_TYPE);
 		latitude = msg.getVariableAsReal(NXCPCodes.VID_LATITUDE);
 		longitude = msg.getVariableAsReal(NXCPCodes.VID_LONGITUDE);
+		accuracy = msg.getVariableAsInteger(NXCPCodes.VID_ACCURACY);
 	}
 	
 	/**
@@ -59,6 +62,7 @@ public class GeoLocation
 		type = isGPS ? GPS : UNSET;
 		latitude = 0.0;
 		longitude = 0.0;
+		accuracy = 0;
 	}
 	
 	/**
@@ -72,6 +76,21 @@ public class GeoLocation
 		type = MANUAL;
 		latitude = lat;
 		longitude = lon;
+		accuracy = 0;
+	}
+
+	/**
+	 * Create geolocation object of given type and accuracy
+	 * 
+	 * @param lat Latitude
+	 * @param lon Longitude
+	 */
+	public GeoLocation(double lat, double lon, int type, int accuracy)
+	{
+		this.type = type;
+		latitude = lat;
+		longitude = lon;
+		this.accuracy = accuracy;
 	}
 
 	/**
@@ -96,6 +115,14 @@ public class GeoLocation
 	public double getLongitude()
 	{
 		return longitude;
+	}
+	
+	/**
+	 * @return
+	 */
+	public int getAccuracy()
+	{
+		return accuracy;
 	}
 	
 	/**
@@ -181,6 +208,8 @@ public class GeoLocation
 	@Override
 	public String toString()
 	{
+		if (accuracy > 0)
+			return posToText(latitude, true) + " " + posToText(longitude, false) + " (accuracy " + accuracy + " meters)";
 		return posToText(latitude, true) + " " + posToText(longitude, false);
 	}
 	

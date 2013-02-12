@@ -736,6 +736,7 @@ public class NXCPCodes
 	public static final long VID_INSTD_METHOD            = 435;
 	public static final long VID_INSTD_DATA              = 436;
 	public static final long VID_INSTD_FILTER            = 437;
+	public static final long VID_ACCURACY                = 438;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

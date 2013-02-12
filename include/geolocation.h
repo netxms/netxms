@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,20 +26,17 @@
 #include <nms_util.h>
 #include <nxcpapi.h>
 
-
-//
-// Location types
-//
-
+/**
+ * Location types
+ */
 #define GL_UNSET     0
 #define GL_MANUAL    1
 #define GL_GPS       2
+#define GL_NETWORK   3
 
-
-//
-// Geo location class
-//
-
+/**
+ * Geo location class
+ */
 class LIBNETXMS_EXPORTABLE GeoLocation
 {
 private:
@@ -49,6 +46,7 @@ private:
 	TCHAR m_latStr[20];
 	TCHAR m_lonStr[20];
 	bool m_isValid;
+	int m_accuracy;
 
 	void posToString(bool isLat, double pos);
 
@@ -62,8 +60,8 @@ private:
 
 public:
 	GeoLocation();
-	GeoLocation(int type, double lat, double lon);
-	GeoLocation(int type, const TCHAR *lat, const TCHAR *lon);
+	GeoLocation(int type, double lat, double lon, int accuracy = 0);
+	GeoLocation(int type, const TCHAR *lat, const TCHAR *lon, int accuracy = 0);
 	GeoLocation(const GeoLocation &src);
 	GeoLocation(CSCPMessage &msg);
 	~GeoLocation();
@@ -76,6 +74,7 @@ public:
 	const TCHAR *getLatitudeAsString() { return m_latStr; }
 	const TCHAR *getLongitudeAsString() { return m_lonStr; }
 	bool isValid() { return m_isValid; }
+	int getAccuracy() { return m_accuracy; }
 
 	void fillMessage(CSCPMessage &msg);
 };

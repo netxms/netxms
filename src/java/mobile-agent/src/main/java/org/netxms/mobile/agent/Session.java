@@ -570,6 +570,7 @@ public class Session
 			msg.setVariable(NXCPCodes.VID_LATITUDE, location.getLatitude());
 			msg.setVariable(NXCPCodes.VID_LONGITUDE, location.getLongitude());
 			msg.setVariableInt16(NXCPCodes.VID_GEOLOCATION_TYPE, location.getType());
+			msg.setVariableInt16(NXCPCodes.VID_ACCURACY, location.getAccuracy());
 		}
 		else
 		{

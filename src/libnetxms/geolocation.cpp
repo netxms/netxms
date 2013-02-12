@@ -34,11 +34,9 @@ static const double ROUND_OFF = 0.00000001;
 #define DEGREE_SIGN_STR "\xF8"
 #endif
 
-
-//
-// Default constructor - create location of type UNSET
-//
-
+/**
+ * Default constructor - create location of type UNSET
+ */
 GeoLocation::GeoLocation()
 {
 	m_type = GL_UNSET;
@@ -47,14 +45,13 @@ GeoLocation::GeoLocation()
 	posToString(true, 0);
 	posToString(false, 0);
 	m_isValid = true;
+	m_accuracy = 0;
 }
 
-
-//
-// Constructor - create location from double lat/lon values
-//
-
-GeoLocation::GeoLocation(int type, double lat, double lon)
+/**
+ * Constructor - create location from double lat/lon values
+ */
+GeoLocation::GeoLocation(int type, double lat, double lon, int accuracy)
 {
 	m_type = type;
 	m_lat = lat;
@@ -62,26 +59,24 @@ GeoLocation::GeoLocation(int type, double lat, double lon)
 	posToString(true, lat);
 	posToString(false, lon);
 	m_isValid = true;
+   m_accuracy = accuracy;
 }
 
-
-//
-// Constructor - create location from string lat/lon values
-//
-
-GeoLocation::GeoLocation(int type, const TCHAR *lat, const TCHAR *lon)
+/**
+ * Constructor - create location from string lat/lon values
+ */
+GeoLocation::GeoLocation(int type, const TCHAR *lat, const TCHAR *lon, int accuracy)
 {
 	m_type = type;
 	m_isValid = parseLatitude(lat) && parseLongitude(lon);
 	posToString(true, m_lat);
 	posToString(false, m_lon);
+   m_accuracy = accuracy;
 }
 
-
-//
-// Copy constructor
-//
-
+/**
+ * Copy constructor
+ */
 GeoLocation::GeoLocation(const GeoLocation &src)
 {
 	m_type = src.m_type;
@@ -90,37 +85,33 @@ GeoLocation::GeoLocation(const GeoLocation &src)
 	nx_strncpy(m_latStr, src.m_latStr, 20);
 	nx_strncpy(m_lonStr, src.m_lonStr, 20);
 	m_isValid = src.m_isValid;
+   m_accuracy = src.m_accuracy;
 }
 
-
-//
-// Create geolocation object from data in NXCP message
-//
-
+/**
+ * Create geolocation object from data in NXCP message
+ */
 GeoLocation::GeoLocation(CSCPMessage &msg)
 {
 	m_type = (int)msg.GetVariableShort(VID_GEOLOCATION_TYPE);
 	m_lat = msg.GetVariableDouble(VID_LATITUDE);
 	m_lon = msg.GetVariableDouble(VID_LONGITUDE);
+	m_accuracy = (int)msg.GetVariableShort(VID_ACCURACY);
 	posToString(true, m_lat);
 	posToString(false, m_lon);
 	m_isValid = true;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 GeoLocation::~GeoLocation()
 {
 }
 
-
-//
-// Assignment operator
-//
-
+/**
+ * Assignment operator
+ */
 GeoLocation& GeoLocation::operator =(const GeoLocation &src)
 {
 	m_type = src.m_type;
@@ -129,48 +120,50 @@ GeoLocation& GeoLocation::operator =(const GeoLocation &src)
 	nx_strncpy(m_latStr, src.m_latStr, 20);
 	nx_strncpy(m_lonStr, src.m_lonStr, 20);
 	m_isValid = src.m_isValid;
+	m_accuracy = src.m_accuracy;
 	return *this;
 }
 
-
-//
-// Fill NXCP message
-//
-
+/**
+ * Fill NXCP message
+ */
 void GeoLocation::fillMessage(CSCPMessage &msg)
 {
 	msg.SetVariable(VID_GEOLOCATION_TYPE, (WORD)m_type);
 	msg.SetVariable(VID_LATITUDE, m_lat);
 	msg.SetVariable(VID_LONGITUDE, m_lon);
+	msg.SetVariable(VID_ACCURACY, (WORD)m_accuracy);
 }
 
-
-//
-// Getters for degree, minutes, and seconds from double value
-//
-
+/**
+ * Getters degree from double value
+ */
 int GeoLocation::getIntegerDegree(double pos)
 {
 	return (int)(fabs(pos) + ROUND_OFF);
 }
 
+/**
+ * Getters minutes from double value
+ */
 int GeoLocation::getIntegerMinutes(double pos)
 {
 	double d = fabs(pos) + ROUND_OFF;
 	return (int)((d - (double)((int)d)) * 60.0);
 }
 
+/**
+ * Getters seconds from double value
+ */
 double GeoLocation::getDecimalSeconds(double pos)
 {
 	double d = fabs(pos) * 60.0 + ROUND_OFF;
 	return (d - (double)((int)d)) * 60.0;
 }
 
-
-//
-// Convert position to string
-//
-
+/**
+ * Convert position to string
+ */
 void GeoLocation::posToString(bool isLat, double pos)
 {
 	TCHAR *buffer = isLat ? m_latStr : m_lonStr;
@@ -197,11 +190,9 @@ void GeoLocation::posToString(bool isLat, double pos)
 	_sntprintf(buffer, 18, _T("%02d") DEGREE_SIGN_STR _T(" %02d' %02.3f\""), getIntegerDegree(pos), getIntegerMinutes(pos), getDecimalSeconds(pos));
 }
 
-
-//
-// Parse latitude/longitude string
-//
-
+/**
+ * Parse latitude/longitude string
+ */
 double GeoLocation::parse(const TCHAR *str, bool isLat, bool *isValid)
 {
 	*isValid = false;
@@ -293,11 +284,9 @@ cleanup:
 	return value;
 }
 
-
-//
-// Parse latitude
-//
-
+/**
+ * Parse latitude
+ */
 bool GeoLocation::parseLatitude(const TCHAR *lat)
 {
 	bool isValid;
@@ -308,11 +297,9 @@ bool GeoLocation::parseLatitude(const TCHAR *lat)
 	return isValid;
 }
 
-
-//
-// Parse longitude
-//
-
+/**
+ * Parse longitude
+ */
 bool GeoLocation::parseLongitude(const TCHAR *lon)
 {
 	bool isValid;
