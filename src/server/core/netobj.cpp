@@ -132,7 +132,7 @@ BOOL NetObj::loadCommonProperties()
                              _T("status_translation,status_single_threshold,")
                              _T("status_thresholds,comments,is_system,")
 									  _T("location_type,latitude,longitude,location_accuracy,")
-									  _T("guid,image,submap_id FROM object_properties ")
+									  _T("location_timestamp,guid,image,submap_id FROM object_properties ")
                              _T("WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
@@ -165,16 +165,16 @@ BOOL NetObj::loadCommonProperties()
 
 					DBGetField(hResult, 0, 15, lat, 32);
 					DBGetField(hResult, 0, 16, lon, 32);
-					m_geoLocation = GeoLocation(locType, lat, lon, DBGetFieldLong(hResult, 0, 17));
+					m_geoLocation = GeoLocation(locType, lat, lon, DBGetFieldLong(hResult, 0, 17), DBGetFieldULong(hResult, 0, 18));
 				}
 				else
 				{
 					m_geoLocation = GeoLocation();
 				}
 
-				DBGetFieldGUID(hResult, 0, 18, m_guid);
-				DBGetFieldGUID(hResult, 0, 19, m_image);
-				m_submapId = DBGetFieldULong(hResult, 0, 20);
+				DBGetFieldGUID(hResult, 0, 19, m_guid);
+				DBGetFieldGUID(hResult, 0, 20, m_image);
+				m_submapId = DBGetFieldULong(hResult, 0, 21);
 
 				bResult = TRUE;
 			}
@@ -237,75 +237,81 @@ BOOL NetObj::loadCommonProperties()
  */
 BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
 {
-   TCHAR szQuery[32768], szTranslation[16], szThresholds[16], guid[64], image[64];
-   DB_RESULT hResult;
-   BOOL bResult = FALSE;
-   int i, j;
-
-   // Save access options
-   _sntprintf(szQuery, 512, _T("SELECT object_id FROM object_properties WHERE object_id=%d"), m_dwId);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != NULL)
-   {
-      for(i = 0, j = 0; i < 4; i++, j += 2)
-      {
-         _sntprintf(&szTranslation[j], 16 - j, _T("%02X"), (BYTE)m_iStatusTranslation[i]);
-         _sntprintf(&szThresholds[j], 16 - j, _T("%02X"), (BYTE)m_iStatusThresholds[i]);
-      }
-      if (DBGetNumRows(hResult) > 0)
-      {
-         _sntprintf(szQuery, 32768, 
-                    _T("UPDATE object_properties SET name=%s,status=%d,")
-                    _T("is_deleted=%d,inherit_access_rights=%d,")
-                    _T("last_modified=%d,status_calc_alg=%d,status_prop_alg=%d,")
-                    _T("status_fixed_val=%d,status_shift=%d,status_translation='%s',")
-                    _T("status_single_threshold=%d,status_thresholds='%s',")
-                    _T("comments=%s,is_system=%d,location_type=%d,latitude='%f',")
-						  _T("longitude='%f',location_accuracy=%d,guid='%s',image='%s',submap_id=%d WHERE object_id=%d"),
-                    (const TCHAR *)DBPrepareString(g_hCoreDB, m_szName), m_iStatus, m_bIsDeleted,
-                    m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
-                    m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
-                    szTranslation, m_iStatusSingleThreshold, szThresholds,
-						  (const TCHAR *)DBPrepareString(g_hCoreDB, CHECK_NULL_EX(m_pszComments)),
-						  m_bIsSystem, m_geoLocation.getType(),
-						  m_geoLocation.getLatitude(), m_geoLocation.getLongitude(), m_geoLocation.getAccuracy(),
-						  uuid_to_string(m_guid, guid), uuid_to_string(m_image, image),
-						  (int)m_submapId, m_dwId);
-      }
-      else
-      {
-         _sntprintf(szQuery, 32768, 
-                    _T("INSERT INTO object_properties (object_id,name,status,is_deleted,")
+	DB_STATEMENT hStmt;
+	if (IsDatabaseRecordExist(hdb, _T("object_properties"), _T("object_id"), m_dwId))
+	{
+		hStmt = DBPrepare(hdb,
+                    _T("UPDATE object_properties SET name=?,status=?,")
+                    _T("is_deleted=?,inherit_access_rights=?,")
+                    _T("last_modified=?,status_calc_alg=?,status_prop_alg=?,")
+                    _T("status_fixed_val=?,status_shift=?,status_translation=?,")
+                    _T("status_single_threshold=?,status_thresholds=?,")
+                    _T("comments=?,is_system=?,location_type=?,latitude=?,")
+						  _T("longitude=?,location_accuracy=?,location_timestamp=?,")
+						  _T("guid=?,image=?,submap_id=? WHERE object_id=?"));
+	}
+	else
+	{
+		hStmt = DBPrepare(hdb,
+                    _T("INSERT INTO object_properties (name,status,is_deleted,")
                     _T("inherit_access_rights,last_modified,status_calc_alg,")
                     _T("status_prop_alg,status_fixed_val,status_shift,status_translation,")
                     _T("status_single_threshold,status_thresholds,comments,is_system,")
-						  _T("location_type,latitude,longitude,location_accuracy,guid,image,submap_id) ")
-                    _T("VALUES (%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,'%s',%s,%d,%d,'%f','%f',%d,'%s','%s',%d)"),
-                    m_dwId, (const TCHAR *)DBPrepareString(g_hCoreDB, m_szName), m_iStatus, m_bIsDeleted,
-                    m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
-                    m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
-                    szTranslation, m_iStatusSingleThreshold, szThresholds,
-                    (const TCHAR *)DBPrepareString(g_hCoreDB, CHECK_NULL_EX(m_pszComments)),
-						  m_bIsSystem, m_geoLocation.getType(),
-						  m_geoLocation.getLatitude(), m_geoLocation.getLongitude(), m_geoLocation.getAccuracy(),
-						  uuid_to_string(m_guid, guid), uuid_to_string(m_image, image),
-						  m_submapId);
-      }
-      DBFreeResult(hResult);
-      bResult = DBQuery(hdb, szQuery);
+						  _T("location_type,latitude,longitude,location_accuracy,location_timestamp,")
+						  _T("guid,image,submap_id,object_id) ")
+                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+	}
+	if (hStmt == NULL)
+		return FALSE;
+	
+   TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32], guid[64], image[64];
+   for(int i = 0, j = 0; i < 4; i++, j += 2)
+   {
+      _sntprintf(&szTranslation[j], 16 - j, _T("%02X"), (BYTE)m_iStatusTranslation[i]);
+      _sntprintf(&szThresholds[j], 16 - j, _T("%02X"), (BYTE)m_iStatusThresholds[i]);
    }
+	_sntprintf(lat, 32, _T("%f"), m_geoLocation.getLatitude());
+	_sntprintf(lon, 32, _T("%f"), m_geoLocation.getLongitude());
+
+	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_szName, DB_BIND_STATIC);
+	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_iStatus);
+	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_bIsDeleted);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_bInheritAccessRights);
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_dwTimeStamp);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_iStatusCalcAlg);
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_iStatusPropAlg);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_iFixedStatus);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_iStatusShift);
+	DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, szTranslation, DB_BIND_STATIC);
+	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_iStatusSingleThreshold);
+	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, szThresholds, DB_BIND_STATIC);
+	DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_pszComments, DB_BIND_STATIC);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)m_bIsSystem);
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getType());
+	DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
+	DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
+	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
+	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (DWORD)m_geoLocation.getTimestamp());
+	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guid), DB_BIND_STATIC);
+	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, uuid_to_string(m_image, image), DB_BIND_STATIC);
+	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_submapId);
+	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_dwId);
+
+	BOOL bResult = DBExecute(hStmt);
+	DBFreeStatement(hStmt);
    
    // Save custom attributes
    if (bResult)
    {
+		TCHAR szQuery[512];
 		_sntprintf(szQuery, 512, _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), m_dwId);
 		bResult = DBQuery(hdb, szQuery);
 		if (bResult)
 		{
-			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"));
+			hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"));
 			if (hStmt != NULL)
 			{
-				for(i = 0; i < (int)m_customAttributes.getSize(); i++)
+				for(DWORD i = 0; i < m_customAttributes.getSize(); i++)
 				{
 					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
 					DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_customAttributes.getKeyByIndex(i), DB_BIND_STATIC);
@@ -329,11 +335,9 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
    return bResult;
 }
 
-
-//
-// Add reference to the new child object
-//
-
+/**
+ * Add reference to the new child object
+ */
 void NetObj::AddChild(NetObj *pObject)
 {
    DWORD i;
@@ -373,11 +377,9 @@ void NetObj::AddParent(NetObj *pObject)
    Modify();
 }
 
-
-//
-// Delete reference to child object
-//
-
+/**
+ * Delete reference to child object
+ */
 void NetObj::DeleteChild(NetObj *pObject)
 {
    DWORD i;
@@ -702,22 +704,18 @@ BOOL NetObj::loadACLFromDB()
    return bSuccess;
 }
 
-
-//
-// Enumeration parameters structure
-//
-
+/**
+ * ACL enumeration parameters structure
+ */
 struct SAVE_PARAM
 {
    DB_HANDLE hdb;
    DWORD dwObjectId;
 };
 
-
-//
-// Handler for ACL elements enumeration
-//
-
+/**
+ * Handler for ACL elements enumeration
+ */
 static void EnumerationHandler(DWORD dwUserId, DWORD dwAccessRights, void *pArg)
 {
    TCHAR szQuery[256];
@@ -727,11 +725,9 @@ static void EnumerationHandler(DWORD dwUserId, DWORD dwAccessRights, void *pArg)
    DBQuery(((SAVE_PARAM *)pArg)->hdb, szQuery);
 }
 
-
-//
-// Save ACL to database
-//
-
+/**
+ * Save ACL to database
+ */
 BOOL NetObj::saveACLToDB(DB_HANDLE hdb)
 {
    TCHAR szQuery[256];
@@ -752,11 +748,9 @@ BOOL NetObj::saveACLToDB(DB_HANDLE hdb)
    return bSuccess;
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create NXCP message with object's data
+ */
 void NetObj::CreateMessage(CSCPMessage *pMsg)
 {
    DWORD i, dwId;
@@ -807,23 +801,19 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
 	m_geoLocation.fillMessage(*pMsg);
 }
 
-
-//
-// Handler for EnumerateSessions()
-//
-
+/**
+ * Handler for EnumerateSessions()
+ */
 static void BroadcastObjectChange(ClientSession *pSession, void *pArg)
 {
    if (pSession->isAuthenticated())
       pSession->onObjectChange((NetObj *)pArg);
 }
 
-
-//
-// Mark object as modified and put on client's notification queue
-// We assume that object is locked at the time of function call
-//
-
+/**
+ * Mark object as modified and put on client's notification queue
+ * We assume that object is locked at the time of function call
+ */
 void NetObj::Modify()
 {
    if (g_bModificationsLocked)
@@ -837,11 +827,9 @@ void NetObj::Modify()
       EnumerateClientSessions(BroadcastObjectChange, this);
 }
 
-
-//
-// Modify object from message
-//
-
+/**
+ * Modify object from NXCP message
+ */
 DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    BOOL bRecalcStatus = FALSE;

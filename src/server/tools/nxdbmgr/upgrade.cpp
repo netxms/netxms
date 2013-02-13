@@ -316,7 +316,8 @@ static BOOL H_UpgradeFromV270(int currVersion, int newVersion)
 {
    static TCHAR batch[] =
       _T("ALTER TABLE object_properties ADD location_accuracy integer\n")
-      _T("UPDATE object_properties SET location_accuracy=0\n")
+      _T("ALTER TABLE object_properties ADD location_timestamp integer\n")
+      _T("UPDATE object_properties SET location_accuracy=0,location_timestamp=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 

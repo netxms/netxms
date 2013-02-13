@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -46,12 +46,13 @@ GeoLocation::GeoLocation()
 	posToString(false, 0);
 	m_isValid = true;
 	m_accuracy = 0;
+	m_timestamp = 0;
 }
 
 /**
  * Constructor - create location from double lat/lon values
  */
-GeoLocation::GeoLocation(int type, double lat, double lon, int accuracy)
+GeoLocation::GeoLocation(int type, double lat, double lon, int accuracy, time_t timestamp)
 {
 	m_type = type;
 	m_lat = lat;
@@ -60,18 +61,20 @@ GeoLocation::GeoLocation(int type, double lat, double lon, int accuracy)
 	posToString(false, lon);
 	m_isValid = true;
    m_accuracy = accuracy;
+	m_timestamp = timestamp;
 }
 
 /**
  * Constructor - create location from string lat/lon values
  */
-GeoLocation::GeoLocation(int type, const TCHAR *lat, const TCHAR *lon, int accuracy)
+GeoLocation::GeoLocation(int type, const TCHAR *lat, const TCHAR *lon, int accuracy, time_t timestamp)
 {
 	m_type = type;
 	m_isValid = parseLatitude(lat) && parseLongitude(lon);
 	posToString(true, m_lat);
 	posToString(false, m_lon);
    m_accuracy = accuracy;
+	m_timestamp = timestamp;
 }
 
 /**
@@ -86,6 +89,7 @@ GeoLocation::GeoLocation(const GeoLocation &src)
 	nx_strncpy(m_lonStr, src.m_lonStr, 20);
 	m_isValid = src.m_isValid;
    m_accuracy = src.m_accuracy;
+	m_timestamp = src.m_timestamp;
 }
 
 /**
@@ -97,6 +101,7 @@ GeoLocation::GeoLocation(CSCPMessage &msg)
 	m_lat = msg.GetVariableDouble(VID_LATITUDE);
 	m_lon = msg.GetVariableDouble(VID_LONGITUDE);
 	m_accuracy = (int)msg.GetVariableShort(VID_ACCURACY);
+	m_timestamp = (time_t)msg.GetVariableInt64(VID_GEOLOCATION_TIMESTAMP);
 	posToString(true, m_lat);
 	posToString(false, m_lon);
 	m_isValid = true;
@@ -121,6 +126,7 @@ GeoLocation& GeoLocation::operator =(const GeoLocation &src)
 	nx_strncpy(m_lonStr, src.m_lonStr, 20);
 	m_isValid = src.m_isValid;
 	m_accuracy = src.m_accuracy;
+	m_timestamp = src.m_timestamp;
 	return *this;
 }
 
@@ -133,6 +139,7 @@ void GeoLocation::fillMessage(CSCPMessage &msg)
 	msg.SetVariable(VID_LATITUDE, m_lat);
 	msg.SetVariable(VID_LONGITUDE, m_lon);
 	msg.SetVariable(VID_ACCURACY, (WORD)m_accuracy);
+	msg.SetVariable(VID_GEOLOCATION_TIMESTAMP, (QWORD)m_timestamp);
 }
 
 /**

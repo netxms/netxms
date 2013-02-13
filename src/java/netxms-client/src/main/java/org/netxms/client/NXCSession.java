@@ -3359,6 +3359,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			msg.setVariable(NXCPCodes.VID_LATITUDE, gl.getLatitude());
 			msg.setVariable(NXCPCodes.VID_LONGITUDE, gl.getLongitude());
 			msg.setVariableInt16(NXCPCodes.VID_ACCURACY, gl.getAccuracy());
+			msg.setVariableInt64(NXCPCodes.VID_GEOLOCATION_TIMESTAMP, gl.getTimestamp().getTime() / 1000);
 		}
 
 		if ((flags & NXCObjectModificationData.MODIFY_MAP_LAYOUT) != 0)

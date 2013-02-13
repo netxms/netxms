@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.base;
 
 import java.text.NumberFormat;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +42,7 @@ public class GeoLocation
 	private double latitude;
 	private double longitude;
 	private int accuracy;	// Location accuracy in meters
+	private Date timestamp;
 	
 	/**
 	 * Create geolocation object from NXCP message
@@ -52,6 +54,7 @@ public class GeoLocation
 		latitude = msg.getVariableAsReal(NXCPCodes.VID_LATITUDE);
 		longitude = msg.getVariableAsReal(NXCPCodes.VID_LONGITUDE);
 		accuracy = msg.getVariableAsInteger(NXCPCodes.VID_ACCURACY);
+		timestamp = msg.getVariableAsDate(NXCPCodes.VID_GEOLOCATION_TIMESTAMP);
 	}
 	
 	/**
@@ -80,17 +83,18 @@ public class GeoLocation
 	}
 
 	/**
-	 * Create geolocation object of given type and accuracy
+	 * Create geolocation object of given type, accuracy, and timestamp
 	 * 
 	 * @param lat Latitude
 	 * @param lon Longitude
 	 */
-	public GeoLocation(double lat, double lon, int type, int accuracy)
+	public GeoLocation(double lat, double lon, int type, int accuracy, Date timestamp)
 	{
 		this.type = type;
 		latitude = lat;
 		longitude = lon;
 		this.accuracy = accuracy;
+		this.timestamp = timestamp;
 	}
 
 	/**
@@ -125,6 +129,16 @@ public class GeoLocation
 		return accuracy;
 	}
 	
+	/**
+	 * Get location's time stamp. May be null if not known.
+	 * 
+	 * @return the timestamp
+	 */
+	public final Date getTimestamp()
+	{
+		return timestamp;
+	}
+
 	/**
 	 * Extract degrees from lat/lon value
 	 * 

@@ -47,6 +47,7 @@ private:
 	TCHAR m_lonStr[20];
 	bool m_isValid;
 	int m_accuracy;
+	time_t m_timestamp;
 
 	void posToString(bool isLat, double pos);
 
@@ -60,8 +61,8 @@ private:
 
 public:
 	GeoLocation();
-	GeoLocation(int type, double lat, double lon, int accuracy = 0);
-	GeoLocation(int type, const TCHAR *lat, const TCHAR *lon, int accuracy = 0);
+	GeoLocation(int type, double lat, double lon, int accuracy = 0, time_t timestamp = 0);
+	GeoLocation(int type, const TCHAR *lat, const TCHAR *lon, int accuracy = 0, time_t timestamp = 0);
 	GeoLocation(const GeoLocation &src);
 	GeoLocation(CSCPMessage &msg);
 	~GeoLocation();
@@ -75,6 +76,7 @@ public:
 	const TCHAR *getLongitudeAsString() { return m_lonStr; }
 	bool isValid() { return m_isValid; }
 	int getAccuracy() { return m_accuracy; }
+	time_t getTimestamp() { return m_timestamp; }
 
 	void fillMessage(CSCPMessage &msg);
 };
