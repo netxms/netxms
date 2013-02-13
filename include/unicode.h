@@ -201,6 +201,7 @@
 #define _tpopen   wpopen
 #define _fgetts   fgetws
 #define _fputts   fputws
+#define _putts    putws
 #define _puttc    putwc
 #define _tcstol   wcstol
 #define _tcstoul  wcstoul
@@ -275,6 +276,7 @@
 #define _tpopen   popen
 #define _fgetts   fgets
 #define _fputts   fputs
+#define _putts    puts
 #define _puttc    putc
 #define _tcstol   strtol
 #define _tcstoul  strtoul

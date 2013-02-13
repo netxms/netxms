@@ -1109,6 +1109,21 @@ WCHAR *wctime(const time_t *timep)
 
 #endif
 
+#if !HAVE_PUTWS
+
+int putws(const WCHAR *s)
+{
+#if HAVE_FPUTWS
+	fputws(s, stdout);
+	putwc(L'\n', stdout);
+#else
+	printf("%S\n", s);
+#endif
+	return 1;
+}
+
+#endif
+
 #if !HAVE_WCSERROR && HAVE_STRERROR
 
 WCHAR *wcserror(int errnum)
