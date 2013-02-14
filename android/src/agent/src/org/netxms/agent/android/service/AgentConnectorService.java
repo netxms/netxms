@@ -6,6 +6,7 @@ package org.netxms.agent.android.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import org.netxms.agent.android.R;
@@ -538,11 +539,25 @@ public class AgentConnectorService extends Service implements LocationListener
 	}
 
 	/**
+	 * Convert location provider from Android type to NetXMS type.
+	 * 
+	 * @return Provider type
+	 */
+	private int getProviderType(String provider)
+	{
+		if (provider.compareTo(LocationManager.GPS_PROVIDER) == 0)
+			return GeoLocation.GPS;
+		else if (provider.compareTo(LocationManager.NETWORK_PROVIDER) == 0)
+			return GeoLocation.NETWORK;
+		return GeoLocation.UNSET;
+	}
+
+	/**
 	 * Get last known geolocation (depending on strategy used it could be very old).
 	 * If no provider available, try to get a last position from any available provider
 	 * identifyed by the system using the ACCURACY_COARSE criteria.
 	 * 
-	 * @return last known location or null if not known
+	 * @return Last known location or null if not known
 	 */
 	private GeoLocation getGeoLocation()
 	{
@@ -572,12 +587,15 @@ public class AgentConnectorService extends Service implements LocationListener
 						Float.toString(location.getAccuracy()));
 				Log.i(TAG, locStatus);
 				updateLocationStatus(locStatus);
-				return new GeoLocation(location.getLatitude(), location.getLongitude());
+				return new GeoLocation(location.getLatitude(),
+						location.getLongitude(),
+						getProviderType(location.getProvider()),
+						(int)location.getAccuracy(),
+						new Date(location.getTime()));
 			}
 		}
 		return null;
 	}
-
 	/**
 	 * Get list of enabled location provider based on selected strategy
 	 * 
