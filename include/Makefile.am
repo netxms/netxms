@@ -8,8 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-
-EXTRA_DIST = \
+include_HEADERS = \
 	appagent.h \
 	ata.h \
 	base64.h \

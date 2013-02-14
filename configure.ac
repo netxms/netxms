@@ -54,6 +54,7 @@ SUBAGENT_DIRS=""
 SUBAGENT_LIBS=""
 SERVER_LIBS=""
 SERVER_TOOLS=""
+SERVER_INCLUDE=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
@@ -120,6 +121,13 @@ AC_ARG_WITH(ipso-agent,
 [AS_HELP_STRING(--with-ipso-agent,build statically linked IPSO agent)],
 [
 	COMPONENTS="$COMPONENTS ipso-agent"
+])
+
+AC_ARG_WITH(sdk,
+[AS_HELP_STRING(--with-sdk,build and install files necessary for extension development)],
+[
+	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES include"
+	SERVER_INCLUDE="include"
 ])
 
 AC_ARG_WITH(mdebug,
@@ -353,7 +361,8 @@ AC_ARG_WITH(dist,
 	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin"
 	NXCONFIG="nxconfig"
-	TOP_LEVEL_MODULES="sql images"
+	TOP_LEVEL_MODULES="include sql images"
+	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds"
 	CLIENT_COMPONENTS="nxalarm nxevent nxlexer nxpush nxsms scilexer windows"
 	SERVER_TOOLS="nxconfig"
@@ -2022,6 +2031,7 @@ AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
 AC_SUBST(SUBAGENT_DIRS)
+AC_SUBST(SERVER_INCLUDE)
 AC_SUBST(SERVER_LIBS)
 AC_SUBST(SERVER_TOOLS)
 AC_SUBST(TOP_LEVEL_MODULES)
@@ -2346,3 +2356,7 @@ echo "const TCHAR *g_cFlags = _T(\"${CFLAGS}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_cxxFlags = _T(\"${CXXFLAGS}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_ldFlags = _T(\"${LDFLAGS}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_libs = _T(\"${LIBS}\");" >> $FLAGS_CPP
+echo "const TCHAR *g_cc = _T(\"${CC}\");" >> $FLAGS_CPP
+echo "const TCHAR *g_cxx = _T(\"${CXX}\");" >> $FLAGS_CPP
+echo "const TCHAR *g_ld = _T(\"${LD}\");" >> $FLAGS_CPP
+echo "const TCHAR *g_perl = _T(\"${PERL}\");" >> $FLAGS_CPP

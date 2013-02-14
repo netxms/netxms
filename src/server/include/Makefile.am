@@ -8,7 +8,8 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = \
+serverincludedir = $(includedir)/server
+serverinclude_HEADERS = \
 	local_admin.h \
 	netxms_mt.h \
 	nms_actions.h \
@@ -29,4 +30,4 @@ EXTRA_DIST = \
 	nxcore_smclp.h \
 	nxmodule.h \
 	nxsrvapi.h \
-   nddrv.h
+	nddrv.h
