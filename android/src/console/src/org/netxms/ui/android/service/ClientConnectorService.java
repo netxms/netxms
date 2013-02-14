@@ -25,7 +25,7 @@ import org.netxms.ui.android.main.activities.GraphBrowser;
 import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.main.activities.NodeBrowser;
 import org.netxms.ui.android.main.activities.NodeInfo;
-import org.netxms.ui.android.receiver.AlarmIntentReceiver;
+import org.netxms.ui.android.receivers.AlarmIntentReceiver;
 import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
 import org.netxms.ui.android.service.tasks.ExecActionTask;
