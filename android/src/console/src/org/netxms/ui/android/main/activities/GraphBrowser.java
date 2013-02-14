@@ -150,8 +150,7 @@ public class GraphBrowser extends AbstractClientActivity
 				newIntent.putExtra("timeTo", config.getTimeTo().getTime());
 			}
 			else
-			// Back from now
-			{
+			{	// Back from now
 				newIntent.putExtra("timeFrom", System.currentTimeMillis() - config.getTimeRangeMillis());
 				newIntent.putExtra("timeTo", System.currentTimeMillis());
 			}

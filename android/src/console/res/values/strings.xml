@@ -92,7 +92,8 @@
 	<string name="notify_service_obj_sync_success">Objects synchronized</string>
 	<string name="notify_service_obj_sync_fail">Failed to synchronize objects with server.</string>
 	<string name="notify_next_connection_schedule">(next connection scheduled for %1$s)</string>
-
+	<string name="notify_no_data">There are no data to show!</string>
+	
 	<string name="status_normal">Normal</string>
 	<string name="status_warning">Warning</string>
 	<string name="status_minor">Minor</string>

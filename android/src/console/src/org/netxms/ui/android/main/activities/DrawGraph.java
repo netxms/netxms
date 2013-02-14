@@ -21,6 +21,7 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GraphView.GraphViewData;
@@ -175,9 +176,9 @@ public class DrawGraph extends AbstractClientActivity
 		@Override
 		protected void onPostExecute(DciData[] result)
 		{
+			int addedSeries = 0;
 			if (result != null)
 			{
-				int addedSeries = 0;
 				double start = 0;
 				double end = 0;
 				for (int i = 0; i < result.length; i++)
@@ -186,10 +187,13 @@ public class DrawGraph extends AbstractClientActivity
 					if (dciDataRow.length > 0)
 					{
 						GraphViewData[] gwData = new GraphViewData[dciDataRow.length];
+						// dciData are reversed!
 						for (int j = dciDataRow.length - 1, k = 0; j >= 0; j--, k++)
-							// dciData are reversed!
 							gwData[k] = new GraphViewData(dciDataRow[j].getTimestamp().getTime(), dciDataRow[j].getValueAsDouble());
-						GraphViewSeries gwSeries = new GraphViewSeries(items[i].getDescription(), new GraphViewStyle(itemStyles[i].getColor(), itemStyles[i].getLineWidth()), gwData);
+						GraphViewSeries gwSeries = new GraphViewSeries(
+								items[i].getDescription(),
+								new GraphViewStyle(itemStyles[i].getColor(), itemStyles[i].getLineWidth()),
+								gwData);
 						graphView.addSeries(gwSeries);
 						addedSeries++;
 						start = dciDataRow[dciDataRow.length - 1].getTimestamp().getTime();
@@ -210,6 +214,8 @@ public class DrawGraph extends AbstractClientActivity
 				}
 			}
 			dialog.cancel();
+			if (addedSeries == 0)
+				Toast.makeText(getApplicationContext(), getString(R.string.notify_no_data), Toast.LENGTH_SHORT).show();
 		}
 	}
 }

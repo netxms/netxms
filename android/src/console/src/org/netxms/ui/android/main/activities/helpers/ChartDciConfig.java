@@ -26,26 +26,26 @@ import org.simpleframework.xml.Root;
 /**
  * DCI information for chart
  */
-@Root(name="dci")
+@Root(name = "dci", strict = false)
 public class ChartDciConfig
 {
 	public static final String UNSET_COLOR = "UNSET";
-	
+
 	@Attribute
 	public long nodeId;
-	
+
 	@Attribute
 	public long dciId;
-	
-	@Element(required=false)
+
+	@Element(required = false)
 	public String color;
 
-	@Element(required=false)
+	@Element(required = false)
 	public String name;
-	
-	@Element(required=false)
+
+	@Element(required = false)
 	public int lineWidth;
-	
+
 	/**
 	 * Default constructor
 	 */
@@ -105,7 +105,7 @@ public class ChartDciConfig
 	{
 		color = "0x" + Integer.toHexString(value);
 	}
-	
+
 	/**
 	 * Get DCI name. Always returns non-empty string.
 	 * @return
