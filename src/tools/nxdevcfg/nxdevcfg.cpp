@@ -27,7 +27,7 @@
 #include <getopt.h>
 #endif
 
-#define VALID_OPTIONS "bcCdilLPX"
+#define VALID_OPTIONS "bcCdDilLoOpPX"
 
 /**
  * Externals
@@ -37,6 +37,10 @@ extern const TCHAR *g_cxxFlags;
 extern const TCHAR *g_cppFlags;
 extern const TCHAR *g_ldFlags;
 extern const TCHAR *g_libs;
+extern const TCHAR *g_cc;
+extern const TCHAR *g_cxx;
+extern const TCHAR *g_ld;
+extern const TCHAR *g_perl;
 
 /**
  * Show help
@@ -46,13 +50,17 @@ static void ShowHelp()
 	printf("Available options:\n");
 #if HAVE_DECL_GETOPT_LONG
 	printf("   -b, --bindir    Binary directory\n"
+	       "   -o, --cc        C compiler\n"
 	       "   -c, --cflags    C compiler flags\n"
 	       "   -C, --cppflags  C/C++ compiler flags\n"
+	       "   -O, --cxx       C++ compiler\n"
 	       "   -X, --cxxflags  C++ compiler flags\n"
 	       "   -d, --datadir   Data directory\n"
+	       "   -D, --ld        Linker\n"
 	       "   -l, --ldflags   Linker flags (all except -l)\n"
 	       "   -L, --libdir    Library directory\n"
 	       "   -i, --libs      Linker flags (only -l)\n"
+	       "   -p, --perl      Perl interpreter\n"
 	       "   -P, --prefix    Installation prefix\n"
 	      );
 #else
@@ -60,9 +68,13 @@ static void ShowHelp()
 	       "   -c  C compiler flags\n"
 	       "   -C  C/C++ compiler flags\n"
 	       "   -d  Data directory\n"
+	       "   -D  Linker\n"
 	       "   -i  Linker flags (only -l)\n"
 	       "   -l  Linker flags (all except -l)\n"
 	       "   -L  Library directory\n"
+	       "   -o  C compiler\n"
+	       "   -O  C++ compiler\n"
+	       "   -p  Perl interpreter\n"
 	       "   -P  Installation prefix\n"
 	       "   -X  C++ compiler flags\n"
 	      );
@@ -92,13 +104,17 @@ int main(int argc, char *argv[])
 	static struct option longOptions[] = 
 	{
 		{ (char *)"bindir", 0, NULL, 'b' },
+		{ (char *)"cc", 0, NULL, 'o' },
 		{ (char *)"cflags", 0, NULL, 'c' },
 		{ (char *)"cppflags", 0, NULL, 'C' },
+		{ (char *)"cxx", 0, NULL, 'O' },
 		{ (char *)"cxxflags", 0, NULL, 'X' },
 		{ (char *)"datadir", 0, NULL, 'd' },
+		{ (char *)"ld", 0, NULL, 'D' },
 		{ (char *)"ldflags", 0, NULL, 'l' },
 		{ (char *)"libdir", 0, NULL, 'L' },
 		{ (char *)"libs", 0, NULL, 'i' },
+		{ (char *)"perl", 0, NULL, 'p' },
 		{ (char *)"prefix", 0, NULL, 'P' },
 		{ NULL, 0, 0, 0 }
 	};
@@ -128,24 +144,36 @@ int main(int argc, char *argv[])
          case 'C':
             PrintFlags(g_cppFlags);
             return 0;
-         case 'X':
-            PrintFlags(g_cxxFlags);
+			case 'd':
+				_tprintf(_T("%s\n"), DATADIR);
+				return 0;
+			case 'D':
+				_tprintf(_T("%s\n"), g_ld);
+				return 0;
+         case 'i':
+            PrintFlags(g_libs);
             return 0;
          case 'l':
             PrintFlags(g_ldFlags);
             return 0;
-         case 'i':
-            PrintFlags(g_libs);
-            return 0;
-			case 'd':
-				_tprintf(_T("%s\n"), DATADIR);
-				return 0;
 			case 'L':
 				_tprintf(_T("%s\n"), LIBDIR);
+				return 0;
+			case 'o':
+				_tprintf(_T("%s\n"), g_cc);
+				return 0;
+			case 'O':
+				_tprintf(_T("%s\n"), g_cxx);
+				return 0;
+			case 'p':
+				_tprintf(_T("%s\n"), g_perl);
 				return 0;
 			case 'P':
 				_tprintf(_T("%s\n"), PREFIX);
 				return 0;
+         case 'X':
+            PrintFlags(g_cxxFlags);
+            return 0;
 			case '?':
 				ShowHelp();
 				return 1;
