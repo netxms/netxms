@@ -1,4 +1,4 @@
-package org.netxms.ui.android.receiver;
+package org.netxms.ui.android.receivers;
 
 import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.service.ClientConnectorService;
