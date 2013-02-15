@@ -78,7 +78,7 @@ int SNMP_ObjectId::compare(const TCHAR *pszOid)
 /**
  * Compare this OID to another
  */
-int SNMP_ObjectId::compare(DWORD *pdwOid, DWORD dwLen)
+int SNMP_ObjectId::compare(const DWORD *pdwOid, DWORD dwLen)
 {
    if ((pdwOid == NULL) || (dwLen == 0) || (m_pdwValue == NULL))
       return OID_ERROR;
@@ -88,6 +88,16 @@ int SNMP_ObjectId::compare(DWORD *pdwOid, DWORD dwLen)
 
    return (dwLen == m_dwLength) ? OID_EQUAL : 
             ((dwLen < m_dwLength) ? OID_SHORTER : OID_LONGER);
+}
+
+/**
+ * Compare this OID to another
+ */
+int SNMP_ObjectId::compare(SNMP_ObjectId *oid)
+{
+	if (oid == NULL)
+      return OID_ERROR;
+	return compare(oid->getValue(), oid->getLength());
 }
 
 /**

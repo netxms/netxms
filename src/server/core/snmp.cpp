@@ -67,8 +67,8 @@ ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, SNMP_Transport *pTransport)
    pArpCache->dwNumEntries = 0;
    pArpCache->pEntries = NULL;
 
-   if (SnmpEnumerate(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.22.1.3"), 
-                     HandlerArp, pArpCache, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.22.1.3"), 
+                HandlerArp, pArpCache, FALSE) != SNMP_ERR_SUCCESS)
    {
       DestroyArpCache(pArpCache);
       pArpCache = NULL;
@@ -182,8 +182,8 @@ ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport)
    pRT->iNumEntries = 0;
    pRT->pRoutes = NULL;
 
-   if (SnmpEnumerate(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.21.1.1"), 
-                     HandlerRoute, pRT, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.21.1.1"), 
+                HandlerRoute, pRT, FALSE) != SNMP_ERR_SUCCESS)
    {
       DestroyRoutingTable(pRT);
       pRT = NULL;

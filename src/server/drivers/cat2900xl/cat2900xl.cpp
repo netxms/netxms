@@ -113,7 +113,7 @@ InterfaceList *Cat2900Driver::getInterfaces(SNMP_Transport *snmp, StringMap *att
 		return NULL;
 	
 	// Set slot and port number for physical interfaces
-	SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.87.1.4.1.1.25"), HandlerPortList, ifList, FALSE);
+	SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.87.1.4.1.1.25"), HandlerPortList, ifList, FALSE);
 
 	return ifList;
 }

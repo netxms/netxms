@@ -196,7 +196,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
    pIfList = new InterfaceList(iNumIf);
 
    // Gather interface indexes
-   if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.2.1.1"), HandlerIndex, pIfList, FALSE) == SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.2.1.1"), HandlerIndex, pIfList, FALSE) == SNMP_ERR_SUCCESS)
    {
       // Enumerate interfaces
 		for(i = 0; i < pIfList->getSize(); i++)
@@ -296,7 +296,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
       }
 
       // Interface IP address'es and netmasks
-		error = SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.4.20.1.1"), HandlerIpAddr, pIfList, FALSE);
+		error = SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.4.20.1.1"), HandlerIpAddr, pIfList, FALSE);
       if (error == SNMP_ERR_SUCCESS)
       {
          bSuccess = TRUE;
@@ -404,10 +404,10 @@ VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attribu
 {
 	VlanList *list = new VlanList();
 	
-	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
 		goto failure;
 
-	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.17.7.1.4.2.1.4"), HandlerVlanEgressPorts, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.17.7.1.4.2.1.4"), HandlerVlanEgressPorts, list, FALSE) != SNMP_ERR_SUCCESS)
 		goto failure;
 
 	return list;

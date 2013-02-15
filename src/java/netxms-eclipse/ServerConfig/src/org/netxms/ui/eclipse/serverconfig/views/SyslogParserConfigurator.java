@@ -264,7 +264,6 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	private void save()
 	{
 		final String xml = editor.getParserXml();
-System.out.println(xml);		
 		actionSave.setEnabled(false);
 		new ConsoleJob("Save syslog parser configuration", this, Activator.PLUGIN_ID, null) {
 			@Override

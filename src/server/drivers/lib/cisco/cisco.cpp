@@ -194,15 +194,15 @@ VlanList *CiscoDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attribute
 	VlanList *list = new VlanList();
 	
 	// Vlan list
-	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.1.4"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.1.4"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
 		goto failure;
 
 	// Trunk ports
-	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.5"), HandlerTrunkPorts, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.5"), HandlerTrunkPorts, list, FALSE) != SNMP_ERR_SUCCESS)
 		goto failure;
 
 	// Access ports
-	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.68.1.2.2.1.1"), HandlerAccessPorts, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.68.1.2.2.1.1"), HandlerAccessPorts, list, FALSE) != SNMP_ERR_SUCCESS)
 		goto failure;
 
 	return list;

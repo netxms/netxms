@@ -111,7 +111,7 @@ InterfaceList *CatalystDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		return NULL;
 	
 	// Set slot and port number for physical interfaces
-	SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.5.1.4.1.1.11"), HandlerPortList, ifList, FALSE);
+	SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.5.1.4.1.1.11"), HandlerPortList, ifList, FALSE);
 
 	return ifList;
 }

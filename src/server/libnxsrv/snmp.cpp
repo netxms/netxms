@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,30 +22,24 @@
 
 #include "libnxsrv.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Unique request ID
+ */
 static DWORD m_dwRequestId = 1;
 
-
-//
-// Generate new request ID
-//
-
+/**
+ * Generate new request ID
+ */
 DWORD LIBNXSRV_EXPORTABLE SnmpNewRequestId()
 {
    return m_dwRequestId++;
 }
 
-
-//
-// Get value for SNMP variable
-// If szOidStr is not NULL, string representation of OID is used, otherwise -
-// binary representation from oidBinary and dwOidLen
-//
-
+/**
+ * Get value for SNMP variable
+ * If szOidStr is not NULL, string representation of OID is used, otherwise -
+ * binary representation from oidBinary and dwOidLen
+ */
 DWORD LIBNXSRV_EXPORTABLE SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
                                   const TCHAR *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
                                   DWORD dwBufferSize, DWORD dwFlags)
@@ -165,93 +159,101 @@ DWORD LIBNXSRV_EXPORTABLE SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
 /**
  * Enumerate multiple values by walking through MIB, starting at given root
  */
-DWORD LIBNXSRV_EXPORTABLE SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
-                                        DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
-                                        void *pUserArg, BOOL bVerbose)
+DWORD LIBNXSRV_EXPORTABLE SnmpWalk(DWORD dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
+                                   DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
+                                   void *pUserArg, BOOL bVerbose)
 {
-   DWORD pdwRootName[MAX_OID_LEN], dwRootLen, pdwName[MAX_OID_LEN], dwNameLen, dwResult;
-   SNMP_PDU *pRqPDU, *pRespPDU;
-   BOOL bRunning = TRUE;
-
 	if (pTransport == NULL)
 		return SNMP_ERR_COMM;
 
    // Get root
-   dwRootLen = SNMPParseOID(szRootOid, pdwRootName, MAX_OID_LEN);
+	DWORD pdwRootName[MAX_OID_LEN];
+   DWORD dwRootLen = SNMPParseOID(szRootOid, pdwRootName, MAX_OID_LEN);
    if (dwRootLen == 0)
    {
       nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szRootOid);
-      dwResult = SNMP_ERR_BAD_OID;
+      return SNMP_ERR_BAD_OID;
    }
-   else
+
+	// First OID to request
+   DWORD pdwName[MAX_OID_LEN];
+   memcpy(pdwName, pdwRootName, dwRootLen * sizeof(DWORD));
+   DWORD dwNameLen = dwRootLen;
+
+   // Walk the MIB
+   DWORD dwResult;
+   BOOL bRunning = TRUE;
+   DWORD firstObjectName[MAX_OID_LEN];
+   DWORD firstObjectNameLen = 0;
+   while(bRunning)
    {
-      memcpy(pdwName, pdwRootName, dwRootLen * sizeof(DWORD));
-      dwNameLen = dwRootLen;
+      SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, m_dwRequestId++, dwVersion);
+      pRqPDU->bindVariable(new SNMP_Variable(pdwName, dwNameLen));
+	   SNMP_PDU *pRespPDU;
+      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 
-      // Walk the MIB
-      while(bRunning)
+      // Analyze response
+      if (dwResult == SNMP_ERR_SUCCESS)
       {
-         pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, m_dwRequestId++, dwVersion);
-         pRqPDU->bindVariable(new SNMP_Variable(pdwName, dwNameLen));
-         dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
-
-         // Analyze response
-         if (dwResult == SNMP_ERR_SUCCESS)
+         if ((pRespPDU->getNumVariables() > 0) &&
+             (pRespPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
          {
-            if ((pRespPDU->getNumVariables() > 0) &&
-                (pRespPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+            SNMP_Variable *pVar = pRespPDU->getVariable(0);
+
+            if ((pVar->GetType() != ASN_NO_SUCH_OBJECT) &&
+                (pVar->GetType() != ASN_NO_SUCH_INSTANCE))
             {
-               SNMP_Variable *pVar = pRespPDU->getVariable(0);
-
-               if ((pVar->GetType() != ASN_NO_SUCH_OBJECT) &&
-                   (pVar->GetType() != ASN_NO_SUCH_INSTANCE))
+               // Should we stop walking?
+					// Some buggy SNMP agents may return first value after last one
+					// (Toshiba Strata CTX do that for example), so last check is here
+               if ((pVar->GetName()->getLength() < dwRootLen) ||
+                   (memcmp(pdwRootName, pVar->GetName()->getValue(), dwRootLen * sizeof(DWORD))) ||
+						 (pVar->GetName()->compare(pdwName, dwNameLen) == OID_EQUAL) ||
+						 (pVar->GetName()->compare(firstObjectName, firstObjectNameLen) == OID_EQUAL))
                {
-                  // Should we stop walking?
-                  if ((pVar->GetName()->getLength() < dwRootLen) ||
-                      (memcmp(pdwRootName, pVar->GetName()->getValue(), dwRootLen * sizeof(DWORD))) ||
-                      ((pVar->GetName()->getLength() == dwNameLen) &&
-                       (!memcmp(pVar->GetName()->getValue(), pdwName, pVar->GetName()->getLength() * sizeof(DWORD)))))
-                  {
-                     bRunning = FALSE;
-                     delete pRespPDU;
-                     delete pRqPDU;
-                     break;
-                  }
-                  memcpy(pdwName, pVar->GetName()->getValue(), 
-                         pVar->GetName()->getLength() * sizeof(DWORD));
-                  dwNameLen = pVar->GetName()->getLength();
-
-                  // Call user's callback function for processing
-                  dwResult = pHandler(dwVersion, pVar, pTransport, pUserArg);
-                  if (dwResult != SNMP_ERR_SUCCESS)
-                  {
-                     bRunning = FALSE;
-                  }
+                  bRunning = FALSE;
+                  delete pRespPDU;
+                  delete pRqPDU;
+                  break;
                }
-               else
+               dwNameLen = pVar->GetName()->getLength();
+               memcpy(pdwName, pVar->GetName()->getValue(), dwNameLen * sizeof(DWORD));
+					if (firstObjectNameLen == 0)
+					{
+						firstObjectNameLen = dwNameLen;
+						memcpy(firstObjectName, pdwName, dwNameLen * sizeof(DWORD));
+					}
+
+               // Call user's callback function for processing
+               dwResult = pHandler(dwVersion, pVar, pTransport, pUserArg);
+               if (dwResult != SNMP_ERR_SUCCESS)
                {
-                  dwResult = SNMP_ERR_NO_OBJECT;
                   bRunning = FALSE;
                }
             }
             else
             {
-               if (pRespPDU->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
-                  dwResult = SNMP_ERR_NO_OBJECT;
-               else
-                  dwResult = SNMP_ERR_AGENT;
+               dwResult = SNMP_ERR_NO_OBJECT;
                bRunning = FALSE;
             }
-            delete pRespPDU;
          }
          else
          {
-            if (bVerbose)
-               nxlog_write(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", dwResult);
+            if (pRespPDU->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
+               dwResult = SNMP_ERR_NO_OBJECT;
+            else
+               dwResult = SNMP_ERR_AGENT;
             bRunning = FALSE;
          }
-         delete pRqPDU;
+         delete pRespPDU;
       }
+      else
+      {
+         if (bVerbose)
+            nxlog_write(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", dwResult);
+         bRunning = FALSE;
+      }
+      delete pRqPDU;
    }
    return dwResult;
 }

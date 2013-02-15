@@ -60,5 +60,5 @@ static DWORD PortMapCallback(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 
 void BridgeMapPorts(int snmpVersion, SNMP_Transport *transport, InterfaceList *ifList)
 {
-	SnmpEnumerate(snmpVersion, transport, _T(".1.3.6.1.2.1.17.1.4.1.1"), PortMapCallback, ifList, FALSE);
+	SnmpWalk(snmpVersion, transport, _T(".1.3.6.1.2.1.17.1.4.1.1"), PortMapCallback, ifList, FALSE);
 }

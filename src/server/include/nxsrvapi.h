@@ -559,9 +559,9 @@ DWORD LIBNXSRV_EXPORTABLE SnmpNewRequestId();
 DWORD LIBNXSRV_EXPORTABLE SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
                                   const TCHAR *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
                                   DWORD dwBufferSize, DWORD dwFlags);
-DWORD LIBNXSRV_EXPORTABLE SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
-						                      DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
-                                        void *pUserArg, BOOL bVerbose);
+DWORD LIBNXSRV_EXPORTABLE SnmpWalk(DWORD dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
+						                 DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
+                                   void *pUserArg, BOOL bVerbose);
 
 
 //

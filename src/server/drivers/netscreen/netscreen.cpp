@@ -134,7 +134,7 @@ InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, StringMap *a
 		return NULL;
 
 	InterfaceList *ifList = new InterfaceList;
-	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.3224.9.1.1.1"), HandlerIfList, ifList, FALSE) == SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.3224.9.1.1.1"), HandlerIfList, ifList, FALSE) == SNMP_ERR_SUCCESS)
 	{
 		// Fix interface indexes
 		for(int i = 0; i < ifList->getSize(); i++)

@@ -199,7 +199,7 @@ ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp)
 	DbgPrintf(5, _T("Building component tree for node %s [%d]"), node->Name(), (int)node->Id());
 	ObjectArray<Component> elements(16, 16);
 	ComponentTree *tree = NULL;
-	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.47.1.1.1.1.7"), EntityWalker, &elements, FALSE) == SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.47.1.1.1.1.7"), EntityWalker, &elements, FALSE) == SNMP_ERR_SUCCESS)
 	{
 		DbgPrintf(6, _T("BuildComponentTree(%s [%d]): %d elements found"), node->Name(), (int)node->Id(), elements.size());
 

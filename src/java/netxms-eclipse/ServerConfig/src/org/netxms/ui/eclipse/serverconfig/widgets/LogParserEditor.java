@@ -30,6 +30,8 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -157,7 +159,14 @@ public class LogParserEditor extends Composite
 		tabItem.setText("XML");
 		tabItem.setImage(SharedIcons.IMG_XML);
 		tabItem.setControl(xmlEditor);
-
+		
+		xmlEditor.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e)
+			{
+				fireModifyListeners();
+			}
+		});
 	}
 
 	/**

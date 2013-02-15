@@ -104,7 +104,7 @@ VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, 
 {
 	VlanList *list = new VlanList();
 	DWORD slotSize = getSlotSize(attributes);
-	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
 	{
 		delete_and_null(list);
 	}

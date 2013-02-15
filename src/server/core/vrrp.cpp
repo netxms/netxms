@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -87,34 +87,28 @@ void VrrpRouter::addVirtualIP(SNMP_Variable *var)
 	m_ipAddrList[m_ipAddrCount++] = vip; 
 }
 
-
-//
-// VRRP walker callback
-//
-
+/**
+ * VRRP walker callback
+ */
 DWORD VrrpRouter::walkerCallback(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	((VrrpRouter *)arg)->addVirtualIP(var);
 	return SNMP_ERR_SUCCESS;
 }
 
-
-//
-// Read VRs virtual IPs
-//
-
+/**
+ * Read VRs virtual IPs
+ */
 bool VrrpRouter::readVirtualIP(DWORD snmpVersion, SNMP_Transport *transport)
 {
 	TCHAR oid[256];
 	_sntprintf(oid, 256, _T(".1.3.6.1.2.1.68.1.4.1.2.%u.%u"), m_ifIndex, m_id);
-	return SnmpEnumerate(snmpVersion, transport, oid, VrrpRouter::walkerCallback, this, false) == SNMP_ERR_SUCCESS;
+	return SnmpWalk(snmpVersion, transport, oid, VrrpRouter::walkerCallback, this, false) == SNMP_ERR_SUCCESS;
 }
 
-
-//
-// VRRP virtual router table walker's callback
-//
-
+/**
+ * VRRP virtual router table walker's callback
+ */
 DWORD VRRPHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	SNMP_ObjectId *oid = var->GetName();
@@ -140,11 +134,9 @@ DWORD VRRPHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transpo
 	return SNMP_ERR_SUCCESS;
 }
 
-
-//
-// Get list of VRRP virtual routers
-//
-
+/**
+ * Get list of VRRP virtual routers
+ */
 VrrpInfo *GetVRRPInfo(Node *node)
 {
 	if (!node->isSNMPSupported())
@@ -162,7 +154,7 @@ VrrpInfo *GetVRRPInfo(Node *node)
 	}
 
 	VrrpInfo *info = new VrrpInfo(version);
-	if (SnmpEnumerate(node->getSNMPVersion(), transport, _T(".1.3.6.1.2.1.68.1.3.1.3"), VRRPHandler, info, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(node->getSNMPVersion(), transport, _T(".1.3.6.1.2.1.68.1.3.1.3"), VRRPHandler, info, FALSE) != SNMP_ERR_SUCCESS)
 	{
 		delete info;
 		info = NULL;

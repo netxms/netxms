@@ -61,7 +61,7 @@ static DWORD PortLocalInfoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Tr
 ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp)
 {
 	ObjectArray<LLDP_LOCAL_PORT_INFO> *ports = new ObjectArray<LLDP_LOCAL_PORT_INFO>(64, 64, true);
-	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.0.8802.1.1.2.1.3.7.1.3"), PortLocalInfoHandler, ports, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.0.8802.1.1.2.1.3.7.1.3"), PortLocalInfoHandler, ports, FALSE) != SNMP_ERR_SUCCESS)
 	{
 		delete ports;
 		return NULL;

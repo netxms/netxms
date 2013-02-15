@@ -1909,7 +1909,7 @@ bool Node::confPollSnmp(DWORD dwRqId)
 
       // Check for printer MIB support
 		int count = 0;
-		SnmpEnumerate(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43.5.1.1.17"), CountingSnmpWalkerCallback, &count, FALSE);
+		SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43.5.1.1.17"), CountingSnmpWalkerCallback, &count, FALSE);
       if (count > 0)
       {
 			LockData();
@@ -2087,7 +2087,7 @@ void Node::checkBridgeMib(SNMP_Transport *pTransport)
 void Node::checkIfXTable(SNMP_Transport *pTransport)
 {
 	int count = 0;
-	SnmpEnumerate(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.31.1.1.1.1"), CountingSnmpWalkerCallback, &count, FALSE);
+	SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.31.1.1.1.1"), CountingSnmpWalkerCallback, &count, FALSE);
    if (count > 0)
    {
 		LockData();
@@ -2717,7 +2717,7 @@ DWORD Node::getItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TC
 }
 
 /**
- * Callback for SnmpEnumerate in Node::getListFromSNMP
+ * Callback for SnmpWalk in Node::getListFromSNMP
  */
 static DWORD SNMPGetListCallback(DWORD snmpVersion, SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
 {
@@ -2738,7 +2738,7 @@ DWORD Node::getListFromSNMP(WORD port, const TCHAR *oid, StringList **list)
       return DCE_COMM_ERROR;
 
    *list = new StringList;
-   DWORD rc = SnmpEnumerate(snmp->getSnmpVersion(), snmp, oid, SNMPGetListCallback, *list, FALSE);
+   DWORD rc = SnmpWalk(snmp->getSnmpVersion(), snmp, oid, SNMPGetListCallback, *list, FALSE);
    delete snmp;
    if (rc != SNMP_ERR_SUCCESS)
    {
@@ -2758,7 +2758,7 @@ struct SNMPOIDSuffixListCallback_Data
 };
 
 /**
- * Callback for SnmpEnumerate in Node::getOIDSuffixListFromSNMP
+ * Callback for SnmpWalk in Node::getOIDSuffixListFromSNMP
  */
 static DWORD SNMPOIDSuffixListCallback(DWORD snmpVersion, SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
 {
@@ -2792,7 +2792,7 @@ DWORD Node::getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringList **l
    }
 
    data.values = new StringList;
-   DWORD rc = SnmpEnumerate(snmp->getSnmpVersion(), snmp, oid, SNMPOIDSuffixListCallback, &data, FALSE);
+   DWORD rc = SnmpWalk(snmp->getSnmpVersion(), snmp, oid, SNMPOIDSuffixListCallback, &data, FALSE);
    delete snmp;
    if (rc == SNMP_ERR_SUCCESS)
    {
@@ -3890,7 +3890,7 @@ DWORD Node::CallSnmpEnumerate(const TCHAR *pszRootOid,
 		pTransport = createSnmpTransport();
 		if (pTransport != NULL)
 		{
-			dwResult = SnmpEnumerate(m_snmpVersion, pTransport,
+			dwResult = SnmpWalk(m_snmpVersion, pTransport,
 											 pszRootOid, pHandler, pArg, FALSE);
 			delete pTransport;
 		}

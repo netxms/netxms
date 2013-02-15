@@ -377,7 +377,8 @@ public:
    void extend(DWORD subId);
 
    int compare(const TCHAR *pszOid);
-   int compare(DWORD *pdwOid, DWORD dwLen);
+   int compare(const DWORD *pdwOid, DWORD dwLen);
+	int compare(SNMP_ObjectId *oid);
 };
 
 /**
