@@ -92,6 +92,7 @@ static void PrintFlags(const TCHAR *src)
 	s.replace(_T("${pkgdatadir}"), DATADIR);
 	s.replace(_T("${pkglibdir}"), PKGLIBDIR);
 	s.replace(_T("${prefix}"), PREFIX);
+	s.escapeCharacter(_T('"'), _T('\\'));
 	_tprintf(_T("%s\n"), (const TCHAR *)s);
 }
 
