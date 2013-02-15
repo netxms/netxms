@@ -45,9 +45,9 @@ public class OverviewAdapter extends BaseAdapter
 	}
 
 	/**
-	 * Set alarms
+	 * Set values for overview adapter
 	 * 
-	 * @param alarms
+	 * @param object from which to extract overview data
 	 */
 	public void setValues(GenericObject obj)
 	{
@@ -85,51 +85,7 @@ public class OverviewAdapter extends BaseAdapter
 				addPair(r.getString(R.string.overview_battery_level), Integer.toString(((MobileDevice)obj).getBatteryLevel()) + "%");
 				break;
 		}
-		addPair(r.getString(R.string.overview_location), ((MobileDevice)obj).getGeolocation());
-	}
-
-	private void addPair(String label, GeoLocation value)
-	{
-		if (value != null)
-			addPair(label, value.getLatitudeAsString() + " " + value.getLongitudeAsString());
-	}
-
-	private void addPair(String label, String value, boolean allowEmpty)
-	{
-		if (allowEmpty || (value != null && value.length() != 0))
-			addPair(label, value);
-	}
-
-	private void addPair(String label, String value)
-	{
-		labels.add(label);
-		values.add(value);
-	}
-
-	private String getNodeStatus(int status)
-	{
-		switch (status)
-		{
-			case GenericObject.STATUS_NORMAL:
-				return r.getString(R.string.status_normal);
-			case GenericObject.STATUS_WARNING:
-				return r.getString(R.string.status_warning);
-			case GenericObject.STATUS_MINOR:
-				return r.getString(R.string.status_minor);
-			case GenericObject.STATUS_MAJOR:
-				return r.getString(R.string.status_major);
-			case GenericObject.STATUS_CRITICAL:
-				return r.getString(R.string.status_critical);
-			case GenericObject.STATUS_UNKNOWN:
-				return r.getString(R.string.status_unknown);
-			case GenericObject.STATUS_UNMANAGED:
-				return r.getString(R.string.status_unmanaged);
-			case GenericObject.STATUS_DISABLED:
-				return r.getString(R.string.status_disabled);
-			case GenericObject.STATUS_TESTING:
-				return r.getString(R.string.status_testing);
-		}
-		return r.getString(R.string.status_unknown);
+		addPair(r.getString(R.string.overview_location), obj.getGeolocation());
 	}
 
 	/*
@@ -212,5 +168,106 @@ public class OverviewAdapter extends BaseAdapter
 		itemName.setText(labels.get(position));
 		itemValue.setText(values.get(position));
 		return view;
+	}
+
+	/**
+	 * Add a pair label/geolocation value
+	 * 
+	 * @param label Label to print
+	 * @param value GeoLocation value to print 
+	 */
+	private void addPair(String label, GeoLocation value)
+	{
+		if (value != null && value.getType() != GeoLocation.UNSET)
+		{
+			String provider = "";
+			if (getProvider(value.getType()).length() > 0)
+				provider = " - " + r.getString(R.string.overview_provider, getProvider(value.getType()));
+			String accuracy = "";
+			if (value.getAccuracy() > 0)
+				accuracy = " - " + r.getString(R.string.overview_accuracy, Integer.toString(value.getAccuracy()));
+			String timestamp = "";
+			if (value.getTimestamp() != null)
+				timestamp = " - " + r.getString(R.string.overview_timestamp, value.getTimestamp().toLocaleString());
+			String latlon = value.getLatitudeAsString() + " " + value.getLongitudeAsString();
+			addPair(label, latlon + provider + accuracy + timestamp);
+		}
+	}
+
+	/**
+	 * Add a pair label/value with possibly empty values
+	 * 
+	 * @param label Label to print
+	 * @param value String value to print
+	 * @param allowEmpty True to allow empty field (show only label) 
+	 */
+	private void addPair(String label, String value, boolean allowEmpty)
+	{
+		if (allowEmpty || (value != null && value.length() != 0))
+			addPair(label, value);
+	}
+
+	/**
+	 * Add a pair label/value
+	 * 
+	 * @param label	Label to print
+	 * @param value	String value to print 
+	 */
+	private void addPair(String label, String value)
+	{
+		labels.add(label);
+		values.add(value);
+	}
+
+	/**
+	 * Get provider type in human readable form
+	 * 
+	 * @param type NetXMS type of provider
+	 * @return Human readable type of provider 
+	 */
+	private String getProvider(int type)
+	{
+		switch (type)
+		{
+			case GeoLocation.MANUAL:
+				return r.getString(R.string.provider_manual);
+			case GeoLocation.GPS:
+				return r.getString(R.string.provider_gps);
+			case GeoLocation.NETWORK:
+				return r.getString(R.string.provider_network);
+		}
+		return "";
+	}
+
+	/**
+	 * Get node status in human readable form
+	 * 
+	 * @param status NetXMS type of status
+	 * @return Human readable status 
+	 */
+	private String getNodeStatus(int status)
+	{
+		switch (status)
+		{
+			case GenericObject.STATUS_NORMAL:
+				return r.getString(R.string.status_normal);
+			case GenericObject.STATUS_WARNING:
+				return r.getString(R.string.status_warning);
+			case GenericObject.STATUS_MINOR:
+				return r.getString(R.string.status_minor);
+			case GenericObject.STATUS_MAJOR:
+				return r.getString(R.string.status_major);
+			case GenericObject.STATUS_CRITICAL:
+				return r.getString(R.string.status_critical);
+			case GenericObject.STATUS_UNKNOWN:
+				return r.getString(R.string.status_unknown);
+			case GenericObject.STATUS_UNMANAGED:
+				return r.getString(R.string.status_unmanaged);
+			case GenericObject.STATUS_DISABLED:
+				return r.getString(R.string.status_disabled);
+			case GenericObject.STATUS_TESTING:
+				return r.getString(R.string.status_testing);
+		}
+		return r.getString(R.string.status_unknown);
 	}
 }

@@ -145,7 +145,14 @@
 	<string name="overview_user">User</string>
 	<string name="overview_battery_level">Battery Level</string>
 	<string name="overview_location">Location</string>
-	
+	<string name="overview_provider">Source: %1$s</string>
+	<string name="overview_accuracy">Accuracy: %1$s meters</string>
+	<string name="overview_timestamp">Timestamp: %1$s</string>
+
+	<string name="provider_manual">Manual</string>
+	<string name="provider_network">Network</string>
+	<string name="provider_gps">GPS</string>
+				
 	<string name="ts_fn_last">last</string>
 	<string name="ts_fn_average">average</string>
 	<string name="ts_fn_deviation">deviation</string>
