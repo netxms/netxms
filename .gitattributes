@@ -32,7 +32,6 @@ android/src/agent/res/layout/homescreen.xml -text
 android/src/agent/res/layout/screen_header_full.xml -text
 android/src/agent/res/menu/main_menu.xml -text
 android/src/agent/res/values-v11/styles.xml -text
-android/src/agent/res/values/build_number.xml -text
 android/src/agent/res/values/colors.xml -text
 android/src/agent/res/values/strings.xml -text
 android/src/agent/res/values/strings_arrays.xml -text

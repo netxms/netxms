@@ -4,7 +4,9 @@
 package org.netxms.ui.android.main.activities;
 
 import org.netxms.ui.android.R;
+import org.netxms.ui.android.service.ClientConnectorService;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -34,6 +36,18 @@ public class ConsolePreferences extends PreferenceActivity
 	{
 		super.onPause();
 
+	}
+
+	/* (non-Javadoc)
+	 * @see android.preference.PreferenceActivity#onDestroy()
+	 */
+	@Override
+	protected void onDestroy()
+	{
+		Intent i = new Intent(this, ClientConnectorService.class);
+		i.setAction(ClientConnectorService.ACTION_CONFIGURE);
+		startService(i);
+		super.onDestroy();
 	}
 
 	@Override

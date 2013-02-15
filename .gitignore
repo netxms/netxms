@@ -6,9 +6,12 @@
 android/src/agent/bin
 android/src/agent/gen
 android/src/agent/libs/netxms-base-1.2.5.jar
+android/src/agent/libs/netxms-base-1.2.6.jar
 android/src/agent/libs/netxms-client-1.2.5.jar
 android/src/agent/libs/netxms-client-api-1.2.5.jar
 android/src/agent/libs/netxms-mobile-agent-1.2.5.jar
+android/src/agent/libs/netxms-mobile-agent-1.2.6.jar
+android/src/agent/res/values/build_number.xml
 android/src/console/bin
 android/src/console/gen
 android/src/console/libs/*.jar

@@ -72,6 +72,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	public static final String ACTION_DISCONNECT = "org.netxms.ui.android.ACTION_DISCONNECT";
 	public static final String ACTION_FORCE_DISCONNECT = "org.netxms.ui.android.ACTION_FORCE_DISCONNECT";
 	public static final String ACTION_RESCHEDULE = "org.netxms.ui.android.ACTION_RESCHEDULE";
+	public static final String ACTION_CONFIGURE = "org.netxms.ui.android.ACTION_CONFIGURE";
 	private static final String TAG = "nxclient/ClientConnectorService";
 	private static final String LASTALARM_KEY = "LastALarmIdNotified";
 
@@ -173,6 +174,8 @@ public class ClientConnectorService extends Service implements SessionListener
 					reconnect(false);
 				else
 					disconnect(false);
+			else if (intent.getAction().equals(ACTION_CONFIGURE))
+				reconnect(true);
 		return super.onStartCommand(intent, flags, startId);
 	}
 
