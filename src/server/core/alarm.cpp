@@ -734,11 +734,9 @@ int AlarmManager::getMostCriticalStatusForObject(DWORD dwObjectId)
    return iStatus;
 }
 
-
-//
-// Update object status after alarm acknowledgement or deletion
-//
-
+/**
+ * Update object status after alarm acknowledgement or deletion
+ */
 void AlarmManager::updateObjectStatus(DWORD dwObjectId)
 {
    NetObj *pObject;
@@ -748,11 +746,9 @@ void AlarmManager::updateObjectStatus(DWORD dwObjectId)
       pObject->calculateCompoundStatus();
 }
 
-
-//
-// Fill message with alarm stats
-//
-
+/**
+ * Fill message with alarm stats
+ */
 void AlarmManager::getAlarmStats(CSCPMessage *pMsg)
 {
    DWORD i, dwCount[5];
@@ -766,11 +762,9 @@ void AlarmManager::getAlarmStats(CSCPMessage *pMsg)
    pMsg->SetVariableToInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
 }
 
-
-//
-// Watchdog thread
-//
-
+/**
+ * Watchdog thread
+ */
 void AlarmManager::watchdogThread()
 {
 	DWORD i;
@@ -804,11 +798,9 @@ void AlarmManager::watchdogThread()
 	}
 }
 
-
-//
-// Check if givel alram/note id pair is valid
-//
-
+/**
+ * Check if givel alram/note id pair is valid
+ */
 static bool IsValidNoteId(DWORD alarmId, DWORD noteId)
 {
 	bool isValid = false;

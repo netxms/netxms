@@ -241,13 +241,12 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
 {
    NetObj *pObject;
    TCHAR szBuffer[MAX_OBJECT_NAME + 64];
-	static int nUnreachableDeleteDays = -1;
 
-	if (nUnreachableDeleteDays < 0)
+	int unreachableDeleteDays = ConfigReadInt(_T("DeleteUnreachableNodesPeriod"), 0);
+	if (unreachableDeleteDays > 10000)
 	{
-		nUnreachableDeleteDays = ConfigReadInt(_T("DeleteUnreachableNodesPeriod"), 0);
-		if (nUnreachableDeleteDays < 0)
-			nUnreachableDeleteDays = 0;
+		DbgPrintf(1, _T("Extremely high value of DeleteUnreachableNodesPeriod (%d), using 10000 instead)"), unreachableDeleteDays);
+		unreachableDeleteDays = 10000;
 	}
 
    // Initialize state info
@@ -268,8 +267,8 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
 		{
 			((Node *)pObject)->statusPoll(NULL, 0, (long)arg);
 			// Check if the node has to be deleted due to long downtime
-			if (nUnreachableDeleteDays > 0 && ((Node *)pObject)->getDownTime() > 0 && 
-				time(NULL) - ((Node *)pObject)->getDownTime() > nUnreachableDeleteDays * 24 * 3600)
+			if ((unreachableDeleteDays > 0) && (((Node *)pObject)->getDownTime() > 0) && 
+				 (time(NULL) - ((Node *)pObject)->getDownTime() > unreachableDeleteDays * 24 * 3600))
 			{
 				((Node*)pObject)->deleteObject();
 			}
