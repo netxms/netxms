@@ -29,31 +29,31 @@ import org.simpleframework.xml.Root;
 public class LogParserRule
 {
 	@Attribute(required=false)
-	private String context = "";
+	private String context = null;
 
 	@Attribute(name="break", required=false)
-	private boolean breakProcessing = false;
+	private Boolean breakProcessing = null;
 	
 	@Element(required=false)
 	private String match = ".*";
 	
 	@Element(required=false)
-	private LogParserEvent event = new LogParserEvent();
+	private LogParserEvent event = null;
 	
 	@Element(required=false)
-	private int severity = 0;
+	private Integer severity = null;
 	
 	@Element(required=false)
-	private int facility = 0;
+	private Integer facility = null;
 	
 	@Element(required=false)
-	private String tag = "";
+	private String tag = null;
 
 	@Element(required=false)
-	private String description = "";
+	private String description = null;
 	
 	@Element(name="context", required=false)
-	private LogParserContext contextDefinition = new LogParserContext();
+	private LogParserContext contextDefinition = null;
 	
 	private LogParserRuleEditor editor;
 
@@ -78,7 +78,7 @@ public class LogParserRule
 	 */
 	public boolean isBreakProcessing()
 	{
-		return breakProcessing;
+		return (breakProcessing != null) ? breakProcessing : false;
 	}
 
 	/**
@@ -86,7 +86,7 @@ public class LogParserRule
 	 */
 	public void setBreakProcessing(boolean breakProcessing)
 	{
-		this.breakProcessing = breakProcessing;
+		this.breakProcessing = breakProcessing ? Boolean.TRUE : null;
 	}
 
 	/**
@@ -124,7 +124,7 @@ public class LogParserRule
 	/**
 	 * @return the severity
 	 */
-	public int getSeverity()
+	public Integer getSeverity()
 	{
 		return severity;
 	}
@@ -132,7 +132,7 @@ public class LogParserRule
 	/**
 	 * @param severity the severity to set
 	 */
-	public void setSeverity(int severity)
+	public void setSeverity(Integer severity)
 	{
 		this.severity = severity;
 	}
@@ -140,7 +140,7 @@ public class LogParserRule
 	/**
 	 * @return the facility
 	 */
-	public int getFacility()
+	public Integer getFacility()
 	{
 		return facility;
 	}
@@ -148,7 +148,7 @@ public class LogParserRule
 	/**
 	 * @param facility the facility to set
 	 */
-	public void setFacility(int facility)
+	public void setFacility(Integer facility)
 	{
 		this.facility = facility;
 	}

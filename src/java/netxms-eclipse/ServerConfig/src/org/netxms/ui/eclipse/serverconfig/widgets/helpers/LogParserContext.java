@@ -29,10 +29,10 @@ import org.simpleframework.xml.Text;
 public class LogParserContext
 {
 	@Attribute
-	private String action = "set";
+	private String action = null;
 	
 	@Attribute(required=false)
-	private String reset = "auto";
+	private String reset = null;
 	
 	@Text(required=false)
 	private String data = "";
@@ -40,33 +40,33 @@ public class LogParserContext
 	/**
 	 * @return the action
 	 */
-	public String getAction()
+	public int getAction()
 	{
-		return action;
+		return (action == null) ? 0 : (action.equalsIgnoreCase("set") ? 0 : 1);
 	}
 
 	/**
 	 * @param action the action to set
 	 */
-	public void setAction(String action)
+	public void setAction(int action)
 	{
-		this.action = action;
+		this.action = (action == 0) ? "set" : "clear";
 	}
 
 	/**
 	 * @return the reset
 	 */
-	public String getReset()
+	public int getReset()
 	{
-		return reset;
+		return (reset == null) ? 0 : (reset.equalsIgnoreCase("auto") ? 0 : 1);
 	}
 
 	/**
 	 * @param reset the reset to set
 	 */
-	public void setReset(String reset)
+	public void setReset(int reset)
 	{
-		this.reset = reset;
+		this.reset = (action.equalsIgnoreCase("clear")) ? null : ((reset == 0) ? "auto" : "manual");
 	}
 
 	/**

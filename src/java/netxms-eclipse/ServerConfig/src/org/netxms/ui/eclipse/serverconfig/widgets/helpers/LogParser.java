@@ -39,19 +39,19 @@ import org.simpleframework.xml.core.Persister;
 public class LogParser
 {
 	@Attribute(required=false)
-	private String name = "";
+	private String name = null;
 	
 	@Attribute(required=false)
-	private int trace = 0;
+	private Integer trace = null;
 	
 	@Element(required=false)
-	private String file = "";
+	private String file = null;
 	
 	@ElementList(required=false)
-	private List<LogParserRule> rules = new ArrayList<LogParserRule>(0);
+	private ArrayList<LogParserRule> rules = new ArrayList<LogParserRule>(0);
 	
 	@ElementMap(entry="macro", key="name", attribute=true, required=false)
-	private Map<String, String> macros = new HashMap<String, String>(0);
+	private HashMap<String, String> macros = new HashMap<String, String>(0);
 
 	/**
 	 * Create log parser object from XML document
@@ -137,26 +137,10 @@ public class LogParser
 	}
 
 	/**
-	 * @param rules
-	 */
-	public void setRules(List<LogParserRule> rules)
-	{
-		this.rules = rules;
-	}
-
-	/**
 	 * @return
 	 */
 	public Map<String, String> getMacros()
 	{
 		return macros;
-	}
-
-	/**
-	 * @param macros
-	 */
-	public void setMacros(Map<String, String> macros)
-	{
-		this.macros = macros;
 	}
 }

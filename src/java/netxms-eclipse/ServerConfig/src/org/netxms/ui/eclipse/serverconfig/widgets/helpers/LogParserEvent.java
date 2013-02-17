@@ -28,11 +28,28 @@ import org.simpleframework.xml.Text;
 @Root(name="event", strict=false)
 public class LogParserEvent
 {
+	@Text
+	private String event = "0";
+
 	@Attribute(name="params", required=false)
 	private int parameterCount = 0;
 	
-	@Text
-	private String event = "0";
+	/**
+	 * Protected constructor for XML parser
+	 */
+	protected LogParserEvent()
+	{
+	}
+	
+	/**
+	 * @param event
+	 * @param parameterCount
+	 */
+	public LogParserEvent(String event, int parameterCount)
+	{
+		this.event = event;
+		this.parameterCount = parameterCount;
+	}
 
 	/**
 	 * @return the parameterCount

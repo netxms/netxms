@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.serverconfig.widgets;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,6 +33,8 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -59,7 +62,12 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class LogParserEditor extends Composite
 {
+	private static final int TAB_NONE = 0;
+	private static final int TAB_BUILDER = 1;
+	private static final int TAB_XML = 2;
+	
 	private CTabFolder tabFolder;
+	private int currentTab = TAB_NONE;
 	private Text xmlEditor;
 	private FormToolkit toolkit;
 	private ScrolledForm form;
@@ -82,6 +90,47 @@ public class LogParserEditor extends Composite
 		tabFolder = new CTabFolder(this, SWT.BOTTOM | SWT.FLAT | SWT.MULTI);
 		tabFolder.setUnselectedImageVisible(true);
 		tabFolder.setSimple(true);
+		tabFolder.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				String xml;
+				switch(currentTab)
+				{
+					case TAB_BUILDER:
+						xml = buildParserXml();
+						break;
+					case TAB_XML:
+						xml = xmlEditor.getText();
+						break;
+					default:
+						xml = null;
+						break;
+				}
+				CTabItem tab = tabFolder.getSelection();
+				currentTab = (tab != null) ? (Integer)tab.getData() : TAB_NONE;
+				if (xml != null)
+				{
+					switch(currentTab)
+					{
+						case TAB_BUILDER:
+							updateBuilderFromXml(xmlEditor.getText());
+							break;
+						case TAB_XML:
+							xmlEditor.setText(buildParserXml());
+							break;
+						default:
+							break;
+					}
+				}
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
 
 		createForm();
 		createTextEditor();
@@ -101,13 +150,14 @@ public class LogParserEditor extends Composite
 		tabItem.setText("Editor");
 		tabItem.setImage(SharedIcons.IMG_EDIT);
 		tabItem.setControl(form);
+		tabItem.setData(TAB_BUILDER);
 		
 		TableWrapLayout layout = new TableWrapLayout();
 		layout.numColumns = 2;
 		form.getBody().setLayout(layout);
 
 		/* Rules section */
-		Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+		Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.COMPACT | Section.TWISTIE | Section.EXPANDED);
 		section.setText("Rules");
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
@@ -118,6 +168,7 @@ public class LogParserEditor extends Composite
 		GridLayout rulesAreaLayout = new GridLayout();
 		rulesAreaLayout.marginHeight = 0;
 		rulesAreaLayout.marginWidth = 0;
+		rulesAreaLayout.verticalSpacing = 1;
 		rulesArea.setLayout(rulesAreaLayout);
 		
 		section.setClient(rulesArea);
@@ -134,7 +185,7 @@ public class LogParserEditor extends Composite
 		});
 		
 		/* Macros section */
-		section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+		section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.COMPACT | Section.TWISTIE);
 		section.setText("Macros");
 		td = new TableWrapData();
 		td.align = TableWrapData.FILL;
@@ -159,6 +210,7 @@ public class LogParserEditor extends Composite
 		tabItem.setText("XML");
 		tabItem.setImage(SharedIcons.IMG_XML);
 		tabItem.setControl(xmlEditor);
+		tabItem.setData(TAB_XML);
 		
 		xmlEditor.addModifyListener(new ModifyListener() {
 			@Override
@@ -260,7 +312,7 @@ public class LogParserEditor extends Composite
 	/**
 	 * Execute all registered modify listeners
 	 */
-	private void fireModifyListeners()
+	public void fireModifyListeners()
 	{
 		for(LogParserModifyListener l : listeners)
 			l.modifyParser();
@@ -272,6 +324,24 @@ public class LogParserEditor extends Composite
 	 * @return
 	 */
 	public String getParserXml()
+	{
+		switch(currentTab)
+		{
+			case TAB_BUILDER:
+				return buildParserXml();
+			case TAB_XML:
+				return xmlEditor.getText();
+			default:
+				return "<parser></parser>";
+		}
+	}
+	
+	/**
+	 * Build parser XML from current builder state
+	 * 
+	 * @return
+	 */
+	private String buildParserXml()
 	{
 		for(LogParserRule rule : parser.getRules())
 			rule.getEditor().save();
@@ -292,6 +362,17 @@ public class LogParserEditor extends Composite
 	 * @param content
 	 */
 	public void setParserXml(String xml)
+	{
+		updateBuilderFromXml(xml);
+		xmlEditor.setText(xml);
+	}
+	
+	/**
+	 * Update parser builder from XML
+	 * 
+	 * @param xml
+	 */
+	private void updateBuilderFromXml(String xml)
 	{
 		if (parser != null)
 		{
@@ -318,8 +399,7 @@ public class LogParserEditor extends Composite
 		macroList.setInput(parser.getMacros().entrySet().toArray());
 		
 		form.reflow(true);
-		
-		xmlEditor.setText(xml);
+		form.getParent().layout(true, true);
 	}
 
 	/**
@@ -327,7 +407,7 @@ public class LogParserEditor extends Composite
 	 */
 	private LogParserRuleEditor createRuleEditor(LogParserRule rule)
 	{
-		LogParserRuleEditor editor = new LogParserRuleEditor(rulesArea, toolkit, rule);
+		LogParserRuleEditor editor = new LogParserRuleEditor(rulesArea, toolkit, rule, this);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -399,6 +479,56 @@ public class LogParserEditor extends Composite
 			macros.remove(((Entry<String, String>)o).getKey());
 		}
 		macroList.setInput(macros.entrySet().toArray());
+		fireModifyListeners();
+	}
+	
+	/**
+	 * Delete rule
+	 * 
+	 * @param rule
+	 */
+	public void deleteRule(LogParserRule rule)
+	{
+		parser.getRules().remove(rule);
+		rule.getEditor().dispose();
+		form.reflow(true);
+		getParent().layout(true, true);
+		fireModifyListeners();
+	}
+	
+	/**
+	 * Move given rule up
+	 * 
+	 * @param rule
+	 */
+	public void moveRuleUp(LogParserRule rule)
+	{
+		int index = parser.getRules().indexOf(rule);
+		if (index < 1)
+			return;
+		
+		rule.getEditor().moveAbove(parser.getRules().get(index - 1).getEditor());
+		Collections.swap(parser.getRules(), index - 1, index);
+		form.reflow(true);
+		getParent().layout(true, true);
+		fireModifyListeners();
+	}
+	
+	/**
+	 * Move given rule down
+	 * 
+	 * @param rule
+	 */
+	public void moveRuleDown(LogParserRule rule)
+	{
+		int index = parser.getRules().indexOf(rule);
+		if ((index < 0) || (index >= parser.getRules().size() - 1))
+			return;
+		
+		rule.getEditor().moveBelow(parser.getRules().get(index + 1).getEditor());
+		Collections.swap(parser.getRules(), index + 1, index);
+		form.reflow(true);
+		getParent().layout(true, true);
 		fireModifyListeners();
 	}
 }

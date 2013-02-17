@@ -39,6 +39,7 @@ public class SharedIcons
 	public static ImageDescriptor COPY;
 	public static ImageDescriptor CUT;
 	public static ImageDescriptor DELETE_OBJECT;
+	public static ImageDescriptor DOWN;
 	public static ImageDescriptor EDIT;
 	public static ImageDescriptor EMPTY;
 	public static ImageDescriptor EXECUTE;
@@ -53,6 +54,7 @@ public class SharedIcons
 	public static ImageDescriptor SAVE;
 	public static ImageDescriptor TERMINATE;
 	public static ImageDescriptor UNKNOWN_OBJECT;
+	public static ImageDescriptor UP;
 	public static ImageDescriptor XML;
 	public static ImageDescriptor ZOOM_IN;
 	public static ImageDescriptor ZOOM_OUT;
@@ -69,6 +71,7 @@ public class SharedIcons
 	public static Image IMG_COPY;
 	public static Image IMG_CUT;
 	public static Image IMG_DELETE_OBJECT;
+	public static Image IMG_DOWN;
 	public static Image IMG_EDIT;
 	public static Image IMG_EMPTY;
 	public static Image IMG_EXECUTE;
@@ -83,6 +86,7 @@ public class SharedIcons
 	public static Image IMG_SAVE;
 	public static Image IMG_TERMINATE;
 	public static Image IMG_UNKNOWN_OBJECT;
+	public static Image IMG_UP;
 	public static Image IMG_XML;
 	public static Image IMG_ZOOM_IN;
 	public static Image IMG_ZOOM_OUT;
@@ -104,6 +108,7 @@ public class SharedIcons
 		COPY = Activator.getImageDescriptor("icons/copy.gif"); //$NON-NLS-1$
 		CUT = Activator.getImageDescriptor("icons/cut.gif"); //$NON-NLS-1$
 		DELETE_OBJECT = Activator.getImageDescriptor("icons/delete_obj.gif"); //$NON-NLS-1$
+		DOWN = Activator.getImageDescriptor("icons/down.png"); //$NON-NLS-1$
 		EDIT = Activator.getImageDescriptor("icons/edit.png"); //$NON-NLS-1$
 		EMPTY = Activator.getImageDescriptor("icons/empty.png"); //$NON-NLS-1$
 		EXECUTE = Activator.getImageDescriptor("icons/execute.gif"); //$NON-NLS-1$
@@ -118,6 +123,7 @@ public class SharedIcons
 		SAVE = Activator.getImageDescriptor("icons/save.gif"); //$NON-NLS-1$
 		TERMINATE = Activator.getImageDescriptor("icons/terminate.gif"); //$NON-NLS-1$
 		UNKNOWN_OBJECT = Activator.getImageDescriptor("icons/unknown_obj.gif"); //$NON-NLS-1$
+		UP = Activator.getImageDescriptor("icons/up.png"); //$NON-NLS-1$
 		XML = Activator.getImageDescriptor("icons/xml.gif"); //$NON-NLS-1$
 		ZOOM_IN = Activator.getImageDescriptor("icons/zoom_in.png"); //$NON-NLS-1$
 		ZOOM_OUT = Activator.getImageDescriptor("icons/zoom_out.png"); //$NON-NLS-1$
@@ -134,6 +140,7 @@ public class SharedIcons
 		IMG_COPY = COPY.createImage();
 		IMG_CUT = CUT.createImage();
 		IMG_DELETE_OBJECT = DELETE_OBJECT.createImage();
+		IMG_DOWN = DOWN.createImage();
 		IMG_EDIT = EDIT.createImage();
 		IMG_EMPTY = EMPTY.createImage();
 		IMG_EXECUTE = EXECUTE.createImage();
@@ -148,6 +155,7 @@ public class SharedIcons
 		IMG_SAVE = SAVE.createImage();
 		IMG_TERMINATE = TERMINATE.createImage();
 		IMG_UNKNOWN_OBJECT = UNKNOWN_OBJECT.createImage();
+		IMG_UP = UP.createImage();
 		IMG_XML = XML.createImage();
 		IMG_ZOOM_IN = ZOOM_IN.createImage();
 		IMG_ZOOM_OUT = ZOOM_OUT.createImage();

@@ -66,6 +66,7 @@ public class EventSelector extends AbstractSelector
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
+			long prevEventCode = eventCode;
 			EventTemplate[] events = dlg.getSelectedEvents();
 			if (events.length > 0)
 			{
@@ -81,6 +82,8 @@ public class EventSelector extends AbstractSelector
 				setImage(null);
 				getTextControl().setToolTipText(null);
 			}
+			if (prevEventCode != eventCode)
+				fireModifyListeners();
 		}
 	}
 
@@ -90,10 +93,14 @@ public class EventSelector extends AbstractSelector
 	@Override
 	protected void clearButtonHandler()
 	{
+		if (eventCode == 0)
+			return;
+		
 		eventCode = 0;
 		setText(Messages.EventSelector_None);
 		setImage(null);
 		getTextControl().setToolTipText(null);
+		fireModifyListeners();
 	}
 
 	/**
@@ -112,6 +119,9 @@ public class EventSelector extends AbstractSelector
 	 */
 	public void setEventCode(long eventCode)
 	{
+		if (this.eventCode == eventCode)
+			return;	// nothing to change
+		
 		this.eventCode = eventCode;
 		if (eventCode != 0)
 		{
@@ -135,6 +145,7 @@ public class EventSelector extends AbstractSelector
 			setImage(null);
 			getTextControl().setToolTipText(null);
 		}
+		fireModifyListeners();
 	}
 
 	/**

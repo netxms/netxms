@@ -4265,6 +4265,32 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/**
+	 * Find event template by name in event template database internally
+	 * maintained by session object. You must call
+	 * NXCSession.syncEventTemplates() first to make local copy of event template
+	 * database.
+	 * 
+	 * @param name Event name
+	 * @return Event template object or null if not found
+	 */
+	public EventTemplate findEventTemplateByName(String name)
+	{
+		EventTemplate result = null;
+		synchronized(eventTemplates)
+		{
+			for(EventTemplate e: eventTemplates.values())
+			{
+				if (e.getName().equalsIgnoreCase(name))
+				{
+					result = e;
+					break;
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
 	 * Find event template by code in event template database internally
 	 * maintained by session object. You must call
 	 * NXCSession.syncEventTemplates() first to make local copy of event template
