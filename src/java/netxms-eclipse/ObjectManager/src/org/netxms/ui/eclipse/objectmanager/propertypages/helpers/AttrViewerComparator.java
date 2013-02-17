@@ -47,10 +47,10 @@ public class AttrViewerComparator extends ViewerComparator
 		switch((Integer)sortColumn.getData("ID"))
 		{
 			case CustomAttributes.COLUMN_NAME:
-				rc =  ((Entry<String, String>)e1).getKey().compareToIgnoreCase(((Entry<String, String>)e2).getKey());
+				rc = ((Entry<String, String>)e1).getKey().compareToIgnoreCase(((Entry<String, String>)e2).getKey());
 				break;
 			case CustomAttributes.COLUMN_VALUE:
-				rc =  ((Entry<String, String>)e1).getValue().compareToIgnoreCase(((Entry<String, String>)e2).getValue());
+				rc = ((Entry<String, String>)e1).getValue().compareToIgnoreCase(((Entry<String, String>)e2).getValue());
 				break;
 			default:
 				rc = 0;

@@ -34,11 +34,12 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 	public void initializeDefaultPreferences()
 	{
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		ps.setDefault("INITIAL_PERSPECTIVE", "org.netxms.ui.eclipse.console.DefaultPerspective"); //$NON-NLS-1$ //$NON-NLS-2$
-		ps.setDefault("SHOW_COOLBAR", true); //$NON-NLS-1$
-		ps.setDefault("SHOW_TRAY_ICON", true); //$NON-NLS-1$
 		ps.setDefault("HIDE_WHEN_MINIMIZED", false); //$NON-NLS-1$
+		ps.setDefault("INITIAL_PERSPECTIVE", "org.netxms.ui.eclipse.console.DefaultPerspective"); //$NON-NLS-1$ //$NON-NLS-2$
 		ps.setDefault("SAVE_AND_RESTORE", true); //$NON-NLS-1$
+		ps.setDefault("SHOW_COOLBAR", true); //$NON-NLS-1$
+		ps.setDefault("SHOW_HIDDEN_ATTRIBUTES", false); //$NON-NLS-1$
+		ps.setDefault("SHOW_TRAY_ICON", true); //$NON-NLS-1$
 		
 		ps.setDefault("HTTP_PROXY_ENABLED", false); //$NON-NLS-1$
 		ps.setDefault("HTTP_PROXY_SERVER", ""); //$NON-NLS-1$ //$NON-NLS-2$

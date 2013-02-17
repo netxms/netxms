@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -31,6 +32,8 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -100,6 +103,18 @@ public class CustomAttributes extends PropertyPage
       
       attributes = new HashMap<String, String>(object.getCustomAttributes());
       viewer.setInput(attributes.entrySet());
+      
+      if (!Platform.getPreferencesService().getBoolean("org.netxms.ui.eclipse.console", "SHOW_HIDDEN_ATTRIBUTES", false, null))
+      {
+	      viewer.addFilter(new ViewerFilter() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public boolean select(Viewer viewer, Object parentElement, Object element)
+				{
+					return !((Entry<String, String>)element).getKey().startsWith(".");
+				}
+			});
+      }
       
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
