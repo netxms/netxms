@@ -1414,7 +1414,6 @@ src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/dialogs/SelectScript
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/tools/NXSLLineStyleListener.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptEditorView.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptLibrary.java -text
-src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptToolbox.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/helpers/ScriptComparator.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/helpers/ScriptLabelProvider.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/ScriptEditor.java -text
@@ -2467,6 +2466,7 @@ webui/webapp/Core/icons/collapseall.png -text
 webui/webapp/Core/icons/copy.gif -text
 webui/webapp/Core/icons/cut.gif -text
 webui/webapp/Core/icons/delete_obj.gif -text
+webui/webapp/Core/icons/down.png -text
 webui/webapp/Core/icons/edit.png -text
 webui/webapp/Core/icons/empty.png -text
 webui/webapp/Core/icons/execute.gif -text
@@ -2497,6 +2497,7 @@ webui/webapp/Core/icons/status/unmanaged.png -text
 webui/webapp/Core/icons/status/warning.png -text
 webui/webapp/Core/icons/terminate.gif -text
 webui/webapp/Core/icons/unknown_obj.gif -text
+webui/webapp/Core/icons/up.png -text
 webui/webapp/Core/icons/xml.gif -text
 webui/webapp/Core/icons/zoom_in.png -text
 webui/webapp/Core/icons/zoom_out.png -text
@@ -2984,7 +2985,6 @@ webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/dialogs/CreateScriptDialog.java
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/dialogs/SelectScriptDialog.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptEditorView.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptLibrary.java -text
-webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptToolbox.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/views/helpers/ScriptComparator.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/views/helpers/ScriptLabelProvider.java -text
 webui/webapp/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/ScriptEditor.java -text

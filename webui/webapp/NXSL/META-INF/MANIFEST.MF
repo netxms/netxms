@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXSL Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.nxsl;singleton:=true
-Bundle-Version: 1.2.4
+Bundle-Version: 1.2.6
 Bundle-Activator: org.netxms.ui.eclipse.nxsl.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.rap.ui;bundle-version="1.5.0",

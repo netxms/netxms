@@ -25,10 +25,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.IViewSite;
@@ -40,6 +37,8 @@ import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
+import org.netxms.ui.eclipse.serverconfig.widgets.LogParserEditor;
+import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserModifyListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
@@ -51,7 +50,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.SyslogParserConfigurator";
 	
 	private NXCSession session;
-	private Text editor;
+	private LogParserEditor editor;
 	private boolean modified = false;
 	private String content;
 	private Action actionRefresh;
@@ -73,12 +72,10 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		editor = new Text(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-		editor.addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
+		editor = new LogParserEditor(parent, SWT.NONE);
+		editor.addModifyListener(new LogParserModifyListener() {
 			@Override
-			public void modifyText(ModifyEvent e)
+			public void modifyParser()
 			{
 				setModified(true);
 			}
@@ -90,13 +87,12 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 		refresh();
 	}
 
-	
 	/**
 	 * Create actions
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction() {
+		actionRefresh = new RefreshAction(this) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -172,7 +168,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 			@Override
 			public void run()
 			{
-				content = editor.getText();
+				content = editor.getParserXml();
 			}
 		});
 		try
@@ -231,7 +227,6 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 				return;
 		}
 		
-		editor.setEditable(false);
 		actionSave.setEnabled(false);
 		new ConsoleJob("Load syslog parser configuration", this, Activator.PLUGIN_ID, null) {
 			@Override
@@ -253,8 +248,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 					@Override
 					public void run()
 					{
-						editor.setText(content);
-						editor.setEditable(true);
+						editor.setParserXml(content);
 						setModified(false);
 					}
 				});
@@ -273,7 +267,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	 */
 	private void save()
 	{
-		final String xml = editor.getText();
+		final String xml = editor.getParserXml();
 		actionSave.setEnabled(false);
 		new ConsoleJob("Save syslog parser configuration", this, Activator.PLUGIN_ID, null) {
 			@Override

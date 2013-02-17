@@ -22,12 +22,15 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * NXSL script editor
@@ -38,7 +41,6 @@ public class ScriptEditor extends Composite
 	private static final long serialVersionUID = 1L;
 
 	private Text editor;
-	private Font editorFont;
 
 	/**
 	 * @param parent
@@ -48,22 +50,22 @@ public class ScriptEditor extends Composite
 	{
 		super(parent, style);
 		
-		editorFont = new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL);
-		
 		setLayout(new FillLayout());
 		
 		editor = new Text(this, editorStyle);
-		editor.setFont(editorFont);
-	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Widget#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-		editorFont.dispose();
-		super.dispose();
+		final Font font = new Font(getDisplay(), "Courier New", WidgetHelper.fontPixelsToPoints(getDisplay(), 16), SWT.NORMAL);
+		addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void widgetDisposed(DisposeEvent event)
+			{
+				font.dispose();
+			}
+		});
+		
+		editor.setFont(font);
 	}
 	
 	/**

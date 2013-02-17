@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -205,6 +206,7 @@ public class LogParserEditor extends Composite
 	private void createTextEditor()
 	{
 		xmlEditor = new Text(tabFolder, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		xmlEditor.setFont(JFaceResources.getTextFont());
 
 		final CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
 		tabItem.setText("XML");

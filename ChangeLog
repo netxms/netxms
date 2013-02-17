@@ -2,11 +2,6 @@
 * 1.2.6
 *
 
-- Android Console:
-	- Force reconnection after changing settings (#241)
-	- Fixed bug in showing predefined graphs and dashboards (#239)
-	- Added support for mobile device objects
-	- Added geolocation info in overview tab
 - DCI instance discovery
 - Array initializers in NXSL
 - NXSL function PostEvent can use event names instead of event codes
@@ -15,6 +10,12 @@
 	- Network map functionality in web console now in sync with desktop version
 	- Alarm details view improved
 	- Configurable chart ordering on performance tab
+	- Syslog parser editor working correctly
+- Android Console:
+	- Force reconnection after changing settings (#241)
+	- Fixed bug in showing predefined graphs and dashboards (#239)
+	- Added support for mobile device objects
+	- Added geolocation info in overview tab
 - 64bit interface counters in Windows agent
 - Improved LLDP support
 - Driver for D-Link switches
