@@ -111,6 +111,8 @@ public class Thresholds extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       instance.setLayoutData(gd);
+		if (dci.getTemplateId() == dci.getNodeId())	// DCI created by instance discovery
+			instance.getTextControl().setEditable(false);
       
       checkAllThresholds = new Button(dialogArea, SWT.CHECK);
       checkAllThresholds.setText(Messages.Thresholds_ProcessAll);
