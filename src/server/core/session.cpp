@@ -2255,11 +2255,9 @@ void ClientSession::deleteConfigVariable(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Set configuration clob
-//
-
+/**
+ * Set configuration clob
+ */
 void ClientSession::setConfigCLOB(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -2277,9 +2275,9 @@ void ClientSession::setConfigCLOB(CSCPMessage *pRequest)
 			if (ConfigWriteCLOB(name, value, TRUE))
 			{
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
-				free(value);
 				WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
 								  _T("Server configuration variable \"%s\" set to \"%s\""), name, value);
+				free(value);
 			}
 			else
 			{
