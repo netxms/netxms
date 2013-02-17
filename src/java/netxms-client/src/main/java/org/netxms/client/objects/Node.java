@@ -55,7 +55,8 @@ public class Node extends GenericObject
 	public static final int NF_IS_STP                 = 0x00008000;
 	public static final int NF_HAS_ENTITY_MIB         = 0x00010000;
 	public static final int NF_HAS_IFXTABLE           = 0x00020000;
-
+	public static final int NF_HAS_AGENT_IFXCOUNTERS  = 0x00040000;
+	
 	// Node flags (user)
 	public static final int NF_DISABLE_DISCOVERY_POLL = 0x00400000;
 	public static final int NF_DISABLE_TOPOLOGY_POLL  = 0x00800000;
@@ -395,11 +396,20 @@ public class Node extends GenericObject
 
 	/**
 	 * 
-	 * @return true if node supports ENTITY-MIB
+	 * @return true if node supports ifXTable
 	 */
 	public boolean isIfXTableSupported()
 	{
 		return (flags & NF_HAS_IFXTABLE) != 0;
+	}
+
+	/**
+	 * 
+	 * @return true if agent on node supports 64-bit interface counters
+	 */
+	public boolean isAgentIfXCountersSupported()
+	{
+		return (flags & NF_HAS_AGENT_IFXCOUNTERS) != 0;
 	}
 
 	/**

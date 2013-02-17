@@ -167,7 +167,10 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 		if (node.hasAgent())
 		{
 			dci.setOrigin(DataCollectionItem.AGENT);
-			dci.setDataType(DataCollectionItem.DT_UINT);
+			if (node.isAgentIfXCountersSupported())
+				dci.setDataType(((dciType != IFDCI_IN_ERRORS) && (dciType != IFDCI_OUT_ERRORS)) ? DataCollectionItem.DT_UINT64 : DataCollectionItem.DT_UINT);
+			else
+				dci.setDataType(DataCollectionItem.DT_UINT);
 		}
 		else
 		{
@@ -186,16 +189,16 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			switch(dciType)
 			{
 				case IFDCI_IN_BYTES:
-					dci.setName("Net.Interface.BytesIn(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+					dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.BytesIn64(" : "Net.Interface.BytesIn(") + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					break;
 				case IFDCI_OUT_BYTES:
-					dci.setName("Net.Interface.BytesOut(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+					dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.BytesOut64(" : "Net.Interface.BytesOut(") + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					break;
 				case IFDCI_IN_PACKETS:
-					dci.setName("Net.Interface.PacketsIn(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+					dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.PacketsIn64(" : "Net.Interface.PacketsIn(") + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					break;
 				case IFDCI_OUT_PACKETS:
-					dci.setName("Net.Interface.PacketsOut(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+					dci.setName((node.isAgentIfXCountersSupported() ? "Net.Interface.PacketsOut64(" : "Net.Interface.PacketsOut(") + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					break;
 				case IFDCI_IN_ERRORS:
 					dci.setName("Net.Interface.InErrors(" + iface.getIfIndex() + ")"); //$NON-NLS-1$ //$NON-NLS-2$

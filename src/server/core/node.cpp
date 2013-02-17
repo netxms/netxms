@@ -1738,6 +1738,17 @@ bool Node::confPollAgent(DWORD dwRqId)
 			delete m_tableList;
 			m_paramList = plist;
 			m_tableList = tlist;
+
+			// Check for 64-bit interface counters
+			m_dwFlags &= ~NF_HAS_AGENT_IFXCOUNTERS;
+			for(int i = 0; i < plist->size(); i++)
+			{
+				if (!_tcsicmp(plist->get(i)->szName, _T("Net.Interface.BytesIn64(*)")))
+				{
+					m_dwFlags |= NF_HAS_AGENT_IFXCOUNTERS;
+				}
+			}
+
 			UnlockData();
 		}
 		else
