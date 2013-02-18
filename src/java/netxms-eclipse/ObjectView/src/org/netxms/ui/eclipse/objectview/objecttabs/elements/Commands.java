@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -31,6 +30,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.CommandBox;
 
 /**
@@ -88,7 +88,7 @@ public class Commands extends OverviewPageElement
 			public void run()
 			{
 				final GenericObject object = getObject();
-				if (MessageDialog.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
+				if (MessageDialogHelper.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
 				{
 					new ConsoleJob("Initiate agent restart on node " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 						@Override
@@ -114,7 +114,7 @@ public class Commands extends OverviewPageElement
 			public void run()
 			{
 				final GenericObject object = getObject();
-				if (MessageDialog.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
+				if (MessageDialogHelper.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
 				{
 					new ConsoleJob("Initiate node restart", null, Activator.PLUGIN_ID, null) {
 						@Override
@@ -140,7 +140,7 @@ public class Commands extends OverviewPageElement
 			public void run()
 			{
 				final GenericObject object = getObject();
-				if (MessageDialog.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be shut down. Are you sure?"))
+				if (MessageDialogHelper.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be shut down. Are you sure?"))
 				{
 					new ConsoleJob("Initiate node shutdown", null, Activator.PLUGIN_ID, null) {
 						@Override

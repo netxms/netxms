@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.switchmanager.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -30,6 +29,7 @@ import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.switchmanager.Messages;
 import org.netxms.ui.eclipse.switchmanager.views.Dot1xStatusView;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Change IP address for node.
@@ -62,7 +62,7 @@ public class OpenDot1xStateView implements IObjectActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), Messages.OpenDot1xStateView_Error, Messages.OpenDot1xStateView_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.OpenDot1xStateView_Error, Messages.OpenDot1xStateView_ErrorText + e.getMessage());
 			}
 		}
 	}

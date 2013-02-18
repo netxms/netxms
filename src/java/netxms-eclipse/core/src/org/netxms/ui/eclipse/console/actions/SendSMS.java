@@ -20,11 +20,8 @@ package org.netxms.ui.eclipse.console.actions;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.netxms.client.NXCSession;
@@ -33,6 +30,7 @@ import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.dialogs.SendSMSDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Send SMS
@@ -81,12 +79,8 @@ public class SendSMS implements IWorkbenchWindowActionDelegate
 					@Override
 					public void run()
 					{
-						final Shell shell = window.getShell();
-						final String title = Messages.getString("SendSMS.DialogTitle"); //$NON-NLS-1$
 						final String message = Messages.getString("SendSMS.DialogTextPrefix") + dlg.getPhoneNumber() + Messages.getString("SendSMS.DialogTextSuffix"); //$NON-NLS-1$ //$NON-NLS-2$
-						
-						MessageDialog.open(MessageDialog.INFORMATION, shell, title, message, SWT.SHEET);
-						//MessageDialog.openInformation(shell, title, message);
+						MessageDialogHelper.openInformation(window.getShell(), Messages.getString("SendSMS.DialogTitle"), message);
 					}
 				});
 			}

@@ -3,7 +3,6 @@
  */
 package org.netxms.ui.eclipse.networkmaps;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -12,6 +11,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.networkmaps.views.PredefinedMap;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenHandler;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Open handler for network maps
@@ -34,7 +34,7 @@ public class NetworkMapOpenHandler implements ObjectOpenHandler
 		}
 		catch(PartInitException e)
 		{
-			MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+			MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 		}
 		return true;
 	}

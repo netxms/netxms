@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.dashboard.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -30,6 +29,7 @@ import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.views.DashboardView;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Open predefined map object
@@ -63,7 +63,7 @@ public class OpenDashboard implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(window.getShell(), Messages.OpenDashboard_Error, Messages.OpenDashboard_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.OpenDashboard_Error, Messages.OpenDashboard_ErrorText + e.getMessage());
 			}
 		}
 	}

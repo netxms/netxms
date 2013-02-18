@@ -27,7 +27,6 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -51,6 +50,7 @@ import org.netxms.ui.eclipse.datacollection.dialogs.SelectNodeDciDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
@@ -229,7 +229,7 @@ public class IdMatchingDialog extends Dialog
 			}
 			else
 			{
-				MessageDialog.openWarning(getShell(), Messages.IdMatchingDialog_Warning, Messages.IdMatchingDialog_ClassMismatch);
+				MessageDialogHelper.openWarning(getShell(), Messages.IdMatchingDialog_Warning, Messages.IdMatchingDialog_ClassMismatch);
 			}
 		}
 	}
@@ -328,7 +328,7 @@ public class IdMatchingDialog extends Dialog
 		
 		if (!ok)
 		{
-			if (!MessageDialog.openQuestion(getShell(), Messages.IdMatchingDialog_MatchingErrors, Messages.IdMatchingDialog_ConfirmationText))
+			if (!MessageDialogHelper.openQuestion(getShell(), Messages.IdMatchingDialog_MatchingErrors, Messages.IdMatchingDialog_ConfirmationText))
 				return;
 		}
 		

@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.datacollection.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -32,6 +31,7 @@ import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.LastValues;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Show last values for DCI
@@ -64,7 +64,7 @@ public class ShowLastValues implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(window.getShell(), Messages.ShowLastValues_Error, Messages.ShowLastValues_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.ShowLastValues_Error, Messages.ShowLastValues_ErrorText + e.getMessage());
 			}
 		}
 	}

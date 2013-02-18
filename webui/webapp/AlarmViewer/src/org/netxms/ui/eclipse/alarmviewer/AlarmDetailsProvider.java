@@ -3,7 +3,6 @@
  */
 package org.netxms.ui.eclipse.alarmviewer;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
@@ -18,6 +17,7 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser;
 import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Object details provider which will show alarm list for given node
@@ -49,7 +49,7 @@ public class AlarmDetailsProvider implements ObjectDetailsProvider
 		}
 		catch(PartInitException e)
 		{
-			MessageDialog.openError((viewPart != null) ? viewPart.getSite().getShell() : null, Messages.get().AlarmDetailsProvider_Error, Messages.get().AlarmDetailsProvider_ErrorOpeningView + e.getMessage());
+			MessageDialogHelper.openError((viewPart != null) ? viewPart.getSite().getShell() : null, Messages.get().AlarmDetailsProvider_Error, Messages.get().AlarmDetailsProvider_ErrorOpeningView + e.getMessage());
 		}
 	}
 }

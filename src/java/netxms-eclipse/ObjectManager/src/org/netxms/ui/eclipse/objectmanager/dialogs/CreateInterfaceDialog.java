@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.objectmanager.dialogs;
 
 import java.net.InetAddress;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -35,6 +34,7 @@ import org.netxms.ui.eclipse.console.tools.IPAddressValidator;
 import org.netxms.ui.eclipse.console.tools.IPNetMaskValidator;
 import org.netxms.ui.eclipse.console.tools.MacAddressValidator;
 import org.netxms.ui.eclipse.console.tools.ObjectNameValidator;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.NumericTextFieldValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -201,7 +201,7 @@ public class CreateInterfaceDialog extends Dialog
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(getShell(), "Error", "Internal error: " + e.getMessage());
+			MessageDialogHelper.openError(getShell(), "Error", "Internal error: " + e.getMessage());
 		}
 	}
 

@@ -26,7 +26,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ICellModifier;
@@ -56,6 +55,7 @@ import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableEntryCompara
 import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableEntryLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -162,7 +162,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			public void run()
 			{
 				if (modified)
-					if (!MessageDialog.openQuestion(getSite().getShell(), "Refresh Confirmation", "This will destroy unsaved changes. Are you sure?"))
+					if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Refresh Confirmation", "This will destroy unsaved changes. Are you sure?"))
 						return;
 				refresh();
 			}

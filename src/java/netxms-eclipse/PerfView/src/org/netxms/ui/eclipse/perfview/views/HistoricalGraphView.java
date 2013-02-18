@@ -32,7 +32,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -66,6 +65,7 @@ import org.netxms.ui.eclipse.perfview.ChartConfig;
 import org.netxms.ui.eclipse.perfview.dialogs.SaveGraphDlg;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * History graph view
@@ -474,7 +474,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 				}
 				catch(IllegalStateException e)
 				{
-					MessageDialog.openError(getSite().getShell(), "Error", "Cannot switch to logarithmic scale: " + e.getLocalizedMessage());
+					MessageDialogHelper.openError(getSite().getShell(), "Error", "Cannot switch to logarithmic scale: " + e.getLocalizedMessage());
 				}
 				setChecked(config.isLogScale());
 			}
@@ -791,7 +791,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(getSite().getShell(), "Internal Error", "Enexpected exception: " + e.getLocalizedMessage());
+			MessageDialogHelper.openError(getSite().getShell(), "Internal Error", "Enexpected exception: " + e.getLocalizedMessage());
 		}
 	}
 }

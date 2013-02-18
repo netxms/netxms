@@ -28,7 +28,6 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -64,6 +63,7 @@ import org.netxms.ui.eclipse.serverconfig.dialogs.SelectSnmpTrapDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.helpers.TrapListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -447,7 +447,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	{
 		if (exportFile.getFile() == null)
 		{
-			MessageDialog.openWarning(getSite().getShell(), "Warning", "Please enter valid file name to write exported configuration to!");
+			MessageDialogHelper.openWarning(getSite().getShell(), "Warning", "Please enter valid file name to write exported configuration to!");
 			return;
 		}
 		

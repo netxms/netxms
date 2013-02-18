@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.topology.dialogs;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -34,6 +33,7 @@ import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -118,7 +118,7 @@ public class EnterIpAddressDlg extends Dialog
 		}
 		catch(UnknownHostException e)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid IP address!");
+			MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid IP address!");
 			return;
 		}
 		
@@ -127,13 +127,13 @@ public class EnterIpAddressDlg extends Dialog
 			long objectId = objectSelector.getObjectId();
 			if (objectId == 0)
 			{
-				MessageDialog.openWarning(getShell(), "Warning", "Please select zone object!");
+				MessageDialogHelper.openWarning(getShell(), "Warning", "Please select zone object!");
 				return;
 			}
 			GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
 			if ((object == null) || !(object instanceof Zone))
 			{
-				MessageDialog.openWarning(getShell(), "Warning", "Please select zone object!");
+				MessageDialogHelper.openWarning(getShell(), "Warning", "Please select zone object!");
 				return;
 			}
 			zoneId = ((Zone)object).getZoneId();

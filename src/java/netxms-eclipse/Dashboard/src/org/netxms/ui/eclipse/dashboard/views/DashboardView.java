@@ -23,7 +23,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
@@ -39,6 +38,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Dashboard view
@@ -119,7 +119,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			{
 				if (dbc.isModified())
 				{
-					if (!MessageDialog.openConfirm(getSite().getShell(), Messages.DashboardView_Refresh, 
+					if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.DashboardView_Refresh, 
 							Messages.DashboardView_Confirmation))
 						return;
 				}

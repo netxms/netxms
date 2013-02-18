@@ -30,7 +30,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -61,6 +60,7 @@ import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableListComparat
 import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -393,7 +393,7 @@ public class MappingTables extends ViewPart
 		}
 		catch(PartInitException e)
 		{
-			MessageDialog.openError(getSite().getShell(), "Error", "Error opening view: " + e.getLocalizedMessage());
+			MessageDialogHelper.openError(getSite().getShell(), "Error", "Error opening view: " + e.getLocalizedMessage());
 		}
 	}
 	
@@ -406,7 +406,7 @@ public class MappingTables extends ViewPart
 		if ((selection == null) || (selection.size() == 0))
 			return;
 
-		if (!MessageDialog.openQuestion(getSite().getShell(), "Delete Confirmation", "Are you sure you want to delete selected mapping tables?"))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Confirmation", "Are you sure you want to delete selected mapping tables?"))
 			return;
 		
 		final List<Integer> tables = new ArrayList<Integer>(selection.size());

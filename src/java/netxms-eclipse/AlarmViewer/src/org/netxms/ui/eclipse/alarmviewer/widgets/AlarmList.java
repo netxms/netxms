@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.alarmviewer.widgets;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
@@ -29,7 +28,6 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -68,6 +66,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -499,7 +498,7 @@ public class AlarmList extends Composite
 		}
 		catch(PartInitException e)
 		{
-			MessageDialog.openError(getShell(), Messages.AlarmList_Error, Messages.AlarmList_ErrorText + e.getLocalizedMessage());
+			MessageDialogHelper.openError(getShell(), Messages.AlarmList_Error, Messages.AlarmList_ErrorText + e.getLocalizedMessage());
 		}
 	}
 	
@@ -635,7 +634,7 @@ public class AlarmList extends Composite
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(getShell(), Messages.AlarmList_Error, Messages.AlarmList_OpenDetailsError + e.getLocalizedMessage());
+				MessageDialogHelper.openError(getShell(), Messages.AlarmList_Error, Messages.AlarmList_OpenDetailsError + e.getLocalizedMessage());
 			}
 		}
 	}

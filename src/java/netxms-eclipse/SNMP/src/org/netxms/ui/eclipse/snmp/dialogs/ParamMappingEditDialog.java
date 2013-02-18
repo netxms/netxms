@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.snmp.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -39,6 +38,7 @@ import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.client.snmp.SnmpTrapParameterMapping;
 import org.netxms.ui.eclipse.snmp.Messages;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -258,7 +258,7 @@ public class ParamMappingEditDialog extends Dialog
 			}
 			catch(SnmpObjectIdFormatException e)
 			{
-				MessageDialog.openWarning(getShell(), Messages.ParamMappingEditDialog_Warning, Messages.ParamMappingEditDialog_WarningInvalidOID);
+				MessageDialogHelper.openWarning(getShell(), Messages.ParamMappingEditDialog_Warning, Messages.ParamMappingEditDialog_WarningInvalidOID);
 				return;
 			}
 		}

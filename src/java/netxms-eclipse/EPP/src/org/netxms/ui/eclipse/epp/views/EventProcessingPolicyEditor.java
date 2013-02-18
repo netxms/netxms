@@ -31,7 +31,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -63,6 +62,7 @@ import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Event processing policy editor
@@ -743,7 +743,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(getViewSite().getShell(), Messages.EventProcessingPolicyEditor_Error, Messages.EventProcessingPolicyEditor_SaveError + e.getMessage());
+			MessageDialogHelper.openError(getViewSite().getShell(), Messages.EventProcessingPolicyEditor_Error, Messages.EventProcessingPolicyEditor_SaveError + e.getMessage());
 		}
 	}
 

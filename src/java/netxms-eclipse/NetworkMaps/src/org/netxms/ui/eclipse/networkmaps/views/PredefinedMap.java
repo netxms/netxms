@@ -28,7 +28,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -69,6 +68,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * View for predefined map
@@ -511,7 +511,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
-		if (!MessageDialog.openQuestion(getSite().getShell(), "Confirm Removal", "Are you sure to remove selected element"
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Removal", "Are you sure to remove selected element"
 				+ (selection.size() == 1 ? "" : "s") + " from map?"))
 			return;
 

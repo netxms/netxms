@@ -23,7 +23,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
@@ -54,6 +53,7 @@ import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentParameterLabelP
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentTableComparator;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentTableLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -251,7 +251,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), Messages.AbstractSelectParamDlg_Warning, Messages.AbstractSelectParamDlg_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.AbstractSelectParamDlg_Warning, Messages.AbstractSelectParamDlg_WarningText);
 			return;
 		}
 		this.selection = selection.getFirstElement();

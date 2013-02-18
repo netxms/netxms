@@ -28,7 +28,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -50,6 +49,7 @@ import org.netxms.ui.eclipse.agentmanager.dialogs.SaveConfigDialog;
 import org.netxms.ui.eclipse.agentmanager.widgets.AgentConfigEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Agent's master config editor
@@ -221,7 +221,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(getViewSite().getShell(), Messages.AgentConfigEditorView_Error, Messages.AgentConfigEditorView_SaveError + e.getMessage());
+			MessageDialogHelper.openError(getViewSite().getShell(), Messages.AgentConfigEditorView_Error, Messages.AgentConfigEditorView_SaveError + e.getMessage());
 		}
 	}
 

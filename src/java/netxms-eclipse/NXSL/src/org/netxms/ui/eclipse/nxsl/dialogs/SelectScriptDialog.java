@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.nxsl.dialogs;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -42,6 +41,7 @@ import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -153,7 +153,7 @@ public class SelectScriptDialog extends Dialog
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.size() == 0)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "You must select at script from list and then press OK.");
+			MessageDialogHelper.openWarning(getShell(), "Warning", "You must select at script from list and then press OK.");
 			return;
 		}
 		script = (Script)selection.getFirstElement();

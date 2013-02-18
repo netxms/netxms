@@ -22,7 +22,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ST;
@@ -626,7 +625,7 @@ public class WidgetHelper
 			if (page != null)
 				page.setErrorMessage(validator.getErrorMessage(text, label));
 			else	
-				MessageDialog.openError(control.getShell(), Messages.WidgetHelper_InputValidationError, validator.getErrorMessage(text, label));
+				MessageDialogHelper.openError(control.getShell(), Messages.WidgetHelper_InputValidationError, validator.getErrorMessage(text, label));
 		}
 		return ok;
 	}

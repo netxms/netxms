@@ -19,10 +19,8 @@
 package org.netxms.ui.eclipse.topology.actions;
 
 import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -38,6 +36,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.topology.Activator;
 import org.netxms.ui.eclipse.topology.views.VlanView;
 
@@ -84,7 +83,7 @@ public class ShowVlans implements IObjectActionDelegate
 							}
 							catch(PartInitException e)
 							{
-								MessageDialog.openError(window.getShell(), "Error", "Cannot open VLAN view: " + e.getLocalizedMessage());
+								MessageDialogHelper.openError(window.getShell(), "Error", "Cannot open VLAN view: " + e.getLocalizedMessage());
 							}
 						}
 					});

@@ -35,7 +35,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -88,6 +87,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.ObjectFigureType;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Base class for network map views
@@ -1071,7 +1071,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				}
 				catch(PartInitException e)
 				{
-					MessageDialog.openError(getSite().getShell(), "Error", "Cannot open submap view: " + e.getMessage());
+					MessageDialogHelper.openError(getSite().getShell(), "Error", "Cannot open submap view: " + e.getMessage());
 				}
 			}
 		}

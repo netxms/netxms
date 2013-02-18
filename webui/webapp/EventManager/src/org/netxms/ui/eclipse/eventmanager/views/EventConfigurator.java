@@ -29,7 +29,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -60,6 +59,7 @@ import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateComparator;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -441,7 +441,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 
 		final String message = ((selection.size() > 1) ? Messages.EventConfigurator_DeleteConfirmation_Plural : Messages.EventConfigurator_DeleteConfirmation_Singular);
 		final Shell shell = getViewSite().getShell();
-		if (!MessageDialog.openQuestion(shell, Messages.EventConfigurator_DeleteConfirmationTitle, message))
+		if (!MessageDialogHelper.openQuestion(shell, Messages.EventConfigurator_DeleteConfirmationTitle, message))
 		{
 			return;
 		}

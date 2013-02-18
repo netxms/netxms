@@ -29,7 +29,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -53,6 +52,7 @@ import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Script editor view
@@ -337,7 +337,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(getViewSite().getShell(), "Error", "Cannot save script: " + e.getMessage());
+			MessageDialogHelper.openError(getViewSite().getShell(), "Error", "Cannot save script: " + e.getMessage());
 		}
 	}
 

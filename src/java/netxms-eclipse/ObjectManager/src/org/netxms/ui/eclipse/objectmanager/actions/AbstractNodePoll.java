@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.objectmanager.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -29,6 +28,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectmanager.views.NodePollerView;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Generic poll starter
@@ -54,7 +54,7 @@ public abstract class AbstractNodePoll implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 			}
 		}
 	}

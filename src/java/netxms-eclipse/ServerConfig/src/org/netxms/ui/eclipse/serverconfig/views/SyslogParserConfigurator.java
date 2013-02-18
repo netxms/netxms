@@ -23,7 +23,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
@@ -41,6 +40,7 @@ import org.netxms.ui.eclipse.serverconfig.widgets.LogParserEditor;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserModifyListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Syslog parser configurator
@@ -173,7 +173,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(getSite().getShell(), "Error", "Cannot save syslog parser configuration: " + e.getLocalizedMessage());
+			MessageDialogHelper.openError(getSite().getShell(), "Error", "Cannot save syslog parser configuration: " + e.getLocalizedMessage());
 		}
 	}
 
@@ -219,7 +219,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	{
 		if (modified)
 		{
-			if (!MessageDialog.openQuestion(getSite().getShell(), "Confirm Refresh", "This will destroy all unsaved changes. Are you sure?"))
+			if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Refresh", "This will destroy all unsaved changes. Are you sure?"))
 				return;
 		}
 		

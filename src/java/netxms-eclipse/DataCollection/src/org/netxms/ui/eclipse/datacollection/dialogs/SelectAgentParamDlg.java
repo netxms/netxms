@@ -23,7 +23,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.dialogs.InputDialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -42,6 +41,7 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Dialog for selecting parameters/tables provided by NetXMS agent
@@ -190,7 +190,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 					@Override
 					public void run()
 					{
-						MessageDialog.openInformation(getShell(), Messages.SelectAgentParamDlg_CurrentValueTitle, Messages.SelectAgentParamDlg_CurrentValuePrefix + value + Messages.SelectAgentParamDlg_CurrentValueSuffix);
+						MessageDialogHelper.openInformation(getShell(), Messages.SelectAgentParamDlg_CurrentValueTitle, Messages.SelectAgentParamDlg_CurrentValuePrefix + value + Messages.SelectAgentParamDlg_CurrentValueSuffix);
 					}
 				});
 			}

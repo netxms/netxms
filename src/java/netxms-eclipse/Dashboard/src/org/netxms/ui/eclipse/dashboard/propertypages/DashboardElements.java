@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import org.eclipse.core.internal.runtime.AdapterManager;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -58,6 +57,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -311,7 +311,7 @@ public class DashboardElements extends PropertyPage
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialog.openError(getShell(), Messages.DashboardElements_Error, Messages.DashboardElements_ErrorText);
+			MessageDialogHelper.openError(getShell(), Messages.DashboardElements_Error, Messages.DashboardElements_ErrorText);
 			return false;
 		}
 		
@@ -466,12 +466,12 @@ public class DashboardElements extends PropertyPage
 			}
 			catch(Exception e)
 			{
-				MessageDialog.openError(getShell(), Messages.DashboardElements_InternalErrorTitle, Messages.DashboardElements_InternalErrorText + e.getMessage());
+				MessageDialogHelper.openError(getShell(), Messages.DashboardElements_InternalErrorTitle, Messages.DashboardElements_InternalErrorText + e.getMessage());
 			}
 		}
 		else
 		{
-			MessageDialog.openError(getShell(), Messages.DashboardElements_InternalErrorTitle, Messages.DashboardElements_InternalErrorText2);
+			MessageDialogHelper.openError(getShell(), Messages.DashboardElements_InternalErrorTitle, Messages.DashboardElements_InternalErrorText2);
 		}
 	}
 	

@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.objectbrowser.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -27,6 +26,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -92,7 +92,7 @@ public class CreateObjectDialog extends Dialog
 		objectName = textName.getText().trim();
 		if (objectName.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), Messages.CreateObjectDialog_Warning, Messages.CreateObjectDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.CreateObjectDialog_Warning, Messages.CreateObjectDialog_WarningText);
 			return;
 		}
 		super.okPressed();

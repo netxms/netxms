@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.reporter.propertypages;
 import java.io.File;
 import java.io.FileInputStream;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -42,6 +41,7 @@ import org.netxms.client.objects.Report;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.reporter.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -145,7 +145,7 @@ public class ReportDefinition extends PropertyPage
 			}
 			catch(Exception e)
 			{
-				MessageDialog.openError(getShell(), "Error", "Cannot load report definition from file: " + e.getLocalizedMessage());
+				MessageDialogHelper.openError(getShell(), "Error", "Cannot load report definition from file: " + e.getLocalizedMessage());
 			}
 		}
 	}

@@ -28,7 +28,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -56,6 +55,7 @@ import org.netxms.ui.eclipse.nxsl.dialogs.CreateScriptDialog;
 import org.netxms.ui.eclipse.nxsl.views.helpers.ScriptComparator;
 import org.netxms.ui.eclipse.nxsl.views.helpers.ScriptLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -345,7 +345,7 @@ public class ScriptLibrary extends ViewPart
 		}
 		catch(PartInitException e)
 		{
-			MessageDialog.openError(getSite().getWorkbenchWindow().getShell(), "Error", "Cannot open script editor: " + e.getMessage());
+			MessageDialogHelper.openError(getSite().getWorkbenchWindow().getShell(), "Error", "Cannot open script editor: " + e.getMessage());
 		}
 	}
 
@@ -400,7 +400,7 @@ public class ScriptLibrary extends ViewPart
 	@SuppressWarnings("rawtypes")
 	private void deleteScript()
 	{
-		if (!MessageDialog.openQuestion(getSite().getShell(), "Confirmation", "Do you really want to delete selected scripts?"))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Confirmation", "Do you really want to delete selected scripts?"))
 			return;
 		
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();

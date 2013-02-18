@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.alarmviewer.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -37,6 +36,7 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Show alarms for given object
@@ -69,7 +69,7 @@ public class ShowObjectAlarms implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(window.getShell(), Messages.ShowObjectAlarms_Error, Messages.ShowObjectAlarms_ErrorOpeningView + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.ShowObjectAlarms_Error, Messages.ShowObjectAlarms_ErrorOpeningView + e.getMessage());
 			}
 		}
 	}

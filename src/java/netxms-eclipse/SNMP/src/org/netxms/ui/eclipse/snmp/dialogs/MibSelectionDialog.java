@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.snmp.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
@@ -41,6 +40,7 @@ import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.shared.MibCache;
 import org.netxms.ui.eclipse.snmp.widgets.MibBrowser;
 import org.netxms.ui.eclipse.snmp.widgets.MibObjectDetails;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -183,7 +183,7 @@ public class MibSelectionDialog extends Dialog
 		selectedObject = mibTree.getSelection();
 		if (selectedObject == null)
 		{
-			MessageDialog.openWarning(getShell(), Messages.MibSelectionDialog_Warning, Messages.MibSelectionDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.MibSelectionDialog_Warning, Messages.MibSelectionDialog_WarningText);
 			return;
 		}
 		saveSettings();

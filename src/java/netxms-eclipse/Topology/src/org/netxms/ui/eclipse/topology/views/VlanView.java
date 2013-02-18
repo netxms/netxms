@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.topology.views;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -29,7 +28,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -57,6 +55,7 @@ import org.netxms.client.topology.VlanInfo;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.topology.Activator;
 import org.netxms.ui.eclipse.topology.views.helpers.VlanLabelProvider;
 import org.netxms.ui.eclipse.topology.widgets.DeviceView;
@@ -310,7 +309,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(getSite().getShell(), "Error", "Cannot open VLAN map view for VLAN " + vlan.getVlanId() + ": " + e.getLocalizedMessage());
+				MessageDialogHelper.openError(getSite().getShell(), "Error", "Cannot open VLAN map view for VLAN " + vlan.getVlanId() + ": " + e.getLocalizedMessage());
 			}
 		}
 	}

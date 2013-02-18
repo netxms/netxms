@@ -19,10 +19,8 @@
 package org.netxms.ui.eclipse.serverconfig.actions;
 
 import java.io.FileInputStream;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
@@ -33,6 +31,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.dialogs.ConfigurationImportDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Import configuration from XML
@@ -90,7 +89,7 @@ public class ImportConfiguration implements IWorkbenchWindowActionDelegate
 						@Override
 						public void run()
 						{
-							MessageDialog.openInformation(shell, "Information", "Configuration was successfully imported from file " + dlg.getFileName());
+							MessageDialogHelper.openInformation(shell, "Information", "Configuration was successfully imported from file " + dlg.getFileName());
 						}
 					});
 				}

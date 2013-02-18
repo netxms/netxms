@@ -27,11 +27,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.ContributionItem;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -62,6 +60,7 @@ import org.netxms.ui.eclipse.objecttools.views.FileViewer;
 import org.netxms.ui.eclipse.objecttools.views.LocalCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Dynamic object tools menu creator
@@ -267,7 +266,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 				message = message.replace("%OBJECT_NAME%", "<multiple nodes>");
 				message = message.replace("%OBJECT_ID%", "<multiple nodes>");
 			}
-			if (!MessageDialog.openQuestion(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
+			if (!MessageDialogHelper.openQuestion(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
 					"Confirm Tool Execution", message))
 				return;
 		}
@@ -329,7 +328,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		}
 		catch(PartInitException e)
 		{
-			MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+			MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 		}
 	}
 
@@ -355,7 +354,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 					@Override
 					public void run()
 					{
-						MessageDialog.openInformation(null, "Tool Execution", "Action " + tool.getData() + " executed successfully on node " + node.getObjectName());
+						MessageDialogHelper.openInformation(null, "Tool Execution", "Action " + tool.getData() + " executed successfully on node " + node.getObjectName());
 					}
 				});
 			}
@@ -380,7 +379,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 					@Override
 					public void run()
 					{
-						MessageDialog.openInformation(null, "Information", "Server command executed successfully");
+						MessageDialogHelper.openInformation(null, "Information", "Server command executed successfully");
 					}
 				});
 			}
@@ -439,7 +438,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			}
 			catch(Exception e)
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 			}
 		}
 	}
@@ -476,7 +475,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 						}
 						catch(Exception e)
 						{
-							MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+							MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 						}
 					}
 				});
@@ -498,7 +497,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		}
 		else
 		{
-			MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Cannot execute object tool: handler not defined");
+			MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Cannot execute object tool: handler not defined");
 		}
 	}
 
@@ -522,7 +521,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		}
 		catch(PartInitException e)
 		{
-			MessageDialog.openError(window.getShell(), "Error", "Cannot open web browser: " + e.getLocalizedMessage());
+			MessageDialogHelper.openError(window.getShell(), "Error", "Cannot open web browser: " + e.getLocalizedMessage());
 		}
 	}
 }

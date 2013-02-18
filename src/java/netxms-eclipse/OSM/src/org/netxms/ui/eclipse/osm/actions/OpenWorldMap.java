@@ -19,13 +19,13 @@
 package org.netxms.ui.eclipse.osm.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.views.WorldMap;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Open world map view
@@ -65,7 +65,7 @@ public class OpenWorldMap implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), Messages.OpenWorldMap_Error, Messages.OpenWorldMap_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.OpenWorldMap_Error, Messages.OpenWorldMap_ErrorText + e.getMessage());
 			}
 		}
 	}

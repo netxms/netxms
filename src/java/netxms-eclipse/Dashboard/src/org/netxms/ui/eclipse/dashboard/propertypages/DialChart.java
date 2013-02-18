@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.dashboard.propertypages;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -28,6 +27,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DialChartConfig;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -137,7 +137,7 @@ public class DialChart extends PropertyPage
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialog.openWarning(getShell(), Messages.DialChart_Warning, Messages.DialChart_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.DialChart_Warning, Messages.DialChart_WarningText);
 			return false;
 		}
 		

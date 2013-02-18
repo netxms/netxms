@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.dashboard.dialogs;
 
 import java.io.File;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -29,6 +28,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.filemanager.widgets.LocalFileSelector;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -106,13 +106,13 @@ public class ImportDashboardDialog extends Dialog
 		objectName = textName.getText().trim();
 		if (objectName.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), Messages.ImportDashboardDialog_Warning, Messages.ImportDashboardDialog_WarningValidName);
+			MessageDialogHelper.openWarning(getShell(), Messages.ImportDashboardDialog_Warning, Messages.ImportDashboardDialog_WarningValidName);
 			return;
 		}
 		importFile = importFileSelector.getFile();
 		if (importFile == null)
 		{
-			MessageDialog.openWarning(getShell(), Messages.ImportDashboardDialog_Warning, Messages.ImportDashboardDialog_WarningSelectFile);
+			MessageDialogHelper.openWarning(getShell(), Messages.ImportDashboardDialog_Warning, Messages.ImportDashboardDialog_WarningSelectFile);
 			return;
 		}
 		super.okPressed();

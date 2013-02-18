@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.objectview.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -31,6 +30,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.objectview.views.ObjectStatusMapView;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Show object status map
@@ -63,7 +63,7 @@ public class ShowStatusMap implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 			}
 		}
 	}

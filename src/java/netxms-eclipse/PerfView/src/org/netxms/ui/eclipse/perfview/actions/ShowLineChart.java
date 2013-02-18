@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.perfview.actions;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -28,6 +27,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.eclipse.datacollection.api.DciOpenHandler;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Show line chart on double-click on DCI's value
@@ -68,7 +68,7 @@ public class ShowLineChart implements DciOpenHandler
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+			MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 		}
 		return true;
 	}

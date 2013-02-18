@@ -28,7 +28,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -49,6 +48,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.Activator;
 import org.netxms.ui.eclipse.topology.views.helpers.ConnectionPointComparator;
@@ -252,7 +252,7 @@ public class HostSearchResults extends ViewPart
 		
 		if (cp == null)
 		{
-			MessageDialog.openWarning(shell, "Warning", "Connection point information cannot be found");
+			MessageDialogHelper.openWarning(shell, "Warning", "Connection point information cannot be found");
 			return;
 		}
 		
@@ -267,12 +267,12 @@ public class HostSearchResults extends ViewPart
 			{
 				if (host != null)
 				{
-					MessageDialog.openInformation(shell, "Connection Point", "Node " + host.getObjectName() + " is " + (cp.isDirectlyConnected() ? "directly" : "indirectly") + " connected to network switch " + bridge.getObjectName() + " port " + iface.getObjectName());
+					MessageDialogHelper.openInformation(shell, "Connection Point", "Node " + host.getObjectName() + " is " + (cp.isDirectlyConnected() ? "directly" : "indirectly") + " connected to network switch " + bridge.getObjectName() + " port " + iface.getObjectName());
 				}
 				else
 				{
 					String ipAddress = (cp.getLocalIpAddress() != null) ? "IP address " + cp.getLocalIpAddress().getHostAddress() + " and " : "";
-					MessageDialog.openInformation(shell, "Connection Point", "Node with " + ipAddress + "MAC address " + cp.getLocalMacAddress() + " is " + (cp.isDirectlyConnected() ? "directly" : "indirectly") + " connected to network switch " + bridge.getObjectName() + " port " + iface.getObjectName());
+					MessageDialogHelper.openInformation(shell, "Connection Point", "Node with " + ipAddress + "MAC address " + cp.getLocalMacAddress() + " is " + (cp.isDirectlyConnected() ? "directly" : "indirectly") + " connected to network switch " + bridge.getObjectName() + " port " + iface.getObjectName());
 				}
 				
 				IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
@@ -281,12 +281,12 @@ public class HostSearchResults extends ViewPart
 			}
 			else
 			{
-				MessageDialog.openWarning(shell, "Warning", "Connection point information cannot be found");
+				MessageDialogHelper.openWarning(shell, "Warning", "Connection point information cannot be found");
 			}
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openWarning(shell, "Warning", "Connection point information cannot be shown: " + e.getMessage());
+			MessageDialogHelper.openWarning(shell, "Warning", "Connection point information cannot be shown: " + e.getMessage());
 		}
 	}
 

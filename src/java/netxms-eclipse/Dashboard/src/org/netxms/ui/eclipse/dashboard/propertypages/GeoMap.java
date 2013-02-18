@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.dashboard.propertypages;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -30,6 +29,7 @@ import org.netxms.base.GeoLocation;
 import org.netxms.base.GeoLocationFormatException;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -103,7 +103,7 @@ public class GeoMap extends PropertyPage
 		}
 		catch(GeoLocationFormatException e)
 		{
-			MessageDialog.openError(getShell(), Messages.GeoMap_Error, Messages.GeoMap_ErrorText);
+			MessageDialogHelper.openError(getShell(), Messages.GeoMap_Error, Messages.GeoMap_ErrorText);
 		}
 		config.setTitle(title.getText());
 		config.setZoom(zoom.getSelection());

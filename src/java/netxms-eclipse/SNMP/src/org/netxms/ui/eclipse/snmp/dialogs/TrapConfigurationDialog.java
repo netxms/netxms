@@ -21,9 +21,7 @@ package org.netxms.ui.eclipse.snmp.dialogs;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -54,6 +52,7 @@ import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.dialogs.helpers.ParamMappingLabelProvider;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -388,7 +387,7 @@ public class TrapConfigurationDialog extends Dialog
 		}
 		catch(SnmpObjectIdFormatException e)
 		{
-			MessageDialog.openWarning(getShell(), Messages.TrapConfigurationDialog_Warning, Messages.TrapConfigurationDialog_WarningInvalidOID);
+			MessageDialogHelper.openWarning(getShell(), Messages.TrapConfigurationDialog_Warning, Messages.TrapConfigurationDialog_WarningInvalidOID);
 			return;
 		}
 

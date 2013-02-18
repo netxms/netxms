@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.networkmaps.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -32,6 +31,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -125,7 +125,7 @@ public class CreateNetworkMapDialog extends Dialog
 		name = textName.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please enter non-empty object name");
+			MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter non-empty object name");
 			return;
 		}
 		
@@ -135,7 +135,7 @@ public class CreateNetworkMapDialog extends Dialog
 			seedObject = seedObjectSelector.getObjectId();
 			if (seedObject == 0)
 			{
-				MessageDialog.openWarning(getShell(), "Warning", "Please select seed node");
+				MessageDialogHelper.openWarning(getShell(), "Warning", "Please select seed node");
 				return;
 			}
 		}

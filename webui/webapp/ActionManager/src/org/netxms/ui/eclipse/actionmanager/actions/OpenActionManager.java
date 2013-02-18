@@ -19,13 +19,13 @@
 package org.netxms.ui.eclipse.actionmanager.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
 import org.netxms.ui.eclipse.actionmanager.Messages;
 import org.netxms.ui.eclipse.actionmanager.views.ActionManager;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 public class OpenActionManager implements IWorkbenchWindowActionDelegate
 {
@@ -62,7 +62,7 @@ public class OpenActionManager implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), Messages.OpenActionManager_Error, Messages.OpenActionManager_ErrorOpeningView + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.OpenActionManager_Error, Messages.OpenActionManager_ErrorOpeningView + e.getMessage());
 			}
 		}
 	}

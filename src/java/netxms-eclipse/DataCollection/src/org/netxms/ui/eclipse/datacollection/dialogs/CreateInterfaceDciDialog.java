@@ -4,7 +4,6 @@
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -20,6 +19,7 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.InterfaceDciInfo;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -133,7 +133,7 @@ public class CreateInterfaceDciDialog extends Dialog
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialog.openError(getShell(), Messages.CreateInterfaceDciDialog_Error, Messages.CreateInterfaceDciDialog_BadPollingInterval);
+			MessageDialogHelper.openError(getShell(), Messages.CreateInterfaceDciDialog_Error, Messages.CreateInterfaceDciDialog_BadPollingInterval);
 		}
 		
 		try
@@ -144,7 +144,7 @@ public class CreateInterfaceDciDialog extends Dialog
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialog.openError(getShell(), Messages.CreateInterfaceDciDialog_Error, Messages.CreateInterfaceDciDialog_BadRetentionTime);
+			MessageDialogHelper.openError(getShell(), Messages.CreateInterfaceDciDialog_Error, Messages.CreateInterfaceDciDialog_BadRetentionTime);
 		}
 		
 		dciInfo = new InterfaceDciInfo[forms.length];

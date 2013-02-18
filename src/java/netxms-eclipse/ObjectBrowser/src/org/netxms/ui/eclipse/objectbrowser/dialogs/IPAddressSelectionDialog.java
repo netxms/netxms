@@ -21,9 +21,7 @@ package org.netxms.ui.eclipse.objectbrowser.dialogs;
 import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Set;
-
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -42,6 +40,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.AddressListLabelProvider;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -153,7 +152,7 @@ public class IPAddressSelectionDialog extends Dialog
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), Messages.IPAddressSelectionDialog_Warning, Messages.IPAddressSelectionDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.IPAddressSelectionDialog_Warning, Messages.IPAddressSelectionDialog_WarningText);
 			return;
 		}
 		address = ((Interface)selection.getFirstElement()).getPrimaryIP();

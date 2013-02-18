@@ -22,10 +22,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -56,6 +54,7 @@ import org.netxms.ui.eclipse.objectmanager.dialogs.AttributeEditDialog;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AttrListLabelProvider;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AttrViewerComparator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -155,7 +154,7 @@ public class CustomAttributes extends PropertyPage
 				{
 					if (attributes.containsKey(dlg.getAttrName()))
 					{
-						MessageDialog.openWarning(CustomAttributes.this.getShell(), "Warning", "Attribute named " + dlg.getAttrName() + " already exists");
+						MessageDialogHelper.openWarning(CustomAttributes.this.getShell(), "Warning", "Attribute named " + dlg.getAttrName() + " already exists");
 					}
 					else
 					{

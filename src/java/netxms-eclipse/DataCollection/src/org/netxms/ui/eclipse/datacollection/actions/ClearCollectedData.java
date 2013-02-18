@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -34,6 +33,7 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Clear collected data for DCI
@@ -61,7 +61,7 @@ public class ClearCollectedData implements IObjectActionDelegate
 		if (objects == null)
 			return;
 		
-		if (!MessageDialog.openQuestion(part.getSite().getShell(), Messages.ClearCollectedData_ConfirmDialogTitle, Messages.ClearCollectedData_ConfirmationText))
+		if (!MessageDialogHelper.openQuestion(part.getSite().getShell(), Messages.ClearCollectedData_ConfirmDialogTitle, Messages.ClearCollectedData_ConfirmationText))
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();

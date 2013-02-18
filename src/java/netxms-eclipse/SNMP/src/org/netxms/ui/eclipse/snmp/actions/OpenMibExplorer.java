@@ -19,13 +19,13 @@
 package org.netxms.ui.eclipse.snmp.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.views.MibExplorer;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /** 
  * Workbench action for opening MIB Explorer view.
@@ -66,7 +66,7 @@ public class OpenMibExplorer implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), Messages.OpenMibExplorer_Error, Messages.OpenMibExplorer_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.OpenMibExplorer_Error, Messages.OpenMibExplorer_ErrorText + e.getMessage());
 			}
 		}
 	}

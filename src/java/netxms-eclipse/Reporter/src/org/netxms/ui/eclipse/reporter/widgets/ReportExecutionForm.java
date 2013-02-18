@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
@@ -59,6 +58,7 @@ import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportResultLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.ImageCache;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -399,7 +399,7 @@ public class ReportExecutionForm extends Composite
 					@Override
 					public void run()
 					{
-						MessageDialog.openInformation(getShell(), "Report Execution", "Report " + report.getObjectName()
+						MessageDialogHelper.openInformation(getShell(), "Report Execution", "Report " + report.getObjectName()
 								+ " execution started successfully. Job ID is " + jobId + ".");
 					}
 				});
@@ -471,7 +471,7 @@ public class ReportExecutionForm extends Composite
 		}
 		else
 		{
-			MessageDialog.openError(getShell(), "Error", "Report was rendered successfully, but external viewer cannot be opened");
+			MessageDialogHelper.openError(getShell(), "Error", "Report was rendered successfully, but external viewer cannot be opened");
 		}
 	}
 
@@ -484,7 +484,7 @@ public class ReportExecutionForm extends Composite
 		if (selection.size() == 0)
 			return;
 
-		if (!MessageDialog.openConfirm(getShell(), "Delete Report Results", "Do you really want to delete selected results?"))
+		if (!MessageDialogHelper.openConfirm(getShell(), "Delete Report Results", "Do you really want to delete selected results?"))
 			return;
 
 		final List<Long> resultIdList = new ArrayList<Long>(selection.size());

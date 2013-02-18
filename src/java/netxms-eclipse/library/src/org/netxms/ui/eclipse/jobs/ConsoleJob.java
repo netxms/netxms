@@ -19,12 +19,10 @@
 package org.netxms.ui.eclipse.jobs;
 
 import java.lang.reflect.InvocationTargetException;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchPart;
@@ -34,6 +32,7 @@ import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.netxms.api.client.NetXMSClientException;
 import org.netxms.ui.eclipse.library.Activator;
 import org.netxms.ui.eclipse.library.Messages;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Tailored Job class for NetXMS console. Callers must call start() instead of schedule() for correct execution.
@@ -189,7 +188,7 @@ public abstract class ConsoleJob extends Job
 			Throwable cause = e.getCause();
 			if (cause == null)
 				cause = e;
-			MessageDialog.openError(null, Messages.ConsoleJob_ErrorDialogTitle, getErrorMessage() + ": " + cause.getLocalizedMessage()); //$NON-NLS-1$
+			MessageDialogHelper.openError(null, Messages.ConsoleJob_ErrorDialogTitle, getErrorMessage() + ": " + cause.getLocalizedMessage()); //$NON-NLS-1$
 		}
 		catch(InterruptedException e)
 		{

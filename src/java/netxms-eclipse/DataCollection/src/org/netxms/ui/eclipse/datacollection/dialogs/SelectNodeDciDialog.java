@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.swt.SWT;
@@ -36,6 +35,7 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.DciList;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Dialog for selecting DCI from specific node
@@ -132,7 +132,7 @@ public class SelectNodeDciDialog extends Dialog
 		selection = dciList.getSelection();
 		if (selection == null)
 		{
-			MessageDialog.openWarning(getShell(), Messages.SelectNodeDciDialog_Warning, Messages.SelectNodeDciDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.SelectNodeDciDialog_Warning, Messages.SelectNodeDciDialog_WarningText);
 			return;
 		}
 		saveSettings();

@@ -31,6 +31,7 @@ import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.views.ServerConsole;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Open server console
@@ -84,7 +85,7 @@ public class OpenServerConsole implements IWorkbenchWindowActionDelegate
 									}
 									catch(PartInitException e)
 									{
-										MessageDialog.openError(window.getShell(), Messages.getString("OpenServerConsole.Error"), Messages.getString("OpenServerConsole.ViewErrorMessage") + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
+										MessageDialogHelper.openError(window.getShell(), Messages.getString("OpenServerConsole.Error"), Messages.getString("OpenServerConsole.ViewErrorMessage") + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
 									}
 								}
 							});

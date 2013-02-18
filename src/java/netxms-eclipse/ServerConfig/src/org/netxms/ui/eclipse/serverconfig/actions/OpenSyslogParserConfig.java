@@ -19,12 +19,12 @@
 package org.netxms.ui.eclipse.serverconfig.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
 import org.netxms.ui.eclipse.serverconfig.views.SyslogParserConfigurator;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Open network discovery configuration view
@@ -65,7 +65,7 @@ public class OpenSyslogParserConfig implements IWorkbenchWindowActionDelegate
 		} 
 		catch (PartInitException e) 
 		{
-			MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+			MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 		}
 	}
 

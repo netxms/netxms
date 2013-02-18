@@ -28,7 +28,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -56,6 +55,7 @@ import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.UserComparator;
 import org.netxms.ui.eclipse.usermanager.UserLabelProvider;
@@ -323,7 +323,7 @@ public class UserManagementView extends ViewPart
 						}
 						catch(Exception e)
 						{
-							MessageDialog.openError(getSite().getShell(), "Unable to change password", e.getMessage());
+							MessageDialogHelper.openError(getSite().getShell(), "Unable to change password", e.getMessage());
 						}
 					}
 				}
@@ -477,7 +477,7 @@ public class UserManagementView extends ViewPart
 
 		final String message = "Do you really wish to delete selected user" + ((selection.size() > 1) ? "s?" : "?");
 		final Shell shell = getViewSite().getShell();
-		if (!MessageDialog.openQuestion(shell, "Confirm user deletion", message))
+		if (!MessageDialogHelper.openQuestion(shell, "Confirm user deletion", message))
 		{
 			return;
 		}

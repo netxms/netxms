@@ -32,7 +32,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -64,6 +63,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -348,7 +348,7 @@ public class PackageManager extends ViewPart
 			}
 			catch(IOException e)
 			{
-				MessageDialog.openError(getSite().getShell(), Messages.PackageManager_Error, Messages.PackageManager_PkgFileOpenError + e.getLocalizedMessage());
+				MessageDialogHelper.openError(getSite().getShell(), Messages.PackageManager_Error, Messages.PackageManager_PkgFileOpenError + e.getLocalizedMessage());
 			}
 		}
 	}
@@ -358,7 +358,7 @@ public class PackageManager extends ViewPart
 	 */
 	private void removePackage()
 	{
-		if (!MessageDialog.openConfirm(getSite().getShell(), Messages.PackageManager_ConfirmDeleteTitle, Messages.PackageManager_ConfirmDeleteText))
+		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.PackageManager_ConfirmDeleteTitle, Messages.PackageManager_ConfirmDeleteText))
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -447,7 +447,7 @@ public class PackageManager extends ViewPart
 									}
 									catch(PartInitException e)
 									{
-										MessageDialog.openError(getSite().getShell(), Messages.PackageManager_Error, Messages.PackageManager_ErrorOpenView + e.getLocalizedMessage());
+										MessageDialogHelper.openError(getSite().getShell(), Messages.PackageManager_Error, Messages.PackageManager_ErrorOpenView + e.getLocalizedMessage());
 									}
 									synchronized(sync)
 									{
@@ -473,7 +473,7 @@ public class PackageManager extends ViewPart
 							@Override
 							public void run()
 							{
-								MessageDialog.openInformation(getSite().getShell(), Messages.PackageManager_Information, Messages.PackageManager_PkgDepCompleted);
+								MessageDialogHelper.openInformation(getSite().getShell(), Messages.PackageManager_Information, Messages.PackageManager_PkgDepCompleted);
 							}
 						});
 					}

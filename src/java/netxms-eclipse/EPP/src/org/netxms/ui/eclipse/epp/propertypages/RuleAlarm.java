@@ -36,6 +36,7 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.ImageCombo;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -330,7 +331,7 @@ public class RuleAlarm extends PropertyPage
 					int t = Integer.parseInt(alarmTimeout.getText());
 					if (t < 0)
 					{
-						MessageDialog.openWarning(getShell(), Messages.RuleAlarm_Warning, Messages.RuleAlarm_WarningInvalidTimeout);
+						MessageDialogHelper.openWarning(getShell(), Messages.RuleAlarm_Warning, Messages.RuleAlarm_WarningInvalidTimeout);
 						return false;
 					}
 					rule.setAlarmTimeout(t);

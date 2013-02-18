@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.networkmaps.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -46,6 +45,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -278,7 +278,7 @@ public class MapBackground extends PropertyPage
 			}
 			catch(GeoLocationFormatException e)
 			{
-				MessageDialog.openError(getShell(), "Error", "Geolocation format error");
+				MessageDialogHelper.openError(getShell(), "Error", "Geolocation format error");
 				return false;
 			}
 			md.setMapBackground(NetworkMap.GEOMAP_BACKGROUND, location, zoomSpinner.getSelection(), ColorConverter.rgbToInt(backgroundColor.getColorValue()));

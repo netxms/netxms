@@ -24,7 +24,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -64,6 +63,7 @@ import org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.DashboardElement;
 import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 
@@ -860,7 +860,7 @@ public class RuleEditor extends Composite
 		Iterator pages = pageManager.getElements(PreferenceManager.PRE_ORDER).iterator();
 		if (!pages.hasNext())
 		{
-			MessageDialog.openInformation(shell, WorkbenchMessages.get().PropertyDialog_messageTitle,
+			MessageDialogHelper.openInformation(shell, WorkbenchMessages.get().PropertyDialog_messageTitle,
 					NLS.bind(WorkbenchMessages.get().PropertyDialog_noPropertyMessage, name));
 			return null;
 		}

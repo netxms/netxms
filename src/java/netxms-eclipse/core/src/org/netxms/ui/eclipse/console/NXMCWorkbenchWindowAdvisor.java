@@ -154,10 +154,6 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 				e.getCause().printStackTrace();
 				MessageDialog.openError(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.connectionError"), e.getCause().getLocalizedMessage()); //$NON-NLS-1$
 			}
-			catch(InterruptedException e)
-			{
-				MessageDialog.openError(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.exception"), e.toString()); //$NON-NLS-1$
-			}
 			catch(Exception e)
 			{
 				e.printStackTrace();

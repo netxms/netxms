@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.networkmaps.actions;
 
 import java.util.List;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
@@ -33,6 +32,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.networkmaps.views.IPRouteMap;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Show IP route between two nodes
@@ -67,7 +67,7 @@ public class ShowIPRoute implements IObjectActionDelegate
 			GenericObject[] selection = dlg.getSelectedObjects(Node.class);
 			if (selection.length == 0)
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Invalid target selection");
+				MessageDialogHelper.openError(window.getShell(), "Error", "Invalid target selection");
 				return;
 			}
 			targetNode = (Node)selection[0];
@@ -81,7 +81,7 @@ public class ShowIPRoute implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 			}
 		}
 	}

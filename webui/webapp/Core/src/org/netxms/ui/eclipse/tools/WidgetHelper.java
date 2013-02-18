@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.tools;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
@@ -499,7 +498,7 @@ public class WidgetHelper
 			if (page != null)
 				page.setErrorMessage(validator.getErrorMessage(text, label));
 			else	
-				MessageDialog.openError(control.getShell(), "Input Validation Error", validator.getErrorMessage(text, label));
+				MessageDialogHelper.openError(control.getShell(), "Input Validation Error", validator.getErrorMessage(text, label));
 		}
 		return ok;
 	}

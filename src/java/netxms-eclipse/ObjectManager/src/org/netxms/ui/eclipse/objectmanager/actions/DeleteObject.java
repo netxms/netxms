@@ -1,9 +1,9 @@
 package org.netxms.ui.eclipse.objectmanager.actions;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.netxms.client.objects.GenericObject;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 public class DeleteObject extends MultipleObjectAction
 {
@@ -22,7 +22,7 @@ public class DeleteObject extends MultipleObjectAction
 		{
 			question = "Are you sure you want to delete selected objects?";
 		}
-		boolean confirmed = MessageDialog.openConfirm(getWindow().getShell(), "Confirm Delete", question);
+		boolean confirmed = MessageDialogHelper.openConfirm(getWindow().getShell(), "Confirm Delete", question);
 		return confirmed;
 	}
 

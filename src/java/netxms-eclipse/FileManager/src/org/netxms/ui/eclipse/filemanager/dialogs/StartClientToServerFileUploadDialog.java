@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.filemanager.dialogs;
 
 import java.io.File;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -29,6 +28,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.widgets.LocalFileSelector;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -102,7 +102,7 @@ public class StartClientToServerFileUploadDialog extends Dialog
 		localFile = fileSelector.getFile();
 		if (localFile == null)
 		{
-			MessageDialog.openWarning(getShell(), Messages.StartClientToServerFileUploadDialog_Warning, Messages.StartClientToServerFileUploadDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.StartClientToServerFileUploadDialog_Warning, Messages.StartClientToServerFileUploadDialog_WarningText);
 			return;
 		}
 		remoteFileName = textRemoteFile.getText().trim();

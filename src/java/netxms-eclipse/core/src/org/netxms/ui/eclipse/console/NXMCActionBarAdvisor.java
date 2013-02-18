@@ -39,7 +39,6 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.StatusLineContributionItem;
 import org.eclipse.jface.action.ToolBarContributionItem;
 import org.eclipse.jface.action.ToolBarManager;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IWorkbench;
@@ -49,11 +48,12 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
-import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
+import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.netxms.ui.eclipse.shared.IActionConstants;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Action bar advisor for management console
@@ -355,7 +355,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	 */
 	private void setLanguage(String locale)
 	{
-		if (!MessageDialog.openConfirm(null, Messages.getString("NXMCActionBarAdvisor.ConfirmRestart"), Messages.getString("NXMCActionBarAdvisor.RestartConsoleMessage"))) //$NON-NLS-1$ //$NON-NLS-2$
+		if (!MessageDialogHelper.openConfirm(null, Messages.getString("NXMCActionBarAdvisor.ConfirmRestart"), Messages.getString("NXMCActionBarAdvisor.RestartConsoleMessage"))) //$NON-NLS-1$ //$NON-NLS-2$
 			return;
 		
 		Activator.getDefault().getPreferenceStore().setValue("NL", locale); //$NON-NLS-1$

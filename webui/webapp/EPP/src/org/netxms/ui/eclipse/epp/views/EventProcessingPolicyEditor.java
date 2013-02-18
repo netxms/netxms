@@ -25,14 +25,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -63,6 +61,7 @@ import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Event processing policy editor
@@ -761,7 +760,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(getViewSite().getShell(), "Error", "Cannot save event processing policy: " + e.getMessage());
+			MessageDialogHelper.openError(getViewSite().getShell(), "Error", "Cannot save event processing policy: " + e.getMessage());
 		}	
 	}
 

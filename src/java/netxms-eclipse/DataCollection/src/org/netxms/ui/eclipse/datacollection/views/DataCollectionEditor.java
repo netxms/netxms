@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.datacollection.views;
 
 import java.util.Iterator;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -29,7 +28,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -78,6 +76,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -601,7 +600,7 @@ public class DataCollectionEditor extends ViewPart
 		if (selection.size() <= 0)
 			return;
 		
-		if (!MessageDialog.openConfirm(getSite().getShell(), Messages.DataCollectionEditor_DeleteConfirmTitle,
+		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.DataCollectionEditor_DeleteConfirmTitle,
 		                               Messages.DataCollectionEditor_DeleteConfirmText))
 			return;
 		

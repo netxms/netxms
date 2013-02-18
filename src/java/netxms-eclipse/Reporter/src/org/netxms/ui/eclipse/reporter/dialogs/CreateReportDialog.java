@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.reporter.dialogs;
 
 import java.io.File;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -29,6 +28,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.filemanager.widgets.LocalFileSelector;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -100,7 +100,7 @@ public class CreateReportDialog extends Dialog
 		objectName = textName.getText().trim();
 		if (objectName.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid object name");
+			MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid object name");
 			return;
 		}
 		super.okPressed();

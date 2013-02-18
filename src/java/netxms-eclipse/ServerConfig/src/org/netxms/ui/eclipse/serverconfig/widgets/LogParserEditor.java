@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -57,6 +56,7 @@ import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserModifyListene
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserRule;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserRuleEditor;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Log parser editor
@@ -389,7 +389,7 @@ public class LogParserEditor extends Composite
 		catch(Exception e)
 		{
 			e.printStackTrace();
-			MessageDialog.openError(getShell(), "Error", "Log parser definition is invalid");
+			MessageDialogHelper.openError(getShell(), "Error", "Log parser definition is invalid");
 			parser = new LogParser();
 		}
 		

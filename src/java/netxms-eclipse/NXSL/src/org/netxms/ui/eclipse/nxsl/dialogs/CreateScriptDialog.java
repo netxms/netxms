@@ -19,13 +19,13 @@
 package org.netxms.ui.eclipse.nxsl.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -79,7 +79,7 @@ public class CreateScriptDialog extends Dialog
 		name = nameInputField.getText();
 		name = name.trim();
 		if (name.isEmpty())
-			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid script name");
+			MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid script name");
 		else
 			super.okPressed();
 	}
