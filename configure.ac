@@ -854,7 +854,11 @@ if test "x$STATIC_BUILD" = "xyes"; then
 	enable_static=yes
 else
 	enable_shared=yes
-	enable_static=no
+	if test "x$BUILD_SDK" = "xyes"; then
+		enable_static=yes
+	else
+		enable_static=no
+	fi
 fi
 
 if test "x$LTINIT_CC" != "x"; then
