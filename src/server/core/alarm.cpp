@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -269,7 +269,6 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 {
    NXC_ALARM alarm;
    TCHAR *pszExpMsg, *pszExpKey, szQuery[2048];
-   DWORD i, dwObjectId = 0;
    BOOL bNewAlarm = TRUE;
 
    // Expand alarm's message and key
@@ -281,7 +280,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
    {
       lock();
 
-      for(i = 0; i < m_dwNumAlarms; i++)
+      for(DWORD i = 0; i < m_dwNumAlarms; i++)
 			if (!_tcscmp(pszExpKey, m_pAlarmList[i].szKey))
          {
             m_pAlarmList[i].dwRepeatCount++;
@@ -334,7 +333,6 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
          m_dwNumAlarms++;
          m_pAlarmList = (NXC_ALARM *)realloc(m_pAlarmList, sizeof(NXC_ALARM) * m_dwNumAlarms);
 			memcpy(&m_pAlarmList[m_dwNumAlarms - 1], &alarm, sizeof(NXC_ALARM));
-         dwObjectId = alarm.dwSourceObject;
 
          unlock();
       }
@@ -362,8 +360,8 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
    }
 
    // Update status of related object if needed
-   if ((dwObjectId != 0) && ((alarm.nState & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED))
-      updateObjectStatus(dwObjectId);
+   if ((alarm.nState & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
+		updateObjectStatus(pEvent->getSourceId());
 
 	// Add record to alarm_events table
 	TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
