@@ -491,4 +491,25 @@ public class Node extends GenericObject
 	{
 		return primaryName;
 	}
+	
+	/**
+	 * Get MAC address of interface with node's primary IP
+	 * 
+	 * @return
+	 */
+	public MacAddress getPrimaryMAC()
+	{
+		for(GenericObject o : getAllChilds(GenericObject.OBJECT_INTERFACE))
+		{
+			Interface iface = (Interface)o;
+			if (iface.isLoopback() || (iface.getMacAddress() == null))
+				continue;
+			
+			if (iface.getPrimaryIP().equals(getPrimaryIP()))
+			{
+				return iface.getMacAddress();
+			}
+		}
+		return null;
+	}
 }

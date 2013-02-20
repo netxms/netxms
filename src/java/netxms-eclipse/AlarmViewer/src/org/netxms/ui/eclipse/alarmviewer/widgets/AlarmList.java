@@ -616,7 +616,7 @@ public class AlarmList extends Composite
 	}
 
 	/**
-	 * Acknowledge selected alarms
+	 * Show details for selected object
 	 */
 	private void showObjectDetails()
 	{

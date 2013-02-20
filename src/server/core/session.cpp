@@ -10633,11 +10633,9 @@ void ClientSession::updateUsmCredentials(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Find connection port for the node
-//
-
+/**
+ * Find connection point for the node
+ */
 void ClientSession::findNodeConnection(CSCPMessage *request)
 {
    CSCPMessage msg;

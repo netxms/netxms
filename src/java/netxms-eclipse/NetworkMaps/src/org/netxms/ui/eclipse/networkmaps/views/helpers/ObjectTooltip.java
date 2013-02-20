@@ -19,13 +19,26 @@
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.draw2d.Figure;
+import org.eclipse.draw2d.GridData;
+import org.eclipse.draw2d.GridLayout;
+import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.LineBorder;
 import org.eclipse.draw2d.MarginBorder;
-import org.eclipse.draw2d.StackLayout;
 import org.eclipse.draw2d.text.FlowPage;
 import org.eclipse.draw2d.text.TextFlow;
+import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.swt.SWT;
+import org.netxms.client.MacAddress;
+import org.netxms.client.constants.Severity;
+import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.charts.figures.BirtChartFigure;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Tooltip for object on map
@@ -35,29 +48,109 @@ public class ObjectTooltip extends Figure
 	/**
 	 * @param object
 	 */
-	public ObjectTooltip(GenericObject object)
+	public ObjectTooltip(GenericObject object, MapLabelProvider labelProvider)
 	{
 		setBorder(new MarginBorder(3));
-		setLayoutManager(new StackLayout());
+		GridLayout layout = new GridLayout(2, false);
+		layout.horizontalSpacing = 10;
+		setLayoutManager(layout);
 		
-		FlowPage page = new FlowPage();
-		add(page);
+		Label title = new Label();
+		title.setIcon(labelProvider.getWorkbenchIcon(object));
+		title.setText(object.getObjectName());
+		title.setFont(JFaceResources.getBannerFont());
+		add(title);
 		
-		TextFlow text = new TextFlow();
-		StringBuilder sb = new StringBuilder(object.getObjectName());
-		sb.append("\nStatus: ");
-		sb.append(StatusDisplayInfo.getStatusText(object.getStatus()));
+		Label status = new Label();
+		status.setIcon(StatusDisplayInfo.getStatusImage(object.getStatus()));
+		status.setText(StatusDisplayInfo.getStatusText(object.getStatus()));
+		add(status);
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.RIGHT;
+		setConstraint(status, gd);
+
 		if ((object instanceof Node) && !((Node)object).getPrimaryIP().isAnyLocalAddress())
 		{
-			sb.append("\nPrimary IP: ");
-			sb.append(((Node)object).getPrimaryIP().getHostAddress());
+			StringBuilder sb = new StringBuilder(((Node)object).getPrimaryIP().getHostAddress());
+			MacAddress mac = ((Node)object).getPrimaryMAC();
+			if (mac != null)
+			{
+				sb.append(" (");
+				sb.append(mac.toString());
+				sb.append(')');
+			}
+			
+			Label iface = new Label();
+			iface.setIcon(SharedIcons.IMG_IP_ADDRESS);
+			iface.setText(sb.toString());
+			add(iface);
+			
+			gd = new GridData();
+			gd.horizontalSpan = 2;
+			setConstraint(iface, gd);
 		}
+		
+		if (object instanceof Container)
+			addStatusChart(object, labelProvider);
+		
 		if (!object.getComments().isEmpty())
 		{
-			sb.append("\n\n");
-			sb.append(object.getComments());
+			FlowPage page = new FlowPage();
+			add(page);
+			gd = new GridData();
+			gd.horizontalSpan = 2;
+			setConstraint(page, gd);
+			
+			TextFlow text = new TextFlow();
+			text.setText("\n" + object.getComments());
+			page.add(text);
 		}
-		text.setText(sb.toString());
-		page.add(text);
+	}
+	
+	/**
+	 * Status chart
+	 */
+	private void addStatusChart(GenericObject object, MapLabelProvider labelProvider)
+	{
+		BirtChartFigure chart = new BirtChartFigure(BirtChartFigure.BAR_CHART, labelProvider.getColors());
+		add(chart);
+		GridData gd = new GridData();
+		gd.horizontalSpan = 2;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.heightHint = 180;
+		gd.widthHint = 320;
+		setConstraint(chart, gd);
+
+		int[] objectCount = new int[6];
+		collectData(objectCount, object);
+
+		chart.setTitleVisible(true);
+		chart.setChartTitle("Underlying Nodes Status");
+		chart.setLegendPosition(GraphSettings.POSITION_RIGHT);
+		chart.setLegendVisible(true);
+		chart.set3DModeEnabled(true);
+		chart.setTransposed(false);
+		chart.setTranslucent(false);
+		chart.setBorder(new LineBorder());
+
+		for(int i = 0; i <= Severity.UNKNOWN; i++)
+		{
+			chart.addParameter(new GraphItem(0, 0, 0, 0, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i)), objectCount[i]);
+			chart.setPaletteEntry(i, new ChartColor(StatusDisplayInfo.getStatusColor(i).getRGB()));
+		}
+		chart.initializationComplete();
+	}
+
+	/**
+	 * @param objectCount
+	 * @param root
+	 */
+	private void collectData(int[] objectCount, GenericObject root)
+	{
+		for(GenericObject o : root.getAllChilds(GenericObject.OBJECT_NODE))
+		{
+			if (o.getStatus() <= Severity.UNKNOWN)
+				objectCount[o.getStatus()]++;
+		}
 	}
 }

@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.Bendpoint;
 import org.eclipse.draw2d.BendpointConnectionRouter;
@@ -55,6 +56,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.maps.elements.NetworkMapResource;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.UnknownObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.networkmaps.Activator;
@@ -104,6 +106,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		this.viewer = viewer;
 		session = (NXCSession)ConsoleSharedData.getSession();
+		
+		// Initiate loading of object browser plugin if it was not loaded before
+		Platform.getAdapterManager().loadAdapter(new UnknownObject(99, session), "org.eclipse.ui.model.IWorkbenchAdapter");
+		
 		workbenchLabelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 
 		statusImages = new Image[9];

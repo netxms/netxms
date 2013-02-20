@@ -970,8 +970,8 @@ void Node::deleteInterface(Interface *pInterface)
 void Node::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    int iOldStatus = m_iStatus;
-   static DWORD dwEventCodes[] = { EVENT_NODE_NORMAL, EVENT_NODE_MINOR,
-      EVENT_NODE_WARNING, EVENT_NODE_MAJOR, EVENT_NODE_CRITICAL,
+   static DWORD dwEventCodes[] = { EVENT_NODE_NORMAL, EVENT_NODE_WARNING,
+      EVENT_NODE_MINOR, EVENT_NODE_MAJOR, EVENT_NODE_CRITICAL,
       EVENT_NODE_UNKNOWN, EVENT_NODE_UNMANAGED };
 
    NetObj::calculateCompoundStatus(bForcedRecalc);
@@ -1325,6 +1325,39 @@ skip_snmp_check:
  */
 bool Node::checkNetworkPath(DWORD dwRqId)
 {
+	time_t now = time(NULL);
+
+	// Check directly connected switch
+   sendPollerMsg(dwRqId, _T("Checking ethernet connectivity...\r\n"));
+	DWORD localIfId;
+	BYTE localMacAddr[MAC_ADDR_LENGTH];
+	bool exactMatch;
+	Interface *iface = findConnectionPoint(&localIfId, localMacAddr, &exactMatch);
+	if (iface != NULL)
+	{
+		Node *node = iface->getParentNode();
+		if (node->isDown())
+		{
+			DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): upstream node %s [%d] is down"),
+			          m_szName, m_dwId, node->Name(), node->Id());
+			sendPollerMsg(dwRqId, POLLER_WARNING _T("   Upstream node %s is down\r\n"), node->Name());
+			return true;
+		}
+		if (node->m_tLastStatusPoll < now - 1)
+		{
+			DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
+			          m_szName, m_dwId, node->Name(), node->Id());
+			node->statusPoll(NULL, 0, 0);
+			if (node->isDown())
+			{
+				DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): upstream node %s [%d] is down"),
+							 m_szName, m_dwId, node->Name(), node->Id());
+				sendPollerMsg(dwRqId, POLLER_WARNING _T("   Upstream node %s is down\r\n"), node->Name());
+				return true;
+			}
+		}
+	}
+
    Node *mgmtNode = (Node *)FindObjectById(g_dwMgmtNode);
    if (mgmtNode == NULL)
 	{
@@ -1346,7 +1379,6 @@ bool Node::checkNetworkPath(DWORD dwRqId)
 	// then method will just return true. Otherwise, we will do
 	// second pass, this time forcing status poll on each node in the path.
    sendPollerMsg(dwRqId, _T("Checking network path...\r\n"));
-	time_t now = time(NULL);
 	bool secondPass = false;
 	bool pathProblemFound = false;
 restart:

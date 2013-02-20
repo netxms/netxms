@@ -53,6 +53,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.zest.core.viewers.AbstractZoomableViewer;
@@ -91,7 +92,6 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Base class for network map views
- *
  */
 public abstract class NetworkMap extends ViewPart implements ISelectionProvider, IZoomableWorkbenchPart
 {
@@ -140,6 +140,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	private Action actionShowGrid;
 	private Action actionAlignToGrid;
 	private Action actionSnapToGrid;
+	private Action actionShowObjectDetails;
 	
 	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
@@ -639,6 +640,14 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				updateObjectPositions();
 			}
 		};
+
+		actionShowObjectDetails = new Action("Show object details") {
+			@Override
+			public void run()
+			{
+				showObjectDetails();
+			}
+		};
 	}
 	
 	/**
@@ -800,6 +809,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		if (currentSelection.size() == 1)
 		{
 			manager.add(new Separator());
+			manager.add(actionShowObjectDetails);
 			manager.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
 			manager.add(new PropertyDialogAction(getSite(), this));
 		}
@@ -1098,5 +1108,36 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		for(int i = 0; i < actionSetRouter.length; i++)
 			actionSetRouter[i].setChecked(routingAlgorithm == (i + 1));
 		viewer.refresh();
+	}
+	
+	/**
+	 * Show details for selected object
+	 */
+	private void showObjectDetails()
+	{
+		if ((currentSelection.size() != 1) || !(currentSelection.getFirstElement() instanceof GenericObject))
+			return;
+		
+		GenericObject object = (GenericObject)currentSelection.getFirstElement();
+		if (object != null)
+		{
+			try
+			{
+				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView("org.netxms.ui.eclipse.objectview.view.tabbed_object_view");
+
+				if (!selectionListeners.isEmpty())
+				{
+					SelectionChangedEvent event = new SelectionChangedEvent(NetworkMap.this, currentSelection);
+					for(ISelectionChangedListener l : selectionListeners)
+					{
+						l.selectionChanged(event);
+					}
+				}
+			}
+			catch(PartInitException e)
+			{
+				MessageDialogHelper.openError(getSite().getShell(), "Error", "Error opening object details view: " + e.getLocalizedMessage());
+			}
+		}
 	}
 }
