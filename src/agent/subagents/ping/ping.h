@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2004-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: ping.h
+** File: ping.h
 **
 **/
 
@@ -28,31 +28,28 @@
 #include <nms_agent.h>
 #include <math.h>
 
-
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #define MAX_POLLS_PER_MINUTE     60
 
-
-//
-// Target information structure
-//
-
+/**
+ * Target information structure
+ */
 struct PING_TARGET
 {
-   DWORD dwIpAddr;
-   TCHAR szName[MAX_DB_STRING];
-   DWORD dwPacketSize;
-   DWORD dwAvgRTT;
-   DWORD dwLastRTT;
-   DWORD dwStdDevRTT;
-   DWORD dwPacketLoss;
-   DWORD pdwHistory[MAX_POLLS_PER_MINUTE];
-   int iBufPos;
+   DWORD ipAddr;
+   TCHAR dnsName[MAX_DB_STRING];
+   TCHAR name[MAX_DB_STRING];
+   DWORD packetSize;
+   DWORD avgRTT;
+   DWORD lastRTT;
+   DWORD stdDevRTT;
+   DWORD packetLoss;
+   DWORD history[MAX_POLLS_PER_MINUTE];
+   int bufPos;
+	int ipAddrAge;
    THREAD hThread;
 };
-
 
 #endif

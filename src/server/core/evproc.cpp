@@ -234,7 +234,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       // Pass event through event processing policy if it is not correlated
       if (pEvent->getRootId() == 0)
 		{
-         g_pEventPolicy->ProcessEvent(pEvent);
+         g_pEventPolicy->processEvent(pEvent);
 			DbgPrintf(7, _T("Event ") UINT64_FMT _T(" with code %d passed event processing policy"), pEvent->getId(), pEvent->getCode());
 		}
 

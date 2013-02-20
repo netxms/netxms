@@ -628,11 +628,9 @@ static BOOL LoadEvents()
    return bSuccess;
 }
 
-
-//
-// Inilialize event handling subsystem
-//
-
+/**
+ * Inilialize event handling subsystem
+ */
 BOOL InitEventSubsystem()
 {
    BOOL bSuccess;
@@ -650,7 +648,7 @@ BOOL InitEventSubsystem()
    if (bSuccess)
    {
       g_pEventPolicy = new EventPolicy;
-      if (!g_pEventPolicy->LoadFromDB())
+      if (!g_pEventPolicy->loadFromDB())
       {
          bSuccess = FALSE;
          nxlog_write(MSG_EPP_LOAD_FAILED, EVENTLOG_ERROR_TYPE, NULL);
@@ -661,11 +659,9 @@ BOOL InitEventSubsystem()
    return bSuccess;
 }
 
-
-//
-// Shutdown event subsystem
-//
-
+/**
+ * Shutdown event subsystem
+ */
 void ShutdownEventSubsystem()
 {
    delete g_pEventQueue;

@@ -19,6 +19,8 @@
 - 64bit interface counters in Windows agent
 - Improved LLDP support
 - Driver for D-Link switches
+- Event parameters passed as arguments to action scripts
+- PING subagent: targets can be specified using DNS names
 - Android Agent:
 	- Changed name of configuration parameters (NB needs reconfiguration of agent!!!)
 	- New location strategy: relay on updates from other apps or force update (frequency, duration and provider selectable).

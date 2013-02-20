@@ -350,7 +350,13 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 			script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
 		script->setGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)));
 
-		if (script->run(pEnv) == 0)
+		// Pass event's parameters as arguments
+		NXSL_Value **ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * event->getParametersCount());
+		memset(ppValueList, 0, sizeof(NXSL_Value *) * event->getParametersCount());
+		for(DWORD i = 0; i < event->getParametersCount(); i++)
+			ppValueList[i] = new NXSL_Value(event->getParameter(i));
+
+		if (script->run(pEnv, event->getParametersCount(), ppValueList) == 0)
 		{
 			DbgPrintf(4, _T("ExecuteActionScript: script %s successfully executed"), scriptName);
 			success = TRUE;
@@ -360,6 +366,7 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 			DbgPrintf(4, _T("ExecuteActionScript: Script %s execution error: %s"), scriptName, script->getErrorText());
 			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, script->getErrorText(), 0);
 		}
+	   free(ppValueList);
 	}
 	else
 	{
@@ -369,11 +376,9 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 	return success;
 }
 
-
-//
-// Execute action on specific event
-//
-
+/**
+ * Execute action on specific event
+ */
 BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
 {
    NXC_ACTION *pAction;

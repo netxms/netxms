@@ -3811,7 +3811,7 @@ void ClientSession::openEPP(DWORD dwRqId)
       {
          m_dwFlags |= CSF_EPP_LOCKED;
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         msg.SetVariable(VID_NUM_RULES, g_pEventPolicy->NumRules());
+         msg.SetVariable(VID_NUM_RULES, g_pEventPolicy->getNumRules());
          bSuccess = TRUE;
       }
    }
@@ -3826,7 +3826,7 @@ void ClientSession::openEPP(DWORD dwRqId)
 
    // Send policy to client
    if (bSuccess)
-      g_pEventPolicy->SendToClient(this, dwRqId);
+      g_pEventPolicy->sendToClient(this, dwRqId);
 }
 
 /**
@@ -3881,8 +3881,8 @@ void ClientSession::saveEPP(CSCPMessage *pRequest)
          m_dwRecordsUploaded = 0;
          if (m_dwNumRecordsToUpload == 0)
          {
-            g_pEventPolicy->ReplacePolicy(0, NULL);
-            g_pEventPolicy->SaveToDB();
+            g_pEventPolicy->replacePolicy(0, NULL);
+            g_pEventPolicy->saveToDB();
          }
          else
          {
@@ -3936,8 +3936,8 @@ void ClientSession::processEPPRecord(CSCPMessage *pRequest)
             // All records received, replace event policy...
             debugPrintf(5, _T("Replacing event processing policy with a new one at %p (%d rules)"),
                         m_ppEPPRuleList, m_dwNumRecordsToUpload);
-            g_pEventPolicy->ReplacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
-            g_pEventPolicy->SaveToDB();
+            g_pEventPolicy->replacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
+            g_pEventPolicy->saveToDB();
             m_ppEPPRuleList = NULL;
             
             // ... and send final confirmation
@@ -4940,7 +4940,7 @@ void ClientSession::deleteAction(CSCPMessage *pRequest)
    {
       // Get Id of action to be deleted
       dwActionId = pRequest->GetVariableLong(VID_ACTION_ID);
-      if (!g_pEventPolicy->ActionInUse(dwActionId))
+      if (!g_pEventPolicy->isActionInUse(dwActionId))
       {
          msg.SetVariable(VID_RCC, DeleteActionFromDB(dwActionId));
       }

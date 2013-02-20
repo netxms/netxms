@@ -139,12 +139,12 @@ private:
 	TCHAR m_szSituationInstance[MAX_DB_STRING];
 	StringMap m_situationAttrList;
 
-   BOOL MatchSource(DWORD dwObjectId);
-   BOOL MatchEvent(DWORD dwEventCode);
-   BOOL MatchSeverity(DWORD dwSeverity);
-   BOOL MatchScript(Event *pEvent);
+   bool matchSource(DWORD dwObjectId);
+   bool matchEvent(DWORD dwEventCode);
+   bool matchSeverity(DWORD dwSeverity);
+   bool matchScript(Event *pEvent);
 
-   void GenerateAlarm(Event *pEvent);
+   void generateAlarm(Event *pEvent);
 
 public:
    EPRule(DWORD dwId);
@@ -152,14 +152,14 @@ public:
    EPRule(CSCPMessage *pMsg);
    ~EPRule();
 
-   DWORD Id() { return m_dwId; }
-   void SetId(DWORD dwNewId) { m_dwId = dwNewId; }
-   BOOL LoadFromDB();
-	void SaveToDB(DB_HANDLE hdb);
-   BOOL ProcessEvent(Event *pEvent);
-   void CreateMessage(CSCPMessage *pMsg);
+   DWORD getId() { return m_dwId; }
+   void setId(DWORD dwNewId) { m_dwId = dwNewId; }
+   bool loadFromDB();
+	void saveToDB(DB_HANDLE hdb);
+   bool processEvent(Event *pEvent);
+   void createMessage(CSCPMessage *pMsg);
 
-   BOOL ActionInUse(DWORD dwActionId);
+   bool isActionInUse(DWORD dwActionId);
 };
 
 /**
@@ -172,39 +172,36 @@ private:
    EPRule **m_ppRuleList;
    RWLOCK m_rwlock;
 
-   void ReadLock(void) { RWLockReadLock(m_rwlock, INFINITE); }
-   void WriteLock(void) { RWLockWriteLock(m_rwlock, INFINITE); }
-   void Unlock(void) { RWLockUnlock(m_rwlock); }
-   void Clear(void);
+   void readLock() { RWLockReadLock(m_rwlock, INFINITE); }
+   void writeLock() { RWLockWriteLock(m_rwlock, INFINITE); }
+   void unlock() { RWLockUnlock(m_rwlock); }
+   void clear();
 
 public:
    EventPolicy();
    ~EventPolicy();
 
-   DWORD NumRules(void) { return m_dwNumRules; }
-   BOOL LoadFromDB(void);
-   void SaveToDB(void);
-   void ProcessEvent(Event *pEvent);
-   void SendToClient(ClientSession *pSession, DWORD dwRqId);
-   void ReplacePolicy(DWORD dwNumRules, EPRule **ppRuleList);
+   DWORD getNumRules() { return m_dwNumRules; }
+   bool loadFromDB();
+   void saveToDB();
+   void processEvent(Event *pEvent);
+   void sendToClient(ClientSession *pSession, DWORD dwRqId);
+   void replacePolicy(DWORD dwNumRules, EPRule **ppRuleList);
 
-   BOOL ActionInUse(DWORD dwActionId);
+   bool isActionInUse(DWORD dwActionId);
 };
 
-
-//
-// Functions
-//
-
-BOOL InitEventSubsystem(void);
-void ShutdownEventSubsystem(void);
+/**
+ * Functions
+ */
+BOOL InitEventSubsystem();
+void ShutdownEventSubsystem();
 BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, ...);
 BOOL PostEventWithNames(DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, const TCHAR **names, ...);
 BOOL PostEventWithTag(DWORD dwEventCode, DWORD dwSourceId, const TCHAR *pszUserTag, const char *pszFormat, ...);
-BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, 
-                 const char *pszFormat, ...);
+BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, ...);
 void ResendEvents(Queue *pQueue);
-void ReloadEvents(void);
+void ReloadEvents();
 void DeleteEventTemplateFromList(DWORD dwEventCode);
 void CorrelateEvent(Event *pEvent);
 void CreateNXMPEventRecord(String &str, DWORD dwCode);
@@ -213,11 +210,9 @@ DWORD EventCodeFromName(const TCHAR *name, DWORD defaultValue = 0);
 EVENT_TEMPLATE *FindEventTemplateByCode(DWORD dwCode);
 EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName);
 
-
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 extern Queue *g_pEventQueue;
 extern EventPolicy *g_pEventPolicy;
 extern const TCHAR *g_szStatusText[];

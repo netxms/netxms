@@ -457,13 +457,10 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    return value;
 }
 
-
-//
-// Implementation of "DCI" class
-//
-
-NXSL_DciClass::NXSL_DciClass()
-              :NXSL_Class()
+/**
+ * Implementation of "DCI" class
+ */
+NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
 {
    _tcscpy(m_szName, _T("DCI"));
 }

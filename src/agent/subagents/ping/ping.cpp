@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004-2012 Victor Kirhenshtein
+** Copyright (C) 2004-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "ping.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
 #ifdef _NETWARE
 static CONDITION m_hCondTerminate = INVALID_CONDITION_HANDLE;
@@ -38,11 +36,9 @@ static DWORD m_dwTimeout = 3000;    // Default timeout is 3 seconds
 static DWORD m_dwDefPacketSize = 46;
 static DWORD m_dwPollsPerMinute = 4;
 
-
-//
-// Poller thread
-//
-
+/**
+ * Poller thread
+ */
 static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
 {
 	QWORD qwStartTime;
@@ -53,24 +49,51 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
 	{
 		bUnreachable = FALSE;
 		qwStartTime = GetCurrentTimeMs();
-		if (IcmpPing(target->dwIpAddr, 1, m_dwTimeout, &target->dwLastRTT, target->dwPacketSize) != ICMP_SUCCESS)
+retry:
+		if (IcmpPing(target->ipAddr, 1, m_dwTimeout, &target->lastRTT, target->packetSize) != ICMP_SUCCESS)
 		{
-			target->dwLastRTT = 10000;
+			DWORD ip = ResolveHostName(target->dnsName);
+			if (ip != target->ipAddr)
+			{
+				TCHAR ip1[16], ip2[16];
+				AgentWriteDebugLog(6, _T("PING: IP address for target %s changed from %s to %s"), target->name,
+				                   IpToStr(ntohl(target->ipAddr), ip1), IpToStr(ntohl(ip), ip2));
+				target->ipAddr = ip;
+				goto retry;
+			}
+			target->lastRTT = 10000;
 			bUnreachable = TRUE;
 		}
 
-		target->pdwHistory[target->iBufPos++] = target->dwLastRTT;
-		if (target->iBufPos == (int)m_dwPollsPerMinute)
-			target->iBufPos = 0;
+		target->history[target->bufPos++] = target->lastRTT;
+		if (target->bufPos == (int)m_dwPollsPerMinute)
+		{
+			target->bufPos = 0;
+
+			// recheck IP every 5 minutes
+			target->ipAddrAge++;
+			if (target->ipAddrAge >= 1)
+			{
+				DWORD ip = ResolveHostName(target->dnsName);
+				if (ip != target->ipAddr)
+				{
+					TCHAR ip1[16], ip2[16];
+					AgentWriteDebugLog(6, _T("PING: IP address for target %s changed from %s to %s"), target->name,
+											 IpToStr(ntohl(target->ipAddr), ip1), IpToStr(ntohl(ip), ip2));
+					target->ipAddr = ip;
+				}
+				target->ipAddrAge = 0;
+			}
+		}
 
 		for(i = 0, dwSum = 0, dwLost = 0, dwCount = 0, dwStdDev = 0; i < m_dwPollsPerMinute; i++)
 		{
-			if (target->pdwHistory[i] < 10000)
+			if (target->history[i] < 10000)
 			{
-				dwSum += target->pdwHistory[i];
-				if (target->pdwHistory[i] > 0)
+				dwSum += target->history[i];
+				if (target->history[i] > 0)
 				{
-					dwStdDev += (target->dwAvgRTT - target->pdwHistory[i]) * (target->dwAvgRTT - target->pdwHistory[i]);
+					dwStdDev += (target->avgRTT - target->history[i]) * (target->avgRTT - target->history[i]);
 				}
 				dwCount++;
 			}
@@ -79,16 +102,16 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
 				dwLost++;
 			}
 		}
-		target->dwAvgRTT = bUnreachable ? 10000 : (dwSum / dwCount);
-		target->dwPacketLoss = dwLost * 100 / m_dwPollsPerMinute;
+		target->avgRTT = bUnreachable ? 10000 : (dwSum / dwCount);
+		target->packetLoss = dwLost * 100 / m_dwPollsPerMinute;
 
 		if (dwCount > 0)
 		{
-			target->dwStdDevRTT = (DWORD)sqrt((double)dwStdDev / (double)dwCount);
+			target->stdDevRTT = (DWORD)sqrt((double)dwStdDev / (double)dwCount);
 		}
 		else
 		{
-			target->dwStdDevRTT = 0;
+			target->stdDevRTT = 0;
 		}
 		
 		dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
@@ -100,11 +123,9 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
 	return THREAD_OK;
 }
 
-
-//
-// Hanlder for immediate ping request
-//
-
+/**
+ * Hanlder for immediate ping request
+ */
 static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	TCHAR szHostName[256], szTimeOut[32], szPacketSize[32];
@@ -120,7 +141,7 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 		return SYSINFO_RC_UNSUPPORTED;
 	StrStrip(szPacketSize);
 
-	dwAddr = _t_inet_addr(szHostName);
+	dwAddr = ResolveHostName(szHostName);
 	if (szTimeOut[0] != 0)
 	{
 		dwTimeOut = _tcstoul(szTimeOut, NULL, 0);
@@ -140,11 +161,9 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for poller information
-//
-
+/**
+ * Handler for poller information
+ */
 static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	TCHAR szTarget[MAX_DB_STRING];
@@ -163,12 +182,12 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 	{
 		if (bUseName)
 		{
-			if (!_tcsicmp(m_pTargetList[i].szName, szTarget))
+			if (!_tcsicmp(m_pTargetList[i].name, szTarget) || !_tcsicmp(m_pTargetList[i].dnsName, szTarget))
 				break;
 		}
 		else
 		{
-			if (m_pTargetList[i].dwIpAddr == dwIpAddr)
+			if (m_pTargetList[i].ipAddr == dwIpAddr)
 				break;
 		}
 	}
@@ -179,16 +198,16 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 	switch(*pArg)
 	{
 		case _T('A'):
-			ret_uint(pValue, m_pTargetList[i].dwAvgRTT);
+			ret_uint(pValue, m_pTargetList[i].avgRTT);
 			break;
 		case _T('L'):
-			ret_uint(pValue, m_pTargetList[i].dwLastRTT);
+			ret_uint(pValue, m_pTargetList[i].lastRTT);
 			break;
 		case _T('P'):
-			ret_uint(pValue, m_pTargetList[i].dwPacketLoss);
+			ret_uint(pValue, m_pTargetList[i].packetLoss);
 			break;
 		case _T('D'):
-			ret_uint(pValue, m_pTargetList[i].dwStdDevRTT);
+			ret_uint(pValue, m_pTargetList[i].stdDevRTT);
 			break;
 		default:
 			return SYSINFO_RC_UNSUPPORTED;
@@ -197,11 +216,9 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for configured target list
-//
-
+/**
+ * Handler for configured target list
+ */
 static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
 	DWORD i;
@@ -209,21 +226,19 @@ static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 
 	for(i = 0; i < m_dwNumTargets; i++)
 	{
-		_sntprintf(szBuffer, MAX_DB_STRING + 64, _T("%s %u %u %u %u %s"), IpToStr(ntohl(m_pTargetList[i].dwIpAddr), szIpAddr),
-				m_pTargetList[i].dwLastRTT, m_pTargetList[i].dwAvgRTT, m_pTargetList[i].dwPacketLoss, 
-				m_pTargetList[i].dwPacketSize, m_pTargetList[i].szName);
+		_sntprintf(szBuffer, MAX_DB_STRING + 64, _T("%s %u %u %u %u %s"), IpToStr(ntohl(m_pTargetList[i].ipAddr), szIpAddr),
+				m_pTargetList[i].lastRTT, m_pTargetList[i].avgRTT, m_pTargetList[i].packetLoss, 
+				m_pTargetList[i].packetSize, m_pTargetList[i].name);
 		value->add(szBuffer);
 	}
 
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Called by master agent at unload
-//
-
-static void SubagentShutdown(void)
+/**
+ * Called by master agent at unload
+ */
+static void SubagentShutdown()
 {
 	DWORD i;
 
@@ -241,13 +256,11 @@ static void SubagentShutdown(void)
 #endif
 }
 
-
-//
-// Add target from configuration file parameter
-// Parameter value should be <ip_address>:<name>:<packet_size>
-// Name and size parts are optional and can be missing
-//
-
+/**
+ * Add target from configuration file parameter
+ * Parameter value should be <ip_address>:<name>:<packet_size>
+ * Name and size parts are optional and can be missing
+ */
 static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 {
 	TCHAR *ptr, *pszLine, *pszName = NULL;
@@ -276,17 +289,18 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 	}
 	StrStrip(pszLine);
 
-	dwIpAddr = _t_inet_addr(pszLine);
+	dwIpAddr = ResolveHostName(pszLine);
 	if ((dwIpAddr != INADDR_ANY) && (dwIpAddr != INADDR_NONE))
 	{
 		m_pTargetList = (PING_TARGET *)realloc(m_pTargetList, sizeof(PING_TARGET) * (m_dwNumTargets + 1));
 		memset(&m_pTargetList[m_dwNumTargets], 0, sizeof(PING_TARGET));
-		m_pTargetList[m_dwNumTargets].dwIpAddr = dwIpAddr;
+		m_pTargetList[m_dwNumTargets].ipAddr = dwIpAddr;
+		nx_strncpy(m_pTargetList[m_dwNumTargets].dnsName, pszLine, MAX_DB_STRING);
 		if (pszName != NULL)
-			nx_strncpy(m_pTargetList[m_dwNumTargets].szName, pszName, MAX_DB_STRING);
+			nx_strncpy(m_pTargetList[m_dwNumTargets].name, pszName, MAX_DB_STRING);
 		else
-			IpToStr(ntohl(dwIpAddr), m_pTargetList[m_dwNumTargets].szName);
-		m_pTargetList[m_dwNumTargets].dwPacketSize = dwPacketSize;
+			IpToStr(ntohl(dwIpAddr), m_pTargetList[m_dwNumTargets].name);
+		m_pTargetList[m_dwNumTargets].packetSize = dwPacketSize;
 		m_dwNumTargets++;
 		bResult = TRUE;
 	}
@@ -295,11 +309,9 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 	return bResult;
 }
 
-
-//
-// Configuration file template
-//
-
+/**
+ * Configuration file template
+ */
 static TCHAR *m_pszTargetList = NULL;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
@@ -310,11 +322,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
-
-//
-// Subagent initialization
-//
-
+/**
+ * Subagent initialization
+ */
 static BOOL SubagentInit(Config *config)
 {
 	DWORD i;
@@ -361,11 +371,9 @@ static BOOL SubagentInit(Config *config)
 	return success;
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("Icmp.AvgPingTime(*)"), H_PollResult, _T("A"), DCI_DT_UINT, _T("Average response time of ICMP ping to {instance} for last minute") },
@@ -393,22 +401,18 @@ static NETXMS_SUBAGENT_INFO m_info =
 	0, NULL	// push parameters
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(PING)
 {
 	*ppInfo = &m_info;
 	return TRUE;
 }
 
-
-//
-// DLL entry point
-//
-
+/**
+ * DLL entry point
+ */
 #ifdef _WIN32
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
@@ -420,13 +424,11 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 
 #endif
 
-
-//
-// NetWare entry point
-// We use main() instead of _init() and _fini() to implement
-// automatic unload of the subagent after unload handler is called
-//
-
+/**
+ * NetWare entry point
+ * We use main() instead of _init() and _fini() to implement
+ * automatic unload of the subagent after unload handler is called
+ */
 #ifdef _NETWARE
 
 int main(int argc, char *argv[])

@@ -163,22 +163,22 @@ EPRule::~EPRule()
 /**
  * Check if source object's id match to the rule
  */
-BOOL EPRule::MatchSource(DWORD dwObjectId)
+bool EPRule::matchSource(DWORD dwObjectId)
 {
    DWORD i;
    NetObj *pObject;
-   BOOL bMatch = FALSE;
+   bool bMatch = FALSE;
 
    if (m_dwNumSources == 0)   // No sources in list means "any"
    {
-      bMatch = TRUE;
+      bMatch = true;
    }
    else
    {
       for(i = 0; i < m_dwNumSources; i++)
          if (m_pdwSourceList[i] == dwObjectId)
          {
-            bMatch = TRUE;
+            bMatch = true;
             break;
          }
          else
@@ -188,7 +188,7 @@ BOOL EPRule::MatchSource(DWORD dwObjectId)
             {
                if (pObject->isChild(dwObjectId))
                {
-                  bMatch = TRUE;
+                  bMatch = true;
                   break;
                }
             }
@@ -201,19 +201,17 @@ BOOL EPRule::MatchSource(DWORD dwObjectId)
    return (m_dwFlags & RF_NEGATED_SOURCE) ? !bMatch : bMatch;
 }
 
-
-//
-// Check if event's id match to the rule
-//
-
-BOOL EPRule::MatchEvent(DWORD dwEventCode)
+/**
+ * Check if event's id match to the rule
+ */
+bool EPRule::matchEvent(DWORD dwEventCode)
 {
    DWORD i;
-   BOOL bMatch = FALSE;
+   bool bMatch = false;
 
    if (m_dwNumEvents == 0)   // No sources in list means "any"
    {
-      bMatch = TRUE;
+      bMatch = true;
    }
    else
    {
@@ -226,7 +224,7 @@ BOOL EPRule::MatchEvent(DWORD dwEventCode)
          {
             if (m_pdwEventList[i] == dwEventCode)
             {
-               bMatch = TRUE;
+               bMatch = true;
                break;
             }
          }
@@ -234,35 +232,31 @@ BOOL EPRule::MatchEvent(DWORD dwEventCode)
    return (m_dwFlags & RF_NEGATED_EVENTS) ? !bMatch : bMatch;
 }
 
-
-//
-// Check if event's severity match to the rule
-//
-
-BOOL EPRule::MatchSeverity(DWORD dwSeverity)
+/**
+ * Check if event's severity match to the rule
+ */
+bool EPRule::matchSeverity(DWORD dwSeverity)
 {
    static DWORD dwSeverityFlag[] = { RF_SEVERITY_INFO, RF_SEVERITY_WARNING,
                                      RF_SEVERITY_MINOR, RF_SEVERITY_MAJOR,
                                      RF_SEVERITY_CRITICAL };
-   return dwSeverityFlag[dwSeverity] & m_dwFlags;
+	return (dwSeverityFlag[dwSeverity] & m_dwFlags) ? true : false;
 }
 
-
-//
-// Check if event match to the script
-//
-
-BOOL EPRule::MatchScript(Event *pEvent)
+/**
+ * Check if event match to the script
+ */
+bool EPRule::matchScript(Event *pEvent)
 {
    NXSL_ServerEnv *pEnv;
    NXSL_Value **ppValueList, *pValue;
    NXSL_VariableSystem *pLocals, *pGlobals = NULL;
-   BOOL bRet = TRUE;
+   bool bRet = true;
    DWORD i;
 	NetObj *pObject;
 
    if (m_pScript == NULL)
-      return TRUE;
+      return true;
 
    pEnv = new NXSL_ServerEnv;
 
@@ -295,7 +289,7 @@ BOOL EPRule::MatchScript(Event *pEvent)
       pValue = m_pScript->getResult();
       if (pValue != NULL)
       {
-         bRet = pValue->getValueAsInt32() ? TRUE : FALSE;
+         bRet = pValue->getValueAsInt32() ? true : false;
          if (bRet)
          {
          	NXSL_Variable *var;
@@ -319,15 +313,13 @@ BOOL EPRule::MatchScript(Event *pEvent)
    return bRet;
 }
 
-
-//
-// Check if event match to rule and perform required actions if yes
-// Method will return TRUE if event matched and RF_STOP_PROCESSING flag is set
-//
-
-BOOL EPRule::ProcessEvent(Event *pEvent)
+/**
+ * Check if event match to rule and perform required actions if yes
+ * Method will return TRUE if event matched and RF_STOP_PROCESSING flag is set
+ */
+bool EPRule::processEvent(Event *pEvent)
 {
-   BOOL bStopProcessing = FALSE;
+   bool bStopProcessing = false;
    DWORD i;
    TCHAR *pszText;
 
@@ -335,14 +327,14 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
    if (!(m_dwFlags & RF_DISABLED))
    {
       // Check if event match
-      if (MatchSource(pEvent->getSourceId()) && MatchEvent(pEvent->getCode()) &&
-          MatchSeverity(pEvent->getSeverity()) && MatchScript(pEvent))
+      if (matchSource(pEvent->getSourceId()) && matchEvent(pEvent->getCode()) &&
+          matchSeverity(pEvent->getSeverity()) && matchScript(pEvent))
       {
 			DbgPrintf(6, _T("Event ") UINT64_FMT _T(" match EPP rule %d"), pEvent->getId(), (int)m_dwId);
 
          // Generate alarm if requested
          if (m_dwFlags & RF_GENERATE_ALARM)
-            GenerateAlarm(pEvent);
+            generateAlarm(pEvent);
 
          // Event matched, perform actions
          if (m_dwNumActions > 0)
@@ -379,7 +371,7 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
 				}
 			}
 
-         bStopProcessing = m_dwFlags & RF_STOP_PROCESSING;
+			bStopProcessing = (m_dwFlags & RF_STOP_PROCESSING) ? true : false;
       }
    }
 
@@ -389,7 +381,7 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
 /**
  * Generate alarm from event
  */
-void EPRule::GenerateAlarm(Event *pEvent)
+void EPRule::generateAlarm(Event *pEvent)
 {
    // Terminate alarms with key == our ack_key
 	if ((m_iAlarmSeverity == SEVERITY_RESOLVE) || (m_iAlarmSeverity == SEVERITY_TERMINATE))
@@ -410,11 +402,11 @@ void EPRule::GenerateAlarm(Event *pEvent)
 /**
  * Load rule from database
  */
-BOOL EPRule::LoadFromDB()
+bool EPRule::loadFromDB()
 {
    DB_RESULT hResult;
    TCHAR szQuery[256], name[MAX_DB_STRING], value[MAX_DB_STRING];
-   BOOL bSuccess = TRUE;
+   bool bSuccess = true;
    DWORD i, count;
    
    // Load rule's sources
@@ -430,7 +422,7 @@ BOOL EPRule::LoadFromDB()
    }
    else
    {
-      bSuccess = FALSE;
+      bSuccess = false;
    }
 
    // Load rule's events
@@ -446,7 +438,7 @@ BOOL EPRule::LoadFromDB()
    }
    else
    {
-      bSuccess = FALSE;
+      bSuccess = false;
    }
 
    // Load rule's actions
@@ -462,7 +454,7 @@ BOOL EPRule::LoadFromDB()
    }
    else
    {
-      bSuccess = FALSE;
+      bSuccess = false;
    }
    
    // Load situation attributes
@@ -481,7 +473,7 @@ BOOL EPRule::LoadFromDB()
    }
    else
    {
-      bSuccess = FALSE;
+      bSuccess = false;
    }
 
    return bSuccess;
@@ -490,7 +482,7 @@ BOOL EPRule::LoadFromDB()
 /**
  * Save rule to database
  */
-void EPRule::SaveToDB(DB_HANDLE hdb)
+void EPRule::saveToDB(DB_HANDLE hdb)
 {
 	DWORD len = (DWORD)(_tcslen(CHECK_NULL(m_pszComment)) + _tcslen(CHECK_NULL(m_pszScript)) + 4096);
    TCHAR *pszQuery = (TCHAR *)malloc(len * sizeof(TCHAR));
@@ -548,7 +540,7 @@ void EPRule::SaveToDB(DB_HANDLE hdb)
 /**
  * Create NXCP message with rule's data
  */
-void EPRule::CreateMessage(CSCPMessage *pMsg)
+void EPRule::createMessage(CSCPMessage *pMsg)
 {
 	DWORD i, id;
 
@@ -577,26 +569,22 @@ void EPRule::CreateMessage(CSCPMessage *pMsg)
 	}
 }
 
-
-//
-// Check if given action is used within rule
-//
-
-BOOL EPRule::ActionInUse(DWORD dwActionId)
+/**
+ * Check if given action is used within rule
+ */
+bool EPRule::isActionInUse(DWORD dwActionId)
 {
    DWORD i;
 
    for(i = 0; i < m_dwNumActions; i++)
       if (m_pdwActionList[i] == dwActionId)
-         return TRUE;
-   return FALSE;
+         return true;
+   return false;
 }
 
-
-//
-// Event processing policy constructor
-//
-
+/**
+ * Event processing policy constructor
+ */
 EventPolicy::EventPolicy()
 {
    m_dwNumRules = 0;
@@ -604,23 +592,19 @@ EventPolicy::EventPolicy()
    m_rwlock = RWLockCreate();
 }
 
-
-//
-// Event processing policy destructor
-//
-
+/**
+ * Event processing policy destructor
+ */
 EventPolicy::~EventPolicy()
 {
-   Clear();
+   clear();
    RWLockDestroy(m_rwlock);
 }
 
-
-//
-// Clear existing policy
-//
-
-void EventPolicy::Clear()
+/**
+ * Clear existing policy
+ */
+void EventPolicy::clear()
 {
    DWORD i;
 
@@ -633,10 +617,10 @@ void EventPolicy::Clear()
 /**
  * Load event processing policy from database
  */
-BOOL EventPolicy::LoadFromDB()
+bool EventPolicy::loadFromDB()
 {
    DB_RESULT hResult;
-   BOOL bSuccess = FALSE;
+   bool bSuccess = false;
 
    hResult = DBSelect(g_hCoreDB, _T("SELECT rule_id,flags,comments,alarm_message,")
                                  _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
@@ -646,13 +630,13 @@ BOOL EventPolicy::LoadFromDB()
    {
       DWORD i;
 
-      bSuccess = TRUE;
+      bSuccess = true;
       m_dwNumRules = DBGetNumRows(hResult);
       m_ppRuleList = (EPRule **)malloc(sizeof(EPRule *) * m_dwNumRules);
       for(i = 0; i < m_dwNumRules; i++)
       {
          m_ppRuleList[i] = new EPRule(hResult, i);
-         bSuccess = bSuccess && m_ppRuleList[i]->LoadFromDB();
+         bSuccess = bSuccess && m_ppRuleList[i]->loadFromDB();
       }
       DBFreeResult(hResult);
    }
@@ -663,13 +647,13 @@ BOOL EventPolicy::LoadFromDB()
 /**
  * Save event processing policy to database
  */
-void EventPolicy::SaveToDB()
+void EventPolicy::saveToDB()
 {
    DWORD i;
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   ReadLock();
+   readLock();
    DBBegin(hdb);
    DBQuery(hdb, _T("DELETE FROM event_policy"));
    DBQuery(hdb, _T("DELETE FROM policy_action_list"));
@@ -677,96 +661,88 @@ void EventPolicy::SaveToDB()
    DBQuery(hdb, _T("DELETE FROM policy_source_list"));
    DBQuery(hdb, _T("DELETE FROM policy_situation_attr_list"));
    for(i = 0; i < m_dwNumRules; i++)
-      m_ppRuleList[i]->SaveToDB(hdb);
+      m_ppRuleList[i]->saveToDB(hdb);
    DBCommit(hdb);
-   Unlock();
+   unlock();
 	DBConnectionPoolReleaseConnection(hdb);
 }
 
-
-//
-// Pass event through policy
-//
-
-void EventPolicy::ProcessEvent(Event *pEvent)
+/**
+ * Pass event through policy
+ */
+void EventPolicy::processEvent(Event *pEvent)
 {
    DWORD i;
 
 	DbgPrintf(7, _T("EPP: processing event ") UINT64_FMT, pEvent->getId());
-   ReadLock();
+   readLock();
    for(i = 0; i < m_dwNumRules; i++)
-      if (m_ppRuleList[i]->ProcessEvent(pEvent))
+      if (m_ppRuleList[i]->processEvent(pEvent))
 		{
 			DbgPrintf(7, _T("EPP: got \"stop processing\" flag for event ") UINT64_FMT _T(" at rule %d"), pEvent->getId(), i + 1);
          break;   // EPRule::ProcessEvent() return TRUE if we should stop processing this event
 		}
-   Unlock();
+   unlock();
 }
 
-
-//
-// Send event policy to client
-//
-
-void EventPolicy::SendToClient(ClientSession *pSession, DWORD dwRqId)
+/**
+ * Send event policy to client
+ */
+void EventPolicy::sendToClient(ClientSession *pSession, DWORD dwRqId)
 {
    DWORD i;
    CSCPMessage msg;
 
-   ReadLock();
+   readLock();
    msg.SetCode(CMD_EPP_RECORD);
    msg.SetId(dwRqId);
    for(i = 0; i < m_dwNumRules; i++)
    {
-      m_ppRuleList[i]->CreateMessage(&msg);
+      m_ppRuleList[i]->createMessage(&msg);
       pSession->sendMessage(&msg);
       msg.DeleteAllVariables();
    }
-   Unlock();
+   unlock();
 }
 
-
-//
-// Replace policy with new one
-//
-
-void EventPolicy::ReplacePolicy(DWORD dwNumRules, EPRule **ppRuleList)
+/**
+ * Replace policy with new one
+ */
+void EventPolicy::replacePolicy(DWORD dwNumRules, EPRule **ppRuleList)
 {
    DWORD i;
 
-   WriteLock();
+   writeLock();
 
    // Replace rule list
-   Clear();
+   clear();
    m_dwNumRules = dwNumRules;
    m_ppRuleList = ppRuleList;
 
    // Replace id's in rules
    for(i = 0; i < m_dwNumRules; i++)
-      m_ppRuleList[i]->SetId(i);
+      m_ppRuleList[i]->setId(i);
    
-   Unlock();
+   unlock();
 }
 
-
-//
-// Check if given action is used in policy
-//
-
-BOOL EventPolicy::ActionInUse(DWORD dwActionId)
+/**
+ * Check if given action is used in policy
+ */
+bool EventPolicy::isActionInUse(DWORD dwActionId)
 {
-   BOOL bResult = FALSE;
+   bool bResult = false;
    DWORD i;
 
-   ReadLock();
+   readLock();
 
    for(i = 0; i < m_dwNumRules; i++)
-      if (m_ppRuleList[i]->ActionInUse(dwActionId))
+      if (m_ppRuleList[i]->isActionInUse(dwActionId))
       {
-         bResult = TRUE;
+         bResult = true;
          break;
       }
 
-   Unlock();
+   unlock();
    return bResult;
 }
