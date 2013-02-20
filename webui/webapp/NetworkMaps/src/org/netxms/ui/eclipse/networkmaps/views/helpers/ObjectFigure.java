@@ -56,7 +56,6 @@ public abstract class ObjectFigure extends Figure
 			object = new UnknownObject(element.getObjectId(), session);
 
 		setFocusTraversable(true);
-		setToolTip(new ObjectTooltip(object));
 		
 		addFigureListener(new FigureListener() {
 			@Override
@@ -73,10 +72,8 @@ public abstract class ObjectFigure extends Figure
 	@Override
 	public void setToolTip(IFigure f)
 	{
-		// we set our own tooltip figure in object figure constructor
-		// this check is to prevent overriding it by the viewer
-		if ((f == null) || (f instanceof ObjectTooltip))
-			super.setToolTip(f);
+		// Use our own tooltip figure instead of supplied by viewer
+		super.setToolTip((f == null) ? null : new ObjectTooltip(object, labelProvider));
 	}
 	
 	/**
@@ -114,9 +111,10 @@ public abstract class ObjectFigure extends Figure
 		object = session.findObjectById(element.getObjectId());
 		if (object == null)
 			object = new UnknownObject(element.getObjectId(), session);
-		setToolTip(new ObjectTooltip(object));
+		setToolTip(new ObjectTooltip(object, labelProvider));
 		onObjectUpdate();
 		invalidateTree();
+		super.setToolTip(new ObjectTooltip(object, labelProvider));
 	}
 	
 	/**
