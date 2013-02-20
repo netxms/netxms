@@ -98,13 +98,17 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    TCHAR szBuffer[256];
 
    pNode = (Node *)pObject->getData();
-   if (!_tcscmp(pszAttr, _T("name")))
+   if (!_tcscmp(pszAttr, _T("agentVersion")))
    {
-      pValue = new NXSL_Value(pNode->Name());
+      pValue = new NXSL_Value(pNode->getAgentVersion());
    }
-   else if (!_tcscmp(pszAttr, _T("id")))
+   else if (!_tcscmp(pszAttr, _T("comments")))
    {
-      pValue = new NXSL_Value(pNode->Id());
+      pValue = new NXSL_Value(pNode->getComments());
+   }
+   else if (!_tcscmp(pszAttr, _T("flags")))
+   {
+		pValue = new NXSL_Value(pNode->getFlags());
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
@@ -113,9 +117,9 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 		TCHAR buffer[128];
 		pValue = new NXSL_Value(uuid_to_string(guid, buffer));
    }
-   else if (!_tcscmp(pszAttr, _T("status")))
+   else if (!_tcscmp(pszAttr, _T("id")))
    {
-      pValue = new NXSL_Value((LONG)pNode->Status());
+      pValue = new NXSL_Value(pNode->Id());
    }
    else if (!_tcscmp(pszAttr, _T("ipAddr")))
    {
@@ -162,33 +166,33 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 	{
 		pValue = new NXSL_Value((LONG)((pNode->isLocalManagement()) ? 1 : 0));
 	}
-   else if (!_tcscmp(pszAttr, _T("snmpVersion")))
+   else if (!_tcscmp(pszAttr, _T("name")))
    {
-      pValue = new NXSL_Value((LONG)pNode->getSNMPVersion());
-   }
-   else if (!_tcscmp(pszAttr, _T("snmpOID")))
-   {
-      pValue = new NXSL_Value(pNode->getSNMPObjectId());
-   }
-   else if (!_tcscmp(pszAttr, _T("agentVersion")))
-   {
-      pValue = new NXSL_Value(pNode->getAgentVersion());
+      pValue = new NXSL_Value(pNode->Name());
    }
    else if (!_tcscmp(pszAttr, _T("platformName")))
    {
       pValue = new NXSL_Value(pNode->getPlatformName());
    }
+   else if (!_tcscmp(pszAttr, _T("snmpOID")))
+   {
+      pValue = new NXSL_Value(pNode->getSNMPObjectId());
+   }
    else if (!_tcscmp(pszAttr, _T("snmpSysName")))
    {
       pValue = new NXSL_Value(pNode->getSysName());
    }
+   else if (!_tcscmp(pszAttr, _T("snmpVersion")))
+   {
+      pValue = new NXSL_Value((LONG)pNode->getSNMPVersion());
+   }
+   else if (!_tcscmp(pszAttr, _T("status")))
+   {
+      pValue = new NXSL_Value((LONG)pNode->Status());
+   }
    else if (!_tcscmp(pszAttr, _T("sysDescription")))
    {
       pValue = new NXSL_Value(pNode->getSysDescription());
-   }
-   else if (!_tcscmp(pszAttr, _T("comments")))
-   {
-      pValue = new NXSL_Value(pNode->getComments());
    }
 	else
 	{
@@ -217,13 +221,37 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    NXSL_Value *pValue = NULL;
 
    iface = (Interface *)pObject->getData();
-   if (!_tcscmp(pszAttr, _T("name")))
+   if (!_tcscmp(pszAttr, _T("adminState")))
    {
-      pValue = new NXSL_Value(iface->Name());
+		pValue = new NXSL_Value((LONG)iface->getAdminState());
    }
-   else if (!_tcscmp(pszAttr, _T("id")))
+   else if (!_tcscmp(pszAttr, _T("bridgePortNumber")))
    {
-      pValue = new NXSL_Value(iface->Id());
+		pValue = new NXSL_Value(iface->getBridgePortNumber());
+   }
+   else if (!_tcscmp(pszAttr, _T("comments")))
+   {
+      pValue = new NXSL_Value(iface->getComments());
+   }
+   else if (!_tcscmp(pszAttr, _T("description")))
+   {
+      pValue = new NXSL_Value(iface->getDescription());
+   }
+   else if (!_tcscmp(pszAttr, _T("dot1xBackendAuthState")))
+   {
+		pValue = new NXSL_Value((LONG)iface->getDot1xBackendAuthState());
+   }
+   else if (!_tcscmp(pszAttr, _T("dot1xPaeAuthState")))
+   {
+		pValue = new NXSL_Value((LONG)iface->getDot1xPaeAuthState());
+   }
+   else if (!_tcscmp(pszAttr, _T("expectedState")))
+   {
+		pValue = new NXSL_Value((iface->getFlags() & IF_EXPECTED_STATE_MASK) >> 28);
+   }
+   else if (!_tcscmp(pszAttr, _T("flags")))
+   {
+		pValue = new NXSL_Value(iface->getFlags());
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
@@ -232,14 +260,17 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 		TCHAR buffer[128];
 		pValue = new NXSL_Value(uuid_to_string(guid, buffer));
    }
-   else if (!_tcscmp(pszAttr, _T("status")))
+   else if (!_tcscmp(pszAttr, _T("id")))
    {
-      pValue = new NXSL_Value((LONG)iface->Status());
+      pValue = new NXSL_Value(iface->Id());
    }
-   else if (!_tcscmp(pszAttr, _T("macAddr")))
+   else if (!_tcscmp(pszAttr, _T("ifIndex")))
    {
-		TCHAR buffer[256];
-		pValue = new NXSL_Value(BinToStr(iface->getMacAddr(), MAC_ADDR_LENGTH, buffer));
+		pValue = new NXSL_Value(iface->getIfIndex());
+   }
+   else if (!_tcscmp(pszAttr, _T("ifType")))
+   {
+		pValue = new NXSL_Value(iface->getIfType());
    }
    else if (!_tcscmp(pszAttr, _T("ipAddr")))
    {
@@ -253,57 +284,30 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 		IpToStr(iface->getIpNetMask(), buffer);
       pValue = new NXSL_Value(buffer);
    }
+   else if (!_tcscmp(pszAttr, _T("isExcludedFromTopology")))
+   {
+      pValue = new NXSL_Value((LONG)(iface->isExcludedFromTopology() ? 1 : 0));
+   }
    else if (!_tcscmp(pszAttr, _T("isLoopback")))
    {
 		pValue = new NXSL_Value((LONG)(iface->isLoopback() ? 1 : 0));
-   }
-   else if (!_tcscmp(pszAttr, _T("isPhysicalPort")))
-   {
-		pValue = new NXSL_Value((LONG)(iface->isPhysicalPort() ? 1 : 0));
    }
    else if (!_tcscmp(pszAttr, _T("isManuallyCreated")))
    {
 		pValue = new NXSL_Value((LONG)(iface->isManuallyCreated() ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isExcludedFromTopology")))
+   else if (!_tcscmp(pszAttr, _T("isPhysicalPort")))
    {
-      pValue = new NXSL_Value((LONG)(iface->isExcludedFromTopology() ? 1 : 0));
+		pValue = new NXSL_Value((LONG)(iface->isPhysicalPort() ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("description")))
+   else if (!_tcscmp(pszAttr, _T("macAddr")))
    {
-      pValue = new NXSL_Value(iface->getDescription());
+		TCHAR buffer[256];
+		pValue = new NXSL_Value(BinToStr(iface->getMacAddr(), MAC_ADDR_LENGTH, buffer));
    }
-   else if (!_tcscmp(pszAttr, _T("comments")))
+   else if (!_tcscmp(pszAttr, _T("name")))
    {
-      pValue = new NXSL_Value(iface->getComments());
-   }
-   else if (!_tcscmp(pszAttr, _T("ifIndex")))
-   {
-		pValue = new NXSL_Value(iface->getIfIndex());
-   }
-   else if (!_tcscmp(pszAttr, _T("ifType")))
-   {
-		pValue = new NXSL_Value(iface->getIfType());
-   }
-   else if (!_tcscmp(pszAttr, _T("bridgePortNumber")))
-   {
-		pValue = new NXSL_Value(iface->getBridgePortNumber());
-   }
-   else if (!_tcscmp(pszAttr, _T("adminState")))
-   {
-		pValue = new NXSL_Value((LONG)iface->getAdminState());
-   }
-   else if (!_tcscmp(pszAttr, _T("operState")))
-   {
-		pValue = new NXSL_Value((LONG)iface->getOperState());
-   }
-   else if (!_tcscmp(pszAttr, _T("dot1xPaeAuthState")))
-   {
-		pValue = new NXSL_Value((LONG)iface->getDot1xPaeAuthState());
-   }
-   else if (!_tcscmp(pszAttr, _T("dot1xBackendAuthState")))
-   {
-		pValue = new NXSL_Value((LONG)iface->getDot1xBackendAuthState());
+      pValue = new NXSL_Value(iface->Name());
    }
    else if (!_tcscmp(pszAttr, _T("node")))
 	{
@@ -317,35 +321,9 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 			pValue = new NXSL_Value;
 		}
 	}
-   else if (!_tcscmp(pszAttr, _T("peerNode")))
+   else if (!_tcscmp(pszAttr, _T("operState")))
    {
-		Node *peerNode = (Node *)FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
-		if (peerNode != NULL)
-		{
-			if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
-			{
-				Node *parentNode = iface->getParentNode();
-				if ((parentNode != NULL) && (peerNode->isTrustedNode(parentNode->Id())))
-				{
-					pValue = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, peerNode));
-				}
-				else
-				{
-					// No access, return null
-					pValue = new NXSL_Value;
-					DbgPrintf(4, _T("NXSL::Interface::peerNode(%s [%d]): access denied for node %s [%d]"),
-					          iface->Name(), iface->Id(), peerNode->Name(), peerNode->Id());
-				}
-			}
-			else
-			{
-				pValue = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, peerNode));
-			}
-		}
-		else
-		{
-			pValue = new NXSL_Value;
-		}
+		pValue = new NXSL_Value((LONG)iface->getOperState());
    }
    else if (!_tcscmp(pszAttr, _T("peerInterface")))
    {
@@ -385,6 +363,40 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 		{
 			pValue = new NXSL_Value;
 		}
+   }
+   else if (!_tcscmp(pszAttr, _T("peerNode")))
+   {
+		Node *peerNode = (Node *)FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
+		if (peerNode != NULL)
+		{
+			if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
+			{
+				Node *parentNode = iface->getParentNode();
+				if ((parentNode != NULL) && (peerNode->isTrustedNode(parentNode->Id())))
+				{
+					pValue = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, peerNode));
+				}
+				else
+				{
+					// No access, return null
+					pValue = new NXSL_Value;
+					DbgPrintf(4, _T("NXSL::Interface::peerNode(%s [%d]): access denied for node %s [%d]"),
+					          iface->Name(), iface->Id(), peerNode->Name(), peerNode->Id());
+				}
+			}
+			else
+			{
+				pValue = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, peerNode));
+			}
+		}
+		else
+		{
+			pValue = new NXSL_Value;
+		}
+   }
+   else if (!_tcscmp(pszAttr, _T("status")))
+   {
+      pValue = new NXSL_Value((LONG)iface->Status());
    }
 	else
 	{

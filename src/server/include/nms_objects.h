@@ -618,6 +618,7 @@ public:
 	DWORD getPortNumber() { return m_portNumber; }
 	DWORD getPeerNodeId() { return m_peerNodeId; }
 	DWORD getPeerInterfaceId() { return m_peerInterfaceId; }
+	DWORD getFlags() { return m_flags; }
 	int getAdminState() { return (int)m_adminState; }
 	int getOperState() { return (int)m_operState; }
 	int getDot1xPaeAuthState() { return (int)m_dot1xPaeAuthState; }
@@ -657,6 +658,7 @@ public:
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    DWORD wakeUp();
+	void setExpectedState(int state);
 };
 
 /**

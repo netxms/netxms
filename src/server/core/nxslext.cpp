@@ -740,6 +740,50 @@ static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 }
 
 /**
+ * Set interface expected state
+ * Syntax:
+ *    SetInterfaceExpectedState(interface, state)
+ * where:
+ *     interface - Interface object
+ *     state     - state ID or name. Possible values: 0 "UP", 1 "DOWN", 2 "IGNORE"
+ * Return value:
+ *     null
+ */
+static int F_SetInterfaceExpectedState(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	int state;
+	if (argv[1]->isInteger())
+	{
+		state = argv[1]->getValueAsInt32();
+	}
+	else if (argv[1]->isString())
+	{
+		static TCHAR *stateNames[] = { _T("UP"), _T("DOWN"), _T("IGNORE"), NULL };
+		const TCHAR *name = argv[1]->getValueAsCString();
+		for(state = 0; stateNames[state] != NULL; state++)
+			if (!_tcsicmp(stateNames[state], name))
+				break;
+	}
+	else
+	{
+		return NXSL_ERR_NOT_STRING;
+	}
+
+	if ((state >= 0) && (state <= 2))
+		((Interface *)object->getData())->setExpectedState(state);
+
+	*ppResult = new NXSL_Value;
+	return 0;
+}
+
+/**
  * Create new SNMP transport object
  * Syntax:
  *    CreateSNMPTransport(node)
@@ -1139,6 +1183,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ _T("RenameObject"), F_RenameObject, 2 },
    { _T("SetCustomAttribute"), F_SetCustomAttribute, 3 },
    { _T("SetEventParameter"), F_SetEventParameter, 3 },
+	{ _T("SetInterfaceExpectedState"), F_SetInterfaceExpectedState, 2 },
 	{ _T("SNMPGet"), F_SNMPGet, 2 },
 	{ _T("SNMPGetValue"), F_SNMPGetValue, 2 },
 	{ _T("SNMPSet"), F_SNMPSet, -1 /* 3 or 4 */ },

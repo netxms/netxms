@@ -592,11 +592,9 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,	Queue *pEventQ
 	sendPollerMsg(dwRqId, _T("   Finished status poll on interface %s\r\n"), m_szName);
 }
 
-
-//
-// PAE (802.1x) status poll
-//
-
+/**
+ * PAE (802.1x) status poll
+ */
 void Interface::paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transport *pTransport, Node *node)
 {
 	static const TCHAR *paeStateText[] = 
@@ -682,11 +680,9 @@ void Interface::paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transp
 	}
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create NXCP message with object's data
+ */
 void Interface::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
@@ -708,11 +704,9 @@ void Interface::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
 }
 
-
-//
-// Modify object from message
-//
-
+/**
+ * Modify object from message
+ */
 DWORD Interface::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
@@ -733,11 +727,21 @@ DWORD Interface::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
 
+/**
+ * Set expected state for interface
+ */
+void Interface::setExpectedState(int state)
+{
+	LockData();
+	m_flags &= ~IF_EXPECTED_STATE_MASK;
+	m_flags |= (DWORD)state << 28;
+	Modify();
+	UnlockData();
+}
 
-//
-// Wake up node bound to this interface by sending magic packet
-//
-
+/**
+ * Wake up node bound to this interface by sending magic packet
+ */
 DWORD Interface::wakeUp()
 {
    DWORD dwAddr, dwResult = RCC_NO_MAC_ADDRESS;
