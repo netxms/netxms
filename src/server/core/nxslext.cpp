@@ -765,7 +765,7 @@ static int F_SetInterfaceExpectedState(int argc, NXSL_Value **argv, NXSL_Value *
 	}
 	else if (argv[1]->isString())
 	{
-		static TCHAR *stateNames[] = { _T("UP"), _T("DOWN"), _T("IGNORE"), NULL };
+		static const TCHAR *stateNames[] = { _T("UP"), _T("DOWN"), _T("IGNORE"), NULL };
 		const TCHAR *name = argv[1]->getValueAsCString();
 		for(state = 0; stateNames[state] != NULL; state++)
 			if (!_tcsicmp(stateNames[state], name))
