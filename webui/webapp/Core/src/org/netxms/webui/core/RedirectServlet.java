@@ -41,7 +41,7 @@ public class RedirectServlet extends HttpServlet
 		if (path == null || path.isEmpty() || "/".equals(path))  //$NON-NLS-1$
 		{
 			BrandingManager.create();
-			resp.sendRedirect(resp.encodeRedirectURL(BrandingManager.getInstance().getRedirectionURL())); //$NON-NLS-1$
+			resp.sendRedirect(resp.encodeRedirectURL(BrandingManager.getInstance().getRedirectionURL()));
 		}
 	}
 }
