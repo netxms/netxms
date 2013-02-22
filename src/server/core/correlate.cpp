@@ -39,6 +39,20 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 		return;
 	}
 
+	// Check directly connected switch
+	Interface *iface = pNode->findInterface(0, pNode->IpAddr());
+	if ((iface != NULL) && (iface->getPeerNodeId() != 0))
+	{
+		Node *peerNode = (Node *)FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
+		if ((peerNode != NULL) && peerNode->isDown())
+		{
+         pEvent->setRootId(peerNode->getLastEventId(LAST_EVENT_NODE_DOWN));
+			DbgPrintf(5, _T("C_SysNodeDown: upstream node %s [%d] for current node %s [%d] is down"),
+			          peerNode->Name(), peerNode->Id(), pNode->Name(), pNode->Id());
+			return;
+		}
+	}
+
    // Trace route from management station to failed node and
    // check for failed intermediate nodes or interfaces
    Node *pMgmtNode = (Node *)FindObjectById(g_dwMgmtNode);

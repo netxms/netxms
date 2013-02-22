@@ -132,11 +132,9 @@
 #define MD5_DIGEST_SIZE       16
 #define SHA1_DIGEST_SIZE      20
 
-
-//
-// Compatibility defines for C sources
-//
-
+/**
+ * Compatibility defines for C sources
+ */
 #ifndef __cplusplus
 typedef int bool;
 #endif

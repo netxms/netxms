@@ -620,7 +620,7 @@ Interface *Node::findInterface(DWORD dwIndex, DWORD dwHostAddr)
       if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_pChildList[i];
-         if (pInterface->getIfIndex() == dwIndex)
+			if ((pInterface->getIfIndex() == dwIndex) || (dwIndex == INVALID_INDEX))
          {
             if (((pInterface->IpAddr() & pInterface->getIpNetMask()) ==
                  (dwHostAddr & pInterface->getIpNetMask())) ||
@@ -1329,25 +1329,14 @@ bool Node::checkNetworkPath(DWORD dwRqId)
 
 	// Check directly connected switch
    sendPollerMsg(dwRqId, _T("Checking ethernet connectivity...\r\n"));
-	DWORD localIfId;
-	BYTE localMacAddr[MAC_ADDR_LENGTH];
-	bool exactMatch;
-	Interface *iface = findConnectionPoint(&localIfId, localMacAddr, &exactMatch);
-	if (iface != NULL)
+	Interface *iface = findInterface(INVALID_INDEX, m_dwIpAddr);
+	if ((iface != NULL) && (iface->getPeerNodeId() != 0))
 	{
-		Node *node = iface->getParentNode();
-		if (node->isDown())
+		DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): found interface object for primary IP: %s [%d]"), m_szName, m_dwId, iface->Name(), iface->Id());
+		Node *node = (Node *)FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
+		if (node != NULL)
 		{
-			DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): upstream node %s [%d] is down"),
-			          m_szName, m_dwId, node->Name(), node->Id());
-			sendPollerMsg(dwRqId, POLLER_WARNING _T("   Upstream node %s is down\r\n"), node->Name());
-			return true;
-		}
-		if (node->m_tLastStatusPoll < now - 1)
-		{
-			DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
-			          m_szName, m_dwId, node->Name(), node->Id());
-			node->statusPoll(NULL, 0, 0);
+			DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): found peer node: %s [%d]"), m_szName, m_dwId, node->Name(), node->Id());
 			if (node->isDown())
 			{
 				DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): upstream node %s [%d] is down"),
@@ -1355,7 +1344,24 @@ bool Node::checkNetworkPath(DWORD dwRqId)
 				sendPollerMsg(dwRqId, POLLER_WARNING _T("   Upstream node %s is down\r\n"), node->Name());
 				return true;
 			}
+			if (node->m_tLastStatusPoll < now - 1)
+			{
+				DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
+							 m_szName, m_dwId, node->Name(), node->Id());
+				node->statusPoll(NULL, 0, 0);
+				if (node->isDown())
+				{
+					DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): upstream node %s [%d] is down"),
+								 m_szName, m_dwId, node->Name(), node->Id());
+					sendPollerMsg(dwRqId, POLLER_WARNING _T("   Upstream node %s is down\r\n"), node->Name());
+					return true;
+				}
+			}
 		}
+	}
+	else
+	{
+		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): cannot find interface object for primary IP"), m_szName, m_dwId);
 	}
 
    Node *mgmtNode = (Node *)FindObjectById(g_dwMgmtNode);
