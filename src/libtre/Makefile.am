@@ -37,4 +37,5 @@ EXTRA_DIST = \
 	THANKS \
 	libtre.def \
 	libtre.vcproj \
-	windll.cpp
+	windll.cpp \
+	xmalloc.c
