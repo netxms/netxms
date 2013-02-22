@@ -1097,11 +1097,9 @@ static void InitConfig()
 	g_config->setTopLevelTag(_T("config"));
 }
 
-
-//
-// Startup
-//
-
+/**
+ * Application entry point
+ */
 int main(int argc, char *argv[])
 {
    int ch, iExitCode = 0, iAction = ACTION_RUN_AGENT;
@@ -1114,6 +1112,10 @@ int main(int argc, char *argv[])
    DWORD dwSize;
 #else
    TCHAR *pszEnv;
+#endif
+
+#ifdef _WIN32
+	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
 #endif
 
    InitThreadLibrary();
