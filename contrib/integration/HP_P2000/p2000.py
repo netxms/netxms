@@ -101,6 +101,7 @@ def main():
         processDiskStatistics(makeCall('show/disk-statistics'))
         processVDiskStatistics(makeCall('show/vdisk-statistics'))
         processVolumeStatistics(makeCall('show/volume-statistics'))
+        makeCall('logout')
 
 if __name__ == "__main__":
     parsecmdline()
