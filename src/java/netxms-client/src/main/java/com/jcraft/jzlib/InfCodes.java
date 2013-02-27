@@ -43,6 +43,16 @@ final class InfCodes{
     0x00007fff, 0x0000ffff
   };
 
+  static final private int Z_OK=0;
+  static final private int Z_STREAM_END=1;
+  static final private int Z_NEED_DICT=2;
+  static final private int Z_ERRNO=-1;
+  static final private int Z_STREAM_ERROR=-2;
+  static final private int Z_DATA_ERROR=-3;
+  static final private int Z_MEM_ERROR=-4;
+  static final private int Z_BUF_ERROR=-5;
+  static final private int Z_VERSION_ERROR=-6;
+
   // waiting for "i:"=input,
   //             "o:"=output,
   //             "x:"=nothing
@@ -79,11 +89,16 @@ final class InfCodes{
   int[] dtree;          // distance tree
   int dtree_index;      // distance tree
 
-  InfCodes(){
+  private final ZStream z;
+  private final InfBlocks s;
+  InfCodes(ZStream z, InfBlocks s){
+    this.z=z; 
+    this.s=s; 
   }
+
   void init(int bl, int bd,
 	   int[] tl, int tl_index,
-	   int[] td, int td_index, ZStream z){
+	   int[] td, int td_index){
     mode=START;
     lbits=(byte)bl;
     dbits=(byte)bd;
@@ -94,9 +109,9 @@ final class InfCodes{
     tree=null;
   }
 
-  int proc(InfBlocks s, ZStream z, int r){ 
+  int proc(int r){ 
     int j;              // temporary storage
-    //int[] t;            // temporary pointer
+    int[] t;            // temporary pointer
     int tindex;         // temporary pointer
     int e;              // extra bits or operation
     int b=0;            // bit buffer
@@ -129,8 +144,8 @@ final class InfCodes{
 	  p=z.next_in_index;n=z.avail_in;b=s.bitb;k=s.bitk;
 	  q=s.write;m=q<s.read?s.read-q-1:s.end-q;
 
-	  if (r != JZlib.Z_OK){
-	    mode = r == JZlib.Z_STREAM_END ? WASH : BADCODE;
+	  if (r != Z_OK){
+	    mode = r == Z_STREAM_END ? WASH : BADCODE;
 	    break;
 	  }
 	}
@@ -143,13 +158,13 @@ final class InfCodes{
 	j = need;
 
 	while(k<(j)){
-	  if(n!=0)r=JZlib.Z_OK;
+	  if(n!=0)r=Z_OK;
 	  else{
 
 	    s.bitb=b;s.bitk=k;
 	    z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	    s.write=q;
-	    return s.inflate_flush(z,r);
+	    return s.inflate_flush(r);
 	  }
 	  n--;
 	  b|=(z.next_in[p++]&0xff)<<k;
@@ -185,24 +200,24 @@ final class InfCodes{
 	}
 	mode = BADCODE;        // invalid code
 	z.msg = "invalid literal/length code";
-	r = JZlib.Z_DATA_ERROR;
+	r = Z_DATA_ERROR;
 
 	s.bitb=b;s.bitk=k;
 	z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	s.write=q;
-	return s.inflate_flush(z,r);
+	return s.inflate_flush(r);
 
       case LENEXT:        // i: getting length extra (have base)
 	j = get;
 
 	while(k<(j)){
-	  if(n!=0)r=JZlib.Z_OK;
+	  if(n!=0)r=Z_OK;
 	  else{
 
 	    s.bitb=b;s.bitk=k;
 	    z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	    s.write=q;
-	    return s.inflate_flush(z,r);
+	    return s.inflate_flush(r);
 	  }
 	  n--; b|=(z.next_in[p++]&0xff)<<k;
 	  k+=8;
@@ -221,13 +236,13 @@ final class InfCodes{
 	j = need;
 
 	while(k<(j)){
-	  if(n!=0)r=JZlib.Z_OK;
+	  if(n!=0)r=Z_OK;
 	  else{
 
 	    s.bitb=b;s.bitk=k;
 	    z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	    s.write=q;
-	    return s.inflate_flush(z,r);
+	    return s.inflate_flush(r);
 	  }
 	  n--; b|=(z.next_in[p++]&0xff)<<k;
 	  k+=8;
@@ -252,24 +267,24 @@ final class InfCodes{
 	}
 	mode = BADCODE;        // invalid code
 	z.msg = "invalid distance code";
-	r = JZlib.Z_DATA_ERROR;
+	r = Z_DATA_ERROR;
 
 	s.bitb=b;s.bitk=k;
 	z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	s.write=q;
-	return s.inflate_flush(z,r);
+	return s.inflate_flush(r);
 
       case DISTEXT:       // i: getting distance extra
 	j = get;
 
 	while(k<(j)){
-	  if(n!=0)r=JZlib.Z_OK;
+	  if(n!=0)r=Z_OK;
 	  else{
 
 	    s.bitb=b;s.bitk=k;
 	    z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	    s.write=q;
-	    return s.inflate_flush(z,r);
+	    return s.inflate_flush(r);
 	  }
 	  n--; b|=(z.next_in[p++]&0xff)<<k;
 	  k+=8;
@@ -291,7 +306,7 @@ final class InfCodes{
 	  if(m==0){
 	    if(q==s.end&&s.read!=0){q=0;m=q<s.read?s.read-q-1:s.end-q;}
 	    if(m==0){
-	      s.write=q; r=s.inflate_flush(z,r);
+	      s.write=q; r=s.inflate_flush(r);
 	      q=s.write;m=q<s.read?s.read-q-1:s.end-q;
 
 	      if(q==s.end&&s.read!=0){q=0;m=q<s.read?s.read-q-1:s.end-q;}
@@ -300,7 +315,7 @@ final class InfCodes{
 		s.bitb=b;s.bitk=k;
 		z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 		s.write=q;
-		return s.inflate_flush(z,r);
+		return s.inflate_flush(r);
 	      }  
 	    }
 	  }
@@ -317,7 +332,7 @@ final class InfCodes{
 	if(m==0){
 	  if(q==s.end&&s.read!=0){q=0;m=q<s.read?s.read-q-1:s.end-q;}
 	  if(m==0){
-	    s.write=q; r=s.inflate_flush(z,r);
+	    s.write=q; r=s.inflate_flush(r);
 	    q=s.write;m=q<s.read?s.read-q-1:s.end-q;
 
 	    if(q==s.end&&s.read!=0){q=0;m=q<s.read?s.read-q-1:s.end-q;}
@@ -325,11 +340,11 @@ final class InfCodes{
 	      s.bitb=b;s.bitk=k;
 	      z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	      s.write=q;
-	      return s.inflate_flush(z,r);
+	      return s.inflate_flush(r);
 	    }
 	  }
 	}
-	r=JZlib.Z_OK;
+	r=Z_OK;
 
 	s.window[q++]=(byte)lit; m--;
 
@@ -342,39 +357,39 @@ final class InfCodes{
 	  p--;             // can always return one
 	}
 
-	s.write=q; r=s.inflate_flush(z,r);
+	s.write=q; r=s.inflate_flush(r);
 	q=s.write;m=q<s.read?s.read-q-1:s.end-q;
 
 	if (s.read != s.write){
 	  s.bitb=b;s.bitk=k;
 	  z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	  s.write=q;
-	  return s.inflate_flush(z,r);
+	  return s.inflate_flush(r);
 	}
 	mode = END;
       case END:
-	r = JZlib.Z_STREAM_END;
+	r = Z_STREAM_END;
 	s.bitb=b;s.bitk=k;
 	z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	s.write=q;
-	return s.inflate_flush(z,r);
+	return s.inflate_flush(r);
 
       case BADCODE:       // x: got error
 
-	r = JZlib.Z_DATA_ERROR;
+	r = Z_DATA_ERROR;
 
 	s.bitb=b;s.bitk=k;
 	z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	s.write=q;
-	return s.inflate_flush(z,r);
+	return s.inflate_flush(r);
 
       default:
-	r = JZlib.Z_STREAM_ERROR;
+	r = Z_STREAM_ERROR;
 
 	s.bitb=b;s.bitk=k;
 	z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	s.write=q;
-	return s.inflate_flush(z,r);
+	return s.inflate_flush(r);
       }
     }
   }
@@ -537,7 +552,7 @@ final class InfCodes{
 	      z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	      s.write=q;
 
-	      return JZlib.Z_DATA_ERROR;
+	      return Z_DATA_ERROR;
 	    }
 	  }
 	  while(true);
@@ -565,7 +580,7 @@ final class InfCodes{
 	  z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	  s.write=q;
 
-	  return JZlib.Z_STREAM_END;
+	  return Z_STREAM_END;
 	}
 	else{
 	  z.msg="invalid literal/length code";
@@ -576,7 +591,7 @@ final class InfCodes{
 	  z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
 	  s.write=q;
 
-	  return JZlib.Z_DATA_ERROR;
+	  return Z_DATA_ERROR;
 	}
       } 
       while(true);
@@ -590,6 +605,6 @@ final class InfCodes{
     z.avail_in=n;z.total_in+=p-z.next_in_index;z.next_in_index=p;
     s.write=q;
 
-    return JZlib.Z_OK;
+    return Z_OK;
   }
 }

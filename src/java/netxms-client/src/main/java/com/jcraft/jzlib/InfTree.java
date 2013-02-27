@@ -38,6 +38,16 @@ final class InfTree{
 
   static final private int MANY=1440;
 
+  static final private int Z_OK=0;
+  static final private int Z_STREAM_END=1;
+  static final private int Z_NEED_DICT=2;
+  static final private int Z_ERRNO=-1;
+  static final private int Z_STREAM_ERROR=-2;
+  static final private int Z_DATA_ERROR=-3;
+  static final private int Z_MEM_ERROR=-4;
+  static final private int Z_BUF_ERROR=-5;
+  static final private int Z_VERSION_ERROR=-6;
+
   static final int fixed_bl = 9;
   static final int fixed_bd = 5;
 
@@ -260,7 +270,7 @@ final class InfTree{
     if(c[0] == n){                // null input--all zero length codes
       t[0] = -1;
       m[0] = 0;
-      return JZlib.Z_OK;
+      return Z_OK;
     }
 
     // Find minimum and maximum length, bound *m by those
@@ -283,11 +293,11 @@ final class InfTree{
     // Adjust last length count to fill out codes, if needed
     for (y = 1 << j; j < i; j++, y <<= 1){
       if ((y -= c[j]) < 0){
-        return JZlib.Z_DATA_ERROR;
+        return Z_DATA_ERROR;
       }
     }
     if ((y -= c[i]) < 0){
-      return JZlib.Z_DATA_ERROR;
+      return Z_DATA_ERROR;
     }
     c[i] += y;
 
@@ -348,7 +358,7 @@ final class InfTree{
 
 	  // allocate new table
           if (hn[0] + z > MANY){       // (note: doesn't matter for fixed)
-            return JZlib.Z_DATA_ERROR;       // overflow of MANY
+            return Z_DATA_ERROR;       // overflow of MANY
           }
           u[h] = q = /*hp+*/ hn[0];   // DEBUG
           hn[0] += z;
@@ -403,7 +413,7 @@ final class InfTree{
       }
     }
     // Return Z_BUF_ERROR if we were given an incomplete table
-    return y != 0 && g != 1 ? JZlib.Z_BUF_ERROR : JZlib.Z_OK;
+    return y != 0 && g != 1 ? Z_BUF_ERROR : Z_OK;
   }
 
   int inflate_trees_bits(int[] c,  // 19 code lengths
@@ -417,12 +427,12 @@ final class InfTree{
     hn[0]=0;
     result = huft_build(c, 0, 19, 19, null, null, tb, bb, hp, hn, v);
 
-    if(result == JZlib.Z_DATA_ERROR){
+    if(result == Z_DATA_ERROR){
       z.msg = "oversubscribed dynamic bit lengths tree";
     }
-    else if(result == JZlib.Z_BUF_ERROR || bb[0] == 0){
+    else if(result == Z_BUF_ERROR || bb[0] == 0){
       z.msg = "incomplete dynamic bit lengths tree";
-      result = JZlib.Z_DATA_ERROR;
+      result = Z_DATA_ERROR;
     }
     return result;
   }
@@ -443,13 +453,13 @@ final class InfTree{
     initWorkArea(288);
     hn[0]=0;
     result = huft_build(c, 0, nl, 257, cplens, cplext, tl, bl, hp, hn, v);
-    if (result != JZlib.Z_OK || bl[0] == 0){
-      if(result == JZlib.Z_DATA_ERROR){
+    if (result != Z_OK || bl[0] == 0){
+      if(result == Z_DATA_ERROR){
         z.msg = "oversubscribed literal/length tree";
       }
-      else if (result != JZlib.Z_MEM_ERROR){
+      else if (result != Z_MEM_ERROR){
         z.msg = "incomplete literal/length tree";
-        result = JZlib.Z_DATA_ERROR;
+        result = Z_DATA_ERROR;
       }
       return result;
     }
@@ -458,22 +468,22 @@ final class InfTree{
     initWorkArea(288);
     result = huft_build(c, nl, nd, 0, cpdist, cpdext, td, bd, hp, hn, v);
 
-    if (result != JZlib.Z_OK || (bd[0] == 0 && nl > 257)){
-      if (result == JZlib.Z_DATA_ERROR){
+    if (result != Z_OK || (bd[0] == 0 && nl > 257)){
+      if (result == Z_DATA_ERROR){
         z.msg = "oversubscribed distance tree";
       }
-      else if (result == JZlib.Z_BUF_ERROR) {
+      else if (result == Z_BUF_ERROR) {
         z.msg = "incomplete distance tree";
-        result = JZlib.Z_DATA_ERROR;
+        result = Z_DATA_ERROR;
       }
-      else if (result != JZlib.Z_MEM_ERROR){
+      else if (result != Z_MEM_ERROR){
         z.msg = "empty distance tree with lengths";
-        result = JZlib.Z_DATA_ERROR;
+        result = Z_DATA_ERROR;
       }
       return result;
     }
 
-    return JZlib.Z_OK;
+    return Z_OK;
   }
 
   static int inflate_trees_fixed(int[] bl,  //literal desired/actual bit depth
@@ -486,7 +496,7 @@ final class InfTree{
     bd[0]=fixed_bd;
     tl[0]=fixed_tl;
     td[0]=fixed_td;
-    return JZlib.Z_OK;
+    return Z_OK;
   }
 
   private void initWorkArea(int vsize){
@@ -502,9 +512,7 @@ final class InfTree{
     for(int i=0; i<vsize; i++){v[i]=0;}
     for(int i=0; i<BMAX+1; i++){c[i]=0;}
     for(int i=0; i<3; i++){r[i]=0;}
-//  for(int i=0; i<BMAX; i++){u[i]=0;}
     System.arraycopy(c, 0, u, 0, BMAX);
-//  for(int i=0; i<BMAX+1; i++){x[i]=0;}
     System.arraycopy(c, 0, x, 0, BMAX+1);
   }
 }

@@ -779,7 +779,9 @@ src/java/netxms-client-api/src/main/java/org/netxms/api/client/users/UserGroup.j
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/users/UserManager.java -text
 src/java/netxms-client/pom.xml -text
 src/java/netxms-client/src/main/java/com/jcraft/jzlib/Adler32.java -text
+src/java/netxms-client/src/main/java/com/jcraft/jzlib/Checksum.java -text
 src/java/netxms-client/src/main/java/com/jcraft/jzlib/Deflate.java -text
+src/java/netxms-client/src/main/java/com/jcraft/jzlib/GZIPException.java -text
 src/java/netxms-client/src/main/java/com/jcraft/jzlib/InfBlocks.java -text
 src/java/netxms-client/src/main/java/com/jcraft/jzlib/InfCodes.java -text
 src/java/netxms-client/src/main/java/com/jcraft/jzlib/InfTree.java -text

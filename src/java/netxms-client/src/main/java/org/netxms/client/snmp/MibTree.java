@@ -27,7 +27,7 @@ import java.util.Arrays;
 import org.netxms.base.NXCPDataInputStream;
 import org.netxms.client.NXCException;
 import org.netxms.client.constants.RCC;
-import com.jcraft.jzlib.ZInputStream;
+import com.jcraft.jzlib.InflaterInputStream;
 
 /**
  * This class represents MIB tree.
@@ -79,7 +79,7 @@ public class MibTree
 				in = null;
 				BufferedInputStream bufferedInput = new BufferedInputStream(new FileInputStream(file));
 				bufferedInput.skip(headerSize);
-				in = new NXCPDataInputStream(new ZInputStream(bufferedInput));
+				in = new NXCPDataInputStream(new InflaterInputStream(bufferedInput));
 			}
 			else
 			{
