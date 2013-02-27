@@ -6,6 +6,7 @@ import hashlib
 import socket
 import urllib2
 import argparse
+import sys
 
 from lxml import etree
 
@@ -15,7 +16,7 @@ opener = urllib2.build_opener(handler)
 
 
 def makeCall(command):
-    url = ('https://' if config.ssl else 'http://') + config.address + '/api/'
+    url = ('https://' if config.ssl else 'http://') + config.currentAddress + '/api/'
     req = urllib2.Request(url + command)
     res = opener.open(req)
     return etree.XML(res.read())
@@ -82,7 +83,7 @@ def processVolumeStatistics(root):
 def parsecmdline():
     global config
     parser = argparse.ArgumentParser(description='Get status and performance data from HP P2000 disk arrays.')
-    parser.add_argument('-a', '--address', required=True, help='Array IP address')
+    parser.add_argument('-a', '--address', nargs='*', required=True, help='Array IP address')
     parser.add_argument('-u', '--user', required=True, help='Username')
     parser.add_argument('-p', '--password', required=True, help='Password')
     parser.add_argument('-n', '--nossl', dest='ssl', action='store_false', help='Disable https')
@@ -93,15 +94,17 @@ def parsecmdline():
 
 
 def main():
-    token = login()
-    if token:
-        opener.addheaders.append(('Cookie', 'wbisessionkey=' + token))
-        processEnclosureStatus(makeCall('show/enclosure-status'))
-        processControllerStatistics(makeCall('show/controller-statistics'))
-        processDiskStatistics(makeCall('show/disk-statistics'))
-        processVDiskStatistics(makeCall('show/vdisk-statistics'))
-        processVolumeStatistics(makeCall('show/volume-statistics'))
-        makeCall('logout')
+    processEnclosureStatus(makeCall('show/enclosure-status'))
+    processControllerStatistics(makeCall('show/controller-statistics'))
+    processDiskStatistics(makeCall('show/disk-statistics'))
+    processVDiskStatistics(makeCall('show/vdisk-statistics'))
+    processVolumeStatistics(makeCall('show/volume-statistics'))
+    makeCall('logout')
+
+def processException(e):
+    import traceback
+    if config.debug:
+        traceback.print_exc(e);
 
 if __name__ == "__main__":
     parsecmdline()
@@ -113,10 +116,23 @@ if __name__ == "__main__":
     else:
         prefix += '.'
 
-    try:
-        main()
-    except Exception as e:
-        import sys, traceback
-        if config.debug:
-            traceback.print_exc(e);
+    failed = True
+    token = None
+    for config.currentAddress in config.address:
+        try:
+            token = login()
+            if token:
+                opener.addheaders.append(('Cookie', 'wbisessionkey=' + token))
+                break
+        except Exception as e:
+            processException(e)
+
+    if token:
+        try:
+            main()
+            failed = False
+        except Exception as e:
+            processException(e)
+
+    if failed:
         sys.exit(1)
