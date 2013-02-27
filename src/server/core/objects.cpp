@@ -699,11 +699,9 @@ Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId)
 	return (Node *)g_idxNodeById.find(LldpIdComparator, (void *)lldpId);
 }
 
-
-//
-// Find subnet by IP address
-//
-
+/**
+ * Find subnet by IP address
+ */
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD zoneId, DWORD ipAddr)
 {
    if (ipAddr == 0)

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -74,11 +74,9 @@ public:
 	void fillMessage(CSCPMessage *msg);
 };
 
-
-//
-// Switch forwarding database
-//
-
+/**
+ * FDB entry
+ */
 struct FDB_ENTRY
 {
 	DWORD port;                    // Port number
@@ -87,12 +85,18 @@ struct FDB_ENTRY
 	DWORD nodeObject;              // ID of node object or 0 if not found
 };
 
+/**
+ * FDB port mapping entry
+ */
 struct PORT_MAPPING_ENTRY
 {
 	DWORD port;
 	DWORD ifIndex;
 };
 
+/**
+ * Switch forwarding database
+ */
 class ForwardingDatabase : public RefCountObject
 {
 private:

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,22 +36,18 @@ ForwardingDatabase::ForwardingDatabase()
 	m_timestamp = time(NULL);
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 ForwardingDatabase::~ForwardingDatabase()
 {
 	safe_free(m_fdb);
 	safe_free(m_portMap);
 }
 
-
-//
-// Add port mapping entry
-//
-
+/**
+ * Add port mapping entry
+ */
 void ForwardingDatabase::addPortMapping(PORT_MAPPING_ENTRY *entry)
 {
 	if (m_pmSize == m_pmAllocated)
@@ -63,11 +59,9 @@ void ForwardingDatabase::addPortMapping(PORT_MAPPING_ENTRY *entry)
 	m_pmSize++;
 }
 
-
-//
-// Get interface index for given port number
-//
-
+/**
+ * Get interface index for given port number
+ */
 DWORD ForwardingDatabase::ifIndexFromPort(DWORD port)
 {
 	for(int i = 0; i < m_pmSize; i++)
@@ -76,11 +70,9 @@ DWORD ForwardingDatabase::ifIndexFromPort(DWORD port)
 	return 0;
 }
 
-
-//
-// Add entry
-//
-
+/**
+ * Add entry
+ */
 void ForwardingDatabase::addEntry(FDB_ENTRY *entry)
 {
 	// Check for duplicate
@@ -102,17 +94,18 @@ void ForwardingDatabase::addEntry(FDB_ENTRY *entry)
 	m_fdbSize++;
 }
 
-
-//
-// Find MAC address
-// Returns interface index or 0 if MAC address not found
-//
-
+/**
+ * FDB entry comparator
+ */
 static int EntryComparator(const void *p1, const void *p2)
 {
 	return memcmp(((FDB_ENTRY *)p1)->macAddr, ((FDB_ENTRY *)p2)->macAddr, MAC_ADDR_LENGTH);
 }
 
+/**
+ * Find MAC address
+ * Returns interface index or 0 if MAC address not found
+ */
 DWORD ForwardingDatabase::findMacAddress(const BYTE *macAddr)
 {
 	FDB_ENTRY key;
@@ -121,13 +114,11 @@ DWORD ForwardingDatabase::findMacAddress(const BYTE *macAddr)
 	return (entry != NULL) ? entry->ifIndex : 0;
 }
 
-
-//
-// Check if port has only one MAC in FDB
-// If macAddr parameter is not NULL, MAC address found on port
-// copied into provided buffer
-//
-
+/**
+ * Check if port has only one MAC in FDB
+ * If macAddr parameter is not NULL, MAC address found on port
+ * copied into provided buffer
+ */
 bool ForwardingDatabase::isSingleMacOnPort(DWORD ifIndex, BYTE *macAddr)
 {
 	int count = 0;
@@ -144,11 +135,9 @@ bool ForwardingDatabase::isSingleMacOnPort(DWORD ifIndex, BYTE *macAddr)
 	return count == 1;
 }
 
-
-//
-// Get number of MAC addresses on given port
-//
-
+/**
+ * Get number of MAC addresses on given port
+ */
 int ForwardingDatabase::getMacCountOnPort(DWORD ifIndex)
 {
 	int count = 0;
@@ -161,21 +150,17 @@ int ForwardingDatabase::getMacCountOnPort(DWORD ifIndex)
 	return count;
 }
 
-
-//
-// Sort FDB
-//
-
+/**
+ * Sort FDB
+ */
 void ForwardingDatabase::sort()
 {
 	qsort(m_fdb, m_fdbSize, sizeof(FDB_ENTRY), EntryComparator);
 }
 
-
-//
-// FDB walker's callback
-//
-
+/**
+ * FDB walker's callback
+ */
 static DWORD FDBHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
    SNMP_ObjectId *pOid = pVar->GetName();

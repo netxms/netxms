@@ -242,7 +242,7 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 }
 
 /**
- * Set column nullable (currently Oracle only implementation)
+ * Set column nullable (currently only Oracle and PostgreSQL)
  */
 static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column)
 {

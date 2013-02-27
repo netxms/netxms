@@ -26,7 +26,6 @@
 #include <nms_common.h>
 #include <nxsrvapi.h>
 
-
 /**
  *API version
  */
