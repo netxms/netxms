@@ -549,11 +549,9 @@ LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
    return iResult;
 }
 
-
-//
-// Handler for System.Processes table
-//
-
+/**
+ * Handler for System.Processes table
+ */
 LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
 {
    DWORD i, dwSize, dwNumProc, *pdwProcList;

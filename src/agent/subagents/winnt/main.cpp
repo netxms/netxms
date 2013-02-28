@@ -29,6 +29,7 @@ LONG H_ActiveUserSessions(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
 LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
+LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value);
 LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_IPRoutingTable(const TCHAR *cmd, const TCHAR *arg, StringList *pValue);
 LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
@@ -191,6 +192,7 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 };
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
+	{ _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
 	{ _T("System.Processes"), H_ProcessTable, NULL, _T("PID"), DCTDESC_SYSTEM_PROCESSES }
 };
 static NETXMS_SUBAGENT_ACTION m_actions[] =

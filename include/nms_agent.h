@@ -341,6 +341,7 @@
 
 
 #define DCTDESC_FILESYSTEM_VOLUMES                _T("File system volumes")
+#define DCTDESC_SYSTEM_INSTALLED_PRODUCTS         _T("Installed products")
 #define DCTDESC_SYSTEM_PROCESSES                  _T("Process table")
 
 /**
