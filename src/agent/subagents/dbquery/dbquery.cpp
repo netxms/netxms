@@ -37,16 +37,16 @@ static BOOL SubAgentInit(Config *config)
 
 	// Add database connections
 	ConfigEntryList *databases = config->getSubEntries(_T("/DBQuery"), _T("Database"));
-//		ConfigEntry = config->getEntry(_T("/DBQuery/Query"));
-	if (ql != NULL)
+	ConfigEntry *queries = config->getEntry(_T("/DBQuery/Query"));
+	if (queries != NULL)
 	{
-		for(i = 0; i < ql->getValueCount(); i++)
+		for(i = 0; i < queries->getValueCount(); i++)
 		{
-			if (!AddQueryFromConfig(ql->getValue(i)))
+			if (!AddQueryFromConfig(queries->getValue(i)))
 			{
             AgentWriteLog(EVENTLOG_WARNING_TYPE,
                             _T("Unable to add ODBC query from configuration file. ")
-									 _T("Original configuration record: %s"), ql->getValue(i));
+									 _T("Original configuration record: %s"), queries->getValue(i));
 			}
 		}
 	}

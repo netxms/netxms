@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008-2012 Victor Kirhenshtein
+** Copyright (C) 2008-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,18 +22,9 @@
 
 #include "logwatch.h"
 
-
-//
-// Constants
-//
-
-#define BUFFER_SIZE		32768
-
-
-//
-// Event source class definition
-//
-
+/**
+ * Event source class definition
+ */
 class EventSource
 {
 private:
@@ -53,11 +44,9 @@ public:
 	const TCHAR *getLogName() { return m_logName; }
 };
 
-
-//
-// Event source constructor
-//
-
+/**
+ * Event source constructor
+ */
 EventSource::EventSource(const TCHAR *logName, const TCHAR *name)
 {
 	m_logName = _tcsdup(logName);
@@ -66,11 +55,9 @@ EventSource::EventSource(const TCHAR *logName, const TCHAR *name)
 	m_modules = NULL;
 }
 
-
-//
-// Event source destructor
-//
-
+/**
+ * Event source destructor
+ */
 EventSource::~EventSource()
 {
 	int i;
@@ -82,11 +69,9 @@ EventSource::~EventSource()
 	safe_free(m_modules);
 }
 
-
-//
-// Load event source
-//
-
+/**
+ * Load event source
+ */
 BOOL EventSource::load()
 {
    HKEY hKey;
@@ -131,11 +116,9 @@ BOOL EventSource::load()
 	return isLoaded;
 }
 
-
-//
-// Format message
-//
-
+/**
+ * Format message
+ */
 BOOL EventSource::formatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize)
 {
    TCHAR *strings[256], *str;
@@ -171,20 +154,16 @@ BOOL EventSource::formatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize)
 	return success;
 }
 
-
-//
-// Loaded event sources
-//
-
+/**
+ * Loaded event sources
+ */
 static int m_numEventSources;
 static EventSource **m_eventSourceList = NULL;
 static CRITICAL_SECTION m_csEventSourceAccess;
 
-
-//
-// Load event source
-//
-
+/**
+ * Load event source
+ */
 EventSource *LoadEventSource(const TCHAR *log, const TCHAR *name)
 {
 	EventSource *es = NULL;
@@ -221,11 +200,9 @@ EventSource *LoadEventSource(const TCHAR *log, const TCHAR *name)
 	return es;
 }
 
-
-//
-// Notification thread's data
-//
-
+/**
+ * Notification thread's data
+ */
 struct NOTIFICATION_THREAD_DATA
 {
 	HANDLE hLogEvent;
@@ -233,11 +210,9 @@ struct NOTIFICATION_THREAD_DATA
 	HANDLE hStopEvent;
 };
 
-
-//
-// Change notification thread
-//
-
+/**
+ * Change notification thread
+ */
 static THREAD_RESULT THREAD_CALL NotificationThread(void *arg)
 {
 	HANDLE handles[2];
@@ -253,11 +228,9 @@ static THREAD_RESULT THREAD_CALL NotificationThread(void *arg)
 	return THREAD_OK;
 }
 
-
-//
-// Parse event log record
-//
-
+/**
+ * Parse event log record
+ */
 static void ParseEvent(LogParser *parser, EVENTLOGRECORD *rec)
 {
 	TCHAR msg[8192], *eventSourceName;
@@ -276,11 +249,9 @@ static void ParseEvent(LogParser *parser, EVENTLOGRECORD *rec)
 	}
 }
 
-
-//
-// Event log parser thread
-//
-
+/**
+ * Event log parser thread
+ */
 THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
 {
 	LogParser *parser = (LogParser *)arg;
@@ -341,7 +312,7 @@ reopen_log:
             {
 retry_read:
                success = ReadEventLog(hLog, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
-                                       buffer, BUFFER_SIZE, &bytes, &bytesNeeded);
+                                       buffer, bufferSize, &bytes, &bytesNeeded);
 					error = GetLastError();
 					if (!success && (error == ERROR_INSUFFICIENT_BUFFER))
 					{
@@ -368,7 +339,7 @@ retry_read:
             if (error != ERROR_HANDLE_EOF)
 				{
 					AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log \"%s\": %s"),
-										 &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
+										 &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
 					parser->setStatus(_T("EVENT LOG READ ERROR"));
 				}
          }
@@ -381,7 +352,7 @@ retry_read:
       else
       {
 			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log (initial read) \"%s\": %s"),
-			                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
+			                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
       }
 
 		CloseEventLog(hLog);
@@ -399,7 +370,7 @@ retry_read:
    else
    {
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to open event log \"%s\": %s"),
-		                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
+		                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
 		parser->setStatus(_T("EVENT LOG OPEN ERROR"));
    }
 
@@ -407,21 +378,17 @@ retry_read:
 	return THREAD_OK;
 }
 
-
-//
-// Initialize event log parsers
-//
-
+/**
+ * Initialize event log parsers
+ */
 void InitEventLogParsers()
 {
 	InitializeCriticalSection(&m_csEventSourceAccess);
 }
 
-
-//
-// Cleanup event log parsers
-//
-
+/**
+ * Cleanup event log parsers
+ */
 void CleanupEventLogParsers()
 {
 	int i;
