@@ -277,8 +277,10 @@ restart_check:
 	{
 		DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, originalContext->getCommunity());
 		pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
-		if (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL,
-						0, buffer, 1024, 0) == SNMP_ERR_SUCCESS)
+
+		// some devives does not support sysObjectId, so we check sysDescr as well
+		if ((SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS) ||
+		    (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS))
 		{
 			*version = snmpVer;
 			return new SNMP_SecurityContext(originalContext);
@@ -288,8 +290,8 @@ restart_check:
 	// Check default community
 	DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, defCommunity);
 	pTransport->setSecurityContext(new SNMP_SecurityContext(defCommunity));
-	if (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL,
-		         0, buffer, 1024, 0) == SNMP_ERR_SUCCESS)
+	if ((SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS) ||
+		 (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS))
 	{
 		*version = snmpVer;
 		return new SNMP_SecurityContext(defCommunity);
@@ -307,7 +309,8 @@ restart_check:
 			DBGetFieldA(hResult, i, 0, temp, 256);
 			DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, temp);
 			pTransport->setSecurityContext(new SNMP_SecurityContext(temp));
-			if (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS)
+			if ((SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS) ||
+			    (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, buffer, 1024, 0) == SNMP_ERR_SUCCESS))
 			{
 				*version = snmpVer;
 				break;

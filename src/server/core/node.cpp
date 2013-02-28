@@ -1854,21 +1854,21 @@ bool Node::confPollSnmp(DWORD dwRqId)
 			(m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
 
 		TCHAR szBuffer[4096];
-		if (SnmpGet(m_snmpVersion, pTransport,
-						_T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, 4096, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+		if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, 4096, SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
 		{
-			LockData();
-			if (_tcscmp(m_szObjectId, szBuffer))
-			{
-				nx_strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
-				hasChanges = true;
-			}
-			UnlockData();
+			// Set snmp object ID to .0.0 if it cannot be read
+			_tcscpy(szBuffer, _T(".0.0"));
 		}
+		LockData();
+		if (_tcscmp(m_szObjectId, szBuffer))
+		{
+			nx_strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
+			hasChanges = true;
+		}
+		UnlockData();
 
 		// Get system description
-		if (SnmpGet(m_snmpVersion, pTransport,
-		            _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, szBuffer, MAX_DB_STRING, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+		if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, szBuffer, MAX_DB_STRING, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
 		{
 			TranslateStr(szBuffer, _T("\r\n"), _T(" "));
 			TranslateStr(szBuffer, _T("\n"), _T(" "));
