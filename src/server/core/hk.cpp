@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -154,6 +154,15 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		{
 			dwRetentionTime *= 86400;	// Convert days to seconds
 			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), (long)(currTime - dwRetentionTime));
+			DBQuery(hdb, szQuery);
+		}
+
+		// Remove outdated SNMP trap log records
+		dwRetentionTime = ConfigReadULong(_T("SNMPTrapLogRetentionTime"), 90);
+		if (dwRetentionTime > 0)
+		{
+			dwRetentionTime *= 86400;	// Convert days to seconds
+			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_log WHERE trap_timestamp<%ld"), (long)(currTime - dwRetentionTime));
 			DBQuery(hdb, szQuery);
 		}
 

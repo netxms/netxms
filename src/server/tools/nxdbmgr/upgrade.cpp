@@ -310,6 +310,17 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 /**
+ * Upgrade from V271 to V272
+ */
+static BOOL H_UpgradeFromV271(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateConfigParam(_T("SNMPTrapLogRetentionTime"), _T("90"), 1, 0));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='272' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V270 to V271
  */
 static BOOL H_UpgradeFromV270(int currVersion, int newVersion)

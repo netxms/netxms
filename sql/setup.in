@@ -63,6 +63,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('EventLogRetentionTime','90',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('SNMPTrapLogRetentionTime','90',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('HouseKeepingInterval','3600',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('DeleteEmptySubnets','0',1,1);
