@@ -75,13 +75,13 @@ public class PerfTabGraph extends DashboardComposite
 		chart = ChartFactory.createLineChart(this, SWT.NONE);
 		chart.setZoomEnabled(false);
 		chart.setTitleVisible(true);
-		chart.setChartTitle(settings.getTitle().isEmpty() ? dci.getDescription() : settings.getTitle());
+		chart.setChartTitle(settings.getRuntimeTitle());
 		chart.setLegendVisible(false);
 		
 		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
 		chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
 		
-		chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getName().isEmpty() ? dci.getDescription() : settings.getName()));
+		chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getRuntimeName()));
 	}
 	
 	/**
@@ -103,7 +103,7 @@ public class PerfTabGraph extends DashboardComposite
 			else
 				styles.set(items.size() - 1, style);
 			chart.setItemStyles(styles);
-			chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getName().isEmpty() ? dci.getDescription() : settings.getName()));
+			chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getRuntimeName()));
 		}
 	}
 	

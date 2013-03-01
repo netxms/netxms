@@ -196,7 +196,13 @@ public class PerformanceTab extends ObjectTab
 				if (result == 0)
 					result = Integer.signum(o1.getOrder() - o2.getOrder());
 				if (result == 0)
-					result = o1.getName().compareToIgnoreCase(o2.getName());
+				{
+					// Sort top-level DCI's by chart title, and attached DCIs by legend name  
+					if (o1.getParentDciId() == 0)
+						result = o1.getRuntimeTitle().compareToIgnoreCase(o2.getRuntimeTitle());
+					else
+						result = o1.getRuntimeName().compareToIgnoreCase(o2.getRuntimeName());
+				}
 				return result;
 			}
 		});
