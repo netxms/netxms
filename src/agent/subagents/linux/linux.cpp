@@ -49,6 +49,7 @@ static void SubAgentShutdown()
 LONG H_DRBDDeviceList(const TCHAR *pszParam, const TCHAR *pszArg, StringList *pValue);
 LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
 LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
+LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value);
 LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValue);
 
 /**
@@ -398,6 +399,11 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 	{ _T("System.ProcessList"),           H_ProcessList,        NULL }
 };
 
+static NETXMS_SUBAGENT_TABLE m_tables[] =
+{
+	{ _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS }
+};
+
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
@@ -410,31 +416,32 @@ static NETXMS_SUBAGENT_INFO m_info =
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
-	0, NULL,	// tables
-   0, NULL,	// actions
+	sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
+	m_tables,
+	0, NULL,	// actions
 	0, NULL	// push parameters
 };
 
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(LINUX)
 {
 	*ppInfo = &m_info;
 	return TRUE;
 }
 
-
-//
-// Entry points for server
-//
-
+/**
+ * Entry point for server: interface list
+ */
 extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
 	return H_NetIfList(_T("Net.InterfaceList"), NULL, pValue) == SYSINFO_RC_SUCCESS;
 }
 
+/**
+ * Entry point for server: arp cache
+ */
 extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
 {
 	return H_NetArpCache(_T("Net.ArpCache"), NULL, pValue) == SYSINFO_RC_SUCCESS;
