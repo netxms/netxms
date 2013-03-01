@@ -31,8 +31,9 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value)
 	value->addColumn(_T("NAME"));
 	value->addColumn(_T("VERSION"));
 	value->addColumn(_T("VENDOR"));
-	value->addColumn(_T("URL"));
 	value->addColumn(_T("DATE"));
+	value->addColumn(_T("DESCRIPTION"));
+	value->addColumn(_T("URL"));
 
 	DWORD index = 0;
 	TCHAR productId[40];
@@ -58,15 +59,15 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value)
 			}
 
 			size = 256;
-			if (MsiGetProductInfo(productId, INSTALLPROPERTY_URLINFOABOUT, buffer, &size) == ERROR_SUCCESS)
+			if (MsiGetProductInfo(productId, INSTALLPROPERTY_INSTALLDATE, buffer, &size) == ERROR_SUCCESS)
 			{
 				value->set(3, buffer);
 			}
 
 			size = 256;
-			if (MsiGetProductInfo(productId, INSTALLPROPERTY_INSTALLDATE, buffer, &size) == ERROR_SUCCESS)
+			if (MsiGetProductInfo(productId, INSTALLPROPERTY_URLINFOABOUT, buffer, &size) == ERROR_SUCCESS)
 			{
-				value->set(4, buffer);
+				value->set(5, buffer);
 			}
 		}
 	}
