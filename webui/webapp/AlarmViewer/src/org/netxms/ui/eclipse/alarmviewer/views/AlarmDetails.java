@@ -85,8 +85,8 @@ public class AlarmDetails extends ViewPart
 	public static final int EV_COLUMN_MESSAGE = 3;
 	public static final int EV_COLUMN_TIMESTAMP = 4;
 	
-	private static final String[] stateImage = { "icons/outstanding.png", "icons/acknowledged.png", "icons/terminated.png" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	private static final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };	
+	private static final String[] stateImage = { "icons/outstanding.png", "icons/acknowledged.png", "icons/resolved.png", "icons/terminated.png", "icons/acknowledged_sticky.png" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+	private final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Resolved, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };
 	
 	private NXCSession session;
 	private long alarmId;
@@ -548,7 +548,10 @@ public class AlarmDetails extends ViewPart
 		alarmSeverity.setImage(StatusDisplayInfo.getStatusImage(alarm.getCurrentSeverity()));
 		alarmSeverity.setText(StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()));
 		
-		alarmState.setImage(imageCache.add(Activator.getImageDescriptor(stateImage[alarm.getState()])));
+		int state = alarm.getState();
+		if ((state == Alarm.STATE_ACKNOWLEDGED) && alarm.isSticky())
+			state = Alarm.STATE_TERMINATED + 1;
+		alarmState.setImage(imageCache.add(Activator.getImageDescriptor(stateImage[state])));
 		alarmState.setText(stateText[alarm.getState()]);
 		
 		GenericObject object = session.findObjectById(alarm.getSourceObjectId());

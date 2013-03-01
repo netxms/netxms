@@ -153,7 +153,7 @@ public class LoginForm extends Window
 		}
 		
 		final ImageDescriptor customImage = BrandingManager.getInstance().getLoginTitleImage();
-		final Image loginImage = (userImage != null) ? userImage : ((customImage != null) ? customImage.createImage() : Activator.getImageDescriptor("icons/login.jpg").createImage()); //$NON-NLS-1$
+		final Image loginImage = (userImage != null) ? userImage : ((customImage != null) ? customImage.createImage() : Activator.getImageDescriptor("icons/login.png").createImage()); //$NON-NLS-1$
 		Label logo = new Label(content, SWT.NONE);
 		logo.setImage(loginImage);
 		
