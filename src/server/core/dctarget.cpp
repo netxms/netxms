@@ -295,7 +295,15 @@ DWORD DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
 			pMsg->SetVariable(dwId++, object->getPerfTabSettings());
 			pMsg->SetVariable(dwId++, (WORD)object->getType());
 			pMsg->SetVariable(dwId++, object->getTemplateItemId());
-			dwId += 4;
+			if (object->getType() == DCO_TYPE_ITEM)
+			{
+				pMsg->SetVariable(dwId++, ((DCItem *)object)->getInstance());
+				dwId += 3;
+			}
+			else
+			{
+				dwId += 4;
+			}
 			dwCount++;
 		}
 	}

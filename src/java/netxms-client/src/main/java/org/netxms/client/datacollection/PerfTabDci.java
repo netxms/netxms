@@ -30,6 +30,7 @@ public class PerfTabDci
 	private int status;
 	private String description;
 	private String perfTabSettings;
+	private String instance;
 	
 	public PerfTabDci(NXCPMessage msg, long baseId)
 	{
@@ -38,6 +39,9 @@ public class PerfTabDci
 		status = msg.getVariableAsInteger(baseId + 2);
 		perfTabSettings = msg.getVariableAsString(baseId + 3);
 		templateDciId = msg.getVariableAsInt64(baseId + 5);
+		instance = msg.getVariableAsString(baseId + 6);
+		if (instance == null)
+			instance = "";
 	}
 
 	/**
@@ -78,5 +82,13 @@ public class PerfTabDci
 	public final long getTemplateDciId()
 	{
 		return templateDciId;
+	}
+
+	/**
+	 * @return the instance
+	 */
+	public final String getInstance()
+	{
+		return instance;
 	}
 }

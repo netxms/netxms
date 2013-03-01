@@ -126,11 +126,24 @@ public class PerfTabGraphSettings
 	}
 
 	/**
+	 * Get configured title
+	 * 
 	 * @return the title
 	 */
 	public String getTitle()
 	{
 		return title;
+	}
+	
+	/**
+	 * Get actual title to be shown in runtime
+	 * 
+	 * @return
+	 */
+	public String getRuntimeTitle()
+	{
+		String t = ((title == null) || title.isEmpty()) ? ((runtimeDciInfo != null) ? runtimeDciInfo.getDescription() : "") : title;
+		return t.replace("{instance}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstance() : "");
 	}
 
 	/**
@@ -238,6 +251,8 @@ public class PerfTabGraphSettings
 	}
 
 	/**
+	 * Get configured name for chart legend
+	 * 
 	 * @return the name
 	 */
 	public final String getName()
@@ -251,6 +266,17 @@ public class PerfTabGraphSettings
 	public final void setName(String name)
 	{
 		this.name = name;
+	}
+	
+	/**
+	 * Get runtime name for chart legend
+	 * 
+	 * @return the name
+	 */
+	public String getRuntimeName()
+	{
+		String n = ((name == null) || name.isEmpty()) ? ((runtimeDciInfo != null) ? runtimeDciInfo.getDescription() : "") : name;
+		return n.replace("{instance}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstance() : "");
 	}
 
 	/**

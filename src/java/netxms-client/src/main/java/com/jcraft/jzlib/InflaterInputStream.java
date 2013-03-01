@@ -30,6 +30,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.jcraft.jzlib;
 import java.io.*;
 
+@SuppressWarnings("deprecation")
 public class InflaterInputStream extends FilterInputStream {
   protected final Inflater inflater;
   protected byte[] buf;

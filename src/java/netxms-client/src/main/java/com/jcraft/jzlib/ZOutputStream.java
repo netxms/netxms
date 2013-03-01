@@ -106,14 +106,8 @@ public class ZOutputStream extends FilterOutputStream {
   }
 
   public void finish() throws IOException {
-    int err;
     if(compress){
-      int tmp = flush;
-      int flush = JZlib.Z_FINISH;
-      try{
         write("".getBytes(), 0, 0);
-      }
-      finally { flush = tmp; }
     }
     else{
       dos.finish();

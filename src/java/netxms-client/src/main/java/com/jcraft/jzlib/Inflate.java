@@ -34,6 +34,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.jcraft.jzlib;
 
+@SuppressWarnings({ "unused", "deprecation" })
 final class Inflate{
   
   static final private int MAX_WBITS=15; // 32K LZ77 window
@@ -678,7 +679,8 @@ final class Inflate{
     return r;
   }
   class Return extends Exception{
-    int r;
+	private static final long serialVersionUID = 1L;
+	int r;
     Return(int r){this.r=r; }
   }
 
