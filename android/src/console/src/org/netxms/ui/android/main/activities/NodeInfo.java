@@ -34,10 +34,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ExpandableListView;
 import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TabHost;
 import android.widget.TabHost.OnTabChangeListener;
 import android.widget.TabHost.TabContentFactory;
@@ -62,6 +60,8 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 			0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9 };
 	private static final int MAX_COLORS = DEFAULT_COLORS.length;
 	private static final String SORT_KEY = "NodeAlarmsSortBy";
+	private final int[] menuSortIds = { R.id.sort_severity_asc, R.id.sort_severity_desc,
+			R.id.sort_date_asc, R.id.sort_date_desc, R.id.sort_name_asc, R.id.sort_name_desc };
 
 	private static Method method_invalidateOptionsMenu;
 
@@ -94,7 +94,6 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	private long nodeId;
 	private GenericObject obj = null;
 	private boolean recreateOptionsMenu = false;
-	private Spinner sortBy;
 
 	/* (non-Javadoc)
 	 * @see android.app.ActivityGroup#onCreate(android.os.Bundle)
@@ -110,7 +109,7 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 		tabHost = getTabHost();
 		tabHost.setOnTabChangedListener(this);
 
-		TAB_OVERVIEW = getString(R.string.node_info_overview);
+		TAB_OVERVIEW = getString(R.string.ni_overview);
 		overviewAdapter = new OverviewAdapter(this);
 		overviewListView = (ListView)findViewById(R.id.overview);
 		overviewListView.setAdapter(overviewAdapter);
@@ -125,7 +124,7 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 					}
 				}));
 
-		TAB_ALARMS = getString(R.string.node_info_alarms);
+		TAB_ALARMS = getString(R.string.ni_alarms);
 		alarmsAdapter = new AlarmListAdapter(this);
 		alarmsListView = (ListView)findViewById(R.id.alarms);
 		alarmsListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
@@ -142,23 +141,7 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 					}
 				}));
 
-		sortBy = (Spinner)findViewById(R.id.sortBy);
-		sortBy.setOnItemSelectedListener(new OnItemSelectedListener()
-		{
-			@Override
-			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id)
-			{
-				alarmsAdapter.setSortBy(position);
-				refreshAlarms();
-			}
-			@Override
-			public void onNothingSelected(AdapterView<?> arg0)
-			{
-			}
-		});
-		sortBy.setSelection(PreferenceManager.getDefaultSharedPreferences(this).getInt(SORT_KEY, 0));
-
-		TAB_LAST_VALUES = getString(R.string.node_info_last_values);
+		TAB_LAST_VALUES = getString(R.string.ni_last_values);
 		lastValuesAdapter = new LastValuesAdapter(this);
 		lastValuesListView = (ListView)findViewById(R.id.last_values);
 		lastValuesListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
@@ -175,7 +158,7 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 					}
 				}));
 
-		TAB_INTERFACES = getString(R.string.node_info_interfaces);
+		TAB_INTERFACES = getString(R.string.ni_interfaces);
 		interfacesAdapter = new InterfacesAdapter(this, null, null);
 		interfacesListView = (ExpandableListView)findViewById(R.id.interfaces);
 		interfacesListView.setAdapter(interfacesAdapter);
@@ -201,27 +184,11 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	}
 
 	/* (non-Javadoc)
-	 * @see android.app.Activity#onStop()
-	 */
-	@Override
-	protected void onStop()
-	{
-		super.onStop();
-
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		SharedPreferences.Editor editor = prefs.edit();
-		editor.putInt(SORT_KEY, alarmsAdapter.getSortBy());
-		editor.commit();
-	}
-
-	/* (non-Javadoc)
 	 * @see android.widget.TabHost.OnTabChangeListener#onTabChanged(java.lang.String)
 	 */
 	@Override
 	public void onTabChanged(String tabId)
 	{
-		if (sortBy != null)
-			sortBy.setVisibility(tabId.equals(TAB_ALARMS) ? View.VISIBLE : View.INVISIBLE);
 		if (tabId.equals(TAB_OVERVIEW))
 			overviewAdapter.notifyDataSetChanged();
 		else if (tabId.equals(TAB_LAST_VALUES))
@@ -278,6 +245,7 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 			inflater.inflate(R.menu.alarm_actions, menu);
 			hideMenuItem(menu, R.id.viewlastvalues);
 		}
+		checkMenuSortItem(menu);
 	}
 
 	/* (non-Javadoc)
@@ -300,6 +268,7 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 				hideMenuItem(menu, R.id.viewlastvalues);
 			}
 		}
+		checkMenuSortItem(menu);
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -308,6 +277,26 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 		MenuItem item = menu.findItem(resId);
 		if (item != null)
 			item.setVisible(false);
+	}
+
+	private void checkMenuSortItem(Menu menu)
+	{
+		int sortBy = PreferenceManager.getDefaultSharedPreferences(this).getInt(SORT_KEY, 0);
+		MenuItem item = menu.findItem(menuSortIds[sortBy]);
+		if (item != null)
+			item.setChecked(true);
+	}
+
+	private void setNewSort(MenuItem item, int sortBy)
+	{
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putInt(SORT_KEY, sortBy);
+		editor.commit();
+		item.setChecked(!item.isChecked());
+		alarmsAdapter.setSortBy(sortBy);
+		alarmsAdapter.sort();
+		alarmsAdapter.notifyDataSetChanged();
 	}
 
 	/* (non-Javadoc)
@@ -348,6 +337,7 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 			}
 			recreateOptionsMenu = false;
 		}
+		checkMenuSortItem(menu);
 		return true;
 	}
 
@@ -412,7 +402,7 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 			ArrayList<Integer> id = new ArrayList<Integer>(0);
 			id.add((int)obj.getObjectId());
 			alarmsAdapter.setFilter(id);
-			alarmsAdapter.setAlarms(service.getAlarms());
+			alarmsAdapter.setValues(service.getAlarms());
 			alarmsAdapter.notifyDataSetChanged();
 		}
 	}
@@ -461,6 +451,18 @@ public class NodeInfo extends AbstractTabActivity implements OnTabChangeListener
 	{
 		switch (item.getItemId())
 		{
+			case R.id.sort_severity_asc:
+				setNewSort(item, AlarmListAdapter.SORT_SEVERITY_ASC);
+				return true;
+			case R.id.sort_severity_desc:
+				setNewSort(item, AlarmListAdapter.SORT_SEVERITY_DESC);
+				return true;
+			case R.id.sort_date_asc:
+				setNewSort(item, AlarmListAdapter.SORT_DATE_ASC);
+				return true;
+			case R.id.sort_date_desc:
+				setNewSort(item, AlarmListAdapter.SORT_DATE_DESC);
+				return true;
 			case android.R.id.home:
 				startActivity(new Intent(this, HomeScreen.class));
 				return true;

@@ -29,7 +29,7 @@ import android.widget.TextView;
 public class ObjectListAdapter extends BaseAdapter
 {
 	private final Context context;
-	private List<GenericObject> objectList = new ArrayList<GenericObject>(0);
+	private final List<GenericObject> objectList = new ArrayList<GenericObject>(0);
 
 	private static final int[] statusImageId = {
 			R.drawable.status_normal, // STATUS_NORMAL = 0;
@@ -70,19 +70,23 @@ public class ObjectListAdapter extends BaseAdapter
 	 */
 	public void setNodes(GenericObject[] objects)
 	{
-		objectList = Arrays.asList(objects);
-		Collections.sort(objectList, new Comparator<GenericObject>()
+		objectList.clear();
+		if (objects != null)
 		{
-			@Override
-			public int compare(GenericObject object1, GenericObject object2)
+			objectList.addAll(Arrays.asList(objects));
+			Collections.sort(objectList, new Comparator<GenericObject>()
 			{
-				int category1 = (object1.getObjectClass() == GenericObject.OBJECT_CONTAINER) ? 0 : 1;
-				int category2 = (object2.getObjectClass() == GenericObject.OBJECT_CONTAINER) ? 0 : 1;
-				if (category1 != category2)
-					return category1 - category2;
-				return object1.getObjectName().compareToIgnoreCase(object2.getObjectName());
-			}
-		});
+				@Override
+				public int compare(GenericObject object1, GenericObject object2)
+				{
+					int category1 = (object1.getObjectClass() == GenericObject.OBJECT_CONTAINER) ? 0 : 1;
+					int category2 = (object2.getObjectClass() == GenericObject.OBJECT_CONTAINER) ? 0 : 1;
+					if (category1 != category2)
+						return category1 - category2;
+					return object1.getObjectName().compareToIgnoreCase(object2.getObjectName());
+				}
+			});
+		}
 	}
 
 	/*

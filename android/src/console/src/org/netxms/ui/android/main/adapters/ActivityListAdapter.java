@@ -29,10 +29,11 @@ public class ActivityListAdapter extends BaseAdapter
 {
 	private static final int[] activityId = { HomeScreen.ACTIVITY_ALARMS, HomeScreen.ACTIVITY_DASHBOARDS,
 			HomeScreen.ACTIVITY_NODES, HomeScreen.ACTIVITY_GRAPHS, HomeScreen.ACTIVITY_MACADDRESS };
+//		HomeScreen.ACTIVITY_NODES, HomeScreen.ACTIVITY_GRAPHS, HomeScreen.ACTIVITY_MACADDRESS, HomeScreen.ACTIVITY_TEST };
 	private static final int[] imageId = { R.drawable.alarms, R.drawable.dashboard,
-			R.drawable.nodes, R.drawable.graphs, R.drawable.macaddress };
+			R.drawable.nodes, R.drawable.graphs, R.drawable.macaddress, R.drawable.icon };
 	private static final int[] textId = { R.string.home_screen_alarms, R.string.home_screen_dashboards,
-			R.string.home_screen_nodes, R.string.home_screen_graphs, R.string.home_screen_macaddress };
+			R.string.home_screen_nodes, R.string.home_screen_graphs, R.string.home_screen_macaddress, R.string.home };
 	private static final int[] statusImageId = {
 			R.drawable.status_normal, // STATUS_NORMAL = 0;
 			R.drawable.status_warning, // STATUS_WARNING = 1;
@@ -140,7 +141,7 @@ public class ActivityListAdapter extends BaseAdapter
 			if (convertView == null)
 			{
 				view = new ActivityListElement(context, imageId[position], textId[position]);
-				view.setLayoutParams(new GridView.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+				view.setLayoutParams(new GridView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 			}
 			else
 			{

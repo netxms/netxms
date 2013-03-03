@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.main.adapters;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,6 +18,7 @@ import org.netxms.ui.android.helpers.Multipliers;
 import org.netxms.ui.android.helpers.SafeParser;
 import org.netxms.ui.android.main.views.CheckableLinearLayout;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -40,7 +42,7 @@ public class LastValuesAdapter extends BaseAdapter
 {
 	private final SharedPreferences sp;
 	private final Context context;
-	private List<DciValue> currentValues = new ArrayList<DciValue>(0);
+	private final List<DciValue> currentValues = new ArrayList<DciValue>(0);
 
 	private static final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor,
 			R.drawable.status_major, R.drawable.status_critical };
@@ -63,15 +65,21 @@ public class LastValuesAdapter extends BaseAdapter
 	 */
 	public void setValues(DciValue[] values)
 	{
-		currentValues = Arrays.asList(values);
-		Collections.sort(currentValues, new Comparator<DciValue>()
+		currentValues.clear();
+		if (values != null)
 		{
-			@Override
-			public int compare(DciValue object1, DciValue object2)
+			currentValues.addAll(Arrays.asList(values));
+			Collections.sort(currentValues, new Comparator<DciValue>()
 			{
-				return object1.getDescription().compareToIgnoreCase(object2.getDescription());
-			}
-		});
+				@Override
+				public int compare(DciValue object1, DciValue object2)
+				{
+					if (object1 != null && object2 != null)
+						return object1.getDescription().compareToIgnoreCase(object2.getDescription());
+					return 0;
+				}
+			});
+		}
 	}
 
 	/*
@@ -106,7 +114,9 @@ public class LastValuesAdapter extends BaseAdapter
 	@Override
 	public long getItemId(int position)
 	{
-		return position;
+		if (position >= 0 && position < getCount())
+			return position;
+		return 0;
 	}
 
 	/*
@@ -205,20 +215,20 @@ public class LastValuesAdapter extends BaseAdapter
 			severity.setImageResource(getThresholdIcon(t));
 			threshold.setText(getThresholdText(t));
 			state.setImageResource(LastValuesAdapter.stateImageId[item.getStatus()]);
-			date.setText(item.getTimestamp().toLocaleString());
+			date.setText(DateFormat.getDateTimeInstance().format(item.getTimestamp()));
 			name.setText(item.getDescription());
 			value.setText((item.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE) ? r.getString(R.string.table_value_placeholder) : getFormattedValue(item));
 		}
 
 		return view;
 	}
-
 	/**
 	 * Get formatted value (using multiplier as necessary)
 	 * 
 	 * @param dciValue	Value to be formatted
 	 * @return String value formatted
 	 */
+	@SuppressLint("DefaultLocale")
 	private String getFormattedValue(DciValue dciValue)
 	{
 		boolean floating = false;

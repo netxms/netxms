@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.main.adapters;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,9 +50,9 @@ public class AlarmListAdapter extends BaseAdapter
 	public static final int TERMINATE = 3;
 
 	private final Context context;
-	private List<Alarm> alarms = new ArrayList<Alarm>(0);
+	private final List<Alarm> alarms = new ArrayList<Alarm>(0);
 	private ArrayList<Integer> nodeIdList = null;
-	private ClientConnectorService service;
+	private ClientConnectorService service = null;
 	private int sortBy = SORT_SEVERITY_DESC;
 	private String NODE_UNKNOWN = "";
 	private final ProgressDialog dialog;
@@ -98,23 +99,36 @@ public class AlarmListAdapter extends BaseAdapter
 	}
 
 	/**
-	 * Set alarms
+	 * Set values to the adapter
 	 * 
-	 * @param alarms List of alarms
+	 * @param values List of alarms
 	 */
-	public void setAlarms(Alarm[] alarms)
+	public void setValues(Alarm[] values)
 	{
-		if (nodeIdList == null || nodeIdList.size() == 0)
-			this.alarms = Arrays.asList(alarms);
-		else
-		{ // Filter on specific node
-			this.alarms.clear();
-			for (int i = 0; i < alarms.length; i++)
-				for (int j = 0; j < nodeIdList.size(); j++)
-					if (alarms[i].getSourceObjectId() == nodeIdList.get(j))
-						this.alarms.add(alarms[i]);
+		alarms.clear();
+		if (values != null)
+		{
+			if (nodeIdList == null || nodeIdList.size() == 0)
+				alarms.addAll(Arrays.asList(values));
+			else
+			{ // Filter on specific node
+				for (int i = 0; i < values.length; i++)
+					for (int j = 0; j < nodeIdList.size(); j++)
+						if (values[i].getSourceObjectId() == nodeIdList.get(j))
+							alarms.add(values[i]);
+			}
+			sort();
 		}
-		Collections.sort(this.alarms, new Comparator<Alarm>()
+	}
+
+	/**
+	 * Sort the list of alarms
+	 * 
+	 * @param values List of alarms
+	 */
+	public void sort()
+	{
+		Collections.sort(alarms, new Comparator<Alarm>()
 		{
 			@Override
 			public int compare(Alarm alarm1, Alarm alarm2)
@@ -195,7 +209,9 @@ public class AlarmListAdapter extends BaseAdapter
 
 	private String getObjectName(long objectId)
 	{
-		GenericObject object = service.findObjectById(objectId);
+		GenericObject object = null;
+		if (service != null)
+			object = service.findObjectById(objectId);
 		return object == null ? NODE_UNKNOWN : object.getObjectName();
 	}
 
@@ -287,7 +303,7 @@ public class AlarmListAdapter extends BaseAdapter
 			date.setPadding(5, 2, 5, 2);
 			date.setTextColor(r.getColor(R.color.text_color));
 			date.setGravity(Gravity.RIGHT);
-			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			lp.gravity = Gravity.RIGHT;
 			date.setLayoutParams(lp);
 			message = new TextView(context);
@@ -299,7 +315,7 @@ public class AlarmListAdapter extends BaseAdapter
 			info.addView(date);
 			texts = new LinearLayout(context);
 			texts.setOrientation(LinearLayout.VERTICAL);
-			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			texts.setLayoutParams(lp);
 			texts.addView(info);
 			texts.addView(message);
@@ -325,7 +341,7 @@ public class AlarmListAdapter extends BaseAdapter
 		// get node name
 		Alarm alarm = alarms.get(position);
 		source.setText(getObjectName(alarm.getSourceObjectId()));
-		date.setText(alarm.getLastChangeTime().toLocaleString());
+		date.setText(DateFormat.getDateTimeInstance().format(alarm.getLastChangeTime()));
 		message.setText(alarm.getMessage());
 		severity.setImageResource(getAlarmIconSeverity(alarm));
 		state.setImageResource(getAlarmIconState(alarm));
@@ -371,29 +387,33 @@ public class AlarmListAdapter extends BaseAdapter
 		@Override
 		protected Void doInBackground(ArrayList<Long>... params)
 		{
-			switch (action)
-			{
-				case ACKNOWLEDGE:
-					service.acknowledgeAlarm(params[0], false);
-					break;
-				case STICKY_ACKNOWLEDGE:
-					service.acknowledgeAlarm(params[0], true);
-					break;
-				case RESOLVE:
-					service.resolveAlarm(params[0]);
-					break;
-				case TERMINATE:
-					service.terminateAlarm(params[0]);
-					break;
-			}
+			if (service != null)
+				switch (action)
+				{
+					case ACKNOWLEDGE:
+						service.acknowledgeAlarm(params[0], false);
+						break;
+					case STICKY_ACKNOWLEDGE:
+						service.acknowledgeAlarm(params[0], true);
+						break;
+					case RESOLVE:
+						service.resolveAlarm(params[0]);
+						break;
+					case TERMINATE:
+						service.terminateAlarm(params[0]);
+						break;
+				}
 			return null;
 		}
 
 		@Override
 		protected void onPostExecute(Void result)
 		{
-			setAlarms(service.getAlarms());
-			notifyDataSetChanged();
+			if (service != null)
+			{
+				setValues(service.getAlarms());
+				notifyDataSetChanged();
+			}
 			dialog.cancel();
 		}
 	}

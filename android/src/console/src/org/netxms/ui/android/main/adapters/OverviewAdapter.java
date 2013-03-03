@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.main.adapters;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,41 +54,43 @@ public class OverviewAdapter extends BaseAdapter
 	{
 		labels.clear();
 		values.clear();
-		addPair(r.getString(R.string.overview_id), Integer.toString((int)obj.getObjectId()));
-		addPair(r.getString(R.string.overview_guid), obj.getGuid().toString());
-		addPair(r.getString(R.string.overview_class), obj.getClass().getSimpleName());
-		addPair(r.getString(R.string.overview_status), getNodeStatus(obj.getStatus()));
-		addPair(r.getString(R.string.overview_primary_ip), obj.getPrimaryIP().getHostAddress().toString());
-		switch (obj.getObjectClass())
+		if (obj != null)
 		{
-			case GenericObject.OBJECT_NODE:
-				addPair(r.getString(R.string.overview_zone_id), Long.toString(((Node)obj).getZoneId()));
-				addPair(r.getString(R.string.overview_primary_hostname), ((Node)obj).getPrimaryName());
-				if (((Node)obj).hasAgent())
-					addPair(r.getString(R.string.overview_netxms_agent_version), ((Node)obj).getAgentVersion());
-				addPair(r.getString(R.string.overview_system_description), ((Node)obj).getSystemDescription(), false);
-				addPair(r.getString(R.string.overview_platform_name), ((Node)obj).getPlatformName(), false);
-				addPair(r.getString(R.string.overview_snmp_sysname), ((Node)obj).getSnmpSysName(), false);
-				addPair(r.getString(R.string.overview_snmp_oid), ((Node)obj).getSnmpOID(), false);
-				if ((((Node)obj).getFlags() & Node.NF_IS_BRIDGE) != 0)
-					addPair(r.getString(R.string.overview_bridge_base_address), ((Node)obj).getBridgeBaseAddress().toString());
-				addPair(r.getString(R.string.overview_driver), ((Node)obj).getDriverName(), false);
-				break;
-			case GenericObject.OBJECT_MOBILEDEVICE:
-				addPair(r.getString(R.string.overview_last_report), ((MobileDevice)obj).getLastReportTime().toLocaleString());
-				addPair(r.getString(R.string.overview_device_id), ((MobileDevice)obj).getDeviceId());
-				addPair(r.getString(R.string.overview_vendor), ((MobileDevice)obj).getVendor());
-				addPair(r.getString(R.string.overview_model), ((MobileDevice)obj).getModel());
-				addPair(r.getString(R.string.overview_serial_number), ((MobileDevice)obj).getSerialNumber());
-				addPair(r.getString(R.string.overview_os_name), ((MobileDevice)obj).getOsName());
-				addPair(r.getString(R.string.overview_os_version), ((MobileDevice)obj).getOsVersion());
-				addPair(r.getString(R.string.overview_user), ((MobileDevice)obj).getUserId());
-				addPair(r.getString(R.string.overview_battery_level), Integer.toString(((MobileDevice)obj).getBatteryLevel()) + "%");
-				break;
+			addPair(r.getString(R.string.overview_id), Integer.toString((int)obj.getObjectId()));
+			addPair(r.getString(R.string.overview_guid), obj.getGuid().toString());
+			addPair(r.getString(R.string.overview_class), obj.getClass().getSimpleName());
+			addPair(r.getString(R.string.overview_status), getNodeStatus(obj.getStatus()));
+			addPair(r.getString(R.string.overview_primary_ip), obj.getPrimaryIP().getHostAddress().toString());
+			switch (obj.getObjectClass())
+			{
+				case GenericObject.OBJECT_NODE:
+					addPair(r.getString(R.string.overview_zone_id), Long.toString(((Node)obj).getZoneId()));
+					addPair(r.getString(R.string.overview_primary_hostname), ((Node)obj).getPrimaryName());
+					if (((Node)obj).hasAgent())
+						addPair(r.getString(R.string.overview_netxms_agent_version), ((Node)obj).getAgentVersion());
+					addPair(r.getString(R.string.overview_system_description), ((Node)obj).getSystemDescription(), false);
+					addPair(r.getString(R.string.overview_platform_name), ((Node)obj).getPlatformName(), false);
+					addPair(r.getString(R.string.overview_snmp_sysname), ((Node)obj).getSnmpSysName(), false);
+					addPair(r.getString(R.string.overview_snmp_oid), ((Node)obj).getSnmpOID(), false);
+					if ((((Node)obj).getFlags() & Node.NF_IS_BRIDGE) != 0)
+						addPair(r.getString(R.string.overview_bridge_base_address), ((Node)obj).getBridgeBaseAddress().toString());
+					addPair(r.getString(R.string.overview_driver), ((Node)obj).getDriverName(), false);
+					break;
+				case GenericObject.OBJECT_MOBILEDEVICE:
+					addPair(r.getString(R.string.overview_last_report), DateFormat.getDateTimeInstance().format(((MobileDevice)obj).getLastReportTime()));
+					addPair(r.getString(R.string.overview_device_id), ((MobileDevice)obj).getDeviceId());
+					addPair(r.getString(R.string.overview_vendor), ((MobileDevice)obj).getVendor());
+					addPair(r.getString(R.string.overview_model), ((MobileDevice)obj).getModel());
+					addPair(r.getString(R.string.overview_serial_number), ((MobileDevice)obj).getSerialNumber());
+					addPair(r.getString(R.string.overview_os_name), ((MobileDevice)obj).getOsName());
+					addPair(r.getString(R.string.overview_os_version), ((MobileDevice)obj).getOsVersion());
+					addPair(r.getString(R.string.overview_user), ((MobileDevice)obj).getUserId());
+					addPair(r.getString(R.string.overview_battery_level), Integer.toString(((MobileDevice)obj).getBatteryLevel()) + "%");
+					break;
+			}
+			addPair(r.getString(R.string.overview_location), obj.getGeolocation());
 		}
-		addPair(r.getString(R.string.overview_location), obj.getGeolocation());
 	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -147,7 +150,7 @@ public class OverviewAdapter extends BaseAdapter
 			itemValue.setPadding(5, 2, 5, 2);
 			itemValue.setTextColor(r.getColor(R.color.text_color));
 			itemValue.setGravity(Gravity.RIGHT);
-			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			lp.gravity = Gravity.RIGHT;
 			itemValue.setLayoutParams(lp);
 
@@ -188,7 +191,7 @@ public class OverviewAdapter extends BaseAdapter
 				accuracy = " - " + r.getString(R.string.overview_accuracy, Integer.toString(value.getAccuracy()));
 			String timestamp = "";
 			if (value.getTimestamp() != null)
-				timestamp = " - " + r.getString(R.string.overview_timestamp, value.getTimestamp().toLocaleString());
+				timestamp = " - " + r.getString(R.string.overview_timestamp, DateFormat.getDateTimeInstance().format(value.getTimestamp()));
 			String latlon = value.getLatitudeAsString() + " " + value.getLongitudeAsString();
 			addPair(label, latlon + provider + accuracy + timestamp);
 		}

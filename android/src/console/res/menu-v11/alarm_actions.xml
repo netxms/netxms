@@ -1,10 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/acknowledge" android:title="@string/alarm_acknowledge" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item>
-    <item android:id="@+id/sticky_acknowledge" android:title="@string/alarm_sticky_acknowledge" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item>
-    <item android:id="@+id/resolve" android:title="@string/alarm_resolve" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false" ></item>
-    <item android:id="@+id/terminate" android:title="@string/alarm_terminate" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item>
-    <item android:id="@+id/viewlastvalues" android:title="@string/alarm_viewlastvalues" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item>
+    <item android:id="@+id/alarm_actions" android:title="@string/alarm_actions">
+	    <menu>
+		    <item android:id="@+id/acknowledge" android:title="@string/alarm_acknowledge" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item>
+		    <item android:id="@+id/sticky_acknowledge" android:title="@string/alarm_sticky_acknowledge" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item>
+		    <item android:id="@+id/resolve" android:title="@string/alarm_resolve" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false" ></item>
+		    <item android:id="@+id/terminate" android:title="@string/alarm_terminate" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item>
+		    <item android:id="@+id/viewlastvalues" android:title="@string/alarm_viewlastvalues" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false"></item>
+	    </menu>
+    </item>
+    <item android:id="@+id/alarm_sort" android:title="@string/alarm_sort">
+   	    <menu>
+			<group android:id="@+id/sort_group" android:checkableBehavior="single">
+   	        	<item android:id="@+id/sort_severity_asc" android:title="@string/sort_severity_asc"></item>
+		        <item android:id="@+id/sort_severity_desc" android:title="@string/sort_severity_desc"></item>
+		    	<item android:id="@+id/sort_date_asc" android:title="@string/sort_date_asc"></item>
+		        <item android:id="@+id/sort_date_desc" android:title="@string/sort_date_desc"></item>
+		    	<item android:id="@+id/sort_name_asc" android:title="@string/sort_name_asc"></item>
+		        <item android:id="@+id/sort_name_desc" android:title="@string/sort_name_desc"></item>
+			</group>
+		</menu>
+	</item>
     <item android:id="@+id/selectall" android:title="@string/alarm_selectall" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false" android:icon="@drawable/ic_select_all" android:showAsAction="always"></item>
     <item android:id="@+id/unselectall" android:title="@string/alarm_unselectall" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false" android:icon="@drawable/ic_unselect_all" android:showAsAction="always"></item>
 </menu>

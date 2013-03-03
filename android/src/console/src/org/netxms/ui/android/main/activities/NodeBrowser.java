@@ -16,6 +16,7 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.NXApplication;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ObjectListAdapter;
+import org.netxms.ui.android.main.fragments.NodeInfoFragment;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -39,7 +40,12 @@ import android.widget.TextView;
 
 /**
  * Node browser
+ * 
+ * @author Victor Kirhenshtein
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
+ * 
  */
+
 public class NodeBrowser extends AbstractClientActivity
 {
 	private static final String TAG = "nxclient/SyncMissingObjectsTask";
@@ -127,7 +133,8 @@ public class NodeBrowser extends AbstractClientActivity
 	 */
 	public void showNodeInfo(long objectId)
 	{
-		Intent newIntent = new Intent(this, NodeInfo.class);
+		Intent newIntent = new Intent(this, NodeInfoFragment.class);
+//		Intent newIntent = new Intent(this, NodeInfo.class);
 		newIntent.putExtra("objectId", objectId);
 		startActivity(newIntent);
 	}

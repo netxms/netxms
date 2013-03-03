@@ -6,6 +6,7 @@ import org.netxms.base.NXCommon;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ActivityListAdapter;
+import org.netxms.ui.android.main.fragments.NodeInfoFragment;
 import org.netxms.ui.android.service.ClientConnectorService.ConnectionStatus;
 
 import android.content.ComponentName;
@@ -13,6 +14,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -42,6 +44,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	public static final int ACTIVITY_NODES = 3;
 	public static final int ACTIVITY_GRAPHS = 4;
 	public static final int ACTIVITY_MACADDRESS = 5;
+	public static final int ACTIVITY_TEST = 6;
 	public static final String INTENTIONAL_EXIT_KEY = "IntentionalExit";
 
 	private static final String TAG = "nxclient/HomeScreen";
@@ -100,7 +103,8 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
 		super.onCreateOptionsMenu(menu);
-		menu.removeItem(android.R.id.home);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+			menu.removeItem(android.R.id.home);
 		menu.add(Menu.NONE, R.string.reconnect, Menu.NONE, getString(R.string.reconnect)).setIcon(android.R.drawable.ic_menu_revert);
 		menu.add(Menu.NONE, R.string.exit, Menu.NONE, getString(R.string.exit)).setIcon(android.R.drawable.ic_menu_close_clear_cancel);
 		return true;
@@ -160,13 +164,19 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 				case ACTIVITY_DASHBOARDS:
 					Log.d(TAG, "ACTIVITY_DASHBOARDS");
 					startActivity(new Intent(this, DashboardBrowser.class));
+					break;
+				case ACTIVITY_TEST:
+					Log.d(TAG, "ACTIVITY_TEST");
+					Intent newIntent = new Intent(this, NodeInfoFragment.class);
+					newIntent.putExtra("objectId", (long)345);
+					startActivity(newIntent);
+					break;
 				default:
 					break;
 			}
 		else
 			showToast(getString(R.string.notify_disconnected));
 	}
-
 	/**
 	 * @param text
 	 */

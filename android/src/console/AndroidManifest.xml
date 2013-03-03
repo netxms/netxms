@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="org.netxms.ui.android" android:versionName="1.2.6" android:versionCode="7">
+      package="org.netxms.ui.android" android:versionName="1.2.7" android:versionCode="8">
 	<uses-sdk android:targetSdkVersion="17" android:minSdkVersion="8"></uses-sdk>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -81,5 +81,9 @@
         <activity android:label="@string/app_name" 
                   android:name=".main.activities.TableLastValues">
         </activity>
-        	</application>
+        <activity android:label="@string/app_name"
+            	  android:name=".main.fragments.NodeInfoFragment"
+            	  android:configChanges="orientation|screenSize">
+        </activity>
+     </application>
 </manifest>

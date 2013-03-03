@@ -2,6 +2,7 @@
 <resources>
     <color name="item_body">#ebeae1</color>
 	<color name="text_color">#FF404040</color>
+	<color name="text_no_items">#FF808080</color>
 	<color name="item_home_background">#FFFFFFFF</color>
 	<color name="item_home_border">#FF000000</color>
 	<color name="notify_connected">#FF00FF00</color>

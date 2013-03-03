@@ -57,7 +57,8 @@ public class ConsolePreferences extends PreferenceActivity
 		if (preference != null)
 			if (preference instanceof PreferenceScreen)
 				if (((PreferenceScreen)preference).getDialog() != null)
-					((PreferenceScreen)preference).getDialog().getWindow().getDecorView().setBackgroundDrawable(this.getWindow().getDecorView().getBackground().getConstantState().newDrawable());
+					((PreferenceScreen)preference).getDialog().getWindow().getDecorView().setBackgroundDrawable(
+							this.getWindow().getDecorView().getBackground().getConstantState().newDrawable());
 		return false;
 	}
 }

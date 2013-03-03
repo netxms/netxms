@@ -92,6 +92,6 @@ public class DashboardActivity extends AbstractClientActivity
 	private void refresh()
 	{
 		if (dashboard != null)
-			rootView.addView(new DashboardView(this, dashboard, service, scheduleTaskExecutor), new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+			rootView.addView(new DashboardView(this, dashboard, service, scheduleTaskExecutor), new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 	}
 }

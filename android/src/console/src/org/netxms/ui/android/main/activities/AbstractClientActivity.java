@@ -4,10 +4,12 @@ import org.netxms.ui.android.NXApplication;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -29,6 +31,7 @@ public abstract class AbstractClientActivity extends Activity implements Service
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
 	 */
+	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -38,7 +41,12 @@ public abstract class AbstractClientActivity extends Activity implements Service
 		bindService(new Intent(this, ClientConnectorService.class), this, 0);
 
 		// the following is required if target API version is 14:
-		//getActionBar().setHomeButtonEnabled(true);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+		{
+//			ActionBar actionBar = getActionBar();
+			getActionBar().setDisplayHomeAsUpEnabled(true);
+//			getActionBar().setHomeButtonEnabled(true);
+		}
 	}
 
 	/**
@@ -98,7 +106,7 @@ public abstract class AbstractClientActivity extends Activity implements Service
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		Log.d(TAG, "onOptionsItemSelected: id=" + android.R.id.home);
+		Log.d(TAG, "onOptionsItemSelected: id=" + item.getItemId());
 
 		if (item.getItemId() == android.R.id.home)
 		{

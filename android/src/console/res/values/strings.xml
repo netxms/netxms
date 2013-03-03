@@ -12,6 +12,7 @@
 	<string name="reconnect">Reconnect</string>
 	<string name="tools">Tools</string>
 	<string name="confirm_tool_execution">Confirm execution</string>
+	<string name="no_items">No items to show...</string>
 					
 	<string name="progress_gathering_data">Gathering data&#8230;</string>
 	<string name="progress_processing_data">Processing data&#8230;</string>
@@ -105,6 +106,8 @@
 	<string name="status_testing">Testing</string>
 
 	<string name="view_alarms">View alarms</string>
+	<string name="alarm_actions">Actions</string>
+	<string name="alarm_sort">Sort</string>
 	<string name="alarm_acknowledge">Acknowledge</string>
 	<string name="alarm_sticky_acknowledge">Sticky acknowledge</string>
 	<string name="alarm_resolve">Resolve</string>
@@ -113,13 +116,20 @@
 	<string name="alarm_selectall">Select All</string>
 	<string name="alarm_unselectall">Unselect All</string>
 	<string name="alarms_title">Alarms</string>
-
+	
+    <string name="sort_severity_asc">Sort by severity ascending</string> 
+	<string name="sort_severity_desc">Sort by severity descending</string> 
+	<string name="sort_date_asc">Sort by date ascending</string> 
+	<string name="sort_date_desc">Sort by date descending</string> 
+	<string name="sort_name_asc">Sort by node name ascending</string> 
+	<string name="sort_name_desc">Sort by node name descending</string> 
+		
 	<string name="nodes_title">Nodes</string>
 	<string name="node_unknown">&lt;Unknown&gt;</string>
-	<string name="node_info_last_values">Last values</string>
-	<string name="node_info_overview">Overview</string>
-	<string name="node_info_alarms">Alarms</string>
-	<string name="node_info_interfaces">Interfaces</string>
+	<string name="ni_last_values">Last values</string>
+	<string name="ni_overview">Overview</string>
+	<string name="ni_alarms">Alarms</string>
+	<string name="ni_interfaces">Interfaces</string>
 	
 	<string name="overview_id">ID</string>
 	<string name="overview_guid">GUID</string>
@@ -224,5 +234,14 @@
 	<string name="menu_poll_configuration">Configuration</string>
 	<string name="menu_poll_topology">Topology</string>
 	<string name="menu_poll_interfaces">Interface names</string>
-
+	
+	
+    <string name="fragment_tabs">Fragment/Tabs</string>
+	<string name="new_fragment">Add new</string>
+    <string name="delete_fragment">Pop top</string>
+    <string name="hello_world"><b>Hello, <i>World!</i></b></string>
+    <string name="first">First</string>
+    <string name="last">Last</string>
+    	
+	
 </resources>

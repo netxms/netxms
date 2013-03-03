@@ -24,6 +24,7 @@ import android.widget.TextView;
  * Expandable list adapter for browsing interfaces
  * 
  */
+
 public class InterfacesAdapter extends BaseExpandableListAdapter
 {
 	private final Context context;
@@ -48,21 +49,24 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 	 */
 	public void setValues(List<Interface> interfaces)
 	{
-		Collections.sort(interfaces, new Comparator<Interface>()
-		{
-			@Override
-			public int compare(Interface object1, Interface object2)
-			{
-				return object1.getObjectName().compareTo(object2.getObjectName());
-			}
-		});
 		groups.clear();
 		children.clear();
-		for (int i = 0; i < interfaces.size(); i++)
+		if (interfaces != null)
 		{
-			groups.add(interfaces.get(i).getObjectName());
-			children.add(new ArrayList<Interface>());
-			children.get(i).add(interfaces.get(i));
+			Collections.sort(interfaces, new Comparator<Interface>()
+			{
+				@Override
+				public int compare(Interface object1, Interface object2)
+				{
+					return object1.getObjectName().compareTo(object2.getObjectName());
+				}
+			});
+			for (int i = 0; i < interfaces.size(); i++)
+			{
+				groups.add(interfaces.get(i).getObjectName());
+				children.add(new ArrayList<Interface>());
+				children.get(i).add(interfaces.get(i));
+			}
 		}
 	}
 

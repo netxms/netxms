@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+    android:layout_height="match_parent"
+	android:background="@color/item_body">
+    
+	<LinearLayout android:id="@+id/progressContainer"
+    	android:orientation="vertical"
+        android:layout_width="match_parent" 
+        android:layout_height="match_parent"
+		android:background="@color/item_body"
+        android:visibility="gone"
+        android:gravity="center">
+
+        <ProgressBar style="?android:attr/progressBarStyleLarge"
+        	android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="@string/progress_gathering_data"
+            android:paddingTop="4dip"
+            android:singleLine="true" />
+    </LinearLayout>
+    
+    <FrameLayout android:id="@+id/listContainer" 
+        android:orientation="vertical"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:background="@color/item_body"> 
+		<ListView android:id="@android:id/list"
+		    android:layout_width="fill_parent"
+			android:background="@color/item_body"
+			android:cacheColorHint="@color/item_body" 
+		    android:listSelector="@drawable/list_selection"
+    		android:choiceMode="multipleChoice"
+			android:layout_height="wrap_content">
+		</ListView>
+
+        <TextView
+            android:id="@android:id/empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+			android:background="@color/item_body"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="@string/no_items"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="@color/text_no_items" />
+
+	</FrameLayout>
+</FrameLayout>

@@ -123,7 +123,7 @@ public class InterfaceDetailsAdapter extends BaseAdapter
 			itemValue.setPadding(5, 2, 5, 2);
 			itemValue.setTextColor(r.getColor(R.color.text_color));
 			itemValue.setGravity(Gravity.RIGHT);
-			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			lp.gravity = Gravity.RIGHT;
 			itemValue.setLayoutParams(lp);
 

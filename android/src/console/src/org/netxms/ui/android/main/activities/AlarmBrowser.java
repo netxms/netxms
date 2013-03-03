@@ -10,6 +10,7 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.AlarmListAdapter;
+import org.netxms.ui.android.main.fragments.NodeInfoFragment;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -26,9 +27,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 /**
@@ -42,10 +41,11 @@ import android.widget.TextView;
 public class AlarmBrowser extends AbstractClientActivity
 {
 	private static final String SORT_KEY = "AlarmsSortBy";
+	private final int[] menuSortIds = { R.id.sort_severity_asc, R.id.sort_severity_desc,
+			R.id.sort_date_asc, R.id.sort_date_desc, R.id.sort_name_asc, R.id.sort_name_desc };
 	private ListView listView;
 	private AlarmListAdapter adapter;
 	private ArrayList<Integer> nodeIdList;
-	private Spinner sortBy;
 	private static Method method_invalidateOptionsMenu;
 
 	static
@@ -79,22 +79,6 @@ public class AlarmBrowser extends AbstractClientActivity
 		listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 		listView.setAdapter(adapter);
 		registerForContextMenu(listView);
-
-		sortBy = (Spinner)findViewById(R.id.sortBy);
-		sortBy.setOnItemSelectedListener(new OnItemSelectedListener()
-		{
-			@Override
-			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id)
-			{
-				adapter.setSortBy(position);
-				refreshList();
-			}
-			@Override
-			public void onNothingSelected(AdapterView<?> arg0)
-			{
-			}
-		});
-		sortBy.setSelection(PreferenceManager.getDefaultSharedPreferences(this).getInt(SORT_KEY, 0));
 	}
 
 	/* (non-Javadoc)
@@ -127,6 +111,7 @@ public class AlarmBrowser extends AbstractClientActivity
 	{
 		android.view.MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.alarm_actions, menu);
+		checkMenuSortItem(menu);
 		final SparseBooleanArray positions = listView.getCheckedItemPositions();
 		if (positions != null)
 			for (int i = 0; i < positions.size(); i++)
@@ -148,6 +133,27 @@ public class AlarmBrowser extends AbstractClientActivity
 			item.setVisible(false);
 	}
 
+	private void checkMenuSortItem(Menu menu)
+	{
+		int sortBy = PreferenceManager.getDefaultSharedPreferences(this).getInt(SORT_KEY, 0);
+		MenuItem item = menu.findItem(menuSortIds[sortBy]);
+		if (item != null)
+			item.setChecked(true);
+	}
+
+	private void setNewSort(MenuItem item, int sortBy)
+	{
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putInt(SORT_KEY, sortBy);
+		editor.commit();
+		item.setChecked(!item.isChecked());
+		selectAll(false);
+		adapter.setSortBy(sortBy);
+		adapter.sort();
+		adapter.notifyDataSetChanged();
+	}
+
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
 	 */
@@ -159,6 +165,7 @@ public class AlarmBrowser extends AbstractClientActivity
 			android.view.MenuInflater inflater = getMenuInflater();
 			inflater.inflate(R.menu.alarm_actions, menu);
 		}
+		checkMenuSortItem(menu);
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -178,6 +185,7 @@ public class AlarmBrowser extends AbstractClientActivity
 			menu.add(Menu.NONE, R.id.selectall, Menu.NONE, getString(R.string.alarm_selectall));
 			menu.add(Menu.NONE, R.id.unselectall, Menu.NONE, getString(R.string.alarm_unselectall));
 		}
+		checkMenuSortItem(menu);
 		return true;
 	}
 
@@ -214,6 +222,24 @@ public class AlarmBrowser extends AbstractClientActivity
 	{
 		switch (item.getItemId())
 		{
+			case R.id.sort_severity_asc:
+				setNewSort(item, AlarmListAdapter.SORT_SEVERITY_ASC);
+				return true;
+			case R.id.sort_severity_desc:
+				setNewSort(item, AlarmListAdapter.SORT_SEVERITY_DESC);
+				return true;
+			case R.id.sort_date_asc:
+				setNewSort(item, AlarmListAdapter.SORT_DATE_ASC);
+				return true;
+			case R.id.sort_date_desc:
+				setNewSort(item, AlarmListAdapter.SORT_DATE_DESC);
+				return true;
+			case R.id.sort_name_asc:
+				setNewSort(item, AlarmListAdapter.SORT_NAME_ASC);
+				return true;
+			case R.id.sort_name_desc:
+				setNewSort(item, AlarmListAdapter.SORT_NAME_DESC);
+				return true;
 			case R.id.selectall:
 				selectAll(true);
 				return true;
@@ -232,9 +258,11 @@ public class AlarmBrowser extends AbstractClientActivity
 							GenericObject object = service.findObjectById(al.getSourceObjectId());
 							if (object != null)
 							{
-								Intent newIntent = new Intent(this, NodeInfo.class);
+//								Intent newIntent = new Intent(this, NodeInfo.class);
+								Intent newIntent = new Intent(this, NodeInfoFragment.class);
 								newIntent.putExtra("objectId", object.getObjectId());
-								newIntent.putExtra("tabId", NodeInfo.TAB_LAST_VALUES_ID);
+//								newIntent.putExtra("tabId", NodeInfo.TAB_LAST_VALUES_ID);
+								newIntent.putExtra("tabId", NodeInfoFragment.TAB_LAST_VALUES_ID);
 								startActivity(newIntent);
 							}
 						}
@@ -303,7 +331,7 @@ public class AlarmBrowser extends AbstractClientActivity
 		if (service != null)
 		{
 			adapter.setFilter(nodeIdList);
-			adapter.setAlarms(service.getAlarms());
+			adapter.setValues(service.getAlarms());
 			adapter.notifyDataSetChanged();
 			final SparseBooleanArray positions = listView.getCheckedItemPositions();
 			int count = positions != null ? Math.max(positions.size(), adapter.getCount()) : adapter.getCount();
@@ -321,19 +349,5 @@ public class AlarmBrowser extends AbstractClientActivity
 		if (service != null)
 			service.registerAlarmBrowser(null);
 		super.onDestroy();
-	}
-
-	/* (non-Javadoc)
-	 * @see android.app.Activity#onStop()
-	 */
-	@Override
-	protected void onStop()
-	{
-		super.onStop();
-
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		SharedPreferences.Editor editor = prefs.edit();
-		editor.putInt(SORT_KEY, adapter.getSortBy());
-		editor.commit();
 	}
 }

@@ -12,20 +12,6 @@
 		<item>2</item> 
 		<item>3</item> 
 	</string-array>      
-	<string-array name="alarms_sort_by"> 
-		<item>Sort by severity ascending</item> 
-	    <item>Sort by severity descending</item> 
-		<item>Sort by date ascending</item> 
-		<item>Sort by date descending</item> 
-		<item>Sort by node name ascending</item> 
-		<item>Sort by node name descending</item> 
-	</string-array>
-	<string-array name="node_alarms_sort_by"> 
-		<item>Sort by severity ascending</item> 
-	    <item>Sort by severity descending</item> 
-		<item>Sort by date ascending</item> 
-		<item>Sort by date descending</item> 
-	</string-array>
 	<string-array name="multiplier_labels"> 
 		<item>None</item> 
 		<item>Decimal</item> 

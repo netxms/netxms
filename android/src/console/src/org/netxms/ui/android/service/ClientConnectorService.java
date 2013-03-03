@@ -3,16 +3,19 @@
  */
 package org.netxms.ui.android.service;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.base.Logger;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objecttools.ObjectTool;
@@ -49,6 +52,8 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -104,6 +109,10 @@ public class ClientConnectorService extends Service implements SessionListener
 	private BroadcastReceiver receiver = null;
 	private DashboardBrowser dashboardBrowser;
 	private SharedPreferences sp;
+	private final List<Loader<Alarm[]>> alarmLoaders = new ArrayList<Loader<Alarm[]>>(0);
+	private final List<Loader<DciValue[]>> dciValueLoaders = new ArrayList<Loader<DciValue[]>>(0);
+	private final List<Loader<GenericObject>> genericObjectLoaders = new ArrayList<Loader<GenericObject>>(0);
+	private final List<Loader<Set<GenericObject>>> genericObjectChildrenLoaders = new ArrayList<Loader<Set<GenericObject>>>(0);
 
 	/**
 	 * Class for clients to access. Because we know this service always runs in
@@ -233,16 +242,19 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		if (sp.getBoolean("global.notification.alarm", true))
 		{
-			Notification n = new Notification(GetAlarmIcon(severity), text, System.currentTimeMillis());
-			n.defaults = Notification.DEFAULT_LIGHTS;
-
 			Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowser.class);
 			PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
-			n.setLatestEventInfo(getApplicationContext(), getString(R.string.notification_title), text, intent);
+			NotificationCompat.Builder nb = new NotificationCompat.Builder(getApplicationContext())
+					.setSmallIcon(getAlarmIcon(severity))
+					.setWhen(System.currentTimeMillis())
+					.setDefaults(Notification.DEFAULT_LIGHTS)
+					.setContentText(text)
+					.setContentTitle(getString(R.string.notification_title))
+					.setContentIntent(intent);
 			final String sound = GetAlarmSound(severity);
 			if ((sound != null) && (sound.length() > 0))
-				n.sound = Uri.parse(sound);
-			notificationManager.notify(NOTIFY_ALARM, n);
+				nb.setSound(Uri.parse(sound));
+			notificationManager.notify(NOTIFY_ALARM, nb.build());
 		}
 		else
 		{
@@ -251,7 +263,6 @@ public class ClientConnectorService extends Service implements SessionListener
 				r.play();
 		}
 	}
-
 	/**
 	 * Show status notification
 	 * 
@@ -300,16 +311,21 @@ public class ClientConnectorService extends Service implements SessionListener
 				showToast(text);
 			if (sp.getBoolean("global.notification.icon", false))
 			{
-				Notification n = new Notification(icon, text, System.currentTimeMillis());
-				n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
 				Intent notifyIntent = new Intent(getApplicationContext(), HomeScreen.class);
 				PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
-				n.setLatestEventInfo(getApplicationContext(), getString(R.string.notification_title), text, intent);
-				notificationManager.notify(NOTIFY_STATUS, n);
+				NotificationCompat.Builder nb = new NotificationCompat.Builder(getApplicationContext())
+						.setSmallIcon(icon)
+						.setWhen(System.currentTimeMillis())
+						.setAutoCancel(false)
+						.setOnlyAlertOnce(true)
+						.setOngoing(true)
+						.setContentText(text)
+						.setContentTitle(getString(R.string.notification_title))
+						.setContentIntent(intent);
+				notificationManager.notify(NOTIFY_STATUS, nb.build());
 			}
 		}
 	}
-
 	/**
 	 * Hide notification
 	 * 
@@ -731,6 +747,8 @@ public class ClientConnectorService extends Service implements SessionListener
 				}
 			});
 		}
+		for (Loader<Alarm[]> l : alarmLoaders)
+			l.forceLoad();
 	}
 
 	/**
@@ -749,8 +767,13 @@ public class ClientConnectorService extends Service implements SessionListener
 				}
 			});
 		}
+		for (Loader<DciValue[]> l : dciValueLoaders)
+			l.forceLoad();
+		for (Loader<GenericObject> l : genericObjectLoaders)
+			l.forceLoad();
+		for (Loader<Set<GenericObject>> l : genericObjectChildrenLoaders)
+			l.forceLoad();
 	}
-
 	/**
 	 * Refresh dashboard browser activity
 	 */
@@ -818,7 +841,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 * 
 	 * @param severity
 	 */
-	private int GetAlarmIcon(int severity)
+	private int getAlarmIcon(int severity)
 	{
 		switch (severity)
 		{
@@ -1037,6 +1060,50 @@ public class ClientConnectorService extends Service implements SessionListener
 		dashboardBrowser = browser;
 	}
 
+	public void registerAlarmLoader(Loader<Alarm[]> loader)
+	{
+		if (!alarmLoaders.contains(this))
+			alarmLoaders.add(loader);
+	}
+
+	public void unregisterAlarmLoader(Loader<Alarm[]> loader)
+	{
+		alarmLoaders.remove(loader);
+	}
+
+	public void registerDciValueLoader(Loader<DciValue[]> loader)
+	{
+		if (!dciValueLoaders.contains(this))
+			dciValueLoaders.add(loader);
+	}
+
+	public void unregisterDciValueLoader(Loader<DciValue[]> loader)
+	{
+		dciValueLoaders.remove(loader);
+	}
+
+	public void registerGenericObjectLoader(Loader<GenericObject> loader)
+	{
+		if (!genericObjectLoaders.contains(this))
+			genericObjectLoaders.add(loader);
+	}
+
+	public void unregisterGenericObjectLoader(Loader<GenericObject> loader)
+	{
+		genericObjectLoaders.remove(loader);
+	}
+
+	public void registerGenericObjectChildrenLoader(Loader<Set<GenericObject>> loader)
+	{
+		if (!genericObjectChildrenLoaders.contains(this))
+			genericObjectChildrenLoaders.add(loader);
+	}
+
+	public void unregisterGenericObjectChildrenLoader(Loader<Set<GenericObject>> loader)
+	{
+		genericObjectChildrenLoaders.remove(loader);
+	}
+
 	/**
 	 * @return the connectionStatus
 	 */
@@ -1121,7 +1188,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			if (cal.getTimeInMillis() < next)
 			{
 				cal.setTimeInMillis(next);
-				return " " + getString(R.string.notify_next_connection_schedule, cal.getTime().toLocaleString());
+				return " " + getString(R.string.notify_next_connection_schedule, DateFormat.getDateTimeInstance().format(cal));
 			}
 		}
 		return "";

@@ -5,21 +5,13 @@
 	android:layout_height="fill_parent"
 	android:background="@color/item_body">
     <include layout="@layout/screen_header_small" />
-	<LinearLayout android:layout_width="fill_parent"
-    	android:layout_height="wrap_content"
-		android:background="@color/item_body">
-    	<Spinner android:id="@+id/sortBy"
-    		android:layout_width="fill_parent"
-    		android:layout_height="wrap_content"
-    		android:entries="@array/alarms_sort_by" />
-	</LinearLayout>
 	<ListView 
-			android:id="@+id/AlarmList" 
-			android:layout_width="fill_parent"
-  			android:layout_height="fill_parent"
-			android:background="@color/item_body"
-			android:cacheColorHint="@color/item_body"
-			android:choiceMode="multipleChoice"
-			android:listSelector="@drawable/list_selection">
+		android:id="@+id/AlarmList" 
+		android:layout_width="fill_parent"
+  		android:layout_height="fill_parent"
+		android:background="@color/item_body"
+		android:cacheColorHint="@color/item_body"
+		android:choiceMode="multipleChoice"
+		android:listSelector="@drawable/list_selection">
   	</ListView>
 </LinearLayout>
