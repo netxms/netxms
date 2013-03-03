@@ -291,7 +291,7 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 				DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable in context %s"), fdb->getSize() - size, context);
 				size = fdb->getSize();
 			}
-			delete vlans;
+			vlans->decRefCount();
 		}
 	}
 

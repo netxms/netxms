@@ -4161,7 +4161,7 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 				char community[128];
 #ifdef UNICODE
 				char mbContext[64];
-				WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR, context, -1, mbContext, 64, NULL, NULL);
+				WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, context, -1, mbContext, 64, NULL, NULL);
 				snprintf(community, 128, "%s@%s", m_snmpSecurity->getCommunity(), mbContext);
 #else
 				snprintf(community, 128, "%s@%s", m_snmpSecurity->getCommunity(), context);
@@ -4413,6 +4413,46 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    sendPollerMsg(dwRqId, _T("Starting topology poll for node %s\r\n"), m_szName);
 	DbgPrintf(4, _T("Started topology poll for node %s [%d]"), m_szName, m_dwId);
 
+	if (m_driver != NULL)
+	{
+		SNMP_Transport *snmp = createSnmpTransport();
+		if (snmp != NULL)
+		{
+			VlanList *vlanList = m_driver->getVlans(snmp, &m_customAttributes, m_driverData);
+			delete snmp;
+
+			MutexLock(m_mutexTopoAccess);
+			if (vlanList != NULL)
+			{
+				resolveVlanPorts(vlanList);
+				sendPollerMsg(dwRqId, POLLER_INFO _T("VLAN list successfully retrieved from node\r\n"));
+				DbgPrintf(4, _T("VLAN list retrieved from node %s [%d]"), m_szName, m_dwId);
+				if (m_vlans != NULL)
+					m_vlans->decRefCount();
+				m_vlans = vlanList;
+			}
+			else
+			{
+				sendPollerMsg(dwRqId, POLLER_WARNING _T("Cannot get VLAN list\r\n"));
+				DbgPrintf(4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_szName, m_dwId);
+				if (m_vlans != NULL)
+					m_vlans->decRefCount();
+				m_vlans = NULL;
+			}
+			MutexUnlock(m_mutexTopoAccess);
+
+			LockData();
+			DWORD oldFlags = m_dwFlags;
+			if (vlanList != NULL)
+				m_dwFlags |= NF_HAS_VLANS;
+			else
+				m_dwFlags &= ~NF_HAS_VLANS;
+			if (oldFlags != m_dwFlags)
+				Modify();
+			UnlockData();
+		}
+	}
+
 	ForwardingDatabase *fdb = GetSwitchForwardingDatabase(this);
 	MutexLock(m_mutexTopoAccess);
 	if (m_fdb != NULL)
@@ -4492,46 +4532,6 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	else
 	{
 	   sendPollerMsg(dwRqId, POLLER_ERROR _T("Link layer topology retrieved\r\n"));
-	}
-
-	if (m_driver != NULL)
-	{
-		SNMP_Transport *snmp = createSnmpTransport();
-		if (snmp != NULL)
-		{
-			VlanList *vlanList = m_driver->getVlans(snmp, &m_customAttributes, m_driverData);
-			delete snmp;
-
-			MutexLock(m_mutexTopoAccess);
-			if (vlanList != NULL)
-			{
-				resolveVlanPorts(vlanList);
-				sendPollerMsg(dwRqId, POLLER_INFO _T("VLAN list successfully retrieved from node\r\n"));
-				DbgPrintf(4, _T("VLAN list retrieved from node %s [%d]"), m_szName, m_dwId);
-				if (m_vlans != NULL)
-					m_vlans->decRefCount();
-				m_vlans = vlanList;
-			}
-			else
-			{
-				sendPollerMsg(dwRqId, POLLER_WARNING _T("Cannot get VLAN list\r\n"));
-				DbgPrintf(4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_szName, m_dwId);
-				if (m_vlans != NULL)
-					m_vlans->decRefCount();
-				m_vlans = NULL;
-			}
-			MutexUnlock(m_mutexTopoAccess);
-
-			LockData();
-			DWORD oldFlags = m_dwFlags;
-			if (vlanList != NULL)
-				m_dwFlags |= NF_HAS_VLANS;
-			else
-				m_dwFlags &= ~NF_HAS_VLANS;
-			if (oldFlags != m_dwFlags)
-				Modify();
-			UnlockData();
-		}
 	}
 
    // Call hooks in loaded modules
@@ -4944,7 +4944,7 @@ LinkLayerNeighbors *Node::getLinkLayerNeighbors()
 }
 
 /**
- * Get link layer neighbors
+ * Get VLANs
  */
 VlanList *Node::getVlans()
 {
