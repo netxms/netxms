@@ -412,7 +412,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
          }
 
          // Enumerate
-         if (((TOOL_STARTUP_INFO *)pArg)->pNode->CallSnmpEnumerate(args.ppszOidList[0], TableHandler, &args) == SNMP_ERR_SUCCESS)
+         if (((TOOL_STARTUP_INFO *)pArg)->pNode->callSnmpEnumerate(args.ppszOidList[0], TableHandler, &args) == SNMP_ERR_SUCCESS)
          {
             // Fill in message with results
             msg.SetVariable(VID_RCC, RCC_SUCCESS);

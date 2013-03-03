@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -32,18 +32,14 @@
 #endif
 #endif
 
-
-//
-// Static data
-//
-
+/**
+ * PLaceholder for message hash
+ */
 static BYTE m_hashPlaceholder[12] = { 0xAB, 0xCD, 0xEF, 0xFF, 0x00, 0x11, 0x22, 0x33, 0xBB, 0xAA, 0x99, 0x88 };
 
-
-//
-// PDU type to command translation
-//
-
+/**
+ * PDU type to command translation
+ */
 static struct
 {
    DWORD dwType;
@@ -63,11 +59,9 @@ static struct
    { 0, -1, 0 }
 };
 
-
-//
-// SNMP_PDU default constructor
-//
-
+/**
+ * SNMP_PDU default constructor
+ */
 SNMP_PDU::SNMP_PDU()
 {
    m_dwVersion = SNMP_VERSION_1;
@@ -89,11 +83,9 @@ SNMP_PDU::SNMP_PDU()
 	m_reportable = true;
 }
 
-
-//
-// Create request PDU
-//
-
+/**
+ * Create request PDU
+ */
 SNMP_PDU::SNMP_PDU(DWORD dwCommand, DWORD dwRqId, DWORD dwVersion)
 {
    m_dwVersion = dwVersion;
@@ -115,11 +107,9 @@ SNMP_PDU::SNMP_PDU(DWORD dwCommand, DWORD dwRqId, DWORD dwVersion)
 	m_reportable = true;
 }
 
-
-//
-// SNMP_PDU destructor
-//
-
+/**
+ * SNMP_PDU destructor
+ */
 SNMP_PDU::~SNMP_PDU()
 {
    DWORD i;
@@ -131,11 +121,9 @@ SNMP_PDU::~SNMP_PDU()
 	safe_free(m_authObject);
 }
 
-
-//
-// Parse single variable binding
-//
-
+/**
+ * Parse single variable binding
+ */
 BOOL SNMP_PDU::parseVariable(BYTE *pData, DWORD dwVarLength)
 {
    SNMP_Variable *var;
@@ -154,11 +142,9 @@ BOOL SNMP_PDU::parseVariable(BYTE *pData, DWORD dwVarLength)
    return success;
 }
 
-
-//
-// Parse variable bindings
-//
-
+/**
+ * Parse variable bindings
+ */
 BOOL SNMP_PDU::parseVarBinds(BYTE *pData, DWORD dwPDULength)
 {
    BYTE *pbCurrPos;
@@ -188,11 +174,9 @@ BOOL SNMP_PDU::parseVarBinds(BYTE *pData, DWORD dwPDULength)
    return TRUE;
 }
 
-
-//
-// Parse generic PDU content
-//
-
+/**
+ * Parse generic PDU content
+ */
 BOOL SNMP_PDU::parsePduContent(BYTE *pData, DWORD dwPDULength)
 {
    DWORD dwType, dwLength ,dwIdLength;
@@ -249,11 +233,9 @@ BOOL SNMP_PDU::parsePduContent(BYTE *pData, DWORD dwPDULength)
    return bResult;
 }
 
-
-//
-// Parse version 1 TRAP PDU
-//
-
+/**
+ * Parse version 1 TRAP PDU
+ */
 BOOL SNMP_PDU::parseTrapPDU(BYTE *pData, DWORD dwPDULength)
 {
    DWORD dwType, dwLength, dwIdLength;
@@ -378,11 +360,9 @@ BOOL SNMP_PDU::parseTrapPDU(BYTE *pData, DWORD dwPDULength)
    return bResult;
 }
 
-
-//
-// Parse version 2 TRAP or INFORM-REQUEST PDU
-//
-
+/**
+ * Parse version 2 TRAP or INFORM-REQUEST PDU
+ */
 BOOL SNMP_PDU::parseTrap2PDU(BYTE *pData, DWORD dwPDULength)
 {
    BOOL bResult;
@@ -422,11 +402,9 @@ BOOL SNMP_PDU::parseTrap2PDU(BYTE *pData, DWORD dwPDULength)
    return bResult;
 }
 
-
-//
-// Parse version 3 header
-//
-
+/**
+ * Parse version 3 header
+ */
 BOOL SNMP_PDU::parseV3Header(BYTE *header, DWORD headerLength)
 {
 	DWORD type, length, idLength, remLength = headerLength;
@@ -480,11 +458,9 @@ BOOL SNMP_PDU::parseV3Header(BYTE *header, DWORD headerLength)
 	return TRUE;
 }
 
-
-//
-// Parse V3 USM security parameters
-//
-
+/**
+ * Parse V3 USM security parameters
+ */
 BOOL SNMP_PDU::parseV3SecurityUsm(BYTE *data, DWORD dataLength)
 {
 	DWORD type, length, idLength, remLength = dataLength;
@@ -571,11 +547,9 @@ BOOL SNMP_PDU::parseV3SecurityUsm(BYTE *data, DWORD dataLength)
 	return TRUE;
 }
 
-
-//
-// Parse V3 scoped PDU
-//
-
+/**
+ * Parse V3 scoped PDU
+ */
 BOOL SNMP_PDU::parseV3ScopedPdu(BYTE *data, DWORD dataLength)
 {
 	DWORD type, length, idLength, remLength = dataLength;
@@ -606,11 +580,9 @@ BOOL SNMP_PDU::parseV3ScopedPdu(BYTE *data, DWORD dataLength)
 	return parsePdu(currPos, remLength);
 }
 
-
-//
-// Parse PDU
-//
-
+/**
+ * Parse PDU
+ */
 BOOL SNMP_PDU::parsePdu(BYTE *pdu, DWORD pduLength)
 {
 	BYTE *content;
@@ -661,11 +633,9 @@ BOOL SNMP_PDU::parsePdu(BYTE *pdu, DWORD pduLength)
 	return success;
 }
 
-
-//
-// Validate V3 signed message
-//
-
+/**
+ * Validate V3 signed message
+ */
 BOOL SNMP_PDU::validateSignedMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityContext *securityContext)
 {
 	BYTE k1[64], k2[64], hash[20], *buffer;
@@ -730,11 +700,9 @@ BOOL SNMP_PDU::validateSignedMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityConte
 	return !memcmp(m_signature, hash, 12);
 }
 
-
-//
-// Decrypt data in packet
-//
-
+/**
+ * Decrypt data in packet
+ */
 BOOL SNMP_PDU::decryptData(BYTE *data, DWORD length, BYTE *decryptedData, SNMP_SecurityContext *securityContext)
 {
 #ifdef _WITH_ENCRYPTION
@@ -801,11 +769,9 @@ BOOL SNMP_PDU::decryptData(BYTE *data, DWORD length, BYTE *decryptedData, SNMP_S
 #endif
 }
 
-
-//
-// Create PDU from packet
-//
-
+/**
+ * Create PDU from packet
+ */
 BOOL SNMP_PDU::parse(BYTE *pRawData, DWORD dwRawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate)
 {
    BYTE *pbCurrPos;
@@ -923,15 +889,20 @@ BOOL SNMP_PDU::parse(BYTE *pRawData, DWORD dwRawLength, SNMP_SecurityContext *se
    return bResult;
 }
 
-
-//
-// Create packet from PDU
-//
-
+/**
+ * Create packet from PDU
+ */
 DWORD SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 {
    DWORD i, dwBufferSize, dwBytes, dwVarBindsSize, dwPDUType, dwPDUSize, dwPacketSize, dwValue;
    BYTE *pbCurrPos, *pBlock, *pVarBinds, *pPacket;
+
+	// Replace context name if defined in security context
+	if (securityContext->getContextName() != NULL)
+	{
+		strncpy(m_contextName, securityContext->getContextName(), SNMP_MAX_CONTEXT_NAME);
+		m_contextName[SNMP_MAX_CONTEXT_NAME - 1] = 0;
+	}
 
    // Estimate required buffer size and allocate it
    for(dwBufferSize = 1024, i = 0; i < m_dwNumVariables; i++)
@@ -1150,11 +1121,9 @@ cleanup:
    return dwBytes;
 }
 
-
-//
-// Encode version 3 header
-//
-
+/**
+ * Encode version 3 header
+ */
 DWORD SNMP_PDU::encodeV3Header(BYTE *buffer, DWORD bufferSize, SNMP_SecurityContext *securityContext)
 {
 	BYTE header[256];
@@ -1180,11 +1149,9 @@ DWORD SNMP_PDU::encodeV3Header(BYTE *buffer, DWORD bufferSize, SNMP_SecurityCont
 	return BER_Encode(ASN_SEQUENCE, header, bytes, buffer, bufferSize);
 }
 
-
-//
-// Encode version 3 security parameters
-//
-
+/**
+ * Encode version 3 security parameters
+ */
 DWORD SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize, SNMP_SecurityContext *securityContext)
 {
 	BYTE securityParameters[1024], sequence[1040];
@@ -1246,11 +1213,9 @@ DWORD SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize, SNMP_
 	return bytes;
 }
 
-
-//
-// Encode versionj 3 scoped PDU
-//
-
+/**
+ * Encode versionj 3 scoped PDU
+ */
 DWORD SNMP_PDU::encodeV3ScopedPDU(DWORD pduType, BYTE *pdu, DWORD pduSize, BYTE *buffer, DWORD bufferSize)
 {
 	DWORD spduLen = pduSize + SNMP_MAX_CONTEXT_NAME + SNMP_MAX_ENGINEID_LEN + 32;
@@ -1267,30 +1232,28 @@ DWORD SNMP_PDU::encodeV3ScopedPDU(DWORD pduType, BYTE *pdu, DWORD pduSize, BYTE 
 	return bytes;
 }
 
-
-//
-// Sign message
-//
-// Algorithm described in RFC:
-//   1) The msgAuthenticationParameters field is set to the serialization,
-//      according to the rules in [RFC3417], of an OCTET STRING containing
-//      12 zero octets.
-//   2) From the secret authKey, two keys K1 and K2 are derived:
-//      a) extend the authKey to 64 octets by appending 48 zero octets;
-//         save it as extendedAuthKey
-//      b) obtain IPAD by replicating the octet 0x36 64 times;
-//      c) obtain K1 by XORing extendedAuthKey with IPAD;
-//      d) obtain OPAD by replicating the octet 0x5C 64 times;
-//      e) obtain K2 by XORing extendedAuthKey with OPAD.
-//   3) Prepend K1 to the wholeMsg and calculate MD5 digest over it
-//      according to [RFC1321].
-//   4) Prepend K2 to the result of the step 4 and calculate MD5 digest
-//      over it according to [RFC1321].  Take the first 12 octets of the
-//      final digest - this is Message Authentication Code (MAC).
-//   5) Replace the msgAuthenticationParameters field with MAC obtained in
-//      the step 4.
-//
-
+/**
+ * Sign message
+ *
+ * Algorithm described in RFC:
+ *   1) The msgAuthenticationParameters field is set to the serialization,
+ *      according to the rules in [RFC3417], of an OCTET STRING containing
+ *      12 zero octets.
+ *   2) From the secret authKey, two keys K1 and K2 are derived:
+ *      a) extend the authKey to 64 octets by appending 48 zero octets;
+ *         save it as extendedAuthKey
+ *      b) obtain IPAD by replicating the octet 0x36 64 times;
+ *      c) obtain K1 by XORing extendedAuthKey with IPAD;
+ *      d) obtain OPAD by replicating the octet 0x5C 64 times;
+ *      e) obtain K2 by XORing extendedAuthKey with OPAD.
+ *   3) Prepend K1 to the wholeMsg and calculate MD5 digest over it
+ *      according to [RFC1321].
+ *   4) Prepend K2 to the result of the step 4 and calculate MD5 digest
+ *      over it according to [RFC1321].  Take the first 12 octets of the
+ *      final digest - this is Message Authentication Code (MAC).
+ *   5) Replace the msgAuthenticationParameters field with MAC obtained in
+ *      the step 4.
+ */
 void SNMP_PDU::signMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityContext *securityContext)
 {
 	int i, hashPos;
@@ -1360,11 +1323,9 @@ void SNMP_PDU::signMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityContext *securi
 	memcpy(&msg[hashPos], hash, 12);
 }
 
-
-//
-// Bind variable to PDU
-//
-
+/**
+ * Bind variable to PDU
+ */
 void SNMP_PDU::bindVariable(SNMP_Variable *pVar)
 {
    m_ppVarList = (SNMP_Variable **)realloc(m_ppVarList, sizeof(SNMP_Variable *) * (m_dwNumVariables + 1));
@@ -1372,28 +1333,27 @@ void SNMP_PDU::bindVariable(SNMP_Variable *pVar)
    m_dwNumVariables++;
 }
 
-
-//
-// Set context ID
-//
-
+/**
+ * Set context engine ID
+ */
 void SNMP_PDU::setContextEngineId(BYTE *id, int len)
 {
 	m_contextEngineIdLen = min(len, SNMP_MAX_ENGINEID_LEN);
 	memcpy(m_contextEngineId, id, m_contextEngineIdLen);
 }
 
+/**
+ * Set context engine ID
+ */
 void SNMP_PDU::setContextEngineId(const char *id)
 {
 	m_contextEngineIdLen = min((int)strlen(id), SNMP_MAX_ENGINEID_LEN);
 	memcpy(m_contextEngineId, id, m_contextEngineIdLen);
 }
 
-
-//
-// Set context name
-//
-
+/**
+ * Set context name
+ */
 void SNMP_PDU::setContextName(const char *name)
 {
 	strncpy(m_contextName, name, SNMP_MAX_CONTEXT_NAME);

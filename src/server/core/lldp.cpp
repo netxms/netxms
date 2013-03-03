@@ -225,6 +225,6 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 	DbgPrintf(5, _T("LLDP: collecting topology information for node %s [%d]"), node->Name(), node->Id());
 	nbs->setData(0, node);
 	nbs->setData(1, NULL);	// local port info cache
-	node->CallSnmpEnumerate(_T(".1.0.8802.1.1.2.1.4.1.1.5"), LLDPTopoHandler, nbs);
+	node->callSnmpEnumerate(_T(".1.0.8802.1.1.2.1.4.1.1.5"), LLDPTopoHandler, nbs);
 	DbgPrintf(5, _T("LLDP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
 }

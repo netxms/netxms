@@ -938,6 +938,7 @@ public:
    bool isBridge() { return m_dwFlags & NF_IS_BRIDGE ? true : false; }
    bool isRouter() { return m_dwFlags & NF_IS_ROUTER ? true : false; }
    bool isLocalManagement() { return m_dwFlags & NF_IS_LOCAL_MGMT ? true : false; }
+	bool isPerVlanFdbSupported() { return (m_driver != NULL) ? m_driver->isPerVlanFdbSupported() : false; }
 
 	LONG getSNMPVersion() { return m_snmpVersion; }
 	const TCHAR *getSNMPObjectId() { return m_szObjectId; }
@@ -1030,7 +1031,7 @@ public:
    void closeTableList() { UnlockData(); }
 
    AgentConnectionEx *createAgentConnection();
-	SNMP_Transport *createSnmpTransport(WORD port = 0);
+	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext();
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1040,14 +1041,14 @@ public:
    DWORD wakeUp();
 
    void addService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
-   DWORD CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0,
+   DWORD checkNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0,
                              WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL);
 
    QWORD getLastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
    void setLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }
 
-   DWORD CallSnmpEnumerate(const TCHAR *pszRootOid, 
-      DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *), void *pArg);
+   DWORD callSnmpEnumerate(const TCHAR *pszRootOid, 
+      DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *), void *pArg, const TCHAR *context = NULL);
 
 	nxmap_ObjList *getL2Topology();
 	nxmap_ObjList *buildL2Topology(DWORD *pdwStatus, int radius, bool includeEndNodes);

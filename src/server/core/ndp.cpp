@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Read remote slot and port from s5EnMsTopNmmEosTable
-//
-
+/**
+ * Read remote slot and port from s5EnMsTopNmmEosTable
+ */
 static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, DWORD snmpVersion, SNMP_Transport *transport)
 {
 	// Read data from appropriate entry in s5EnMsTopNmmEosTable
@@ -53,11 +51,9 @@ static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, DWORD snmpVers
 	return result;
 }
 
-
-//
-// Topology table walker's callback for NDP topology table
-//
-
+/**
+ * Topology table walker's callback for NDP topology table
+ */
 static DWORD NDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
@@ -111,11 +107,9 @@ static DWORD NDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpor
 	return SNMP_ERR_SUCCESS;
 }
 
-
-//
-// Add NDP-discovered neighbors
-//
-
+/**
+ * Add NDP-discovered neighbors
+ */
 void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 {
 	if (!(node->getFlags() & NF_IS_NDP))
@@ -123,6 +117,6 @@ void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 
 	DbgPrintf(5, _T("NDP: collecting topology information for node %s [%d]"), node->Name(), node->Id());
 	nbs->setData(node);
-	node->CallSnmpEnumerate(_T(".1.3.6.1.4.1.45.1.6.13.2.1.1.3"), NDPTopoHandler, nbs);
+	node->callSnmpEnumerate(_T(".1.3.6.1.4.1.45.1.6.13.2.1.1.3"), NDPTopoHandler, nbs);
 	DbgPrintf(5, _T("NDP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
 }

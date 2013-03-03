@@ -7752,7 +7752,7 @@ static THREAD_RESULT THREAD_CALL WalkerThread(void *pArg)
    args.dwId = VID_SNMP_WALKER_DATA_BASE;
    args.dwNumVars = 0;
    args.pSession = ((WALKER_THREAD_ARGS *)pArg)->pSession;
-   ((Node *)(((WALKER_THREAD_ARGS *)pArg)->pObject))->CallSnmpEnumerate(((WALKER_THREAD_ARGS *)pArg)->szBaseOID, WalkerCallback, &args);
+   ((Node *)(((WALKER_THREAD_ARGS *)pArg)->pObject))->callSnmpEnumerate(((WALKER_THREAD_ARGS *)pArg)->szBaseOID, WalkerCallback, &args);
    msg.SetVariable(VID_NUM_VARIABLES, args.dwNumVars);
    msg.SetEndOfSequence();
    ((WALKER_THREAD_ARGS *)pArg)->pSession->sendMessage(&msg);

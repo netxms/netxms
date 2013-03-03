@@ -110,6 +110,7 @@ public:
 	virtual int getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
 	virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int module, NDD_MODULE_LAYOUT *layout);
 	virtual void destroyDriverData(void *driverData);
+	virtual bool isPerVlanFdbSupported();
 };
 
 #endif   /* _nddrv_h_ */

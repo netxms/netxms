@@ -1,0 +1,919 @@
+ASTARO-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Astaro Notification Definition
+--
+-- .1.3.6.1.4.1.9789
+-- .iso.org.dod.internet.private.enterprises.astaro
+--      .1500  (.notification)
+--           .0  (DEBUG)
+--           .1  (INFO)
+--           .2  (WARN)
+--           .3  (CRIT)
+--                .0 - .999   (<notificationID>)
+--
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
+    enterprises 
+             FROM SNMPv2-SMI ;
+
+
+
+-- 
+-- top level
+--
+
+astaro MODULE-IDENTITY
+    LAST-UPDATED "201110060000Z"
+    ORGANIZATION "Astaro GmbH & Co. KG - a Sophos company"
+    CONTACT-INFO 
+                 "Astaro GmbH & Co. KG - a Sophos company
+                 Amalienbadstr. 41/Bau 52
+                 76227 Karlsruhe
+
+                 Telefon: +49-800-2782761 (Germany Only)
+                 Telefon: +49-721-25516-0 (Outside Germany)
+                 Fax: +49 721 25516 200
+                 Email: emea@astaro.com
+                 www.astaro.com"
+    DESCRIPTION  
+                 "The MIB module for Notification Events
+
+                 Copyright (C) 2009 by Astaro AG"
+    REVISION     "200812170000Z"
+    DESCRIPTION  
+                 "Initial version"
+::= { enterprises 9789 }
+
+notification OBJECT IDENTIFIER ::= { astaro 1500 }
+
+
+--
+-- Notification severiry
+--
+
+debug OBJECT IDENTIFIER ::= { notification 0 }
+info  OBJECT IDENTIFIER ::= { notification 1 }
+warn  OBJECT IDENTIFIER ::= { notification 2 }
+crit  OBJECT IDENTIFIER ::= { notification 3 }
+
+
+-- 
+-- Notifications
+--
+crit-025 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "License usage: EXCEEDING 100% OF USER COUNT on Astaro Security Gateway"
+::= { crit 025 }
+
+crit-026 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "License usage: EXCEEDING 110% OF USER COUNT on Astaro Security Gateway"
+::= { crit 026 }
+
+crit-027 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "License usage: No valid HA license"
+::= { crit 027 }
+
+crit-028 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "License usage: No valid Cluster license"
+::= { crit 028 }
+
+crit-054 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "UPS power critical, system shutting down"
+::= { crit 054 }
+
+crit-060 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Raid degraded: harddisk replacement needed"
+::= { crit 060 }
+
+crit-080 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "HA System: There is no slave node, please check your HA System"
+::= { crit 080 }
+
+crit-081 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "HA System: Your installed system versions differ, please check your HA System"
+::= { crit 081 }
+
+crit-082 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "HA System: Some interfaces are unplugged, please check your HA System"
+::= { crit 082 }
+
+crit-090 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Cluster: One or more nodes are dead, please check your Cluster"
+::= { crit 090 }
+
+crit-091 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Cluster: Your installed system versions differ, please check your Cluster"
+::= { crit 091 }
+
+crit-092 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Cluster: Some interfaces are unplugged, please check your Cluster"
+::= { crit 092 }
+
+crit-310 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Up2Date prefetch failed"
+::= { crit 310 }
+
+crit-311 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Firmware Up2Date installation failed"
+::= { crit 311 }
+
+crit-712 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "System shut down due to full log file partition"
+::= { crit 712 }
+
+crit-850 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Intrusion Prevention Alert"
+::= { crit 850 }
+
+crit-852 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Intrusion Prevention Alert (Packet dropped)"
+::= { crit 852 }
+
+info-000 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "System was restarted"
+::= { info 000 }
+
+info-005 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Successful WebAdmin login"
+::= { info 005 }
+
+info-006 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Successful SSH login"
+::= { info 006 }
+
+info-007 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Successful console login"
+::= { info 005 }
+
+info-010 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Configuration Auto Backup"
+::= { info 010 }
+
+info-011 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Configuration Backup File"
+::= { info 011 }
+
+info-020 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "License expiry: a feature will expire"
+::= { info 020 }
+
+info-021 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "License expiry: a feature expires today"
+::= { info 021 }
+
+info-022 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "License expiry: a feature expired"
+::= { info 022 }
+
+info-040 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Remote Configuration Manager - System Information"
+::= { info 040 }
+
+info-050 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "UPS device connected"
+::= { info 050 }
+
+info-051 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "UPS device disconnected"
+::= { info 051 }
+
+info-053 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "UPS power restored"
+::= { info 053 }
+
+info-062 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Raid rebuild process started"
+::= { info 062 }
+
+info-063 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Raid rebuild process finished"
+::= { info 063 }
+
+info-080 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "HA node is now Master"
+::= { info 080 }
+
+info-081 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "HA node is now Slave"
+::= { info 081 }
+
+info-083 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "HA System is active and fully functional"
+::= { info 083 }
+
+info-090 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Cluster node is now Master"
+::= { info 090 }
+
+info-091 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Cluster node is now Slave"
+::= { info 091 }
+
+info-092 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Cluster node is now Worker"
+::= { info 092 }
+
+info-093 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Cluster is active and fully functional"
+::= { info 093 }
+
+info-094 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Upgrade: download successful"
+::= { info 094 }
+
+info-105 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Astaro User Authenticator (AUA) not running - restarted"
+::= { info 105 }
+
+info-106 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Cron Task Scheduler not running - restarted"
+::= { info 106 }
+
+info-107 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "WebAdmin webserver not running - restarted"
+::= { info 107 }
+
+info-108 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Ssh server not running - restarted"
+::= { info 108 }
+
+info-110 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Configuration daemon not running - restarted"
+::= { info 110 }
+
+info-111 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Syslog server not running - restarted"
+::= { info 111 }
+
+info-112 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Middleware not running - restarted"
+::= { info 112 }
+
+info-114 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Ulogd not running - restarted"
+::= { info 114 }
+
+info-115 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Snort not running - restarted"
+::= { info 115 }
+
+info-116 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Snmpd daemon not running - restarted"
+::= { info 116 }
+
+info-117 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Pop3 proxy not running - restarted"
+::= { info 117 }
+
+info-118 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Ftp proxy not running - restarted"
+::= { info 118 }
+
+info-119 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Named not running - restarted"
+::= { info 119 }
+
+info-120 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Sockd not running - restarted"
+::= { info 120 }
+
+info-121 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Identd not running - restarted"
+::= { info 121 }
+
+info-122 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Dhcpd not running - restarted"
+::= { info 122 }
+
+info-123 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "IRQd not running - restarted"
+::= { info 123 }
+
+info-124 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Ufod not running - restarted"
+::= { info 124 }
+
+info-125 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Smtpd not running - restarted"
+::= { info 125 }
+
+info-126 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Dyndns not running - restarted"
+::= { info 126 }
+
+info-127 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Spam filter not running - restarted"
+::= { info 127 }
+
+info-128 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Pptpd not running - restarted"
+::= { info 128 }
+
+info-130 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Winbindd not running - restarted"
+::= { info 130 }
+
+info-131 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Xinetd not running - restarted"
+::= { info 131 }
+
+info-132 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "ACC core daemon not running - restarted"
+::= { info 132 }
+
+info-133 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "ACC up2date cache not running - restarted"
+::= { info 133 }
+
+info-134 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "IPsec starter not running - restarted"
+::= { info 134 }
+
+info-135 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "IPsec pluto not running - restarted"
+::= { info 135 }
+
+info-136 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "ACC device agent not running - restarted"
+::= { info 136 }
+
+info-137 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Virus scanner clamd not running - restarted"
+::= { info 137 }
+
+info-138 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Smtp scan daemon not running - restarted"
+::= { info 138 }
+
+info-139 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Content Filter Framework not running - restarted"
+::= { info 139 }
+
+info-140 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Notification Daemon not running - restarted"
+::= { info 140 }
+
+info-141 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Http proxy not running - restarted"
+::= { info 141 }
+
+info-142 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "OSPF daemon (ospfd) not running - restarted"
+::= { info 142 }
+
+info-143 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Dynamic routing daemon (quagga) not running - restarted"
+::= { info 143 }
+
+info-144 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "HAL (Hardware Abstraction Layer) system daemon not running - restarted"
+::= { info 144 }
+
+info-145 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Udev (system device manager) daemon not running - restarted"
+::= { info 145 }
+
+info-146 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Dbus (application device bus) system daemon not running - restarted"
+::= { info 146 }
+
+info-147 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "NTP (network time synchronization) daemon not running - restarted"
+::= { info 147 }
+
+info-148 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "L2TP-over-IPsec daemon not running - restarted"
+::= { info 148 }
+
+info-149 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Application Control daemon not running - restarted"
+::= { info 149 }
+
+info-150 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Root partition is filling up - please check"
+::= { info 150 }
+
+info-153 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Log Disk is filling up - please check"
+::= { info 153 }
+
+info-154 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Data Disk is filling up - please check"
+::= { info 154 }
+
+info-163 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Log Disk is short of inodes - please check"
+::= { info 163 }
+
+info-164 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Data Disk is short of inodes - please check"
+::= { info 164 }
+
+info-170 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "HA confd sync daemon not running - restarted"
+::= { info 170 }
+
+info-171 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "HA up2date proxy not running - restarted"
+::= { info 171 }
+
+info-172 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "HA ctsync daemon not running - restarted"
+::= { info 172 }
+
+info-173 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "HA csync2 daemon not running - restarted"
+::= { info 173 }
+
+info-174 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "IPv6 SixXs Tunnel Broker client not running - restarted"
+::= { info 174 }
+
+info-175 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "IPv6 Teredo Tunnel Broker client not running - restarted"
+::= { info 175 }
+
+info-176 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "IPv6 gogo6 Tunnel Broker client not running - restarted"
+::= { info 176 }
+
+info-177 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "IPv6 Routing Advertisement daemon not running - restarted"
+::= { info 177 }
+
+info-178 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "IPv6 Hurricane Tunnel Broker client not running - restarted"
+::= { info 178 }
+
+info-179 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "DNS resolver not running - restarted"
+::= { info 179 }
+
+info-180 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Client Authentication daemon not running - restarted"
+::= { info 180 }
+
+info-181 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Service Monitor not running - restarted"
+::= { info 181 }
+
+info-182 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Job queue manager (atd) not running - restarted"
+::= { info 182 }
+
+info-183 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "BGP daemon (bgpd) not running - restarted"
+::= { info 183 }
+
+info-301 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "New Firmware Up2Date is ready for installation"
+::= { info 301 }
+
+info-302 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "New Firmware Up2Date installed"
+::= { info 302 }
+
+info-306 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "New Pattern Up2Dates installed"
+::= { info 306 }
+
+info-310 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Up2Date prefetch is working again"
+::= { info 310 }
+
+info-320 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Database Conversion Started"
+::= { info 320 }
+
+info-321 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Database Conversion Adjourned"
+::= { info 321 }
+
+info-322 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Database Conversion Finished"
+::= { info 322 }
+
+info-700 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Daily log file archive"
+::= { info 700 }
+
+info-710 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Log file partition is filling up"
+::= { info 710 }
+
+info-716 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Log Management has been enabled"
+::= { info 716 }
+
+info-720 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Daily Executive Report"
+::= { info 720 }
+
+info-721 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Weekly Executive Report"
+::= { info 721 }
+
+info-722 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Monthly Executive Report"
+::= { info 722 }
+
+info-723 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Daily Executive Report"
+::= { info 723 }
+
+info-724 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Weekly Executive Report"
+::= { info 724 }
+
+info-725 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Monthly Executive Report"
+::= { info 725 }
+
+info-850 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Intrusion Prevention Alert"
+::= { info 850 }
+
+info-852 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Intrusion Prevention Alert (Packet dropped)"
+::= { info 852 }
+
+warn-005 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Failed WebAdmin login"
+::= { warn 005 }
+
+warn-006 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Failed SSH login"
+::= { warn 006 }
+
+warn-007 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Failed console login"
+::= { warn 007 }
+
+warn-025 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "License usage: EXCEEDING 90% OF USER COUNT on Astaro Security Gateway"
+::= { warn 025 }
+
+warn-030 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Primary internet uplink is down, switching to backup line"
+::= { warn 030 }
+
+warn-031 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Primary internet uplink is back online, switching to main line"
+::= { warn 031 }
+
+warn-032 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Internet uplink is down"
+::= { warn 032 }
+
+warn-033 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Internet uplink is up again"
+::= { warn 033 }
+
+warn-040 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Astaro weak Certificate check - found weak certificates"
+::= { warn 040 }
+
+warn-052 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "UPS on battery power"
+::= { warn 052 }
+
+warn-061 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Raid degraded: defective harddisk inserted"
+::= { warn 061 }
+
+warn-080 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "HA selfcheck"
+::= { warn 080 }
+
+warn-090 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Cluster selfcheck"
+::= { warn 090 }
+
+warn-094 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Upgrade failed"
+::= { warn 094 }
+
+warn-103 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Too much swap usage!"
+::= { warn 103 }
+
+warn-129 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Spam Filter cannot query database servers"
+::= { warn 129 }
+
+warn-136 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "ACC server not reachable"
+::= { warn 136 }
+
+warn-160 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Root partition is short of inodes - please check"
+::= { warn 160 }
+
+warn-711 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Log files have been deleted"
+::= { warn 711 }
+
+warn-715 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Remote log file storage failed"
+::= { warn 715 }
+
+warn-850 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Intrusion Prevention Alert"
+::= { warn 850 }
+
+warn-852 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Intrusion Prevention Alert (Packet dropped)"
+::= { warn 852 }
+
+warn-856 NOTIFICATION-TYPE
+    STATUS current
+    DESCRIPTION
+          "Portscan detected"
+::= { warn 856 }
+
+
+
+END

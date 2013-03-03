@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Topology table walker's callback for CDP topology table
-//
-
+/**
+ * Topology table walker's callback for CDP topology table
+ */
 static DWORD CDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
@@ -88,11 +86,9 @@ static DWORD CDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpor
 	return rcc;
 }
 
-
-//
-// Add CDP-discovered neighbors
-//
-
+/**
+ * Add CDP-discovered neighbors
+ */
 void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 {
 	if (!(node->getFlags() & NF_IS_CDP))
@@ -100,6 +96,6 @@ void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 
 	DbgPrintf(5, _T("CDP: collecting topology information for node %s [%d]"), node->Name(), node->Id());
 	nbs->setData(node);
-	node->CallSnmpEnumerate(_T(".1.3.6.1.4.1.9.9.23.1.2.1.1.4"), CDPTopoHandler, nbs);
+	node->callSnmpEnumerate(_T(".1.3.6.1.4.1.9.9.23.1.2.1.1.4"), CDPTopoHandler, nbs);
 	DbgPrintf(5, _T("CDP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
 }

@@ -44,6 +44,7 @@ class CISCO_EXPORTABLE CiscoDeviceDriver : public NetworkDeviceDriver
 {
 public:
 	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+	virtual bool isPerVlanFdbSupported();
 };
 
 #endif

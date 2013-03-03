@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpwalk - command line tool used to retrieve parameters from SNMP agent
-** Copyright (C) 2004-2009 Victor Kirhenshtein
+** Copyright (C) 2004-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,26 +25,23 @@
 #include <nms_util.h>
 #include <nxsnmp.h>
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static char m_community[256] = "public";
 static char m_user[256] = "";
 static char m_authPassword[256] = "";
 static char m_encryptionPassword[256] = "";
+static char m_contextName[256] = "";
 static int m_authMethod = SNMP_AUTH_NONE;
 static int m_encryptionMethod = SNMP_ENCRYPT_NONE;
 static WORD m_port = 161;
 static DWORD m_snmpVersion = SNMP_VERSION_2C;
 static DWORD m_timeout = 3000;
 
-
-//
-// Get data
-//
-
+/**
+ * Get data
+ */
 int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
 {
    SNMP_UDPTransport *pTransport;
@@ -72,9 +69,16 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
    else
    {
 		if (m_snmpVersion == SNMP_VERSION_3)
-			pTransport->setSecurityContext(new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod));
+		{
+			SNMP_SecurityContext *context = new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod);
+			if (m_contextName[0] != 0)
+				context->setContextNameA(m_contextName);
+			pTransport->setSecurityContext(context);
+		}
 		else
+		{
 			pTransport->setSecurityContext(new SNMP_SecurityContext(m_community));
+		}
 
       // Get root
       dwRootLen = SNMPParseOID(pszRootOid, pdwRootName, MAX_OID_LEN);
@@ -164,11 +168,9 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
    return iExit;
 }
 
-
-//
-// Startup
-//
-
+/**
+ * Startup
+ */
 int main(int argc, char *argv[])
 {
    int ch, iExit = 1;
@@ -178,7 +180,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:A:c:e:E:hp:u:v:w:")) != -1)
+	while((ch = getopt(argc, argv, "a:A:c:e:E:hn:p:u:v:w:")) != -1)
    {
       switch(ch)
       {
@@ -191,6 +193,7 @@ int main(int argc, char *argv[])
 						   _T("   -e <method>  : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
                      _T("   -E <passwd>  : User's encryption password for SNMP v3 USM\n")
                      _T("   -h           : Display help and exit\n")
+						   _T("   -n <name>    : SNMP v3 context name\n")
                      _T("   -p <port>    : Agent's port number. Default is 161\n")
                      _T("   -u <user>    : User name for SNMP v3 USM\n")
                      _T("   -v <version> : SNMP version to use (valid values is 1, 2c, and 3)\n")
@@ -262,6 +265,10 @@ int main(int argc, char *argv[])
                _tprintf(_T("Encryption password should be at least 8 characters long\n"));
 					bStart = FALSE;
 				}
+            break;
+         case 'n':   // context name
+            strncpy(m_contextName, optarg, 256);
+				m_contextName[255] = 0;
             break;
          case 'p':   // Port number
             dwValue = strtoul(optarg, &eptr, 0);

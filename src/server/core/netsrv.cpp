@@ -362,7 +362,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
 
       sendPollerMsg(dwRqId, _T("      Polling service from node %s [%s]\r\n"),
                     pNode->Name(), IpToStr(pNode->IpAddr(), szBuffer));
-      if (pNode->CheckNetworkService(&dwStatus, 
+      if (pNode->checkNetworkService(&dwStatus, 
                                      (m_dwIpAddr == 0) ? m_pHostNode->IpAddr() : m_dwIpAddr,
                                      m_iServiceType, m_wPort, m_wProto, 
                                      m_pszRequest, m_pszResponse) == ERR_SUCCESS)

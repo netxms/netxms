@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// STP port table walker's callback
-//
-
+/**
+ * STP port table walker's callback
+ */
 static DWORD STPPortListHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	int state = var->GetValueAsInt();
@@ -39,11 +37,9 @@ static DWORD STPPortListHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Tran
 	return SNMP_ERR_SUCCESS;
 }
 
-
-//
-// Add STP-discovered neighbors
-//
-
+/**
+ * Add STP-discovered neighbors
+ */
 void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 {
 	if (!(node->getFlags() & NF_IS_STP))
@@ -51,6 +47,6 @@ void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 
 	DbgPrintf(5, _T("STP: collecting topology information for node %s [%d]"), node->Name(), node->Id());
 	nbs->setData(node);
-	node->CallSnmpEnumerate(_T(".1.3.6.1.2.1.17.2.15.1.3"), STPPortListHandler, nbs);
+	node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.2.15.1.3"), STPPortListHandler, nbs);
 	DbgPrintf(5, _T("STP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
 }

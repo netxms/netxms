@@ -213,6 +213,17 @@ failure:
 }
 
 /**
+ * Returns true if per-VLAN FDB supported by device (accessible using community@vlan_id).
+ * Default implementation always return false;
+ *
+ * @return true if per-VLAN FDB supported by device
+ */
+bool CiscoDeviceDriver::isPerVlanFdbSupported()
+{
+	return true;
+}
+
+/**
  * DLL entry point
  */
 #ifdef _WIN32

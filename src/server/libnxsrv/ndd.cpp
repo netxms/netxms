@@ -453,3 +453,14 @@ void NetworkDeviceDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attri
 void NetworkDeviceDriver::destroyDriverData(void *driverData)
 {
 }
+
+/**
+ * Returns true if per-VLAN FDB supported by device (accessible using community@vlan_id).
+ * Default implementation always return false;
+ *
+ * @return true if per-VLAN FDB supported by device
+ */
+bool NetworkDeviceDriver::isPerVlanFdbSupported()
+{
+	return false;
+}

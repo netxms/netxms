@@ -338,11 +338,9 @@ DWORD SNMP_UDPTransport::createUDPTransport(const TCHAR *pszHostName, DWORD dwHo
 
 #undef HOSTNAME_VAR
 
-
-//
-// Destructor for SNMP_Transport
-//
-
+/**
+ * Destructor for UDP transport
+ */
 SNMP_UDPTransport::~SNMP_UDPTransport()
 {
    safe_free(m_pBuffer);
@@ -350,11 +348,9 @@ SNMP_UDPTransport::~SNMP_UDPTransport()
       closesocket(m_hSocket);
 }
 
-
-//
-// Clear buffer
-//
-
+/**
+ * Clear buffer
+ */
 void SNMP_UDPTransport::clearBuffer()
 {
    m_dwBytesInBuffer = 0;

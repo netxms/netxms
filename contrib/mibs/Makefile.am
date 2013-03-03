@@ -14,6 +14,7 @@ mibs_DATA = \
 	APACHE2-MIB.txt \
 	APPLICATION-MIB.txt \
 	ARCADA-MIB.txt \
+	ASTARO-MIB.txt \
 	ASTERISK-MIB.txt \
 	ATM-TC-MIB.txt \
 	BAY-STACK-ADAC-MIB.txt \

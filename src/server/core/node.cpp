@@ -3549,7 +3549,7 @@ void Node::openTableList(StructArray<NXC_AGENT_TABLE> **tableList)
 /**
  * Check status of network service
  */
-DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType,
+DWORD Node::checkNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType,
                                 WORD wPort, WORD wProto, TCHAR *pszRequest,
                                 TCHAR *pszResponse)
 {
@@ -3925,9 +3925,9 @@ void Node::updateRoutingTable()
 /**
  * Call SNMP Enumerate with node's SNMP parameters
  */
-DWORD Node::CallSnmpEnumerate(const TCHAR *pszRootOid, 
+DWORD Node::callSnmpEnumerate(const TCHAR *pszRootOid, 
                               DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
-                              void *pArg)
+                              void *pArg, const TCHAR *context)
 {
    if ((m_dwFlags & NF_IS_SNMP) && 
        (!(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)) &&
@@ -3936,11 +3936,10 @@ DWORD Node::CallSnmpEnumerate(const TCHAR *pszRootOid,
 		SNMP_Transport *pTransport;
 		DWORD dwResult;
 
-		pTransport = createSnmpTransport();
+		pTransport = createSnmpTransport(0, context);
 		if (pTransport != NULL)
 		{
-			dwResult = SnmpWalk(m_snmpVersion, pTransport,
-											 pszRootOid, pHandler, pArg, FALSE);
+			dwResult = SnmpWalk(m_snmpVersion, pTransport, pszRootOid, pHandler, pArg, FALSE);
 			delete pTransport;
 		}
 		else
@@ -4106,7 +4105,7 @@ Cluster *Node::getMyCluster()
 /**
  * Create SNMP transport
  */
-SNMP_Transport *Node::createSnmpTransport(WORD port)
+SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 {
 	SNMP_Transport *pTransport = NULL;
 	DWORD snmpProxy = m_dwSNMPProxy;
@@ -4150,8 +4149,32 @@ SNMP_Transport *Node::createSnmpTransport(WORD port)
 	if (pTransport != NULL)
 	{
 		LockData();
-		pTransport->setSecurityContext(new SNMP_SecurityContext(m_snmpSecurity));
 		pTransport->setSnmpVersion(m_snmpVersion);
+		if (context == NULL)
+		{
+			pTransport->setSecurityContext(new SNMP_SecurityContext(m_snmpSecurity));
+		}
+		else
+		{
+			if (m_snmpVersion < SNMP_VERSION_3)
+			{
+				char community[128];
+#ifdef UNICODE
+				char mbContext[64];
+				WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR, context, -1, mbContext, 64, NULL, NULL);
+				snprintf(community, 128, "%s@%s", m_snmpSecurity->getCommunity(), mbContext);
+#else
+				snprintf(community, 128, "%s@%s", m_snmpSecurity->getCommunity(), context);
+#endif
+				pTransport->setSecurityContext(new SNMP_SecurityContext(community));
+			}
+			else
+			{
+				SNMP_SecurityContext *securityContext = new SNMP_SecurityContext(m_snmpSecurity);
+				securityContext->setContextName(context);
+				pTransport->setSecurityContext(securityContext);
+			}
+		}
 		UnlockData();
 	}
 	return pTransport;

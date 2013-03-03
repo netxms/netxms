@@ -444,11 +444,9 @@ public:
 	void setTime(int engineTime) { m_engineTime = engineTime; }
 };
 
-
-//
-// Security context
-//
-
+/**
+ * Security context
+ */
 class LIBNXSNMP_EXPORTABLE SNMP_SecurityContext
 {
 private:
@@ -456,6 +454,7 @@ private:
 	char *m_authName;	// community for V1/V2c, user for V3 USM
 	char *m_authPassword;
 	char *m_privPassword;
+	char *m_contextName;
 	BYTE m_authKeyMD5[16];
 	BYTE m_authKeySHA1[20];
 	BYTE m_privKey[20];
@@ -468,7 +467,7 @@ private:
 public:
 	SNMP_SecurityContext();
 	SNMP_SecurityContext(SNMP_SecurityContext *src);
-	SNMP_SecurityContext(const char *user);
+	SNMP_SecurityContext(const char *community);
 	SNMP_SecurityContext(const char *user, const char *authPassword, int authMethod);
 	SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword,
 	                     int authMethod, int encryptionMethod);
@@ -479,6 +478,7 @@ public:
 	const char *getUser() { return CHECK_NULL_EX_A(m_authName); }
 	const char *getAuthPassword() { return CHECK_NULL_EX_A(m_authPassword); }
 	const char *getPrivPassword() { return CHECK_NULL_EX_A(m_privPassword); }
+	const char *getContextName() { return m_contextName; }
 
 	bool needAuthentication() { return (m_authMethod != SNMP_AUTH_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
 	bool needEncryption() { return (m_privMethod != SNMP_ENCRYPT_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
@@ -496,16 +496,20 @@ public:
 	void setAuthMethod(int method) { m_authMethod = method; }
 	void setPrivMethod(int method) { m_privMethod = method; }
 	void setSecurityModel(int model) { m_securityModel = model; }
+	void setContextName(const TCHAR *name);
+#ifdef UNICODE
+	void setContextNameA(const char *name);
+#else
+	void setContextNameA(const char *name) { setContextName(name); }
+#endif
 
 	void setAuthoritativeEngine(SNMP_Engine &engine);
 	SNMP_Engine& getAuthoritativeEngine() { return m_authoritativeEngine; }
 };
 
-
-//
-// SNMP PDU
-//
-
+/**
+ * SNMP PDU
+ */
 class LIBNXSNMP_EXPORTABLE SNMP_PDU
 {
 private:

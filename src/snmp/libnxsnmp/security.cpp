@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,17 +23,16 @@
 
 #include "libnxsnmp.h"
 
-
-//
-// Constructors for SNMP_SecurityContext
-//
-
+/**
+ * Default constructor for SNMP_SecurityContext
+ */
 SNMP_SecurityContext::SNMP_SecurityContext()
 {
 	m_securityModel = 0;
 	m_authName = NULL;
 	m_authPassword = NULL;
 	m_privPassword = NULL;
+	m_contextName = NULL;
 	m_authMethod = SNMP_AUTH_NONE;
 	m_privMethod = SNMP_ENCRYPT_NONE;
 	memset(m_authKeyMD5, 0, 16);
@@ -41,12 +40,16 @@ SNMP_SecurityContext::SNMP_SecurityContext()
 	memset(m_privKey, 0, 20);
 }
 
+/**
+ * Create copy of given security context
+ */
 SNMP_SecurityContext::SNMP_SecurityContext(SNMP_SecurityContext *src)
 {
 	m_securityModel = src->m_securityModel;
 	m_authName = (src->m_authName != NULL) ? strdup(src->m_authName) : NULL;
 	m_authPassword = (src->m_authPassword != NULL) ? strdup(src->m_authPassword) : NULL;
 	m_privPassword = (src->m_privPassword != NULL) ? strdup(src->m_privPassword) : NULL;
+	m_contextName = (src->m_contextName != NULL) ? strdup(src->m_contextName) : NULL;
 	m_authMethod = src->m_authMethod;
 	m_privMethod = src->m_privMethod;
 	memcpy(m_authKeyMD5, src->m_authKeyMD5, 16);
@@ -55,12 +58,16 @@ SNMP_SecurityContext::SNMP_SecurityContext(SNMP_SecurityContext *src)
 	m_authoritativeEngine = src->m_authoritativeEngine;
 }
 
+/**
+ * Create V2C security context
+ */
 SNMP_SecurityContext::SNMP_SecurityContext(const char *community)
 {
 	m_securityModel = SNMP_SECURITY_MODEL_V2C;
 	m_authName = strdup(CHECK_NULL_EX_A(community));
 	m_authPassword = NULL;
 	m_privPassword = NULL;
+	m_contextName = NULL;
 	m_authMethod = SNMP_AUTH_NONE;
 	m_privMethod = SNMP_ENCRYPT_NONE;
 	memset(m_authKeyMD5, 0, 16);
@@ -68,17 +75,24 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *community)
 	memset(m_privKey, 0, 20);
 }
 
+/**
+ * Create authNoPriv V3 security context
+ */
 SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, int authMethod)
 {
 	m_securityModel = SNMP_SECURITY_MODEL_USM;
 	m_authName = strdup(CHECK_NULL_EX_A(user));
 	m_authPassword = strdup(CHECK_NULL_EX_A(authPassword));
 	m_privPassword = NULL;
+	m_contextName = NULL;
 	m_authMethod = authMethod;
 	m_privMethod = SNMP_ENCRYPT_NONE;
 	recalculateKeys();
 }
 
+/**
+ * Create authPriv V3 security context
+ */
 SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword,
 														 int authMethod, int encryptionMethod)
 {
@@ -86,39 +100,68 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPas
 	m_authName = strdup(CHECK_NULL_EX_A(user));
 	m_authPassword = strdup(CHECK_NULL_EX_A(authPassword));
 	m_privPassword = strdup(CHECK_NULL_EX_A(encryptionPassword));
+	m_contextName = NULL;
 	m_authMethod = authMethod;
 	m_privMethod = encryptionMethod;
 	recalculateKeys();
 }
 
-
-//
-// Destructor for security context
-//
-
+/**
+ * Destructor for security context
+ */
 SNMP_SecurityContext::~SNMP_SecurityContext()
 {
 	safe_free(m_authName);
 	safe_free(m_authPassword);
 	safe_free(m_privPassword);
+	safe_free(m_contextName);
 }
 
+/**
+ * Set context name
+ */
+void SNMP_SecurityContext::setContextName(const TCHAR *name)
+{
+	safe_free(m_contextName);
+	if (name != NULL)
+	{
+#ifdef UNICODE
+		m_contextName = MBStringFromWideString(name);
+#else
+		m_contextName = strdup(name);
+#endif
+	}
+	else
+	{
+		m_contextName = NULL;
+	}
+}
 
-//
-// Set authentication name
-//
+#ifdef UNICODE
 
+/**
+ * Set context name (multibyte string version)
+ */
+void SNMP_SecurityContext::setContextNameA(const char *name)
+{
+	safe_free(m_contextName);
+	m_contextName = (name != NULL) ? strdup(name) : NULL;
+}
+
+#endif
+
+/**
+ * Set authentication name
+ */
 void SNMP_SecurityContext::setAuthName(const char *name)
 {
 	safe_free(m_authName);
 	m_authName = strdup(CHECK_NULL_EX_A(name));
 }
 
-
-//
-// Set authentication password
-//
-
+/**
+ * Set authentication password
+ */
 void SNMP_SecurityContext::setAuthPassword(const char *password)
 {
 	safe_free(m_authPassword);
@@ -126,11 +169,9 @@ void SNMP_SecurityContext::setAuthPassword(const char *password)
 	recalculateKeys();
 }
 
-
-//
-// Set encryption password
-//
-
+/**
+ * Set encryption password
+ */
 void SNMP_SecurityContext::setPrivPassword(const char *password)
 {
 	safe_free(m_privPassword);
@@ -138,22 +179,18 @@ void SNMP_SecurityContext::setPrivPassword(const char *password)
 	recalculateKeys();
 }
 
-
-//
-// Set authoritative engine ID
-//
-
+/**
+ * Set authoritative engine ID
+ */
 void SNMP_SecurityContext::setAuthoritativeEngine(SNMP_Engine &engine)
 {
 	m_authoritativeEngine = engine;
 	recalculateKeys();
 }
 
-
-//
-// Recalculate keys
-//
-
+/**
+ * Recalculate keys
+ */
 void SNMP_SecurityContext::recalculateKeys()
 {
 	BYTE buffer[256];

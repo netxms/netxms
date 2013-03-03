@@ -269,11 +269,32 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 		return NULL;
 
 	ForwardingDatabase *fdb = new ForwardingDatabase();
-	node->CallSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb);
-	node->CallSnmpEnumerate(_T(".1.3.6.1.2.1.17.7.1.2.2.1.2"), Dot1qTpFdbHandler, fdb);
-	DbgPrintf(5, _T("FDB: %d entries read from dot1qTpFdbTable"), fdb->getSize());
-	node->CallSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb);
-	DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable"), fdb->getSize());
+	node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb);
+	node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.7.1.2.2.1.2"), Dot1qTpFdbHandler, fdb);
+	int size = fdb->getSize();
+	DbgPrintf(5, _T("FDB: %d entries read from dot1qTpFdbTable"), size);
+
+	node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb);
+	DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable"), fdb->getSize() - size);
+	size = fdb->getSize();
+
+	if (node->isPerVlanFdbSupported())
+	{
+		VlanList *vlans = node->getVlans();
+		if (vlans != NULL)
+		{
+			for(int i = 0; i < vlans->getSize(); i++)
+			{
+				TCHAR context[16];
+				_sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? "" : "vlan-", vlans->get(i)->getVlanId());
+				node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb, context);
+				DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable in context %s"), fdb->getSize() - size, context);
+				size = fdb->getSize();
+			}
+			delete vlans;
+		}
+	}
+
 	fdb->sort();
 	return fdb;
 }
