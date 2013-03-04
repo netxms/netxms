@@ -63,7 +63,7 @@ public class ColorManager
 	{
 		// Read all registered extensions and create branding providers
 		final IExtensionRegistry reg = Platform.getExtensionRegistry();
-		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.colors"); //$NON-NLS-1$
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.colorproviders"); //$NON-NLS-1$
 		for(int i = 0; i < elements.length; i++)
 		{
 			try

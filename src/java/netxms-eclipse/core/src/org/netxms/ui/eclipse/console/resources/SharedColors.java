@@ -35,6 +35,8 @@ import org.netxms.ui.eclipse.tools.ColorCache;
 public class SharedColors
 {
 	public static final String BORDER = "Border"; 
+	public static final String CGROUP_BORDER = "CGroup.Border"; 
+	public static final String CGROUP_TITLE = "CGroup.Title"; 
 	public static final String DASHBOARD_BACKGROUND = "Dashboard.Background"; 
 	public static final String DIAL_CHART_LEGEND = "DialChart.Legend"; 
 	public static final String DIAL_CHART_NEEDLE = "DialChart.Needle";
@@ -63,6 +65,8 @@ public class SharedColors
 	static
 	{
 		defaultColors.put(BORDER, new RGB(153, 180, 209));
+		defaultColors.put(CGROUP_BORDER, new RGB(153, 180, 209));
+		defaultColors.put(CGROUP_TITLE, new RGB(0, 0, 0));
 		defaultColors.put(DASHBOARD_BACKGROUND, new RGB(255, 255, 255));
 		defaultColors.put(DIAL_CHART_LEGEND, new RGB(0, 0, 0));
 		defaultColors.put(DIAL_CHART_NEEDLE, new RGB(51, 78, 113));

@@ -2092,6 +2092,7 @@ src/java/netxms-eclipse/core/nxmc.product -text
 src/java/netxms-eclipse/core/plugin.xml -text
 src/java/netxms-eclipse/core/plugin_customization.ini -text
 src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.branding.exsd -text
+src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.colorproviders.exsd -text
 src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.loginlisteners.exsd -text
 src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.sessionproviders.exsd -text
 src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.tweaklets.exsd -text

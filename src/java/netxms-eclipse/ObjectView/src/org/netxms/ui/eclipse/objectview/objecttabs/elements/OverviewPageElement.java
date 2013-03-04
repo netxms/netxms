@@ -21,13 +21,13 @@ package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.widgets.DashboardElement;
+import org.netxms.ui.eclipse.widgets.CGroup;
 
 /**
  * Abstract element of "Object Overview" tab
  *
  */
-public abstract class OverviewPageElement extends DashboardElement
+public abstract class OverviewPageElement extends CGroup
 {
 	private GenericObject object;
 	

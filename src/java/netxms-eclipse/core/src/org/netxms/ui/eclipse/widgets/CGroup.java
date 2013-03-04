@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
@@ -37,18 +36,15 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 
 /**
- * Dashboard element. Provides all basic functionality - border, buttons, etc.
- *
+ * Instances of this class provide a custom-drawn border with an optional title bar and buttons.
  */
-public abstract class DashboardElement extends Canvas
+public abstract class CGroup extends Canvas
 {
-	private static final Color DEFAULT_BORDER_COLOR = new Color(Display.getCurrent(), 153, 180, 209);
-	private static final Color DEFAULT_TITLE_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
 	private static final int BORDER_WIDTH = 3;
 	private static final int HEADER_HEIGHT = 22;
 	
@@ -64,13 +60,13 @@ public abstract class DashboardElement extends Canvas
 	 * @param parent
 	 * @param style
 	 */
-	public DashboardElement(Composite parent, String text)
+	public CGroup(Composite parent, String text)
 	{
 		super(parent, SWT.NONE);
 		this.text = text;
 		
-		borderColor = DEFAULT_BORDER_COLOR;
-		titleColor = DEFAULT_TITLE_COLOR;
+		borderColor = SharedColors.getColor(SharedColors.CGROUP_BORDER, getDisplay());
+		titleColor = SharedColors.getColor(SharedColors.CGROUP_TITLE, getDisplay());
 		
 		headerArea = new Composite(this, SWT.NONE);
 		headerArea.setBackground(borderColor);
