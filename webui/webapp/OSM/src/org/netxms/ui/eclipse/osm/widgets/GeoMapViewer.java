@@ -56,6 +56,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.presentations.PresentationUtil;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.osm.Activator;
@@ -68,7 +69,6 @@ import org.netxms.ui.eclipse.osm.tools.MapLoader;
 import org.netxms.ui.eclipse.osm.tools.Tile;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
-import org.netxms.ui.eclipse.shared.SharedColors;
 
 /**
  * This widget shows map retrieved via OpenStreetMap Static Map API
@@ -466,7 +466,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			gc.setFont(TITLE_FONT);
 			Rectangle rect = getClientArea();
 			int x = (rect.width - gc.textExtent(title).x) / 2;
-			gc.setForeground(SharedColors.BLACK);
+			gc.setForeground(SharedColors.getColor(SharedColors.GEOMAP_TITLE, getDisplay()));
 			gc.drawText(title, x, 10, true);
 		}
 	}

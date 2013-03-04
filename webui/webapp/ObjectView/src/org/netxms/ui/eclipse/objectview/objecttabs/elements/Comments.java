@@ -23,7 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.shared.SharedColors;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 
 /**
  * Show object's comments
@@ -53,7 +53,7 @@ public class Comments extends OverviewPageElement
 	protected Control createClientArea(Composite parent)
 	{
 		comments = new Text(parent, SWT.MULTI | SWT.READ_ONLY | SWT.WRAP);
-		comments.setBackground(SharedColors.WHITE);
+		comments.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
 		if (getObject() != null)
 			comments.setText(getObject().getComments());
 		return comments;

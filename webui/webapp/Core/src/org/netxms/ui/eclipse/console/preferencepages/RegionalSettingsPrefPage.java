@@ -36,9 +36,9 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.netxms.api.client.Session;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.webui.core.Activator;
@@ -171,7 +171,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 				{
 					setErrorMessage(e.getLocalizedMessage());
 					if (updatedControl != null)
-						updatedControl.setBackground(SharedColors.RED);
+						updatedControl.setBackground(SharedColors.getColor(SharedColors.ERROR_BACKGROUND, updatedControl.getDisplay()));
 					return;
 				}
 				break;

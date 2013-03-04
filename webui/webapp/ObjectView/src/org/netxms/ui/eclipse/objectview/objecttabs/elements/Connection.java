@@ -30,8 +30,8 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedColors;
 
 /**
  * "Connection" element - shows peer information for interface
@@ -74,7 +74,7 @@ public class Connection extends OverviewPageElement
 		Composite area = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		area.setLayout(layout);
-		area.setBackground(SharedColors.WHITE);
+		area.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
 		
 		nodeLabel = new CLabel(area, SWT.NONE);
 		nodeLabel.setBackground(area.getBackground());

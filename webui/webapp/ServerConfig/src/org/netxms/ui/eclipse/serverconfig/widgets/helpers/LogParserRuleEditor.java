@@ -44,8 +44,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.CGroup;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
-import org.netxms.ui.eclipse.widgets.DashboardElement;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -98,7 +98,7 @@ public class LogParserRuleEditor extends DashboardComposite
 		controlBar.setLayoutData(gd);
 		fillControlBar(controlBar);
 		
-		final DashboardElement condition = new DashboardElement(this, "Condition") {
+		final CGroup condition = new CGroup(this, "Condition") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -116,7 +116,7 @@ public class LogParserRuleEditor extends DashboardComposite
 		gd.grabExcessVerticalSpace = true;
 		condition.setLayoutData(gd);
 
-		final DashboardElement action = new DashboardElement(this, "Action") {
+		final CGroup action = new CGroup(this, "Action") {
 			private static final long serialVersionUID = 1L;
 
 			@Override

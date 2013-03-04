@@ -26,7 +26,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.ColorCache;
 
 /**
@@ -54,8 +53,8 @@ public class DashboardComposite extends Canvas implements PaintListener
 		
 		colors = new ColorCache(this);
 		borderOuterColor = colors.create(171, 173, 179);
-		borderInnerColor = SharedColors.WHITE;
-		backgroundColor = SharedColors.WHITE;
+		borderInnerColor = colors.create(255, 255, 255);
+		backgroundColor = colors.create(255, 255, 255);
 		
 		hasBorder = ((style & SWT.BORDER) != 0);
 		addPaintListener(this);

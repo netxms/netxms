@@ -34,6 +34,7 @@ import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.AvailabilityChart;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Capabilities;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Commands;
@@ -42,7 +43,6 @@ import org.netxms.ui.eclipse.objectview.objecttabs.elements.Connection;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.GeneralInfo;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedColors;
 
 /**
  * Object overview tab
@@ -78,7 +78,7 @@ public class ObjectOverview extends ObjectTab
 		});
 		
 		viewArea = new Composite(scroller, SWT.NONE);
-		viewArea.setBackground(SharedColors.WHITE);
+		viewArea.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		viewArea.setLayout(layout);
@@ -86,7 +86,7 @@ public class ObjectOverview extends ObjectTab
 		
 		leftColumn = new Composite(viewArea, SWT.NONE);
 		leftColumn.setLayout(createColumnLayout());
-		leftColumn.setBackground(SharedColors.WHITE);
+		leftColumn.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
 		GridData gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.FILL;
@@ -95,7 +95,7 @@ public class ObjectOverview extends ObjectTab
 		
 		rightColumn = new Composite(viewArea, SWT.NONE);
 		rightColumn.setLayout(createColumnLayout());
-		rightColumn.setBackground(SharedColors.WHITE);
+		rightColumn.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.LEFT;

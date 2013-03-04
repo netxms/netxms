@@ -64,7 +64,7 @@ import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.widgets.DashboardElement;
+import org.netxms.ui.eclipse.widgets.CGroup;
 import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 
 /**
@@ -97,8 +97,8 @@ public class RuleEditor extends Composite
 	private Composite header;
 	private Label headerLabel;
 	private Composite mainArea;
-	private DashboardElement condition;
-	private DashboardElement action;
+	private CGroup condition;
+	private CGroup action;
 	private Label expandButton;
 	private Label editButton;
 	private boolean modified = false;
@@ -164,7 +164,7 @@ public class RuleEditor extends Composite
 		
 		createPopupMenu(new Control[] { leftPanel, ruleNumberLabel, header, headerLabel });
 		
-		condition = new DashboardElement(mainArea, Messages.RuleEditor_Filter) {
+		condition = new CGroup(mainArea, Messages.RuleEditor_Filter) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -188,7 +188,7 @@ public class RuleEditor extends Composite
 		condition.addButton(new DashboardElementButton(Messages.RuleEditor_EditCondition, editor.getImageEdit(), editRuleCondition));
 		condition.setDoubleClickAction(editRuleCondition);
 
-		action = new DashboardElement(mainArea, Messages.RuleEditor_Action) {
+		action = new CGroup(mainArea, Messages.RuleEditor_Action) {
 			private static final long serialVersionUID = 1L;
 
 			@Override

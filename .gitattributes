@@ -2484,6 +2484,7 @@ webui/webapp/Core/icons/zoom_out.png -text
 webui/webapp/Core/jar/simple-xml-2.6.4.jar -text
 webui/webapp/Core/plugin.xml -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.branding.exsd -text
+webui/webapp/Core/schema/org.netxms.ui.eclipse.colorproviders.exsd -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.loginlisteners.exsd -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.sessionproviders.exsd -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
@@ -2501,7 +2502,6 @@ webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/RegionalSettings.java 
 webui/webapp/Core/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/shared/ConsoleSharedData.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/shared/IActionConstants.java -text
-webui/webapp/Core/src/org/netxms/ui/eclipse/shared/SharedColors.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/shared/SharedIcons.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/tools/ColorCache.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/tools/ColorConverter.java -text
@@ -2520,7 +2520,6 @@ webui/webapp/Core/src/org/netxms/ui/eclipse/widgets/AbstractSelector.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/widgets/AnimatedImage.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/widgets/CommandBox.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/widgets/DashboardComposite.java -text
-webui/webapp/Core/src/org/netxms/ui/eclipse/widgets/DashboardElement.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/widgets/DateTimeSelector.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/widgets/FilterText.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/widgets/LabeledText.java -text

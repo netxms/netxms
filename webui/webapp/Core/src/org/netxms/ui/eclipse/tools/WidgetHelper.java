@@ -38,7 +38,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.ui.eclipse.shared.SharedColors;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -487,7 +487,7 @@ public class WidgetHelper
 			return true;	// Ignore validation for disabled controls
 		
 		boolean ok = validator.validate(text);
-		control.setBackground(ok ? null : SharedColors.RED);
+		control.setBackground(ok ? null : SharedColors.getColor(SharedColors.ERROR_BACKGROUND, control.getDisplay()));
 		if (ok)
 		{
 			if (page != null)

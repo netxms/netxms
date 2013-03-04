@@ -42,7 +42,6 @@ import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -64,10 +63,10 @@ import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.shared.MibCache;
@@ -89,7 +88,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	
 	private CLabel header;
 	private Font headerFont;
-	private Color headerColor;
 	private MibBrowser mibBrowser;
 	private MibObjectDetails details;
 	private TableViewer viewer;
@@ -155,7 +153,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	public void createPartControl(Composite parent)
 	{
 		headerFont = new Font(parent.getDisplay(), "Verdana", 11, SWT.BOLD); //$NON-NLS-1$
-		headerColor = new Color(parent.getDisplay(), 153, 180, 209);
 		
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = 0;
@@ -166,8 +163,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		header = new CLabel(parent, SWT.BORDER);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		header.setFont(headerFont);
-		header.setBackground(headerColor);
-		header.setForeground(SharedColors.WHITE);
+		header.setBackground(SharedColors.getColor(SharedColors.MIB_EXPLORER_HEADER_BACKGROUND, parent.getDisplay()));
+		header.setForeground(SharedColors.getColor(SharedColors.MIB_EXPLORER_HEADER_TEXT, parent.getDisplay()));
 		header.setText((currentNode != null) ? currentNode.getObjectName() : ""); //$NON-NLS-1$
 		
 		SashForm splitter = new SashForm(parent, SWT.VERTICAL);
@@ -631,7 +628,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	public void dispose()
 	{
 		headerFont.dispose();
-		headerColor.dispose();
 		super.dispose();
 	}
 }

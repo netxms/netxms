@@ -36,8 +36,8 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.Port;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
@@ -49,7 +49,7 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
 public class DeviceView extends DashboardComposite
 {
 	private static final long serialVersionUID = 1L;
-
+	
 	private long nodeId;
 	private NXCSession session;
 	private Map<Long, PortInfo> ports = new HashMap<Long, PortInfo>();
@@ -74,7 +74,7 @@ public class DeviceView extends DashboardComposite
 		layout.wrap = false;
 		setLayout(layout);
 		
-		setBackground(SharedColors.WHITE);
+		setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
 		
 		listener = new PortSelectionListener() {
 			@Override

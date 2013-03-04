@@ -44,11 +44,11 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.perfview.objecttabs.internal.PerfTabGraph;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
@@ -70,7 +70,7 @@ public class PerformanceTab extends ObjectTab
 		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 		
 		chartArea = new Composite(scroller, SWT.NONE);
-		chartArea.setBackground(SharedColors.WHITE);
+		chartArea.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;

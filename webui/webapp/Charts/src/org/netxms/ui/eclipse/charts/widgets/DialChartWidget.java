@@ -44,7 +44,7 @@ import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DialChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
-import org.netxms.ui.eclipse.shared.SharedColors;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -66,8 +66,6 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	private static final RGB GREEN_ZONE_COLOR = new RGB(0, 224, 0);
 	private static final RGB YELLOW_ZONE_COLOR = new RGB(255, 242, 0);
 	private static final RGB RED_ZONE_COLOR = new RGB(224, 0, 0);
-	private static final RGB NEEDLE_COLOR = new RGB(51, 78, 113);
-	private static final RGB NEEDLE_PIN_COLOR = new RGB(239, 228, 176);
 	
 	private static Font[] scaleFonts = null;
 	private static Font[] valueFonts = null;
@@ -264,17 +262,20 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		return false;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#setLabelsVisible(boolean)
+	 */
 	@Override
 	public void setLabelsVisible(boolean visible)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#isLabelsVisible()
+	 */
 	@Override
 	public boolean isLabelsVisible()
 	{
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -424,7 +425,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		
 		// Draw center part and border
 		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
-		gc.setForeground(SharedColors.BLACK);
+		gc.setForeground(SharedColors.getColor(SharedColors.DIAL_CHART_SCALE, getDisplay()));
 		gc.fillArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, 0, 360);
 		gc.setLineWidth(2);
 		gc.drawArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
@@ -457,7 +458,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		gc.drawArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, -45, 270);
 		
 		// Draw needle
-		gc.setBackground(colors.create(NEEDLE_COLOR));
+		gc.setBackground(SharedColors.getColor(SharedColors.DIAL_CHART_NEEDLE, getDisplay()));
 		double dciValue = dci.getValue();
 		if (dciValue < minValue)
 			dciValue = minValue;
@@ -469,7 +470,7 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		Point np2 = positionOnArc(cx, cy, NEEDLE_PIN_RADIUS / 2, angle + 90);
 		gc.fillPolygon(new int[] { np1.x, np1.y, needleEnd.x, needleEnd.y, np2.x, np2.y });
 		gc.fillArc(cx - NEEDLE_PIN_RADIUS, cy - NEEDLE_PIN_RADIUS, NEEDLE_PIN_RADIUS * 2 - 1, NEEDLE_PIN_RADIUS * 2 - 1, 0, 360);
-		gc.setBackground(colors.create(NEEDLE_PIN_COLOR));
+		gc.setBackground(SharedColors.getColor(SharedColors.DIAL_CHART_NEEDLE_PIN, getDisplay()));
 		gc.fillArc(cx - NEEDLE_PIN_RADIUS / 2, cy - NEEDLE_PIN_RADIUS / 2, NEEDLE_PIN_RADIUS - 1, NEEDLE_PIN_RADIUS - 1, 0, 360);
 		
 		// Draw current value
@@ -477,17 +478,17 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 		gc.setFont(WidgetHelper.getMatchingSizeFont(valueFonts, markFont));
 		Point ext = gc.textExtent(value);
 		gc.setLineWidth(3);
-		gc.setBackground(colors.create(NEEDLE_COLOR));
+		gc.setBackground(SharedColors.getColor(SharedColors.DIAL_CHART_VALUE_BACKGROUND, getDisplay()));
 		int boxW = Math.max(outerRadius - scaleInnerOffset - 6, ext.x + 8);
 		gc.fillRoundRectangle(cx - boxW / 2, cy + rect.height / 4, boxW, ext.y + 6, 3, 3);
-		gc.setForeground(SharedColors.WHITE);
+		gc.setForeground(SharedColors.getColor(SharedColors.DIAL_CHART_VALUE, getDisplay()));
 		gc.drawText(value, cx - ext.x / 2, cy + rect.height / 4 + 3, true);
 		
 		// Draw legend, ignore legend position
 		if (legendVisible)
 		{
 			ext = gc.textExtent(dci.getName());
-			gc.setForeground(SharedColors.BLACK);
+			gc.setForeground(SharedColors.getColor(SharedColors.DIAL_CHART_LEGEND, getDisplay()));
 			if (legendInside)
 			{
 				gc.setFont(markFont);
@@ -783,8 +784,6 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	@Override
 	public void setBackgroundColor(ChartColor color)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 
 	/* (non-Javadoc)
@@ -793,8 +792,6 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	@Override
 	public void setPlotAreaColor(ChartColor color)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 
 	/* (non-Javadoc)
@@ -803,8 +800,6 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	@Override
 	public void setLegendColor(ChartColor foreground, ChartColor background)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 
 	/* (non-Javadoc)
@@ -813,8 +808,6 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	@Override
 	public void setAxisColor(ChartColor color)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 
 	/* (non-Javadoc)
@@ -823,8 +816,6 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	@Override
 	public void setGridColor(ChartColor color)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 
 	/* (non-Javadoc)
@@ -833,8 +824,6 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	@Override
 	public void addError(String message)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 
 	/* (non-Javadoc)
@@ -843,7 +832,5 @@ public class DialChartWidget extends GenericChart implements DialChart, PaintLis
 	@Override
 	public void clearErrors()
 	{
-		// TODO Auto-generated method stub
-		
 	}
 }

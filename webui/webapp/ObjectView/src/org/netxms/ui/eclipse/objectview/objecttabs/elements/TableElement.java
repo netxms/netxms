@@ -12,7 +12,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.shared.SharedColors;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 public abstract class TableElement extends OverviewPageElement
@@ -59,7 +59,7 @@ public abstract class TableElement extends OverviewPageElement
 		
 		table.setHeaderVisible(false);
 		table.setLinesVisible(false);
-		table.setBackground(SharedColors.WHITE);
+		table.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
 	}
 	
 	/**
