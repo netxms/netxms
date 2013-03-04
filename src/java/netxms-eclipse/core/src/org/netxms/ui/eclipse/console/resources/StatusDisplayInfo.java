@@ -42,15 +42,15 @@ public final class StatusDisplayInfo
 	 */
 	public static void init(Display display)
 	{
-		statusText[Severity.NORMAL] = Messages.getString("StatusDisplayInfo.Normal"); //$NON-NLS-1$
-		statusText[Severity.WARNING] = Messages.getString("StatusDisplayInfo.Warning"); //$NON-NLS-1$
-		statusText[Severity.MINOR] = Messages.getString("StatusDisplayInfo.Minor"); //$NON-NLS-1$
-		statusText[Severity.MAJOR] = Messages.getString("StatusDisplayInfo.Major"); //$NON-NLS-1$
-		statusText[Severity.CRITICAL] = Messages.getString("StatusDisplayInfo.Critical"); //$NON-NLS-1$
-		statusText[Severity.UNKNOWN] = Messages.getString("StatusDisplayInfo.Unknown"); //$NON-NLS-1$
-		statusText[Severity.UNMANAGED] = Messages.getString("StatusDisplayInfo.Unmanaged"); //$NON-NLS-1$
-		statusText[Severity.DISABLED] = Messages.getString("StatusDisplayInfo.Disabled"); //$NON-NLS-1$
-		statusText[Severity.TESTING] = Messages.getString("StatusDisplayInfo.Testing"); //$NON-NLS-1$
+		statusText[Severity.NORMAL] = Messages.StatusDisplayInfo_Normal;
+		statusText[Severity.WARNING] = Messages.StatusDisplayInfo_Warning;
+		statusText[Severity.MINOR] = Messages.StatusDisplayInfo_Minor;
+		statusText[Severity.MAJOR] = Messages.StatusDisplayInfo_Major;
+		statusText[Severity.CRITICAL] = Messages.StatusDisplayInfo_Critical;
+		statusText[Severity.UNKNOWN] = Messages.StatusDisplayInfo_Unknown;
+		statusText[Severity.UNMANAGED] = Messages.StatusDisplayInfo_Unmanaged;
+		statusText[Severity.DISABLED] = Messages.StatusDisplayInfo_Disabled;
+		statusText[Severity.TESTING] = Messages.StatusDisplayInfo_Testing;
 
 		statusImageDesc[Severity.NORMAL] = Activator.getImageDescriptor("icons/status/normal.png"); //$NON-NLS-1$
 		statusImageDesc[Severity.WARNING] = Activator.getImageDescriptor("icons/status/warning.png"); //$NON-NLS-1$

@@ -152,12 +152,12 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			catch(InvocationTargetException e)
 			{
 				e.getCause().printStackTrace();
-				MessageDialog.openError(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.connectionError"), e.getCause().getLocalizedMessage()); //$NON-NLS-1$
+				MessageDialog.openError(shell, Messages.NXMCWorkbenchWindowAdvisor_connectionError, e.getCause().getLocalizedMessage()); //$NON-NLS-1$
 			}
 			catch(Exception e)
 			{
 				e.printStackTrace();
-				MessageDialog.openError(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.exception"), e.toString()); //$NON-NLS-1$
+				MessageDialog.openError(shell, Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString()); //$NON-NLS-1$
 			}
 		} while(!success);
 
@@ -193,15 +193,15 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 					try
 					{
 						new ProgressMonitorDialog(shell).run(true, true, job);
-						MessageDialog.openInformation(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.title_information"), Messages.getString("NXMCWorkbenchWindowAdvisor.passwd_changed")); //$NON-NLS-1$ //$NON-NLS-2$
+						MessageDialog.openInformation(shell, Messages.NXMCWorkbenchWindowAdvisor_title_information, Messages.NXMCWorkbenchWindowAdvisor_passwd_changed);
 					}
 					catch(InvocationTargetException e)
 					{
-						MessageDialog.openError(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.title_error"), Messages.getString("NXMCWorkbenchWindowAdvisor.cannot_change_passwd") + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						MessageDialog.openError(shell, Messages.NXMCWorkbenchWindowAdvisor_title_error, Messages.NXMCWorkbenchWindowAdvisor_cannot_change_passwd + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
 					}
 					catch(InterruptedException e)
 					{
-						MessageDialog.openError(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.exception"), e.toString()); //$NON-NLS-1$
+						MessageDialog.openError(shell, Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString());
 					}
 				}
 			}

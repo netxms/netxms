@@ -56,7 +56,7 @@ public class SendSMSDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.getString("SendSMSDialog.Title")); //$NON-NLS-1$
+		newShell.setText(Messages.SendSMSDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -73,7 +73,7 @@ public class SendSMSDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		numberField = new LabeledText(dialogArea, SWT.NONE);
-		numberField.setLabel(Messages.getString("SendSMSDialog.PhoneNumber")); //$NON-NLS-1$
+		numberField.setLabel(Messages.SendSMSDialog_PhoneNumber);
 		numberField.setText(phoneNumber);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -82,7 +82,7 @@ public class SendSMSDialog extends Dialog
 		numberField.setLayoutData(gd);
 		
 		messageField = new LabeledText(dialogArea, SWT.NONE);
-		messageField.setLabel(Messages.getString("SendSMSDialog.Message")); //$NON-NLS-1$
+		messageField.setLabel(Messages.SendSMSDialog_Message);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

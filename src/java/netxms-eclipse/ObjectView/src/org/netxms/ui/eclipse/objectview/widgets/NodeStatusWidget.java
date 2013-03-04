@@ -27,8 +27,8 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.shared.SharedColors;
 
 /**
  * Widget representing node status
@@ -60,7 +60,7 @@ public class NodeStatusWidget extends Canvas implements PaintListener
 		
 		e.gc.setAntialias(SWT.ON);
 		e.gc.setTextAntialias(SWT.ON);
-		e.gc.setForeground(SharedColors.BLACK);
+		e.gc.setForeground(SharedColors.getColor(SharedColors.TEXT_NORMAL, getDisplay()));
 		e.gc.setLineWidth(1);
 
 		e.gc.setBackground(StatusDisplayInfo.getStatusColor(node.getStatus()));

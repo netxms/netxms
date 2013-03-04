@@ -72,10 +72,10 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
-import org.netxms.ui.eclipse.shared.SharedColors;
 
 /**
  * Widget showing "heat" map of nodes under given root object
@@ -126,7 +126,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			}
 		});
 		
-		setBackground(SharedColors.WHITE);
+		setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
 		setExpandHorizontal(true);
 		setExpandVertical(true);
 		addControlListener(new ControlAdapter() {

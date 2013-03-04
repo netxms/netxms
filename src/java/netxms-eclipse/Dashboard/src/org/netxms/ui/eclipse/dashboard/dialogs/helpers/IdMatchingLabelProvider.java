@@ -23,11 +23,12 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.IdMatchingDialog;
 import org.netxms.ui.eclipse.objectbrowser.shared.ObjectIcons;
-import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.ImageCache;
 
 /**
@@ -82,7 +83,7 @@ public class IdMatchingLabelProvider extends LabelProvider implements ITableLabe
 	@Override
 	public Color getForeground(Object element)
 	{
-		return (((IdMatchingData)element).getDestinationId() != 0) ? SharedColors.BLACK : SharedColors.RED;
+		return SharedColors.getColor((((IdMatchingData)element).getDestinationId() != 0) ? SharedColors.TEXT_NORMAL : SharedColors.TEXT_ERROR, Display.getCurrent());
 	}
 
 	/* (non-Javadoc)

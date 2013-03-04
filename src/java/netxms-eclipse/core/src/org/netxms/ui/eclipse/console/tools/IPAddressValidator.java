@@ -57,6 +57,6 @@ public class IPAddressValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return Messages.getString("IPAddressValidator.ErrorPrefix") + label + Messages.getString("IPAddressValidator.ErrorSuffix"); //$NON-NLS-1$ //$NON-NLS-2$
+		return Messages.IPAddressValidator_ErrorPrefix + label + Messages.IPAddressValidator_ErrorSuffix;
 	}
 }

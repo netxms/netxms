@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -54,6 +55,7 @@ public class Activator extends AbstractUIPlugin
 	{
 		super.start(context);
 		plugin = this;
+		SharedIcons.init();
 	}
 
 	/*
@@ -116,7 +118,7 @@ public class Activator extends AbstractUIPlugin
 		if (tray != null)
 		{
 			TrayItem item = new TrayItem(tray, SWT.NONE);
-			item.setToolTipText(Messages.getString("Activator.TrayTooltip")); //$NON-NLS-1$
+			item.setToolTipText(Messages.Activator_TrayTooltip);
 			item.setImage(getImageDescriptor("icons/launcher/16x16.png").createImage()); //$NON-NLS-1$
 			item.addSelectionListener(new SelectionListener() {
 				@Override

@@ -35,7 +35,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Workbench" preference page 
- *
  */
 public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchPreferencePage
 {
@@ -57,15 +56,15 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 		dialogArea.setLayout(layout);
 		
 		cbShowHeapMonitor = new Button(dialogArea, SWT.CHECK);
-		cbShowHeapMonitor.setText(Messages.getString("WorkbenchGeneralPrefs.show_heap")); //$NON-NLS-1$
+		cbShowHeapMonitor.setText(Messages.WorkbenchGeneralPrefs_show_heap);
 		cbShowHeapMonitor.setSelection(getPreferenceStore().getBoolean("SHOW_MEMORY_MONITOR")); //$NON-NLS-1$
 		
 		cbShowTrayIcon = new Button(dialogArea, SWT.CHECK);
-		cbShowTrayIcon.setText(Messages.getString("WorkbenchGeneralPrefs.show_tray_icon")); //$NON-NLS-1$
+		cbShowTrayIcon.setText(Messages.WorkbenchGeneralPrefs_show_tray_icon);
 		cbShowTrayIcon.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_ICON")); //$NON-NLS-1$
 		
 		cbHideWhenMinimized = new Button(dialogArea, SWT.CHECK);
-		cbHideWhenMinimized.setText(Messages.getString("WorkbenchGeneralPrefs.HideWhenMinimized")); //$NON-NLS-1$
+		cbHideWhenMinimized.setText(Messages.WorkbenchGeneralPrefs_HideWhenMinimized);
 		cbHideWhenMinimized.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WHEN_MINIMIZED")); //$NON-NLS-1$
 		cbHideWhenMinimized.setEnabled(cbShowTrayIcon.getSelection());
 

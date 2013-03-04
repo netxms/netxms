@@ -6,12 +6,14 @@ package org.netxms.ui.eclipse.slm.views;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
@@ -24,8 +26,8 @@ import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.slm.Messages;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -154,19 +156,20 @@ public class ServiceAvailability extends ViewPart
 	 */
 	private void paintLegend(GC gc)
 	{
-		int th = gc.textExtent(Messages.ServiceAvailability_UptimeDowntime).y;
+		final int th = gc.textExtent(Messages.ServiceAvailability_UptimeDowntime).y;
+		final Color fg = SharedColors.getColor(SharedColors.SERVICE_AVAILABILITY_LEGEND, Display.getCurrent());
 		
 		gc.setBackground(colors.create(127, 154, 72));
-		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), SharedColors.BLACK, 0.2f, colors));
+		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), fg, 0.2f, colors));
 		gc.fillRectangle(5, 10, th, th);
 		gc.drawRectangle(5, 10, th, th);
 
 		gc.setBackground(colors.create(158, 65, 62));
-		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), SharedColors.BLACK, 0.2f, colors));
+		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), fg, 0.2f, colors));
 		gc.fillRectangle(5, 40, th, th);
 		gc.drawRectangle(5, 40, th, th);
 
-		gc.setForeground(SharedColors.BLACK);
+		gc.setForeground(fg);
 		gc.drawText(Messages.ServiceAvailability_Uptime, 10 + th, 10, true);
 		gc.drawText(Messages.ServiceAvailability_Downtime, 10 + th, 40, true);
 	}

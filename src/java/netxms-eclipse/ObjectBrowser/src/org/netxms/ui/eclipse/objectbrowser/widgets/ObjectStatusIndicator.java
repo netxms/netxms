@@ -37,11 +37,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeViewer;
-import org.netxms.ui.eclipse.shared.SharedColors;
 
 /**
  * Object status indicator
@@ -68,7 +68,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 	{
 		super(parent, style | SWT.DOUBLE_BUFFERED);
 		addPaintListener(this);
-		setBackground(SharedColors.WHITE);
+		setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
 		
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		showIcons = ps.getBoolean("ObjectStatusIndicator.showIcons"); //$NON-NLS-1$
@@ -224,7 +224,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 				}
 			}
 		}		
-		gc.setForeground(SharedColors.BORDER);
+		gc.setForeground(SharedColors.getColor(SharedColors.BORDER, getDisplay()));
 		gc.drawLine(width - 1, 0, width - 1, getClientArea().height);
 	}
 	

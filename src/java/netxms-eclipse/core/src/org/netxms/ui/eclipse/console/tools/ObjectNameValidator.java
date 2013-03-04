@@ -60,6 +60,6 @@ public class ObjectNameValidator implements TextFieldValidator
 	@Override
 	public String getErrorMessage(String text, String label)
 	{
-		return isEmpty ? (Messages.getString("ObjectNameValidator.ErrorPrefix1") + label + Messages.getString("ObjectNameValidator.ErrorSuffix1")) : (Messages.getString("ObjectNameValidator.ErrorPrefix2") + label + Messages.getString("ObjectNameValidator.ErrorSuffix2")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		return isEmpty ? (Messages.ObjectNameValidator_ErrorPrefix1 + label + Messages.ObjectNameValidator_ErrorSuffix1) : (Messages.ObjectNameValidator_ErrorPrefix2 + label + Messages.ObjectNameValidator_ErrorSuffix2);
 	}
 }

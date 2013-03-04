@@ -297,7 +297,6 @@ Copyright (c) 2003-2013 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.netxms.ui.eclipse.eventmanager"/>
       <plugin id="org.netxms.ui.eclipse.filemanager"/>
       <plugin id="org.netxms.ui.eclipse.imagelibrary"/>
-      <plugin id="org.netxms.ui.eclipse.library"/>
       <plugin id="org.netxms.ui.eclipse.logviewer"/>
       <plugin id="org.netxms.ui.eclipse.networkmaps"/>
       <plugin id="org.netxms.ui.eclipse.nxsl"/>

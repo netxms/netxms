@@ -143,8 +143,8 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 						public void run()
 						{
 							MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
-									Messages.getString("NXMCWorkbenchAdvisor.CommunicationError"),  //$NON-NLS-1$
-									((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? Messages.getString("NXMCWorkbenchAdvisor.ConnectionLostMessage") : Messages.getString("NXMCWorkbenchAdvisor.ServerShutdownMessage")) + Messages.getString("NXMCWorkbenchAdvisor.OKToCloseMessage")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+									Messages.NXMCWorkbenchAdvisor_CommunicationError,
+									((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? Messages.NXMCWorkbenchAdvisor_ConnectionLostMessage : Messages.NXMCWorkbenchAdvisor_ServerShutdownMessage) + Messages.NXMCWorkbenchAdvisor_OKToCloseMessage);
 							PlatformUI.getWorkbench().getActiveWorkbenchWindow().close();
 						}
 					});

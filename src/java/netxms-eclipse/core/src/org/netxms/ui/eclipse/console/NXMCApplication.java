@@ -30,6 +30,7 @@ public class NXMCApplication implements IApplication
 
 		try
 		{
+			ColorManager.create();
 			StatusDisplayInfo.init(display);
 			DataCollectionDisplayInfo.init();
 

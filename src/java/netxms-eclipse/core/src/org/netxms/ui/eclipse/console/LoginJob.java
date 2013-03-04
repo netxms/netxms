@@ -83,7 +83,7 @@ public class LoginJob implements IRunnableWithProgress
 	@Override
 	public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
 	{
-		monitor.beginTask(Messages.getString("LoginJob.connecting"), 100); //$NON-NLS-1$
+		monitor.beginTask(Messages.LoginJob_connecting, 100);
 		try
 		{
 			final String hostName;
@@ -113,25 +113,25 @@ public class LoginJob implements IRunnableWithProgress
 			session.connect();
 			monitor.worked(40);
 
-			monitor.setTaskName(Messages.getString("LoginJob.sync_objects")); //$NON-NLS-1$
+			monitor.setTaskName(Messages.LoginJob_sync_objects);
 			session.syncObjects();
 			monitor.worked(25);
 
-			monitor.setTaskName(Messages.getString("LoginJob.sync_users")); //$NON-NLS-1$
+			monitor.setTaskName(Messages.LoginJob_sync_users);
 			session.syncUserDatabase();
 			monitor.worked(5);
 
-			monitor.setTaskName(Messages.getString("LoginJob.sync_event_db")); //$NON-NLS-1$
+			monitor.setTaskName(Messages.LoginJob_sync_event_db);
 			session.syncEventTemplates();
 			monitor.worked(5);
 
-			monitor.setTaskName(Messages.getString("LoginJob.subscribe")); //$NON-NLS-1$
+			monitor.setTaskName(Messages.LoginJob_subscribe);
 			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS | NXCSession.CHANNEL_EVENTS);
 			monitor.worked(5);
 
 			ConsoleSharedData.setSession(session);
 			
-			monitor.setTaskName(Messages.getString("LoginJob.init_extensions")); //$NON-NLS-1$
+			monitor.setTaskName(Messages.LoginJob_init_extensions);
 			TweakletManager.postLogin(session);
 			callLoginListeners(session);
 			monitor.worked(5);

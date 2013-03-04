@@ -56,11 +56,11 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.objectview.services.SourceProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 
 /**
@@ -137,7 +137,7 @@ public class TabbedObjectView extends ViewPart
 		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		header.setFont(headerFont);
 		header.setBackground(headerColor);
-		header.setForeground(SharedColors.WHITE);
+		header.setForeground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
 		
 		tabFolder = new CTabFolder(parent, SWT.TOP | SWT.FLAT | SWT.MULTI);
 		tabFolder.setUnselectedImageVisible(true);

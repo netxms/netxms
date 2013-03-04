@@ -15,7 +15,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.shared.SharedColors;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 public abstract class TableElement extends OverviewPageElement
@@ -60,7 +60,7 @@ public abstract class TableElement extends OverviewPageElement
 		
 		table.setHeaderVisible(false);
 		table.setLinesVisible(false);
-		table.setBackground(SharedColors.WHITE);
+		table.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
 
 		// On Windows Vista and Windows 7, Table widget draws
 		// vertical lines even when setLinesVisible set to false.
@@ -71,7 +71,7 @@ public abstract class TableElement extends OverviewPageElement
 			public void handleEvent(Event event)
 			{
 				GC gc = event.gc;
-				gc.setBackground(SharedColors.WHITE);
+				gc.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
 				gc.fillRectangle(event.x, event.y, event.width, event.height);
 			}
 		});

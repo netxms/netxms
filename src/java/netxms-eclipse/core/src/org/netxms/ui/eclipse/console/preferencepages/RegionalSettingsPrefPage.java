@@ -38,9 +38,9 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.netxms.api.client.Session;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -82,10 +82,10 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
-		dateTimeFormat = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.getString("RegionalSettingsPrefPage.DateTimeFormat"), gd); //$NON-NLS-1$
-		dateTimeFormat.add(Messages.getString("RegionalSettingsPrefPage.FmtServer")); //$NON-NLS-1$
-		dateTimeFormat.add(Messages.getString("RegionalSettingsPrefPage.FmtJava")); //$NON-NLS-1$
-		dateTimeFormat.add(Messages.getString("RegionalSettingsPrefPage.FmtCustom")); //$NON-NLS-1$
+		dateTimeFormat = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.RegionalSettingsPrefPage_DateTimeFormat, gd); //$NON-NLS-1$
+		dateTimeFormat.add(Messages.RegionalSettingsPrefPage_FmtServer); //$NON-NLS-1$
+		dateTimeFormat.add(Messages.RegionalSettingsPrefPage_FmtJava); //$NON-NLS-1$
+		dateTimeFormat.add(Messages.RegionalSettingsPrefPage_FmtCustom); //$NON-NLS-1$
 		format = getPreferenceStore().getInt("DATETIME_FORMAT"); //$NON-NLS-1$
 		dateTimeFormat.select(format);
 		dateTimeFormat.addSelectionListener(new SelectionListener() {
@@ -114,7 +114,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		};
 		
 		dateFormatString = new LabeledText(dialogArea, SWT.NONE);
-		dateFormatString.setLabel(Messages.getString("RegionalSettingsPrefPage.DateFormatString")); //$NON-NLS-1$
+		dateFormatString.setLabel(Messages.RegionalSettingsPrefPage_DateFormatString); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -124,7 +124,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		dateFormatString.getTextControl().addModifyListener(listener);
 		
 		timeFormatString = new LabeledText(dialogArea, SWT.NONE);
-		timeFormatString.setLabel(Messages.getString("RegionalSettingsPrefPage.TimeFormatString")); //$NON-NLS-1$
+		timeFormatString.setLabel(Messages.RegionalSettingsPrefPage_TimeFormatString); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -134,7 +134,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		timeFormatString.getTextControl().addModifyListener(listener);
 		
 		dateTimeExample = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
-		dateTimeExample.setLabel(Messages.getString("RegionalSettingsPrefPage.Example")); //$NON-NLS-1$
+		dateTimeExample.setLabel(Messages.RegionalSettingsPrefPage_Example); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -166,7 +166,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 				{
 					setErrorMessage(e.getLocalizedMessage());
 					if (updatedControl != null)
-						updatedControl.setBackground(SharedColors.RED);
+						updatedControl.setBackground(SharedColors.getColor(SharedColors.ERROR_BACKGROUND, getShell().getDisplay()));
 					return;
 				}
 				break;

@@ -33,8 +33,8 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
-import org.netxms.ui.eclipse.shared.SharedColors;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
@@ -84,7 +84,7 @@ public class DecorationFigure extends Figure implements MouseListener, MouseMoti
 			label.setSize(d.width + LABEL_MARGIN * 2, d.height + 2);
 			label.setLocation(new Point(TITLE_OFFSET, 0));
 			label.setBackgroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(decoration.getColor())));
-			label.setForegroundColor(SharedColors.WHITE);
+			label.setForegroundColor(SharedColors.getColor(SharedColors.MAP_GROUP_BOX_TITLE, Display.getCurrent()));
 			
 			createResizeHandle(BOTTOM_RIGHT);
 		}

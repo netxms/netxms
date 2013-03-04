@@ -34,13 +34,13 @@ public class DataCollectionDisplayInfo
 	 */
 	public static void init()
 	{
-		dciDataTypes[DataCollectionItem.DT_INT] = Messages.getString("DataCollectionDisplayInfo.Integer"); //$NON-NLS-1$
-		dciDataTypes[DataCollectionItem.DT_UINT] = Messages.getString("DataCollectionDisplayInfo.UInteger"); //$NON-NLS-1$
-		dciDataTypes[DataCollectionItem.DT_INT64] = Messages.getString("DataCollectionDisplayInfo.Integer64"); //$NON-NLS-1$
-		dciDataTypes[DataCollectionItem.DT_UINT64] = Messages.getString("DataCollectionDisplayInfo.UInteger64"); //$NON-NLS-1$
-		dciDataTypes[DataCollectionItem.DT_FLOAT] = Messages.getString("DataCollectionDisplayInfo.Float"); //$NON-NLS-1$
-		dciDataTypes[DataCollectionItem.DT_STRING] = Messages.getString("DataCollectionDisplayInfo.String"); //$NON-NLS-1$
-		dciDataTypes[DataCollectionItem.DT_NULL] = Messages.getString("DataCollectionDisplayInfo.Null"); //$NON-NLS-1$
+		dciDataTypes[DataCollectionItem.DT_INT] = Messages.DataCollectionDisplayInfo_Integer;
+		dciDataTypes[DataCollectionItem.DT_UINT] = Messages.DataCollectionDisplayInfo_UInteger;
+		dciDataTypes[DataCollectionItem.DT_INT64] = Messages.DataCollectionDisplayInfo_Integer64;
+		dciDataTypes[DataCollectionItem.DT_UINT64] = Messages.DataCollectionDisplayInfo_UInteger64;
+		dciDataTypes[DataCollectionItem.DT_FLOAT] = Messages.DataCollectionDisplayInfo_Float;
+		dciDataTypes[DataCollectionItem.DT_STRING] = Messages.DataCollectionDisplayInfo_String;
+		dciDataTypes[DataCollectionItem.DT_NULL] = Messages.DataCollectionDisplayInfo_Null;
 	}
 
 	/**
@@ -56,7 +56,7 @@ public class DataCollectionDisplayInfo
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
-			return Messages.getString("DataCollectionDisplayInfo.Unknown"); //$NON-NLS-1$
+			return Messages.DataCollectionDisplayInfo_Unknown;
 		}
 	}
 }

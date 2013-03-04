@@ -74,7 +74,7 @@ public class HttpProxyPrefs extends PreferencePage implements IWorkbenchPreferen
 		dialogArea.setLayout(layout);
 		
 		checkUseProxy = new Button(dialogArea, SWT.CHECK);
-		checkUseProxy.setText(Messages.getString("HttpProxyPrefs.UserProxyMessage")); //$NON-NLS-1$
+		checkUseProxy.setText(Messages.HttpProxyPrefs_UserProxyMessage); //$NON-NLS-1$
 		checkUseProxy.setSelection(getPreferenceStore().getBoolean("HTTP_PROXY_ENABLED")); //$NON-NLS-1$
 		GridData gd = new GridData();
 		gd.horizontalSpan = 2;
@@ -100,7 +100,7 @@ public class HttpProxyPrefs extends PreferencePage implements IWorkbenchPreferen
 		});
 		
 		editProxyServer = new LabeledText(dialogArea, SWT.NONE);
-		editProxyServer.setLabel(Messages.getString("HttpProxyPrefs.ProxyServer")); //$NON-NLS-1$
+		editProxyServer.setLabel(Messages.HttpProxyPrefs_ProxyServer); //$NON-NLS-1$
 		editProxyServer.setText(getPreferenceStore().getString("HTTP_PROXY_SERVER")); //$NON-NLS-1$
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -108,7 +108,7 @@ public class HttpProxyPrefs extends PreferencePage implements IWorkbenchPreferen
 		editProxyServer.setLayoutData(gd);
 
 		editProxyPort = new LabeledText(dialogArea, SWT.NONE);
-		editProxyPort.setLabel(Messages.getString("HttpProxyPrefs.Port")); //$NON-NLS-1$
+		editProxyPort.setLabel(Messages.HttpProxyPrefs_Port); //$NON-NLS-1$
 		editProxyPort.setText(getPreferenceStore().getString("HTTP_PROXY_PORT")); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -116,7 +116,7 @@ public class HttpProxyPrefs extends PreferencePage implements IWorkbenchPreferen
 		editProxyPort.setLayoutData(gd);
 		
 		editExclusions = new LabeledText(dialogArea, SWT.NONE);
-		editExclusions.setLabel(Messages.getString("HttpProxyPrefs.ExcludedAddresses")); //$NON-NLS-1$
+		editExclusions.setLabel(Messages.HttpProxyPrefs_ExcludedAddresses); //$NON-NLS-1$
 		editExclusions.setText(getPreferenceStore().getString("HTTP_PROXY_EXCLUSIONS").replaceAll("\\|", ",")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -129,7 +129,7 @@ public class HttpProxyPrefs extends PreferencePage implements IWorkbenchPreferen
 		editExclusions.setEnabled(checkUseProxy.getSelection());
 		
 		checkRequireAuth = new Button(dialogArea, SWT.CHECK);
-		checkRequireAuth.setText(Messages.getString("HttpProxyPrefs.ProxyRequireAuth")); //$NON-NLS-1$
+		checkRequireAuth.setText(Messages.HttpProxyPrefs_ProxyRequireAuth); //$NON-NLS-1$
 		checkRequireAuth.setSelection(getPreferenceStore().getBoolean("HTTP_PROXY_AUTH")); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalSpan = 2;
@@ -152,7 +152,7 @@ public class HttpProxyPrefs extends PreferencePage implements IWorkbenchPreferen
 		});
 
 		editLogin = new LabeledText(dialogArea, SWT.NONE);
-		editLogin.setLabel(Messages.getString("HttpProxyPrefs.Login")); //$NON-NLS-1$
+		editLogin.setLabel(Messages.HttpProxyPrefs_Login); //$NON-NLS-1$
 		editLogin.setText(getPreferenceStore().getString("HTTP_PROXY_LOGIN")); //$NON-NLS-1$
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -161,7 +161,7 @@ public class HttpProxyPrefs extends PreferencePage implements IWorkbenchPreferen
 		editLogin.setLayoutData(gd);
 
 		editPassword = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.PASSWORD);
-		editPassword.setLabel(Messages.getString("HttpProxyPrefs.Password")); //$NON-NLS-1$
+		editPassword.setLabel(Messages.HttpProxyPrefs_Password); //$NON-NLS-1$
 		editPassword.setText(getPreferenceStore().getString("HTTP_PROXY_PASSWORD")); //$NON-NLS-1$
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
