@@ -222,7 +222,6 @@ src/java/netxms-client/.classpath
 src/java/netxms-client/.project
 src/java/netxms-client/.settings
 src/java/netxms-eclipse/core/jar/netxms-client-*.jar
-src/java/netxms-eclipse/library/jar/*.jar
 src/libexpat/Makefile
 src/libexpat/Makefile.in
 src/libexpat/libexpat/.deps
