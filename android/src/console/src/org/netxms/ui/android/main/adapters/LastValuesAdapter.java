@@ -69,17 +69,25 @@ public class LastValuesAdapter extends BaseAdapter
 		if (values != null)
 		{
 			currentValues.addAll(Arrays.asList(values));
-			Collections.sort(currentValues, new Comparator<DciValue>()
-			{
-				@Override
-				public int compare(DciValue object1, DciValue object2)
-				{
-					if (object1 != null && object2 != null)
-						return object1.getDescription().compareToIgnoreCase(object2.getDescription());
-					return 0;
-				}
-			});
+			sort();
 		}
+	}
+
+	/**
+	 * Sort the list of values
+	 */
+	public void sort()
+	{
+		Collections.sort(currentValues, new Comparator<DciValue>()
+		{
+			@Override
+			public int compare(DciValue object1, DciValue object2)
+			{
+				if (object1 != null && object2 != null)
+					return object1.getDescription().compareToIgnoreCase(object2.getDescription());
+				return 0;
+			}
+		});
 	}
 
 	/*

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<Preference android:title="@string/pref_global"
+	    android:summary="@string/pref_global">
+			<intent
+			    android:targetPackage="org.netxms.ui.android"
+			    android:targetClass="org.netxms.ui.android.main.activities.ConsolePreferences"
+			    android:action="org.netxms.ui.android.ConsolePreferences.global" />
+	</Preference>
+	<Preference android:title="@string/pref_connection"
+	    android:summary="@string/pref_connection">
+			<intent
+			    android:targetPackage="org.netxms.ui.android"
+			    android:targetClass="org.netxms.ui.android.main.activities.ConsolePreferences"
+			    android:action="org.netxms.ui.android.ConsolePreferences.connection" />
+	</Preference>
+	<Preference android:title="@string/pref_notifications"
+	    android:summary="@string/pref_notifications">
+			<intent
+			    android:targetPackage="org.netxms.ui.android"
+			    android:targetClass="org.netxms.ui.android.main.activities.ConsolePreferences"
+			    android:action="org.netxms.ui.android.ConsolePreferences.notifications" />
+	</Preference>
+	<Preference android:title="@string/pref_interface"
+	    android:summary="@string/pref_interface">
+			<intent
+			    android:targetPackage="org.netxms.ui.android"
+			    android:targetClass="org.netxms.ui.android.main.activities.ConsolePreferences"
+			    android:action="org.netxms.ui.android.ConsolePreferences.interface" />
+	</Preference>
+</PreferenceScreen>

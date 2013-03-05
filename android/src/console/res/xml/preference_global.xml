@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory android:title="@string/pref_global">
+	    <CheckBoxPreference android:summaryOff="@string/pref_global_autostart_disabled" android:summaryOn="@string/pref_global_autostart_enabled" android:key="global.autostart" android:enabled="true" android:defaultValue="false" android:title="@string/pref_global_autostart"/>
+	</PreferenceCategory>
+</PreferenceScreen>

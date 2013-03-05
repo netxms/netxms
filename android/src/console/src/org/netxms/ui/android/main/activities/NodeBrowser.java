@@ -134,7 +134,6 @@ public class NodeBrowser extends AbstractClientActivity
 	public void showNodeInfo(long objectId)
 	{
 		Intent newIntent = new Intent(this, NodeInfoFragment.class);
-//		Intent newIntent = new Intent(this, NodeInfo.class);
 		newIntent.putExtra("objectId", objectId);
 		startActivity(newIntent);
 	}

@@ -85,5 +85,8 @@
             	  android:name=".main.fragments.NodeInfoFragment"
             	  android:configChanges="orientation|screenSize">
         </activity>
-     </application>
+        <activity android:label="@string/settings"
+            	  android:name=".main.fragments.ConsolePreferencesFragment">
+        </activity>
+        </application>
 </manifest>

@@ -123,8 +123,6 @@ public class AlarmListAdapter extends BaseAdapter
 
 	/**
 	 * Sort the list of alarms
-	 * 
-	 * @param values List of alarms
 	 */
 	public void sort()
 	{

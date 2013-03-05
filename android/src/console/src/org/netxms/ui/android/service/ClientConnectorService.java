@@ -27,7 +27,6 @@ import org.netxms.ui.android.main.activities.DashboardBrowser;
 import org.netxms.ui.android.main.activities.GraphBrowser;
 import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.main.activities.NodeBrowser;
-import org.netxms.ui.android.main.activities.NodeInfo;
 import org.netxms.ui.android.receivers.AlarmIntentReceiver;
 import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
@@ -102,7 +101,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	private AlarmBrowser alarmBrowser = null;
 	private NodeBrowser nodeBrowser = null;
 	private GraphBrowser graphBrowser = null;
-	private NodeInfo nodeInfo = null;
 	private Alarm unknownAlarm = null;
 	private long lastAlarmIdNotified;
 	private List<ObjectTool> objectTools = null;
@@ -113,6 +111,22 @@ public class ClientConnectorService extends Service implements SessionListener
 	private final List<Loader<DciValue[]>> dciValueLoaders = new ArrayList<Loader<DciValue[]>>(0);
 	private final List<Loader<GenericObject>> genericObjectLoaders = new ArrayList<Loader<GenericObject>>(0);
 	private final List<Loader<Set<GenericObject>>> genericObjectChildrenLoaders = new ArrayList<Loader<Set<GenericObject>>>(0);
+	private String server = "";
+	private int port = 4701;
+	private String login = "";
+	private String password = "";
+	private boolean encrypt = false;
+	private boolean enabled = false;
+	private boolean notifyAlarm = false;
+	private int notificationType = 0;
+	private boolean notifyIcon = false;
+	private boolean notifyToast = false;
+	private int schedulerPostpone = 0;
+	private int schedulerDuration = 0;
+	private int schedulerInterval = 0;
+	private boolean schedulerDailyEnabled = false;
+	private int schedulerDailyOn = 0;
+	private int schedulerDailyOff = 0;
 
 	/**
 	 * Class for clients to access. Because we know this service always runs in
@@ -144,6 +158,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
 		lastAlarmIdNotified = sp.getInt(LASTALARM_KEY, 0);
+		configure();
 
 		receiver = new BroadcastReceiver()
 		{
@@ -184,7 +199,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				else
 					disconnect(false);
 			else if (intent.getAction().equals(ACTION_CONFIGURE))
-				reconnect(true);
+				reconnect(configure());
 		return super.onStartCommand(intent, flags, startId);
 	}
 
@@ -240,7 +255,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void alarmNotification(int severity, String text)
 	{
-		if (sp.getBoolean("global.notification.alarm", true))
+		if (notifyAlarm)
 		{
 			Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowser.class);
 			PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -273,7 +288,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		int icon = -1;
 		String text = "";
-		int notificationType = Integer.parseInt(sp.getString("global.notification.status", "0"));
 		switch (status)
 		{
 			case CS_CONNECTED:
@@ -307,9 +321,9 @@ public class ClientConnectorService extends Service implements SessionListener
 			hideNotification(NOTIFY_STATUS);
 		else
 		{
-			if (sp.getBoolean("global.notification.toast", true))
+			if (notifyToast)
 				showToast(text);
-			if (sp.getBoolean("global.notification.icon", false))
+			if (notifyIcon)
 			{
 				Intent notifyIntent = new Intent(getApplicationContext(), HomeScreen.class);
 				PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -326,6 +340,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			}
 		}
 	}
+
 	/**
 	 * Hide notification
 	 * 
@@ -346,6 +361,51 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
+	 * Configure service, notify callers if it is necessary to reconnect
+	 * depending if a particular subset of parameters have been changed.
+	 * 
+	 * @return true If it is necessary to force a reconnection
+	 */
+	private boolean configure()
+	{
+		boolean needsToReconnect = enabled != sp.getBoolean("global.scheduler.enable", false) ||
+				server != sp.getString("connection.server", "") ||
+				port != SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701) ||
+				login != sp.getString("connection.login", "") ||
+				password != sp.getString("connection.password", "") ||
+				encrypt != sp.getBoolean("connection.encrypt", false) ||
+				notifyAlarm != sp.getBoolean("global.notification.alarm", true) ||
+				notificationType != Integer.parseInt(sp.getString("global.notification.status", "0")) ||
+				notifyIcon != sp.getBoolean("global.notification.icon", false) ||
+				notifyToast != sp.getBoolean("global.notification.toast", true) ||
+				schedulerPostpone != Integer.parseInt(sp.getString("global.scheduler.postpone", "1")) ||
+				schedulerDuration != Integer.parseInt(sp.getString("global.scheduler.duration", "1")) ||
+				schedulerInterval != Integer.parseInt(sp.getString("global.scheduler.interval", "15")) ||
+				schedulerDailyEnabled != sp.getBoolean("global.scheduler.daily.enable", false) ||
+				schedulerDailyOn != getMinutes("global.scheduler.daily.on") ||
+				schedulerDailyOff != getMinutes("global.scheduler.daily.off");
+
+		enabled = sp.getBoolean("global.scheduler.enable", false);
+		server = sp.getString("connection.server", "");
+		port = SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701);
+		login = sp.getString("connection.login", "");
+		password = sp.getString("connection.password", "");
+		encrypt = sp.getBoolean("connection.encrypt", false);
+		notifyAlarm = sp.getBoolean("global.notification.alarm", true);
+		notificationType = Integer.parseInt(sp.getString("global.notification.status", "0"));
+		notifyIcon = sp.getBoolean("global.notification.icon", false);
+		notifyToast = sp.getBoolean("global.notification.toast", true);
+		schedulerPostpone = Integer.parseInt(sp.getString("global.scheduler.postpone", "1"));
+		schedulerDuration = Integer.parseInt(sp.getString("global.scheduler.duration", "1"));
+		schedulerInterval = Integer.parseInt(sp.getString("global.scheduler.interval", "15"));
+		schedulerDailyEnabled = sp.getBoolean("global.scheduler.daily.enable", false);
+		schedulerDailyOn = getMinutes("global.scheduler.daily.on");
+		schedulerDailyOff = getMinutes("global.scheduler.daily.off");
+
+		return needsToReconnect;
+	}
+
+	/**
 	 * Reconnect to server.
 	 * 
 	 * @param forceReconnect if set to true forces disconnection before connecting
@@ -363,12 +423,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				{
 					setConnectionStatus(ConnectionStatus.CS_INPROGRESS, "");
 					statusNotification(ConnectionStatus.CS_INPROGRESS, "");
-					new ConnectTask(this).execute(sp.getString("connection.server", ""),
-							SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701),
-							sp.getString("connection.login", ""),
-							sp.getString("connection.password", ""),
-							sp.getBoolean("connection.encrypt", false),
-							force);
+					new ConnectTask(this).execute(server, port, login, password, encrypt, force);
 				}
 			}
 		}
@@ -380,7 +435,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void disconnect(boolean force)
 	{
-		if (force || sp.getBoolean("global.scheduler.enable", false) && !NXApplication.isActivityVisible() &&
+		if (force || enabled && !NXApplication.isActivityVisible() &&
 				(connectionStatus == ConnectionStatus.CS_CONNECTED ||
 				connectionStatus == ConnectionStatus.CS_ALREADYCONNECTED))
 		{
@@ -454,7 +509,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	private boolean isScheduleExpired()
 	{
-		if (sp.getBoolean("global.scheduler.enable", false))
+		if (enabled)
 		{
 			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
 			return cal.getTimeInMillis() > sp.getLong("global.scheduler.next_activation", 0);
@@ -489,28 +544,28 @@ public class ClientConnectorService extends Service implements SessionListener
 	public void schedule(String action)
 	{
 		Log.i(TAG, "Schedule: " + action);
-		if (!sp.getBoolean("global.scheduler.enable", false))
+		if (!enabled)
 			cancelSchedule();
 		else
 		{
 			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
 			if (action == ACTION_RESCHEDULE)
-				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.postpone", "1")));
+				cal.add(Calendar.MINUTE, schedulerPostpone);
 			if (action == ACTION_DISCONNECT)
-				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.duration", "1")));
-			else if (!sp.getBoolean("global.scheduler.daily.enable", false))
-				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.interval", "15")));
+				cal.add(Calendar.MINUTE, schedulerDuration);
+			else if (!schedulerDailyEnabled)
+				cal.add(Calendar.MINUTE, schedulerInterval);
 			else
 			{
-				int on = getMinutes("global.scheduler.daily.on");
-				int off = getMinutes("global.scheduler.daily.off");
+				int on = schedulerDailyOn;
+				int off = schedulerDailyOff;
 				if (off < on)
 					off += ONE_DAY_MINUTES; // Next day!
 				Calendar calOn = (Calendar)cal.clone();
 				setDayOffset(calOn, on);
 				Calendar calOff = (Calendar)cal.clone();
 				setDayOffset(calOff, off);
-				cal.add(Calendar.MINUTE, Integer.parseInt(sp.getString("global.scheduler.interval", "15")));
+				cal.add(Calendar.MINUTE, schedulerInterval);
 				if (cal.before(calOn))
 				{
 					cal = (Calendar)calOn.clone();
@@ -722,17 +777,6 @@ public class ClientConnectorService extends Service implements SessionListener
 				public void run()
 				{
 					alarmBrowser.refreshList();
-				}
-			});
-		}
-		if (nodeInfo != null)
-		{
-			nodeInfo.runOnUiThread(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					nodeInfo.refreshAlarms();
 				}
 			});
 		}
@@ -1042,14 +1086,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	public void registerGraphBrowser(GraphBrowser browser)
 	{
 		graphBrowser = browser;
-	}
-
-	/**
-	 * @param browser
-	 */
-	public void registerNodeInfo(NodeInfo browser)
-	{
-		nodeInfo = browser;
 	}
 
 	/**

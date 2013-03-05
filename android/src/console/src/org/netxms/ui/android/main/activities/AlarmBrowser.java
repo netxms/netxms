@@ -258,10 +258,8 @@ public class AlarmBrowser extends AbstractClientActivity
 							GenericObject object = service.findObjectById(al.getSourceObjectId());
 							if (object != null)
 							{
-//								Intent newIntent = new Intent(this, NodeInfo.class);
 								Intent newIntent = new Intent(this, NodeInfoFragment.class);
 								newIntent.putExtra("objectId", object.getObjectId());
-//								newIntent.putExtra("tabId", NodeInfo.TAB_LAST_VALUES_ID);
 								newIntent.putExtra("tabId", NodeInfoFragment.TAB_LAST_VALUES_ID);
 								startActivity(newIntent);
 							}

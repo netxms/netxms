@@ -41,12 +41,8 @@ public abstract class AbstractClientActivity extends Activity implements Service
 		bindService(new Intent(this, ClientConnectorService.class), this, 0);
 
 		// the following is required if target API version is 14:
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-		{
-//			ActionBar actionBar = getActionBar();
-			getActionBar().setDisplayHomeAsUpEnabled(true);
-//			getActionBar().setHomeButtonEnabled(true);
-		}
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+			getActionBar().setHomeButtonEnabled(true);
 	}
 
 	/**

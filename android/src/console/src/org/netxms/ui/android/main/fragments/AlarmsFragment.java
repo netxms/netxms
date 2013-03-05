@@ -107,7 +107,7 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 	{
 		android.view.MenuInflater inflater = getActivity().getMenuInflater();
 		inflater.inflate(R.menu.alarm_actions, menu);
-		menu.removeItem(R.id.last_values);
+		menu.removeItem(R.id.viewlastvalues);
 		checkMenuSortItem(menu);
 	}
 
@@ -117,7 +117,7 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 		if (method_invalidateOptionsMenu != null)
 		{
 			inflater.inflate(R.menu.alarm_actions, menu);
-			menu.removeItem(R.id.last_values);
+			menu.removeItem(R.id.viewlastvalues);
 		}
 		checkMenuSortItem(menu);
 		super.onCreateOptionsMenu(menu, inflater);
@@ -127,7 +127,7 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 	public void onPrepareOptionsMenu(Menu menu)
 	{
 		super.onPrepareOptionsMenu(menu);
-		menu.removeItem(R.id.last_values);
+		menu.removeItem(R.id.viewlastvalues);
 		if (method_invalidateOptionsMenu == null)
 		{
 			menu.removeItem(R.id.selectall);
@@ -195,6 +195,12 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 				return true;
 			case R.id.sort_date_desc:
 				setNewSort(item, AlarmListAdapter.SORT_DATE_DESC);
+				return true;
+			case R.id.sort_name_asc:
+				setNewSort(item, AlarmListAdapter.SORT_NAME_ASC);
+				return true;
+			case R.id.sort_name_desc:
+				setNewSort(item, AlarmListAdapter.SORT_NAME_DESC);
 				return true;
 			case R.id.selectall:
 				selectAll(true);

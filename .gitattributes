@@ -176,7 +176,6 @@ android/src/console/res/layout/interfaces_child.xml -text
 android/src/console/res/layout/interfaces_fragment.xml -text
 android/src/console/res/layout/interfaces_group.xml -text
 android/src/console/res/layout/lastvalues_fragment.xml -text
-android/src/console/res/layout/node_info.xml -text
 android/src/console/res/layout/node_poller.xml -text
 android/src/console/res/layout/node_view.xml -text
 android/src/console/res/layout/nodeinfo_pager_fragment.xml -text
@@ -198,7 +197,12 @@ android/src/console/res/values/colors.xml -text
 android/src/console/res/values/strings.xml -text
 android/src/console/res/values/strings_arrays.xml -text
 android/src/console/res/values/styles.xml -text
-android/src/console/res/xml/preferences.xml -text
+android/src/console/res/xml/preference_connection.xml -text
+android/src/console/res/xml/preference_global.xml -text
+android/src/console/res/xml/preference_headers.xml -text
+android/src/console/res/xml/preference_headers_legacy.xml -text
+android/src/console/res/xml/preference_interface.xml -text
+android/src/console/res/xml/preference_notifications.xml -text
 android/src/console/src/com/jjoe64/graphview/BarGraphView.java -text
 android/src/console/src/com/jjoe64/graphview/GraphView.java -text
 android/src/console/src/com/jjoe64/graphview/GraphViewDemo.java -text
@@ -212,7 +216,6 @@ android/src/console/src/org/netxms/ui/android/loaders/DciValueLoader.java -text
 android/src/console/src/org/netxms/ui/android/loaders/GenericObjectChildrenLoader.java -text
 android/src/console/src/org/netxms/ui/android/loaders/GenericObjectLoader.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/AbstractComparisonChart.java -text
-android/src/console/src/org/netxms/ui/android/main/activities/AbstractTabActivity.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/AlarmBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/ConnectionPointBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/ConsolePreferences.java -text
@@ -223,7 +226,6 @@ android/src/console/src/org/netxms/ui/android/main/activities/DrawPieChart.java 
 android/src/console/src/org/netxms/ui/android/main/activities/GraphBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/HomeScreen.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/NodeBrowser.java -text
-android/src/console/src/org/netxms/ui/android/main/activities/NodeInfo.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/NodePollerActivity.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/TableLastValues.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/helpers/XmlDateConverter.java -text
@@ -262,6 +264,7 @@ android/src/console/src/org/netxms/ui/android/main/dashboards/elements/TablePieC
 android/src/console/src/org/netxms/ui/android/main/fragments/AbstractFragmentActivity.java -text
 android/src/console/src/org/netxms/ui/android/main/fragments/AbstractListFragment.java -text
 android/src/console/src/org/netxms/ui/android/main/fragments/AlarmsFragment.java -text
+android/src/console/src/org/netxms/ui/android/main/fragments/ConsolePreferencesFragment.java -text
 android/src/console/src/org/netxms/ui/android/main/fragments/ExpandableListFragment.java -text
 android/src/console/src/org/netxms/ui/android/main/fragments/InterfacesFragment.java -text
 android/src/console/src/org/netxms/ui/android/main/fragments/LastValuesFragment.java -text

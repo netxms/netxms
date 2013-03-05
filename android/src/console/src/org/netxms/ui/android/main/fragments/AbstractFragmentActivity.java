@@ -6,9 +6,11 @@ import org.netxms.ui.android.main.activities.ConsolePreferences;
 import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.service.ClientConnectorService;
 
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
@@ -31,6 +33,7 @@ public abstract class AbstractFragmentActivity extends FragmentActivity implemen
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
 	 */
+	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -40,7 +43,8 @@ public abstract class AbstractFragmentActivity extends FragmentActivity implemen
 		bindService(new Intent(this, ClientConnectorService.class), this, 0);
 
 		// the following is required if target API version is 14:
-		//getActionBar().setHomeButtonEnabled(true);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+			getActionBar().setHomeButtonEnabled(true);
 	}
 
 	/**
@@ -100,7 +104,7 @@ public abstract class AbstractFragmentActivity extends FragmentActivity implemen
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		Log.d(TAG, "onOptionsItemSelected: id=" + android.R.id.home);
+		Log.d(TAG, "onOptionsItemSelected: id=" + item.getItemId());
 
 		if (item.getItemId() == android.R.id.home)
 		{
