@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -122,10 +122,7 @@ void LoadNetworkDeviceDrivers()
 }
 
 /**
- * Find appropriate device driver for given node
- *
- * @param node Node object to test
- * @returns Pointer to device driver object
+ * Information about selected (potential) driver
  */
 struct __selected_driver
 {
@@ -133,11 +130,20 @@ struct __selected_driver
 	NetworkDeviceDriver *driver;
 };
 
+/**
+ * Compare two drivers by priority
+ */
 static int CompareDrivers(const void *e1, const void *e2)
 {
 	return -(((struct __selected_driver *)e1)->priority - ((struct __selected_driver *)e2)->priority);
 }
 
+/**
+ * Find appropriate device driver for given node
+ *
+ * @param node Node object to test
+ * @returns Pointer to device driver object
+ */
 NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport)
 {
 	struct __selected_driver selection[MAX_DEVICE_DRIVERS];
@@ -166,6 +172,27 @@ NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport)
 			if (selection[i].driver->isDeviceSupported(pTransport, node->getObjectId()))
 				return selection[i].driver;
 		}
+	}
+
+	return s_defaultDriver;
+}
+
+/**
+ * Find device driver by name. Will return default driver if name is empty
+ * or driver with given name does not exist.
+ *
+ * @param name driver's name
+ * @returns pointer to device driver object
+ */
+NetworkDeviceDriver *FindDriverByName(const TCHAR *name)
+{
+	if ((name == NULL) || (name[0] == 0))
+		return s_defaultDriver;
+
+	for(int i = 0; i < s_numDrivers; i++)
+	{
+		if (!_tcsicmp(s_drivers[i]->getName(), name))
+			return s_drivers[i];
 	}
 
 	return s_defaultDriver;

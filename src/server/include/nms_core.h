@@ -776,6 +776,7 @@ ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport);
 
 void LoadNetworkDeviceDrivers();
 NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport);
+NetworkDeviceDriver *FindDriverByName(const TCHAR *name);
 
 void WatchdogInit();
 DWORD WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval);

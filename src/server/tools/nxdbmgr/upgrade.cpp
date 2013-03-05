@@ -315,7 +315,7 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 static BOOL H_UpgradeFromV271(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateConfigParam(_T("SNMPTrapLogRetentionTime"), _T("90"), 1, 0));
-
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD driver_name varchar(32)\n")));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='272' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -6730,6 +6730,7 @@ static struct
 	{ 268, 269, H_UpgradeFromV268 },
 	{ 269, 270, H_UpgradeFromV269 },
    { 270, 271, H_UpgradeFromV270 },
+   { 271, 272, H_UpgradeFromV271 },
    { 0, 0, NULL }
 };
 

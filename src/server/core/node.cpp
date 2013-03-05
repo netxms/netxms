@@ -220,7 +220,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
       _T("proxy_node,snmp_proxy,required_polls,uname,")
 		_T("use_ifxtable,snmp_port,community,usm_auth_password,")
 		_T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
-      _T("runtime_flags,down_since FROM nodes WHERE id=?"));
+      _T("runtime_flags,down_since,driver_name FROM nodes WHERE id=?"));
 	if (hStmt == NULL)
 		return FALSE;
 
@@ -281,6 +281,13 @@ BOOL Node::CreateFromDB(DWORD dwId)
 	m_dwDynamicFlags &= NDF_PERSISTENT;	// Clear out all non-persistent runtime flags
 
 	m_tDownSince = DBGetFieldLong(hResult, 0, 26);
+
+	// Setup driver
+	TCHAR driverName[34];
+	DBGetField(hResult, 0, 27, driverName, 34);
+	StrStrip(driverName);
+	if (driverName[0] != 0)
+		m_driver = FindDriverByName(driverName);
 
    DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
@@ -351,71 +358,85 @@ BOOL Node::CreateFromDB(DWORD dwId)
  */
 BOOL Node::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[4096], szIpAddr[16], baseAddress[16];
-   BOOL bNewObject = TRUE;
-   BOOL bResult;
-
    // Lock object's access
    LockData();
 
-   saveCommonProperties(hdb);
+   if (!saveCommonProperties(hdb))
+	{
+		UnlockData();
+		return FALSE;
+	}
 
    // Form and execute INSERT or UPDATE query
 	int snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
+	DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("nodes"), _T("id"), m_dwId))
 	{
-      _sntprintf(szQuery, 4096,
-			_T("UPDATE nodes SET primary_ip='%s',primary_name=%s,snmp_port=%d,")
-                 _T("node_flags=%d,snmp_version=%d,community=%s,")
-                 _T("status_poll_type=%d,agent_port=%d,auth_method=%d,secret=%s,")
-                 _T("snmp_oid=%s,uname=%s,agent_version=%s,platform_name=%s,poller_node_id=%d,")
-                 _T("zone_guid=%d,proxy_node=%d,snmp_proxy=%d,")
-					  _T("required_polls=%d,use_ifxtable=%d,usm_auth_password=%s,")
-					  _T("usm_priv_password=%s,usm_methods=%d,snmp_sys_name=%s,bridge_base_addr='%s',")
-					  _T("runtime_flags=%d,down_since=%d WHERE id=%d"),
-                 IpToStr(m_dwIpAddr, szIpAddr), (const TCHAR *)DBPrepareString(hdb, m_primaryName), m_wSNMPPort, 
-                 m_dwFlags, m_snmpVersion, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
-                 m_iStatusPollType, m_wAgentPort, m_wAuthMethod,
-					  (const TCHAR *)DBPrepareString(hdb, m_szSharedSecret), 
-                 (const TCHAR *)DBPrepareString(hdb, m_szObjectId),
-					  (const TCHAR *)DBPrepareString(hdb, m_sysDescription),
-                 (const TCHAR *)DBPrepareString(hdb, m_szAgentVersion),
-					  (const TCHAR *)DBPrepareString(hdb, m_szPlatformName), m_dwPollerNode, m_zoneId,
-                 m_dwProxyNode, m_dwSNMPProxy, m_iRequiredPollCount,
-					  m_nUseIfXTable, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
-					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
-					  (const TCHAR *)DBPrepareString(hdb, m_sysName), 
-					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), (int)m_dwDynamicFlags, 
-					  (int)m_tDownSince, (int)m_dwId);
+		hStmt = DBPrepare(hdb,
+			_T("UPDATE nodes SET primary_ip=?,primary_name=?,snmp_port=?,node_flags=?,snmp_version=?,community=?,")
+         _T("status_poll_type=?,agent_port=?,auth_method=?,secret=?,snmp_oid=?,uname=?,agent_version=?,")
+			_T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,required_polls=?,")
+			_T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
+			_T("runtime_flags=?,down_since=?,driver_name=? WHERE id=?"));
 	}
    else
 	{
-      _sntprintf(szQuery, 4096,
-                 _T("INSERT INTO nodes (id,primary_ip,primary_name,snmp_port,")
-                 _T("node_flags,snmp_version,community,status_poll_type,")
-                 _T("agent_port,auth_method,secret,snmp_oid,proxy_node,")
-                 _T("agent_version,platform_name,uname,")
-                 _T("poller_node_id,zone_guid,snmp_proxy,required_polls,")
-		           _T("use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
-					  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since) VALUES ")
-		           _T("(%d,'%s',%s,%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d,%s,'%s',%d,%d)"),
-                 (int)m_dwId, IpToStr(m_dwIpAddr, szIpAddr), (const TCHAR *)DBPrepareString(hdb, m_primaryName),
-					  (int)m_wSNMPPort, m_dwFlags, m_snmpVersion, (
-					  const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
-					  m_iStatusPollType, (int)m_wAgentPort, m_wAuthMethod, 
-					  (const TCHAR *)DBPrepareString(hdb, m_szSharedSecret),
-					  (const TCHAR *)DBPrepareString(hdb, m_szObjectId),
-                 m_dwProxyNode, (const TCHAR *)DBPrepareString(hdb, m_szAgentVersion),
-                 (const TCHAR *)DBPrepareString(hdb, m_szPlatformName),
-					  (const TCHAR *)DBPrepareString(hdb, m_sysDescription),
-		           m_dwPollerNode, m_zoneId, m_dwSNMPProxy, m_iRequiredPollCount, m_nUseIfXTable,
-					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
-					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
-					  (const TCHAR *)DBPrepareString(hdb, m_sysName),
-					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), (int)m_dwDynamicFlags, 
-					  (int)m_tDownSince);
+		hStmt = DBPrepare(hdb,
+		  _T("INSERT INTO nodes (primary_ip,primary_name,snmp_port,node_flags,snmp_version,community,status_poll_type,")
+		  _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
+		  _T("proxy_node,snmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
+		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,id) ")
+		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
-   bResult = DBQuery(hdb, szQuery);
+	if (hStmt == NULL)
+	{
+		UnlockData();
+		return FALSE;
+	}
+
+   TCHAR ipAddr[16], baseAddress[16];
+
+	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, IpToStr(m_dwIpAddr, ipAddr), DB_BIND_STATIC);
+	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryName, DB_BIND_STATIC);
+	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_wSNMPPort);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_dwFlags);
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_snmpVersion);
+#ifdef UNICODE
+	DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getCommunity()), DB_BIND_DYNAMIC);
+#else
+	DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getCommunity(), DB_BIND_STATIC);
+#endif
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_iStatusPollType);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_wAgentPort);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_wAuthMethod);
+	DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_szSharedSecret, DB_BIND_STATIC);
+	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_szObjectId, DB_BIND_STATIC);
+	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_sysDescription, DB_BIND_STATIC);
+	DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_szAgentVersion, DB_BIND_STATIC);
+	DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_szPlatformName, DB_BIND_STATIC);
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dwPollerNode);
+	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_zoneId);
+	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_dwProxyNode);
+	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_dwSNMPProxy);
+	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (LONG)m_iRequiredPollCount);
+	DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, (LONG)m_nUseIfXTable);
+#ifdef UNICODE
+	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthPassword()), DB_BIND_DYNAMIC);
+	DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getPrivPassword()), DB_BIND_DYNAMIC);
+#else
+	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthPassword(), DB_BIND_STATIC);
+	DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getPrivPassword(), DB_BIND_STATIC);
+#endif
+	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, (LONG)snmpMethods);
+	DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC);
+	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), DB_BIND_STATIC);
+	DBBind(hStmt, 26, DB_SQLTYPE_INTEGER, m_dwDynamicFlags);
+	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (LONG)m_tDownSince);
+	DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, (m_driver != NULL) ? m_driver->getName() : _T(""), DB_BIND_STATIC);
+	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_dwId);
+
+	BOOL bResult = DBExecute(hStmt);
+	DBFreeStatement(hStmt);
 
    // Save access list
    saveACLToDB(hdb);
