@@ -399,6 +399,10 @@ public class AbstractSelector extends Composite
 			selectionButton.setEnabled(enabled);
 		if (selectionLink != null)
 			selectionLink.setEnabled(enabled);
+		if (clearingButton != null)
+			clearingButton.setEnabled(enabled);
+		if (clearingLink != null)
+			clearingLink.setEnabled(enabled);
 		super.setEnabled(enabled);
 	}
 	

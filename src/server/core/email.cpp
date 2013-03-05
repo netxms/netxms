@@ -146,11 +146,9 @@ static int GetSMTPResponse(SOCKET hSocket, char *pszBuffer, int *pnBufPos)
    return atoi(szLine);
 }
 
-
-//
-// Send e-mail
-//
-
+/**
+ * Send e-mail
+ */
 static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 {
    SOCKET hSocket;
@@ -379,11 +377,9 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
    return dwRetCode;
 }
 
-
-//
-// Mailer thread
-//
-
+/**
+ * Mailer thread
+ */
 static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 {
    static const TCHAR *m_szErrorText[] =
@@ -436,22 +432,18 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
    return THREAD_OK;
 }
 
-
-//
-// Initialize mailer subsystem
-//
-
+/**
+ * Initialize mailer subsystem
+ */
 void InitMailer()
 {
    m_pMailerQueue = new Queue;
    m_hThread = ThreadCreateEx(MailerThread, 0, NULL);
 }
 
-
-//
-// Shutdown mailer
-//
-
+/**
+ * Shutdown mailer
+ */
 void ShutdownMailer()
 {
    m_pMailerQueue->Clear();
@@ -461,11 +453,9 @@ void ShutdownMailer()
    delete m_pMailerQueue;
 }
 
-
-//
-// Post e-mail to queue
-//
-
+/**
+ * Post e-mail to queue
+ */
 void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, const TCHAR *pszText)
 {
    MAIL_ENVELOPE *pEnvelope;
