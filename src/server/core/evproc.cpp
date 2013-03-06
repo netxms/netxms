@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,11 +49,9 @@ static void BroadcastEvent(ClientSession *pSession, void *pArg)
       pSession->onNewEvent((Event *)pArg);
 }
 
-
-//
-// Event storm detector thread
-//
-
+/**
+ * Event storm detector thread
+ */
 static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 {
 	INT64 numEvents, prevEvents, eventsPerSecond;
@@ -115,7 +113,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 			TCHAR szQuery[4096];
 			_sntprintf(szQuery, 4096, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,")
 											  _T("event_severity,event_message,root_event_id,user_tag) VALUES (") UINT64_FMT 
-											  _T(",%d,%d,%d,%d,'%s',") UINT64_FMT _T(",'%s')"), pEvent->getId(), pEvent->getCode(), 
+											  _T(",%d,%d,%d,%d,%s,") UINT64_FMT _T(",%s)"), pEvent->getId(), pEvent->getCode(), 
 											  (DWORD)pEvent->getTimeStamp(), pEvent->getSourceId(), pEvent->getSeverity(), 
 											  (const TCHAR *)DBPrepareString(hdb, pEvent->getMessage(), MAX_EVENT_MSG_LENGTH - 1),
 											  pEvent->getRootId(), (const TCHAR *)DBPrepareString(hdb, pEvent->getUserTag(), 63));
