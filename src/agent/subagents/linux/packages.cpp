@@ -77,7 +77,11 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value)
 					ptr = NULL;
 				}
 			}
+#ifdef UNICODE
+			value->setPreallocated(i, WideStringFromMBString(curr));
+#else
 			value->set(i, curr);
+#endif
 			if (ptr == NULL)
 				break;
 			curr = ptr + 1;
