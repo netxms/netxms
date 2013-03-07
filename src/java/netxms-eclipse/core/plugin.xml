@@ -83,19 +83,19 @@
          </property>
          <property
                name="startupForegroundColor"
-               value="FFFF00">
+               value="410B73">
          </property>
          <property
                name="startupMessageRect"
-               value="7,265,386,20">
-         </property>
-         <property
-               name="startupProgressRect"
-               value="0,285,400,15">
+               value="7,275,441,18">
          </property>
          <property
                name="preferenceCustomization"
                value="plugin_customization.ini">
+         </property>
+         <property
+               name="startupProgressRect"
+               value="500,284,455,10">
          </property>
       </product>
    </extension>
@@ -247,6 +247,17 @@
             name="Abstract Trace View"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.splashHandlers">
+      <splashHandler
+            class="org.netxms.ui.eclipse.console.SplashHandler"
+            id="org.netxms.ui.eclipse.console.SplashHandler">
+      </splashHandler>
+      <splashHandlerProductBinding
+            productId="org.netxms.ui.eclipse.console.product"
+            splashId="org.netxms.ui.eclipse.console.SplashHandler">
+      </splashHandlerProductBinding>
    </extension>
 
 </plugin>

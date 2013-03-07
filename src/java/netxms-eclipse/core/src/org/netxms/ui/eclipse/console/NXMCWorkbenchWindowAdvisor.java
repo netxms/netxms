@@ -23,8 +23,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.operation.ModalContext;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
@@ -146,7 +146,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 				                            settings.get("Connect.Login"), password, //$NON-NLS-1$
 				                            settings.getBoolean("Connect.Encrypt")); //$NON-NLS-1$
 
-				new ProgressMonitorDialog(shell).run(true, true, job);
+				ModalContext.run(job, true, SplashHandler.getInstance().getBundleProgressMonitor(), Display.getCurrent());
 				success = true;
 			}
 			catch(InvocationTargetException e)
@@ -192,7 +192,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 					};
 					try
 					{
-						new ProgressMonitorDialog(shell).run(true, true, job);
+						ModalContext.run(job, true, SplashHandler.getInstance().getBundleProgressMonitor(), Display.getCurrent());
 						MessageDialog.openInformation(shell, Messages.NXMCWorkbenchWindowAdvisor_title_information, Messages.NXMCWorkbenchWindowAdvisor_passwd_changed);
 					}
 					catch(InvocationTargetException e)

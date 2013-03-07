@@ -83,7 +83,7 @@ public class LoginJob implements IRunnableWithProgress
 	@Override
 	public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
 	{
-		monitor.beginTask(Messages.LoginJob_connecting, 100);
+		monitor.setTaskName(Messages.LoginJob_connecting);
 		try
 		{
 			final String hostName;
@@ -108,33 +108,33 @@ public class LoginJob implements IRunnableWithProgress
 
 			NXCSession session = createSession(hostName, port);
 			session.setConnClientInfo("nxmc/" + NXCommon.VERSION); //$NON-NLS-1$
-			monitor.worked(10);
+			monitor.worked(1);
 
 			session.connect();
-			monitor.worked(40);
+			monitor.worked(1);
 
 			monitor.setTaskName(Messages.LoginJob_sync_objects);
 			session.syncObjects();
-			monitor.worked(25);
+			monitor.worked(1);
 
 			monitor.setTaskName(Messages.LoginJob_sync_users);
 			session.syncUserDatabase();
-			monitor.worked(5);
+			monitor.worked(1);
 
 			monitor.setTaskName(Messages.LoginJob_sync_event_db);
 			session.syncEventTemplates();
-			monitor.worked(5);
-
+			monitor.worked(1);
+			
 			monitor.setTaskName(Messages.LoginJob_subscribe);
 			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS | NXCSession.CHANNEL_EVENTS);
-			monitor.worked(5);
+			monitor.worked(1);
 
 			ConsoleSharedData.setSession(session);
 			
 			monitor.setTaskName(Messages.LoginJob_init_extensions);
 			TweakletManager.postLogin(session);
 			callLoginListeners(session);
-			monitor.worked(5);
+			monitor.worked(1);
 
 			Runnable keepAliveTimer = new KeepAliveHelper();
 			final Thread thread = new Thread(keepAliveTimer);
@@ -147,7 +147,7 @@ public class LoginJob implements IRunnableWithProgress
 		}
 		finally
 		{
-			monitor.done();
+			monitor.setTaskName("");
 		}
 	}
 	

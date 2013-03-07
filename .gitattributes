@@ -2099,6 +2099,7 @@ src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.colorproviders.exsd -t
 src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.loginlisteners.exsd -text
 src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.sessionproviders.exsd -text
 src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.tweaklets.exsd -text
+src/java/netxms-eclipse/core/splash.bmp -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/Activator.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/BrandingManager.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/ExtendedContributionComparator.java -text
