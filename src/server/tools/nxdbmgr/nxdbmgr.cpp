@@ -559,7 +559,7 @@ int main(int argc, char *argv[])
                      _T("   -q          : Quiet mode (don't show startup banner).\n")
                      _T("   -t          : Enable trace mode (show executed SQL queries).\n")
                      _T("   -v          : Display version and exit.\n")
-                     _T("   -X          : Ignore SQL errors when upgrading (USE WITH CARE!!!)\n")
+                     _T("   -X          : Ignore SQL errors when upgrading (USE WITH CAUTION!!!)\n")
                      _T("\n"));
             bStart = FALSE;
             break;
