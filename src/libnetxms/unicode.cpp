@@ -1177,7 +1177,7 @@ WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
 
 
 //
-// Wrappers for wprintf family
+// Wrappers for wprintf/wscanf family
 //
 // All these wrappers replaces %s with %S and %c with %C
 // because in POSIX version of wprintf functions %s and %c
@@ -1213,6 +1213,39 @@ int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *fo
 
 	va_start(args, format);
 	rc = nx_vswprintf(buffer, size, format, args);
+	va_end(args);
+	return rc;
+}
+
+int LIBNETXMS_EXPORTABLE nx_wscanf(const WCHAR *format, ...)
+{
+	va_list args;
+	int rc;
+
+	va_start(args, format);
+	rc = nx_vwscanf(format, args);
+	va_end(args);
+	return rc;
+}
+
+int LIBNETXMS_EXPORTABLE nx_fwscanf(FILE *fp, const WCHAR *format, ...)
+{
+	va_list args;
+	int rc;
+
+	va_start(args, format);
+	rc = nx_vfwscanf(fp, format, args);
+	va_end(args);
+	return rc;
+}
+
+int LIBNETXMS_EXPORTABLE nx_swscanf(WCHAR *buffer, size_t size, const WCHAR *format, ...)
+{
+	va_list args;
+	int rc;
+
+	va_start(args, format);
+	rc = nx_vswscanf(buffer, size, format, args);
 	va_end(args);
 	return rc;
 }
@@ -1337,4 +1370,36 @@ int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, const WCHAR *f
 	return rc;
 }
 
+int LIBNETXMS_EXPORTABLE nx_vwscanf(const WCHAR *format, va_list args)
+{
+	WCHAR *fmt;
+	int rc;
+
+	fmt = ReplaceFormatSpecs(format);
+	rc = vwscanf(fmt, args);
+	free(fmt);
+	return rc;
+}
+
+int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const WCHAR *format, va_list args)
+{
+	WCHAR *fmt;
+	int rc;
+
+	fmt = ReplaceFormatSpecs(format);
+	rc = vfwscanf(fp, fmt, args);
+	free(fmt);
+	return rc;
+}
+
+int LIBNETXMS_EXPORTABLE nx_vswscanf(WCHAR *buffer, size_t size, const WCHAR *format, va_list args)
+{
+	WCHAR *fmt;
+	int rc;
+
+	fmt = ReplaceFormatSpecs(format);
+	rc = vswscanf(buffer, size, fmt, args);
+	free(fmt);
+	return rc;
+}
 #endif

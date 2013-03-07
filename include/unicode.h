@@ -196,7 +196,12 @@
 #define _vtprintf nx_vwprintf
 #define _vftprintf nx_vfwprintf
 #define _vsntprintf nx_vswprintf
-#define _stscanf  swscanf
+#define _tscanf  nx_wscanf
+#define _ftscanf nx_fwscanf
+#define _stscanf nx_swscanf
+#define _vtscanf nx_vwscanf
+#define _vftscanf nx_vfwscanf
+#define _vstscanf nx_vswscanf
 #define _tfopen   wfopen
 #define _tpopen   wpopen
 #define _fgetts   fgetws
@@ -271,7 +276,12 @@
 #define _vtprintf vprintf
 #define _vstprintf vsprintf
 #define _vsntprintf vsnprintf
+#define _tscanf   scanf
+#define _ftscanf  fscanf
 #define _stscanf  sscanf
+#define _vtscanf  vscanf
+#define _vftscanf vfscanf
+#define _vstscanf vsscanf
 #define _tfopen   fopen
 #define _tpopen   popen
 #define _fgetts   fgets

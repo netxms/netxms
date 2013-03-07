@@ -897,6 +897,13 @@ extern "C"
 	int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, const WCHAR *format, va_list args);
 	int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, const WCHAR *format, va_list args);
 
+	int LIBNETXMS_EXPORTABLE nx_wscanf(const WCHAR *format, ...);
+	int LIBNETXMS_EXPORTABLE nx_fwscanf(FILE *fp, const WCHAR *format, ...);
+	int LIBNETXMS_EXPORTABLE nx_swscanf(WCHAR *buffer, size_t size, const WCHAR *format, ...);
+	int LIBNETXMS_EXPORTABLE nx_vwscanf(const WCHAR *format, va_list args);
+	int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const WCHAR *format, va_list args);
+	int LIBNETXMS_EXPORTABLE nx_vswscanf(WCHAR *buffer, size_t size, const WCHAR *format, va_list args);
+
 #endif	/* _WIN32 */
 
    WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString);
