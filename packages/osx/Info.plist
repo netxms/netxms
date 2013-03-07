@@ -5,7 +5,7 @@
 	<key>CFBundleExecutable</key>
 	<string>nxmc</string>
 	<key>CFBundleGetInfoString</key>
-	<string>NetXMS Management Console, Copyright Raden Solutions 2012. All rights reserved.</string>
+	<string>NetXMS Management Console, Copyright Raden Solutions 2013. All rights reserved.</string>
 	<key>CFBundleIconFile</key>
 	<string>nxmc.icns</string>
 	<key>CFBundleIdentifier</key>
