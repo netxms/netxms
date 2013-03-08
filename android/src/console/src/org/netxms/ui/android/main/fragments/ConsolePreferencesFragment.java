@@ -7,6 +7,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceFragment;
 
+/**
+ * Fragment for preferences (API > 11)
+ * 
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
+ * 
+ */
+
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class ConsolePreferencesFragment extends PreferenceFragment
 {

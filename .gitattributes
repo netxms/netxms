@@ -59,7 +59,7 @@ android/src/console/.settings/org.eclipse.jdt.core.prefs -text
 android/src/console/AndroidManifest.xml -text
 android/src/console/default.properties -text
 android/src/console/libs/achartengine-1.0.0.jar -text
-android/src/console/libs/acra-4.2.3.jar -text svneol=unset#unset
+android/src/console/libs/acra-4.4.0.jar -text
 android/src/console/libs/simple-xml-2.6.4.jar -text
 android/src/console/lint.xml -text
 android/src/console/project.properties -text
@@ -167,6 +167,7 @@ android/src/console/res/layout/alarm_view.xml -text
 android/src/console/res/layout/alarms_fragment.xml -text
 android/src/console/res/layout/connection_point_view.xml -text
 android/src/console/res/layout/dashboard.xml -text
+android/src/console/res/layout/fragment_container.xml -text
 android/src/console/res/layout/graph_view.xml -text
 android/src/console/res/layout/graph_view_child_layout.xml -text
 android/src/console/res/layout/graph_view_group_layout.xml -text
@@ -216,7 +217,6 @@ android/src/console/src/org/netxms/ui/android/loaders/DciValueLoader.java -text
 android/src/console/src/org/netxms/ui/android/loaders/GenericObjectChildrenLoader.java -text
 android/src/console/src/org/netxms/ui/android/loaders/GenericObjectLoader.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/AbstractComparisonChart.java -text
-android/src/console/src/org/netxms/ui/android/main/activities/AlarmBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/ConnectionPointBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/ConsolePreferences.java -text
 android/src/console/src/org/netxms/ui/android/main/activities/DashboardActivity.java -text
@@ -263,6 +263,7 @@ android/src/console/src/org/netxms/ui/android/main/dashboards/elements/TableBarC
 android/src/console/src/org/netxms/ui/android/main/dashboards/elements/TablePieChartElement.java -text
 android/src/console/src/org/netxms/ui/android/main/fragments/AbstractFragmentActivity.java -text
 android/src/console/src/org/netxms/ui/android/main/fragments/AbstractListFragment.java -text
+android/src/console/src/org/netxms/ui/android/main/fragments/AlarmBrowserFragment.java -text
 android/src/console/src/org/netxms/ui/android/main/fragments/AlarmsFragment.java -text
 android/src/console/src/org/netxms/ui/android/main/fragments/ConsolePreferencesFragment.java -text
 android/src/console/src/org/netxms/ui/android/main/fragments/ExpandableListFragment.java -text

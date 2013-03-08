@@ -22,11 +22,11 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.NXApplication;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.helpers.SafeParser;
-import org.netxms.ui.android.main.activities.AlarmBrowser;
 import org.netxms.ui.android.main.activities.DashboardBrowser;
 import org.netxms.ui.android.main.activities.GraphBrowser;
 import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.main.activities.NodeBrowser;
+import org.netxms.ui.android.main.fragments.AlarmBrowserFragment;
 import org.netxms.ui.android.receivers.AlarmIntentReceiver;
 import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
@@ -98,7 +98,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	private int connectionStatusColor = 0;
 	private Map<Long, Alarm> alarms = null;
 	private HomeScreen homeScreen = null;
-	private AlarmBrowser alarmBrowser = null;
 	private NodeBrowser nodeBrowser = null;
 	private GraphBrowser graphBrowser = null;
 	private Alarm unknownAlarm = null;
@@ -257,7 +256,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		if (notifyAlarm)
 		{
-			Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowser.class);
+			Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowserFragment.class);
 			PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
 			NotificationCompat.Builder nb = new NotificationCompat.Builder(getApplicationContext())
 					.setSmallIcon(getAlarmIcon(severity))
@@ -769,17 +768,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	private void refreshAlarmBrowser()
 	{
-		if (alarmBrowser != null)
-		{
-			alarmBrowser.runOnUiThread(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					alarmBrowser.refreshList();
-				}
-			});
-		}
 		if (homeScreen != null)
 		{
 			homeScreen.runOnUiThread(new Runnable()
@@ -818,6 +806,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		for (Loader<Set<GenericObject>> l : genericObjectChildrenLoaders)
 			l.forceLoad();
 	}
+
 	/**
 	 * Refresh dashboard browser activity
 	 */
@@ -1062,14 +1051,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	public void registerHomeScreen(HomeScreen homeScreen)
 	{
 		this.homeScreen = homeScreen;
-	}
-
-	/**
-	 * @param browser
-	 */
-	public void registerAlarmBrowser(AlarmBrowser browser)
-	{
-		alarmBrowser = browser;
 	}
 
 	/**

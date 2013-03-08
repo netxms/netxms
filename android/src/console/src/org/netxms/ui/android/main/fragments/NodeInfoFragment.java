@@ -67,6 +67,7 @@ public class NodeInfoFragment extends AbstractFragmentActivity
 		adapter.setItem(TAB_OVERVIEW_ID, overview, getString(R.string.ni_overview), R.drawable.ni_overview_tab);
 		AlarmsFragment alarms = new AlarmsFragment();
 		alarms.setNodeId(nodeId);
+		alarms.enableLastValuesMenu(false);
 		adapter.setItem(TAB_ALARMS_ID, alarms, getString(R.string.ni_alarms), R.drawable.ni_alarms_tab);
 		LastValuesFragment lastValues = new LastValuesFragment();
 		lastValues.setNodeId(nodeId);
@@ -98,6 +99,7 @@ public class NodeInfoFragment extends AbstractFragmentActivity
 				{
 					frag.setNodeId(nodeId);
 					frag.setService(service);
+					frag.refresh();
 				}
 			}
 		}

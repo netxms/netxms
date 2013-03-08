@@ -64,6 +64,7 @@ public class InterfacesFragment extends ExpandableListFragment implements Loader
 		{
 			loader.setObjId(nodeId);
 			loader.setService(service);
+			loader.forceLoad();
 		}
 	}
 

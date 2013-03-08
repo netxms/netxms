@@ -1,5 +1,7 @@
 package org.netxms.ui.android;
 
+import org.acra.ACRA;
+import org.acra.ErrorReporter;
 import org.acra.annotation.ReportsCrashes;
 
 import android.app.Application;
@@ -12,8 +14,8 @@ public class NXApplication extends Application
 	@Override
 	public void onCreate()
 	{
-//		ACRA.init(this);
-//		ErrorReporter.getInstance().checkReportsOnApplicationStart();
+		ACRA.init(this);
+		ErrorReporter.getInstance().checkReportsOnApplicationStart();
 		super.onCreate();
 	}
 

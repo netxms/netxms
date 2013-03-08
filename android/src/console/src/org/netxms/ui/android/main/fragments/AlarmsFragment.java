@@ -6,10 +6,12 @@ package org.netxms.ui.android.main.fragments;
 import java.util.ArrayList;
 
 import org.netxms.client.events.Alarm;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.loaders.AlarmLoader;
 import org.netxms.ui.android.main.adapters.AlarmListAdapter;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -25,7 +27,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 
 /**
@@ -40,9 +41,12 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 	private AlarmListAdapter adapter = null;
 	private AlarmLoader loader = null;
 	private ListView lv = null;
-	private static final String SORT_KEY = "NodeAlarmsSortBy";
+	private ArrayList<Integer> nodeIdList = null;
+	private int lastPosition = -1;
+	private boolean lastValuesMenuIsEnabled = true;
+	private static final String SORT_KEY = "AlarmsSortBy";
 	private final int[] menuSortIds = { R.id.sort_severity_asc, R.id.sort_severity_desc,
-			R.id.sort_date_asc, R.id.sort_date_desc };
+			R.id.sort_date_asc, R.id.sort_date_desc, R.id.sort_name_asc, R.id.sort_name_desc };
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -66,15 +70,35 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 			loader.setService(service);
 		lv = getListView();
 		registerForContextMenu(lv);
+		lv.setOnItemClickListener(new AdapterView.OnItemClickListener()
+		{
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3)
+			{
+				lastPosition = position;
+			}
+		});
+		lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener()
+		{
+			@Override
+			public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int position, long arg3)
+			{
+				lastPosition = position;
+				return false;
+			}
+		});
 	}
 
 	@Override
 	public void refresh()
 	{
 		if (loader != null)
+		{
 			loader.setService(service);
-		if (adapter != null)
-			adapter.setService(service);
+			if (adapter != null)
+				adapter.setService(service);
+			loader.forceLoad();
+		}
 	}
 
 	@Override
@@ -89,9 +113,7 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 		setListShown(true, true);
 		if (adapter != null)
 		{
-			ArrayList<Integer> id = new ArrayList<Integer>(0);
-			id.add((int)nodeId);
-			adapter.setFilter(id);
+			adapter.setFilter(nodeIdList);
 			adapter.setValues(arg1);
 			adapter.notifyDataSetChanged();
 		}
@@ -107,17 +129,22 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 	{
 		android.view.MenuInflater inflater = getActivity().getMenuInflater();
 		inflater.inflate(R.menu.alarm_actions, menu);
-		menu.removeItem(R.id.viewlastvalues);
+		if (!lastValuesMenuIsEnabled)
+		{
+			MenuItem item = menu.findItem(R.id.viewlastvalues);
+			item.setVisible(false);
+		}
 		checkMenuSortItem(menu);
 	}
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
 	{
-		if (method_invalidateOptionsMenu != null)
+		inflater.inflate(R.menu.alarm_actions, menu);
+		if (!lastValuesMenuIsEnabled)
 		{
-			inflater.inflate(R.menu.alarm_actions, menu);
-			menu.removeItem(R.id.viewlastvalues);
+			MenuItem item = menu.findItem(R.id.viewlastvalues);
+			item.setVisible(false);
 		}
 		checkMenuSortItem(menu);
 		super.onCreateOptionsMenu(menu, inflater);
@@ -127,13 +154,10 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 	public void onPrepareOptionsMenu(Menu menu)
 	{
 		super.onPrepareOptionsMenu(menu);
-		menu.removeItem(R.id.viewlastvalues);
-		if (method_invalidateOptionsMenu == null)
+		if (!lastValuesMenuIsEnabled)
 		{
-			menu.removeItem(R.id.selectall);
-			menu.removeItem(R.id.unselectall);
-			menu.add(Menu.NONE, R.id.selectall, Menu.NONE, getString(R.string.alarm_selectall));
-			menu.add(Menu.NONE, R.id.unselectall, Menu.NONE, getString(R.string.alarm_unselectall));
+			MenuItem item = menu.findItem(R.id.viewlastvalues);
+			item.setVisible(false);
 		}
 		checkMenuSortItem(menu);
 	}
@@ -154,12 +178,36 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 		return super.onOptionsItemSelected(item);
 	}
 
+	@Override
+	public void setNodeId(long id)
+	{
+		super.setNodeId(id);
+		if (nodeIdList == null)
+			nodeIdList = new ArrayList<Integer>(0);
+		else
+			nodeIdList.clear();
+		nodeIdList.add((int)nodeId);
+	}
+
+	public void setNodeIdList(ArrayList<Integer> list)
+	{
+		nodeIdList = list;
+	}
+
+	public void enableLastValuesMenu(boolean enable)
+	{
+		lastValuesMenuIsEnabled = enable;
+	}
+
 	private void checkMenuSortItem(Menu menu)
 	{
 		int sortBy = PreferenceManager.getDefaultSharedPreferences(getActivity()).getInt(SORT_KEY, 0);
-		MenuItem item = menu.findItem(menuSortIds[sortBy]);
-		if (item != null)
-			item.setChecked(true);
+		if (sortBy >= 0 && sortBy < menuSortIds.length)
+		{
+			MenuItem item = menu.findItem(menuSortIds[sortBy]);
+			if (item != null)
+				item.setChecked(true);
+		}
 	}
 
 	private void setNewSort(MenuItem item, int sortBy)
@@ -224,6 +272,23 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 				adapter.doAction(AlarmListAdapter.TERMINATE, getAlarmsSelection(item));
 				selectAll(false);
 				return true;
+			case R.id.viewlastvalues:
+				if (service != null)
+				{
+					Alarm al = (Alarm)adapter.getItem(lastPosition);
+					if (al != null)
+					{
+						GenericObject object = service.findObjectById(al.getSourceObjectId());
+						if (object != null)
+						{
+							Intent newIntent = new Intent(getActivity(), NodeInfoFragment.class);
+							newIntent.putExtra("objectId", object.getObjectId());
+							newIntent.putExtra("tabId", NodeInfoFragment.TAB_LAST_VALUES_ID);
+							startActivity(newIntent);
+						}
+					}
+				}
+				return true;
 		}
 		return false;
 	}
@@ -243,16 +308,20 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 					if (al != null)
 						idList.add(al.getId());
 				}
-		if (idList.size() == 0)
+		if (idList.size() == 0)	// Get last item highlighted
 		{
-			AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
-			Alarm al = (Alarm)adapter.getItem(info != null ? info.position : lv.getSelectedItemPosition());
+			Alarm al = (Alarm)adapter.getItem(lastPosition);
 			if (al != null)
 				idList.add(al.getId());
 		}
 		return idList;
 	}
 
+	/**
+	 * Slect/unselect all the checkboxes
+	 * 
+	 * @param select true to select all, false to clear all 
+	 */
 	private void selectAll(boolean select)
 	{
 		for (int i = 0; i < adapter.getCount(); i++)

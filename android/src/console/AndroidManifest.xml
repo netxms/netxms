@@ -8,11 +8,12 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.READ_LOGS"/>
-    <application android:icon="@drawable/icon"
-        android:allowBackup="true"
-    	android:theme="@style/AppTheme"
-    	android:label="@string/app_name" 
-    	android:enabled="true" android:hardwareAccelerated="true" android:name="NXApplication">
+    <application android:name="NXApplication"
+                 android:icon="@drawable/icon"
+                 android:allowBackup="true"
+    	         android:theme="@style/AppTheme"
+    	         android:label="@string/app_name" 
+    	         android:enabled="true" android:hardwareAccelerated="true">
     	<receiver android:name="org.netxms.ui.android.receivers.BootCompletedIntentReceiver">  
 			<intent-filter>  
 		 		<action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -34,59 +35,59 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
     	</service>
-        <activity android:label="@string/app_name"
-                  android:launchMode="singleTop"
-                  android:name=".main.activities.HomeScreen">
+        <activity android:name=".main.activities.HomeScreen"
+                  android:label="@string/app_name"
+                  android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:label="@string/app_name" 
-                  android:name=".main.activities.NodeInfo">
-        </activity>        
-        <activity android:name=".main.activities.AlarmBrowser"
+        <activity android:name=".main.activities.NodeInfo"
                   android:label="@string/app_name">
-        </activity>
+        </activity>        
         <activity android:name=".main.activities.ConsolePreferences"
                   android:label="@string/settings">
         </activity>
-        <activity android:label="@string/app_name" 
-                  android:name=".main.activities.NodeBrowser">
+        <activity android:name=".main.activities.NodeBrowser" 
+                  android:label="@string/app_name">
         </activity>
-        <activity android:label="@string/app_name" 
-                  android:name=".main.activities.GraphBrowser">
+        <activity android:name=".main.activities.GraphBrowser"
+                  android:label="@string/app_name">
         </activity>
-		<activity android:label="@string/app_name" 
-                  android:name=".main.activities.ConnectionPointBrowser">
+		<activity android:name=".main.activities.ConnectionPointBrowser" 
+                  android:label="@string/app_name">
 		</activity>
-        <activity android:label="@string/app_name" 
-                  android:name=".main.activities.DrawGraph">
+        <activity android:name=".main.activities.DrawGraph"
+                  android:label="@string/app_name">
         </activity>        
-        <activity android:label="@string/app_name" 
-                  android:name=".main.activities.DrawBarChart">
+        <activity android:name=".main.activities.DrawBarChart"
+                  android:label="@string/app_name">
         </activity>        
-        <activity android:label="@string/app_name" 
-                  android:name=".main.activities.DrawPieChart">
+        <activity android:name=".main.activities.DrawPieChart"
+                  android:label="@string/app_name">
         </activity>        
-        <activity android:label="@string/app_name" 
-                  android:name=".main.activities.DashboardBrowser">
+        <activity android:name=".main.activities.DashboardBrowser"
+                  android:label="@string/app_name">
         </activity>
-        <activity android:label="@string/app_name" 
-                  android:name=".main.activities.DashboardActivity">
+        <activity android:name=".main.activities.DashboardActivity"
+                  android:label="@string/app_name">
         </activity>
-        <activity android:label="@string/app_name" 
-                  android:name=".main.activities.NodePollerActivity">
+        <activity android:name=".main.activities.NodePollerActivity" 
+                  android:label="@string/app_name">
         </activity>
-        <activity android:label="@string/app_name" 
-                  android:name=".main.activities.TableLastValues">
+        <activity android:name=".main.activities.TableLastValues"
+                  android:label="@string/app_name">
         </activity>
-        <activity android:label="@string/app_name"
-            	  android:name=".main.fragments.NodeInfoFragment"
+        <activity android:name=".main.fragments.NodeInfoFragment"
+            	  android:label="@string/app_name"
             	  android:configChanges="orientation|screenSize">
         </activity>
-        <activity android:label="@string/settings"
-            	  android:name=".main.fragments.ConsolePreferencesFragment">
+        <activity android:name=".main.fragments.ConsolePreferencesFragment"
+            	  android:label="@string/settings">
+        </activity>
+        <activity android:name=".main.fragments.AlarmBrowserFragment"
+                  android:label="@string/app_name">
         </activity>
         </application>
 </manifest>

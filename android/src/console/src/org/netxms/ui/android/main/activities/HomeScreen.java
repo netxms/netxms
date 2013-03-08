@@ -6,6 +6,7 @@ import org.netxms.base.NXCommon;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ActivityListAdapter;
+import org.netxms.ui.android.main.fragments.AlarmBrowserFragment;
 import org.netxms.ui.android.main.fragments.NodeInfoFragment;
 import org.netxms.ui.android.service.ClientConnectorService.ConnectionStatus;
 
@@ -150,7 +151,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 			switch ((int)id)
 			{
 				case ACTIVITY_ALARMS:
-					startActivity(new Intent(this, AlarmBrowser.class));
+					startActivity(new Intent(this, AlarmBrowserFragment.class));
 					break;
 				case ACTIVITY_NODES:
 					startActivity(new Intent(this, NodeBrowser.class));

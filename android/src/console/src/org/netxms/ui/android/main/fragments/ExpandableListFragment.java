@@ -21,7 +21,8 @@ import android.widget.ListView;
  * http://stackoverflow.com/questions/6051050/expandablelistfragment-with-loadermanager-for-compatibility-package
  * and then modified and adapted to be used into the NetXMS Android console.
  *
- * @author Marco Incalcaterra
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
+ * 
  */
 
 public class ExpandableListFragment extends AbstractListFragment

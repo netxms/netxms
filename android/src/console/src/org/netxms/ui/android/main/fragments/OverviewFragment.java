@@ -58,6 +58,7 @@ public class OverviewFragment extends AbstractListFragment implements LoaderMana
 		{
 			loader.setObjId(nodeId);
 			loader.setService(service);
+			loader.forceLoad();
 		}
 	}
 

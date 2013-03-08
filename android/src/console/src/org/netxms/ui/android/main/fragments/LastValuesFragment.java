@@ -44,7 +44,6 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 	private LastValuesAdapter adapter = null;
 	private DciValueLoader loader = null;
 	private ListView lv = null;
-
 	private static final Integer[] DEFAULT_COLORS = { 0x40699C, 0x9E413E, 0x7F9A48, 0x695185, 0x3C8DA3, 0xCC7B38, 0x4F81BD, 0xC0504D,
 			0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9 };
 	private static final int MAX_COLORS = DEFAULT_COLORS.length;
@@ -82,6 +81,7 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 		{
 			loader.setObjId(nodeId);
 			loader.setService(service);
+			loader.forceLoad();
 		}
 	}
 
@@ -129,8 +129,7 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
 	{
-		if (method_invalidateOptionsMenu != null)
-			inflater.inflate(R.menu.last_values_actions, menu);
+		inflater.inflate(R.menu.last_values_actions, menu);
 		super.onCreateOptionsMenu(menu, inflater);
 	}
 
@@ -138,25 +137,6 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 	public void onPrepareOptionsMenu(Menu menu)
 	{
 		super.onPrepareOptionsMenu(menu);
-		if (method_invalidateOptionsMenu == null)
-		{
-			menu.removeItem(R.id.graph_half_hour);
-			menu.removeItem(R.id.graph_one_hour);
-			menu.removeItem(R.id.graph_two_hours);
-			menu.removeItem(R.id.graph_four_hours);
-			menu.removeItem(R.id.graph_one_day);
-			menu.removeItem(R.id.graph_one_week);
-			menu.removeItem(R.id.bar_chart);
-			menu.removeItem(R.id.pie_chart);
-			menu.add(Menu.NONE, R.id.graph_half_hour, Menu.NONE, getString(R.string.last_values_graph_half_hour));
-			menu.add(Menu.NONE, R.id.graph_one_hour, Menu.NONE, getString(R.string.last_values_graph_one_hour));// .setIcon(R.drawable.ic_menu_line_chart);
-			menu.add(Menu.NONE, R.id.graph_two_hours, Menu.NONE, getString(R.string.last_values_graph_two_hours));
-			menu.add(Menu.NONE, R.id.graph_four_hours, Menu.NONE, getString(R.string.last_values_graph_four_hours));
-			menu.add(Menu.NONE, R.id.graph_one_day, Menu.NONE, getString(R.string.last_values_graph_one_day));
-			menu.add(Menu.NONE, R.id.graph_one_week, Menu.NONE, getString(R.string.last_values_graph_one_week));
-			menu.add(Menu.NONE, R.id.bar_chart, Menu.NONE, getString(R.string.last_values_bar_chart));
-			menu.add(Menu.NONE, R.id.pie_chart, Menu.NONE, getString(R.string.last_values_pie_chart));
-		}
 	}
 
 	@Override

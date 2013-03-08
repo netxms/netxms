@@ -16,6 +16,7 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.NXApplication;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ObjectListAdapter;
+import org.netxms.ui.android.main.fragments.AlarmBrowserFragment;
 import org.netxms.ui.android.main.fragments.NodeInfoFragment;
 
 import android.app.AlertDialog;
@@ -433,7 +434,7 @@ public class NodeBrowser extends AbstractClientActivity
 	 */
 	private void viewAlarms(ArrayList<Integer> nodeIdList)
 	{
-		Intent newIntent = new Intent(this, AlarmBrowser.class);
+		Intent newIntent = new Intent(this, AlarmBrowserFragment.class);
 		newIntent.putIntegerArrayListExtra("nodeIdList", nodeIdList);
 		startActivity(newIntent);
 	}

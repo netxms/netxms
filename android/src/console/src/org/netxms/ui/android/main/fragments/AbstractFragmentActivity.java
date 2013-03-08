@@ -23,6 +23,9 @@ import android.view.MenuItem;
  * Abstract base class for all activities in the client. Implements
  * common functionality for connecting to service and handling common items
  * in options menu.
+ * 
+ * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
+ * 
  */
 public abstract class AbstractFragmentActivity extends FragmentActivity implements ServiceConnection
 {
