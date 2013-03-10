@@ -352,7 +352,8 @@ public class Gallery extends Canvas {
 	 */
 	public void removeSelectionListener(SelectionListener listener) {
 		checkWidget();
-		removeSelectionListener(listener);
+		removeListener(SWT.Selection, listener);
+		removeListener(SWT.DefaultSelection, listener);
 	}
 
 	/**

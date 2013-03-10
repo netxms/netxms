@@ -54,7 +54,6 @@ import org.eclipse.birt.core.framework.PlatformConfig;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.jface.preference.PreferenceConverter;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
@@ -81,7 +80,6 @@ public class BirtChartFigure extends GenericChartFigure implements DataCompariso
 	private Chart chart = null;
 	private boolean fullRepaint = true;
 	private IDeviceRenderer deviceRenderer = null;
-	private GC gcImage = null;
 	private GeneratedChartState generatedChartState = null;
 	private IGenerator generator = null;
 	private Image imgChart = null;
@@ -134,8 +132,6 @@ public class BirtChartFigure extends GenericChartFigure implements DataCompariso
 		super.dispose();
 		if ((imgChart != null) && (!imgChart.isDisposed()))
 			imgChart.dispose();
-		if ((gcImage != null) && (!gcImage.isDisposed()))
-			gcImage.dispose();
 	}
 
 	/**

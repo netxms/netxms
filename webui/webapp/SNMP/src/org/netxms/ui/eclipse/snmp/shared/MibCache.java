@@ -98,8 +98,10 @@ public final class MibCache implements ConsoleLoginListener
 							}
 							finally
 							{
-						      in.close();
-						      out.close();
+								if (in != null)
+									in.close();
+								if (out != null)
+									out.close();
 							}
 					      
 					      file.delete();

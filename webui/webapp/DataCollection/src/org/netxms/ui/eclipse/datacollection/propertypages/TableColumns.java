@@ -293,7 +293,7 @@ public class TableColumns extends PropertyPage
 		final IStructuredSelection selection = (IStructuredSelection)columnList.getSelection();
 		if (!selection.isEmpty())
 		{
-			Iterator<Threshold> it = selection.iterator();
+			Iterator<ColumnDefinition> it = selection.iterator();
 			while(it.hasNext())
 			{
 				columns.remove(it.next());

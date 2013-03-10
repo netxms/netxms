@@ -216,7 +216,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			return imgResCluster;
 		}
-		return null;
+		return imgUnknown;
 	}
 
 	/*
