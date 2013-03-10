@@ -28,7 +28,7 @@
  */
 DWORD LIBNXSRV_EXPORTABLE g_dwFlags = AF_USE_SYSLOG;
 DWORD LIBNXSRV_EXPORTABLE g_dwSNMPTimeout = 2000;
-int LIBNXSRV_EXPORTABLE g_nDebugLevel = 0;
+DWORD LIBNXSRV_EXPORTABLE g_debugLevel = 0;
 
 /**
  * Agent error codes
@@ -134,7 +134,7 @@ void LIBNXSRV_EXPORTABLE DbgPrintf2(int level, const TCHAR *format, va_list args
 {
    TCHAR buffer[4096];
 
-	if (level > g_nDebugLevel)
+	if (level > (int)g_debugLevel)
       return;     // Required application flag(s) not set
 
 	_vsntprintf(buffer, 4096, format, args);
@@ -149,7 +149,7 @@ void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...)
    va_list args;
    TCHAR buffer[4096];
 
-   if (level > g_nDebugLevel)
+   if (level > (int)g_debugLevel)
       return;     // Required application flag(s) not set
 
    va_start(args, format);

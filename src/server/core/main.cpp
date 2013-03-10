@@ -577,7 +577,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	DBSetDebugPrintCallback(DbgPrintf2);
 	if (!DBInit(MSG_OTHER, (g_dwFlags & AF_LOG_SQL_ERRORS) ? MSG_SQL_ERROR : 0))
 		return FALSE;
-	g_dbDriver = DBLoadDriver(g_szDbDriver, g_szDbDrvParams, (g_nDebugLevel >= 9), DBEventHandler, NULL);
+	g_dbDriver = DBLoadDriver(g_szDbDriver, g_szDbDrvParams, (g_debugLevel >= 9), DBEventHandler, NULL);
 	if (g_dbDriver == NULL)
 		return FALSE;
 
@@ -1005,12 +1005,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		int level = (int)_tcstol(szBuffer, &eptr, 0);
 		if ((*eptr == 0) && (level >= 0) && (level <= 9))
 		{
-			g_nDebugLevel = level;
+			g_debugLevel = (DWORD)level;
 			ConsolePrintf(pCtx, (level == 0) ? _T("Debug mode turned off\n") : _T("Debug level set to %d\n"), level);
 		}
 		else if (IsCommand(_T("OFF"), szBuffer, 2))
 		{
-			g_nDebugLevel = 0;
+			g_debugLevel = 0;
 			ConsolePrintf(pCtx, _T("Debug mode turned off\n"));
 		}
 		else

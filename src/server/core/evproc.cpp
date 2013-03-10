@@ -217,7 +217,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       EnumerateClientSessions(BroadcastEvent, pEvent);
 
       // Write event information to debug
-      if (g_nDebugLevel >= 5)
+      if (g_debugLevel >= 5)
       {
          NetObj *pObject = FindObjectById(pEvent->getSourceId());
          if (pObject == NULL)

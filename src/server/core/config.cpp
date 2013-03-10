@@ -58,6 +58,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer },
+   { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir },
    { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags },
    { _T("JavaLibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szJavaLibDir },

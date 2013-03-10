@@ -146,7 +146,7 @@ void MobileDeviceSession::run()
  */
 void MobileDeviceSession::debugPrintf(int level, const TCHAR *format, ...)
 {
-   if (level <= g_nDebugLevel)
+   if (level <= (int)g_debugLevel)
    {
       va_list args;
 		TCHAR buffer[4096];

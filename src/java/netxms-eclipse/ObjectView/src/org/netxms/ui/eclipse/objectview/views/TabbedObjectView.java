@@ -53,6 +53,8 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -78,6 +80,7 @@ public class TabbedObjectView extends ViewPart
 	private ISelectionService selectionService = null;
 	private ISelectionListener selectionListener = null;
 	private IntermediateSelectionProvider selectionProvider;
+	private SessionListener sessionListener = null;
 	private Action actionRefresh;
 	private SourceProvider sourceProvider;
 	private long objectId = 0; 
@@ -189,8 +192,28 @@ public class TabbedObjectView extends ViewPart
 		selectionProvider = new IntermediateSelectionProvider();
 		getSite().setSelectionProvider(selectionProvider);
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		if (objectId != 0)
-			setObject(((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId));
+			setObject(session.findObjectById(objectId));
+		
+		sessionListener = new SessionListener() {
+			@Override
+			public void notificationHandler(SessionNotification n)
+			{
+				if (objectId == n.getSubCode())
+				{
+					final GenericObject object = (GenericObject)n.getObject();
+					getSite().getShell().getDisplay().asyncExec(new Runnable() {
+						@Override
+						public void run()
+						{
+							onObjectUpdate(object);
+						}
+					});
+				}
+			}
+		};
+		session.addListener(sessionListener);
 	}
 	
 	/**
@@ -245,6 +268,20 @@ public class TabbedObjectView extends ViewPart
 		CTabItem item = tabFolder.getSelection();
 		if (item != null)
 			((ObjectTab)item.getData()).refresh();
+	}
+	/**
+	 * Notify visible tabs about object update
+	 * 
+	 * @param object New object
+	 */
+	private void onObjectUpdate(GenericObject object)
+	{
+		header.setText(object.getObjectName());
+		for(final ObjectTab tab : tabs)
+		{
+			if (tab.isVisible())
+				tab.currentObjectUpdated(object);
+		}
 	}
 
 	/**
@@ -320,8 +357,7 @@ public class TabbedObjectView extends ViewPart
 			}
 			catch(CoreException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Activator.log("Exception when instantiating object tab", e);
 			}
 		}
 		
@@ -347,6 +383,7 @@ public class TabbedObjectView extends ViewPart
 	@Override
 	public void dispose()
 	{
+		ConsoleSharedData.getSession().removeListener(sessionListener);
 		sourceProvider.updateProperty(SourceProvider.ACTIVE_TAB, null);
 		getSite().setSelectionProvider(null);
 		if ((selectionService != null) && (selectionListener != null))

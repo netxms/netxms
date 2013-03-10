@@ -652,11 +652,9 @@ static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
 	free(serverList);
 }
 
-
-//
-// Initialization routine
-//
-
+/**
+ * Agent initialization
+ */
 BOOL Initialize()
 {
    TCHAR *pItem, *pEnd;
@@ -1086,11 +1084,9 @@ static int CreateConfig(const char *pszServer, const char *pszLogFile, const cha
    return (fp != NULL) ? 0 : 2;
 }
 
-
-//
-// Init config
-//
-
+/**
+ * Init config
+ */
 static void InitConfig()
 {
 	g_config = new Config();

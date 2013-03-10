@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
-** Copyright (C) 2003-2011 NetXMS Team
+** Copyright (C) 2003-2013 NetXMS Team
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -221,11 +221,11 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 				g_dwFlags |= AF_DAEMON;
 				break;
 			case 'D':	// Debug level
-				g_nDebugLevel = strtol(optarg, &eptr, 0);
-				if ((*eptr != 0) || (g_nDebugLevel < 0) || (g_nDebugLevel > 9))
+				g_debugLevel = strtoul(optarg, &eptr, 0);
+				if ((*eptr != 0) || (g_debugLevel > 9))
 				{
 					_tprintf(_T("Invalid debug level \"%hs\" - should be in range 0..9\n"), optarg);
-					g_nDebugLevel = 0;
+					g_debugLevel = 0;
 				}
 				break;
 			case 'q': // disable interactive console

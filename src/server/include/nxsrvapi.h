@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -487,11 +487,9 @@ public:
 #define ISCF_IS_CONNECTED        ((DWORD)0x00000001)
 #define ISCF_REQUIRE_ENCRYPTION  ((DWORD)0x00000002)
 
-
-//
-// Inter-server connection (ISC)
-//
-
+/**
+ * Inter-server connection (ISC)
+ */
 class LIBNXSRV_EXPORTABLE ISC
 {
 private:
@@ -534,7 +532,7 @@ public:
    CSCPMessage *WaitForMessage(WORD code, DWORD id, DWORD timeOut) { return m_msgWaitQueue->waitForMessage(code, id, timeOut); }
    DWORD WaitForRCC(DWORD rqId, DWORD timeOut);
 
-   DWORD Nop(void);
+   DWORD Nop();
 };
 
 
@@ -570,7 +568,7 @@ DWORD LIBNXSRV_EXPORTABLE SnmpWalk(DWORD dwVersion, SNMP_Transport *pTransport, 
 
 extern DWORD LIBNXSRV_EXPORTABLE g_dwFlags;
 extern DWORD LIBNXSRV_EXPORTABLE g_dwSNMPTimeout;
-extern int LIBNXSRV_EXPORTABLE g_nDebugLevel;
+extern DWORD LIBNXSRV_EXPORTABLE g_debugLevel;
 
 
 //
