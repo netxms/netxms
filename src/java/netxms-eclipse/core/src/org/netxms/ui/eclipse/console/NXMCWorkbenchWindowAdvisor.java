@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.netxms.api.client.Session;
-import org.netxms.client.NXCSession;
+import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
@@ -132,7 +132,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			{
 				loginDialog = new LoginDialog(shell);
 				if (loginDialog.open() != Window.OK)
-					System.exit(0);	// TODO: do we need to use more graceful method?
+					System.exit(0);
 				password = loginDialog.getPassword();
 			}
 			else
@@ -177,8 +177,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 						{
 							try
 							{
-								NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-								session.setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
+								monitor.setTaskName("Changing password...");
+								((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
+								monitor.setTaskName("");
 							}
 							catch(Exception e)
 							{

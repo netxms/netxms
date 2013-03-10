@@ -90,7 +90,7 @@ public class AlarmTest extends SessionTest
 			});
 			session.subscribe(NXCSession.CHANNEL_ALARMS);
 			session.terminateAlarm(alarmId);
-			s.tryAcquire(3, TimeUnit.SECONDS);
+			assertTrue(s.tryAcquire(3, TimeUnit.SECONDS));
 			assertEquals(true, success[0]);
 		}
 		
