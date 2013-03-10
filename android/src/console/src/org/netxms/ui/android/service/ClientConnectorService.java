@@ -88,7 +88,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	private static final int ONE_DAY_MINUTES = 24 * 60;
 	private static final int NETXMS_REQUEST_CODE = 123456;
 
-	private final String mutex = "MUTEX";
+	private final Object mutex = new Object();
 	private final Binder binder = new ClientConnectorBinder();
 	private Handler uiThreadHandler;
 	private NotificationManager notificationManager;
@@ -368,10 +368,10 @@ public class ClientConnectorService extends Service implements SessionListener
 	private boolean configure()
 	{
 		boolean needsToReconnect = enabled != sp.getBoolean("global.scheduler.enable", false) ||
-				server != sp.getString("connection.server", "") ||
+				!server.equalsIgnoreCase(sp.getString("connection.server", "")) ||
 				port != SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701) ||
-				login != sp.getString("connection.login", "") ||
-				password != sp.getString("connection.password", "") ||
+				!login.equals(sp.getString("connection.login", "")) ||
+				!password.equals(sp.getString("connection.password", "")) ||
 				encrypt != sp.getBoolean("connection.encrypt", false) ||
 				notifyAlarm != sp.getBoolean("global.notification.alarm", true) ||
 				notificationType != Integer.parseInt(sp.getString("global.notification.status", "0")) ||
@@ -548,9 +548,9 @@ public class ClientConnectorService extends Service implements SessionListener
 		else
 		{
 			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-			if (action == ACTION_RESCHEDULE)
+			if (action.equals(ACTION_RESCHEDULE))
 				cal.add(Calendar.MINUTE, schedulerPostpone);
-			if (action == ACTION_DISCONNECT)
+			if (action.equals(ACTION_DISCONNECT))
 				cal.add(Calendar.MINUTE, schedulerDuration);
 			else if (!schedulerDailyEnabled)
 				cal.add(Calendar.MINUTE, schedulerInterval);
@@ -1079,7 +1079,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	public void registerAlarmLoader(Loader<Alarm[]> loader)
 	{
-		if (!alarmLoaders.contains(this))
+		if (!alarmLoaders.contains(loader))
 			alarmLoaders.add(loader);
 	}
 
@@ -1090,7 +1090,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	public void registerDciValueLoader(Loader<DciValue[]> loader)
 	{
-		if (!dciValueLoaders.contains(this))
+		if (!dciValueLoaders.contains(loader))
 			dciValueLoaders.add(loader);
 	}
 
@@ -1101,7 +1101,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	public void registerGenericObjectLoader(Loader<GenericObject> loader)
 	{
-		if (!genericObjectLoaders.contains(this))
+		if (!genericObjectLoaders.contains(loader))
 			genericObjectLoaders.add(loader);
 	}
 
@@ -1112,7 +1112,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	public void registerGenericObjectChildrenLoader(Loader<Set<GenericObject>> loader)
 	{
-		if (!genericObjectChildrenLoaders.contains(this))
+		if (!genericObjectChildrenLoaders.contains(loader))
 			genericObjectChildrenLoaders.add(loader);
 	}
 

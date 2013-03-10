@@ -132,7 +132,7 @@ public class ObjectListAdapter extends BaseAdapter
 	public View getView(int position, View convertView, ViewGroup parent)
 	{
 		TextView objectName;
-		TextView objectStatus;
+		TextView objectStatusText;
 		LinearLayout view, texts;
 		ImageView objectIcon;
 		Resources r = context.getResources();
@@ -145,9 +145,9 @@ public class ObjectListAdapter extends BaseAdapter
 			objectName.setTextColor(r.getColor(R.color.text_color));
 			objectName.setTextSize(objectName.getTextSize() * 1.1f);
 
-			objectStatus = new TextView(context);
-			objectStatus.setPadding(5, 2, 5, 2);
-			objectStatus.setTextColor(r.getColor(R.color.text_color));
+			objectStatusText = new TextView(context);
+			objectStatusText.setPadding(5, 2, 5, 2);
+			objectStatusText.setTextColor(r.getColor(R.color.text_color));
 
 			objectIcon = new ImageView(context);
 			objectIcon.setPadding(5, 5, 5, 2);
@@ -155,7 +155,7 @@ public class ObjectListAdapter extends BaseAdapter
 			texts = new LinearLayout(context);
 			texts.setOrientation(LinearLayout.VERTICAL);
 			texts.addView(objectName);
-			texts.addView(objectStatus);
+			texts.addView(objectStatusText);
 
 			view = new LinearLayout(context);
 			view.addView(objectIcon);
@@ -168,21 +168,24 @@ public class ObjectListAdapter extends BaseAdapter
 			objectIcon = (ImageView)view.getChildAt(0);
 			texts = (LinearLayout)view.getChildAt(1);
 			objectName = (TextView)texts.getChildAt(0);
-			objectStatus = (TextView)texts.getChildAt(1);
+			objectStatusText = (TextView)texts.getChildAt(1);
 		}
 
 		// set fields in view
+		int objectStatus;
 		int objectIconId = R.drawable.object_unknown;
 		GenericObject object = objectList.get(position);
 		if (object == null)
 		{
 			objectName.setText(r.getString(R.string.node_unknown));
-			objectStatus.setText(r.getString(R.string.status_unknown));
+			objectStatusText.setText(r.getString(R.string.status_unknown));
+			objectStatus = GenericObject.STATUS_UNKNOWN;
 		}
 		else
 		{
 			objectName.setText(object.getObjectName());
-			objectStatus.setText(statusTextId[object.getStatus()]);
+			objectStatusText.setText(statusTextId[object.getStatus()]);
+			objectStatus = object.getStatus();
 			switch (object.getObjectClass())
 			{
 				case GenericObject.OBJECT_CONTAINER:
@@ -205,7 +208,7 @@ public class ObjectListAdapter extends BaseAdapter
 
 		Drawable[] layers = new Drawable[2];
 		layers[0] = parent.getResources().getDrawable(objectIconId);
-		layers[1] = parent.getResources().getDrawable(ObjectListAdapter.statusImageId[object.getStatus()]);
+		layers[1] = parent.getResources().getDrawable(ObjectListAdapter.statusImageId[objectStatus]);
 		LayerDrawable drawable = new LayerDrawable(layers);
 		drawable.setLayerInset(1, layers[0].getIntrinsicWidth() - layers[1].getIntrinsicWidth(),
 				layers[0].getIntrinsicHeight() - layers[1].getIntrinsicHeight(), 0, 0);
