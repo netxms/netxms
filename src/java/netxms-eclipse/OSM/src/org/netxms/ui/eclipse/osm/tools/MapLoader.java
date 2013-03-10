@@ -47,7 +47,7 @@ public class MapLoader
 	public static final int TOP_LEFT = GeoLocationCache.TOP_LEFT;
 	public static final int BOTTOM_RIGHT = GeoLocationCache.BOTTOM_RIGHT;
 	
-	private static String CACHE_MUTEX = "cache_mutex"; //$NON-NLS-1$
+	private static Object CACHE_MUTEX = new Object();
 
 	private Display display;
 	private Image missingTile = null; 

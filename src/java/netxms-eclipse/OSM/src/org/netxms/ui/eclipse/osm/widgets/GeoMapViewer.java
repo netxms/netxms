@@ -61,6 +61,7 @@ import org.netxms.ui.eclipse.osm.tools.MapLoader;
 import org.netxms.ui.eclipse.osm.tools.Tile;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * This widget shows map retrieved via OpenStreetMap Static Map API
@@ -462,9 +463,12 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private void drawObject(GC gc, int x, int y, GenericObject object)
 	{
 		final String text = object.getObjectName();
-		final Image image = labelProvider.getImage(object);
 		final Point textSize = gc.textExtent(text);
 
+		Image image = labelProvider.getImage(object);
+		if (image == null)
+			image = SharedIcons.IMG_UNKNOWN_OBJECT;
+		
 		Rectangle rect = new Rectangle(x - LABEL_ARROW_OFFSET, y - LABEL_ARROW_HEIGHT - textSize.y, textSize.x
 				+ image.getImageData().width + LABEL_X_MARGIN * 2 + LABEL_SPACING, Math.max(image.getImageData().height, textSize.y)
 				+ LABEL_Y_MARGIN * 2);

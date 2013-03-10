@@ -10,8 +10,8 @@ call mvn -Dmaven.test.skip=true install %*
 
 for /f "tokens=2 delims=>< " %%a in ('findstr projectversion pom.xml') do @set version=%%a
 
-copy netxms-base\target\netxms-base-%version%.jar netxms-eclipse\library\jar\
-copy netxms-client-api\target\netxms-client-api-%version%.jar netxms-eclipse\library\jar\
+copy netxms-base\target\netxms-base-%version%.jar netxms-eclipse\core\jar\
+copy netxms-client-api\target\netxms-client-api-%version%.jar netxms-eclipse\core\jar\
 copy netxms-client\target\netxms-client-%version%.jar netxms-eclipse\core\jar\
 
 copy netxms-base\target\netxms-base-%version%.jar ..\..\webui\webapp\Core\jar\

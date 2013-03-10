@@ -205,7 +205,8 @@ public abstract class AbstractGridGroupRenderer extends
 		if (Gallery.DEBUG)
 			System.out.println("Draw item ? " + index); //$NON-NLS-1$
 
-		if (index < parent.getItemCount()) {
+		if (index < parent.getItemCount()) 
+		{
 			int hCount = ((Integer) parent.getData(H_COUNT)).intValue();
 			int vCount = ((Integer) parent.getData(V_COUNT)).intValue();
 
@@ -235,13 +236,13 @@ public abstract class AbstractGridGroupRenderer extends
 				xPixelPos = posX * (itemWidth + margin) + margin;
 				yPixelPos = posY * (itemHeight + minMargin) - gallery.translate
 				/* + minMargin */
-				+ ((parent == null) ? 0 : (parent.y) + offsetY);
+				+ parent.y + offsetY;
 				gItem.x = xPixelPos;
 				gItem.y = yPixelPos + gallery.translate;
 			} else {
 				xPixelPos = posX * (itemWidth + minMargin) - gallery.translate
 				/* + minMargin */
-				+ ((parent == null) ? 0 : (parent.x) + offsetY);
+				+ parent.x + offsetY;
 				yPixelPos = posY * (itemHeight + margin) + margin;
 				gItem.x = xPixelPos + gallery.translate;
 				gItem.y = yPixelPos;

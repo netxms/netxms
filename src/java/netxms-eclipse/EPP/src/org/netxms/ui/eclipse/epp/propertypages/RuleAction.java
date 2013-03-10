@@ -50,7 +50,6 @@ public class RuleAction extends PropertyPage
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING * 2;
       dialogArea.setLayout(layout);
       

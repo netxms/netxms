@@ -360,7 +360,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			dbc.setModifyListener(dbcModifyListener);
 		}
 
-		actionSave.setEnabled(dbc.isModified());
+		actionSave.setEnabled((dbc != null) ? dbc.isModified() : false);
 		firePropertyChange(PROP_DIRTY);
 	}
 }

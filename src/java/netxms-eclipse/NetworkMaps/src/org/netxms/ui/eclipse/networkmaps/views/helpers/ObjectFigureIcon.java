@@ -68,8 +68,16 @@ public class ObjectFigureIcon extends ObjectFigure
 	private void updateSize()
 	{
 		final Image image = labelProvider.getImage(element);
-		imageWidth = image.getImageData().width;
-		imageHeight = image.getImageData().height;
+		if (image != null)
+		{
+			imageWidth = image.getImageData().width;
+			imageHeight = image.getImageData().height;
+		}
+		else
+		{
+			imageWidth = 32;
+			imageHeight = 32;
+		}
 		
 		Dimension ls = label.getPreferredSize(-1, -1);
 		if (ls.width > imageWidth * 2)

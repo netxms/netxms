@@ -214,7 +214,7 @@ public class AbstractSelector extends Composite
 			public void run()
 			{
 				final Clipboard cb = new Clipboard(getDisplay());
-				cb.setContents(new Object[] { getText() }, new Transfer[] { TextTransfer.getInstance() });
+				cb.setContents(new Object[] { AbstractSelector.this.getText() }, new Transfer[] { TextTransfer.getInstance() });
 			}
 		};
 		actionCopy.setText(Messages.AbstractSelector_CopyToClipboard);

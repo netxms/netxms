@@ -51,7 +51,6 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.ColumnDefinition;
 import org.netxms.client.datacollection.DataCollectionTable;
-import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditColumnDialog;
@@ -284,7 +283,7 @@ public class TableColumns extends PropertyPage
 		final IStructuredSelection selection = (IStructuredSelection)columnList.getSelection();
 		if (!selection.isEmpty())
 		{
-			Iterator<Threshold> it = selection.iterator();
+			Iterator<ColumnDefinition> it = selection.iterator();
 			while(it.hasNext())
 			{
 				columns.remove(it.next());
