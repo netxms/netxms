@@ -236,6 +236,15 @@ public class InterfacesTab extends ObjectTab
 	}
 
 	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#currentObjectUpdated(org.netxms.client.objects.GenericObject)
+	 */
+	@Override
+	public void currentObjectUpdated(GenericObject object)
+	{
+		objectChanged(object);
+	}
+
+	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
 	 */
 	@Override

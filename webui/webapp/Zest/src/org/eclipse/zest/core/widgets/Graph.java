@@ -837,7 +837,7 @@ public class Graph extends FigureCanvas implements IContainer {
 				}
 				// If the figure under the mouse is the canvas, and CTRL/CMD is
 				// not being held down, then select nothing
-				if (figureUnderMouse == null || figureUnderMouse == Graph.this) {
+				if (figureUnderMouse == null || figureUnderMouse == Graph.this.zestRootLayer || figureUnderMouse == Graph.this.rootlayer) {
 					if ((me.getState() & SWT.MOD1) == 0) {
 						clearSelection();
 						if (hasSelection) {

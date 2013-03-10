@@ -82,7 +82,7 @@ public class TabbedObjectView extends ViewPart
 	private IntermediateSelectionProvider selectionProvider;
 	private SessionListener sessionListener = null;
 	private Action actionRefresh;
-	private SourceProvider sourceProvider;
+	private SourceProvider sourceProvider = null;
 	private long objectId = 0; 
 	
 	/* (non-Javadoc)
@@ -384,7 +384,8 @@ public class TabbedObjectView extends ViewPart
 	public void dispose()
 	{
 		ConsoleSharedData.getSession().removeListener(sessionListener);
-		sourceProvider.updateProperty(SourceProvider.ACTIVE_TAB, null);
+		if (sourceProvider != null)
+			sourceProvider.updateProperty(SourceProvider.ACTIVE_TAB, null);
 		getSite().setSelectionProvider(null);
 		if ((selectionService != null) && (selectionListener != null))
 			selectionService.removePostSelectionListener(selectionListener);

@@ -361,14 +361,15 @@ public class ZoomManager {
 	 * 
 	 * @return List The list of zoom levels
 	 */
-	public String[] getZoomLevelsAsText() {
-		String[] zoomLevelStrings = new String[zoomLevels.length
-				+ zoomLevelContributions.size()];
-
-		if (zoomLevelContributions != null) {
-			for (int i = 0; i < zoomLevelContributions.size(); i++) {
-				zoomLevelStrings[i] = (String)zoomLevelContributions.get(i);
-			}
+	public String[] getZoomLevelsAsText() 
+	{
+		if (zoomLevelContributions == null)
+			return new String[0];
+		
+		String[] zoomLevelStrings = new String[zoomLevels.length	+ zoomLevelContributions.size()];
+		for (int i = 0; i < zoomLevelContributions.size(); i++) 
+		{
+			zoomLevelStrings[i] = (String)zoomLevelContributions.get(i);
 		}
 		for (int i = 0; i < zoomLevels.length; i++) {
 			// zoomLevelStrings[i + zoomLevelContributions.size()] =

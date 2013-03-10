@@ -137,6 +137,17 @@ public abstract class ObjectTab
 	}
 	
 	/**
+	 * Called by parent view to inform tab that update notification for
+	 * current object was received from server. Default implementation do nothing.
+	 * This method always called in UI thread.
+	 * 
+	 * @param object new instance of current object
+	 */
+	public void currentObjectUpdated(GenericObject object)
+	{
+	}
+	
+	/**
 	 * Show tab
 	 */
 	public void show()
@@ -201,6 +212,16 @@ public abstract class ObjectTab
 			}
 			clientArea.setVisible(false);
 		}
+	}
+	
+	/**
+	 * Check if this tab is currently visible
+	 * 
+	 * @return
+	 */
+	public final boolean isVisible()
+	{
+		return tabItem != null;
 	}
 
 	/**

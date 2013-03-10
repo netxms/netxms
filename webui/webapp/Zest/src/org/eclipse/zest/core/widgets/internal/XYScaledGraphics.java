@@ -62,6 +62,8 @@ public class XYScaledGraphics extends ScaledGraphics {
 		}
 
 		public boolean equals(Object obj) {
+			if (obj == null)
+				return false;
 			return (((FontKey) obj).font.equals(font) && ((FontKey) obj).height == height);
 		}
 

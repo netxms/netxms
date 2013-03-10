@@ -103,31 +103,36 @@ public class AligningBendpointLocator extends AbstractLocator {
 	 * 
 	 * @see org.eclipse.draw2d.ConnectionLocator#getReferencePoint()
 	 */
-	protected Point getReferencePoint() {
+	protected Point getReferencePoint()
+	{
 		PointList points = getConnection().getPoints();
-		Point p = points.getMidpoint().getCopy();
-		PointList tempPoints = new PointList();
-		switch (horizontal) {
-		case BEGINNING:
-			p = points.getFirstPoint().getCopy();
-			break;
-		case END:
-			p = points.getLastPoint().getCopy();
-			break;
-		case CENTER_BEGINNING:
-			tempPoints.addPoint(points.getFirstPoint().getCopy());
-			tempPoints.addPoint(points.getPoint(1).getCopy());
-			p = tempPoints.getMidpoint().getCopy();
-			break;
-		case CENTER_END:
-			tempPoints = new PointList();
-			int s = points.size();
-			tempPoints.addPoint(points.getLastPoint().getCopy());
-			tempPoints.addPoint(points.getPoint(s - 2).getCopy());
-			p = tempPoints.getMidpoint().getCopy();
-		case CENTER:
-		default:
-			p = points.getMidpoint().getCopy();
+		Point p;
+		PointList tempPoints;
+		switch(horizontal)
+		{
+			case BEGINNING:
+				p = points.getFirstPoint().getCopy();
+				break;
+			case END:
+				p = points.getLastPoint().getCopy();
+				break;
+			case CENTER_BEGINNING:
+				tempPoints = new PointList();
+				tempPoints.addPoint(points.getFirstPoint().getCopy());
+				tempPoints.addPoint(points.getPoint(1).getCopy());
+				p = tempPoints.getMidpoint().getCopy();
+				break;
+			case CENTER_END:
+				tempPoints = new PointList();
+				int s = points.size();
+				tempPoints.addPoint(points.getLastPoint().getCopy());
+				tempPoints.addPoint(points.getPoint(s - 2).getCopy());
+				p = tempPoints.getMidpoint().getCopy();
+				break;
+			case CENTER:
+			default:
+				p = points.getMidpoint().getCopy();
+				break;
 		}
 		return p;
 	}

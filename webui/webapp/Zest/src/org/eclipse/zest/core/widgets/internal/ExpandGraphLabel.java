@@ -132,8 +132,8 @@ public class ExpandGraphLabel extends Figure implements ActionListener {
 				}
 				Rectangle bounds = getBounds();
 				graphics.translate(bounds.x, bounds.y);
-				if (getIcon() != null) {
-					graphics.drawImage(getIcon(), getIconLocation());
+				if (super.getIcon() != null) {
+					graphics.drawImage(super.getIcon(), getIconLocation());
 				}
 				if (!isEnabled()) {
 					graphics.translate(1, 1);
@@ -142,7 +142,7 @@ public class ExpandGraphLabel extends Figure implements ActionListener {
 					graphics.translate(-1, -1);
 					graphics.setForegroundColor(ColorConstants.buttonDarker);
 				}
-				graphics.drawText(getText(), getTextLocation());
+				graphics.drawText(super.getText(), getTextLocation());
 				graphics.translate(-bounds.x, -bounds.y);
 			}
 		};
