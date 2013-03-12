@@ -39,7 +39,6 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -76,7 +75,6 @@ public class TabbedObjectView extends ViewPart
 	private CLabel header;
 	private CTabFolder tabFolder;
 	private Font headerFont;
-	private Color headerColor;
 	private List<ObjectTab> tabs;
 	private ISelectionService selectionService = null;
 	private ISelectionListener selectionListener = null;
@@ -135,13 +133,12 @@ public class TabbedObjectView extends ViewPart
 		parent.setLayout(layout);
 		
 		headerFont = new Font(parent.getDisplay(), "Verdana", 11, SWT.BOLD);
-		headerColor = new Color(parent.getDisplay(), 153, 180, 209);
 		
 		header = new CLabel(parent, SWT.BORDER);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		header.setFont(headerFont);
-		header.setBackground(headerColor);
-		header.setForeground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
+		header.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_HEADER_BACKGROUND, parent.getDisplay()));
+		header.setForeground(SharedColors.getColor(SharedColors.OBJECT_TAB_HEADER, parent.getDisplay()));
 		
 		tabFolder = new CTabFolder(parent, SWT.TOP | SWT.FLAT | SWT.MULTI);
 		tabFolder.setUnselectedImageVisible(true);
@@ -395,7 +392,6 @@ public class TabbedObjectView extends ViewPart
 			tab.dispose();
 		}
 		headerFont.dispose();
-		headerColor.dispose();
 		super.dispose();
 	}
 }
