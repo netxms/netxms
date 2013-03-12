@@ -63,10 +63,12 @@ public class ColumnFilterEditor extends DashboardComposite
 		this.toolkit = toolkit;
 		this.column = column;
 		
+		toolkit.adapt(this);
+		
 		GridLayout layout = new GridLayout();
 		setLayout(layout);
 		
-		final Composite header = new Composite(this, SWT.NONE);
+		final Composite header = toolkit.createComposite(this);
 		layout = new GridLayout();
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
@@ -77,14 +79,13 @@ public class ColumnFilterEditor extends DashboardComposite
 		gd.grabExcessHorizontalSpace = true;
 		header.setLayoutData(gd);
 		
-		final Label title = new Label(header, SWT.NONE);
-		title.setText(column.getDescription());
+		final Label title = toolkit.createLabel(header, column.getDescription());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = false;
 		title.setLayoutData(gd);
 		
-		final Composite buttons = new Composite(header, SWT.NONE); 
+		final Composite buttons = toolkit.createComposite(header); 
 		layout = new GridLayout();
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
@@ -131,7 +132,7 @@ public class ColumnFilterEditor extends DashboardComposite
 			}
 		});
 		
-		ImageHyperlink link = new ImageHyperlink(header, SWT.NONE);
+		ImageHyperlink link = toolkit.createImageHyperlink(header, SWT.NONE);
 		link.setImage(SharedIcons.IMG_ADD_OBJECT);
 		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
@@ -141,7 +142,7 @@ public class ColumnFilterEditor extends DashboardComposite
 			}
 		});
 
-		link = new ImageHyperlink(header, SWT.NONE);
+		link = toolkit.createImageHyperlink(header, SWT.NONE);
 		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override

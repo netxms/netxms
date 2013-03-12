@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -31,14 +30,13 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 
 /**
  * Implements command box - vertical list of hyperlinks to given actions
@@ -46,11 +44,6 @@ import org.eclipse.swt.widgets.Display;
  */
 public class CommandBox extends Composite implements DisposeListener
 {
-	private static final long serialVersionUID = 1L;
-
-	private static final Color FOREGROUND_COLOR = new Color(Display.getDefault(), 0, 0, 96);
-	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
-	
 	private List<Action> actions = new ArrayList<Action>();
 	private Map<ImageDescriptor, Image> imageCache = new HashMap<ImageDescriptor, Image>();
 	private Cursor cursor;
@@ -64,7 +57,7 @@ public class CommandBox extends Composite implements DisposeListener
 	{
 		super(parent, style);
 		
-		setBackground(BACKGROUND_COLOR);
+		setBackground(SharedColors.getColor(SharedColors.COMMAND_BOX_BACKGROUND, getDisplay()));
 		
 		cursor = new Cursor(getDisplay(), SWT.CURSOR_HAND);
 		font = new Font(getDisplay(), "Verdana", 9, SWT.NORMAL); //$NON-NLS-1$
@@ -87,12 +80,10 @@ public class CommandBox extends Composite implements DisposeListener
 			label.setText(a.getText());
 			label.setImage(getImage(a));
 			label.setCursor(cursor);
-			label.setForeground(FOREGROUND_COLOR);
-			label.setBackground(BACKGROUND_COLOR);
+			label.setForeground(SharedColors.getColor(SharedColors.COMMAND_BOX_TEXT, getDisplay()));
+			label.setBackground(SharedColors.getColor(SharedColors.COMMAND_BOX_BACKGROUND, getDisplay()));
 			//label.setFont(font);
 			label.addMouseListener(new MouseListener() {
-				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void mouseDoubleClick(MouseEvent e)
 				{
