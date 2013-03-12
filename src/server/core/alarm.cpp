@@ -296,6 +296,8 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
             notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
             updateAlarmInDB(&m_pAlarmList[i]);
 
+				alarm.dwAlarmId = m_pAlarmList[i].dwAlarmId;		// needed for correct update of related events
+
             bNewAlarm = FALSE;
             break;
          }

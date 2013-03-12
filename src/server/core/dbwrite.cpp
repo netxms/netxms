@@ -61,11 +61,9 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query)
 	DbgPrintf(8, _T("SQL request queued: %s"), query);
 }
 
-
-//
-// Put parameterized SQL request into queue for later execution
-//
-
+/**
+ * Put parameterized SQL request into queue for later execution
+ */
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values)
 {
 	int size = sizeof(DELAYED_SQL_REQUEST) + ((int)_tcslen(query) + 1) * sizeof(TCHAR) + bindCount * sizeof(TCHAR *) + bindCount;

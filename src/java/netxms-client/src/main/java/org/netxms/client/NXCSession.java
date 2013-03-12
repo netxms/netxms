@@ -249,6 +249,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private String tileServerURL;
 	private String dateFormat;
 	private String timeFormat;
+	private int defaultDciRetentionTime;
+	private int defaultDciPollingInterval;
 
 	// Objects
 	private Map<Long, GenericObject> objectList = new HashMap<Long, GenericObject>();
@@ -1403,7 +1405,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			timeFormat = response.getVariableAsString(NXCPCodes.VID_TIME_FORMAT);
 			if ((timeFormat == null) || (timeFormat.length() == 0))
 				timeFormat = "HH:mm:ss";
-
+			
 			// Setup encryption if required
 			if (connUseEncryption)
 			{
@@ -1437,6 +1439,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			userSystemRights = response.getVariableAsInteger(NXCPCodes.VID_USER_SYS_RIGHTS);
 			passwordExpired = response.getVariableAsBoolean(NXCPCodes.VID_CHANGE_PASSWD_FLAG);
 			zoningEnabled = response.getVariableAsBoolean(NXCPCodes.VID_ZONING_ENABLED);
+
+			defaultDciPollingInterval = response.getVariableAsInteger(NXCPCodes.VID_POLLING_INTERVAL);
+			if (defaultDciPollingInterval == 0)
+				defaultDciPollingInterval = 60;
+
+			defaultDciRetentionTime = response.getVariableAsInteger(NXCPCodes.VID_RETENTION_TIME);
+			if (defaultDciRetentionTime == 0)
+				defaultDciRetentionTime = 30;
 
 			Logger.info("NXCSession.connect", "succesfully connected and logged in, userId=" + userId);
 			isConnected = true;
@@ -6494,5 +6504,21 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariableInt32(NXCPCodes.VID_MAPPING_TABLE_ID, id);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+	}
+
+	/**
+	 * @return the defaultDciRetentionTime
+	 */
+	public final int getDefaultDciRetentionTime()
+	{
+		return defaultDciRetentionTime;
+	}
+
+	/**
+	 * @return the defaultDciPollingInterval
+	 */
+	public final int getDefaultDciPollingInterval()
+	{
+		return defaultDciPollingInterval;
 	}
 }

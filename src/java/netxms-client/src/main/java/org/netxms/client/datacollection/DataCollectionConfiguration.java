@@ -341,4 +341,12 @@ public class DataCollectionConfiguration
 	{
 		this.userData = userData;
 	}
+
+	/**
+	 * @return the session
+	 */
+	protected final NXCSession getSession()
+	{
+		return session;
+	}
 }

@@ -310,6 +310,17 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 /**
+ * Upgrade from V272 to V273
+ */
+static BOOL H_UpgradeFromV272(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateConfigParam(_T("DefaultDCIRetentionTime"), _T("30"), 1, 0));
+	CHK_EXEC(CreateConfigParam(_T("DefaultDCIPollingInterval"), _T("60"), 1, 0));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='273' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V271 to V272
  */
 static BOOL H_UpgradeFromV271(int currVersion, int newVersion)
@@ -6731,6 +6742,7 @@ static struct
 	{ 269, 270, H_UpgradeFromV269 },
    { 270, 271, H_UpgradeFromV270 },
    { 271, 272, H_UpgradeFromV271 },
+   { 272, 273, H_UpgradeFromV272 },
    { 0, 0, NULL }
 };
 

@@ -1656,6 +1656,8 @@ void ClientSession::login(CSCPMessage *pRequest)
 			msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
          msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? 0 : 1));
 			msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
+			msg.SetVariable(VID_POLLING_INTERVAL, ConfigReadULong(_T("DefaultDCIPollingInterval"), 60));
+			msg.SetVariable(VID_RETENTION_TIME, ConfigReadULong(_T("DefaultDCIRetentionTime"), 30));
          debugPrintf(3, _T("User %s authenticated"), m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
@@ -2977,10 +2979,14 @@ void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
 							switch(dcObjectType)
 							{
 								case DCO_TYPE_ITEM:
-									dcObject = new DCItem(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, DCI_DT_INT, 60, 30, (Node *)pObject);
+									dcObject = new DCItem(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, DCI_DT_INT, 
+										ConfigReadInt(_T("DefaultDCIPollingInterval"), 60), 
+										ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), (Node *)pObject);
 									break;
 								case DCO_TYPE_TABLE:
-									dcObject = new DCTable(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, 60, 30, (Node *)pObject);
+									dcObject = new DCTable(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, 
+										ConfigReadInt(_T("DefaultDCIPollingInterval"), 60), 
+										ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), (Node *)pObject);
 									break;
 								default:
 									dcObject = NULL;
@@ -4257,7 +4263,9 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 
 										_sntprintf(dciName, MAX_DB_STRING, _T("ChildStatus(%d)"), pObject->Id());
 										_sntprintf(dciDescription, MAX_DB_STRING, _T("Status of network service %s"), pObject->Name());
-										((Node *)pParent)->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT, 60, 30, (Node *)pParent, dciDescription));
+										((Node *)pParent)->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT,
+											ConfigReadInt(_T("DefaultDCIPollingInterval"), 60),
+											ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), (Node *)pParent, dciDescription));
 									}
 								}
 							}

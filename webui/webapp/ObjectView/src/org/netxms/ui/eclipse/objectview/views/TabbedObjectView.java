@@ -55,6 +55,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
+import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -202,7 +203,7 @@ public class TabbedObjectView extends ViewPart
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
-				if (objectId == n.getSubCode())
+				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) && (objectId == n.getSubCode()))
 				{
 					final GenericObject object = (GenericObject)n.getObject();
 					getSite().getShell().getDisplay().asyncExec(new Runnable() {

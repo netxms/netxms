@@ -120,8 +120,8 @@ public abstract class DataCollectionObject
 		templateId = 0;
 		resourceId = 0;
 		proxyNode = 0;
-		pollingInterval = 60;
-		retentionTime = 30;
+		pollingInterval = owner.getSession().getDefaultDciPollingInterval();
+		retentionTime = owner.getSession().getDefaultDciRetentionTime();
 		origin = AGENT;
 		status = ACTIVE;
 		flags = 0;

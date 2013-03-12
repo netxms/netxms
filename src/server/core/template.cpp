@@ -243,11 +243,9 @@ BOOL Template::CreateFromDB(DWORD dwId)
    return bResult;
 }
 
-
-//
-// Save object to database
-//
-
+/**
+ * Save object to database
+ */
 BOOL Template::SaveToDB(DB_HANDLE hdb)
 {
    LockData();
@@ -315,11 +313,9 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
    return success;
 }
 
-
-//
-// Delete object from database
-//
-
+/**
+ * Delete object from database
+ */
 BOOL Template::DeleteFromDB()
 {
    TCHAR szQuery[256];
@@ -348,11 +344,9 @@ BOOL Template::DeleteFromDB()
    return bSuccess;
 }
 
-
-//
-// Load data collection items from database
-//
-
+/**
+ * Load data collection items from database
+ */
 void Template::loadItemsFromDB()
 {
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, 
@@ -395,11 +389,9 @@ void Template::loadItemsFromDB()
 	}
 }
 
-
-//
-// Add data collection object to node
-//
-
+/**
+ * Add data collection object to node
+ */
 bool Template::addDCObject(DCObject *object, bool alreadyLocked)
 {
    int i;
@@ -509,11 +501,9 @@ bool Template::updateDCObject(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMa
    return success;
 }
 
-
-//
-// Set status for group of DCIs
-//
-
+/**
+ * Set status for group of DCIs
+ */
 bool Template::setItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
 {
    bool success = true;
@@ -616,11 +606,9 @@ void Template::sendItemsToClient(ClientSession *pSession, DWORD dwRqId)
    pSession->sendMessage(&msg);
 }
 
-
-//
-// Get DCI item's type
-//
-
+/**
+ * Get DCI's data type
+ */
 int Template::getItemType(DWORD dwItemId)
 {
    int iType = -1;
@@ -644,11 +632,9 @@ int Template::getItemType(DWORD dwItemId)
    return iType;
 }
 
-
-//
-// Get item by it's id
-//
-
+/**
+ * Get item by it's id
+ */
 DCObject *Template::getDCObjectById(DWORD dwItemId)
 {
    DCObject *object = NULL;
@@ -669,11 +655,9 @@ DCObject *Template::getDCObjectById(DWORD dwItemId)
    return object;
 }
 
-
-//
-// Get item by it's name (case-insensetive)
-//
-
+/**
+ * Get item by it's name (case-insensetive)
+ */
 DCObject *Template::getDCObjectByName(const TCHAR *pszName)
 {
    DCObject *object = NULL;
@@ -693,11 +677,9 @@ DCObject *Template::getDCObjectByName(const TCHAR *pszName)
    return object;
 }
 
-
-//
-// Get item by it's description (case-insensetive)
-//
-
+/**
+ * Get item by it's description (case-insensetive)
+ */
 DCObject *Template::getDCObjectByDescription(const TCHAR *pszDescription)
 {
    DCObject *object = NULL;
@@ -717,11 +699,9 @@ DCObject *Template::getDCObjectByDescription(const TCHAR *pszDescription)
    return object;
 }
 
-
-//
-// Get item by it's index
-//
-
+/**
+ * Get item by it's index
+ */
 DCObject *Template::getDCObjectByIndex(int index)
 {
    lockDciAccess();
@@ -730,21 +710,17 @@ DCObject *Template::getDCObjectByIndex(int index)
    return object;
 }
 
-
-//
-// Redefined status calculation for template
-//
-
+/**
+ * Redefined status calculation for template
+ */
 void Template::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create NXCP message with object's data
+ */
 void Template::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
@@ -753,11 +729,9 @@ void Template::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_applyFilterSource));
 }
 
-
-//
-// Modify object from message
-//
-
+/**
+ * Modify object from NXCP message
+ */
 DWORD Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
@@ -953,11 +927,9 @@ bool Template::enumDCObjects(bool (* pfCallback)(DCObject *, DWORD, void *), voi
 	return success;
 }
 
-
-//
-// (Re)associate all DCIs
-//
-
+/**
+ * (Re)associate all DCIs
+ */
 void Template::associateItems()
 {
 	lockDciAccess();
