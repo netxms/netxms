@@ -44,6 +44,8 @@ import org.netxms.ui.eclipse.console.resources.SharedColors;
  */
 public class CommandBox extends Composite implements DisposeListener
 {
+	private static final long serialVersionUID = 1L;
+
 	private List<Action> actions = new ArrayList<Action>();
 	private Map<ImageDescriptor, Image> imageCache = new HashMap<ImageDescriptor, Image>();
 	private Cursor cursor;
@@ -84,6 +86,8 @@ public class CommandBox extends Composite implements DisposeListener
 			label.setBackground(SharedColors.getColor(SharedColors.COMMAND_BOX_BACKGROUND, getDisplay()));
 			//label.setFont(font);
 			label.addMouseListener(new MouseListener() {
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void mouseDoubleClick(MouseEvent e)
 				{
