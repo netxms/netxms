@@ -74,4 +74,30 @@ public class RegionalSettings
 				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
 		}
 	}
+
+	/**
+	 * Get formatter for date only
+	 * 
+	 * @return
+	 */
+	public static DateFormat getDateFormat()
+	{
+		switch(dateTimeFormat)
+		{
+			case DATETIME_FORMAT_SERVER:
+				Session session = ConsoleSharedData.getSession();
+				return new SimpleDateFormat(session.getDateFormat());
+			case DATETIME_FORMAT_CUSTOM:
+				try
+				{
+					return new SimpleDateFormat(dateFormatString);
+				}
+				catch(IllegalArgumentException e)
+				{
+					return DateFormat.getDateInstance(DateFormat.SHORT);
+				}
+			default:
+				return DateFormat.getDateInstance(DateFormat.SHORT);
+		}
+	}
 }

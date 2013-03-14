@@ -3259,6 +3259,7 @@ webui/webapp/ObjectView/icons/object_details.png -text
 webui/webapp/ObjectView/icons/overview_tab.gif -text
 webui/webapp/ObjectView/icons/restart.png -text
 webui/webapp/ObjectView/icons/shutdown.png -text
+webui/webapp/ObjectView/icons/software.png -text
 webui/webapp/ObjectView/icons/wol.png -text
 webui/webapp/ObjectView/plugin.xml -text
 webui/webapp/ObjectView/schema/org.netxms.ui.eclipse.objectview.objectDetailsProvider.exsd -text

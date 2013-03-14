@@ -20,6 +20,14 @@
             name="Object Status"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objectview.views.SoftwareInventoryView"
+            icon="icons/software.png"
+            id="org.netxms.ui.eclipse.objectview.views.SoftwareInventoryView"
+            name="Software Inventory"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -90,6 +98,18 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectview.popupActions.ShowStatusMap_ServiceRoot"
                label="Status Map">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectview.actions.popup.object.Node"
+            objectClass="org.netxms.client.objects.Node">
+         <action
+               class="org.netxms.ui.eclipse.objectview.actions.ShowSoftwareInventory"
+               enablesFor="1"
+               icon="icons/software.png"
+               id="org.netxms.ui.eclipse.objectview.popupActions.ShowSoftwareInventory_Node"
+               label="Software Inventory">
          </action>
       </objectContribution>
    </extension>
