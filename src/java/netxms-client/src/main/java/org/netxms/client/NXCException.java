@@ -129,7 +129,8 @@ public class NXCException extends NetXMSClientException
 		"No physical component data",
 		"Invalid alarm note ID",
 		"Encryption error",
-		"Invalid mapping table ID"
+		"Invalid mapping table ID",
+		"No software package data"
 	};
 	private static final String[] extendedErrorTexts_en =
 	{
@@ -238,7 +239,8 @@ public class NXCException extends NetXMSClientException
       "Sin datos en el componente físico",
       "ID del comentario de la alarma inválido",
       "Error de cifrado",
-      "ID de tabla de asignación inválido"
+      "ID de tabla de asignación inválido",
+		"No software package data"	// TODO: translate
 	};
 	private static final String[] extendedErrorTexts_es =
 	{

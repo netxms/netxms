@@ -232,6 +232,26 @@ public:
 };
 
 /**
+ * Software package information
+ */
+class SoftwarePackage
+{
+private:
+	TCHAR *m_name;
+	TCHAR *m_version;
+	TCHAR *m_vendor;
+	time_t m_date;
+	TCHAR *m_url;
+	TCHAR *m_description;
+
+public:
+	SoftwarePackage(Table *table, int row);
+	~SoftwarePackage();
+
+	void fillMessage(CSCPMessage *msg, DWORD baseId);
+};
+
+/**
  * Base class for network objects
  */
 class NXCORE_EXPORTABLE NetObj
@@ -867,6 +887,7 @@ protected:
 	time_t m_topologyRebuildTimestamp;
 	ServerJobQueue *m_jobQueue;
 	ComponentTree *m_components;		// Hardware components
+	ObjectArray<SoftwarePackage> *m_softwarePackages;  // installed software packages
 
    void pollerLock() { MutexLock(m_hPollerMutex); }
    void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
@@ -1037,6 +1058,7 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
    void writeParamListToMessage(CSCPMessage *pMsg, WORD flags);
+	void writePackageListToMessage(CSCPMessage *msg);
 
    DWORD wakeUp();
 

@@ -22,10 +22,11 @@ libnxcore_la_SOURCES =  acl.cpp agent.cpp agent_policy.cpp actions.cpp \
 			radius.cpp report.cpp report_job.cpp rootobj.cpp \
 			script.cpp session.cpp situation.cpp slmcheck.cpp \
 			smclp.cpp sms.cpp snmp.cpp snmptrap.cpp subnet.cpp \
-			svccontainer.cpp syncer.cpp syslogd.cpp template.cpp \
-			tools.cpp tracert.cpp uniroot.cpp upload_job.cpp \
-			uptimecalc.cpp userdb.cpp userdb_objects.cpp \
-			vpnconn.cpp vrrp.cpp watchdog.cpp zone.cpp
+			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp \
+			template.cpp tools.cpp tracert.cpp uniroot.cpp \
+			upload_job.cpp uptimecalc.cpp userdb.cpp \
+			userdb_objects.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
+			zone.cpp
 libnxcore_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxcore_la_LIBADD = ../../libnetxms/libnetxms.la \

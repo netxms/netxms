@@ -534,6 +534,7 @@ enum
 #define RCC_INVALID_ALARM_NOTE_ID    ((DWORD)97)
 #define RCC_ENCRYPTION_ERROR         ((DWORD)98)
 #define RCC_INVALID_MAPPING_TABLE_ID ((DWORD)99)
+#define RCC_NO_SOFTWARE_PACKAGE_DATA ((DWORD)100)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

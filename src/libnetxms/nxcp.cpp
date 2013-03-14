@@ -312,10 +312,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_GET_MAPPING_TABLE"),
 		_T("CMD_UPDATE_MAPPING_TABLE"),
 		_T("CMD_DELETE_MAPPING_TABLE"),
-		_T("CMD_LIST_MAPPING_TABLES")
+		_T("CMD_LIST_MAPPING_TABLES"),
+		_T("CMD_GET_NODE_SOFTWARE")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_LIST_MAPPING_TABLES))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_NODE_SOFTWARE))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

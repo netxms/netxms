@@ -1737,6 +1737,7 @@ src/java/netxms-eclipse/ObjectView/icons/object_details.png -text
 src/java/netxms-eclipse/ObjectView/icons/overview_tab.gif -text
 src/java/netxms-eclipse/ObjectView/icons/restart.png -text
 src/java/netxms-eclipse/ObjectView/icons/shutdown.png -text
+src/java/netxms-eclipse/ObjectView/icons/software.png -text
 src/java/netxms-eclipse/ObjectView/icons/wol.png -text
 src/java/netxms-eclipse/ObjectView/plugin.xml -text
 src/java/netxms-eclipse/ObjectView/schema/org.netxms.ui.eclipse.objectview.objectDetailsProvider.exsd -text

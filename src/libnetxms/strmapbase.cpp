@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -67,9 +67,10 @@ void StringMapBase::clear()
  */
 DWORD StringMapBase::find(const TCHAR *key)
 {
-	DWORD i;
+	if (key == NULL)
+		return INVALID_INDEX;
 
-	for(i = 0; i < m_size; i++)
+	for(DWORD i = 0; i < m_size; i++)
 	{
 		if (!_tcsicmp(key, m_keys[i]))
 			return i;

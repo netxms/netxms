@@ -630,6 +630,7 @@ private:
 	void renderReport(CSCPMessage *request);
 	void getNetworkPath(CSCPMessage *request);
 	void getNodeComponents(CSCPMessage *request);
+	void getNodeSoftware(CSCPMessage *request);
 	void listMappingTables(CSCPMessage *request);
 	void getMappingTable(CSCPMessage *request);
 	void updateMappingTable(CSCPMessage *request);

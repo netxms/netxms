@@ -93,6 +93,7 @@ Node::Node() : DataCollectionTarget()
 	m_driver = NULL;
 	m_driverData = NULL;
 	m_components = NULL;
+	m_softwarePackages = NULL;
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 }
 
@@ -161,6 +162,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_driver = NULL;
 	m_driverData = NULL;
 	m_components = NULL;
+	m_softwarePackages = NULL;
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 }
 
@@ -192,6 +194,7 @@ Node::~Node()
 		m_vlans->decRefCount();
 	delete m_components;
 	delete m_lldpLocalPortInfo;
+	delete m_softwarePackages;
 }
 
 /**
@@ -1666,6 +1669,31 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller,
 		applyUserTemplates();
 		updateContainerMembership();
 		doInstanceDiscovery();
+
+		// Get list of installed products
+		if (m_dwFlags & NF_IS_NATIVE_AGENT)
+		{
+			SetPollerInfo(nPoller, _T("software check"));
+			sendPollerMsg(dwRqId, _T("Reading list of installed software packages\r\n"));
+
+			Table *table;
+			if (getTableFromAgent(_T("System.InstalledProducts"), &table) == DCE_SUCCESS)
+			{
+				LockData();
+				delete m_softwarePackages;
+				m_softwarePackages = new ObjectArray<SoftwarePackage>(table->getNumRows(), 16, true);
+				for(int i = 0; i < table->getNumRows(); i++)
+					m_softwarePackages->add(new SoftwarePackage(table, i));
+				UnlockData();
+				delete table;
+				sendPollerMsg(dwRqId, POLLER_INFO _T("Got information about %d installed software packages\r\n"), m_softwarePackages->size());
+			}
+			else
+			{
+				delete_and_null(m_softwarePackages);
+				sendPollerMsg(dwRqId, POLLER_WARNING _T("Unable to get information about installed software packages\r\n"));
+			}
+		}
 
 		sendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n"), m_szName);
 		sendPollerMsg(dwRqId, _T("Node configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
@@ -5230,4 +5258,28 @@ bool Node::ifDescrFromLldpLocalId(BYTE *id, size_t idLen, TCHAR *ifName)
 	}
 	UnlockData();
 	return result;
+}
+
+/**
+ * Fill NXCP message with software package list
+ */
+void Node::writePackageListToMessage(CSCPMessage *msg)
+{
+	LockData();
+	if (m_softwarePackages != NULL)
+	{
+		msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)m_softwarePackages->size());
+		DWORD varId = VID_ELEMENT_LIST_BASE;
+		for(int i = 0; i < m_softwarePackages->size(); i++)
+		{
+			m_softwarePackages->get(i)->fillMessage(msg, varId);
+			varId += 10;
+		}
+		msg->SetVariable(VID_RCC, RCC_SUCCESS);
+	}
+	else
+	{
+		msg->SetVariable(VID_RCC, RCC_NO_SOFTWARE_PACKAGE_DATA);
+	}
+	UnlockData();
 }

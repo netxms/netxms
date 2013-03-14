@@ -61,7 +61,21 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value)
 			size = 256;
 			if (MsiGetProductInfo(productId, INSTALLPROPERTY_INSTALLDATE, buffer, &size) == ERROR_SUCCESS)
 			{
-				value->set(3, buffer);
+				if (_tcslen(buffer) == 8)
+				{
+					// convert YYYYMMDD to UNIX timestamp
+					struct tm t;
+					memset(&t, 0, sizeof(struct tm));
+					t.tm_mday = _tcstol(&buffer[6], NULL, 10);
+					buffer[6] = 0;
+					t.tm_mon = _tcstol(&buffer[4], NULL, 10) - 1;
+					buffer[4] = 0;
+					t.tm_year = _tcstol(buffer, NULL, 10) - 1900;
+					t.tm_isdst = -1;
+					t.tm_hour = 12;
+					_sntprintf(buffer, 256, _T("%ld"), (long)mktime(&t));
+					value->set(3, buffer);
+				}
 			}
 
 			size = 256;

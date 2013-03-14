@@ -757,6 +757,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\swpkg.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\syncer.cpp"
 				>
 			</File>

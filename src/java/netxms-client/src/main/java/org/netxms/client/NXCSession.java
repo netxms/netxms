@@ -3993,6 +3993,31 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/**
+	 * Get list of software packages installed on node.
+	 * 
+	 * @param nodeId node object identifier
+	 * @return root component
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<SoftwarePackage> getNodeSoftwarePackages(long nodeId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NODE_SOFTWARE);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
+		List<SoftwarePackage> packages = new ArrayList<SoftwarePackage>(count);
+		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			packages.add(new SoftwarePackage(response, varId));
+			varId += 10;
+		}
+		return packages;
+	}
+
+	/**
 	 * Get list of server jobs
 	 * 
 	 * @return list of server jobs

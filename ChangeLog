@@ -2,6 +2,7 @@
 * 1.2.7
 *
 
+- Basic software inventory
 - New MIBs added: ASTARO-MIB
 - Fixed issues: #242, #249
 

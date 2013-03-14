@@ -461,6 +461,7 @@ typedef struct
 #define CMD_UPDATE_MAPPING_TABLE       0x010F
 #define CMD_DELETE_MAPPING_TABLE       0x0110
 #define CMD_LIST_MAPPING_TABLES        0x0111
+#define CMD_GET_NODE_SOFTWARE          0x0112
 
 /**
  * Variable identifiers

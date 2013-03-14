@@ -20,7 +20,6 @@ package org.netxms.client;
 
 /**
  * Listener interface for NXCSession.nodePoll
- *
  */
 public interface NodePollListener
 {
