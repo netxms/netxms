@@ -5,12 +5,14 @@
 	android:layout_height="fill_parent">
 	<TextView 
 		android:id="@+id/tvChild"
+		android:textIsSelectable="false"
 	    android:layout_width="fill_parent"
-		android:layout_height="36dip"
-		android:paddingLeft="5dip"
-		android:paddingRight="5dip"
+		android:layout_height="36dp"
+		android:paddingLeft="5dp"
+		android:paddingRight="5dp"
 		android:gravity="center_vertical"
-		android:textSize="17dip"
+		android:textSize="17sp"
+		android:textColor="@color/text_color"
 		android:cacheColorHint="@color/item_body"
 		android:background="@drawable/explist_selection">
 	</TextView>

@@ -10,6 +10,7 @@
 		android:paddingLeft="20dip"
 		android:paddingRight="5dip"
 		android:gravity="center_vertical"
+		android:textColor="@color/text_color"
 		android:cacheColorHint="@color/item_body"
 		android:background="@drawable/explist_selection">
 	</ListView>

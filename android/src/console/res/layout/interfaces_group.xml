@@ -1,29 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/interface_layout"
-    android:layout_width="fill_parent"
-	android:layout_height="fill_parent"
-	android:layout_centerVertical="true" >
-	<ImageView
-	    android:id="@+id/interface_image"
-	    android:src="@drawable/status_normal"
-		android:layout_width="wrap_content"
-	    android:layout_height="48dip"
-	    android:paddingLeft="36dip"
-	    android:gravity="center_vertical"
-		android:cacheColorHint="@color/item_body"
-		android:background="@drawable/explist_selection">
-	</ImageView>
-    <TextView
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:drawableLeft="@drawable/status_normal"
+        android:textIsSelectable="false"
 	    android:id="@+id/interface_text"
 		android:layout_width="match_parent"
 	    android:layout_height="48dip"
-	    android:paddingLeft="5dip"
+		android:paddingLeft="36dp"
 	    android:paddingRight="5dip"
+ 	    android:paddingTop="10dip"
+	    android:paddingBottom="10dip"
 	    android:gravity="center_vertical"
-	    android:textSize="17dip"
+	    android:textSize="17sp"
+		android:textColor="@color/text_color"
 		android:cacheColorHint="@color/item_body"
 		android:background="@drawable/explist_selection"
 	    android:textStyle="bold" >
 	</TextView>
-</LinearLayout>

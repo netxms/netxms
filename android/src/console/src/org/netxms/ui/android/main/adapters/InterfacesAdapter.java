@@ -14,7 +14,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -154,10 +153,9 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 			convertView = layoutInflater.inflate(R.layout.interfaces_group, null);
 		}
 		Interface i = (Interface)getChild(groupPosition, 0);
-		ImageView iv = (ImageView)convertView.findViewById(R.id.interface_image);
-		iv.setImageResource(getInterfaceStatusIcon(i.getStatus()));
 		TextView tv = (TextView)convertView.findViewById(R.id.interface_text);
-		tv.setText(i.getObjectName());
+		tv.setText(" " + i.getObjectName());
+		tv.setCompoundDrawablesWithIntrinsicBounds(parent.getResources().getDrawable(getInterfaceStatusIcon(i.getStatus())), null, null, null);
 		return convertView;
 	}
 

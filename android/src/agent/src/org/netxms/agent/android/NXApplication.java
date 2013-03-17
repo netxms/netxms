@@ -1,7 +1,6 @@
 package org.netxms.agent.android;
 
 import org.acra.ACRA;
-import org.acra.ErrorReporter;
 import org.acra.annotation.ReportsCrashes;
 
 import android.app.Application;
@@ -11,12 +10,11 @@ public class NXApplication extends Application
 {
 	private static boolean activityVisible;
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public void onCreate()
 	{
 		ACRA.init(this);
-		ErrorReporter.getInstance().checkReportsOnApplicationStart();
+		ACRA.getErrorReporter().checkReportsOnApplicationStart();
 		super.onCreate();
 	}
 

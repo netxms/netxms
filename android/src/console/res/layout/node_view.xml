@@ -7,6 +7,7 @@
 	<ListView 
 		android:id="@+id/NodeList" 
 		android:layout_width="fill_parent" 
+		android:textColor="@color/text_color"
 		android:background="@color/item_body"
 		android:cacheColorHint="@color/item_body"
 		android:listSelector="@drawable/list_selection"
