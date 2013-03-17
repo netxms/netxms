@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,6 +62,7 @@ import org.netxms.client.objects.UnknownObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.MapImageProvidersManager;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -175,12 +176,19 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			GenericObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
 			if (object != null)
 			{
+				// First, check if object has custom map image set
 				final UUID objectImageGuid = object.getImage();
 				if (objectImageGuid != null && !objectImageGuid.equals(NXCommon.EMPTY_GUID))
 				{
 					return ImageProvider.getInstance(viewer.getControl().getDisplay()).getImage(objectImageGuid);
 				}
+				
+				// Try registered network map image providers
+				Image img = MapImageProvidersManager.getInstance().getMapImage(object);
+				if (img != null)
+					return img;
 
+				// Use built-in image as last resort
 				switch(object.getObjectClass())
 				{
 					case GenericObject.OBJECT_NODE:
@@ -216,7 +224,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			return imgResCluster;
 		}
-		return imgUnknown;
+		return null;
 	}
 
 	/*
