@@ -19,4 +19,5 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.networkmaps.algorithms,
+ org.netxms.ui.eclipse.networkmaps.api,
  org.netxms.ui.eclipse.networkmaps.widgets

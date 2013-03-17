@@ -1479,6 +1479,7 @@ src/java/netxms-eclipse/NetworkMaps/icons/service_components.gif -text
 src/java/netxms-eclipse/NetworkMaps/icons/service_deps.gif -text
 src/java/netxms-eclipse/NetworkMaps/icons/snap_to_grid.png -text
 src/java/netxms-eclipse/NetworkMaps/plugin.xml -text
+src/java/netxms-eclipse/NetworkMaps/schema/org.netxms.ui.eclipse.networkmaps.imageproviders.exsd -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/Activator.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/NetworkMapOpenHandler.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/CreateMapGroup.java -text

@@ -33,6 +33,8 @@ public class Activator extends AbstractUIPlugin
 	   ps.setDefault("NetMap.ShowStatusIcon", true);
 	   ps.setDefault("NetMap.ShowStatusFrame", false);
 	   ps.setDefault("NetMap.ShowStatusBackground", false);
+	   
+	   MapImageProvidersManager.create();
 	}
 
 	/*
