@@ -38,8 +38,10 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TreePath;
+import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
@@ -103,7 +105,7 @@ public class ObjectBrowser extends ViewPart
 	private boolean initHideTemplateChecks = false;
 	private boolean initShowFilter = true;
 	private boolean initShowStatus = false;
-	private long initObjectId = 0;
+	private String initialObjectSelection = null;
 	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
 	
 	/* (non-Javadoc)
@@ -119,7 +121,7 @@ public class ObjectBrowser extends ViewPart
 			initHideTemplateChecks = safeCast(memento.getBoolean("ObjectBrowser.hideTemplateChecks"), false); //$NON-NLS-1$
 			initShowFilter = safeCast(memento.getBoolean("ObjectBrowser.showFilter"), true); //$NON-NLS-1$
 			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), false); //$NON-NLS-1$
-			initObjectId = safeCast(memento.getInteger("ObjetBrowser.selectedObject"), 0);
+			initialObjectSelection = memento.getString("ObjectBrowser.selectedObject"); //$NON-NLS-1$
 		}
 		registerOpenHandlers();
 	}
@@ -127,11 +129,6 @@ public class ObjectBrowser extends ViewPart
 	private static boolean safeCast(Boolean b, boolean defval)
 	{
 		return (b != null) ? b : defval;
-	}
-
-	private static int safeCast(Integer i, int defval)
-	{
-		return (i != null) ? i : defval;
 	}
 
 	/* (non-Javadoc)
@@ -145,16 +142,7 @@ public class ObjectBrowser extends ViewPart
 		memento.putBoolean("ObjectBrowser.hideTemplateChecks", objectTree.isHideTemplateChecks()); //$NON-NLS-1$
 		memento.putBoolean("ObjectBrowser.showFilter", objectTree.isFilterEnabled()); //$NON-NLS-1$
 		memento.putBoolean("ObjectBrowser.showStatusIndicator", objectTree.isStatusIndicatorEnabled()); //$NON-NLS-1$
-
-		IStructuredSelection selection = (IStructuredSelection)objectTree.getTreeViewer().getSelection();
-		if (selection.size() == 1)
-		{
-			memento.putInteger("ObjetBrowser.selectedObject", (int)((GenericObject)selection.getFirstElement()).getObjectId());
-		}
-		else
-		{
-			memento.putInteger("ObjetBrowser.selectedObject", 0);
-		}
+		saveSelection(memento);
 	}
 
 	/* (non-Javadoc)
@@ -217,15 +205,61 @@ public class ObjectBrowser extends ViewPart
 		objectTree.setFilterCloseAction(actionShowFilter);
 		
 		activateContext();
-		
-		if (initObjectId != 0)
+		restoreSelection();
+	}
+	
+	/**
+	 * Save tree viewer selection
+	 * 
+	 * @param memento
+	 */
+	private void saveSelection(IMemento memento)
+	{
+		ITreeSelection selection = (ITreeSelection)objectTree.getTreeViewer().getSelection();
+		if (selection.size() == 1)
 		{
-			GenericObject o = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(initObjectId);
-			if (o != null)
+			TreePath path = selection.getPaths()[0];
+			StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < path.getSegmentCount(); i++)
 			{
-				objectTree.getTreeViewer().setSelection(new StructuredSelection(o), true);
+				sb.append('/');
+				sb.append(((GenericObject)path.getSegment(i)).getObjectId());
 			}
+			memento.putString("ObjectBrowser.selectedObject", sb.toString());
 		}
+		else
+		{
+			memento.putString("ObjectBrowser.selectedObject", "");
+		}
+	}
+	
+	/**
+	 * Restore selection in the tree
+	 */
+	private void restoreSelection()
+	{		
+		if ((initialObjectSelection == null) || initialObjectSelection.isEmpty() || !initialObjectSelection.startsWith("/"))
+			return;
+		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final String[] parts = initialObjectSelection.split("/");
+		final Object[] elements = new Object[parts.length - 1];
+		for(int i = 1; i < parts.length; i++)
+		{
+			long id;
+			try
+			{
+				id = Long.parseLong(parts[i]);
+			}
+			catch(NumberFormatException e)
+			{
+				return;
+			}
+			elements[i - 1] = session.findObjectById(id);
+			if (elements[i - 1] == null)
+				return;	// path element is missing
+		}
+		objectTree.getTreeViewer().setSelection(new TreeSelection(new TreePath(elements)), true);
 	}
 	
 	/**
