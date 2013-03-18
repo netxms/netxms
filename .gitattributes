@@ -207,8 +207,10 @@ android/src/console/res/xml/preference_interface.xml -text
 android/src/console/res/xml/preference_notifications.xml -text
 android/src/console/src/com/jjoe64/graphview/BarGraphView.java -text
 android/src/console/src/com/jjoe64/graphview/GraphView.java -text
-android/src/console/src/com/jjoe64/graphview/GraphViewDemo.java -text
+android/src/console/src/com/jjoe64/graphview/GraphViewSeries.java -text
+android/src/console/src/com/jjoe64/graphview/GraphViewStyle.java -text
 android/src/console/src/com/jjoe64/graphview/LineGraphView.java -text
+android/src/console/src/com/jjoe64/graphview/ValueDependentColor.java -text
 android/src/console/src/com/jjoe64/graphview/compatible/RealScaleGestureDetector.java -text
 android/src/console/src/com/jjoe64/graphview/compatible/ScaleGestureDetector.java -text
 android/src/console/src/org/netxms/ui/android/helpers/Multipliers.java -text

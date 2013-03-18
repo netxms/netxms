@@ -12,8 +12,10 @@ import android.view.MotionEvent;
  * Licensed under the GNU Lesser General Public License (LGPL)
  * http://www.gnu.org/licenses/lgpl.html
  */
-public class ScaleGestureDetector {
-	public interface SimpleOnScaleGestureListener {
+public class ScaleGestureDetector
+{
+	public interface SimpleOnScaleGestureListener
+	{
 		boolean onScale(ScaleGestureDetector detector);
 	}
 
@@ -26,8 +28,10 @@ public class ScaleGestureDetector {
 	 * @param context
 	 * @param simpleOnScaleGestureListener
 	 */
-	public ScaleGestureDetector(Context context, SimpleOnScaleGestureListener simpleOnScaleGestureListener) {
-		try {
+	public ScaleGestureDetector(Context context, SimpleOnScaleGestureListener simpleOnScaleGestureListener)
+	{
+		try
+		{
 			// check if class is available
 			Class.forName("android.view.ScaleGestureDetector");
 
@@ -40,18 +44,25 @@ public class ScaleGestureDetector {
 			// create real ScaleGestureDetector
 			Constructor<?> constructor = classRealScaleGestureDetector.getConstructor(Context.class, getClass(), SimpleOnScaleGestureListener.class);
 			realScaleGestureDetector = constructor.newInstance(context, this, simpleOnScaleGestureListener);
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			// not available
 			Log.w("com.jjoe64.graphview", "*** WARNING *** No scaling available for graphs. Exception:");
 			e.printStackTrace();
 		}
 	}
 
-	public double getScaleFactor() {
-		if (method_getScaleFactor != null) {
-			try {
+	public double getScaleFactor()
+	{
+		if (method_getScaleFactor != null)
+		{
+			try
+			{
 				return (Float)method_getScaleFactor.invoke(realScaleGestureDetector);
-			} catch (Exception e) {
+			}
+			catch (Exception e)
+			{
 				e.printStackTrace();
 				return 1.0;
 			}
@@ -59,11 +70,16 @@ public class ScaleGestureDetector {
 		return 1.0;
 	}
 
-	public boolean isInProgress() {
-		if (method_getScaleFactor != null) {
-			try {
-				return (Boolean) method_isInProgress.invoke(realScaleGestureDetector);
-			} catch (Exception e) {
+	public boolean isInProgress()
+	{
+		if (method_getScaleFactor != null)
+		{
+			try
+			{
+				return (Boolean)method_isInProgress.invoke(realScaleGestureDetector);
+			}
+			catch (Exception e)
+			{
 				e.printStackTrace();
 				return false;
 			}
@@ -71,11 +87,16 @@ public class ScaleGestureDetector {
 		return false;
 	}
 
-	public void onTouchEvent(MotionEvent event) {
-		if (method_onTouchEvent != null) {
-			try {
+	public void onTouchEvent(MotionEvent event)
+	{
+		if (method_onTouchEvent != null)
+		{
+			try
+			{
 				method_onTouchEvent.invoke(realScaleGestureDetector, event);
-			} catch (Exception e) {
+			}
+			catch (Exception e)
+			{
 				e.printStackTrace();
 			}
 		}

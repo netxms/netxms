@@ -5,19 +5,22 @@ package org.netxms.ui.android.main.dashboards.elements;
 
 import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
+
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
 import org.netxms.ui.android.main.dashboards.configs.LineChartConfig;
 import org.netxms.ui.android.main.views.ExtendedLineGraphView;
 import org.netxms.ui.android.service.ClientConnectorService;
-import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.GraphView.GraphViewData;
-import com.jjoe64.graphview.GraphView.GraphViewSeries;
-import com.jjoe64.graphview.GraphView.GraphViewStyle;
-import com.jjoe64.graphview.GraphView.LegendAlign;
+
 import android.content.Context;
 import android.util.Log;
+
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GraphView.GraphViewData;
+import com.jjoe64.graphview.GraphView.LegendAlign;
+import com.jjoe64.graphview.GraphViewSeries;
+import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
 
 /**
  * Bar chart element
@@ -25,10 +28,10 @@ import android.util.Log;
 public class LineChartElement extends AbstractDashboardElement
 {
 	private static final String TAG = "nxclient/LineChartElement";
-	
+
 	private LineChartConfig config;
 	private GraphView graphView = null;
-	
+
 	/**
 	 * @param context
 	 * @param xmlConfig
@@ -40,20 +43,19 @@ public class LineChartElement extends AbstractDashboardElement
 		{
 			config = LineChartConfig.createFromXml(xmlConfig);
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			Log.e(TAG, "Error parsing element config", e);
 			config = new LineChartConfig();
 		}
-		
+
 		graphView = new ExtendedLineGraphView(context, config.getTitle());
 		graphView.setShowLegend(config.isShowLegend());
 		graphView.setScalable(false);
 		graphView.setScrollable(false);
-		graphView.setLegendAlign(LegendAlign.TOP);   
-		graphView.setLegendWidth(240);  
+		graphView.setLegendAlign(LegendAlign.TOP);
+		graphView.setLegendWidth(240);
 		graphView.setBackgroundColor(0xFF000000);
-		graphView.setZeroBased(true);
 	}
 
 	/* (non-Javadoc)
@@ -76,10 +78,10 @@ public class LineChartElement extends AbstractDashboardElement
 		Log.d(TAG, "refresh(): " + items.length + " items to load");
 		if (items.length == 0)
 			return;
-		
+
 		final long endTime = System.currentTimeMillis();
 		final long startTime = endTime - config.getTimeRangeMillis();
-		
+
 		try
 		{
 			final DciData[] dciData = new DciData[items.length];
@@ -88,36 +90,38 @@ public class LineChartElement extends AbstractDashboardElement
 				dciData[i] = service.getSession().getCollectedData(items[i].nodeId, items[i].dciId, new Date(startTime), new Date(endTime), 0);
 			}
 			Log.d(TAG, "refresh(): data retrieved from server");
-			
-			post(new Runnable() {
+
+			post(new Runnable()
+			{
 				@Override
 				public void run()
 				{
-					for(int i = 0; i < dciData.length; i++)
+					for (int i = 0; i < dciData.length; i++)
 					{
 						DciDataRow[] dciDataRow = dciData[i].getValues();
 						GraphViewData[] gvData = new GraphViewData[dciDataRow.length];
-						for (int j = dciDataRow.length-1, k = 0; j >= 0; j--, k++)	// dciData are reversed!
+						for (int j = dciDataRow.length - 1, k = 0; j >= 0; j--, k++)
+							// dciData are reversed!
 							gvData[k] = new GraphViewData(dciDataRow[j].getTimestamp().getTime(), dciDataRow[j].getValueAsDouble());
 						int color = items[i].getColorAsInt();
 						if (color == -1)
 							color = DEFAULT_ITEM_COLORS[i];
 						else
 							color = swapRGB(color);
-						GraphViewSeries series = new GraphViewSeries(items[i].getName(), new GraphViewStyle(color | 0xFF000000, 3), gvData);
+						GraphViewSeries series = new GraphViewSeries(items[i].getName(), new GraphViewSeriesStyle(color | 0xFF000000, 3), gvData);
 						graphView.addOrReplaceSeries(i, series);
 					}
 					graphView.setViewPort(startTime, endTime - startTime + 1);
 					Log.d(TAG, "refresh(): " + dciData.length + " series added; viewport set to " + startTime + "/" + (endTime - startTime + 1));
-					
+
 					if (getChildCount() == 0)
 						addView(graphView);
 					else
-						graphView.repaint();
+						graphView.redrawAll();
 				}
 			});
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			Log.e(TAG, "Exception while reading data from server", e);
 		}

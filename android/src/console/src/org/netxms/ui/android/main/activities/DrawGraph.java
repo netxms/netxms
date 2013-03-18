@@ -25,9 +25,9 @@ import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GraphView.GraphViewData;
-import com.jjoe64.graphview.GraphView.GraphViewSeries;
-import com.jjoe64.graphview.GraphView.GraphViewStyle;
 import com.jjoe64.graphview.GraphView.LegendAlign;
+import com.jjoe64.graphview.GraphViewSeries;
+import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
 
 /**
  * Draw graph activity
@@ -86,7 +86,6 @@ public class DrawGraph extends AbstractClientActivity
 		graphView.setLegendWidth(240);
 		graphView.setScalable(true);
 		graphView.setScrollable(true);
-		graphView.setZeroBased(true);
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 		title.setText(R.string.graph_title);
 	}
@@ -192,7 +191,7 @@ public class DrawGraph extends AbstractClientActivity
 							gwData[k] = new GraphViewData(dciDataRow[j].getTimestamp().getTime(), dciDataRow[j].getValueAsDouble());
 						GraphViewSeries gwSeries = new GraphViewSeries(
 								items[i].getDescription(),
-								new GraphViewStyle(itemStyles[i].getColor(), itemStyles[i].getLineWidth()),
+								new GraphViewSeriesStyle(itemStyles[i].getColor(), itemStyles[i].getLineWidth()),
 								gwData);
 						graphView.addSeries(gwSeries);
 						addedSeries++;
@@ -203,7 +202,7 @@ public class DrawGraph extends AbstractClientActivity
 				if (addedSeries == 0) // Add an empty series when getting no data
 				{
 					GraphViewData[] gwData = new GraphViewData[] { new GraphViewData(0, 0) };
-					GraphViewSeries gwSeries = new GraphViewSeries("", new GraphViewStyle(0xFFFFFF, 4), gwData);
+					GraphViewSeries gwSeries = new GraphViewSeries("", new GraphViewSeriesStyle(0xFFFFFF, 4), gwData);
 					graphView.addSeries(gwSeries);
 				}
 				LinearLayout layout = (LinearLayout)findViewById(R.id.graphics);
