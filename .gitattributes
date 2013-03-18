@@ -1602,7 +1602,6 @@ src/java/netxms-eclipse/ObjectBrowser/plugin.xml -text
 src/java/netxms-eclipse/ObjectBrowser/schema/org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers.exsd -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Activator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Messages.java -text
-src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectAdapterFactory.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectDecorator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/PreferenceInitializer.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/actions/OpenObjectBrowser.java -text
@@ -3126,7 +3125,6 @@ webui/webapp/ObjectBrowser/plugin.xml -text
 webui/webapp/ObjectBrowser/schema/org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers.exsd -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Activator.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Messages.java -text
-webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectAdapterFactory.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectDecorator.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/PreferenceInitializer.java -text
 webui/webapp/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/actions/OpenObjectBrowser.java -text

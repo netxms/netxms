@@ -124,11 +124,21 @@ public class ObjectBrowser extends ViewPart
 		registerOpenHandlers();
 	}
 
+	/**
+	 * @param b
+	 * @param defval
+	 * @return
+	 */
 	private static boolean safeCast(Boolean b, boolean defval)
 	{
 		return (b != null) ? b : defval;
 	}
 
+	/**
+	 * @param i
+	 * @param defval
+	 * @return
+	 */
 	private static int safeCast(Integer i, int defval)
 	{
 		return (i != null) ? i : defval;
