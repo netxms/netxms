@@ -22,7 +22,7 @@ package org.netxms.api.client.users;
  * Abstract access list element.
  *
  */
-public class AbstractAccessListElement
+public abstract class AbstractAccessListElement
 {
 	protected long userId;
 	protected int accessRights;

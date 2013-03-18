@@ -25,7 +25,7 @@ import org.netxms.api.client.users.AbstractAccessListElement;
  * Access list element for NetXMS objects
  *
  */
-public final class AccessListElement extends AbstractAccessListElement
+public class AccessListElement extends AbstractAccessListElement
 {
 	/**
 	 * Create new ACL element with given user ID and rights
