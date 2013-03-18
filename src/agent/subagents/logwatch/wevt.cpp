@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008-2012 Victor Kirhenshtein
+** Copyright (C) 2008-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,8 +61,8 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 
 	// Create render context for event values - we need provider name,
 	// event id, and severity level
-	static PCWSTR eventProperties[] = { L"Event/System/Provider/@Name", L"Event/System/EventID", L"Event/System/Level" };
-	EVT_HANDLE renderContext = _EvtCreateRenderContext(3, eventProperties, EvtRenderContextValues);
+	static PCWSTR eventProperties[] = { L"Event/System/Provider/@Name", L"Event/System/EventID", L"Event/System/Level", L"Event/System/Keywords" };
+	EVT_HANDLE renderContext = _EvtCreateRenderContext(4, eventProperties, EvtRenderContextValues);
 	if (renderContext == NULL)
 	{
 		AgentWriteDebugLog(5, _T("LogWatch: Call to EvtCreateRenderContext failed: %s"),
@@ -121,6 +121,12 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 				break;
 		}
 	}
+
+	// Keywords
+	if (values[3].UInt64Val & WINEVENT_KEYWORD_AUDIT_SUCCESS)
+		level = EVENTLOG_AUDIT_SUCCESS;
+	else if (values[3].UInt64Val & WINEVENT_KEYWORD_AUDIT_FAILURE)
+		level = EVENTLOG_AUDIT_FAILURE;
 
 	// Open publisher metadata
 	pubMetadata = _EvtOpenPublisherMetadata(NULL, values[0].StringVal, NULL, MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT), 0);
