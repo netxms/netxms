@@ -114,6 +114,7 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 		if (adapter != null)
 		{
 			adapter.setFilter(nodeIdList);
+			adapter.setSortBy(PreferenceManager.getDefaultSharedPreferences(getActivity()).getInt(SORT_KEY, 0));
 			adapter.setValues(arg1);
 			adapter.notifyDataSetChanged();
 		}
