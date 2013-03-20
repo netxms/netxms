@@ -76,11 +76,9 @@
 #include <nddrv.h>
 #include <nxcore_smclp.h>
 
-
-//
-// Console context
-//
-
+/**
+ * Console context
+ */
 struct __console_ctx
 {
    SOCKET hSocket;
@@ -96,6 +94,7 @@ typedef __console_ctx * CONSOLE_CTX;
  */
 #include "nms_dcoll.h"
 #include "nms_users.h"
+#include "nxcore_winperf.h"
 #include "nms_objects.h"
 #include "nms_locks.h"
 #include "nms_pkg.h"
@@ -631,6 +630,7 @@ private:
 	void getNetworkPath(CSCPMessage *request);
 	void getNodeComponents(CSCPMessage *request);
 	void getNodeSoftware(CSCPMessage *request);
+	void getWinPerfObjects(CSCPMessage *request);
 	void listMappingTables(CSCPMessage *request);
 	void getMappingTable(CSCPMessage *request);
 	void updateMappingTable(CSCPMessage *request);

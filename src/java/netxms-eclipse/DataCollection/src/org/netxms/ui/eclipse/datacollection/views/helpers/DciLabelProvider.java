@@ -60,6 +60,7 @@ public class DciLabelProvider implements ITableLabelProvider
 		originTexts.put(DataCollectionItem.CHECKPOINT_SNMP, Messages.DciLabelProvider_SourceCPSNMP);
 		originTexts.put(DataCollectionItem.INTERNAL, Messages.DciLabelProvider_SourceInternal);
 		originTexts.put(DataCollectionItem.PUSH, Messages.DciLabelProvider_SourcePush);
+		originTexts.put(DataCollectionItem.WINPERF, "Windows Performance Counters");
 		
 		statusTexts.put(DataCollectionItem.ACTIVE, Messages.DciLabelProvider_Active);
 		statusTexts.put(DataCollectionItem.DISABLED, Messages.DciLabelProvider_Disabled);

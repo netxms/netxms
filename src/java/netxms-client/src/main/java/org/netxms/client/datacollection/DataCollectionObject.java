@@ -39,6 +39,7 @@ public abstract class DataCollectionObject
 	public static final int SNMP = 2;
 	public static final int CHECKPOINT_SNMP = 3;
 	public static final int PUSH = 4;
+	public static final int WINPERF = 5;
 	
 	// data collection object status
 	public static final int ACTIVE = 0;

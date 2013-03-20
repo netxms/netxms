@@ -86,6 +86,7 @@ import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
+import org.netxms.client.datacollection.WinPerfObject;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmNote;
 import org.netxms.client.events.Event;
@@ -3990,6 +3991,24 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		return new PhysicalComponent(response, NXCPCodes.VID_COMPONENT_LIST_BASE, null);
+	}
+
+	/**
+	 * Get list of available Windows performance objects. Returns empty list if node
+	 * does is not a Windows node or does not have WinPerf subagent installed.
+	 * 
+	 * @param nodeId node object ID
+	 * @return list of available Windows performance objects
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<WinPerfObject> getNodeWinPerfObjects(long nodeId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_WINPERF_OBJECTS);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return WinPerfObject.createListFromMessage(response);
 	}
 
 	/**

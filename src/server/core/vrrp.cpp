@@ -22,32 +22,26 @@
 
 #include "nxcore.h"
 
-
-//
-// Info class constructor
-//
-
+/**
+ * VRRP info class constructor
+ */
 VrrpInfo::VrrpInfo(int version)
 {
 	m_version = version;
 	m_routers = new ObjectArray<VrrpRouter>(16, 16, true);
 }
 
-
-//
-// Info class destructor
-//
-
+/**
+ * VRRP info class destructor
+ */
 VrrpInfo::~VrrpInfo()
 {
 	delete m_routers;
 }
 
-
-//
-// Router constructor
-//
-
+/**
+ * Router constructor
+ */
 VrrpRouter::VrrpRouter(DWORD id, DWORD ifIndex, int state, BYTE *macAddr)
 {
 	m_id = id;
@@ -58,21 +52,17 @@ VrrpRouter::VrrpRouter(DWORD id, DWORD ifIndex, int state, BYTE *macAddr)
 	m_ipAddrList = NULL;
 }
 
-
-//
-// Router destructor
-//
-
+/**
+ * Router destructor
+ */
 VrrpRouter::~VrrpRouter()
 {
 	safe_free(m_ipAddrList);
 }
 
-
-//
-// Add virtual IP
-//
-
+/**
+ * Add virtual IP
+ */
 void VrrpRouter::addVirtualIP(SNMP_Variable *var)
 {
 	if (var->GetValueAsInt() != VRRP_VIP_ACTIVE)

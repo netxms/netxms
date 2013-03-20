@@ -143,11 +143,9 @@ static LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
    return nRet;
 }
 
-
-//
-// Value of given counter collected by one of the collector threads
-//
-
+/**
+ * Value of given counter collected by one of the collector threads
+ */
 LONG H_CollectedCounterData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
    switch(((WINPERF_COUNTER *)pArg)->wType)
@@ -165,11 +163,9 @@ LONG H_CollectedCounterData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVa
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Value of given performance counter
-//
-
+/**
+ * Value of given performance counter
+ */
 static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
    HQUERY hQuery;
@@ -177,18 +173,15 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
    PDH_RAW_COUNTER rawData1, rawData2;
    PDH_FMT_COUNTERVALUE counterValue;
    PDH_STATUS rc;
-   TCHAR szCounter[MAX_PATH], szBuffer[16];
+   TCHAR szCounter[MAX_PATH];
    DWORD dwType;
    BOOL bUseTwoSamples = FALSE;
    static TCHAR szFName[] = _T("H_PdhCounterValue");
 
 	if (pArg == NULL)		// Normal call
 	{
-		if ((!AgentGetParameterArg(pszParam, 1, szCounter, MAX_PATH)) ||
-			 (!AgentGetParameterArg(pszParam, 2, szBuffer, 16)))
+		if (!AgentGetParameterArg(pszParam, 1, szCounter, MAX_PATH))
 			return SYSINFO_RC_UNSUPPORTED;
-
-		bUseTwoSamples = _tcstol(szBuffer, NULL, 0) ? TRUE : FALSE;
 	}
 	else	// Call from H_CounterAlias
 	{
@@ -232,19 +225,24 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
    PdhGetRawCounterValue(hCounter, &dwType, &rawData1);
 
    // Get second sample if required
-   if (bUseTwoSamples)
+   if ((dwType & 0x00000C00) == PERF_TYPE_COUNTER)
    {
-      Sleep(1000);   // We will take second sample after one second
-      if ((rc = PdhCollectQueryData(hQuery)) != ERROR_SUCCESS)
-      {
-         ReportPdhError(szFName, _T("PdhCollectQueryData"), rc);
-         PdhCloseQuery(hQuery);
-         return SYSINFO_RC_ERROR;
-      }
-      PdhGetRawCounterValue(hCounter, NULL, &rawData2);
+		DWORD subType = dwType & 0x000F0000;
+		if ((subType == PERF_COUNTER_RATE) || (subType == PERF_COUNTER_PRECISION))
+		{
+			Sleep(1000);   // We will take second sample after one second
+			if ((rc = PdhCollectQueryData(hQuery)) != ERROR_SUCCESS)
+			{
+				ReportPdhError(szFName, _T("PdhCollectQueryData"), rc);
+				PdhCloseQuery(hQuery);
+				return SYSINFO_RC_ERROR;
+			}
+			PdhGetRawCounterValue(hCounter, NULL, &rawData2);
+			bUseTwoSamples = TRUE;
+		}
    }
 
-   if (dwType & PERF_SIZE_LARGE)
+   if ((dwType & 0x00000300) == PERF_SIZE_LARGE)
    {
       if (bUseTwoSamples)
          PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LARGE,
@@ -268,11 +266,9 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// List of available performance objects
-//
-
+/**
+ * List of available performance objects
+ */
 static LONG H_PdhObjects(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
    TCHAR *pszObject, *pszObjList, szHostName[256];
@@ -301,11 +297,9 @@ static LONG H_PdhObjects(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
    return iResult;
 }
 
-
-//
-// List of available performance items for given object
-//
-
+/**
+ * List of available performance items for given object
+ */
 static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
    TCHAR *pszElement, *pszCounterList, *pszInstanceList, szHostName[256], szObject[256];

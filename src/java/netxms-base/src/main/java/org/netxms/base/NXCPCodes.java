@@ -298,6 +298,7 @@ public class NXCPCodes
 	public static final int CMD_DELETE_MAPPING_TABLE     = 0x0110;
 	public static final int CMD_LIST_MAPPING_TABLES      = 0x0111;
 	public static final int CMD_GET_NODE_SOFTWARE        = 0x0112;
+	public static final int CMD_GET_WINPERF_OBJECTS      = 0x0113;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;

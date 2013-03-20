@@ -1288,6 +1288,9 @@ void ClientSession::processingThread()
 			case CMD_GET_NODE_SOFTWARE:
 				getNodeSoftware(pMsg);
 				break;
+			case CMD_GET_WINPERF_OBJECTS:
+				getWinPerfObjects(pMsg);
+				break;
 			case CMD_LIST_MAPPING_TABLES:
 				listMappingTables(pMsg);
 				break;
@@ -12008,7 +12011,6 @@ void ClientSession::getNodeComponents(CSCPMessage *request)
    sendMessage(&msg);
 }
 
-
 /**
  * Get list of software packages installed on node
  */
@@ -12027,6 +12029,39 @@ void ClientSession::getNodeSoftware(CSCPMessage *request)
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
 			node->writePackageListToMessage(&msg);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Get list of Windows performance objects supported by node
+ */
+void ClientSession::getWinPerfObjects(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get node id and check object class and access rights
+   Node *node = (Node *)FindObjectById(request->GetVariableLong(VID_OBJECT_ID), OBJECT_NODE);
+   if (node != NULL)
+   {
+      if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+			node->writeWinPerfObjectsToMessage(&msg);
       }
       else
       {

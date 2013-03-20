@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,19 +22,14 @@
 
 #include "nxcore.h"
 
-
-//
-// Constants
-//
-
-// FIXME: 1 is experimental, revert to 2 in case of problems
+/**
+ * Interval between DCI polling
+ */
 #define ITEM_POLLING_INTERVAL    1	
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 extern Queue g_statusPollQueue;
 extern Queue g_configPollQueue;
 
@@ -78,6 +73,18 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 	         *error = ((Node *)dcTarget)->getItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
 			else
 				*error = DCE_NOT_SUPPORTED;
+         break;
+      case DS_WINPERF:
+			if (dcTarget->Type() == OBJECT_NODE)
+			{
+				TCHAR name[MAX_PARAM_NAME];
+				_sntprintf(name, MAX_PARAM_NAME, _T("PDH.CounterValue(\"%s\")"), pItem->getName());
+	         *error = ((Node *)dcTarget)->getItemFromAgent(name, MAX_LINE_SIZE, pBuffer);
+			}
+			else
+			{
+				*error = DCE_NOT_SUPPORTED;
+			}
          break;
 		default:
 			*error = DCE_NOT_SUPPORTED;

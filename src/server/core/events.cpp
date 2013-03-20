@@ -374,6 +374,8 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
 							if ((dwParam > 0) && (dwParam <= (DWORD)event->m_parameters.size()))
 							{
 								const TCHAR *value = (TCHAR *)event->m_parameters.get(dwParam - 1);
+								if (value == NULL)
+									value = _T("");
 								dwSize += (DWORD)_tcslen(value);
 								pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 								_tcscpy(&pText[dwPos], value);

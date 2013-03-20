@@ -28,6 +28,7 @@ serverinclude_HEADERS = \
 	nxcore_reports.h \
 	nxcore_situations.h \
 	nxcore_smclp.h \
+	nxcore_winperf.h \
 	nxmodule.h \
 	nxsrvapi.h \
 	nddrv.h

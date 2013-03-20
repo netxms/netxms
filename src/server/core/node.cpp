@@ -94,6 +94,7 @@ Node::Node() : DataCollectionTarget()
 	m_driverData = NULL;
 	m_components = NULL;
 	m_softwarePackages = NULL;
+	m_winPerfObjects = NULL;
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 }
 
@@ -163,6 +164,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_driverData = NULL;
 	m_components = NULL;
 	m_softwarePackages = NULL;
+	m_winPerfObjects = NULL;
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 }
 
@@ -195,6 +197,7 @@ Node::~Node()
 	delete m_components;
 	delete m_lldpLocalPortInfo;
 	delete m_softwarePackages;
+	delete m_winPerfObjects;
 }
 
 /**
@@ -1565,7 +1568,8 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller,
       m_dwFlags &= ~(NF_IS_NATIVE_AGENT | NF_IS_SNMP | NF_IS_CPSNMP |
                      NF_IS_BRIDGE | NF_IS_ROUTER | NF_IS_OSPF | NF_IS_PRINTER |
 							NF_IS_CDP | NF_IS_LLDP | NF_IS_SONMP | NF_IS_VRRP | NF_HAS_VLANS |
-							NF_IS_8021X | NF_IS_STP | NF_HAS_ENTITY_MIB | NF_HAS_IFXTABLE);
+							NF_IS_8021X | NF_IS_STP | NF_HAS_ENTITY_MIB | NF_HAS_IFXTABLE |
+							NF_HAS_WINPDH);
 		m_dwDynamicFlags &= ~NDF_CONFIGURATION_POLL_PASSED;
       m_szObjectId[0] = 0;
       m_szPlatformName[0] = 0;
@@ -1841,6 +1845,35 @@ bool Node::confPollAgent(DWORD dwRqId)
 		else
 		{
 		   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%d"), m_szName, rcc);
+		}
+
+		// Get supported Windows Performance Counters
+		if (!_tcsncmp(m_szPlatformName, _T("windows-"), 8))
+		{
+         sendPollerMsg(dwRqId, _T("   Reading list of available Windows Performance Counters...\r\n"));
+			ObjectArray<WinPerfObject> *perfObjects = WinPerfObject::getWinPerfObjectsFromNode(this, pAgentConn);
+			LockData();
+			delete m_winPerfObjects;
+			m_winPerfObjects = perfObjects;
+			if (m_winPerfObjects != NULL)
+			{
+				sendPollerMsg(dwRqId, POLLER_INFO _T("   %d counters read\r\n"), m_winPerfObjects->size());
+				if (!(m_dwFlags & NF_HAS_WINPDH))
+				{
+					m_dwFlags |= NF_HAS_WINPDH;
+					hasChanges = true;
+				}
+			}
+			else
+			{
+				sendPollerMsg(dwRqId, POLLER_ERROR _T("   unable to get Windows Performance Counters list\r\n"));
+				if (m_dwFlags & NF_HAS_WINPDH)
+				{
+					m_dwFlags &= ~NF_HAS_WINPDH;
+					hasChanges = true;
+				}
+			}
+			UnlockData();
 		}
 
 		checkAgentPolicyBinding(pAgentConn);
@@ -3572,6 +3605,34 @@ void Node::writeParamListToMessage(CSCPMessage *pMsg, WORD flags)
    {
 		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): m_tableList == NULL"), m_szName);
       pMsg->SetVariable(VID_NUM_TABLES, (DWORD)0);
+   }
+
+	UnlockData();
+}
+
+/**
+ * Put list of supported Windows performance counters into NXCP message
+ */
+void Node::writeWinPerfObjectsToMessage(CSCPMessage *msg)
+{
+   LockData();
+
+	if (m_winPerfObjects != NULL)
+   {
+		msg->SetVariable(VID_NUM_OBJECTS, (DWORD)m_winPerfObjects->size());
+
+		DWORD id = VID_PARAM_LIST_BASE;
+      for(int i = 0; i < m_winPerfObjects->size(); i++)
+      {
+			WinPerfObject *o = m_winPerfObjects->get(i);
+			id = o->fillMessage(msg, id);
+      }
+		DbgPrintf(6, _T("Node[%s]::writeWinPerfObjectsToMessage(): sending %d objects"), m_szName, m_winPerfObjects->size());
+   }
+   else
+   {
+		DbgPrintf(6, _T("Node[%s]::writeWinPerfObjectsToMessage(): m_winPerfObjects == NULL"), m_szName);
+      msg->SetVariable(VID_NUM_OBJECTS, (DWORD)0);
    }
 
 	UnlockData();

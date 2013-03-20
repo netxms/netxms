@@ -462,6 +462,7 @@ typedef struct
 #define CMD_DELETE_MAPPING_TABLE       0x0110
 #define CMD_LIST_MAPPING_TABLES        0x0111
 #define CMD_GET_NODE_SOFTWARE          0x0112
+#define CMD_GET_WINPERF_OBJECTS        0x0113
 
 /**
  * Variable identifiers

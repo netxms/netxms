@@ -3,7 +3,7 @@
 *
 
 - Basic software inventory
-- New MIBs added: ASTARO-MIB
+- New MIBs added: ASTARO-MIB, CPQHOST-MIB, CPQPOWER-MIB
 - Fixed issues: #242, #249, #250, #251
 
 

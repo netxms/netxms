@@ -33,11 +33,9 @@
 #define EVENTLOG_MAX_MESSAGE_SIZE   255
 #define EVENTLOG_MAX_USERTAG_SIZE   63
 
-
-//
-// Event template
-//
-
+/**
+ * Event template
+ */
 struct EVENT_TEMPLATE
 {
    DWORD dwCode;
@@ -48,11 +46,9 @@ struct EVENT_TEMPLATE
    TCHAR szName[MAX_EVENT_NAME];
 };
 
-
-//
-// Event
-//
-
+/**
+ * Event
+ */
 class Event
 {
 private:

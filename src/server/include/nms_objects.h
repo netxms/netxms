@@ -888,6 +888,7 @@ protected:
 	ServerJobQueue *m_jobQueue;
 	ComponentTree *m_components;		// Hardware components
 	ObjectArray<SoftwarePackage> *m_softwarePackages;  // installed software packages
+	ObjectArray<WinPerfObject> *m_winPerfObjects;  // Windows performance objects
 
    void pollerLock() { MutexLock(m_hPollerMutex); }
    void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
@@ -1058,6 +1059,7 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
    void writeParamListToMessage(CSCPMessage *pMsg, WORD flags);
+	void writeWinPerfObjectsToMessage(CSCPMessage *msg);
 	void writePackageListToMessage(CSCPMessage *msg);
 
    DWORD wakeUp();

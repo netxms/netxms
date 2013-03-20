@@ -236,6 +236,7 @@ typedef void * NXC_SESSION;
 #define NF_HAS_ENTITY_MIB         0x00010000  /* Supports ENTITY-MIB */
 #define NF_HAS_IFXTABLE           0x00020000  /* Supports ifXTable */
 #define NF_HAS_AGENT_IFXCOUNTERS  0x00040000  /* Agent supports 64-bit interface counters */
+#define NF_HAS_WINPDH             0x00080000  /* Node supports Windows PDH parameters */
 
 #define NF_DISABLE_DISCOVERY_POLL 0x00400000
 #define NF_DISABLE_TOPOLOGY_POLL  0x00800000
@@ -747,6 +748,8 @@ enum
 #define DS_SNMP_AGENT         2
 #define DS_CHECKPOINT_AGENT   3
 #define DS_PUSH_AGENT         4
+#define DS_WINPERF            5
+#define DS_WMI                6
 
 /**
  * Item status

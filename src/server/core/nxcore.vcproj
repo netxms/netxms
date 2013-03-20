@@ -813,6 +813,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\winperf.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\zone.cpp"
 				>
 			</File>
@@ -948,6 +952,10 @@
 			</File>
 			<File
 				RelativePath="..\include\nxcore_smclp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\nxcore_winperf.h"
 				>
 			</File>
 			<File

@@ -20,7 +20,6 @@ package org.netxms.client.datacollection;
 
 import java.util.ArrayList;
 
-
 /**
  * Class to hold series of collected DCI data
  * 
