@@ -1,3 +1,4 @@
+-- vim: syntax=mib
 -- file: UPS-MIB.my
 -- Changes:
 --   Added IMPORT for TEXTUAL-CONVENTION.
