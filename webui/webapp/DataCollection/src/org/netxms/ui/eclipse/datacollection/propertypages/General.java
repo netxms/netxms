@@ -55,6 +55,7 @@ import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
+import org.netxms.ui.eclipse.datacollection.dialogs.WinPerfCounterSelectionDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -211,6 +212,7 @@ public class General extends PropertyPage
       origin.add(Messages.General_SourceSNMP);
       origin.add(Messages.General_SourceCPSNMP);
       origin.add(Messages.General_SourcePush);
+      origin.add("Windows Performance Counters");
       origin.select(dci.getOrigin());
       origin.addSelectionListener(new SelectionListener() {
 			private static final long serialVersionUID = 1L;
@@ -493,6 +495,9 @@ public class General extends PropertyPage
 					oid = null;
 				}
 				dlg = new SelectSnmpParamDlg(getShell(), oid);
+				break;
+			case DataCollectionItem.WINPERF:
+				dlg = new WinPerfCounterSelectionDialog(getShell(), dci.getNodeId());
 				break;
 			default:
 				dlg = null;

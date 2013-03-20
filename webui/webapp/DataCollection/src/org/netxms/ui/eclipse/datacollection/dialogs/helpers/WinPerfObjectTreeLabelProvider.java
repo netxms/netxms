@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,32 +16,29 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.tools;
+package org.netxms.ui.eclipse.datacollection.dialogs.helpers;
 
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
-import org.eclipse.swt.SWT;
+import org.eclipse.jface.viewers.LabelProvider;
+import org.netxms.client.datacollection.WinPerfCounter;
+import org.netxms.client.datacollection.WinPerfObject;
 
 /**
- * Viewer comparator for case when model elements are just strings.
+ * Label provider for Windows performance counters tree
  */
-public class StringComparator extends ViewerComparator
+public class WinPerfObjectTreeLabelProvider extends LabelProvider
 {
 	private static final long serialVersionUID = 1L;
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+	 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
 	 */
 	@Override
-	public int compare(Viewer viewer, Object e1, Object e2)
+	public String getText(Object element)
 	{
-		int rc = ((String)e1).compareToIgnoreCase((String)e2);
-		if (viewer instanceof TableViewer)
-		{
-			int dir = ((TableViewer)viewer).getTable().getSortDirection();
-			return (dir == SWT.UP) ? rc : -rc;
-		}
-		return rc;
-	}
+		if (element instanceof WinPerfObject)
+			return ((WinPerfObject)element).getName();
+		if (element instanceof WinPerfCounter)
+			return ((WinPerfCounter)element).getName();
+		return super.getText(element);
+	}	
 }
