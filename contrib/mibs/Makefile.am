@@ -68,6 +68,8 @@ mibs_DATA = \
 	COSINE-GLOBAL-REG.txt \
 	COSINE-InVision-MIB.txt \
 	COSINE-ORION-MIB.txt \
+	CPQPOWER-MIB.txt \
+	CPQHOST-MIB.txt \
 	Dell-Vendor-MIB.txt \
 	DIGIUM-MIB.txt \
 	DISMAN-PING-MIB.txt \

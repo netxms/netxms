@@ -297,7 +297,6 @@ contrib/mibs/ATM-TC-MIB.txt -text
 contrib/mibs/BAY-STACK-MIB.txt -text
 contrib/mibs/CISCO-ENTITY-VENDORTYPE-OID-MIB.txt -text
 contrib/mibs/CPQHOST-MIB.txt -text svneol=native#unset
-contrib/mibs/CPQPOWER1.64.txt -text svneol=native#unset
 contrib/mibs/DVMRP-MIB.txt -text
 contrib/mibs/IGMP-MIB.txt -text
 contrib/mibs/IPV6-TC.txt -text
