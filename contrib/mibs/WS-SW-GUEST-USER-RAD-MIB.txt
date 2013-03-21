@@ -1,0 +1,82 @@
+-- vim: syntax=mib
+
+WS-SW-GUEST-USER-RAD-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+            OBJECT-GROUP, MODULE-COMPLIANCE
+                FROM SNMPv2-CONF
+            IpAddress, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY
+                FROM SNMPv2-SMI
+            DateAndTime, RowStatus, TruthValue, DisplayString, PhysAddress
+                FROM SNMPv2-TC
+            wsSwGuestRadius
+                FROM WS-SW-SMI;
+
+      wiosGuestRadiusModule MODULE-IDENTITY
+          LAST-UPDATED "9901251200Z"
+          ORGANIZATION "Symbol Technologies"
+          CONTACT-INFO
+                  "Prakash Kaja
+		      Symbol Technologies
+		      Bangalore
+		      India
+              prakash.kaja@symbol.com"
+	    DESCRIPTION  "Initial revision."
+          ::= { wsSwGuestRadius 1 }
+
+      wiosRadiusConfig   OBJECT IDENTIFIER ::= { wiosGuestRadiusModule 1 }
+
+   wiosRadiusTable OBJECT-TYPE
+       SYNTAX     SEQUENCE OF WiosRadiusEntry
+       MAX-ACCESS not-accessible
+       STATUS     current
+       DESCRIPTION 
+            "The (conceptual) table containing 
+             guest user information."
+       ::= { wiosRadiusConfig 1 }
+
+   wiosRadiusEntry OBJECT-TYPE
+       SYNTAX     WiosRadiusEntry
+       MAX-ACCESS not-accessible
+       STATUS     current
+       DESCRIPTION ""
+       INDEX      { wiosRadiusUsername }
+       ::= { wiosRadiusTable 1 }
+
+   WiosRadiusEntry ::= SEQUENCE {
+
+      wiosRadiusUsername	        DisplayString,
+      wiosRadiusPassword	        DisplayString,
+      wiosRadiusGroup	            DisplayString,
+      wiosRadiusExpireDateAndTime   DisplayString
+   }
+
+   wiosRadiusUsername OBJECT-TYPE
+       SYNTAX      DisplayString ( SIZE(8 .. 31) )
+       MAX-ACCESS  read-create
+       STATUS      current
+       DESCRIPTION ""
+       ::= { wiosRadiusEntry 1 }
+
+   wiosRadiusPassword OBJECT-TYPE
+       SYNTAX      DisplayString ( SIZE(8..64) )
+       MAX-ACCESS  read-create
+       STATUS      current
+       DESCRIPTION  ""
+       ::= { wiosRadiusEntry 2 }
+
+   wiosRadiusGroup OBJECT-TYPE
+       SYNTAX      DisplayString ( SIZE(2..64) )
+       MAX-ACCESS  read-create
+       STATUS      current
+       DESCRIPTION  ""
+       ::= { wiosRadiusEntry 3 }
+
+    wiosRadiusExpireDateAndTime OBJECT-TYPE
+       SYNTAX      DisplayString ( SIZE( 3..18) )
+       MAX-ACCESS  read-create
+       STATUS      current
+       DESCRIPTION ""
+       ::= { wiosRadiusEntry 4 }
+
+END

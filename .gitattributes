@@ -303,6 +303,38 @@ contrib/mibs/IPV6-TC.txt -text
 contrib/mibs/RAPID-CITY-BAY-STACK.txt -text
 contrib/mibs/RC-MLT-MIB.txt -text
 contrib/mibs/S5-AGENT-MIB.txt -text
+contrib/mibs/WS-CC-RF-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-CC-SMI.txt -text svneol=native#unset
+contrib/mibs/WS-CC-STATS-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-INFRA-AUTO-UPDATE-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-INFRA-CLUSTER-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-INFRA-DIAG-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-INFRA-FILE-MGMT-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-INFRA-LIC-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-INFRA-PM-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-INFRA-SMI-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-INFRA-SYSMSG-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-MGMT-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SEC-VPN-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SMI.txt -text svneol=native#unset
+contrib/mibs/WS-SW-ACL-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SW-ARP-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SW-AUTHENTICATEDNTP-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SW-DHCP-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SW-DHCPSERVER-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SW-DNS-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SW-GRE-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SW-GUEST-USER-RAD-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SW-IF-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SW-IP-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SW-MOBILITY-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SW-PORTVLAN-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SW-RADIUS-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-SW-SMI.txt -text svneol=native#unset
+contrib/mibs/WS-SW-SNMP-SAVE-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-TRAP-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-TYPE-MIB.txt -text svneol=native#unset
+contrib/mibs/WS-USER-MGMT-MIB.txt -text svneol=native#unset
 contrib/startup/debian/Makefile.am -text
 contrib/startup/debian/netxmsd.in -text
 contrib/startup/debian/nxagentd.in -text
