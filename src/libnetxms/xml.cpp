@@ -22,20 +22,18 @@
 
 #include "libnetxms.h"
 
-
-//
-// Encode string for XML
-//
-
-TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length)
+/**
+ * Encode string for XML
+ */
+TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length)
 {
 	TCHAR *out;
 	const TCHAR *in;
 	int inLen, outLen, pos;
 
 	// Calculate length
-	inLen = (length == -1) ? (int)_tcslen(string) : length;
-	for(in = string, outLen = 0; (inLen > 0) && (*in != 0); in++, outLen++, inLen--)
+	inLen = (length == -1) ? (int)_tcslen(str) : length;
+	for(in = str, outLen = 0; (inLen > 0) && (*in != 0); in++, outLen++, inLen--)
 		if ((*in == _T('&')) || (*in == _T('<')) ||
 		    (*in == _T('>')) || (*in == _T('"')) ||
 			 (*in == _T('\'')) || (*in < 32))
@@ -44,8 +42,8 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length)
 	
 	// Convert string
 	out = (TCHAR *)malloc(outLen * sizeof(TCHAR));
-	inLen = (length == -1) ? (int)_tcslen(string) : length;
-	for(in = string, pos = 0; inLen > 0; in++, inLen--)
+	inLen = (length == -1) ? (int)_tcslen(str) : length;
+	for(in = str, pos = 0; inLen > 0; in++, inLen--)
 	{
 		switch(*in)
 		{
@@ -87,23 +85,19 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length)
 	return out;
 }
 
-
-//
-// Escape string for XML - return escaped string as String object
-//
-
-String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *string, int length)
+/**
+ * Escape string for XML - return escaped string as String object
+ */
+String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *str, int length)
 {
 	String s;
-	s.setBuffer(EscapeStringForXML(string, length));
+	s.setBuffer(EscapeStringForXML(str, length));
 	return s;
 }
 
-
-//
-// Get attribute for XML tag
-//
-
+/**
+ * Get attribute for XML tag
+ */
 const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name)
 {
 	int i;

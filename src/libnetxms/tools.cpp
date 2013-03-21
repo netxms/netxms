@@ -221,15 +221,31 @@ WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src)
 
 #endif
 
+/**
+ * Compare pattern with possible ? characters with given text
+ */
+static bool CompareTextBlocks(const TCHAR *pattern, const TCHAR *text, size_t size)
+{
+	const TCHAR *p = pattern;
+	const TCHAR *t = text;
+	for(size_t i = size; i > 0; i--, p++, t++)
+	{
+		if (*p == _T('?'))
+			continue;
+		if (*p != *t)
+			return false;
+	}
+	return true;
+}
 
-//
-// Match string against pattern with * and ? metasymbols
-//
-
-static BOOL MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
+/**
+ * Match string against pattern with * and ? metasymbols - implementation
+ */
+static bool MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
 {
    const TCHAR *SPtr, *MPtr, *BPtr, *EPtr;
-   BOOL bFinishScan;
+	size_t bsize;
+   bool finishScan;
 
    SPtr = string;
    MPtr = pattern;
@@ -245,58 +261,61 @@ static BOOL MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
                MPtr++;
             }
             else
-               return FALSE;
+				{
+               return false;
+				}
             break;
          case _T('*'):
             while(*MPtr == _T('*'))
                MPtr++;
             if (*MPtr == 0)
-	            return TRUE;
+	            return true;
             while(*MPtr == _T('?'))      // Handle "*?" case
             {
                if (*SPtr != 0)
                   SPtr++;
                else
-                  return FALSE;
+                  return false;
 					MPtr++;
                break;
             }
             BPtr = MPtr;           // Text block begins here
-            while((*MPtr != 0) && (*MPtr != _T('?')) && (*MPtr != _T('*')))
+            while((*MPtr != 0) && (*MPtr != _T('*')))
                MPtr++;     // Find the end of text block
             // Try to find rightmost matching block
+				bsize = (size_t)(MPtr - BPtr);
             EPtr = NULL;
-            bFinishScan = FALSE;
+            finishScan = false;
             do
             {
                while(1)
                {
                   while((*SPtr != 0) && (*SPtr != *BPtr))
                      SPtr++;
-                  if (_tcslen(SPtr) < (size_t)(MPtr - BPtr))
+                  if (_tcslen(SPtr) < bsize)
                   {
                      if (EPtr == NULL)
                      {
-                        return FALSE;  // Length of remained text less than remaining pattern
+                        return false;  // Length of remained text less than remaining pattern
                      }
                      else
                      {
-                        SPtr = EPtr;   // Revert back to last match
-                        bFinishScan = TRUE;
+                        SPtr = EPtr;   // Revert back to point after last match
+                        finishScan = true;
                         break;
                      }
                   }
-                  if (!memcmp(BPtr, SPtr, (MPtr - BPtr) * sizeof(TCHAR)))
+                  if (CompareTextBlocks(BPtr, SPtr, bsize))
                      break;
                   SPtr++;
                }
-               if (!bFinishScan)
+               if (!finishScan)
                {
-                  SPtr += (MPtr - BPtr);   // Increment SPtr because we alredy match current fragment
-                  EPtr = SPtr;   // Remember current point
+                  EPtr = SPtr + bsize;   // Remember point after last match
+                  SPtr++;    // continue scan at next character
                }
             }
-            while(!bFinishScan);
+            while(!finishScan);
             break;
          default:
             if (*MPtr == *SPtr)
@@ -305,41 +324,45 @@ static BOOL MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
                MPtr++;
             }
             else
-               return FALSE;
+				{
+               return false;
+				}
             break;
       }
    }
 
-   return *SPtr == 0 ? TRUE : FALSE;
+   return *SPtr == 0;
 }
 
-BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern,
-									  const TCHAR *string,
-									  BOOL matchCase)
+/**
+ * Match string against pattern with * and ? metasymbols
+ *
+ * @param pattern pattern to match against
+ * @param str string to match
+ * @param matchCase set to true for case-sensetive match
+ * @return true if string matches given pattern
+ */
+bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase)
 {
    if (matchCase)
-      return MatchStringEngine(pattern, string);
-   else
-   {
-      TCHAR *tp, *ts;
-      BOOL bResult;
+      return MatchStringEngine(pattern, str);
 
-      tp = _tcsdup(pattern);
-      ts = _tcsdup(string);
-      _tcsupr(tp);
-      _tcsupr(ts);
-      bResult = MatchStringEngine(tp, ts);
-      free(tp);
-      free(ts);
-      return bResult;
-   }
+   TCHAR *tp, *ts;
+   bool bResult;
+
+   tp = _tcsdup(pattern);
+   ts = _tcsdup(str);
+   _tcsupr(tp);
+   _tcsupr(ts);
+   bResult = MatchStringEngine(tp, ts);
+   free(tp);
+   free(ts);
+   return bResult;
 }
 
-
-//
-// Strip whitespaces and tabs off the string
-//
-
+/**
+ * Strip whitespaces and tabs off the string
+ */
 void LIBNETXMS_EXPORTABLE StrStripA(char *str)
 {
    int i;
@@ -351,6 +374,9 @@ void LIBNETXMS_EXPORTABLE StrStripA(char *str)
    str[i + 1] = 0;
 }
 
+/**
+ * Strip whitespaces and tabs off the string
+ */
 void LIBNETXMS_EXPORTABLE StrStripW(WCHAR *str)
 {
    int i;
@@ -362,11 +388,9 @@ void LIBNETXMS_EXPORTABLE StrStripW(WCHAR *str)
    str[i + 1] = 0;
 }
 
-
-//
-// Strip whitespaces and tabs off the string
-//
-
+/**
+ * Strip whitespaces and tabs off the string
+ */
 void LIBNETXMS_EXPORTABLE Trim(TCHAR *str)
 {
    int i;

@@ -804,7 +804,7 @@ extern "C"
 
 	const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize);
 	void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
-   BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
+   bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase);
 	TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
 
 #ifdef __cplusplus
@@ -1090,8 +1090,8 @@ int wcscat_s(WCHAR *dst, size_t dstSize, const WCHAR *src);
 
 #ifdef __cplusplus
 
-TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length);
-String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *string, int length = -1);
+TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length);
+String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *str, int length = -1);
 const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name);
 int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int defVal);
 DWORD LIBNETXMS_EXPORTABLE XMLGetAttrDWORD(const char **attrs, const char *name, DWORD defVal);
