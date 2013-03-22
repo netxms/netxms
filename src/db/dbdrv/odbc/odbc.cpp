@@ -113,11 +113,9 @@ static void ClearPendingResults(SQLHSTMT stmt)
 	}
 }
 
-
-//
-// Prepare string for using in SQL query - enclose in quotes and escape as needed
-//
-
+/**
+ * Prepare string for using in SQL query - enclose in quotes and escape as needed
+ */
 extern "C" NETXMS_WCHAR EXPORT *DrvPrepareStringW(const NETXMS_WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
@@ -297,11 +295,9 @@ extern "C" void EXPORT DrvDisconnect(ODBCDRV_CONN *pConn)
    free(pConn);
 }
 
-
-//
-// Prepare statement
-//
-
+/**
+ * Prepare statement
+ */
 extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
    long iResult;
@@ -357,15 +353,14 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(ODBCDRV_CONN *pConn, NETXMS_WCHAR *
    return result;
 }
 
-
-//
-// Bind parameter to statement
-//
-
+/**
+ * Bind parameter to statement
+ */
 extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
 	static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE, SQL_LONGVARCHAR };
-	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE };
+	static SQLSMALLINT odbcCTypeW[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE };
+	static SQLSMALLINT odbcCTypeA[] = { SQL_C_CHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE };
 	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double) };
 
 	int length = (int)wcslen((NETXMS_WCHAR *)buffer) + 1;
@@ -374,63 +369,105 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
 	switch(allocType)
 	{
 		case DB_BIND_STATIC:
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-			sqlBuffer = buffer;
-#else
-			if (cType == DB_CTYPE_STRING)
+			if (m_useUnicode)
 			{
-				sqlBuffer = UCS2StringFromUCS4String((NETXMS_WCHAR *)buffer);
-				stmt->buffers->add(sqlBuffer);
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+				sqlBuffer = buffer;
+#else
+				if (cType == DB_CTYPE_STRING)
+				{
+					sqlBuffer = UCS2StringFromUCS4String((NETXMS_WCHAR *)buffer);
+					stmt->buffers->add(sqlBuffer);
+				}
+				else
+				{
+					sqlBuffer = buffer;
+				}
+#endif
 			}
 			else
 			{
-				sqlBuffer = buffer;
+				if (cType == DB_CTYPE_STRING)
+				{
+					sqlBuffer = MBStringFromWideString((NETXMS_WCHAR *)buffer);
+					stmt->buffers->add(sqlBuffer);
+				}
+				else
+				{
+					sqlBuffer = buffer;
+				}
 			}
-#endif
 			break;
 		case DB_BIND_DYNAMIC:
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-			sqlBuffer = buffer;
-#else
-			if (cType == DB_CTYPE_STRING)
+			if (m_useUnicode)
 			{
-				sqlBuffer = UCS2StringFromUCS4String((NETXMS_WCHAR *)buffer);
-				free(buffer);
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+				sqlBuffer = buffer;
+#else
+				if (cType == DB_CTYPE_STRING)
+				{
+					sqlBuffer = UCS2StringFromUCS4String((NETXMS_WCHAR *)buffer);
+					free(buffer);
+				}
+				else
+				{
+					sqlBuffer = buffer;
+				}
+#endif
 			}
 			else
 			{
-				sqlBuffer = buffer;
+				if (cType == DB_CTYPE_STRING)
+				{
+					sqlBuffer = MBStringFromWideString((NETXMS_WCHAR *)buffer);
+					free(buffer);
+				}
+				else
+				{
+					sqlBuffer = buffer;
+				}
 			}
-#endif
 			stmt->buffers->add(sqlBuffer);
 			break;
 		case DB_BIND_TRANSIENT:
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-			sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
-#else
-			if (cType == DB_CTYPE_STRING)
+			if (m_useUnicode)
 			{
-				sqlBuffer = UCS2StringFromUCS4String((NETXMS_WCHAR *)buffer);
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+				sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
+#else
+				if (cType == DB_CTYPE_STRING)
+				{
+					sqlBuffer = UCS2StringFromUCS4String((NETXMS_WCHAR *)buffer);
+				}
+				else
+				{
+					sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
+				}
+#endif
 			}
 			else
 			{
-				sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
+				if (cType == DB_CTYPE_STRING)
+				{
+					sqlBuffer = MBStringFromWideString((NETXMS_WCHAR *)buffer);
+				}
+				else
+				{
+					sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
+				}
 			}
-#endif
 			stmt->buffers->add(sqlBuffer);
 			break;
 		default:
 			return;	// Invalid call
 	}
-	SQLBindParameter(stmt->handle, pos, SQL_PARAM_INPUT, odbcCType[cType], odbcSqlType[sqlType],
+	SQLBindParameter(stmt->handle, pos, SQL_PARAM_INPUT, m_useUnicode ? odbcCTypeW[cType] : odbcCTypeA[cType], odbcSqlType[sqlType],
 	                 (cType == DB_CTYPE_STRING) ? length : 0, 0, sqlBuffer, 0, NULL);
 }
 
-
-//
-// Execute prepared statement
-//
-
+/**
+ * Execute prepared statement
+ */
 extern "C" DWORD EXPORT DrvExecute(ODBCDRV_CONN *pConn, ODBCDRV_STATEMENT *stmt, NETXMS_WCHAR *errorText)
 {
    DWORD dwResult;
@@ -452,11 +489,9 @@ extern "C" DWORD EXPORT DrvExecute(ODBCDRV_CONN *pConn, ODBCDRV_STATEMENT *stmt,
 	return dwResult;
 }
 
-
-//
-// Destroy prepared statement
-//
-
+/**
+ * Destroy prepared statement
+ */
 extern "C" void EXPORT DrvFreeStatement(ODBCDRV_STATEMENT *stmt)
 {
 	if (stmt == NULL)

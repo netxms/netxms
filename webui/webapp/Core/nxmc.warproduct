@@ -93,6 +93,11 @@
       <plugin id="org.eclipse.equinox.common.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.common.nl_zh" fragment="true"/>
       <plugin id="org.eclipse.equinox.console"/>
+      <plugin id="org.eclipse.equinox.http.jetty.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.equinox.http.jetty.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.http.jetty.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.equinox.http.jetty.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.equinox.http.jetty.nl_zh" fragment="true"/>
       <plugin id="org.eclipse.equinox.http.registry"/>
       <plugin id="org.eclipse.equinox.http.registry.nl_cs" fragment="true"/>
       <plugin id="org.eclipse.equinox.http.registry.nl_de" fragment="true"/>
@@ -106,11 +111,6 @@
       <plugin id="org.eclipse.equinox.http.servlet.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.http.servlet.nl_zh" fragment="true"/>
       <plugin id="org.eclipse.equinox.http.servletbridge"/>
-      <plugin id="org.eclipse.equinox.http.servletbridge.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.equinox.http.servletbridge.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.equinox.http.servletbridge.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.equinox.http.servletbridge.nl_ru" fragment="true"/>
-      <plugin id="org.eclipse.equinox.http.servletbridge.nl_zh" fragment="true"/>
       <plugin id="org.eclipse.equinox.preferences"/>
       <plugin id="org.eclipse.equinox.preferences.nl_cs" fragment="true"/>
       <plugin id="org.eclipse.equinox.preferences.nl_de" fragment="true"/>
@@ -123,13 +123,7 @@
       <plugin id="org.eclipse.equinox.registry.nl_es" fragment="true"/>
       <plugin id="org.eclipse.equinox.registry.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.registry.nl_zh" fragment="true"/>
-      <plugin id="org.eclipse.equinox.servletbridge"/>
       <plugin id="org.eclipse.equinox.servletbridge.extensionbundle" fragment="true"/>
-      <plugin id="org.eclipse.equinox.servletbridge.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.equinox.servletbridge.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.equinox.servletbridge.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.equinox.servletbridge.nl_ru" fragment="true"/>
-      <plugin id="org.eclipse.equinox.servletbridge.nl_zh" fragment="true"/>
       <plugin id="org.eclipse.help"/>
       <plugin id="org.eclipse.help.nl_cs" fragment="true"/>
       <plugin id="org.eclipse.help.nl_de" fragment="true"/>
@@ -196,7 +190,6 @@
       <plugin id="org.eclipse.rap.ui.workbench.nl_es" fragment="true"/>
       <plugin id="org.eclipse.rap.ui.workbench.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.rap.ui.workbench.nl_zh" fragment="true"/>
-      <plugin id="org.eclipse.tm.terminal"/>
       <plugin id="org.eclipse.zest"/>
       <plugin id="org.mozilla.javascript"/>
       <plugin id="org.netxms.nebula.widgets.gallery"/>
@@ -264,7 +257,6 @@
       <plugin id="org.eclipse.equinox.http.servletbridge" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.preferences" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.registry" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.equinox.servletbridge" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.help" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.jetty.continuation" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.jetty.http" autoStart="true" startLevel="0" />
@@ -286,7 +278,6 @@
       <plugin id="org.eclipse.rap.ui" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.ui.forms" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.ui.workbench" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.tm.terminal" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.zest" autoStart="true" startLevel="0" />
       <plugin id="org.mozilla.javascript" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.nebula.widgets.gallery" autoStart="true" startLevel="0" />
@@ -322,7 +313,7 @@
       <plugin id="org.swtchart" autoStart="true" startLevel="0" />
    </configurations>
 
-   <warConfiguration webXml="/WAR/WEB-INF/web.xml" launchIni="/WAR/WEB-INF/launch.ini">
+   <warConfiguration webXml="/Core/WEB-INF/web.xml" launchIni="/Core/WEB-INF/launch.ini">
    <libraries>
       <library path="org.eclipse.equinox.servletbridge_1.2.200.v20120522-2049.jar" fromTarget="true"/>
    </libraries>
