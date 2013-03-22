@@ -319,7 +319,6 @@ contrib/mibs/WS-SEC-VPN-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-SMI.txt -text svneol=native#unset
 contrib/mibs/WS-SW-ACL-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-SW-ARP-MIB.txt -text svneol=native#unset
-contrib/mibs/WS-SW-AUTHENTICATEDNTP-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-SW-DHCP-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-SW-DHCPSERVER-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-SW-DNS-MIB.txt -text svneol=native#unset
@@ -329,12 +328,8 @@ contrib/mibs/WS-SW-IF-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-SW-IP-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-SW-MOBILITY-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-SW-PORTVLAN-MIB.txt -text svneol=native#unset
-contrib/mibs/WS-SW-RADIUS-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-SW-SMI.txt -text svneol=native#unset
-contrib/mibs/WS-SW-SNMP-SAVE-MIB.txt -text svneol=native#unset
-contrib/mibs/WS-TRAP-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-TYPE-MIB.txt -text svneol=native#unset
-contrib/mibs/WS-USER-MGMT-MIB.txt -text svneol=native#unset
 contrib/startup/debian/Makefile.am -text
 contrib/startup/debian/netxmsd.in -text
 contrib/startup/debian/nxagentd.in -text

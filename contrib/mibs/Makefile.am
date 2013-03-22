@@ -283,6 +283,39 @@ mibs_DATA = \
 	V2ADMIN-MIB.txt \
 	VRRP-MIB.txt \
 	WF-COM.txt \
+	WS-SW-RADIUS-MIB.txt \
+	WS-TYPE-MIB.txt \
+	WS-SW-AUTHENTICATEDNTP-MIB.txt \
+	WS-SW-ACL-MIB.txt \
+	WS-CC-RF-MIB.txt \
+	WS-USER-MGMT-MIB.txt \
+	WS-SW-DHCPSERVER-MIB.txt \
+	WS-SW-DHCP-MIB.txt \
+	WS-INFRA-FILE-MGMT-MIB.txt \
+	WS-SW-MOBILITY-MIB.txt \
+	WS-INFRA-SMI-MIB.txt \
+	WS-CC-SMI.txt \
+	WS-INFRA-DIAG-MIB.txt \
+	WS-SW-SMI.txt \
+	WS-SEC-VPN-MIB.txt \
+	WS-INFRA-SYSMSG-MIB.txt \
+	WS-SW-ARP-MIB.txt \
+	WS-SW-GUEST-USER-RAD-MIB.txt \
+	WS-INFRA-NTP-MIB.txt \
+	WS-INFRA-LIC-MIB.txt \
+	WS-TRAP-MIB.txt \
+	WS-MGMT-MIB.txt \
+	WS-INFRA-PM-MIB.txt \
+	WS-SW-DNS-MIB.txt \
+	WS-INFRA-CLUSTER-MIB.txt \
+	WS-CC-STATS-MIB.txt \
+	WS-SW-SNMP-SAVE-MIB.txt \
+	WS-SMI.txt \
+	WS-INFRA-AUTO-UPDATE-MIB.txt \
+	WS-SW-GRE-MIB.txt \
+	WS-SW-IF-MIB.txt \
+	WS-SW-IP-MIB.txt \
+	WS-SW-PORTVLAN-MIB.txt \
 	WWW-MIB.txt \
 	XPPC-MIB.txt
 

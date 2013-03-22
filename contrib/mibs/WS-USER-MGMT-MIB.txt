@@ -10,7 +10,7 @@
 		IMPORTS
 			OBJECT-GROUP, MODULE-COMPLIANCE			
 				FROM SNMPv2-CONF			
-			IpAddress, BITS, OBJECT-TYPE, MODULE-IDENTITY			
+			IpAddress, OBJECT-TYPE, MODULE-IDENTITY			
 				FROM SNMPv2-SMI			
 			PhysAddress, DisplayString, TruthValue			
 				FROM SNMPv2-TC			

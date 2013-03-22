@@ -1248,8 +1248,8 @@
 			STATUS current
 			DESCRIPTION 
 				"Description."
-			MODULE wsSwNTPModule
-				MANDATORY-GROUPS { wsSwNtpGroupAll }
+--			MODULE wsSwNTPModule
+--				MANDATORY-GROUPS { wsSwNtpGroupAll }
 			MODULE -- this module
 				MANDATORY-GROUPS { wsSwNtpGroupAll }
 			::= { wsSwNtpMIBConformance 1 }

@@ -5054,11 +5054,9 @@ void ClientSession::SendContainerCategories(DWORD dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Perform a forced node poll
-//
-
+/**
+ * Perform a forced node poll
+ */
 void ClientSession::forcedNodePoll(CSCPMessage *pRequest)
 {
    CSCPMessage msg;

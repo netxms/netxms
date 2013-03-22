@@ -60,7 +60,7 @@
 			wsSwMobilityPeerL2ROAMSent, wsSwMobilityPeerL2ROAMRecvd, wsSwMobilityPeerL3ROAMSent, wsSwMobilityPeerL3ROAMRecvd, wsSwMobilityPeerSessionState, 
 			wsSwMobilityPeerClearStatistics, wsSwMobilityPeerRowStatus, wsSwMobilityMUMACAddr, wsSwMobilityMUIPAddress, wsSwMobilityMUHSIPAddr, 
 			wsSwMobilityMUCSIPAddr, wsSwMobilityMUHSVLAN, wsSwMobilityLocalAddr, wsSwMobilityEnable, wsSwMobilityRoamPeriod, 
-			wsSwMobilityMibCompliance, wsSwMobilityGroup			
+			wsSwMobilityGroup
 				FROM WS-SW-MOBILITY-MIB			
 			DoActionNow			
 				FROM WS-TYPE-MIB;

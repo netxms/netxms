@@ -35,7 +35,7 @@
 		IMPORTS
 			OBJECT-GROUP			
 				FROM SNMPv2-CONF			
-			IpAddress, Integer32, Unsigned32, BITS, OBJECT-TYPE, 
+			IpAddress, Integer32, Unsigned32, OBJECT-TYPE, 
 			MODULE-IDENTITY			
 				FROM SNMPv2-SMI			
 			DisplayString, TruthValue			
