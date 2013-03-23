@@ -68,7 +68,7 @@ public class ServiceComponents extends NetworkMap
 	 */
 	private void addServiceComponents(GenericObject object, long parentElementId)
 	{
-		Iterator<Long> it = object.getChilds();
+		Iterator<Long> it = object.getChildren();
 		while(it.hasNext())
 		{
 			long objectId = it.next();

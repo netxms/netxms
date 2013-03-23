@@ -88,7 +88,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public boolean hasChildren(Object element)
 	{
-		return ((GenericObject)element).getNumberOfChilds() > 0;
+		return ((GenericObject)element).hasAccessibleChildren();
 	}
 
 	/* (non-Javadoc)

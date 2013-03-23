@@ -79,7 +79,7 @@ public class IPNeighbors extends NetworkMap
 	 */
 	private void addNodesFromSubnet(Subnet subnet, long subnetElementId, long rootNodeId)
 	{
-		Iterator<Long> it = subnet.getChilds();
+		Iterator<Long> it = subnet.getChildren();
 		while(it.hasNext())
 		{
 			long objectId = it.next();
