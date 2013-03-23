@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.TextViewerUndoManager;
@@ -63,7 +64,8 @@ public class ScriptEditor extends Composite
 	{
 		super(parent, style);
 		
-		editorFont = new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL);
+		//editorFont = new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL);
+		editorFont = JFaceResources.getTextFont();
 		
 		proposalIcons[0] = Activator.getImageDescriptor("icons/function.gif").createImage();
 		proposalIcons[1] = Activator.getImageDescriptor("icons/var_global.gif").createImage();
@@ -143,7 +145,7 @@ public class ScriptEditor extends Composite
 	{
 		for(int i = 0; i < proposalIcons.length; i++)
 			proposalIcons[i].dispose();
-		editorFont.dispose();
+		//editorFont.dispose();
 		super.dispose();
 	}
 	
