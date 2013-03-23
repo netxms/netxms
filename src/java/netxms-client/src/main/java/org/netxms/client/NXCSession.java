@@ -1983,7 +1983,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				if ((classFilter != null) && !classFilter.contains(object.getObjectClass()))
 					continue;
 				
-				if (object.getNumberOfParents() == 0)
+				if (!object.hasParents())
 				{
 					list.add(object);
 				}

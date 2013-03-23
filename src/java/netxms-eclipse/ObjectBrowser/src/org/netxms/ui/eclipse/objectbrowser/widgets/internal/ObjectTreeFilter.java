@@ -111,7 +111,7 @@ public class ObjectTreeFilter extends ViewerFilter
 			return true;
 
 		boolean pass = objectList.containsKey(((GenericObject)element).getObjectId());
-		if (!pass && (((GenericObject)element).getNumberOfChilds() > 0))
+		if (!pass && ((GenericObject)element).hasChildren())
 		{
 			Iterator<GenericObject> it = objectList.values().iterator();
 			while(it.hasNext())

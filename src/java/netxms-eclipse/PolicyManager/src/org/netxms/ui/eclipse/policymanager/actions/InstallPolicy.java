@@ -63,7 +63,7 @@ public class InstallPolicy implements IObjectActionDelegate
 		int initialMode = SelectInstallTargetDialog.INSTALL_ON_CURRENT;
 		for(AgentPolicy p : currentSelection)
 		{
-			if (p.getNumberOfChilds() == 0)
+			if (p.hasChildren())
 			{
 				initialMode = SelectInstallTargetDialog.INSTALL_ON_SELECTED;
 				break;

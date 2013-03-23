@@ -46,6 +46,7 @@ public class GenericObject
 	public static final int SERVICEROOT                = 2;
 	/** Templates */
 	public static final int TEMPLATEROOT               = 3;
+	/** Default zone */
 	public static final int ZONE0                      = 4;
 	/** Configuration Policies */
 	public static final int POLICYROOT                 = 5;
@@ -144,7 +145,7 @@ public class GenericObject
 	private int[] statusThresholds;
 
 	protected HashSet<Long> parents = new HashSet<Long>(0);
-	protected HashSet<Long> childs = new HashSet<Long>(0);
+	protected HashSet<Long> children = new HashSet<Long>(0);
 	protected Map<String, String> customAttributes = new HashMap<String, String>(0);
 
 	/**
@@ -246,7 +247,7 @@ public class GenericObject
 		count = msg.getVariableAsInteger(NXCPCodes.VID_CHILD_CNT);
 		for(i = 0, id = NXCPCodes.VID_CHILD_ID_BASE; i < count; i++, id++)
 		{
-			childs.add(msg.getVariableAsInt64(id));
+			children.add(msg.getVariableAsInt64(id));
 		}
 		
 		// Trusted nodes
@@ -258,7 +259,7 @@ public class GenericObject
 		}
 		for(i = 0, id = NXCPCodes.VID_CHILD_ID_BASE; i < count; i++, id++)
 		{
-			childs.add(msg.getVariableAsInt64(id));
+			children.add(msg.getVariableAsInt64(id));
 		}
 		
 		// Custom attributes
@@ -298,9 +299,9 @@ public class GenericObject
 	/**
 	 * @return Iterator for list of child objects
 	 */
-	public Iterator<Long> getChilds()
+	public Iterator<Long> getChildren()
 	{
-		return childs.iterator();
+		return children.iterator();
 	}
 
 	/**
@@ -448,7 +449,7 @@ public class GenericObject
 		final Set<GenericObject> list;
 		synchronized(parents)
 		{
-			list = new HashSet<GenericObject>(childs.size());
+			list = new HashSet<GenericObject>(children.size());
 			final Iterator<Long> it = parents.iterator();
 			while(it.hasNext())
 			{
@@ -466,10 +467,10 @@ public class GenericObject
 	public GenericObject[] getChildsAsArray()
 	{
 		final Set<GenericObject> list;
-		synchronized(childs)
+		synchronized(children)
 		{
-			list = new HashSet<GenericObject>(childs.size());
-			final Iterator<Long> it = childs.iterator();
+			list = new HashSet<GenericObject>(children.size());
+			final Iterator<Long> it = children.iterator();
 			while(it.hasNext())
 			{
 				GenericObject obj = session.findObjectById(it.next());
@@ -488,11 +489,11 @@ public class GenericObject
 	public long[] getChildIdList()
 	{
 		long[] list;
-		synchronized(childs)
+		synchronized(children)
 		{
-			list = new long[childs.size()];
+			list = new long[children.size()];
 			int i = 0;
-			for(Long id : childs)
+			for(Long id : children)
 				list[i++] = id;
 		}
 		return list;
@@ -523,9 +524,9 @@ public class GenericObject
 	 */
 	private void getAllChildsInternal(int classFilter, Set<GenericObject> set)
 	{
-		synchronized(childs)
+		synchronized(children)
 		{
-			final Iterator<Long> it = childs.iterator();
+			final Iterator<Long> it = children.iterator();
 			while(it.hasNext())
 			{
 				GenericObject obj = session.findObjectById(it.next());
@@ -607,22 +608,31 @@ public class GenericObject
 	}
 
 	/**
-	 * @return Number of parent objects
+	 * @return true if object has parents
 	 */
-	public int getNumberOfParents()
+	public boolean hasParents()
 	{
-		return parents.size();
+		return parents.size() > 0;
 	}
-
 
 	/**
-	 * @return Number of child objects
+	 * @return true if object has children
 	 */
-	public int getNumberOfChilds()
+	public boolean hasChildren()
 	{
-		return childs.size();
+		return children.size() > 0;
 	}
 
+	/**
+	 * @return true if object has children accessible by this session
+	 */
+	public boolean hasAccessibleChildren()
+	{
+		for(Long id : children)
+			if (session.findObjectById(id) != null)
+				return true;
+		return false;
+	}
 
 	/**
 	 * @return the objectClass
