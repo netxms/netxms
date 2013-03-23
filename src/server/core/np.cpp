@@ -143,7 +143,7 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
  * @param discoveredNode must be set to true if node being added automatically by discovery thread
  */
 Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
-                  WORD agentPort, WORD snmpPort, TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy,
+                  WORD agentPort, WORD snmpPort, const TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy,
                   Cluster *pCluster, DWORD zoneId, bool doConfPoll, bool discoveredNode)
 {
    Node *pNode;

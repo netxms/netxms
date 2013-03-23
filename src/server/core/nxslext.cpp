@@ -506,6 +506,52 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 }
 
 /**
+ * Create node object
+ * Syntax:
+ *    CreateNode(parent, name, primaryHostName)
+ * where:
+ *     parent          - parent object
+ *     name            - name for new node
+ *     primaryHostName - primary host name for new node
+ * Return value:
+ *     new node object or null on failure
+ */
+static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *obj = argv[0]->getValueAsObject();
+	if (_tcscmp(obj->getClass()->getName(), g_nxslNetObjClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	NetObj *parent = (NetObj*)obj->getData();
+	if (parent->Type() != OBJECT_CONTAINER && parent->Type() != OBJECT_SERVICEROOT)
+		return NXSL_ERR_BAD_CLASS;
+
+	if (!argv[1]->isString() || !argv[2]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	const TCHAR *pname = argv[2]->getValueAsCString();
+	if (*pname == 0)
+		pname = argv[1]->getValueAsCString();
+	Node *node = PollNewNode(ntohl(ResolveHostName(pname)), 0, 0, 0, 0, argv[1]->getValueAsCString(), 0, 0, NULL, 0, true, false);
+	if (node != NULL)
+	{
+		node->setPrimaryName(pname);
+		parent->AddChild(node);
+		node->AddParent(parent);
+		node->unhide();
+		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
+	}
+	else
+	{
+		*ppResult = new NXSL_Value;
+	}
+	return 0;
+}
+
+/**
  * Create container object
  * Syntax:
  *    CreateContainer(parent, name)
@@ -1198,6 +1244,7 @@ static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 {
 	{ _T("BindObject"), F_BindObject, 2 },
 	{ _T("CreateContainer"), F_CreateContainer, 2 },
+	{ _T("CreateNode"), F_CreateNode, 3 },
 	{ _T("RemoveContainer"), F_RemoveContainer, 1 },
 	{ _T("UnbindObject"), F_UnbindObject, 2 }
 };

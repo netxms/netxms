@@ -1,6 +1,6 @@
 /* 
 ** ODBC Database Driver
-** Copyright (C) 2004-2012 Victor Kirhenshtein
+** Copyright (C) 2004-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,25 +25,19 @@
 
 DECLARE_DRIVER_HEADER("ODBC")
 
-
-//
-// Constants
-//
-
+/**
+ * Size of data buffer
+ */
 #define DATA_BUFFER_SIZE      65536
 
-
-//
-// Static data
-//
-
+/**
+ * Flag for enable/disable UNICODE
+ */
 static BOOL m_useUnicode = TRUE;
 
-
-//
-// Convert ODBC state to NetXMS database error code and get error text
-//
-
+/**
+ * Convert ODBC state to NetXMS database error code and get error text
+ */
 static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_WCHAR *errorText)
 {
    SQLRETURN nRet;
@@ -98,11 +92,9 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_
    return dwError;
 }
 
-
-//
-// Clear any pending result sets on given statement
-//
-
+/**
+ * Clear any pending result sets on given statement
+ */
 static void ClearPendingResults(SQLHSTMT stmt)
 {
 	while(1)
@@ -279,11 +271,9 @@ connect_failure_0:
    return NULL;
 }
 
-
-//
-// Disconnect from database
-//
-
+/**
+ * Disconnect from database
+ */
 extern "C" void EXPORT DrvDisconnect(ODBCDRV_CONN *pConn)
 {
    MutexLock(pConn->mutexQuery);
@@ -504,11 +494,9 @@ extern "C" void EXPORT DrvFreeStatement(ODBCDRV_STATEMENT *stmt)
 	free(stmt);
 }
 
-
-//
-// Perform non-SELECT query
-//
-
+/**
+ * Perform non-SELECT query
+ */
 extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NETXMS_WCHAR *errorText)
 {
    long iResult;
@@ -558,11 +546,9 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, N
    return dwResult;
 }
 
-
-//
-// Process results of SELECT query
-//
-
+/**
+ * Process results of SELECT query
+ */
 static ODBCDRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT stmt)
 {
    // Allocate result buffer and determine column info
@@ -637,11 +623,9 @@ static ODBCDRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT stmt)
 	return pResult;
 }
 
-
-//
-// Perform SELECT query
-//
-
+/**
+ * Perform SELECT query
+ */
 extern "C" DBDRV_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
    ODBCDRV_QUERY_RESULT *pResult = NULL;
@@ -690,11 +674,9 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwsz
    return pResult;
 }
 
-
-//
-// Perform SELECT query using prepared statement
-//
-
+/**
+ * Perform SELECT query using prepared statement
+ */
 extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(ODBCDRV_CONN *pConn, ODBCDRV_STATEMENT *stmt, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
    ODBCDRV_QUERY_RESULT *pResult = NULL;
@@ -715,11 +697,9 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(ODBCDRV_CONN *pConn, ODBCDRV_ST
 	return pResult;
 }
 
-
-//
-// Get field length from result
-//
-
+/**
+ * Get field length from result
+ */
 extern "C" LONG EXPORT DrvGetFieldLength(ODBCDRV_QUERY_RESULT *pResult, int iRow, int iColumn)
 {
    LONG nLen = -1;
@@ -733,11 +713,9 @@ extern "C" LONG EXPORT DrvGetFieldLength(ODBCDRV_QUERY_RESULT *pResult, int iRow
    return nLen;
 }
 
-
-//
-// Get field value from result
-//
-
+/**
+ * Get field value from result
+ */
 extern "C" NETXMS_WCHAR EXPORT *DrvGetField(ODBCDRV_QUERY_RESULT *pResult, int iRow, int iColumn,
                                             NETXMS_WCHAR *pBuffer, int nBufSize)
 {
@@ -760,41 +738,33 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetField(ODBCDRV_QUERY_RESULT *pResult, int i
    return pValue;
 }
 
-
-//
-// Get number of rows in result
-//
-
+/**
+ * Get number of rows in result
+ */
 extern "C" int EXPORT DrvGetNumRows(ODBCDRV_QUERY_RESULT *pResult)
 {
    return (pResult != NULL) ? pResult->iNumRows : 0;
 }
 
-
-//
-// Get column count in query result
-//
-
+/**
+ * Get column count in query result
+ */
 extern "C" int EXPORT DrvGetColumnCount(ODBCDRV_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->iNumCols : 0;
 }
 
-
-//
-// Get column name in query result
-//
-
+/**
+ * Get column name in query result
+ */
 extern "C" const char EXPORT *DrvGetColumnName(ODBCDRV_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
 }
 
-
-//
-// Free SELECT results
-//
-
+/**
+ * Free SELECT results
+ */
 extern "C" void EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
 {
    if (pResult != NULL)
@@ -814,11 +784,9 @@ extern "C" void EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
    }
 }
 
-
-//
-// Perform asynchronous SELECT query
-//
-
+/**
+ * Perform asynchronous SELECT query
+ */
 extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
                                                  DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
@@ -899,11 +867,9 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_
    return pResult;
 }
 
-
-//
-// Fetch next result line from asynchronous SELECT results
-//
-
+/**
+ * Fetch next result line from asynchronous SELECT results
+ */
 extern "C" BOOL EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 {
    BOOL bResult = FALSE;
@@ -920,11 +886,9 @@ extern "C" BOOL EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
    return bResult;
 }
 
-
-//
-// Get field length from async query result
-//
-
+/**
+ * Get field length from async query result
+ */
 extern "C" LONG EXPORT DrvGetFieldLengthAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult, int iColumn)
 {
    LONG nLen = -1;
@@ -946,11 +910,9 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResul
    return nLen;
 }
 
-
-//
-// Get field from current row in async query result
-//
-
+/**
+ * Get field from current row in async query result
+ */
 extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult,
                                                  int iColumn, NETXMS_WCHAR *pBuffer, int iBufSize)
 {
@@ -1000,31 +962,25 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pRe
    return pBuffer;
 }
 
-
-//
-// Get column count in async query result
-//
-
+/**
+ * Get column count in async query result
+ */
 extern "C" int EXPORT DrvGetColumnCountAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->iNumCols : 0;
 }
 
-
-//
-// Get column name in async query result
-//
-
+/**
+ * Get column name in async query result
+ */
 extern "C" const char EXPORT *DrvGetColumnNameAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
 }
 
-
-//
-// Destroy result of async query
-//
-
+/**
+ * Destroy result of async query
+ */
 extern "C" void EXPORT DrvFreeAsyncResult(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 {
    if (pResult != NULL)
@@ -1035,11 +991,9 @@ extern "C" void EXPORT DrvFreeAsyncResult(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
    }
 }
 
-
-//
-// Begin transaction
-//
-
+/**
+ * Begin transaction
+ */
 extern "C" DWORD EXPORT DrvBegin(ODBCDRV_CONN *pConn)
 {
    SQLRETURN nRet;
@@ -1062,11 +1016,9 @@ extern "C" DWORD EXPORT DrvBegin(ODBCDRV_CONN *pConn)
    return dwResult;
 }
 
-
-//
-// Commit transaction
-//
-
+/**
+ * Commit transaction
+ */
 extern "C" DWORD EXPORT DrvCommit(ODBCDRV_CONN *pConn)
 {
    SQLRETURN nRet;
@@ -1081,11 +1033,9 @@ extern "C" DWORD EXPORT DrvCommit(ODBCDRV_CONN *pConn)
    return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
-
-//
-// Rollback transaction
-//
-
+/**
+ * Rollback transaction
+ */
 extern "C" DWORD EXPORT DrvRollback(ODBCDRV_CONN *pConn)
 {
    SQLRETURN nRet;
@@ -1100,13 +1050,11 @@ extern "C" DWORD EXPORT DrvRollback(ODBCDRV_CONN *pConn)
    return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
-
-//
-// DLL Entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL Entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
