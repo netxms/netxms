@@ -89,7 +89,8 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %left '+' '-'
 %left '*' '/' '%'
 %right T_INC T_DEC '!' '~' NEGATE
-%left T_POST_INC T_POST_DEC T_REF '[' ']'
+%left T_REF '@'
+%left T_POST_INC T_POST_DEC '[' ']'
 
 %type <pConstant> Constant
 %type <valStr> AnyIdentifier
@@ -302,6 +303,10 @@ Expression:
 |	Expression T_REF T_IDENTIFIER
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GET_ATTRIBUTE, $3));
+}
+|	T_IDENTIFIER '@' Expression
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SAFE_GET_ATTR, $1));
 }
 |	'-' Expression		%prec NEGATE
 {

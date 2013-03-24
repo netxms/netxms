@@ -113,14 +113,13 @@ typedef void *yyscan_t;
 #define OPCODE_JZ_PEEK        57
 #define OPCODE_JNZ_PEEK       58
 #define OPCODE_ADD_TO_ARRAY   59
-
-
-//
-// Modified lexer class
-//
+#define OPCODE_SAFE_GET_ATTR  60
 
 class NXSL_Compiler;
 
+/**
+ * Modified lexer class
+ */
 class NXSL_Lexer
 {
 	friend int yylex(YYSTYPE *, yyscan_t);

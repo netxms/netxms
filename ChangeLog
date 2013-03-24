@@ -5,6 +5,7 @@
 - Simplified configuration of DCIs based on Windows performance counters
 - Basic software inventory
 - New NXSL functions: CreateNode
+- New NXSL operator @ - safe get object's attribute
 - New MIBs added: ASTARO-MIB, CPQHOST-MIB, CPQPOWER-MIB
 - Fixed issues: #242, #249, #250, #251
 

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -47,7 +47,8 @@ static const char *m_szCommandMnemonic[] =
    "JNZ", "LIKE", "ILIKE", "MATCH",
    "IMATCH", "CASE", "ARRAY", "EGET",
 	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
-	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR"
+	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR",
+	"AGETS"
 };
 
 /**
@@ -352,6 +353,7 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_DEC:
          case OPCODE_INCP:
          case OPCODE_DECP:
+			case OPCODE_SAFE_GET_ATTR:
          case OPCODE_GET_ATTRIBUTE:
          case OPCODE_SET_ATTRIBUTE:
 			case OPCODE_NAME:
@@ -1087,6 +1089,7 @@ void NXSL_Program::execute()
          }
          break;
       case OPCODE_GET_ATTRIBUTE:
+		case OPCODE_SAFE_GET_ATTR:
          pValue = (NXSL_Value *)m_pDataStack->pop();
          if (pValue != NULL)
          {
@@ -1105,7 +1108,14 @@ void NXSL_Program::execute()
                   }
                   else
                   {
-                     error(NXSL_ERR_NO_SUCH_ATTRIBUTE);
+							if (cp->m_nOpCode == OPCODE_SAFE_GET_ATTR)
+							{
+	                     m_pDataStack->push(new NXSL_Value);
+							}
+							else
+							{
+								error(NXSL_ERR_NO_SUCH_ATTRIBUTE);
+							}
                   }
                }
                else

@@ -205,11 +205,9 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    return pValue;
 }
 
-
-//
-// Implementation of "NetXMS interface" class
-//
-
+/**
+ * Implementation of "NetXMS interface" class
+ */
 NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_Class()
 {
    _tcscpy(m_szName, _T("Interface"));
