@@ -971,6 +971,9 @@ public:
 	const TCHAR *getSysDescription() { return CHECK_NULL_EX(m_sysDescription); }
 	const TCHAR *getLLDPNodeId() { return m_lldpNodeId; }
 	const TCHAR *getDriverName() { return (m_driver != NULL) ? m_driver->getName() : _T("GENERIC"); }
+	WORD getAgentPort() { return m_wAgentPort; }
+	WORD getAuthMethod() { return m_wAuthMethod; }
+	const TCHAR *getSharedSecret() { return m_szSharedSecret; }
 
    BOOL isDown() { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
 	time_t getDownTime() const { return m_tDownSince; }

@@ -754,11 +754,9 @@ Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD zoneId, DWORD dwNodeAddr)
 	return subnet;
 }
 
-
-//
-// Find object by ID
-//
-
+/**
+ * Find object by ID
+ */
 NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId, int objClass)
 {
 	NetObj *object = g_idxObjectById.get(dwId);
@@ -767,17 +765,18 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId, int objClass)
 	return (objClass == object->Type()) ? object : NULL;
 }
 
-
-//
-// Find object by name
-//
-
+/**
+ * Callback data for FindObjectByName
+ */
 struct __find_object_data
 {
 	int objClass;
 	const TCHAR *name;
 };
 
+/**
+ * Object name comparator for FindObjectByName
+ */
 static bool ObjectNameComparator(NetObj *object, void *data)
 {
 	struct __find_object_data *fd = (struct __find_object_data *)data;
@@ -785,6 +784,9 @@ static bool ObjectNameComparator(NetObj *object, void *data)
 	       !object->isDeleted() && !_tcsicmp(object->Name(), fd->name);
 }
 
+/**
+ * Find object by name
+ */
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
 {
 	struct __find_object_data data;
@@ -794,11 +796,9 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
 	return g_idxObjectById.find(ObjectNameComparator, &data);
 }
 
-
-//
-// Find object by GUID
-//
-
+/**
+ * GUID comparator for FindObjectByGUID
+ */
 static bool ObjectGuidComparator(NetObj *object, void *data)
 {
 	uuid_t temp;
@@ -806,22 +806,26 @@ static bool ObjectGuidComparator(NetObj *object, void *data)
 	return !object->isDeleted() && !uuid_compare((BYTE *)data, temp);
 }
 
+/**
+ * Find object by GUID
+ */
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass)
 {
 	NetObj *object = g_idxObjectById.find(ObjectGuidComparator, guid);
 	return (object != NULL) ? (((objClass == -1) || (objClass == object->Type())) ? object : NULL) : NULL;
 }
 
-
-//
-// Find template object by name
-//
-
+/**
+ * Template name comparator for FindTemplateByName
+ */
 static bool TemplateNameComparator(NetObj *object, void *name)
 {
 	return (object->Type() == OBJECT_TEMPLATE) && !object->isDeleted() && !_tcsicmp(object->Name(), (const TCHAR *)name);
 }
 
+/**
+ * Find template object by name
+ */
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName)
 {
 	return (Template *)g_idxObjectById.find(TemplateNameComparator, (void *)pszName);

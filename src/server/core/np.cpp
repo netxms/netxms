@@ -275,6 +275,135 @@ static Interface *GetOldNodeWithNewIP(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwZ
 }
 
 /**
+ * Check if host at given IP address is reachable by NetXMS server
+ */
+static bool HostIsReachable(DWORD ipAddr, DWORD zoneId, bool fullCheck, SNMP_Transport **transport, AgentConnection **agentConn)
+{
+	bool reachable = false;
+
+	if (transport != NULL)
+		*transport = NULL;
+	if (agentConn != NULL)
+		*agentConn = NULL;
+
+	DWORD agentProxy = 0;
+	DWORD icmpProxy = 0;
+	DWORD snmpProxy = 0;
+
+	if (IsZoningEnabled() && (zoneId != 0))
+	{
+		Zone *zone = (Zone *)g_idxZoneByGUID.get(zoneId);
+		if (zone != NULL)
+		{
+			agentProxy = zone->getAgentProxy();
+			icmpProxy = zone->getIcmpProxy();
+			snmpProxy = zone->getSnmpProxy();
+		}
+	}
+
+	// *** ICMP PING ***
+	if (icmpProxy != 0)
+	{
+		Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
+		if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
+		{
+			AgentConnection *conn = proxyNode->createAgentConnection();
+			if (conn != NULL)
+			{
+				TCHAR parameter[64], buffer[64];
+
+				_sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(ipAddr, buffer));
+				if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
+				{
+					TCHAR *eptr;
+					long value = _tcstol(buffer, &eptr, 10);
+					if ((*eptr == 0) && (value >= 0))
+					{
+						if (value < 10000)
+						{
+							reachable = true;
+						}
+					}
+				}
+				conn->disconnect();
+				delete conn;
+			}
+		}
+	}
+	else	// not using ICMP proxy
+	{
+		if (IcmpPing(htonl(ipAddr), 3, 1500, NULL, g_dwPingSize) == ICMP_SUCCESS)
+			reachable = true;
+	}
+
+	if (reachable && !fullCheck)
+		return true;
+
+	// *** NetXMS agent ***
+   AgentConnection *pAgentConn = new AgentConnection(htonl(ipAddr), AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
+	if (agentProxy != 0)
+	{
+		Node *proxyNode = (Node *)g_idxNodeById.get(agentProxy);
+      if (proxyNode != NULL)
+      {
+         pAgentConn->setProxy(htonl(proxyNode->IpAddr()), proxyNode->getAgentPort(),
+                              proxyNode->getAuthMethod(), proxyNode->getSharedSecret());
+      }
+	}
+   if (pAgentConn->connect(g_pServerKey))
+   {
+		if (agentConn != NULL)
+		{
+			*agentConn = pAgentConn;
+			pAgentConn = NULL;	// prevent deletion
+		}
+		reachable = true;
+   }
+	delete pAgentConn;
+
+	if (reachable && !fullCheck)
+		return true;
+
+	// *** SNMP ***
+	SNMP_Transport *pTransport;
+	if (snmpProxy != 0)
+	{
+		Node *proxyNode = (Node *)g_idxNodeById.get(snmpProxy);
+		if (proxyNode != NULL)
+		{
+			AgentConnection *pConn;
+
+			pConn = proxyNode->createAgentConnection();
+			if (pConn != NULL)
+			{
+				pTransport = new SNMP_ProxyTransport(pConn, ipAddr, 161);
+			}
+		}
+	}
+	else
+	{
+		pTransport = new SNMP_UDPTransport;
+		((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(ipAddr), 161);
+	}
+	int version;
+	SNMP_SecurityContext *ctx = SnmpCheckCommSettings(pTransport, &version, NULL);
+	if (ctx != NULL)
+	{
+		delete ctx;
+		if (transport != NULL)
+		{
+			pTransport->setSnmpVersion(version);
+			*transport = pTransport;
+			pTransport = NULL;	// prevent deletion
+		}
+		reachable = true;
+	}
+	delete pTransport;
+
+	return reachable;
+}
+
+/**
  * Check if newly discovered node should be added
  */
 static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *macAddr)
@@ -286,7 +415,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
    NXSL_Program *pScript;
    NXSL_Value *pValue;
    BOOL bResult = FALSE;
-	SNMP_UDPTransport *pTransport;
+	SNMP_Transport *pTransport;
 
 	IpToStr(dwIpAddr, szIpAddr);
    if ((FindNodeByIP(zoneId, dwIpAddr) != NULL) ||
@@ -299,6 +428,12 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
 	Interface *iface = GetOldNodeWithNewIP(dwIpAddr, dwNetMask, zoneId, macAddr);
 	if (iface != NULL)
 	{
+		if (!HostIsReachable(dwIpAddr, zoneId, false, NULL, NULL))
+		{
+			DbgPrintf(4, _T("AcceptNewNode(%s): found existing interface with same MAC address, but new IP is not reachable"), szIpAddr);
+			return FALSE;
+		}
+
 		Node *oldNode = iface->getParentNode();
 		if (iface->IpAddr() == oldNode->IpAddr())
 		{
@@ -329,6 +464,11 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
    // Check for filter script
    if ((szFilter[0] == 0) || (!_tcsicmp(szFilter, _T("none"))))
 	{
+		if (!HostIsReachable(dwIpAddr, zoneId, false, NULL, NULL))
+		{
+			DbgPrintf(4, _T("AcceptNewNode(%s): host is not reachable"), szIpAddr);
+			return FALSE;
+		}
 		DbgPrintf(4, _T("AcceptNewNode(%s): no filtering, node accepted"), szIpAddr);
       return TRUE;   // No filtering
 	}
@@ -376,22 +516,18 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId, BYTE *m
       }
    }
 
-   // Check SNMP support
-	DbgPrintf(4, _T("AcceptNewNode(%s): checking SNMP support"), szIpAddr);
-	pTransport = new SNMP_UDPTransport;
-	pTransport->createUDPTransport(NULL, htonl(dwIpAddr), 161);
-	SNMP_SecurityContext *ctx = SnmpCheckCommSettings(pTransport, &data.nSNMPVersion, NULL);
-	if (ctx != NULL)
+	// Check if host is reachable
+	if (!HostIsReachable(dwIpAddr, zoneId, true, &pTransport, &pAgentConn))
+	{
+		DbgPrintf(4, _T("AcceptNewNode(%s): host is not reachable"), szIpAddr);
+      return FALSE;
+	}
+	if (pTransport != NULL)
 	{
       data.dwFlags |= NNF_IS_SNMP;
-		delete ctx;
+		data.nSNMPVersion = pTransport->getSnmpVersion();
 	}
-
-   // Check NetXMS agent support
-	DbgPrintf(4, _T("AcceptNewNode(%s): checking NetXMS agent"), szIpAddr);
-   pAgentConn = new AgentConnection(htonl(dwIpAddr), AGENT_LISTEN_PORT,
-                                    AUTH_NONE, _T(""));
-   if (pAgentConn->connect(g_pServerKey))
+   if (pAgentConn != NULL)
    {
       data.dwFlags |= NNF_IS_AGENT;
       pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, data.szAgentVersion);

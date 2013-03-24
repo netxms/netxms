@@ -4082,13 +4082,11 @@ void Node::setAgentProxy(AgentConnection *pConn)
 
    if (proxyNode != 0)
    {
-      Node *pNode;
-
-      pNode = (Node *)FindObjectById(proxyNode);
-      if (pNode != NULL)
+		Node *node = (Node *)g_idxNodeById.get(proxyNode);
+      if (node != NULL)
       {
-         pConn->setProxy(htonl(pNode->m_dwIpAddr), pNode->m_wAgentPort,
-                         pNode->m_wAuthMethod, pNode->m_szSharedSecret);
+         pConn->setProxy(htonl(node->m_dwIpAddr), node->m_wAgentPort,
+                         node->m_wAuthMethod, node->m_szSharedSecret);
       }
    }
 }
@@ -4237,20 +4235,15 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 	}
 	else
 	{
-		NetObj *pObject;
-
-		pObject = FindObjectById(snmpProxy);
-		if (pObject != NULL)
+		Node *proxyNode = (Node *)g_idxNodeById.get(snmpProxy);
+		if (proxyNode != NULL)
 		{
-			if (pObject->Type() == OBJECT_NODE)
-			{
-				AgentConnection *pConn;
+			AgentConnection *pConn;
 
-				pConn = ((Node *)pObject)->createAgentConnection();
-				if (pConn != NULL)
-				{
-					pTransport = new SNMP_ProxyTransport(pConn, m_dwIpAddr, (port != 0) ? port : m_wSNMPPort);
-				}
+			pConn = proxyNode->createAgentConnection();
+			if (pConn != NULL)
+			{
+				pTransport = new SNMP_ProxyTransport(pConn, m_dwIpAddr, (port != 0) ? port : m_wSNMPPort);
 			}
 		}
 	}
