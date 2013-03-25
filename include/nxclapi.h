@@ -2008,8 +2008,6 @@ BOOL LIBNXCL_EXPORTABLE NXCInitialize(void);
 void LIBNXCL_EXPORTABLE NXCShutdown(void);
 void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
 
-BOOL LIBNXCL_EXPORTABLE NXCDecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd);
-
 /** Low-level messaging **/
 DWORD LIBNXCL_EXPORTABLE NXCGenerateMessageId(NXC_SESSION hSession);
 BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, CSCPMessage *msg);

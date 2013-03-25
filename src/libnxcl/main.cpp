@@ -150,21 +150,17 @@ BOOL LIBNXCL_EXPORTABLE NXCIsDBConnLost(NXC_SESSION hSession)
    return ((NXCL_Session *)hSession)->IsDBConnLost();
 }
 
-
-//
-// Check if password needs to be changed
-//
-
+/**
+ * Check if password needs to be changed
+ */
 void LIBNXCL_EXPORTABLE NXCStartWatchdog(NXC_SESSION hSession)
 {
 	((NXCL_Session *)hSession)->StartWatchdogThread();
 }
 
-
-//
-// Get last lock information (owner of already locked component)
-//
-
+/**
+ * Get last lock information (owner of already locked component)
+ */
 void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuffer,
                                             int nBufSize)
 {
@@ -174,11 +170,9 @@ void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuff
 		nx_strncpy(pszBuffer, _T("INVALID SESSION HANDLE"), nBufSize);
 }
 
-
-//
-// Send SMS via server
-//
-
+/**
+ * Send SMS via server
+ */
 DWORD LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *message)
 {
    CSCPMessage msg;
@@ -197,11 +191,9 @@ DWORD LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *m
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
-
-//
-// Check connection status by sending keepalive message
-//
-
+/**
+ * Check connection status by sending keepalive message
+ */
 DWORD LIBNXCL_EXPORTABLE NXCCheckConnection(NXC_SESSION hSession)
 {
    CSCPMessage msg;
@@ -219,11 +211,9 @@ DWORD LIBNXCL_EXPORTABLE NXCCheckConnection(NXC_SESSION hSession)
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
-
-//
-// Get server's time zone
-//
-
+/**
+ * Get server's time zone
+ */
 const TCHAR LIBNXCL_EXPORTABLE *NXCGetServerTimeZone(NXC_SESSION hSession)
 {
 	const TCHAR *ptr;
@@ -232,42 +222,34 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetServerTimeZone(NXC_SESSION hSession)
 	return (*ptr == 0) ? NULL : ptr;
 }
 
-
-//
-// Generate Message ID
-//
-
+/**
+ * Generate Message ID
+ */
 DWORD LIBNXCL_EXPORTABLE NXCGenerateMessageId(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->CreateRqId();
 }
 
-
-//
-// Send prepared NXCP message
-//
-
+/**
+ * Send prepared NXCP message
+ */
 BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, CSCPMessage *msg)
 {
 	CHECK_SESSION_HANDLE();
    return ((NXCL_Session *)hSession)->SendMsg(msg);
 }
 
-
-//
-// Wait for message
-//
-
+/**
+ * Wait for message
+ */
 CSCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, DWORD dwRqId)
 {
 	return (hSession != NULL) ? ((NXCL_Session *)hSession)->WaitForMessage(wCode, dwRqId) : NULL;
 }
 
-
-//
-// Wait for CMD_REQUEST_COMPLETED message and return value of VID_RCC
-//
-
+/**
+ * Wait for CMD_REQUEST_COMPLETED message and return value of VID_RCC
+ */
 DWORD LIBNXCL_EXPORTABLE NXCWaitForRCC(NXC_SESSION hSession, DWORD dwRqId)
 {
 	CHECK_SESSION_HANDLE();
@@ -385,51 +367,11 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 	return (dwError <= RCC_INVALID_MAPPING_TABLE_ID) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
-/**
- * Decrypt password
- */
-BOOL LIBNXCL_EXPORTABLE NXCDecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd)
-{
-	if (_tcslen(encryptedPasswd) != 44)
-		return FALSE;
-
-#ifdef UNICODE
-	char *mbencrypted = MBStringFromWideString(encryptedPasswd);
-	char *mblogin = MBStringFromWideString(login);
-#else
-	const char *mbencrypted = encryptedPasswd;
-	const char *mblogin = login;
-#endif
-
-	BYTE encrypted[32], decrypted[32], key[16];
-	size_t encSize;
-	base64_decode(mbencrypted, strlen(mbencrypted), (char *)encrypted, &encSize);
-	if (encSize != 32)
-		return FALSE;
-
-	CalculateMD5Hash((BYTE *)mblogin, strlen(mblogin), key);
-	ICEDecryptData(encrypted, 32, decrypted, key);
-	decrypted[31] = 0;
-	
-#ifdef UNICODE
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, 32);
-	decryptedPasswd[31] = 0;
-	free(mbencrypted);
-	free(mblogin);
-#else
-	nx_strncpy(decryptedPasswd, (char *)decrypted, 32);
-#endif
-
-	return TRUE;
-}
-
-
-//
-// DLL entry point
-//
-
 #if defined(_WIN32) && !defined(UNDER_CE)
 
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)

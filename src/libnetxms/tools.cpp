@@ -1481,11 +1481,9 @@ TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *nu
 	return strings;
 }
 
-
-//
-// Decrypt password
-//
-
+/**
+ * Decrypt password encrypted with nxencpassw
+ */
 BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd)
 {
 	if (_tcslen(encryptedPasswd) != 44)
@@ -1500,7 +1498,7 @@ BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encry
 #endif
 
 	BYTE encrypted[32], decrypted[32], key[16];
-	size_t encSize;
+	size_t encSize = 32;
 	base64_decode(mbencrypted, strlen(mbencrypted), (char *)encrypted, &encSize);
 	if (encSize != 32)
 		return FALSE;
@@ -1521,13 +1519,11 @@ BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encry
 	return TRUE;
 }
 
-
-//
-// Load file into memory
-//
-
 #ifndef UNDER_CE
 
+/**
+ * Load file content into memory
+ */
 static BYTE *LoadFileContent(int fd, DWORD *pdwFileSize)
 {
    int iBufPos, iNumBytes, iBytesRead;
