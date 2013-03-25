@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.6], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.7-m3], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -2220,7 +2220,6 @@ AC_CONFIG_FILES([
 	src/server/tools/nxconfig/Makefile
 	src/server/tools/nxconfig/res/Makefile
 	src/server/tools/nxdbmgr/Makefile
-	src/server/tools/nxencpasswd/Makefile
 	src/server/tools/nxget/Makefile
 	src/server/tools/nxupload/Makefile
 	src/snmp/Makefile
@@ -2232,6 +2231,7 @@ AC_CONFIG_FILES([
 	src/sqlite/Makefile
 	src/tools/Makefile
 	src/tools/nxdevcfg/Makefile
+	src/tools/nxencpasswd/Makefile
 	src/zlib/Makefile
 	sql/Makefile
 	tools/Makefile
