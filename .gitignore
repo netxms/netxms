@@ -360,11 +360,6 @@ src/server/tools/nxdbmgr/Makefile
 src/server/tools/nxdbmgr/Makefile.in
 src/server/tools/nxdbmgr/nxdbmgr
 src/server/tools/nxdbmgr/tables.cpp
-src/server/tools/nxencpasswd/.deps
-src/server/tools/nxencpasswd/.libs
-src/server/tools/nxencpasswd/Makefile
-src/server/tools/nxencpasswd/Makefile.in
-src/server/tools/nxencpasswd/nxencpasswd
 src/server/tools/nxget/.deps
 src/server/tools/nxget/.libs
 src/server/tools/nxget/Makefile

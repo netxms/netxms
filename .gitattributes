@@ -2341,7 +2341,6 @@ src/server/tools/nxconfig/res/running.ico -text
 src/server/tools/nxconfig/res/warning.ico -text
 src/server/tools/nxconfig/res/wizard.bmp -text
 src/server/tools/nxdbmgr/nxdbmgr.vcproj -text
-src/server/tools/nxencpasswd/nxencpasswd.vcproj -text
 src/server/tools/nxget/nxget.vcproj -text
 src/server/tools/nxupload/nxupload.vcproj -text
 src/snmp/Makefile.am -text
@@ -2355,6 +2354,7 @@ src/sqlite/nxsqlite.vcproj -text
 src/tools/Makefile.am -text
 src/tools/nxdevcfg/Makefile.am -text
 src/tools/nxdevcfg/nxdevcfg.cpp -text
+src/tools/nxencpasswd/nxencpasswd.vcproj -text
 src/zlib/Makefile.am -text
 src/zlib/nxzlib.vcproj -text
 tools/flex_bison.rule -text
