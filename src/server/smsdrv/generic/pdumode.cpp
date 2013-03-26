@@ -97,8 +97,8 @@ bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduB
 		payloadHex[i*2 + 1]	= bin2hex(payload[i]&0xF);
 	}
 	payloadHex[i*2] = '\0';
-	snprintf(pduBuffer, pduBufferSize, "0011000%X%X%s0000AA%02X%s", strlen(phoneNumber), numberFormat, 
-		phoneNumberFormatted, strlen(message), payloadHex);
+	snprintf(pduBuffer, pduBufferSize, "0011000%X%X%s0000AA%02X%s", (int)strlen(phoneNumber), numberFormat, 
+		phoneNumberFormatted, (int)strlen(message), payloadHex);
 
 	return true;
 }

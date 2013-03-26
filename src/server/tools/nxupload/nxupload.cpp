@@ -48,13 +48,13 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
 
       if (bVerbose)
       {
-         printf("Agent upgrade started, waiting for completion...\n"
-                "[............................................................]\r[");
+         _tprintf(_T("Agent upgrade started, waiting for completion...\n")
+                  _T("[............................................................]\r["));
          fflush(stdout);
          for(i = 0; i < 120; i += 2)
          {
             ThreadSleep(2);
-            putc('*', stdout);
+            _puttc(_T('*'), stdout);
             fflush(stdout);
             if ((i % 20 == 0) && (i > 30))
             {
@@ -65,7 +65,7 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
                }
             }
          }
-         putc('\n', stdout);
+         _puttc(_T('\n'), stdout);
       }
       else
       {
@@ -87,17 +87,17 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
 
       if (bConnected && bVerbose)
       {
-         printf("Successfully established connection to agent after upgrade\n");
+         _tprintf(_T("Successfully established connection to agent after upgrade\n"));
       }
       else
       {
-         fprintf(stderr, "Failed to establish connection to the agent after upgrade\n");
+         _ftprintf(stderr, _T("Failed to establish connection to the agent after upgrade\n"));
       }
    }
    else
    {
       if (bVerbose)
-         fprintf(stderr, "%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+         _ftprintf(stderr, _T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
    }
 
    return bConnected ? 0 : 1;
@@ -111,9 +111,9 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
 static void ProgressCallback(INT64 bytesTransferred, void *cbArg)
 {
 #ifdef _WIN32
-	printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-16I64d", bytesTransferred);
+	_tprintf(_T("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-16I64d"), bytesTransferred);
 #else
-	printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-16lld", bytesTransferred);
+	_tprintf(_T("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-16lld"), bytesTransferred);
 #endif
 }
 
