@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004-2012 Victor Kirhenshtein
+** Copyright (C) 2004-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,28 +31,25 @@
 
 #define WPF_ENABLE_DEFAULT_COUNTERS    0x0001
 
-
-//
-// Global variables
-//
-
+/**
+ * Shutdown condition
+ */
 HANDLE g_hCondShutdown = NULL;
 
-
-//
-// Static variables
-//
-
+/**
+ * Static variables
+ */
 static DWORD m_dwFlags = WPF_ENABLE_DEFAULT_COUNTERS;
 static DWORD m_dwNumCPU = 1;
 static WINPERF_COUNTER *m_pProcessorCounters[MAX_CPU_COUNT];
 static WINPERF_COUNTER *m_pProcessorCounters5[MAX_CPU_COUNT];
 static WINPERF_COUNTER *m_pProcessorCounters15[MAX_CPU_COUNT];
+static MUTEX s_autoCountersLock = MutexCreate();
+static StringObjectMap<WINPERF_COUNTER> *s_autoCounters = new StringObjectMap<WINPERF_COUNTER>(false);
 
-
-//
-// List of predefined performance counters
-//
+/**
+ * List of predefined performance counters
+ */
 static struct
 {
    TCHAR *pszParamName;
@@ -83,11 +80,9 @@ static struct
    { NULL, NULL, 0, 0, 0, NULL, 0 }
 };
 
-
-//
-// Value of given performance counter
-//
-
+/**
+ * Handler for PDH.Version parameter
+ */
 static LONG H_PdhVersion(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
    DWORD dwVersion;
@@ -98,11 +93,18 @@ static LONG H_PdhVersion(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
    return SYSINFO_RC_SUCCESS;
 }
 
+/**
+ * Handler for WinPerf.Features parameter
+ */
+static LONG H_WinPerfFeatures(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+{
+   ret_uint(pValue, WINPERF_AUTOMATIC_SAMPLE_COUNT | WINPERF_REMOTE_COUNTER_CONFIG);
+   return SYSINFO_RC_SUCCESS;
+}
 
-//
-// Value of CPU utilization counter
-//
-
+/**
+ * Value of CPU utilization counter
+ */
 static LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
    LONG nProcessor, nRet = SYSINFO_RC_SUCCESS;
@@ -182,6 +184,31 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 	{
 		if (!AgentGetParameterArg(pszParam, 1, szCounter, MAX_PATH))
 			return SYSINFO_RC_UNSUPPORTED;
+
+		// required number of samples
+		TCHAR buffer[MAX_PATH] = _T("");
+		AgentGetParameterArg(pszParam, 2, buffer, MAX_PATH);
+		if (buffer[0] != 0)   // sample count given
+		{
+			int samples = _tcstol(buffer, NULL, 0);
+			if (samples > 1)
+			{
+				_sntprintf(buffer, MAX_PATH, _T("%d#%s"), samples, szCounter);
+				MutexLock(s_autoCountersLock);
+				WINPERF_COUNTER *counter = s_autoCounters->get(buffer);
+				if (counter == NULL)
+				{
+					counter = AddCounter(szCounter, 0, samples, COUNTER_TYPE_AUTO);
+					if (counter != NULL)
+					{
+						AgentWriteDebugLog(5, _T("WINPERF: new automatic counter created: \"%s\""), buffer);
+						s_autoCounters->set(buffer, counter);
+					}
+				}
+				MutexUnlock(s_autoCountersLock);
+				return (counter != NULL) ? H_CollectedCounterData(pszParam, (const TCHAR *)counter, pValue) : SYSINFO_RC_UNSUPPORTED;
+			}
+		}
 	}
 	else	// Call from H_CounterAlias
 	{
@@ -341,22 +368,18 @@ static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, StringLis
    return iResult;
 }
 
-
-//
-// Value of specific performance parameter, which is mapped one-to-one to
-// performance counter. Actually, it's an alias for PDH.CounterValue(xxx) parameter.
-//
-
+/**
+ * Value of specific performance parameter, which is mapped one-to-one to
+ * performance counter. Actually, it's an alias for PDH.CounterValue(xxx) parameter.
+ */
 static LONG H_CounterAlias(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
    return H_PdhCounterValue(NULL, pArg, pValue);
 }
 
-
-//
-// Initialize subagent
-//
-
+/**
+ * Initialize subagent
+ */
 static BOOL SubAgentInit(Config *config)
 {
    // Create shutdown condition object
@@ -386,7 +409,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.Usage5(*)"), H_CPUUsage, _T("2"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
    { _T("System.CPU.Usage15(*)"), H_CPUUsage, _T("3"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
 	{ _T("System.ThreadCount"), H_CounterAlias, _T("\\System\\Threads"), DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
-	{ _T("System.Uptime"), H_CounterAlias, _T("\\System\\System Up Time"), DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
+	{ _T("System.Uptime"), H_CounterAlias, _T("\\System\\System Up Time"), DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME },
+   { _T("WinPerf.Features"), H_WinPerfFeatures, NULL, DCI_DT_UINT, _T("Features supported by this WinPerf version") },
 };
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {
@@ -408,11 +432,9 @@ static NETXMS_SUBAGENT_INFO m_info =
 	0, NULL	// push parameters
 };
 
-
-//
-// Add new parameter to list
-//
-
+/**
+ * Add new parameter to list
+ */
 BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *),
                   TCHAR *pArg, int iDataType, TCHAR *pszDescription)
 {

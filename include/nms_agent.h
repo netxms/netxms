@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -53,19 +53,15 @@
 #define COMMAND_TIMEOUT          60
 #define MAX_SUBAGENT_NAME        64
 
-
-//
-// Agent policy types
-//
-
+/**
+ * Agent policy types
+ */
 #define AGENT_POLICY_CONFIG      1
 #define AGENT_POLICY_LOG_PARSER  2
 
-
-//
-// Error codes
-//
-
+/**
+ * Error codes
+ */
 #define ERR_SUCCESS                 ((DWORD)0)
 #define ERR_UNKNOWN_COMMAND         ((DWORD)400)
 #define ERR_AUTH_REQUIRED           ((DWORD)401)
@@ -98,20 +94,22 @@
 #define ERR_MEM_ALLOC_FAILED        ((DWORD)917)
 #define ERR_FILE_DELETE_FAILED      ((DWORD)918)
 
-
-//
-// Parameter handler return codes
-//
-
+/**
+ * Parameter handler return codes
+ */
 #define SYSINFO_RC_SUCCESS       0
 #define SYSINFO_RC_UNSUPPORTED   1
 #define SYSINFO_RC_ERROR         2
 
+/**
+ * WinPerf features
+ */
+#define WINPERF_AUTOMATIC_SAMPLE_COUNT    ((DWORD)0x00000001)
+#define WINPERF_REMOTE_COUNTER_CONFIG     ((DWORD)0x00000002)
 
-//
-// Descriptions for common parameters
-//
-
+/**
+ * Descriptions for common parameters
+ */
 #define DCIDESC_FS_AVAIL                          _T("Available space on file system {instance}")
 #define DCIDESC_FS_AVAILPERC                      _T("Percentage of available space on file system {instance}")
 #define DCIDESC_FS_FREE                           _T("Free space on file system {instance}")

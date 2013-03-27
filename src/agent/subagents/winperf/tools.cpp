@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004-2012 Victor Kirhenshtein
+** Copyright (C) 2004-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,26 +22,20 @@
 
 #include "winperf.h"
 
-
-//
-// Constants
-//
-
+/**
+ * Max length of counter element
+ */
 #define MAX_ELEMENT_LENGTH		1024
 
-
-//
-// Static data
-//
-
+/**
+ * List of configured counters
+ */
 static COUNTER_INDEX *m_pCounterList = NULL;
 static DWORD m_dwNumCounters = 0;
 
-
-//
-// Get error text for PDH functions
-//
-
+/**
+ * Get error text for PDH functions
+ */
 TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize)
 {
    TCHAR *pszMsg;
@@ -64,11 +58,9 @@ TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize)
    return pszBuffer;
 }
 
-
-//
-// Report PDH error to master agent's log
-//
-
+/**
+ * Report PDH error to master agent's log
+ */
 void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError)
 {
    TCHAR szBuffer[1024];

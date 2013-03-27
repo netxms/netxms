@@ -906,6 +906,7 @@ typedef struct
 #define VID_INSTD_FILTER            ((DWORD)437)
 #define VID_ACCURACY                ((DWORD)438)
 #define VID_GEOLOCATION_TIMESTAMP   ((DWORD)439)
+#define VID_SAMPLE_COUNT            ((DWORD)440)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

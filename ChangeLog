@@ -5,6 +5,7 @@
 - Simplified configuration of DCIs based on Windows performance counters
 - Basic software inventory
 - Network discovery improved
+- Configurable default DCI retention time and polling interval
 - New NXSL functions: CreateNode
 - New NXSL operator @ - safe get object's attribute
 - New MIBs added: ASTARO-MIB, CPQHOST-MIB, CPQPOWER-MIB

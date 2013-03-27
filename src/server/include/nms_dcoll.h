@@ -285,6 +285,7 @@ protected:
    TCHAR m_instance[MAX_DB_STRING];
    BYTE m_deltaCalculation;      // Delta calculation method
    BYTE m_dataType;
+	int m_sampleCount;            // Number of samples required to calculate value
 	ObjectArray<Threshold> *m_thresholds;
    TCHAR *m_transformerSource;   // Transformation script (source code)
    NXSL_Program *m_transformer;  // Compiled transformation script
@@ -336,6 +337,7 @@ public:
 	const TCHAR *getInstanceDiscoveryData() { return m_instanceDiscoveryData; }
 	NXSL_Program *getInstanceFilter() { return m_instanceFilter; }
 	const TCHAR *getInstance() { return m_instance; }
+	int getSampleCount() { return m_sampleCount; }
 
 	void filterInstanceList(StringList *instances);
 	void expandInstance();

@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
@@ -39,6 +38,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
@@ -59,7 +59,6 @@ import org.netxms.ui.eclipse.datacollection.dialogs.WinPerfCounterSelectionDialo
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.NumericTextFieldValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -92,11 +91,12 @@ public class General extends PropertyPage
 	private Button checkInterpretRawSnmpValue;
 	private Combo snmpRawType;
 	private Button checkUseCustomSnmpPort;
-	private Text customSnmpPort;
+	private Spinner customSnmpPort;
 	private ObjectSelector proxyNode;
 	private Combo schedulingMode;
-	private LabeledText pollingInterval;
-	private LabeledText retentionTime;
+	private Spinner pollingInterval;
+	private Spinner retentionTime;
+	private Spinner sampleCount;
 	private Combo clusterResource;
 	private Button statusActive;
 	private Button statusDisabled;
@@ -294,11 +294,13 @@ public class General extends PropertyPage
       checkUseCustomSnmpPort.setLayoutData(fd);
       checkUseCustomSnmpPort.setEnabled(dci.getOrigin() == DataCollectionItem.SNMP);
 
-      customSnmpPort = new Text(groupData, SWT.BORDER);
+      customSnmpPort = new Spinner(groupData, SWT.BORDER);
+      customSnmpPort.setMinimum(1);
+      customSnmpPort.setMaximum(65535);
       if ((dci.getOrigin() == DataCollectionItem.SNMP) && (dci.getSnmpPort() != 0))
       {
       	customSnmpPort.setEnabled(true);
-      	customSnmpPort.setText(Integer.toString(dci.getSnmpPort()));
+      	customSnmpPort.setSelection(dci.getSnmpPort());
       }
       else
       {
@@ -310,11 +312,18 @@ public class General extends PropertyPage
       fd.top = new FormAttachment(checkUseCustomSnmpPort, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       customSnmpPort.setLayoutData(fd);
       
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(snmpRawType, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      fd.right = new FormAttachment(100, 0);
+      sampleCount = WidgetHelper.createLabeledSpinner(groupData, SWT.BORDER, "Sample count for average value calculation (0 to disable)", 0, 65535, fd);
+		sampleCount.setEnabled(dci.getOrigin() == DataCollectionItem.WINPERF);
+      
       proxyNode = new ObjectSelector(groupData, SWT.NONE, true);
       proxyNode.setLabel(Messages.General_ProxyNode);
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(snmpRawType, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      fd.top = new FormAttachment(sampleCount.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
       proxyNode.setLayoutData(fd);
       proxyNode.setObjectClass(Node.class);
@@ -353,20 +362,17 @@ public class General extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				pollingInterval.getTextControl().setEnabled(schedulingMode.getSelectionIndex() == 0);
+				pollingInterval.setEnabled(schedulingMode.getSelectionIndex() == 0);
 			}
       });
       
-      pollingInterval = new LabeledText(groupPolling, SWT.NONE);
-      pollingInterval.getTextControl().setTextLimit(5);
-      pollingInterval.setLabel(Messages.General_PollingInterval);
-      pollingInterval.setText(Integer.toString(dci.getPollingInterval()));
-      pollingInterval.setEnabled(!dci.isUseAdvancedSchedule() && (dci.getOrigin() != DataCollectionItem.PUSH));
       fd = new FormData();
       fd.left = new FormAttachment(50, WidgetHelper.OUTER_SPACING / 2);
       fd.right = new FormAttachment(100, 0);
       fd.top = new FormAttachment(0, 0);
-      pollingInterval.setLayoutData(fd);
+      pollingInterval = WidgetHelper.createLabeledSpinner(groupPolling, SWT.BORDER, Messages.General_PollingInterval, 1, 99999, fd);
+      pollingInterval.setSelection(dci.getPollingInterval());
+      pollingInterval.setEnabled(!dci.isUseAdvancedSchedule() && (dci.getOrigin() != DataCollectionItem.PUSH));
       
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -435,10 +441,8 @@ public class General extends PropertyPage
       storageLayout.marginHeight = WidgetHelper.OUTER_SPACING;
       groupStorage.setLayout(storageLayout);
       
-      retentionTime = new LabeledText(groupStorage, SWT.NONE);
-      retentionTime.setLabel(Messages.General_RetentionTime);
-      retentionTime.getTextControl().setTextLimit(5);
-      retentionTime.setText(Integer.toString(dci.getRetentionTime()));
+      retentionTime = WidgetHelper.createLabeledSpinner(groupStorage, SWT.BORDER, Messages.General_RetentionTime, 1, 99999, null);
+      retentionTime.setSelection(dci.getRetentionTime());
       
       return dialogArea;
 	}
@@ -451,11 +455,12 @@ public class General extends PropertyPage
 		int index = origin.getSelectionIndex();
 		proxyNode.setEnabled(index != DataCollectionItem.PUSH);
 		schedulingMode.setEnabled(index != DataCollectionItem.PUSH);
-		pollingInterval.getTextControl().setEnabled((index != DataCollectionItem.PUSH) && (schedulingMode.getSelectionIndex() == 0));
+		pollingInterval.setEnabled((index != DataCollectionItem.PUSH) && (schedulingMode.getSelectionIndex() == 0));
 		checkInterpretRawSnmpValue.setEnabled(index == DataCollectionItem.SNMP);
 		snmpRawType.setEnabled((index == DataCollectionItem.SNMP) && checkInterpretRawSnmpValue.getSelection());
 		checkUseCustomSnmpPort.setEnabled(index == DataCollectionItem.SNMP);
 		customSnmpPort.setEnabled((index == DataCollectionItem.SNMP) && checkUseCustomSnmpPort.getSelection());
+		sampleCount.setEnabled(index == DataCollectionItem.WINPERF);
 	}
 	
 	/**
@@ -509,11 +514,6 @@ public class General extends PropertyPage
 	 */
 	protected boolean applyChanges(final boolean isApply)
 	{
-		if (!WidgetHelper.validateTextInput(customSnmpPort, Messages.General_CustomPort, new NumericTextFieldValidator(1, 65535), this) ||
-		    !WidgetHelper.validateTextInput(pollingInterval, new NumericTextFieldValidator(1, 1000000), this) ||
-		    !WidgetHelper.validateTextInput(retentionTime, new NumericTextFieldValidator(1, 65535), this))
-			return false;
-		
 		if (isApply)
 			setValid(false);
 		
@@ -521,6 +521,7 @@ public class General extends PropertyPage
 		dci.setName(parameter.getText().trim());
 		dci.setOrigin(origin.getSelectionIndex());
 		dci.setDataType(dataType.getSelectionIndex());
+		dci.setSampleCount(sampleCount.getSelection());
 		dci.setProxyNode(proxyNode.getObjectId());
 		dci.setUseAdvancedSchedule(schedulingMode.getSelectionIndex() == 1);
 		dci.setPollingInterval(Integer.parseInt(pollingInterval.getText()));
@@ -596,13 +597,17 @@ public class General extends PropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
+		
+		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		
 		schedulingMode.select(0);
-		pollingInterval.setText("60"); //$NON-NLS-1$
+		pollingInterval.setSelection(session.getDefaultDciPollingInterval());
 		statusActive.setSelection(true);
 		statusDisabled.setSelection(false);
 		statusUnsupported.setSelection(false);
-		retentionTime.setText("30"); //$NON-NLS-1$
+		retentionTime.setSelection(session.getDefaultDciRetentionTime());
 		checkInterpretRawSnmpValue.setSelection(false);
 		checkUseCustomSnmpPort.setSelection(false);
+		customSnmpPort.setSelection(161);
 	}
 }

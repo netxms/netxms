@@ -57,6 +57,7 @@ public class DataCollectionItem extends DataCollectionObject
 	
 	private int dataType;
 	private int deltaCalculation;
+	private int sampleCount;
 	private String transformationScript;
 	private String instance;
 	private int baseUnits;
@@ -80,6 +81,7 @@ public class DataCollectionItem extends DataCollectionObject
 		
 		dataType = msg.getVariableAsInteger(NXCPCodes.VID_DCI_DATA_TYPE);
 		deltaCalculation = msg.getVariableAsInteger(NXCPCodes.VID_DCI_DELTA_CALCULATION);
+		sampleCount = msg.getVariableAsInteger(NXCPCodes.VID_SAMPLE_COUNT);
 		transformationScript = msg.getVariableAsString(NXCPCodes.VID_TRANSFORMATION_SCRIPT);
 		instance = msg.getVariableAsString(NXCPCodes.VID_INSTANCE);
 		baseUnits = msg.getVariableAsInteger(NXCPCodes.VID_BASE_UNITS);
@@ -111,6 +113,7 @@ public class DataCollectionItem extends DataCollectionObject
 		
 		dataType = DT_INT;
 		deltaCalculation = DELTA_NONE;
+		sampleCount = 0;
 		transformationScript = null;
 		instance = "";
 		baseUnits = 0;
@@ -132,6 +135,7 @@ public class DataCollectionItem extends DataCollectionObject
 		msg.setVariableInt16(NXCPCodes.VID_DCOBJECT_TYPE, DCO_TYPE_ITEM);
 		msg.setVariableInt16(NXCPCodes.VID_DCI_DATA_TYPE, dataType);
 		msg.setVariableInt16(NXCPCodes.VID_DCI_DELTA_CALCULATION, deltaCalculation);
+		msg.setVariableInt16(NXCPCodes.VID_SAMPLE_COUNT, sampleCount);
 		msg.setVariable(NXCPCodes.VID_INSTANCE, instance);
 		msg.setVariable(NXCPCodes.VID_TRANSFORMATION_SCRIPT, transformationScript);
 		msg.setVariableInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
@@ -376,5 +380,21 @@ public class DataCollectionItem extends DataCollectionObject
 	public final void setInstanceDiscoveryFilter(String instanceDiscoveryFilter)
 	{
 		this.instanceDiscoveryFilter = instanceDiscoveryFilter;
+	}
+
+	/**
+	 * @return the sampleCount
+	 */
+	public int getSampleCount()
+	{
+		return sampleCount;
+	}
+
+	/**
+	 * @param sampleCount the sampleCount to set
+	 */
+	public void setSampleCount(int sampleCount)
+	{
+		this.sampleCount = sampleCount;
 	}
 }

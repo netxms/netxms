@@ -78,7 +78,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 			if (dcTarget->Type() == OBJECT_NODE)
 			{
 				TCHAR name[MAX_PARAM_NAME];
-				_sntprintf(name, MAX_PARAM_NAME, _T("PDH.CounterValue(\"%s\")"), pItem->getName());
+				_sntprintf(name, MAX_PARAM_NAME, _T("PDH.CounterValue(\"%s\",%d)"), pItem->getName(), pItem->getSampleCount());
 	         *error = ((Node *)dcTarget)->getItemFromAgent(name, MAX_LINE_SIZE, pBuffer);
 			}
 			else

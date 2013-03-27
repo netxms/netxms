@@ -67,35 +67,42 @@ struct WINPERF_COUNTER
    HCOUNTER handle;
 };
 
-
-//
-// Counter set structure
-//
-
-struct WINPERF_COUNTER_SET
+/**
+ * Counter set
+ */
+class WinPerfCounterSet
 {
-   DWORD dwInterval;    // Interval beetween samples in milliseconds
-   DWORD dwNumCounters;
-   WINPERF_COUNTER **ppCounterList;
-   TCHAR cClass;
+private:
+   DWORD m_interval;    // Interval beetween samples in milliseconds
+	ObjectArray<WINPERF_COUNTER> *m_counters;
+   TCHAR m_class;
+	MUTEX m_mutex;
+	CONDITION m_changeCondition;
+
+	void collectorThread();
+	static THREAD_RESULT THREAD_CALL collectorThreadStarter(void *);
+
+public:
+	WinPerfCounterSet(DWORD interval, TCHAR cls);
+	~WinPerfCounterSet();
+
+	void addCounter(WINPERF_COUNTER *c);
+
+	void startCollectorThread();
 };
 
-
-//
-// Counter index structure
-//
-
+/**
+ * Counter index structure
+ */
 struct COUNTER_INDEX
 {
 	DWORD dwIndex;
 	TCHAR *pszName;
 };
 
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 void CreateCounterIndex(TCHAR *pData);
 BOOL TranslateCounterName(const TCHAR *pszName, TCHAR *pszOut);
 int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName);

@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004-2012 Victor Kirhenshtein
+** Copyright (C) 2004-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,23 +22,200 @@
 
 #include "winperf.h"
 
-
-//
-// Static data
-//
-
-WINPERF_COUNTER_SET m_cntSet[3] =
+/**
+ * Counter sets
+ */
+WinPerfCounterSet *m_cntSet[3] =
 {
-   { 1000, 0, NULL, _T('A') },
-   { 5000, 0, NULL, _T('B') },
-   { 60000, 0, NULL, _T('C') }
+	new WinPerfCounterSet(1000, _T('A')),
+	new WinPerfCounterSet(5000, _T('B')),
+	new WinPerfCounterSet(6000, _T('C'))
 };
 
+/**
+ * Counter set constructor
+ */
+WinPerfCounterSet::WinPerfCounterSet(DWORD interval, TCHAR cls)
+{
+	m_mutex = MutexCreate();
+	m_changeCondition = ConditionCreate(TRUE);
+	m_interval = interval;
+	m_class = cls;
+	m_counters = new ObjectArray<WINPERF_COUNTER>(32, 32, true);
+}
 
-//
-// Check that counter's name is valid and determine counter's type
-//
+/**
+ * Counter set destructor
+ */
+WinPerfCounterSet::~WinPerfCounterSet()
+{
+	MutexDestroy(m_mutex);
+	ConditionDestroy(m_changeCondition);
+	delete m_counters;
+}
 
+/**
+ * Add counter to set
+ */
+void WinPerfCounterSet::addCounter(WINPERF_COUNTER *c)
+{
+	MutexLock(m_mutex);
+	m_counters->add(c);
+	MutexUnlock(m_mutex);
+	ConditionSet(m_changeCondition);
+}
+
+/**
+ * Collector thread
+ */
+void WinPerfCounterSet::collectorThread()
+{
+   HQUERY hQuery;
+   PDH_STATUS rc;
+   PDH_STATISTICS statData;
+   TCHAR szFName[] = _T("CollectorThread_X");
+
+   szFName[16] = m_class;
+
+	// Outer loop - rebuild query after set changes
+	while(1)
+	{
+		AgentWriteDebugLog(2, _T("WINPERF: %s waiting for set change"), szFName);
+
+		HANDLE handles[2];
+		handles[0] = g_hCondShutdown;
+		handles[1] = m_changeCondition;
+      DWORD waitStatus = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+		if (waitStatus == WAIT_OBJECT_0)
+         break;   // Shutdown condition
+		if (waitStatus != WAIT_OBJECT_0 + 1)
+			continue;	// set not changed, continue waiting
+
+		ConditionReset(m_changeCondition);
+
+		AgentWriteDebugLog(2, _T("WINPERF: %s: set changed"), szFName);
+		if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
+		{
+			ReportPdhError(szFName, _T("PdhOpenQuery"), rc);
+			continue;
+		}
+
+		// Add counters to query
+	   DWORD dwOKCounters = 0;
+		MutexLock(m_mutex);
+		for(int i = 0; i < m_counters->size(); i++)
+		{
+			WINPERF_COUNTER *counter = m_counters->get(i);
+			if ((rc = PdhAddCounter(hQuery, counter->pszName, 0, &counter->handle)) != ERROR_SUCCESS)
+			{
+				TCHAR szBuffer[1024];
+
+				AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("WINPERF: %s: Unable to add counter \"%s\" to query (%s)"), 
+				              szFName, counter->pszName, GetPdhErrorText(rc, szBuffer, 1024));
+				counter->handle = NULL;
+			}
+			else
+			{
+				dwOKCounters++;
+			}
+		}
+		MutexUnlock(m_mutex);
+
+			// Check if we was able to add at least one counter
+		if (dwOKCounters == 0)
+		{
+			PdhCloseQuery(hQuery);
+			AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("WINPERF: Failed to add any counter to query for counter set %c"), m_class);
+			continue;
+		}
+
+		// Collection loop (until shutdown or set change)
+		AgentWriteDebugLog(2, _T("WINPERF: %s entered data collection loop"), szFName);
+		while(1)
+		{
+			HANDLE handles[2];
+			handles[0] = g_hCondShutdown;
+			handles[1] = m_changeCondition;
+			waitStatus = WaitForMultipleObjects(2, handles, FALSE, m_interval);
+			if (waitStatus == WAIT_OBJECT_0)
+				goto stop;	// shutdown
+			if (waitStatus == WAIT_OBJECT_0 + 1)
+				break;   // Set change, break collection loop
+
+			// Collect data
+			if ((rc = PdhCollectQueryData(hQuery)) != ERROR_SUCCESS)
+				ReportPdhError(szFName, _T("PdhCollectQueryData"), rc);
+
+			// Get raw values for each counter and compute average value
+			for(int i = 0; i < m_counters->size(); i++)
+			{
+				WINPERF_COUNTER *counter = m_counters->get(i);
+				if (counter->handle != NULL)
+				{
+					// Get raw value into buffer
+					PdhGetRawCounterValue(counter->handle, NULL, &counter->pRawValues[counter->dwBufferPos]);
+					counter->dwBufferPos++;
+					if (counter->dwBufferPos == (DWORD)counter->wNumSamples)
+						counter->dwBufferPos = 0;
+
+					// Calculate mean value
+					if ((rc = PdhComputeCounterStatistics(counter->handle,
+								counter->dwFormat,
+								counter->dwBufferPos, 
+								counter->wNumSamples,
+								counter->pRawValues,
+								&statData)) != ERROR_SUCCESS)
+					{
+						ReportPdhError(szFName, _T("PdhComputeCounterStatistics"), rc);
+					}
+
+					// Update mean value in counter set
+					switch(counter->wType)
+					{
+						case COUNTER_TYPE_INT32:
+							counter->value.iLong = statData.mean.longValue;
+							break;
+						case COUNTER_TYPE_INT64:
+							counter->value.iLarge = statData.mean.largeValue;
+							break;
+						case COUNTER_TYPE_FLOAT:
+							counter->value.dFloat = statData.mean.doubleValue;
+							break;
+						default:
+							break;
+					}
+				}
+			}
+		}
+
+		AgentWriteDebugLog(2, _T("WINPERF: %s: data collection stopped"), szFName);
+		PdhCloseQuery(hQuery);
+	}
+
+stop:
+	AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("WINPERF: Collector thread for counter set %c terminated"), m_class);
+}
+
+/**
+ * Starter for collector thread
+ */
+THREAD_RESULT THREAD_CALL WinPerfCounterSet::collectorThreadStarter(void *arg)
+{
+	((WinPerfCounterSet *)arg)->collectorThread();
+	return THREAD_OK;
+}
+
+/**
+ * Start collector thread
+ */
+void WinPerfCounterSet::startCollectorThread()
+{
+	ThreadCreate(collectorThreadStarter, 0, this);
+}
+
+/**
+ * Check that counter's name is valid and determine counter's type
+ */
 int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName)
 {
    HQUERY hQuery;
@@ -94,11 +271,9 @@ int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName)
    return (ci.dwType & PERF_SIZE_LARGE) ? COUNTER_TYPE_INT64 : COUNTER_TYPE_INT32;
 }
 
-
-//
-// Add counter to set
-//
-
+/**
+ * Add counter to set
+ */
 WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDataType)
 {
    WINPERF_COUNTER *pCnt;
@@ -118,7 +293,7 @@ WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDa
 	}
 
    // Create new counter
-   pCnt = (WINPERF_COUNTER *)malloc(sizeof(WINPERF_COUNTER));
+   pCnt = new WINPERF_COUNTER;
    memset(pCnt, 0, sizeof(WINPERF_COUNTER));
 	if (pszNewName != NULL)
 	{
@@ -146,22 +321,16 @@ WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDa
    }
 
    // Add counter to set
-   m_cntSet[iClass].dwNumCounters++;
-   m_cntSet[iClass].ppCounterList = 
-      (WINPERF_COUNTER **)realloc(m_cntSet[iClass].ppCounterList, sizeof(WINPERF_COUNTER *) * m_cntSet[iClass].dwNumCounters);
-   m_cntSet[iClass].ppCounterList[m_cntSet[iClass].dwNumCounters - 1] = pCnt;
-
+	m_cntSet[iClass]->addCounter(pCnt);
    return pCnt;
 }
 
-
-//
-// Add custom counter from configuration file
-// Should be in form 
-// <parameter name>:<counter path>:<number of samples>:<class>:<data type>:<description>
-// Class can be A (poll every second), B (poll every 5 seconds) or C (poll every 30 seconds)
-//
-
+/**
+ * Add custom counter from configuration file
+ * Should be in form 
+ * <parameter name>:<counter path>:<number of samples>:<class>:<data type>:<description>
+ * Class can be A (poll every second), B (poll every 5 seconds) or C (poll every 30 seconds)
+ */
 BOOL AddCounterFromConfig(TCHAR *pszStr)
 {
    TCHAR *ptr, *eptr, *pszCurrField;
@@ -275,125 +444,11 @@ BOOL AddCounterFromConfig(TCHAR *pszStr)
    return ((iState == -1) && (iField >= 4) && (iField <= 6));
 }
 
-
-//
-// Collector thread
-//
-
-static THREAD_RESULT THREAD_CALL CollectorThread(WINPERF_COUNTER_SET *pSet)
+/**
+ * Start collector threads
+ */
+void StartCollectorThreads()
 {
-   HQUERY hQuery;
-   PDH_STATUS rc;
-   PDH_STATISTICS statData;
-   DWORD i, dwOKCounters = 0;
-   TCHAR szFName[] = _T("CollectorThread_X");
-
-   szFName[16] = pSet->cClass;
-   if (pSet->dwNumCounters == 0)
-   {
-      AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Counter set %c is empty, collector thread for that set will not start"),
-                      pSet->cClass);
-      return 0;
-   }
-
-   if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
-   {
-      ReportPdhError(szFName, _T("PdhOpenQuery"), rc);
-      return -1;
-   }
-
-   // Add counters to query
-   for(i = 0; i < pSet->dwNumCounters; i++)
-      if ((rc = PdhAddCounter(hQuery, pSet->ppCounterList[i]->pszName, 
-                              0, &pSet->ppCounterList[i]->handle)) != ERROR_SUCCESS)
-      {
-         TCHAR szBuffer[1024];
-
-         AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("%s: Unable to add counter \"%s\" to query (%s)"), 
-                         szFName, pSet->ppCounterList[i]->pszName, GetPdhErrorText(rc, szBuffer, 1024));
-         pSet->ppCounterList[i]->handle = NULL;
-      }
-      else
-      {
-         dwOKCounters++;
-      }
-
-      // Check if we was able to add at least one counter
-   if (dwOKCounters == 0)
-   {
-      PdhCloseQuery(hQuery);
-      AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("Failed to add any counter to query for counter set %c, ")
-                                           _T("collector thread for that set will not start"),
-                      pSet->cClass);
-      return 0;
-   }
-
-   // Main collection loop
-   while(1)
-   {
-      if (WaitForSingleObject(g_hCondShutdown, pSet->dwInterval) != WAIT_TIMEOUT)
-         break;   // We got a signal
-
-      // Collect data
-      if ((rc = PdhCollectQueryData(hQuery)) != ERROR_SUCCESS)
-         ReportPdhError(szFName, _T("PdhCollectQueryData"), rc);
-
-      // Get raw values for each counter and compute average value
-      for(i = 0; i < pSet->dwNumCounters; i++)
-         if (pSet->ppCounterList[i]->handle != NULL)
-         {
-            // Get raw value into buffer
-            PdhGetRawCounterValue(pSet->ppCounterList[i]->handle, NULL, 
-               &pSet->ppCounterList[i]->pRawValues[pSet->ppCounterList[i]->dwBufferPos]);
-            pSet->ppCounterList[i]->dwBufferPos++;
-            if (pSet->ppCounterList[i]->dwBufferPos == (DWORD)pSet->ppCounterList[i]->wNumSamples)
-               pSet->ppCounterList[i]->dwBufferPos = 0;
-
-            // Calculate mean value
-            if ((rc = PdhComputeCounterStatistics(pSet->ppCounterList[i]->handle,
-                     pSet->ppCounterList[i]->dwFormat,
-                     pSet->ppCounterList[i]->dwBufferPos, 
-                     pSet->ppCounterList[i]->wNumSamples,
-                     pSet->ppCounterList[i]->pRawValues,
-                     &statData)) != ERROR_SUCCESS)
-            {
-               ReportPdhError(szFName, _T("PdhComputeCounterStatistics"), rc);
-            }
-
-            // Update mean value in counter set
-            switch(pSet->ppCounterList[i]->wType)
-            {
-               case COUNTER_TYPE_INT32:
-                  pSet->ppCounterList[i]->value.iLong = statData.mean.longValue;
-                  break;
-               case COUNTER_TYPE_INT64:
-                  pSet->ppCounterList[i]->value.iLarge = statData.mean.largeValue;
-                  break;
-               case COUNTER_TYPE_FLOAT:
-                  pSet->ppCounterList[i]->value.dFloat = statData.mean.doubleValue;
-                  break;
-               default:
-                  break;
-            }
-         }
-   }
-
-   // Cleanup
-   PdhCloseQuery(hQuery);
-   AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Collector thread for counter set %c terminated"), pSet->cClass);
-
-   return 0;
-}
-
-
-//
-// Start collector threads
-//
-
-void StartCollectorThreads(void)
-{
-   int i;
-
-   for(i = 0; i < 3; i++)
-      ThreadCreate((THREAD_RESULT (THREAD_CALL *)(void *))CollectorThread, 0, &m_cntSet[i]);
+   for(int i = 0; i < 3; i++)
+		m_cntSet[i]->startCollectorThread();
 }

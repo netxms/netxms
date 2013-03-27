@@ -485,6 +485,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dc_nxsl.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\dcitem.cpp"
 				>
 			</File>

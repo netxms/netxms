@@ -574,6 +574,7 @@ CREATE TABLE items
 	instd_method integer not null,
 	instd_data varchar(255) null,
 	instd_filter SQL_TEXT null,
+	samples integer not null,
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
