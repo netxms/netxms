@@ -10,7 +10,7 @@ import org.eclipse.ui.PlatformUI;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -25,10 +25,10 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class AlarmDetailsProvider implements ObjectDetailsProvider
 {
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider#canProvideDetails(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider#canProvideDetails(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public boolean canProvideDetails(GenericObject object)
+	public boolean canProvideDetails(AbstractObject object)
 	{
 		return (object instanceof Node) || (object instanceof Container) ||
 			(object instanceof ServiceRoot) || (object instanceof Subnet) ||
@@ -37,10 +37,10 @@ public class AlarmDetailsProvider implements ObjectDetailsProvider
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider#provideDetails(org.netxms.client.objects.GenericObject, org.eclipse.ui.IViewPart)
+	 * @see org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider#provideDetails(org.netxms.client.objects.AbstractObject, org.eclipse.ui.IViewPart)
 	 */
 	@Override
-	public void provideDetails(GenericObject object, IViewPart viewPart)
+	public void provideDetails(AbstractObject object, IViewPart viewPart)
 	{
 		try
 		{

@@ -20,7 +20,7 @@ package org.netxms.client;
 
 import java.net.InetAddress;
 import org.netxms.client.objects.EntireNetwork;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 
 /**
@@ -34,7 +34,7 @@ public class ObjectTest extends SessionTest
 		final NXCSession session = connect(true);
 		
 		session.syncObjects();
-		final GenericObject obj = session.findObjectById(1);
+		final AbstractObject obj = session.findObjectById(1);
 		assertEquals(true, obj != null);
 		assertEquals(1, obj.getObjectId());
 		assertEquals("Entire Network", obj.getObjectName());
@@ -49,7 +49,7 @@ public class ObjectTest extends SessionTest
 		session.syncObjectSet(new long[] { 1, 2, 3 }, false);
 		Thread.sleep(1000);
 
-		final GenericObject obj = session.findObjectById(1);
+		final AbstractObject obj = session.findObjectById(1);
 		assertEquals(true, obj != null);
 		assertEquals(1, obj.getObjectId());
 		assertEquals("Entire Network", obj.getObjectName());
@@ -65,11 +65,11 @@ public class ObjectTest extends SessionTest
 		
 		session.syncObjects();
 		
-		GenericObject object = session.findObjectById(2);
-		assertEquals(false, object.isChildOf(1));
+		AbstractObject object = session.findObjectById(2);
+		assertFalse(object.isChildOf(1));
 		
-		object = session.findObjectById(102);
-		assertEquals(true, object.isChildOf(1));
+		object = session.findObjectById(100);
+		assertTrue(object.isChildOf(1));
 		
 		session.disconnect();
 	}
@@ -80,7 +80,7 @@ public class ObjectTest extends SessionTest
 		
 		session.syncObjects();
 		
-		GenericObject object = session.findObjectById(1);
+		AbstractObject object = session.findObjectById(1);
 		assertNotNull(object);
 		
 		session.setObjectName(1, "test name");
@@ -104,10 +104,10 @@ public class ObjectTest extends SessionTest
 		
 		session.syncObjects();
 		
-		GenericObject object = session.findObjectById(2);
+		AbstractObject object = session.findObjectById(2);
 		assertNotNull(object);
 		
-		NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NODE, "TestNode", 2);
+		NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, "TestNode", 2);
 		cd.setCreationFlags(NXCObjectCreationData.CF_CREATE_UNMANAGED);
 		cd.setIpAddress(InetAddress.getByName("192.168.10.1"));
 		long id = session.createObject(cd);
@@ -134,7 +134,7 @@ public class ObjectTest extends SessionTest
 		
 		session.syncObjects();
 
-		GenericObject object = session.findObjectById(1, EntireNetwork.class);
+		AbstractObject object = session.findObjectById(1, EntireNetwork.class);
 		assertNotNull(object);
 		assertEquals(1, object.getObjectId());
 		
@@ -144,13 +144,13 @@ public class ObjectTest extends SessionTest
 		session.disconnect();
 	}
 	
-	private void printObject(GenericObject object, int level)
+	private void printObject(AbstractObject object, int level)
 	{
 		for(int i = 0; i < level; i++)
 			System.out.print(' ');
 		System.out.println(object.getObjectName());
 		
-		for(GenericObject o : object.getChildsAsArray())
+		for(AbstractObject o : object.getChildsAsArray())
 			printObject(o, level + 2);
 	}
 	
@@ -160,7 +160,7 @@ public class ObjectTest extends SessionTest
 		
 		session.syncObjects();
 
-		GenericObject object = session.findObjectById(1, EntireNetwork.class);
+		AbstractObject object = session.findObjectById(1, EntireNetwork.class);
 		assertNotNull(object);
 		assertEquals(1, object.getObjectId());
 

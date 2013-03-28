@@ -32,8 +32,9 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -125,10 +126,10 @@ public class StatusIndicatorElement extends ElementWidget
 	protected void refreshData()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		final GenericObject object = session.findObjectById(config.getObjectId());
+		final AbstractObject object = session.findObjectById(config.getObjectId());
 		if (object != null)
 		{
-			greenState = object.getStatus() == GenericObject.STATUS_NORMAL;
+			greenState = (object.getStatus() == Severity.NORMAL);
 		}
 		else
 		{

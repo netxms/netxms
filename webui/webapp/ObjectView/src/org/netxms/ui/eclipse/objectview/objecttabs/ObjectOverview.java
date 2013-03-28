@@ -30,7 +30,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Layout;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.AvailabilityChart;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Capabilities;
@@ -139,19 +139,19 @@ public class ObjectOverview extends ObjectTab
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#currentObjectUpdated(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#currentObjectUpdated(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public void currentObjectUpdated(GenericObject object)
+	public void currentObjectUpdated(AbstractObject object)
 	{
 		changeObject(object);
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public void objectChanged(GenericObject object)
+	public void objectChanged(AbstractObject object)
 	{
 		viewArea.setRedraw(false);
 		for(OverviewPageElement element : elements)

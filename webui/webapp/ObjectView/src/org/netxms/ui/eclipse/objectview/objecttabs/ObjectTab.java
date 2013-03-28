@@ -29,7 +29,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Abstract object tab class
@@ -41,7 +41,7 @@ public abstract class ObjectTab
 	private CTabFolder tabFolder;
 	private CTabItem tabItem;
 	private Composite clientArea;
-	private GenericObject object;
+	private AbstractObject object;
 	private String name;
 	private int order;
 	private ImageDescriptor icon;
@@ -113,7 +113,7 @@ public abstract class ObjectTab
 	 * @param object Object to test
 	 * @return Should return true if tab must be shown for given object
 	 */
-	public boolean showForObject(final GenericObject object)
+	public boolean showForObject(final AbstractObject object)
 	{
 		return true;
 	}
@@ -123,14 +123,14 @@ public abstract class ObjectTab
 	 * 
 	 * @param object New object to display
 	 */
-	public abstract void objectChanged(GenericObject object);
+	public abstract void objectChanged(AbstractObject object);
 	
 	/**
 	 * Change current object. Intended to be called only by parent view.
 	 * 
 	 * @param object New object to display
 	 */
-	public void changeObject(GenericObject object)
+	public void changeObject(AbstractObject object)
 	{
 		this.object = object;
 		objectChanged(object);
@@ -143,7 +143,7 @@ public abstract class ObjectTab
 	 * 
 	 * @param object new instance of current object
 	 */
-	public void currentObjectUpdated(GenericObject object)
+	public void currentObjectUpdated(AbstractObject object)
 	{
 	}
 	
@@ -229,7 +229,7 @@ public abstract class ObjectTab
 	 * 
 	 * @return Currently selected object
 	 */
-	public GenericObject getObject()
+	public AbstractObject getObject()
 	{
 		return object;
 	}

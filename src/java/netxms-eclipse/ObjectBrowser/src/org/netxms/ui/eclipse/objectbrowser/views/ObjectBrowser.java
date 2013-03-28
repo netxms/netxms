@@ -64,7 +64,7 @@ import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -182,7 +182,7 @@ public class ObjectBrowser extends ViewPart
 		
 		objectTree.addOpenListener(new ObjectOpenListener() {
 			@Override
-			public boolean openObject(GenericObject object)
+			public boolean openObject(AbstractObject object)
 			{
 				return callOpenObjectHandler(object);
 			}
@@ -226,7 +226,7 @@ public class ObjectBrowser extends ViewPart
 			for(int i = 0; i < path.getSegmentCount(); i++)
 			{
 				sb.append('/');
-				sb.append(((GenericObject)path.getSegment(i)).getObjectId());
+				sb.append(((AbstractObject)path.getSegment(i)).getObjectId());
 			}
 			memento.putString("ObjectBrowser.selectedObject", sb.toString());
 		}
@@ -533,21 +533,21 @@ public class ObjectBrowser extends ViewPart
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
-			final GenericObject target = dlg.getSelectedObjects().get(0);
+			final AbstractObject target = dlg.getSelectedObjects().get(0);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.ObjectBrowser_MoveJob_Title + ((GenericObject)currentObject).getObjectName(), this, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(Messages.ObjectBrowser_MoveJob_Title + ((AbstractObject)currentObject).getObjectName(), this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					long objectId = ((GenericObject)currentObject).getObjectId();
+					long objectId = ((AbstractObject)currentObject).getObjectId();
 					session.bindObject(target.getObjectId(), objectId);
-					session.unbindObject(((GenericObject)parentObject).getObjectId(), objectId);
+					session.unbindObject(((AbstractObject)parentObject).getObjectId(), objectId);
 				}
 	
 				@Override
 				protected String getErrorMessage()
 				{
-					return Messages.ObjectBrowser_MoveJob_Error + ((GenericObject)currentObject).getObjectName();
+					return Messages.ObjectBrowser_MoveJob_Error + ((AbstractObject)currentObject).getObjectName();
 				}
 			}.start();
 		}
@@ -618,7 +618,7 @@ public class ObjectBrowser extends ViewPart
 	 * 
 	 * @return
 	 */
-	private boolean callOpenObjectHandler(GenericObject object)
+	private boolean callOpenObjectHandler(AbstractObject object)
 	{
 		for(OpenHandlerData h : openHandlers)
 		{

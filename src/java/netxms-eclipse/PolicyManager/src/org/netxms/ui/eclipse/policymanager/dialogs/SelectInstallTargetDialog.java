@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
@@ -51,7 +51,7 @@ public class SelectInstallTargetDialog extends Dialog
 	private Button radioInstallOnSelected;
 	private ObjectTree objectTree;
 	private int installMode;
-	private GenericObject[] selectedObjects;
+	private AbstractObject[] selectedObjects;
 	
 	/**
 	 * @param parentShell
@@ -141,15 +141,15 @@ public class SelectInstallTargetDialog extends Dialog
 		installMode = radioInstallOnCurrent.getSelection() ? INSTALL_ON_CURRENT : INSTALL_ON_SELECTED;
 				
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		List<GenericObject> objects = session.findMultipleObjects(objectTree.getCheckedObjects(), false);
-		Iterator<GenericObject> it = objects.iterator();
+		List<AbstractObject> objects = session.findMultipleObjects(objectTree.getCheckedObjects(), false);
+		Iterator<AbstractObject> it = objects.iterator();
 		while(it.hasNext())
 		{
-			GenericObject o = it.next();
+			AbstractObject o = it.next();
 			if (!(o instanceof Node))
 				it.remove();
 		}
-		selectedObjects = objects.toArray(new GenericObject[0]);
+		selectedObjects = objects.toArray(new AbstractObject[0]);
 		super.okPressed();
 	}
 
@@ -164,7 +164,7 @@ public class SelectInstallTargetDialog extends Dialog
 	/**
 	 * @return the selectedObjects
 	 */
-	public GenericObject[] getSelectedObjects()
+	public AbstractObject[] getSelectedObjects()
 	{
 		return selectedObjects;
 	}

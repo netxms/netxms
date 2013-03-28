@@ -20,13 +20,8 @@ public class LoginListener implements ConsoleLoginListener
 {
 	private final class ImageLibraryListener implements SessionListener
 	{
-		private final Display display;
-		private final NXCSession session;
-
 		private ImageLibraryListener(Display display, NXCSession session)
 		{
-			this.display = display;
-			this.session = session;
 		}
 
 		@Override
@@ -41,6 +36,9 @@ public class LoginListener implements ConsoleLoginListener
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.console.api.ConsoleLoginListener#afterLogin(org.netxms.client.NXCSession, org.eclipse.swt.widgets.Display)
+	 */
 	@Override
 	public void afterLogin(final NXCSession session, final Display display)
 	{

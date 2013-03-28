@@ -29,7 +29,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -79,7 +79,7 @@ public class RemoveTemplate implements IObjectActionDelegate
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
-						List<GenericObject> objects = dlg.getSelectedObjects();
+						List<AbstractObject> objects = dlg.getSelectedObjects();
 						for(int i = 0; i < objects.size(); i++)
 							session.removeTemplate(parentId, objects.get(i).getObjectId(), dlg2.getRemoveFlag());
 					}
@@ -100,7 +100,7 @@ public class RemoveTemplate implements IObjectActionDelegate
 			if (obj instanceof Template)
 			{
 				action.setEnabled(true);
-				parentId = ((GenericObject)obj).getObjectId();
+				parentId = ((AbstractObject)obj).getObjectId();
 			}
 			else
 			{

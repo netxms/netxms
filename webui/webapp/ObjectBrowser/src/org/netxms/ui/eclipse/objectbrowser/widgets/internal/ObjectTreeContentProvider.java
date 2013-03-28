@@ -22,7 +22,7 @@ import java.util.Iterator;
 import org.eclipse.jface.viewers.TreeNodeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Content provider for object tree.
@@ -53,7 +53,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public Object[] getChildren(Object parentElement)
 	{
-		return ((GenericObject)parentElement).getChildsAsArray();
+		return ((AbstractObject)parentElement).getChildsAsArray();
 	}
 
 	/* (non-Javadoc)
@@ -66,7 +66,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 		{
 			return (rootObjects != null) ? session.findMultipleObjects(rootObjects, false).toArray() : session.getTopLevelObjects();
 		}
-		return new GenericObject[0];
+		return new AbstractObject[0];
 	}
 
 	/* (non-Javadoc)
@@ -78,7 +78,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 		if (session == null)
 			return null;
 		
-		Iterator<Long> it = ((GenericObject)element).getParents();
+		Iterator<Long> it = ((AbstractObject)element).getParents();
 		return it.hasNext() ? session.findObjectById(it.next()) : null;
 	}
 
@@ -88,7 +88,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public boolean hasChildren(Object element)
 	{
-		return ((GenericObject)element).hasAccessibleChildren();
+		return ((AbstractObject)element).hasAccessibleChildren();
 	}
 
 	/* (non-Javadoc)

@@ -33,7 +33,7 @@ import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.figures.BirtChartFigure;
@@ -48,7 +48,7 @@ public class ObjectTooltip extends Figure
 	/**
 	 * @param object
 	 */
-	public ObjectTooltip(GenericObject object, MapLabelProvider labelProvider)
+	public ObjectTooltip(AbstractObject object, MapLabelProvider labelProvider)
 	{
 		setBorder(new MarginBorder(3));
 		GridLayout layout = new GridLayout(2, false);
@@ -110,7 +110,7 @@ public class ObjectTooltip extends Figure
 	/**
 	 * Status chart
 	 */
-	private void addStatusChart(GenericObject object, MapLabelProvider labelProvider)
+	private void addStatusChart(AbstractObject object, MapLabelProvider labelProvider)
 	{
 		BirtChartFigure chart = new BirtChartFigure(BirtChartFigure.BAR_CHART, labelProvider.getColors());
 		add(chart);
@@ -145,9 +145,9 @@ public class ObjectTooltip extends Figure
 	 * @param objectCount
 	 * @param root
 	 */
-	private void collectData(int[] objectCount, GenericObject root)
+	private void collectData(int[] objectCount, AbstractObject root)
 	{
-		for(GenericObject o : root.getAllChilds(GenericObject.OBJECT_NODE))
+		for(AbstractObject o : root.getAllChilds(AbstractObject.OBJECT_NODE))
 		{
 			if (o.getStatus() <= Severity.UNKNOWN)
 				objectCount[o.getStatus()]++;

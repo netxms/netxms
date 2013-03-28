@@ -23,7 +23,7 @@ import java.net.InetAddress;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.IPAddressSelectionDialog;
@@ -60,7 +60,7 @@ public class IPAddressSelector extends AbstractSelector
 	 */
 	public void setNode(long nodeId)
 	{
-		GenericObject object = session.findObjectById(nodeId);
+		AbstractObject object = session.findObjectById(nodeId);
 		if (object instanceof Node)
 		{
 			node = (Node)object;

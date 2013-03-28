@@ -28,7 +28,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ReportGroup;
 import org.netxms.client.objects.ReportRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -71,7 +71,7 @@ public class CreateReportGroup implements IObjectActionDelegate
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_REPORTGROUP, dlg.getObjectName(), parentId);
+				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_REPORTGROUP, dlg.getObjectName(), parentId);
 				session.createObject(cd);
 			}
 
@@ -94,7 +94,7 @@ public class CreateReportGroup implements IObjectActionDelegate
 			final Object object = ((IStructuredSelection)selection).getFirstElement();
 			if ((object instanceof ReportGroup) || (object instanceof ReportRoot))
 			{
-				parentId = ((GenericObject)object).getObjectId();
+				parentId = ((AbstractObject)object).getObjectId();
 			}
 			else
 			{

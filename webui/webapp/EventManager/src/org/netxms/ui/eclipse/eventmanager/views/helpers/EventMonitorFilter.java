@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.eventmanager.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Event;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
 
@@ -55,7 +55,7 @@ public class EventMonitorFilter extends AbstractTraceViewFilter
 		if (((Event)element).getMessage().toLowerCase().contains(filterString))
 			return true;
 		
-		GenericObject object = session.findObjectById(((Event)element).getSourceId());
+		AbstractObject object = session.findObjectById(((Event)element).getSourceId());
 		if (object != null)
 		{
 			return object.getObjectName().toLowerCase().contains(filterString);

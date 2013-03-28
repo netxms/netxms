@@ -25,7 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.layouts.algorithms.SpaceTreeLayoutAlgorithm;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.IServiceFigureListener;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.ServiceTreeContentProvider;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.ServiceTreeElement;
@@ -48,7 +48,7 @@ public class ServiceTree extends Composite implements IServiceFigureListener
 	 * @param parent
 	 * @param style
 	 */
-	public ServiceTree(Composite parent, int style, GenericObject rootObject)
+	public ServiceTree(Composite parent, int style, AbstractObject rootObject)
 	{
 		super(parent, style);
 		setLayout(new FillLayout());

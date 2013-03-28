@@ -32,7 +32,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.Port;
@@ -91,7 +91,7 @@ public class DeviceView extends DashboardComposite
 	 */
 	public void refresh()
 	{
-		GenericObject object = session.findObjectById(nodeId);
+		AbstractObject object = session.findObjectById(nodeId);
 		if ((object == null) || !(object instanceof Node))
 			return;
 		
@@ -104,7 +104,7 @@ public class DeviceView extends DashboardComposite
 		ports.clear();
 		
 		List<Interface> interfaces = new ArrayList<Interface>();
-		for(GenericObject o: object.getAllChilds(GenericObject.OBJECT_INTERFACE))
+		for(AbstractObject o: object.getAllChilds(AbstractObject.OBJECT_INTERFACE))
 		{
 			if (((Interface)o).isPhysicalPort())
 				interfaces.add((Interface)o);

@@ -55,7 +55,7 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImageSelectionDialog;
@@ -474,10 +474,10 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	 * @param list
 	 *           object list
 	 */
-	private void addObjectsFromList(List<GenericObject> list, Point location)
+	private void addObjectsFromList(List<AbstractObject> list, Point location)
 	{
 		int added = 0;
-		for(GenericObject object : list)
+		for(AbstractObject object : list)
 		{
 			if (mapPage.findObjectElement(object.getObjectId()) == null)
 			{
@@ -531,9 +531,9 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		Object[] objects = selection.toArray();
 		for(Object element : objects)
 		{
-			if (element instanceof GenericObject)
+			if (element instanceof AbstractObject)
 			{
-				mapPage.removeObjectElement(((GenericObject)element).getObjectId());
+				mapPage.removeObjectElement(((AbstractObject)element).getObjectId());
 			}
 			else if (element instanceof NetworkMapElement)
 			{
@@ -679,10 +679,10 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#onObjectChange(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#onObjectChange(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	protected void onObjectChange(final GenericObject object)
+	protected void onObjectChange(final AbstractObject object)
 	{
 		super.onObjectChange(object);
 		

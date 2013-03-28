@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.contexts.IContextService;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
@@ -64,19 +64,19 @@ public class LastValues extends ObjectTab
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public void objectChanged(GenericObject object)
+	public void objectChanged(AbstractObject object)
 	{
 		dataView.setNode(object);
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public boolean showForObject(GenericObject object)
+	public boolean showForObject(AbstractObject object)
 	{
 		return (object instanceof Node) || (object instanceof MobileDevice);
 	}

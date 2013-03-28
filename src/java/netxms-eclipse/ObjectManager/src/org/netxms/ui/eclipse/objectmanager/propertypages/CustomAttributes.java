@@ -47,7 +47,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.dialogs.AttributeEditDialog;
@@ -66,7 +66,7 @@ public class CustomAttributes extends PropertyPage
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_VALUE = 1;
 	
-	private GenericObject object = null;
+	private AbstractObject object = null;
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
@@ -82,7 +82,7 @@ public class CustomAttributes extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (GenericObject)getElement().getAdapter(GenericObject.class);
+		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
 		if (object == null)	// Paranoid check
 			return dialogArea;
 		

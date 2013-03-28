@@ -44,7 +44,7 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.ObjectToolsCache;
@@ -92,7 +92,7 @@ public class LocalCommandResults extends ViewPart
 			toolId = Long.parseLong(parts[1]);
 			
 			NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			GenericObject object = session.findObjectById(nodeId);
+			AbstractObject object = session.findObjectById(nodeId);
 			setPartName(object.getObjectName() + " - " + ObjectToolsCache.findTool(toolId).getDisplayName());
 		}
 		catch(Exception e)

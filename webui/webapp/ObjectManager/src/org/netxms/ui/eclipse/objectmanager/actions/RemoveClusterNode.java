@@ -31,7 +31,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ChildObjectListDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -61,7 +61,7 @@ public class RemoveClusterNode implements IObjectActionDelegate
 	 */
 	public void run(IAction action)
 	{
-		final ChildObjectListDialog dlg = new ChildObjectListDialog(shell, clusterId, ChildObjectListDialog.createClassFilter(GenericObject.OBJECT_NODE));
+		final ChildObjectListDialog dlg = new ChildObjectListDialog(shell, clusterId, ChildObjectListDialog.createClassFilter(AbstractObject.OBJECT_NODE));
 		dlg.open();
 		if (dlg.getReturnCode() == Window.OK)
 		{
@@ -76,7 +76,7 @@ public class RemoveClusterNode implements IObjectActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					List<GenericObject> objects = dlg.getSelectedObjects();
+					List<AbstractObject> objects = dlg.getSelectedObjects();
 					for(int i = 0; i < objects.size(); i++)
 						session.removeClusterNode(clusterId, objects.get(i).getObjectId());
 				}
@@ -95,7 +95,7 @@ public class RemoveClusterNode implements IObjectActionDelegate
 			if (obj instanceof Cluster)
 			{
 				action.setEnabled(true);
-				clusterId = ((GenericObject)obj).getObjectId();
+				clusterId = ((AbstractObject)obj).getObjectId();
 			}
 			else
 			{

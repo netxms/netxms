@@ -29,7 +29,7 @@ import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -44,7 +44,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class ShowObjectAlarms implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private GenericObject object;
+	private AbstractObject object;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -90,7 +90,7 @@ public class ShowObjectAlarms implements IObjectActionDelegate
 				(obj instanceof EntireNetwork) || (obj instanceof ServiceRoot) ||
 				(obj instanceof Zone))
 			{
-				object = (GenericObject)obj;
+				object = (AbstractObject)obj;
 			}
 		}
 		else

@@ -27,7 +27,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.PolicyGroup;
 import org.netxms.client.objects.PolicyRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -42,7 +42,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class CreateAgentPolicyConfig implements IObjectActionDelegate
 {
 	private IWorkbenchPart targetPart;
-	private GenericObject currentObject;
+	private AbstractObject currentObject;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -67,7 +67,7 @@ public class CreateAgentPolicyConfig implements IObjectActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_AGENTPOLICY_CONFIG, dlg.getObjectName(), currentObject.getObjectId());
+					NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_AGENTPOLICY_CONFIG, dlg.getObjectName(), currentObject.getObjectId());
 					session.createObject(cd);
 				}
 
@@ -88,7 +88,7 @@ public class CreateAgentPolicyConfig implements IObjectActionDelegate
 	{
 		if (selection instanceof TreeSelection)
 		{
-			currentObject = (GenericObject)((TreeSelection)selection).getFirstElement();
+			currentObject = (AbstractObject)((TreeSelection)selection).getFirstElement();
 			action.setEnabled((currentObject instanceof PolicyRoot) || (currentObject instanceof PolicyGroup));
 		}
 	}

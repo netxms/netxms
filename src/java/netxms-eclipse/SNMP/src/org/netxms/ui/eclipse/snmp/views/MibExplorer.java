@@ -57,7 +57,7 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
@@ -116,7 +116,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			long nodeId = safeCast(memento.getInteger("CurrentNode"), 0); //$NON-NLS-1$
 			if (nodeId != 0)
 			{
-				GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
+				AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
 				if ((object != null) && (object instanceof Node))
 					currentNode = (Node)object;
 			}

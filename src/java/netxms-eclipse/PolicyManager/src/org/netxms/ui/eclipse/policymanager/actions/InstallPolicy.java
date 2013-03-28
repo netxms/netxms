@@ -30,7 +30,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AgentPolicy;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.policymanager.Activator;
 import org.netxms.ui.eclipse.policymanager.dialogs.SelectInstallTargetDialog;
@@ -80,7 +80,7 @@ public class InstallPolicy implements IObjectActionDelegate
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
-						final GenericObject[] nodeList =
+						final AbstractObject[] nodeList =
 								(dlg.getInstallMode() == SelectInstallTargetDialog.INSTALL_ON_SELECTED) ?
 									dlg.getSelectedObjects() : policy.getChildsAsArray();
 						for(int i = 0; i < nodeList.length; i++)

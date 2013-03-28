@@ -45,7 +45,7 @@ import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AccessListComparator;
@@ -63,7 +63,7 @@ public class AccessControl extends PropertyPage
 {
 	private static final long serialVersionUID = 1L;
 
-	private GenericObject object;
+	private AbstractObject object;
 	private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(11);
 	private HashMap<Long, AccessListElement> acl;
@@ -75,7 +75,7 @@ public class AccessControl extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		object = (GenericObject)getElement().getAdapter(GenericObject.class);
+		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
 		
 		AccessListElement[] origAcl = object.getAccessList();
 		acl = new HashMap<Long, AccessListElement>(origAcl.length);

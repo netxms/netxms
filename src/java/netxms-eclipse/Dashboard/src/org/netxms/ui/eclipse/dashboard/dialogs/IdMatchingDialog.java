@@ -39,7 +39,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
@@ -197,19 +197,19 @@ public class IdMatchingDialog extends Dialog
 		Set<Integer> classFilter;
 		switch(data.objectClass)
 		{
-			case GenericObject.OBJECT_NODE:
+			case AbstractObject.OBJECT_NODE:
 				classFilter = ObjectSelectionDialog.createNodeSelectionFilter(false);
 				break;
-			case GenericObject.OBJECT_CONTAINER:
+			case AbstractObject.OBJECT_CONTAINER:
 				classFilter = ObjectSelectionDialog.createContainerSelectionFilter();
 				break;
-			case GenericObject.OBJECT_ZONE:
+			case AbstractObject.OBJECT_ZONE:
 				classFilter = ObjectSelectionDialog.createZoneSelectionFilter();
 				break;
-			case GenericObject.OBJECT_DASHBOARD:
+			case AbstractObject.OBJECT_DASHBOARD:
 				classFilter = new HashSet<Integer>(2);
-				classFilter.add(GenericObject.OBJECT_DASHBOARD);
-				classFilter.add(GenericObject.OBJECT_DASHBOARDROOT);
+				classFilter.add(AbstractObject.OBJECT_DASHBOARD);
+				classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
 				break;
 			default:
 				classFilter = null;
@@ -218,7 +218,7 @@ public class IdMatchingDialog extends Dialog
 		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, classFilter);
 		if (dlg.open() == Window.OK)
 		{
-			GenericObject object = dlg.getSelectedObjects().get(0);
+			AbstractObject object = dlg.getSelectedObjects().get(0);
 			if (object.getObjectClass() == data.objectClass)
 			{
 				data.dstId = object.getObjectId();

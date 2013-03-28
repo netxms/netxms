@@ -54,7 +54,7 @@ import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmComments;
@@ -624,7 +624,7 @@ public class AlarmList extends Composite
 		if (selection.size() != 1)
 			return;
 		
-		GenericObject object = session.findObjectById(((Alarm)selection.getFirstElement()).getSourceObjectId());
+		AbstractObject object = session.findObjectById(((Alarm)selection.getFirstElement()).getSourceObjectId());
 		if (object != null)
 		{
 			try

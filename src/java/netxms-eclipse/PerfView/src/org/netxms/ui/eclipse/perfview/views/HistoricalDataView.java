@@ -39,7 +39,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -85,7 +85,7 @@ public class HistoricalDataView extends ViewPart
 			throw new PartInitException("Internal error");
 		
 		nodeId = Long.parseLong(parts[0]);
-		GenericObject object = session.findObjectById(nodeId);
+		AbstractObject object = session.findObjectById(nodeId);
 		if ((object == null) || (!(object instanceof Node) && !(object instanceof MobileDevice)))
 			throw new PartInitException("Invalid object ID");
 		nodeName = object.getObjectName();

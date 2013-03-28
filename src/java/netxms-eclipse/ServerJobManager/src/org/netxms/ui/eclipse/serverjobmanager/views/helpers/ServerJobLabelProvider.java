@@ -27,7 +27,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerJob;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.serverjobmanager.Activator;
 import org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -84,7 +84,7 @@ public class ServerJobLabelProvider extends LabelProvider implements ITableLabel
 					AbstractUserObject user = session.findUserDBObjectById(((ServerJob)obj).getUserId());
 					return (user != null) ? user.getName() : "<unknown>";
 				case ServerJobManager.COLUMN_NODE:
-					GenericObject object = session.findObjectById(((ServerJob)obj).getNodeId());
+					AbstractObject object = session.findObjectById(((ServerJob)obj).getNodeId());
 					return (object != null) ? object.getObjectName() : "<unknown>";
 				case ServerJobManager.COLUMN_DESCRIPTION:
 					return ((ServerJob)obj).getDescription();

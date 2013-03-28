@@ -30,7 +30,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AgentPolicy;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -78,7 +78,7 @@ public class UninstallPolicy implements IObjectActionDelegate
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
-						GenericObject[] nodeList = dlg.getSelectedObjects(Node.class);
+						AbstractObject[] nodeList = dlg.getSelectedObjects(Node.class);
 							for(int i = 0; i < nodeList.length; i++)
 								session.uninstallAgentPolicy(policy.getObjectId(), nodeList[i].getObjectId());
 					}

@@ -100,6 +100,7 @@ import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.AgentPolicyConfig;
 import org.netxms.client.objects.BusinessService;
@@ -254,7 +255,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private int defaultDciPollingInterval;
 
 	// Objects
-	private Map<Long, GenericObject> objectList = new HashMap<Long, GenericObject>();
+	private Map<Long, AbstractObject> objectList = new HashMap<Long, AbstractObject>();
 	private boolean objectsSynchronized = false;
 
 	// Users
@@ -286,7 +287,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param msg Source NXCP message
 	 * @return NetXMS object
 	 */
-	protected GenericObject createCustomObjectFromMessage(int objectClass, NXCPMessage msg)
+	protected AbstractObject createCustomObjectFromMessage(int objectClass, NXCPMessage msg)
 	{
 		return new GenericObject(msg, this);
 	}
@@ -297,101 +298,101 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param msg Source NXCP message
 	 * @return NetXMS object
 	 */
-	private GenericObject createObjectFromMessage(NXCPMessage msg)
+	private AbstractObject createObjectFromMessage(NXCPMessage msg)
 	{
 		final int objectClass = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_CLASS);
-		GenericObject object;
+		AbstractObject object;
 
 		switch(objectClass)
 		{
-			case GenericObject.OBJECT_INTERFACE:
+			case AbstractObject.OBJECT_INTERFACE:
 				object = new Interface(msg, this);
 				break;
-			case GenericObject.OBJECT_SUBNET:
+			case AbstractObject.OBJECT_SUBNET:
 				object = new Subnet(msg, this);
 				break;
-			case GenericObject.OBJECT_CONTAINER:
+			case AbstractObject.OBJECT_CONTAINER:
 				object = new Container(msg, this);
 				break;
-			case GenericObject.OBJECT_CONDITION:
+			case AbstractObject.OBJECT_CONDITION:
 				object = new Condition(msg, this);
 				break;
-			case GenericObject.OBJECT_MOBILEDEVICE:
+			case AbstractObject.OBJECT_MOBILEDEVICE:
 				object = new MobileDevice(msg, this);
 				break;
-			case GenericObject.OBJECT_NODE:
+			case AbstractObject.OBJECT_NODE:
 				object = new Node(msg, this);
 				break;
-			case GenericObject.OBJECT_CLUSTER:
+			case AbstractObject.OBJECT_CLUSTER:
 				object = new Cluster(msg, this);
 				break;
-			case GenericObject.OBJECT_TEMPLATE:
+			case AbstractObject.OBJECT_TEMPLATE:
 				object = new Template(msg, this);
 				break;
-			case GenericObject.OBJECT_TEMPLATEROOT:
+			case AbstractObject.OBJECT_TEMPLATEROOT:
 				object = new TemplateRoot(msg, this);
 				break;
-			case GenericObject.OBJECT_TEMPLATEGROUP:
+			case AbstractObject.OBJECT_TEMPLATEGROUP:
 				object = new TemplateGroup(msg, this);
 				break;
-			case GenericObject.OBJECT_NETWORK:
+			case AbstractObject.OBJECT_NETWORK:
 				object = new EntireNetwork(msg, this);
 				break;
-			case GenericObject.OBJECT_SERVICEROOT:
+			case AbstractObject.OBJECT_SERVICEROOT:
 				object = new ServiceRoot(msg, this);
 				break;
-			case GenericObject.OBJECT_POLICYROOT:
+			case AbstractObject.OBJECT_POLICYROOT:
 				object = new PolicyRoot(msg, this);
 				break;
-			case GenericObject.OBJECT_POLICYGROUP:
+			case AbstractObject.OBJECT_POLICYGROUP:
 				object = new PolicyGroup(msg, this);
 				break;
-			case GenericObject.OBJECT_AGENTPOLICY:
+			case AbstractObject.OBJECT_AGENTPOLICY:
 				object = new AgentPolicy(msg, this);
 				break;
-			case GenericObject.OBJECT_AGENTPOLICY_CONFIG:
+			case AbstractObject.OBJECT_AGENTPOLICY_CONFIG:
 				object = new AgentPolicyConfig(msg, this);
 				break;
-			case GenericObject.OBJECT_NETWORKMAPROOT:
+			case AbstractObject.OBJECT_NETWORKMAPROOT:
 				object = new NetworkMapRoot(msg, this);
 				break;
-			case GenericObject.OBJECT_NETWORKMAPGROUP:
+			case AbstractObject.OBJECT_NETWORKMAPGROUP:
 				object = new NetworkMapGroup(msg, this);
 				break;
-			case GenericObject.OBJECT_NETWORKMAP:
+			case AbstractObject.OBJECT_NETWORKMAP:
 				object = new NetworkMap(msg, this);
 				break;
-			case GenericObject.OBJECT_DASHBOARDROOT:
+			case AbstractObject.OBJECT_DASHBOARDROOT:
 				object = new DashboardRoot(msg, this);
 				break;
-			case GenericObject.OBJECT_DASHBOARD:
+			case AbstractObject.OBJECT_DASHBOARD:
 				object = new Dashboard(msg, this);
 				break;
-			case GenericObject.OBJECT_ZONE:
+			case AbstractObject.OBJECT_ZONE:
 				object = new Zone(msg, this);
 				break;
-			case GenericObject.OBJECT_NETWORKSERVICE:
+			case AbstractObject.OBJECT_NETWORKSERVICE:
 				object = new NetworkService(msg, this);
 				break;
-			case GenericObject.OBJECT_REPORTROOT:
+			case AbstractObject.OBJECT_REPORTROOT:
 				object = new ReportRoot(msg, this);
 				break;
-			case GenericObject.OBJECT_REPORTGROUP:
+			case AbstractObject.OBJECT_REPORTGROUP:
 				object = new ReportGroup(msg, this);
 				break;
-			case GenericObject.OBJECT_REPORT:
+			case AbstractObject.OBJECT_REPORT:
 				object = new Report(msg, this);
 				break;
-			case GenericObject.OBJECT_BUSINESSSERVICEROOT:
+			case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
 				object = new BusinessServiceRoot(msg, this);
 				break;
-			case GenericObject.OBJECT_BUSINESSSERVICE:
+			case AbstractObject.OBJECT_BUSINESSSERVICE:
 				object = new BusinessService(msg, this);
 				break;
-			case GenericObject.OBJECT_NODELINK:
+			case AbstractObject.OBJECT_NODELINK:
 				object = new NodeLink(msg, this);
 				break;
-			case GenericObject.OBJECT_SLMCHECK:
+			case AbstractObject.OBJECT_SLMCHECK:
 				object = new ServiceCheck(msg, this);
 				break;
 			default:
@@ -470,7 +471,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 							break;
 						case NXCPCodes.CMD_OBJECT:
 						case NXCPCodes.CMD_OBJECT_UPDATE:
-							final GenericObject obj = createObjectFromMessage(msg);
+							final AbstractObject obj = createObjectFromMessage(msg);
 							synchronized(objectList)
 							{
 								if (obj.isDeleted())
@@ -1805,9 +1806,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param id Object identifier
 	 * @return Object with given ID or null if object cannot be found
 	 */
-	public GenericObject findObjectById(final long id)
+	public AbstractObject findObjectById(final long id)
 	{
-		GenericObject obj;
+		AbstractObject obj;
 
 		synchronized(objectList)
 		{
@@ -1823,9 +1824,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param requiredClass required object class
 	 * @return Object with given ID or null if object cannot be found or is not an instance of required class
 	 */
-	public GenericObject findObjectById(final long id, final Class<? extends GenericObject> requiredClass)
+	public AbstractObject findObjectById(final long id, final Class<? extends AbstractObject> requiredClass)
 	{
-		GenericObject object = findObjectById(id);
+		AbstractObject object = findObjectById(id);
 		return requiredClass.isInstance(object) ? object : null;
 	}
 	
@@ -1836,7 +1837,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
 	 * @return list of found objects
 	 */
-	public List<GenericObject> findMultipleObjects(final long[] idList, boolean returnUnknown)
+	public List<AbstractObject> findMultipleObjects(final long[] idList, boolean returnUnknown)
 	{
 		return findMultipleObjects(idList, null, returnUnknown);
 	}
@@ -1849,15 +1850,15 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
 	 * @return list of found objects
 	 */
-	public List<GenericObject> findMultipleObjects(final long[] idList, Class<? extends GenericObject> classFilter, boolean returnUnknown)
+	public List<AbstractObject> findMultipleObjects(final long[] idList, Class<? extends AbstractObject> classFilter, boolean returnUnknown)
 	{
-		List<GenericObject> result = new ArrayList<GenericObject>(idList.length);
+		List<AbstractObject> result = new ArrayList<AbstractObject>(idList.length);
 
 		synchronized(objectList)
 		{
 			for(int i = 0; i < idList.length; i++)
 			{
-				final GenericObject object = objectList.get(idList[i]);
+				final AbstractObject object = objectList.get(idList[i]);
 				if ((object != null) && ((classFilter == null) || classFilter.isInstance(object)))
 				{
 					result.add(object);
@@ -1879,7 +1880,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
 	 * @return array of found objects
 	 */
-	public List<GenericObject> findMultipleObjects(final Long[] idList, boolean returnUnknown)
+	public List<AbstractObject> findMultipleObjects(final Long[] idList, boolean returnUnknown)
 	{
 		return findMultipleObjects(idList, null, returnUnknown);
 	}
@@ -1892,15 +1893,15 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
 	 * @return array of found objects
 	 */
-	public List<GenericObject> findMultipleObjects(final Long[] idList, Class<? extends GenericObject> classFilter, boolean returnUnknown)
+	public List<AbstractObject> findMultipleObjects(final Long[] idList, Class<? extends AbstractObject> classFilter, boolean returnUnknown)
 	{
-		List<GenericObject> result = new ArrayList<GenericObject>(idList.length);
+		List<AbstractObject> result = new ArrayList<AbstractObject>(idList.length);
 
 		synchronized(objectList)
 		{
 			for(int i = 0; i < idList.length; i++)
 			{
-				final GenericObject object = objectList.get(idList[i]);
+				final AbstractObject object = objectList.get(idList[i]);
 				if ((object != null) && ((classFilter == null) || classFilter.isInstance(object)))
 				{
 					result.add(object);
@@ -1923,12 +1924,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param name object name to find
 	 * @return object with matching name or null
 	 */
-	public GenericObject findObjectByName(final String name)
+	public AbstractObject findObjectByName(final String name)
 	{
-		GenericObject result = null;
+		AbstractObject result = null;
 		synchronized(objectList)
 		{
-			for(GenericObject object : objectList.values())
+			for(AbstractObject object : objectList.values())
 			{
 				if (object.getObjectName().equalsIgnoreCase(name))
 				{
@@ -1947,13 +1948,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param pattern regular expression for matching object name
 	 * @return object with matching name or null
 	 */
-	public GenericObject findObjectByNamePattern(final String pattern)
+	public AbstractObject findObjectByNamePattern(final String pattern)
 	{
-		GenericObject result = null;
+		AbstractObject result = null;
 		Matcher matcher = Pattern.compile(pattern).matcher("");
 		synchronized(objectList)
 		{
-			for(GenericObject object : objectList.values())
+			for(AbstractObject object : objectList.values())
 			{
 				matcher.reset(object.getObjectName());
 				if (matcher.matches())
@@ -1973,12 +1974,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @return List of all top matching level objects (either without parents or with
 	 *         inaccessible parents)
 	 */
-	public GenericObject[] getTopLevelObjects(Set<Integer> classFilter)
+	public AbstractObject[] getTopLevelObjects(Set<Integer> classFilter)
 	{
-		HashSet<GenericObject> list = new HashSet<GenericObject>();
+		HashSet<AbstractObject> list = new HashSet<AbstractObject>();
 		synchronized(objectList)
 		{
-			for(GenericObject object : objectList.values())
+			for(AbstractObject object : objectList.values())
 			{
 				if ((classFilter != null) && !classFilter.contains(object.getObjectClass()))
 					continue;
@@ -1996,7 +1997,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 						Long parent = it.next();
 						if (classFilter != null)
 						{
-							GenericObject p = objectList.get(parent);
+							AbstractObject p = objectList.get(parent);
 							if ((p != null) && classFilter.contains(p.getObjectClass()))
 							{
 								hasParents = true;
@@ -2017,7 +2018,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				}
 			}
 		}
-		return list.toArray(new GenericObject[list.size()]);
+		return list.toArray(new AbstractObject[list.size()]);
 	}
 	
 	/**
@@ -2026,7 +2027,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @return List of all top level objects (either without parents or with
 	 *         inaccessible parents)
 	 */
-	public GenericObject[] getTopLevelObjects()
+	public AbstractObject[] getTopLevelObjects()
 	{
 		return getTopLevelObjects(null);
 	}
@@ -2036,13 +2037,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * 
 	 * @return List of all objects
 	 */
-	public GenericObject[] getAllObjects()
+	public AbstractObject[] getAllObjects()
 	{
-		GenericObject[] list;
+		AbstractObject[] list;
 
 		synchronized(objectList)
 		{
-			list = objectList.values().toArray(new GenericObject[objectList.size()]);
+			list = objectList.values().toArray(new AbstractObject[objectList.size()]);
 		}
 		return list;
 	}
@@ -2055,7 +2056,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 */
 	public String getObjectName(long objectId)
 	{
-		GenericObject object = findObjectById(objectId);
+		AbstractObject object = findObjectById(objectId);
 		return (object != null) ? object.getObjectName() : ("[" + Long.toString(objectId) + "]");
 	}
 
@@ -3128,7 +3129,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		// Class-specific attributes
 		switch(data.getObjectClass())
 		{
-			case GenericObject.OBJECT_NODE:
+			case AbstractObject.OBJECT_NODE:
 				if (data.getPrimaryName() != null)
 					msg.setVariable(NXCPCodes.VID_PRIMARY_NAME, data.getPrimaryName());
 				msg.setVariable(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
@@ -3139,11 +3140,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				msg.setVariableInt32(NXCPCodes.VID_AGENT_PROXY, (int)data.getAgentProxyId());
 				msg.setVariableInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxyId());
 				break;
-			case GenericObject.OBJECT_NETWORKMAP:
+			case AbstractObject.OBJECT_NETWORKMAP:
 				msg.setVariableInt16(NXCPCodes.VID_MAP_TYPE, data.getMapType());
 				msg.setVariableInt32(NXCPCodes.VID_SEED_OBJECT, (int)data.getSeedObjectId());
 				break;
-			case GenericObject.OBJECT_NETWORKSERVICE:
+			case AbstractObject.OBJECT_NETWORKSERVICE:
 				msg.setVariableInt16(NXCPCodes.VID_SERVICE_TYPE, data.getServiceType());
 				msg.setVariableInt16(NXCPCodes.VID_IP_PROTO, data.getIpProtocol());
 				msg.setVariableInt16(NXCPCodes.VID_IP_PORT, data.getIpPort());
@@ -3151,13 +3152,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				msg.setVariable(NXCPCodes.VID_SERVICE_RESPONSE, data.getResponse());
 				msg.setVariableInt16(NXCPCodes.VID_CREATE_STATUS_DCI, data.isCreateStatusDci() ? 1 : 0);
 				break;
-			case GenericObject.OBJECT_NODELINK:
+			case AbstractObject.OBJECT_NODELINK:
 				msg.setVariableInt32(NXCPCodes.VID_NODE_ID, (int)data.getLinkedNodeId());
 				break;
-			case GenericObject.OBJECT_SLMCHECK:
+			case AbstractObject.OBJECT_SLMCHECK:
 				msg.setVariableInt16(NXCPCodes.VID_IS_TEMPLATE, data.isTemplate() ? 1 : 0);
 				break;
-			case GenericObject.OBJECT_INTERFACE:
+			case AbstractObject.OBJECT_INTERFACE:
 				msg.setVariable(NXCPCodes.VID_MAC_ADDR, data.getMacAddress().getValue());
 				msg.setVariable(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
 				msg.setVariable(NXCPCodes.VID_IP_NETMASK, data.getIpNetMask());
@@ -3167,7 +3168,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				msg.setVariableInt32(NXCPCodes.VID_IF_PORT, data.getPort());
 				msg.setVariableInt16(NXCPCodes.VID_IS_PHYS_PORT, data.isPhysicalPort() ? 1 : 0);
 				break;
-			case GenericObject.OBJECT_MOBILEDEVICE:
+			case AbstractObject.OBJECT_MOBILEDEVICE:
 				msg.setVariable(NXCPCodes.VID_DEVICE_ID, data.getDeviceId());
 				break;
 		}
@@ -6467,7 +6468,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	public void handover(NXCSession target)
 	{
 		target.objectList = objectList;
-		for(GenericObject o : objectList.values())
+		for(AbstractObject o : objectList.values())
 			o.setSession(target);
 		objectList = null;
 	}

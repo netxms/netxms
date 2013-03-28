@@ -30,7 +30,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.maps.elements.NetworkMapResource;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.networkmaps.widgets.NetworkMapWidget;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.ClusterResourceListComparator;
@@ -87,10 +87,10 @@ public class ClusterTab extends ObjectTab
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public void objectChanged(GenericObject object)
+	public void objectChanged(AbstractObject object)
 	{
 		if (object instanceof Cluster)
 		{
@@ -108,10 +108,10 @@ public class ClusterTab extends ObjectTab
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public boolean showForObject(GenericObject object)
+	public boolean showForObject(AbstractObject object)
 	{
 		return object instanceof Cluster;
 	}
@@ -128,7 +128,7 @@ public class ClusterTab extends ObjectTab
 		
 		page.addElement(new NetworkMapObject(id++, cluster.getObjectId()));
 		
-		for(GenericObject o : cluster.getAllChilds(GenericObject.OBJECT_NODE))
+		for(AbstractObject o : cluster.getAllChilds(AbstractObject.OBJECT_NODE))
 		{
 			page.addElement(new NetworkMapObject(id, o.getObjectId()));
 			page.addLink(new NetworkMapLink(0, 1, id));

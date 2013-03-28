@@ -45,7 +45,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
@@ -67,7 +67,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class GeneralTable extends PropertyPage
 {
 	private DataCollectionTable dci;
-	private GenericObject owner;
+	private AbstractObject owner;
 	private Cluster cluster = null;
 	private Map<Integer, Long> clusterResourceMap;
 	private Text description;
@@ -101,7 +101,7 @@ public class GeneralTable extends PropertyPage
 		}
 		else if (owner instanceof Node)
 		{
-			for(GenericObject o : owner.getParentsAsArray())
+			for(AbstractObject o : owner.getParentsAsArray())
 			{
 				if (o instanceof Cluster)
 				{

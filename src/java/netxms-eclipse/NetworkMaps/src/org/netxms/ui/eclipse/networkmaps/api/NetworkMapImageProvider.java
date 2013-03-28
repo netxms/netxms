@@ -19,7 +19,7 @@
 package org.netxms.ui.eclipse.networkmaps.api;
 
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Interface for network map custom image providers
@@ -32,5 +32,5 @@ public interface NetworkMapImageProvider
 	 * @param object NetXMS object
 	 * @return image for given object or null to continue search
 	 */
-	public Image getMapImage(GenericObject object);
+	public Image getMapImage(AbstractObject object);
 }

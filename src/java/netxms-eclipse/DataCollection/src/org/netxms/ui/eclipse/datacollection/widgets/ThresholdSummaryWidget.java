@@ -32,7 +32,7 @@ import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.ThresholdTreeComparator;
@@ -54,7 +54,7 @@ public class ThresholdSummaryWidget extends Composite
 	public static final int COLUMN_CONDITION = 4;
 	public static final int COLUMN_TIMESTAMP = 5;
 	
-	private GenericObject object;
+	private AbstractObject object;
 	private IViewPart viewPart;
 	private SortableTreeViewer viewer;
 	
@@ -148,7 +148,7 @@ public class ThresholdSummaryWidget extends Composite
 	/**
 	 * @param object the object to set
 	 */
-	public void setObject(GenericObject object)
+	public void setObject(AbstractObject object)
 	{
 		this.object = object;
 		refresh();

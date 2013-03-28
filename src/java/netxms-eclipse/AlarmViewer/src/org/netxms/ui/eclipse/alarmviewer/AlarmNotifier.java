@@ -38,7 +38,7 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.alarmviewer.dialogs.AlarmReminderDialog;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -176,7 +176,7 @@ public class AlarmNotifier
 				public IStatus runInUIThread(IProgressMonitor monitor)
 				{
 					final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-					final GenericObject object = session.findObjectById(alarm.getSourceObjectId());
+					final AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
 					
 					int severityFlag;
 					if (alarm.getCurrentSeverity() == Severity.NORMAL)

@@ -22,7 +22,7 @@ import java.text.NumberFormat;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
@@ -42,7 +42,7 @@ public class GeneralInfo extends TableElement
 {
 	private static final long serialVersionUID = 1L;
 
-	public GeneralInfo(Composite parent, GenericObject object)
+	public GeneralInfo(Composite parent, AbstractObject object)
 	{
 		super(parent, object);
 	}
@@ -53,7 +53,7 @@ public class GeneralInfo extends TableElement
 	@Override
 	protected void fillTable()
 	{
-		final GenericObject object = getObject();
+		final AbstractObject object = getObject();
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
 		addPair("ID", Long.toString(object.getObjectId()));
@@ -63,7 +63,7 @@ public class GeneralInfo extends TableElement
 		addPair("Status", StatusDisplayInfo.getStatusText(object.getStatus()));
 		switch(object.getObjectClass())
 		{
-			case GenericObject.OBJECT_INTERFACE:
+			case AbstractObject.OBJECT_INTERFACE:
 				Interface iface = (Interface)object;
 				addPair("Interface Index", Integer.toString(iface.getIfIndex()));
 				addPair("Interface Type", Integer.toString(iface.getIfType()));
@@ -89,7 +89,7 @@ public class GeneralInfo extends TableElement
 					addPair("IP Subnet Mask", iface.getSubnetMask().getHostAddress());
 				}
 				break;
-			case GenericObject.OBJECT_NODE:
+			case AbstractObject.OBJECT_NODE:
 				Node node = (Node)object;
 				if (session.isZoningEnabled())
 					addPair("Zone ID", Long.toString(node.getZoneId()));
@@ -105,7 +105,7 @@ public class GeneralInfo extends TableElement
 					addPair("Bridge Base Address", node.getBridgeBaseAddress().toString());
 				addPair("Driver", node.getDriverName(), false);
 				break;
-			case GenericObject.OBJECT_MOBILEDEVICE:
+			case AbstractObject.OBJECT_MOBILEDEVICE:
 				MobileDevice md = (MobileDevice)object;
 				if (md.getLastReportTime().getTime() == 0)
 					addPair("Last Report", "never");
@@ -121,21 +121,21 @@ public class GeneralInfo extends TableElement
 				if (md.getBatteryLevel() >= 0)
 					addPair("Battery Level", Integer.toString(md.getBatteryLevel()) + "%");
 				break;
-			case GenericObject.OBJECT_SUBNET:
+			case AbstractObject.OBJECT_SUBNET:
 				Subnet subnet = (Subnet)object;
 				if (session.isZoningEnabled())
 					addPair("Zone ID", Long.toString(subnet.getZoneId()));
 				break;
-			case GenericObject.OBJECT_ZONE:
+			case AbstractObject.OBJECT_ZONE:
 				Zone zone = (Zone)object;
 				addPair("Zone ID", Long.toString(zone.getZoneId()));
 				break;
-			case GenericObject.OBJECT_NODELINK:
+			case AbstractObject.OBJECT_NODELINK:
 				Node linkedNode = (Node)session.findObjectById(((NodeLink)object).getNodeId(), Node.class);
 				if (linkedNode != null)
 					addPair("Linked node", linkedNode.getObjectName());
-			case GenericObject.OBJECT_BUSINESSSERVICE:
-			case GenericObject.OBJECT_BUSINESSSERVICEROOT:
+			case AbstractObject.OBJECT_BUSINESSSERVICE:
+			case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
 				ServiceContainer service = (ServiceContainer)object;
 				NumberFormat nf = NumberFormat.getNumberInstance();
 				nf.setMinimumFractionDigits(3);
@@ -144,7 +144,7 @@ public class GeneralInfo extends TableElement
 				addPair("Uptime for week", nf.format(service.getUptimeForWeek()) + "%");
 				addPair("Uptime for month", nf.format(service.getUptimeForMonth()) + "%");
 				break;
-			case GenericObject.OBJECT_SLMCHECK:
+			case AbstractObject.OBJECT_SLMCHECK:
 				ServiceCheck check = (ServiceCheck)object;
 				addPair("Is template", check.isTemplate() ? "Yes" : "No");
 				if (check.getTemplateId() != 0)

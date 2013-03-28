@@ -22,7 +22,7 @@ import java.util.Iterator;
 
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.maps.NetworkMapLink;
@@ -61,7 +61,7 @@ public class IPNeighbors extends NetworkMap
 		while(it.hasNext())
 		{
 			long objectId = it.next();
-			GenericObject object = session.findObjectById(objectId);
+			AbstractObject object = session.findObjectById(objectId);
 			if ((object != null) && (object instanceof Subnet))
 			{
 				long elementId = mapPage.createElementId();
@@ -85,7 +85,7 @@ public class IPNeighbors extends NetworkMap
 			long objectId = it.next();
 			if (objectId != rootNodeId)
 			{
-				GenericObject object = session.findObjectById(objectId);
+				AbstractObject object = session.findObjectById(objectId);
 				if ((object != null) && (object instanceof Node))
 				{
 					long elementId = mapPage.createElementId();

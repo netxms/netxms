@@ -37,7 +37,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
@@ -131,8 +131,8 @@ public class IPAddressSelectionDialog extends Dialog
 		tc.setText(Messages.IPAddressSelectionDialog_Interface);
 		tc.setWidth(150);
 		
-		Set<GenericObject> addrList = new HashSet<GenericObject>();
-		for(GenericObject o : node.getChildsAsArray())
+		Set<AbstractObject> addrList = new HashSet<AbstractObject>();
+		for(AbstractObject o : node.getChildsAsArray())
 		{
 			if (o instanceof Interface)
 			{

@@ -22,7 +22,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ILightweightLabelDecorator;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Label decorator for NetXMS objects
@@ -89,7 +89,7 @@ public class ObjectDecorator implements ILightweightLabelDecorator
 	@Override
 	public void decorate(Object element, IDecoration decoration)
 	{
-		int status = ((GenericObject)element).getStatus();
+		int status = ((AbstractObject)element).getStatus();
 		decoration.addOverlay(statusImages[status], IDecoration.BOTTOM_RIGHT);
 	}
 }

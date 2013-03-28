@@ -31,7 +31,7 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -118,7 +118,7 @@ public class ObjectFieldEditor extends FieldEditor
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
-			GenericObject[] objects = dlg.getSelectedObjects(GenericObject.class);
+			AbstractObject[] objects = dlg.getSelectedObjects(AbstractObject.class);
 			if (objects.length > 0)
 			{
 				objectId = objects[0].getObjectId();

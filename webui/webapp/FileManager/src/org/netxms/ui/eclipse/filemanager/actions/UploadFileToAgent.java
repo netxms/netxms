@@ -33,7 +33,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -114,8 +114,8 @@ public class UploadFileToAgent implements IObjectActionDelegate
 			else if ((object instanceof Container) || (object instanceof ServiceRoot) || 
 			         (object instanceof Subnet)  || (object instanceof EntireNetwork))
 			{
-				Set<GenericObject> set = ((GenericObject)object).getAllChilds(GenericObject.OBJECT_NODE);
-				for(GenericObject o : set)
+				Set<AbstractObject> set = ((AbstractObject)object).getAllChilds(AbstractObject.OBJECT_NODE);
+				for(AbstractObject o : set)
 					nodes.add(o.getObjectId());
 			}
 		}

@@ -25,7 +25,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.elements.NetworkMapObject;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.UnknownObject;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -37,7 +37,7 @@ public abstract class ObjectFigure extends Figure
 	protected static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 132, 0, 200);
 	
 	protected NetworkMapObject element;
-	protected GenericObject object;
+	protected AbstractObject object;
 	protected MapLabelProvider labelProvider;
 	
 	private boolean moved = false;

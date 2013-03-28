@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventInfo;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmDetails;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
@@ -60,7 +60,7 @@ public class EventTreeLabelProvider extends LabelProvider implements ITableLabel
 			case AlarmDetails.EV_COLUMN_SEVERITY:
 				return StatusDisplayInfo.getStatusText(((EventInfo)element).getSeverity());
 			case AlarmDetails.EV_COLUMN_SOURCE:
-				GenericObject o = session.findObjectById(((EventInfo)element).getSourceObjectId());
+				AbstractObject o = session.findObjectById(((EventInfo)element).getSourceObjectId());
 				return (o != null) ? o.getObjectName() : ("[" + ((EventInfo)element).getSourceObjectId() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case AlarmDetails.EV_COLUMN_NAME:
 				return ((EventInfo)element).getName();

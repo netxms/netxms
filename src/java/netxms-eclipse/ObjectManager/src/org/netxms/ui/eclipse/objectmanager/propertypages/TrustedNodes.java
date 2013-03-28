@@ -41,7 +41,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -58,11 +58,11 @@ public class TrustedNodes extends PropertyPage
 {
 	public static final int COLUMN_NAME = 0;
 	
-	private GenericObject object = null;
+	private AbstractObject object = null;
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button deleteButton;
-	private HashMap<Long, GenericObject> trustedNodes = new HashMap<Long, GenericObject>(0);
+	private HashMap<Long, AbstractObject> trustedNodes = new HashMap<Long, AbstractObject>(0);
 	private boolean isModified = false;
 
 	/* (non-Javadoc)
@@ -73,7 +73,7 @@ public class TrustedNodes extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (GenericObject)getElement().getAdapter(GenericObject.class);
+		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -89,7 +89,7 @@ public class TrustedNodes extends PropertyPage
       viewer.setLabelProvider(new WorkbenchLabelProvider());
       viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       
-      GenericObject[] nodes = object.getTrustedNodes();
+      AbstractObject[] nodes = object.getTrustedNodes();
       for(int i = 0; i < nodes.length; i++)
       {
       	if (nodes[i] != null)
@@ -130,7 +130,7 @@ public class TrustedNodes extends PropertyPage
 				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(true));
 				if (dlg.open() == Window.OK)
 				{
-					GenericObject[] nodes = dlg.getSelectedObjects(Node.class);
+					AbstractObject[] nodes = dlg.getSelectedObjects(Node.class);
 			      for(int i = 0; i < nodes.length; i++)
 			      	trustedNodes.put(nodes[i].getObjectId(), nodes[i]);
 			      viewer.setInput(trustedNodes.values().toArray());
@@ -156,12 +156,12 @@ public class TrustedNodes extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				Iterator<GenericObject> it = selection.iterator();
+				Iterator<AbstractObject> it = selection.iterator();
 				if (it.hasNext())
 				{
 					while(it.hasNext())
 					{
-						GenericObject object = it.next();
+						AbstractObject object = it.next();
 						trustedNodes.remove(object.getObjectId());
 					}
 			      viewer.setInput(trustedNodes.values().toArray());
@@ -254,7 +254,7 @@ public class TrustedNodes extends PropertyPage
 	protected void performDefaults()
 	{
 		trustedNodes.clear();
-		viewer.setInput(new GenericObject[0]);
+		viewer.setInput(new AbstractObject[0]);
 		isModified = true;
 		super.performDefaults();
 	}

@@ -56,7 +56,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmNote;
 import org.netxms.client.events.EventInfo;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
@@ -448,7 +448,7 @@ public class AlarmDetails extends ViewPart
 						
 						if (lastValuesWidget == null)
 						{
-							GenericObject object = session.findObjectById(alarm.getSourceObjectId());
+							AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
 							if (object != null)
 							{
 								lastValuesWidget = new LastValuesWidget(AlarmDetails.this, dataArea, SWT.BORDER, object, "AlarmDetails.LastValues"); //$NON-NLS-1$
@@ -549,7 +549,7 @@ public class AlarmDetails extends ViewPart
 		alarmState.setImage(imageCache.add(Activator.getImageDescriptor(stateImage[state])));
 		alarmState.setText(stateText[alarm.getState()]);
 		
-		GenericObject object = session.findObjectById(alarm.getSourceObjectId());
+		AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
 		alarmSource.setImage((object != null) ? wbLabelProvider.getImage(object) : SharedIcons.IMG_UNKNOWN_OBJECT);
 		alarmSource.setText((object != null) ? object.getObjectName() : ("[" + Long.toString(alarm.getSourceObjectId()) + "]")); //$NON-NLS-1$ //$NON-NLS-2$
 		

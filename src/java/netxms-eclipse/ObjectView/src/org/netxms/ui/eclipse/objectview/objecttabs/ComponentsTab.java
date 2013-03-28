@@ -39,7 +39,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.PhysicalComponent;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
@@ -236,10 +236,10 @@ public class ComponentsTab extends ObjectTab
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public void objectChanged(final GenericObject object)
+	public void objectChanged(final AbstractObject object)
 	{
 		viewer.setInput(new Object[0]);
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -298,10 +298,10 @@ public class ComponentsTab extends ObjectTab
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public boolean showForObject(GenericObject object)
+	public boolean showForObject(AbstractObject object)
 	{
 		if (object instanceof Node)
 		{

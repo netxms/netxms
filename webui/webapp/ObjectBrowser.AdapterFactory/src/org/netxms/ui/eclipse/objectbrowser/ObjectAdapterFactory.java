@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.objectbrowser;
 
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.ui.model.IWorkbenchAdapter;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectAdapter;
 
 /**
@@ -52,8 +52,8 @@ public class ObjectAdapterFactory implements IAdapterFactory
 	public Object getAdapter(Object adaptableObject, Class adapterType)
 	{
 		if ((adapterType == IWorkbenchAdapter.class) && 
-		    (adaptableObject instanceof GenericObject) &&
-		    (((GenericObject)adaptableObject).getObjectClass() < GenericObject.OBJECT_CUSTOM))
+		    (adaptableObject instanceof AbstractObject) &&
+		    (((AbstractObject)adaptableObject).getObjectClass() < AbstractObject.OBJECT_CUSTOM))
 		{
 			return new ObjectAdapter();
 		}

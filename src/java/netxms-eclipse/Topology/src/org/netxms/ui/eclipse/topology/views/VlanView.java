@@ -50,7 +50,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -92,7 +92,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		super.init(site);
 		nodeId = Long.parseLong(site.getSecondaryId());
 		session = (NXCSession)ConsoleSharedData.getSession();
-		GenericObject object = session.findObjectById(nodeId);
+		AbstractObject object = session.findObjectById(nodeId);
 		setPartName("VLAN View - " + ((object != null) ? object.getObjectName() : "<" + site.getSecondaryId() + ">"));
 	}
 

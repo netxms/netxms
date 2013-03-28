@@ -27,7 +27,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -64,7 +64,7 @@ public class ObjectStatusChart extends PropertyPage
 		
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
 		objectSelector.setLabel(Messages.ObjectStatusChart_RootObject);
-		objectSelector.setObjectClass(GenericObject.class);
+		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getRootObject());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

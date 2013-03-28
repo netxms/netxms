@@ -29,7 +29,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
@@ -70,7 +70,7 @@ public class CreateContainer implements IObjectActionDelegate
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_CONTAINER, dlg.getObjectName(), parentId);
+				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_CONTAINER, dlg.getObjectName(), parentId);
 				session.createObject(cd);
 			}
 
@@ -93,7 +93,7 @@ public class CreateContainer implements IObjectActionDelegate
 			final Object object = ((IStructuredSelection)selection).getFirstElement();
 			if ((object instanceof Container) || (object instanceof ServiceRoot))
 			{
-				parentId = ((GenericObject)object).getObjectId();
+				parentId = ((AbstractObject)object).getObjectId();
 			}
 			else
 			{

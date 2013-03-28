@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.PerfTabDci;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
@@ -95,10 +95,10 @@ public class PerformanceTab extends ObjectTab
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public void objectChanged(final GenericObject object)
+	public void objectChanged(final AbstractObject object)
 	{
 		for(PerfTabGraph chart : charts.values())
 			chart.dispose();
@@ -245,10 +245,10 @@ public class PerformanceTab extends ObjectTab
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public boolean showForObject(GenericObject object)
+	public boolean showForObject(AbstractObject object)
 	{
 		return object instanceof Node;
 	}

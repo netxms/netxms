@@ -27,7 +27,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
@@ -113,7 +113,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			case DataSources.COLUMN_POSITION:
 				return Integer.toString(elementList.indexOf(dci) + 1);
 			case DataSources.COLUMN_NODE:
-				GenericObject object = session.findObjectById(dci.nodeId);
+				AbstractObject object = session.findObjectById(dci.nodeId);
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.nodeId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case DataSources.COLUMN_METRIC:
 				String name = dciNameCache.get(new NodeItemPair(dci.nodeId, dci.dciId));

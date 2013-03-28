@@ -39,7 +39,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
@@ -80,8 +80,8 @@ public class TableLastValues extends ViewPart
 			throw new PartInitException("Internal error");
 		
 		nodeId = Long.parseLong(parts[0]);
-		GenericObject object = session.findObjectById(nodeId);
-		if ((object == null) || (object.getObjectClass() != GenericObject.OBJECT_NODE))
+		AbstractObject object = session.findObjectById(nodeId);
+		if ((object == null) || (object.getObjectClass() != AbstractObject.OBJECT_NODE))
 			throw new PartInitException("Invalid object ID");
 		nodeName = object.getObjectName();
 		

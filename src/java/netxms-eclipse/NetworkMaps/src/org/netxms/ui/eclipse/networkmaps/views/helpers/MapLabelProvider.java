@@ -54,7 +54,7 @@ import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.maps.elements.NetworkMapResource;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.UnknownObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -153,7 +153,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		if (element instanceof NetworkMapObject)
 		{
-			GenericObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
+			AbstractObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
 			return (object != null) ? object.getObjectName() : null;
 		}
 		return null;
@@ -169,7 +169,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		if (element instanceof NetworkMapObject)
 		{
-			GenericObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
+			AbstractObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
 			if (object != null)
 			{
 				// First, check if object has custom map image set
@@ -187,7 +187,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				// Use built-in image as last resort
 				switch(object.getObjectClass())
 				{
-					case GenericObject.OBJECT_NODE:
+					case AbstractObject.OBJECT_NODE:
 						if ((((Node)object).getFlags() & Node.NF_IS_BRIDGE) != 0)
 							return imgNodeSwitch;
 						if ((((Node)object).getFlags() & Node.NF_IS_ROUTER) != 0)
@@ -201,11 +201,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 						if (((Node)object).getPlatformName().startsWith("FreeBSD"))
 							return imgNodeFreeBSD;
 						return imgNodeGeneric;
-					case GenericObject.OBJECT_SUBNET:
+					case AbstractObject.OBJECT_SUBNET:
 						return imgSubnet;
-					case GenericObject.OBJECT_CONTAINER:
+					case AbstractObject.OBJECT_CONTAINER:
 						return imgService;
-					case GenericObject.OBJECT_CLUSTER:
+					case AbstractObject.OBJECT_CLUSTER:
 						return imgCluster;
 					default:
 						return imgOther;
@@ -261,7 +261,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	 * @param object
 	 * @return
 	 */
-	public Image getStatusImage(GenericObject object)
+	public Image getStatusImage(AbstractObject object)
 	{
 		Image image = null;
 		try
@@ -414,7 +414,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
 		if (link.getStatusObject() != 0)
 		{
-			GenericObject object = session.findObjectById(link.getStatusObject());
+			AbstractObject object = session.findObjectById(link.getStatusObject());
 			if (object != null)
 			{
 				connection.setLineColor(StatusDisplayInfo.getStatusColor(object.getStatus()));

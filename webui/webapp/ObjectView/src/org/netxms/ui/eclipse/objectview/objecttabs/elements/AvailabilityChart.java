@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
@@ -54,7 +54,7 @@ public class AvailabilityChart extends OverviewPageElement
 	 * @param parent
 	 * @param object
 	 */
-	public AvailabilityChart(Composite parent, GenericObject object)
+	public AvailabilityChart(Composite parent, AbstractObject object)
 	{
 		super(parent, object);
 	}
@@ -177,10 +177,10 @@ public class AvailabilityChart extends OverviewPageElement
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public boolean isApplicableForObject(GenericObject object)
+	public boolean isApplicableForObject(AbstractObject object)
 	{
 		return object instanceof ServiceContainer;
 	}

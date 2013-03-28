@@ -26,7 +26,7 @@ import org.eclipse.ui.PartInitException;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.topology.HopInfo;
 import org.netxms.client.topology.NetworkPath;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -39,7 +39,7 @@ public class IPRouteMap extends NetworkMap
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.IPRouteMap";
 	
-	private GenericObject targetObject;
+	private AbstractObject targetObject;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)

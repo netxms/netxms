@@ -24,7 +24,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
@@ -96,7 +96,7 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 			case AlarmList.COLUMN_STATE:
 				return stateText[((Alarm)element).getState()];
 			case AlarmList.COLUMN_SOURCE:
-				GenericObject object = session.findObjectById(((Alarm)element).getSourceObjectId());
+				AbstractObject object = session.findObjectById(((Alarm)element).getSourceObjectId());
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(((Alarm)element).getSourceObjectId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case AlarmList.COLUMN_MESSAGE:
 				return ((Alarm)element).getMessage();

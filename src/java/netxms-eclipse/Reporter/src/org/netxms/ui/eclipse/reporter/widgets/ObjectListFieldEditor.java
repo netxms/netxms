@@ -33,7 +33,7 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -45,7 +45,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class ObjectListFieldEditor extends FieldEditor
 {
 	private TableViewer viewer;
-	private Map<Long, GenericObject> objects = new HashMap<Long, GenericObject>();
+	private Map<Long, AbstractObject> objects = new HashMap<Long, AbstractObject>();
 	
 	/**
 	 * @param parameter
@@ -113,7 +113,7 @@ public class ObjectListFieldEditor extends FieldEditor
 		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(false));
 		if (dlg.open() == Window.OK)
 		{
-			for(GenericObject o : dlg.getSelectedObjects())
+			for(AbstractObject o : dlg.getSelectedObjects())
 				objects.put(o.getObjectId(), o);
 			viewer.setInput(objects.values().toArray());
 		}
@@ -127,7 +127,7 @@ public class ObjectListFieldEditor extends FieldEditor
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		for(Object o : selection.toList())
 		{
-			objects.remove(((GenericObject)o).getObjectId());
+			objects.remove(((AbstractObject)o).getObjectId());
 		}
 		viewer.setInput(objects.values().toArray());
 	}
@@ -142,7 +142,7 @@ public class ObjectListFieldEditor extends FieldEditor
 			return "";
 		
 		StringBuilder sb = new StringBuilder();
-		for(GenericObject o : objects.values())
+		for(AbstractObject o : objects.values())
 		{
 			sb.append(o.getObjectId());
 			sb.append(',');

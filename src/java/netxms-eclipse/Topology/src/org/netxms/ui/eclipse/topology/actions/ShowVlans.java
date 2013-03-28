@@ -31,7 +31,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -111,7 +111,7 @@ public class ShowVlans implements IObjectActionDelegate
 			if (obj instanceof Node)
 			{
 				action.setEnabled(true);
-				objectId = ((GenericObject)obj).getObjectId();
+				objectId = ((AbstractObject)obj).getObjectId();
 			}
 			else
 			{

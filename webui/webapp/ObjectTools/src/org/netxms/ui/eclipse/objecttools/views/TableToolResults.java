@@ -33,7 +33,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -79,8 +79,8 @@ public class TableToolResults extends ViewPart
 			throw new PartInitException("Invalid tool ID");
 		
 		nodeId = Long.parseLong(parts[1]);
-		GenericObject object = session.findObjectById(nodeId);
-		if ((object == null) || (object.getObjectClass() != GenericObject.OBJECT_NODE))
+		AbstractObject object = session.findObjectById(nodeId);
+		if ((object == null) || (object.getObjectClass() != AbstractObject.OBJECT_NODE))
 			throw new PartInitException("Invalid object ID");
 		
 		setPartName(object.getObjectName() + ": " + tool.getDisplayName());

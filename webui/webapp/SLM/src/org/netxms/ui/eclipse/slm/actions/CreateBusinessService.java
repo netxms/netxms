@@ -30,7 +30,7 @@ import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.Activator;
@@ -71,7 +71,7 @@ public class CreateBusinessService implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.createObject(new NXCObjectCreationData(GenericObject.OBJECT_BUSINESSSERVICE, dlg.getName(), parentId));
+				session.createObject(new NXCObjectCreationData(AbstractObject.OBJECT_BUSINESSSERVICE, dlg.getName(), parentId));
 			}
 
 			@Override
@@ -93,7 +93,7 @@ public class CreateBusinessService implements IObjectActionDelegate
 			final Object object = ((IStructuredSelection)selection).getFirstElement();
 			if ((object instanceof BusinessService) || (object instanceof BusinessServiceRoot))
 			{
-				parentId = ((GenericObject)object).getObjectId();
+				parentId = ((AbstractObject)object).getObjectId();
 			}
 			else
 			{

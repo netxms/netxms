@@ -156,7 +156,7 @@ public class Interface extends GenericObject
 		{
 			for(Long id : parents)
 			{
-				GenericObject object = session.findObjectById(id);
+				AbstractObject object = session.findObjectById(id);
 				if (object instanceof Node)
 				{
 					node = (Node)object;

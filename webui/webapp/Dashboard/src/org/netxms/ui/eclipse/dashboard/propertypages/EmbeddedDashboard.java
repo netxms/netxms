@@ -47,7 +47,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -65,12 +65,12 @@ public class EmbeddedDashboard extends PropertyPage
 	static
 	{
 		objectSelectionFilter = new HashSet<Integer>(2);
-		objectSelectionFilter.add(GenericObject.OBJECT_DASHBOARD);
-		objectSelectionFilter.add(GenericObject.OBJECT_DASHBOARDROOT);
+		objectSelectionFilter.add(AbstractObject.OBJECT_DASHBOARD);
+		objectSelectionFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
 	}
 	
 	private EmbeddedDashboardConfig config;
-	private List<GenericObject> dashboardObjects;
+	private List<AbstractObject> dashboardObjects;
 	private TableViewer viewer;
 	private Button addButton;
 	private Button deleteButton;

@@ -30,7 +30,7 @@ import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.Threshold;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.propertypages.ConditionData;
@@ -116,7 +116,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			case ConditionData.COLUMN_POSITION:
 				return Integer.toString(elementList.indexOf(dci) + 1);
 			case ConditionData.COLUMN_NODE:
-				GenericObject object = session.findObjectById(dci.getNodeId());
+				AbstractObject object = session.findObjectById(dci.getNodeId());
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.getNodeId()) + "]");
 			case ConditionData.COLUMN_METRIC:
 				String name = dciNameCache.get(new NodeItemPair(dci.getNodeId(), dci.getDciId()));

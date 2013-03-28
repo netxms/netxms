@@ -30,7 +30,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -71,8 +71,8 @@ public class AddClusterNode implements IObjectActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					List<GenericObject> objects = dlg.getSelectedObjects();
-					for(GenericObject o : objects)
+					List<AbstractObject> objects = dlg.getSelectedObjects();
+					for(AbstractObject o : objects)
 						session.addClusterNode(clusterId, o.getObjectId());
 				}
 			}.start();
@@ -90,7 +90,7 @@ public class AddClusterNode implements IObjectActionDelegate
 			if (obj instanceof Cluster)
 			{
 				action.setEnabled(true);
-				clusterId = ((GenericObject)obj).getObjectId();
+				clusterId = ((AbstractObject)obj).getObjectId();
 			}
 			else
 			{

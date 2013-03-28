@@ -23,7 +23,7 @@ import java.io.Writer;
 import java.util.Map;
 import java.util.Set;
 import org.netxms.client.datacollection.GraphSettings;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
@@ -39,7 +39,7 @@ public class ObjectStatusChartConfig extends DashboardElementConfig
 	private long rootObject = 0;
 	
 	@ElementArray(required=false)
-	private int[] classFilter = { GenericObject.OBJECT_NODE };
+	private int[] classFilter = { AbstractObject.OBJECT_NODE };
 	
 	@Element(required=false)
 	private String title = ""; //$NON-NLS-1$

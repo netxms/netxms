@@ -28,7 +28,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.networkmaps.views.ServiceDependency;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -40,7 +40,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class ShowServiceDependency implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private GenericObject object;
+	private AbstractObject object;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -82,7 +82,7 @@ public class ShowServiceDependency implements IObjectActionDelegate
 			Object obj = ((IStructuredSelection)selection).getFirstElement();
 			if ((obj instanceof Node) || (obj instanceof Container) || (obj instanceof Cluster))
 			{
-				object = (GenericObject)obj;
+				object = (AbstractObject)obj;
 			}
 			else
 			{

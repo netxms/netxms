@@ -25,7 +25,7 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
@@ -96,7 +96,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 		int[] objectCount = new int[6];
 		Arrays.fill(objectCount, 0);
 
-		GenericObject root = session.findObjectById(config.getRootObject());
+		AbstractObject root = session.findObjectById(config.getRootObject());
 		if (root != null)
 			collectData(objectCount, root);
 
@@ -109,9 +109,9 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	 * @param objectCount
 	 * @param root
 	 */
-	private void collectData(int[] objectCount, GenericObject root)
+	private void collectData(int[] objectCount, AbstractObject root)
 	{
-		for(GenericObject o : root.getAllChilds(-1))
+		for(AbstractObject o : root.getAllChilds(-1))
 		{
 			if ((o.getStatus() <= Severity.UNKNOWN) && filterObject(o))
 				objectCount[o.getStatus()]++;
@@ -122,7 +122,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	 * @param o
 	 * @return
 	 */
-	private boolean filterObject(GenericObject o)
+	private boolean filterObject(AbstractObject o)
 	{
 		int[] cf = config.getClassFilter();
 		for(int i = 0; i < cf.length; i++)

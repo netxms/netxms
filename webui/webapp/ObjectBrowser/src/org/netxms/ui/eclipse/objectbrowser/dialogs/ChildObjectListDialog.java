@@ -49,7 +49,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectListFilter;
@@ -69,7 +69,7 @@ public class ChildObjectListDialog extends Dialog
 	private ObjectListFilter filter;
 	private Text filterText;
 	private TableViewer objectList;
-	private List<GenericObject> selectedObjects;
+	private List<AbstractObject> selectedObjects;
 	
 	/**
 	 * Create class filter from array of allowed classes.
@@ -138,8 +138,8 @@ public class ChildObjectListDialog extends Dialog
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
-		GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(parentObject);
-		GenericObject[] sourceObjects = (object != null) ? object.getChildsAsArray() : new GenericObject[0];
+		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(parentObject);
+		AbstractObject[] sourceObjects = (object != null) ? object.getChildsAsArray() : new AbstractObject[0];
 		
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
@@ -170,7 +170,7 @@ public class ChildObjectListDialog extends Dialog
 			{
 				filter.setFilterString(filterText.getText());
 				objectList.refresh(false);
-				GenericObject obj = filter.getLastMatch();
+				AbstractObject obj = filter.getLastMatch();
 				if (obj != null)
 				{
 					objectList.setSelection(new StructuredSelection(obj), true);
@@ -242,10 +242,10 @@ public class ChildObjectListDialog extends Dialog
 	protected void okPressed()
 	{
 		IStructuredSelection selection = (IStructuredSelection)objectList.getSelection();
-		selectedObjects = new ArrayList<GenericObject>(selection.size());
+		selectedObjects = new ArrayList<AbstractObject>(selection.size());
 		Iterator it = selection.iterator();
 		while(it.hasNext())
-			selectedObjects.add((GenericObject)it.next());
+			selectedObjects.add((AbstractObject)it.next());
 		saveSettings();
 		super.okPressed();
 	}
@@ -265,7 +265,7 @@ public class ChildObjectListDialog extends Dialog
 	/**
 	 * @return the selectedObjects
 	 */
-	public List<GenericObject> getSelectedObjects()
+	public List<AbstractObject> getSelectedObjects()
 	{
 		return selectedObjects;
 	}

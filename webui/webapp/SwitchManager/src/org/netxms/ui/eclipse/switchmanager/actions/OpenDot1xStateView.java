@@ -27,7 +27,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.switchmanager.Messages;
 import org.netxms.ui.eclipse.switchmanager.views.Dot1xStatusView;
 
@@ -37,7 +37,7 @@ import org.netxms.ui.eclipse.switchmanager.views.Dot1xStatusView;
 public class OpenDot1xStateView implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private GenericObject object;
+	private AbstractObject object;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -76,9 +76,9 @@ public class OpenDot1xStateView implements IObjectActionDelegate
 		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
 			final Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if (obj instanceof GenericObject)
+			if (obj instanceof AbstractObject)
 			{
-				object = (GenericObject)obj;
+				object = (AbstractObject)obj;
 			}
 			else
 			{

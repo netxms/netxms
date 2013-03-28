@@ -22,7 +22,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -55,7 +55,7 @@ public class AlarmListFilter extends ViewerFilter
 		if ((rootObject == 0) || (rootObject == ((Alarm)element).getSourceObjectId()))
 			return true;	// No filtering by object ID or root object is a source
 		
-		GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(((Alarm)element).getSourceObjectId());
+		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(((Alarm)element).getSourceObjectId());
 		if (object != null)
 			return object.isChildOf(rootObject);
 		return false;

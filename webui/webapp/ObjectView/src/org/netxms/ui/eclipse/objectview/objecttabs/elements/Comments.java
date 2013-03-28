@@ -22,7 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 
 /**
@@ -41,7 +41,7 @@ public class Comments extends OverviewPageElement
 	 * @param parent
 	 * @param object
 	 */
-	public Comments(Composite parent, GenericObject object)
+	public Comments(Composite parent, AbstractObject object)
 	{
 		super(parent, object);
 	}

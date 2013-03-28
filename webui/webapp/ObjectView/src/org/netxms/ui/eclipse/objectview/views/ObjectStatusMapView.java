@@ -30,7 +30,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMap;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -58,7 +58,7 @@ public class ObjectStatusMapView extends ViewPart
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		rootObjectId = Long.parseLong(site.getSecondaryId());
-		final GenericObject object = session.findObjectById(rootObjectId);
+		final AbstractObject object = session.findObjectById(rootObjectId);
 		setPartName("Status Map - " + ((object != null) ? object.getObjectName() : ("[" + rootObjectId + "]")));
 	}
 

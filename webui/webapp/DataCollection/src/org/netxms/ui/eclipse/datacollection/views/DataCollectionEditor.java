@@ -64,7 +64,7 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Template;
@@ -107,7 +107,7 @@ public class DataCollectionEditor extends ViewPart
 	private FilterText filterText;
 	private SortableTableViewer viewer;
 	private NXCSession session;
-	private GenericObject object;
+	private AbstractObject object;
 	private DataCollectionConfiguration dciConfig = null;
 	private DciFilter filter;
 	private Action actionCreateItem;
@@ -132,7 +132,7 @@ public class DataCollectionEditor extends ViewPart
 		super.init(site);
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
-		GenericObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
+		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		object = ((obj != null) && ((obj instanceof Node) || (obj instanceof Template) || (obj instanceof Cluster) || (obj instanceof MobileDevice))) ? obj : null;
 		setPartName(Messages.DataCollectionEditor_PartNamePrefix + ((object != null) ? object.getObjectName() : Messages.DataCollectionEditor_Error));
 	}
@@ -778,11 +778,11 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				for(GenericObject o : dlg.getSelectedObjects(Node.class))
+				for(AbstractObject o : dlg.getSelectedObjects(Node.class))
 					dciConfig.copyObjects(o.getObjectId(), dciList);
-				for(GenericObject o : dlg.getSelectedObjects(Template.class))
+				for(AbstractObject o : dlg.getSelectedObjects(Template.class))
 					dciConfig.copyObjects(o.getObjectId(), dciList);
-				for(GenericObject o : dlg.getSelectedObjects(MobileDevice.class))
+				for(AbstractObject o : dlg.getSelectedObjects(MobileDevice.class))
 					dciConfig.copyObjects(o.getObjectId(), dciList);
 				if (doMove)
 				{
@@ -816,7 +816,7 @@ public class DataCollectionEditor extends ViewPart
 		if (dlg.open() != Window.OK)
 			return;
 		
-		GenericObject[] objects = dlg.getSelectedObjects(Template.class);
+		AbstractObject[] objects = dlg.getSelectedObjects(Template.class);
 		if (objects.length == 0)
 			return;
 		final Template template = (Template)objects[0];

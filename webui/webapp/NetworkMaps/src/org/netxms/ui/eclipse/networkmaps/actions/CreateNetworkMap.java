@@ -28,7 +28,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -71,7 +71,7 @@ public class CreateNetworkMap implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NETWORKMAP, dlg.getName(), parentId);
+				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NETWORKMAP, dlg.getName(), parentId);
 				cd.setMapType(dlg.getType());
 				cd.setSeedObjectId(dlg.getSeedObject());
 				session.createObject(cd);
@@ -96,7 +96,7 @@ public class CreateNetworkMap implements IObjectActionDelegate
 			final Object object = ((IStructuredSelection)selection).getFirstElement();
 			if ((object instanceof NetworkMapGroup) || (object instanceof NetworkMapRoot))
 			{
-				parentId = ((GenericObject)object).getObjectId();
+				parentId = ((AbstractObject)object).getObjectId();
 			}
 			else
 			{

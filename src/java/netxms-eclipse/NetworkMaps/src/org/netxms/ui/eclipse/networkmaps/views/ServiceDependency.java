@@ -28,7 +28,7 @@ import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Service dependency for service, cluster, condition, or node object
@@ -65,13 +65,13 @@ public class ServiceDependency extends NetworkMap
 	 * 
 	 * @param object
 	 */
-	private void addParentServices(GenericObject object, long parentElementId)
+	private void addParentServices(AbstractObject object, long parentElementId)
 	{
 		Iterator<Long> it = object.getParents();
 		while(it.hasNext())
 		{
 			long objectId = it.next();
-			GenericObject parent = session.findObjectById(objectId);
+			AbstractObject parent = session.findObjectById(objectId);
 			if ((parent != null) && ((parent instanceof Container) || (parent instanceof Cluster)))
 			{
 				long elementId = mapPage.createElementId();

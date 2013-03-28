@@ -35,7 +35,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
@@ -65,15 +65,15 @@ public class ObjectSelectionDialog extends Dialog
 	public static Set<Integer> createNodeSelectionFilter(boolean allowMobileDevices)
 	{
 		HashSet<Integer> classFilter = new HashSet<Integer>(7);
-		classFilter.add(GenericObject.OBJECT_NETWORK);
-		classFilter.add(GenericObject.OBJECT_ZONE);
-		classFilter.add(GenericObject.OBJECT_SUBNET);
-		classFilter.add(GenericObject.OBJECT_SERVICEROOT);
-		classFilter.add(GenericObject.OBJECT_CONTAINER);
-		classFilter.add(GenericObject.OBJECT_CLUSTER);
-		classFilter.add(GenericObject.OBJECT_NODE);
+		classFilter.add(AbstractObject.OBJECT_NETWORK);
+		classFilter.add(AbstractObject.OBJECT_ZONE);
+		classFilter.add(AbstractObject.OBJECT_SUBNET);
+		classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+		classFilter.add(AbstractObject.OBJECT_CONTAINER);
+		classFilter.add(AbstractObject.OBJECT_CLUSTER);
+		classFilter.add(AbstractObject.OBJECT_NODE);
 		if (allowMobileDevices)
-			classFilter.add(GenericObject.OBJECT_MOBILEDEVICE);
+			classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
 		return classFilter;
 	}
 
@@ -85,8 +85,8 @@ public class ObjectSelectionDialog extends Dialog
 	public static Set<Integer> createZoneSelectionFilter()
 	{
 		HashSet<Integer> classFilter = new HashSet<Integer>(2);
-		classFilter.add(GenericObject.OBJECT_NETWORK);
-		classFilter.add(GenericObject.OBJECT_ZONE);
+		classFilter.add(AbstractObject.OBJECT_NETWORK);
+		classFilter.add(AbstractObject.OBJECT_ZONE);
 		return classFilter;
 	}
 
@@ -98,9 +98,9 @@ public class ObjectSelectionDialog extends Dialog
 	public static Set<Integer> createNetworkMapSelectionFilter()
 	{
 		HashSet<Integer> classFilter = new HashSet<Integer>(3);
-		classFilter.add(GenericObject.OBJECT_NETWORKMAPROOT);
-		classFilter.add(GenericObject.OBJECT_NETWORKMAPGROUP);
-		classFilter.add(GenericObject.OBJECT_NETWORKMAP);
+		classFilter.add(AbstractObject.OBJECT_NETWORKMAPROOT);
+		classFilter.add(AbstractObject.OBJECT_NETWORKMAPGROUP);
+		classFilter.add(AbstractObject.OBJECT_NETWORKMAP);
 		return classFilter;
 	}
 
@@ -113,9 +113,9 @@ public class ObjectSelectionDialog extends Dialog
 	public static Set<Integer> createTemplateSelectionFilter()
 	{
 		HashSet<Integer> classFilter = new HashSet<Integer>(3);
-		classFilter.add(GenericObject.OBJECT_TEMPLATEROOT);
-		classFilter.add(GenericObject.OBJECT_TEMPLATEGROUP);
-		classFilter.add(GenericObject.OBJECT_TEMPLATE);
+		classFilter.add(AbstractObject.OBJECT_TEMPLATEROOT);
+		classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
+		classFilter.add(AbstractObject.OBJECT_TEMPLATE);
 		return classFilter;
 	}
 
@@ -128,17 +128,17 @@ public class ObjectSelectionDialog extends Dialog
 	public static Set<Integer> createNodeAndTemplateSelectionFilter(boolean allowMobileDevices)
 	{
 		HashSet<Integer> classFilter = new HashSet<Integer>(9);
-		classFilter.add(GenericObject.OBJECT_NETWORK);
-		classFilter.add(GenericObject.OBJECT_SUBNET);
-		classFilter.add(GenericObject.OBJECT_SERVICEROOT);
-		classFilter.add(GenericObject.OBJECT_CONTAINER);
-		classFilter.add(GenericObject.OBJECT_CLUSTER);
-		classFilter.add(GenericObject.OBJECT_NODE);
-		classFilter.add(GenericObject.OBJECT_TEMPLATEROOT);
-		classFilter.add(GenericObject.OBJECT_TEMPLATEGROUP);
-		classFilter.add(GenericObject.OBJECT_TEMPLATE);
+		classFilter.add(AbstractObject.OBJECT_NETWORK);
+		classFilter.add(AbstractObject.OBJECT_SUBNET);
+		classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+		classFilter.add(AbstractObject.OBJECT_CONTAINER);
+		classFilter.add(AbstractObject.OBJECT_CLUSTER);
+		classFilter.add(AbstractObject.OBJECT_NODE);
+		classFilter.add(AbstractObject.OBJECT_TEMPLATEROOT);
+		classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
+		classFilter.add(AbstractObject.OBJECT_TEMPLATE);
 		if (allowMobileDevices)
-			classFilter.add(GenericObject.OBJECT_MOBILEDEVICE);
+			classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
 		return classFilter;
 	}
 
@@ -151,8 +151,8 @@ public class ObjectSelectionDialog extends Dialog
 	public static Set<Integer> createContainerSelectionFilter()
 	{
 		HashSet<Integer> classFilter = new HashSet<Integer>(2);
-		classFilter.add(GenericObject.OBJECT_SERVICEROOT);
-		classFilter.add(GenericObject.OBJECT_CONTAINER);
+		classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+		classFilter.add(AbstractObject.OBJECT_CONTAINER);
 		return classFilter;
 	}
 
@@ -164,8 +164,8 @@ public class ObjectSelectionDialog extends Dialog
 	public static Set<Integer> createBusinessServiceSelectionFilter()
 	{
 		HashSet<Integer> classFilter = new HashSet<Integer>(2);
-		classFilter.add(GenericObject.OBJECT_BUSINESSSERVICEROOT);
-		classFilter.add(GenericObject.OBJECT_BUSINESSSERVICE);
+		classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEROOT);
+		classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE);
 		return classFilter;
 	}
 
@@ -298,10 +298,10 @@ public class ObjectSelectionDialog extends Dialog
 	 * 
 	 * @return
 	 */
-	public List<GenericObject> getSelectedObjects()
+	public List<AbstractObject> getSelectedObjects()
 	{
 		if (selectedObjects == null)
-			return new ArrayList<GenericObject>(0);
+			return new ArrayList<AbstractObject>(0);
 
 		return session.findMultipleObjects(selectedObjects, false);
 	}
@@ -312,19 +312,19 @@ public class ObjectSelectionDialog extends Dialog
 	 * @param classFilter 
 	 * @return
 	 */
-	public GenericObject[] getSelectedObjects(Class<? extends GenericObject> classFilter)
+	public AbstractObject[] getSelectedObjects(Class<? extends AbstractObject> classFilter)
 	{
 		if (selectedObjects == null)
-			return new GenericObject[0];
+			return new AbstractObject[0];
 
-		final Set<GenericObject> resultSet = new HashSet<GenericObject>(selectedObjects.length);
+		final Set<AbstractObject> resultSet = new HashSet<AbstractObject>(selectedObjects.length);
 		for(int i = 0; i < selectedObjects.length; i++)
 		{
-			GenericObject object = session.findObjectById(selectedObjects[i]);
+			AbstractObject object = session.findObjectById(selectedObjects[i]);
 			if (classFilter.isInstance(object))
 				resultSet.add(object);
 		}
-		return resultSet.toArray(new GenericObject[resultSet.size()]);
+		return resultSet.toArray(new AbstractObject[resultSet.size()]);
 	}
 
 	/**

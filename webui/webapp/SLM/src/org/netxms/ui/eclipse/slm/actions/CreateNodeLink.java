@@ -30,7 +30,7 @@ import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.Activator;
@@ -71,7 +71,7 @@ public class CreateNodeLink implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NODELINK, dlg.getName(), parentId);
+				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODELINK, dlg.getName(), parentId);
 				cd.setLinkedNodeId(dlg.getNodeId());
 				session.createObject(cd);
 			}
@@ -95,7 +95,7 @@ public class CreateNodeLink implements IObjectActionDelegate
 			final Object object = ((IStructuredSelection)selection).getFirstElement();
 			if ((object instanceof BusinessService) || (object instanceof BusinessServiceRoot))
 			{
-				parentId = ((GenericObject)object).getObjectId();
+				parentId = ((AbstractObject)object).getObjectId();
 			}
 			else
 			{

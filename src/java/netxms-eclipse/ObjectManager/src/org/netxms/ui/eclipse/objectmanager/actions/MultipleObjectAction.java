@@ -27,7 +27,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -60,7 +60,7 @@ public abstract class MultipleObjectAction implements IObjectActionDelegate
 	 * 
 	 * @throws Exception
 	 */
-	abstract protected void runObjectAction(final NXCSession session, final GenericObject object) throws Exception;
+	abstract protected void runObjectAction(final NXCSession session, final AbstractObject object) throws Exception;
 	
 	/**
 	 * Hook for possible confirmation. Default implementation always returns true.
@@ -95,10 +95,10 @@ public abstract class MultipleObjectAction implements IObjectActionDelegate
 		if (!confirm())
 			return;
 		
-		Iterator<GenericObject> it = selection.iterator();
+		Iterator<AbstractObject> it = selection.iterator();
 		while(it.hasNext())
 		{
-			final GenericObject object = it.next();
+			final AbstractObject object = it.next();
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			new ConsoleJob(jobDescription() + " " + object.getObjectName() + " [" + object.getObjectId() + "]", part, Activator.PLUGIN_ID, null) {
 				@Override

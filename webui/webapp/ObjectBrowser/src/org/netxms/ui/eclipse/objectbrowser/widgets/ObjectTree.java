@@ -58,7 +58,7 @@ import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
@@ -146,7 +146,7 @@ public class ObjectTree extends Composite
 				if (items.length == 1)
 				{
 					// Call open handlers. If open event processed by handler, openObject will return true
-					if (!openObject((GenericObject)items[0].getData()))
+					if (!openObject((AbstractObject)items[0].getData()))
 					{
 						objectTree.toggleItemExpandState(items[0]);
 					}
@@ -164,7 +164,7 @@ public class ObjectTree extends Composite
 				
 				item.setGrayed(false);
 				item.setChecked(isChecked);
-				Long id = ((GenericObject)item.getData()).getObjectId();
+				Long id = ((AbstractObject)item.getData()).getObjectId();
 				if (isChecked)
 					checkedObjects.add(id);
 				else
@@ -209,7 +209,7 @@ public class ObjectTree extends Composite
 					return;
 				
 				TreeItem item = (TreeItem)event.item;
-				final GenericObject object = (GenericObject)item.getData();
+				final AbstractObject object = (AbstractObject)item.getData();
 				if (object == null)
 					return;
 				
@@ -408,7 +408,7 @@ public class ObjectTree extends Composite
 		Object[] elements = objectTree.getExpandedElements();
 		expandedElements = new long[elements.length];
 		for(int i = 0; i < elements.length; i++)
-			expandedElements[i] = ((GenericObject)elements[i]).getObjectId();
+			expandedElements[i] = ((AbstractObject)elements[i]).getObjectId();
 	}
 	
 	/**
@@ -433,7 +433,7 @@ public class ObjectTree extends Composite
 		IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
 		if (selection.isEmpty())
 			return 0;
-		return ((GenericObject)selection.getFirstElement()).getObjectId();
+		return ((AbstractObject)selection.getFirstElement()).getObjectId();
 	}
 	
 	/**
@@ -449,7 +449,7 @@ public class ObjectTree extends Composite
 		Iterator it = selection.iterator();
 		while(it.hasNext())
 		{
-			objects.add(((GenericObject)it.next()).getObjectId());
+			objects.add(((AbstractObject)it.next()).getObjectId());
 		}
 		return objects.toArray(new Long[objects.size()]);
 	}
@@ -459,10 +459,10 @@ public class ObjectTree extends Composite
 	 * 
 	 * @return
 	 */
-	public GenericObject getFirstSelectedObject2()
+	public AbstractObject getFirstSelectedObject2()
 	{
 		IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
-		return (GenericObject)selection.getFirstElement();
+		return (AbstractObject)selection.getFirstElement();
 	}
 	
 	/**
@@ -492,11 +492,11 @@ public class ObjectTree extends Composite
 		final String text = filterText.getText();
 		filter.setFilterString(text);
 		objectTree.refresh(false);
-		GenericObject obj = filter.getLastMatch();
+		AbstractObject obj = filter.getLastMatch();
 		if (obj != null)
 		{
 			objectTree.setSelection(new StructuredSelection(obj), true);
-			GenericObject parent = filter.getParent(obj);
+			AbstractObject parent = filter.getParent(obj);
 			if (parent != null)
 				objectTree.expandToLevel(parent, 1);
 			objectTree.reveal(obj);
@@ -670,7 +670,7 @@ public class ObjectTree extends Composite
 	 * @param object
 	 * @return
 	 */
-	private boolean openObject(GenericObject object)
+	private boolean openObject(AbstractObject object)
 	{
 		for(ObjectOpenListener l : openListeners)
 			if (l.openObject(object))

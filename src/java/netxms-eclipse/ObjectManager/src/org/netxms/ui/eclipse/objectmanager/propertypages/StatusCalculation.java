@@ -37,7 +37,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -50,7 +50,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class StatusCalculation extends PropertyPage
 {
-	private GenericObject object;
+	private AbstractObject object;
 	
 	private NXCObjectModificationData currentState;
 	private int calculationMethod;
@@ -79,7 +79,7 @@ public class StatusCalculation extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (GenericObject)getElement().getAdapter(GenericObject.class);
+		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
 		
 		currentState = new NXCObjectModificationData(object.getObjectId());
 		currentState.setStatusCalculationMethod(object.getStatusCalculationMethod());
@@ -104,16 +104,16 @@ public class StatusCalculation extends PropertyPage
       changeCalculationMethod(object.getStatusCalculationMethod());
       changePropagationMethod(object.getStatusPropagationMethod());
       
-      createCalcSelectionListener(radioCalcDefault, GenericObject.CALCULATE_DEFAULT);
-      createCalcSelectionListener(radioCalcMostCritical, GenericObject.CALCULATE_MOST_CRITICAL);
-      createCalcSelectionListener(radioCalcSingle, GenericObject.CALCULATE_SINGLE_THRESHOLD);
-      createCalcSelectionListener(radioCalcMultiple, GenericObject.CALCULATE_MULTIPLE_THRESHOLDS);
+      createCalcSelectionListener(radioCalcDefault, AbstractObject.CALCULATE_DEFAULT);
+      createCalcSelectionListener(radioCalcMostCritical, AbstractObject.CALCULATE_MOST_CRITICAL);
+      createCalcSelectionListener(radioCalcSingle, AbstractObject.CALCULATE_SINGLE_THRESHOLD);
+      createCalcSelectionListener(radioCalcMultiple, AbstractObject.CALCULATE_MULTIPLE_THRESHOLDS);
 
-      createPropSelectionListener(radioPropDefault, GenericObject.PROPAGATE_DEFAULT);
-      createPropSelectionListener(radioPropUnchanged, GenericObject.PROPAGATE_UNCHANGED);
-      createPropSelectionListener(radioPropFixed, GenericObject.PROPAGATE_FIXED);
-      createPropSelectionListener(radioPropRelative, GenericObject.PROPAGATE_RELATIVE);
-      createPropSelectionListener(radioPropTranslated, GenericObject.PROPAGATE_TRANSLATED);
+      createPropSelectionListener(radioPropDefault, AbstractObject.PROPAGATE_DEFAULT);
+      createPropSelectionListener(radioPropUnchanged, AbstractObject.PROPAGATE_UNCHANGED);
+      createPropSelectionListener(radioPropFixed, AbstractObject.PROPAGATE_FIXED);
+      createPropSelectionListener(radioPropRelative, AbstractObject.PROPAGATE_RELATIVE);
+      createPropSelectionListener(radioPropTranslated, AbstractObject.PROPAGATE_TRANSLATED);
       
       return dialogArea;
 	}
@@ -139,15 +139,15 @@ public class StatusCalculation extends PropertyPage
 		
 		radioPropDefault = new Button(group, SWT.RADIO);
 		radioPropDefault.setText("&Default");
-		radioPropDefault.setSelection(object.getStatusPropagationMethod() == GenericObject.PROPAGATE_DEFAULT);
+		radioPropDefault.setSelection(object.getStatusPropagationMethod() == AbstractObject.PROPAGATE_DEFAULT);
 		
 		radioPropUnchanged = new Button(group, SWT.RADIO);
 		radioPropUnchanged.setText("&Unchanged");
-		radioPropUnchanged.setSelection(object.getStatusPropagationMethod() == GenericObject.PROPAGATE_UNCHANGED);
+		radioPropUnchanged.setSelection(object.getStatusPropagationMethod() == AbstractObject.PROPAGATE_UNCHANGED);
 		
 		radioPropFixed = new Button(group, SWT.RADIO);
 		radioPropFixed.setText("&Fixed to value:");
-		radioPropFixed.setSelection(object.getStatusPropagationMethod() == GenericObject.PROPAGATE_FIXED);
+		radioPropFixed.setSelection(object.getStatusPropagationMethod() == AbstractObject.PROPAGATE_FIXED);
 		
 		comboFixedStatus = new Combo(group, SWT.BORDER | SWT.READ_ONLY);
 		gd = new GridData();
@@ -161,7 +161,7 @@ public class StatusCalculation extends PropertyPage
 		
 		radioPropRelative = new Button(group, SWT.RADIO);
 		radioPropRelative.setText("&Relative with offset:");
-		radioPropRelative.setSelection(object.getStatusPropagationMethod() == GenericObject.PROPAGATE_RELATIVE);
+		radioPropRelative.setSelection(object.getStatusPropagationMethod() == AbstractObject.PROPAGATE_RELATIVE);
 		
 		textRelativeStatus = new Text(group, SWT.BORDER);
 		gd = new GridData();
@@ -173,7 +173,7 @@ public class StatusCalculation extends PropertyPage
 
 		radioPropTranslated = new Button(group, SWT.RADIO);
 		radioPropTranslated.setText("&Severity based:");
-		radioPropTranslated.setSelection(object.getStatusPropagationMethod() == GenericObject.PROPAGATE_TRANSLATED);
+		radioPropTranslated.setSelection(object.getStatusPropagationMethod() == AbstractObject.PROPAGATE_TRANSLATED);
 
 		Composite translationGroup = new Composite(group, SWT.NONE);
 		layout = new GridLayout();
@@ -230,15 +230,15 @@ public class StatusCalculation extends PropertyPage
 		
 		radioCalcDefault = new Button(group, SWT.RADIO);
 		radioCalcDefault.setText("D&efault");
-		radioCalcDefault.setSelection(object.getStatusCalculationMethod() == GenericObject.CALCULATE_DEFAULT);
+		radioCalcDefault.setSelection(object.getStatusCalculationMethod() == AbstractObject.CALCULATE_DEFAULT);
 		
 		radioCalcMostCritical = new Button(group, SWT.RADIO);
 		radioCalcMostCritical.setText("&Most critical");
-		radioCalcMostCritical.setSelection(object.getStatusCalculationMethod() == GenericObject.CALCULATE_MOST_CRITICAL);
+		radioCalcMostCritical.setSelection(object.getStatusCalculationMethod() == AbstractObject.CALCULATE_MOST_CRITICAL);
 		
 		radioCalcSingle = new Button(group, SWT.RADIO);
 		radioCalcSingle.setText("&Single threshold (%):");
-		radioCalcSingle.setSelection(object.getStatusCalculationMethod() == GenericObject.CALCULATE_SINGLE_THRESHOLD);
+		radioCalcSingle.setSelection(object.getStatusCalculationMethod() == AbstractObject.CALCULATE_SINGLE_THRESHOLD);
 		
 		textSingleThreshold = new Text(group, SWT.BORDER);
 		gd = new GridData();
@@ -250,7 +250,7 @@ public class StatusCalculation extends PropertyPage
 
 		radioCalcMultiple = new Button(group, SWT.RADIO);
 		radioCalcMultiple.setText("M&ultiple thresholds (%):");
-		radioCalcMultiple.setSelection(object.getStatusCalculationMethod() == GenericObject.CALCULATE_MULTIPLE_THRESHOLDS);
+		radioCalcMultiple.setSelection(object.getStatusCalculationMethod() == AbstractObject.CALCULATE_MULTIPLE_THRESHOLDS);
 
 		Composite thresholdGroup = new Composite(group, SWT.NONE);
 		layout = new GridLayout();
@@ -284,9 +284,9 @@ public class StatusCalculation extends PropertyPage
 	private void changeCalculationMethod(int method)
 	{
 		calculationMethod = method;
-		textSingleThreshold.setEnabled(method == GenericObject.CALCULATE_SINGLE_THRESHOLD);
+		textSingleThreshold.setEnabled(method == AbstractObject.CALCULATE_SINGLE_THRESHOLD);
 		for(int i = 0; i < 4; i++)
-			textThresholds[i].setEnabled(method == GenericObject.CALCULATE_MULTIPLE_THRESHOLDS);
+			textThresholds[i].setEnabled(method == AbstractObject.CALCULATE_MULTIPLE_THRESHOLDS);
 	}
 	
 	/**
@@ -295,10 +295,10 @@ public class StatusCalculation extends PropertyPage
 	private void changePropagationMethod(int method)
 	{
 		propagationMethod = method;
-		comboFixedStatus.setEnabled(method == GenericObject.PROPAGATE_FIXED);
-		textRelativeStatus.setEnabled(method == GenericObject.PROPAGATE_RELATIVE);
+		comboFixedStatus.setEnabled(method == AbstractObject.PROPAGATE_FIXED);
+		textRelativeStatus.setEnabled(method == AbstractObject.PROPAGATE_RELATIVE);
 		for(int i = 0; i < 4; i++)
-			comboTranslatedStatus[i].setEnabled(method == GenericObject.PROPAGATE_TRANSLATED);
+			comboTranslatedStatus[i].setEnabled(method == AbstractObject.PROPAGATE_TRANSLATED);
 	}
 	
 	/**
@@ -362,8 +362,8 @@ public class StatusCalculation extends PropertyPage
 		radioPropTranslated.setSelection(false);
 		radioPropUnchanged.setSelection(false);
 		
-		changeCalculationMethod(GenericObject.CALCULATE_DEFAULT);
-		changePropagationMethod(GenericObject.PROPAGATE_DEFAULT);
+		changeCalculationMethod(AbstractObject.CALCULATE_DEFAULT);
+		changePropagationMethod(AbstractObject.PROPAGATE_DEFAULT);
 	}
 	
 	/**
@@ -380,11 +380,11 @@ public class StatusCalculation extends PropertyPage
 		
 		switch(md.getStatusCalculationMethod())
 		{
-			case GenericObject.CALCULATE_SINGLE_THRESHOLD:
+			case AbstractObject.CALCULATE_SINGLE_THRESHOLD:
 				if (currentState.getStatusSingleThreshold() != md.getStatusSingleThreshold())
 					return true;
 				break;
-			case GenericObject.CALCULATE_MULTIPLE_THRESHOLDS:
+			case AbstractObject.CALCULATE_MULTIPLE_THRESHOLDS:
 				if (!Arrays.equals(currentState.getStatusThresholds(), md.getStatusThresholds()))
 					return true;
 				break;
@@ -394,15 +394,15 @@ public class StatusCalculation extends PropertyPage
 		
 		switch(md.getStatusPropagationMethod())
 		{
-			case GenericObject.PROPAGATE_FIXED:
+			case AbstractObject.PROPAGATE_FIXED:
 				if (currentState.getFixedPropagatedStatus() != md.getFixedPropagatedStatus())
 					return true;
 				break;
-			case GenericObject.PROPAGATE_RELATIVE:
+			case AbstractObject.PROPAGATE_RELATIVE:
 				if (currentState.getStatusShift() != md.getStatusShift())
 					return true;
 				break;
-			case GenericObject.PROPAGATE_TRANSLATED:
+			case AbstractObject.PROPAGATE_TRANSLATED:
 				if (!Arrays.equals(currentState.getStatusTransformation(), md.getStatusTransformation()))
 					return true;
 				break;

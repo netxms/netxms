@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -100,7 +100,7 @@ public class ZoneSelectionDialog extends Dialog
 			MessageDialogHelper.openWarning(getShell(), "Warning", "Please select zone object!");
 			return;
 		}
-		GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
+		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
 		if ((object == null) || !(object instanceof Zone))
 		{
 			MessageDialogHelper.openWarning(getShell(), "Warning", "Please select zone object!");

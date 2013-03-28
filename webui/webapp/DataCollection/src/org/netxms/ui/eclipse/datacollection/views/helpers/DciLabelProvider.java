@@ -26,7 +26,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
@@ -121,7 +121,7 @@ public class DciLabelProvider implements ITableLabelProvider
 			case DataCollectionEditor.COLUMN_TEMPLATE:
 				if (dci.getTemplateId() == 0)
 					return null;
-				GenericObject object = session.findObjectById(dci.getTemplateId());
+				AbstractObject object = session.findObjectById(dci.getTemplateId());
 				return (object != null) ? object.getObjectName() : Messages.DciLabelProvider_Unknown;
 		}
 		return null;

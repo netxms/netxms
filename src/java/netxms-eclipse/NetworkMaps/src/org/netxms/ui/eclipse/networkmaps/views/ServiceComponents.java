@@ -28,7 +28,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 
 /**
@@ -66,13 +66,13 @@ public class ServiceComponents extends NetworkMap
 	 * 
 	 * @param object
 	 */
-	private void addServiceComponents(GenericObject object, long parentElementId)
+	private void addServiceComponents(AbstractObject object, long parentElementId)
 	{
 		Iterator<Long> it = object.getChildren();
 		while(it.hasNext())
 		{
 			long objectId = it.next();
-			GenericObject child = session.findObjectById(objectId);
+			AbstractObject child = session.findObjectById(objectId);
 			if ((child != null) && 
 					((child instanceof Container) || 
 					 (child instanceof Cluster) || 

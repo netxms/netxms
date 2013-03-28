@@ -32,7 +32,7 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.log.ColumnFilter;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -127,7 +127,7 @@ public class ObjectConditionEditor extends ConditionEditor
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
-			GenericObject[] objects = dlg.getSelectedObjects(GenericObject.class);
+			AbstractObject[] objects = dlg.getSelectedObjects(AbstractObject.class);
 			if (objects.length > 0)
 			{
 				objectId = objects[0].getObjectId();

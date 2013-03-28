@@ -28,7 +28,7 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.base.Glob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceCheck;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -47,8 +47,8 @@ public class ObjectTreeFilter extends ViewerFilter
 	private String filterString = null;
 	private boolean hideUnmanaged = false;
 	private boolean hideTemplateChecks = false;
-	private Map<Long, GenericObject> objectList = null;
-	private GenericObject lastMatch = null;
+	private Map<Long, AbstractObject> objectList = null;
+	private AbstractObject lastMatch = null;
 	private long[] rootObjects = null;
 	private Set<Integer> classFilter = null;
 	private boolean usePatternMatching = false;
@@ -73,7 +73,7 @@ public class ObjectTreeFilter extends ViewerFilter
 	 * @param object object to match
 	 * @return true if object matched to current filter string
 	 */
-	private boolean matchFilterString(GenericObject object)
+	private boolean matchFilterString(AbstractObject object)
 	{
 		if ((mode == NONE) || (filterString == null))
 			return true;
@@ -99,11 +99,11 @@ public class ObjectTreeFilter extends ViewerFilter
 	{
 		if (classFilter != null)
 		{
-			if (!classFilter.contains(((GenericObject)element).getObjectClass()))
+			if (!classFilter.contains(((AbstractObject)element).getObjectClass()))
 				return false;
 		}
 		
-		if (hideUnmanaged && (((GenericObject)element).getStatus() == Severity.UNMANAGED))
+		if (hideUnmanaged && (((AbstractObject)element).getStatus() == Severity.UNMANAGED))
 			return false;
 		
 		if (hideTemplateChecks && (element instanceof ServiceCheck) && ((ServiceCheck)element).isTemplate())
@@ -112,14 +112,14 @@ public class ObjectTreeFilter extends ViewerFilter
 		if (objectList == null)
 			return true;
 
-		boolean pass = objectList.containsKey(((GenericObject)element).getObjectId());
-		if (!pass && ((GenericObject)element).hasChildren())
+		boolean pass = objectList.containsKey(((AbstractObject)element).getObjectId());
+		if (!pass && ((AbstractObject)element).hasChildren())
 		{
-			Iterator<GenericObject> it = objectList.values().iterator();
+			Iterator<AbstractObject> it = objectList.values().iterator();
 			while(it.hasNext())
 			{
-				GenericObject obj = it.next();
-				if (obj.isChildOf(((GenericObject)element).getObjectId()))
+				AbstractObject obj = it.next();
+				if (obj.isChildOf(((AbstractObject)element).getObjectId()))
 				{
 					pass = true;
 					break;
@@ -185,8 +185,8 @@ public class ObjectTreeFilter extends ViewerFilter
 		{
 			if (doFullSearch)
 			{
-				GenericObject[] fullList = ((NXCSession)ConsoleSharedData.getSession()).getAllObjects();
-				objectList = new HashMap<Long, GenericObject>();
+				AbstractObject[] fullList = ((NXCSession)ConsoleSharedData.getSession()).getAllObjects();
+				objectList = new HashMap<Long, AbstractObject>();
 				for(int i = 0; i < fullList.length; i++)
 					if (matchFilterString(fullList[i]) &&
 					    ((rootObjects == null) || fullList[i].isChildOf(rootObjects)))
@@ -198,10 +198,10 @@ public class ObjectTreeFilter extends ViewerFilter
 			else
 			{
 				lastMatch = null;
-				Iterator<GenericObject> it = objectList.values().iterator();
+				Iterator<AbstractObject> it = objectList.values().iterator();
 				while(it.hasNext())
 				{
-					GenericObject obj = it.next();
+					AbstractObject obj = it.next();
 					if (!matchFilterString(obj))
 						it.remove();
 					else
@@ -220,7 +220,7 @@ public class ObjectTreeFilter extends ViewerFilter
 	 * Get last matched object
 	 * @return Last matched object
 	 */
-	public final GenericObject getLastMatch()
+	public final AbstractObject getLastMatch()
 	{
 		return lastMatch;
 	}
@@ -228,10 +228,10 @@ public class ObjectTreeFilter extends ViewerFilter
 	/**
 	 * Get parent for given object
 	 */
-	public GenericObject getParent(final GenericObject childObject)
+	public AbstractObject getParent(final AbstractObject childObject)
 	{
-		GenericObject[] parents = childObject.getParentsAsArray();
-		for(GenericObject object : parents)
+		AbstractObject[] parents = childObject.getParentsAsArray();
+		for(AbstractObject object : parents)
 		{
 			if (object != null)
 			{

@@ -31,7 +31,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
@@ -59,7 +59,7 @@ public class ObjectAlarmBrowser extends ViewPart
 		
 		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		objectId = Long.parseLong(site.getSecondaryId());
-		GenericObject object = session.findObjectById(objectId);
+		AbstractObject object = session.findObjectById(objectId);
 		setPartName(Messages.ObjectAlarmBrowser_TitlePrefix + ((object != null) ? object.getObjectName() : ("[" + Long.toString(objectId) + "]")));  //$NON-NLS-1$//$NON-NLS-2$
 	}
 

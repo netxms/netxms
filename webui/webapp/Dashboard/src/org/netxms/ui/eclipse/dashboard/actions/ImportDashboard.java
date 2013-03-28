@@ -52,7 +52,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardRoot;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.IdMatchingDialog;
@@ -98,7 +98,7 @@ public class ImportDashboard implements IObjectActionDelegate
 			final Object object = ((IStructuredSelection)selection).getFirstElement();
 			if ((object instanceof Dashboard) || (object instanceof DashboardRoot))
 			{
-				parentId = ((GenericObject)object).getObjectId();
+				parentId = ((AbstractObject)object).getObjectId();
 			}
 			else
 			{
@@ -160,7 +160,7 @@ public class ImportDashboard implements IObjectActionDelegate
 				
 				if (doIdMapping(display, session, dashboardElements, root))
 				{
-					NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_DASHBOARD, dlg.getObjectName(), parentId);
+					NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_DASHBOARD, dlg.getObjectName(), parentId);
 					final long objectId = session.createObject(cd);
 					
 					NXCObjectModificationData md = new NXCObjectModificationData(objectId);
@@ -193,7 +193,7 @@ public class ImportDashboard implements IObjectActionDelegate
 		for(DciIdMatchingData d : dcis.values())
 		{
 			if (!objects.containsKey(d.srcNodeId))
-				objects.put(d.srcNodeId, new ObjectIdMatchingData(d.srcNodeId, "", GenericObject.OBJECT_NODE)); //$NON-NLS-1$
+				objects.put(d.srcNodeId, new ObjectIdMatchingData(d.srcNodeId, "", AbstractObject.OBJECT_NODE)); //$NON-NLS-1$
 		}
 		
 		// try to match objects
@@ -209,7 +209,7 @@ public class ImportDashboard implements IObjectActionDelegate
 			if (d.srcName.isEmpty())
 				continue;
 			
-			GenericObject object = session.findObjectByName(d.srcName);
+			AbstractObject object = session.findObjectByName(d.srcName);
 			if ((object != null) && (object.getObjectClass() == d.objectClass))
 			{
 				d.dstId = object.getObjectId();

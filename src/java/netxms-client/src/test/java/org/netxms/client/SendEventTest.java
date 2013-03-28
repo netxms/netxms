@@ -18,7 +18,7 @@
  */
 package org.netxms.client;
 
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 
 /**
@@ -34,7 +34,7 @@ public class SendEventTest extends SessionTest
 		session.sendEvent("SYS_NODE_ADDED", new String[0]);
 		
 		session.syncObjects();
-		for(GenericObject o : session.getAllObjects())
+		for(AbstractObject o : session.getAllObjects())
 		{
 			if (o instanceof Node)
 			{

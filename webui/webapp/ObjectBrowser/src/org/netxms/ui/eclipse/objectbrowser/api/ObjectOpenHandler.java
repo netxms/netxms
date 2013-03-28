@@ -18,7 +18,7 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.api;
 
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Handler for object open
@@ -31,5 +31,5 @@ public interface ObjectOpenHandler
 	 * @param object object to open
 	 * @return true if object was opened
 	 */
-	public abstract boolean openObject(GenericObject object);
+	public abstract boolean openObject(AbstractObject object);
 }

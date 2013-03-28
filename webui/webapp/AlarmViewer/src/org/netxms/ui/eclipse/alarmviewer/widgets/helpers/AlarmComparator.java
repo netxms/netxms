@@ -25,7 +25,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -57,8 +57,8 @@ public class AlarmComparator extends ViewerComparator
 				rc = Integer.signum(((Alarm)e1).getState() - ((Alarm)e2).getState());
 				break;
 			case AlarmList.COLUMN_SOURCE:
-				GenericObject obj1 = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(((Alarm)e1).getSourceObjectId());
-				GenericObject obj2 = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(((Alarm)e2).getSourceObjectId());
+				AbstractObject obj1 = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(((Alarm)e1).getSourceObjectId());
+				AbstractObject obj2 = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(((Alarm)e2).getSourceObjectId());
 				String name1 = (obj1 != null) ? obj1.getObjectName() : Messages.get().AlarmComparator_Unknown;
 				String name2 = (obj2 != null) ? obj2.getObjectName() : Messages.get().AlarmComparator_Unknown;
 				rc = name1.compareToIgnoreCase(name2);

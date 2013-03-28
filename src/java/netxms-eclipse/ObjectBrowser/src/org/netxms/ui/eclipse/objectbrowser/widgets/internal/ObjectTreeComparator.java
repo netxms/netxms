@@ -22,7 +22,7 @@ import java.util.Comparator;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Comparator for object tree
@@ -55,14 +55,14 @@ public class ObjectTreeComparator extends ViewerComparator
 	@Override
 	public int category(Object element)
 	{
-		if (((GenericObject)element).getObjectId() < 10)
-			return (int)((GenericObject)element).getObjectId();
-		if ((((GenericObject)element).getObjectClass() == GenericObject.OBJECT_CONTAINER) ||
-		    (((GenericObject)element).getObjectClass() == GenericObject.OBJECT_TEMPLATEGROUP) ||
-		    (((GenericObject)element).getObjectClass() == GenericObject.OBJECT_POLICYGROUP) ||
-		    (((GenericObject)element).getObjectClass() == GenericObject.OBJECT_BUSINESSSERVICE))
+		if (((AbstractObject)element).getObjectId() < 10)
+			return (int)((AbstractObject)element).getObjectId();
+		if ((((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_CONTAINER) ||
+		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_TEMPLATEGROUP) ||
+		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_POLICYGROUP) ||
+		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_BUSINESSSERVICE))
 			return CATEGORY_CONTAINER;
-		if (((GenericObject)element).getObjectClass() == GenericObject.OBJECT_NODELINK)
+		if (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_NODELINK)
 				return CATEGORY_NODELINK;
 		return CATEGORY_OTHER;
 	}

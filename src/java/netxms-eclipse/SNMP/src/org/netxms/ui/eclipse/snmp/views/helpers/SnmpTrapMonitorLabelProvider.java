@@ -22,7 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.snmp.SnmpTrapLogRecord;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -64,7 +64,7 @@ public class SnmpTrapMonitorLabelProvider extends LabelProvider implements ITabl
 			case SnmpTrapMonitor.COLUMN_SOURCE_IP:
 				return record.getSourceAddress().getHostAddress();
 			case SnmpTrapMonitor.COLUMN_SOURCE_NODE:
-				final GenericObject object = session.findObjectById(record.getSourceNode());
+				final AbstractObject object = session.findObjectById(record.getSourceNode());
 				return (object != null) ? object.getObjectName() : Messages.SnmpTrapMonitorLabelProvider_Unknown;
 			case SnmpTrapMonitor.COLUMN_OID:
 				return record.getTrapObjectId();

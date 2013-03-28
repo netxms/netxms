@@ -54,7 +54,7 @@ import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.GraphSettingsChangeListener;
 import org.netxms.client.datacollection.Threshold;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
@@ -174,7 +174,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 			if (items.size() == 1)
 			{
 				ChartDciConfig item = items.get(0);
-				GenericObject object = session.findObjectById(item.nodeId);
+				AbstractObject object = session.findObjectById(item.nodeId);
 				if (object != null)
 				{
 					setPartName(object.getObjectName() + ": " + item.name);
@@ -192,7 +192,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 				if (nodeId != -1)
 				{
 					// All DCIs from same node, set title to "host name"
-					GenericObject object = session.findObjectById(nodeId);
+					AbstractObject object = session.findObjectById(nodeId);
 					if (object != null)
 					{
 						setPartName(object.getObjectName() + ": historical data");

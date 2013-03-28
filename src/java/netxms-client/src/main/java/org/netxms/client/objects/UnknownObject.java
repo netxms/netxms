@@ -19,6 +19,7 @@
 package org.netxms.client.objects;
 
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.GenericObject;
 
 /**
@@ -49,7 +50,7 @@ public class UnknownObject extends GenericObject
 	@Override
 	public int getStatus()
 	{
-		return STATUS_UNKNOWN;
+		return Severity.UNKNOWN;
 	}
 
 	/* (non-Javadoc)

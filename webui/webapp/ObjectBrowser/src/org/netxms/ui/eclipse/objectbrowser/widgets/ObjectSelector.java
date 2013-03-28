@@ -22,7 +22,7 @@ import java.util.Set;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -37,7 +37,7 @@ public class ObjectSelector extends AbstractSelector
 	private static final long serialVersionUID = 1L;
 
 	private long objectId = 0;
-	private Class<? extends GenericObject> objectClass = Node.class;
+	private Class<? extends AbstractObject> objectClass = Node.class;
 	private Set<Integer> classFilter = null;
 	private String emptySelectionName = Messages.ObjectSelector_None;
 	
@@ -61,7 +61,7 @@ public class ObjectSelector extends AbstractSelector
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
-			GenericObject[] objects = dlg.getSelectedObjects(objectClass);
+			AbstractObject[] objects = dlg.getSelectedObjects(objectClass);
 			if (objects.length > 0)
 			{
 				objectId = objects[0].getObjectId();
@@ -115,7 +115,7 @@ public class ObjectSelector extends AbstractSelector
 		}
 		else
 		{
-			final GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
+			final AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
 			setText((object != null) ? object.getObjectName() : ("<" + Long.toString(objectId) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
@@ -123,7 +123,7 @@ public class ObjectSelector extends AbstractSelector
 	/**
 	 * @return the objectClass
 	 */
-	public Class<? extends GenericObject> getObjectClass()
+	public Class<? extends AbstractObject> getObjectClass()
 	{
 		return objectClass;
 	}
@@ -131,7 +131,7 @@ public class ObjectSelector extends AbstractSelector
 	/**
 	 * @param objectClass the objectClass to set
 	 */
-	public void setObjectClass(Class<? extends GenericObject> objectClass)
+	public void setObjectClass(Class<? extends AbstractObject> objectClass)
 	{
 		this.objectClass = objectClass;
 	}

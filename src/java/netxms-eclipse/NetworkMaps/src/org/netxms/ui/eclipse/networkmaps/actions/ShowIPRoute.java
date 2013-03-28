@@ -28,7 +28,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.networkmaps.views.IPRouteMap;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -64,7 +64,7 @@ public class ShowIPRoute implements IObjectActionDelegate
 			if (dlg.open() != Window.OK)
 				return;
 			
-			GenericObject[] selection = dlg.getSelectedObjects(Node.class);
+			AbstractObject[] selection = dlg.getSelectedObjects(Node.class);
 			if (selection.length == 0)
 			{
 				MessageDialogHelper.openError(window.getShell(), "Error", "Invalid target selection");

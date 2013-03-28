@@ -30,7 +30,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -74,8 +74,8 @@ public class BindObject implements IObjectActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					List<GenericObject> objects = dlg.getSelectedObjects();
-					for(GenericObject o : objects)
+					List<AbstractObject> objects = dlg.getSelectedObjects();
+					for(AbstractObject o : objects)
 						session.bindObject(parentId, o.getObjectId());
 				}
 			}.start();
@@ -94,7 +94,7 @@ public class BindObject implements IObjectActionDelegate
 			if ((obj instanceof ServiceRoot) || (obj instanceof Container))
 			{
 				action.setEnabled(true);
-				parentId = ((GenericObject)obj).getObjectId();
+				parentId = ((AbstractObject)obj).getObjectId();
 			}
 			else
 			{

@@ -27,7 +27,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -44,7 +44,7 @@ public class MapAppearance extends PropertyPage
 {
 	private static final long serialVersionUID = 1L;
 
-	private GenericObject object;
+	private AbstractObject object;
 	private ImageSelector image;
 	private ObjectSelector submap;
 	
@@ -56,7 +56,7 @@ public class MapAppearance extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (GenericObject)getElement().getAdapter(GenericObject.class);
+		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
 		if (object == null)	// Paranoid check
 			return dialogArea;
 		

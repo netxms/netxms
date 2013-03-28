@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.widgets.CGroup;
 
 /**
@@ -29,13 +29,13 @@ import org.netxms.ui.eclipse.widgets.CGroup;
  */
 public abstract class OverviewPageElement extends CGroup
 {
-	private GenericObject object;
+	private AbstractObject object;
 	
 	/**
 	 * @param parent
 	 * @param text
 	 */
-	public OverviewPageElement(Composite parent, GenericObject object)
+	public OverviewPageElement(Composite parent, AbstractObject object)
 	{
 		super(parent, "");
 		setText(getTitle());
@@ -52,7 +52,7 @@ public abstract class OverviewPageElement extends CGroup
 	/**
 	 * @return the object
 	 */
-	public GenericObject getObject()
+	public AbstractObject getObject()
 	{
 		return object;
 	}
@@ -60,7 +60,7 @@ public abstract class OverviewPageElement extends CGroup
 	/**
 	 * @param object the object to set
 	 */
-	public void setObject(GenericObject object)
+	public void setObject(AbstractObject object)
 	{
 		this.object = object;
 		onObjectChange();
@@ -78,7 +78,7 @@ public abstract class OverviewPageElement extends CGroup
 	 * @param object object to test
 	 * @return true if element is applicable
 	 */
-	public boolean isApplicableForObject(GenericObject object)
+	public boolean isApplicableForObject(AbstractObject object)
 	{
 		return true;
 	}

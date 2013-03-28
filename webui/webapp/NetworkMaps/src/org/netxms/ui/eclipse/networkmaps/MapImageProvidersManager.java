@@ -25,7 +25,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.networkmaps.api.NetworkMapImageProvider;
 
 /**
@@ -99,7 +99,7 @@ public class MapImageProvidersManager
 	 * 
 	 * @return image for given object or null.
 	 */
-	public Image getMapImage(GenericObject object)
+	public Image getMapImage(AbstractObject object)
 	{
 		for(NetworkMapImageProvider p : providers.values())
 		{

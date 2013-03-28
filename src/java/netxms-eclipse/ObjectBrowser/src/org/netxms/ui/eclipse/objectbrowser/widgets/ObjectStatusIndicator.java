@@ -36,7 +36,7 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.constants.Severity;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
@@ -203,7 +203,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 			ViewerRow row = objectTree.getTreeViewerRow(item);
 			while((row != null) && (y < limit))
 			{
-				GenericObject object = (GenericObject)row.getItem().getData();
+				AbstractObject object = (AbstractObject)row.getItem().getData();
 				drawObject(gc, object, y, width, height);
 				y += height;
 				row = row.getNeighbor(ViewerRow.BELOW, false);
@@ -232,7 +232,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 	 * @param object
 	 * @param y
 	 */
-	private void drawObject(GC gc, GenericObject object, int y, int width, int height)
+	private void drawObject(GC gc, AbstractObject object, int y, int width, int height)
 	{
 		final int status = object.getStatus();
 		

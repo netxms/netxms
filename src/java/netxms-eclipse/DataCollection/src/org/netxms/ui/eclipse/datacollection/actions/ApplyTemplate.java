@@ -29,7 +29,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -74,8 +74,8 @@ public class ApplyTemplate implements IObjectActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					List<GenericObject> objects = dlg.getSelectedObjects();
-					for(GenericObject o : objects)
+					List<AbstractObject> objects = dlg.getSelectedObjects();
+					for(AbstractObject o : objects)
 						session.applyTemplate(parentId, o.getObjectId());
 				}
 			}.start();
@@ -94,7 +94,7 @@ public class ApplyTemplate implements IObjectActionDelegate
 			if (obj instanceof Template)
 			{
 				action.setEnabled(true);
-				parentId = ((GenericObject)obj).getObjectId();
+				parentId = ((AbstractObject)obj).getObjectId();
 			}
 			else
 			{

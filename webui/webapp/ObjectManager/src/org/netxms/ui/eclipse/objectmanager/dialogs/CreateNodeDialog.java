@@ -39,7 +39,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -265,7 +265,7 @@ public class CreateNodeDialog extends Dialog
 		if (session.isZoningEnabled())
 		{
 			long zoneObjectId = zoneSelector.getObjectId();
-			GenericObject object = session.findObjectById(zoneObjectId);
+			AbstractObject object = session.findObjectById(zoneObjectId);
 			if ((object != null) && (object instanceof Zone))
 			{
 				zoneId = ((Zone)object).getZoneId();

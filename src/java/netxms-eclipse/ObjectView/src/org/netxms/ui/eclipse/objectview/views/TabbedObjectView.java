@@ -56,7 +56,7 @@ import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.Activator;
@@ -175,9 +175,9 @@ public class TabbedObjectView extends ViewPart
 				if ((selection instanceof IStructuredSelection) && !selection.isEmpty())
 				{
 					Object object = ((IStructuredSelection)selection).getFirstElement();
-					if (object instanceof GenericObject)
+					if (object instanceof AbstractObject)
 					{
-						setObject((GenericObject)object);
+						setObject((AbstractObject)object);
 					}
 				}
 			}
@@ -200,7 +200,7 @@ public class TabbedObjectView extends ViewPart
 			{
 				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) && (objectId == n.getSubCode()))
 				{
-					final GenericObject object = (GenericObject)n.getObject();
+					final AbstractObject object = (AbstractObject)n.getObject();
 					getSite().getShell().getDisplay().asyncExec(new Runnable() {
 						@Override
 						public void run()
@@ -272,7 +272,7 @@ public class TabbedObjectView extends ViewPart
 	 * 
 	 * @param object New object
 	 */
-	private void onObjectUpdate(GenericObject object)
+	private void onObjectUpdate(AbstractObject object)
 	{
 		header.setText(object.getObjectName());
 		for(final ObjectTab tab : tabs)
@@ -287,7 +287,7 @@ public class TabbedObjectView extends ViewPart
 	 * 
 	 * @param object New object
 	 */
-	public void setObject(GenericObject object)
+	public void setObject(AbstractObject object)
 	{
 		if (object != null)
 		{

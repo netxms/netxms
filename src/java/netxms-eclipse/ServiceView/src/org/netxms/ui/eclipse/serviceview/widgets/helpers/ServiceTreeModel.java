@@ -24,7 +24,7 @@ import java.util.List;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 
 /**
@@ -33,10 +33,10 @@ import org.netxms.client.objects.Node;
  */
 public class ServiceTreeModel
 {
-	private GenericObject root;
+	private AbstractObject root;
 	private List<ServiceTreeElement> elements = new ArrayList<ServiceTreeElement>();
 	
-	public ServiceTreeModel(GenericObject root)
+	public ServiceTreeModel(AbstractObject root)
 	{
 		this.root = root;
 		addToModel(null, root, 0);
@@ -47,11 +47,11 @@ public class ServiceTreeModel
 	 * 
 	 * @param object NetXMS object
 	 */
-	private void addToModel(ServiceTreeElement parent, GenericObject object, int level)
+	private void addToModel(ServiceTreeElement parent, AbstractObject object, int level)
 	{
 		final ServiceTreeElement element = new ServiceTreeElement(parent, object);
 		elements.add(element);
-		for(GenericObject o : object.getChildsAsArray())
+		for(AbstractObject o : object.getChildsAsArray())
 		{
 			if ((o instanceof Container) || (o instanceof Node) || (o instanceof Cluster) || (o instanceof Condition))
 			{
@@ -79,7 +79,7 @@ public class ServiceTreeModel
 	/**
 	 * @return the root
 	 */
-	public GenericObject getRoot()
+	public AbstractObject getRoot()
 	{
 		return root;
 	}

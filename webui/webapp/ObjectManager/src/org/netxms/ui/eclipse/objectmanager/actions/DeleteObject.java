@@ -2,7 +2,7 @@ package org.netxms.ui.eclipse.objectmanager.actions;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.NXCSession;
 
 public class DeleteObject extends MultipleObjectAction
@@ -16,7 +16,7 @@ public class DeleteObject extends MultipleObjectAction
 		String question;
 		if (selection.size() == 1)
 		{
-			question = "Are you sure you want to delete '" + ((GenericObject)selection.getFirstElement()).getObjectName() + "'?";
+			question = "Are you sure you want to delete '" + ((AbstractObject)selection.getFirstElement()).getObjectName() + "'?";
 		}
 		else
 		{
@@ -48,7 +48,7 @@ public class DeleteObject extends MultipleObjectAction
 	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#runObjectAction(org.netxms.client.NXCSession, org.netxms.client.NXCObject)
 	 */
 	@Override
-	protected void runObjectAction(NXCSession session, GenericObject object) throws Exception
+	protected void runObjectAction(NXCSession session, AbstractObject object) throws Exception
 	{
 		session.deleteObject(object.getObjectId());
 	}

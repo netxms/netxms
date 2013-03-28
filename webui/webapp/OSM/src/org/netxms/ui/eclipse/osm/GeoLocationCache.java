@@ -30,7 +30,7 @@ import org.netxms.api.client.SessionNotification;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.QuadTree;
 
@@ -47,7 +47,7 @@ public class GeoLocationCache implements SessionListener
 	
 	private static GeoLocationCache instance = new GeoLocationCache();
 	
-	private Map<Long, GenericObject> objects = new HashMap<Long, GenericObject>();
+	private Map<Long, AbstractObject> objects = new HashMap<Long, AbstractObject>();
 	private QuadTree<Long> locationTree = new QuadTree<Long>();
 	private NXCSession session;
 	private Set<GeoLocationCacheListener> listeners = new HashSet<GeoLocationCacheListener>();
@@ -59,7 +59,7 @@ public class GeoLocationCache implements SessionListener
 	public void notificationHandler(SessionNotification n)
 	{
 		if (n.getCode() == NXCNotification.OBJECT_CHANGED)
-			onObjectChange((GenericObject)n.getObject());
+			onObjectChange((AbstractObject)n.getObject());
 		else if (n.getCode() == NXCNotification.OBJECT_SYNC_COMPLETED)
 			internalInitialize();
 	}
@@ -85,12 +85,12 @@ public class GeoLocationCache implements SessionListener
 			locationTree.removeAll();
 			objects.clear();
 		
-			for(GenericObject object : session.getAllObjects())
+			for(AbstractObject object : session.getAllObjects())
 			{
-				if ((object.getObjectClass() == GenericObject.OBJECT_NODE) ||
-					 (object.getObjectClass() == GenericObject.OBJECT_MOBILEDEVICE) ||
-					 (object.getObjectClass() == GenericObject.OBJECT_CLUSTER) ||
-					 (object.getObjectClass() == GenericObject.OBJECT_CONTAINER))
+				if ((object.getObjectClass() == AbstractObject.OBJECT_NODE) ||
+					 (object.getObjectClass() == AbstractObject.OBJECT_MOBILEDEVICE) ||
+					 (object.getObjectClass() == AbstractObject.OBJECT_CLUSTER) ||
+					 (object.getObjectClass() == AbstractObject.OBJECT_CONTAINER))
 				{
 					GeoLocation gl = object.getGeolocation();
 					if (gl.getType() != GeoLocation.UNSET)
@@ -108,12 +108,12 @@ public class GeoLocationCache implements SessionListener
 	 * 
 	 * @param object
 	 */
-	private void onObjectChange(GenericObject object)
+	private void onObjectChange(AbstractObject object)
 	{
-		if ((object.getObjectClass() != GenericObject.OBJECT_NODE) &&
-			 (object.getObjectClass() != GenericObject.OBJECT_MOBILEDEVICE) &&
-		    (object.getObjectClass() != GenericObject.OBJECT_CLUSTER) &&
-		    (object.getObjectClass() != GenericObject.OBJECT_CONTAINER))
+		if ((object.getObjectClass() != AbstractObject.OBJECT_NODE) &&
+			 (object.getObjectClass() != AbstractObject.OBJECT_MOBILEDEVICE) &&
+		    (object.getObjectClass() != AbstractObject.OBJECT_CLUSTER) &&
+		    (object.getObjectClass() != AbstractObject.OBJECT_CONTAINER))
 			return;
 		
 		GeoLocation prevLocation = null;
@@ -123,7 +123,7 @@ public class GeoLocationCache implements SessionListener
 			GeoLocation gl = object.getGeolocation();
 			if (gl.getType() == GeoLocation.UNSET)
 			{
-				GenericObject prevObject = objects.remove(object.getObjectId());
+				AbstractObject prevObject = objects.remove(object.getObjectId());
 				if (prevObject != null)
 					prevLocation = prevObject.getGeolocation();
 				cacheChanged = locationTree.remove(object.getObjectId());
@@ -164,16 +164,16 @@ public class GeoLocationCache implements SessionListener
 	 * @param area
 	 * @return
 	 */
-	public List<GenericObject> getObjectsInArea(Area area)
+	public List<AbstractObject> getObjectsInArea(Area area)
 	{
-		List<GenericObject> list = null;
+		List<AbstractObject> list = null;
 		synchronized(locationTree)
 		{
 			List<Long> idList = locationTree.query(area);
-			list = new ArrayList<GenericObject>(idList.size());
+			list = new ArrayList<AbstractObject>(idList.size());
 			for(Long id : idList)
 			{
-				GenericObject o = objects.get(id);
+				AbstractObject o = objects.get(id);
 				if (o != null)
 					list.add(o);
 			}

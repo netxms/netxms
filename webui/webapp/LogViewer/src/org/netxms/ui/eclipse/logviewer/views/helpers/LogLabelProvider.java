@@ -31,7 +31,7 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.logviewer.Activator;
@@ -100,7 +100,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				try
 				{
 					long id = Long.parseLong(value);
-					GenericObject object = session.findObjectById(id);
+					AbstractObject object = session.findObjectById(id);
 					return (object != null) ? wbLabelProvider.getImage(object) : null;
 				}
 				catch(NumberFormatException e)
@@ -150,7 +150,7 @@ public class LogLabelProvider implements ITableLabelProvider
 					long id = Long.parseLong(value);
 					if (id == 0)
 						return "";
-					GenericObject object = session.findObjectById(id);
+					AbstractObject object = session.findObjectById(id);
 					return (object != null) ? object.getObjectName() : ("[" + id + "]");
 				}
 				catch(NumberFormatException e)

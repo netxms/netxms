@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerJob;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -60,8 +60,8 @@ public class ServerJobComparator extends ViewerComparator
 				result = ((ServerJob)e1).getStatus() - ((ServerJob)e2).getStatus();
 				break;
 			case ServerJobManager.COLUMN_NODE:
-				GenericObject object1 = session.findObjectById(((ServerJob)e1).getNodeId());
-				GenericObject object2 = session.findObjectById(((ServerJob)e2).getNodeId());
+				AbstractObject object1 = session.findObjectById(((ServerJob)e1).getNodeId());
+				AbstractObject object2 = session.findObjectById(((ServerJob)e2).getNodeId());
 				String name1 = (object1 != null) ? object1.getObjectName() : "<unknown>";
 				String name2 = (object2 != null) ? object2.getObjectName() : "<unknown>";
 				result = name1.compareToIgnoreCase(name2);

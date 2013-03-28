@@ -31,7 +31,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -60,8 +60,8 @@ public class FileViewer extends ViewPart
 			throw new PartInitException("Internal error");
 		
 		nodeId = Long.parseLong(parts[0]);
-		GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
-		if ((object == null) || (object.getObjectClass() != GenericObject.OBJECT_NODE))
+		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
+		if ((object == null) || (object.getObjectClass() != AbstractObject.OBJECT_NODE))
 			throw new PartInitException("Invalid object ID");
 		
 		try

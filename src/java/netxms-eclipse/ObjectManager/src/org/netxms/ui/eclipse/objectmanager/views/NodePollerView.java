@@ -43,7 +43,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.NodePollListener;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -87,7 +87,7 @@ public class NodePollerView extends ViewPart
 		if (parts.length != 2)
 			throw new PartInitException("Internal error");
 		
-		GenericObject obj = session.findObjectById(Long.parseLong(parts[0]));
+		AbstractObject obj = session.findObjectById(Long.parseLong(parts[0]));
 		node = ((obj != null) && (obj instanceof Node)) ? (Node)obj : null;
 		if (node == null)
 			throw new PartInitException("Invalid object ID");

@@ -75,7 +75,7 @@ import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ExpansionAlgorithm;
@@ -113,7 +113,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	private static final int SELECTION_LINKS = 4;
 	
 	protected NXCSession session;
-	protected GenericObject rootObject;
+	protected AbstractObject rootObject;
 	protected NetworkMapPage mapPage;
 	protected ExtendedGraphViewer viewer;
 	protected MapLabelProvider labelProvider;
@@ -227,7 +227,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 					int selectionType = analyzeSelection(currentSelection);
 					if (selectionType == SELECTION_OBJECTS)
 					{
-						GenericObject object = (GenericObject)currentSelection.getFirstElement();
+						AbstractObject object = (AbstractObject)currentSelection.getFirstElement();
 						actionOpenSubmap.setEnabled(object.getSubmapId() != 0);
 					}
 					else
@@ -278,7 +278,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 						@Override
 						public void run()
 						{
-							onObjectChange((GenericObject)n.getObject());
+							onObjectChange((AbstractObject)n.getObject());
 						}
 					});
 				}
@@ -880,10 +880,10 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		Object first = it.next();
 		int type;
 		Class firstClass;
-		if (first instanceof GenericObject)
+		if (first instanceof AbstractObject)
 		{
 			type = SELECTION_OBJECTS;
-			firstClass = GenericObject.class;
+			firstClass = AbstractObject.class;
 		}
 		else if (first instanceof NetworkMapElement)
 		{
@@ -914,7 +914,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	 * 
 	 * @param object changed NetXMS object
 	 */
-	protected void onObjectChange(final GenericObject object)
+	protected void onObjectChange(final AbstractObject object)
 	{
 		NetworkMapObject element = mapPage.findObjectElement(object.getObjectId());
 		if (element != null)
@@ -992,7 +992,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			Object element = it.next();
 			if (element instanceof NetworkMapObject)
 			{
-				GenericObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
+				AbstractObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
 				if (object != null)
 				{
 					objects.add(object);
@@ -1070,9 +1070,9 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			return;
 		
 		Object object = currentSelection.getFirstElement();
-		if (object instanceof GenericObject)
+		if (object instanceof AbstractObject)
 		{
-			long submapId = ((GenericObject)object).getSubmapId();
+			long submapId = ((AbstractObject)object).getSubmapId();
 			if (submapId != 0)
 			{
 				try
@@ -1115,10 +1115,10 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	 */
 	private void showObjectDetails()
 	{
-		if ((currentSelection.size() != 1) || !(currentSelection.getFirstElement() instanceof GenericObject))
+		if ((currentSelection.size() != 1) || !(currentSelection.getFirstElement() instanceof AbstractObject))
 			return;
 		
-		GenericObject object = (GenericObject)currentSelection.getFirstElement();
+		AbstractObject object = (AbstractObject)currentSelection.getFirstElement();
 		if (object != null)
 		{
 			try

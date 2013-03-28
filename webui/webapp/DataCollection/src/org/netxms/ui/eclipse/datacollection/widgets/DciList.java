@@ -36,7 +36,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -60,7 +60,7 @@ public class DciList extends Composite
 	public static final int COLUMN_DESCRIPTION = 2;
 	
 	private final ViewPart viewPart;
-	private GenericObject node;
+	private AbstractObject node;
 	private NXCSession session;
 	private SortableTableViewer viewer;
 	private int dcObjectType;	// DC object type filter; -1 allows all object types
@@ -169,7 +169,7 @@ public class DciList extends Composite
 	 * 
 	 * @param node new node or mobile device object
 	 */
-	public void setNode(GenericObject node)
+	public void setNode(AbstractObject node)
 	{
 		this.node = node;
 		getDataFromServer();

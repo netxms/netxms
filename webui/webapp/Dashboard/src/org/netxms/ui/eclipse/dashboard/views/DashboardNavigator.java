@@ -39,7 +39,7 @@ import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.DashboardRoot;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -66,7 +66,7 @@ public class DashboardNavigator extends ViewPart
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		final Set<Integer> classFilter = new HashSet<Integer>(2);
-		classFilter.add(GenericObject.OBJECT_DASHBOARD);
+		classFilter.add(AbstractObject.OBJECT_DASHBOARD);
 		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE, getRootObjects(classFilter), classFilter);
 		objectTree.enableFilter(false);
 		objectTree.getTreeViewer().expandToLevel(2);
@@ -102,7 +102,7 @@ public class DashboardNavigator extends ViewPart
 	 */
 	private long[] getRootObjects(Set<Integer> classFilter)
 	{
-		GenericObject[] objects = session.getTopLevelObjects(classFilter);
+		AbstractObject[] objects = session.getTopLevelObjects(classFilter);
 		long[] ids = new long[objects.length];
 		for(int i = 0; i < objects.length; i++)
 			ids[i] = objects[i].getObjectId();
@@ -219,7 +219,7 @@ public class DashboardNavigator extends ViewPart
 	private void refresh()
 	{
 		final Set<Integer> classFilter = new HashSet<Integer>(2);
-		classFilter.add(GenericObject.OBJECT_DASHBOARD);
+		classFilter.add(AbstractObject.OBJECT_DASHBOARD);
 		objectTree.setRootObjects(getRootObjects(classFilter));
 		objectTree.getTreeViewer().expandToLevel(2);
 	}

@@ -15,7 +15,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -120,7 +120,7 @@ public class MapLinkGeneral extends PropertyPage
 
 		statusObject = new ObjectSelector(colorGroup, SWT.NONE, true);
 		statusObject.setLabel("Status object");
-		statusObject.setObjectClass(GenericObject.class);
+		statusObject.setObjectClass(AbstractObject.class);
 		statusObject.setObjectId(object.getStatusObject());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

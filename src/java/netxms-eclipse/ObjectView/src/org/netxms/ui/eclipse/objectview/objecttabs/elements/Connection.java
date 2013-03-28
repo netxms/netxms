@@ -28,7 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -47,7 +47,7 @@ public class Connection extends OverviewPageElement
 	 * @param parent
 	 * @param object
 	 */
-	public Connection(Composite parent, GenericObject object)
+	public Connection(Composite parent, AbstractObject object)
 	{
 		super(parent, object);
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -112,7 +112,7 @@ public class Connection extends OverviewPageElement
 		long peerNodeId = iface.getPeerNodeId();
 		if (peerNodeId != 0)
 		{
-			GenericObject node = session.findObjectById(peerNodeId);
+			AbstractObject node = session.findObjectById(peerNodeId);
 			nodeLabel.setText((node != null) ? node.getObjectName() : "<" + peerNodeId + ">");
 			nodeLabel.setImage(labelProvider.getImage(node));
 		}
@@ -124,7 +124,7 @@ public class Connection extends OverviewPageElement
 		long peerInterfaceId = iface.getPeerInterfaceId();
 		if (peerInterfaceId != 0)
 		{
-			GenericObject peerIface = session.findObjectById(peerInterfaceId);
+			AbstractObject peerIface = session.findObjectById(peerInterfaceId);
 			interfaceLabel.setText((peerIface != null) ? peerIface.getObjectName() : "<" + peerInterfaceId + ">");
 			interfaceLabel.setImage(labelProvider.getImage(peerIface));
 		}
@@ -135,10 +135,10 @@ public class Connection extends OverviewPageElement
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public boolean isApplicableForObject(GenericObject object)
+	public boolean isApplicableForObject(AbstractObject object)
 	{
 		return (object instanceof Interface) && (((Interface)object).getPeerNodeId() != 0);
 	}

@@ -24,7 +24,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -49,7 +49,7 @@ public class Commands extends OverviewPageElement
 	 * @param parent
 	 * @param object
 	 */
-	public Commands(Composite parent, GenericObject object)
+	public Commands(Composite parent, AbstractObject object)
 	{
 		super(parent, object);
 		createActions();
@@ -64,7 +64,7 @@ public class Commands extends OverviewPageElement
 			@Override
 			public void run()
 			{
-				final GenericObject object = getObject();
+				final AbstractObject object = getObject();
 				new ConsoleJob("Wakeup node", null, Activator.PLUGIN_ID, null) {
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -87,7 +87,7 @@ public class Commands extends OverviewPageElement
 			@Override
 			public void run()
 			{
-				final GenericObject object = getObject();
+				final AbstractObject object = getObject();
 				if (MessageDialogHelper.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
 				{
 					new ConsoleJob("Initiate agent restart on node " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
@@ -113,7 +113,7 @@ public class Commands extends OverviewPageElement
 			@Override
 			public void run()
 			{
-				final GenericObject object = getObject();
+				final AbstractObject object = getObject();
 				if (MessageDialogHelper.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
 				{
 					new ConsoleJob("Initiate node restart", null, Activator.PLUGIN_ID, null) {
@@ -139,7 +139,7 @@ public class Commands extends OverviewPageElement
 			@Override
 			public void run()
 			{
-				final GenericObject object = getObject();
+				final AbstractObject object = getObject();
 				if (MessageDialogHelper.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be shut down. Are you sure?"))
 				{
 					new ConsoleJob("Initiate node shutdown", null, Activator.PLUGIN_ID, null) {
@@ -205,10 +205,10 @@ public class Commands extends OverviewPageElement
 	} 
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public boolean isApplicableForObject(GenericObject object)
+	public boolean isApplicableForObject(AbstractObject object)
 	{
 		return (object instanceof Node) || (object instanceof Interface);
 	}

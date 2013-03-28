@@ -24,7 +24,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Report;
 import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -49,7 +49,7 @@ public class ReportView extends ViewPart
 		super.init(site);
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		GenericObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
+		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		report = ((obj != null) && (obj instanceof Report)) ? (Report)obj : null;
 		setPartName("Report - " + ((report != null) ? report.getObjectName() : "<error>"));
 	}

@@ -9,7 +9,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.objects.Dashboard;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.views.DashboardView;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenHandler;
 
@@ -19,10 +19,10 @@ import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenHandler;
 public class DashboardOpenHandler implements ObjectOpenHandler
 {
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenHandler#openObject(org.netxms.client.objects.GenericObject)
+	 * @see org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenHandler#openObject(org.netxms.client.objects.AbstractObject)
 	 */
 	@Override
-	public boolean openObject(GenericObject object)
+	public boolean openObject(AbstractObject object)
 	{
 		if (!(object instanceof Dashboard))
 			return false;

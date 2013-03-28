@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,7 @@ package org.netxms.client;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkService;
 
 /**
@@ -70,7 +69,7 @@ public class NXCObjectCreationData
 	 * Constructor.
 	 * 
 	 * @param objectClass Class of new object (one of NXCObject.OBJECT_xxx constants)
-	 * @see GenericObject
+	 * @see AbstractObject
 	 * @param name Name of new object
 	 * @param parentId Parent object ID
 	 */

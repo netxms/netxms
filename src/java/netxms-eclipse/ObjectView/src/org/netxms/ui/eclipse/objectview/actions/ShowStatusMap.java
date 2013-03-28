@@ -27,7 +27,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.objectview.views.ObjectStatusMapView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -38,7 +38,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class ShowStatusMap implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private GenericObject object;
+	private AbstractObject object;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -80,7 +80,7 @@ public class ShowStatusMap implements IObjectActionDelegate
 			 Object o = ((IStructuredSelection)selection).getFirstElement();
 			 if ((o instanceof Container) || (o instanceof ServiceRoot))
 			 {
-				 object = (GenericObject)o;
+				 object = (AbstractObject)o;
 			 }
 			 else
 			 {

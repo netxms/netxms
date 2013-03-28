@@ -27,7 +27,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -41,7 +41,7 @@ public class Comments extends PropertyPage
 {
 	private static final long serialVersionUID = 1L;
 
-	private GenericObject object;
+	private AbstractObject object;
 	private Text comments;
 	private String initialComments;
 	
@@ -53,7 +53,7 @@ public class Comments extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (GenericObject)getElement().getAdapter(GenericObject.class);
+		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
 		initialComments = object.getComments();
 		if (initialComments == null)
 			initialComments = "";

@@ -42,7 +42,7 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.dialogs.SaveConfigDialog;
@@ -81,7 +81,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		session = (NXCSession)ConsoleSharedData.getSession();
 		nodeId = Long.parseLong(site.getSecondaryId());
 		
-		GenericObject object = session.findObjectById(nodeId);
+		AbstractObject object = session.findObjectById(nodeId);
 		setPartName(Messages.AgentConfigEditorView_PartName + ((object != null) ? object.getObjectName() : Long.toString(nodeId)));
 	}
 

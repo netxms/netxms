@@ -29,7 +29,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.agentmanager.Activator;
 import org.netxms.ui.eclipse.agentmanager.Messages;
@@ -109,7 +109,7 @@ public class OpenAgentConfig implements IObjectActionDelegate
 			if ((obj instanceof Node) && ((Node)obj).hasAgent())
 			{
 				action.setEnabled(true);
-				nodeId = ((GenericObject)obj).getObjectId();
+				nodeId = ((AbstractObject)obj).getObjectId();
 			}
 			else
 			{

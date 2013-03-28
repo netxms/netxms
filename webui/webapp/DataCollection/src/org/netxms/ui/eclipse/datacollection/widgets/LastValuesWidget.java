@@ -52,7 +52,7 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -85,7 +85,7 @@ public class LastValuesWidget extends Composite
 	public static final int COLUMN_THRESHOLD = 4;
 	
 	private final ViewPart viewPart;
-	private GenericObject dcTarget;
+	private AbstractObject dcTarget;
 	private NXCSession session;
 	private boolean filterEnabled = false;
 	private FilterText filterText;
@@ -109,7 +109,7 @@ public class LastValuesWidget extends Composite
 	 * @param _node node to display data for
 	 * @param configPrefix configuration prefix for saving/restoring viewer settings
 	 */
-	public LastValuesWidget(ViewPart viewPart, Composite parent, int style, GenericObject dcTarget, final String configPrefix)
+	public LastValuesWidget(ViewPart viewPart, Composite parent, int style, AbstractObject dcTarget, final String configPrefix)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -360,7 +360,7 @@ public class LastValuesWidget extends Composite
 	 * 
 	 * @param _node new node object
 	 */
-	public void setNode(GenericObject node)
+	public void setNode(AbstractObject node)
 	{
 		if ((node instanceof Node) || (node instanceof MobileDevice))
 			this.dcTarget = node;

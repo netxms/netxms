@@ -69,7 +69,7 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
@@ -114,7 +114,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			public void notificationHandler(SessionNotification n)
 			{
 				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
-					onObjectChange((GenericObject)n.getObject());
+					onObjectChange((AbstractObject)n.getObject());
 				else if (n.getCode() == NXCNotification.OBJECT_DELETED)
 					onObjectDelete(n.getSubCode());
 			}
@@ -225,14 +225,14 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	 */
 	private void buildFlatView()
 	{
-		GenericObject root = session.findObjectById(rootObjectId);
+		AbstractObject root = session.findObjectById(rootObjectId);
 		if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot)))
 			return;
 		
-		List<GenericObject> objects = new ArrayList<GenericObject>(root.getAllChilds(GenericObject.OBJECT_NODE));
-		Collections.sort(objects, new Comparator<GenericObject>() {
+		List<AbstractObject> objects = new ArrayList<AbstractObject>(root.getAllChilds(AbstractObject.OBJECT_NODE));
+		Collections.sort(objects, new Comparator<AbstractObject>() {
 			@Override
-			public int compare(GenericObject o1, GenericObject o2)
+			public int compare(AbstractObject o1, AbstractObject o2)
 			{
 				return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
 			}
@@ -256,7 +256,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		sections.add(clientArea);
 		
 		// Add nodes
-		for(GenericObject o : objects)
+		for(AbstractObject o : objects)
 		{
 			if (!(o instanceof Node))
 				continue;
@@ -270,14 +270,14 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	 */
 	private void buildSection(long rootId, String namePrefix)
 	{
-		GenericObject root = session.findObjectById(rootId);
+		AbstractObject root = session.findObjectById(rootId);
 		if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot)))
 			return;
 		
-		List<GenericObject> objects = new ArrayList<GenericObject>(Arrays.asList(root.getChildsAsArray()));
-		Collections.sort(objects, new Comparator<GenericObject>() {
+		List<AbstractObject> objects = new ArrayList<AbstractObject>(Arrays.asList(root.getChildsAsArray()));
+		Collections.sort(objects, new Comparator<AbstractObject>() {
 			@Override
-			public int compare(GenericObject o1, GenericObject o2)
+			public int compare(AbstractObject o1, AbstractObject o2)
 			{
 				return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
 			}
@@ -287,7 +287,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		Composite clientArea = null;
 		
 		// Add nodes
-		for(GenericObject o : objects)
+		for(AbstractObject o : objects)
 		{
 			if (!(o instanceof Node))
 				continue;
@@ -334,7 +334,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		}
 		
 		// Add subcontainers
-		for(GenericObject o : objects)
+		for(AbstractObject o : objects)
 		{
 			if (!(o instanceof Container) && !(o instanceof ServiceRoot))
 				continue;
@@ -493,7 +493,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	/**
 	 * Handle object change
 	 */
-	private void onObjectChange(final GenericObject object)
+	private void onObjectChange(final AbstractObject object)
 	{
 		if (!((object instanceof Node) || (object instanceof Container) || (object instanceof Cluster) || (object instanceof ServiceRoot)))
 			return;

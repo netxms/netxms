@@ -28,7 +28,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -73,7 +73,7 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 		String name = cachedObjectNames.get(id);
 		if (name == null)
 		{
-			GenericObject object = session.findObjectById(id);
+			AbstractObject object = session.findObjectById(id);
 			name = (object != null) ? object.getObjectName() : "<unknown>";
 			cachedObjectNames.put(id, name);
 		}

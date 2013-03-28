@@ -48,7 +48,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -191,7 +191,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			}
 			else if ((o instanceof Container) || (o instanceof ServiceRoot) || (o instanceof Subnet) || (o instanceof Cluster))
 			{
-				for(GenericObject n : ((GenericObject)o).getAllChilds(GenericObject.OBJECT_NODE))
+				for(AbstractObject n : ((AbstractObject)o).getAllChilds(AbstractObject.OBJECT_NODE))
 					nodes.add((Node)n);
 			}
 			else if (o instanceof Alarm)

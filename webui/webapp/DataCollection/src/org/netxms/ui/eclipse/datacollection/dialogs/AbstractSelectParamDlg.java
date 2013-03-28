@@ -45,7 +45,7 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.client.AgentParameter;
 import org.netxms.client.AgentTable;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentParameterComparator;
@@ -69,7 +69,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	public static final int COLUMN_DESCRIPTION = 2;
 	
 	protected boolean selectTables;
-	protected GenericObject object;
+	protected AbstractObject object;
 	protected Text filterText;
 	protected SortableTableViewer viewer;
 	

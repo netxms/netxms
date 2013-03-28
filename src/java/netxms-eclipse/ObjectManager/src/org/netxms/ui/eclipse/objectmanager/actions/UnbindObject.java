@@ -30,7 +30,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ChildObjectListDialog;
@@ -76,7 +76,7 @@ public class UnbindObject implements IObjectActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					List<GenericObject> objects = dlg.getSelectedObjects();
+					List<AbstractObject> objects = dlg.getSelectedObjects();
 					for(int i = 0; i < objects.size(); i++)
 						session.unbindObject(parentId, objects.get(i).getObjectId());
 				}
@@ -96,7 +96,7 @@ public class UnbindObject implements IObjectActionDelegate
 			if ((obj instanceof ServiceRoot) || (obj instanceof Container))
 			{
 				action.setEnabled(true);
-				parentId = ((GenericObject)obj).getObjectId();
+				parentId = ((AbstractObject)obj).getObjectId();
 			}
 			else
 			{

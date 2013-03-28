@@ -47,7 +47,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.base.GeoLocation;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -91,7 +91,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private Image currentImage = null;
 	private Image bufferImage = null;
 	private Area coverage = null;
-	private List<GenericObject> objects = new ArrayList<GenericObject>();
+	private List<AbstractObject> objects = new ArrayList<AbstractObject>();
 	private MapAccessor accessor;
 	private MapLoader mapLoader;
 	private IViewPart viewPart = null;
@@ -390,7 +390,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			gc.setTextAntialias(SWT.ON);
 
 			final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
-			for(GenericObject object : objects)
+			for(AbstractObject object : objects)
 			{
 				final Point virtualXY = GeoLocationCache.coordinateToDisplay(object.getGeolocation(), accessor.getZoom());
 				final int dx = virtualXY.x - centerXY.x;
@@ -460,7 +460,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 * @param y
 	 * @param object
 	 */
-	private void drawObject(GC gc, int x, int y, GenericObject object)
+	private void drawObject(GC gc, int x, int y, AbstractObject object)
 	{
 		final String text = object.getObjectName();
 		final Point textSize = gc.textExtent(text);
@@ -509,10 +509,10 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 * 
 	 * @see
 	 * org.netxms.ui.eclipse.osm.GeoLocationCacheListener#geoLocationCacheChanged
-	 * (org.netxms.client.objects.GenericObject, org.netxms.client.GeoLocation)
+	 * (org.netxms.client.objects.AbstractObject, org.netxms.client.GeoLocation)
 	 */
 	@Override
-	public void geoLocationCacheChanged(final GenericObject object, final GeoLocation prevLocation)
+	public void geoLocationCacheChanged(final AbstractObject object, final GeoLocation prevLocation)
 	{
 		getDisplay().asyncExec(new Runnable()
 		{
@@ -530,7 +530,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 * @param object
 	 * @param prevLocation
 	 */
-	private void onCacheChange(final GenericObject object, final GeoLocation prevLocation)
+	private void onCacheChange(final AbstractObject object, final GeoLocation prevLocation)
 	{
 		GeoLocation currLocation = object.getGeolocation();
 		if (((currLocation.getType() != GeoLocation.UNSET) && coverage.contains(currLocation.getLatitude(),

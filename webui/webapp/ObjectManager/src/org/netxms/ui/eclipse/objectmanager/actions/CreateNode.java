@@ -30,7 +30,7 @@ import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -72,7 +72,7 @@ public class CreateNode implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NODE, dlg.getObjectName(), parentId);
+				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), parentId);
 				cd.setCreationFlags(dlg.getCreationFlags());
 				cd.setPrimaryName(dlg.getHostName());
 				cd.setAgentPort(dlg.getAgentPort());
@@ -102,7 +102,7 @@ public class CreateNode implements IObjectActionDelegate
 			final Object object = ((IStructuredSelection)selection).getFirstElement();
 			if ((object instanceof Container) || (object instanceof ServiceRoot) || (object instanceof Cluster))
 			{
-				parentId = ((GenericObject)object).getObjectId();
+				parentId = ((AbstractObject)object).getObjectId();
 			}
 			else
 			{

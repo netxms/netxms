@@ -37,7 +37,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
@@ -116,7 +116,7 @@ public class ExportDashboard implements IObjectActionDelegate
 				xml.append("\t<objectMap>\n"); //$NON-NLS-1$
 				for(Long id : objects)
 				{
-					GenericObject o = session.findObjectById(id);
+					AbstractObject o = session.findObjectById(id);
 					if (o != null)
 					{
 						xml.append("\t\t<object id=\""); //$NON-NLS-1$

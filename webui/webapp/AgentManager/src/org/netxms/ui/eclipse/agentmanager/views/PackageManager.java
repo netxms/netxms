@@ -51,7 +51,7 @@ import org.netxms.api.client.ProgressListener;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.client.packages.PackageInfo;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -421,7 +421,7 @@ public class PackageManager extends ViewPart
 			return;
 		
 		final Set<Long> objects = new HashSet<Long>();
-		for(GenericObject o : dlg.getSelectedObjects())
+		for(AbstractObject o : dlg.getSelectedObjects())
 		{
 			objects.add(o.getObjectId());
 		}

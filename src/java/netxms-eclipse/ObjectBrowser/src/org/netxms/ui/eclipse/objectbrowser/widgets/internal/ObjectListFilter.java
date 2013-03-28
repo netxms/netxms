@@ -26,7 +26,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.base.Glob;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -37,9 +37,9 @@ public class ObjectListFilter extends ViewerFilter
 {
 	private String filterString = null;
 	private Set<Integer> classFilter = null;
-	private GenericObject[] sourceObjects = null;
-	private Map<Long, GenericObject> objectList = null;
-	private GenericObject lastMatch = null;
+	private AbstractObject[] sourceObjects = null;
+	private Map<Long, AbstractObject> objectList = null;
+	private AbstractObject lastMatch = null;
 	private boolean usePatternMatching = false;
 
 	/**
@@ -55,7 +55,7 @@ public class ObjectListFilter extends ViewerFilter
 	 * @param sourceObjects Custom source objects list. If null, all known objects used as source.
 	 * @param classFilter Class filter
 	 */
-	public ObjectListFilter(GenericObject[] sourceObjects, Set<Integer> classFilter)
+	public ObjectListFilter(AbstractObject[] sourceObjects, Set<Integer> classFilter)
 	{
 		this.sourceObjects = sourceObjects;
 		this.classFilter = classFilter;
@@ -83,11 +83,11 @@ public class ObjectListFilter extends ViewerFilter
 	{
 		if (classFilter != null)
 		{
-			if (!classFilter.contains(((GenericObject)element).getObjectClass()))
+			if (!classFilter.contains(((AbstractObject)element).getObjectClass()))
 				return false;
 		}
 		
-		return matchFilterString(((GenericObject)element).getObjectName());
+		return matchFilterString(((AbstractObject)element).getObjectName());
 	}
 		
 	/**
@@ -131,8 +131,8 @@ public class ObjectListFilter extends ViewerFilter
 		{
 			if (doFullSearch)
 			{
-				GenericObject[] fullList = (sourceObjects != null) ? sourceObjects : ((NXCSession)ConsoleSharedData.getSession()).getAllObjects();
-				objectList = new HashMap<Long, GenericObject>();
+				AbstractObject[] fullList = (sourceObjects != null) ? sourceObjects : ((NXCSession)ConsoleSharedData.getSession()).getAllObjects();
+				objectList = new HashMap<Long, AbstractObject>();
 				for(int i = 0; i < fullList.length; i++)
 					if (matchFilterString(fullList[i].getObjectName()))
 					{
@@ -143,10 +143,10 @@ public class ObjectListFilter extends ViewerFilter
 			else
 			{
 				lastMatch = null;
-				Iterator<GenericObject> it = objectList.values().iterator();
+				Iterator<AbstractObject> it = objectList.values().iterator();
 				while(it.hasNext())
 				{
-					GenericObject obj = it.next();
+					AbstractObject obj = it.next();
 					if (!matchFilterString(obj.getObjectName()))
 						it.remove();
 					else
@@ -165,7 +165,7 @@ public class ObjectListFilter extends ViewerFilter
 	 * Get last matched object
 	 * @return Last matched object
 	 */
-	public final GenericObject getLastMatch()
+	public final AbstractObject getLastMatch()
 	{
 		return lastMatch;
 	}

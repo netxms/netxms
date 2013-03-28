@@ -33,7 +33,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -79,7 +79,7 @@ public class Dot1xStatusView extends ViewPart
 		}
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		GenericObject object = session.findObjectById(rootObject);
+		AbstractObject object = session.findObjectById(rootObject);
 		setPartName(Messages.Dot1xStatusView_PartNamePrefix + ((object != null) ? object.getObjectName() : ("<" + rootObject + ">"))); //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
@@ -176,13 +176,13 @@ public class Dot1xStatusView extends ViewPart
 	 */
 	private void fillPortList(List<Dot1xPortSummary> portList, Set<Long> nodeList, long root)
 	{
-		GenericObject object = session.findObjectById(root);
+		AbstractObject object = session.findObjectById(root);
 		if (object == null)
 			return;
 		
 		if ((object instanceof Node) && !nodeList.contains(object.getObjectId()))
 		{
-			for(GenericObject o : object.getAllChilds(GenericObject.OBJECT_INTERFACE))
+			for(AbstractObject o : object.getAllChilds(AbstractObject.OBJECT_INTERFACE))
 			{
 				if ((((Interface)o).getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
 					portList.add(new Dot1xPortSummary((Node)object, (Interface)o));

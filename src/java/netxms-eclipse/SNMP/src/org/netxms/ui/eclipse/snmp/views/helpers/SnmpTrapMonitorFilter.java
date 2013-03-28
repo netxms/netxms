@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.snmp.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.snmp.SnmpTrapLogRecord;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
@@ -59,7 +59,7 @@ public class SnmpTrapMonitorFilter extends AbstractTraceViewFilter
 		if (((SnmpTrapLogRecord)element).getSourceAddress().getHostAddress().contains(filterString))
 			return true;
 		
-		GenericObject object = session.findObjectById(((SnmpTrapLogRecord)element).getSourceNode());
+		AbstractObject object = session.findObjectById(((SnmpTrapLogRecord)element).getSourceNode());
 		if (object != null)
 		{
 			return object.getObjectName().toLowerCase().contains(filterString);

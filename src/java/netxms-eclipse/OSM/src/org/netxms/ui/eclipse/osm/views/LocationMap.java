@@ -22,7 +22,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -33,7 +33,7 @@ public class LocationMap extends AbstractGeolocationView
 {
 	public static final String ID = "org.netxms.ui.eclipse.osm.views.LocationMap"; //$NON-NLS-1$
 	
-	private GenericObject object;
+	private AbstractObject object;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)

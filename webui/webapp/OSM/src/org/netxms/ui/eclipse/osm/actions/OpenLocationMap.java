@@ -28,7 +28,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.base.GeoLocation;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.views.LocationMap;
 
@@ -38,7 +38,7 @@ import org.netxms.ui.eclipse.osm.views.LocationMap;
 public class OpenLocationMap implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private GenericObject object;
+	private AbstractObject object;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -76,9 +76,9 @@ public class OpenLocationMap implements IObjectActionDelegate
 	{
 		Object obj;
 		if ((selection instanceof IStructuredSelection) &&
-			 ((obj = ((IStructuredSelection)selection).getFirstElement()) instanceof GenericObject))
+			 ((obj = ((IStructuredSelection)selection).getFirstElement()) instanceof AbstractObject))
 		{
-			object = (GenericObject)obj;
+			object = (AbstractObject)obj;
 		}
 		else
 		{

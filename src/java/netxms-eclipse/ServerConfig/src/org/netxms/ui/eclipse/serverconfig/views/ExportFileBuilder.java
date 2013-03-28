@@ -51,7 +51,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
@@ -583,7 +583,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		if (dlg.open() == Window.OK)
 		{
 			final Set<Long> idList = new HashSet<Long>();
-			for(GenericObject o : dlg.getSelectedObjects(Template.class))
+			for(AbstractObject o : dlg.getSelectedObjects(Template.class))
 			{
 				templates.add((Template)o);
 				idList.add(o.getObjectId());

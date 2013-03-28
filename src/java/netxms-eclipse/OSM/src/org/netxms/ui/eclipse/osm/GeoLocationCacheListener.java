@@ -19,7 +19,7 @@
 package org.netxms.ui.eclipse.osm;
 
 import org.netxms.base.GeoLocation;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Interface for geolocation cache listeners
@@ -32,5 +32,5 @@ public interface GeoLocationCacheListener
 	 * @param object changed object
 	 * @param prevLocation previous objects's location (may be null)
 	 */
-	public abstract void geoLocationCacheChanged(GenericObject object, GeoLocation prevLocation);
+	public abstract void geoLocationCacheChanged(AbstractObject object, GeoLocation prevLocation);
 }

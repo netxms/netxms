@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.serviceview.widgets.helpers;
 
 import java.util.HashSet;
 import java.util.Set;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Service tree element
@@ -28,12 +28,12 @@ import org.netxms.client.objects.GenericObject;
  */
 public class ServiceTreeElement
 {
-	private GenericObject object;
+	private AbstractObject object;
 	private boolean expanded;
 	private ServiceTreeElement parent;
 	private Set<ServiceTreeElement> childs = new HashSet<ServiceTreeElement>();
 	
-	protected ServiceTreeElement(ServiceTreeElement parent, GenericObject object)
+	protected ServiceTreeElement(ServiceTreeElement parent, AbstractObject object)
 	{
 		this.parent = parent;
 		this.object = object;
@@ -84,7 +84,7 @@ public class ServiceTreeElement
 	/**
 	 * @return the object
 	 */
-	public GenericObject getObject()
+	public AbstractObject getObject()
 	{
 		return object;
 	}

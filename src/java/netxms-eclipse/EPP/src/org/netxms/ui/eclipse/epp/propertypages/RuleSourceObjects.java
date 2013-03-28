@@ -43,7 +43,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicyRule;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -61,7 +61,7 @@ public class RuleSourceObjects extends PropertyPage
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private SortableTableViewer viewer;
-	private Map<Long, GenericObject> objects = new HashMap<Long, GenericObject>();
+	private Map<Long, AbstractObject> objects = new HashMap<Long, AbstractObject>();
 	private Button addButton;
 	private Button deleteButton;
 	private Button checkInverted;
@@ -102,7 +102,7 @@ public class RuleSourceObjects extends PropertyPage
 			}
       });
 
-      for(GenericObject o : session.findMultipleObjects(rule.getSources().toArray(new Long[0]), true))
+      for(AbstractObject o : session.findMultipleObjects(rule.getSources().toArray(new Long[0]), true))
       	objects.put(o.getObjectId(), o);
       viewer.setInput(objects.values().toArray());
       
@@ -175,7 +175,7 @@ public class RuleSourceObjects extends PropertyPage
 		dlg.enableMultiSelection(true);
 		if (dlg.open() == Window.OK)
 		{
-			for(GenericObject o : dlg.getSelectedObjects())
+			for(AbstractObject o : dlg.getSelectedObjects())
 				objects.put(o.getObjectId(), o);
 		}
       viewer.setInput(objects.values().toArray());
@@ -188,12 +188,12 @@ public class RuleSourceObjects extends PropertyPage
 	private void deleteEvent()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		Iterator<GenericObject> it = selection.iterator();
+		Iterator<AbstractObject> it = selection.iterator();
 		if (it.hasNext())
 		{
 			while(it.hasNext())
 			{
-				GenericObject o = it.next();
+				AbstractObject o = it.next();
 				objects.remove(o.getObjectId());
 			}
 	      viewer.setInput(objects.values().toArray());

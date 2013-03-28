@@ -53,7 +53,7 @@ import org.netxms.client.ServerAction;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.situations.Situation;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -462,7 +462,7 @@ public class RuleEditor extends Composite
 				CLabel clabel = createCLabel(clientArea, 2, false);
 				clabel.addMouseListener(listener);
 				
-				GenericObject object = session.findObjectById(id);
+				AbstractObject object = session.findObjectById(id);
 				if (object != null)
 				{
 					clabel.setText(object.getObjectName());

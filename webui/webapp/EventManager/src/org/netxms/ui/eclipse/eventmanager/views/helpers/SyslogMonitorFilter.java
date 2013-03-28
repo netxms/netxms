@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.eventmanager.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.SyslogRecord;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
 
@@ -61,7 +61,7 @@ public class SyslogMonitorFilter extends AbstractTraceViewFilter
 		if (((SyslogRecord)element).getTag().toLowerCase().contains(filterString))
 			return true;
 		
-		GenericObject object = session.findObjectById(((SyslogRecord)element).getSourceObjectId());
+		AbstractObject object = session.findObjectById(((SyslogRecord)element).getSourceObjectId());
 		if (object != null)
 		{
 			return object.getObjectName().toLowerCase().contains(filterString);
