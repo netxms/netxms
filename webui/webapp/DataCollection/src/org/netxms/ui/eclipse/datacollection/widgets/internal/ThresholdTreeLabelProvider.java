@@ -25,7 +25,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
@@ -52,7 +52,7 @@ public class ThresholdTreeLabelProvider extends LabelProvider implements ITableL
 	{
 		if ((element instanceof ThresholdViolationSummary) && (columnIndex == ThresholdSummaryWidget.COLUMN_NODE))
 		{
-			Node node = (Node)session.findObjectById(((ThresholdViolationSummary)element).getNodeId(), Node.class);
+			AbstractNode node = (AbstractNode)session.findObjectById(((ThresholdViolationSummary)element).getNodeId(), AbstractNode.class);
 			return (node != null) ? wbLabelProvider.getImage(node) : null;
 		}
 		else if ((element instanceof ThresholdViolationSummary) && (columnIndex == ThresholdSummaryWidget.COLUMN_STATUS))
@@ -77,7 +77,7 @@ public class ThresholdTreeLabelProvider extends LabelProvider implements ITableL
 			switch(columnIndex)
 			{
 				case ThresholdSummaryWidget.COLUMN_NODE:
-					Node node = (Node)session.findObjectById(((ThresholdViolationSummary)element).getNodeId(), Node.class);
+					AbstractNode node = (AbstractNode)session.findObjectById(((ThresholdViolationSummary)element).getNodeId(), AbstractNode.class);
 					return (node != null) ? node.getObjectName() : null;
 				case ThresholdSummaryWidget.COLUMN_STATUS:
 					return StatusDisplayInfo.getStatusText(((ThresholdViolationSummary)element).getCurrentSeverity());

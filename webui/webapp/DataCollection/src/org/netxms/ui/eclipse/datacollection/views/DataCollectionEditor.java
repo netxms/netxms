@@ -63,10 +63,10 @@ import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
-import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
-import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -133,7 +133,7 @@ public class DataCollectionEditor extends ViewPart
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
-		object = ((obj != null) && ((obj instanceof Node) || (obj instanceof Template) || (obj instanceof Cluster) || (obj instanceof MobileDevice))) ? obj : null;
+		object = ((obj != null) && ((obj instanceof AbstractNode) || (obj instanceof Template) || (obj instanceof Cluster) || (obj instanceof MobileDevice))) ? obj : null;
 		setPartName(Messages.DataCollectionEditor_PartNamePrefix + ((object != null) ? object.getObjectName() : Messages.DataCollectionEditor_Error));
 	}
 
@@ -778,7 +778,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				for(AbstractObject o : dlg.getSelectedObjects(Node.class))
+				for(AbstractObject o : dlg.getSelectedObjects(AbstractNode.class))
 					dciConfig.copyObjects(o.getObjectId(), dciList);
 				for(AbstractObject o : dlg.getSelectedObjects(Template.class))
 					dciConfig.copyObjects(o.getObjectId(), dciList);

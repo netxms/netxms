@@ -22,10 +22,10 @@ import java.text.NumberFormat;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
-import org.netxms.client.objects.Node;
 import org.netxms.client.objects.NodeLink;
 import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.ServiceContainer;
@@ -74,7 +74,7 @@ public class GeneralInfo extends TableElement
 				if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
 				{
 					addPair("Slot/Port", Integer.toString(iface.getSlot()) + "/" + Integer.toString(iface.getPort()));
-					Node node = iface.getParentNode();
+					AbstractNode node = iface.getParentNode();
 					if ((node != null) && node.is8021xSupported())
 					{
 						addPair("802.1x PAE State", iface.getDot1xPaeStateAsText());
@@ -90,7 +90,7 @@ public class GeneralInfo extends TableElement
 				}
 				break;
 			case AbstractObject.OBJECT_NODE:
-				Node node = (Node)object;
+				AbstractNode node = (AbstractNode)object;
 				if (session.isZoningEnabled())
 					addPair("Zone ID", Long.toString(node.getZoneId()));
 				addPair("Primary Host Name", node.getPrimaryName());
@@ -101,7 +101,7 @@ public class GeneralInfo extends TableElement
 				addPair("Platform Name", node.getPlatformName(), false);
 				addPair("SNMP sysName", node.getSnmpSysName(), false);
 				addPair("SNMP Object ID", node.getSnmpOID(), false);
-				if ((node.getFlags() & Node.NF_IS_BRIDGE) != 0)
+				if ((node.getFlags() & AbstractNode.NF_IS_BRIDGE) != 0)
 					addPair("Bridge Base Address", node.getBridgeBaseAddress().toString());
 				addPair("Driver", node.getDriverName(), false);
 				break;
@@ -131,7 +131,7 @@ public class GeneralInfo extends TableElement
 				addPair("Zone ID", Long.toString(zone.getZoneId()));
 				break;
 			case AbstractObject.OBJECT_NODELINK:
-				Node linkedNode = (Node)session.findObjectById(((NodeLink)object).getNodeId(), Node.class);
+				AbstractNode linkedNode = (AbstractNode)session.findObjectById(((NodeLink)object).getNodeId(), AbstractNode.class);
 				if (linkedNode != null)
 					addPair("Linked node", linkedNode.getObjectName());
 			case AbstractObject.OBJECT_BUSINESSSERVICE:

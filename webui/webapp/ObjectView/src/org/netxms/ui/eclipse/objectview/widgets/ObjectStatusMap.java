@@ -67,10 +67,10 @@ import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
@@ -258,10 +258,10 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		// Add nodes
 		for(AbstractObject o : objects)
 		{
-			if (!(o instanceof Node))
+			if (!(o instanceof AbstractNode))
 				continue;
 
-			addNodeElement(clientArea, (Node)o);
+			addNodeElement(clientArea, (AbstractNode)o);
 		}
 	}
 	
@@ -289,7 +289,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		// Add nodes
 		for(AbstractObject o : objects)
 		{
-			if (!(o instanceof Node))
+			if (!(o instanceof AbstractNode))
 				continue;
 			
 			if (section == null)
@@ -330,7 +330,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 				sections.add(section);
 			}
 			
-			addNodeElement(clientArea, (Node)o);
+			addNodeElement(clientArea, (AbstractNode)o);
 		}
 		
 		// Add subcontainers
@@ -346,7 +346,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	/**
 	 * @param node
 	 */
-	private void addNodeElement(final Composite parent, final Node node)
+	private void addNodeElement(final Composite parent, final AbstractNode node)
 	{
 		NodeStatusWidget w = new NodeStatusWidget(parent, node);
 		w.setBackground(getBackground());
@@ -478,7 +478,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	 * 
 	 * @param node
 	 */
-	private void callDetailsProvider(Node node)
+	private void callDetailsProvider(AbstractNode node)
 	{
 		for(ObjectDetailsProvider p : detailsProviders.values())
 		{
@@ -495,7 +495,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	 */
 	private void onObjectChange(final AbstractObject object)
 	{
-		if (!((object instanceof Node) || (object instanceof Container) || (object instanceof Cluster) || (object instanceof ServiceRoot)))
+		if (!((object instanceof AbstractNode) || (object instanceof Container) || (object instanceof Cluster) || (object instanceof ServiceRoot)))
 			return;
 		
 		synchronized(nodes)
@@ -508,7 +508,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 					public void run()
 					{
 						if (!w.isDisposed())
-							w.updateObject((Node)object);
+							w.updateObject((AbstractNode)object);
 					}
 				});
 			}

@@ -21,12 +21,12 @@ package org.netxms.ui.eclipse.alarmviewer.objecttabs;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
-import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
@@ -81,7 +81,7 @@ public class AlarmTab extends ObjectTab
 	@Override
 	public boolean showForObject(AbstractObject object)
 	{
-		return (object instanceof Node) || (object instanceof Subnet) ||
+		return (object instanceof AbstractNode) || (object instanceof Subnet) ||
 		       (object instanceof EntireNetwork) || (object instanceof Container) ||
 		       (object instanceof Cluster) || (object instanceof ServiceRoot) ||
 		       (object instanceof MobileDevice);

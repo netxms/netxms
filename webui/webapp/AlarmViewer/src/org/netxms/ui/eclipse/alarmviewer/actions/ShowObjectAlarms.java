@@ -26,11 +26,11 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
@@ -85,7 +85,7 @@ public class ShowObjectAlarms implements IObjectActionDelegate
 		    (((IStructuredSelection)selection).size() == 1))
 		{
 			obj = ((IStructuredSelection)selection).getFirstElement();
-			if((obj instanceof Node) || (obj instanceof Container) ||
+			if((obj instanceof AbstractNode) || (obj instanceof Container) ||
 				(obj instanceof Subnet) || (obj instanceof Cluster) ||
 				(obj instanceof EntireNetwork) || (obj instanceof ServiceRoot) ||
 				(obj instanceof Zone))

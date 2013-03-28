@@ -22,7 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.ui.eclipse.agentmanager.Activator;
 import org.netxms.ui.eclipse.agentmanager.Messages;
@@ -35,6 +35,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
 public class DeploymentStatusLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	private static final long serialVersionUID = 1L;
+
 	private static final String[] statusText = { Messages.DeploymentStatusLabelProvider_Pending, Messages.DeploymentStatusLabelProvider_Uploading, Messages.DeploymentStatusLabelProvider_Installing, Messages.DeploymentStatusLabelProvider_Completed, Messages.DeploymentStatusLabelProvider_Failed, Messages.DeploymentStatusLabelProvider_Init }; 
 			
 	private WorkbenchLabelProvider workbenchLabelProvider;
@@ -65,7 +66,7 @@ public class DeploymentStatusLabelProvider extends LabelProvider implements ITab
 		switch(columnIndex)
 		{
 			case PackageDeploymentMonitor.COLUMN_NODE:
-				Node node = s.getNodeObject();
+				AbstractNode node = s.getNodeObject();
 				return (node != null) ? workbenchLabelProvider.getImage(node) : SharedIcons.IMG_UNKNOWN_OBJECT;
 			case PackageDeploymentMonitor.COLUMN_STATUS:
 				switch(s.getStatus())

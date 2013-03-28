@@ -57,8 +57,8 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
@@ -91,7 +91,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private MibBrowser mibBrowser;
 	private MibObjectDetails details;
 	private TableViewer viewer;
-	private Node currentNode = null;
+	private AbstractNode currentNode = null;
 	private NXCSession session;
 	private boolean walkActive = false;
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
@@ -117,8 +117,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			if (nodeId != 0)
 			{
 				AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
-				if ((object != null) && (object instanceof Node))
-					currentNode = (Node)object;
+				if ((object != null) && (object instanceof AbstractNode))
+					currentNode = (AbstractNode)object;
 			}
 		}
 		super.init(site, memento);
@@ -262,7 +262,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 				dlg.enableMultiSelection(false);
 				if (dlg.open() == Window.OK)
 				{
-					setNode((Node)dlg.getSelectedObjects().get(0));
+					setNode((AbstractNode)dlg.getSelectedObjects().get(0));
 				}
 			}
 		};
@@ -533,7 +533,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	 * 
 	 * @param node
 	 */
-	public void setNode(Node node)
+	public void setNode(AbstractNode node)
 	{
 		currentNode = node;
 		actionWalk.setEnabled((node != null) && !walkActive);

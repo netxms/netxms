@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.objectmanager.propertypages;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -41,8 +40,8 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -83,7 +82,7 @@ public class TrustedNodes extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { "Node" };
+      final String[] columnNames = { "AbstractNode" };
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -134,7 +133,7 @@ public class TrustedNodes extends PropertyPage
 				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(true));
 				if (dlg.open() == Window.OK)
 				{
-					AbstractObject[] nodes = dlg.getSelectedObjects(Node.class);
+					AbstractObject[] nodes = dlg.getSelectedObjects(AbstractNode.class);
 			      for(int i = 0; i < nodes.length; i++)
 			      	trustedNodes.put(nodes[i].getObjectId(), nodes[i]);
 			      viewer.setInput(trustedNodes.values().toArray());

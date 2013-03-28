@@ -19,7 +19,7 @@
 package org.netxms.ui.eclipse.agentmanager.views.helpers;
 
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -28,7 +28,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class DeploymentStatus
 {
 	private long nodeId;
-	private Node nodeObject;
+	private AbstractNode nodeObject;
 	private int status;
 	private String message;
 	
@@ -40,7 +40,7 @@ public class DeploymentStatus
 	public DeploymentStatus(long nodeId, int status, String message)
 	{
 		this.nodeId = nodeId;
-		this.nodeObject = (Node)((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId, Node.class);
+		this.nodeObject = (AbstractNode)((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId, AbstractNode.class);
 		this.status = status;
 		this.message = message;
 	}
@@ -54,7 +54,7 @@ public class DeploymentStatus
 	{
 		if (nodeObject == null)
 		{
-			nodeObject = (Node)((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId, Node.class);
+			nodeObject = (AbstractNode)((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId, AbstractNode.class);
 		}
 		return (nodeObject != null) ? nodeObject.getObjectName() : ("[" + Long.toString(nodeId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
@@ -94,7 +94,7 @@ public class DeploymentStatus
 	/**
 	 * @return the nodeObject
 	 */
-	public Node getNodeObject()
+	public AbstractNode getNodeObject()
 	{
 		return nodeObject;
 	}

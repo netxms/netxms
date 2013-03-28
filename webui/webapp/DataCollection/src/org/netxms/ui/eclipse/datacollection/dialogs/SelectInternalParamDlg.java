@@ -19,12 +19,11 @@
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import java.util.ArrayList;
-
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.AgentParameter;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.MobileDevice;
-import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Messages;
 
@@ -58,17 +57,17 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		list.add(new AgentParameter("Dummy", Messages.SelectInternalParamDlg_DCI_Dummy, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		list.add(new AgentParameter("Status", Messages.SelectInternalParamDlg_DCI_Status, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		
-		if ((object instanceof Template) || (object instanceof Node))
+		if ((object instanceof Template) || (object instanceof AbstractNode))
 		{
 			list.add(new AgentParameter("Net.IP.NextHop(*)", Messages.SelectInternalParamDlg_DCI_NextHop, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
 		}
 		
-		if ((object instanceof Template) || ((object instanceof Node) && ((Node)object).hasAgent()))
+		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).hasAgent()))
 		{
 			list.add(new AgentParameter("AgentStatus", Messages.SelectInternalParamDlg_DCI_AgentStatus, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		}
 		
-		if ((object instanceof Template) || ((object instanceof Node) && ((Node)object).isManagementServer()))
+		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isManagementServer()))
 		{
 			list.add(new AgentParameter("Server.AverageConfigurationPollerQueueSize", Messages.SelectInternalParamDlg_DCI_AvgConfPollerQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
 			list.add(new AgentParameter("AverageDBWriterQueueSize", Messages.SelectInternalParamDlg_DCI_AvgDBWriterQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$

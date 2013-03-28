@@ -26,7 +26,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
@@ -37,12 +37,12 @@ public class NodeStatusWidget extends Canvas implements PaintListener
 {
 	private static final long serialVersionUID = 1L;
 
-	private Node node;
+	private AbstractNode node;
 	
 	/**
 	 * @param parent
 	 */
-	public NodeStatusWidget(Composite parent, Node node)
+	public NodeStatusWidget(Composite parent, AbstractNode node)
 	{
 		super(parent, SWT.NONE);
 		this.node = node;
@@ -97,7 +97,7 @@ public class NodeStatusWidget extends Canvas implements PaintListener
 	/**
 	 * @param node
 	 */
-	public void updateObject(Node node)
+	public void updateObject(AbstractNode node)
 	{
 		this.node = node;
 		redraw();

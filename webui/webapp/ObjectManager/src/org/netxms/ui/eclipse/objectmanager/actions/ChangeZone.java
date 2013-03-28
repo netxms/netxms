@@ -27,7 +27,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.dialogs.ZoneSelectionDialog;
@@ -41,7 +41,7 @@ public class ChangeZone implements IObjectActionDelegate
 	private boolean zoningEnabled;
 	private IWorkbenchWindow window;
 	private IWorkbenchPart part;
-	private Node node;
+	private AbstractNode node;
 	
 	/**
 	 * The constructor
@@ -96,9 +96,9 @@ public class ChangeZone implements IObjectActionDelegate
 		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
 			final Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if (obj instanceof Node)
+			if (obj instanceof AbstractNode)
 			{
-				node = (Node)obj;
+				node = (AbstractNode)obj;
 			}
 			else
 			{

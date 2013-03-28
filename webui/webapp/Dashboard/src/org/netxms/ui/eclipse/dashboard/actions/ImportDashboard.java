@@ -69,7 +69,6 @@ import org.w3c.dom.NodeList;
 
 /**
  * Create dashboard object
- *
  */
 public class ImportDashboard implements IObjectActionDelegate
 {

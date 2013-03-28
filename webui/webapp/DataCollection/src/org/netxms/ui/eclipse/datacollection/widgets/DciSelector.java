@@ -23,7 +23,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
@@ -103,7 +103,7 @@ public class DciSelector extends AbstractSelector
 					@Override
 					public void run()
 					{
-						Node node = (Node)session.findObjectById(nodeId, Node.class);
+						AbstractNode node = (AbstractNode)session.findObjectById(nodeId, AbstractNode.class);
 						
 						StringBuilder sb = new StringBuilder();
 						if (!fixedNode)

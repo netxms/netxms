@@ -43,9 +43,10 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
@@ -117,7 +118,7 @@ public class General extends PropertyPage
 		{
 			cluster = (Cluster)owner;
 		}
-		else if (owner instanceof Node)
+		else if (owner instanceof AbstractNode)
 		{
 			for(AbstractObject o : owner.getParentsAsArray())
 			{

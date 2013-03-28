@@ -37,9 +37,9 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.AddressListLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -52,7 +52,7 @@ public class IPAddressSelectionDialog extends Dialog
 {
 	private static final long serialVersionUID = 1L;
 
-	private Node node;
+	private AbstractNode node;
 	private TableViewer viewer;
 	private InetAddress address;
 	
@@ -62,7 +62,7 @@ public class IPAddressSelectionDialog extends Dialog
 	 * @param parentShell parent shell
 	 * @param node node object which IP address should be selected
 	 */
-	public IPAddressSelectionDialog(Shell parentShell, Node node)
+	public IPAddressSelectionDialog(Shell parentShell, AbstractNode node)
 	{
 		super(parentShell);
 		this.node = node;

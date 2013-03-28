@@ -29,8 +29,8 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.agentmanager.Activator;
 import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView;
@@ -106,7 +106,7 @@ public class OpenAgentConfig implements IObjectActionDelegate
 		    (((IStructuredSelection)selection).size() == 1))
 		{
 			Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if ((obj instanceof Node) && ((Node)obj).hasAgent())
+			if ((obj instanceof AbstractNode) && ((AbstractNode)obj).hasAgent())
 			{
 				action.setEnabled(true);
 				nodeId = ((AbstractObject)obj).getObjectId();

@@ -26,7 +26,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.views.MibExplorer;
 
@@ -36,7 +36,7 @@ import org.netxms.ui.eclipse.snmp.views.MibExplorer;
 public class OpenMibExplorerForNode implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private Node node;
+	private AbstractNode node;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -76,9 +76,9 @@ public class OpenMibExplorerForNode implements IObjectActionDelegate
 		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
 			final Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if (obj instanceof Node)
+			if (obj instanceof AbstractNode)
 			{
-				node = (Node)obj;
+				node = (AbstractNode)obj;
 			}
 			else
 			{
