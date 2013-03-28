@@ -36,8 +36,8 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.DciListComparator;
@@ -72,7 +72,7 @@ public class DciList extends Composite
 	 * @param _node node to display data for
 	 * @param configPrefix configuration prefix for saving/restoring viewer settings
 	 */
-	public DciList(ViewPart viewPart, Composite parent, int style, Node _node, final String configPrefix, int dcObjectType)
+	public DciList(ViewPart viewPart, Composite parent, int style, AbstractNode _node, final String configPrefix, int dcObjectType)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();

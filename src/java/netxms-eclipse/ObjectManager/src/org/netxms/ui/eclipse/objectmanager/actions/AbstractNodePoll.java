@@ -26,18 +26,17 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.objectmanager.views.NodePollerView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Generic poll starter
- *
  */
 public abstract class AbstractNodePoll implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private Node node = null;
+	private AbstractNode node = null;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
@@ -68,9 +67,9 @@ public abstract class AbstractNodePoll implements IObjectActionDelegate
 		Object obj;
 		if ((selection instanceof IStructuredSelection) &&
 		    (((IStructuredSelection)selection).size() == 1) &&
-			 ((obj = ((IStructuredSelection)selection).getFirstElement()) instanceof Node))
+			 ((obj = ((IStructuredSelection)selection).getFirstElement()) instanceof AbstractNode))
 		{
-			node = (Node)obj;
+			node = (AbstractNode)obj;
 		}
 		else
 		{

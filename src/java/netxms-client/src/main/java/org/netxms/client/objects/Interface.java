@@ -149,17 +149,17 @@ public class Interface extends GenericObject
 	 * 
 	 * @return parent node object or null if it is not exist or inaccessible
 	 */
-	public Node getParentNode()
+	public AbstractNode getParentNode()
 	{
-		Node node = null;
+		AbstractNode node = null;
 		synchronized(parents)
 		{
 			for(Long id : parents)
 			{
 				AbstractObject object = session.findObjectById(id);
-				if (object instanceof Node)
+				if (object instanceof AbstractNode)
 				{
-					node = (Node)object;
+					node = (AbstractNode)object;
 					break;
 				}
 			}

@@ -7,11 +7,11 @@ import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
@@ -30,7 +30,7 @@ public class AlarmDetailsProvider implements ObjectDetailsProvider
 	@Override
 	public boolean canProvideDetails(AbstractObject object)
 	{
-		return (object instanceof Node) || (object instanceof Container) ||
+		return (object instanceof AbstractNode) || (object instanceof Container) ||
 			(object instanceof ServiceRoot) || (object instanceof Subnet) ||
 			(object instanceof Zone) || (object instanceof EntireNetwork) ||
 			(object instanceof Cluster);

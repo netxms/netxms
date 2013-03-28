@@ -43,7 +43,7 @@ import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.Interface;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.CreateInterfaceDciDialog;
@@ -88,10 +88,10 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			final List<Interface> ifaces = new ArrayList<Interface>(objects);
 			
 			// Get set of nodes
-			final Set<Node> nodes = new HashSet<Node>();
+			final Set<AbstractNode> nodes = new HashSet<AbstractNode>();
 			for(Interface iface : ifaces)
 			{
-				Node node = iface.getParentNode();
+				AbstractNode node = iface.getParentNode();
 				if (node != null)
 				{
 					nodes.add(node);
@@ -101,7 +101,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			// Check what nodes requires DCI list lock
 			final Map<Long, Boolean> lockRequired = new HashMap<Long, Boolean>(nodes.size());
 			final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-			for(Node n : nodes)
+			for(AbstractNode n : nodes)
 			{
 				IViewReference ref = page.findViewReference(DataCollectionEditor.ID, Long.toString(n.getObjectId()));
 				lockRequired.put(n.getObjectId(), !((ref != null) && (ref.getView(false) != null)));
@@ -147,7 +147,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 	private static void createInterfaceDci(NXCSession session, Interface iface, int dciType, InterfaceDciInfo dciInfo, int pollingInterval,
 			int retentionTime, boolean updateDescription, Map<Long, Boolean> lockRequired) throws Exception
 	{
-		Node node = iface.getParentNode();
+		AbstractNode node = iface.getParentNode();
 		if (node == null)
 			throw new NXCException(RCC.INTERNAL_ERROR);		
 		

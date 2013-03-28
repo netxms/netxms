@@ -26,7 +26,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.objectview.views.SoftwareInventoryView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -36,7 +36,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class ShowSoftwareInventory implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private Node node;
+	private AbstractNode node;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -76,9 +76,9 @@ public class ShowSoftwareInventory implements IObjectActionDelegate
 		    (((IStructuredSelection)selection).size() == 1))
 		{
 			 Object o = ((IStructuredSelection)selection).getFirstElement();
-			 if (o instanceof Node)
+			 if (o instanceof AbstractNode)
 			 {
-				 node = (Node)o;
+				 node = (AbstractNode)o;
 			 }
 			 else
 			 {

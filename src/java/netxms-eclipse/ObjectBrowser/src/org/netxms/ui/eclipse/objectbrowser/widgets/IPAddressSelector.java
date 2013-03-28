@@ -19,12 +19,11 @@
 package org.netxms.ui.eclipse.objectbrowser.widgets;
 
 import java.net.InetAddress;
-
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.IPAddressSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -36,7 +35,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class IPAddressSelector extends AbstractSelector
 {
-	private Node node;
+	private AbstractNode node;
 	private InetAddress address;
 	private NXCSession session;
 
@@ -59,9 +58,9 @@ public class IPAddressSelector extends AbstractSelector
 	public void setNode(long nodeId)
 	{
 		AbstractObject object = session.findObjectById(nodeId);
-		if (object instanceof Node)
+		if (object instanceof AbstractNode)
 		{
-			node = (Node)object;
+			node = (AbstractNode)object;
 			address = node.getPrimaryIP();
 			setText(address.getHostAddress());
 		}
@@ -77,7 +76,7 @@ public class IPAddressSelector extends AbstractSelector
 	 * 
 	 * @param node node object
 	 */
-	public void setNode(Node node)
+	public void setNode(AbstractNode node)
 	{
 		this.node = node;
 		address = node.getPrimaryIP();

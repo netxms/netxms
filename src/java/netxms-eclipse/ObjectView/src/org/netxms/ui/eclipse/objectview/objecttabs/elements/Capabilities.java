@@ -19,8 +19,8 @@
 package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 
 /**
  * "Capabilities" element for object overview page
@@ -52,24 +52,24 @@ public class Capabilities extends TableElement
 	@Override
 	protected void fillTable()
 	{
-		if (!(getObject() instanceof Node))
+		if (!(getObject() instanceof AbstractNode))
 			return;
 		
-		Node node = (Node)getObject();
-		addFlag("isAgent", (node.getFlags() & Node.NF_IS_NATIVE_AGENT) != 0);
-		addFlag("isBridge", (node.getFlags() & Node.NF_IS_BRIDGE) != 0);
-		addFlag("isCDP", (node.getFlags() & Node.NF_IS_CDP) != 0);
-		addFlag("isDot1x", (node.getFlags() & Node.NF_IS_8021X) != 0);
-		addFlag("isLLDP", (node.getFlags() & Node.NF_IS_LLDP) != 0);
-		addFlag("isNDP", (node.getFlags() & Node.NF_IS_SONMP) != 0);
-		addFlag("isPrinter", (node.getFlags() & Node.NF_IS_PRINTER) != 0);
-		addFlag("isRouter", (node.getFlags() & Node.NF_IS_ROUTER) != 0);
-		addFlag("isSNMP", (node.getFlags() & Node.NF_IS_SNMP) != 0);
-		addFlag("isSTP", (node.getFlags() & Node.NF_IS_STP) != 0);
-		addFlag("isVRRP", (node.getFlags() & Node.NF_IS_VRRP) != 0);
-		addFlag("hasEntityMIB", (node.getFlags() & Node.NF_HAS_ENTITY_MIB) != 0);
-		addFlag("hasIfXTable", (node.getFlags() & Node.NF_HAS_IFXTABLE) != 0);
-		if ((node.getFlags() & Node.NF_IS_SNMP) != 0)
+		AbstractNode node = (AbstractNode)getObject();
+		addFlag("isAgent", (node.getFlags() & AbstractNode.NF_IS_NATIVE_AGENT) != 0);
+		addFlag("isBridge", (node.getFlags() & AbstractNode.NF_IS_BRIDGE) != 0);
+		addFlag("isCDP", (node.getFlags() & AbstractNode.NF_IS_CDP) != 0);
+		addFlag("isDot1x", (node.getFlags() & AbstractNode.NF_IS_8021X) != 0);
+		addFlag("isLLDP", (node.getFlags() & AbstractNode.NF_IS_LLDP) != 0);
+		addFlag("isNDP", (node.getFlags() & AbstractNode.NF_IS_SONMP) != 0);
+		addFlag("isPrinter", (node.getFlags() & AbstractNode.NF_IS_PRINTER) != 0);
+		addFlag("isRouter", (node.getFlags() & AbstractNode.NF_IS_ROUTER) != 0);
+		addFlag("isSNMP", (node.getFlags() & AbstractNode.NF_IS_SNMP) != 0);
+		addFlag("isSTP", (node.getFlags() & AbstractNode.NF_IS_STP) != 0);
+		addFlag("isVRRP", (node.getFlags() & AbstractNode.NF_IS_VRRP) != 0);
+		addFlag("hasEntityMIB", (node.getFlags() & AbstractNode.NF_HAS_ENTITY_MIB) != 0);
+		addFlag("hasIfXTable", (node.getFlags() & AbstractNode.NF_HAS_IFXTABLE) != 0);
+		if ((node.getFlags() & AbstractNode.NF_IS_SNMP) != 0)
 		{
 			addPair("snmpPort", Integer.toString(node.getSnmpPort()));
 			addPair("snmpVersion", getSnmpVersionName(node.getSnmpVersion()));
@@ -97,11 +97,11 @@ public class Capabilities extends TableElement
 	{
 		switch(version)
 		{
-			case Node.SNMP_VERSION_1:
+			case AbstractNode.SNMP_VERSION_1:
 				return "1";
-			case Node.SNMP_VERSION_2C:
+			case AbstractNode.SNMP_VERSION_2C:
 				return "2c";
-			case Node.SNMP_VERSION_3:
+			case AbstractNode.SNMP_VERSION_3:
 				return "3";
 			default:
 				return "???";
@@ -114,6 +114,6 @@ public class Capabilities extends TableElement
 	@Override
 	public boolean isApplicableForObject(AbstractObject object)
 	{
-		return object instanceof Node;
+		return object instanceof AbstractNode;
 	}
 }

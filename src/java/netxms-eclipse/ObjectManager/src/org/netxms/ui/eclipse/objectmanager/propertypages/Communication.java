@@ -38,7 +38,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -52,7 +52,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class Communication extends PropertyPage
 {
-	private Node node;
+	private AbstractNode node;
 	private LabeledText primaryName;
 	private LabeledText agentPort;
 	private LabeledText agentSharedSecret;
@@ -75,7 +75,7 @@ public class Communication extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		node = (Node)getElement().getAdapter(Node.class);
+		node = (AbstractNode)getElement().getAdapter(AbstractNode.class);
 
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		GridLayout dialogLayout = new GridLayout();
@@ -141,7 +141,7 @@ public class Communication extends PropertyPage
 
 		agentForceEncryption = new Button(agentGroup, SWT.CHECK);
 		agentForceEncryption.setText("Force encryption");
-		agentForceEncryption.setSelection((node.getFlags() & Node.NF_FORCE_ENCRYPTION) != 0);
+		agentForceEncryption.setSelection((node.getFlags() & AbstractNode.NF_FORCE_ENCRYPTION) != 0);
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(agentPort, 0, SWT.BOTTOM);
@@ -166,7 +166,7 @@ public class Communication extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				agentSharedSecret.getTextControl().setEnabled(agentAuthMethod.getSelectionIndex() != Node.AGENT_AUTH_NONE);
+				agentSharedSecret.getTextControl().setEnabled(agentAuthMethod.getSelectionIndex() != AbstractNode.AGENT_AUTH_NONE);
 			}
 		});
 		
@@ -178,7 +178,7 @@ public class Communication extends PropertyPage
 		fd.right = new FormAttachment(100, 0);
 		fd.top = new FormAttachment(agentForceEncryption, 0, SWT.BOTTOM);
 		agentSharedSecret.setLayoutData(fd);
-		agentSharedSecret.getTextControl().setEnabled(node.getAgentAuthMethod() != Node.AGENT_AUTH_NONE);
+		agentSharedSecret.getTextControl().setEnabled(node.getAgentAuthMethod() != AbstractNode.AGENT_AUTH_NONE);
 	
 		// SNMP
 		Group snmpGroup = new Group(dialogArea, SWT.NONE);
@@ -228,7 +228,7 @@ public class Communication extends PropertyPage
 		snmpAuth.add("MD5");
 		snmpAuth.add("SHA1");
 		snmpAuth.select(node.getSnmpAuthMethod());
-		snmpAuth.setEnabled(node.getSnmpVersion() == Node.SNMP_VERSION_3);
+		snmpAuth.setEnabled(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3);
 		
 		fd = new FormData();
 		fd.left = new FormAttachment(snmpAuth.getParent(), 0, SWT.RIGHT);
@@ -238,7 +238,7 @@ public class Communication extends PropertyPage
 		snmpPriv.add("DES");
 		snmpPriv.add("AES");
 		snmpPriv.select(node.getSnmpPrivMethod());
-		snmpPriv.setEnabled(node.getSnmpVersion() == Node.SNMP_VERSION_3);
+		snmpPriv.setEnabled(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3);
 		
 		snmpProxy = new ObjectSelector(snmpGroup, SWT.NONE, true);
 		snmpProxy.setLabel("Proxy");
@@ -250,7 +250,7 @@ public class Communication extends PropertyPage
 		snmpProxy.setLayoutData(fd);
 		
 		snmpAuthName = new LabeledText(snmpGroup, SWT.NONE);
-		snmpAuthName.setLabel(node.getSnmpVersion() == Node.SNMP_VERSION_3 ? "User name" : "Community string");
+		snmpAuthName.setLabel(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3 ? "User name" : "Community string");
 		snmpAuthName.setText(node.getSnmpAuthName());
 		fd = new FormData();
 		fd.left = new FormAttachment(snmpProxy, 0, SWT.RIGHT);
@@ -266,7 +266,7 @@ public class Communication extends PropertyPage
 		fd.top = new FormAttachment(snmpAuth.getParent(), 0, SWT.TOP);
 		fd.right = new FormAttachment(100, 0);
 		snmpAuthPassword.setLayoutData(fd);
-		snmpAuthPassword.getTextControl().setEnabled(node.getSnmpVersion() == Node.SNMP_VERSION_3);
+		snmpAuthPassword.getTextControl().setEnabled(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3);
 		
 		snmpPrivPassword = new LabeledText(snmpGroup, SWT.NONE);
 		snmpPrivPassword.setLabel("Encryption password");
@@ -276,7 +276,7 @@ public class Communication extends PropertyPage
 		fd.top = new FormAttachment(snmpProxy, 0, SWT.TOP);
 		fd.right = new FormAttachment(100, 0);
 		snmpPrivPassword.setLayoutData(fd);
-		snmpPrivPassword.getTextControl().setEnabled(node.getSnmpVersion() == Node.SNMP_VERSION_3);
+		snmpPrivPassword.getTextControl().setEnabled(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3);
 
 		fd = new FormData();
 		fd.left = new FormAttachment(snmpVersion.getParent(), 0, SWT.RIGHT);
@@ -297,11 +297,11 @@ public class Communication extends PropertyPage
 	{
 		switch(version)
 		{
-			case Node.SNMP_VERSION_1:
+			case AbstractNode.SNMP_VERSION_1:
 				return 0;
-			case Node.SNMP_VERSION_2C:
+			case AbstractNode.SNMP_VERSION_2C:
 				return 1;
-			case Node.SNMP_VERSION_3:
+			case AbstractNode.SNMP_VERSION_3:
 				return 2;
 		}
 		return 0;
@@ -312,7 +312,7 @@ public class Communication extends PropertyPage
 	 */
 	private int snmpIndexToVersion(int index)
 	{
-		final int[] versions = { Node.SNMP_VERSION_1, Node.SNMP_VERSION_2C, Node.SNMP_VERSION_3 };
+		final int[] versions = { AbstractNode.SNMP_VERSION_1, AbstractNode.SNMP_VERSION_2C, AbstractNode.SNMP_VERSION_3 };
 		return versions[index];
 	}
 	
@@ -390,9 +390,9 @@ public class Communication extends PropertyPage
 		/* TODO: sync in some way with "Polling" page */
 		int flags = node.getFlags();
 		if (agentForceEncryption.getSelection())
-			flags |= Node.NF_FORCE_ENCRYPTION;
+			flags |= AbstractNode.NF_FORCE_ENCRYPTION;
 		else
-			flags &= ~Node.NF_FORCE_ENCRYPTION;
+			flags &= ~AbstractNode.NF_FORCE_ENCRYPTION;
 		md.setObjectFlags(flags);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();

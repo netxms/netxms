@@ -46,10 +46,10 @@ import org.eclipse.ui.services.IEvaluationService;
 import org.eclipse.ui.services.IServiceLocator;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objecttools.ObjectTool;
@@ -106,7 +106,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		if ((selection == null) || !(selection instanceof IStructuredSelection))
 			return;
 
-		final Set<Node> nodes = buildNodeSet((IStructuredSelection)selection);
+		final Set<AbstractNode> nodes = buildNodeSet((IStructuredSelection)selection);
 		final Menu toolsMenu = new Menu(menu);
 		
 		ObjectTool[] tools = ObjectToolsCache.getTools();
@@ -177,25 +177,25 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 * @param selection
 	 * @return
 	 */
-	private Set<Node> buildNodeSet(IStructuredSelection selection)
+	private Set<AbstractNode> buildNodeSet(IStructuredSelection selection)
 	{
-		final Set<Node> nodes = new HashSet<Node>();
+		final Set<AbstractNode> nodes = new HashSet<AbstractNode>();
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
 		for(Object o : selection.toList())
 		{
-			if (o instanceof Node)
+			if (o instanceof AbstractNode)
 			{
-				nodes.add((Node)o);
+				nodes.add((AbstractNode)o);
 			}
 			else if ((o instanceof Container) || (o instanceof ServiceRoot) || (o instanceof Subnet) || (o instanceof Cluster))
 			{
 				for(AbstractObject n : ((AbstractObject)o).getAllChilds(AbstractObject.OBJECT_NODE))
-					nodes.add((Node)n);
+					nodes.add((AbstractNode)n);
 			}
 			else if (o instanceof Alarm)
 			{
-				Node n = (Node)session.findObjectById(((Alarm)o).getSourceObjectId(), Node.class);
+				AbstractNode n = (AbstractNode)session.findObjectById(((Alarm)o).getSourceObjectId(), AbstractNode.class);
 				if (n != null)
 					nodes.add(n);
 			}
@@ -210,7 +210,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 * @param nodes
 	 * @return
 	 */
-	private static boolean isToolAllowed(ObjectTool tool, Set<Node> nodes)
+	private static boolean isToolAllowed(ObjectTool tool, Set<AbstractNode> nodes)
 	{
 		if (tool.getType() != ObjectTool.TYPE_INTERNAL)
 			return true;
@@ -218,7 +218,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
 		if (handler != null)
 		{
-			for(Node n : nodes)
+			for(AbstractNode n : nodes)
 				if (!handler.canExecuteOnNode(n, tool))
 					return false;
 			return true;
@@ -236,9 +236,9 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 * @param nodes
 	 * @return
 	 */
-	private static boolean isToolApplicable(ObjectTool tool, Set<Node> nodes)
+	private static boolean isToolApplicable(ObjectTool tool, Set<AbstractNode> nodes)
 	{
-		for(Node n : nodes)
+		for(AbstractNode n : nodes)
 			if (!tool.isApplicableForNode(n))
 				return false;
 		return true;
@@ -248,14 +248,14 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 * Execute object tool on node set
 	 * @param tool Object tool
 	 */
-	private void executeObjectTool(final Set<Node> nodes, final ObjectTool tool)
+	private void executeObjectTool(final Set<AbstractNode> nodes, final ObjectTool tool)
 	{
 		if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
 		{
 			String message = tool.getConfirmationText();
 			if (nodes.size() == 1)
 			{
-				Node node = nodes.iterator().next();
+				AbstractNode node = nodes.iterator().next();
 				message = message.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
 				message = message.replace("%OBJECT_NAME%", node.getObjectName());
 				message = message.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
@@ -271,7 +271,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 				return;
 		}
 		
-		for(Node n : nodes)
+		for(AbstractNode n : nodes)
 			executeObjectToolOnNode(n, tool);
 	}
 	
@@ -281,7 +281,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 * @param node
 	 * @param tool
 	 */
-	private void executeObjectToolOnNode(final Node node, final ObjectTool tool)
+	private void executeObjectToolOnNode(final AbstractNode node, final ObjectTool tool)
 	{
 		switch(tool.getType())
 		{
@@ -316,7 +316,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 * @param node
 	 * @param tool
 	 */
-	private void executeTableTool(final Node node, final ObjectTool tool)
+	private void executeTableTool(final AbstractNode node, final ObjectTool tool)
 	{
 		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		try
@@ -336,7 +336,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 * @param node
 	 * @param tool
 	 */
-	private void executeAgentAction(final Node node, final ObjectTool tool)
+	private void executeAgentAction(final AbstractNode node, final ObjectTool tool)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Execute action on node " + node.getObjectName(), null, Activator.PLUGIN_ID, null) {
@@ -367,7 +367,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 * @param node
 	 * @param tool
 	 */
-	private void executeServerCommand(final Node node, final ObjectTool tool)
+	private void executeServerCommand(final AbstractNode node, final ObjectTool tool)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Execute server command", null, Activator.PLUGIN_ID, null) {
@@ -398,7 +398,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 * @param node
 	 * @param tool
 	 */
-	private void executeLocalCommand(final Node node, final ObjectTool tool)
+	private void executeLocalCommand(final AbstractNode node, final ObjectTool tool)
 	{
 		String temp = tool.getData();
 		temp = temp.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
@@ -447,7 +447,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 * @param node
 	 * @param tool
 	 */
-	private void executeFileDownload(final Node node, final ObjectTool tool)
+	private void executeFileDownload(final AbstractNode node, final ObjectTool tool)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
@@ -488,7 +488,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 * @param node
 	 * @param tool
 	 */
-	private void executeInternalTool(final Node node, final ObjectTool tool)
+	private void executeInternalTool(final AbstractNode node, final ObjectTool tool)
 	{
 		ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
 		if (handler != null)
@@ -505,7 +505,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 * @param node
 	 * @param tool
 	 */
-	private void openURL(final Node node, final ObjectTool tool)
+	private void openURL(final AbstractNode node, final ObjectTool tool)
 	{
 		String temp = tool.getData();
 		temp = temp.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());

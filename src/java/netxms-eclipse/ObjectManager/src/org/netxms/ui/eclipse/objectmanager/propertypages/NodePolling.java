@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -44,7 +44,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class NodePolling extends PropertyPage
 {
-	private Node object;
+	private AbstractNode object;
 	private ObjectSelector pollerNode;
 	private Button radioDefault;
 	private Button radioEnable;
@@ -60,7 +60,7 @@ public class NodePolling extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (Node)getElement().getAdapter(Node.class);
+		object = (AbstractNode)getElement().getAdapter(AbstractNode.class);
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
@@ -82,7 +82,7 @@ public class NodePolling extends PropertyPage
 		
 		pollerNode = new ObjectSelector(servicePollGroup, SWT.NONE, true);
 		pollerNode.setLabel("Poller node");
-		pollerNode.setObjectClass(Node.class);
+		pollerNode.setObjectClass(AbstractNode.class);
 		pollerNode.setEmptySelectionName("<server>");
 		pollerNode.setObjectId(object.getPollerNodeId());
 		gd = new GridData();
@@ -107,15 +107,15 @@ public class NodePolling extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		optionsGroup.setLayoutData(gd);
 		
-		addFlag(optionsGroup, Node.NF_DISABLE_NXCP, "Disable usage of NetXMS &agent for all polls");
-		addFlag(optionsGroup, Node.NF_DISABLE_SNMP, "Disable usage of &SNMP for all polls");
-		addFlag(optionsGroup, Node.NF_DISABLE_ICMP, "Disable usage of &ICMP pings for status polling");
-		addFlag(optionsGroup, Node.NF_DISABLE_STATUS_POLL, "Disable s&tatus polling");
-		addFlag(optionsGroup, Node.NF_DISABLE_CONF_POLL, "Disable &configuration polling");
-		addFlag(optionsGroup, Node.NF_DISABLE_ROUTE_POLL, "Disable &routing table polling");
-		addFlag(optionsGroup, Node.NF_DISABLE_TOPOLOGY_POLL, "Disable &topology polling");
-		addFlag(optionsGroup, Node.NF_DISABLE_DISCOVERY_POLL, "Disable network &discovery polling");
-		addFlag(optionsGroup, Node.NF_DISABLE_DATA_COLLECT, "Disable data c&ollection");
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_NXCP, "Disable usage of NetXMS &agent for all polls");
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_SNMP, "Disable usage of &SNMP for all polls");
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ICMP, "Disable usage of &ICMP pings for status polling");
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_STATUS_POLL, "Disable s&tatus polling");
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_CONF_POLL, "Disable &configuration polling");
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ROUTE_POLL, "Disable &routing table polling");
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_TOPOLOGY_POLL, "Disable &topology polling");
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DISCOVERY_POLL, "Disable network &discovery polling");
+		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DATA_COLLECT, "Disable data c&ollection");
 		
 		/* use ifXTable */
 		Group ifXTableGroup = new Group(dialogArea, SWT.NONE);
@@ -132,15 +132,15 @@ public class NodePolling extends PropertyPage
 		
 		radioDefault = new Button(ifXTableGroup, SWT.RADIO);
 		radioDefault.setText("De&fault");
-		radioDefault.setSelection(object.getIfXTablePolicy() == Node.IFXTABLE_DEFAULT);
+		radioDefault.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_DEFAULT);
 
 		radioEnable = new Button(ifXTableGroup, SWT.RADIO);
 		radioEnable.setText("&Enable");
-		radioEnable.setSelection(object.getIfXTablePolicy() == Node.IFXTABLE_ENABLED);
+		radioEnable.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_ENABLED);
 
 		radioDisable = new Button(ifXTableGroup, SWT.RADIO);
 		radioDisable.setText("&Disable");
-		radioDisable.setSelection(object.getIfXTablePolicy() == Node.IFXTABLE_DISABLED);
+		radioDisable.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_DISABLED);
 
       return dialogArea;
 	}
@@ -190,10 +190,10 @@ public class NodePolling extends PropertyPage
 	private int collectIfXTablePolicy()
 	{
 		if (radioEnable.getSelection())
-			return Node.IFXTABLE_ENABLED;
+			return AbstractNode.IFXTABLE_ENABLED;
 		if (radioDisable.getSelection())
-			return Node.IFXTABLE_DISABLED;
-		return Node.IFXTABLE_DEFAULT;
+			return AbstractNode.IFXTABLE_DISABLED;
+		return AbstractNode.IFXTABLE_DEFAULT;
 	}
 
 	/**

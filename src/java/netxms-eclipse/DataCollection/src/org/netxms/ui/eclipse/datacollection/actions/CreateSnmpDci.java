@@ -43,7 +43,7 @@ import org.netxms.client.constants.ASN;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -93,10 +93,10 @@ public class CreateSnmpDci implements IObjectActionDelegate
 		final List<SnmpValue> values = new ArrayList<SnmpValue>(objects);
 		
 		// Get set of nodes
-		final Set<Node> nodes = new HashSet<Node>();
+		final Set<AbstractNode> nodes = new HashSet<AbstractNode>();
 		for(SnmpValue v : values)
 		{
-			Node node = (Node)session.findObjectById(v.getNodeId(), Node.class);
+			AbstractNode node = (AbstractNode)session.findObjectById(v.getNodeId(), AbstractNode.class);
 			if (node != null)
 			{
 				nodes.add(node);
@@ -106,7 +106,7 @@ public class CreateSnmpDci implements IObjectActionDelegate
 		// Check what nodes requires DCI list lock
 		final Map<Long, Boolean> lockRequired = new HashMap<Long, Boolean>(nodes.size());
 		final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-		for(Node n : nodes)
+		for(AbstractNode n : nodes)
 		{
 			IViewReference ref = page.findViewReference(DataCollectionEditor.ID, Long.toString(n.getObjectId()));
 			lockRequired.put(n.getObjectId(), !((ref != null) && (ref.getView(false) != null)));
@@ -148,7 +148,7 @@ public class CreateSnmpDci implements IObjectActionDelegate
 	private static void createDci(NXCSession session, SnmpValue value, String description, int pollingInterval,
 			int retentionTime, int deltaCalculation, Map<Long, Boolean> lockRequired) throws Exception
 	{
-		Node node = (Node)session.findObjectById(value.getNodeId(), Node.class);
+		AbstractNode node = (AbstractNode)session.findObjectById(value.getNodeId(), AbstractNode.class);
 		if (node == null)
 			throw new NXCException(RCC.INTERNAL_ERROR);		
 		

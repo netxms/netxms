@@ -30,7 +30,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.DciList;
@@ -96,7 +96,7 @@ public class SelectNodeDciDialog extends Dialog
 			}
 		});
 
-		dciList.setNode((Node)((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId, Node.class));
+		dciList.setNode((AbstractNode)((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId, AbstractNode.class));
 
 		return dialogArea;
 	}

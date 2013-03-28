@@ -35,9 +35,9 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
@@ -69,7 +69,7 @@ public class LastValues extends ViewPart
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
-		dcTarget = ((obj != null) && ((obj instanceof Node) || (obj instanceof MobileDevice))) ? obj : null;
+		dcTarget = ((obj != null) && ((obj instanceof AbstractNode) || (obj instanceof MobileDevice))) ? obj : null;
 		setPartName(Messages.LastValues_PartNamePrefix + ((dcTarget != null) ? dcTarget.getObjectName() : Messages.LastValues_Error));
 	}
 

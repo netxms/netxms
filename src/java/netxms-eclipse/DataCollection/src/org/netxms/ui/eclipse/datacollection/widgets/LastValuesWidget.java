@@ -52,9 +52,9 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DciOpenHandler;
@@ -347,7 +347,7 @@ public class LastValuesWidget extends Composite
 	 */
 	public void setNode(AbstractObject node)
 	{
-		if ((node instanceof Node) || (node instanceof MobileDevice))
+		if ((node instanceof AbstractNode) || (node instanceof MobileDevice))
 			this.dcTarget = node;
 		else
 			this.dcTarget = null;

@@ -18,7 +18,7 @@
  */
 package org.netxms.ui.eclipse.objecttools.api;
 
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectTool;
 
 /**
@@ -33,7 +33,7 @@ public interface ObjectToolHandler
 	 * @param tool object tool to be executed
 	 * @return true if tool can be executed and should be shown in menu
 	 */
-	public abstract boolean canExecuteOnNode(Node node, ObjectTool tool);
+	public abstract boolean canExecuteOnNode(AbstractNode node, ObjectTool tool);
 	
 	/**
 	 * Execute object tool. This method called on UI thread.
@@ -41,5 +41,5 @@ public interface ObjectToolHandler
 	 * @param node node object on which tool execution was requested
 	 * @param tool object tool to be executed
 	 */
-	public abstract void execute(Node node, ObjectTool tool);
+	public abstract void execute(AbstractNode node, ObjectTool tool);
 }

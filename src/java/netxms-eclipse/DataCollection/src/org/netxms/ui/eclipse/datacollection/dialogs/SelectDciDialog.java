@@ -36,10 +36,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
-import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -171,7 +171,7 @@ public class SelectDciDialog extends Dialog
 				{
 					AbstractObject object = objectTree.getFirstSelectedObject2();
 					if ((object != null) && 
-					    ((object instanceof Node) || (object instanceof MobileDevice) ||
+					    ((object instanceof AbstractNode) || (object instanceof MobileDevice) ||
 					     (allowTemplateItems && ((object instanceof Template) || (object instanceof Cluster)))))
 					{
 						dciList.setNode(object);
