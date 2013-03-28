@@ -92,7 +92,7 @@
 #define AGENT_DEFAULT_CONFIG_D   _T("{search}")
 #define AGENT_DEFAULT_LOG        _T("/var/log/nxagentd")
 #define AGENT_DEFAULT_FILE_STORE _T("/tmp")
-#define AGENT_DEFAULT_DATA_DIR   _T("/var/opt/netxms/agent")
+#define AGENT_DEFAULT_DATA_DIR   _T(PREFIX "/var/netxms")
 #endif
 
 #define REGISTRY_FILE_NAME       _T("registry.dat")
