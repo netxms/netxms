@@ -28,14 +28,13 @@ import org.netxms.ui.eclipse.console.Messages;
 
 /**
  * Status display information
- *
  */
 public final class StatusDisplayInfo
 {
 	private static String[] statusText = new String[9];
 	private static ImageDescriptor[] statusImageDesc = new ImageDescriptor[9];
 	private static Image[] statusImage = new Image[9];
-	private static Color[] statusColor = new Color[9];
+	private static String[] statusColor = new String[9];
 	
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
@@ -65,15 +64,15 @@ public final class StatusDisplayInfo
 		for(int i = 0; i < statusImageDesc.length; i++)
 			statusImage[i] = statusImageDesc[i].createImage();
 
-		statusColor[Severity.NORMAL] = new Color(display, 0, 192, 0);
-		statusColor[Severity.WARNING] = new Color(display, 0, 255, 255);
-		statusColor[Severity.MINOR] = new Color(display, 231, 226, 0);
-		statusColor[Severity.MAJOR] = new Color(display, 255, 128, 0);
-		statusColor[Severity.CRITICAL] = new Color(display, 192, 0, 0);
-		statusColor[Severity.UNKNOWN] = new Color(display, 0, 0, 128);
-		statusColor[Severity.UNMANAGED] = new Color(display, 192, 192, 192);
-		statusColor[Severity.DISABLED] = new Color(display, 128, 64, 0);
-		statusColor[Severity.TESTING] = new Color(display, 255, 128, 255);
+		statusColor[Severity.NORMAL] = SharedColors.STATUS_NORMAL;
+		statusColor[Severity.WARNING] = SharedColors.STATUS_WARNING;
+		statusColor[Severity.MINOR] = SharedColors.STATUS_MINOR;
+		statusColor[Severity.MAJOR] = SharedColors.STATUS_MAJOR;
+		statusColor[Severity.CRITICAL] = SharedColors.STATUS_CRITICAL;
+		statusColor[Severity.UNKNOWN] = SharedColors.STATUS_UNKNOWN;
+		statusColor[Severity.UNMANAGED] = SharedColors.STATUS_UNMANAGED;
+		statusColor[Severity.DISABLED] = SharedColors.STATUS_DISABLED;
+		statusColor[Severity.TESTING] = SharedColors.STATUS_TESTING;
 	}
 	
 	/**
@@ -141,7 +140,7 @@ public final class StatusDisplayInfo
 	{
 		try
 		{
-			return statusColor[severity];
+			return SharedColors.getColor(statusColor[severity], Display.getCurrent());
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
