@@ -63,6 +63,15 @@ public class SharedColors
 	public static final String RULE_EDITOR_ACTION_BORDER = "RuleEditor.Border.Action";
 	public static final String RULE_EDITOR_TITLE_TEXT = "RuleEditor.Title.Text";
 	public static final String SERVICE_AVAILABILITY_LEGEND = "ServiceAvailability.Legend"; 
+	public static final String STATUS_NORMAL = "Status.Normal"; 
+	public static final String STATUS_WARNING = "Status.Warning"; 
+	public static final String STATUS_MINOR = "Status.Minor"; 
+	public static final String STATUS_MAJOR = "Status.Major"; 
+	public static final String STATUS_CRITICAL = "Status.Critical"; 
+	public static final String STATUS_UNKNOWN = "Status.Unknown"; 
+	public static final String STATUS_UNMANAGED = "Status.Unmanaged"; 
+	public static final String STATUS_DISABLED = "Status.Disabled"; 
+	public static final String STATUS_TESTING = "Status.Testing"; 
 	public static final String TEXT_ERROR = "Text.Error"; 
 	public static final String TEXT_NORMAL = "Text.Normal"; 
 	
@@ -105,6 +114,15 @@ public class SharedColors
 		defaultColors.put(RULE_EDITOR_ACTION_BORDER, new RGB(186,176,201));
 		defaultColors.put(RULE_EDITOR_TITLE_TEXT, new RGB(0, 0, 0));
 		defaultColors.put(SERVICE_AVAILABILITY_LEGEND, new RGB(0, 0, 0));
+		defaultColors.put(STATUS_NORMAL, new RGB(0, 192, 0));
+		defaultColors.put(STATUS_WARNING, new RGB(0, 255, 255));
+		defaultColors.put(STATUS_MINOR, new RGB(231, 226, 0));
+		defaultColors.put(STATUS_MAJOR, new RGB(255, 128, 0));
+		defaultColors.put(STATUS_CRITICAL, new RGB(192, 0, 0));
+		defaultColors.put(STATUS_UNKNOWN, new RGB(0, 0, 128));
+		defaultColors.put(STATUS_UNMANAGED, new RGB(192, 192, 192));
+		defaultColors.put(STATUS_DISABLED, new RGB(128, 64, 0));
+		defaultColors.put(STATUS_TESTING, new RGB(255, 128, 255));		
 		defaultColors.put(TEXT_ERROR, new RGB(255, 0, 0));
 		defaultColors.put(TEXT_NORMAL, new RGB(0, 0, 0));
 	}
