@@ -91,6 +91,7 @@ public:
    void SetVariable(DWORD dwVarId, QWORD qwValue) { Set(dwVarId, CSCP_DT_INT64, &qwValue); }
    void SetVariable(DWORD dwVarId, double dValue) { Set(dwVarId, CSCP_DT_FLOAT, &dValue); }
    void SetVariable(DWORD dwVarId, const TCHAR *pszValue) { Set(dwVarId, CSCP_DT_STRING, pszValue); }
+   void SetVariable(DWORD dwVarId, const TCHAR *pszValue, DWORD maxLen) { Set(dwVarId, CSCP_DT_STRING, pszValue, maxLen); }
    void SetVariable(DWORD dwVarId, BYTE *pValue, DWORD dwSize) { Set(dwVarId, CSCP_DT_BINARY, pValue, dwSize); }
 #ifdef UNICODE
    void SetVariableFromMBString(DWORD dwVarId, const char *pszValue);

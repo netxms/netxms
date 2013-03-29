@@ -142,7 +142,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
    pszTmp = DBGetField(hResult, iRow, 25, NULL, 0);
 	setInstanceFilter(pszTmp);
    free(pszTmp);
-	m_sampleCount = DBGetFieldLong(hResult, iRow, 25);
+	m_sampleCount = DBGetFieldLong(hResult, iRow, 26);
 
    // Load last raw value from database
 	TCHAR szQuery[256];

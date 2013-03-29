@@ -327,6 +327,7 @@ public class General extends PropertyPage
       fd.top = new FormAttachment(snmpRawType, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
       sampleCount = WidgetHelper.createLabeledSpinner(groupData, SWT.BORDER, "Sample count for average value calculation (0 to disable)", 0, 65535, fd);
+      sampleCount.setSelection(dci.getSampleCount());
 		sampleCount.setEnabled(dci.getOrigin() == DataCollectionItem.WINPERF);
       
       proxyNode = new ObjectSelector(groupData, SWT.NONE, true);

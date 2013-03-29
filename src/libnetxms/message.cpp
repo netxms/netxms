@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -404,12 +404,11 @@ DWORD CSCPMessage::FindVariable(DWORD dwVarId)
    return INVALID_INDEX;
 }
 
-
-//
-// Set variable
-// Argument dwSize (data size) is used only for DT_BINARY type
-//
-
+/**
+ * Set variable
+ * Argument dwSize (data size) contains data length in bytes for DT_BINARY type
+ * and maximum number of characters for DT_STRING type (0 means no limit)
+ */
 void *CSCPMessage::Set(DWORD dwVarId, BYTE bType, const void *pValue, DWORD dwSize)
 {
    DWORD dwIndex, dwLength;
@@ -442,6 +441,8 @@ void *CSCPMessage::Set(DWORD dwVarId, BYTE bType, const void *pValue, DWORD dwSi
       case CSCP_DT_STRING:
 #ifdef UNICODE         
          dwLength = (DWORD)_tcslen((const TCHAR *)pValue);
+			if ((dwSize > 0) && (dwLength > dwSize))
+				dwLength = dwSize;
 #ifndef UNICODE_UCS2 /* assume UNICODE_UCS4 */
          __buffer = (UCS2CHAR *)malloc(dwLength * 2 + 2);
          ucs4_to_ucs2((WCHAR *)pValue, dwLength, __buffer, dwLength + 1);
@@ -449,6 +450,8 @@ void *CSCPMessage::Set(DWORD dwVarId, BYTE bType, const void *pValue, DWORD dwSi
 #else		/* not UNICODE */
 			__buffer = UCS2StringFromMBString((const char *)pValue);
 			dwLength = (DWORD)ucs2_strlen(__buffer);
+			if ((dwSize > 0) && (dwLength > dwSize))
+				dwLength = dwSize;
 #endif
          pVar = (CSCP_DF *)malloc(12 + dwLength * 2);
          pVar->df_string.dwLen = dwLength * 2;
@@ -876,11 +879,9 @@ void CSCPMessage::SetVariableFromMBString(DWORD dwVarId, const char *pszValue)
 
 #endif
 
-
-//
-// Set binary variable to an array of DWORDs
-//
-
+/**
+ * Set binary variable to an array of DWORDs
+ */
 void CSCPMessage::SetVariableToInt32Array(DWORD dwVarId, DWORD dwNumElements, const DWORD *pdwData)
 {
    DWORD i, *pdwBuffer;
@@ -894,11 +895,9 @@ void CSCPMessage::SetVariableToInt32Array(DWORD dwVarId, DWORD dwNumElements, co
    }
 }
 
-
-//
-// Get binary variable as an array of DWORDs
-//
-
+/**
+ * Get binary variable as an array of DWORDs
+ */
 DWORD CSCPMessage::GetVariableInt32Array(DWORD dwVarId, DWORD dwNumElements, DWORD *pdwBuffer)
 {
    DWORD i, dwSize;
