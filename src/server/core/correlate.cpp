@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,6 +28,22 @@
 static QWORD m_networkLostEventId = 0;
 
 /**
+ * Correlate current event to another node down event
+ */
+static bool CheckNodeDown(Node *currNode, Event *pEvent, DWORD nodeId, const TCHAR *nodeType)
+{
+	Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
+	if ((node != NULL) && node->isDown())
+	{
+		pEvent->setRootId(node->getLastEventId(LAST_EVENT_NODE_DOWN));
+		DbgPrintf(5, _T("C_SysNodeDown: %s %s [%d] for current node %s [%d] is down"),
+		          nodeType, node->Name(), node->Id(), currNode->Name(), currNode->Id());
+		return true;
+	}
+	return false;
+}
+
+/**
  * Correlate SYS_NODE_DOWN event
  */
 static void C_SysNodeDown(Node *pNode, Event *pEvent)
@@ -39,18 +55,31 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 		return;
 	}
 
+	// Check proxy nodes
+	if (IsZoningEnabled() && (pNode->getZoneId() != 0))
+	{
+		Zone *zone = (Zone *)g_idxZoneByGUID.get(pNode->getZoneId());
+		if ((zone != NULL) && ((zone->getAgentProxy() != 0) || (zone->getSnmpProxy() != 0) || (zone->getIcmpProxy() != 0)))
+		{
+			bool allProxyDown = true;
+			if (zone->getAgentProxy() != 0)
+				allProxyDown = CheckNodeDown(pNode, pEvent, zone->getAgentProxy(), _T("agent proxy"));
+			if (allProxyDown && (zone->getSnmpProxy() != 0) && (zone->getSnmpProxy() != zone->getAgentProxy()))
+				allProxyDown = CheckNodeDown(pNode, pEvent, zone->getSnmpProxy(), _T("SNMP proxy"));
+			if (allProxyDown && (zone->getIcmpProxy() != 0) && (zone->getIcmpProxy() != zone->getAgentProxy()) && (zone->getIcmpProxy() != zone->getSnmpProxy()))
+				allProxyDown = CheckNodeDown(pNode, pEvent, zone->getSnmpProxy(), _T("ICMP proxy"));
+			if (allProxyDown)
+				return;
+			pEvent->setRootId(0);
+		}
+	}
+
 	// Check directly connected switch
 	Interface *iface = pNode->findInterface(0, pNode->IpAddr());
 	if ((iface != NULL) && (iface->getPeerNodeId() != 0))
 	{
-		Node *peerNode = (Node *)FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
-		if ((peerNode != NULL) && peerNode->isDown())
-		{
-         pEvent->setRootId(peerNode->getLastEventId(LAST_EVENT_NODE_DOWN));
-			DbgPrintf(5, _T("C_SysNodeDown: upstream node %s [%d] for current node %s [%d] is down"),
-			          peerNode->Name(), peerNode->Id(), pNode->Name(), pNode->Id());
+		if (CheckNodeDown(pNode, pEvent, iface->getPeerNodeId(), _T("upstream switch")))
 			return;
-		}
 	}
 
    // Trace route from management station to failed node and

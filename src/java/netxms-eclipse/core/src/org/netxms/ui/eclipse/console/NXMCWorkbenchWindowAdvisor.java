@@ -45,11 +45,17 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 {
+	/**
+	 * @param configurer
+	 */
 	public NXMCWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
 	{
 		super(configurer);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#createActionBarAdvisor(org.eclipse.ui.application.IActionBarConfigurer)
+	 */
 	@Override
 	public ActionBarAdvisor createActionBarAdvisor(IActionBarConfigurer configurer)
 	{

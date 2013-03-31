@@ -918,6 +918,7 @@ protected:
 	void checkIfXTable(SNMP_Transport *pTransport);
 	void executeHookScript(const TCHAR *hookName);
 	bool checkNetworkPath(DWORD dwRqId);
+	bool checkNetworkPathElement(DWORD nodeId, const TCHAR *nodeType, DWORD dwRqId);
 
 	void applyUserTemplates();
 	void doInstanceDiscovery();

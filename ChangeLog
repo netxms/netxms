@@ -5,6 +5,7 @@
 - Simplified configuration of DCIs based on Windows performance counters
 - Basic software inventory
 - Network discovery improved
+- Status of zone's proxy node now used in "node down" event correlation
 - Configurable default DCI retention time and polling interval
 - New NXSL functions: CreateNode
 - New NXSL operator @ - safe get object's attribute
