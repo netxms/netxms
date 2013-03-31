@@ -1046,14 +1046,11 @@ restart_agent_check:
       DbgPrintf(6, _T("StatusPoll(%s): check SNMP"), m_szName);
 		pTransport = createSnmpTransport();
 		if (pTransport == NULL)
-		{
 	      DbgPrintf(6, _T("StatusPoll(%s): cannot create SNMP transport"), m_szName);
-			goto skip_snmp_check;
-		}
 
       SetPollerInfo(nPoller, _T("check SNMP"));
       sendPollerMsg(dwRqId, _T("Checking SNMP agent connectivity\r\n"));
-      dwResult = SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, 256, 0);
+		dwResult = SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, 256, 0);
       if ((dwResult == SNMP_ERR_SUCCESS) || (dwResult == SNMP_ERR_NO_OBJECT))
       {
          if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
@@ -1088,7 +1085,6 @@ restart_agent_check:
       DbgPrintf(6, _T("StatusPoll(%s): SNMP check finished"), m_szName);
    }
 
-skip_snmp_check:
    // Check native agent connectivity
    if ((m_dwFlags & NF_IS_NATIVE_AGENT) && (!(m_dwFlags & NF_DISABLE_NXCP)) && (m_dwIpAddr != 0))
    {
