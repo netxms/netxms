@@ -4118,6 +4118,10 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								pObject = new Container(szObjectName, pRequest->GetVariableLong(VID_CATEGORY));
 								NetObjInsert(pObject, TRUE);
 								break;
+							case OBJECT_RACK:
+								pObject = new Rack(szObjectName, (int)pRequest->GetVariableShort(VID_HEIGHT));
+								NetObjInsert(pObject, TRUE);
+								break;
 							case OBJECT_TEMPLATEGROUP:
 								pObject = new TemplateGroup(szObjectName);
 								NetObjInsert(pObject, TRUE);

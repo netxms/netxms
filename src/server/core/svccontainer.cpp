@@ -72,31 +72,25 @@ BOOL ServiceContainer::CreateFromDB(DWORD id)
 	return TRUE;
 }
 
-
-//
-// Save object to database
-//
-
+/**
+ * Save object to database
+ */
 BOOL ServiceContainer::SaveToDB(DB_HANDLE hdb)
 {
 	return Container::SaveToDB(hdb);
 }
 
-
-//
-// Delete object from database
-//
-
+/**
+ * Delete object from database
+ */
 BOOL ServiceContainer::DeleteFromDB()
 {
 	return Container::DeleteFromDB();
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create NXCP message with object's data
+ */
 void ServiceContainer::CreateMessage(CSCPMessage *pMsg)
 {
    Container::CreateMessage(pMsg);
@@ -105,11 +99,9 @@ void ServiceContainer::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_UPTIME_MONTH, m_uptimeMonth);
 }
 
-
-//
-// Modify object from message
-//
-
+/**
+ * Modify object from message
+ */
 DWORD ServiceContainer::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
@@ -118,11 +110,9 @@ DWORD ServiceContainer::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLo
    return Container::ModifyFromMessage(pRequest, TRUE);
 }
 
-
-//
-// Calculate status for compound object based on childs status
-//
-
+/**
+ * Calculate status for compound object based on childs status
+ */
 void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 {
 	int i, iCount, iMostCriticalStatus;
@@ -162,21 +152,17 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 		addHistoryRecord();
 }
 
-
-//
-// Set service status - use this instead of direct assignment;
-//
-
+/**
+ * Set service status - use this instead of direct assignment;
+ */
 void ServiceContainer::setStatus(int newStatus)
 {
 	m_iStatus = newStatus;
 }
 
-
-//
-// Add a record to slm_service_history table
-//
-
+/**
+ * Add a record to slm_service_history table
+ */
 BOOL ServiceContainer::addHistoryRecord()
 {
 	DB_RESULT hResult;

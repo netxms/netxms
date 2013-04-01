@@ -1587,6 +1587,7 @@ src/java/netxms-eclipse/ObjectBrowser.AdapterFactory/build.properties -text
 src/java/netxms-eclipse/ObjectBrowser.AdapterFactory/fragment.xml -text
 src/java/netxms-eclipse/ObjectBrowser/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectBrowser/build.properties -text
+src/java/netxms-eclipse/ObjectBrowser/icons/access_point.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/business_service.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/cluster.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/condition.gif -text
@@ -1606,6 +1607,7 @@ src/java/netxms-eclipse/ObjectBrowser/icons/object_browser.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/policy.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/policy_group.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/policy_root.gif -text
+src/java/netxms-eclipse/ObjectBrowser/icons/rack.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/report.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/report_group.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/report_root.gif -text

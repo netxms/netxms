@@ -884,4 +884,16 @@ Language=English
 Listening for mobile device connections on TCP socket %1:%2
 .
 
+MessageId=
+SymbolicName=MSG_AP_LOAD_FAILED
+Language=English
+Failed to load access point object with id %1 from database
+.
+
+MessageId=
+SymbolicName=MSG_RACK_LOAD_FAILED
+Language=English
+Failed to load rack object with id %1 from database
+.
+
 ;#endif

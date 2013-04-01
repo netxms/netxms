@@ -381,6 +381,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\accesspoint.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\acl.cpp"
 				>
 			</File>
@@ -698,6 +702,10 @@
 			</File>
 			<File
 				RelativePath=".\poll.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\rack.cpp"
 				>
 			</File>
 			<File

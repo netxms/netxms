@@ -214,11 +214,9 @@ BOOL Interface::CreateFromDB(DWORD dwId)
    return bResult;
 }
 
-
-//
-// Save interface object to database
-//
-
+/**
+ * Save interface object to database
+ */
 BOOL Interface::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR szMacStr[16], szIpAddr[16], szNetMask[16];
@@ -240,7 +238,6 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
       dwNodeId = 0;
 
    // Form and execute INSERT or UPDATE query
-   BinToStr(m_bMacAddr, MAC_ADDR_LENGTH, szMacStr);
 	DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("interfaces"), _T("id"), m_dwId))
 	{
@@ -270,7 +267,7 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, dwNodeId);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_dwIfType);
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_dwIfIndex);
-	DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, szMacStr, DB_BIND_STATIC);
+	DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, BinToStr(m_bMacAddr, MAC_ADDR_LENGTH, szMacStr), DB_BIND_STATIC);
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_iRequiredPollCount);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_bridgePortNumber);

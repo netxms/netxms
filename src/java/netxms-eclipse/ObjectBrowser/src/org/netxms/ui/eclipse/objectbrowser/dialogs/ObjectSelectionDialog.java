@@ -67,6 +67,7 @@ public class ObjectSelectionDialog extends Dialog
 		classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
 		classFilter.add(AbstractObject.OBJECT_CONTAINER);
 		classFilter.add(AbstractObject.OBJECT_CLUSTER);
+		classFilter.add(AbstractObject.OBJECT_RACK);
 		classFilter.add(AbstractObject.OBJECT_NODE);
 		if (allowMobileDevices)
 			classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);

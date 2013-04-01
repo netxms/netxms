@@ -92,6 +92,8 @@ public abstract class AbstractObject
 	public static final int OBJECT_NODELINK = 29;
 	public static final int OBJECT_SLMCHECK = 30;
 	public static final int OBJECT_MOBILEDEVICE = 31;
+	public static final int OBJECT_RACK = 32;
+	public static final int OBJECT_ACCESSPOINT = 33;
 	public static final int OBJECT_CUSTOM = 10000;
 	
 	// Status calculation methods

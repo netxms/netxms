@@ -827,6 +827,37 @@ public:
 };
 
 /**
+ * Access point class
+ */
+class NXCORE_EXPORTABLE AccessPoint : public DataCollectionTarget
+{
+protected:
+	DWORD m_nodeId;
+	BYTE m_macAddr[MAC_ADDR_LENGTH];
+	TCHAR *m_vendor;
+	TCHAR *m_model;
+	TCHAR *m_serialNumber;
+
+public:
+   AccessPoint();
+   AccessPoint(const TCHAR *name, BYTE *macAddr, DWORD nodeId);
+   virtual ~AccessPoint();
+
+   virtual int Type() { return OBJECT_ACCESSPOINT; }
+
+   virtual BOOL CreateFromDB(DWORD dwId);
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual BOOL DeleteFromDB();
+
+	virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+	BYTE *getMacAddr() { return m_macAddr; }
+
+	void attachToNode(DWORD nodeId);
+};
+
+/**
  * Node
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
@@ -1316,7 +1347,7 @@ public:
    virtual int Type(void) { return OBJECT_CONTAINER; }
   
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB(void);
+   virtual BOOL DeleteFromDB();
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1343,13 +1374,36 @@ class NXCORE_EXPORTABLE TemplateGroup : public Container
 {
 public:
    TemplateGroup() : Container() { }
-   TemplateGroup(TCHAR *pszName) : Container(pszName, 0) { }
+   TemplateGroup(const TCHAR *pszName) : Container(pszName, 0) { }
    virtual ~TemplateGroup() { }
 
    virtual int Type() { return OBJECT_TEMPLATEGROUP; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual bool showThresholdSummary();
+};
+
+/**
+ * Rack object
+ */
+class NXCORE_EXPORTABLE Rack : public Container
+{
+protected:
+	int m_height;	// Rack height in units
+
+public:
+   Rack();
+   Rack(const TCHAR *name, int height);
+   virtual ~Rack();
+
+   virtual int Type() { return OBJECT_RACK; }
+
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual BOOL DeleteFromDB();
+   virtual BOOL CreateFromDB(DWORD dwId);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 };
 
 /**

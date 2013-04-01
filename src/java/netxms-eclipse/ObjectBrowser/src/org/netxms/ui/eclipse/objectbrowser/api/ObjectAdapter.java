@@ -60,6 +60,8 @@ public class ObjectAdapter implements IWorkbenchAdapter
 				return Activator.getImageDescriptor("icons/service_root.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_CONTAINER:
 				return Activator.getImageDescriptor("icons/container.png"); //$NON-NLS-1$
+			case AbstractObject.OBJECT_RACK:
+				return Activator.getImageDescriptor("icons/rack.gif"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_ZONE:
 				return Activator.getImageDescriptor("icons/zone.gif"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_SUBNET:
@@ -68,6 +70,8 @@ public class ObjectAdapter implements IWorkbenchAdapter
 				return Activator.getImageDescriptor("icons/cluster.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_NODE:
 				return Activator.getImageDescriptor("icons/node.png"); //$NON-NLS-1$
+			case AbstractObject.OBJECT_ACCESSPOINT:
+				return Activator.getImageDescriptor("icons/access_point.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_INTERFACE:
 				return Activator.getImageDescriptor("icons/interface.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_NETWORKSERVICE:

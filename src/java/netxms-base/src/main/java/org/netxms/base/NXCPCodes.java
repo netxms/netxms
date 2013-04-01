@@ -741,6 +741,7 @@ public class NXCPCodes
 	public static final long VID_ACCURACY                = 438;
 	public static final long VID_GEOLOCATION_TIMESTAMP   = 439;
 	public static final long VID_SAMPLE_COUNT            = 440;
+	public static final long VID_HEIGHT                  = 441;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

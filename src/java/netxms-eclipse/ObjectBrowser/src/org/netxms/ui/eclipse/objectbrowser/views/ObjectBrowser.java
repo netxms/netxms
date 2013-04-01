@@ -66,6 +66,7 @@ import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
@@ -484,6 +485,7 @@ public class ObjectBrowser extends ViewPart
 		            (currentObject instanceof Cluster) ||
 			         (currentObject instanceof Subnet) ||
 		            (currentObject instanceof Condition) ||
+		            (currentObject instanceof Rack) ||
 			         (currentObject instanceof Container)) &&
 			        ((parentObject instanceof Container) ||
 			         (parentObject instanceof ServiceRoot));

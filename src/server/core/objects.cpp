@@ -62,7 +62,7 @@ const TCHAR *g_szClassName[]={ _T("Generic"), _T("Subnet"), _T("Node"), _T("Inte
                                _T("NetworkMapGroup"), _T("NetworkMap"), _T("DashboardRoot"), 
                                _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report"),
                                _T("BusinessServiceRoot"), _T("BusinessService"), _T("NodeLink"),
-                               _T("ServiceCheck"), _T("MobileDevice")
+                               _T("ServiceCheck"), _T("MobileDevice"), _T("Rack"), _T("AccessPoint")
 };
 
 /**
@@ -330,6 +330,8 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_BUSINESSSERVICEROOT:
 			case OBJECT_BUSINESSSERVICE:
 			case OBJECT_NODELINK:
+			case OBJECT_RACK:
+			case OBJECT_ACCESSPOINT:
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(pObject->Id(), pObject);
@@ -458,6 +460,8 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_BUSINESSSERVICEROOT:
 		case OBJECT_BUSINESSSERVICE:
 		case OBJECT_NODELINK:
+		case OBJECT_RACK:
+		case OBJECT_ACCESSPOINT:
 			break;
       case OBJECT_NODE:
 			g_idxNodeById.remove(pObject->Id());
@@ -723,16 +727,17 @@ Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD zoneId, DWORD ipAddr)
 	return subnet;
 }
 
-
-//
-// Find subnet for given IP address
-//
-
+/**
+ * Subnet address comparator
+ */
 static bool SubnetAddrComparator(NetObj *object, void *nodeAddr)
 {
    return (CAST_FROM_POINTER(nodeAddr, DWORD) & ((Subnet *)object)->getIpNetMask()) == ((Subnet *)object)->IpAddr();
 }
 
+/**
+ * Find subnet for given IP address
+ */
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD zoneId, DWORD dwNodeAddr)
 {
    if (dwNodeAddr == 0)
@@ -875,50 +880,46 @@ bool NXCORE_EXPORTABLE IsClusterIP(DWORD zoneId, DWORD ipAddr)
 	return g_idxObjectById.find(ClusterIPComparator, &data) != NULL;
 }
 
-
-//
-// Find zone object by GUID
-//
-
+/**
+ * Find zone object by GUID
+ */
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID)
 {
 	return (Zone *)g_idxZoneByGUID.get(dwZoneGUID);
 }
 
-
-//
-// Find local management node ID
-//
-
+/**
+ * Object comparator for FindLocalMgmtNode()
+ */
 static bool LocalMgmtNodeComparator(NetObj *object, void *data)
 {
 	return (((Node *)object)->getFlags() & NF_IS_LOCAL_MGMT) ? true : false;
 }
 
+/**
+ * Find local management node ID
+ */
 DWORD FindLocalMgmtNode()
 {
 	NetObj *object = g_idxNodeById.find(LocalMgmtNodeComparator, NULL);
 	return (object != NULL) ? object->Id() : 0;
 }
 
-
-//
-// ObjectIndex::forEach callback which recalculates object's status
-//
-
+/**
+ * ObjectIndex::forEach callback which recalculates object's status
+ */
 static void RecalcStatusCallback(NetObj *object, void *data)
 {
 	object->calculateCompoundStatus();
 }
 
-
-//
-// ObjectIndex::forEach callback which links container child objects
-//
-
+/**
+ * ObjectIndex::forEach callback which links container child objects
+ */
 static void LinkChildObjectsCallback(NetObj *object, void *data)
 {
 	if ((object->Type() == OBJECT_CONTAINER) ||
+		 (object->Type() == OBJECT_RACK) ||
 		 (object->Type() == OBJECT_TEMPLATEGROUP) ||
 		 (object->Type() == OBJECT_POLICYGROUP) ||
 		 (object->Type() == OBJECT_NETWORKMAPGROUP) ||
@@ -1131,6 +1132,31 @@ BOOL LoadObjects()
       ThreadCreate(CacheLoadingThread, 0, NULL);
    }
 
+   // Load access points
+   DbgPrintf(2, _T("Loading access points..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM access_points"));
+   if (hResult != 0)
+   {
+		AccessPoint *ap;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         ap = new AccessPoint;
+         if (ap->CreateFromDB(dwId))
+         {
+            NetObjInsert(ap, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            nxlog_write(MSG_AP_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete ap;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Load interfaces
    DbgPrintf(2, _T("Loading interfaces..."));
    hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM interfaces"));
@@ -1334,6 +1360,31 @@ BOOL LoadObjects()
          {
             delete pContainer;
             nxlog_write(MSG_CONTAINER_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Load racks
+   DbgPrintf(2, _T("Loading racks..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM racks"));
+   if (hResult != 0)
+   {
+		Rack *rack;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         rack = new Rack;
+         if (rack->CreateFromDB(dwId))
+         {
+            NetObjInsert(rack, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            nxlog_write(MSG_RACK_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete rack;
          }
       }
       DBFreeResult(hResult);
@@ -1709,10 +1760,15 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
       case OBJECT_SERVICEROOT:
       case OBJECT_CONTAINER:
          if ((iChildClass == OBJECT_CONTAINER) || 
+             (iChildClass == OBJECT_RACK) ||
              (iChildClass == OBJECT_NODE) ||
              (iChildClass == OBJECT_CLUSTER) ||
              (iChildClass == OBJECT_MOBILEDEVICE) ||
              (iChildClass == OBJECT_CONDITION))
+            return true;
+         break;
+      case OBJECT_RACK:
+         if (iChildClass == OBJECT_NODE)
             return true;
          break;
       case OBJECT_TEMPLATEROOT:

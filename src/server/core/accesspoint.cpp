@@ -1,0 +1,241 @@
+/* 
+** NetXMS - Network Management System
+** Copyright (C) 2003-2013 Victor Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: accesspoint.cpp
+**/
+
+#include "nxcore.h"
+
+/**
+ * Default constructor
+ */
+AccessPoint::AccessPoint() : DataCollectionTarget()
+{
+	m_nodeId = 0;
+	memset(m_macAddr, 0, MAC_ADDR_LENGTH);
+	m_vendor = NULL;
+	m_model = NULL;
+	m_serialNumber = NULL;
+}
+
+/**
+ * Constructor for creating new mobile device object
+ */
+AccessPoint::AccessPoint(const TCHAR *name, BYTE *macAddr, DWORD nodeId) : DataCollectionTarget(name)
+{
+	m_nodeId = nodeId;
+	memcpy(m_macAddr, macAddr, MAC_ADDR_LENGTH);
+	m_vendor = NULL;
+	m_model = NULL;
+	m_serialNumber = NULL;
+}
+
+/**
+ * Destructor
+ */
+AccessPoint::~AccessPoint()
+{
+	safe_free(m_vendor);
+	safe_free(m_model);
+	safe_free(m_serialNumber);
+}
+
+/**
+ * Create object from database data
+ */
+BOOL AccessPoint::CreateFromDB(DWORD dwId)
+{
+   m_dwId = dwId;
+
+   if (!loadCommonProperties())
+   {
+      DbgPrintf(2, _T("Cannot load common properties for access point object %d"), dwId);
+      return FALSE;
+   }
+
+	TCHAR query[256];
+	_sntprintf(query, 256, _T("SELECT mac_address,vendor,model,serial_number,node_id FROM access_points WHERE id=%d"), (int)m_dwId);
+	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+	if (hResult == NULL)
+		return FALSE;
+
+	DBGetFieldByteArray2(hResult, 0, 0, m_macAddr, MAC_ADDR_LENGTH, 0);
+	m_vendor = DBGetField(hResult, 0, 1, NULL, 0);
+	m_model = DBGetField(hResult, 0, 2, NULL, 0);
+	m_serialNumber = DBGetField(hResult, 0, 3, NULL, 0);
+	DWORD nodeId = DBGetFieldULong(hResult, 0, 4);
+	DBFreeResult(hResult);
+
+   // Load DCI and access list
+   loadACLFromDB();
+   loadItemsFromDB();
+   for(int i = 0; i < m_dcObjects->size(); i++)
+      if (!m_dcObjects->get(i)->loadThresholdsFromDB())
+         return FALSE;
+
+   // Link access point to node
+	BOOL success = FALSE;
+   if (!m_bIsDeleted)
+   {
+      NetObj *object = FindObjectById(nodeId);
+      if (object == NULL)
+      {
+         nxlog_write(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, nodeId);
+      }
+      else if (object->Type() != OBJECT_NODE)
+      {
+         nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, nodeId);
+      }
+      else
+      {
+         object->AddChild(this);
+         AddParent(object);
+         success = TRUE;
+      }
+   }
+   else
+   {
+      success = TRUE;
+   }
+
+   return success;
+}
+
+/**
+ * Save object to database
+ */
+BOOL AccessPoint::SaveToDB(DB_HANDLE hdb)
+{
+   // Lock object's access
+   LockData();
+
+   saveCommonProperties(hdb);
+
+   BOOL bResult;
+	DB_STATEMENT hStmt;
+   if (IsDatabaseRecordExist(hdb, _T("access_points"), _T("id"), m_dwId))
+		hStmt = DBPrepare(hdb, _T("UPDATE access_points SET mac_address=?,vendor=?,model=?,serial_number=?,node_id=? WHERE id=?"));
+	else
+		hStmt = DBPrepare(hdb, _T("INSERT INTO access_points (mac_address,vendor,model,serial_number,node_id,id) VALUES (?,?,?,?,?,?)"));
+	if (hStmt != NULL)
+	{
+		TCHAR macStr[16];
+		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, BinToStr(m_macAddr, MAC_ADDR_LENGTH, macStr), DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_vendor), DB_BIND_STATIC);
+		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_model), DB_BIND_STATIC);
+		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_serialNumber), DB_BIND_STATIC);
+		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_nodeId);
+		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_dwId);
+
+		bResult = DBExecute(hStmt);
+
+		DBFreeStatement(hStmt);
+	}
+	else
+	{
+		bResult = FALSE;
+	}
+
+   // Save data collection items
+   if (bResult)
+   {
+		lockDciAccess();
+      for(int i = 0; i < m_dcObjects->size(); i++)
+         m_dcObjects->get(i)->saveToDB(hdb);
+		unlockDciAccess();
+   }
+
+   // Save access list
+   saveACLToDB(hdb);
+
+   // Clear modifications flag and unlock object
+	if (bResult)
+		m_bIsModified = FALSE;
+   UnlockData();
+
+   return bResult;
+}
+
+/**
+ * Delete object from database
+ */
+BOOL AccessPoint::DeleteFromDB()
+{
+   TCHAR szQuery[256];
+   BOOL bSuccess;
+
+   bSuccess = DataCollectionTarget::DeleteFromDB();
+   if (bSuccess)
+   {
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM access_points WHERE id=%d"), (int)m_dwId);
+      QueueSQLRequest(szQuery);
+   }
+   return bSuccess;
+}
+
+/**
+ * Create CSCP message with object's data
+ */
+void AccessPoint::CreateMessage(CSCPMessage *msg)
+{
+   DataCollectionTarget::CreateMessage(msg);
+	msg->SetVariable(VID_NODE_ID, m_nodeId);
+	msg->SetVariable(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
+	msg->SetVariable(VID_VENDOR, CHECK_NULL_EX(m_vendor));
+	msg->SetVariable(VID_MODEL, CHECK_NULL_EX(m_model));
+	msg->SetVariable(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
+}
+
+/**
+ * Modify object from message
+ */
+DWORD AccessPoint::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+{
+   if (!bAlreadyLocked)
+      LockData();
+
+   return DataCollectionTarget::ModifyFromMessage(pRequest, TRUE);
+}
+
+/**
+ * Attach access point to node
+ */
+void AccessPoint::attachToNode(DWORD nodeId)
+{
+	if (m_nodeId != 0)
+	{
+		Node *currNode = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
+		if (currNode != NULL)
+		{
+			currNode->DeleteChild(this);
+			DeleteParent(currNode);
+		}
+	}
+
+	Node *newNode = (Node *)FindObjectById(nodeId, OBJECT_NODE);
+	if (newNode != NULL)
+	{
+		newNode->AddChild(this);
+		AddParent(newNode);
+	}
+
+	LockData();
+	m_nodeId = nodeId;
+	Modify();
+	UnlockData();
+}

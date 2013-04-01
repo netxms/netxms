@@ -64,6 +64,7 @@ public class NXCObjectCreationData
 	private boolean physicalPort;
 	private boolean createStatusDci;
 	private String deviceId;
+	private int height;
 	
 	/**
 	 * Constructor.
@@ -592,5 +593,21 @@ public class NXCObjectCreationData
 	public final void setDeviceId(String deviceId)
 	{
 		this.deviceId = deviceId;
+	}
+
+	/**
+	 * @return the height
+	 */
+	public int getHeight()
+	{
+		return height;
+	}
+
+	/**
+	 * @param height the height to set
+	 */
+	public void setHeight(int height)
+	{
+		this.height = height;
 	}
 }

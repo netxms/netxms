@@ -92,6 +92,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_EXPECTED_STATE     = 0x01000000000000L;
 	public static final long MODIFY_CONNECTION_ROUTING = 0x02000000000000L;
 	public static final long MODIFY_DISCOVERY_RADIUS   = 0x04000000000000L;
+	public static final long MODIFY_HEIGHT             = 0x08000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -162,6 +163,7 @@ public class NXCObjectModificationData
 	private int linkColor;
 	private int connectionRouting;
 	private int discoveryRadius;
+	private int height;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1321,5 +1323,22 @@ public class NXCObjectModificationData
 	{
 		this.discoveryRadius = discoveryRadius;
 		flags |= MODIFY_DISCOVERY_RADIUS;
+	}
+
+	/**
+	 * @return the height
+	 */
+	public int getHeight()
+	{
+		return height;
+	}
+
+	/**
+	 * @param height the height to set
+	 */
+	public void setHeight(int height)
+	{
+		this.height = height;
+		flags |= MODIFY_HEIGHT;
 	}
 }

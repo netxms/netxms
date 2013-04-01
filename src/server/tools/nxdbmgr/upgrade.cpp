@@ -310,6 +310,37 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 /**
+ * Upgrade from V274 to V275
+ */
+static BOOL H_UpgradeFromV274(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE nodes ADD rack_image varchar(36)\n")
+      _T("ALTER TABLE nodes ADD rack_position integer\n")
+      _T("ALTER TABLE nodes ADD rack_id integer\n")
+      _T("UPDATE nodes SET rack_image='00000000-0000-0000-0000-000000000000',rack_position=0,rack_id=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE access_points (")
+	                     _T("id integer not null,")
+								_T("node_id integer not null,")
+	                     _T("mac_address varchar(6) null,")
+	                     _T("vendor varchar(64) null,")
+	                     _T("model varchar(128) null,")
+	                     _T("serial_number varchar(64) null,")
+	                     _T("PRIMARY KEY(id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE racks (")
+	                     _T("id integer not null,")
+								_T("height integer not null,")
+	                     _T("PRIMARY KEY(id))")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='275' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V273 to V274
  */
 static BOOL H_UpgradeFromV273(int currVersion, int newVersion)
@@ -6759,6 +6790,7 @@ static struct
    { 271, 272, H_UpgradeFromV271 },
    { 272, 273, H_UpgradeFromV272 },
    { 273, 274, H_UpgradeFromV273 },
+   { 274, 275, H_UpgradeFromV274 },
    { 0, 0, NULL }
 };
 

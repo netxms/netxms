@@ -213,6 +213,34 @@ CREATE TABLE mobile_devices
 
 
 /*
+** Access point objects
+*/
+
+CREATE TABLE access_points
+(
+	id integer not null,
+	node_id integer not null,
+	mac_address varchar(6) null,
+	vendor varchar(64) null,
+	model varchar(128) null,
+	serial_number varchar(64) null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
+** Rack objects
+*/
+
+CREATE TABLE racks
+(
+	id integer not null,
+	height integer not null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
 ** Nodes information
 */
 
@@ -247,6 +275,9 @@ CREATE TABLE nodes
 	bridge_base_addr varchar(15) null,
 	down_since integer not null,
 	driver_name varchar(32) null,
+	rack_image varchar(36) null,
+	rack_position integer not null,
+	rack_id integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

@@ -164,6 +164,8 @@ typedef void * NXC_SESSION;
 #define OBJECT_NODELINK             29
 #define OBJECT_SLMCHECK             30
 #define OBJECT_MOBILEDEVICE         31
+#define OBJECT_RACK                 32
+#define OBJECT_ACCESSPOINT          33
 
 /** Base value for custom object classes */
 #define OBJECT_CUSTOM               10000

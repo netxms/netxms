@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Find container category by id
-//
-
+/**
+ * Find container category by id
+ */
 CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(DWORD dwId)
 {
    DWORD i;
@@ -37,13 +35,10 @@ CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(DWORD dwId)
    return NULL;
 }
 
-
-//
-// Default container class constructor
-//
-
-Container::Container()
-          :NetObj()
+/**
+ * Default container class constructor
+ */
+Container::Container() : NetObj()
 {
    m_pdwChildIdList = NULL;
    m_dwChildIdListSize = 0;
@@ -53,13 +48,10 @@ Container::Container()
 	m_bindFilterSource = NULL;
 }
 
-
-//
-// _T("Normal") container class constructor
-//
-
-Container::Container(const TCHAR *pszName, DWORD dwCategory)
-          :NetObj()
+/**
+ * "Normal" container class constructor
+ */
+Container::Container(const TCHAR *pszName, DWORD dwCategory) : NetObj()
 {
    nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME);
    m_pdwChildIdList = NULL;
@@ -71,11 +63,9 @@ Container::Container(const TCHAR *pszName, DWORD dwCategory)
    m_bIsHidden = TRUE;
 }
 
-
-//
-// Container class destructor
-//
-
+/**
+ * Container class destructor
+ */
 Container::~Container()
 {
    safe_free(m_pdwChildIdList);
@@ -213,11 +203,9 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
    return success;
 }
 
-
-//
-// Delete object from database
-//
-
+/**
+ * Delete object from database
+ */
 BOOL Container::DeleteFromDB()
 {
    TCHAR szQuery[256];
@@ -234,12 +222,10 @@ BOOL Container::DeleteFromDB()
    return bSuccess;
 }
 
-
-//
-// Link child objects after loading from database
-// This method is expected to be called only at startup, so we don't lock
-//
-
+/**
+ * Link child objects after loading from database
+ * This method is expected to be called only at startup, so we don't lock
+ */
 void Container::linkChildObjects()
 {
    NetObj *pObject;
@@ -264,11 +250,9 @@ void Container::linkChildObjects()
    }
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create NXCP message with object's data
+ */
 void Container::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
@@ -277,11 +261,9 @@ void Container::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
 }
 
-
-//
-// Modify object from message
-//
-
+/**
+ * Modify object from message
+ */
 DWORD Container::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
@@ -302,11 +284,9 @@ DWORD Container::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
 
-
-//
-// Set container's autobind script
-//
-
+/**
+ * Set container's autobind script
+ */
 void Container::setAutoBindFilter(const TCHAR *script)
 {
 	if (script != NULL)
@@ -335,11 +315,9 @@ void Container::setAutoBindFilter(const TCHAR *script)
 	Modify();
 }
 
-
-//
-// Check if node should be placed into container
-//
-
+/**
+ * Check if node should be placed into container
+ */
 bool Container::isSuitableForNode(Node *node)
 {
 	NXSL_ServerEnv *pEnv;

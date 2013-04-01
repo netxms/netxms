@@ -682,11 +682,9 @@ TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr)
 	return pStr;
 }
 
-
-//
-// Convert byte array to text representation
-//
-
+/**
+ * Convert byte array to text representation (wide character version)
+ */
 WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, DWORD dwSize, WCHAR *pStr)
 {
    DWORD i;
@@ -701,6 +699,9 @@ WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, DWORD dwSize, WCHAR *pS
    return pStr;
 }
 
+/**
+ * Convert byte array to text representation (multibyte character version)
+ */
 char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, DWORD dwSize, char *pStr)
 {
    DWORD i;
@@ -715,12 +716,10 @@ char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, DWORD dwSize, char *pStr
    return pStr;
 }
 
-
-//
-// Convert string of hexadecimal digits to byte array
-// Returns number of bytes written to destination
-//
-
+/**
+ * Convert string of hexadecimal digits to byte array
+ * Returns number of bytes written to destination
+ */
 DWORD LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, DWORD dwSize)
 {
    DWORD i;

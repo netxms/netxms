@@ -101,6 +101,7 @@ import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.AgentPolicyConfig;
 import org.netxms.client.objects.BusinessService;
@@ -124,6 +125,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objects.NodeLink;
 import org.netxms.client.objects.PolicyGroup;
 import org.netxms.client.objects.PolicyRoot;
+import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Report;
 import org.netxms.client.objects.ReportGroup;
 import org.netxms.client.objects.ReportRoot;
@@ -314,6 +316,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			case AbstractObject.OBJECT_CONTAINER:
 				object = new Container(msg, this);
 				break;
+			case AbstractObject.OBJECT_RACK:
+				object = new Rack(msg, this);
+				break;
 			case AbstractObject.OBJECT_CONDITION:
 				object = new Condition(msg, this);
 				break;
@@ -322,6 +327,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				break;
 			case AbstractObject.OBJECT_NODE:
 				object = new Node(msg, this);
+				break;
+			case AbstractObject.OBJECT_ACCESSPOINT:
+				object = new AccessPoint(msg, this);
 				break;
 			case AbstractObject.OBJECT_CLUSTER:
 				object = new Cluster(msg, this);
@@ -3171,6 +3179,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			case AbstractObject.OBJECT_MOBILEDEVICE:
 				msg.setVariable(NXCPCodes.VID_DEVICE_ID, data.getDeviceId());
 				break;
+			case AbstractObject.OBJECT_RACK:
+				msg.setVariableInt16(NXCPCodes.VID_HEIGHT, data.getHeight());
+				break;
 		}
 		
 		if (userData != null)
@@ -3598,6 +3609,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		if ((flags & NXCObjectModificationData.MODIFY_DISCOVERY_RADIUS) != 0)
 		{
 			msg.setVariableInt32(NXCPCodes.VID_DISCOVERY_RADIUS, data.getDiscoveryRadius());
+		}
+
+		if ((flags & NXCObjectModificationData.MODIFY_HEIGHT) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_HEIGHT, data.getHeight());
 		}
 
 		if (userData != null)
