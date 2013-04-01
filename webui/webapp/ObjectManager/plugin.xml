@@ -309,6 +309,13 @@
                menubarPath="objectcreation">
          </action>
          <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateRack"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createRack_Container"
+               label="Create &amp;rack..."
+               menubarPath="objectcreation">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateCondition"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createCondition_Container"
@@ -360,6 +367,13 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_ServiceRoot"
                label="Create &amp;container..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateRack"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createRack_ServiceRoot"
+               label="Create &amp;rack..."
                menubarPath="objectcreation">
          </action>
          <action

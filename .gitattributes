@@ -3115,6 +3115,7 @@ webui/webapp/ObjectBrowser.AdapterFactory/build.properties -text
 webui/webapp/ObjectBrowser.AdapterFactory/fragment.xml -text
 webui/webapp/ObjectBrowser/META-INF/MANIFEST.MF -text
 webui/webapp/ObjectBrowser/build.properties -text
+webui/webapp/ObjectBrowser/icons/access_point.png -text
 webui/webapp/ObjectBrowser/icons/business_service.png -text
 webui/webapp/ObjectBrowser/icons/cluster.png -text
 webui/webapp/ObjectBrowser/icons/condition.gif -text
@@ -3134,6 +3135,7 @@ webui/webapp/ObjectBrowser/icons/object_browser.gif -text
 webui/webapp/ObjectBrowser/icons/policy.png -text
 webui/webapp/ObjectBrowser/icons/policy_group.png -text
 webui/webapp/ObjectBrowser/icons/policy_root.gif -text
+webui/webapp/ObjectBrowser/icons/rack.gif -text
 webui/webapp/ObjectBrowser/icons/report.png -text
 webui/webapp/ObjectBrowser/icons/report_group.png -text
 webui/webapp/ObjectBrowser/icons/report_root.gif -text
