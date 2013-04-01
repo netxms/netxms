@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: NetXMS Console Scripting Plug-in
+Bundle-SymbolicName: org.netxms.ui.eclipse.scripting;singleton:=true
+Bundle-Version: 1.2.7
+Bundle-Activator: org.netxms.ui.eclipse.scripting.Activator
+Bundle-Vendor: Raden Solutions
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.netxms.ui.eclipse.console;bundle-version="1.2.7",
+ org.eclipse.ui.console;bundle-version="3.5.100",
+ org.eclipse.jface.text;bundle-version="3.7.2"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: jar/jython-standalone-2.7-b1.jar,
+ .
