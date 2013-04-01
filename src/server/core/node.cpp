@@ -1344,7 +1344,7 @@ restart_agent_check:
 /**
  * Check single elementof network path
  */
-bool Node::checkNetworkPathElement(DWORD nodeId, const TCHAR *nodeType, DWORD dwRqId)
+bool Node::checkNetworkPathElement(DWORD nodeId, const TCHAR *nodeType, bool isProxy, DWORD dwRqId)
 {
 	Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
 	if (node == NULL)
@@ -1358,6 +1358,13 @@ bool Node::checkNetworkPathElement(DWORD nodeId, const TCHAR *nodeType, DWORD dw
 		sendPollerMsg(dwRqId, POLLER_WARNING _T("   %s %s is down\r\n"), nodeType, node->Name());
 		return true;
 	}
+	if (isProxy && node->isNativeAgent() && (node->getRuntimeFlags() & NDF_AGENT_UNREACHABLE))
+	{
+		DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): agent on %s %s [%d] is down"),
+					 m_szName, m_dwId, nodeType, node->Name(), node->Id());
+		sendPollerMsg(dwRqId, POLLER_WARNING _T("   Agent on %s %s is down\r\n"), nodeType, node->Name());
+		return true;
+	}
 	if (node->m_tLastStatusPoll < time(NULL) - 1)
 	{
 		DbgPrintf(6, _T("Node::checkNetworkPathElement(%s [%d]): forced status poll on node %s [%d]"),
@@ -1368,6 +1375,13 @@ bool Node::checkNetworkPathElement(DWORD nodeId, const TCHAR *nodeType, DWORD dw
 			DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): %s %s [%d] is down"),
 						 m_szName, m_dwId, nodeType, node->Name(), node->Id());
 			sendPollerMsg(dwRqId, POLLER_WARNING _T("   %s %s is down\r\n"), nodeType, node->Name());
+			return true;
+		}
+		if (isProxy && node->isNativeAgent() && (node->getRuntimeFlags() & NDF_AGENT_UNREACHABLE))
+		{
+			DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): agent on %s %s [%d] is down"),
+						 m_szName, m_dwId, nodeType, node->Name(), node->Id());
+			sendPollerMsg(dwRqId, POLLER_WARNING _T("   Agent on %s %s is down\r\n"), nodeType, node->Name());
 			return true;
 		}
 	}
@@ -1391,11 +1405,11 @@ bool Node::checkNetworkPath(DWORD dwRqId)
 		{
 			bool allProxyDown = true;
 			if (zone->getIcmpProxy() != 0)
-				allProxyDown = checkNetworkPathElement(zone->getIcmpProxy(), _T("ICMP proxy"), dwRqId);
+				allProxyDown = checkNetworkPathElement(zone->getIcmpProxy(), _T("ICMP proxy"), true, dwRqId);
 			if (allProxyDown && (zone->getSnmpProxy() != 0) && (zone->getSnmpProxy() != zone->getIcmpProxy()))
-				allProxyDown = checkNetworkPathElement(zone->getSnmpProxy(), _T("SNMP proxy"), dwRqId);
+				allProxyDown = checkNetworkPathElement(zone->getSnmpProxy(), _T("SNMP proxy"), true, dwRqId);
 			if (allProxyDown && (zone->getAgentProxy() != 0) && (zone->getAgentProxy() != zone->getIcmpProxy()) && (zone->getAgentProxy() != zone->getSnmpProxy()))
-				allProxyDown = checkNetworkPathElement(zone->getAgentProxy(), _T("agent proxy"), dwRqId);
+				allProxyDown = checkNetworkPathElement(zone->getAgentProxy(), _T("agent proxy"), true, dwRqId);
 			if (allProxyDown)
 				return true;
 		}
@@ -1407,7 +1421,7 @@ bool Node::checkNetworkPath(DWORD dwRqId)
 	if ((iface != NULL) && (iface->getPeerNodeId() != 0))
 	{
 		DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): found interface object for primary IP: %s [%d]"), m_szName, m_dwId, iface->Name(), iface->Id());
-		if (checkNetworkPathElement(iface->getPeerNodeId(), _T("upstream switch"), dwRqId))
+		if (checkNetworkPathElement(iface->getPeerNodeId(), _T("upstream switch"), false, dwRqId))
 			return true;
 	}
 	else

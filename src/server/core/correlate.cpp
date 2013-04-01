@@ -44,6 +44,22 @@ static bool CheckNodeDown(Node *currNode, Event *pEvent, DWORD nodeId, const TCH
 }
 
 /**
+ * Correlate current event to agent unreachable event
+ */
+static bool CheckAgentDown(Node *currNode, Event *pEvent, DWORD nodeId, const TCHAR *nodeType)
+{
+	Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
+	if ((node != NULL) && node->isNativeAgent() && (node->getRuntimeFlags() & NDF_AGENT_UNREACHABLE))
+	{
+		pEvent->setRootId(node->getLastEventId(LAST_EVENT_AGENT_DOWN));
+		DbgPrintf(5, _T("C_SysNodeDown: agent on %s %s [%d] for current node %s [%d] is down"),
+		          nodeType, node->Name(), node->Id(), currNode->Name(), currNode->Id());
+		return true;
+	}
+	return false;
+}
+
+/**
  * Correlate SYS_NODE_DOWN event
  */
 static void C_SysNodeDown(Node *pNode, Event *pEvent)
@@ -63,11 +79,11 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 		{
 			bool allProxyDown = true;
 			if (zone->getAgentProxy() != 0)
-				allProxyDown = CheckNodeDown(pNode, pEvent, zone->getAgentProxy(), _T("agent proxy"));
+				allProxyDown = CheckAgentDown(pNode, pEvent, zone->getAgentProxy(), _T("agent proxy"));
 			if (allProxyDown && (zone->getSnmpProxy() != 0) && (zone->getSnmpProxy() != zone->getAgentProxy()))
-				allProxyDown = CheckNodeDown(pNode, pEvent, zone->getSnmpProxy(), _T("SNMP proxy"));
+				allProxyDown = CheckAgentDown(pNode, pEvent, zone->getSnmpProxy(), _T("SNMP proxy"));
 			if (allProxyDown && (zone->getIcmpProxy() != 0) && (zone->getIcmpProxy() != zone->getAgentProxy()) && (zone->getIcmpProxy() != zone->getSnmpProxy()))
-				allProxyDown = CheckNodeDown(pNode, pEvent, zone->getSnmpProxy(), _T("ICMP proxy"));
+				allProxyDown = CheckAgentDown(pNode, pEvent, zone->getSnmpProxy(), _T("ICMP proxy"));
 			if (allProxyDown)
 				return;
 			pEvent->setRootId(0);
@@ -171,11 +187,20 @@ void CorrelateEvent(Event *pEvent)
 			// there are intentionally no break
       case EVENT_SERVICE_DOWN:
       case EVENT_SNMP_FAIL:
-      case EVENT_AGENT_FAIL:
          if (node->getRuntimeFlags() & NDF_UNREACHABLE)
          {
             pEvent->setRootId(node->getLastEventId(LAST_EVENT_NODE_DOWN));
          }
+         break;
+      case EVENT_AGENT_FAIL:
+         node->setLastEventId(LAST_EVENT_AGENT_DOWN, pEvent->getId());
+         if (node->getRuntimeFlags() & NDF_UNREACHABLE)
+         {
+            pEvent->setRootId(node->getLastEventId(LAST_EVENT_NODE_DOWN));
+         }
+         break;
+      case EVENT_AGENT_OK:
+         node->setLastEventId(LAST_EVENT_AGENT_DOWN, 0);
          break;
       case EVENT_NODE_DOWN:
 		case EVENT_NODE_UNREACHABLE:

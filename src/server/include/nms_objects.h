@@ -62,6 +62,7 @@ extern DWORD g_dwConditionPollingInterval;
 #define MAX_LAST_EVENTS       8
 
 #define LAST_EVENT_NODE_DOWN  0
+#define LAST_EVENT_AGENT_DOWN 1
 
 /**
  * Built-in object IDs
@@ -918,7 +919,7 @@ protected:
 	void checkIfXTable(SNMP_Transport *pTransport);
 	void executeHookScript(const TCHAR *hookName);
 	bool checkNetworkPath(DWORD dwRqId);
-	bool checkNetworkPathElement(DWORD nodeId, const TCHAR *nodeType, DWORD dwRqId);
+	bool checkNetworkPathElement(DWORD nodeId, const TCHAR *nodeType, bool isProxy, DWORD dwRqId);
 
 	void applyUserTemplates();
 	void doInstanceDiscovery();
