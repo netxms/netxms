@@ -22,7 +22,7 @@ darwin_la_CPPFLAGS=-I@top_srcdir@/include
 darwin_la_LDFLAGS=-module -avoid-version
 darwin_la_LIBADD=../../../libnetxms/libnetxms.la
 
-EXTRA_DIST=system.h net.h disk.cpp
+EXTRA_DIST=cpu.h darwin.h disk.h net.h system.h
 
 if !STATIC_BUILD
 install-exec-hook:
