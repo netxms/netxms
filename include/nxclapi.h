@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -215,8 +215,8 @@ typedef void * NXC_SESSION;
 /**
  * Node flags
  */
-#define NF_SYSTEM_FLAGS           0x0000FFFF
-#define NF_USER_FLAGS             0xFFFF0000
+#define NF_SYSTEM_FLAGS           0x001FFFFF
+#define NF_USER_FLAGS             0xFFE00000
 
 #define NF_IS_SNMP                0x00000001
 #define NF_IS_NATIVE_AGENT        0x00000002
@@ -239,6 +239,7 @@ typedef void * NXC_SESSION;
 #define NF_HAS_IFXTABLE           0x00020000  /* Supports ifXTable */
 #define NF_HAS_AGENT_IFXCOUNTERS  0x00040000  /* Agent supports 64-bit interface counters */
 #define NF_HAS_WINPDH             0x00080000  /* Node supports Windows PDH parameters */
+#define NF_IS_WIFI_CONTROLLER     0x00100000  /* Node is wireless network controller */
 
 #define NF_DISABLE_DISCOVERY_POLL 0x00400000
 #define NF_DISABLE_TOPOLOGY_POLL  0x00800000

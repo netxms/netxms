@@ -464,3 +464,55 @@ bool NetworkDeviceDriver::isPerVlanFdbSupported()
 {
 	return false;
 }
+
+/**
+ * Get device cluster mode. Default implementation always return CLUSTER_MODE_STANDALONE.
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return cluster mode (one of CLUSTER_MODE_STANDALONE, CLUSTER_MODE_ACTIVE, CLUSTER_MODE_STANDBY)
+ */
+int NetworkDeviceDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+{
+   return CLUSTER_MODE_STANDALONE;
+}
+
+/**
+ * Returns true if device is a wireless controller. Default implementation always return false.
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return true if device is a wireless controller
+ */
+bool NetworkDeviceDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+{
+   return false;
+}
+
+/**
+ * Get list of wireless access points managed by this controller. Default implementation always return NULL.
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return list of access points
+ */
+ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+{
+   return NULL;
+}
+
+/**
+ * Get list of associated wireless stations. Default implementation always return NULL.
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return list of associated wireless stations
+ */
+ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+{
+   return NULL;
+}

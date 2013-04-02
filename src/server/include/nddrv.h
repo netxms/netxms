@@ -79,6 +79,16 @@ enum
 };
 
 /**
+ * Cluster modes
+ */
+enum
+{
+   CLUSTER_MODE_STANDALONE = 0,
+   CLUSTER_MODE_ACTIVE = 1,
+   CLUSTER_MODE_STANDBY = 2
+};
+
+/**
  * Module layout definition
  */
 typedef struct __ndd_module_layout
@@ -89,6 +99,39 @@ typedef struct __ndd_module_layout
 	WORD portRows[256];     // row numbers for ports
 	WORD portColumns[256];  // column numbers for ports
 } NDD_MODULE_LAYOUT;
+
+/**
+ * Wireless access point information
+ */
+class LIBNXSRV_EXPORTABLE AccessPointInfo
+{
+private:
+   BYTE macAddr[MAC_ADDR_LENGTH];
+   int state;
+   TCHAR *model;
+   TCHAR *serial;
+
+public:
+   AccessPointInfo(BYTE *macAddr, int state, const TCHAR *model, const TCHAR *serial);
+   ~AccessPointInfo();
+
+   BYTE *getMacAddr();
+   int getState();
+   const TCHAR *getModel();
+   const TCHAR *getSerial();
+};
+
+/**
+ * Wireless station information
+ */
+struct WirelessStationInfo
+{
+public:
+   BYTE macAddr[MAC_ADDR_LENGTH];
+   BYTE apMacAddr[MAC_ADDR_LENGTH];
+   TCHAR ssid[64];
+   int vlan;
+};
 
 /**
  * Base class for device drivers
@@ -111,6 +154,10 @@ public:
 	virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int module, NDD_MODULE_LAYOUT *layout);
 	virtual void destroyDriverData(void *driverData);
 	virtual bool isPerVlanFdbSupported();
+   virtual int getClusterMode(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+	virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+	virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
 };
 
 #endif   /* _nddrv_h_ */
