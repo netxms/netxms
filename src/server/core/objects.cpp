@@ -49,6 +49,7 @@ ObjectIndex g_idxZoneByGUID;
 ObjectIndex g_idxNodeById;
 ObjectIndex g_idxNodeByAddr;
 ObjectIndex g_idxMobileDeviceById;
+ObjectIndex g_idxAccessPointById;
 ObjectIndex g_idxConditionById;
 ObjectIndex g_idxServiceCheckById;
 ObjectIndex g_idxNetMapById;
@@ -165,6 +166,11 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
    for(int i = 0; i < mbs->size(); i++)
 		((MobileDevice *)mbs->get(i))->updateDciCache();
 	delete mbs;
+
+	ObjectArray<NetObj> *aps = g_idxAccessPointById.getObjects();
+   for(int i = 0; i < aps->size(); i++)
+		((AccessPoint *)aps->get(i))->updateDciCache();
+	delete aps;
 
    DbgPrintf(1, _T("Finished caching of DCI values"));
    return THREAD_OK;
@@ -331,7 +337,6 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_BUSINESSSERVICE:
 			case OBJECT_NODELINK:
 			case OBJECT_RACK:
-			case OBJECT_ACCESSPOINT:
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(pObject->Id(), pObject);
@@ -340,6 +345,9 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             break;
 			case OBJECT_MOBILEDEVICE:
 				g_idxMobileDeviceById.put(pObject->Id(), pObject);
+            break;
+			case OBJECT_ACCESSPOINT:
+				g_idxAccessPointById.put(pObject->Id(), pObject);
             break;
          case OBJECT_SUBNET:
             if (pObject->IpAddr() != 0)
@@ -461,7 +469,6 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_BUSINESSSERVICE:
 		case OBJECT_NODELINK:
 		case OBJECT_RACK:
-		case OBJECT_ACCESSPOINT:
 			break;
       case OBJECT_NODE:
 			g_idxNodeById.remove(pObject->Id());
@@ -470,6 +477,9 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          break;
       case OBJECT_MOBILEDEVICE:
 			g_idxMobileDeviceById.remove(pObject->Id());
+         break;
+		case OBJECT_ACCESSPOINT:
+			g_idxAccessPointById.remove(pObject->Id());
          break;
       case OBJECT_SUBNET:
          if (pObject->IpAddr() != 0)
@@ -566,7 +576,27 @@ static DWORD GetObjectNetmask(NetObj *pObject)
 }
 
 /**
- * Find mobile device by device ID
+ * Access point MAC address comparator
+ */
+static bool AccessPointMACComparator(NetObj *object, void *macAddr)
+{
+	return ((object->Type() == OBJECT_ACCESSPOINT) && !object->isDeleted() &&
+		     !memcmp(macAddr, ((AccessPoint *)object)->getMacAddr(), 6));
+}
+
+/**
+ * Find access point by MAC address
+ */
+AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr)
+{
+	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
+		return NULL;
+
+	return (AccessPoint *)g_idxAccessPointById.find(AccessPointMACComparator, (void *)macAddr);
+}
+
+/**
+ * Mobile device id comparator
  */
 static bool DeviceIdComparator(NetObj *object, void *deviceId)
 {
@@ -574,6 +604,9 @@ static bool DeviceIdComparator(NetObj *object, void *deviceId)
 		     !_tcscmp((const TCHAR *)deviceId, ((MobileDevice *)object)->getDeviceId()));
 }
 
+/**
+ * Find mobile device by device ID
+ */
 MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId)
 {
 	if ((deviceId == NULL) || (*deviceId == 0))
@@ -657,24 +690,27 @@ Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr)
 }
 
 /**
- * Find interface by MAC address
+ * Interface MAC address comparator
  */
-static bool MACComparator(NetObj *object, void *macAddr)
+static bool InterfaceMACComparator(NetObj *object, void *macAddr)
 {
 	return ((object->Type() == OBJECT_INTERFACE) && !object->isDeleted() &&
 		     !memcmp(macAddr, ((Interface *)object)->getMacAddr(), 6));
 }
 
+/**
+ * Find interface by MAC address
+ */
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
 {
 	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
 		return NULL;
 
-	return (Interface *)g_idxObjectById.find(MACComparator, (void *)macAddr);
+	return (Interface *)g_idxObjectById.find(InterfaceMACComparator, (void *)macAddr);
 }
 
 /**
- * Find interface by description
+ * Interface description comparator
  */
 static bool DescriptionComparator(NetObj *object, void *description)
 {
@@ -682,22 +718,26 @@ static bool DescriptionComparator(NetObj *object, void *description)
 	        !_tcscmp((const TCHAR *)description, ((Interface *)object)->getDescription()));
 }
 
+/**
+ * Find interface by description
+ */
 Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description)
 {
 	return (Interface *)g_idxObjectById.find(DescriptionComparator, (void *)description);
 }
 
-
-//
-// Find node by LLDP ID
-//
-
+/**
+ * LLDP ID comparator
+ */
 static bool LldpIdComparator(NetObj *object, void *lldpId)
 {
 	const TCHAR *id = ((Node *)object)->getLLDPNodeId();
 	return (id != NULL) && !_tcscmp(id, (const TCHAR *)lldpId);
 }
 
+/**
+ * Find node by LLDP ID
+ */
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId)
 {
 	return (Node *)g_idxNodeById.find(LldpIdComparator, (void *)lldpId);
@@ -851,18 +891,18 @@ Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(DWORD ipAddr)
 	return (Cluster *)g_idxObjectById.find(ClusterResourceIPComparator, CAST_TO_POINTER(ipAddr, void *));
 }
 
-
-//
-// Check if given IP address is used by cluster (it's either
-// resource IP or located on one of sync subnets)
-//
-
+/**
+ * Data structure for IsClusterIP callback
+ */
 struct __cluster_ip_data
 {
 	DWORD ipAddr;
 	DWORD zoneId;
 };
 
+/**
+ * Cluster IP comparator - returns true if given address in given zone is cluster IP address
+ */
 static bool ClusterIPComparator(NetObj *object, void *data)
 {
 	struct __cluster_ip_data *d = (struct __cluster_ip_data *)data;
@@ -872,6 +912,10 @@ static bool ClusterIPComparator(NetObj *object, void *data)
 			  ((Cluster *)object)->isSyncAddr(d->ipAddr));
 }
 
+/**
+ * Check if given IP address is used by cluster (it's either
+ * resource IP or located on one of sync subnets)
+ */
 bool NXCORE_EXPORTABLE IsClusterIP(DWORD zoneId, DWORD ipAddr)
 {
 	struct __cluster_ip_data data;

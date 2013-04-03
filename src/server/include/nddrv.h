@@ -101,24 +101,38 @@ typedef struct __ndd_module_layout
 } NDD_MODULE_LAYOUT;
 
 /**
+ * Radio interface information
+ */
+struct RadioInterfaceInfo
+{
+	int index;
+	TCHAR name[64];
+	BYTE macAddr[MAC_ADDR_LENGTH];
+};
+
+/**
  * Wireless access point information
  */
 class LIBNXSRV_EXPORTABLE AccessPointInfo
 {
 private:
-   BYTE macAddr[MAC_ADDR_LENGTH];
-   int state;
-   TCHAR *model;
-   TCHAR *serial;
+   BYTE m_macAddr[MAC_ADDR_LENGTH];
+   int m_state;
+   TCHAR *m_model;
+   TCHAR *m_serial;
+	ObjectArray<RadioInterfaceInfo> *m_radioInterfaces;
 
 public:
    AccessPointInfo(BYTE *macAddr, int state, const TCHAR *model, const TCHAR *serial);
    ~AccessPointInfo();
 
-   BYTE *getMacAddr();
-   int getState();
-   const TCHAR *getModel();
-   const TCHAR *getSerial();
+	void addRadioInterface(RadioInterfaceInfo *iface);
+
+	BYTE *getMacAddr() { return m_macAddr; }
+	int getState() { return m_state; }
+	const TCHAR *getModel() { return m_model; }
+	const TCHAR *getSerial() { return m_serial; }
+	ObjectArray<RadioInterfaceInfo> *getRadioInterfaces() { return m_radioInterfaces; }
 };
 
 /**

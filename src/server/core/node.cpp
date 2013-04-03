@@ -2190,6 +2190,39 @@ bool Node::confPollSnmp(DWORD dwRqId)
 			m_dwFlags &= ~NF_IS_VRRP;
 			UnlockData();
 		}
+
+		// Get wireless controller data
+		if ((m_driver != NULL) && m_driver->isWirelessController(pTransport, &m_customAttributes, m_driverData))
+		{
+			LockData();
+			m_dwFlags |= NF_IS_WIFI_CONTROLLER;
+			UnlockData();
+
+			ObjectArray<AccessPointInfo> *aps = m_driver->getAccessPoints(pTransport, &m_customAttributes, m_driverData);
+			if (aps != NULL)
+			{
+				for(int i = 0; i < aps->size(); i++)
+				{
+					AccessPointInfo *info = aps->get(i);
+					AccessPoint *ap = FindAccessPointByMAC(info->getMacAddr());
+					if (ap != NULL)
+					{
+						ap->attachToNode(m_dwId);
+					}
+					else
+					{
+						//ap = new AccessPoint(info->getN
+					}
+				}
+				delete aps;
+			}
+		}
+		else
+		{
+			LockData();
+			m_dwFlags &= ~NF_IS_WIFI_CONTROLLER;
+			UnlockData();
+		}
    }
    else
    {

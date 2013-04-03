@@ -217,6 +217,9 @@ DWORD AccessPoint::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
  */
 void AccessPoint::attachToNode(DWORD nodeId)
 {
+	if (m_nodeId == nodeId)
+		return;
+
 	if (m_nodeId != 0)
 	{
 		Node *currNode = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);

@@ -2028,6 +2028,7 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD zoneId, DWORD ipAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD zoneId, DWORD dwNodeAddr);
 MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId);
+AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr);
 DWORD NXCORE_EXPORTABLE FindLocalMgmtNode();
 CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(DWORD dwId);
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID);
@@ -2072,6 +2073,7 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByGUID;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxMobileDeviceById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxAccessPointById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxConditionById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxServiceCheckById;
 
