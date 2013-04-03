@@ -13,4 +13,6 @@ Require-Bundle: org.netxms.ui.eclipse.objectview;bundle-version="1.2.5",
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .
-Export-Package: org.netxms.ui.eclipse.alarmviewer.widgets
+Export-Package: org.netxms.ui.eclipse.alarmviewer.actions,
+ org.netxms.ui.eclipse.alarmviewer.views,
+ org.netxms.ui.eclipse.alarmviewer.widgets

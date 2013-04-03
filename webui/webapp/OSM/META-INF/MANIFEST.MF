@@ -11,5 +11,6 @@ Require-Bundle: org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.4",
  org.eclipse.rap.draw2d.compatibility;bundle-version="1.5.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.netxms.ui.eclipse.osm.tools,
+Export-Package: org.netxms.ui.eclipse.osm.actions,
+ org.netxms.ui.eclipse.osm.tools,
  org.netxms.ui.eclipse.osm.widgets
