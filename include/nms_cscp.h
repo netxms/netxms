@@ -463,6 +463,7 @@ typedef struct
 #define CMD_LIST_MAPPING_TABLES        0x0111
 #define CMD_GET_NODE_SOFTWARE          0x0112
 #define CMD_GET_WINPERF_OBJECTS        0x0113
+#define CMD_GET_WIRELESS_STATIONS      0x0114
 
 /**
  * Variable identifiers

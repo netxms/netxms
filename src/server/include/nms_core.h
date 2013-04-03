@@ -576,7 +576,7 @@ private:
 	void AddCACertificate(CSCPMessage *pRequest);
 	void DeleteCertificate(CSCPMessage *pRequest);
 	void UpdateCertificateComments(CSCPMessage *pRequest);
-	void SendCertificateList(DWORD dwRqId);
+	void getCertificateList(DWORD dwRqId);
 	void queryL2Topology(CSCPMessage *pRequest);
 	void sendSMS(CSCPMessage *pRequest);
 	void SendCommunityList(DWORD dwRqId);
@@ -635,6 +635,7 @@ private:
 	void getMappingTable(CSCPMessage *request);
 	void updateMappingTable(CSCPMessage *request);
 	void deleteMappingTable(CSCPMessage *request);
+	void getWirelessStations(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

@@ -152,6 +152,7 @@ import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.client.topology.NetworkPath;
 import org.netxms.client.topology.VlanInfo;
+import org.netxms.client.topology.WirelessStation;
 
 /**
  * Communication session with NetXMS server.
@@ -6230,6 +6231,31 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		return new NetworkPath(response);
+	}
+	
+	/**
+	 * Get list of wireless stations registered at given wireless controller.
+	 * 
+	 * @param nodeId controller node ID
+	 * @return list of wireless stations
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<WirelessStation> getWirelessStations(long nodeId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_WIRELESS_STATIONS);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
+		List<WirelessStation> stations = new ArrayList<WirelessStation>(count);
+		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			stations.add(new WirelessStation(response, varId));
+			varId += 10;
+		}
+		return stations;
 	}
 	
 	/**

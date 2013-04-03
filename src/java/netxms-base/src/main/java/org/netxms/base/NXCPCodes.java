@@ -299,6 +299,7 @@ public class NXCPCodes
 	public static final int CMD_LIST_MAPPING_TABLES      = 0x0111;
 	public static final int CMD_GET_NODE_SOFTWARE        = 0x0112;
 	public static final int CMD_GET_WINPERF_OBJECTS      = 0x0113;
+	public static final int CMD_GET_WIRELESS_STATIONS    = 0x0114;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;

@@ -90,6 +90,7 @@ Node::Node() : DataCollectionTarget()
 	m_jobQueue = new ServerJobQueue();
 	m_fdb = NULL;
 	m_vlans = NULL;
+	m_wirelessStations = NULL;
 	m_driver = NULL;
 	m_driverData = NULL;
 	m_components = NULL;
@@ -160,6 +161,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_jobQueue = new ServerJobQueue();
 	m_fdb = NULL;
 	m_vlans = NULL;
+	m_wirelessStations = NULL;
 	m_driver = NULL;
 	m_driverData = NULL;
 	m_components = NULL;
@@ -194,6 +196,7 @@ Node::~Node()
 		m_fdb->decRefCount();
 	if (m_vlans != NULL)
 		m_vlans->decRefCount();
+	delete m_wirelessStations;
 	delete m_components;
 	delete m_lldpLocalPortInfo;
 	delete m_softwarePackages;
@@ -2205,14 +2208,20 @@ bool Node::confPollSnmp(DWORD dwRqId)
 				{
 					AccessPointInfo *info = aps->get(i);
 					AccessPoint *ap = FindAccessPointByMAC(info->getMacAddr());
-					if (ap != NULL)
+					if (ap == NULL)
 					{
-						ap->attachToNode(m_dwId);
+						String name;
+						
+						for(int j = 0; j < info->getRadioInterfaces()->size(); j++)
+						{
+							if (j > 0)
+								name += _T("/");
+							name += info->getRadioInterfaces()->get(j)->name;
+						}
+						ap = new AccessPoint((const TCHAR *)name, info->getMacAddr(), m_dwId);
 					}
-					else
-					{
-						//ap = new AccessPoint(info->getN
-					}
+					ap->attachToNode(m_dwId);
+					ap->updateRadioInterfaces(info->getRadioInterfaces());
 				}
 				delete aps;
 			}
@@ -4708,6 +4717,20 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	   sendPollerMsg(dwRqId, POLLER_ERROR _T("Link layer topology retrieved\r\n"));
 	}
 
+	if ((m_driver != NULL) && (m_dwFlags & NF_IS_WIFI_CONTROLLER))
+	{
+		SNMP_Transport *snmp = createSnmpTransport();
+		if (snmp != NULL)
+		{
+			ObjectArray<WirelessStationInfo> *ws = m_driver->getWirelessStations(snmp, &m_customAttributes, m_driverData);
+			delete snmp;
+			LockData();
+			delete m_wirelessStations;
+			m_wirelessStations = ws;
+			UnlockData();
+		}
+	}
+
    // Call hooks in loaded modules
    for(DWORD i = 0; i < g_dwNumModules; i++)
 	{
@@ -5405,6 +5428,37 @@ void Node::writePackageListToMessage(CSCPMessage *msg)
 	else
 	{
 		msg->SetVariable(VID_RCC, RCC_NO_SOFTWARE_PACKAGE_DATA);
+	}
+	UnlockData();
+}
+
+/**
+ * Write list of registered wireless stations to NXCP message
+ */
+void Node::writeWsListToMessage(CSCPMessage *msg)
+{
+	LockData();
+	if (m_wirelessStations != NULL)
+	{
+		msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)m_wirelessStations->size());
+		DWORD varId = VID_ELEMENT_LIST_BASE;
+		for(int i = 0; i < m_wirelessStations->size(); i++)
+		{
+			WirelessStationInfo *ws = m_wirelessStations->get(i);
+			msg->SetVariable(varId++, ws->macAddr, MAC_ADDR_LENGTH);
+			msg->SetVariable(varId++, ws->ipAddr);
+			msg->SetVariable(varId++, ws->ssid);
+			msg->SetVariable(varId++, (WORD)ws->vlan);
+			msg->SetVariable(varId++, ws->apObjectId);
+			msg->SetVariable(varId++, (DWORD)ws->rfIndex);
+			msg->SetVariable(varId++, ws->rfName);
+			msg->SetVariable(varId++, ws->nodeId);
+			varId += 2;
+		}
+	}
+	else
+	{
+		msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)0);
 	}
 	UnlockData();
 }

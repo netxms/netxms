@@ -31,8 +31,8 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -41,8 +41,7 @@ import org.netxms.ui.eclipse.topology.Activator;
 import org.netxms.ui.eclipse.topology.views.VlanView;
 
 /**
- * Find connection point for node or interface
- *
+ * Show vlans configured on network device
  */
 public class ShowVlans implements IObjectActionDelegate
 {
@@ -108,7 +107,7 @@ public class ShowVlans implements IObjectActionDelegate
 		    (((IStructuredSelection)selection).size() == 1))
 		{
 			Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if (obj instanceof Node)
+			if (obj instanceof AbstractNode)
 			{
 				action.setEnabled(true);
 				objectId = ((AbstractObject)obj).getObjectId();

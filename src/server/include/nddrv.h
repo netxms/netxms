@@ -140,11 +140,17 @@ public:
  */
 struct WirelessStationInfo
 {
-public:
+	// This part filled by driver
    BYTE macAddr[MAC_ADDR_LENGTH];
-   BYTE apMacAddr[MAC_ADDR_LENGTH];
-   TCHAR ssid[64];
+	DWORD ipAddr;	// IP address, must be in host byte order
+	int rfIndex;	// radio interface index
+	TCHAR ssid[MAX_OBJECT_NAME];
    int vlan;
+
+	// This part filled by core
+	DWORD apObjectId;
+	DWORD nodeId;
+   TCHAR rfName[MAX_OBJECT_NAME];
 };
 
 /**

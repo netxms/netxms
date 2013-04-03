@@ -1133,7 +1133,7 @@ void ClientSession::processingThread()
 				UpdateCertificateComments(pMsg);
 				break;
 			case CMD_GET_CERT_LIST:
-				SendCertificateList(pMsg->GetId());
+				getCertificateList(pMsg->GetId());
 				break;
 			case CMD_QUERY_L2_TOPOLOGY:
 				CALL_IN_NEW_THREAD(queryL2Topology, pMsg);
@@ -1302,6 +1302,9 @@ void ClientSession::processingThread()
 				break;
 			case CMD_DELETE_MAPPING_TABLE:
 				deleteMappingTable(pMsg);
+				break;
+			case CMD_GET_WIRELESS_STATIONS:
+				getWirelessStations(pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -9576,12 +9579,10 @@ void ClientSession::UpdateCertificateComments(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Send list of installed certificates to client
-//
-
-void ClientSession::SendCertificateList(DWORD dwRqId)
+/**
+ * Send list of installed certificates to client
+ */
+void ClientSession::getCertificateList(DWORD dwRqId)
 {
    CSCPMessage msg;
 	DB_RESULT hResult;
@@ -12213,6 +12214,47 @@ void ClientSession::deleteMappingTable(CSCPMessage *request)
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Get list of wireless stations registered on controller
+ */
+void ClientSession::getWirelessStations(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get object id and check object class and access rights
+	Node *node = (Node *)FindObjectById(request->GetVariableLong(VID_OBJECT_ID), OBJECT_NODE);
+   if (node != NULL)
+   {
+      if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+			if (node->isWirelessController())
+			{
+				node->writeWsListToMessage(&msg);
+	         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			}
+			else
+			{
+	         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
 
    // Send response
    sendMessage(&msg);

@@ -2020,6 +2020,7 @@ src/java/netxms-eclipse/Topology/build.properties -text
 src/java/netxms-eclipse/Topology/icons/ports.gif -text
 src/java/netxms-eclipse/Topology/icons/search_history.png -text
 src/java/netxms-eclipse/Topology/icons/vlanview.gif -text
+src/java/netxms-eclipse/Topology/icons/wireless_stations.png -text
 src/java/netxms-eclipse/Topology/plugin.xml -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/Activator.java -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/actions/FindConnectionPoint.java -text

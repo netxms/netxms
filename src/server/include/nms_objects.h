@@ -837,6 +837,7 @@ protected:
 	TCHAR *m_vendor;
 	TCHAR *m_model;
 	TCHAR *m_serialNumber;
+	ObjectArray<RadioInterfaceInfo> *m_radioInterfaces;
 
 public:
    AccessPoint();
@@ -855,6 +856,7 @@ public:
 	BYTE *getMacAddr() { return m_macAddr; }
 
 	void attachToNode(DWORD nodeId);
+	void updateRadioInterfaces(ObjectArray<RadioInterfaceInfo> *ri);
 };
 
 /**
@@ -914,8 +916,9 @@ protected:
 	LinkLayerNeighbors *m_linkLayerNeighbors;
 	VlanList *m_vlans;
 	VrrpInfo *m_vrrpInfo;
+	ObjectArray<WirelessStationInfo> *m_wirelessStations;
 	BYTE m_baseBridgeAddress[MAC_ADDR_LENGTH];	// Bridge base address (dot1dBaseBridgeAddress in bridge MIB)
-	nxmap_ObjList *m_pTopology;	// For compatibility, to be removed in 1.1.x
+	nxmap_ObjList *m_pTopology;
 	time_t m_topologyRebuildTimestamp;
 	ServerJobQueue *m_jobQueue;
 	ComponentTree *m_components;		// Hardware components
@@ -994,6 +997,7 @@ public:
    bool isRouter() { return m_dwFlags & NF_IS_ROUTER ? true : false; }
    bool isLocalManagement() { return m_dwFlags & NF_IS_LOCAL_MGMT ? true : false; }
 	bool isPerVlanFdbSupported() { return (m_driver != NULL) ? m_driver->isPerVlanFdbSupported() : false; }
+	bool isWirelessController() { return m_dwFlags & NF_IS_WIFI_CONTROLLER ? true : false; }
 
 	LONG getSNMPVersion() { return m_snmpVersion; }
 	const TCHAR *getSNMPObjectId() { return m_szObjectId; }
@@ -1097,6 +1101,7 @@ public:
    void writeParamListToMessage(CSCPMessage *pMsg, WORD flags);
 	void writeWinPerfObjectsToMessage(CSCPMessage *msg);
 	void writePackageListToMessage(CSCPMessage *msg);
+	void writeWsListToMessage(CSCPMessage *msg);
 
    DWORD wakeUp();
 

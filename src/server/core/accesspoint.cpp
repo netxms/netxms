@@ -31,6 +31,7 @@ AccessPoint::AccessPoint() : DataCollectionTarget()
 	m_vendor = NULL;
 	m_model = NULL;
 	m_serialNumber = NULL;
+	m_radioInterfaces = NULL;
 }
 
 /**
@@ -43,6 +44,7 @@ AccessPoint::AccessPoint(const TCHAR *name, BYTE *macAddr, DWORD nodeId) : DataC
 	m_vendor = NULL;
 	m_model = NULL;
 	m_serialNumber = NULL;
+	m_radioInterfaces = NULL;
 }
 
 /**
@@ -53,6 +55,7 @@ AccessPoint::~AccessPoint()
 	safe_free(m_vendor);
 	safe_free(m_model);
 	safe_free(m_serialNumber);
+	delete m_radioInterfaces;
 }
 
 /**
@@ -240,5 +243,23 @@ void AccessPoint::attachToNode(DWORD nodeId)
 	LockData();
 	m_nodeId = nodeId;
 	Modify();
+	UnlockData();
+}
+
+/**
+ * Update radio interfaces information
+ */
+void AccessPoint::updateRadioInterfaces(ObjectArray<RadioInterfaceInfo> *ri)
+{
+	LockData();
+	if (m_radioInterfaces == NULL)
+		m_radioInterfaces = new ObjectArray<RadioInterfaceInfo>(ri->size(), 4, true);
+	m_radioInterfaces->clear();
+	for(int i = 0; i < ri->size(); i++)
+	{
+		RadioInterfaceInfo *info = new RadioInterfaceInfo;
+		memcpy(info, ri->get(i), sizeof(RadioInterfaceInfo));
+		m_radioInterfaces->add(info);
+	}
 	UnlockData();
 }

@@ -27,6 +27,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
@@ -38,10 +40,12 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.switchmanager.Activator;
 import org.netxms.ui.eclipse.switchmanager.Messages;
 import org.netxms.ui.eclipse.switchmanager.views.helpers.Dot1xPortComparator;
 import org.netxms.ui.eclipse.switchmanager.views.helpers.Dot1xPortListLabelProvider;
 import org.netxms.ui.eclipse.switchmanager.views.helpers.Dot1xPortSummary;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -79,8 +83,7 @@ public class Dot1xStatusView extends ViewPart
 		}
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		AbstractObject object = session.findObjectById(rootObject);
-		setPartName(Messages.Dot1xStatusView_PartNamePrefix + ((object != null) ? object.getObjectName() : ("<" + rootObject + ">"))); //$NON-NLS-2$ //$NON-NLS-3$
+		setPartName(Messages.Dot1xStatusView_PartNamePrefix + session.getObjectName(rootObject));
 	}
 
 	/* (non-Javadoc)
@@ -96,6 +99,15 @@ public class Dot1xStatusView extends ViewPart
 		viewer.setLabelProvider(new Dot1xPortListLabelProvider());
 		viewer.setComparator(new Dot1xPortComparator());
 
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "Dot1xStatusView");
+		viewer.getTable().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "Dot1xStatusView");
+			}
+		});
+		
 		createActions();
 		contributeToActionBars();
 		
