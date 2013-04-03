@@ -96,6 +96,52 @@ InterfaceList *SymbolDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attr
 }
 
 /**
+ * Get cluster mode for device (standalone / active / standby)
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node custom attributes
+ * @param driverData optional pointer to user data
+ */
+int SymbolDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+{
+}
+
+/*
+ * Check switch for wireless capabilities
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node custom attributes
+ * @param driverData optional pointer to user data
+ */
+virtual bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+{
+   return true;
+}
+
+/*
+ * Get access points
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node custom attributes
+ * @param driverData optional pointer to user data
+ */
+ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+{
+   return NULL;
+}
+
+/*
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node custom attributes
+ * @param driverData optional pointer to user data
+ */
+ObjectArray<WirelessStationInfo> *SymbolDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+{
+   return NULL;
+}
+
+/**
  * Driver entry point
  */
 DECLARE_NDD_ENTRY_POINT(s_driverName, SymbolDriver);
