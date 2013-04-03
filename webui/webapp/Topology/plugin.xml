@@ -24,6 +24,15 @@
                menubarPath="topology"
                style="push">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.ShowWirelessStations"
+               enablesFor="1"
+               icon="icons/wireless_stations.png"
+               id="org.netxms.ui.eclipse.topology.popupActions.WirelessStations"
+               label="Wireless Stations"
+               menubarPath="topology"
+               style="push">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
@@ -97,6 +106,15 @@
             icon="icons/vlanview.gif"
             id="org.netxms.ui.eclipse.topology.views.VlanView"
             name="VLAN View"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.topology.views.WirelessStations"
+            icon="icons/wireless_stations.png"
+            id="org.netxms.ui.eclipse.topology.views.WirelessStations"
+            name="Wireless Stations"
             restorable="true">
       </view>
    </extension>

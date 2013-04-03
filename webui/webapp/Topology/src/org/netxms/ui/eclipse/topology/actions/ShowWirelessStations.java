@@ -18,32 +18,23 @@
  */
 package org.netxms.ui.eclipse.topology.actions;
 
-import java.util.List;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.topology.VlanInfo;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.topology.Activator;
-import org.netxms.ui.eclipse.topology.views.VlanView;
+import org.netxms.ui.eclipse.topology.views.WirelessStations;
 
 /**
- * Show vlans configured on network device
+ * Show wireless stations registered on wireless network controller
  */
-public class ShowVlans implements IObjectActionDelegate
+public class ShowWirelessStations implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
 	private long objectId;
@@ -54,46 +45,13 @@ public class ShowVlans implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		IViewReference vr = window.getActivePage().findViewReference(VlanView.ID, Long.toString(objectId));
-		if (vr != null)
+		try
 		{
-			VlanView view = (VlanView)vr.getView(true);
-			if (view != null)
-			{
-				window.getActivePage().activate(view);
-			}
+			window.getActivePage().showView(WirelessStations.ID, Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE);
 		}
-		else
+		catch(PartInitException e)
 		{
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob("Reading VLAN list from node", null, Activator.PLUGIN_ID, null) {
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					final List<VlanInfo> vlans = session.getVlans(objectId);
-					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-						@Override
-						public void run()
-						{
-							try
-							{
-								VlanView view = (VlanView)window.getActivePage().showView(VlanView.ID, Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE);
-								view.setVlans(vlans);
-							}
-							catch(PartInitException e)
-							{
-								MessageDialogHelper.openError(window.getShell(), "Error", "Cannot open VLAN view: " + e.getLocalizedMessage());
-							}
-						}
-					});
-				}
-
-				@Override
-				protected String getErrorMessage()
-				{
-					return "Cannot get VLAN list from node";
-				}
-			}.start();
+			MessageDialogHelper.openError(window.getShell(), "Error", "Cannot open view: " + e.getLocalizedMessage());
 		}
 	}
 	
@@ -107,7 +65,7 @@ public class ShowVlans implements IObjectActionDelegate
 		    (((IStructuredSelection)selection).size() == 1))
 		{
 			Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if (obj instanceof AbstractNode)
+			if ((obj instanceof AbstractNode) && ((AbstractNode)obj).isWirelessController())
 			{
 				action.setEnabled(true);
 				objectId = ((AbstractObject)obj).getObjectId();

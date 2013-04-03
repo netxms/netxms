@@ -82,6 +82,8 @@ public class WirelessStations extends ViewPart
 		
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "WirelessStations");
 		viewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -100,6 +102,8 @@ public class WirelessStations extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction(this) {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void run()
 			{

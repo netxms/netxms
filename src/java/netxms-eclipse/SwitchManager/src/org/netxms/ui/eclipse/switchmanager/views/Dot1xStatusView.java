@@ -119,7 +119,7 @@ public class Dot1xStatusView extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction() {
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{

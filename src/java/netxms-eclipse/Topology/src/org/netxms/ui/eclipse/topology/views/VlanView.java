@@ -174,7 +174,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction() {
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{
