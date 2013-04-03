@@ -1,0 +1,4 @@
+-I../../include
+-I../../../../include
+-I../../../..
+-DPREFIX=/usr/local
