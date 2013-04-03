@@ -152,26 +152,26 @@ public:
  */
 class LIBNXSRV_EXPORTABLE NetworkDeviceDriver
 {
-  public:
-    NetworkDeviceDriver();
-    virtual ~NetworkDeviceDriver();
+public:
+   NetworkDeviceDriver();
+   virtual ~NetworkDeviceDriver();
 
-    virtual const TCHAR *getName();
-    virtual const TCHAR *getVersion();
+   virtual const TCHAR *getName();
+   virtual const TCHAR *getVersion();
 
-    virtual int isPotentialDevice(const TCHAR *oid);
-    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-    virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData);
-    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable);
-    virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
-    virtual int getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
-    virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int module, NDD_MODULE_LAYOUT *layout);
-    virtual void destroyDriverData(void *driverData);
-    virtual bool isPerVlanFdbSupported();
-    virtual int getClusterMode(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
-    virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
-    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
-    virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+   virtual int isPotentialDevice(const TCHAR *oid);
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData);
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable);
+   virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+   virtual int getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+   virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int module, NDD_MODULE_LAYOUT *layout);
+   virtual void destroyDriverData(void *driverData);
+   virtual bool isPerVlanFdbSupported();
+   virtual int getClusterMode(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+   virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
 };
 
 #endif   /* _nddrv_h_ */
