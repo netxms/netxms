@@ -1,10 +1,10 @@
-DRIVER = symbol-ws
+DRIVER = symbol_ws
 
-pkglib_LTLIBRARIES = symbol-ws.la
-symbol-ws_la_SOURCES = symbol-ws.cpp
-symbol-ws_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-symbol-ws_la_LDFLAGS = -module -avoid-version
-symbol-ws_la_LIBADD = ../../../libnetxms/libnetxms.la \
+pkglib_LTLIBRARIES = symbol_ws.la
+symbol_ws_la_SOURCES = symbol_ws.cpp
+symbol_ws_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+symbol_ws_la_LDFLAGS = -module -avoid-version
+symbol_ws_la_LIBADD = ../../../libnetxms/libnetxms.la \
 	../../../snmp/libnxsnmp/libnxsnmp.la \
 	../../libnxsrv/libnxsrv.la
 
