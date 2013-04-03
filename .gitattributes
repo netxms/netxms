@@ -346,6 +346,7 @@ doc/internal/netxms_architecture.png -text
 doc/internal/netxms_architecture.svg -text
 doc/internal/report_definition.docx -text
 doc/internal/sleak_debug.options -text
+doc/logo.png -text svneol=unset#unset
 doc/manuals/client_library.doc -text
 doc/manuals/netxms_install_guide.odt -text
 doc/manuals/netxms_solution_guide.doc -text
@@ -2287,6 +2288,7 @@ src/libtre/xmalloc.h -text
 src/nxinstall/nxinstall.vcproj -text
 src/nxlptest/nxlptest.vcproj -text
 src/nxscript/nxscript.vcproj -text
+src/server/core/.clang_complete -text
 src/server/core/cdp.cpp -text
 src/server/core/components.cpp -text
 src/server/core/fdb.cpp -text
