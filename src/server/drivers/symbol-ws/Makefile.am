@@ -1,7 +1,7 @@
 DRIVER = symbol_ws
 
 pkglib_LTLIBRARIES = symbol_ws.la
-symbol_ws_la_SOURCES = symbol_ws.cpp
+symbol_ws_la_SOURCES = symbol-ws.cpp
 symbol_ws_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 symbol_ws_la_LDFLAGS = -module -avoid-version
 symbol_ws_la_LIBADD = ../../../libnetxms/libnetxms.la \

@@ -113,7 +113,7 @@ int SymbolDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, vo
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-virtual bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
 {
    return true;
 }
