@@ -398,7 +398,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 		  _T("INSERT INTO nodes (primary_ip,primary_name,snmp_port,node_flags,snmp_version,community,status_poll_type,")
 		  _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
 		  _T("proxy_node,snmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
-		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,,rack_image,rack_position,rack_id,id) ")
+		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_id,id) ")
 		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
