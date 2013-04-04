@@ -207,13 +207,13 @@ static DWORD HandlerAccessPointListAdopted(DWORD version, SNMP_Variable *var, SN
    //ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &model, sizeof(model), 0);
 
    // get serial
-   if (ret == SNMP_ERR_SUCCESS);
+   if (ret == SNMP_ERR_SUCCESS)
    {
       oid[(sizeof(oid) / sizeof(oid[0])) - 2] = 4; // 1.3.6.1.4.1.388.14.3.2.1.9.2.1.4.x, wsCcRfApSerialNumber
       ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]),
             &serial, sizeof(serial) / sizeof(serial[0]), SG_STRING_RESULT);
    }
-   if (ret == SNMP_ERR_SUCCESS);
+   if (ret == SNMP_ERR_SUCCESS)
    {
       // get number of radios
       oid[(sizeof(oid) / sizeof(oid[0])) - 2] = 9; // 1.3.6.1.4.1.388.14.3.2.1.9.2.1.9.x, wsCcRfApNumRadios
@@ -222,13 +222,13 @@ static DWORD HandlerAccessPointListAdopted(DWORD version, SNMP_Variable *var, SN
 
    // load radios
    DWORD radioIndex[2] = { 0, 0 };
-   if (ret == SNMP_ERR_SUCCESS && numberOfRadios > 0);
+   if (ret == SNMP_ERR_SUCCESS && numberOfRadios > 0)
    {
       oid[(sizeof(oid) / sizeof(oid[0])) - 2] = 10; // 1.3.6.1.4.1.388.14.3.2.1.9.2.1.10.x, wsCcRfApRadio1
       ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]),
             &(radioIndex[0]), sizeof(radioIndex[0]), 0);
    }
-   if (ret == SNMP_ERR_SUCCESS && numberOfRadios > 1);
+   if (ret == SNMP_ERR_SUCCESS && numberOfRadios > 1)
    {
       oid[(sizeof(oid) / sizeof(oid[0])) - 2] = 11; // 1.3.6.1.4.1.388.14.3.2.1.9.2.1.11.x, wsCcRfApRadio2
       ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]),
@@ -274,7 +274,7 @@ static DWORD HandlerAccessPointListAdopted(DWORD version, SNMP_Variable *var, SN
       apList->add(info);
    }
 
-   for (int i = 0; (i < numberOfRadios) && (ret == SNMP_ERR_SUCCESS) && radioIndex[i] != 0; i++)
+   for (int i = 0; (i < (int)numberOfRadios) && (ret == SNMP_ERR_SUCCESS) && radioIndex[i] != 0; i++)
    {
       DWORD descOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 11, 5, 1, 3, 0 }; // wsCcRfRadioDescr
       DWORD macOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 11, 11, 1, 1, 0 }; // wsCcRfRadioStatusRadioMac

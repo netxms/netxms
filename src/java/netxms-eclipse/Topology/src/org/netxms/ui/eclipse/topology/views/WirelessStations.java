@@ -173,6 +173,6 @@ public class WirelessStations extends ViewPart
 			{
 				return "Cannot get list of wireless stations";
 			}
-		};
+		}.start();
 	}
 }

@@ -6247,7 +6247,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
 		List<WirelessStation> stations = new ArrayList<WirelessStation>(count);
 		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < count; i++)

@@ -23,11 +23,9 @@
 
 #include "libnxsnmp.h"
 
-
-//
-// SNMP_Variable default constructor
-//
-
+/**
+ * SNMP_Variable default constructor
+ */
 SNMP_Variable::SNMP_Variable()
 {
    m_pName = NULL;
@@ -36,11 +34,9 @@ SNMP_Variable::SNMP_Variable()
    m_dwValueLength = 0;
 }
 
-
-//
-// Create variable of ASN_NULL type
-//
-
+/**
+ * Create variable of ASN_NULL type
+ */
 SNMP_Variable::SNMP_Variable(const TCHAR *pszName)
 {
    DWORD dwLength, *pdwOid;
@@ -157,12 +153,10 @@ BOOL SNMP_Variable::Parse(BYTE *pData, DWORD dwVarLength)
    return bResult;
 }
 
-
-//
-// Get raw value
-// Returns actual data length
-//
-
+/**
+ * Get raw value
+ * Returns actual data length
+ */
 size_t SNMP_Variable::getRawValue(BYTE *buffer, size_t bufSize)
 {
 	size_t len = min(bufSize, (size_t)m_dwValueLength);
@@ -170,11 +164,9 @@ size_t SNMP_Variable::getRawValue(BYTE *buffer, size_t bufSize)
 	return len;
 }
 
-
-//
-// Get value as unsigned integer
-//
-
+/**
+ * Get value as unsigned integer
+ */
 DWORD SNMP_Variable::GetValueAsUInt()
 {
    DWORD dwValue;
@@ -200,11 +192,9 @@ DWORD SNMP_Variable::GetValueAsUInt()
    return dwValue;
 }
 
-
-//
-// Get value as signed integer
-//
-
+/**
+ * Get value as signed integer
+ */
 LONG SNMP_Variable::GetValueAsInt()
 {
    LONG iValue;

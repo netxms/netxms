@@ -4789,25 +4789,30 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 		{
 			ObjectArray<WirelessStationInfo> *stations = m_driver->getWirelessStations(snmp, &m_customAttributes, m_driverData);
 			delete snmp;
-
-			for(int i = 0; i < stations->size(); i++)
+			if (stations != NULL)
 			{
-				WirelessStationInfo *ws = stations->get(i);
-				
-				AccessPoint *ap = FindAccessPointByRadioId(ws->rfIndex);
-				if (ap != NULL)
-				{
-					ws->apObjectId = ap->Id();
-					ap->getRadioName(ws->rfIndex, ws->rfName, MAX_OBJECT_NAME);
-				}
-				else
-				{
-					ws->apObjectId = 0;
-					ws->rfName[0] = 0;
-				}
+				sendPollerMsg(dwRqId, _T("   %d wireless stations found\r\n"), stations->size());
+				DbgPrintf(6, _T("%d wireless stations found on controller node %s [%d]"), stations->size(), m_szName, m_dwId);
 
-				Node *node = FindNodeByMAC(ws->macAddr);
-				ws->nodeId = (node != NULL) ? node->Id() : 0;
+				for(int i = 0; i < stations->size(); i++)
+				{
+					WirelessStationInfo *ws = stations->get(i);
+					
+					AccessPoint *ap = FindAccessPointByRadioId(ws->rfIndex);
+					if (ap != NULL)
+					{
+						ws->apObjectId = ap->Id();
+						ap->getRadioName(ws->rfIndex, ws->rfName, MAX_OBJECT_NAME);
+					}
+					else
+					{
+						ws->apObjectId = 0;
+						ws->rfName[0] = 0;
+					}
+
+					Node *node = FindNodeByMAC(ws->macAddr);
+					ws->nodeId = (node != NULL) ? node->Id() : 0;
+				}
 			}
 
 			LockData();
