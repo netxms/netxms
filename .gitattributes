@@ -3030,6 +3030,7 @@ webui/webapp/NetworkMaps/icons/grid.png -text
 webui/webapp/NetworkMaps/icons/layer2.png -text
 webui/webapp/NetworkMaps/icons/link_add.png -text
 webui/webapp/NetworkMaps/icons/netmap.png -text
+webui/webapp/NetworkMaps/icons/objects/accesspoint.png -text
 webui/webapp/NetworkMaps/icons/objects/cluster.png -text
 webui/webapp/NetworkMaps/icons/objects/freebsdserver.png -text
 webui/webapp/NetworkMaps/icons/objects/linuxserver.png -text
