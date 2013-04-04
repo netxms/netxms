@@ -37,14 +37,15 @@ AccessPoint::AccessPoint() : DataCollectionTarget()
 /**
  * Constructor for creating new mobile device object
  */
-AccessPoint::AccessPoint(const TCHAR *name, BYTE *macAddr, DWORD nodeId) : DataCollectionTarget(name)
+AccessPoint::AccessPoint(const TCHAR *name, BYTE *macAddr) : DataCollectionTarget(name)
 {
-	m_nodeId = nodeId;
+	m_nodeId = 0;
 	memcpy(m_macAddr, macAddr, MAC_ADDR_LENGTH);
 	m_vendor = NULL;
 	m_model = NULL;
 	m_serialNumber = NULL;
 	m_radioInterfaces = NULL;
+	m_bIsHidden = TRUE;
 }
 
 /**
@@ -142,8 +143,8 @@ BOOL AccessPoint::SaveToDB(DB_HANDLE hdb)
 		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_vendor), DB_BIND_STATIC);
 		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_model), DB_BIND_STATIC);
 		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_serialNumber), DB_BIND_STATIC);
-		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_nodeId);
-		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_nodeId);
+		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_dwId);
 
 		bResult = DBExecute(hStmt);
 
@@ -261,5 +262,68 @@ void AccessPoint::updateRadioInterfaces(ObjectArray<RadioInterfaceInfo> *ri)
 		memcpy(info, ri->get(i), sizeof(RadioInterfaceInfo));
 		m_radioInterfaces->add(info);
 	}
+	UnlockData();
+}
+
+/**
+ * Check if given radio interface index (radio ID) is on this access point
+ */
+bool AccessPoint::isMyRadio(int rfIndex)
+{
+	bool result = false;
+	LockData();
+	if (m_radioInterfaces != NULL)
+	{
+		for(int i = 0; i < m_radioInterfaces->size(); i++)
+		{
+			if (m_radioInterfaces->get(i)->index == rfIndex)
+			{
+				result = true;
+				break;
+			}
+		}
+	}
+	UnlockData();
+	return result;
+}
+
+/**
+ * Get radio name
+ */
+void AccessPoint::getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize)
+{
+	buffer[0] = 0;
+	LockData();
+	if (m_radioInterfaces != NULL)
+	{
+		for(int i = 0; i < m_radioInterfaces->size(); i++)
+		{
+			if (m_radioInterfaces->get(i)->index == rfIndex)
+			{
+				nx_strncpy(buffer, m_radioInterfaces->get(i)->name, bufSize);
+				break;
+			}
+		}
+	}
+	UnlockData();
+}
+
+/**
+ * Update access point information
+ */
+void AccessPoint::updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber)
+{
+	LockData();
+
+	safe_free(m_vendor);
+	m_vendor = (vendor != NULL) ? _tcsdup(vendor) : NULL;
+
+	safe_free(m_model);
+	m_model = (model != NULL) ? _tcsdup(model) : NULL;
+
+	safe_free(m_serialNumber);
+	m_serialNumber = (serialNumber != NULL) ? _tcsdup(serialNumber) : NULL;
+
+	Modify();
 	UnlockData();
 }

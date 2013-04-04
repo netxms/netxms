@@ -596,6 +596,24 @@ AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr)
 }
 
 /**
+ * Access point radio ID comparator
+ */
+static bool AccessPointRfIndexComparator(NetObj *object, void *rfIndex)
+{
+	return (object->Type() == OBJECT_ACCESSPOINT) && 
+		!object->isDeleted() && 
+		((AccessPoint *)object)->isMyRadio(CAST_FROM_POINTER(rfIndex, int));
+}
+
+/**
+ * Find access point by radio ID (radio interface index)
+ */
+AccessPoint NXCORE_EXPORTABLE *FindAccessPointByRadioId(int rfIndex)
+{
+	return (AccessPoint *)g_idxAccessPointById.find(AccessPointRfIndexComparator, CAST_TO_POINTER(rfIndex, void *));
+}
+
+/**
  * Mobile device id comparator
  */
 static bool DeviceIdComparator(NetObj *object, void *deviceId)

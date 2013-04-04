@@ -63,10 +63,10 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isManagementServer()))
 		{
 			list.add(new AgentParameter("Server.AverageConfigurationPollerQueueSize", Messages.SelectInternalParamDlg_DCI_AvgConfPollerQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-			list.add(new AgentParameter("AverageDBWriterQueueSize", Messages.SelectInternalParamDlg_DCI_AvgDBWriterQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-			list.add(new AgentParameter("AverageDCIQueuingTime", Messages.SelectInternalParamDlg_DCI_AvgDCIQueueTime, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
-			list.add(new AgentParameter("AverageDCPollerQueueSize", Messages.SelectInternalParamDlg_DCI_AvgDCQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-			list.add(new AgentParameter("AverageStatusPollerQueueSize", Messages.SelectInternalParamDlg_DCI_AvgStatusPollerQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+			list.add(new AgentParameter("Server.AverageDBWriterQueueSize", Messages.SelectInternalParamDlg_DCI_AvgDBWriterQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+			list.add(new AgentParameter("Server.AverageDCIQueuingTime", Messages.SelectInternalParamDlg_DCI_AvgDCIQueueTime, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
+			list.add(new AgentParameter("Server.AverageDCPollerQueueSize", Messages.SelectInternalParamDlg_DCI_AvgDCQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+			list.add(new AgentParameter("Server.AverageStatusPollerQueueSize", Messages.SelectInternalParamDlg_DCI_AvgStatusPollerQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
 		}
 
 		if ((object instanceof Template) || (object instanceof MobileDevice))
@@ -82,6 +82,13 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 			list.add(new AgentParameter("MobileDevice.UserId", Messages.SelectInternalParamDlg_DCI_UserID, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
 		}
 		
+		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isWirelessController()))
+		{
+			list.add(new AgentParameter("WirelessController.AdoptedAPCount", "Adopted access points", DataCollectionItem.DT_INT)); //$NON-NLS-1$
+			list.add(new AgentParameter("WirelessController.TotalAPCount", "Total access points", DataCollectionItem.DT_INT)); //$NON-NLS-1$
+			list.add(new AgentParameter("WirelessController.UnadoptedAPCount", "Unadopted access points", DataCollectionItem.DT_INT)); //$NON-NLS-1$
+		}
+
 		viewer.setInput(list.toArray());
 	}
 

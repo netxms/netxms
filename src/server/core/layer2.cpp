@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,6 +27,9 @@
  */
 void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth, bool includeEndNodes)
 {
+	if (topology.isObjectExist(root->Id()))
+		return;  // loop in object connections
+
 	topology.addObject(root->Id());
 
 	LinkLayerNeighbors *nbs = root->getLinkLayerNeighbors();

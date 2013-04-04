@@ -633,11 +633,9 @@ int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose)
 
 #endif
 
-
-//
-// Check if given name is a valid object name
-//
-
+/**
+ * Check if given name is a valid object name
+ */
 BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars)
 {
    static TCHAR szValidCharacters[] = _T("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- @()./");
@@ -650,11 +648,9 @@ BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtended
    return (pszName[0] != 0) && (bExtendedChars ? (_tcscspn(pszName, szInvalidCharacters) == _tcslen(pszName)) : (_tcsspn(pszName, szValidCharacters) == _tcslen(pszName)));
 }
 
-
-//
-// Check if given name is a valid script name
-//
-
+/**
+ * Check if given name is a valid script name
+ */
 BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName)
 {
    static TCHAR szValidCharacters[] = _T("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_:");
@@ -662,11 +658,9 @@ BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName)
           (_tcsspn(pszName, szValidCharacters) == _tcslen(pszName));
 }
 
-
-//
-// Convert 6-byte MAC address to text representation
-//
-
+/**
+ * Convert 6-byte MAC address to text representation
+ */
 TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr)
 {
    DWORD i;

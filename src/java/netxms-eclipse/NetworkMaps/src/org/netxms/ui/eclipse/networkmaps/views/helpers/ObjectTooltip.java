@@ -32,6 +32,7 @@ import org.netxms.client.MacAddress;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
@@ -92,6 +93,25 @@ public class ObjectTooltip extends Figure
 		
 		if (object instanceof Container)
 			addStatusChart(object, labelProvider);
+		
+		if (object instanceof AccessPoint)
+		{
+			StringBuilder sb = new StringBuilder(((AccessPoint)object).getModel());
+			MacAddress mac = ((AccessPoint)object).getMacAddress();
+			if (mac != null)
+			{
+				sb.append('\n');
+				sb.append(mac.toString());
+			}
+			
+			Label info = new Label();
+			info.setText(sb.toString());
+			add(info);
+			
+			gd = new GridData();
+			gd.horizontalSpan = 2;
+			setConstraint(info, gd);
+		}
 		
 		if (!object.getComments().isEmpty())
 		{

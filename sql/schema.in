@@ -220,7 +220,7 @@ CREATE TABLE access_points
 (
 	id integer not null,
 	node_id integer not null,
-	mac_address varchar(6) null,
+	mac_address varchar(12) null,
 	vendor varchar(64) null,
 	model varchar(128) null,
 	serial_number varchar(64) null,
@@ -368,7 +368,7 @@ CREATE TABLE interfaces
 	phy_port integer not null,
 	peer_node_id integer not null,
 	peer_if_id integer not null,
-	mac_addr varchar(15) not null,
+	mac_addr varchar(12) not null,
 	required_polls integer not null,
 	admin_state integer not null,
 	oper_state integer not null,

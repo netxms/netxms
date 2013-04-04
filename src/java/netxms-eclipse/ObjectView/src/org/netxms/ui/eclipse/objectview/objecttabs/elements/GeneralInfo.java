@@ -24,6 +24,7 @@ import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.NodeLink;
@@ -122,6 +123,13 @@ public class GeneralInfo extends TableElement
 				addPair("User", md.getUserId(), false);
 				if (md.getBatteryLevel() >= 0)
 					addPair("Battery Level", Integer.toString(md.getBatteryLevel()) + "%");
+				break;
+			case AbstractObject.OBJECT_ACCESSPOINT:
+				AccessPoint ap = (AccessPoint)object;
+				addPair("Vendor", ap.getVendor());
+				addPair("Model", ap.getModel());
+				addPair("Serial Number", ap.getSerialNumber());
+				addPair("MAC Address", ap.getMacAddress().toString());
 				break;
 			case AbstractObject.OBJECT_SUBNET:
 				Subnet subnet = (Subnet)object;

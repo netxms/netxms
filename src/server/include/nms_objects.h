@@ -841,7 +841,7 @@ protected:
 
 public:
    AccessPoint();
-   AccessPoint(const TCHAR *name, BYTE *macAddr, DWORD nodeId);
+   AccessPoint(const TCHAR *name, BYTE *macAddr);
    virtual ~AccessPoint();
 
    virtual int Type() { return OBJECT_ACCESSPOINT; }
@@ -854,9 +854,12 @@ public:
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	BYTE *getMacAddr() { return m_macAddr; }
+	bool isMyRadio(int rfIndex);
+	void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
 
 	void attachToNode(DWORD nodeId);
 	void updateRadioInterfaces(ObjectArray<RadioInterfaceInfo> *ri);
+	void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
 };
 
 /**
@@ -917,6 +920,8 @@ protected:
 	VlanList *m_vlans;
 	VrrpInfo *m_vrrpInfo;
 	ObjectArray<WirelessStationInfo> *m_wirelessStations;
+	int m_adoptedApCount;
+	int m_totalApCount;
 	BYTE m_baseBridgeAddress[MAC_ADDR_LENGTH];	// Bridge base address (dot1dBaseBridgeAddress in bridge MIB)
 	nxmap_ObjList *m_pTopology;
 	time_t m_topologyRebuildTimestamp;
@@ -2034,6 +2039,7 @@ Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD zoneId, DWORD ipAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD zoneId, DWORD dwNodeAddr);
 MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId);
 AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr);
+AccessPoint NXCORE_EXPORTABLE *FindAccessPointByRadioId(int rfIndex);
 DWORD NXCORE_EXPORTABLE FindLocalMgmtNode();
 CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(DWORD dwId);
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID);

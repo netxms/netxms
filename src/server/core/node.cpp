@@ -91,6 +91,8 @@ Node::Node() : DataCollectionTarget()
 	m_fdb = NULL;
 	m_vlans = NULL;
 	m_wirelessStations = NULL;
+	m_adoptedApCount = 0;
+	m_totalApCount = 0;
 	m_driver = NULL;
 	m_driverData = NULL;
 	m_components = NULL;
@@ -162,6 +164,8 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_fdb = NULL;
 	m_vlans = NULL;
 	m_wirelessStations = NULL;
+	m_adoptedApCount = 0;
+	m_totalApCount = 0;
 	m_driver = NULL;
 	m_driverData = NULL;
 	m_components = NULL;
@@ -386,7 +390,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
          _T("status_poll_type=?,agent_port=?,auth_method=?,secret=?,snmp_oid=?,uname=?,agent_version=?,")
 			_T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,required_polls=?,")
 			_T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
-			_T("runtime_flags=?,down_since=?,driver_name=? WHERE id=?"));
+			_T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_id=? WHERE id=?"));
 	}
    else
 	{
@@ -394,8 +398,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 		  _T("INSERT INTO nodes (primary_ip,primary_name,snmp_port,node_flags,snmp_version,community,status_poll_type,")
 		  _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
 		  _T("proxy_node,snmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
-		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,id) ")
-		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,,rack_image,rack_position,rack_id,id) ")
+		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -442,7 +446,10 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 26, DB_SQLTYPE_INTEGER, m_dwDynamicFlags);
 	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (LONG)m_tDownSince);
 	DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, (m_driver != NULL) ? m_driver->getName() : _T(""), DB_BIND_STATIC);
-	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, _T("00000000-0000-0000-0000-000000000000"), DB_BIND_STATIC);	// rack image
+	DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, (LONG)0);	// rack position
+	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)0);	// rack ID
+	DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_dwId);
 
 	BOOL bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -2208,9 +2215,14 @@ bool Node::confPollSnmp(DWORD dwRqId)
 			{
 				sendPollerMsg(dwRqId, POLLER_INFO _T("   %d wireless access points found\r\n"), aps->size());
 				DbgPrintf(5, _T("ConfPoll(%s): got information about %d access points"), m_szName, aps->size());
+				int adopted = 0;
 				for(int i = 0; i < aps->size(); i++)
 				{
 					AccessPointInfo *info = aps->get(i);
+					if (info->getState() != AP_ADOPTED)
+						continue;
+
+					adopted++;
 					AccessPoint *ap = FindAccessPointByMAC(info->getMacAddr());
 					if (ap == NULL)
 					{
@@ -2222,11 +2234,21 @@ bool Node::confPollSnmp(DWORD dwRqId)
 								name += _T("/");
 							name += info->getRadioInterfaces()->get(j)->name;
 						}
-						ap = new AccessPoint((const TCHAR *)name, info->getMacAddr(), m_dwId);
+						ap = new AccessPoint((const TCHAR *)name, info->getMacAddr());
+						NetObjInsert(ap, TRUE);
+						DbgPrintf(5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_szName, ap->Name(), ap->Id());
 					}
 					ap->attachToNode(m_dwId);
 					ap->updateRadioInterfaces(info->getRadioInterfaces());
+					ap->updateInfo(NULL, info->getModel(), info->getSerial());
+					ap->unhide();
 				}
+
+				LockData();
+				m_adoptedApCount = adopted;
+				m_totalApCount = aps->size();
+				UnlockData();
+
 				delete aps;
 			}
 			else
@@ -3270,6 +3292,39 @@ DWORD Node::getInternalItem(const TCHAR *param, DWORD bufSize, TCHAR *buffer)
       {
          buffer[0] = (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ? _T('1') : _T('0');
          buffer[1] = 0;
+      }
+      else
+      {
+         rc = DCE_NOT_SUPPORTED;
+      }
+   }
+   else if (!_tcsicmp(param, _T("WirelessController.AdoptedAPCount")))
+   {
+      if (m_dwFlags & NF_IS_WIFI_CONTROLLER)
+      {
+			_sntprintf(buffer, bufSize, _T("%d"), m_adoptedApCount);
+      }
+      else
+      {
+         rc = DCE_NOT_SUPPORTED;
+      }
+   }
+   else if (!_tcsicmp(param, _T("WirelessController.TotalAPCount")))
+   {
+      if (m_dwFlags & NF_IS_WIFI_CONTROLLER)
+      {
+			_sntprintf(buffer, bufSize, _T("%d"), m_totalApCount);
+      }
+      else
+      {
+         rc = DCE_NOT_SUPPORTED;
+      }
+   }
+   else if (!_tcsicmp(param, _T("WirelessController.UnadoptedAPCount")))
+   {
+      if (m_dwFlags & NF_IS_WIFI_CONTROLLER)
+      {
+			_sntprintf(buffer, bufSize, _T("%d"), m_totalApCount - m_adoptedApCount);
       }
       else
       {
@@ -4726,16 +4781,38 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	   sendPollerMsg(dwRqId, POLLER_ERROR _T("Link layer topology retrieved\r\n"));
 	}
 
+	// Read list of associated wireless stations
 	if ((m_driver != NULL) && (m_dwFlags & NF_IS_WIFI_CONTROLLER))
 	{
 		SNMP_Transport *snmp = createSnmpTransport();
 		if (snmp != NULL)
 		{
-			ObjectArray<WirelessStationInfo> *ws = m_driver->getWirelessStations(snmp, &m_customAttributes, m_driverData);
+			ObjectArray<WirelessStationInfo> *stations = m_driver->getWirelessStations(snmp, &m_customAttributes, m_driverData);
 			delete snmp;
+
+			for(int i = 0; i < stations->size(); i++)
+			{
+				WirelessStationInfo *ws = stations->get(i);
+				
+				AccessPoint *ap = FindAccessPointByRadioId(ws->rfIndex);
+				if (ap != NULL)
+				{
+					ws->apObjectId = ap->Id();
+					ap->getRadioName(ws->rfIndex, ws->rfName, MAX_OBJECT_NAME);
+				}
+				else
+				{
+					ws->apObjectId = 0;
+					ws->rfName[0] = 0;
+				}
+
+				Node *node = FindNodeByMAC(ws->macAddr);
+				ws->nodeId = (node != NULL) ? node->Id() : 0;
+			}
+
 			LockData();
 			delete m_wirelessStations;
-			m_wirelessStations = ws;
+			m_wirelessStations = stations;
 			UnlockData();
 		}
 	}

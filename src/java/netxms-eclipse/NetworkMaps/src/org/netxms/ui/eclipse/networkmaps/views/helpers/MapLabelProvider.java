@@ -85,6 +85,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Image imgSubnet;
 	private Image imgService;
 	private Image imgCluster;
+	private Image imgAccessPoint;
 	private Image imgOther;
 	private Image imgUnknown;
 	private Image imgResCluster;
@@ -128,6 +129,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgSubnet = Activator.getImageDescriptor("icons/objects/subnet.png").createImage();
 		imgService = Activator.getImageDescriptor("icons/objects/service.png").createImage();
 		imgCluster = Activator.getImageDescriptor("icons/objects/cluster.png").createImage();
+		imgAccessPoint = Activator.getImageDescriptor("icons/objects/accesspoint.png").createImage();
 		imgOther = Activator.getImageDescriptor("icons/objects/other.png").createImage();
 		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage();
 		imgResCluster = Activator.getImageDescriptor("icons/resources/cluster_res.png").createImage();
@@ -207,6 +209,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 						return imgService;
 					case AbstractObject.OBJECT_CLUSTER:
 						return imgCluster;
+					case AbstractObject.OBJECT_ACCESSPOINT:
+						return imgAccessPoint;
 					default:
 						return imgOther;
 				}
@@ -298,6 +302,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgSubnet.dispose();
 		imgService.dispose();
 		imgCluster.dispose();
+		imgAccessPoint.dispose();
 		imgOther.dispose();
 		imgUnknown.dispose();
 		

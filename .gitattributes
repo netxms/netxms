@@ -1489,6 +1489,7 @@ src/java/netxms-eclipse/NetworkMaps/icons/grid.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/layer2.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/link_add.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/netmap.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/objects/accesspoint.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/cluster.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/freebsdserver.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/linuxserver.png -text
