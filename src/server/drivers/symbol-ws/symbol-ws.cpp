@@ -356,19 +356,25 @@ static DWORD HandlerWirelessStationList(DWORD version, SNMP_Variable *var, SNMP_
    DWORD ipAddr;
    oid[14] = 6; // wsCcRfMuIpAddr
    ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &ipAddr, sizeof(ipAddr), 0);
+   DWORD vlanInfex;
    if (ret == SNMP_ERR_SUCCESS)
    {
+      oid[14] = 4; // wsCcRfMuVlanIndex
+      ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &vlanInfex, sizeof(vlanInfex), 0);
    }
-
-   DWORD vlanInfex;
-   oid[14] = 4; // wsCcRfMuVlanIndex
-   ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &vlanInfex, sizeof(vlanInfex), 0);
 
    DWORD wlanInfex;
    if (ret == SNMP_ERR_SUCCESS)
    {
       oid[14] = 2; // wsCcRfMuWlanIndex
       ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &wlanInfex, sizeof(vlanInfex), 0);
+   }
+
+   DWORD rfIndex;
+   if (ret == SNMP_ERR_SUCCESS)
+   {
+      oid[14] = 3; // wsCcRfMuRadioIndex
+      ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &rfIndex, sizeof(rfIndex), 0);
    }
 
    TCHAR ssid[MAX_OBJECT_NAME];
@@ -388,6 +394,7 @@ static DWORD HandlerWirelessStationList(DWORD version, SNMP_Variable *var, SNMP_
       info->ipAddr = ipAddr;
       info->vlan = vlanInfex;
       nx_strncpy(info->ssid, ssid, MAX_OBJECT_NAME);
+      info->rfIndex = rfIndex;
 
       wsList->add(info);
    }
