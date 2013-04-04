@@ -77,23 +77,6 @@ void SymbolDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringM
 {
 }
 
-/**
- * Get list of interfaces for given node
- *
- * @param snmp SNMP transport
- * @param attributes Node's custom attributes
- */
-InterfaceList *SymbolDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
-{
-   // Get interface list from standard MIB
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
-   if (ifList == NULL)
-   {
-      return NULL;
-   }
-
-   return ifList;
-}
 
 /**
  * Get cluster mode for device (standalone / active / standby)
@@ -104,7 +87,40 @@ InterfaceList *SymbolDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attr
  */
 int SymbolDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
 {
+   int ret = CLUSTER_MODE_UNKNOWN;
+
+#define _GET(oid) \
+   SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &value, sizeof(DWORD), 0)
+
+   DWORD value = 0;
+   if (_GET(_T(".1.3.6.1.4.1.388.14.1.8.1.2.0")) == SNMP_ERR_SUCCESS)
+   {
+      if (value == 1)
+      {
+         if (_GET(_T(".1.3.6.1.4.1.388.14.1.8.1.2.0")) == SNMP_ERR_SUCCESS)
+         {
+            if (value == 1)
+            {
+               ret = CLUSTER_MODE_ACTIVE;
+            }
+            else if (value == 2)
+            {
+               ret = CLUSTER_MODE_STANDBY;
+            }
+
+         }
+         // enabled
+      }
+      else
+      {
+         ret = CLUSTER_MODE_STANDALONE;
+      }
+   }
+#undef _GET
+
+   return ret;
 }
+
 
 /*
  * Check switch for wireless capabilities
@@ -118,6 +134,60 @@ bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attribu
    return true;
 }
 
+
+/**
+ * Handler for access point enumeration
+ */
+static DWORD HandlerAccessPointList(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
+
+   SNMP_ObjectId *name = var->GetName();
+   DWORD nameLen = name->getLength();
+   DWORD apIndex = name->getValue()[nameLen - 1];
+   bool adopted = name->getValue()[12] == 2; // 2 == adopted, 4 == unadopted
+
+   if (!adopted)
+   {
+      DWORD oid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 9, 4, 1, 3, 0 };
+      oid[15] = apIndex;
+      DWORD type;
+      if (SnmpGet(version, transport, NULL, oid, 16, &type, sizeof(DWORD), 0) != SNMP_ERR_SUCCESS)
+      {
+         type = -1;
+      }
+
+      const TCHAR *model;
+      switch (type)
+      {
+         case 1:
+            model = _T("AP100");
+            break;
+         case 2:
+            model = _T("AP200");
+            break;
+         case 3:
+            model = _T("AP300");
+            break;
+         case 4:
+            model = _T("AP4131");
+            break;
+         default:
+            model = _T("UNKNOWN");
+            break;
+      }
+
+      AccessPointInfo *info = new AccessPointInfo((BYTE *)var->GetValue(), AP_UNADOPTED, model, NULL);
+      apList->add(info);
+   }
+   else
+   {
+   }
+
+   return SNMP_ERR_SUCCESS;
+}
+
+
 /*
  * Get access points
  *
@@ -127,7 +197,23 @@ bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attribu
  */
 ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
 {
-   return new ObjectArray(0, 16, true);
+   ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
+
+   // Adopted
+   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.9.2.1.2"), HandlerAccessPointList, apList, FALSE) != SNMP_ERR_SUCCESS)
+   {
+      delete apList;
+      apList = NULL;
+   }
+
+   // Unadopted
+   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.9.4.1.2"), HandlerAccessPointList, apList, FALSE) != SNMP_ERR_SUCCESS)
+   {
+      delete apList;
+      apList = NULL;
+   }
+
+   return apList;
 }
 
 /*
@@ -138,7 +224,9 @@ ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp
  */
 ObjectArray<WirelessStationInfo> *SymbolDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
 {
-   return new ObjectArray(0, 16, true);
+   ObjectArray<WirelessStationInfo> *ret = new ObjectArray<WirelessStationInfo>(0, 16, true);
+
+   return ret;
 }
 
 /**

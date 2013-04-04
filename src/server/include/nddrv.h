@@ -83,9 +83,20 @@ enum
  */
 enum
 {
+   CLUSTER_MODE_UNKNOWN = -1,
    CLUSTER_MODE_STANDALONE = 0,
    CLUSTER_MODE_ACTIVE = 1,
    CLUSTER_MODE_STANDBY = 2
+};
+
+
+/**
+ * Access point state
+ */
+enum
+{
+   AP_ADOPTED = 0,
+   AP_UNADOPTED = 1
 };
 
 /**

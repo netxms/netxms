@@ -39,7 +39,6 @@ public:
    virtual int isPotentialDevice(const TCHAR *oid);
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
    virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData);
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable);
    virtual int getClusterMode(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
    virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
