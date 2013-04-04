@@ -50,7 +50,7 @@ AccessPointInfo::~AccessPointInfo()
 void AccessPointInfo::addRadioInterface(RadioInterfaceInfo *iface)
 {
 	RadioInterfaceInfo *r = new RadioInterfaceInfo;
-	memcpy(&r, iface, sizeof(RadioInterfaceInfo));
+	memcpy(r, iface, sizeof(RadioInterfaceInfo));
 	m_radioInterfaces->add(r);
 }
 
