@@ -33,7 +33,7 @@ static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
  */
 const TCHAR *SymbolDriver::getName()
 {
-  return s_driverName;
+   return s_driverName;
 }
 
 /**
@@ -41,7 +41,7 @@ const TCHAR *SymbolDriver::getName()
  */
 const TCHAR *SymbolDriver::getVersion()
 {
-  return s_driverVersion;
+   return s_driverVersion;
 }
 
 /**
@@ -51,7 +51,7 @@ const TCHAR *SymbolDriver::getVersion()
  */
 int SymbolDriver::isPotentialDevice(const TCHAR *oid)
 {
-  return (_tcsncmp(oid, _T(".1.3.6.1.4.1.388.14."), 20) == 0) ? 127 : 0;
+   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.388.14."), 20) == 0) ? 127 : 0;
 }
 
 /**
@@ -62,7 +62,7 @@ int SymbolDriver::isPotentialDevice(const TCHAR *oid)
  */
 bool SymbolDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
-  return true;
+   return true;
 }
 
 /**
@@ -85,14 +85,14 @@ void SymbolDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringM
  */
 InterfaceList *SymbolDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
 {
-  // Get interface list from standard MIB
-  InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
-  if (ifList == NULL)
-  {
-    return NULL;
-  }
+   // Get interface list from standard MIB
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
+   if (ifList == NULL)
+   {
+      return NULL;
+   }
 
-  return ifList;
+   return ifList;
 }
 
 /**
@@ -127,7 +127,7 @@ bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attribu
  */
 ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
 {
-   return NULL;
+   return new ObjectArray(0, 16, true);
 }
 
 /*
@@ -138,7 +138,7 @@ ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp
  */
 ObjectArray<WirelessStationInfo> *SymbolDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
 {
-   return NULL;
+   return new ObjectArray(0, 16, true);
 }
 
 /**
@@ -153,12 +153,12 @@ DECLARE_NDD_ENTRY_POINT(s_driverName, SymbolDriver);
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-  if (dwReason == DLL_PROCESS_ATTACH)
-  {
-    DisableThreadLibraryCalls(hInstance);
-  }
+   if (dwReason == DLL_PROCESS_ATTACH)
+   {
+      DisableThreadLibraryCalls(hInstance);
+   }
 
-  return TRUE;
+   return TRUE;
 }
 
 #endif
