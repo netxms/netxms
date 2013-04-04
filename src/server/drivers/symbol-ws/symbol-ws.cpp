@@ -97,7 +97,7 @@ int SymbolDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, vo
    {
       if (value == 1)
       {
-         if (_GET(_T(".1.3.6.1.4.1.388.14.1.8.1.2.0")) == SNMP_ERR_SUCCESS)
+         if (_GET(_T(".1.3.6.1.4.1.388.14.1.8.1.3.0")) == SNMP_ERR_SUCCESS)
          {
             if (value == 1)
             {
@@ -136,28 +136,113 @@ bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attribu
 
 
 /**
- * Handler for access point enumeration
+ * Handler for access point enumeration - unadopted
  */
-static DWORD HandlerAccessPointList(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static DWORD HandlerAccessPointListUnadopted(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
    SNMP_ObjectId *name = var->GetName();
    DWORD nameLen = name->getLength();
    DWORD apIndex = name->getValue()[nameLen - 1];
-   bool adopted = name->getValue()[12] == 2; // 2 == adopted, 4 == unadopted
 
-   if (!adopted)
+   DWORD oid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 9, 4, 1, 3, 0 };
+   oid[(sizeof(oid) / sizeof(oid[0])) - 1] = apIndex;
+   DWORD type;
+   if (SnmpGet(version, transport, NULL, oid, 16, &type, sizeof(DWORD), 0) != SNMP_ERR_SUCCESS)
    {
-      DWORD oid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 9, 4, 1, 3, 0 };
-      oid[15] = apIndex;
-      DWORD type;
-      if (SnmpGet(version, transport, NULL, oid, 16, &type, sizeof(DWORD), 0) != SNMP_ERR_SUCCESS)
-      {
-         type = -1;
-      }
+      type = -1;
+   }
 
-      const TCHAR *model;
+   const TCHAR *model;
+   switch (type)
+   {
+      case 1:
+         model = _T("AP100");
+         break;
+      case 2:
+         model = _T("AP200");
+         break;
+      case 3:
+         model = _T("AP300");
+         break;
+      case 4:
+         model = _T("AP4131");
+         break;
+      default:
+         model = _T("UNKNOWN");
+         break;
+   }
+
+   AccessPointInfo *info = new AccessPointInfo((BYTE *)var->GetValue(), AP_UNADOPTED, model, NULL);
+   apList->add(info);
+
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Handler for access point enumeration - adopted
+ */
+static DWORD HandlerAccessPointListAdopted(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   int ret = SNMP_ERR_SUCCESS;
+
+   ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
+
+   SNMP_ObjectId *name = var->GetName();
+   DWORD nameLen = name->getLength();
+   DWORD apIndex = name->getValue()[nameLen - 1];
+
+   DWORD numberOfRadios;
+   TCHAR serial[128];
+
+   DWORD oid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 9, 2, 1, 3, 0 }; // wsCcRfApModelNumber
+   oid[(sizeof(oid) / sizeof(oid[0])) - 1] = apIndex;
+
+   const TCHAR *model;
+   //TCHAR model[128];
+   // TODO: model=AP300, PN=WSAP-5100-050-WWR. Unadopted return only model, adopted return PN as model
+   //       and model (AP300). Need to decide, where to put this info.
+   // get AP model
+   //ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &model, sizeof(model), 0);
+
+   // get serial
+   if (ret == SNMP_ERR_SUCCESS);
+   {
+      oid[(sizeof(oid) / sizeof(oid[0])) - 2] = 4; // 1.3.6.1.4.1.388.14.3.2.1.9.2.1.4.x, wsCcRfApSerialNumber
+      ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &serial, sizeof(serial), 0);
+   }
+   if (ret == SNMP_ERR_SUCCESS);
+   {
+      // get number of radios
+      oid[(sizeof(oid) / sizeof(oid[0])) - 2] = 9; // 1.3.6.1.4.1.388.14.3.2.1.9.2.1.9.x, wsCcRfApNumRadios
+      ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &numberOfRadios, sizeof(numberOfRadios), 0);
+   }
+
+   // load radios
+   DWORD radioIndex[2] = { 0, 0 };
+   if (ret == SNMP_ERR_SUCCESS && numberOfRadios > 0);
+   {
+      oid[(sizeof(oid) / sizeof(oid[0])) - 2] = 10; // 1.3.6.1.4.1.388.14.3.2.1.9.2.1.10.x, wsCcRfApRadio1
+      ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &(radioIndex[0]), sizeof(radioIndex[0]), 0);
+   }
+   if (ret == SNMP_ERR_SUCCESS && numberOfRadios > 1);
+   {
+      oid[(sizeof(oid) / sizeof(oid[0])) - 2] = 11; // 1.3.6.1.4.1.388.14.3.2.1.9.2.1.11.x, wsCcRfApRadio2
+      ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &(radioIndex[1]), sizeof(radioIndex[0]), 0);
+   }
+
+   // get AP model
+   DWORD radioOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 11,5, 1, 5, 0 }; // wsCcRfRadioApType
+   DWORD type;
+   if (ret == SNMP_ERR_SUCCESS)
+   {
+      radioOid[(sizeof(radioOid) / sizeof(radioOid[0])) - 1] = radioIndex[0];
+      ret = SnmpGet(version, transport, NULL, radioOid, sizeof(radioOid) / sizeof(radioOid[0]), &type, sizeof(type), 0);
+   }
+
+   if (ret == SNMP_ERR_SUCCESS)
+   {
       switch (type)
       {
          case 1:
@@ -176,15 +261,46 @@ static DWORD HandlerAccessPointList(DWORD version, SNMP_Variable *var, SNMP_Tran
             model = _T("UNKNOWN");
             break;
       }
+   }
 
-      AccessPointInfo *info = new AccessPointInfo((BYTE *)var->GetValue(), AP_UNADOPTED, model, NULL);
+   AccessPointInfo *info;
+   if (ret == SNMP_ERR_SUCCESS)
+   {
+      info = new AccessPointInfo((BYTE *)var->GetValue(), AP_ADOPTED, model, serial);
       apList->add(info);
    }
-   else
+
+   for (int i = 0; (i < numberOfRadios) && (ret == SNMP_ERR_SUCCESS) && radioIndex[i] != 0; i++)
    {
+      DWORD descOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 11, 5, 1, 3, 0 }; // wsCcRfRadioDescr
+      DWORD macOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 11, 11, 1, 1, 0 }; // wsCcRfRadioStatusRadioMac
+      descOid[(sizeof(descOid) / sizeof(descOid[0])) - 1] = radioIndex[i];
+      macOid[(sizeof(macOid) / sizeof(macOid[0])) - 1] = radioIndex[i];
+
+      RadioInterfaceInfo *radioInfo = new RadioInterfaceInfo;
+      radioInfo->index = radioIndex[i];
+      if (ret == SNMP_ERR_SUCCESS)
+      {
+         ret = SnmpGet(version, transport, NULL, macOid, sizeof(macOid) / sizeof(macOid[0]),
+               &radioInfo->macAddr, MAC_ADDR_LENGTH, 0);
+      }
+      if (ret == SNMP_ERR_SUCCESS)
+      {
+         ret = SnmpGet(version, transport, NULL, descOid, sizeof(descOid) / sizeof(descOid[0]),
+               &radioInfo->name, sizeof(radioInfo->name), 0);
+      }
+      if (ret == SNMP_ERR_SUCCESS)
+      {
+         info->addRadioInterface(radioInfo);
+      }
+      else
+      {
+         delete radioInfo;
+      }
    }
 
-   return SNMP_ERR_SUCCESS;
+   //printf("%d\n", ret);
+   return ret;
 }
 
 /*
@@ -199,14 +315,15 @@ ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
 
    // Adopted
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.9.2.1.2"), HandlerAccessPointList, apList, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.9.2.1.2"),
+            HandlerAccessPointListAdopted, apList, FALSE) != SNMP_ERR_SUCCESS)
    {
       delete apList;
       return NULL;
    }
 
    // Unadopted
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.9.4.1.2"), HandlerAccessPointList, apList, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.9.4.1.2"), HandlerAccessPointListUnadopted, apList, FALSE) != SNMP_ERR_SUCCESS)
    {
       delete apList;
       return NULL;
