@@ -2197,6 +2197,8 @@ bool Node::confPollSnmp(DWORD dwRqId)
 		// Get wireless controller data
 		if ((m_driver != NULL) && m_driver->isWirelessController(pTransport, &m_customAttributes, m_driverData))
 		{
+			DbgPrintf(5, _T("ConfPoll(%s): node is wireless controller, reading access point information"), m_szName);
+         sendPollerMsg(dwRqId, _T("   Reading wireless access point information\r\n"));
 			LockData();
 			m_dwFlags |= NF_IS_WIFI_CONTROLLER;
 			UnlockData();
@@ -2204,6 +2206,8 @@ bool Node::confPollSnmp(DWORD dwRqId)
 			ObjectArray<AccessPointInfo> *aps = m_driver->getAccessPoints(pTransport, &m_customAttributes, m_driverData);
 			if (aps != NULL)
 			{
+				sendPollerMsg(dwRqId, POLLER_INFO _T("   %d wireless access points found\r\n"), aps->size());
+				DbgPrintf(5, _T("ConfPoll(%s): got information about %d access points"), m_szName, aps->size());
 				for(int i = 0; i < aps->size(); i++)
 				{
 					AccessPointInfo *info = aps->get(i);
@@ -2224,6 +2228,11 @@ bool Node::confPollSnmp(DWORD dwRqId)
 					ap->updateRadioInterfaces(info->getRadioInterfaces());
 				}
 				delete aps;
+			}
+			else
+			{
+				DbgPrintf(5, _T("ConfPoll(%s): failed to read access point information"), m_szName);
+				sendPollerMsg(dwRqId, POLLER_ERROR _T("   Failed to read access point information\r\n"));
 			}
 		}
 		else

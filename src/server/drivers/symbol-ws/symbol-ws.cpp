@@ -51,7 +51,7 @@ const TCHAR *SymbolDriver::getVersion()
  */
 int SymbolDriver::isPotentialDevice(const TCHAR *oid)
 {
-   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.388.14."), 20) == 0) ? 127 : 0;
+   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.388.14"), 19) == 0) ? 127 : 0;
 }
 
 /**
@@ -187,7 +187,6 @@ static DWORD HandlerAccessPointList(DWORD version, SNMP_Variable *var, SNMP_Tran
    return SNMP_ERR_SUCCESS;
 }
 
-
 /*
  * Get access points
  *
@@ -203,14 +202,14 @@ ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp
    if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.9.2.1.2"), HandlerAccessPointList, apList, FALSE) != SNMP_ERR_SUCCESS)
    {
       delete apList;
-      apList = NULL;
+      return NULL;
    }
 
    // Unadopted
    if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.9.4.1.2"), HandlerAccessPointList, apList, FALSE) != SNMP_ERR_SUCCESS)
    {
       delete apList;
-      apList = NULL;
+      return NULL;
    }
 
    return apList;
