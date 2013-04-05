@@ -83,7 +83,7 @@
           lightweight= "true"
           class="org.netxms.ui.eclipse.objectbrowser.ObjectDecorator">
          <enablement>
-           <objectClass name="org.netxms.client.objects.GenericObject"/>
+           <objectClass name="org.netxms.client.objects.AbstractObject"/>
          </enablement>
          <description>
             Decorate NetXMS objects (nodes, containers, etc.) with current status indicators
