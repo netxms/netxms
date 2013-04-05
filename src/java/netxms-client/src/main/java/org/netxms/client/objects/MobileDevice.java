@@ -56,6 +56,15 @@ public class MobileDevice extends GenericObject
 		lastReportTime = msg.getVariableAsDate(NXCPCodes.VID_LAST_CHANGE_TIME);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
+	 */
+	@Override
+	public boolean isAllowedOnMap()
+	{
+		return true;
+	}
+
 	/**
 	 * @return the deviceId
 	 */

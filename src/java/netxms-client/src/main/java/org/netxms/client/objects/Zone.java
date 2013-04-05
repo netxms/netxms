@@ -47,6 +47,15 @@ public class Zone extends GenericObject
 		icmpProxy = msg.getVariableAsInt64(NXCPCodes.VID_ICMP_PROXY);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
+	 */
+	@Override
+	public boolean isAllowedOnMap()
+	{
+		return true;
+	}
+
 	/**
 	 * @return the zoneId
 	 */

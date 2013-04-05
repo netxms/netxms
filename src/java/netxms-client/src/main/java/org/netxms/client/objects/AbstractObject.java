@@ -620,6 +620,17 @@ public abstract class AbstractObject
 				return true;
 		return false;
 	}
+	
+	/**
+	 * If this method returns true object is allowed to be on custom network map.
+	 * Default implementation always returns false.
+	 * 
+	 * @return true if object is allowed to be on custom network map
+	 */
+	public boolean isAllowedOnMap()
+	{
+		return false;
+	}
 
 	/**
 	 * @return the objectClass
@@ -748,5 +759,4 @@ public abstract class AbstractObject
 	{
 		this.session = session;
 	}
-
 }

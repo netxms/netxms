@@ -75,6 +75,15 @@ public class Condition extends GenericObject
 		return "Condition";
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
+	 */
+	@Override
+	public boolean isAllowedOnMap()
+	{
+		return true;
+	}
+
 	/**
 	 * @return the script
 	 */

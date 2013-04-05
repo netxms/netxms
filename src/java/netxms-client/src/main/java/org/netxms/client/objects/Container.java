@@ -45,6 +45,15 @@ public class Container extends GenericObject
 		autoBindFilter = msg.getVariableAsString(NXCPCodes.VID_AUTOBIND_FILTER);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
+	 */
+	@Override
+	public boolean isAllowedOnMap()
+	{
+		return true;
+	}
+
 	/**
 	 * @return the category
 	 */

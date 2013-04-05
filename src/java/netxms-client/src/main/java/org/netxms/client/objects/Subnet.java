@@ -22,7 +22,6 @@ import java.net.InetAddress;
 import org.netxms.base.*;
 import org.netxms.client.NXCSession;
 
-
 /**
  * Subnet object
  */
@@ -41,7 +40,6 @@ public class Subnet extends GenericObject
 		subnetMask = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_NETMASK);
 		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
 	}
-
 	
 	/**
 	 * @return Subnet mask
@@ -50,7 +48,6 @@ public class Subnet extends GenericObject
 	{
 		return subnetMask;
 	}
-
 
 	/* (non-Javadoc)
 	 * @see org.netxms.client.NXCObject#getObjectClassName()
@@ -61,6 +58,14 @@ public class Subnet extends GenericObject
 		return "Subnet";
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
+	 */
+	@Override
+	public boolean isAllowedOnMap()
+	{
+		return true;
+	}
 
 	/**
 	 * @return the zoneId
