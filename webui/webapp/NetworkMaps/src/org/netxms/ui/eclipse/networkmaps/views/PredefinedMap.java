@@ -53,13 +53,7 @@ import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.AccessPoint;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Condition;
-import org.netxms.client.objects.Container;
-import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImageSelectionDialog;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
@@ -195,12 +189,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 				while(it.hasNext())
 				{
 					Object object = it.next();
-					if (!((object instanceof AbstractNode) || 
-							(object instanceof AccessPoint) || 
-							(object instanceof Cluster) || 
-							(object instanceof Container) || 
-							(object instanceof Subnet) || 
-							(object instanceof Condition)))
+					if (!((object instanceof AbstractObject) && ((AbstractObject)object).isAllowedOnMap())) 
 						return false;
 				}
 
