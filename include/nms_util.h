@@ -500,13 +500,25 @@ public:
 	void disconnect();
 
 	bool canRead(DWORD timeout);
-	int read(char *pBuff, int nSize, DWORD timeout = INFINITE);
+	virtual int read(char *pBuff, int nSize, DWORD timeout = INFINITE);
 	bool waitForText(const char *text, int timeout);
 	
 	int write(const char *pBuff, int nSize);
 	bool writeLine(const char *line);
 
 	static SocketConnection *createTCPConnection(const TCHAR *hostName, WORD port, DWORD timeout);
+};
+
+class LIBNETXMS_EXPORTABLE TelnetConnection : public SocketConnection
+{
+public:
+	bool connect(const TCHAR *hostName, WORD port, DWORD timeout);
+	int read(char *pBuff, int nSize, DWORD timeout = INFINITE);
+
+	static TelnetConnection *createConnection(const TCHAR *hostName, WORD port, DWORD timeout);
+
+protected:
+	bool connectTCP(const TCHAR *hostName, WORD port, DWORD timeout);
 };
 
 #endif   /* __cplusplus */

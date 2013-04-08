@@ -22,6 +22,12 @@
 
 #include "libnetxms.h"
 
+#define TELNET_WILL 0xFB
+#define TELNET_WONT 0xFC
+#define TELNET_DO 0xFD
+#define TELNET_DONT 0xFE
+#define TELNET_IAC 0xFF
+#define TELNET_GA 0xF9
 
 /**
  * Helper fuction to create connected SocketConnection object.
@@ -189,4 +195,114 @@ bool SocketConnection::waitForText(const char *text, int timeout)
 		m_dataPos = min(bufLen, textLen - 1);
 		memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos);
 	}
+}
+
+
+/**
+ * Establish TCP connection to given host and port
+ *
+ * @param hostName host name or IP address
+ * @param port port number
+ * @param timeout connection timeout in milliseconds
+ * @return true if connection attempt was successful
+ */
+bool TelnetConnection::connect(const TCHAR *hostName, WORD port, DWORD timeout)
+{
+   bool ret = SocketConnection::connectTCP(hostName, port, timeout);
+
+   if (ret)
+   {
+      // disable echo
+      unsigned char out[3]; 
+      out[0] = TELNET_IAC;
+      out[1] = TELNET_WILL;
+      out[2] = 0x01; // echo
+      write((char *)out, 3);
+   }
+
+   return ret;
+}
+
+/**
+ * Read data from socket
+ */
+int TelnetConnection::read(char *pBuff, int nSize, DWORD timeout)
+{
+	int bytesRead = RecvEx(m_socket, pBuff, nSize, 0, timeout);
+   if (bytesRead > 0)
+   {
+      // process telnet control sequences
+      for (int i = 0; i < bytesRead - 1; i++)
+      {
+         int skip = 0;
+         switch ((unsigned char)pBuff[i])
+         {
+            case TELNET_IAC: // "Interpret as Command"
+               {
+                  unsigned char cmd = (unsigned char)pBuff[i + 1];
+
+                  switch (cmd)
+                  {
+                     case TELNET_IAC:
+                        // Duplicate IAC - data byte 0xFF, just deduplicate
+                        skip = 1;
+                        break;
+                     case TELNET_WILL:
+                     case TELNET_DO:
+                     case TELNET_DONT:
+                     case TELNET_WONT:
+                        if ((i + 1) < bytesRead)
+                        {
+                           skip = 3;
+                           if ((unsigned char)pBuff[i + 2] == TELNET_GA)
+                           {
+                              pBuff[i + 1] = cmd == TELNET_DO ? TELNET_WILL : TELNET_DO;
+                           }
+                           else
+                           {
+                              pBuff[i + 1] = cmd == TELNET_DO ? TELNET_WONT : TELNET_DONT;
+                           }
+                           write(pBuff + i, 3);
+                        }
+                        break;
+                     default:
+                        skip = 2; // skip IAC + unhandled command
+                  }
+               }
+               break;
+            case 0:
+               // "No Operation", skip
+               skip = 1;
+         }
+
+         if (skip > 0)
+         {
+            memmove(pBuff + i, pBuff + i + skip, bytesRead - i - 1);
+            bytesRead -= skip;
+            i--;
+         }
+      }
+   }
+
+   return bytesRead;
+}
+
+/**
+ * Helper fuction to create connected TelnetConnection object.
+ *
+ * @param hostName host name or IP address
+ * @param port port number
+ * @param timeout connection timeout in milliseconds
+ * @return connected TelnetConnection object or NULL on connection failure
+ */
+TelnetConnection *TelnetConnection::createConnection(const TCHAR *hostName, WORD port, DWORD timeout)
+{
+	TelnetConnection *tc = new TelnetConnection();
+	if (!tc->connect(hostName, port, timeout))
+	{
+		delete tc;
+		tc = NULL;
+	}
+
+	return tc;
 }
