@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.console.dialogs;
 
 import java.util.Arrays;
 import java.util.HashSet;
-
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.resource.ImageDescriptor;

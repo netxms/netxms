@@ -46,6 +46,7 @@ public class WirelessStations extends ViewPart
 	private long rootObject;
 	private SortableTableViewer viewer;
 	private Action actionRefresh;
+	private Action actionCopy;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)

@@ -28,7 +28,6 @@ import org.eclipse.jface.operation.ModalContext;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
@@ -68,8 +67,6 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	@Override
 	public void preWindowOpen()
 	{
-		doLogin(Display.getCurrent());
-
 		RegionalSettings.updateFromPreferences();
 
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
@@ -81,6 +78,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		configurer.setShowPerspectiveBar(true);
 		
 		TweakletManager.preWindowOpen(configurer);
+		
+		doLogin(Display.getCurrent());
 	}
 
 	/**
@@ -106,7 +105,6 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	private void doLogin(final Display display)
 	{
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		final Shell shell = getWindowConfigurer().getWindow().getShell();
 		boolean success = false;
 		boolean autoConnect = false;
 		String password = ""; //$NON-NLS-1$
@@ -136,7 +134,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		{
 			if (!autoConnect)
 			{
-				loginDialog = new LoginDialog(shell);
+				loginDialog = new LoginDialog(null);
 				if (loginDialog.open() != Window.OK)
 					System.exit(0);
 				password = loginDialog.getPassword();
@@ -158,12 +156,12 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			catch(InvocationTargetException e)
 			{
 				e.getCause().printStackTrace();
-				MessageDialog.openError(shell, Messages.NXMCWorkbenchWindowAdvisor_connectionError, e.getCause().getLocalizedMessage()); //$NON-NLS-1$
+				MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_connectionError, e.getCause().getLocalizedMessage()); //$NON-NLS-1$
 			}
 			catch(Exception e)
 			{
 				e.printStackTrace();
-				MessageDialog.openError(shell, Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString()); //$NON-NLS-1$
+				MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString()); //$NON-NLS-1$
 			}
 		} while(!success);
 
@@ -173,7 +171,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			final Session session = ConsoleSharedData.getSession();
 			if (session.isPasswordExpired())
 			{
-				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(shell);
+				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
 				if (dlg.open() == Window.OK)
 				{
 					final String currentPassword = password;
@@ -200,15 +198,15 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 					try
 					{
 						ModalContext.run(job, true, SplashHandler.getInstance().getBundleProgressMonitor(), Display.getCurrent());
-						MessageDialog.openInformation(shell, Messages.NXMCWorkbenchWindowAdvisor_title_information, Messages.NXMCWorkbenchWindowAdvisor_passwd_changed);
+						MessageDialog.openInformation(null, Messages.NXMCWorkbenchWindowAdvisor_title_information, Messages.NXMCWorkbenchWindowAdvisor_passwd_changed);
 					}
 					catch(InvocationTargetException e)
 					{
-						MessageDialog.openError(shell, Messages.NXMCWorkbenchWindowAdvisor_title_error, Messages.NXMCWorkbenchWindowAdvisor_cannot_change_passwd + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
+						MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_title_error, Messages.NXMCWorkbenchWindowAdvisor_cannot_change_passwd + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$
 					}
 					catch(InterruptedException e)
 					{
-						MessageDialog.openError(shell, Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString());
+						MessageDialog.openError(null, Messages.NXMCWorkbenchWindowAdvisor_exception, e.toString());
 					}
 				}
 			}

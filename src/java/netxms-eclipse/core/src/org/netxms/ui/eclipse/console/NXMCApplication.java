@@ -33,7 +33,7 @@ public class NXMCApplication implements IApplication
 			ColorManager.create();
 			StatusDisplayInfo.init(display);
 			DataCollectionDisplayInfo.init();
-
+			
 			int returnCode = PlatformUI.createAndRunWorkbench(display, new NXMCWorkbenchAdvisor());
 			if (returnCode == PlatformUI.RETURN_RESTART)
 				return IApplication.EXIT_RESTART;
