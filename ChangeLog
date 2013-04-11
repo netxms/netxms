@@ -7,7 +7,7 @@
 - Network discovery improved
 - Status of zone's proxy node now used in "node down" event correlation
 - Configurable default DCI retention time and polling interval
-- New NXSL functions: CreateNode
+- New NXSL functions: CreateNode, GetSumDCIValue
 - New NXSL operator @ - safe get object's attribute
 - New MIBs added: ASTARO-MIB, CPQHOST-MIB, CPQPOWER-MIB
 - Fixed issues: #242, #249, #250, #251

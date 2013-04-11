@@ -67,10 +67,11 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	@Override
 	public void preWindowOpen()
 	{
+		doLogin(Display.getCurrent());
+		
 		RegionalSettings.updateFromPreferences();
 
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 		configurer.setShowCoolBar(ps.getBoolean("SHOW_COOLBAR")); //$NON-NLS-1$
 		configurer.setShowStatusLine(true);
@@ -78,8 +79,6 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		configurer.setShowPerspectiveBar(true);
 		
 		TweakletManager.preWindowOpen(configurer);
-		
-		doLogin(Display.getCurrent());
 	}
 
 	/**

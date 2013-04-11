@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,20 +27,16 @@
 #include <library.h>
 #endif
 
-
-//
-// Static data
-//
-
+/**
+ * Subagent list
+ */
 static DWORD m_dwNumSubAgents = 0;
 static SUBAGENT *m_pSubAgentList = NULL;
 
-
-//
-// Initialize subagent
-// Note: pszEntryPoint ignored on all pltforms except NetWare
-//
-
+/**
+ * Initialize subagent
+ * Note: pszEntryPoint ignored on all pltforms except NetWare
+ */
 BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
                   BOOL (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *),
                   const TCHAR *pszEntryPoint)
@@ -153,11 +149,9 @@ BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
    return bSuccess;
 }
 
-
-//
-// Load subagent
-//
-
+/**
+ * Load subagent
+ */
 BOOL LoadSubAgent(TCHAR *szModuleName)
 {
    HMODULE hModule;
@@ -231,13 +225,11 @@ BOOL LoadSubAgent(TCHAR *szModuleName)
    return bSuccess;
 }
 
-
-//
-// Unload all subagents.
-// This function should be called on shutdown, so we don't care
-// about deregistering parameters and so on.
-//
-
+/**
+ * Unload all subagents.
+ * This function should be called on shutdown, so we don't care
+ * about deregistering parameters and so on.
+ */
 void UnloadAllSubAgents()
 {
    DWORD i;
@@ -256,11 +248,9 @@ void UnloadAllSubAgents()
    }
 }
 
-
-//
-// Enumerate loaded subagents
-//
-
+/**
+ * Enumerate loaded subagents
+ */
 LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    DWORD i;
@@ -282,11 +272,28 @@ LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
    return SYSINFO_RC_SUCCESS;
 }
 
+/**
+ * Enumerate loaded subagents as a table
+ */
+LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
+{
+   value->addColumn(_T("NAME"));
+   value->addColumn(_T("VERSION"));
+   value->addColumn(_T("FILE"));
 
-//
-// Handler for Agent.IsSubagentLoaded
-// 
+   for(DWORD i = 0; i < m_dwNumSubAgents; i++)
+   {
+      value->addRow();
+      value->set(0, m_pSubAgentList[i].pInfo->name);
+      value->set(1, m_pSubAgentList[i].pInfo->version);
+      value->set(2, m_pSubAgentList[i].szName);
+   }
+   return SYSINFO_RC_SUCCESS;
+}
 
+/**
+ * Handler for Agent.IsSubagentLoaded
+ */ 
 LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
 	TCHAR name[256];
@@ -305,11 +312,9 @@ LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Process unknown command by subagents
-//
-
+/**
+ * Process unknown command by subagents
+ */
 BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
 {
    BOOL bResult = FALSE;

@@ -338,6 +338,7 @@
 #define DCIDESC_DEPRECATED                        _T("<deprecated>")
 
 
+#define DCTDESC_AGENT_SUBAGENTS                   _T("Load subagents")
 #define DCTDESC_FILESYSTEM_VOLUMES                _T("File system volumes")
 #define DCTDESC_SYSTEM_INSTALLED_PRODUCTS         _T("Installed products")
 #define DCTDESC_SYSTEM_PROCESSES                  _T("Process table")

@@ -178,7 +178,7 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 /**
  * Get min, max or average of DCI values for a period
  */
-typedef enum { DCI_MIN, DCI_MAX, DCI_AVG } DciSqlFunc_t;
+typedef enum { DCI_MIN = 0, DCI_MAX = 1, DCI_AVG = 2, DCI_SUM = 3 } DciSqlFunc_t;
 
 static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program, DciSqlFunc_t sqlFunc)
 {
@@ -206,24 +206,25 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 		double result = 0.;
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		TCHAR query[1024];
+      static TCHAR *functions[] = { _T("min"), _T("max"), _T("avg"), _T("sum") };
 
 		if (g_nDBSyntax == DB_SYNTAX_ORACLE)
 		{
 			_sntprintf(query, 1024, _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u ")
 				_T("WHERE item_id=? and idata_timestamp between ? and ?"), 
-				sqlFunc == DCI_MAX ? _T("max"): (sqlFunc == DCI_MIN ? _T("min") : _T("avg")), node->Id());
+				functions[sqlFunc], node->Id());
 		}
 		else if (g_nDBSyntax == DB_SYNTAX_PGSQL)
 		{
 			_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value::double precision,0)) FROM idata_%u ")
 				_T("WHERE item_id=? and idata_timestamp between ? and ?"), 
-				sqlFunc == DCI_MAX ? _T("max"): (sqlFunc == DCI_MIN ? _T("min") : _T("avg")),	node->Id());
+				functions[sqlFunc],	node->Id());
 		}
 		else
 		{
 			_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u ")
 				_T("WHERE item_id=? and idata_timestamp between ? and ?"), 
-				sqlFunc == DCI_MAX ? _T("max"): (sqlFunc == DCI_MIN ? _T("min") : _T("avg")),	node->Id());
+				functions[sqlFunc],	node->Id());
 		}
 
 		DB_STATEMENT hStmt = DBPrepare(hdb, query);
@@ -281,6 +282,14 @@ static int F_GetMaxDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 static int F_GetAvgDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	return F_GetDCIValueStat(argc, argv, ppResult, program, DCI_AVG);
+}
+
+/**
+ * Get average of DCI values for a period
+ */
+static int F_GetSumDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	return F_GetDCIValueStat(argc, argv, ppResult, program, DCI_SUM);
 }
 
 /**
@@ -353,13 +362,14 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
    { _T("CreateDCI"), F_CreateDCI, 7 },
    { _T("FindDCIByName"), F_FindDCIByName, 2 },
    { _T("FindDCIByDescription"), F_FindDCIByDescription, 2 },
+	{ _T("GetAvgDCIValue"), F_GetAvgDCIValue, 4 },
    { _T("GetDCIObject"), F_GetDCIObject, 2 },
    { _T("GetDCIValue"), F_GetDCIValue, 2 },
-   { _T("GetDCIValueByName"), F_GetDCIValueByName, 2 },
    { _T("GetDCIValueByDescription"), F_GetDCIValueByDescription, 2 },
+   { _T("GetDCIValueByName"), F_GetDCIValueByName, 2 },
 	{ _T("GetMaxDCIValue"), F_GetMaxDCIValue, 4 },
 	{ _T("GetMinDCIValue"), F_GetMinDCIValue, 4 },
-	{ _T("GetAvgDCIValue"), F_GetAvgDCIValue, 4 }
+	{ _T("GetSumDCIValue"), F_GetSumDCIValue, 4 }
 };
 
 /**

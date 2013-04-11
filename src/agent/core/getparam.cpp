@@ -35,6 +35,7 @@ LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
 LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value);
 LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
@@ -257,6 +258,7 @@ static NETXMS_SUBAGENT_LIST m_stdLists[] =
  */
 static NETXMS_SUBAGENT_TABLE m_stdTables[] =
 {
+   { _T("Agent.SubAgents"), H_SubAgentTable, NULL, _T("NAME"), DCTDESC_AGENT_SUBAGENTS },
 #ifdef _WIN32
    { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES }
 #endif
