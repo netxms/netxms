@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Defined logs
-//
-
+/**
+ * Defined logs
+ */
 static NXCORE_LOG s_logs[] =
 {
 	{ _T("AlarmLog"), _T("alarms"), _T("alarm_id"), SYSTEM_ACCESS_VIEW_AUDIT_LOG,
@@ -141,18 +139,20 @@ static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
 }
 
 /**
- * Open log by name
+ * Open log from given log set by name
+ * 
+ * @return log handle on success, -1 on error, -2 if log not found
  */
-int OpenLog(const TCHAR *name, ClientSession *session, DWORD *rcc)
+static int OpenLogInternal(NXCORE_LOG *logs, const TCHAR *name, ClientSession *session, DWORD *rcc)
 {
-	for(int i = 0; s_logs[i].name != NULL; i++)
+	for(int i = 0; logs[i].name != NULL; i++)
 	{	
-		if (!_tcsicmp(name, s_logs[i].name))
+		if (!_tcsicmp(name, logs[i].name))
 		{
-			if (session->checkSysAccessRights(s_logs[i].requiredAccess))
+			if (session->checkSysAccessRights(logs[i].requiredAccess))
 			{
 				*rcc = RCC_SUCCESS;
-				LogHandle *handle = new LogHandle(&s_logs[i]);
+				LogHandle *handle = new LogHandle(&logs[i]);
 				return RegisterLogHandle(handle, session);
 			}
 			else
@@ -162,6 +162,29 @@ int OpenLog(const TCHAR *name, ClientSession *session, DWORD *rcc)
 			}
 		}
 	}
+   return -2;
+}
+
+/**
+ * Open log by name
+ */
+int OpenLog(const TCHAR *name, ClientSession *session, DWORD *rcc)
+{
+   int rc = OpenLogInternal(s_logs, name, session, rcc);
+   if (rc != -2)
+      return rc;
+
+   // Try to find log definition in loaded modules
+   for(DWORD i = 0; i < g_dwNumModules; i++)
+	{
+		if (g_pModuleList[i].logs != NULL)
+		{
+         rc = OpenLogInternal(g_pModuleList[i].logs, name, session, rcc);
+         if (rc != -2)
+            return rc;
+		}
+	}
+
 	*rcc = RCC_UNKNOWN_LOG_NAME;
 	return -1;
 }

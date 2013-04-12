@@ -31,6 +31,7 @@ class MobileDeviceSession;
 class Node;
 class Event;
 class NetObj;
+struct NXCORE_LOG;
 
 /**
  * Command handler return codes
@@ -62,6 +63,7 @@ typedef struct
 	NetObj *(* pfCreateObject)(int objectClass, const TCHAR *name, NetObj *parent, CSCPMessage *msg);
 	BOOL (* pfIsValidParentClass)(int childClass, int parentClass);
 	BOOL (* pfAcceptNewNode)(DWORD ipAddr, DWORD ipNetMask, DWORD zoneId, BYTE *macAddr);
+   NXCORE_LOG *logs;
    HMODULE hModule;
 } NXMODULE;
 
