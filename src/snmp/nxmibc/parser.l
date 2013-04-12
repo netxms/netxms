@@ -52,7 +52,6 @@ WHITESPC  [[:blank:]\t\n\r]
 
 #define YY_NEVER_INTERACTIVE 1
 #define YY_NO_UNISTD_H
-#define ECHO
 
 #include "mibparse.h"
 #include "parser.tab.hpp"/* token codes from the parser */
