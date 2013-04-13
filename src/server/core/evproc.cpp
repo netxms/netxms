@@ -38,11 +38,9 @@ static THREAD s_threadStormDetector = INVALID_THREAD_HANDLE;
 static THREAD s_threadLogger = INVALID_THREAD_HANDLE;
 static Queue *s_loggerQueue = NULL;
 
-
-//
-// Handler for EnumerateSessions()
-//
-
+/**
+ * Handler for EnumerateSessions()
+ */
 static void BroadcastEvent(ClientSession *pSession, void *pArg)
 {
    if (pSession->isAuthenticated())

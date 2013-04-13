@@ -304,6 +304,14 @@ Expression:
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GET_ATTRIBUTE, $3));
 }
+|	Expression T_REF FunctionName ParameterList ')'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CALL_METHOD, $3, $4));
+}
+|	Expression T_REF FunctionName ')'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CALL_METHOD, $3, 0));
+}
 |	T_IDENTIFIER '@' Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SAFE_GET_ATTR, $1));

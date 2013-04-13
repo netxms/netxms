@@ -50,11 +50,9 @@
 #define NXSL_DT_UINT32     8
 #define NXSL_DT_UINT64     9
 
-
-//
-// Simple stack class
-//
-
+/**
+ * NXSL stack class
+ */
 class LIBNXSL_EXPORTABLE NXSL_Stack
 {
 private:
@@ -74,14 +72,13 @@ public:
    int getSize() { return m_nStackPos; }
 };
 
-
-//
-// Class representing NXSL class
-//
-
 class NXSL_Value;
 class NXSL_Object;
+class NXSL_Program;
 
+/**
+ * Class representing NXSL class
+ */
 class LIBNXSL_EXPORTABLE NXSL_Class
 {
 protected:
@@ -94,22 +91,25 @@ public:
    virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
    virtual BOOL setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue);
 
+   virtual int callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program);
+
 	virtual void onObjectDelete(NXSL_Object *object);
 
    const TCHAR *getName() { return m_szName; }
 };
 
-
-//
-// Object instance
-//
-
+/**
+ * Class data - object and reference count
+ */
 struct __nxsl_class_data
 {
 	void *data;
 	int refCount;
 };
 
+/**
+ * Object instance
+ */
 class LIBNXSL_EXPORTABLE NXSL_Object
 {
 private:
@@ -125,17 +125,18 @@ public:
 	void *getData() { return m_data->data; }
 };
 
-
-//
-// Array
-//
-
+/**
+ * Array element
+ */
 struct NXSL_ArrayElement
 {
 	int index;
 	NXSL_Value *value;
 };
 
+/**
+ * NXSL array
+ */
 class LIBNXSL_EXPORTABLE NXSL_Array
 {
 private:
@@ -308,24 +309,18 @@ public:
    BOOL GE(NXSL_Value *pVal);
 };
 
-
-//
-// Function structure
-//
-
+/**
+ * NXSL function definition structure
+ */
 struct NXSL_Function
 {
    TCHAR m_szName[MAX_FUNCTION_NAME];
    DWORD m_dwAddr;
 };
 
-
-//
-// External function structure
-//
-
-class NXSL_Program;
-
+/**
+ * External function structure
+ */
 struct NXSL_ExtFunction
 {
    TCHAR m_szName[MAX_FUNCTION_NAME];

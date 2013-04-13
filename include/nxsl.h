@@ -70,6 +70,7 @@
 #define NXSL_ERR_NOT_ITERATOR					27
 #define NXSL_ERR_NO_STAT_DATA             28
 #define NXSL_ERR_NO_SUCH_STAT_PARAM       29
+#define NXSL_ERR_NO_SUCH_METHOD           30
 
 /**
  * Special return codes for external functions

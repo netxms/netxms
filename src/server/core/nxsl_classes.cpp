@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -407,11 +407,9 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    return pValue;
 }
 
-
-//
-// Implementation of "NetXMS event" class
-//
-
+/**
+ * Implementation of NXSL "Event" class
+ */
 NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
 {
    _tcscpy(m_szName, _T("Event"));
@@ -603,11 +601,9 @@ void NXSL_SNMPVarBindClass::onObjectDelete(NXSL_Object *object)
 	delete (SNMP_Variable *)object->getData();
 }
 
-
-//
-// Class objects
-//
-
+/**
+ * Class objects
+ */
 NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NodeClass g_nxslNodeClass;
 NXSL_InterfaceClass g_nxslInterfaceClass;

@@ -48,11 +48,9 @@ typedef void *yyscan_t;
 #define INVALID_ADDRESS    ((DWORD)0xFFFFFFFF)
 #define MAX_STRING_SIZE    8192
 
-
-//
-// Instruction opcodes
-//
-
+/**
+ * Instruction opcodes
+ */
 #define OPCODE_NOP            0
 #define OPCODE_RETURN         1
 #define OPCODE_JMP            2
@@ -114,6 +112,7 @@ typedef void *yyscan_t;
 #define OPCODE_JNZ_PEEK       58
 #define OPCODE_ADD_TO_ARRAY   59
 #define OPCODE_SAFE_GET_ATTR  60
+#define OPCODE_CALL_METHOD    61
 
 class NXSL_Compiler;
 

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Host
-** Copyright (C) 2005-2010 Victor Kirhenshtein
+** Copyright (C) 2005-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,4 +53,14 @@ BOOL NXSL_TestClass::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Va
 		return TRUE;
    }
    return FALSE;
+}
+
+int NXSL_TestClass::callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program)
+{
+   if (!_tcscmp(name, _T("debug")))
+   {
+      *result = new NXSL_Value(_T("Sample debug output"));
+      return 0;
+   }
+   return NXSL_Class::callMethod(name, object, argc, argv, result, program);
 }

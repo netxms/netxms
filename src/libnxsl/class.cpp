@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,61 +23,58 @@
 
 #include "libnxsl.h"
 
-
-//
-// Class constructor
-//
-
+/**
+ * Class constructor
+ */
 NXSL_Class::NXSL_Class()
 {
    _tcscpy(m_szName, _T("generic"));
 }
 
-
-//
-// Class destructor
-//
-
+/**
+ * Class destructor
+ */
 NXSL_Class::~NXSL_Class()
 {
 }
 
-
-//
-// Get attribute
-// Default implementation - always returns error
-//
-
+/**
+ * Get attribute
+ * Default implementation always returns error
+ */
 NXSL_Value *NXSL_Class::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    return NULL;
 }
 
-
-//
-// Set attribute
-// Default implementation - always returns error
-//
-
+/**
+ * Set attribute
+ * Default implementation always returns error
+ */
 BOOL NXSL_Class::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue)
 {
    return FALSE;
 }
 
+/**
+ * Call method
+ * Default implementation always returns NXSL_ERR_NO_SUCH_METHOD
+ */
+BOOL NXSL_Class::callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program)
+{
+   return NXSL_ERR_NO_SUCH_METHOD;
+}
 
-//
-// Object deletion handler. Called by interpreter when last reference to object being deleted.
-//
-
+/**
+ * Object deletion handler. Called by interpreter when last reference to object being deleted.
+ */
 void NXSL_Class::onObjectDelete(NXSL_Object *object)
 {
 }
 
-
-//
-// Object constructors
-//
-
+/**
+ * Object constructors
+ */
 NXSL_Object::NXSL_Object(NXSL_Class *pClass, void *pData)
 {
    m_class = pClass;
@@ -93,11 +90,9 @@ NXSL_Object::NXSL_Object(NXSL_Object *pObject)
 	m_data->refCount++;
 }
 
-
-//
-// Object destructor
-//
-
+/**
+ * Object destructor
+ */
 NXSL_Object::~NXSL_Object()
 {
 	m_data->refCount--;

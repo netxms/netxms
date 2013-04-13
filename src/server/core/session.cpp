@@ -2356,11 +2356,9 @@ void ClientSession::kill()
    shutdown(m_hSocket, 2);
 }
 
-
-//
-// Handler for new events
-//
-
+/**
+ * Handler for new events
+ */
 void ClientSession::onNewEvent(Event *pEvent)
 {
    UPDATE_INFO *pUpdate;
@@ -2378,11 +2376,9 @@ void ClientSession::onNewEvent(Event *pEvent)
    }
 }
 
-
-//
-// Handler for object changes
-//
-
+/**
+ * Handler for object changes
+ */
 void ClientSession::onObjectChange(NetObj *pObject)
 {
    UPDATE_INFO *pUpdate;

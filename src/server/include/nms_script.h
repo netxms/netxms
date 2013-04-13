@@ -62,11 +62,9 @@ public:
    virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
 };
 
-
-//
-// "NetXMS event" class
-//
-
+/**
+ * NXSL "Event" class
+ */
 class NXSL_EventClass : public NXSL_Class
 {
 public:
@@ -75,11 +73,9 @@ public:
    virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
 };
 
-
-//
-// "DCI" class
-//
-
+/**
+ * NXSL "DCI" class
+ */
 class NXSL_DciClass : public NXSL_Class
 {
 public:
@@ -88,11 +84,9 @@ public:
    virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
 };
 
-
-//
-// "SNMP_Transport" class
-//
-
+/**
+ * NXSL "SNMP_Transport" class
+ */
 class NXSL_SNMPTransportClass : public NXSL_Class
 {
 public:

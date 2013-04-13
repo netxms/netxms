@@ -27,7 +27,7 @@
 /**
  * Constants
  */
-#define MAX_ERROR_NUMBER         29
+#define MAX_ERROR_NUMBER         30
 #define CONTROL_STACK_LIMIT      32768
 
 /**
@@ -48,7 +48,7 @@ static const char *m_szCommandMnemonic[] =
    "IMATCH", "CASE", "ARRAY", "EGET",
 	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
 	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR",
-	"AGETS"
+	"AGETS", "CALL"
 };
 
 /**
@@ -84,7 +84,8 @@ static const TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
 	_T("Named parameter required"),
 	_T("Function or operation argument is not an iterator"),
 	_T("Statistical data for given instance is not collected yet"),
-	_T("Requested statistical parameter does not exist")
+	_T("Requested statistical parameter does not exist"),
+	_T("Unknown object's method")
 };
 
 /**
@@ -335,6 +336,10 @@ void NXSL_Program::dump(FILE *pFile)
             break;
          case OPCODE_CALL:
             _ftprintf(pFile, _T("%04X, %d\n"), m_ppInstructionSet[i]->m_operand.m_dwAddr,
+                      m_ppInstructionSet[i]->m_nStackItems);
+            break;
+         case OPCODE_CALL_METHOD:
+            _ftprintf(pFile, _T("@%s, %d\n"), m_ppInstructionSet[i]->m_operand.m_pszString,
                       m_ppInstructionSet[i]->m_nStackItems);
             break;
          case OPCODE_JMP:
@@ -973,6 +978,54 @@ void NXSL_Program::execute()
             {
                error(NXSL_ERR_NO_FUNCTION);
             }
+         }
+         break;
+      case OPCODE_CALL_METHOD:
+         pValue = (NXSL_Value *)m_pDataStack->pop();
+         if (pValue != NULL)
+         {
+            if (pValue->getDataType() == NXSL_DT_OBJECT)
+            {
+               NXSL_Object *pObj;
+               NXSL_Value *pResult;
+
+               pObj = pValue->getValueAsObject();
+               if (pObj != NULL)
+               {
+                  nRet = pObj->getClass()->callMethod(cp->m_operand.m_pszString, pObj, cp->m_nStackItems,
+                                                      (NXSL_Value **)m_pDataStack->peekList(cp->m_nStackItems),
+                                                      &pResult, this);
+                  if (nRet == 0)
+                  {
+                     for(i = 0; i < cp->m_nStackItems; i++)
+                        delete (NXSL_Value *)m_pDataStack->pop();
+                     m_pDataStack->push(pResult);
+                  }
+                  else if (nRet == NXSL_STOP_SCRIPT_EXECUTION)
+					   {
+                     m_pDataStack->push(pResult);
+		               dwNext = m_dwCodeSize;
+					   }
+					   else
+                  {
+                     // Execution error inside method
+                     error(nRet);
+                  }
+               }
+               else
+               {
+                  error(NXSL_ERR_INTERNAL);
+               }
+            }
+            else
+            {
+               error(NXSL_ERR_NOT_OBJECT);
+            }
+            delete pValue;
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
       case OPCODE_RET_NULL:
