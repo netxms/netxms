@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -178,11 +178,23 @@ int Table::addColumn(const TCHAR *name, LONG format)
 	return m_nNumCols - 1;
 }
 
+/**
+ * Get column index by name
+ *
+ * @param name column name
+ * @return column index or -1 if there are no such column
+ */
+int Table::getColumnIndex(const TCHAR *name)
+{
+   for(int i = 0; i < m_nNumCols; i++)
+      if (!_tcsicmp(name, m_ppColNames[i]))
+         return i;
+   return -1;
+}
 
-//
-// Add new row
-//
-
+/**
+ * Add new row
+ */
 int Table::addRow()
 {
    if (m_nNumCols > 0)
@@ -311,4 +323,42 @@ double Table::getAsDouble(int nRow, int nCol)
 
    pszVal = getAsString(nRow, nCol);
    return pszVal != NULL ? _tcstod(pszVal, NULL) : 0;
+}
+
+/**
+ * Merge with another table. If instance column given, values from rows
+ * with same values in instance column will be summarized.
+ * Identical table format assumed.
+ *
+ * @param t table to merge into this table
+ * @param instanceColumn name of instance column, may be NULL
+ */
+void Table::merge(Table *t, const TCHAR *instanceColumn)
+{
+   if (m_nNumCols != t->m_nNumCols)
+      return;
+
+   int instColIdx = (instanceColumn != NULL) ? getColumnIndex(instanceColumn) : -1;
+   if (instColIdx != -1)
+   {
+      for(int i = 0; i < t->m_nNumRows; i++)
+      {
+         const TCHAR *instance = t->getAsString(i, instColIdx);
+         
+      }
+   }
+   else
+   {
+      m_ppData = (TCHAR **)realloc(m_ppData, sizeof(TCHAR *) * (m_nNumRows + t->m_nNumRows) * m_nNumCols);
+      int dpos = m_nNumRows * m_nNumCols;
+      int spos = 0;
+      for(int i = 0; i < t->m_nNumRows; i++)
+      {
+         for(int j = 0; j < m_nNumCols; j++)
+         {
+            const TCHAR *value = t->m_ppData[spos++];
+            m_ppData[dpos++] = (value != NULL) ? _tcsdup(value) : NULL;
+         }
+      }
+   }
 }

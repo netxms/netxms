@@ -29,6 +29,8 @@
 NXSL_Class::NXSL_Class()
 {
    _tcscpy(m_szName, _T("generic"));
+   m_methods = new StringObjectMap<NXSL_ExtMethod>(true);
+   m_methods->setIgnoreCase(false);
 }
 
 /**
@@ -36,6 +38,7 @@ NXSL_Class::NXSL_Class()
  */
 NXSL_Class::~NXSL_Class()
 {
+   delete m_methods;
 }
 
 /**
@@ -58,10 +61,18 @@ BOOL NXSL_Class::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value 
 
 /**
  * Call method
- * Default implementation always returns NXSL_ERR_NO_SUCH_METHOD
+ * Default implementation calls methods registered with NXSL_REGISTER_METHOD macro.
  */
 BOOL NXSL_Class::callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program)
 {
+   NXSL_ExtMethod *m = m_methods->get(name);
+   if (m != NULL)
+   {
+      if ((argc == m->numArgs) || (m->numArgs == -1))
+         return m->handler(object, argc, argv, result, program);
+      else
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+   }
    return NXSL_ERR_NO_SUCH_METHOD;
 }
 

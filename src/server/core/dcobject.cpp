@@ -51,6 +51,8 @@ DCObject::DCObject()
 	m_dwProxyNode = 0;
 	m_pszPerfTabSettings = NULL;
 	m_snmpPort = 0;	// use default
+   m_transformationScriptSource = NULL;
+   m_transformationScript = NULL;
 }
 
 /**
@@ -82,6 +84,10 @@ DCObject::DCObject(const DCObject *pSrc)
 	m_dwProxyNode = pSrc->m_dwProxyNode;
 	m_pszPerfTabSettings = (pSrc->m_pszPerfTabSettings != NULL) ? _tcsdup(pSrc->m_pszPerfTabSettings) : NULL;
 	m_snmpPort = pSrc->m_snmpPort;
+
+   m_transformationScriptSource = NULL;
+   m_transformationScript = NULL;
+   setTransformationScript(pSrc->m_transformationScriptSource);
 
    // Copy schedules
    m_dwNumSchedules = pSrc->m_dwNumSchedules;
@@ -133,6 +139,8 @@ DCObject::DCObject(DWORD dwId, const TCHAR *szName, int iSource,
 	m_dwProxyNode = 0;
 	m_pszPerfTabSettings = NULL;
 	m_snmpPort = 0;	// use default
+   m_transformationScriptSource = NULL;
+   m_transformationScript = NULL;
 }
 
 /**
@@ -165,6 +173,10 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
    m_dwNumSchedules = 0;
    m_ppScheduleList = NULL;
 
+	m_transformationScriptSource = NULL;
+	m_transformationScript = NULL;
+	setTransformationScript(config->getSubEntryValue(_T("transformation")));
+   
 	if (config->getSubEntryValueInt(_T("advancedSchedule")))
 		m_flags |= DCF_ADVANCED_SCHEDULE;
 
@@ -190,6 +202,8 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
  */
 DCObject::~DCObject()
 {
+   safe_free(m_transformationScriptSource);
+   delete m_transformationScript;
    if (m_dwNumSchedules > 0)
    {
       for(DWORD i = 0; i < m_dwNumSchedules; i++)
@@ -441,11 +455,11 @@ static int GetStepSize(TCHAR *str)
  * Match schedule element
  * NOTE: We assume that pattern can be modified during processing
  */
-static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue, time_t currTime = 0)
+static bool MatchScheduleElement(TCHAR *pszPattern, int nValue, time_t currTime = 0)
 {
    TCHAR *ptr, *curr;
    int nStep, nCurr, nPrev;
-   BOOL bRun = TRUE, bRange = FALSE;
+   bool bRun = true, bRange = false;
 
 	// Check if time() step was specified (% - special syntax)
 	ptr = _tcschr(pszPattern, _T('%'));
@@ -466,13 +480,13 @@ static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue, time_t currTime 
       {
          case '-':
             if (bRange)
-               return FALSE;  // Form like 1-2-3 is invalid
-            bRange = TRUE;
+               return false;  // Form like 1-2-3 is invalid
+            bRange = true;
             *ptr = 0;
             nPrev = _tcstol(curr, NULL, 10);
             break;
          case 0:
-            bRun = FALSE;
+            bRun = false;
          case ',':
             *ptr = 0;
             nCurr = _tcstol(curr, NULL, 10);
@@ -480,18 +494,18 @@ static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue, time_t currTime 
             {
                if ((nValue >= nPrev) && (nValue <= nCurr))
                   goto check_step;
-               bRange = FALSE;
+               bRange = false;
             }
             else
             {
                if (nValue == nCurr)
-                  return TRUE;
+                  return true;
             }
             break;
       }
    }
 
-   return FALSE;
+   return false;
 
 check_step:
    return (nValue % nStep) == 0;
@@ -500,7 +514,7 @@ check_step:
 /**
  * Match schedule to current time
  */
-BOOL DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp)
+bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp)
 {
    const TCHAR *pszCurr;
 	TCHAR szValue[256];
@@ -549,29 +563,29 @@ BOOL DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
       {
          // invalid syntax
          // TODO: add logging
-         return FALSE;
+         return false;
       }
    }
 
    // Minute
    pszCurr = ExtractWord(realSchedule, szValue);
    if (!MatchScheduleElement(szValue, pCurrTime->tm_min))
-         return FALSE;
+         return false;
 
    // Hour
    pszCurr = ExtractWord(pszCurr, szValue);
    if (!MatchScheduleElement(szValue, pCurrTime->tm_hour))
-         return FALSE;
+         return false;
 
    // Day of month
    pszCurr = ExtractWord(pszCurr, szValue);
    if (!MatchScheduleElement(szValue, pCurrTime->tm_mday))
-         return FALSE;
+         return false;
 
    // Month
    pszCurr = ExtractWord(pszCurr, szValue);
    if (!MatchScheduleElement(szValue, pCurrTime->tm_mon + 1))
-         return FALSE;
+         return false;
 
    // Day of week
    pszCurr = ExtractWord(pszCurr, szValue);
@@ -579,7 +593,7 @@ BOOL DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
 		if (szValue[i] == _T('7'))
 			szValue[i] = _T('0');
    if (!MatchScheduleElement(szValue, pCurrTime->tm_wday))
-		return FALSE;
+		return false;
 
 	// Seconds
 	szValue[0] = _T('\0');
@@ -591,7 +605,7 @@ BOOL DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
 		return MatchScheduleElement(szValue, pCurrTime->tm_sec, currTimestamp);
 	}
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -683,6 +697,7 @@ void DCObject::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_TEMPLATE_ID, m_dwTemplateId);
    pMsg->SetVariable(VID_NAME, m_szName);
    pMsg->SetVariable(VID_DESCRIPTION, m_szDescription);
+   pMsg->SetVariable(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformationScriptSource));
    pMsg->SetVariable(VID_FLAGS, m_flags);
    pMsg->SetVariable(VID_SYSTEM_TAG, m_systemTag);
    pMsg->SetVariable(VID_POLLING_INTERVAL, (DWORD)m_iPollingInterval);
@@ -720,6 +735,9 @@ void DCObject::updateFromMessage(CSCPMessage *pMsg)
 	safe_free(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
 	m_snmpPort = pMsg->GetVariableShort(VID_SNMP_PORT);
+   TCHAR *pszStr = pMsg->GetVariableStr(VID_TRANSFORMATION_SCRIPT);
+   setTransformationScript(pszStr);
+   safe_free(pszStr);
 
    // Update schedules
    for(DWORD i = 0; i < m_dwNumSchedules; i++)
@@ -833,6 +851,8 @@ void DCObject::updateFromTemplate(DCObject *src)
 	safe_free(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = (src->m_pszPerfTabSettings != NULL) ? _tcsdup(src->m_pszPerfTabSettings) : NULL;
 
+   setTransformationScript(src->m_transformationScriptSource);
+
    // Copy schedules
 	DWORD i;
    for(i = 0; i < m_dwNumSchedules; i++)
@@ -871,4 +891,32 @@ void DCObject::processNewError()
 bool DCObject::hasValue()
 {
 	return true;
+}
+
+/**
+ * Set new transformation script
+ */
+void DCObject::setTransformationScript(const TCHAR *pszScript)
+{
+   safe_free(m_transformationScriptSource);
+   delete m_transformationScript;
+   if (pszScript != NULL)
+   {
+      m_transformationScriptSource = _tcsdup(pszScript);
+      StrStrip(m_transformationScriptSource);
+      if (m_transformationScriptSource[0] != 0)
+      {
+			/* TODO: add compilation error handling */
+         m_transformationScript = (NXSL_Program *)NXSLCompile(m_transformationScriptSource, NULL, 0);
+      }
+      else
+      {
+         m_transformationScript = NULL;
+      }
+   }
+   else
+   {
+      m_transformationScriptSource = NULL;
+      m_transformationScript = NULL;
+   }
 }

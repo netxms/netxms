@@ -23,11 +23,17 @@
 
 #include "nxscript.h"
 
+NXSL_METHOD_DEFINITION(debug)
+{
+   *result = new NXSL_Value(_T("Sample debug output"));
+   return 0;
+}
 
 NXSL_TestClass::NXSL_TestClass()
                :NXSL_Class()
 {
    _tcscpy(m_szName, _T("TEST"));
+   NXSL_REGISTER_METHOD(debug, 0);
 }
 
 NXSL_Value *NXSL_TestClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
@@ -53,14 +59,4 @@ BOOL NXSL_TestClass::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Va
 		return TRUE;
    }
    return FALSE;
-}
-
-int NXSL_TestClass::callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program)
-{
-   if (!_tcscmp(name, _T("debug")))
-   {
-      *result = new NXSL_Value(_T("Sample debug output"));
-      return 0;
-   }
-   return NXSL_Class::callMethod(name, object, argc, argv, result, program);
 }

@@ -32,6 +32,7 @@ StringMapBase::StringMapBase(bool objectOwner)
 	m_keys = NULL;
 	m_values = NULL;
 	m_objectOwner = objectOwner;
+   m_ignoreCase = true;
 	m_objectDestructor = free;
 }
 
@@ -42,7 +43,6 @@ StringMapBase::~StringMapBase()
 {
 	clear();
 }
-
 
 /**
  * Clear map
@@ -72,7 +72,7 @@ DWORD StringMapBase::find(const TCHAR *key)
 
 	for(DWORD i = 0; i < m_size; i++)
 	{
-		if (!_tcsicmp(key, m_keys[i]))
+      if (m_ignoreCase ? !_tcsicmp(key, m_keys[i]) : !_tcscmp(key, m_keys[i]))
 			return i;
 	}
 	return INVALID_INDEX;

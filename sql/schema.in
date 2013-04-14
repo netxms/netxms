@@ -632,7 +632,8 @@ CREATE TABLE dc_tables
 	system_tag varchar(255) null,     		// System tag
 	resource_id integer not null,  	// associated cluster resource ID
 	proxy_node integer not null,   	// ID of proxy node (for SNMP and agent items)
-	perftab_settings SQL_TEXT,			// Settings for displaying graph on performance tab
+	perftab_settings SQL_TEXT null,			// Settings for displaying graph on performance tab
+	transformation_script SQL_TEXT null,
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
@@ -647,7 +648,6 @@ CREATE TABLE dc_table_columns
 	column_name varchar(63) not null,
 	snmp_oid varchar(1023) null,		// SNMP OID for this column, valid only for SNMP tables
 	data_type integer not null,
-	transformation_script SQL_TEXT null,
 	PRIMARY KEY(table_id,column_name)
 ) TABLE_TYPE;
 

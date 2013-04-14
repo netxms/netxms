@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -192,6 +192,8 @@ protected:
 	DWORD m_dwProxyNode;          // Proxy node ID or 0 to disable
 	WORD m_snmpPort;					// Custom SNMP port or 0 for node default
 	TCHAR *m_pszPerfTabSettings;
+   TCHAR *m_transformationScriptSource;   // Transformation script (source code)
+   NXSL_Program *m_transformationScript;  // Compiled transformation script
 
    void lock() { MutexLock(m_hMutex); }
    void unlock() { MutexUnlock(m_hMutex); }
@@ -199,6 +201,7 @@ protected:
 	BOOL loadCustomSchedules();
 
 	bool matchClusterResource();
+   bool matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp);
 
 	void expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
 
@@ -269,11 +272,9 @@ public:
 	void setInterval(int nInt) { m_iPollingInterval = nInt; }
 	void setAdvScheduleFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ADVANCED_SCHEDULE; else m_flags &= ~DCF_ADVANCED_SCHEDULE; }
 	void addSchedule(const TCHAR *pszSchedule);
+   void setTransformationScript(const TCHAR *pszScript);
 
 	bool prepareForDeletion();
-
-private:
-  BOOL matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp);
 };
 
 /**
@@ -287,8 +288,6 @@ protected:
    BYTE m_dataType;
 	int m_sampleCount;            // Number of samples required to calculate value
 	ObjectArray<Threshold> *m_thresholds;
-   TCHAR *m_transformerSource;   // Transformation script (source code)
-   NXSL_Program *m_transformer;  // Compiled transformation script
    DWORD m_dwCacheSize;          // Number of items in cache
    ItemValue **m_ppValueCache;
    ItemValue m_prevRawValue;     // Previous raw value (used for delta calculation)
@@ -371,7 +370,6 @@ public:
 	void setAllThresholdsFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ALL_THRESHOLDS; else m_flags &= ~DCF_ALL_THRESHOLDS; }
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
-   void setTransformationScript(const TCHAR *pszScript);
 	void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
 	void setInstanceDiscoveryData(const TCHAR *data) { safe_free(m_instanceDiscoveryData); m_instanceDiscoveryData = (data != NULL) ? _tcsdup(data) : NULL; }
    void setInstanceFilter(const TCHAR *pszScript);
@@ -388,8 +386,6 @@ private:
 	TCHAR m_name[MAX_COLUMN_NAME];
 	int m_dataType;
 	SNMP_ObjectId *m_snmpOid;
-	TCHAR *m_scriptSource;
-	NXSL_Program *m_script;
 
 public:
 	DCTableColumn(const DCTableColumn *src);
@@ -397,12 +393,9 @@ public:
 	DCTableColumn(DB_RESULT hResult, int row);
 	~DCTableColumn();
 
-   void setTransformationScript(const TCHAR *script);
-
 	const TCHAR *getName() { return m_name; }
 	int getDataType() { return m_dataType; }
 	SNMP_ObjectId *getSnmpOid() { return m_snmpOid; }
-	const TCHAR *getScriptSource() { return m_scriptSource; }
 };
 
 

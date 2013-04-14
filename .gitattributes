@@ -2254,6 +2254,7 @@ src/libnxmap/libnxmap.vcproj -text
 src/libnxmb/libnxmb.vcproj -text
 src/libnxsl/libnxsl.vcproj -text
 src/libnxsl/parser.l -text
+src/libnxsl/table.cpp -text
 src/libtre/AUTHORS -text
 src/libtre/LICENSE -text
 src/libtre/NEWS -text

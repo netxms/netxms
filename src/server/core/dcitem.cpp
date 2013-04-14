@@ -32,8 +32,6 @@ DCItem::DCItem() : DCObject()
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
 	m_sampleCount = 0;
    m_instance[0] = 0;
-   m_transformerSource = NULL;
-   m_transformer = NULL;
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
@@ -57,9 +55,6 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
    m_deltaCalculation = pSrc->m_deltaCalculation;
 	m_sampleCount = pSrc->m_sampleCount;
 	_tcscpy(m_instance, pSrc->m_instance);
-   m_transformerSource = NULL;
-   m_transformer = NULL;
-   setTransformationScript(pSrc->m_transformerSource);
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
@@ -110,8 +105,6 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
    m_iRetentionTime = DBGetFieldLong(hResult, iRow, 5);
    m_status = (BYTE)DBGetFieldLong(hResult, iRow, 6);
    m_deltaCalculation = (BYTE)DBGetFieldLong(hResult, iRow, 7);
-   m_transformerSource = NULL;
-   m_transformer = NULL;
    TCHAR *pszTmp = DBGetField(hResult, iRow, 8, NULL, 0);
    setTransformationScript(pszTmp);
    free(pszTmp);
@@ -175,8 +168,6 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
    m_dataType = iDataType;
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
 	m_sampleCount = 0;
-   m_transformerSource = NULL;
-   m_transformer = NULL;
    m_thresholds = NULL;
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
@@ -223,10 +214,6 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 	if (config->getSubEntryValueInt(_T("rawValueInOctetString")))
 		m_flags |= DCF_RAW_VALUE_OCTET_STRING;
 
-	m_transformerSource = NULL;
-	m_transformer = NULL;
-	setTransformationScript(config->getSubEntryValue(_T("transformation")));
-   
 	ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
 	if (thresholdsRoot != NULL)
 	{
@@ -252,8 +239,6 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 DCItem::~DCItem()
 {
 	delete m_thresholds;
-   safe_free(m_transformerSource);
-   delete m_transformer;
 	safe_free(m_instanceFilterSource);
 	delete m_instanceFilter;
 	safe_free(m_customUnitName);
@@ -362,7 +347,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_iRetentionTime);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_status);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_deltaCalculation);
-	DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_transformerSource, DB_BIND_STATIC);
+	DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_transformationScriptSource, DB_BIND_STATIC);
 	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_szDescription, DB_BIND_STATIC);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_instance, DB_BIND_STATIC);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
@@ -510,7 +495,6 @@ void DCItem::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_DCI_DATA_TYPE, (WORD)m_dataType);
    pMsg->SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)m_deltaCalculation);
    pMsg->SetVariable(VID_SAMPLE_COUNT, (WORD)m_sampleCount);
-   pMsg->SetVariable(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformerSource));
 	pMsg->SetVariable(VID_BASE_UNITS, (WORD)m_nBaseUnits);
 	pMsg->SetVariable(VID_MULTIPLIER, (DWORD)m_nMultiplier);
 	pMsg->SetVariable(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
@@ -565,9 +549,6 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppd
    m_dataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
    m_deltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
 	m_sampleCount = (int)pMsg->GetVariableShort(VID_SAMPLE_COUNT);
-   TCHAR *pszStr = pMsg->GetVariableStr(VID_TRANSFORMATION_SCRIPT);
-   setTransformationScript(pszStr);
-   safe_free(pszStr);
 	m_nBaseUnits = pMsg->GetVariableShort(VID_BASE_UNITS);
 	m_nMultiplier = (int)pMsg->GetVariableLong(VID_MULTIPLIER);
 	safe_free(m_customUnitName);
@@ -578,7 +559,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppd
 	safe_free(m_instanceDiscoveryData);
 	m_instanceDiscoveryData = pMsg->GetVariableStr(VID_INSTD_DATA);
 
-   pszStr = pMsg->GetVariableStr(VID_INSTD_FILTER);
+   TCHAR *pszStr = pMsg->GetVariableStr(VID_INSTD_FILTER);
 	setInstanceFilter(pszStr);
    safe_free(pszStr);
 
@@ -848,19 +829,19 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
          break;
    }
 
-   if (m_transformer != NULL)
+   if (m_transformationScript != NULL)
    {
       NXSL_Value *pValue;
       NXSL_ServerEnv *pEnv;
 
       pValue = new NXSL_Value((const TCHAR *)value);
       pEnv = new NXSL_ServerEnv;
-      m_transformer->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
-      m_transformer->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
+      m_transformationScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+      m_transformationScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
 	
-      if (m_transformer->run(pEnv, 1, &pValue) == 0)
+      if (m_transformationScript->run(pEnv, 1, &pValue) == 0)
       {
-         pValue = m_transformer->getResult();
+         pValue = m_transformationScript->getResult();
          if (pValue != NULL)
          {
             switch(m_dataType)
@@ -892,10 +873,10 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
       {
          TCHAR szBuffer[1024];
 
-			_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::Transformer"),
+			_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
                     (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
          PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer,
-                   m_transformer->getErrorText(), m_dwId);
+                   m_transformationScript->getErrorText(), m_dwId);
       }
    }
 }
@@ -1233,7 +1214,6 @@ void DCItem::updateFromTemplate(DCObject *src)
 
    m_dataType = item->m_dataType;
    m_deltaCalculation = item->m_deltaCalculation;
-   setTransformationScript(item->m_transformerSource);
 
 	m_nBaseUnits = item->m_nBaseUnits;
 	m_nMultiplier = item->m_nMultiplier;
@@ -1270,34 +1250,6 @@ void DCItem::updateFromTemplate(DCObject *src)
    updateCacheSize();
    
    unlock();
-}
-
-/**
- * Set new transformation script
- */
-void DCItem::setTransformationScript(const TCHAR *pszScript)
-{
-   safe_free(m_transformerSource);
-   delete m_transformer;
-   if (pszScript != NULL)
-   {
-      m_transformerSource = _tcsdup(pszScript);
-      StrStrip(m_transformerSource);
-      if (m_transformerSource[0] != 0)
-      {
-			/* TODO: add compilation error handling */
-         m_transformer = (NXSL_Program *)NXSLCompile(m_transformerSource, NULL, 0);
-      }
-      else
-      {
-         m_transformer = NULL;
-      }
-   }
-   else
-   {
-      m_transformerSource = NULL;
-      m_transformer = NULL;
-   }
 }
 
 /**
@@ -1385,10 +1337,10 @@ void DCItem::createNXMPRecord(String &str)
 								  (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? 1 : 0, 
 								  (int)m_snmpRawValueType, (int)m_snmpPort);
 
-	if (m_transformerSource != NULL)
+	if (m_transformationScriptSource != NULL)
 	{
 		str += _T("\t\t\t\t\t<transformation>");
-		str.addDynamicString(EscapeStringForXML(m_transformerSource, -1));
+		str.addDynamicString(EscapeStringForXML(m_transformationScriptSource, -1));
 		str += _T("</transformation>\n");
 	}
 
@@ -1640,7 +1592,7 @@ void DCItem::filterInstanceList(StringList *instances)
 			_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"),
                     (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
          PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer,
-                   m_transformer->getErrorText(), m_dwId);
+                   m_instanceFilter->getErrorText(), m_dwId);
       }
    }
 }

@@ -77,12 +77,32 @@ class NXSL_Object;
 class NXSL_Program;
 
 /**
+ * External method structure
+ */
+struct NXSL_ExtMethod
+{
+   int (* handler)(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program);
+   int numArgs;   // Number of arguments or -1 for variable number
+};
+
+#define NXSL_METHOD_DEFINITION(name) \
+   static int M_##name (NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program)
+
+#define NXSL_REGISTER_METHOD(name, argc) { \
+      NXSL_ExtMethod *m = new NXSL_ExtMethod; \
+      m->handler = M_##name; \
+      m->numArgs = argc; \
+      m_methods->set(_T(#name), m); \
+   }
+
+/**
  * Class representing NXSL class
  */
 class LIBNXSL_EXPORTABLE NXSL_Class
 {
 protected:
    TCHAR m_szName[MAX_CLASS_NAME];
+   StringObjectMap<NXSL_ExtMethod> *m_methods;
 
 public:
    NXSL_Class();
@@ -161,11 +181,9 @@ public:
 	int size() { return m_size; }
 };
 
-
-//
-// Iterator for arrays
-//
-
+/**
+ * Iterator for arrays
+ */
 class LIBNXSL_EXPORTABLE NXSL_Iterator
 {
 private:
@@ -189,11 +207,9 @@ public:
 	static int createIterator(NXSL_Stack *stack);
 };
 
-
-//
-// Variable or constant value
-//
-
+/**
+ * Variable or constant value
+ */
 class LIBNXSL_EXPORTABLE NXSL_Value
 {
 protected:
@@ -328,13 +344,11 @@ struct NXSL_ExtFunction
    int m_iNumArgs;   // Number of arguments or -1 for variable number
 };
 
-
-//
-// Environment for NXSL program
-//
-
 class NXSL_Library;
 
+/**
+ * Environment for NXSL program
+ */
 class LIBNXSL_EXPORTABLE NXSL_Environment
 {
 private:
@@ -443,11 +457,9 @@ public:
    ~NXSL_Instruction();
 };
 
-
-//
-// Used module information
-//
-
+/**
+ * NXSL module information
+ */
 struct NXSL_Module
 {
    TCHAR m_szName[MAX_PATH];
@@ -457,11 +469,9 @@ struct NXSL_Module
    DWORD m_dwNumFunctions;
 };
 
-
-//
-// Class representing compiled NXSL program
-//
-
+/**
+ * Class representing compiled NXSL program
+ */
 class LIBNXSL_EXPORTABLE NXSL_Program
 {
 protected:
@@ -545,11 +555,9 @@ public:
 	void setUserData(void *data) { m_userData = data; }
 };
 
-
-//
-// Script library
-//
-
+/**
+ * Script library
+ */
 class LIBNXSL_EXPORTABLE NXSL_Library
 {
 private:
@@ -576,5 +584,17 @@ public:
    void fillMessage(CSCPMessage *pMsg);
 };
 
+/**
+ * NXSL "Table" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_TableClass : public NXSL_Class
+{
+public:
+   NXSL_TableClass();
+   virtual ~NXSL_TableClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+	virtual void onObjectDelete(NXSL_Object *object);
+};
 
 #endif

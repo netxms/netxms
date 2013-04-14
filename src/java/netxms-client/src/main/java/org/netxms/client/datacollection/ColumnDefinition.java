@@ -29,7 +29,6 @@ public class ColumnDefinition
 	private String name;
 	private int dataType;
 	private SnmpObjectId snmpObjectId;
-	private String transformationScript;
 
 	/**
 	 * Create new column definition.
@@ -41,7 +40,6 @@ public class ColumnDefinition
 		this.name = name;
 		dataType = DataCollectionObject.DT_STRING;
 		snmpObjectId = null;
-		transformationScript = null;
 	}
 	
 	/**
@@ -54,7 +52,6 @@ public class ColumnDefinition
 		name = src.name;
 		dataType = src.dataType;
 		snmpObjectId = src.snmpObjectId;
-		transformationScript = src.transformationScript;
 	}
 	
 	/**
@@ -67,8 +64,7 @@ public class ColumnDefinition
 	{
 		name = msg.getVariableAsString(baseId);
 		dataType = msg.getVariableAsInteger(baseId + 1);
-		transformationScript = msg.getVariableAsString(baseId + 2);
-		long[] oid = msg.getVariableAsUInt32Array(baseId + 3);
+		long[] oid = msg.getVariableAsUInt32Array(baseId + 2);
 		snmpObjectId = (oid != null) ? new SnmpObjectId(oid) : null;
 	}
 
@@ -82,10 +78,8 @@ public class ColumnDefinition
 	{
 		msg.setVariable(baseId, name);
 		msg.setVariableInt16(baseId + 1, dataType);
-		if ((transformationScript != null) && !transformationScript.isEmpty())
-			msg.setVariable(baseId + 2, transformationScript);
 		if (snmpObjectId != null)
-			snmpObjectId.setNXCPVariable(msg, baseId + 3);
+			snmpObjectId.setNXCPVariable(msg, baseId + 2);
 	}
 	
 	/**
@@ -118,22 +112,6 @@ public class ColumnDefinition
 	public void setSnmpObjectId(SnmpObjectId snmpObjectId)
 	{
 		this.snmpObjectId = snmpObjectId;
-	}
-
-	/**
-	 * @return the transformationScript
-	 */
-	public String getTransformationScript()
-	{
-		return transformationScript;
-	}
-
-	/**
-	 * @param transformationScript the transformationScript to set
-	 */
-	public void setTransformationScript(String transformationScript)
-	{
-		this.transformationScript = transformationScript;
 	}
 
 	/**

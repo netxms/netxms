@@ -165,6 +165,7 @@ DEFINE_THREAD_STARTER(deleteReportResults)
 DEFINE_THREAD_STARTER(renderReport)
 DEFINE_THREAD_STARTER(getNetworkPath)
 DEFINE_THREAD_STARTER(queryParameter)
+DEFINE_THREAD_STARTER(queryAgentTable)
 DEFINE_THREAD_STARTER(getAlarmEvents)
 
 /**
@@ -945,6 +946,9 @@ void ClientSession::processingThread()
 				break;
          case CMD_QUERY_PARAMETER:
             CALL_IN_NEW_THREAD(queryParameter, pMsg);
+            break;
+         case CMD_QUERY_TABLE:
+            CALL_IN_NEW_THREAD(queryAgentTable, pMsg);
             break;
          case CMD_LOCK_PACKAGE_DB:
             LockPackageDB(pMsg->GetId(), TRUE);
@@ -5318,11 +5322,9 @@ void ClientSession::onWakeUpNode(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Query specific parameter from node
-//
-
+/**
+ * Query specific parameter from node
+ */
 void ClientSession::queryParameter(CSCPMessage *pRequest)
 {
    NetObj *pObject;
@@ -5369,11 +5371,9 @@ void ClientSession::queryParameter(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Query specific table from node
-//
-
+/**
+ * Query specific table from node
+ */
 void ClientSession::queryAgentTable(CSCPMessage *pRequest)
 {
    NetObj *pObject;

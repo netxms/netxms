@@ -157,7 +157,8 @@ DCTable::DCTable(DWORD id, const TCHAR *name, int source, int pollingInterval, i
  * Assumes that fields in SELECT query are in following order:
  *    item_id,template_id,template_item_id,name,instance_column,
  *    description,flags,source,snmp_port,polling_interval,retention_time,
- *    status,system_tag,resource_id,proxy_node,perftab_settings
+ *    status,system_tag,resource_id,proxy_node,perftab_settings,
+ *    transformation_script
  */
 DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
@@ -177,12 +178,15 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	m_dwResourceId = DBGetFieldULong(hResult, iRow, 13);
 	m_dwProxyNode = DBGetFieldULong(hResult, iRow, 14);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 15, NULL, 0);
+   TCHAR *pszTmp = DBGetField(hResult, iRow, 16, NULL, 0);
+   setTransformationScript(pszTmp);
+   free(pszTmp);
 
    m_pNode = pNode;
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
 	m_lastValue = NULL;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT column_name,data_type,snmp_oid,transformation_script FROM dc_table_columns WHERE table_id=?"));
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT column_name,data_type,snmp_oid FROM dc_table_columns WHERE table_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
@@ -369,7 +373,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 
 		if (result && (m_columns->size() > 0))
 		{
-			hStmt = DBPrepare(hdb, _T("INSERT INTO dc_table_columns (table_id,column_name,snmp_oid,data_type,transformation_script) VALUES (?,?,?,?)"));
+			hStmt = DBPrepare(hdb, _T("INSERT INTO dc_table_columns (table_id,column_name,snmp_oid,data_type) VALUES (?,?,?,?)"));
 			if (hStmt != NULL)
 			{
 				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
@@ -380,7 +384,6 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 					SNMP_ObjectId *oid = column->getSnmpOid();
 					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (oid != NULL) ? oid->getValueAsText() : NULL, DB_BIND_STATIC);
 					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)column->getDataType());
-					DBBind(hStmt, 5, DB_SQLTYPE_TEXT, column->getScriptSource(), DB_BIND_STATIC);
 
 					result = DBExecute(hStmt);
 					if (!result)
@@ -432,13 +435,12 @@ void DCTable::createMessage(CSCPMessage *pMsg)
 		DCTableColumn *column = m_columns->get(i);
 		pMsg->SetVariable(varId++, column->getName());
 		pMsg->SetVariable(varId++, (WORD)column->getDataType());
-		pMsg->SetVariable(varId++, CHECK_NULL_EX(column->getScriptSource()));
 		SNMP_ObjectId *oid = column->getSnmpOid();
 		if (oid != NULL)
 			pMsg->SetVariableToInt32Array(varId++, oid->getLength(), oid->getValue());
 		else
 			varId++;
-		varId += 6;
+		varId += 7;
 	}
    unlock();
 }

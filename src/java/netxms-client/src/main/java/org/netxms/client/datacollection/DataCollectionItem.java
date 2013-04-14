@@ -58,7 +58,6 @@ public class DataCollectionItem extends DataCollectionObject
 	private int dataType;
 	private int deltaCalculation;
 	private int sampleCount;
-	private String transformationScript;
 	private String instance;
 	private int baseUnits;
 	private int multiplier;
@@ -82,7 +81,6 @@ public class DataCollectionItem extends DataCollectionObject
 		dataType = msg.getVariableAsInteger(NXCPCodes.VID_DCI_DATA_TYPE);
 		deltaCalculation = msg.getVariableAsInteger(NXCPCodes.VID_DCI_DELTA_CALCULATION);
 		sampleCount = msg.getVariableAsInteger(NXCPCodes.VID_SAMPLE_COUNT);
-		transformationScript = msg.getVariableAsString(NXCPCodes.VID_TRANSFORMATION_SCRIPT);
 		instance = msg.getVariableAsString(NXCPCodes.VID_INSTANCE);
 		baseUnits = msg.getVariableAsInteger(NXCPCodes.VID_BASE_UNITS);
 		multiplier = msg.getVariableAsInteger(NXCPCodes.VID_MULTIPLIER);
@@ -114,7 +112,6 @@ public class DataCollectionItem extends DataCollectionObject
 		dataType = DT_INT;
 		deltaCalculation = DELTA_NONE;
 		sampleCount = 0;
-		transformationScript = null;
 		instance = "";
 		baseUnits = 0;
 		multiplier = 0;
@@ -137,7 +134,6 @@ public class DataCollectionItem extends DataCollectionObject
 		msg.setVariableInt16(NXCPCodes.VID_DCI_DELTA_CALCULATION, deltaCalculation);
 		msg.setVariableInt16(NXCPCodes.VID_SAMPLE_COUNT, sampleCount);
 		msg.setVariable(NXCPCodes.VID_INSTANCE, instance);
-		msg.setVariable(NXCPCodes.VID_TRANSFORMATION_SCRIPT, transformationScript);
 		msg.setVariableInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
 		msg.setVariableInt16(NXCPCodes.VID_BASE_UNITS, baseUnits);
 		msg.setVariableInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
@@ -228,22 +224,6 @@ public class DataCollectionItem extends DataCollectionObject
 			flags |= DCF_RAW_VALUE_OCTET_STRING;
 		else
 			flags &= ~DCF_RAW_VALUE_OCTET_STRING;
-	}
-
-	/**
-	 * @return the transformationScript
-	 */
-	public String getTransformationScript()
-	{
-		return transformationScript;
-	}
-
-	/**
-	 * @param transformationScript the transformationScript to set
-	 */
-	public void setTransformationScript(String transformationScript)
-	{
-		this.transformationScript = transformationScript;
 	}
 
 	/**

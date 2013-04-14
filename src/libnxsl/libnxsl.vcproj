@@ -437,6 +437,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\table.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\value.cpp"
 				>
 			</File>

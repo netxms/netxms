@@ -186,11 +186,11 @@ public:
 	bool restart();
 };
 
+class CSCPMessage;
+
 /**
  * Class for table data storage
  */
-class CSCPMessage;
-
 class LIBNETXMS_EXPORTABLE Table
 {
 private:
@@ -212,12 +212,15 @@ public:
 	int fillMessage(CSCPMessage &msg, int offset, int rowLimit);
 	void updateFromMessage(CSCPMessage *msg);
 
+   void merge(Table *t, const TCHAR *instanceColumn);
+
    int getNumRows() { return m_nNumRows; }
    int getNumColumns() { return m_nNumCols; }
 	const TCHAR *getTitle() { return CHECK_NULL_EX(m_title); }
 
 	const TCHAR *getColumnName(int col) { return ((col >= 0) && (col < m_nNumCols)) ? m_ppColNames[col] : NULL; }
 	LONG getColumnFormat(int col) { return ((col >= 0) && (col < m_nNumCols)) ? m_colFormats[col] : 0; }
+	int getColumnIndex(const TCHAR *name);
 
 	void setTitle(const TCHAR *title) { safe_free(m_title); m_title = (title != NULL) ? _tcsdup(title) : NULL; }
    int addColumn(const TCHAR *name, LONG format = 0);
@@ -306,6 +309,7 @@ protected:
 	TCHAR **m_keys;
 	void **m_values;
 	bool m_objectOwner;
+   bool m_ignoreCase;
 	void (*m_objectDestructor)(void *);
 
 	DWORD find(const TCHAR *key);
@@ -316,6 +320,9 @@ protected:
 public:
 	StringMapBase(bool objectOwner);
 	virtual ~StringMapBase();
+
+   void setOwner(bool owner) { m_objectOwner = owner; }
+   void setIgnoreCase(bool ignore) { m_ignoreCase = ignore; }
 
 	void remove(const TCHAR *key);
 	void clear();

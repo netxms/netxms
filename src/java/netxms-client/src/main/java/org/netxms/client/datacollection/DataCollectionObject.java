@@ -68,6 +68,7 @@ public abstract class DataCollectionObject
 	protected int origin;
 	protected int status;
 	protected int flags;
+	protected String transformationScript;
 	protected String name;
 	protected String description;
 	protected String systemTag;
@@ -93,6 +94,7 @@ public abstract class DataCollectionObject
 		origin = msg.getVariableAsInteger(NXCPCodes.VID_DCI_SOURCE_TYPE);
 		status = msg.getVariableAsInteger(NXCPCodes.VID_DCI_STATUS);
 		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
+		transformationScript = msg.getVariableAsString(NXCPCodes.VID_TRANSFORMATION_SCRIPT);
 		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
 		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
 		systemTag = msg.getVariableAsString(NXCPCodes.VID_SYSTEM_TAG);
@@ -126,6 +128,7 @@ public abstract class DataCollectionObject
 		origin = AGENT;
 		status = ACTIVE;
 		flags = 0;
+		transformationScript = null;
 		perfTabSettings = null;
 		name = "";
 		description = "";
@@ -150,6 +153,7 @@ public abstract class DataCollectionObject
 		msg.setVariable(NXCPCodes.VID_DESCRIPTION, description);
 		msg.setVariable(NXCPCodes.VID_SYSTEM_TAG, systemTag);
 		msg.setVariableInt16(NXCPCodes.VID_FLAGS, flags);
+		msg.setVariable(NXCPCodes.VID_TRANSFORMATION_SCRIPT, transformationScript);
 		msg.setVariableInt32(NXCPCodes.VID_RESOURCE_ID, (int)resourceId);
 		msg.setVariableInt32(NXCPCodes.VID_AGENT_PROXY, (int)proxyNode);
 		if (perfTabSettings != null)
@@ -443,5 +447,21 @@ public abstract class DataCollectionObject
 	public void setFlags(int flags)
 	{
 		this.flags = flags;
+	}
+
+	/**
+	 * @return the transformationScript
+	 */
+	public String getTransformationScript()
+	{
+		return transformationScript;
+	}
+
+	/**
+	 * @param transformationScript the transformationScript to set
+	 */
+	public void setTransformationScript(String transformationScript)
+	{
+		this.transformationScript = transformationScript;
 	}
 }

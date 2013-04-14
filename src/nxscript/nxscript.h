@@ -44,7 +44,6 @@ public:
 
    virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
    virtual BOOL setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue);
-   virtual int callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program);
 };
 
 #endif
