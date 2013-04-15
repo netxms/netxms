@@ -83,9 +83,9 @@ typedef void * DBDRV_ASYNC_RESULT;
 // DB binding buffer allocation types
 //
 
-#define DB_BIND_STATIC     0
-#define DB_BIND_TRANSIENT  1
-#define DB_BIND_DYNAMIC    2
+#define DB_BIND_STATIC     0 // buffer is managed by caller and will be valid until after the query is executed
+#define DB_BIND_TRANSIENT  1 // buffer will be duplicated by DB driver in DBBind()
+#define DB_BIND_DYNAMIC    2 // DB Driver will call free() on buffer
 
 
 //
