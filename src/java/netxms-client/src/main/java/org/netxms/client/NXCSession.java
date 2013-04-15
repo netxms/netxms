@@ -282,17 +282,17 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	
 	/**
 	 * Create custom object from NXCP message. May be overridden by derived classes to create custom
-	 * NetXMS objects. Default implementation will always create GenericObject class. Implementation
-	 * in derived class must either always return object or call base implementation for unknown 
-	 * NetXMS object classes.
+	 * NetXMS objects. This method called before standard object creation, so it can be used for 
+	 * overriding standard object classes. If this method returns null, standard object
+	 * creation mechanism will be used. Default implementation will always return null.
 	 * 
 	 * @param objectClass NetXMS object class ID
 	 * @param msg Source NXCP message
-	 * @return NetXMS object
+	 * @return NetXMS object or null if object cannot be created
 	 */
 	protected AbstractObject createCustomObjectFromMessage(int objectClass, NXCPMessage msg)
 	{
-		return new GenericObject(msg, this);
+		return null;
 	}
 
 	/**
@@ -304,7 +304,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private AbstractObject createObjectFromMessage(NXCPMessage msg)
 	{
 		final int objectClass = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_CLASS);
-		AbstractObject object;
+		
+		AbstractObject object = createCustomObjectFromMessage(objectClass, msg);
+		if (object != null)
+			return object;
 
 		switch(objectClass)
 		{
@@ -405,7 +408,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				object = new ServiceCheck(msg, this);
 				break;
 			default:
-				object = createCustomObjectFromMessage(objectClass, msg);
+				object = new GenericObject(msg, this);
 				break;
 		}
 
