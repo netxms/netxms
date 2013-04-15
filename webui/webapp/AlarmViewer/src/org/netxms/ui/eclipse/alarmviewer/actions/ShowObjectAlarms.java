@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,14 +26,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Container;
-import org.netxms.client.objects.EntireNetwork;
-import org.netxms.client.objects.ServiceRoot;
-import org.netxms.client.objects.Subnet;
-import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -85,10 +78,7 @@ public class ShowObjectAlarms implements IObjectActionDelegate
 		    (((IStructuredSelection)selection).size() == 1))
 		{
 			obj = ((IStructuredSelection)selection).getFirstElement();
-			if((obj instanceof AbstractNode) || (obj instanceof Container) ||
-				(obj instanceof Subnet) || (obj instanceof Cluster) ||
-				(obj instanceof EntireNetwork) || (obj instanceof ServiceRoot) ||
-				(obj instanceof Zone))
+			if (obj instanceof AbstractObject)
 			{
 				object = (AbstractObject)obj;
 			}

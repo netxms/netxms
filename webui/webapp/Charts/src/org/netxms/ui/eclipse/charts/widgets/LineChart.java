@@ -261,6 +261,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 		
 		final Composite plotArea = getPlotArea();
 		moveListener = new MouseMoveListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void mouseMove(MouseEvent e)
 			{

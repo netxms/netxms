@@ -13,6 +13,7 @@ import org.eclipse.swt.graphics.Point;
 /**
  * A utility class providing generic methods.
  */
+@SuppressWarnings("deprecation")
 public final class Util
 {
 	/**

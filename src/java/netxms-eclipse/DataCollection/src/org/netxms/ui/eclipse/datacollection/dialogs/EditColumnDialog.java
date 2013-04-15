@@ -9,7 +9,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.datacollection.ColumnDefinition;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 
 /**
  * Column definition editing dialog
@@ -17,7 +16,6 @@ import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 public class EditColumnDialog extends Dialog
 {
 	private ColumnDefinition column;
-	private ScriptEditor transformationScript; 
 	
 	/**
 	 * @param parentShell
