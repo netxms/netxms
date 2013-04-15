@@ -27,6 +27,7 @@ import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IPluginContribution;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.netxms.client.objects.AbstractObject;
@@ -35,8 +36,10 @@ import org.netxms.client.objects.AbstractObject;
  * Abstract object tab class
  *
  */
-public abstract class ObjectTab
+public abstract class ObjectTab implements IPluginContribution
 {
+	private String pluginId;
+	private String id;
 	private ViewPart viewPart;
 	private CTabFolder tabFolder;
 	private CTabItem tabItem;
@@ -55,6 +58,11 @@ public abstract class ObjectTab
 	public void configure(IConfigurationElement ce, ViewPart viewPart)
 	{
 		this.viewPart = viewPart;
+		
+		pluginId = ce.getContributor().getName();
+		id = ce.getAttribute("id");
+		if (id == null)
+			id = "no_id";
 		
 		name = ce.getAttribute("name");
 		if (name == null)
@@ -287,5 +295,23 @@ public abstract class ObjectTab
 	public ISelectionProvider getSelectionProvider()
 	{
 		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.IPluginContribution#getLocalId()
+	 */
+	@Override
+	public String getLocalId()
+	{
+		return id;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.IPluginContribution#getPluginId()
+	 */
+	@Override
+	public String getPluginId()
+	{
+		return pluginId;
 	}
 }

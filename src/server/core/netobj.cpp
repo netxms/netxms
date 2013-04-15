@@ -694,7 +694,7 @@ BOOL NetObj::loadACLFromDB()
 
 			iNumRows = DBGetNumRows(hResult);
 			for(i = 0; i < iNumRows; i++)
-				m_pAccessList->AddElement(DBGetFieldULong(hResult, i, 0), 
+				m_pAccessList->addElement(DBGetFieldULong(hResult, i, 0), 
 												  DBGetFieldULong(hResult, i, 1));
 			DBFreeResult(hResult);
 			bSuccess = TRUE;
@@ -741,7 +741,7 @@ BOOL NetObj::saveACLToDB(DB_HANDLE hdb)
    {
       sp.dwObjectId = m_dwId;
       sp.hdb = hdb;
-      m_pAccessList->EnumerateElements(EnumerationHandler, &sp);
+      m_pAccessList->enumerateElements(EnumerationHandler, &sp);
       bSuccess = TRUE;
    }
    UnlockACL();
@@ -797,7 +797,7 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
 		pMsg->SetVariable(dwId++, m_customAttributes.getValueByIndex(i));
 	}
 
-   m_pAccessList->CreateMessage(pMsg);
+   m_pAccessList->fillMessage(pMsg);
 	m_geoLocation.fillMessage(*pMsg);
 }
 
@@ -872,9 +872,9 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       LockACL();
       dwNumElements = pRequest->GetVariableLong(VID_ACL_SIZE);
       m_bInheritAccessRights = pRequest->GetVariableShort(VID_INHERIT_RIGHTS);
-      m_pAccessList->DeleteAll();
+      m_pAccessList->deleteAll();
       for(i = 0; i < dwNumElements; i++)
-         m_pAccessList->AddElement(pRequest->GetVariableLong(VID_ACL_USER_BASE + i),
+         m_pAccessList->addElement(pRequest->GetVariableLong(VID_ACL_USER_BASE + i),
                                    pRequest->GetVariableLong(VID_ACL_RIGHTS_BASE +i));
       UnlockACL();
    }
@@ -948,10 +948,12 @@ DWORD NetObj::getUserRights(DWORD userId)
 	if (m_bIsSystem)
 		return 0;
 
-   LockACL();
-
    // Check if have direct right assignment
-   if (!m_pAccessList->GetUserRights(userId, &dwRights))
+   LockACL();
+   bool hasDirectRights = m_pAccessList->getUserRights(userId, &dwRights);
+   UnlockACL();
+
+   if (!hasDirectRights)
    {
       // We don't. If this object inherit rights from parents, get them
       if (m_bInheritAccessRights)
@@ -965,7 +967,6 @@ DWORD NetObj::getUserRights(DWORD userId)
       }
    }
 
-   UnlockACL();
    return dwRights;
 }
 
@@ -988,9 +989,14 @@ BOOL NetObj::checkAccessRights(DWORD userId, DWORD requiredRights)
 void NetObj::dropUserAccess(DWORD dwUserId)
 {
    LockACL();
-   if (m_pAccessList->DeleteElement(dwUserId))
-      Modify();
+   bool modified = m_pAccessList->deleteElement(dwUserId);
    UnlockACL();
+   if (modified)
+   {
+      LockData();
+      Modify();
+      UnlockData();
+   }
 }
 
 /**

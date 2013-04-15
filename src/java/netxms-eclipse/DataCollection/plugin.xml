@@ -285,12 +285,14 @@
       <tab
             class="org.netxms.ui.eclipse.datacollection.objecttabs.LastValues"
             icon="icons/last_values.png"
+            id="org.netxms.ui.eclipse.datacollection.objecttabs.LastValues"
             name="Last Values"
             order="20">
       </tab>
       <tab
             class="org.netxms.ui.eclipse.datacollection.objecttabs.ThresholdSummary"
             icon="icons/thresholds.gif"
+            id="org.netxms.ui.eclipse.datacollection.objecttabs.ThresholdSummary"
             name="Thresholds"
             order="20">
       </tab>

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Access list constructor
-//
-
+/**
+ * Access list constructor
+ */
 AccessList::AccessList()
 {
    m_pElements = NULL;
@@ -34,27 +32,23 @@ AccessList::AccessList()
    m_hMutex = MutexCreate();
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 AccessList::~AccessList()
 {
    safe_free(m_pElements);
    MutexDestroy(m_hMutex);
 }
 
-
-//
-// Add element to list
-//
-
-void AccessList::AddElement(DWORD dwUserId, DWORD dwAccessRights)
+/**
+ * Add element to list
+ */
+void AccessList::addElement(DWORD dwUserId, DWORD dwAccessRights)
 {
    DWORD i;
 
-   Lock();
+   lock();
    for(i = 0; i < m_dwNumElements; i++)
       if (m_pElements[i].dwUserId == dwUserId)    // Object already exist in list
       {
@@ -69,52 +63,48 @@ void AccessList::AddElement(DWORD dwUserId, DWORD dwAccessRights)
       m_pElements[m_dwNumElements].dwAccessRights = dwAccessRights;
       m_dwNumElements++;
    }
-   Unlock();
+   unlock();
 }
 
-
-//
-// Delete element from list
-//
-
-BOOL AccessList::DeleteElement(DWORD dwUserId)
+/**
+ * Delete element from list
+ */
+bool AccessList::deleteElement(DWORD dwUserId)
 {
    DWORD i;
-   BOOL bDeleted = FALSE;
+   bool bDeleted = false;
 
-   Lock();
+   lock();
    for(i = 0; i < m_dwNumElements; i++)
       if (m_pElements[i].dwUserId == dwUserId)
       {
          m_dwNumElements--;
          memmove(&m_pElements[i], &m_pElements[i + 1], sizeof(ACL_ELEMENT) * (m_dwNumElements - i));
-         bDeleted = TRUE;
+         bDeleted = true;
          break;
       }
-   Unlock();
+   unlock();
    return bDeleted;
 }
 
-
-//
-// Retrieve access rights for specific user object
-// Return TRUE on success and stores access rights to specific location
-// If user doesn't have explicit rights or via group, returns FALSE
-//
-
-BOOL AccessList::GetUserRights(DWORD dwUserId, DWORD *pdwAccessRights)
+/**
+ * Retrieve access rights for specific user object
+ * Returns true on success and stores access rights to specific location
+ * If user doesn't have explicit rights or via group, returns false
+ */
+bool AccessList::getUserRights(DWORD dwUserId, DWORD *pdwAccessRights)
 {
    DWORD i;
-   BOOL bFound = FALSE;
+   bool bFound = false;
 
-   Lock();
+   lock();
 
    // Check for explicit rights
    for(i = 0; i < m_dwNumElements; i++)
       if (m_pElements[i].dwUserId == dwUserId)
       {
          *pdwAccessRights = m_pElements[i].dwAccessRights;
-         bFound = TRUE;
+         bFound = true;
          break;
       }
 
@@ -127,40 +117,36 @@ BOOL AccessList::GetUserRights(DWORD dwUserId, DWORD *pdwAccessRights)
             if (CheckUserMembership(dwUserId, m_pElements[i].dwUserId))
             {
                *pdwAccessRights |= m_pElements[i].dwAccessRights;
-               bFound = TRUE;
+               bFound = true;
             }
          }
    }
 
-   Unlock();
+   unlock();
    return bFound;
 }
 
-
-//
-// Enumerate all elements
-//
-
-void AccessList::EnumerateElements(void (* pHandler)(DWORD, DWORD, void *), void *pArg)
+/**
+ * Enumerate all elements
+ */
+void AccessList::enumerateElements(void (* pHandler)(DWORD, DWORD, void *), void *pArg)
 {
    DWORD i;
 
-   Lock();
+   lock();
    for(i = 0; i < m_dwNumElements; i++)
       pHandler(m_pElements[i].dwUserId, m_pElements[i].dwAccessRights, pArg);
-   Unlock();
+   unlock();
 }
 
-
-//
-// Fill CSCP message with ACL's data
-//
-
-void AccessList::CreateMessage(CSCPMessage *pMsg)
+/**
+ * Fill NXCP message with ACL's data
+ */
+void AccessList::fillMessage(CSCPMessage *pMsg)
 {
    DWORD i, dwId1, dwId2;
 
-   Lock();
+   lock();
    pMsg->SetVariable(VID_ACL_SIZE, m_dwNumElements);
    for(i = 0, dwId1 = VID_ACL_USER_BASE, dwId2 = VID_ACL_RIGHTS_BASE;
        i < m_dwNumElements; i++, dwId1++, dwId2++)
@@ -168,19 +154,17 @@ void AccessList::CreateMessage(CSCPMessage *pMsg)
       pMsg->SetVariable(dwId1, m_pElements[i].dwUserId);
       pMsg->SetVariable(dwId2, m_pElements[i].dwAccessRights);
    }
-   Unlock();
+   unlock();
 }
 
-
-//
-// Delete all elements
-//
-
-void AccessList::DeleteAll()
+/**
+ * Delete all elements
+ */
+void AccessList::deleteAll()
 {
-   Lock();
+   lock();
    m_dwNumElements = 0;
    safe_free(m_pElements);
    m_pElements = NULL;
-   Unlock();
+   unlock();
 }

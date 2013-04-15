@@ -23,29 +23,26 @@
 #ifndef _nms_users_h_
 #define _nms_users_h_
 
-
-//
-// Maximum number of grace logins allowed for user
-//
-
+/**
+ * Maximum number of grace logins allowed for user
+ */
 #define MAX_GRACE_LOGINS      5
 
+/**
+ * Authentication methods
+ */
+enum UserAuthMethod
+{
+   AUTH_NETXMS_PASSWORD = 0,
+   AUTH_RADIUS          = 1,
+   AUTH_CERTIFICATE     = 2,
+   AUTH_CERT_OR_PASSWD  = 3,
+   AUTH_CERT_OR_RADIUS  = 4
+};
 
-//
-// Authentication methods
-//
-
-#define AUTH_NETXMS_PASSWORD  0
-#define AUTH_RADIUS           1
-#define AUTH_CERTIFICATE      2
-#define AUTH_CERT_OR_PASSWD   3
-#define AUTH_CERT_OR_RADIUS   4
-
-
-//
-// Generic user database object
-//
-
+/**
+ * Generic user database object
+ */
 class NXCORE_EXPORTABLE UserDatabaseObject
 {
 protected:
@@ -90,11 +87,9 @@ public:
 	void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.set(name, value); m_flags |= UF_MODIFIED; }
 };
 
-
-//
-// User object
-//
-
+/**
+ * User object
+ */
 class NXCORE_EXPORTABLE User : public UserDatabaseObject
 {
 protected:
@@ -146,11 +141,9 @@ public:
 	void disable() { m_flags |= UF_DISABLED | UF_MODIFIED; }
 };
 
-
-//
-// Group object
-//
-
+/**
+ * Group object
+ */
 class NXCORE_EXPORTABLE Group : public UserDatabaseObject
 {
 protected:
@@ -174,22 +167,18 @@ public:
 	bool isMember(DWORD userId);
 };
 
-
-//
-// Access list element structure
-//
-
+/**
+ * Access list element structure
+ */
 typedef struct
 {
    DWORD dwUserId;
    DWORD dwAccessRights;
 } ACL_ELEMENT;
 
-
-//
-// Access list class
-//
-
+/**
+ * Access list class
+ */
 class AccessList
 {
 private:
@@ -197,28 +186,26 @@ private:
    ACL_ELEMENT *m_pElements;
    MUTEX m_hMutex;
 
-   void Lock(void) { MutexLock(m_hMutex); }
-   void Unlock(void) { MutexUnlock(m_hMutex); }
+   void lock() { MutexLock(m_hMutex); }
+   void unlock() { MutexUnlock(m_hMutex); }
 
 public:
    AccessList();
    ~AccessList();
 
-   BOOL GetUserRights(DWORD dwUserId, DWORD *pdwAccessRights);
-   void AddElement(DWORD dwUserId, DWORD dwAccessRights);
-   BOOL DeleteElement(DWORD dwUserId);
-   void DeleteAll(void);
+   bool getUserRights(DWORD dwUserId, DWORD *pdwAccessRights);
+   void addElement(DWORD dwUserId, DWORD dwAccessRights);
+   bool deleteElement(DWORD dwUserId);
+   void deleteAll();
 
-   void EnumerateElements(void (* pHandler)(DWORD, DWORD, void *), void *pArg);
+   void enumerateElements(void (* pHandler)(DWORD, DWORD, void *), void *pArg);
 
-   void CreateMessage(CSCPMessage *pMsg);
+   void fillMessage(CSCPMessage *pMsg);
 };
 
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 BOOL LoadUsers();
 void SaveUsers(DB_HANDLE hdb);
 void SendUserDBUpdate(int code, DWORD id, UserDatabaseObject *object);
