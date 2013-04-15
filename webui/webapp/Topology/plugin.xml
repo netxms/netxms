@@ -136,6 +136,7 @@
       <tab
             class="org.netxms.ui.eclipse.topology.objecttabs.Ports"
             icon="icons/ports.gif"
+            id="org.netxms.ui.eclipse.topology.objecttabs.Ports"
             name="Ports">
       </tab>
    </extension>

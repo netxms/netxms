@@ -3320,6 +3320,7 @@ webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/Activator.java -tex
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowObjectDetailsView.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowStatusMap.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/api/ObjectDetailsProvider.java -text
+webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ClusterTab.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ComponentsTab.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectOverview.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectTab.java -text
@@ -3331,6 +3332,8 @@ webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/GeneralInfo.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/OverviewPageElement.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/TableElement.java -text
+webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/helpers/ClusterResourceListComparator.java -text
+webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/helpers/ClusterResourceListLabelProvider.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/helpers/ComponentTreeContentProvider.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/helpers/ComponentTreeLabelProvider.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/services/SourceProvider.java -text

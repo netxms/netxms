@@ -51,6 +51,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.activities.WorkbenchActivityHelper;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
@@ -298,7 +299,7 @@ public class TabbedObjectView extends ViewPart
 			header.setText(object.getObjectName());
 			for(final ObjectTab tab : tabs)
 			{
-				if (tab.showForObject(object))
+				if (tab.showForObject(object) && !WorkbenchActivityHelper.filterItem(tab))
 				{
 					tab.show();
 					tab.changeObject(object);

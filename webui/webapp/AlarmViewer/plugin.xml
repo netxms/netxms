@@ -77,6 +77,7 @@
       <tab
             class="org.netxms.ui.eclipse.alarmviewer.objecttabs.AlarmTab"
             icon="icons/alarm_browser.png"
+            id="org.netxms.ui.eclipse.alarmviewer.objecttabs.AlarmTab"
             name="%tab.Alarms"
             order="10">
       </tab>
