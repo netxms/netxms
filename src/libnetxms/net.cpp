@@ -180,6 +180,11 @@ bool SocketConnection::waitForText(const char *text, int timeout)
 		}
 
 		int size = read(&m_data[m_dataPos], 4095 - m_dataPos);
+      if (size <= 0)
+      {
+         return false;
+      }
+
 		m_data[size + m_dataPos] = 0;
 		bufLen = (int)strlen(m_data);
 
