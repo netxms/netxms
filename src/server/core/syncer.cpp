@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,12 +28,34 @@
 void NetObjDelete(NetObj *pObject);
 
 /**
+ * Object transaction lock
+ */
+static RWLOCK s_objectTxnLock = RWLockCreate();
+
+/**
+ * Start object transaction
+ */
+void NXCORE_EXPORTABLE ObjectTransactionStart()
+{
+   RWLockReadLock(s_objectTxnLock, INFINITE);
+}
+
+/**
+ * End object transaction
+ */
+void NXCORE_EXPORTABLE ObjectTransactionEnd()
+{
+   RWLockUnlock(s_objectTxnLock);
+}
+
+/**
  * Save objects to database
  */
 void SaveObjects(DB_HANDLE hdb)
 {
-	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
+   RWLockWriteLock(s_objectTxnLock, INFINITE);
 
+	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
 	for(int i = 0; i < objects->size(); i++)
    {
    	NetObj *object = objects->get(i);
@@ -65,14 +87,13 @@ void SaveObjects(DB_HANDLE hdb)
 		}
    }
 
+   RWLockUnlock(s_objectTxnLock);
 	delete objects;
 }
 
-
-//
-// Syncer thread
-//
-
+/**
+ * Syncer thread
+ */
 THREAD_RESULT THREAD_CALL Syncer(void *arg)
 {
    int iSyncInterval;

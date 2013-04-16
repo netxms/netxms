@@ -4093,6 +4093,8 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 					pRequest->GetVariableStr(VID_OBJECT_NAME, szObjectName, MAX_OBJECT_NAME);
 					if (IsValidObjectName(szObjectName, TRUE))
 					{
+                  ObjectTransactionStart();
+
 						// Create new object
 						switch(iClass)
 						{
@@ -4310,6 +4312,8 @@ void ClientSession::createObject(CSCPMessage *pRequest)
                   		msg.SetVariable(VID_RCC, RCC_OBJECT_CREATION_FAILED);
 							}
 						}
+
+                  ObjectTransactionEnd();
 					}
 					else
 					{
@@ -4440,8 +4444,10 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
                // Prevent loops
                if (!pChild->isChild(pParent->Id()))
                {
+                  ObjectTransactionStart();
                   pParent->AddChild(pChild);
                   pChild->AddParent(pParent);
+                  ObjectTransactionEnd();
                   pParent->calculateCompoundStatus();
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
 
@@ -4457,8 +4463,10 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
             }
             else
             {
+               ObjectTransactionStart();
                pParent->DeleteChild(pChild);
                pChild->DeleteParent(pParent);
+               ObjectTransactionEnd();
                if ((pParent->Type() == OBJECT_TEMPLATE) &&
                    ((pChild->Type() == OBJECT_NODE) || (pChild->Type() == OBJECT_MOBILEDEVICE)))
                {
@@ -4497,22 +4505,20 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
    sendMessage(&msg);
 }
 
-
-//
-// Worker thread for object deletion
-//
-
+/**
+ * Worker thread for object deletion
+ */
 static THREAD_RESULT THREAD_CALL DeleteObjectWorker(void *arg)
 {
+   ObjectTransactionStart();
 	((NetObj *)arg)->deleteObject();
+   ObjectTransactionEnd();
 	return THREAD_OK;
 }
 
-
-//
-// Delete object
-//
-
+/**
+ * Delete object
+ */
 void ClientSession::deleteObject(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -4561,11 +4567,9 @@ void ClientSession::deleteObject(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Process changes in alarms
-//
-
+/**
+ * Process changes in alarms
+ */
 void ClientSession::onAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 {
    UPDATE_INFO *pUpdate;
@@ -6018,7 +6022,9 @@ void ClientSession::applyTemplate(CSCPMessage *pRequest)
                {
                   BOOL bErrors;
 
+                  ObjectTransactionStart();
                   bErrors = ((Template *)pSource)->applyToTarget((DataCollectionTarget *)pDestination);
+                  ObjectTransactionEnd();
                   ((Template *)pDestination)->unlockDCIList(m_dwIndex);
                   msg.SetVariable(VID_RCC, bErrors ? RCC_DCI_COPY_ERRORS : RCC_SUCCESS);
                }

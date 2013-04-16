@@ -752,6 +752,8 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...);
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 
 void SaveObjects(DB_HANDLE hdb);
+void NXCORE_EXPORTABLE ObjectTransactionStart();
+void NXCORE_EXPORTABLE ObjectTransactionEnd();
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);

@@ -310,7 +310,9 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
 
       _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->Name(), pNode->Id());
       SetPollerState((long)arg, szBuffer);
+      ObjectTransactionStart();
       pNode->configurationPoll(NULL, 0, (long)arg, 0);
+      ObjectTransactionEnd();
       pNode->decRefCount();
    }
    SetPollerState((long)arg, _T("finished"));

@@ -671,7 +671,9 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 		          IpToStr(pInfo->dwIpAddr, szIpAddr), IpToStr(pInfo->dwNetMask, szNetMask), (int)pInfo->zoneId);
 		if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, pInfo->zoneId, pInfo->bMacAddr))
 		{
-         Node *node = PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, 0, 0, NULL, 0, 0, NULL, pInfo->zoneId, true, true);
+         ObjectTransactionStart();
+         PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, 0, 0, NULL, 0, 0, NULL, pInfo->zoneId, true, true);
+         ObjectTransactionEnd();
 		}
       free(pInfo);
    }
