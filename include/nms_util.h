@@ -516,25 +516,26 @@ public:
 	static SocketConnection *createTCPConnection(const TCHAR *hostName, WORD port, DWORD timeout);
 };
 
+/**
+ * Telnet connection - handles all telnet negotiation
+ */
 class LIBNETXMS_EXPORTABLE TelnetConnection : public SocketConnection
 {
+protected:
+	bool connectTCP(const TCHAR *hostName, WORD port, DWORD timeout);
+
 public:
 	bool connect(const TCHAR *hostName, WORD port, DWORD timeout);
 	int read(char *pBuff, int nSize, DWORD timeout = INFINITE);
 
 	static TelnetConnection *createConnection(const TCHAR *hostName, WORD port, DWORD timeout);
-
-protected:
-	bool connectTCP(const TCHAR *hostName, WORD port, DWORD timeout);
 };
 
 #endif   /* __cplusplus */
 
-
-//
-// Configuration item template for configuration loader
-//
-
+/**
+ * Configuration item template for configuration loader
+ */
 typedef struct
 {
    TCHAR szToken[64];
@@ -546,11 +547,9 @@ typedef struct
    void *pBuffer;
 } NX_CFG_TEMPLATE;
 
-
-//
-// Code translation structure
-//
-
+/**
+ * Code translation structure
+ */
 typedef struct  __CODE_TO_TEXT
 {
    int code;

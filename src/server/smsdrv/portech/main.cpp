@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SMS driver for Portech MV-37x VoIP GSM gateways
-** Copyright (C) 2011-2012 Victor Kirhenshtein
+** Copyright (C) 2011-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,29 +29,28 @@
 #define EXPORT
 #endif
 
-
-//
-// Static data
-//
-
-static TCHAR s_hostName[MAX_PATH] = _T("10.0.0.1");
+/**
+ * Static data
+ */
+static TCHAR s_primaryHostName[MAX_PATH] = _T("10.0.0.1");
+static TCHAR s_secondaryHostName[MAX_PATH] = _T("");
+static const TCHAR *s_hostName = s_primaryHostName;
 static char s_login[MAX_PATH] = "admin";
 static char s_password[MAX_PATH] = "admin";
 static enum { OM_TEXT, OM_PDU } s_mode = OM_PDU;
 
-
-//
-// Initialize driver
-// option string format: option1=value1;option2=value2;...
-// Valid options are: host, login, password, mode
-//
-
+/**
+ * Initialize driver
+ * option string format: option1=value1;option2=value2;...
+ * Valid options are: host, login, password, mode
+ */
 extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *options)
 {
 	DbgPrintf(1, _T("Loading Portech MV-72x SMS Driver (configuration: %s)"), options);
 
 	// Parse arguments
-	ExtractNamedOptionValue(options, _T("host"), s_hostName, MAX_PATH);
+	ExtractNamedOptionValue(options, _T("host"), s_primaryHostName, MAX_PATH);
+	ExtractNamedOptionValue(options, _T("secondaryHost"), s_secondaryHostName, MAX_PATH);
 
 #ifdef UNICODE
 	WCHAR temp[MAX_PATH];
@@ -85,11 +84,9 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *options)
 	return TRUE;
 }
 
-
-//
-// Login to unit
-//
-
+/**
+ * Login to unit
+ */
 static bool DoLogin(SocketConnection *conn)
 {
 	if (!conn->waitForText("username: ", 5000))
@@ -116,11 +113,9 @@ static bool DoLogin(SocketConnection *conn)
 	return true;
 }
 
-
-//
-// Logout from unit
-//
-
+/**
+ * Logout from unit
+ */
 static void DoLogout(SocketConnection *conn)
 {
 	if (conn->write("\x18", 1) > 0)
@@ -130,13 +125,14 @@ static void DoLogout(SocketConnection *conn)
 	}
 }
 
-
-//
-// Send SMS in text mode
-//
-
+/**
+ * Return immediately if given operation failed
+ */
 #define __chk(x) if (!(x)) { return FALSE; }
 
+/**
+ * Send SMS in text mode
+ */
 static BOOL SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	char szTmp[128];
@@ -184,11 +180,9 @@ static BOOL SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const 
 	return TRUE;
 }
 
-
-//
-// Send SMS in PDU mode
-//
-
+/**
+ * Send SMS in PDU mode
+ */
 static BOOL SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	const int bufferSize = 512;
@@ -240,11 +234,9 @@ static BOOL SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const T
 	return TRUE;
 }
 
-
-//
-// Send SMS
-//
-
+/**
+ * Send SMS
+ */
 extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	SocketConnection *conn;
@@ -253,6 +245,9 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 	if ((pszPhoneNumber == NULL) || (pszText == NULL))
 		return FALSE;
 
+   bool canRetry = true;
+
+retry:
 	conn = SocketConnection::createTCPConnection(s_hostName, 23, 10000);
 	if (conn != NULL)
 	{
@@ -265,25 +260,34 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 		conn->disconnect();
 		delete conn;
 	}
+
+   if (!success && canRetry)
+   {
+      const TCHAR *newName = (s_hostName == s_primaryHostName) ? s_secondaryHostName : s_primaryHostName;
+      if (newName[0] != 0)
+      {
+         s_hostName = newName;
+         DbgPrintf(4, _T("Portech SMS driver: switched to host %s"), s_hostName);
+         canRetry = false;
+         goto retry;
+      }
+   }
+
 	return success;
 }
 
-
-//
-// Unload SMS driver
-//
-
+/**
+ * Unload SMS driver
+ */
 extern "C" void EXPORT SMSDriverUnload()
 {
 }
 
-
-//
-// DLL Entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL Entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)

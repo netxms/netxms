@@ -52,9 +52,9 @@ extern const TCHAR *g_szMessages[];
 /**
  * Shutdown reasons
  */
-#define SHUTDOWN_DEFAULT	0
-#define SHUTDOWN_FROM_CONSOLE	1
-#define SHUTDOWN_BY_SIGNAL	2
+#define SHUTDOWN_DEFAULT      0
+#define SHUTDOWN_FROM_CONSOLE 1
+#define SHUTDOWN_BY_SIGNAL    2
 
 /**
  * Externals
