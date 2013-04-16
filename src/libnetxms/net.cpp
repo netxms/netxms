@@ -180,7 +180,7 @@ bool SocketConnection::waitForText(const char *text, int timeout)
 		}
 
 		int size = read(&m_data[m_dataPos], 4095 - m_dataPos);
-      if (size <= 0 && errno != EAGAIN && errno != EINPROGRESS)
+      if ((size <= 0) && (WSAGetLastError() != WSAEWOULDBLOCK) && (WSAGetLastError() != WSAEINPROGRESS))
       {
          return false;
       }

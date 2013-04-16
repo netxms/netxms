@@ -650,9 +650,17 @@ void ClientSession::updateThread()
          case INFO_CAT_OBJECT_CHANGE:
             MutexLock(m_mutexSendObjects);
             msg.SetCode(CMD_OBJECT_UPDATE);
-            ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
-            if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
-               ((NetObj *)pUpdate->pData)->commentsToMessage(&msg);
+            if (!((NetObj *)pUpdate->pData)->isDeleted())
+            {
+               ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
+               if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
+                  ((NetObj *)pUpdate->pData)->commentsToMessage(&msg);
+            }
+            else
+            {
+               msg.SetVariable(VID_OBJECT_ID, ((NetObj *)pUpdate->pData)->Id());
+               msg.SetVariable(VID_IS_DELETED, (WORD)1);
+            }
             sendMessage(&msg);
             MutexUnlock(m_mutexSendObjects);
             msg.DeleteAllVariables();
@@ -2388,7 +2396,7 @@ void ClientSession::onObjectChange(NetObj *pObject)
    UPDATE_INFO *pUpdate;
 
    if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_OBJECTS))
-      if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (pObject->isDeleted() || pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
          pUpdate->dwCategory = INFO_CAT_OBJECT_CHANGE;

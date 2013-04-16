@@ -483,20 +483,26 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 							break;
 						case NXCPCodes.CMD_OBJECT:
 						case NXCPCodes.CMD_OBJECT_UPDATE:
-							final AbstractObject obj = createObjectFromMessage(msg);
-							synchronized(objectList)
+							if (!msg.getVariableAsBoolean(NXCPCodes.VID_IS_DELETED))
 							{
-								if (obj.isDeleted())
-									objectList.remove(obj.getObjectId());
-								else
+								final AbstractObject obj = createObjectFromMessage(msg);
+								synchronized(objectList)
+								{
 									objectList.put(obj.getObjectId(), obj);
-							}
-							if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
-							{
-								if (obj.isDeleted())
-									sendNotification(new NXCNotification(NXCNotification.OBJECT_DELETED, obj.getObjectId()));
-								else
+								}
+								if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
+								{
 									sendNotification(new NXCNotification(NXCNotification.OBJECT_CHANGED, obj.getObjectId(), obj));
+								}
+							}
+							else
+							{
+								long objectId = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_ID);
+								synchronized(objectList)
+								{
+									objectList.remove(objectId);
+								}
+								sendNotification(new NXCNotification(NXCNotification.OBJECT_DELETED, objectId));
 							}
 							break;
 						case NXCPCodes.CMD_OBJECT_LIST_END:
