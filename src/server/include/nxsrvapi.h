@@ -477,13 +477,12 @@ public:
                            struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL,
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pdu);
+   virtual DWORD getPeerIpAddress();
 };
 
-
-//
-// ISC flags
-//
-
+/**
+ * ISC flags
+ */
 #define ISCF_IS_CONNECTED        ((DWORD)0x00000001)
 #define ISCF_REQUIRE_ENCRYPTION  ((DWORD)0x00000002)
 

@@ -627,6 +627,10 @@ public:
 	{
 		return -1;
 	}
+   virtual DWORD getPeerIpAddress()
+   {
+      return 0;
+   }
 
    DWORD doRequest(SNMP_PDU *request, SNMP_PDU **response, 
                    DWORD timeout = INFINITE, int numRetries = 1);
@@ -672,6 +676,7 @@ public:
                            struct sockaddr *sender = NULL, socklen_t *addrSize = NULL,
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pPDU);
+   virtual DWORD getPeerIpAddress();
 
    DWORD createUDPTransport(const TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = SNMP_DEFAULT_PORT);
 	bool isConnected() { return m_connected; }

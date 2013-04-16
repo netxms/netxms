@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,11 +23,9 @@
 
 #include "libnxsrv.h"
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *pConn, DWORD dwIpAddr, WORD wPort)
 {
 	m_pAgentConnection = pConn;
@@ -36,22 +34,18 @@ SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *pConn, DWORD dwIpAddr,
 	m_pResponse = NULL;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 SNMP_ProxyTransport::~SNMP_ProxyTransport()
 {
 	delete m_pAgentConnection;
 	delete m_pResponse;
 }
 
-
-//
-// Send PDU
-//
-
+/**
+ * Send PDU
+ */
 int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 {
    BYTE *pBuffer;
@@ -79,11 +73,9 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
    return nRet;
 }
 
-
-//
-// Receive PDU
-//
-
+/**
+ * Receive PDU
+ */
 int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout, 
                                      struct sockaddr *pSender, socklen_t *piAddrSize,
                                      SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
@@ -120,4 +112,12 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout,
 
 	delete_and_null(m_pResponse);
 	return nRet;
+}
+
+/**
+ * Get peer IPv4 address (in host byte order)
+ */
+DWORD SNMP_ProxyTransport::getPeerIpAddress()
+{
+   return m_dwIpAddr;
 }

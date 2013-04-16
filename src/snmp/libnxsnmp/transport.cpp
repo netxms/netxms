@@ -528,3 +528,11 @@ int SNMP_UDPTransport::sendMessage(SNMP_PDU *pPDU)
 
    return nBytes;
 }
+
+/**
+ * Get peer IPv4 address (in host byte order)
+ */
+DWORD SNMP_UDPTransport::getPeerIpAddress()
+{
+   return ntohl(m_peerAddr.sin_addr.s_addr);
+}
