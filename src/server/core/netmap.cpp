@@ -69,7 +69,7 @@ NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
 	m_seedObject = seed;
 	m_discoveryRadius = -1;
 	m_flags = MF_SHOW_STATUS_ICON;
-	m_layout = MAP_LAYOUT_RADIAL;
+   m_layout = (type == NETMAP_USER_DEFINED) ? MAP_LAYOUT_MANUAL : MAP_LAYOUT_SPRING;
 	uuid_clear(m_background);
 	m_iStatus = STATUS_NORMAL;
 	m_backgroundLatitude = 0;
