@@ -43,6 +43,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.ISelectionListener;
@@ -292,7 +293,28 @@ public class TabbedObjectView extends ViewPart
 	 * 
 	 * @param object New object
 	 */
-	public void setObject(AbstractObject object)
+	public void setObject(final AbstractObject object)
+	{
+		// Current focus event may not be finished yet, so we have
+		// to wait for any outstanding events and only then start
+		// changing tabs. Otherwise runtime exception will be thrown.
+		final Display display = getSite().getShell().getDisplay();
+		display.asyncExec(new Runnable() {
+			@Override
+			public void run() 
+			{
+				while(display.readAndDispatch()); // wait for events to finish before continue
+				setObjectInternal(object);
+			}
+		});
+	}
+	
+	/**
+	 * Set new active object - internal implementation
+	 * 
+	 * @param object New object
+	 */
+	private void setObjectInternal(AbstractObject object)
 	{
 		if (object != null)
 		{
