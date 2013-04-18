@@ -206,7 +206,7 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 		double result = 0.;
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		TCHAR query[1024];
-      static TCHAR *functions[] = { _T("min"), _T("max"), _T("avg"), _T("sum") };
+      static const TCHAR *functions[] = { _T("min"), _T("max"), _T("avg"), _T("sum") };
 
 		if (g_nDBSyntax == DB_SYNTAX_ORACLE)
 		{

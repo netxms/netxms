@@ -455,6 +455,24 @@ public:
 };
 
 /**
+ * Template class for dynamic array which holds scalar values
+ */
+template <class T> class IntegerArray : public Array
+{
+private:
+	static void destructor(void *object) { }
+
+public:
+	IntegerArray(int initial = 0, int grow = 16) : Array(initial, grow, false) { m_objectDestructor = destructor; }
+	virtual ~IntegerArray() { }
+
+	int add(T value) { return Array::add(CAST_TO_POINTER(value, void *)); }
+	T get(int index) { return CAST_FROM_POINTER(Array::get(index), T); }
+	void set(int index, T value) { Array::set(index, CAST_TO_POINTER(value, void *)); }
+	void replace(int index, T value) { Array::replace(index, CAST_TO_POINTER(value, void *)); }
+};
+
+/**
  * Auxilliary class to hold dynamically allocated array of structures
  */
 template <class T> class StructArray

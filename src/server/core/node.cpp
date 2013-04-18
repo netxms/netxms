@@ -2787,7 +2787,7 @@ void Node::updateInstances(DCItem *root, StringList *instances)
    lockDciAccess();
 
 	// Delete DCIs for missing instances and update existing
-	ObjectArray<void> deleteList;
+	IntegerArray<DWORD> deleteList;
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
 		DCObject *object = m_dcObjects->get(i);
@@ -2813,12 +2813,12 @@ void Node::updateInstances(DCItem *root, StringList *instances)
 			// not found, delete DCI
 			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCI will be deleted"),
 			          m_szName, m_dwId, root->getName(), root->getId(), ((DCItem *)object)->getInstance());
-			deleteList.add(CAST_TO_POINTER(object->getId(), void *));
+			deleteList.add(object->getId());
 		}
    }
 
 	for(int i = 0; i < deleteList.size(); i++)
-		deleteDCObject(CAST_FROM_POINTER(deleteList.get(i), DWORD), false);
+		deleteDCObject(deleteList.get(i), false);
 
 	// Create new instances
 	for(int i = 0; i < instances->getSize(); i++)
