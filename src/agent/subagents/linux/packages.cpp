@@ -28,11 +28,11 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value)
    const char *command;
    if (access("/bin/rpm", X_OK) == 0)
    {
-		command = "/bin/rpm -qa --queryformat '@@@%{NAME}|%{VERSION}|%{VENDOR}|%{INSTALLTIME}|%{URL}|%{SUMMARY}\\n'";
+		command = "/bin/rpm -qa --queryformat '@@@ #%{NAME}|%{VERSION}|%{VENDOR}|%{INSTALLTIME}|%{URL}|%{SUMMARY}\\n'";
    }
    else if (access("/usr/bin/dpkg-query", X_OK) == 0)
    {
-		command = "/usr/bin/dpkg-query -W -f '@@@${package}|${version}|||${homepage}|${description}\\n'";
+		command = "/usr/bin/dpkg-query -W -f '@@@${Status}#${package}|${version}|||${homepage}|${description}\\n' | grep '@@@install.*installed.*#'";
 	}
 	else
 	{
@@ -60,7 +60,11 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value)
 			continue;
 
 		value->addRow();
-		char *curr = &line[3];
+		char *curr = strchr(&line[3], '#');
+		if (curr != NULL)
+			curr++;
+		else
+			curr = &line[3];
 		for(int i = 0; i < 6; i++)
 		{
 			char *ptr = strchr(curr, '|');
