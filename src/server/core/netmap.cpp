@@ -55,6 +55,7 @@ NetworkMap::NetworkMap() : NetObj()
 	m_backgroundZoom = 1;
 	m_backgroundColor = 0xFFFFFF;
 	m_defaultLinkColor = -1;
+   m_defaultLinkRouting = 1;  // default routing type "direct"
 	m_nextElementId = 1;
 	m_elements = new ObjectArray<NetworkMapElement>(0, 32, true);
 	m_links = new ObjectArray<NetworkMapLink>(0, 32, true);
@@ -77,6 +78,7 @@ NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
 	m_backgroundZoom = 1;
 	m_backgroundColor = 0xFFFFFF;
 	m_defaultLinkColor = -1;
+   m_defaultLinkRouting = 1;  // default routing type "direct"
 	m_nextElementId = 1;
 	m_elements = new ObjectArray<NetworkMapElement>(0, 32, true);
 	m_links = new ObjectArray<NetworkMapLink>(0, 32, true);

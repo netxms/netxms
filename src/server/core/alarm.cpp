@@ -362,7 +362,7 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
    }
 
    // Update status of related object if needed
-   if ((alarm.nState & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
+   if ((nState & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
 		updateObjectStatus(pEvent->getSourceId());
 
 	// Add record to alarm_events table

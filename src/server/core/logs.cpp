@@ -129,6 +129,7 @@ static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
 	{
 		s_regListSize += 10;
 		s_regList = (LOG_HANDLE_REGISTRATION *)realloc(s_regList, sizeof(LOG_HANDLE_REGISTRATION) * s_regListSize);
+      memset(&s_regList[i], 0, sizeof(LOG_HANDLE_REGISTRATION) * (s_regListSize - i));
 	}
 
 	s_regList[i].handle = handle;
