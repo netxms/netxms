@@ -40,8 +40,8 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.NodePollListener;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -57,7 +57,7 @@ public class NodePollerView extends ViewPart
 	private static final String[] POLL_NAME = { "", "Status Poll", "Configuration Poll", "Interface Poll", "Topology Poll" };
 
 	private NXCSession session;
-	private Node node;
+	private AbstractNode node;
 	private int pollType;
 	private Text textArea;
 	private boolean pollActive = false;
@@ -80,7 +80,7 @@ public class NodePollerView extends ViewPart
 			throw new PartInitException("Internal error");
 		
 		AbstractObject obj = session.findObjectById(Long.parseLong(parts[0]));
-		node = ((obj != null) && (obj instanceof Node)) ? (Node)obj : null;
+		node = ((obj != null) && (obj instanceof AbstractNode)) ? (AbstractNode)obj : null;
 		if (node == null)
 			throw new PartInitException("Invalid object ID");
 		pollType = Integer.parseInt(parts[1]);

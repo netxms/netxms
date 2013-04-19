@@ -13,6 +13,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.resources;bundle-version="3.7.100"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.netxms.ui.eclipse.snmp.dialogs,
+Export-Package: org.netxms.ui.eclipse.snmp.actions,
+ org.netxms.ui.eclipse.snmp.dialogs,
  org.netxms.ui.eclipse.snmp.shared,
+ org.netxms.ui.eclipse.snmp.views,
  org.netxms.ui.eclipse.snmp.widgets
