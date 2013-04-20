@@ -109,4 +109,20 @@ public class MapImageProvidersManager
 		}
 		return null;
 	}
+	
+	/**
+	 * Get status icon for given status code.
+	 * 
+	 * @return icon for given status code or null.
+	 */
+	public Image getStatusIcon(int status)
+	{
+		for(NetworkMapImageProvider p : providers.values())
+		{
+			Image i = p.getStatusIcon(status);
+			if (i != null)
+				return i;
+		}
+		return null;
+	}
 }
