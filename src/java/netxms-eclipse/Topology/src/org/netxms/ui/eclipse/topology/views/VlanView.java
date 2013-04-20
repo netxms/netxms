@@ -52,6 +52,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.topology.VlanInfo;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -82,6 +83,8 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	
 	private Action actionRefresh; 
 	private Action actionShowVlanMap;
+	private Action actionExportToCsv;
+	private Action actionExportAllToCsv;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -189,6 +192,9 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 				showVlanMap();
 			}
 		};
+		
+		actionExportToCsv = new ExportToCsvAction(this, vlanList, true);
+		actionExportAllToCsv = new ExportToCsvAction(this, vlanList, false);
 	}
 
 	/**
@@ -208,6 +214,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionShowVlanMap);
+		manager.add(actionExportAllToCsv);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -218,6 +225,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionExportAllToCsv);
 		manager.add(actionRefresh);
 	}
 
@@ -251,6 +259,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		manager.add(actionShowVlanMap);
+		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}

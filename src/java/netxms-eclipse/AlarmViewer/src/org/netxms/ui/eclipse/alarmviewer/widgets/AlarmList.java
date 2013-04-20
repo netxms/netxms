@@ -36,6 +36,7 @@ import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -55,6 +56,7 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmComments;
@@ -103,6 +105,7 @@ public class AlarmList extends Composite
 	private Action actionTerminate;
 	private Action actionShowAlarmDetails;
 	private Action actionShowObjectDetails;
+	private Action actionExportToCsv;
 	
 	/**
 	 * Create alarm list widget
@@ -372,6 +375,8 @@ public class AlarmList extends Composite
 				showObjectDetails();
 			}
 		};
+		
+		actionExportToCsv = new ExportToCsvAction(viewPart, alarmViewer, true);
 	}
 
 	/**
@@ -404,6 +409,10 @@ public class AlarmList extends Composite
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
+		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+		if (selection.size() == 0)
+			return;
+		
 		manager.add(actionAcknowledge);
 		manager.add(actionStickyAcknowledge);
 		manager.add(actionResolve);
@@ -412,7 +421,6 @@ public class AlarmList extends Composite
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
 
-		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
 		if (selection.size() == 1)
 		{
 			manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
@@ -423,6 +431,7 @@ public class AlarmList extends Composite
 		
 		manager.add(actionCopy);
 		manager.add(actionCopyMessage);
+		manager.add(actionExportToCsv);
 
 		if (selection.size() == 1)
 		{
@@ -637,5 +646,15 @@ public class AlarmList extends Composite
 				MessageDialogHelper.openError(getShell(), Messages.AlarmList_Error, Messages.AlarmList_OpenDetailsError + e.getLocalizedMessage());
 			}
 		}
+	}
+	
+	/**
+	 * Get underlying table viewer.
+	 * 
+	 * @return
+	 */
+	public TableViewer getViewer()
+	{
+		return alarmViewer;
 	}
 }

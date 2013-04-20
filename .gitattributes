@@ -2085,6 +2085,7 @@ src/java/netxms-eclipse/core/icons/close.gif -text
 src/java/netxms-eclipse/core/icons/collapse.png -text
 src/java/netxms-eclipse/core/icons/collapseall.png -text
 src/java/netxms-eclipse/core/icons/copy.gif -text
+src/java/netxms-eclipse/core/icons/csv.png -text
 src/java/netxms-eclipse/core/icons/cut.gif -text
 src/java/netxms-eclipse/core/icons/delete_obj.gif -text
 src/java/netxms-eclipse/core/icons/down.png -text
@@ -2145,6 +2146,7 @@ src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.loginlisteners.exsd -t
 src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.sessionproviders.exsd -text
 src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.tweaklets.exsd -text
 src/java/netxms-eclipse/core/splash.bmp -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/actions/ExportToCsvAction.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/Activator.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/BrandingManager.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/ExtendedContributionComparator.java -text

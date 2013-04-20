@@ -55,6 +55,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DciOpenHandler;
@@ -96,6 +97,7 @@ public class LastValuesWidget extends Composite
 	private Action actionUseMultipliers;
 	private Action actionShowErrors;
 	private Action actionShowUnsupported;
+	private Action actionExportToCsv;
 	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
 	
 	/**
@@ -262,6 +264,8 @@ public class LastValuesWidget extends Composite
 			}
 		};
 		actionShowUnsupported.setChecked(isShowUnsupported());
+		
+		actionExportToCsv = new ExportToCsvAction(viewPart, dataViewer, true);
 	}
 	
 	/**
@@ -272,8 +276,7 @@ public class LastValuesWidget extends Composite
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -296,6 +299,7 @@ public class LastValuesWidget extends Composite
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_SECONDARY));
 		manager.add(new Separator());

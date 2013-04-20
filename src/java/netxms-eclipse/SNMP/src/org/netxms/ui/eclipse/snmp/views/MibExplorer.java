@@ -62,6 +62,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -104,6 +105,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private Action actionCopyType;
 	private Action actionCopyValue;
 	private Action actionSelect;
+	private Action actionExportToCsv;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
@@ -325,6 +327,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 		actionSelect.setEnabled(false);
+
+		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 	}
 	
 	/**
@@ -465,10 +469,14 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	 */
 	protected void fillResultsContextMenu(final IMenuManager manager)
 	{
+		if (viewer.getSelection().isEmpty())
+			return;
+		
 		manager.add(actionCopy);
 		manager.add(actionCopyName);
 		manager.add(actionCopyType);
 		manager.add(actionCopyValue);
+		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(actionSelect);
 		manager.add(new Separator());

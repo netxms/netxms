@@ -58,6 +58,7 @@ import org.netxms.client.Table;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.log.LogFilter;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.logviewer.Activator;
@@ -91,6 +92,8 @@ public class LogViewer extends ViewPart
 	private Action actionShowFilter;
 	private Action actionGetMoreData;
 	private Action actionCopyToClipboard;
+	private Action actionExportToCsv;
+	private Action actionExportAllToCsv;
 	private Table resultSet;
 	private boolean noData = false;
 	
@@ -282,6 +285,8 @@ public class LogViewer extends ViewPart
 		manager.add(new Separator());
 		manager.add(actionGetMoreData);
 		manager.add(new Separator());
+		manager.add(actionExportAllToCsv);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -297,6 +302,8 @@ public class LogViewer extends ViewPart
 		manager.add(actionClearFilter);
 		manager.add(new Separator());
 		manager.add(actionGetMoreData);
+		manager.add(new Separator());
+		manager.add(actionExportAllToCsv);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -332,6 +339,7 @@ public class LogViewer extends ViewPart
 	protected void fillContextMenu(final IMenuManager mgr)
 	{
 		mgr.add(actionCopyToClipboard);
+		mgr.add(actionExportToCsv);
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
@@ -401,6 +409,9 @@ public class LogViewer extends ViewPart
 		};
       actionCopyToClipboard.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.copy"); //$NON-NLS-1$
 		handlerService.activateHandler(actionCopyToClipboard.getActionDefinitionId(), new ActionHandler(actionCopyToClipboard));
+		
+		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
+		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
 	
 	/**
