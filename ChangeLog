@@ -10,7 +10,7 @@
 - New NXSL functions: CreateNode, GetSumDCIValue
 - New NXSL operator @ - safe get object's attribute
 - New MIBs added: ASTARO-MIB, CPQHOST-MIB, CPQPOWER-MIB
-- Fixed issues: #242, #249, #250, #251
+- Fixed issues: #199, #242, #249, #250, #251
 
 
 *

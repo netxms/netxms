@@ -32,10 +32,10 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Layer;
 import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
+import org.eclipse.draw2d.ScalableFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -49,6 +49,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
 import org.eclipse.zest.core.viewers.internal.IStylingGraphModelFactory;
+import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.custom.CGraphNode;
 import org.eclipse.zest.core.widgets.zooming.ZoomManager;
@@ -99,8 +100,11 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		super(composite, style);
 		
+		final Graph graphControl = getGraphControl();
+		final ScalableFigure rootLayer = graphControl.getRootLayer();
+		
 		mapLoader = new MapLoader(composite.getDisplay());
-		getControl().addDisposeListener(new DisposeListener() {
+		graphControl.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -109,20 +113,20 @@ public class ExtendedGraphViewer extends GraphViewer
 		});
 		
 		backgroundLayer = new FreeformLayer();
-		getGraphControl().getRootLayer().add(backgroundLayer, null, 0);
+		rootLayer.add(backgroundLayer, null, 0);
 		backgroundFigure = new BackgroundFigure();
 		backgroundFigure.setSize(10, 10);
 		backgroundLayer.add(backgroundFigure);
 		
 		decorationLayer = new FreeformLayer();
-		getGraphControl().getRootLayer().add(decorationLayer, null, 1);
+		rootLayer.add(decorationLayer, null, 1);
 		
 		indicatorLayer = new FreeformLayer();
-		getGraphControl().getRootLayer().add(indicatorLayer, null, 2);
+		rootLayer.add(indicatorLayer, null, 2);
 		
 		getZoomManager().setZoomLevels(zoomLevels);
 		
-		for(Object f : getGraphControl().getRootLayer().getChildren())
+		for(Object f : rootLayer.getChildren())
 			if (f.getClass().getName().equals("org.eclipse.zest.core.widgets.internal.ZestRootLayer"))
 				zestRootLayer = (IFigure)f;
 
@@ -130,7 +134,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void run()
 			{
-				if (getGraphControl().isDisposed())
+				if (graphControl.isDisposed())
 					return;
 
 				if (backgroundLocation != null)
@@ -145,8 +149,8 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void figureMoved(IFigure source)
 			{
-				getGraphControl().getDisplay().timerExec(-1, timer);
-				getGraphControl().getDisplay().timerExec(1000, timer);
+				graphControl.getDisplay().timerExec(-1, timer);
+				graphControl.getDisplay().timerExec(1000, timer);
 			}
 		});
 		
@@ -159,8 +163,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void mousePressed(MouseEvent me)
 			{
-				clearDecorationSelection();
-				ExtendedGraphViewer.this.setSelection(new StructuredSelection(), true);
+				clearDecorationSelection(true);
 			}
 			
 			@Override
@@ -170,17 +173,45 @@ public class ExtendedGraphViewer extends GraphViewer
 		};
 		backgroundFigure.addMouseListener(backgroundMouseListener);
 		
-		getGraphControl().addSelectionListener(new SelectionListener() {
+		graphControl.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				clearDecorationSelection();
+				clearDecorationSelection(false);
 			}
 			
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
 				widgetSelected(e);
+			}
+		});
+		
+		graphControl.getLightweightSystem().getRootFigure().addMouseListener(new MouseListener() {
+			@Override
+			public void mouseReleased(MouseEvent me)
+			{
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent me)
+			{
+				org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
+				getGraphControl().getRootLayer().translateToRelative(mousePoint);
+				IFigure figureUnderMouse = getGraphControl().getFigureAt(mousePoint.x, mousePoint.y);
+				if (figureUnderMouse == null || figureUnderMouse == graphControl) 
+				{
+					if ((me.getState() & SWT.MOD1) == 0) 
+					{
+						clearDecorationSelection(true);
+					}
+					return;
+				}
+			}
+			
+			@Override
+			public void mouseDoubleClicked(MouseEvent me)
+			{
 			}
 		});
 		
@@ -195,7 +226,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void mousePressed(MouseEvent me)
 			{
-				for(Object o : getGraphControl().getGraph().getNodes())
+				for(Object o : graphControl.getGraph().getNodes())
 				{
 					if (!(o instanceof CGraphNode))
 						continue;
@@ -260,7 +291,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		if (!addToExisting)
 		{
-			clearDecorationSelection();
+			clearDecorationSelection(false);
 			getGraphControl().setSelection(null);
 		}
 		selectedDecorations.add(d);
@@ -273,8 +304,11 @@ public class ExtendedGraphViewer extends GraphViewer
 	/**
 	 * Clear selection on decoration layer
 	 */
-	private void clearDecorationSelection()
+	private void clearDecorationSelection(boolean sendEvent)
 	{
+		if (selectedDecorations.size() == 0)
+			return;
+		
 		for(NetworkMapDecoration d : selectedDecorations)
 		{
 			DecorationFigure f = decorationFigures.get(d.getId());
@@ -282,6 +316,13 @@ public class ExtendedGraphViewer extends GraphViewer
 				f.setSelected(false);
 		}
 		selectedDecorations.clear();
+		
+		if (sendEvent)
+		{
+			SelectionChangedEvent event = new SelectionChangedEvent(this, getSelection());
+			fireSelectionChanged(event);
+			firePostSelectionChanged(event);
+		}
 	}
 	
 	/* (non-Javadoc)
@@ -294,7 +335,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		selectedDecorations.clear();
 		if (l != null)
 		{
-			clearDecorationSelection();
+			clearDecorationSelection(false);
 			for(Object o : l)
 			{
 				if (o instanceof NetworkMapDecoration)
