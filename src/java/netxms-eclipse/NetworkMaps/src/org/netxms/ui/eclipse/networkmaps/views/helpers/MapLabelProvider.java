@@ -267,13 +267,16 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	 */
 	public Image getStatusImage(AbstractObject object)
 	{
-		Image image = null;
-		try
+		Image image = MapImageProvidersManager.getInstance().getStatusIcon(object.getStatus());
+		if (image == null)
 		{
-			image = statusImages[object.getStatus()];
-		}
-		catch(IndexOutOfBoundsException e)
-		{
+			try
+			{
+				image = statusImages[object.getStatus()];
+			}
+			catch(IndexOutOfBoundsException e)
+			{
+			}
 		}
 		return image;
 	}

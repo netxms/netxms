@@ -33,4 +33,12 @@ public interface NetworkMapImageProvider
 	 * @return image for given object or null to continue search
 	 */
 	public Image getMapImage(AbstractObject object);
+	
+	/**
+	 * Get status icon (shown on top of map image) for given status.
+	 * 
+	 * @param status status code
+	 * @return icon for given status or null to continue search
+	 */
+	public Image getStatusIcon(int status);
 }

@@ -41,7 +41,6 @@ all SMS drivers GPL
 
 Third party components bundled with NetXMS:
 
-freetype        BSD-like
 libexpat        BSD-like
 libipfix        LGPL
 libtre          BSD-like
