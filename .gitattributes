@@ -2500,6 +2500,7 @@ webui/webapp/Core/icons/close.gif -text
 webui/webapp/Core/icons/collapse.png -text
 webui/webapp/Core/icons/collapseall.png -text
 webui/webapp/Core/icons/copy.gif -text
+webui/webapp/Core/icons/csv.png -text
 webui/webapp/Core/icons/cut.gif -text
 webui/webapp/Core/icons/delete_obj.gif -text
 webui/webapp/Core/icons/down.png -text
@@ -2545,6 +2546,7 @@ webui/webapp/Core/schema/org.netxms.ui.eclipse.branding.exsd -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.colorproviders.exsd -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.loginlisteners.exsd -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.sessionproviders.exsd -text
+webui/webapp/Core/src/org/netxms/ui/eclipse/actions/ExportToCsvAction.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/BrandingProvider.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/ConsoleLoginListener.java -text
@@ -2591,6 +2593,7 @@ webui/webapp/Core/src/org/netxms/webui/core/ApplicationActionBarAdvisor.java -te
 webui/webapp/Core/src/org/netxms/webui/core/ApplicationWorkbenchAdvisor.java -text
 webui/webapp/Core/src/org/netxms/webui/core/ApplicationWorkbenchWindowAdvisor.java -text
 webui/webapp/Core/src/org/netxms/webui/core/BrandingManager.java -text
+webui/webapp/Core/src/org/netxms/webui/core/DownloadServiceHandler.java -text
 webui/webapp/Core/src/org/netxms/webui/core/ExtendedContributionComparator.java -text
 webui/webapp/Core/src/org/netxms/webui/core/LoginJob.java -text
 webui/webapp/Core/src/org/netxms/webui/core/Messages.java -text

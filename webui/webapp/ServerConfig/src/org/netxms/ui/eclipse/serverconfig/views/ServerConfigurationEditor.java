@@ -47,6 +47,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.servermanager.ServerManager;
 import org.netxms.api.client.servermanager.ServerVariable;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
@@ -73,7 +74,9 @@ public class ServerConfigurationEditor extends ViewPart
 	private Action actionAdd;
 	private Action actionEdit;
 	private Action actionDelete;
-	private RefreshAction actionRefresh;
+	private Action actionExportToCsv;
+	private Action actionExportAllToCsv;
+	private Action actionRefresh;
 	
 	// Columns
 	public static final int COLUMN_NAME = 0;
@@ -176,6 +179,7 @@ public class ServerConfigurationEditor extends ViewPart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionAdd);
+		manager.add(actionExportAllToCsv);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -186,6 +190,7 @@ public class ServerConfigurationEditor extends ViewPart
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionAdd);
+		manager.add(actionExportAllToCsv);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -236,6 +241,9 @@ public class ServerConfigurationEditor extends ViewPart
 			}
 		};
 		actionDelete.setEnabled(false);
+		
+		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
+		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
 
 	/**
@@ -272,6 +280,8 @@ public class ServerConfigurationEditor extends ViewPart
 		mgr.add(actionAdd);
 		mgr.add(actionEdit);
 		mgr.add(actionDelete);
+		mgr.add(new Separator());
+		mgr.add(actionExportToCsv);
 	}
 
 	/**

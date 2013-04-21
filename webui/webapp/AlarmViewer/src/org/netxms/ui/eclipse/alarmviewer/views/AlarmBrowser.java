@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.alarmviewer.views;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -28,12 +29,12 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 
 /**
  * Alarm browser view
- *
  */
 public class AlarmBrowser extends ViewPart
 {
@@ -41,6 +42,7 @@ public class AlarmBrowser extends ViewPart
 	
 	private AlarmList alarmView;
 	private Action actionRefresh;
+	private Action actionExportToCsv;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -70,7 +72,7 @@ public class AlarmBrowser extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction() {
+		actionRefresh = new RefreshAction(this) {
 			private static final long serialVersionUID = -8657999097554656174L;
 
 			@Override
@@ -79,6 +81,8 @@ public class AlarmBrowser extends ViewPart
 				alarmView.refresh();
 			}
 		};
+		
+		actionExportToCsv = new ExportToCsvAction(this, alarmView.getViewer(), false);
 	}
 	
 	/**
@@ -99,6 +103,8 @@ public class AlarmBrowser extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionExportToCsv);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -110,6 +116,7 @@ public class AlarmBrowser extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionExportToCsv);
 		manager.add(actionRefresh);
 	}
 

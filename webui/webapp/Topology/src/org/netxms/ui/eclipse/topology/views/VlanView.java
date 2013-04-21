@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.topology.views;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -29,7 +28,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -54,9 +52,11 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.topology.VlanInfo;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.topology.Activator;
 import org.netxms.ui.eclipse.topology.views.helpers.VlanLabelProvider;
 import org.netxms.ui.eclipse.topology.widgets.DeviceView;
@@ -83,6 +83,8 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	
 	private Action actionRefresh; 
 	private Action actionShowVlanMap;
+	private Action actionExportToCsv;
+	private Action actionExportAllToCsv;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -196,6 +198,9 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 				showVlanMap();
 			}
 		};
+		
+		actionExportToCsv = new ExportToCsvAction(this, vlanList, true);
+		actionExportAllToCsv = new ExportToCsvAction(this, vlanList, false);
 	}
 
 	/**
@@ -215,6 +220,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionShowVlanMap);
+		manager.add(actionExportAllToCsv);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -225,6 +231,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionExportAllToCsv);
 		manager.add(actionRefresh);
 	}
 
@@ -260,6 +267,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		manager.add(actionShowVlanMap);
+		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
@@ -318,7 +326,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 			}
 			catch(PartInitException e)
 			{
-				MessageDialog.openError(getSite().getShell(), "Error", "Cannot open VLAN map view for VLAN " + vlan.getVlanId() + ": " + e.getLocalizedMessage());
+				MessageDialogHelper.openError(getSite().getShell(), "Error", "Cannot open VLAN map view for VLAN " + vlan.getVlanId() + ": " + e.getLocalizedMessage());
 			}
 		}
 	}

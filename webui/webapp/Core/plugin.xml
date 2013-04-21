@@ -54,6 +54,10 @@
             name="%action.OpenServerConsole">
       </command>
       <command
+            id="org.netxms.ui.eclipse.console.commands.send_sms"
+            name="Send SMS">
+      </command>
+      <command
             description="%command.ToggleTraceFilter"
             id="org.netxms.ui.eclipse.library.commands.show_trace_filter"
             name="%command.ToggleTraceFilter">
@@ -74,17 +78,28 @@
             name="Refresh">
       </command>
       <command
-            id="org.netxms.ui.eclipse.console.commands.send_sms"
-            name="Send SMS">
+            description="Export to CSV"
+            id="org.netxms.ui.eclipse.library.commands.export_to_csv_selection"
+            name="Export to CSV">
+      </command>
+      <command
+            description="Export all to CSV"
+            id="org.netxms.ui.eclipse.library.commands.export_to_csv_all"
+            name="Export all to CSV">
       </command>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
       <key
+            commandId="org.netxms.ui.eclipse.console.commands.send_sms"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+M3+S">
+      </key>
+      <key
             commandId="org.netxms.ui.eclipse.library.commands.show_trace_filter"
             contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="Ctrl+F2">
+            sequence="M1+F2">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.library.commands.pause_trace"
@@ -96,13 +111,25 @@
             commandId="org.netxms.ui.eclipse.library.commands.copy"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="Ctrl+C">
+            sequence="M1+C">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.library.commands.refresh"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="F5">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.library.commands.export_to_csv_selection"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+M3+X">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.library.commands.export_to_csv_all"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+M3+A">
       </key>
       <scheme
             description="Default NXMC key binding scheme"
@@ -175,5 +202,12 @@
          alias="/"
          class="org.netxms.webui.core.RedirectServlet">
     </servlet>
-  </extension>   
+  </extension>
+   <extension
+         point="org.eclipse.rap.ui.serviceHandler">
+      <serviceHandler
+            class="org.netxms.webui.core.DownloadServiceHandler"
+            id="downloadServiceHandler">
+      </serviceHandler>
+   </extension>   
 </plugin>

@@ -38,6 +38,7 @@ import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListComparator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListLabelProvider;
@@ -78,6 +79,7 @@ public class InterfacesTab extends ObjectTab
 	private Action actionCopyPeerNameToClipboard;
 	private Action actionCopyPeerMacToClipboard;
 	private Action actionCopyPeerIpToClipboard;
+	private Action actionExportToCsv;
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -174,6 +176,8 @@ public class InterfacesTab extends ObjectTab
 				copyToClipboard(COLUMN_PEER_IP_ADDRESS);
 			}
 		};	
+		
+		actionExportToCsv = new ExportToCsvAction(getViewPart(), viewer, true);
 	}
 	
 	/**
@@ -214,6 +218,7 @@ public class InterfacesTab extends ObjectTab
 		manager.add(actionCopyPeerNameToClipboard);
 		manager.add(actionCopyPeerMacToClipboard);
 		manager.add(actionCopyPeerIpToClipboard);
+		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
 		manager.add(new Separator());

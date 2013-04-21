@@ -42,6 +42,7 @@ import org.netxms.client.datacollection.DciData;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
@@ -68,6 +69,8 @@ public class HistoricalDataView extends ViewPart
 	private boolean updateInProgress = false;
 	private Action actionRefresh;
 	private Action actionSelectRange;
+	private Action actionExportToCsv;
+	private Action actionExportAllToCsv;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -138,6 +141,9 @@ public class HistoricalDataView extends ViewPart
 				selectRange();
 			}
 		};
+		
+		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
+		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
 
 	/**
@@ -159,6 +165,7 @@ public class HistoricalDataView extends ViewPart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionSelectRange);
+		manager.add(actionExportAllToCsv);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -171,6 +178,7 @@ public class HistoricalDataView extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionExportAllToCsv);
 		manager.add(actionRefresh);
 	}
 
@@ -206,6 +214,7 @@ public class HistoricalDataView extends ViewPart
 	private void fillContextMenu(IMenuManager manager)
 	{
 		manager.add(actionSelectRange);
+		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
