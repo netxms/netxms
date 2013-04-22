@@ -662,6 +662,27 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
             m_iStatus = max(m_iStatus, iMostCriticalAlarm);
          }
       }
+
+      // Query loaded modules for object status
+      for(i = 0; i < g_dwNumModules; i++)
+	   {
+		   if (g_pModuleList[i].pfCalculateObjectStatus != NULL)
+		   {
+			   int moduleStatus = g_pModuleList[i].pfCalculateObjectStatus(this);
+            if (moduleStatus != STATUS_UNKNOWN)
+            {
+               if (m_iStatus == STATUS_UNKNOWN)
+               {
+                  m_iStatus = moduleStatus;
+               }
+               else
+               {
+                  m_iStatus = max(m_iStatus, moduleStatus);
+               }
+            }
+		   }
+	   }
+
       UnlockData();
 
       // Cause parent object(s) to recalculate it's status

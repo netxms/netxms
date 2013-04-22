@@ -58,6 +58,7 @@ typedef struct
 	void (* pfStatusPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
 	void (* pfConfPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
 	void (* pfTopologyPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
+	int (* pfCalculateObjectStatus)(NetObj *object);
 	BOOL (* pfNetObjInsert)(NetObj *object);
 	BOOL (* pfNetObjDelete)(NetObj *object);
 	NetObj *(* pfCreateObject)(int objectClass, const TCHAR *name, NetObj *parent, CSCPMessage *msg);
