@@ -39,6 +39,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.StatusLineContributionItem;
 import org.eclipse.jface.action.ToolBarContributionItem;
 import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IWorkbench;
@@ -52,6 +53,7 @@ import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
+import org.netxms.base.NXCommon;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -62,6 +64,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 {
 	private IWorkbenchAction actionExit;
 	private IWorkbenchAction actionAbout;
+	private Action actionAboutCustom;
 	private IWorkbenchAction actionShowPreferences;
 	private IWorkbenchAction actionCustomizePerspective;
 	private IWorkbenchAction actionSavePerspective;
@@ -95,7 +98,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	 * @see org.eclipse.ui.application.ActionBarAdvisor#makeActions(org.eclipse.ui.IWorkbenchWindow)
 	 */
 	@Override
-	protected void makeActions(IWorkbenchWindow window)
+	protected void makeActions(final IWorkbenchWindow window)
 	{
 		contribItemShowView = ContributionItemFactory.VIEWS_SHORTLIST.create(window);
 		contribItemOpenPerspective = ContributionItemFactory.PERSPECTIVES_SHORTLIST.create(window);
@@ -105,6 +108,22 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 
 		actionAbout = ActionFactory.ABOUT.create(window);
 		register(actionAbout);
+		
+		actionAboutCustom = new Action("&About") {
+			@Override
+			public void run()
+			{
+				Dialog dlg = BrandingManager.getInstance().getAboutDialog();
+				if (dlg != null)
+				{
+					dlg.open();
+				}
+				else
+				{	
+					MessageDialogHelper.openInformation(window.getShell(), "About", String.format("NetXMS Management Console\nVersion %s\nCopyright (c) 2003-2013 Raden Solutions", NXCommon.VERSION));
+				}
+			}
+		};
 		
 		actionShowPreferences = ActionFactory.PREFERENCES.create(window);
 		register(actionShowPreferences);
@@ -302,7 +321,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 
 		// Help
 		helpMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		helpMenu.add(actionAbout);
+		helpMenu.add((BrandingManager.getInstance().getAboutDialog() != null) ? actionAboutCustom : actionAbout);
 	}
 
 	/* (non-Javadoc)

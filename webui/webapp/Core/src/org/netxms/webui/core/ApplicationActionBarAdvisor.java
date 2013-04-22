@@ -10,6 +10,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarContributionItem;
 import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IWorkbench;
@@ -75,7 +76,15 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 			@Override
 			public void run()
 			{
-				MessageDialog.openInformation(window.getShell(), Messages.get().ApplicationActionBarAdvisor_About, Messages.get().ApplicationActionBarAdvisor_AboutText1 + NXCommon.VERSION + Messages.get().ApplicationActionBarAdvisor_AboutText2);
+				Dialog dlg = BrandingManager.getInstance().getAboutDialog();
+				if (dlg != null)
+				{
+					dlg.open();
+				}
+				else
+				{
+					MessageDialog.openInformation(window.getShell(), Messages.get().ApplicationActionBarAdvisor_About, Messages.get().ApplicationActionBarAdvisor_AboutText1 + NXCommon.VERSION + Messages.get().ApplicationActionBarAdvisor_AboutText2);
+				}
 			}
 		};
 		

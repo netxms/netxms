@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.RGB;
 import org.netxms.ui.eclipse.console.api.BrandingProvider;
@@ -154,6 +155,22 @@ public class BrandingManager
 			String t = p.getLoginTitle();
 			if (t != null)
 				return t;
+		}
+		return null;
+	}
+	
+	/**
+	 * Get custom "About" dialog.
+	 * 
+	 * @return custom "About" dialog or null if no branding provider defines one.
+	 */
+	public Dialog getAboutDialog()
+	{
+		for(BrandingProvider p : providers.values())
+		{
+			Dialog d = p.getAboutDialog();
+			if (d != null)
+				return d;
 		}
 		return null;
 	}
