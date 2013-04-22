@@ -175,10 +175,12 @@ public class HostSearchResults extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		/*
 		manager.add(actionCopyRecord);
 		manager.add(actionCopyIP);
 		manager.add(actionCopyMAC);
 		manager.add(new Separator());
+		*/
 		manager.add(actionClearLog);
 	}
 
@@ -188,8 +190,10 @@ public class HostSearchResults extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		/*
 		manager.add(actionCopyRecord);
 		manager.add(new Separator());
+		*/
 		manager.add(actionClearLog);
 	}
 
@@ -224,10 +228,12 @@ public class HostSearchResults extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
+		/*
 		manager.add(actionCopyRecord);
 		manager.add(actionCopyIP);
 		manager.add(actionCopyMAC);
 		manager.add(new Separator());
+		*/
 		manager.add(actionClearLog);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));

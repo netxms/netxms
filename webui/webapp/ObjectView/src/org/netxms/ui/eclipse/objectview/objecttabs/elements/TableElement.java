@@ -140,9 +140,9 @@ public abstract class TableElement extends OverviewPageElement
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(actionCopy);
-		manager.add(actionCopyName);
-		manager.add(actionCopyValue);
+		//manager.add(actionCopy);
+		//manager.add(actionCopyName);
+		//manager.add(actionCopyValue);
 	}
 
 	/**

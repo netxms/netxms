@@ -142,11 +142,13 @@ public class ComponentsTab extends ObjectTab
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
+		/*
 		manager.add(actionCopy);
 		manager.add(actionCopyName);
 		manager.add(actionCopyModel);
 		manager.add(actionCopySerial);
 		manager.add(new Separator());
+		*/
 		manager.add(actionCollapeAll);
 		manager.add(actionExpandAll);
 		manager.add(new Separator());

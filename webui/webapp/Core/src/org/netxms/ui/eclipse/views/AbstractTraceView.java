@@ -232,8 +232,8 @@ public abstract class AbstractTraceView extends ViewPart
 		manager.add(new Separator());
 		manager.add(actionPause);
 		manager.add(actionClear);
-		manager.add(new Separator());
-		manager.add(actionCopy);
+		//manager.add(new Separator());
+		//manager.add(actionCopy);
 	}
 
 	/**
@@ -280,8 +280,8 @@ public abstract class AbstractTraceView extends ViewPart
 	 */
 	protected void fillContextMenu(final IMenuManager manager)
 	{
-		manager.add(actionCopy);
-		manager.add(new Separator());
+		//manager.add(actionCopy);
+		//manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 

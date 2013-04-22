@@ -212,12 +212,14 @@ public class InterfacesTab extends ObjectTab
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
+		/*
 		manager.add(actionCopyToClipboard);
 		manager.add(actionCopyMacAddressToClipboard);
 		manager.add(actionCopyIpAddressToClipboard);
 		manager.add(actionCopyPeerNameToClipboard);
 		manager.add(actionCopyPeerMacToClipboard);
 		manager.add(actionCopyPeerIpToClipboard);
+		*/
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
