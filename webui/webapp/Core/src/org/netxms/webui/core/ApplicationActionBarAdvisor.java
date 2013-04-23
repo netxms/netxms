@@ -76,7 +76,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 			@Override
 			public void run()
 			{
-				Dialog dlg = BrandingManager.getInstance().getAboutDialog();
+				Dialog dlg = BrandingManager.getInstance().getAboutDialog(window.getShell());
 				if (dlg != null)
 				{
 					dlg.open();
@@ -176,7 +176,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		// Add a group marker indicating where action set menus will appear.
 		menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		
-		menuBar.add(windowMenu);
+		if (!Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WINDOW_MENU"))
+			menuBar.add(windowMenu);
 		menuBar.add(helpMenu);
 		
 		// File

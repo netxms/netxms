@@ -35,6 +35,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 	{
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		ps.setDefault("HIDE_WHEN_MINIMIZED", false); //$NON-NLS-1$
+		ps.setDefault("HIDE_WINDOW_MENU", false); //$NON-NLS-1$
 		ps.setDefault("INITIAL_PERSPECTIVE", "org.netxms.ui.eclipse.console.DefaultPerspective"); //$NON-NLS-1$ //$NON-NLS-2$
 		ps.setDefault("SAVE_AND_RESTORE", true); //$NON-NLS-1$
 		ps.setDefault("SHOW_COOLBAR", true); //$NON-NLS-1$
