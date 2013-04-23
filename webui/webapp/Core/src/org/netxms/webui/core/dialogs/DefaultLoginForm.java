@@ -48,6 +48,7 @@ import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.base.NXCommon;
+import org.netxms.ui.eclipse.console.api.LoginForm;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -58,7 +59,7 @@ import org.netxms.webui.core.Messages;
 /**
  *	Login form
  */
-public class LoginForm extends Window
+public class DefaultLoginForm extends Window implements LoginForm
 {
 	private static final long serialVersionUID = 1L;
 	
@@ -73,7 +74,7 @@ public class LoginForm extends Window
 	/**
 	 * @param parentShell
 	 */
-	public LoginForm(Shell parentShell, Properties properties)
+	public DefaultLoginForm(Shell parentShell, Properties properties)
 	{
 		super(parentShell);
 		setBlockOnOpen(true);
@@ -291,17 +292,19 @@ public class LoginForm extends Window
 		close();
 	}
 
-	/**
-	 * @return
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.console.api.LoginForm#getLogin()
 	 */
+	@Override
 	public String getLogin()
 	{
 		return login;
 	}
 
-	/**
-	 * @return
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.console.api.LoginForm#getPassword()
 	 */
+	@Override
 	public String getPassword()
 	{
 		return password;

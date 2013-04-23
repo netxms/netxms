@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.console.api;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Shell;
 
 /**
  * Branding provider interface
@@ -58,9 +59,10 @@ public interface BrandingProvider
 	/**
 	 * Get custom "About" dialog. New dialog must be returned on each call.
 	 * 
+	 * @param parentShell parent shell for dialog
 	 * @return custom "About" dialog or null to use default
 	 */
-	public Dialog getAboutDialog();
+	public Dialog getAboutDialog(Shell parentShell);
 	
 	/**
 	 * Get redirection URL for web console. Has no effect on RCP console.

@@ -113,7 +113,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 			@Override
 			public void run()
 			{
-				Dialog dlg = BrandingManager.getInstance().getAboutDialog();
+				Dialog dlg = BrandingManager.getInstance().getAboutDialog(window.getShell());
 				if (dlg != null)
 				{
 					dlg.open();
@@ -321,7 +321,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 
 		// Help
 		helpMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		helpMenu.add((BrandingManager.getInstance().getAboutDialog() != null) ? actionAboutCustom : actionAbout);
+		helpMenu.add((BrandingManager.getInstance().getAboutDialog(null) != null) ? actionAboutCustom : actionAbout);
 	}
 
 	/* (non-Javadoc)

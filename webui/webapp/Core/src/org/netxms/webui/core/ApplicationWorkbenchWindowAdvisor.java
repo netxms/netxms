@@ -44,7 +44,7 @@ import org.eclipse.ui.internal.keys.BindingService;
 import org.eclipse.ui.keys.IBindingService;
 import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
-import org.netxms.webui.core.dialogs.LoginForm;
+import org.netxms.ui.eclipse.console.api.LoginForm;
 import org.netxms.webui.core.dialogs.PasswordExpiredDialog;
 
 /**
@@ -136,19 +136,18 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		
 		readAppProperties();
 
-		LoginForm loginDialog;
+		Window loginDialog;
 		do
 		{
-			loginDialog = new LoginForm(null, properties);
+			loginDialog = BrandingManager.getInstance().getLoginForm(null, properties);
 			if (loginDialog.open() != Window.OK)
 				continue;
 
 			try
 			{
-				LoginJob job = new LoginJob(properties.getProperty("server", "127.0.0.1"), loginDialog.getLogin(), //$NON-NLS-1$ //$NON-NLS-2$
-				                            loginDialog.getPassword(), Display.getCurrent());
+				LoginJob job = new LoginJob(properties.getProperty("server", "127.0.0.1"), ((LoginForm)loginDialog).getLogin(), //$NON-NLS-1$ //$NON-NLS-2$
+						((LoginForm)loginDialog).getPassword(), Display.getCurrent());
 
-				// TODO: implement login on non-UI thread
 				ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
 				pd.run(false, false, job);
 				success = true;
@@ -173,7 +172,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
 				if (dlg.open() == Window.OK)
 				{
-					final String currentPassword = loginDialog.getPassword();
+					final String currentPassword = ((LoginForm)loginDialog).getPassword();
 					final Display display = Display.getCurrent();
 					IRunnableWithProgress job = new IRunnableWithProgress() {
 						@Override

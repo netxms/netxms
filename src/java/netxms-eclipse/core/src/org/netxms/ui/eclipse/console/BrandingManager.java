@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.console.api.BrandingProvider;
 
 /**
@@ -162,13 +163,14 @@ public class BrandingManager
 	/**
 	 * Get custom "About" dialog.
 	 * 
+	 * @param parentShell parent shell for dialog
 	 * @return custom "About" dialog or null if no branding provider defines one.
 	 */
-	public Dialog getAboutDialog()
+	public Dialog getAboutDialog(Shell parentShell)
 	{
 		for(BrandingProvider p : providers.values())
 		{
-			Dialog d = p.getAboutDialog();
+			Dialog d = p.getAboutDialog(parentShell);
 			if (d != null)
 				return d;
 		}

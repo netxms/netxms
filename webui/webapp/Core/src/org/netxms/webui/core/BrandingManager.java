@@ -19,6 +19,7 @@
 package org.netxms.webui.core;
 
 import java.util.Map;
+import java.util.Properties;
 import java.util.TreeMap;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -26,8 +27,12 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.console.api.BrandingProvider;
+import org.netxms.ui.eclipse.console.api.LoginForm;
+import org.netxms.webui.core.dialogs.DefaultLoginForm;
 
 /**
  * Branding manager. There should be only one instance of branding manager,
@@ -160,15 +165,34 @@ public class BrandingManager
 	}
 	
 	/**
-	 * Get custom "About" dialog.
+	 * Get custom login form. It is guaranteed that returned form implements LoginForm interface.
 	 * 
-	 * @return custom "About" dialog or null if no branding provider defines one.
+	 * @param parentShell parent shell for login form
+	 * @param properties system properties
+	 * @return custom login form or default login form if no branding provider defines one.
 	 */
-	public Dialog getAboutDialog()
+	public Window getLoginForm(Shell parentShell, Properties properties)
 	{
 		for(BrandingProvider p : providers.values())
 		{
-			Dialog d = p.getAboutDialog();
+			Window form = p.getLoginForm(parentShell, properties);
+			if ((form != null) && (form instanceof LoginForm))
+				return form;
+		}
+		return new DefaultLoginForm(parentShell, properties);
+	}
+	
+	/**
+	 * Get custom "About" dialog.
+	 * 
+	 * @param parentShell parent shell for dialog
+	 * @return custom "About" dialog or null if no branding provider defines one.
+	 */
+	public Dialog getAboutDialog(Shell parentShell)
+	{
+		for(BrandingProvider p : providers.values())
+		{
+			Dialog d = p.getAboutDialog(parentShell);
 			if (d != null)
 				return d;
 		}
