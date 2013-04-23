@@ -30,6 +30,7 @@ import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
@@ -88,7 +89,7 @@ public class ObjectTree extends Composite
 	private Set<Long> checkedObjects = new HashSet<Long>(0);
 	private NXCListener sessionListener = null;
 	private NXCSession session = null;
-	private long[] expandedElements = null;
+	private TreePath[] expandedPaths = null;
 	private int changeCount = 0;
 	private ObjectStatusIndicator statusIndicator = null;
 	private SelectionListener statusIndicatorSelectionListener = null;
@@ -131,6 +132,7 @@ public class ObjectTree extends Composite
 		
 		// Create object tree control
 		objectTree = new ObjectTreeViewer(this, SWT.VIRTUAL | (((options & MULTI) == MULTI) ? SWT.MULTI : SWT.SINGLE) | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
+		objectTree.setUseHashlookup(true);
 		objectTree.setContentProvider(new ObjectTreeContentProvider(rootObjects));
 		objectTree.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
 		objectTree.setComparator(new ObjectTreeComparator());
@@ -260,11 +262,13 @@ public class ObjectTree extends Composite
 							changeCount--;
 							if (changeCount <= 0)
 							{
+								objectTree.getTree().setRedraw(false);
 								saveExpandedState();
 								objectTree.refresh();
 								if (statusIndicatorEnabled)
 									updateStatusIndicator();
 								restoreExpandedState();
+								objectTree.getTree().setRedraw(true);
 							}
 							return Status.OK_STATUS;
 						}
@@ -405,10 +409,7 @@ public class ObjectTree extends Composite
 	 */
 	private void saveExpandedState()
 	{
-		Object[] elements = objectTree.getExpandedElements();
-		expandedElements = new long[elements.length];
-		for(int i = 0; i < elements.length; i++)
-			expandedElements[i] = ((AbstractObject)elements[i]).getObjectId();
+		expandedPaths = objectTree.getExpandedTreePaths();
 	}
 	
 	/**
@@ -416,11 +417,23 @@ public class ObjectTree extends Composite
 	 */
 	private void restoreExpandedState()
 	{
-		if (expandedElements == null)
+		if (expandedPaths == null)
 			return;
 		
-		Object[] objects = session.findMultipleObjects(expandedElements, false).toArray();
-		objectTree.setExpandedElements(objects);
+		for(int i = 0; i < expandedPaths.length; i++)
+		{
+			TreePath p = expandedPaths[i];
+			Object[] segments = new Object[p.getSegmentCount()];
+			for(int j = 0; j < p.getSegmentCount(); j++)
+			{
+				AbstractObject object = (AbstractObject)p.getSegment(j);
+				segments[j] = session.findObjectById(object.getObjectId());
+				if (segments[j] == null)
+					segments[j] = object;
+			}
+			expandedPaths[i] = new TreePath(segments);
+		}
+		objectTree.setExpandedTreePaths(expandedPaths);
 	}
 	
 	/**
