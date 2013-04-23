@@ -31,6 +31,13 @@ import org.eclipse.swt.widgets.Shell;
 public interface BrandingProvider
 {
 	/**
+	 * Get product name.
+	 * 
+	 * @return
+	 */
+	public String getProductName();
+	
+	/**
 	 * Get default perspective. Should return null to use default (or defined by another branding manager)
 	 * 
 	 * @return default perspective ID or null to use default.

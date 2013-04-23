@@ -70,7 +70,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		actionExit = ActionFactory.QUIT.create(window);
 		register(actionExit);
 
-		actionAbout = new Action(Messages.get().ApplicationActionBarAdvisor_AboutActionName) {
+		actionAbout = new Action(String.format(Messages.get().ApplicationActionBarAdvisor_AboutActionName, BrandingManager.getInstance().getProductName())) {
 			private static final long serialVersionUID = 1L;
 			
 			@Override

@@ -101,6 +101,22 @@ public class BrandingManager
 	}
 	
 	/**
+	 * Get product name.
+	 * 
+	 * @return product name or default product name if no branding provider defines one.
+	 */
+	public String getProductName()
+	{
+		for(BrandingProvider p : providers.values())
+		{
+			String name = p.getProductName();
+			if (name != null)
+				return name;
+		}
+		return Messages.get().ApplicationActionBarAdvisor_AboutProductName;
+	}
+	
+	/**
 	 * Get default perspective ID. 
 	 * 
 	 * @return default perspective ID or null if no branding provider defines one.
