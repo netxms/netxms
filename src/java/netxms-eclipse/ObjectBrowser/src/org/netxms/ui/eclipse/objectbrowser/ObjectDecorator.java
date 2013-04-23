@@ -19,15 +19,15 @@
 package org.netxms.ui.eclipse.objectbrowser;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.BaseLabelProvider;
 import org.eclipse.jface.viewers.IDecoration;
-import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ILightweightLabelDecorator;
 import org.netxms.client.objects.AbstractObject;
 
 /**
  * Label decorator for NetXMS objects
  */
-public class ObjectDecorator implements ILightweightLabelDecorator
+public class ObjectDecorator extends BaseLabelProvider implements ILightweightLabelDecorator
 {
 	// Status images
 	private ImageDescriptor[] statusImages;
@@ -46,39 +46,6 @@ public class ObjectDecorator implements ILightweightLabelDecorator
 		statusImages[6] = Activator.getImageDescriptor("icons/status/unmanaged.gif"); //$NON-NLS-1$
 		statusImages[7] = Activator.getImageDescriptor("icons/status/disabled.gif"); //$NON-NLS-1$
 		statusImages[8] = Activator.getImageDescriptor("icons/status/testing.png"); //$NON-NLS-1$
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	@Override
-	public void addListener(ILabelProviderListener listener)
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
-	 */
-	@Override
-	public boolean isLabelProperty(Object element, String property)
-	{
-		return false;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	@Override
-	public void removeListener(ILabelProviderListener listener)
-	{
 	}
 
 	/* (non-Javadoc)
