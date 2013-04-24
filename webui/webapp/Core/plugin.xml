@@ -209,5 +209,18 @@
             class="org.netxms.webui.core.DownloadServiceHandler"
             id="downloadServiceHandler">
       </serviceHandler>
+   </extension>
+   <extension
+         id="product"
+         name="NetXMS Management Console"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="nxmc"
+            name="NetXMS Management Console">
+         <property
+               name="preferenceCustomization"
+               value="plugin_customization.ini">
+         </property>
+      </product>
    </extension>   
 </plugin>

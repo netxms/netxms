@@ -2542,6 +2542,7 @@ webui/webapp/Core/icons/zoom_out.png -text
 webui/webapp/Core/jar/simple-xml-2.6.4.jar -text
 webui/webapp/Core/nxmc.warproduct -text
 webui/webapp/Core/plugin.xml -text
+webui/webapp/Core/plugin_customization.ini -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.branding.exsd -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.colorproviders.exsd -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.loginlisteners.exsd -text
