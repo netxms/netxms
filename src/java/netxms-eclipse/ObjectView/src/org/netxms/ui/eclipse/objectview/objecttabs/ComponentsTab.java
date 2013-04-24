@@ -66,7 +66,7 @@ public class ComponentsTab extends ObjectTab
 	private Action actionCopyName;
 	private Action actionCopyModel;
 	private Action actionCopySerial;
-	private Action actionCollapeAll;
+	private Action actionCollapseAll;
 	private Action actionExpandAll;
 
 	/* (non-Javadoc)
@@ -143,7 +143,7 @@ public class ComponentsTab extends ObjectTab
 		manager.add(actionCopyModel);
 		manager.add(actionCopySerial);
 		manager.add(new Separator());
-		manager.add(actionCollapeAll);
+		manager.add(actionCollapseAll);
 		manager.add(actionExpandAll);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -186,7 +186,7 @@ public class ComponentsTab extends ObjectTab
 			}
 		};
 
-		actionCollapeAll = new Action("C&ollapse all", SharedIcons.COLLAPSE_ALL) {
+		actionCollapseAll = new Action("C&ollapse all", SharedIcons.COLLAPSE_ALL) {
 			@Override
 			public void run()
 			{

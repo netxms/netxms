@@ -62,11 +62,7 @@ public class ComponentsTab extends ObjectTab
 	public static final int COLUMN_VENDOR = 5;
 	
 	private TreeViewer viewer;
-	private Action actionCopy;
-	private Action actionCopyName;
-	private Action actionCopyModel;
-	private Action actionCopySerial;
-	private Action actionCollapeAll;
+	private Action actionCollapseAll;
 	private Action actionExpandAll;
 
 	/* (non-Javadoc)
@@ -149,7 +145,7 @@ public class ComponentsTab extends ObjectTab
 		manager.add(actionCopySerial);
 		manager.add(new Separator());
 		*/
-		manager.add(actionCollapeAll);
+		manager.add(actionCollapseAll);
 		manager.add(actionExpandAll);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -160,47 +156,7 @@ public class ComponentsTab extends ObjectTab
 	 */
 	private void createActions()
 	{
-		actionCopy = new Action("&Copy to clipboard", SharedIcons.COPY) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				copySelectionToClipboard(-1);
-			}
-		};
-
-		actionCopyName = new Action("Copy &name to clipboard") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				copySelectionToClipboard(COLUMN_NAME);
-			}
-		};
-
-		actionCopyModel = new Action("Copy &model to clipboard") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				copySelectionToClipboard(COLUMN_MODEL);
-			}
-		};
-
-		actionCopySerial = new Action("Copy &serial number to clipboard") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				copySelectionToClipboard(COLUMN_SERIAL);
-			}
-		};
-
-		actionCollapeAll = new Action("C&ollapse all", SharedIcons.COLLAPSE_ALL) {
+		actionCollapseAll = new Action("C&ollapse all", SharedIcons.COLLAPSE_ALL) {
 			private static final long serialVersionUID = 1L;
 
 			@Override

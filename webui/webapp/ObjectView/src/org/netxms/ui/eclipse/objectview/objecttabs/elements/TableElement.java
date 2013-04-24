@@ -1,6 +1,5 @@
 package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -13,16 +12,12 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 public abstract class TableElement extends OverviewPageElement
 {
 	private static final long serialVersionUID = 1L;
 
 	private Table table;
-	private Action actionCopy;
-	private Action actionCopyName;
-	private Action actionCopyValue;
 
 	/**
 	 * @param parent
@@ -67,50 +62,6 @@ public abstract class TableElement extends OverviewPageElement
 	 */
 	protected void createActions()
 	{
-		actionCopy = new Action("Copy to clipboard") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				int index = table.getSelectionIndex();
-				if (index >= 0)
-				{
-					final TableItem item = table.getItem(index);
-					WidgetHelper.copyToClipboard(item.getText(0) + "=" + item.getText(1));
-				}
-			}
-		};
-
-		actionCopyName = new Action("Copy &name to clipboard") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				int index = table.getSelectionIndex();
-				if (index >= 0)
-				{
-					final TableItem item = table.getItem(index);
-					WidgetHelper.copyToClipboard(item.getText(0));
-				}
-			}
-		};
-
-		actionCopyValue = new Action("Copy &value to clipboard") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				int index = table.getSelectionIndex();
-				if (index >= 0)
-				{
-					final TableItem item = table.getItem(index);
-					WidgetHelper.copyToClipboard(item.getText(1));
-				}
-			}
-		};
 	}
 	
 	/**
@@ -140,9 +91,6 @@ public abstract class TableElement extends OverviewPageElement
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		//manager.add(actionCopy);
-		//manager.add(actionCopyName);
-		//manager.add(actionCopyValue);
 	}
 
 	/**

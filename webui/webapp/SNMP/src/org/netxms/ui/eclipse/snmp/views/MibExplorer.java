@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.snmp.views;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -98,12 +97,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
 	private Action actionRefresh;
 	private Action actionWalk;
-	private Action actionCopyObjectName;
 	private Action actionSetNode;
-	private Action actionCopy;
-	private Action actionCopyName;
-	private Action actionCopyType;
-	private Action actionCopyValue;
 	private Action actionSelect;
 	private Action actionExportToCsv;
 	
@@ -268,74 +262,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 				}
 			}
 		};
-
-		actionCopyObjectName = new Action(Messages.MibExplorer_CopyName) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				final MibObject object = mibBrowser.getSelection();
-				if (object != null)
-					WidgetHelper.copyToClipboard(object.getName());
-			}
-		};
-
-		actionCopy = new Action(Messages.MibExplorer_CopyToClipboard) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				TableItem[] selection = viewer.getTable().getSelection();
-				if (selection.length > 0)
-				{
-					final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
-					StringBuilder sb = new StringBuilder();
-					for(int i = 0; i < selection.length; i++)
-					{
-						if (i > 0)
-							sb.append(newLine);
-						sb.append(selection[i].getText(0));
-						sb.append(" ["); //$NON-NLS-1$
-						sb.append(selection[i].getText(1));
-						sb.append("] = "); //$NON-NLS-1$
-						sb.append(selection[i].getText(2));
-					}
-					WidgetHelper.copyToClipboard(sb.toString());
-				}
-			}
-		};
-
-		actionCopyName = new Action(Messages.MibExplorer_CopyName) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				copyColumnToClipboard(0);
-			}
-		};
-
-		actionCopyType = new Action(Messages.MibExplorer_CopyType) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				copyColumnToClipboard(1);
-			}
-		};
-
-		actionCopyValue = new Action(Messages.MibExplorer_CopyValue) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				copyColumnToClipboard(2);
-			}
-		};
 		
 		actionSelect = new Action("Select in MIB tree") {
 			private static final long serialVersionUID = 1L;
@@ -364,28 +290,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			{
 				mibBrowser.setSelection(o);
 			}
-		}
-	}
-	
-	/**
-	 * Copy values in given column and selected rows to clipboard
-	 * 
-	 * @param column column index
-	 */
-	private void copyColumnToClipboard(int column)
-	{
-		final TableItem[] selection = viewer.getTable().getSelection();
-		if (selection.length > 0)
-		{
-			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
-			final StringBuilder sb = new StringBuilder();
-			for(int i = 0; i < selection.length; i++)
-			{
-				if (i > 0)
-					sb.append(newLine);
-				sb.append(selection[i].getText(column));
-			}
-			WidgetHelper.copyToClipboard(sb.toString());
 		}
 	}
 	
@@ -454,8 +358,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	{
 		manager.add(actionWalk);
 		manager.add(new Separator());
-		manager.add(actionCopyObjectName);
-		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -496,10 +398,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		if (viewer.getSelection().isEmpty())
 			return;
 		
-		manager.add(actionCopy);
-		manager.add(actionCopyName);
-		manager.add(actionCopyType);
-		manager.add(actionCopyValue);
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(actionSelect);

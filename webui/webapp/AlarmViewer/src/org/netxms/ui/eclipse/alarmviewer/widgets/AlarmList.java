@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.alarmviewer.widgets;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -41,7 +40,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
@@ -94,8 +92,6 @@ public class AlarmList extends Composite
 	private SortableTableViewer alarmViewer;
 	private AlarmListFilter alarmFilter;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
-	private Action actionCopy;
-	private Action actionCopyMessage;
 	private Action actionComments;
 	private Action actionAcknowledge;
 	private Action actionResolve;
@@ -265,55 +261,6 @@ public class AlarmList extends Composite
 	 */
 	private void createActions()
 	{
-		actionCopy = new Action(Messages.get().AlarmList_CopyToClipboard) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				TableItem[] selection = alarmViewer.getTable().getSelection();
-				if (selection.length > 0)
-				{
-					final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
-					StringBuilder sb = new StringBuilder();
-					for(int i = 0; i < selection.length; i++)
-					{
-						if (i > 0)
-							sb.append(newLine);
-						sb.append('[');
-						sb.append(selection[i].getText(COLUMN_SEVERITY));
-						sb.append("]\t"); //$NON-NLS-1$
-						sb.append(selection[i].getText(COLUMN_SOURCE));
-						sb.append('\t');
-						sb.append(selection[i].getText(COLUMN_MESSAGE));
-					}
-					WidgetHelper.copyToClipboard(sb.toString());
-				}
-			}
-		};
-
-		actionCopyMessage = new Action(Messages.get().AlarmList_CopyMsgToClipboard) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				TableItem[] selection = alarmViewer.getTable().getSelection();
-				if (selection.length > 0)
-				{
-					final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
-					StringBuilder sb = new StringBuilder();
-					for(int i = 0; i < selection.length; i++)
-					{
-						if (i > 0)
-							sb.append(newLine);
-						sb.append(selection[i].getText(COLUMN_MESSAGE));
-					}
-					WidgetHelper.copyToClipboard(sb.toString());
-				}
-			}
-		};
-		
 		actionComments = new Action(Messages.get().AlarmList_Comments, Activator.getImageDescriptor("icons/comments.png")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 1L;
 
@@ -439,8 +386,6 @@ public class AlarmList extends Composite
 			manager.add(new Separator());
 		}
 		
-		manager.add(actionCopy);
-		manager.add(actionCopyMessage);
 		manager.add(actionExportToCsv);
 
 		if (selection.size() == 1)
