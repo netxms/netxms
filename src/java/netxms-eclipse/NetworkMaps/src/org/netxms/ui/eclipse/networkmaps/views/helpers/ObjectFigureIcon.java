@@ -155,6 +155,9 @@ public class ObjectFigureIcon extends ObjectFigure
 			image = labelProvider.getStatusImage(object);
 			if (image != null)
 			{
+				rect.x += imageOffset - BACKGROUND_MARGIN_X; 
+				rect.width = imageWidth + BACKGROUND_MARGIN_X * 2; 
+				
 				org.eclipse.swt.graphics.Rectangle imgSize = image.getBounds();
 				gc.drawImage(image, rect.x + rect.width - imgSize.width, rect.y);  // rect.y + rect.height - imgSize.height
 			}
