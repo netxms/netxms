@@ -119,6 +119,9 @@ struct RadioInterfaceInfo
 	int index;
 	TCHAR name[64];
 	BYTE macAddr[MAC_ADDR_LENGTH];
+   DWORD channel;
+   LONG powerDBm;
+   LONG powerMW;
 };
 
 /**
