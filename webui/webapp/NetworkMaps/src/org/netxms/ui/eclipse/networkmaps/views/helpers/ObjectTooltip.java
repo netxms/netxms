@@ -36,6 +36,7 @@ import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
+import org.netxms.client.topology.RadioInterface;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.figures.BirtChartFigure;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -102,6 +103,17 @@ public class ObjectTooltip extends Figure
 			{
 				sb.append('\n');
 				sb.append(mac.toString());
+			}
+			
+			for(RadioInterface rif : ((AccessPoint)object).getRadios())
+			{
+				sb.append("\nRadio ");
+				sb.append(rif.getIndex());
+				sb.append(" (");
+				sb.append(rif.getMacAddress().toString());
+				sb.append(") TX power: ");
+				sb.append(rif.getPowerMW());
+				sb.append(" mW");
 			}
 			
 			Label info = new Label();

@@ -26,6 +26,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.ConnectionPoint;
@@ -82,7 +83,7 @@ public class FindConnectionPoint implements IObjectActionDelegate
 		    (((IStructuredSelection)selection).size() == 1))
 		{
 			Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if ((obj instanceof Node) || (obj instanceof Interface))
+			if ((obj instanceof Node) || (obj instanceof Interface) || (obj instanceof AccessPoint))
 			{
 				action.setEnabled(true);
 				objectId = ((AbstractObject)obj).getObjectId();

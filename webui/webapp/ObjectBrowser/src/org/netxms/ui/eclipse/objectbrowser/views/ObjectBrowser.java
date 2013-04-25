@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,12 +59,12 @@ import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
@@ -76,8 +76,10 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectActionValidator;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenHandler;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
+import org.netxms.ui.eclipse.objectbrowser.api.SubtreeType;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -89,8 +91,6 @@ import org.netxms.ui.eclipse.shared.IActionConstants;
 public class ObjectBrowser extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.view.navigation.objectbrowser"; //$NON-NLS-1$
-	
-	private enum SubtreeType { NETWORK, INFRASTRUCTURE, TEMPLATES, DASHBOARDS, MAPS, BUSINESS_SERVICES };
 	
 	private ObjectTree objectTree;
 	private Action actionShowFilter;
@@ -108,6 +108,7 @@ public class ObjectBrowser extends ViewPart
 	private boolean initShowStatus = false;
 	private String initialObjectSelection = null;
 	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
+	private ObjectActionValidator[] actionValidators;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
@@ -125,6 +126,7 @@ public class ObjectBrowser extends ViewPart
 			initialObjectSelection = memento.getString("ObjectBrowser.selectedObject"); //$NON-NLS-1$
 		}
 		registerOpenHandlers();
+		registerActionValidators();
 	}
 
 	private static boolean safeCast(Boolean b, boolean defval)
@@ -490,32 +492,18 @@ public class ObjectBrowser extends ViewPart
 		if (selection[0].getParentItem() == null)
 			return false;
 		
-		final Object currentObject = selection[0].getData();
-		final Object parentObject = selection[0].getParentItem().getData();
+		final AbstractObject currentObject = (AbstractObject)selection[0].getData();
+		final AbstractObject parentObject = (AbstractObject)selection[0].getParentItem().getData();
 		
-		switch(subtree)
+		for(ObjectActionValidator v : actionValidators)
 		{
-			case INFRASTRUCTURE:
-				return ((currentObject instanceof Node) ||
-		            (currentObject instanceof Cluster) ||
-			         (currentObject instanceof Subnet) ||
-		            (currentObject instanceof Condition) ||
-		            (currentObject instanceof Rack) ||
-			         (currentObject instanceof Container)) &&
-			        ((parentObject instanceof Container) ||
-			         (parentObject instanceof ServiceRoot));
-			case TEMPLATES:
-				return ((currentObject instanceof Template) ||
-			         (currentObject instanceof TemplateGroup)) &&
-			        ((parentObject instanceof TemplateGroup) ||
-			         (parentObject instanceof TemplateRoot));
-			case BUSINESS_SERVICES:
-				return (currentObject instanceof BusinessService) &&
-				       ((parentObject instanceof BusinessService) ||
-						  (parentObject instanceof BusinessServiceRoot));
-			default:
+			int result = v.isValidSelectionForMove(subtree, currentObject, parentObject);
+			if (result == ObjectActionValidator.APPROVE)
+				return true;
+			if (result == ObjectActionValidator.REJECT)
 				return false;
 		}
+		return false;
 	}
 	
 	/**
@@ -602,7 +590,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		}
 		
-		// Sort tabs by appearance order
+		// Sort handlers by priority
 		Collections.sort(openHandlers, new Comparator<OpenHandlerData>() {
 			@Override
 			public int compare(OpenHandlerData arg0, OpenHandlerData arg1)
@@ -610,6 +598,78 @@ public class ObjectBrowser extends ViewPart
 				return arg0.priority - arg1.priority;
 			}
 		});
+	}
+
+	
+	/**
+	 * Register object action validators
+	 */
+	private void registerActionValidators()
+	{
+		List<ActionValidatorData> list = new ArrayList<ActionValidatorData>();
+		
+		// Read all registered extensions and create validators
+		final IExtensionRegistry reg = Platform.getExtensionRegistry();
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectbrowser.objectActionValidators");
+		for(int i = 0; i < elements.length; i++)
+		{
+			try
+			{
+				final ActionValidatorData v = new ActionValidatorData();
+				v.validator = (ObjectActionValidator)elements[i].createExecutableExtension("class");
+				v.priority = safeParseInt(elements[i].getAttribute("priority"));
+				list.add(v);
+			}
+			catch(CoreException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
+		// Sort handlers by priority
+		Collections.sort(list, new Comparator<ActionValidatorData>() {
+			@Override
+			public int compare(ActionValidatorData arg0, ActionValidatorData arg1)
+			{
+				return arg0.priority - arg1.priority;
+			}
+		});
+		
+		actionValidators = new ObjectActionValidator[list.size() + 1];
+		int i = 0;
+		for(ActionValidatorData v : list)
+			actionValidators[i++] = v.validator;
+		
+		// Default validator
+		actionValidators[i] = new ObjectActionValidator() {
+			@Override
+			public int isValidSelectionForMove(SubtreeType subtree, AbstractObject currentObject, AbstractObject parentObject)
+			{
+				switch(subtree)
+				{
+					case INFRASTRUCTURE:
+						return ((currentObject instanceof Node) ||
+						        (currentObject instanceof Cluster) ||
+					           (currentObject instanceof Subnet) ||
+				              (currentObject instanceof Condition) ||
+				              (currentObject instanceof Rack) ||
+					           (currentObject instanceof Container)) &&
+					          ((parentObject instanceof Container) ||
+					           (parentObject instanceof ServiceRoot)) ? APPROVE : REJECT;
+					case TEMPLATES:
+						return ((currentObject instanceof Template) ||
+					           (currentObject instanceof TemplateGroup)) &&
+					          ((parentObject instanceof TemplateGroup) ||
+					           (parentObject instanceof TemplateRoot)) ? APPROVE : REJECT;
+					case BUSINESS_SERVICES:
+						return (currentObject instanceof BusinessService) &&
+						       ((parentObject instanceof BusinessService) ||
+								  (parentObject instanceof BusinessServiceRoot)) ? APPROVE : REJECT;
+					default:
+						return REJECT;
+				}
+			}
+		};
 	}
 	
 	/**
@@ -656,5 +716,14 @@ public class ObjectBrowser extends ViewPart
 		ObjectOpenHandler handler;
 		int priority;
 		Class<?> enabledFor;
+	}
+
+	/**
+	 * Internal data for object action validators
+	 */
+	private class ActionValidatorData
+	{
+		ObjectActionValidator validator;
+		int priority;
 	}
 }
