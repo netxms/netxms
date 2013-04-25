@@ -909,6 +909,7 @@ typedef struct
 #define VID_GEOLOCATION_TIMESTAMP   ((DWORD)439)
 #define VID_SAMPLE_COUNT            ((DWORD)440)
 #define VID_HEIGHT                  ((DWORD)441)
+#define VID_RADIO_COUNT             ((DWORD)442)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)
@@ -1070,6 +1071,8 @@ typedef struct
 #define VID_NETWORK_PATH_BASE       ((DWORD)0x40000000)
 
 #define VID_COMPONENT_LIST_BASE     ((DWORD)0x20000000)
+
+#define VID_RADIO_LIST_BASE         ((DWORD)0x30000000)
 
 
 //

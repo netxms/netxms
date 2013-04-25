@@ -128,10 +128,6 @@ DIR *opendir(const char *filename)
             return NULL;
         }
         strcpy(&p->start[idx], FindData.cFileName);
-        /*
-         * if (downcase) 
-         * *        strlwr(&p->start[idx]);
-         */
         p->nfiles++;
         idx += len + 1;
     }

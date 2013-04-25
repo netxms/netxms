@@ -281,8 +281,11 @@ static DWORD HandlerAccessPointListAdopted(DWORD version, SNMP_Variable *var, SN
       DWORD channelOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 11, 11, 1, 6, 0 }; // wsCcRfRadioStatusCurrChannel
       DWORD currentPowerDbOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 11, 11, 1, 7, 0 }; // wsCcRfRadioStatusCurrPowerDb
       DWORD currentPowerMwOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 11, 11, 1, 8, 0 }; // wsCcRfRadioStatusCurrPowerMw
-      descOid[(sizeof(descOid) / sizeof(descOid[0])) - 1] = radioIndex[i];
-      macOid[(sizeof(macOid) / sizeof(macOid[0])) - 1] = radioIndex[i];
+      descOid[(sizeof(descOid) / sizeof(DWORD)) - 1] = radioIndex[i];
+      macOid[(sizeof(macOid) / sizeof(DWORD)) - 1] = radioIndex[i];
+      channelOid[(sizeof(channelOid) / sizeof(DWORD)) - 1] = radioIndex[i];
+      currentPowerDbOid[(sizeof(currentPowerDbOid) / sizeof(DWORD)) - 1] = radioIndex[i];
+      currentPowerMwOid[(sizeof(currentPowerMwOid) / sizeof(DWORD)) - 1] = radioIndex[i];
 
       RadioInterfaceInfo *radioInfo = new RadioInterfaceInfo;
       radioInfo->index = radioIndex[i];

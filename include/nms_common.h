@@ -72,11 +72,9 @@
 
 #include <netxms-version.h>
 
-
-//
-// Define __64BIT__ if compiling for 64bit platform with Visual C++
-//
-
+/**
+ * Define __64BIT__ if compiling for 64bit platform with Visual C++
+ */
 #if defined(_M_X64) || defined(_M_IA64)
 #ifndef __64BIT__
 #define __64BIT__
@@ -137,10 +135,16 @@
 typedef int bool;
 #endif
 
+/**
+ * Oracle Pro*C compatibility
+ */
+#ifdef ORACLE_PROC
+#undef BYTE
+#undef DWORD
+#endif
 
-//
-// Platform dependent includes and defines
-//
+
+/***** Platform dependent includes and defines *****/
 
 #if defined(_WIN32) || defined(UNDER_CE)
 
@@ -651,12 +655,10 @@ typedef struct hostent HOSTENT;
 #define CAST_TO_POINTER(v, t) ((t)(v))
 #endif
 
-
-//
-// OpenSSL
-//
-
-#ifdef _WITH_ENCRYPTION
+/**
+ * OpenSSL
+ */
+#if defined(_WITH_ENCRYPTION) && !defined(ORACLE_PROC)
 
 #include <openssl/crypto.h>
 #include <openssl/rsa.h>
@@ -703,20 +705,16 @@ typedef struct hostent HOSTENT;
 
 #endif
 
-
-//
-// open() flags compatibility
-//
-
+/**
+ * open() flags compatibility
+ */
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
 
-
-//
-// Windows-specific structures for non-Windows platforms
-// 
-
+/**
+ * Windows-specific structures for non-Windows platforms
+ */ 
 #ifndef _WIN32
 
 typedef struct tagPOINT
@@ -727,11 +725,9 @@ typedef struct tagPOINT
 
 #endif
 
-
-//
-// Event log severity codes
-//
-
+/**
+ * Event log severity codes
+ */
 #ifndef _WIN32
 #define EVENTLOG_SUCCESS                0x0000
 #define EVENTLOG_ERROR_TYPE             0x0001
@@ -746,11 +742,9 @@ typedef struct tagPOINT
 #define NXLOG_WARNING   EVENTLOG_WARNING_TYPE
 #define NXLOG_ERROR     EVENTLOG_ERROR_TYPE
 
-
-//
-// Interface types
-//
-
+/**
+ * Interface types
+ */
 #define IFTYPE_OTHER                1
 #define IFTYPE_REGULAR1822          2
 #define IFTYPE_HDH1822              3

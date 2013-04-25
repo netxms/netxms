@@ -33,6 +33,15 @@
                menubarPath="topology"
                style="push">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.ShowRadioInterfaces"
+               enablesFor="1"
+               icon="icons/radio_interfaces.png"
+               id="org.netxms.ui.eclipse.topology.popupActions.RadioInterfaces"
+               label="Radio Interfaces"
+               menubarPath="topology"
+               style="push">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
@@ -42,6 +51,19 @@
                class="org.netxms.ui.eclipse.topology.actions.FindConnectionPoint"
                enablesFor="1"
                id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#Interface"
+               label="Find &amp;switch port"
+               menubarPath="topology"
+               style="push">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.topology.actions.popup.object.AccessPoint"
+            objectClass="org.netxms.client.objects.AccessPoint">
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.FindConnectionPoint"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#AccessPoint"
                label="Find &amp;switch port"
                menubarPath="topology"
                style="push">
@@ -115,6 +137,15 @@
             icon="icons/wireless_stations.png"
             id="org.netxms.ui.eclipse.topology.views.WirelessStations"
             name="Wireless Stations"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.topology.views.RadioInterfaces"
+            icon="icons/radio_interfaces.png"
+            id="org.netxms.ui.eclipse.topology.views.RadioInterfaces"
+            name="Radio Interfaces"
             restorable="true">
       </view>
    </extension>

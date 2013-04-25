@@ -101,10 +101,6 @@ DIRW *wopendir(const WCHAR *filename)
         return NULL;
     }
     wcscpy(p->start, FindData.cFileName);
-    /*
-     * if(downcase)
-     * *    strlwr(p->start);
-     */
     p->nfiles = 0;
 
     /*

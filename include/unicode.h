@@ -215,7 +215,6 @@
 #define _tcstod   wcstod
 #define _tcsdup   wcsdup
 #define _tcsupr   wcsupr
-#define _tcslwr   wcslwr
 #define _tcsspn   wcsspn
 #define _tcscspn  wcscspn
 #define _tcsstr   wcsstr
@@ -295,7 +294,6 @@
 #define _tcstod   strtod
 #define _tcsdup   strdup
 #define _tcsupr   strupr
-#define _tcslwr   strlwr
 #define _tcsspn   strspn
 #define _tcscspn  strcspn
 #define _tcsstr   strstr

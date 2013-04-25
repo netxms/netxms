@@ -203,6 +203,27 @@ void AccessPoint::CreateMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->SetVariable(VID_MODEL, CHECK_NULL_EX(m_model));
 	msg->SetVariable(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
+
+   if (m_radioInterfaces != NULL)
+   {
+      msg->SetVariable(VID_RADIO_COUNT, (WORD)m_radioInterfaces->size());
+      DWORD varId = VID_RADIO_LIST_BASE;
+      for(int i = 0; i < m_radioInterfaces->size(); i++)
+      {
+         RadioInterfaceInfo *rif = m_radioInterfaces->get(i);
+         msg->SetVariable(varId++, (DWORD)rif->index);
+         msg->SetVariable(varId++, rif->name);
+         msg->SetVariable(varId++, rif->macAddr, MAC_ADDR_LENGTH);
+         msg->SetVariable(varId++, rif->channel);
+         msg->SetVariable(varId++, (DWORD)rif->powerDBm);
+         msg->SetVariable(varId++, (DWORD)rif->powerMW);
+         varId += 4;
+      }
+   }
+   else
+   {
+      msg->SetVariable(VID_RADIO_COUNT, (WORD)0);
+   }
 }
 
 /**

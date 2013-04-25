@@ -10695,6 +10695,14 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 				iface = FindInterfaceConnectionPoint(localMacAddr, &exactMatch);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
+         else if (object->Type() == OBJECT_ACCESSPOINT)
+			{
+				localNodeId = 0;
+				localIfId = 0;
+				memcpy(localMacAddr, ((AccessPoint *)object)->getMacAddr(), MAC_ADDR_LENGTH);
+				iface = FindInterfaceConnectionPoint(localMacAddr, &exactMatch);
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			}
 			else
 			{
 				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);

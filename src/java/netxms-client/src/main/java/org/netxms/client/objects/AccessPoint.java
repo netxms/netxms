@@ -7,6 +7,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.MacAddress;
 import org.netxms.client.NXCSession;
+import org.netxms.client.topology.RadioInterface;
 
 /**
  * Access point class
@@ -18,6 +19,7 @@ public class AccessPoint extends GenericObject
 	private String vendor;
 	private String model;
 	private String serialNumber;
+	private RadioInterface[] radios;
 	
 	/**
 	 * @param msg
@@ -31,6 +33,15 @@ public class AccessPoint extends GenericObject
 		vendor = msg.getVariableAsString(NXCPCodes.VID_VENDOR);
 		model = msg.getVariableAsString(NXCPCodes.VID_MODEL);
 		serialNumber = msg.getVariableAsString(NXCPCodes.VID_SERIAL_NUMBER);
+		
+		int count = msg.getVariableAsInteger(NXCPCodes.VID_RADIO_COUNT);
+		radios = new RadioInterface[count];
+		long varId = NXCPCodes.VID_RADIO_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			radios[i] = new RadioInterface(this, msg, varId);
+			varId += 10;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -89,5 +100,13 @@ public class AccessPoint extends GenericObject
 	public String getModel()
 	{
 		return model;
+	}
+
+	/**
+	 * @return the radios
+	 */
+	public RadioInterface[] getRadios()
+	{
+		return radios;
 	}
 }

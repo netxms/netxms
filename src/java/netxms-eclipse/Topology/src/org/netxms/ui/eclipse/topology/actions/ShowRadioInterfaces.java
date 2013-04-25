@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,30 +18,25 @@
  */
 package org.netxms.ui.eclipse.topology.actions;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
-import org.netxms.client.NXCSession;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.AccessPoint;
-import org.netxms.client.objects.Interface;
-import org.netxms.client.objects.Node;
-import org.netxms.client.topology.ConnectionPoint;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.topology.Activator;
-import org.netxms.ui.eclipse.topology.views.HostSearchResults;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.topology.views.RadioInterfaces;
 
 /**
- * Find connection point for node or interface
- *
+ * Show wireless stations registered on wireless network controller
  */
-public class FindConnectionPoint implements IObjectActionDelegate
+public class ShowRadioInterfaces implements IObjectActionDelegate
 {
-	private IWorkbenchPart wbPart;
+	private IWorkbenchWindow window;
 	private long objectId;
 	
 	/* (non-Javadoc)
@@ -50,27 +45,14 @@ public class FindConnectionPoint implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Find connection point for object " + objectId, wbPart, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				final ConnectionPoint cp = session.findConnectionPoint(objectId);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						HostSearchResults.showConnection(cp);
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return "Cannot get conection point information";
-			}
-		}.start();
+		try
+		{
+			window.getActivePage().showView(RadioInterfaces.ID, Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE);
+		}
+		catch(PartInitException e)
+		{
+			MessageDialogHelper.openError(window.getShell(), "Error", "Cannot open view: " + e.getLocalizedMessage());
+		}
 	}
 	
 	/* (non-Javadoc)
@@ -83,7 +65,7 @@ public class FindConnectionPoint implements IObjectActionDelegate
 		    (((IStructuredSelection)selection).size() == 1))
 		{
 			Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if ((obj instanceof Node) || (obj instanceof Interface) || (obj instanceof AccessPoint))
+			if ((obj instanceof AbstractNode) && ((AbstractNode)obj).isWirelessController())
 			{
 				action.setEnabled(true);
 				objectId = ((AbstractObject)obj).getObjectId();
@@ -107,6 +89,6 @@ public class FindConnectionPoint implements IObjectActionDelegate
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
-		wbPart = targetPart;
+		window = targetPart.getSite().getWorkbenchWindow();
 	}
 }

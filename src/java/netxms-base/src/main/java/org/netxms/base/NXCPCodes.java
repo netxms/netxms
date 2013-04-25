@@ -743,6 +743,7 @@ public class NXCPCodes
 	public static final long VID_GEOLOCATION_TIMESTAMP   = 439;
 	public static final long VID_SAMPLE_COUNT            = 440;
 	public static final long VID_HEIGHT                  = 441;
+	public static final long VID_RADIO_COUNT             = 442;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
@@ -823,4 +824,5 @@ public class NXCPCodes
 	public static final long VID_VLAN_LIST_BASE           = 0x10000000L;
 	public static final long VID_NETWORK_PATH_BASE        = 0x40000000L;
 	public static final long VID_COMPONENT_LIST_BASE      = 0x20000000L;
+	public static final long VID_RADIO_LIST_BASE          = 0x30000000L;
 }

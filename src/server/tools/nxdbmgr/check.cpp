@@ -307,9 +307,9 @@ static void CheckNodes()
                              _T("last_modified,status_calc_alg,status_prop_alg,")
                              _T("status_fixed_val,status_shift,status_translation,")
                              _T("status_single_threshold,status_thresholds,location_type,")
-									  _T("latitude,longitude,image) VALUES ")
+									  _T("latitude,longitude,location_accuracy,location_timestamp,image,submap_id) VALUES ")
                              _T("(%d,'%s','lost_node_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
-									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000')"),
+									  _T("'0.000000','0.000000',0,0,'00000000-0000-0000-0000-000000000000',0)"),
 									  (int)dwId, uuid_to_string(guid, guidText), (int)dwId, TIME_T_FCAST(time(NULL)));
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;

@@ -10,6 +10,8 @@
 - New NXSL functions: CreateNode, GetSumDCIValue
 - New NXSL operator @ - safe get object's attribute
 - New MIBs added: ASTARO-MIB, CPQHOST-MIB, CPQPOWER-MIB
+- Special support for wireless switches
+- Driver for Motorola/Symbol wireless switches
 - Management console:
 	- "Export to CSV" option added to most tabular data views
 - Fixed issues: #86, #199, #242, #249, #250, #251
