@@ -21,8 +21,10 @@ package org.netxms.ui.eclipse.objectview.widgets.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.SoftwarePackage;
 import org.netxms.ui.eclipse.console.tools.RegionalSettings;
+import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.widgets.SoftwareInventory;
 
 /**
@@ -30,12 +32,32 @@ import org.netxms.ui.eclipse.objectview.widgets.SoftwareInventory;
  */
 public class SoftwarePackageLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+	private WorkbenchLabelProvider wbl = new WorkbenchLabelProvider();
+	private Image imgPackage = Activator.getImageDescriptor("icons/package.gif").createImage();
+	private boolean treeMode;
+
+	/**
+	 * @param treeMode
+	 */
+	public SoftwarePackageLabelProvider(boolean treeMode)
+	{
+		super();
+		this.treeMode = treeMode;
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
+		if (columnIndex == 0)
+		{
+			if (element instanceof SoftwareInventoryNode)
+				return wbl.getImage(((SoftwareInventoryNode)element).getNode());
+			if (treeMode && (element instanceof SoftwarePackage))
+				return imgPackage;
+		}
 		return null;
 	}
 
@@ -45,24 +67,43 @@ public class SoftwarePackageLabelProvider extends LabelProvider implements ITabl
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		SoftwarePackage p = (SoftwarePackage)element;
-		switch(columnIndex)
+		if (element instanceof SoftwareInventoryNode)
 		{
-			case SoftwareInventory.COLUMN_DATE:
-				if ((p.getInstallDate() == null) || (p.getInstallDate().getTime() == 0))
-					return null;
-				return RegionalSettings.getDateFormat().format(p.getInstallDate());
-			case SoftwareInventory.COLUMN_DESCRIPTION:
-				return p.getDescription();
-			case SoftwareInventory.COLUMN_NAME:
-				return p.getName();
-			case SoftwareInventory.COLUMN_URL:
-				return p.getSupportUrl();
-			case SoftwareInventory.COLUMN_VENDOR:
-				return p.getVendor();
-			case SoftwareInventory.COLUMN_VERSION:
-				return p.getVersion();
+			if (columnIndex == 0)
+				return ((SoftwareInventoryNode)element).getNode().getObjectName();
+		}
+		else
+		{
+			SoftwarePackage p = (SoftwarePackage)element;
+			switch(columnIndex)
+			{
+				case SoftwareInventory.COLUMN_DATE:
+					if ((p.getInstallDate() == null) || (p.getInstallDate().getTime() == 0))
+						return null;
+					return RegionalSettings.getDateFormat().format(p.getInstallDate());
+				case SoftwareInventory.COLUMN_DESCRIPTION:
+					return p.getDescription();
+				case SoftwareInventory.COLUMN_NAME:
+					return p.getName();
+				case SoftwareInventory.COLUMN_URL:
+					return p.getSupportUrl();
+				case SoftwareInventory.COLUMN_VENDOR:
+					return p.getVendor();
+				case SoftwareInventory.COLUMN_VERSION:
+					return p.getVersion();
+			}
 		}
 		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		wbl.dispose();
+		imgPackage.dispose();
+		super.dispose();
 	}
 }

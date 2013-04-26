@@ -32,6 +32,7 @@ public class SoftwarePackage
 	private String vendor;
 	private String supportUrl;
 	private Date installDate;
+	private Object data;
 	
 	/**
 	 * Create software package information from NXCP message
@@ -103,5 +104,25 @@ public class SoftwarePackage
 	public long getInstallDateMs()
 	{
 		return (installDate != null) ? installDate.getTime() : 0;
+	}
+
+	/**
+	 * Get value of custom data field.
+	 * 
+	 * @return the data
+	 */
+	public Object getData()
+	{
+		return data;
+	}
+
+	/**
+	 * Set custom data field.
+	 * 
+	 * @param data the data to set
+	 */
+	public void setData(Object data)
+	{
+		this.data = data;
 	}
 }

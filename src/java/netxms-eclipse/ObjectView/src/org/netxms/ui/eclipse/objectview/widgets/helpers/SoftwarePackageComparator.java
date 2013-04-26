@@ -24,49 +24,64 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.SoftwarePackage;
 import org.netxms.ui.eclipse.objectview.widgets.SoftwareInventory;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
  * Comparator for software package objects
  */
 public class SoftwarePackageComparator extends ViewerComparator
 {
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		SoftwarePackage p1 = (SoftwarePackage)e1;
-		SoftwarePackage p2 = (SoftwarePackage)e2;
-		
 		int result;
-		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID");
-		switch(column)
+		final int column = (viewer instanceof SortableTableViewer) ? (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID") : (Integer)((SortableTreeViewer)viewer).getTree().getSortColumn().getData("ID");
+		
+		if (e1 instanceof SoftwareInventoryNode)
 		{
-			case SoftwareInventory.COLUMN_DATE:
-				result = Long.signum(p1.getInstallDateMs() - p2.getInstallDateMs());
-				break;
-			case SoftwareInventory.COLUMN_DESCRIPTION:
-				result = p1.getDescription().compareToIgnoreCase(p2.getDescription());
-				break;
-			case SoftwareInventory.COLUMN_NAME:
-				result = p1.getName().compareToIgnoreCase(p2.getName());
-				break;
-			case SoftwareInventory.COLUMN_URL:
-				result = p1.getSupportUrl().compareToIgnoreCase(p2.getSupportUrl());
-				break;
-			case SoftwareInventory.COLUMN_VENDOR:
-				result = p1.getVendor().compareToIgnoreCase(p2.getVendor());
-				break;
-			case SoftwareInventory.COLUMN_VERSION:
-				result = p1.getVersion().compareToIgnoreCase(p2.getVersion());
-				break;
-			default:
+			if (column == 0)
+			{
+				result = ((SoftwareInventoryNode)e1).getNode().getObjectName().compareToIgnoreCase(((SoftwareInventoryNode)e2).getNode().getObjectName());
+			}
+			else
+			{
 				result = 0;
-				break;
+			}
 		}
-		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+		else
+		{
+			SoftwarePackage p1 = (SoftwarePackage)e1;
+			SoftwarePackage p2 = (SoftwarePackage)e2;
+			
+			switch(column)
+			{
+				case SoftwareInventory.COLUMN_DATE:
+					result = Long.signum(p1.getInstallDateMs() - p2.getInstallDateMs());
+					break;
+				case SoftwareInventory.COLUMN_DESCRIPTION:
+					result = p1.getDescription().compareToIgnoreCase(p2.getDescription());
+					break;
+				case SoftwareInventory.COLUMN_NAME:
+					result = p1.getName().compareToIgnoreCase(p2.getName());
+					break;
+				case SoftwareInventory.COLUMN_URL:
+					result = p1.getSupportUrl().compareToIgnoreCase(p2.getSupportUrl());
+					break;
+				case SoftwareInventory.COLUMN_VENDOR:
+					result = p1.getVendor().compareToIgnoreCase(p2.getVendor());
+					break;
+				case SoftwareInventory.COLUMN_VERSION:
+					result = p1.getVersion().compareToIgnoreCase(p2.getVersion());
+					break;
+				default:
+					result = 0;
+					break;
+			}
+		}
+		int direction = (viewer instanceof SortableTableViewer) ? ((SortableTableViewer)viewer).getTable().getSortDirection() : ((SortableTreeViewer)viewer).getTree().getSortDirection();
+		return (direction == SWT.UP) ? result : -result;
 	}
-
 }

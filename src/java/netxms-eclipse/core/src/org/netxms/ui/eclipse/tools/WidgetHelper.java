@@ -23,6 +23,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.ColorSelector;
+import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ST;
 import org.eclipse.swt.custom.StyledText;
@@ -51,6 +52,7 @@ import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
  * Utility class for simplified creation of widgets
@@ -366,7 +368,7 @@ public class WidgetHelper
 			settings.put(prefix + "." + i + ".width", columns[i].getWidth()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
-	
+
 	/**
 	 * Restore settings of table viewer columns previously saved by call to WidgetHelper.saveColumnSettings
 	 * 
@@ -465,6 +467,83 @@ public class WidgetHelper
 		}
 		catch(NumberFormatException e)
 		{
+		}
+	}
+	
+	/**
+	 * Save settings for sortable tree viewer
+	 * @param viewer Viewer
+	 * @param settings Dialog settings object
+	 * @param prefix Prefix for properties
+	 */
+	public static void saveTreeViewerSettings(SortableTreeViewer viewer, IDialogSettings settings, String prefix)
+	{
+		final Tree tree = viewer.getTree();
+		saveColumnSettings(tree, settings, prefix);
+		TreeColumn column = tree.getSortColumn();
+		settings.put(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1); //$NON-NLS-1$ //$NON-NLS-2$
+		settings.put(prefix + ".sortDirection", tree.getSortDirection()); //$NON-NLS-1$
+	}
+	
+	/**
+	 * Restore settings for sortable table viewer
+	 * @param viewer Viewer
+	 * @param settings Dialog settings object
+	 * @param prefix Prefix for properties
+	 */
+	public static void restoreTreeViewerSettings(SortableTreeViewer viewer, IDialogSettings settings, String prefix)
+	{
+		final Tree tree = viewer.getTree();
+		restoreColumnSettings(tree, settings, prefix);
+		try
+		{
+			tree.setSortDirection(settings.getInt(prefix + ".sortDirection")); //$NON-NLS-1$
+			int column = settings.getInt(prefix + ".sortColumn"); //$NON-NLS-1$
+			if (column >= 0)
+			{
+				tree.setSortColumn(viewer.getColumnById(column));
+			}
+		}
+		catch(NumberFormatException e)
+		{
+		}
+	}
+	
+	/**
+	 * Wrapper for saveTableViewerSettings/saveTreeViewerSettings
+	 * 
+	 * @param viewer
+	 * @param settings
+	 * @param prefix
+	 */
+	public static void saveColumnViewerSettings(ColumnViewer viewer, IDialogSettings settings, String prefix)
+	{
+		if (viewer instanceof SortableTableViewer)
+		{
+			saveTableViewerSettings((SortableTableViewer)viewer, settings, prefix);
+		}
+		else if (viewer instanceof SortableTreeViewer)
+		{
+			saveTreeViewerSettings((SortableTreeViewer)viewer, settings, prefix);
+		}
+	}
+	
+	/**
+	 * Wrapper for restoreTableViewerSettings/restoreTreeViewerSettings
+	 * 
+	 * @param viewer table or tree viewer
+	 * @param settings
+	 * @param prefix
+	 */
+	public static void restoreColumnViewerSettings(ColumnViewer viewer, IDialogSettings settings, String prefix)
+	{
+		if (viewer instanceof SortableTableViewer)
+		{
+			restoreTableViewerSettings((SortableTableViewer)viewer, settings, prefix);
+		}
+		else if (viewer instanceof SortableTreeViewer)
+		{
+			restoreTreeViewerSettings((SortableTreeViewer)viewer, settings, prefix);
 		}
 	}
 	

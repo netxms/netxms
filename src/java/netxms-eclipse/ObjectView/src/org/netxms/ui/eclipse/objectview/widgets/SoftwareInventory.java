@@ -18,24 +18,36 @@
  */
 package org.netxms.ui.eclipse.objectview.widgets;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewPart;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SoftwarePackage;
+import org.netxms.client.constants.RCC;
+import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.objectview.widgets.helpers.SoftwareInventoryContentProvider;
+import org.netxms.ui.eclipse.objectview.widgets.helpers.SoftwareInventoryNode;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.SoftwarePackageComparator;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.SoftwarePackageLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
  * Software inventory information widget
@@ -49,35 +61,79 @@ public class SoftwareInventory extends Composite
 	public static final int COLUMN_DESCRIPTION = 4;
 	public static final int COLUMN_URL = 5;
 	
+	private static final String[] names = { "Name", "Version", "Vendor", "Install Date", "Description", "URL" };
+	private static final int[] widths = { 200, 100, 200, 100, 300, 200 };
+	
 	private IViewPart viewPart;
-	private long nodeId;
-	private SortableTableViewer viewer;
+	private long rootObjectId;
+	private ColumnViewer viewer;
+	private String configPrefix;
+	private MenuManager menuManager = null;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public SoftwareInventory(Composite parent, int style, IViewPart viewPart, final String configPrefix)
+	public SoftwareInventory(Composite parent, int style, IViewPart viewPart, String configPrefix)
 	{
 		super(parent, style);
 		this.viewPart = viewPart;
+		this.configPrefix = configPrefix;
 		
 		setLayout(new FillLayout());
-		
-		final String[] names = { "Name", "Version", "Vendor", "Install Date", "Description", "URL" };
-		final int[] widths = { 200, 100, 200, 100, 300, 200 };
+		createTableViewer();
+	}
+	
+	/**
+	 * Create viewer for table mode
+	 */
+	private void createTableViewer()
+	{
 		viewer = new SortableTableViewer(this, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
-		viewer.getTable().addDisposeListener(new DisposeListener() {			
+		WidgetHelper.restoreColumnViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
+		viewer.getControl().addDisposeListener(new DisposeListener() {			
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
+				WidgetHelper.saveColumnViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
 			}
 		});
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new SoftwarePackageLabelProvider());
+		viewer.setLabelProvider(new SoftwarePackageLabelProvider(false));
 		viewer.setComparator(new SoftwarePackageComparator());
+		
+		if (menuManager != null)
+		{
+			Menu menu = menuManager.createContextMenu(viewer.getControl());
+			viewer.getControl().setMenu(menu);
+			viewPart.getSite().registerContextMenu(menuManager, viewer);
+		}
+	}
+	
+	/**
+	 * Create viewer for tree mode
+	 */
+	private void createTreeViewer()
+	{
+		viewer = new SortableTreeViewer(this, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
+		WidgetHelper.restoreColumnViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
+		viewer.getControl().addDisposeListener(new DisposeListener() {			
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveColumnViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
+			}
+		});
+		viewer.setContentProvider(new SoftwareInventoryContentProvider());
+		viewer.setLabelProvider(new SoftwarePackageLabelProvider(true));
+		viewer.setComparator(new SoftwarePackageComparator());
+		
+		if (menuManager != null)
+		{
+			Menu menu = menuManager.createContextMenu(viewer.getControl());
+			viewer.getControl().setMenu(menu);
+			viewPart.getSite().registerContextMenu(menuManager, viewer);
+		}
 	}
 	
 	/**
@@ -90,14 +146,42 @@ public class SoftwareInventory extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<SoftwarePackage> packages = session.getNodeSoftwarePackages(nodeId);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
+				AbstractObject object = session.findObjectById(rootObjectId);
+				if (object instanceof AbstractNode)
+				{
+					final List<SoftwarePackage> packages = session.getNodeSoftwarePackages(rootObjectId);
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
+						{
+							viewer.setInput(packages.toArray());
+						}
+					});
+				}
+				else
+				{
+					final List<SoftwareInventoryNode> nodes = new ArrayList<SoftwareInventoryNode>();
+					for(final AbstractObject o : object.getAllChilds(AbstractObject.OBJECT_NODE))
 					{
-						viewer.setInput(packages.toArray());
+						try
+						{
+							List<SoftwarePackage> packages = session.getNodeSoftwarePackages(o.getObjectId());
+							nodes.add(new SoftwareInventoryNode((Node)o, packages));
+						}
+						catch(NXCException e)
+						{
+							if (e.getErrorCode() != RCC.NO_SOFTWARE_PACKAGE_DATA)
+								throw e;
+						}
 					}
-				});
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
+						{
+							viewer.setInput(nodes);
+						}
+					});
+				}
 			}
 			
 			@Override
@@ -109,18 +193,57 @@ public class SoftwareInventory extends Composite
 	}
 
 	/**
-	 * @return the nodeId
+	 * @return the rootObjectId
 	 */
-	public long getNodeId()
+	public long getRootObjectId()
 	{
-		return nodeId;
+		return rootObjectId;
 	}
 
 	/**
-	 * @param nodeId the nodeId to set
+	 * @param rootObjectId the rootObjectId to set
 	 */
-	public void setNodeId(long nodeId)
+	public void setRootObjectId(long rootObjectId)
 	{
-		this.nodeId = nodeId;
+		this.rootObjectId = rootObjectId;
+		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(rootObjectId);
+		if (object instanceof Node)
+		{
+			if (!(viewer instanceof SortableTableViewer))
+			{
+				viewer.getControl().dispose();
+				createTableViewer();
+			}
+		}
+		else
+		{
+			if (!(viewer instanceof SortableTreeViewer))
+			{
+				viewer.getControl().dispose();
+				createTreeViewer();
+			}
+		}
+	}
+
+	/**
+	 * @return the viewer
+	 */
+	public ColumnViewer getViewer()
+	{
+		return viewer;
+	}
+	
+	/**
+	 * @param manager
+	 */
+	public void setViewerMenu(MenuManager manager)
+	{
+		menuManager = manager;
+		if (viewer != null)
+		{
+			Menu menu = menuManager.createContextMenu(viewer.getControl());
+			viewer.getControl().setMenu(menu);
+			viewPart.getSite().registerContextMenu(menuManager, viewer);
+		}
 	}
 }

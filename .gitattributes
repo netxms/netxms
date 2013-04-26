@@ -1773,6 +1773,7 @@ src/java/netxms-eclipse/ObjectView/icons/components.png -text
 src/java/netxms-eclipse/ObjectView/icons/interface.png -text
 src/java/netxms-eclipse/ObjectView/icons/object_details.png -text
 src/java/netxms-eclipse/ObjectView/icons/overview_tab.gif -text
+src/java/netxms-eclipse/ObjectView/icons/package.gif -text
 src/java/netxms-eclipse/ObjectView/icons/restart.png -text
 src/java/netxms-eclipse/ObjectView/icons/shutdown.png -text
 src/java/netxms-eclipse/ObjectView/icons/software.png -text
@@ -1804,6 +1805,8 @@ src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/views/Ob
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/views/TabbedObjectView.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/NodeStatusWidget.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/ObjectStatusMap.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/helpers/SoftwareInventoryContentProvider.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/helpers/SoftwareInventoryNode.java -text
 src/java/netxms-eclipse/PerfView/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/PerfView/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/PerfView/build.properties -text
@@ -2156,6 +2159,7 @@ src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.sessionproviders.exsd 
 src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.tweaklets.exsd -text
 src/java/netxms-eclipse/core/splash.bmp -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/actions/ExportToCsvAction.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/actions/ViewerProvider.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/Activator.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/BrandingManager.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/ExtendedContributionComparator.java -text
