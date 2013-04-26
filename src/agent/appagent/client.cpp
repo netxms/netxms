@@ -52,7 +52,11 @@ reconnect:
 
 	struct sockaddr_un remote;
 	remote.sun_family = AF_UNIX;
-	sprintf(remote.sun_path, "/tmp/.appagent.%s", name);	
+#ifdef UNICODE
+   sprintf(remote.sun_path, "/tmp/.appagent.%S", name);
+#else
+	sprintf(remote.sun_path, "/tmp/.appagent.%s", name);
+#endif
 	if (connect(*hPipe, (struct sockaddr *)&remote, SUN_LEN(&remote)) == -1)
 	{
 		close(*hPipe);

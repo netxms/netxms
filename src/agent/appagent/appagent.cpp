@@ -255,7 +255,11 @@ static THREAD_RESULT THREAD_CALL AppAgentConnector(void *arg)
 	
 	struct sockaddr_un addrLocal;
 	addrLocal.sun_family = AF_UNIX;
-	sprintf(addrLocal.sun_path, "/tmp/.appagent.%s", s_config.name);	
+#ifdef UNICODE
+   sprintf(addrLocal.sun_path, "/tmp/.appagent.%S", s_config.name);
+#else
+	sprintf(addrLocal.sun_path, "/tmp/.appagent.%s", s_config.name);
+#endif
 	unlink(addrLocal.sun_path);
 	prevMask = umask(S_IWGRP | S_IWOTH);
 	if (bind(s_pipe, (struct sockaddr *)&addrLocal, SUN_LEN(&addrLocal)) == -1)

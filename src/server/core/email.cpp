@@ -122,11 +122,9 @@ static BOOL ReadLineFromSocket(SOCKET hSocket, char *pszBuffer, int *pnBufPos, c
    return TRUE;
 }
 
-
-//
-// Read SMTP response code from socket
-//
-
+/**
+ * Read SMTP response code from socket
+ */
 static int GetSMTPResponse(SOCKET hSocket, char *pszBuffer, int *pnBufPos)
 {
    char szLine[SMTP_BUFFER_SIZE];
