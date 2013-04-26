@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.topology.views;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -36,7 +35,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -77,9 +75,6 @@ public class HostSearchResults extends ViewPart
 	private SortableTableViewer viewer;
 	private List<ConnectionPoint> results = new ArrayList<ConnectionPoint>();
 	private Action actionClearLog;
-	private Action actionCopyMAC;
-	private Action actionCopyIP;
-	private Action actionCopyRecord;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -127,36 +122,6 @@ public class HostSearchResults extends ViewPart
 			}
 		};
 		actionClearLog.setImageDescriptor(SharedIcons.CLEAR_LOG);
-		
-		actionCopyIP = new Action("Copy IP address to clipboard") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				copyToClipboard(COLUMN_IP_ADDRESS);
-			}
-		};
-		
-		actionCopyMAC = new Action("Copy MAC address to clipboard") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				copyToClipboard(COLUMN_MAC_ADDRESS);
-			}
-		};
-		
-		actionCopyRecord = new Action("&Copy to clipboard", SharedIcons.COPY) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void run()
-			{
-				copyToClipboard(-1);
-			}
-		};
 	}
 
 	/**
@@ -315,39 +280,5 @@ public class HostSearchResults extends ViewPart
 	public void dispose()
 	{
 		super.dispose();
-	}
-	
-	/**
-	 * Copy content to clipboard
-	 * 
-	 * @param column column number or -1 to copy all columns
-	 */
-	private void copyToClipboard(int column)
-	{
-		final TableItem[] selection = viewer.getTable().getSelection();
-		if (selection.length > 0)
-		{
-			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
-			final StringBuilder sb = new StringBuilder();
-			for(int i = 0; i < selection.length; i++)
-			{
-				if (i > 0)
-					sb.append(newLine);
-				if (column == -1)
-				{
-					for(int j = 0; j < viewer.getTable().getColumnCount(); j++)
-					{
-						if (j > 0)
-							sb.append('\t');
-						sb.append(selection[i].getText(j));
-					}
-				}
-				else
-				{
-					sb.append(selection[i].getText(column));
-				}
-			}
-			WidgetHelper.copyToClipboard(sb.toString());
-		}
 	}
 }

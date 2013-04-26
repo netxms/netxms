@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.tools;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.ColorSelector;
+import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
@@ -41,6 +42,8 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
+import org.netxms.webui.core.Messages;
 
 /**
  * Utility class for simplified creation of widgets
@@ -114,7 +117,7 @@ public class WidgetHelper
 	 * @param flags Flags for Text creation
 	 * @param labelText Label's text
 	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
-	 * @return Created Text object
+	 * @return Created Combo object
 	 */
 	public static Combo createLabeledCombo(final Composite parent, int flags, final String labelText,
 	                                       Object layoutData)
@@ -307,7 +310,7 @@ public class WidgetHelper
 			settings.put(prefix + "." + i + ".width", columns[i].getWidth()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
-	
+
 	/**
 	 * Restore settings of table viewer columns previously saved by call to WidgetHelper.saveColumnSettings
 	 * 
@@ -410,6 +413,83 @@ public class WidgetHelper
 	}
 	
 	/**
+	 * Save settings for sortable tree viewer
+	 * @param viewer Viewer
+	 * @param settings Dialog settings object
+	 * @param prefix Prefix for properties
+	 */
+	public static void saveTreeViewerSettings(SortableTreeViewer viewer, IDialogSettings settings, String prefix)
+	{
+		final Tree tree = viewer.getTree();
+		saveColumnSettings(tree, settings, prefix);
+		TreeColumn column = tree.getSortColumn();
+		settings.put(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1); //$NON-NLS-1$ //$NON-NLS-2$
+		settings.put(prefix + ".sortDirection", tree.getSortDirection()); //$NON-NLS-1$
+	}
+	
+	/**
+	 * Restore settings for sortable table viewer
+	 * @param viewer Viewer
+	 * @param settings Dialog settings object
+	 * @param prefix Prefix for properties
+	 */
+	public static void restoreTreeViewerSettings(SortableTreeViewer viewer, IDialogSettings settings, String prefix)
+	{
+		final Tree tree = viewer.getTree();
+		restoreColumnSettings(tree, settings, prefix);
+		try
+		{
+			tree.setSortDirection(settings.getInt(prefix + ".sortDirection")); //$NON-NLS-1$
+			int column = settings.getInt(prefix + ".sortColumn"); //$NON-NLS-1$
+			if (column >= 0)
+			{
+				tree.setSortColumn(viewer.getColumnById(column));
+			}
+		}
+		catch(NumberFormatException e)
+		{
+		}
+	}
+	
+	/**
+	 * Wrapper for saveTableViewerSettings/saveTreeViewerSettings
+	 * 
+	 * @param viewer
+	 * @param settings
+	 * @param prefix
+	 */
+	public static void saveColumnViewerSettings(ColumnViewer viewer, IDialogSettings settings, String prefix)
+	{
+		if (viewer instanceof SortableTableViewer)
+		{
+			saveTableViewerSettings((SortableTableViewer)viewer, settings, prefix);
+		}
+		else if (viewer instanceof SortableTreeViewer)
+		{
+			saveTreeViewerSettings((SortableTreeViewer)viewer, settings, prefix);
+		}
+	}
+	
+	/**
+	 * Wrapper for restoreTableViewerSettings/restoreTreeViewerSettings
+	 * 
+	 * @param viewer table or tree viewer
+	 * @param settings
+	 * @param prefix
+	 */
+	public static void restoreColumnViewerSettings(ColumnViewer viewer, IDialogSettings settings, String prefix)
+	{
+		if (viewer instanceof SortableTableViewer)
+		{
+			restoreTableViewerSettings((SortableTableViewer)viewer, settings, prefix);
+		}
+		else if (viewer instanceof SortableTreeViewer)
+		{
+			restoreTreeViewerSettings((SortableTreeViewer)viewer, settings, prefix);
+		}
+	}
+	
+	/**
 	 * Copy given text to clipboard
 	 * 
 	 * @param text 
@@ -417,7 +497,7 @@ public class WidgetHelper
 	public static void copyToClipboard(final String text)
 	{
    }
-	
+		
 	/**
 	 * Get best fitting font from given font list for given string and bounding rectangle.
 	 * Fonts in the list must be ordered from smaller to larger.
@@ -498,7 +578,7 @@ public class WidgetHelper
 			if (page != null)
 				page.setErrorMessage(validator.getErrorMessage(text, label));
 			else	
-				MessageDialogHelper.openError(control.getShell(), "Input Validation Error", validator.getErrorMessage(text, label));
+				MessageDialogHelper.openError(control.getShell(), Messages.get().WidgetHelper_InputValidationError, validator.getErrorMessage(text, label));
 		}
 		return ok;
 	}
@@ -535,11 +615,6 @@ public class WidgetHelper
 	 */
 	public static int fontPixelsToPoints(Display device, int px)
 	{
-		// Looks like RAP measures font size in pixels, not points:
-		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=309945
-		// so for RCP compatibility we just returns pixels
-		// UPD: looks like it's back to normal in RAP 2.0 RC2
-		//return px;
 		return (int)Math.round(px * 72.0 / device.getDPI().y);
 	}
 }

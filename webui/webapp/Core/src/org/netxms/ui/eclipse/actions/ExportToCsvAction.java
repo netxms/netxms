@@ -26,10 +26,13 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -44,20 +47,25 @@ public class ExportToCsvAction extends Action
 	private static final long serialVersionUID = 1L;
 
 	private IViewPart viewPart;
-	private TableViewer viewer;
+	private ColumnViewer viewer;
+	private ViewerProvider viewerProvider;
 	private boolean selectionOnly;
 	
 	/**
-	 * Create refresh action attached to handler service
+	 * Create "Export to CSV" action attached to handler service
 	 * 
-	 * @param viewPart owning view part
+	 * @param viewPart
+	 * @param viewer
+	 * @param viewerProvider
+	 * @param selectionOnly
 	 */
-	public ExportToCsvAction(IViewPart viewPart, TableViewer viewer, boolean selectionOnly)
+	private ExportToCsvAction(IViewPart viewPart, ColumnViewer viewer, ViewerProvider viewerProvider, boolean selectionOnly)
 	{
 		super(selectionOnly ? "E&xport to CSV..." : "Export all to CSV...", Activator.getImageDescriptor("icons/csv.png"));
 		
 		this.viewPart = viewPart;
 		this.viewer = viewer;
+		this.viewerProvider = viewerProvider;
 		this.selectionOnly = selectionOnly;
 
 		// "Object Details" view can contain multiple widgets
@@ -70,25 +78,77 @@ public class ExportToCsvAction extends Action
       setActionDefinitionId("org.netxms.ui.eclipse.library.commands.export_to_csv_" + (selectionOnly ? "selection" : "all")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		handlerService.activateHandler(getActionDefinitionId(), new ActionHandler(this));
 	}
+	
+	/**
+	 * Create "Export to CSV" action attached to handler service
+	 * 
+	 * @param viewPart
+	 * @param viewer
+	 * @param selectionOnly
+	 */
+	public ExportToCsvAction(IViewPart viewPart, ColumnViewer viewer, boolean selectionOnly)
+	{
+		this(viewPart, viewer, null, selectionOnly);
+	}
 
+	/**
+	 * Create "Export to CSV" action attached to handler service
+	 * 
+	 * @param viewPart
+	 * @param viewerProvider
+	 * @param selectionOnly
+	 */
+	public ExportToCsvAction(IViewPart viewPart, ViewerProvider viewerProvider, boolean selectionOnly)
+	{
+		this(viewPart, null, viewerProvider, selectionOnly);
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.action.Action#run()
 	 */
 	@Override
 	public void run()
 	{
-		int numColumns = viewer.getTable().getColumnCount();
-		if (numColumns == 0)
-			numColumns = 1;
+		if (viewerProvider != null)
+			viewer = viewerProvider.getViewer();
 		
-		TableItem[] selection = selectionOnly ? viewer.getTable().getSelection() : viewer.getTable().getItems();
-		final List<String[]> data = new ArrayList<String[]>(selection.length);
-		for(TableItem item : selection)
+		final List<String[]> data = new ArrayList<String[]>();
+		if (viewer instanceof TableViewer)
 		{
-			String[] row = new String[numColumns];
-			for(int i = 0; i < numColumns; i++)
-				row[i] = item.getText(i);
-			data.add(0, row);  // for some reason RAP implementation returns table items in reverse order, so we reverse them here
+			int numColumns = ((TableViewer)viewer).getTable().getColumnCount();
+			if (numColumns == 0)
+				numColumns = 1;
+			
+			TableItem[] selection = selectionOnly ? ((TableViewer)viewer).getTable().getSelection() : ((TableViewer)viewer).getTable().getItems();
+			for(TableItem item : selection)
+			{
+				String[] row = new String[numColumns];
+				for(int i = 0; i < numColumns; i++)
+					row[i] = item.getText(i);
+				if (selectionOnly)
+					data.add(0, row);  // for some reason RAP implementation returns selected table items in reverse order, so we reverse them here
+				else
+					data.add(row);
+			}
+		}
+		else if (viewer instanceof TreeViewer)
+		{
+			int numColumns = ((TreeViewer)viewer).getTree().getColumnCount();
+			if (numColumns == 0)
+				numColumns = 1;
+			
+			TreeItem[] selection = selectionOnly ? ((TreeViewer)viewer).getTree().getSelection() : ((TreeViewer)viewer).getTree().getItems();
+			for(TreeItem item : selection)
+			{
+				String[] row = new String[numColumns];
+				for(int i = 0; i < numColumns; i++)
+					row[i] = item.getText(i);
+				data.add(row);
+				if (!selectionOnly)
+				{
+					addSubItems(item, data, numColumns);
+				}
+			}
 		}
 
 		final String title = viewPart.getTitle();
@@ -144,5 +204,21 @@ public class ExportToCsvAction extends Action
 				return "Cannot save table data to file";
 			}
 		}.start();
+	}
+
+	/**
+	 * @param item
+	 * @param data
+	 */
+	private void addSubItems(TreeItem root, List<String[]> data, int numColumns)
+	{
+		for(TreeItem item : root.getItems())
+		{
+			String[] row = new String[numColumns];
+			for(int i = 0; i < numColumns; i++)
+				row[i] = item.getText(i);
+			data.add(row);
+			addSubItems(item, data, numColumns);
+		}
 	}
 }

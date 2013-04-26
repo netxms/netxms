@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -33,7 +32,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -175,38 +173,6 @@ public class ComponentsTab extends ObjectTab
 				viewer.expandAll();
 			}
 		};
-	}
-	
-	/**
-	 * Copy selected lines to clipboard
-	 */
-	private void copySelectionToClipboard(int column)
-	{
-		TreeItem[] selection = viewer.getTree().getSelection();
-		if (selection.length > 0)
-		{
-			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n";
-			StringBuilder sb = new StringBuilder();
-			for(int i = 0; i < selection.length; i++)
-			{
-				if (i > 0)
-					sb.append(newLine);
-				if (column == -1)
-				{
-					sb.append(selection[i].getText(0));
-					for(int j = 1; j < viewer.getTree().getColumnCount(); j++)
-					{
-						sb.append("\t");
-						sb.append(selection[i].getText(j));
-					}
-				}
-				else
-				{
-					sb.append(selection[i].getText(column));
-				}
-			}
-			WidgetHelper.copyToClipboard(sb.toString());
-		}
 	}
 
 	/* (non-Javadoc)

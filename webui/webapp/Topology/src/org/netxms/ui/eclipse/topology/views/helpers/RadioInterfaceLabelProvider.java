@@ -29,6 +29,8 @@ import org.netxms.ui.eclipse.topology.views.RadioInterfaces;
  */
 public class RadioInterfaceLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+	private static final long serialVersionUID = 1L;
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */

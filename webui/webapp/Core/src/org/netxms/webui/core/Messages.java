@@ -62,6 +62,7 @@ public class Messages extends NLS
 	public String WidgetHelper_Action_Delete;
 	public String WidgetHelper_Action_Paste;
 	public String WidgetHelper_Action_SelectAll;
+	public String WidgetHelper_InputValidationError;
 	
 	static
 	{

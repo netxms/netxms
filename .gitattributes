@@ -2562,6 +2562,7 @@ webui/webapp/Core/schema/org.netxms.ui.eclipse.loginlisteners.exsd -text
 webui/webapp/Core/schema/org.netxms.ui.eclipse.sessionproviders.exsd -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/actions/ExportToCsvAction.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
+webui/webapp/Core/src/org/netxms/ui/eclipse/actions/ViewerProvider.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/BrandingProvider.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/ConsoleLoginListener.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/api/LoginForm.java -text
@@ -3332,6 +3333,7 @@ webui/webapp/ObjectView/icons/components.png -text
 webui/webapp/ObjectView/icons/interface.png -text
 webui/webapp/ObjectView/icons/object_details.png -text
 webui/webapp/ObjectView/icons/overview_tab.gif -text
+webui/webapp/ObjectView/icons/package.gif -text
 webui/webapp/ObjectView/icons/restart.png -text
 webui/webapp/ObjectView/icons/shutdown.png -text
 webui/webapp/ObjectView/icons/software.png -text
@@ -3364,6 +3366,8 @@ webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/views/ObjectStatusM
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/views/TabbedObjectView.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/NodeStatusWidget.java -text
 webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/ObjectStatusMap.java -text
+webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/helpers/SoftwareInventoryContentProvider.java -text
+webui/webapp/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/helpers/SoftwareInventoryNode.java -text
 webui/webapp/PerfView/.settings/org.eclipse.jdt.core.prefs -text
 webui/webapp/PerfView/META-INF/MANIFEST.MF -text
 webui/webapp/PerfView/build.properties -text

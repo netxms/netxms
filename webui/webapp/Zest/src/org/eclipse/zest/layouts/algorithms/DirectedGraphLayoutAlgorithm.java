@@ -13,8 +13,6 @@ package org.eclipse.zest.layouts.algorithms;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.graph.DirectedGraph;
 import org.eclipse.draw2d.graph.DirectedGraphLayout;
@@ -28,32 +26,44 @@ import org.eclipse.zest.layouts.interfaces.NodeLayout;
 import org.eclipse.zest.layouts.interfaces.SubgraphLayout;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
+public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm
+{
 
-	class ExtendedDirectedGraphLayout extends DirectedGraphLayout {
+	class ExtendedDirectedGraphLayout extends DirectedGraphLayout
+	{
 
-		public void visit(DirectedGraph graph) {
+		public void visit(DirectedGraph graph)
+		{
 			Field field;
-			try {
+			try
+			{
 				field = DirectedGraphLayout.class.getDeclaredField("steps");
 				field.setAccessible(true);
-				Object object = field.get(this);
-				List steps = (List) object;
+				// Object object = field.get(this);
+				// List steps = (List) object;
 				// steps.remove(10);
 				// steps.remove(9);
 				// steps.remove(8);
 				// steps.remove(2);
 				field.setAccessible(false);
 				super.visit(graph);
-			} catch (SecurityException e) {
-				e.printStackTrace();
-			} catch (NoSuchFieldException e) {
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
+			}
+			catch(SecurityException e)
+			{
 				e.printStackTrace();
 			}
+			catch(NoSuchFieldException e)
+			{
+				e.printStackTrace();
+			}
+			catch(IllegalArgumentException e)
+			{
+				e.printStackTrace();
+			}
+			//catch(IllegalAccessException e)
+			//{
+			//	e.printStackTrace();
+			//}
 		}
 	}
 
@@ -65,42 +75,48 @@ public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 
 	private LayoutContext context;
 
-	public DirectedGraphLayoutAlgorithm() {
+	public DirectedGraphLayoutAlgorithm()
+	{
 	}
 
-	public DirectedGraphLayoutAlgorithm(int orientation) {
+	public DirectedGraphLayoutAlgorithm(int orientation)
+	{
 		if (orientation == VERTICAL)
 			this.orientation = orientation;
 	}
 
-	public int getOrientation() {
+	public int getOrientation()
+	{
 		return orientation;
 	}
 
-	public void setOrientation(int orientation) {
+	public void setOrientation(int orientation)
+	{
 		if (orientation == HORIZONTAL || orientation == VERTICAL)
 			this.orientation = orientation;
 	}
 
-	public void applyLayout(boolean clean) {
+	public void applyLayout(boolean clean)
+	{
 		if (!clean)
 			return;
 		HashMap mapping = new HashMap();
 		DirectedGraph graph = new DirectedGraph();
 		EntityLayout[] entities = context.getEntities();
-		for (int i = 0; i < entities.length; i++) {
+		for(int i = 0; i < entities.length; i++)
+		{
 			Node node = new Node(entities[i]);
 			node.setSize(new Dimension(10, 10));
 			mapping.put(entities[i], node);
 			graph.nodes.add(node);
 		}
 		ConnectionLayout[] connections = context.getConnections();
-		for (int i = 0; i < connections.length; i++) {
-			Node source = (Node) mapping.get(getEntity(connections[i]
-					.getSource()));
-			Node dest = (Node) mapping
-					.get(getEntity(connections[i].getTarget()));
-			if (source != null && dest != null) {
+		for(int i = 0; i < connections.length; i++)
+		{
+			Node source = (Node)mapping.get(getEntity(connections[i].getSource()));
+			Node dest = (Node)mapping.get(getEntity(connections[i].getTarget()));
+			if (source != null && dest != null)
+			{
 				Edge edge = new Edge(connections[i], source, dest);
 				graph.edges.add(edge);
 			}
@@ -108,18 +124,23 @@ public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 		DirectedGraphLayout directedGraphLayout = new ExtendedDirectedGraphLayout();
 		directedGraphLayout.visit(graph);
 
-		for (Iterator iterator = graph.nodes.iterator(); iterator.hasNext();) {
-			Node node = (Node) iterator.next();
-			EntityLayout entity = (EntityLayout) node.data;
-			if (orientation == VERTICAL) {
+		for(Iterator iterator = graph.nodes.iterator(); iterator.hasNext();)
+		{
+			Node node = (Node)iterator.next();
+			EntityLayout entity = (EntityLayout)node.data;
+			if (orientation == VERTICAL)
+			{
 				entity.setLocation(node.x, node.y);
-			} else {
+			}
+			else
+			{
 				entity.setLocation(node.y, node.x);
 			}
 		}
 	}
 
-	private EntityLayout getEntity(NodeLayout node) {
+	private EntityLayout getEntity(NodeLayout node)
+	{
 		if (!node.isPruned())
 			return node;
 		SubgraphLayout subgraph = node.getSubgraph();
@@ -128,7 +149,8 @@ public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 		return null;
 	}
 
-	public void setLayoutContext(LayoutContext context) {
+	public void setLayoutContext(LayoutContext context)
+	{
 		this.context = context;
 	}
 

@@ -98,6 +98,13 @@
                id="org.netxms.ui.eclipse.objectview.popupActions.ShowStatusMap_Container"
                label="Status Map">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.objectview.actions.ShowSoftwareInventory"
+               enablesFor="1"
+               icon="icons/software.png"
+               id="org.netxms.ui.eclipse.objectview.popupActions.ShowSoftwareInventory_Container"
+               label="Software Inventory">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
@@ -108,6 +115,13 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectview.popupActions.ShowStatusMap_ServiceRoot"
                label="Status Map">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectview.actions.ShowSoftwareInventory"
+               enablesFor="1"
+               icon="icons/software.png"
+               id="org.netxms.ui.eclipse.objectview.popupActions.ShowSoftwareInventory_ServiceRoot"
+               label="Software Inventory">
          </action>
       </objectContribution>
       <objectContribution

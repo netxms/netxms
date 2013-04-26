@@ -27,6 +27,9 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.objectview.views.SoftwareInventoryView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -36,7 +39,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class ShowSoftwareInventory implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private AbstractNode node;
+	private AbstractObject object;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -53,11 +56,11 @@ public class ShowSoftwareInventory implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		if (node != null)
+		if (object != null)
 		{
 			try
 			{
-				window.getActivePage().showView(SoftwareInventoryView.ID, Long.toString(node.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+				window.getActivePage().showView(SoftwareInventoryView.ID, Long.toString(object.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
 			}
 			catch(PartInitException e)
 			{
@@ -76,19 +79,19 @@ public class ShowSoftwareInventory implements IObjectActionDelegate
 		    (((IStructuredSelection)selection).size() == 1))
 		{
 			 Object o = ((IStructuredSelection)selection).getFirstElement();
-			 if (o instanceof AbstractNode)
+			 if ((o instanceof AbstractNode) || (o instanceof Container) || (o instanceof ServiceRoot))
 			 {
-				 node = (AbstractNode)o;
+				 object = (AbstractObject)o;
 			 }
 			 else
 			 {
-				 node = null;
+				 object = null;
 			 }
 		}
 		else
 		{
-			node = null;
+			object = null;
 		}
-		action.setEnabled((node != null) && node.hasAgent());
+		action.setEnabled((object != null) && (!(object instanceof AbstractNode) || ((AbstractNode)object).hasAgent()));
 	}
 }
