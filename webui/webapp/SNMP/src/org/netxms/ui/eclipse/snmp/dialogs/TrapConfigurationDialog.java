@@ -277,10 +277,10 @@ public class TrapConfigurationDialog extends Dialog
 		{
 			id = null;
 		}
-		MibSelectionDialog dlg = new MibSelectionDialog(getShell(), id);
+		MibSelectionDialog dlg = new MibSelectionDialog(getShell(), id, 0);
 		if (dlg.open() == Window.OK)
 		{
-			oid.setText(dlg.getSelectedObject().getObjectId().toString());
+			oid.setText(dlg.getSelectedObjectId().toString());
 			oid.setFocus();
 		}
 	}

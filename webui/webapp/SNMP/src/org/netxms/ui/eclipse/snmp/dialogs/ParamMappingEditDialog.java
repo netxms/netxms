@@ -231,10 +231,10 @@ public class ParamMappingEditDialog extends Dialog
 		{
 			oid = null;
 		}
-		MibSelectionDialog dlg = new MibSelectionDialog(getShell(), oid);
+		MibSelectionDialog dlg = new MibSelectionDialog(getShell(), oid, 0);
 		if (dlg.open() == Window.OK)
 		{
-			objectId.setText(dlg.getSelectedObject().getObjectId().toString());
+			objectId.setText(dlg.getSelectedObjectId().toString());
 			objectId.setFocus();
 		}
 	}

@@ -3458,6 +3458,7 @@ webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenMibExplorerForNode.
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenSnmpTrapMonitor.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenTrapEditor.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/MibSelectionDialog.java -text
+webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/MibWalkDialog.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/ParamMappingEditDialog.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/TrapConfigurationDialog.java -text
 webui/webapp/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/helpers/ParamMappingLabelProvider.java -text

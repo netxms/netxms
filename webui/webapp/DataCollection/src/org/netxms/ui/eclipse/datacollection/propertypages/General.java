@@ -501,7 +501,7 @@ public class General extends PropertyPage
 				{
 					oid = null;
 				}
-				dlg = new SelectSnmpParamDlg(getShell(), oid);
+				dlg = new SelectSnmpParamDlg(getShell(), oid, dci.getNodeId());
 				break;
 			case DataCollectionItem.WINPERF:
 				dlg = new WinPerfCounterSelectionDialog(getShell(), dci.getNodeId());

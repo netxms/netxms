@@ -425,7 +425,7 @@ public class GeneralTable extends PropertyPage
 				{
 					oid = null;
 				}
-				dlg = new SelectSnmpParamDlg(getShell(), oid);
+				dlg = new SelectSnmpParamDlg(getShell(), oid, dci.getNodeId());
 				break;
 			default:
 				dlg = null;
