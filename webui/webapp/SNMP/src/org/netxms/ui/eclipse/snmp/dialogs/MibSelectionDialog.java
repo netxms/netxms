@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.snmp.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
@@ -47,6 +46,7 @@ import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.shared.MibCache;
 import org.netxms.ui.eclipse.snmp.widgets.MibBrowser;
 import org.netxms.ui.eclipse.snmp.widgets.MibObjectDetails;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -55,6 +55,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class MibSelectionDialog extends Dialog
 {
+	private static final long serialVersionUID = 1L;
+
 	private long nodeId = 0;
 	private MibBrowser mibTree;
 	private Text oid;
@@ -147,6 +149,8 @@ public class MibSelectionDialog extends Dialog
 
 		oid = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 500, Messages.MibSelectionDialog_OID, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 		oid.addModifyListener(new ModifyListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -163,6 +167,8 @@ public class MibSelectionDialog extends Dialog
 			gd.verticalAlignment = SWT.BOTTOM;
 			button.setLayoutData(gd);
 			button.addSelectionListener(new SelectionListener() {
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{

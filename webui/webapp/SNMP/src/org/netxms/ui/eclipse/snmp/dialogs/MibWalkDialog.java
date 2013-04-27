@@ -40,6 +40,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class MibWalkDialog extends Dialog implements SnmpWalkListener
 {
+	private static final long serialVersionUID = 1L;
+
 	private long nodeId;
 	private SnmpObjectId rootObject;
 	private TableViewer viewer;
@@ -98,6 +100,8 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SnmpValueLabelProvider());
 		viewer.getTable().addDisposeListener(new DisposeListener() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
