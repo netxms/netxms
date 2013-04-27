@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +22,16 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
@@ -35,6 +39,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpObjectId;
+import org.netxms.client.snmp.SnmpObjectIdFormatException;
+import org.netxms.client.snmp.SnmpValue;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.shared.MibCache;
@@ -49,10 +55,12 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class MibSelectionDialog extends Dialog
 {
+	private long nodeId = 0;
 	private MibBrowser mibTree;
 	private Text oid;
 	private MibObjectDetails details;
 	private MibObject selectedObject;
+	private SnmpObjectId selectedObjectId;
 	private SnmpObjectId initialSelection;
 	private boolean updateObjectId = true;
 	
@@ -60,11 +68,12 @@ public class MibSelectionDialog extends Dialog
 	 * @param parentShell
 	 * @param initialSelection initial selection for MIB tree or null
 	 */
-	public MibSelectionDialog(Shell parentShell, SnmpObjectId initialSelection)
+	public MibSelectionDialog(Shell parentShell, SnmpObjectId initialSelection, long nodeId)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 		this.initialSelection = initialSelection;
+		this.nodeId = nodeId;
 	}
 
 	/* (non-Javadoc)
@@ -94,19 +103,12 @@ public class MibSelectionDialog extends Dialog
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
 		GridLayout layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+		layout.numColumns = (nodeId != 0) ? 3 : 2;
 		dialogArea.setLayout(layout);
-		
-		oid = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 500, Messages.MibSelectionDialog_OID, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
-		oid.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e)
-			{
-				onManualOidChange();
-			}
-		});
 		
 		/* MIB tree */
 		Composite mibTreeGroup = new Composite(dialogArea, SWT.NONE);
@@ -120,6 +122,7 @@ public class MibSelectionDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
+		gd.verticalSpan = 2;
 		mibTreeGroup.setLayoutData(gd);
 		
 		Label label = new Label(mibTreeGroup, SWT.NONE);
@@ -142,10 +145,45 @@ public class MibSelectionDialog extends Dialog
 			}
 		});
 
+		oid = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 500, Messages.MibSelectionDialog_OID, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+		oid.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e)
+			{
+				onManualOidChange();
+			}
+		});
+		
+		if (nodeId != 0)
+		{
+			Button button = new Button(dialogArea, SWT.PUSH);
+			button.setText("&Walk...");
+			gd = new GridData();
+			gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+			gd.verticalAlignment = SWT.BOTTOM;
+			button.setLayoutData(gd);
+			button.addSelectionListener(new SelectionListener() {
+				@Override
+				public void widgetSelected(SelectionEvent e)
+				{
+					doWalk();
+				}
+				
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e)
+				{
+					widgetSelected(e);
+				}
+			});
+		}
+		
 		details = new MibObjectDetails(dialogArea, SWT.NONE, false, mibTree);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.grabExcessVerticalSpace = true;
+		gd.verticalAlignment = SWT.FILL;
+		gd.horizontalSpan = (nodeId != 0) ? 2 : 1;
 		details.setLayoutData(gd);
 		
 		if (initialSelection != null)
@@ -180,11 +218,25 @@ public class MibSelectionDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
+		try
+		{
+			selectedObjectId = SnmpObjectId.parseSnmpObjectId(oid.getText());
+		}
+		catch(SnmpObjectIdFormatException e)
+		{
+			MessageDialogHelper.openWarning(getShell(), Messages.MibSelectionDialog_Warning, "Please enter valid SNMP object ID or select one from the tree");
+			return;
+		}
+		
 		selectedObject = mibTree.getSelection();
 		if (selectedObject == null)
 		{
-			MessageDialogHelper.openWarning(getShell(), Messages.MibSelectionDialog_Warning, Messages.MibSelectionDialog_WarningText);
-			return;
+			selectedObject = MibCache.getMibTree().findObject(selectedObjectId, false);
+			if (selectedObject == null)
+			{
+				MessageDialogHelper.openWarning(getShell(), Messages.MibSelectionDialog_Warning, Messages.MibSelectionDialog_WarningText);
+				return;
+			}
 		}
 		saveSettings();
 		super.okPressed();
@@ -232,5 +284,37 @@ public class MibSelectionDialog extends Dialog
 			mibTree.setSelection(o);
 			updateObjectId = true;
 		}
+	}
+
+	/**
+	 * Do SNMP walk
+	 */
+	private void doWalk()
+	{
+		try
+		{
+			final SnmpObjectId root = SnmpObjectId.parseSnmpObjectId(oid.getText());
+			MibWalkDialog dlg = new MibWalkDialog(getShell(), nodeId, root);
+			if (dlg.open() == Window.OK)
+			{
+				SnmpValue v = dlg.getValue();
+				if (v != null)
+				{
+					oid.setText(v.getName());
+				}
+			}
+		}
+		catch(SnmpObjectIdFormatException e)
+		{
+			MessageDialogHelper.openError(getShell(), "Error", "Error parsing SNMP OID");
+		}
+	}
+
+	/**
+	 * @return
+	 */
+	public SnmpObjectId getSelectedObjectId()
+	{
+		return selectedObjectId;
 	}
 }

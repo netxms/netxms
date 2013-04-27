@@ -32,10 +32,12 @@ public class SelectSnmpParamDlg extends MibSelectionDialog implements IParameter
 {
 	/**
 	 * @param parentShell
+	 * @param currentOid
+	 * @param nodeId
 	 */
-	public SelectSnmpParamDlg(Shell parentShell, SnmpObjectId currentOid)
+	public SelectSnmpParamDlg(Shell parentShell, SnmpObjectId currentOid, long nodeId)
 	{
-		super(parentShell, currentOid);
+		super(parentShell, currentOid, nodeId);
 	}
 
 	/* (non-Javadoc)
@@ -78,6 +80,6 @@ public class SelectSnmpParamDlg extends MibSelectionDialog implements IParameter
 	@Override
 	public String getParameterName()
 	{
-		return getSelectedObject().getObjectId().toString();
+		return getSelectedObjectId().toString();
 	}
 }

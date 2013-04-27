@@ -1908,6 +1908,7 @@ src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenMibExplo
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenSnmpTrapMonitor.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenTrapEditor.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/MibSelectionDialog.java -text
+src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/MibWalkDialog.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/ParamMappingEditDialog.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/TrapConfigurationDialog.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/helpers/ParamMappingLabelProvider.java -text

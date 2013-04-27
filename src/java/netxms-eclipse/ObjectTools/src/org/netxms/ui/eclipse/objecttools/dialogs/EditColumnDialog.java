@@ -143,10 +143,10 @@ public class EditColumnDialog extends Dialog
 					{
 						initial = null;
 					}
-					MibSelectionDialog dlg = new MibSelectionDialog(getShell(), initial);
+					MibSelectionDialog dlg = new MibSelectionDialog(getShell(), initial, 0);
 					if (dlg.open() == Window.OK)
 					{
-						data.setText(dlg.getSelectedObject().getObjectId().toString());
+						data.setText(dlg.getSelectedObjectId().toString());
 					}
 				}
 				
