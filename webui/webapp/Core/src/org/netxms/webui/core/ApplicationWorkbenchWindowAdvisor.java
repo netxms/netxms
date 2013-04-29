@@ -126,6 +126,36 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		
 		shell.getMenuBar().setData(RWT.CUSTOM_VARIANT, "menuBar"); //$NON-NLS-1$
 	}
+	
+	/**
+	 * Connect to NetXMS server
+	 * 
+	 * @param server
+	 * @param login
+	 * @param password
+	 * @return
+	 */
+	private boolean connectToServer(String server, String login, String password)
+	{
+		boolean success = false;
+		try
+		{
+			LoginJob job = new LoginJob(server, login, password, Display.getCurrent());
+			ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
+			pd.run(false, false, job);
+			success = true;
+		}
+		catch(InvocationTargetException e)
+		{
+			MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, e.getCause().getLocalizedMessage());
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
+		}
+		return success;
+	}
 
 	/**
 	 * Show login dialog and perform login
@@ -136,32 +166,39 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		
 		readAppProperties();
 
-		Window loginDialog;
-		do
+		String password = "";
+		boolean autoLogin = (RWT.getRequest().getParameter("auto") != null); //$NON-NLS-1$
+		
+		if (autoLogin) 
 		{
-			loginDialog = BrandingManager.getInstance().getLoginForm(null, properties);
-			if (loginDialog.open() != Window.OK)
-				continue;
+			String server = RWT.getRequest().getParameter("server"); //$NON-NLS-1$
+			if (server == null)
+				server = properties.getProperty("server", "127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
+			String login = RWT.getRequest().getParameter("login"); //$NON-NLS-1$
+			if (login == null)
+				login = "guest";
+			password = RWT.getRequest().getParameter("password"); //$NON-NLS-1$
+			if (password == null)
+				password = "";
+			success = connectToServer(server, login, password);
+		}
+		
+		if (!autoLogin || !success)
+		{
+			Window loginDialog;
+			do
+			{
+				loginDialog = BrandingManager.getInstance().getLoginForm(null, properties);
+				if (loginDialog.open() != Window.OK)
+					continue;
+				password = ((LoginForm)loginDialog).getPassword();
 
-			try
-			{
-				LoginJob job = new LoginJob(properties.getProperty("server", "127.0.0.1"), ((LoginForm)loginDialog).getLogin(), //$NON-NLS-1$ //$NON-NLS-2$
-						((LoginForm)loginDialog).getPassword(), Display.getCurrent());
-
-				ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
-				pd.run(false, false, job);
-				success = true;
-			}
-			catch(InvocationTargetException e)
-			{
-				MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, e.getCause().getLocalizedMessage());
-			}
-			catch(Exception e)
-			{
-				e.printStackTrace();
-				MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
-			}
-		} while(!success);
+				success = connectToServer(properties.getProperty("server", "127.0.0.1"),  //$NON-NLS-1$ //$NON-NLS-2$ 
+				                          ((LoginForm)loginDialog).getLogin(),
+				                          password);
+				
+			} while(!success);
+		}
 
 		if (success)
 		{
@@ -172,7 +209,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
 				if (dlg.open() == Window.OK)
 				{
-					final String currentPassword = ((LoginForm)loginDialog).getPassword();
+					final String currentPassword = password;
 					final Display display = Display.getCurrent();
 					IRunnableWithProgress job = new IRunnableWithProgress() {
 						@Override
@@ -195,7 +232,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 					};
 					try
 					{
-						// TODO: implement password change on non-UI thread
 						ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
 						pd.run(false, false, job);
 						MessageDialog.openInformation(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Information, Messages.get().ApplicationWorkbenchWindowAdvisor_PasswordChanged);
