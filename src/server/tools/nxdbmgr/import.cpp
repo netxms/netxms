@@ -23,18 +23,14 @@
 #include "nxdbmgr.h"
 #include "sqlite3.h"
 
-
-//
-// Tables to import
-//
-
+/**
+ * Tables to import
+ */
 extern const TCHAR *g_tables[];
 
-
-//
-// Callback for import table
-//
-
+/**
+ * Callback for import table
+ */
 static int ImportTableCB(void *arg, int cols, char **data, char **names)
 {
 	String query;
@@ -73,11 +69,9 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 	return SQLQuery(query) ? 0 : 1;
 }
 
-
-//
-// Import single database table
-//
-
+/**
+ * Import single database table
+ */
 static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
 {
 	char query[256], *errmsg;
@@ -114,11 +108,9 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
 	return rc == SQLITE_OK;
 }
 
-
-//
-// Import idata_xx tables
-//
-
+/**
+ * Import idata_xx tables
+ */
 static BOOL ImportIData(sqlite3 *db)
 {
 	DB_RESULT hResult;
@@ -175,22 +167,18 @@ cleanup:
 	return i == count;
 }
 
-
-//
-// Callback for getting schema version
-//
-
+/**
+ * Callback for getting schema version
+ */
 static int GetSchemaVersionCB(void *arg, int cols, char **data, char **names)
 {
 	*((int *)arg) = strtol(data[0], NULL, 10);
 	return 0;
 }
 
-
-//
-// Import database
-//
-
+/**
+ * Import database
+ */
 void ImportDatabase(const char *file)
 {
 	sqlite3 *db;

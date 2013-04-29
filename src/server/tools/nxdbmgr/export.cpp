@@ -221,9 +221,9 @@ void ExportDatabase(const char *file)
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0,
                     KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
    {
-      size = (MAX_PATH - 16) * sizeof(TCHAR);
-      if (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, 
-                          (BYTE *)buffer, &size) == ERROR_SUCCESS)
+      size = MAX_PATH - 16;
+      if (RegQueryValueExA(hKey, "InstallPath", NULL, NULL, 
+                           (BYTE *)buffer, &size) == ERROR_SUCCESS)
       {
 			strcat(buffer, "\\lib\\sql\\dbschema_sqlite.sql");
 			success = TRUE;

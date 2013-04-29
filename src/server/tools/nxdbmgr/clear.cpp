@@ -22,18 +22,14 @@
 
 #include "nxdbmgr.h"
 
-
-//
-// Tables to clear
-//
-
+/**
+ * Tables to clear
+ */
 extern const TCHAR *g_tables[];
 
-
-//
-// Delete idata_xx tables
-//
-
+/**
+ * Delete idata_xx tables
+ */
 static BOOL DeleteIData()
 {
 	DB_RESULT hResult;
@@ -62,11 +58,9 @@ static BOOL DeleteIData()
 	return TRUE;
 }
 
-
-//
-// Clear tables
-//
-
+/**
+ * Clear tables
+ */
 static BOOL ClearTables()
 {
 	TCHAR query[256];
@@ -82,11 +76,9 @@ static BOOL ClearTables()
 	return TRUE;
 }
 
-
-//
-// Clear database
-//
-
+/**
+ * Clear database
+ */
 BOOL ClearDatabase()
 {
 	if (!ValidateDatabase())
