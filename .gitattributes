@@ -330,6 +330,7 @@ contrib/mibs/WS-SW-MOBILITY-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-SW-PORTVLAN-MIB.txt -text svneol=native#unset
 contrib/mibs/WS-SW-SMI.txt -text svneol=native#unset
 contrib/mibs/WS-TYPE-MIB.txt -text svneol=native#unset
+contrib/startup/archlinux/nxagentd.service -text
 contrib/startup/debian/Makefile.am -text
 contrib/startup/debian/netxmsd.in -text
 contrib/startup/debian/nxagentd.in -text
