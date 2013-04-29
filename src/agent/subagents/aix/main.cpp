@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2005-2011 Victor Kirhenshtein
+** Copyright (C) 2005-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,11 +31,13 @@ LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue);
 LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue);
 LONG H_CpuUsageEx(const char *pszParam, const char *pArg, char *pValue);
 LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue);
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
 LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue);
 LONG H_IOStats(const char *cmd, const char *arg, char *value);
 LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value);
 LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue);
 LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue);
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_NetInterfaceStatus(const char *param, const char *arg, char *value);
 LONG H_NetInterfaceInfo(const char *param, const char *arg, char *value);
 LONG H_NetInterfaceList(const char *pszParam, const char *pArg, StringList *pValue);
@@ -62,22 +64,18 @@ BOOL g_bShutdown = FALSE;
 
 static THREAD m_hCPUStatThread = INVALID_THREAD_HANDLE;
 
-
-//
-// Detect support for source packages
-//
-
+/**
+ * Detect support for source packages
+ */
 static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
 {
 	ret_int(pValue, 1);
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Initalization callback
-//
-
+/**
+ * Initalization callback
+ */
 static BOOL SubAgentInit(Config *config)
 {
 	StartCpuUsageCollector();
@@ -85,11 +83,9 @@ static BOOL SubAgentInit(Config *config)
 	return TRUE;
 }
 
-
-//
-// Called by master agent at unload
-//
-
+/**
+ * Called by master agent at unload
+ */
 static void SubAgentShutdown()
 {
 	g_bShutdown = TRUE;
@@ -97,11 +93,9 @@ static void SubAgentShutdown()
 	ShutdownIOStatCollector();
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Subagent's parameters
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { "Agent.SourcePackageSupport", H_SourcePkg, NULL, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
@@ -255,12 +249,28 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.Uname", H_Uname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
    { "System.Uptime", H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
 };
-static NETXMS_SUBAGENT_LIST m_enums[] =
+
+/**
+ * Subagent's lists
+ */
+static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-   { "Net.InterfaceList", H_NetInterfaceList, NULL },
-   { "System.ProcessList", H_ProcessList, NULL }
+   { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
+   { _T("Net.InterfaceList"), H_NetInterfaceList, NULL },
+   { _T("System.ProcessList"), H_ProcessList, NULL }
 };
 
+/**
+ * Subagent's tables
+ */
+static NETXMS_SUBAGENT_TABLE m_tables[] =
+{
+   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES }
+};
+
+/**
+ * Subagent info
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
@@ -268,29 +278,26 @@ static NETXMS_SUBAGENT_INFO m_info =
    SubAgentInit, SubAgentShutdown, NULL,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
-   sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
-   m_enums,
-	0, NULL,	// tables
+   sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+   m_lists,
+   sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
+   m_tables,
    0, NULL,	// actions
 	0, NULL	// push parameters
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(AIX)
 {
    *ppInfo = &m_info;
    return TRUE;
 }
 
-
-//
-// Entry points for server
-//
-
+/**
+ * Entry point for server: get interface list
+ */
 extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
    return H_NetInterfaceList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
