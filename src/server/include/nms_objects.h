@@ -77,11 +77,9 @@ extern DWORD g_dwConditionPollingInterval;
 #define BUILTIN_OID_REPORTROOT            8
 #define BUILTIN_OID_BUSINESSSERVICEROOT   9
 
-
-//
-// Node runtime (dynamic) flags
-//
-
+/**
+ * Node runtime (dynamic) flags
+ */
 #define NDF_QUEUED_FOR_STATUS_POLL     0x0001
 #define NDF_QUEUED_FOR_CONFIG_POLL     0x0002
 #define NDF_UNREACHABLE                0x0004
@@ -103,22 +101,21 @@ extern DWORD g_dwConditionPollingInterval;
 
 #define __NDF_FLAGS_DEFINED
 
-
-//
-// Cluster runtime flags
-//
-
+/**
+ * Cluster runtime flags
+ */
 #define CLF_QUEUED_FOR_STATUS_POLL     0x0001
 #define CLF_DOWN								0x0002
 
-
-//
-// Status poll types
-//
-
-#define POLL_ICMP_PING        0
-#define POLL_SNMP             1
-#define POLL_NATIVE_AGENT     2
+/**
+ * Status poll types
+ */
+enum StatusPollType
+{
+   POLL_ICMP_PING = 0,
+   POLL_SNMP = 1,
+   POLL_NATIVE_AGENT =2
+};
 
 /**
  * Zone types
@@ -389,11 +386,11 @@ public:
 
    void setId(DWORD dwId) { m_dwId = dwId; Modify(); }
 	void generateGuid() { uuid_generate(m_guid); }
-   void setMgmtStatus(BOOL bIsManaged);
    void setName(const TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
    void resetStatus() { m_iStatus = STATUS_UNKNOWN; Modify(); }
    void setComments(TCHAR *pszText);	/* pszText must be dynamically allocated */
 
+   virtual void setMgmtStatus(BOOL bIsManaged);
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
