@@ -106,91 +106,119 @@ static struct vmount *GetMountPoints(int *count)
 }
 
 /**
- * Handler for FileSystem.Stats table
+ * Handler for FileSystem.Volumes table
  */
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
 {
 	LONG rc = SYSINFO_RC_SUCCESS;
 
-	/*
-	TCHAR volName[MAX_PATH];
-	HANDLE hVol = FindFirstVolume(volName, MAX_PATH);
-	if (hVol != INVALID_HANDLE_VALUE)
-	{
-		table->addColumn(_T("MOUNTPOINT"), DCI_DT_STRING);
-		table->addColumn(_T("VOLUME"), DCI_DT_STRING);
-		table->addColumn(_T("LABEL"), DCI_DT_STRING);
-		table->addColumn(_T("FSTYPE"), DCI_DT_STRING);
-		table->addColumn(_T("SIZE.TOTAL"), DCI_DT_UINT64);
-		table->addColumn(_T("SIZE.FREE"), DCI_DT_UINT64);
-		table->addColumn(_T("SIZE.FREE.PCT"), DCI_DT_FLOAT);
-		table->addColumn(_T("SIZE.AVAIL"), DCI_DT_UINT64);
-		table->addColumn(_T("SIZE.AVAIL.PCT"), DCI_DT_FLOAT);
-		table->addColumn(_T("SIZE.USED"), DCI_DT_UINT64);
-		table->addColumn(_T("SIZE.USED.PCT"), DCI_DT_FLOAT);
+   int count;
+   struct vmount *mountPoints = GetMountPoints(&count);
+   if (mountPoints != NULL)
+   {
+      table->addColumn(_T("MOUNTPOINT"), DCI_DT_STRING);
+      table->addColumn(_T("VOLUME"), DCI_DT_STRING);
+      table->addColumn(_T("LABEL"), DCI_DT_STRING);
+      table->addColumn(_T("FSTYPE"), DCI_DT_STRING);
+      table->addColumn(_T("SIZE.TOTAL"), DCI_DT_UINT64);
+      table->addColumn(_T("SIZE.FREE"), DCI_DT_UINT64);
+      table->addColumn(_T("SIZE.FREE.PCT"), DCI_DT_FLOAT);
+      table->addColumn(_T("SIZE.AVAIL"), DCI_DT_UINT64);
+      table->addColumn(_T("SIZE.AVAIL.PCT"), DCI_DT_FLOAT);
+      table->addColumn(_T("SIZE.USED"), DCI_DT_UINT64);
+      table->addColumn(_T("SIZE.USED.PCT"), DCI_DT_FLOAT);
 
-		do
-		{
-			TCHAR mountPoints[MAX_PATH];
-			DWORD size;
-			if (GetVolumePathNamesForVolumeName(volName, mountPoints, MAX_PATH, &size))
-			{
-				table->addRow();
-				table->set(0, mountPoints);
-				table->set(1, volName);
+      struct vmount *curr = mountPoints;
+      for(int i = 0; i < count; i++)
+      {
+         table->addRow();
+         char *mountPoint = (char *)vmt2dataptr(curr, VMT_STUB);
+         table->set(0, mountPoint);
+         table->set(1, (char *)vmt2dataptr(curr, VMT_OBJECT));
 
-				TCHAR label[MAX_PATH], fsType[MAX_PATH];
-				if (GetVolumeInformation(volName, label, MAX_PATH, NULL, NULL, NULL, fsType, MAX_PATH))
-				{
-					table->set(2, label);
-					table->set(3, fsType);
-				}
-				else
-				{
-					TCHAR buffer[1024];
-					DebugPrintf(INVALID_INDEX, 4, _T("H_FileSystems: Call to GetVolumeInformation(\"%s\") failed (%s)"), volName, GetSystemErrorText(GetLastError(), buffer, 1024));
-				}
+         switch(curr->vmt_gfstype)
+         {
+            case MNT_CACHEFS:
+               table->set(3, "cachefs");
+               break;
+            case MNT_CDROM:
+               table->set(3, "cdrom");
+               break;
+            case MNT_CIFS:
+               table->set(3, "cifs");
+               break;
+            case MNT_J2:
+               table->set(3, "jfs2");
+               break;
+            case MNT_JFS:
+               table->set(3, "jfs");
+               break;
+            case MNT_NAMEFS:
+               table->set(3, "namefs");
+               break;
+            case MNT_NFS:
+               table->set(3, "nfs");
+               break;
+            case MNT_NFS3:
+               table->set(3, "nfs3");
+               break;
+            case MNT_NFS4:
+               table->set(3, "nfs4");
+               break;
+            case MNT_PROCFS:
+               table->set(3, "procfs");
+               break;
+            case MNT_UDF:
+               table->set(3, "udfs");
+               break;
+            case MNT_VXFS:
+               table->set(3, "vxfs");
+               break;
+            default:
+               table->set(3, curr->vmt_gfstype);
+               break;
+         }
 
-				ULARGE_INTEGER availBytes, freeBytes, totalBytes;
-				if (GetDiskFreeSpaceEx(volName, &availBytes, &totalBytes, &freeBytes))
-				{
-	            table->set(4, totalBytes.QuadPart);
-					table->set(5, freeBytes.QuadPart);
-					table->set(6, 100.0 * (INT64)freeBytes.QuadPart / (INT64)totalBytes.QuadPart);
-					table->set(7, freeBytes.QuadPart);
-					table->set(8, 100.0 * (INT64)freeBytes.QuadPart / (INT64)totalBytes.QuadPart);
-					table->set(9, totalBytes.QuadPart - freeBytes.QuadPart);
-					table->set(10, 100.0 * (INT64)(totalBytes.QuadPart - freeBytes.QuadPart) / (INT64)totalBytes.QuadPart);
-				}
-				else
-				{
-					TCHAR buffer[1024];
-					DebugPrintf(INVALID_INDEX, 4, _T("H_FileSystems: Call to GetDiskFreeSpaceEx(\"%s\".\"%s\") failed (%s)"), volName, mountPoints, GetSystemErrorText(GetLastError(), buffer, 1024));
+         struct statvfs s;
+         if (statvfs(mountPoint, &s) == 0)
+         {
+            QWORD usedBlocks = (QWORD)(s.f_blocks - s.f_bfree);
+            QWORD totalBlocks = (QWORD)s.f_blocks;
+            QWORD blockSize = (QWORD)s.f_bsize;
+            QWORD freeBlocks = (QWORD)s.f_bfree;
+            QWORD availableBlocks = (QWORD)s.f_bavail;
 
-					table->set(4, (QWORD)0);
-					table->set(5, (QWORD)0);
-					table->set(6, (QWORD)0);
-					table->set(7, (QWORD)0);
-					table->set(8, (QWORD)0);
-					table->set(9, (QWORD)0);
-					table->set(10, (QWORD)0);
-				}
-			}
-			else
-			{
-				TCHAR buffer[1024];
-				DebugPrintf(INVALID_INDEX, 4, _T("H_FileSystems: Call to GetVolumePathNamesForVolumeName(\"%s\") failed (%s)"), volName, GetSystemErrorText(GetLastError(), buffer, 1024));
-			}
-		} while(FindNextVolume(hVol, volName, MAX_PATH));
-		FindVolumeClose(hVol);
-	}
-	else
-	{
-		TCHAR buffer[1024];
-		DebugPrintf(INVALID_INDEX, 4, _T("H_FileSystems: Call to FindFirstVolume failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
-		rc = SYSINFO_RC_ERROR;
-	}
-	*/
+            table->set(4, totalBlocks * blockSize);
+            table->set(5, freeBlocks * blockSize);
+            table->set(6, (freeBlocks * 100) / totalBlocks);
+            table->set(7, availableBlocks * blockSize);
+            table->set(8, (availableBlocks * 100) / totalBlocks);
+            table->set(9, usedBlocks * blockSize);
+            table->set(10, (usedBlocks * 100) / totalBlocks);
+         }
+         else
+         {
+            TCHAR buffer[1024];
+            AgentWriteDebugLog(4, "AIX: H_FileSystems: Call to statvfs(\"%s\") failed (%s)", mountPoint, strerror(errno));
+
+            table->set(4, (QWORD)0);
+            table->set(5, (QWORD)0);
+            table->set(6, (QWORD)0);
+            table->set(7, (QWORD)0);
+            table->set(8, (QWORD)0);
+            table->set(9, (QWORD)0);
+            table->set(10, (QWORD)0);
+         }
+
+         curr = (struct vmount *)((char *)curr + curr->vmt_length);
+      }
+      free(mountPoints);
+   }
+   else
+   {
+      AgentWriteDebugLog(4, _T("AIX: H_FileSystems: Call to GetMountPoints failed"));
+      rc = SYSINFO_RC_ERROR;
+   }
 	return rc;
 }
 
@@ -208,7 +236,7 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 	   struct vmount *curr = mountPoints;
 	   for(int i = 0; i < count; i++)
 	   {
-	      value->add((char *)curr + curr->vmt_data[VMT_STUB].vmt_off);
+	      value->add((char *)vmt2dataptr(curr, VMT_STUB));
 	      curr = (struct vmount *)((char *)curr + curr->vmt_length);
 	   }
 	   free(mountPoints);
