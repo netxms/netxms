@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004 Alex Kirhenshtein
+** Copyright (C) 2004-2013 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -389,9 +389,13 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_DISKTIME_EX }
 };
 
-static NETXMS_SUBAGENT_LIST m_enums[] =
+/**
+ * Subagent's lists
+ */
+static NETXMS_SUBAGENT_LIST m_lists[] =
 {
 	{ _T("DRBD.DeviceList"),              H_DRBDDeviceList,     NULL },
+   { _T("FileSystem.MountPoints"),       H_MountPoints,        NULL },
 	{ _T("Net.ArpCache"),                 H_NetArpCache,        NULL },
 	{ _T("Net.IP.RoutingTable"),          H_NetRoutingTable,    NULL },
 	{ _T("Net.InterfaceList"),            H_NetIfList,          NULL },
@@ -399,23 +403,29 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 	{ _T("System.ProcessList"),           H_ProcessList,        NULL }
 };
 
+/**
+ * Subagent's tables
+ */
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
+   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES },
 	{ _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS }
 };
 
+/**
+ * Subagent info
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("Linux"),
-	NETXMS_VERSION_STRING,
+	_T("Linux"), NETXMS_VERSION_STRING,
 	SubAgentInit,     /* initialization handler */
 	SubAgentShutdown, /* unload handler */
 	NULL,             /* command handler */
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
-	m_enums,
+	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+	m_lists,
 	sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
 	m_tables,
 	0, NULL,	// actions

@@ -56,11 +56,9 @@ enum
 #define INFOTYPE_AVG             2
 #define INFOTYPE_SUM             3
 
-
-//
-// Process entry
-//
-
+/**
+ * Process entry
+ */
 typedef struct t_ProcEnt
 {
 	unsigned int nPid;
@@ -77,11 +75,9 @@ typedef struct t_ProcEnt
 	unsigned long majflt;	// Number of major page faults
 } PROC_ENT;
 
-
-//
-// FS info types
-//
-
+/**
+ * FS info types
+ */
 enum
 {
 	DISK_FREE,
@@ -172,23 +168,21 @@ enum
 #define CPU_USAGE_PARAM_INTERVAL(p)					((CAST_FROM_POINTER((p), DWORD)) >> 16)
 #define CPU_USAGE_PARAM_SOURCE(p)					((CAST_FROM_POINTER((p), DWORD)) & 0x0000FFFF)
 
-
-//
-// I/O stats
-//
-
+/**
+ * I/O stats
+ */
 #define IOSTAT_NUM_READS      0
 #define IOSTAT_NUM_WRITES     1
 #define IOSTAT_NUM_SREADS     2
 #define IOSTAT_NUM_SWRITES    3
 #define IOSTAT_IO_TIME        4
 
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 LONG H_DiskInfo(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 
 LONG H_IoStats(const TCHAR *, const TCHAR *, TCHAR *);
 LONG H_IoStatsTotal(const TCHAR *, const TCHAR *, TCHAR *);
@@ -231,4 +225,3 @@ void StopDrbdCollector();
 int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine);
 
 #endif // __LINUX_SUBAGENT_H__
-
