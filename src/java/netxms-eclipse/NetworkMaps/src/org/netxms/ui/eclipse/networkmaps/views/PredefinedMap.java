@@ -32,6 +32,7 @@ import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.dnd.DND;
@@ -526,6 +527,10 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			}
 		}
 		saveMap();
+		
+		// for some reason graph viewer does not clear selection 
+		// after all selected elements was removed, so we have to do it manually
+		viewer.setSelection(StructuredSelection.EMPTY);
 	}
 
 	/**

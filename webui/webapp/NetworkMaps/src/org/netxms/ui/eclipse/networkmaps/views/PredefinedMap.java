@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.dnd.DND;
@@ -543,6 +544,10 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			}
 		}
 		saveMap();
+		
+		// for some reason graph viewer does not clear selection 
+		// after all selected elements was removed, so we have to do it manually
+		viewer.setSelection(StructuredSelection.EMPTY);
 	}
 
 	/**
