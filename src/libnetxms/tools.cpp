@@ -505,12 +505,10 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 	return buffer;
 }
 
-
-//
-// Get current time in milliseconds
-// Based on timeval.h by Wu Yongwei
-//
-
+/**
+ * Get current time in milliseconds
+ * Based on timeval.h by Wu Yongwei
+ */
 INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs()
 {
 #ifdef _WIN32
@@ -535,13 +533,11 @@ INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs()
    return t;
 }
 
-
-//
-// Extract word from line. Extracted word will be placed in buffer.
-// Returns pointer to the next word or to the null character if end
-// of line reached.
-//
-
+/**
+ * Extract word from line (UNICODE version). Extracted word will be placed in buffer.
+ * Returns pointer to the next word or to the null character if end
+ * of line reached.
+ */
 const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer)
 {
    const WCHAR *ptr;
@@ -555,6 +551,11 @@ const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer)
    return ptr;
 }
 
+/**
+ * Extract word from line (multibyte version). Extracted word will be placed in buffer.
+ * Returns pointer to the next word or to the null character if end
+ * of line reached.
+ */
 const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer)
 {
    const char *ptr;
@@ -568,14 +569,12 @@ const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer)
    return ptr;
 }
 
-
-//
-// Get system error string by call to FormatMessage
-// (Windows only)
-//
-
 #if defined(_WIN32)
 
+/**
+ * Get system error string by call to FormatMessage
+ * (Windows only)
+ */
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, size_t iBufSize)
 {
    TCHAR *msgBuf;
