@@ -37,7 +37,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.ISaveablePart;
@@ -112,7 +111,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					final DiscoveryConfig loadedConfig = DiscoveryConfig.load();
-					Display.getDefault().asyncExec(new Runnable() {
+					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{

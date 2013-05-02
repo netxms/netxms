@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-
 import org.eclipse.draw2d.Animation;
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.ConnectionRouter;
@@ -49,7 +48,6 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.ControlPaintHandler;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Widget;
@@ -457,7 +455,7 @@ public class Graph extends FigureCanvas implements IContainer {
 		scheduledLayoutClean = scheduledLayoutClean || clean;
 		synchronized (this) {
 			if (scheduledLayoutRunnable == null) {
-				Display.getDefault().asyncExec(
+				getDisplay().asyncExec(
 						scheduledLayoutRunnable = new Runnable() {
 							public void run() {
 								Animation.markBegin();
@@ -1079,7 +1077,7 @@ public class Graph extends FigureCanvas implements IContainer {
 	private void scheduleLayoutOnReveal(final boolean clean) {
 
 		final boolean[] isVisibleSync = new boolean[1];
-		Display.getDefault().syncExec(new Runnable() {
+		getDisplay().syncExec(new Runnable() {
 			public void run() {
 				isVisibleSync[0] = isVisible();
 			}

@@ -14,7 +14,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
@@ -246,7 +245,7 @@ public class MapOptions extends PropertyPage
 			{
 				if (isApply)
 				{
-					Display.getDefault().asyncExec(new Runnable() {
+					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{

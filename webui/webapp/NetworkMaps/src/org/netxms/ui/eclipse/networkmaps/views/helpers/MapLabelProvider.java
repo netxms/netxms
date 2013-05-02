@@ -138,8 +138,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage();
 		imgResCluster = Activator.getImageDescriptor("icons/resources/cluster_res.png").createImage();
 
-		fontLabel = new Font(Display.getDefault(), "Verdana", WidgetHelper.fontPixelsToPoints(viewer.getControl().getDisplay(), 9), SWT.NORMAL);
-		fontTitle = new Font(Display.getDefault(), "Verdana", WidgetHelper.fontPixelsToPoints(viewer.getControl().getDisplay(), 15), SWT.NORMAL);
+		final Display display = viewer.getControl().getDisplay();
+		fontLabel = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 9), SWT.NORMAL);
+		fontTitle = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 15), SWT.NORMAL);
 
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		showStatusIcons = store.getBoolean("NetMap.ShowStatusIcon");
