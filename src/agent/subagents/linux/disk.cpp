@@ -132,13 +132,19 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
          table->addRow();
 
          char device[256], mountPoint[256], fsType[256];
-         const char *next = ExtractWord(line, device);
-         next = ExtractWord(next, mountPoint);
-         ExtractWord(next, fsType);
+         const char *next = ExtractWordA(line, device);
+         next = ExtractWordA(next, mountPoint);
+         ExtractWordA(next, fsType);
 
+#ifdef UNICODE
+         table->setPreallocated(0, WideStringFromMBString(mountPoint));
+         table->setPreallocated(1, WideStringFromMBString(device));
+         table->setPreallocated(3, WideStringFromMBString(fsType));
+#else
          table->set(0, mountPoint);
          table->set(1, device);
          table->set(3, fsType);
+#endif
 
          struct statfs s;
          if (statfs(mountPoint, &s) == 0)
@@ -160,7 +166,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
          else
          {
             TCHAR buffer[1024];
-            AgentWriteDebugLog(4, "Linux: H_FileSystems: Call to statfs(\"%s\") failed (%s)", mountPoint, strerror(errno));
+            AgentWriteDebugLog(4, _T("Linux: H_FileSystems: Call to statfs(\"%hs\") failed (%hs)"), mountPoint, strerror(errno));
 
             table->set(4, (QWORD)0);
             table->set(5, (QWORD)0);
@@ -204,7 +210,11 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value)
             ptr = strchr(mp, ' ');
             if (ptr != NULL)
                *ptr = 0;
+#ifdef UNICODE
+            value->addPreallocated(WideStringFromMBString(mp));
+#else
             value->add(mp);
+#endif
          }
       }
       fclose(in);
