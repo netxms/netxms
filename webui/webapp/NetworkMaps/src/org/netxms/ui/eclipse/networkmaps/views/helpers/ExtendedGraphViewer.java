@@ -41,8 +41,10 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.zest.core.viewers.GraphViewer;
@@ -59,6 +61,7 @@ import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
 import org.netxms.ui.eclipse.osm.tools.Tile;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
+import org.netxms.ui.eclipse.tools.ColorCache;
 
 /**
  * Workaround for bug #244496
@@ -91,6 +94,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	private Set<NetworkMapDecoration> selectedDecorations = new HashSet<NetworkMapDecoration>();
 	private Map<Long, DecorationFigure> decorationFigures = new HashMap<Long, DecorationFigure>();
 	private MouseListener backgroundMouseListener;
+	private ColorCache colors;
 	
 	/**
 	 * @param composite
@@ -99,6 +103,8 @@ public class ExtendedGraphViewer extends GraphViewer
 	public ExtendedGraphViewer(Composite composite, int style)
 	{
 		super(composite, style);
+		
+		colors = new ColorCache(getGraphControl());
 		
 		final Graph graphControl = getGraphControl();
 		final ScalableFigure rootLayer = graphControl.getRootLayer();
@@ -367,6 +373,19 @@ public class ExtendedGraphViewer extends GraphViewer
 		return selection;
 	}
 
+	/**
+	 * Set background color for graph
+	 * 
+	 * @param backgroundColor new background color
+	 */
+	public void setBackgroundColor(RGB color)
+	{
+		Color c = colors.create(color);
+		Graph graphControl = getGraphControl();
+		graphControl.setBackground(c);
+		graphControl.getLightweightSystem().getRootFigure().setBackgroundColor(c);		
+	}
+	
 	/**
 	 * Set background image for graph
 	 * 

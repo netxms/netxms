@@ -81,7 +81,6 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	private Action actionRemove;
 	private Action actionMapProperties;
 	private Action actionLinkProperties;
-	private Color backgroundColor = null;
 	private Color defaultLinkColor = null;
 	private ImageProvider imageProvider;
 
@@ -151,6 +150,9 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			else
 				viewer.setBackgroundImage(imageProvider.getImage(mapObject.getBackground()));
 		}
+		
+		setConnectionRouter(mapObject.getDefaultLinkRouting());
+		viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
 		
 		if (mapObject.getDefaultLinkColor() >= 0)
 		{
@@ -703,10 +705,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			}
 		}
 
-		if (backgroundColor != null)
-			backgroundColor.dispose();
-		backgroundColor = new Color(viewer.getControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
-		viewer.getGraphControl().setBackground(backgroundColor);
+		viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
 
 		if (defaultLinkColor != null)
 			defaultLinkColor.dispose();

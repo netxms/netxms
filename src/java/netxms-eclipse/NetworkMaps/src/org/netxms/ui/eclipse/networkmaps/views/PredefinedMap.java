@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,7 +82,6 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	private Action actionRemove;
 	private Action actionMapProperties;
 	private Action actionLinkProperties;
-	private Color backgroundColor = null;
 	private Color defaultLinkColor = null;
 
 	/**
@@ -152,8 +151,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		}
 
 		setConnectionRouter(mapObject.getDefaultLinkRouting());
-		backgroundColor = new Color(viewer.getGraphControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
-		viewer.getControl().setBackground(backgroundColor);
+		viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
 		
 		if (mapObject.getDefaultLinkColor() >= 0)
 		{
@@ -658,8 +656,6 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	public void dispose()
 	{
 		ImageProvider.getInstance().removeUpdateListener(this);
-		if (backgroundColor != null)
-			backgroundColor.dispose();
 		if (defaultLinkColor != null)
 			defaultLinkColor.dispose();
 		super.dispose();
@@ -694,10 +690,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			}
 		}
 
-		if (backgroundColor != null)
-			backgroundColor.dispose();
-		backgroundColor = new Color(viewer.getControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
-		viewer.getGraphControl().setBackground(backgroundColor);
+		viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
 
 		setConnectionRouter(mapObject.getDefaultLinkRouting());
 
