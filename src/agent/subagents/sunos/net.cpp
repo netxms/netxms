@@ -25,11 +25,13 @@
 #include <sys/sockio.h>
 #include <sys/utsname.h>
 
+#ifndef LIFC_ALLZONES
+#define LIFC_ALLZONES 0
+#endif
 
-//
-// Determine interface type by it's name
-//
-
+/**
+ * Determine interface type by it's name
+ */
 static int InterfaceTypeFromName(char *pszName)
 {
 	int iType = 0;
@@ -76,11 +78,9 @@ static int InterfaceTypeFromName(char *pszName)
 	return iType;
 }
 
-
-//
-// Get interface's hardware address
-//
-
+/**
+ * Get interface's hardware address
+ */
 static BOOL GetInterfaceHWAddr(char *pszIfName, char *pszMacAddr)
 {
 	BYTE macAddr[6];
@@ -98,11 +98,9 @@ static BOOL GetInterfaceHWAddr(char *pszIfName, char *pszMacAddr)
 	return TRUE;
 }
 
-
-//
-// Interface list
-//
-
+/**
+ * Interface list
+ */
 LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
@@ -184,11 +182,9 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 	return nRet;
 }
 
-
-//
-// Get interface description
-//
-
+/**
+ * Get interface description
+ */
 LONG H_NetIfDescription(const char *pszParam, const char *pArg, char *pValue)
 {
 	char *eptr, szIfName[IF_NAMESIZE];
@@ -220,11 +216,9 @@ LONG H_NetIfDescription(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-
-//
-// Get interface administrative status
-//
-
+/**
+ * Get interface administrative status
+ */
 LONG H_NetIfAdminStatus(const char *pszParam, const char *pArg, char *pValue)
 {
 	char *eptr, szIfName[IF_NAMESIZE];
@@ -265,10 +259,9 @@ LONG H_NetIfAdminStatus(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-//
-// Get interface statistics
-//
-
+/**
+ * Get interface statistics
+ */
 LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue)
 {
 	kstat_ctl_t *kc;
@@ -355,11 +348,9 @@ LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-
-//
-// Get Link status
-//
-
+/**
+ * Get Link status
+ */
 LONG H_NetInterfaceLink(const char *pszParam, const char *pArg, char *pValue)
 {
 	char *eptr, szIfName[IF_NAMESIZE];
