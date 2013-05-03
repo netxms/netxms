@@ -524,22 +524,25 @@ public class ObjectBrowser extends ViewPart
 		if (dlg.open() == Window.OK)
 		{
 			final AbstractObject target = dlg.getSelectedObjects().get(0);
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.ObjectBrowser_MoveJob_Title + ((AbstractObject)currentObject).getObjectName(), this, Activator.PLUGIN_ID, null) {
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					long objectId = ((AbstractObject)currentObject).getObjectId();
-					session.bindObject(target.getObjectId(), objectId);
-					session.unbindObject(((AbstractObject)parentObject).getObjectId(), objectId);
-				}
-	
-				@Override
-				protected String getErrorMessage()
-				{
-					return Messages.ObjectBrowser_MoveJob_Error + ((AbstractObject)currentObject).getObjectName();
-				}
-			}.start();
+			if (target.getObjectId() != ((AbstractObject)parentObject).getObjectId())
+			{
+				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+				new ConsoleJob(Messages.ObjectBrowser_MoveJob_Title + ((AbstractObject)currentObject).getObjectName(), this, Activator.PLUGIN_ID, null) {
+					@Override
+					protected void runInternal(IProgressMonitor monitor) throws Exception
+					{
+						long objectId = ((AbstractObject)currentObject).getObjectId();
+						session.bindObject(target.getObjectId(), objectId);
+						session.unbindObject(((AbstractObject)parentObject).getObjectId(), objectId);
+					}
+		
+					@Override
+					protected String getErrorMessage()
+					{
+						return Messages.ObjectBrowser_MoveJob_Error + ((AbstractObject)currentObject).getObjectName();
+					}
+				}.start();
+			}
 		}
 	}
 	

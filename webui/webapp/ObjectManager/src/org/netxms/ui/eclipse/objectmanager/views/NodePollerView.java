@@ -48,7 +48,6 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Forced node poll view
- *
  */
 public class NodePollerView extends ViewPart
 {
