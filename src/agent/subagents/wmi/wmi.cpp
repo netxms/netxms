@@ -1,6 +1,6 @@
 /*
 ** WMI NetXMS subagent
-** Copyright (C) 2008-2011 Victor Kirhenshtein
+** Copyright (C) 2008-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,19 +22,17 @@
 
 #include "wmi.h"
 
-
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, StringList *value);
 LONG H_ACPITZCurrTemp(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_SecurityCenterDisplayName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_SecurityCenterProductState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
-
-//
-// Convert variant to string value
-//
-
+/**
+ * Convert variant to string value
+ */
 TCHAR *VariantToString(VARIANT *pValue)
 {
    TCHAR *buf = NULL;
@@ -81,10 +79,9 @@ TCHAR *VariantToString(VARIANT *pValue)
    return buf;
 }
 
-
-// Convert variant to integer value
-//
-
+/**
+ * Convert variant to integer value
+ */
 LONG VariantToInt(VARIANT *pValue)
 {
    LONG val;
@@ -120,12 +117,10 @@ LONG VariantToInt(VARIANT *pValue)
    return val;
 }
 
-
-//
-// Perform generic WMI query
-// Returns pointer to IEnumWbemClassObject ready for enumeration or NULL
-//
-
+/**
+ * Perform generic WMI query
+ * Returns pointer to IEnumWbemClassObject ready for enumeration or NULL
+ */
 IEnumWbemClassObject *DoWMIQuery(WCHAR *ns, WCHAR *query, WMI_QUERY_CONTEXT *ctx)
 {
 	IWbemLocator *pWbemLocator = NULL;
@@ -167,11 +162,9 @@ IEnumWbemClassObject *DoWMIQuery(WCHAR *ns, WCHAR *query, WMI_QUERY_CONTEXT *ctx
 	return pEnumObject;
 }
 
-
-//
-// Cleanup after WMI query
-//
-
+/**
+ * Cleanup after WMI query
+ */
 void CloseWMIQuery(WMI_QUERY_CONTEXT *ctx)
 {
 	if (ctx->m_services != NULL)
@@ -182,12 +175,10 @@ void CloseWMIQuery(WMI_QUERY_CONTEXT *ctx)
 	CoUninitialize();
 }
 
-
-//
-// Handler for generic WMI query
-// Format: WMI.Query(namespace, query, property)
-//
-
+/**
+ * Handler for generic WMI query
+ * Format: WMI.Query(namespace, query, property)
+ */
 static LONG H_WMIQuery(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	WMI_QUERY_CONTEXT ctx;
@@ -258,11 +249,9 @@ static LONG H_WMIQuery(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    return rc;
 }
 
-
-//
-// Handler for WMI.NameSpaces enum
-//
-
+/**
+ * Handler for WMI.NameSpaces list
+ */
 static LONG H_WMINameSpaces(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
 	WMI_QUERY_CONTEXT ctx;
@@ -295,11 +284,9 @@ static LONG H_WMINameSpaces(const TCHAR *pszParam, const TCHAR *pArg, StringList
    return rc;
 }
 
-
-//
-// Handler for WMI.Classes enum
-//
-
+/**
+ * Handler for WMI.Classes list
+ */
 static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
 	WMI_QUERY_CONTEXT ctx;
@@ -337,43 +324,53 @@ static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
    return rc;
 }
 
-
-//
-// Initialize subagent
-//
-
+/**
+ * Initialize subagent
+ */
 static BOOL SubAgentInit(Config *config)
 {
 	return TRUE;
 }
 
-
-//
-// Handler for subagent unload
-//
-
+/**
+ * Handler for subagent unload
+ */
 static void SubAgentShutdown()
 {
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Provided parameters
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("ACPI.ThermalZone.CurrentTemp"), H_ACPITZCurrTemp, _T("*"), DCI_DT_INT, _T("Current temperature in ACPI thermal zone") },
    { _T("ACPI.ThermalZone.CurrentTemp(*)"), H_ACPITZCurrTemp, _T("%"), DCI_DT_INT, _T("Current temperature in ACPI thermal zone {instance}") },
+   { _T("System.AntiSpywareProduct.Active"), H_SecurityCenterProductState, _T("RAntiSpywareProduct"), DCI_DT_INT, _T("Anti-spyware product active") },
+   { _T("System.AntiSpywareProduct.DisplayName"), H_SecurityCenterDisplayName, _T("AntispywareProduct"), DCI_DT_STRING, _T("Anti-spyware product display name") },
+   { _T("System.AntiSpywareProduct.UpToDate"), H_SecurityCenterProductState, _T("UAntiSpywareProduct"), DCI_DT_INT, _T("Anti-spyware product up to date") },
+   { _T("System.AntiVirusProduct.Active"), H_SecurityCenterProductState, _T("RAntiVirusProduct"), DCI_DT_INT, _T("Anti-virus product active") },
+   { _T("System.AntiVirusProduct.DisplayName"), H_SecurityCenterDisplayName, _T("AntiVirusProduct"), DCI_DT_STRING, _T("Anti-virus product display name") },
+   { _T("System.AntiVirusProduct.UpToDate"), H_SecurityCenterProductState, _T("UAntiVirusProduct"), DCI_DT_INT, _T("Anti-virus product up to date") },
+   { _T("System.FirewallProduct.Active"), H_SecurityCenterProductState, _T("RFirewallProduct"), DCI_DT_INT, _T("Firewall active") },
+   { _T("System.FirewallProduct.DisplayName"), H_SecurityCenterDisplayName, _T("FirewallProduct"), DCI_DT_STRING, _T("Firewall product display name") },
+   { _T("System.FirewallProduct.UpToDate"), H_SecurityCenterProductState, _T("UFirewallProduct"), DCI_DT_INT, _T("Firewall product up to date") },
    { _T("WMI.Query(*)"), H_WMIQuery, NULL, DCI_DT_STRING, _T("Generic WMI query") }
 };
-static NETXMS_SUBAGENT_LIST m_enums[] =
+
+/**
+ * Provided lists
+ */
+static NETXMS_SUBAGENT_LIST m_lists[] =
 {
    { _T("ACPI.ThermalZones"), H_ACPIThermalZones, NULL },
    { _T("WMI.Classes(*)"), H_WMIClasses, NULL },
    { _T("WMI.NameSpaces"), H_WMINameSpaces, NULL }
 };
 
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
@@ -381,18 +378,16 @@ static NETXMS_SUBAGENT_INFO m_info =
    SubAgentInit, SubAgentShutdown, NULL,      // handlers
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
-	m_enums,
+	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+	m_lists,
 	0, NULL,	// tables
    0, NULL,	// actions
 	0, NULL	// push parameters
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 extern "C" BOOL __declspec(dllexport) __cdecl 
    NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
 {
@@ -400,11 +395,9 @@ extern "C" BOOL __declspec(dllexport) __cdecl
    return TRUE;
 }
 
-
-//
-// DLL entry point
-//
-
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)

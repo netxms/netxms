@@ -1,6 +1,6 @@
 /*
 ** WMI NetXMS subagent
-** Copyright (C) 2008 Victor Kirhenshtein
+** Copyright (C) 2008-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "wmi.h"
 
-
-//
-// Handler for ACPI.ThermalZone.CurrentTemp(*)
-//
-
+/**
+ * Handler for ACPI.ThermalZone.CurrentTemp(*)
+ */
 LONG H_ACPITZCurrTemp(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	WMI_QUERY_CONTEXT ctx;
@@ -50,9 +48,7 @@ LONG H_ACPITZCurrTemp(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 
 			if (pClassObject->Get(L"InstanceName", 0, &v, 0, 0) == S_OK)
 			{
-				TCHAR *str;
-
-				str = VariantToString(&v);
+				TCHAR *str = VariantToString(&v);
 				VariantClear(&v);
 				if (str != NULL)
 				{
@@ -65,6 +61,7 @@ LONG H_ACPITZCurrTemp(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 							rc = SYSINFO_RC_SUCCESS;
 						}
 					}
+               free(str);
 				}
 			}
 			else
@@ -79,11 +76,9 @@ LONG H_ACPITZCurrTemp(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    return rc;
 }
 
-
-//
-// Handler for ACPI.ThermalZones enum
-//
-
+/**
+ * Handler for ACPI.ThermalZones list
+ */
 LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
 	WMI_QUERY_CONTEXT ctx;

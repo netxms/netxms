@@ -9,4 +9,4 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = \
-    acpi.cpp wmi.cpp wmi.h wmi.vcproj
+    acpi.cpp sc.cpp wmi.cpp wmi.h wmi.vcproj

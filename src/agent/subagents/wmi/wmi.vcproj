@@ -346,6 +346,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sc.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\wmi.cpp"
 				>
 			</File>

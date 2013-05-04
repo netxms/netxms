@@ -13,6 +13,16 @@
 - Special support for wireless switches
 - Driver for Motorola/Symbol wireless switches
 - Fixed export bugs in database manager
+- New parameters for Windows Security Center provided by WMI subagent:
+	System.AntiSpywareProduct.Active
+	System.AntiSpywareProduct.DisplayName
+	System.AntiSpywareProduct.UpToDate
+	System.AntiVirusProduct.Active
+	System.AntiVirusProduct.DisplayName
+	System.AntiVirusProduct.UpToDate
+	System.FirewallProduct.Active
+	System.FirewallProduct.DisplayName
+	System.FirewallProduct.UpToDate
 - Management console:
 	- "Export to CSV" option added to most tabular data views
 	- Auto login option for web console

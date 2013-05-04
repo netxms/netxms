@@ -437,6 +437,7 @@ src/agent/subagents/ups/doc/apc_protocol_files/vh401.png -text
 src/agent/subagents/ups/ups.vcproj -text
 src/agent/subagents/winnt/winnt.vcproj -text
 src/agent/subagents/winperf/winperf.vcproj -text
+src/agent/subagents/wmi/sc.cpp -text
 src/agent/subagents/wmi/wmi.vcproj -text
 src/agent/tools/nxappget/Makefile.am -text
 src/agent/tools/nxappget/nxappget.vcproj -text
