@@ -61,6 +61,7 @@ public abstract class AbstractNode extends GenericObject
 	public static final int NF_HAS_AGENT_IFXCOUNTERS  = 0x00040000;
 	public static final int NF_HAS_WINPDH             = 0x00080000;
 	public static final int NF_IS_WIFI_CONTROLLER     = 0x00100000;
+	public static final int NF_IS_SMCLP               = 0x00200000;
 	public static final int NF_DISABLE_DISCOVERY_POLL = 0x00400000;
 	public static final int NF_DISABLE_TOPOLOGY_POLL  = 0x00800000;
 	public static final int NF_DISABLE_SNMP           = 0x01000000;

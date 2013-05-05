@@ -215,8 +215,8 @@ typedef void * NXC_SESSION;
 /**
  * Node flags
  */
-#define NF_SYSTEM_FLAGS           0x001FFFFF
-#define NF_USER_FLAGS             0xFFE00000
+#define NF_SYSTEM_FLAGS           0x003FFFFF
+#define NF_USER_FLAGS             0xFFC00000
 
 #define NF_IS_SNMP                0x00000001
 #define NF_IS_NATIVE_AGENT        0x00000002
@@ -240,7 +240,7 @@ typedef void * NXC_SESSION;
 #define NF_HAS_AGENT_IFXCOUNTERS  0x00040000  /* Agent supports 64-bit interface counters */
 #define NF_HAS_WINPDH             0x00080000  /* Node supports Windows PDH parameters */
 #define NF_IS_WIFI_CONTROLLER     0x00100000  /* Node is wireless network controller */
-
+#define NF_IS_SMCLP               0x00200000  /* Node supports SMCLP protocol */
 #define NF_DISABLE_DISCOVERY_POLL 0x00400000
 #define NF_DISABLE_TOPOLOGY_POLL  0x00800000
 #define NF_DISABLE_SNMP           0x01000000
@@ -252,27 +252,21 @@ typedef void * NXC_SESSION;
 #define NF_DISABLE_ROUTE_POLL     0x40000000
 #define NF_DISABLE_DATA_COLLECT   0x80000000
 
-
-//
-// Template flags
-//
-
+/**
+ * Template flags
+ */
 #define TF_AUTO_APPLY            0x00000001
 #define TF_AUTO_REMOVE           0x00000002
 
-
-//
-// Container flags
-//
-
+/**
+ * Container flags
+ */
 #define CF_AUTO_BIND             0x00000001
 #define CF_AUTO_UNBIND           0x00000002
 
-
-//
-// Interface flags
-//
-
+/**
+ * Interface flags
+ */
 #define IF_SYNTHETIC_MASK        0x00000001
 #define IF_PHYSICAL_PORT         0x00000002
 #define IF_EXCLUDE_FROM_TOPOLOGY 0x00000004
@@ -280,49 +274,39 @@ typedef void * NXC_SESSION;
 #define IF_CREATED_MANUALLY      0x00000010
 #define IF_EXPECTED_STATE_MASK   0x30000000	/* 2-bit field holding expected interface state */
 
-
-//
-// Expected interface states
-//
-
+/**
+ * Expected interface states
+ */
 #define IF_EXPECTED_STATE_UP     0
 #define IF_EXPECTED_STATE_DOWN   1
 #define IF_EXPECTED_STATE_IGNORE 2
 
-
-//
-// Interface administrative states
-//
-
+/**
+ * Interface administrative states
+ */
 #define IF_ADMIN_STATE_UNKNOWN   0
 #define IF_ADMIN_STATE_UP        1
 #define IF_ADMIN_STATE_DOWN      2
 #define IF_ADMIN_STATE_TESTING   3
 
-
-//
-// Interface operational states
-//
-
+/**
+ * Interface operational states
+ */
 #define IF_OPER_STATE_UNKNOWN    0
 #define IF_OPER_STATE_UP         1
 #define IF_OPER_STATE_DOWN       2
 #define IF_OPER_STATE_TESTING    3
 
-
-//
-// Node ifXTable usage mode
-//
-
+/**
+ * Node ifXTable usage mode
+ */
 #define IFXTABLE_DEFAULT			0
 #define IFXTABLE_ENABLED			1
 #define IFXTABLE_DISABLED			2
 
-
-//
-// Status calculation and propagation algorithms
-//
-
+/**
+ * Status calculation and propagation algorithms
+ */
 #define SA_CALCULATE_DEFAULT              0
 #define SA_CALCULATE_MOST_CRITICAL        1
 #define SA_CALCULATE_SINGLE_THRESHOLD     2

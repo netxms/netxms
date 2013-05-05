@@ -130,42 +130,46 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_NATIVE_AGENT) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isSNMP")))
-   {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_SNMP) ? 1 : 0));
-   }
    else if (!_tcscmp(pszAttr, _T("isBridge")))
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_BRIDGE) ? 1 : 0));
-   }
-   else if (!_tcscmp(pszAttr, _T("isRouter")))
-   {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_ROUTER) ? 1 : 0));
-   }
-   else if (!_tcscmp(pszAttr, _T("isPrinter")))
-   {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_PRINTER) ? 1 : 0));
    }
    else if (!_tcscmp(pszAttr, _T("isCDP")))
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_CDP) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isSONMP")))
-   {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_SONMP) ? 1 : 0));
-   }
    else if (!_tcscmp(pszAttr, _T("isLLDP")))
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_LLDP) ? 1 : 0));
-   }
-   else if (!_tcscmp(pszAttr, _T("isPAE")) || !_tcscmp(pszAttr, _T("is802_1x")))
-   {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_8021X) ? 1 : 0));
    }
 	else if (!_tcscmp(pszAttr, _T("isLocalMgmt")) || !_tcscmp(pszAttr, _T("isLocalManagement")))
 	{
 		pValue = new NXSL_Value((LONG)((pNode->isLocalManagement()) ? 1 : 0));
 	}
+   else if (!_tcscmp(pszAttr, _T("isPAE")) || !_tcscmp(pszAttr, _T("is802_1x")))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_8021X) ? 1 : 0));
+   }
+   else if (!_tcscmp(pszAttr, _T("isPrinter")))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_PRINTER) ? 1 : 0));
+   }
+   else if (!_tcscmp(pszAttr, _T("isRouter")))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_ROUTER) ? 1 : 0));
+   }
+   else if (!_tcscmp(pszAttr, _T("isSMCLP")))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_SMCLP) ? 1 : 0));
+   }
+   else if (!_tcscmp(pszAttr, _T("isSNMP")))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_SNMP) ? 1 : 0));
+   }
+   else if (!_tcscmp(pszAttr, _T("isSONMP")))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_SONMP) ? 1 : 0));
+   }
    else if (!_tcscmp(pszAttr, _T("name")))
    {
       pValue = new NXSL_Value(pNode->Name());

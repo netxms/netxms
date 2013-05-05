@@ -3386,8 +3386,8 @@ DWORD Node::getItemFromILO(const TCHAR *path, const TCHAR *param, DWORD bufSize,
 {
    DWORD result = DCE_COMM_ERROR;
 
-   const TCHAR *login = getCustomAttribute(_T("iLO.login"));
-   const TCHAR *password = getCustomAttribute(_T("iLO.password"));
+   const char *login = getCustomAttribute(_T("iLO.login"));
+   const char *password = getCustomAttribute(_T("iLO.password"));
 
    if (!(m_dwDynamicFlags & NDF_UNREACHABLE) && login != NULL && password != NULL)
    {
