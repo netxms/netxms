@@ -133,6 +133,7 @@ public class Messages extends NLS
 	public static String DciLabelProvider_SourceInternal;
 	public static String DciLabelProvider_SourcePush;
 	public static String DciLabelProvider_SourceSNMP;
+	public static String DciLabelProvider_SourceILO;
 	public static String DciLabelProvider_Table;
 	public static String DciLabelProvider_Unknown;
 	public static String DciList_ColDescr;
@@ -219,6 +220,7 @@ public class Messages extends NLS
 	public static String General_SourceInternal;
 	public static String General_SourcePush;
 	public static String General_SourceSNMP;
+	public static String General_SourceILO;
 	public static String General_Status;
 	public static String General_Storage;
 	public static String General_UseCustomPort;

@@ -1084,6 +1084,7 @@ public:
 	DWORD getListFromAgent(const TCHAR *name, StringList **list);
    DWORD getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, DWORD dwBufSize);
    DWORD getTableForClient(const TCHAR *name, Table **table);
+   DWORD getItemFromILO(const TCHAR *path, const TCHAR *param, DWORD bufSize, TCHAR *buffer);
 
 	virtual NXSL_Array *getParentsForNXSL();
 	NXSL_Array *getInterfacesForNXSL();

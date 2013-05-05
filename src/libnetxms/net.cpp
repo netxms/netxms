@@ -76,13 +76,26 @@ SocketConnection::~SocketConnection()
  */
 bool SocketConnection::connectTCP(const TCHAR *hostName, WORD port, DWORD timeout)
 {
+   return connectTCP(ResolveHostName(hostName), port, timeout);
+}
+
+/**
+ * Establish TCP connection to given host and port
+ *
+ * @param hostName host name or IP address
+ * @param port port number
+ * @param timeout connection timeout in milliseconds
+ * @return true if connection attempt was successful
+ */
+bool SocketConnection::connectTCP(DWORD ip, WORD port, DWORD timeout)
+{
 	m_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_socket != INVALID_SOCKET)
 	{
 		struct sockaddr_in sa;
 		sa.sin_family = AF_INET;
 		sa.sin_port = htons(port);
-		sa.sin_addr.s_addr = ResolveHostName(hostName);
+		sa.sin_addr.s_addr = ip;
 
 		if (ConnectEx(m_socket, (struct sockaddr*)&sa, sizeof(sa), (timeout != 0) ? timeout : 30000) < 0)
 		{
@@ -202,8 +215,7 @@ bool SocketConnection::waitForText(const char *text, int timeout)
 	}
 }
 
-
-/**
+/*
  * Establish TCP connection to given host and port
  *
  * @param hostName host name or IP address
@@ -213,7 +225,20 @@ bool SocketConnection::waitForText(const char *text, int timeout)
  */
 bool TelnetConnection::connect(const TCHAR *hostName, WORD port, DWORD timeout)
 {
-   bool ret = SocketConnection::connectTCP(hostName, port, timeout);
+   return connect(ResolveHostName(hostName), port, timeout);
+}
+
+/**
+ * Establish TCP connection to given host and port
+ *
+ * @param hostName host name or IP address
+ * @param port port number
+ * @param timeout connection timeout in milliseconds
+ * @return true if connection attempt was successful
+ */
+bool TelnetConnection::connect(DWORD ip, WORD port, DWORD timeout)
+{
+   bool ret = SocketConnection::connectTCP(ip, port, timeout);
 
    if (ret)
    {
@@ -290,6 +315,41 @@ int TelnetConnection::read(char *pBuff, int nSize, DWORD timeout)
    }
 
    return bytesRead;
+}
+
+
+/**
+ * Read line from socket
+ */
+int TelnetConnection::readLine(char *buffer, int size, DWORD timeout)
+{
+   int numOfChars = 0;
+	int bytesRead = 0;
+   while (true) {
+      bytesRead = read(buffer + numOfChars, 1, timeout);
+      if (bytesRead <= 0) {
+         break;
+      }
+
+      if (buffer[numOfChars] == 0x0d || buffer[numOfChars] == 0x0a)
+      {
+         if (numOfChars == 0) {
+            // ignore leading new line characters
+         }
+         else
+         {
+            // got complete string, return
+            break;
+         }
+      }
+      else
+      {
+         numOfChars++;
+      }
+   };
+
+   buffer[numOfChars] = 0;
+   return numOfChars;
 }
 
 /**

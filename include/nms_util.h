@@ -522,6 +522,7 @@ public:
 	virtual ~SocketConnection();
 
 	bool connectTCP(const TCHAR *hostName, WORD port, DWORD timeout);
+	bool connectTCP(DWORD ip, WORD port, DWORD timeout);
 	void disconnect();
 
 	bool canRead(DWORD timeout);
@@ -544,9 +545,15 @@ protected:
 
 public:
 	bool connect(const TCHAR *hostName, WORD port, DWORD timeout);
+	bool connect(DWORD ip, WORD port, DWORD timeout);
 	int read(char *pBuff, int nSize, DWORD timeout = INFINITE);
+	int readLine(char *buffer, int size, DWORD timeout = INFINITE);
 
 	static TelnetConnection *createConnection(const TCHAR *hostName, WORD port, DWORD timeout);
+
+protected:
+	bool connectTCP(const TCHAR *hostName, WORD port, DWORD timeout);
+	bool connectTCP(DWORD ip, WORD port, DWORD timeout);
 };
 
 #endif   /* __cplusplus */

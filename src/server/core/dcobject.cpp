@@ -422,7 +422,7 @@ void DCObject::setStatus(int status, bool generateEvent)
 	if (generateEvent && (m_pNode != NULL) && (m_status != (BYTE)status) && IsEventSource(m_pNode->Type()))
 	{
 		static DWORD eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
-		static const TCHAR *originName[7] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push"), _T("WinPerf"), _T("WMI") };
+		static const TCHAR *originName[7] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push"), _T("WinPerf"), _T("iLO") };
 
 		PostEvent(eventCode[status], m_pNode->Id(), "dssds", m_dwId, m_szName, m_szDescription,
 		          m_source, originName[m_source]);
