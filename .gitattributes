@@ -3096,10 +3096,10 @@ webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/preferencepages/G
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/propertypages/MapBackground.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/propertypages/MapLinkGeneral.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/propertypages/MapOptions.java -text
+webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/AbstractNetworkMapView.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/IPNeighbors.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/IPRouteMap.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/Layer2Topology.java -text
-webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/NetworkMap.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/PredefinedMap.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/ServiceComponents.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/ServiceDependency.java -text

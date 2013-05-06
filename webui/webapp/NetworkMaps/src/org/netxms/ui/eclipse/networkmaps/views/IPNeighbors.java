@@ -33,7 +33,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
  * IP neighbors for given node
  *
  */
-public class IPNeighbors extends NetworkMap
+public class IPNeighbors extends AbstractNetworkMapView
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.view.ip_neighbors";
 	

@@ -35,7 +35,7 @@ import org.netxms.client.objects.Node;
  * Service dependency for service object
  *
  */
-public class ServiceComponents extends NetworkMap
+public class ServiceComponents extends AbstractNetworkMapView
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.ServiceComponents";
 

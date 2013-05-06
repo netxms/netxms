@@ -765,8 +765,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager manager)
 			{
 				int selType = analyzeSelection(currentSelection);

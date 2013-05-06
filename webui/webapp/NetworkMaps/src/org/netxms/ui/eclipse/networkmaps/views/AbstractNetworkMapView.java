@@ -35,7 +35,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -94,7 +93,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 /**
  * Base class for network map views
  */
-public abstract class NetworkMap extends ViewPart implements ISelectionProvider, IZoomableWorkbenchPart
+public abstract class AbstractNetworkMapView extends ViewPart implements ISelectionProvider, IZoomableWorkbenchPart
 {
 	protected static final int LAYOUT_SPRING = 0;
 	protected static final int LAYOUT_RADIAL = 1;
@@ -123,25 +122,25 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	protected boolean allowManualLayout = false;     // True if manual layout can be switched on
 	protected boolean automaticLayoutEnabled = true; // Current layout mode - automatic or manual
 	
-	private RefreshAction actionRefresh;
-	private Action actionShowStatusIcon;
-	private Action actionShowStatusBackground;
-	private Action actionShowStatusFrame;
-	private Action actionZoomIn;
-	private Action actionZoomOut;
-	private Action[] actionZoomTo;
-	private Action[] actionSetAlgorithm;
-	private Action[] actionSetRouter;
-	private Action actionEnableAutomaticLayout;
-	private Action actionSaveLayout;
-	private Action actionOpenSubmap;
-	private Action actionFiguresIcons;
-	private Action actionFiguresSmallLabels;
-	private Action actionFiguresLargeLabels;
-	private Action actionShowGrid;
-	private Action actionAlignToGrid;
-	private Action actionSnapToGrid;
-	private Action actionShowObjectDetails;
+	protected Action actionRefresh;
+	protected Action actionShowStatusIcon;
+	protected Action actionShowStatusBackground;
+	protected Action actionShowStatusFrame;
+	protected Action actionZoomIn;
+	protected Action actionZoomOut;
+	protected Action[] actionZoomTo;
+	protected Action[] actionSetAlgorithm;
+	protected Action[] actionSetRouter;
+	protected Action actionEnableAutomaticLayout;
+	protected Action actionSaveLayout;
+	protected Action actionOpenSubmap;
+	protected Action actionFiguresIcons;
+	protected Action actionFiguresSmallLabels;
+	protected Action actionFiguresLargeLabels;
+	protected Action actionShowGrid;
+	protected Action actionAlignToGrid;
+	protected Action actionSnapToGrid;
+	protected Action actionShowObjectDetails;
 	
 	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
@@ -252,7 +251,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				if (selectionListeners.isEmpty())
 					return;
 				
-				SelectionChangedEvent event = new SelectionChangedEvent(NetworkMap.this, currentSelection);
+				SelectionChangedEvent event = new SelectionChangedEvent(AbstractNetworkMapView.this, currentSelection);
 				for(ISelectionChangedListener l : selectionListeners)
 				{
 					l.selectionChanged(event);
@@ -461,6 +460,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			{
 				labelProvider.setShowStatusBackground(!labelProvider.isShowStatusBackground());
 				setChecked(labelProvider.isShowStatusBackground());
+				updateObjectPositions();
+				saveLayout();
 				viewer.refresh();
 			}
 		};
@@ -475,6 +476,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			{
 				labelProvider.setShowStatusIcons(!labelProvider.isShowStatusIcons());
 				setChecked(labelProvider.isShowStatusIcons());
+				updateObjectPositions();
+				saveLayout();
 				viewer.refresh();
 			}
 		};
@@ -489,6 +492,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			{
 				labelProvider.setShowStatusFrame(!labelProvider.isShowStatusFrame());
 				setChecked(labelProvider.isShowStatusFrame());
+				updateObjectPositions();
+				saveLayout();
 				viewer.refresh();
 			}
 		};
@@ -547,7 +552,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				@Override
 				public void run()
 				{
-					setConnectionRouter(alg);
+					setConnectionRouter(alg, true);
 				}
 			};
 			actionSetRouter[i].setChecked(routingAlgorithm == alg);
@@ -603,6 +608,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			public void run()
 			{
 				labelProvider.setObjectFigureType(ObjectFigureType.ICON);
+				updateObjectPositions();
+				saveLayout();
 				viewer.refresh(true);
 				actionShowStatusBackground.setEnabled(true);
 				actionShowStatusFrame.setEnabled(true);
@@ -618,6 +625,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			public void run()
 			{
 				labelProvider.setObjectFigureType(ObjectFigureType.SMALL_LABEL);
+				updateObjectPositions();
+				saveLayout();
 				viewer.refresh(true);
 				actionShowStatusBackground.setEnabled(false);
 				actionShowStatusFrame.setEnabled(false);
@@ -633,6 +642,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			public void run()
 			{
 				labelProvider.setObjectFigureType(ObjectFigureType.LARGE_LABEL);
+				updateObjectPositions();
+				saveLayout();
 				viewer.refresh(true);
 				actionShowStatusBackground.setEnabled(false);
 				actionShowStatusFrame.setEnabled(false);
@@ -1119,7 +1130,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				}
 				catch(PartInitException e)
 				{
-					MessageDialog.openError(getSite().getShell(), "Error", "Cannot open submap view: " + e.getMessage());
+					MessageDialogHelper.openError(getSite().getShell(), "Error", "Cannot open submap view: " + e.getMessage());
 				}
 			}
 		}
@@ -1130,21 +1141,26 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	 * 
 	 * @param routingAlgorithm
 	 */
-	public void setConnectionRouter(int routingAlgorithm)
+	public void setConnectionRouter(int routingAlgorithm, boolean doSave)
 	{
 		switch(routingAlgorithm)
 		{
 			case NetworkMapLink.ROUTING_MANHATTAN:
-				routingAlgorithm = NetworkMapLink.ROUTING_MANHATTAN;
+				this.routingAlgorithm = NetworkMapLink.ROUTING_MANHATTAN;
 				viewer.getGraphControl().setRouter(new ManhattanConnectionRouter());
 				break;
 			default:
-				routingAlgorithm = NetworkMapLink.ROUTING_DIRECT;
+				this.routingAlgorithm = NetworkMapLink.ROUTING_DIRECT;
 				viewer.getGraphControl().setRouter(null);
 				break;
 		}
 		for(int i = 0; i < actionSetRouter.length; i++)
 			actionSetRouter[i].setChecked(routingAlgorithm == (i + 1));
+		if (doSave)
+		{
+			updateObjectPositions();
+			saveLayout();
+		}
 		viewer.refresh();
 	}
 	
@@ -1165,7 +1181,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 
 				if (!selectionListeners.isEmpty())
 				{
-					SelectionChangedEvent event = new SelectionChangedEvent(NetworkMap.this, currentSelection);
+					SelectionChangedEvent event = new SelectionChangedEvent(AbstractNetworkMapView.this, currentSelection);
 					for(ISelectionChangedListener l : selectionListeners)
 					{
 						l.selectionChanged(event);

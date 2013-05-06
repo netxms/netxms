@@ -582,6 +582,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	private void saveMap()
 	{
 		updateObjectPositions();
+		
 		final NXCObjectModificationData md = new NXCObjectModificationData(rootObject.getObjectId());
 		md.setMapContent(mapPage.getElements(), mapPage.getLinks());
 		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : NetworkMap.LAYOUT_MANUAL);
