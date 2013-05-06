@@ -38,7 +38,7 @@ import org.netxms.ui.eclipse.networkmaps.Activator;
  * IP neighbors for given node
  *
  */
-public class VlanMap extends NetworkMap
+public class VlanMap extends AbstractNetworkMapView
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.VlanMap";
 	

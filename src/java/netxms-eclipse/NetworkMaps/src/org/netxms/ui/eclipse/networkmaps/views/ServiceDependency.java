@@ -34,7 +34,7 @@ import org.netxms.client.objects.AbstractObject;
  * Service dependency for service, cluster, condition, or node object
  *
  */
-public class ServiceDependency extends NetworkMap
+public class ServiceDependency extends AbstractNetworkMapView
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.ServiceDependency";
 

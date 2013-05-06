@@ -51,7 +51,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
 import org.eclipse.zest.core.viewers.internal.IStylingGraphModelFactory;
-import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.custom.CGraphNode;
 import org.eclipse.zest.core.widgets.zooming.ZoomManager;
@@ -104,13 +103,12 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		super(composite, style);
 		
-		colors = new ColorCache(getGraphControl());
+		colors = new ColorCache(graph);
 		
-		final Graph graphControl = getGraphControl();
-		final ScalableFigure rootLayer = graphControl.getRootLayer();
+		final ScalableFigure rootLayer = graph.getRootLayer();
 		
 		mapLoader = new MapLoader(composite.getDisplay());
-		graphControl.addDisposeListener(new DisposeListener() {
+		graph.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -140,14 +138,14 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void run()
 			{
-				if (graphControl.isDisposed())
+				if (graph.isDisposed())
 					return;
 
 				if (backgroundLocation != null)
 					reloadMapBackground();
 				
 				if (gridFigure != null)
-					gridFigure.setSize(getGraphControl().getRootLayer().getSize());
+					gridFigure.setSize(graph.getRootLayer().getSize());
 			}
 		};
 		
@@ -155,8 +153,8 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void figureMoved(IFigure source)
 			{
-				graphControl.getDisplay().timerExec(-1, timer);
-				graphControl.getDisplay().timerExec(1000, timer);
+				graph.getDisplay().timerExec(-1, timer);
+				graph.getDisplay().timerExec(1000, timer);
 			}
 		});
 		
@@ -179,7 +177,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		};
 		backgroundFigure.addMouseListener(backgroundMouseListener);
 		
-		graphControl.addSelectionListener(new SelectionListener() {
+		graph.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -193,7 +191,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			}
 		});
 		
-		graphControl.getLightweightSystem().getRootFigure().addMouseListener(new MouseListener() {
+		graph.getLightweightSystem().getRootFigure().addMouseListener(new MouseListener() {
 			@Override
 			public void mouseReleased(MouseEvent me)
 			{
@@ -203,9 +201,9 @@ public class ExtendedGraphViewer extends GraphViewer
 			public void mousePressed(MouseEvent me)
 			{
 				org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
-				getGraphControl().getRootLayer().translateToRelative(mousePoint);
-				IFigure figureUnderMouse = getGraphControl().getFigureAt(mousePoint.x, mousePoint.y);
-				if (figureUnderMouse == null || figureUnderMouse == graphControl) 
+				graph.getRootLayer().translateToRelative(mousePoint);
+				IFigure figureUnderMouse = graph.getFigureAt(mousePoint.x, mousePoint.y);
+				if (figureUnderMouse == null || figureUnderMouse == graph) 
 				{
 					if ((me.getState() & SWT.MOD1) == 0) 
 					{
@@ -225,14 +223,14 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			public void mouseReleased(MouseEvent me)
 			{
-				if (snapToGrid && (getGraphControl().getRootLayer().findFigureAt(me.x, me.y) != null))
+				if (snapToGrid && (graph.getRootLayer().findFigureAt(me.x, me.y) != null))
 					alignToGrid(true);
 			}
 			
 			@Override
 			public void mousePressed(MouseEvent me)
 			{
-				for(Object o : graphControl.getGraph().getNodes())
+				for(Object o : graph.getNodes())
 				{
 					if (!(o instanceof CGraphNode))
 						continue;
@@ -266,8 +264,11 @@ public class ExtendedGraphViewer extends GraphViewer
 	@Override
 	protected void inputChanged(Object input, Object oldInput)
 	{
+		boolean dynamicLayoutEnabled = graph.isDynamicLayoutEnabled();
+		graph.setDynamicLayout(false);
 		super.inputChanged(input, oldInput);
-		
+		graph.setDynamicLayout(dynamicLayoutEnabled);
+				
 		decorationLayer.removeAll();
 		decorationFigures.clear();
 		if ((getContentProvider() instanceof MapContentProvider) && (getLabelProvider() instanceof MapLabelProvider))
@@ -298,7 +299,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		if (!addToExisting)
 		{
 			clearDecorationSelection(false);
-			getGraphControl().setSelection(null);
+			graph.setSelection(null);
 		}
 		selectedDecorations.add(d);
 
@@ -377,9 +378,8 @@ public class ExtendedGraphViewer extends GraphViewer
 	public void setBackgroundColor(RGB color)
 	{
 		Color c = colors.create(color);
-		Graph graphControl = getGraphControl();
-		graphControl.setBackground(c);
-		graphControl.getLightweightSystem().getRootFigure().setBackgroundColor(c);		
+		graph.setBackground(c);
+		graph.getLightweightSystem().getRootFigure().setBackgroundColor(c);		
 	}
 
 	/**
@@ -400,7 +400,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			backgroundFigure.setSize(10, 10);
 		}
 		backgroundLocation = null;
-		getGraphControl().redraw();
+		graph.redraw();
 	}
 	
 	/**
@@ -416,7 +416,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		backgroundLocation = location;
 		backgroundZoom = zoom;
 		backgroundFigure.setSize(10, 10);
-		getGraphControl().redraw();
+		graph.redraw();
 		reloadMapBackground();
 	}
 	
@@ -425,7 +425,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	 */
 	private void reloadMapBackground()
 	{
-		final Rectangle controlSize = getGraphControl().getClientArea();
+		final Rectangle controlSize = graph.getClientArea();
 		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
 		final Point mapSize = new Point(Math.min(controlSize.width, rootLayerSize.width), Math.max(controlSize.height, rootLayerSize.height)); 
 		ConsoleJob job = new ConsoleJob("Download map tiles", null, Activator.PLUGIN_ID, null) {
@@ -437,12 +437,12 @@ public class ExtendedGraphViewer extends GraphViewer
 					@Override
 					public void run()
 					{
-						if ((backgroundLocation == null) || getGraphControl().isDisposed())
+						if ((backgroundLocation == null) || graph.isDisposed())
 							return;
 						
 						backgroundFigure.setSize(mapSize.x, mapSize.y);
 						drawTiles(tiles);
-						getGraphControl().redraw();
+						graph.redraw();
 					}
 				});
 			}
@@ -474,7 +474,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		final Tile[][] tiles = tileSet.tiles;
 
 		Dimension size = backgroundFigure.getSize();
-		backgroundImage = new Image(getGraphControl().getDisplay(), size.width, size.height);
+		backgroundImage = new Image(graph.getDisplay(), size.width, size.height);
 		GC gc = new GC(backgroundImage);
 
 		int x = tileSet.xOffset;
@@ -508,11 +508,11 @@ public class ExtendedGraphViewer extends GraphViewer
 		}
 		if (element == getInput())
 		{
-			getFactory().refreshGraph(getGraphControl());
+			getFactory().refreshGraph(graph);
 		} 
 		else
 		{
-			getFactory().refresh(getGraphControl(), element, updateLabels);
+			getFactory().refresh(graph, element, updateLabels);
 		}
 	}
 
@@ -561,7 +561,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		{
 			crosshairFigure = new Crosshair();
 			indicatorLayer.add(crosshairFigure);
-			crosshairFigure.setSize(getGraphControl().getRootLayer().getSize());
+			crosshairFigure.setSize(graph.getRootLayer().getSize());
 		}
 		crosshairX = x;
 		crosshairY = y;
@@ -593,7 +593,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			{
 				gridFigure = new GridFigure();
 				backgroundLayer.add(gridFigure, null, 1);
-				gridFigure.setSize(getGraphControl().getRootLayer().getSize());
+				gridFigure.setSize(graph.getRootLayer().getSize());
 			}
 		}
 		else
@@ -619,7 +619,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	 */
 	public void alignToGrid(boolean movedOnly)
 	{
-		for(Object o : getGraphControl().getGraph().getNodes())
+		for(Object o : graph.getNodes())
 		{
 			if (!(o instanceof CGraphNode))
 				continue;
@@ -664,11 +664,11 @@ public class ExtendedGraphViewer extends GraphViewer
 		snapToGrid = snap;
 		if (snap)
 		{
-			getGraphControl().getLightweightSystem().getRootFigure().addMouseListener(snapToGridListener);			
+			graph.getLightweightSystem().getRootFigure().addMouseListener(snapToGridListener);			
 		}
 		else
 		{
-			getGraphControl().getLightweightSystem().getRootFigure().removeMouseListener(snapToGridListener);			
+			graph.getLightweightSystem().getRootFigure().removeMouseListener(snapToGridListener);			
 		}
 	}
 	

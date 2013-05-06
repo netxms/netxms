@@ -182,11 +182,9 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strncpy(UCS2CHAR *pDst, const UCS2CHAR *pSrc
 
 #endif
 
-
-//
-// Convert UNICODE string to single-byte string
-//
-
+/**
+ * Convert UNICODE string to single-byte string
+ */
 int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags,
                                              const WCHAR *pWideCharStr, int cchWideChar,
 															char *pByteStr, int cchByteChar, 
@@ -272,11 +270,9 @@ fallback:
 
 }
 
-
-//
-// Convert single-byte to UNICODE string
-//
-
+/**
+ * Convert single-byte to UNICODE string
+ */
 int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const char *pByteStr,
                                              int cchByteChar, WCHAR *pWideCharStr, int cchWideChar)
 {

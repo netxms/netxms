@@ -29,7 +29,7 @@ import org.netxms.ui.eclipse.networkmaps.Activator;
 /**
  * Layer 2 topology view for given object
  */
-public class Layer2Topology extends NetworkMap
+public class Layer2Topology extends AbstractNetworkMapView
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.Layer2Topology";
 	

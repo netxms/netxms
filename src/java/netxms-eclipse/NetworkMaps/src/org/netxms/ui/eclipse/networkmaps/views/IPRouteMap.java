@@ -35,7 +35,7 @@ import org.netxms.ui.eclipse.networkmaps.Activator;
 /**
  * IP route map
  */
-public class IPRouteMap extends NetworkMap
+public class IPRouteMap extends AbstractNetworkMapView
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.IPRouteMap";
 	

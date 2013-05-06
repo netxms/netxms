@@ -55,6 +55,7 @@ import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImageSelectionDialog;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
@@ -71,7 +72,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  * View for predefined map
  */
 @SuppressWarnings("restriction")
-public class PredefinedMap extends NetworkMap implements ImageUpdateListener
+public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdateListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.PredefinedMap";
 
@@ -151,7 +152,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
 		}
 
-		setConnectionRouter(mapObject.getDefaultLinkRouting());
+		setConnectionRouter(mapObject.getDefaultLinkRouting(), false);
 		viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
 		
 		if (mapObject.getDefaultLinkColor() >= 0)
@@ -163,6 +164,10 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
 		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
 		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
+		
+		actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
+		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
+		actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
 		
 		refreshMap();
 	}
@@ -579,7 +584,24 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		updateObjectPositions();
 		final NXCObjectModificationData md = new NXCObjectModificationData(rootObject.getObjectId());
 		md.setMapContent(mapPage.getElements(), mapPage.getLinks());
-		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL);
+		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : NetworkMap.LAYOUT_MANUAL);
+		md.setConnectionRouting(routingAlgorithm);
+		
+		int flags = mapObject.getFlags();
+		if (labelProvider.isShowStatusIcons())
+			flags |= NetworkMap.MF_SHOW_STATUS_ICON;
+		else
+			flags &= ~NetworkMap.MF_SHOW_STATUS_ICON;
+		if (labelProvider.isShowStatusFrame())
+			flags |= NetworkMap.MF_SHOW_STATUS_FRAME;
+		else
+			flags &= ~NetworkMap.MF_SHOW_STATUS_FRAME;
+		if (labelProvider.isShowStatusBackground())
+			flags |= NetworkMap.MF_SHOW_STATUS_BKGND;
+		else
+			flags &= ~NetworkMap.MF_SHOW_STATUS_BKGND;
+		md.setObjectFlags(flags);
+
 		new ConsoleJob("Save map object " + rootObject.getObjectName(), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
 		{
 			@Override
@@ -697,7 +719,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 
 		viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
 
-		setConnectionRouter(mapObject.getDefaultLinkRouting());
+		setConnectionRouter(mapObject.getDefaultLinkRouting(), false);
 
 		if (defaultLinkColor != null)
 			defaultLinkColor.dispose();
