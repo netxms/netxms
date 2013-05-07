@@ -54,6 +54,25 @@ public class DataCollectionTest extends SessionTest
 		session.disconnect();
 	}
 
+	public void testGetLastValuesForMap() throws Exception
+	{
+		final NXCSession session = connect();
+		
+		DciValue[] list = session.getLastValues(nodeId, true);
+		assertEquals(true, list.length > 0);
+		
+		boolean statusFound = false;
+		for(int i = 0; i < list.length; i++)
+		{
+			System.out.println(list[i].getDescription() + " = " + list[i].getValue());
+			if ((list[i].getName().equalsIgnoreCase("Status")) && (list[i].getSource() == DataCollectionObject.INTERNAL))
+				statusFound = true;
+		}
+		assertEquals(true, statusFound);
+		
+		session.disconnect();
+	}
+
 	public void testGetThresholds() throws Exception
 	{
 		final NXCSession session = connect();

@@ -533,7 +533,7 @@ public:
 	bool enumDCObjects(bool (* pfCallback)(DCObject *, DWORD, void *), void *pArg);
 	void associateItems();
 
-   DWORD getLastValues(CSCPMessage *msg);
+   DWORD getLastValues(CSCPMessage *msg, bool objectTooltipOnly);
 };
 
 /**

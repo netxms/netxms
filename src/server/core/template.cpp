@@ -997,7 +997,7 @@ BOOL Template::isApplicable(Node *node)
  * derived from DataCollectionTarget actual values will always be empty strings
  * with data type DCI_DT_NULL.
  */
-DWORD Template::getLastValues(CSCPMessage *msg)
+DWORD Template::getLastValues(CSCPMessage *msg, bool objectTooltipOnly)
 {
    lockDciAccess();
 
@@ -1005,7 +1005,9 @@ DWORD Template::getLastValues(CSCPMessage *msg)
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-		if (object->hasValue() && _tcsnicmp(object->getDescription(), _T("@system."), 8))
+		if (object->hasValue() && 
+          _tcsnicmp(object->getDescription(), _T("@system."), 8) &&
+          (!objectTooltipOnly || object->isShowOnObjectTooltip()))
 		{
 			if (object->getType() == DCO_TYPE_ITEM)
 			{

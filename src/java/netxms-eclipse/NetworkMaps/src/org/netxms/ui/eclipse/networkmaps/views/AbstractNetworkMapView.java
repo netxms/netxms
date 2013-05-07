@@ -195,7 +195,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		parent.setLayout(layout);
 		
 		viewer = new ExtendedGraphViewer(parent, SWT.NONE);
-		viewer.setContentProvider(new MapContentProvider());
+		viewer.setContentProvider(new MapContentProvider(viewer));
 		labelProvider = new MapLabelProvider(viewer);
 		viewer.setLabelProvider(labelProvider);
 

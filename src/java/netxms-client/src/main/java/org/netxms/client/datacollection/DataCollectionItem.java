@@ -31,6 +31,7 @@ public class DataCollectionItem extends DataCollectionObject
 	// DCI specific flags
 	public static final int DCF_ALL_THRESHOLDS = 0x0002;
 	public static final int DCF_RAW_VALUE_OCTET_STRING = 0x0004;
+	public static final int DCF_SHOW_ON_OBJECT_TOOLTIP = 0x0008;
 	
 	// Delta calculation
 	public static final int DELTA_NONE = 0;
@@ -224,6 +225,25 @@ public class DataCollectionItem extends DataCollectionObject
 			flags |= DCF_RAW_VALUE_OCTET_STRING;
 		else
 			flags &= ~DCF_RAW_VALUE_OCTET_STRING;
+	}
+
+	/**
+	 * @return the processAllThresholds
+	 */
+	public boolean isShowOnObjectTooltip()
+	{
+		return (flags & DCF_SHOW_ON_OBJECT_TOOLTIP) != 0;
+	}
+
+	/**
+	 * @param processAllThresholds the processAllThresholds to set
+	 */
+	public void setShowOnObjectTooltip(boolean show)
+	{
+		if (show)
+			flags |= DCF_SHOW_ON_OBJECT_TOOLTIP;
+		else
+			flags &= ~DCF_SHOW_ON_OBJECT_TOOLTIP;
 	}
 
 	/**

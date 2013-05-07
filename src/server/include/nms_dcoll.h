@@ -245,6 +245,7 @@ public:
 	time_t getLastPollTime() { return m_tLastPoll; }
 	DWORD getErrorCount() { return m_dwErrorCount; }
 	WORD getSnmpPort() { return m_snmpPort; }
+   bool isShowOnObjectTooltip() { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
 
    bool isReadyForPolling(time_t currTime);
 	bool isScheduledForDeletion() { return m_scheduledForDeletion ? true : false; }

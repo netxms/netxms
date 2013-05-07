@@ -2676,18 +2676,17 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	/**
 	 * Get last DCI values for given node
 	 * 
-	 * @param nodeId
-	 *           ID of the node to get DCI values for
+	 * @param nodeId ID of the node to get DCI values for
+	 * @param objectTooltipOnly if set to true, only DCIs with DCF_SHOW_ON_OBJECT_TOOLTIP flag set are returned
 	 * @return List of DCI values
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public DciValue[] getLastValues(final long nodeId) throws IOException, NXCException
+	public DciValue[] getLastValues(final long nodeId, boolean objectTooltipOnly) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LAST_VALUES);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariableInt16(NXCPCodes.VID_OBJECT_TOOLTIP_ONLY, objectTooltipOnly ? 1 : 0);
 		sendMessage(msg);
 
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -2701,6 +2700,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return list;
 	}
 
+	/**
+	 * Get last DCI values for given node
+	 * 
+	 * @param nodeId
+	 *           ID of the node to get DCI values for
+	 * @return List of DCI values
+	 * @throws IOException
+	 *            if socket I/O error occurs
+	 * @throws NXCException
+	 *            if NetXMS server returns an error or operation was timed out
+	 */
+	public DciValue[] getLastValues(final long nodeId) throws IOException, NXCException
+	{
+		return getLastValues(nodeId, false);
+	}
+	
 	/**
 	 * Get last values for given table DCI on given node
 	 * 

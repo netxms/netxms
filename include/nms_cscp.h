@@ -910,6 +910,7 @@ typedef struct
 #define VID_SAMPLE_COUNT            ((DWORD)440)
 #define VID_HEIGHT                  ((DWORD)441)
 #define VID_RADIO_COUNT             ((DWORD)442)
+#define VID_OBJECT_TOOLTIP_ONLY     ((DWORD)443)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

@@ -714,6 +714,7 @@ enum
 #define DCF_ADVANCED_SCHEDULE       0x0001
 #define DCF_ALL_THRESHOLDS          0x0002
 #define DCF_RAW_VALUE_OCTET_STRING  0x0004
+#define DCF_SHOW_ON_OBJECT_TOOLTIP  0x0008
 
 /**
  * SNMP raw types

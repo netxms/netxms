@@ -49,6 +49,7 @@ import org.eclipse.zest.core.widgets.GraphNode;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
@@ -561,5 +562,16 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	public final void setDefaultLinkColor(Color defaultLinkColor)
 	{
 		this.defaultLinkColor = defaultLinkColor;
+	}
+
+	/**
+	 * Get cached last DCI values for given node
+	 * 
+	 * @param nodeId
+	 * @return cached last values or null
+	 */
+	public DciValue[] getNodeLastValues(long nodeId)
+	{
+		return ((MapContentProvider)viewer.getContentProvider()).getNodeLastValues(nodeId);
 	}
 }

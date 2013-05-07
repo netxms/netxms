@@ -269,6 +269,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.NetworkMaps"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.NetworkMaps#110"
+              name="Network Maps">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DataCollectionItem">
+              </instanceof>
+           </enabledWhen>
+        </page>
    </extension>
 
   <extension

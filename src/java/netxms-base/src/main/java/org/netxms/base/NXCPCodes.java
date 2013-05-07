@@ -744,6 +744,7 @@ public class NXCPCodes
 	public static final long VID_SAMPLE_COUNT            = 440;
 	public static final long VID_HEIGHT                  = 441;
 	public static final long VID_RADIO_COUNT             = 442;
+	public static final long VID_OBJECT_TOOLTIP_ONLY     = 443;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

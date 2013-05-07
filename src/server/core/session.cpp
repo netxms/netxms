@@ -3748,7 +3748,7 @@ void ClientSession::getLastValues(CSCPMessage *pRequest)
          if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE) ||
              (pObject->Type() == OBJECT_TEMPLATE) || (pObject->Type() == OBJECT_CLUSTER))
          {
-            msg.SetVariable(VID_RCC, ((Template *)pObject)->getLastValues(&msg));
+            msg.SetVariable(VID_RCC, ((Template *)pObject)->getLastValues(&msg, pRequest->GetVariableShort(VID_OBJECT_TOOLTIP_ONLY) ? true : false));
          }
          else
          {
