@@ -30,6 +30,7 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.netxms.client.MacAddress;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.AccessPoint;
@@ -47,6 +48,8 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class ObjectTooltip extends Figure
 {
+	private NodeLastValuesFigure lastValuesFigure = null;
+	
 	/**
 	 * @param object
 	 */
@@ -90,6 +93,20 @@ public class ObjectTooltip extends Figure
 			gd = new GridData();
 			gd.horizontalSpan = 2;
 			setConstraint(iface, gd);
+		}
+		
+		if (object instanceof Node)
+		{
+			DciValue[] values = labelProvider.getNodeLastValues(object.getObjectId());
+			if ((values != null) && (values.length > 0))
+			{
+				lastValuesFigure = new NodeLastValuesFigure(values);
+				add(lastValuesFigure);
+
+				gd = new GridData();
+				gd.horizontalSpan = 2;
+				setConstraint(lastValuesFigure, gd);
+			}
 		}
 		
 		if (object instanceof Container)

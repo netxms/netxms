@@ -214,6 +214,7 @@ public class General extends PropertyPage
       origin.add(Messages.General_SourceCPSNMP);
       origin.add(Messages.General_SourcePush);
       origin.add("Windows Performance Counters");
+      origin.add("SM-CLP");
       origin.select(dci.getOrigin());
       origin.addSelectionListener(new SelectionListener() {
 			private static final long serialVersionUID = 1L;

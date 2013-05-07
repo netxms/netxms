@@ -102,22 +102,6 @@ public abstract class ObjectFigure extends Figure
 	}
 
 	/**
-	 * Called by label provider to indicate object update
-	 * @param object updated object
-	 */
-	protected void update()
-	{
-		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		object = session.findObjectById(element.getObjectId());
-		if (object == null)
-			object = new UnknownObject(element.getObjectId(), session);
-		setToolTip(new ObjectTooltip(object, labelProvider));
-		onObjectUpdate();
-		invalidateTree();
-		super.setToolTip(new ObjectTooltip(object, labelProvider));
-	}
-	
-	/**
 	 * Object update handler.
 	 */
 	protected abstract void onObjectUpdate();

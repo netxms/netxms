@@ -2879,6 +2879,7 @@ webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/objecttabs/
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/CustomSchedule.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/General.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/GeneralTable.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/NetworkMaps.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/TableColumns.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/Thresholds.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/Transformation.java -text
@@ -3113,6 +3114,7 @@ webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/Gra
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/LinkEditor.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/MapContentProvider.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/MapLabelProvider.java -text
+webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/NodeLastValuesFigure.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectFigure.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectFigureIcon.java -text
 webui/webapp/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectFigureSmallLabel.java -text
