@@ -26,7 +26,7 @@
 - Management console:
 	- "Export to CSV" option added to most tabular data views
 	- Auto login option for web console
-- Fixed issues: #86, #199, #242, #249, #250, #251
+- Fixed issues: #86, #199, #242, #249, #250, #251, #275
 
 
 *

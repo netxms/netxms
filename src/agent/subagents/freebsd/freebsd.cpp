@@ -81,7 +81,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.Memory.Physical.Total"), H_MemoryInfo,      (const TCHAR *)PHYSICAL_TOTAL,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
 	{ _T("System.Memory.Physical.Used"),  H_MemoryInfo,      (const TCHAR *)PHYSICAL_USED,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
 	{ _T("System.Memory.Physical.UsedPerc"), H_MemoryInfo,   (const TCHAR *)PHYSICAL_USED_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED_PCT },
-#if HAVE_KVM_SWAPINFO
+#if HAVE_KVM_GETSWAPINFO
 	{ _T("System.Memory.Swap.Free"),      H_MemoryInfo,      (const TCHAR *)SWAP_FREE,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_FREE },
 	{ _T("System.Memory.Swap.FreePerc"),  H_MemoryInfo,      (const TCHAR *)SWAP_FREE_PCT,	DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_SWAP_FREE_PCT },
 	{ _T("System.Memory.Swap.Total"),     H_MemoryInfo,      (const TCHAR *)SWAP_TOTAL,	DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL },
