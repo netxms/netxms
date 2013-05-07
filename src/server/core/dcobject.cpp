@@ -168,7 +168,8 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
    m_dwErrorCount = 0;
 	m_dwResourceId = 0;
 	m_dwProxyNode = 0;
-	m_pszPerfTabSettings = NULL;
+   const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
+   m_pszPerfTabSettings = (perfTabSettings != NULL) ? _tcsdup(perfTabSettings) : NULL;
 	m_snmpPort = (WORD)config->getSubEntryValueInt(_T("snmpPort"));
    m_dwNumSchedules = 0;
    m_ppScheduleList = NULL;

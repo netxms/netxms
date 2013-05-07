@@ -1177,11 +1177,9 @@ void DCItem::deleteExpiredData()
    QueueSQLRequest(szQuery);
 }
 
-
-//
-// Delete all collected data
-//
-
+/**
+ * Delete all collected data
+ */
 bool DCItem::deleteAllData()
 {
    TCHAR szQuery[256];
@@ -1326,7 +1324,8 @@ void DCItem::createNXMPRecord(String &str)
                           _T("\t\t\t\t\t<allThresholds>%d</allThresholds>\n")
                           _T("\t\t\t\t\t<rawValueInOctetString>%d</rawValueInOctetString>\n")
                           _T("\t\t\t\t\t<snmpRawValueType>%d</snmpRawValueType>\n")
-                          _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n"),
+                          _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n")
+                          _T("\t\t\t\t\t<instanceDiscoveryMethod>%d</instanceDiscoveryMethod>\n"),
 								  (int)m_dwId, (const TCHAR *)EscapeStringForXML2(m_szName),
                           (const TCHAR *)EscapeStringForXML2(m_szDescription),
                           m_dataType, m_sampleCount, (int)m_source, m_iPollingInterval, m_iRetentionTime,
@@ -1335,7 +1334,7 @@ void DCItem::createNXMPRecord(String &str)
 								  (int)m_deltaCalculation, (m_flags & DCF_ADVANCED_SCHEDULE) ? 1 : 0,
                           (m_flags & DCF_ALL_THRESHOLDS) ? 1 : 0, 
 								  (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? 1 : 0, 
-								  (int)m_snmpRawValueType, (int)m_snmpPort);
+								  (int)m_snmpRawValueType, (int)m_snmpPort, (int)m_instanceDiscoveryMethod);
 
 	if (m_transformationScriptSource != NULL)
 	{
@@ -1360,6 +1359,27 @@ void DCItem::createNXMPRecord(String &str)
 			m_thresholds->get(i)->createNXMPRecord(str, i + 1);
 		}
 	   str += _T("\t\t\t\t\t</thresholds>\n");
+	}
+
+	if (m_pszPerfTabSettings != NULL)
+	{
+		str += _T("\t\t\t\t\t<perfTabSettings>");
+		str.addDynamicString(EscapeStringForXML(m_pszPerfTabSettings, -1));
+		str += _T("</perfTabSettings>\n");
+	}
+
+   if (m_instanceDiscoveryData != NULL)
+	{
+		str += _T("\t\t\t\t\t<instanceDiscoveryData>");
+		str.addDynamicString(EscapeStringForXML(m_instanceDiscoveryData, -1));
+		str += _T("</instanceDiscoveryData>\n");
+	}
+
+   if (m_instanceFilterSource != NULL)
+	{
+		str += _T("\t\t\t\t\t<instanceFilter>");
+		str.addDynamicString(EscapeStringForXML(m_instanceFilterSource, -1));
+		str += _T("</instanceFilter>\n");
 	}
 
    unlock();

@@ -12,7 +12,8 @@
 - New MIBs added: ASTARO-MIB, CPQHOST-MIB, CPQPOWER-MIB
 - Special support for wireless switches
 - Driver for Motorola/Symbol wireless switches
-- Fixed export bugs in database manager
+- Fixed bugs in template export/import
+- Database manager: Fixed bugs in database export
 - New parameters for Windows Security Center provided by WMI subagent:
 	System.AntiSpywareProduct.Active
 	System.AntiSpywareProduct.DisplayName

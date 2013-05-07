@@ -887,8 +887,8 @@ DWORD *Template::getDCIEventsList(DWORD *pdwCount)
  */
 void Template::CreateNXMPRecord(String &str)
 {
-   str.addFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<name>%s</name>\n\t\t\t<flags>%s</flags>\n\t\t\t<dataCollection>\n"),
-	                       m_dwId, m_flags, (const TCHAR *)EscapeStringForXML2(m_szName));
+   str.addFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n\t\t\t<dataCollection>\n"),
+	                       m_dwId, (const TCHAR *)EscapeStringForXML2(m_szName), m_flags);
 
    lockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Check if given event exist either in server configuration or in configuration being imported
-//
-
+/**
+ * Check if given event exist either in server configuration or in configuration being imported
+ */
 static bool IsEventExist(const TCHAR *name, Config *config)
 {
 	if (FindEventTemplateByName(name) != NULL)
@@ -47,11 +45,9 @@ static bool IsEventExist(const TCHAR *name, Config *config)
 	return false;
 }
 
-
-//
-// Validate DCI from template
-//
-
+/**
+ * Validate DCI from template
+ */
 static bool ValidateDci(Config *config, ConfigEntry *dci, const TCHAR *templateName, TCHAR *errorText, int errorTextLen)
 {
 	ConfigEntry *thresholdsRoot = dci->findEntry(_T("thresholds"));
@@ -84,11 +80,9 @@ static bool ValidateDci(Config *config, ConfigEntry *dci, const TCHAR *templateN
 	return success;
 }
 
-
-//
-// Validate template
-//
-
+/**
+ * Validate template
+ */
 static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText, int errorTextLen)
 {
 	DbgPrintf(6, _T("ValidateConfig(): validating template \"%s\""), root->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
@@ -112,11 +106,9 @@ static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText
 	return success;
 }
 
-
-//
-// Validate configuration before import
-//
-
+/**
+ * Validate configuration before import
+ */
 bool ValidateConfig(Config *config, DWORD flags, TCHAR *errorText, int errorTextLen)
 {
    int i;
@@ -323,11 +315,9 @@ static DWORD ImportTrap(ConfigEntry *trap)
 	return rcc;
 }
 
-
-//
-// Import configuration
-//
-
+/**
+ * Import configuration
+ */
 DWORD ImportConfig(Config *config, DWORD flags)
 {
 	ConfigEntryList *events = NULL, *traps = NULL, *templates = NULL;
