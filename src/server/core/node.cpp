@@ -3378,7 +3378,6 @@ DWORD Node::getInternalItem(const TCHAR *param, DWORD bufSize, TCHAR *buffer)
    return rc;
 }
 
-
 /**
  * Get value from iLO board
  */
@@ -3386,6 +3385,7 @@ DWORD Node::getItemFromILO(const TCHAR *path, const TCHAR *param, DWORD bufSize,
 {
    DWORD result = DCE_COMM_ERROR;
 
+   /*
    const char *login = getCustomAttribute(_T("iLO.login"));
    const char *password = getCustomAttribute(_T("iLO.password"));
 
@@ -3426,61 +3426,7 @@ DWORD Node::getItemFromILO(const TCHAR *path, const TCHAR *param, DWORD bufSize,
          conn->disconnect();
       }
    }
-
-   DbgPrintf(7, _T("Node(%s)->GetItemFromILO(%s, %s): result=%d"), m_szName, path, param, result);
-
-   return result;
-}
-
-/**
- * Get value from iLO board
- */
-DWORD Node::getItemFromILO(const TCHAR *path, const TCHAR *param, DWORD bufSize, TCHAR *buffer)
-{
-   DWORD result = DCE_COMM_ERROR;
-
-   // TODO: remove this check?
-   //if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
-   {
-      TelnetConnection *conn = new TelnetConnection();
-      if (conn->connect(htonl(m_dwIpAddr), 23, 1000))
-      { 
-         if (conn->waitForText(":", 1000)) 
-         {
-            conn->writeLine("netxms");
-            if (conn->waitForText(":", 1000)) 
-            {
-               conn->writeLine("Riereer8");
-               if (conn->waitForText("iLO->", 1000)) 
-               {
-                  TCHAR tmp[1024];
-                  _sntprintf(tmp, 1024, "show -o format=text %s", path);
-                  // TODO: convert to multibyte!!!
-                  conn->writeLine(tmp);
-
-                  while (conn->readLine(tmp, 1024, 500) > 0) 
-                  {
-                     if (_tcsstr(tmp, _T("iLO->")) != NULL)
-                     {
-                        break;
-                     }
-                     StrStrip(tmp);
-                     int numStrings = 0;
-                     TCHAR **splitted = SplitString(tmp, _T('='), &numStrings);
-                     if (numStrings == 2 && !_tcsicmp(splitted[0], param))
-                     {
-                        nx_strncpy(buffer, splitted[1], bufSize);
-                        result = DCE_SUCCESS;
-                        break;
-                     }
-                  }
-                  conn->writeLine(_T("quit"));
-               }
-            }
-         }
-         conn->disconnect();
-      }
-   }
+   */
 
    DbgPrintf(7, _T("Node(%s)->GetItemFromILO(%s, %s): result=%d"), m_szName, path, param, result);
 
