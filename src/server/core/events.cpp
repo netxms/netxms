@@ -57,11 +57,9 @@ Event::Event()
 	m_parameters.setOwner(true);
 }
 
-
-//
-// Construct event from template
-//
-
+/**
+ * Construct event from template
+ */
 Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTag, const char *szFormat, const TCHAR **names, va_list args)
 {
 	_tcscpy(m_szName, pTemplate->szName);
@@ -138,11 +136,9 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTa
    m_pszMessageTemplate = _tcsdup(pTemplate->pszMessageTemplate);
 }
 
-
-//
-// Destructor for event
-//
-
+/**
+ * Destructor for event
+ */
 Event::~Event()
 {
    safe_free(m_pszMessageText);
@@ -151,11 +147,9 @@ Event::~Event()
 	safe_free(m_pszCustomMessage);
 }
 
-
-//
-// Create message text from template
-//
-
+/**
+ * Create message text from template
+ */
 void Event::expandMessageText()
 {
    if (m_pszMessageTemplate != NULL)
@@ -171,16 +165,17 @@ void Event::expandMessageText()
    }
 }
 
-
-//
-// Substitute % macros in given text with actual values
-//
-
+/**
+ * Substitute % macros in given text with actual values
+ */
 TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
 {
 	return Event::expandText(this, m_dwSource, pszTemplate, pszAlarmMsg);
 }
 
+/**
+ * Substitute % macros in given text with actual values
+ */
 TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
 {
    const TCHAR *pCurr;

@@ -27,7 +27,9 @@
 - Management console:
 	- "Export to CSV" option added to most tabular data views
 	- Auto login option for web console
-- Fixed issues: #86, #199, #242, #249, #250, #251, #275
+	- Last values of selected DCIs can be shown in object tooltips
+	  on network maps
+- Fixed issues: #86, #199, #242, #246, #249, #250, #251, #256, #260, #268, #275
 
 
 *
