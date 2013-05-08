@@ -257,6 +257,7 @@
       <plugin id="org.eclipse.equinox.http.servletbridge" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.preferences" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.registry" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.servletbridge.extensionbundle" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.help" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.jetty.continuation" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.jetty.http" autoStart="true" startLevel="0" />
@@ -315,7 +316,7 @@
 
    <warConfiguration webXml="/Core/WEB-INF/web.xml" launchIni="/Core/WEB-INF/launch.ini">
    <libraries>
-      <library path="org.eclipse.equinox.servletbridge_1.2.200.v20120522-2049.jar" fromTarget="true"/>
+      <library path="org.eclipse.equinox.servletbridge_1.2.200.v20130225-1702.jar" fromTarget="true"/>
    </libraries>
    </warConfiguration>
 </product>

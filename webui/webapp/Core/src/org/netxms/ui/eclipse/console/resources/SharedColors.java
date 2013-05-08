@@ -97,7 +97,7 @@ public class SharedColors
 		defaultColors.put(DIAL_CHART_NEEDLE_PIN, new RGB(239, 228, 176));
 		defaultColors.put(DIAL_CHART_SCALE, new RGB(0, 0, 0));
 		defaultColors.put(DIAL_CHART_VALUE, new RGB(255, 255, 255));
-		defaultColors.put(DIAL_CHART_VALUE_BACKGROUND, new RGB(255, 255, 255));
+		defaultColors.put(DIAL_CHART_VALUE_BACKGROUND, new RGB(51, 78, 113));
 		defaultColors.put(ERROR_BACKGROUND, new RGB(255, 0, 0));
 		defaultColors.put(GEOMAP_TITLE, new RGB(0, 0, 0));
 		defaultColors.put(MAP_GROUP_BOX_TITLE, new RGB(255, 255, 255));
