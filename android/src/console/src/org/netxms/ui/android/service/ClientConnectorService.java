@@ -677,8 +677,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	private void doBackgroundObjectSync(final long objectId)
 	{
-		new Thread("Background object sync")
-		{
+		new Thread("Background object sync") {
 			@Override
 			public void run()
 			{
@@ -700,7 +699,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public AbstractObject findObjectById(long objectId)
 	{
-		return findObjectById(objectId, null);
+		return findObjectById(objectId, AbstractObject.class);
 	}
 
 	/**
