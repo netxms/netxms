@@ -3,9 +3,6 @@
  */
 package org.netxms.ui.android.main.activities;
 
-import org.netxms.client.NodePollListener;
-import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.android.R;
 import android.content.ComponentName;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -18,6 +15,9 @@ import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.widget.TextView;
+import org.netxms.client.NodePollListener;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.android.R;
 
 /**
  * Node poller activity
@@ -56,7 +56,7 @@ public class NodePollerActivity extends AbstractClientActivity
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
 		super.onServiceConnected(name, binder);
-		GenericObject object = service.findObjectById(nodeId);
+		AbstractObject object = service.findObjectById(nodeId);
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 		title.setText(POLL_NAME[pollType] + " poll: " + ((object != null) ? object.getObjectName() : ("[" + Long.toString(nodeId) + "]")));
 		restart();

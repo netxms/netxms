@@ -17,7 +17,7 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.NXApplication;
 import org.netxms.ui.android.R;
@@ -108,8 +108,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	private SharedPreferences sp;
 	private final List<Loader<Alarm[]>> alarmLoaders = new ArrayList<Loader<Alarm[]>>(0);
 	private final List<Loader<DciValue[]>> dciValueLoaders = new ArrayList<Loader<DciValue[]>>(0);
-	private final List<Loader<GenericObject>> genericObjectLoaders = new ArrayList<Loader<GenericObject>>(0);
-	private final List<Loader<Set<GenericObject>>> genericObjectChildrenLoaders = new ArrayList<Loader<Set<GenericObject>>>(0);
+	private final List<Loader<AbstractObject>> genericObjectLoaders = new ArrayList<Loader<AbstractObject>>(0);
+	private final List<Loader<Set<AbstractObject>>> genericObjectChildrenLoaders = new ArrayList<Loader<Set<AbstractObject>>>(0);
 	private String server = "";
 	private int port = 4701;
 	private String login = "";
@@ -639,7 +639,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	private void processAlarmChange(Alarm alarm)
 	{
-		GenericObject object = findObjectById(alarm.getSourceObjectId());
+		AbstractObject object = findObjectById(alarm.getSourceObjectId());
 		synchronized (mutex)
 		{
 			if (alarms != null)
@@ -698,9 +698,9 @@ public class ClientConnectorService extends Service implements SessionListener
 	 * @param objectId
 	 * @return
 	 */
-	public GenericObject findObjectById(long objectId)
+	public AbstractObject findObjectById(long objectId)
 	{
-		return findObjectById(objectId, GenericObject.class);
+		return findObjectById(objectId, null);
 	}
 
 	/**
@@ -710,13 +710,13 @@ public class ClientConnectorService extends Service implements SessionListener
 	 * @param classFilter
 	 * @return
 	 */
-	public GenericObject findObjectById(long objectId, Class<? extends GenericObject> classFilter)
+	public AbstractObject findObjectById(long objectId, Class<? extends AbstractObject> classFilter)
 	{
 		// we can't search without active session
 		if (session == null)
 			return null;
 
-		GenericObject object = session.findObjectById(objectId, classFilter);
+		AbstractObject object = session.findObjectById(objectId, classFilter);
 		// if we don't have object - probably we never synced it
 		// request object synchronization in that case
 		if (object == null)
@@ -729,7 +729,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	/**
 	 * @param object
 	 */
-	private void processObjectUpdate(GenericObject object)
+	private void processObjectUpdate(AbstractObject object)
 	{
 		synchronized (mutex)
 		{
@@ -801,9 +801,9 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		for (Loader<DciValue[]> l : dciValueLoaders)
 			l.forceLoad();
-		for (Loader<GenericObject> l : genericObjectLoaders)
+		for (Loader<AbstractObject> l : genericObjectLoaders)
 			l.forceLoad();
-		for (Loader<Set<GenericObject>> l : genericObjectChildrenLoaders)
+		for (Loader<Set<AbstractObject>> l : genericObjectChildrenLoaders)
 			l.forceLoad();
 	}
 
@@ -918,7 +918,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				break;
 			case NXCNotification.OBJECT_CHANGED:
 			case NXCNotification.OBJECT_SYNC_COMPLETED:
-				processObjectUpdate((GenericObject)n.getObject());
+				processObjectUpdate((AbstractObject)n.getObject());
 				break;
 			case NXCNotification.PREDEFINED_GRAPHS_CHANGED:
 				processGraphUpdate();
@@ -1099,24 +1099,24 @@ public class ClientConnectorService extends Service implements SessionListener
 		dciValueLoaders.remove(loader);
 	}
 
-	public void registerGenericObjectLoader(Loader<GenericObject> loader)
+	public void registerGenericObjectLoader(Loader<AbstractObject> loader)
 	{
 		if (!genericObjectLoaders.contains(loader))
 			genericObjectLoaders.add(loader);
 	}
 
-	public void unregisterGenericObjectLoader(Loader<GenericObject> loader)
+	public void unregisterGenericObjectLoader(Loader<AbstractObject> loader)
 	{
 		genericObjectLoaders.remove(loader);
 	}
 
-	public void registerGenericObjectChildrenLoader(Loader<Set<GenericObject>> loader)
+	public void registerGenericObjectChildrenLoader(Loader<Set<AbstractObject>> loader)
 	{
 		if (!genericObjectChildrenLoaders.contains(loader))
 			genericObjectChildrenLoaders.add(loader);
 	}
 
-	public void unregisterGenericObjectChildrenLoader(Loader<Set<GenericObject>> loader)
+	public void unregisterGenericObjectChildrenLoader(Loader<Set<AbstractObject>> loader)
 	{
 		genericObjectChildrenLoaders.remove(loader);
 	}

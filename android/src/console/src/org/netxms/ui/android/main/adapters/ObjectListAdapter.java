@@ -9,7 +9,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.constants.Severity;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
 
 import android.content.Context;
@@ -29,7 +30,7 @@ import android.widget.TextView;
 public class ObjectListAdapter extends BaseAdapter
 {
 	private final Context context;
-	private final List<GenericObject> objectList = new ArrayList<GenericObject>(0);
+	private final List<AbstractObject> objectList = new ArrayList<AbstractObject>(0);
 
 	private static final int[] statusImageId = {
 			R.drawable.status_normal, // STATUS_NORMAL = 0;
@@ -68,19 +69,19 @@ public class ObjectListAdapter extends BaseAdapter
 	 * 
 	 * @param objecs
 	 */
-	public void setNodes(GenericObject[] objects)
+	public void setNodes(AbstractObject[] objects)
 	{
 		objectList.clear();
 		if (objects != null)
 		{
 			objectList.addAll(Arrays.asList(objects));
-			Collections.sort(objectList, new Comparator<GenericObject>()
+			Collections.sort(objectList, new Comparator<AbstractObject>()
 			{
 				@Override
-				public int compare(GenericObject object1, GenericObject object2)
+				public int compare(AbstractObject object1, AbstractObject object2)
 				{
-					int category1 = (object1.getObjectClass() == GenericObject.OBJECT_CONTAINER) ? 0 : 1;
-					int category2 = (object2.getObjectClass() == GenericObject.OBJECT_CONTAINER) ? 0 : 1;
+					int category1 = (object1.getObjectClass() == AbstractObject.OBJECT_CONTAINER) ? 0 : 1;
+					int category2 = (object2.getObjectClass() == AbstractObject.OBJECT_CONTAINER) ? 0 : 1;
 					if (category1 != category2)
 						return category1 - category2;
 					return object1.getObjectName().compareToIgnoreCase(object2.getObjectName());
@@ -174,12 +175,12 @@ public class ObjectListAdapter extends BaseAdapter
 		// set fields in view
 		int objectStatus;
 		int objectIconId = R.drawable.object_unknown;
-		GenericObject object = objectList.get(position);
+		AbstractObject object = objectList.get(position);
 		if (object == null)
 		{
 			objectName.setText(r.getString(R.string.node_unknown));
 			objectStatusText.setText(r.getString(R.string.status_unknown));
-			objectStatus = GenericObject.STATUS_UNKNOWN;
+			objectStatus = Severity.UNKNOWN;
 		}
 		else
 		{
@@ -188,19 +189,19 @@ public class ObjectListAdapter extends BaseAdapter
 			objectStatus = object.getStatus();
 			switch (object.getObjectClass())
 			{
-				case GenericObject.OBJECT_CONTAINER:
+				case AbstractObject.OBJECT_CONTAINER:
 					objectIconId = R.drawable.object_container;
 					break;
-				case GenericObject.OBJECT_NODE:
+				case AbstractObject.OBJECT_NODE:
 					objectIconId = R.drawable.object_node;
 					break;
-				case GenericObject.OBJECT_CLUSTER:
+				case AbstractObject.OBJECT_CLUSTER:
 					objectIconId = R.drawable.object_cluster;
 					break;
-				case GenericObject.OBJECT_DASHBOARD:
+				case AbstractObject.OBJECT_DASHBOARD:
 					objectIconId = R.drawable.dashboard;
 					break;
-				case GenericObject.OBJECT_MOBILEDEVICE:
+				case AbstractObject.OBJECT_MOBILEDEVICE:
 					objectIconId = R.drawable.object_mobiledevice;
 					break;
 			}

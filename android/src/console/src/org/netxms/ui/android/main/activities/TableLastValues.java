@@ -4,9 +4,11 @@
 package org.netxms.ui.android.main.activities;
 
 import java.util.Arrays;
+
 import org.netxms.client.Table;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
+
 import android.content.ComponentName;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -50,7 +52,7 @@ public class TableLastValues extends AbstractClientActivity
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
 		super.onServiceConnected(name, binder);
-		GenericObject object = service.findObjectById(nodeId);
+		AbstractObject object = service.findObjectById(nodeId);
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 		title.setText(((object != null) ? object.getObjectName() : ("[" + Long.toString(nodeId) + "]")) + ":" + getIntent().getStringExtra("description"));
 		refresh();

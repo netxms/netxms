@@ -11,7 +11,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.netxms.client.events.Alarm;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.views.CheckableLinearLayout;
 import org.netxms.ui.android.service.ClientConnectorService;
@@ -205,9 +205,13 @@ public class AlarmListAdapter extends BaseAdapter
 		return rc;
 	}
 
+	/**
+	 * @param objectId
+	 * @return
+	 */
 	private String getObjectName(long objectId)
 	{
-		GenericObject object = null;
+		AbstractObject object = null;
 		if (service != null)
 			object = service.findObjectById(objectId);
 		return object == null ? NODE_UNKNOWN : object.getObjectName();

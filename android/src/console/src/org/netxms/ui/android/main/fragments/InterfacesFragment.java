@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.loaders.GenericObjectChildrenLoader;
@@ -27,7 +27,7 @@ import android.view.ViewGroup;
  * 
  */
 
-public class InterfacesFragment extends ExpandableListFragment implements LoaderManager.LoaderCallbacks<Set<GenericObject>>
+public class InterfacesFragment extends ExpandableListFragment implements LoaderManager.LoaderCallbacks<Set<AbstractObject>>
 {
 	private InterfacesAdapter adapter = null;
 	private final GenericObjectChildrenLoader loader = null;
@@ -52,7 +52,7 @@ public class InterfacesFragment extends ExpandableListFragment implements Loader
 		if (loader != null)
 		{
 			loader.setObjId(nodeId);
-			loader.setClassFilter(GenericObject.OBJECT_INTERFACE);
+			loader.setClassFilter(AbstractObject.OBJECT_INTERFACE);
 			loader.setService(service);
 		}
 	}
@@ -68,14 +68,20 @@ public class InterfacesFragment extends ExpandableListFragment implements Loader
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see android.support.v4.app.LoaderManager.LoaderCallbacks#onCreateLoader(int, android.os.Bundle)
+	 */
 	@Override
-	public Loader<Set<GenericObject>> onCreateLoader(int arg0, Bundle arg1)
+	public Loader<Set<AbstractObject>> onCreateLoader(int arg0, Bundle arg1)
 	{
 		return new GenericObjectChildrenLoader(getActivity());
 	}
 
+	/* (non-Javadoc)
+	 * @see android.support.v4.app.LoaderManager.LoaderCallbacks#onLoadFinished(android.support.v4.content.Loader, java.lang.Object)
+	 */
 	@Override
-	public void onLoadFinished(Loader<Set<GenericObject>> arg0, Set<GenericObject> arg1)
+	public void onLoadFinished(Loader<Set<AbstractObject>> arg0, Set<AbstractObject> arg1)
 	{
 		setListShown(true, true);
 		if (adapter != null)
@@ -84,15 +90,18 @@ public class InterfacesFragment extends ExpandableListFragment implements Loader
 			if (arg1 != null)
 			{
 				interfaces = new ArrayList<Interface>();
-				for (GenericObject go : arg1)
+				for (AbstractObject go : arg1)
 					interfaces.add((Interface)go);
 			}
 			adapter.setValues(interfaces);
 			adapter.notifyDataSetChanged();
 		}
 	}
+	/* (non-Javadoc)
+	 * @see android.support.v4.app.LoaderManager.LoaderCallbacks#onLoaderReset(android.support.v4.content.Loader)
+	 */
 	@Override
-	public void onLoaderReset(Loader<Set<GenericObject>> arg0)
+	public void onLoaderReset(Loader<Set<AbstractObject>> arg0)
 	{
 	}
 }

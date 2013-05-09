@@ -3,7 +3,7 @@ package org.netxms.ui.android.main.activities;
 import java.util.ArrayList;
 
 import org.netxms.base.NXCommon;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ActivityListAdapter;
 import org.netxms.ui.android.main.fragments.AlarmBrowserFragment;
@@ -214,16 +214,16 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	/**
 	 * Internal task for synching missing objects
 	 */
-	private class SyncTopNodes extends AsyncTask<Long, Void, ArrayList<GenericObject>>
+	private class SyncTopNodes extends AsyncTask<Long, Void, ArrayList<AbstractObject>>
 	{
 		protected SyncTopNodes()
 		{
 		}
 
 		@Override
-		protected ArrayList<GenericObject> doInBackground(Long... params)
+		protected ArrayList<AbstractObject> doInBackground(Long... params)
 		{
-			ArrayList<GenericObject> objList = new ArrayList<GenericObject>();
+			ArrayList<AbstractObject> objList = new ArrayList<AbstractObject>();
 			try
 			{
 				for (int i = 0; i < params.length; i++)
@@ -237,7 +237,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 		}
 
 		@Override
-		protected void onPostExecute(ArrayList<GenericObject> objList)
+		protected void onPostExecute(ArrayList<AbstractObject> objList)
 		{
 			adapter.setTopNodes(objList);
 			adapter.notifyDataSetChanged();

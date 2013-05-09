@@ -10,7 +10,7 @@ import java.util.Stack;
 
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.NodePoller;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.NXApplication;
@@ -53,10 +53,10 @@ public class NodeBrowser extends AbstractClientActivity
 	private ListView listView;
 	private ObjectListAdapter adapter;
 	private final long initialParent = 2;
-	private GenericObject currentParent = null;
-	private final Stack<GenericObject> containerPath = new Stack<GenericObject>();
+	private AbstractObject currentParent = null;
+	private final Stack<AbstractObject> containerPath = new Stack<AbstractObject>();
 	private long[] savedPath = null;
-	private GenericObject selectedObject = null;
+	private AbstractObject selectedObject = null;
 	private ProgressDialog dialog;
 
 	/* (non-Javadoc)
@@ -82,14 +82,14 @@ public class NodeBrowser extends AbstractClientActivity
 			@SuppressWarnings("rawtypes")
 			public void onItemClick(AdapterView parent, View v, int position, long id)
 			{
-				GenericObject obj = (GenericObject)adapter.getItem(position);
-				if ((obj.getObjectClass() == GenericObject.OBJECT_CONTAINER) || (obj.getObjectClass() == GenericObject.OBJECT_CLUSTER))
+				AbstractObject obj = (AbstractObject)adapter.getItem(position);
+				if ((obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER) || (obj.getObjectClass() == AbstractObject.OBJECT_CLUSTER))
 				{
 					containerPath.push(currentParent);
 					currentParent = obj;
 					refreshList();
 				}
-				else if (obj.getObjectClass() == GenericObject.OBJECT_NODE || obj.getObjectClass() == GenericObject.OBJECT_MOBILEDEVICE)
+				else if (obj.getObjectClass() == AbstractObject.OBJECT_NODE || obj.getObjectClass() == AbstractObject.OBJECT_MOBILEDEVICE)
 				{
 					showNodeInfo(obj.getObjectId());
 				}
@@ -164,7 +164,7 @@ public class NodeBrowser extends AbstractClientActivity
 		inflater.inflate(R.menu.node_actions, menu);
 
 		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
-		selectedObject = (GenericObject)adapter.getItem(info.position);
+		selectedObject = (AbstractObject)adapter.getItem(info.position);
 
 		if (selectedObject instanceof Node)
 		{
@@ -366,7 +366,7 @@ public class NodeBrowser extends AbstractClientActivity
 			containerPath.clear();
 			for (int i = 0; i < savedPath.length - 1; i++)
 			{
-				GenericObject object = service.findObjectById(savedPath[i]);
+				AbstractObject object = service.findObjectById(savedPath[i]);
 				if (object == null)
 					break;
 				containerPath.push(object);
@@ -386,7 +386,7 @@ public class NodeBrowser extends AbstractClientActivity
 	private String getFullPath()
 	{
 		StringBuilder sb = new StringBuilder();
-		for (GenericObject o : containerPath)
+		for (AbstractObject o : containerPath)
 		{
 			sb.append('/');
 			sb.append(o.getObjectName());
@@ -408,7 +408,7 @@ public class NodeBrowser extends AbstractClientActivity
 	{
 		long[] path = new long[containerPath.size() + ((currentParent != null) ? 1 : 0)];
 		int i = 0;
-		for (GenericObject o : containerPath)
+		for (AbstractObject o : containerPath)
 			path[i++] = o.getObjectId();
 
 		if (currentParent != null)
@@ -442,7 +442,7 @@ public class NodeBrowser extends AbstractClientActivity
 	/**
 	 * Internal task for synching missing objects
 	 */
-	private class SyncMissingObjectsTask extends AsyncTask<Object, Void, GenericObject[]>
+	private class SyncMissingObjectsTask extends AsyncTask<Object, Void, AbstractObject[]>
 	{
 		private final long currentRoot;
 
@@ -461,7 +461,7 @@ public class NodeBrowser extends AbstractClientActivity
 		}
 
 		@Override
-		protected GenericObject[] doInBackground(Object... params)
+		protected AbstractObject[] doInBackground(Object... params)
 		{
 			try
 			{
@@ -476,7 +476,7 @@ public class NodeBrowser extends AbstractClientActivity
 		}
 
 		@Override
-		protected void onPostExecute(GenericObject[] result)
+		protected void onPostExecute(AbstractObject[] result)
 		{
 			dialog.cancel();
 			if ((result != null) && (currentParent.getObjectId() == currentRoot))
@@ -513,9 +513,9 @@ public class NodeBrowser extends AbstractClientActivity
 			for (int i = 0; i < list.length; i++)
 			{
 				childIdList.add((int)list[i]);
-				GenericObject obj = service.findObjectById(list[i]);
-				if (obj != null && (obj.getObjectClass() == GenericObject.OBJECT_CONTAINER ||
-						obj.getObjectClass() == GenericObject.OBJECT_CLUSTER))
+				AbstractObject obj = service.findObjectById(list[i]);
+				if (obj != null && (obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER ||
+						obj.getObjectClass() == AbstractObject.OBJECT_CLUSTER))
 				{
 					try
 					{

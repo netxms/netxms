@@ -5,7 +5,8 @@ package org.netxms.ui.android.main.adapters;
 
 import java.util.ArrayList;
 
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.constants.Severity;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.main.views.ActivityListElement;
@@ -49,7 +50,7 @@ public class ActivityListAdapter extends BaseAdapter
 			R.drawable.alarm_p3, R.drawable.alarm_p4, R.drawable.alarm_p5, R.drawable.alarm_p6,
 			R.drawable.alarm_p7, R.drawable.alarm_p8, R.drawable.alarm_p9 };
 	private static final int MAX_ALARMS = alarmId.length;
-	private SparseArray<GenericObject> topNodes = null;
+	private SparseArray<AbstractObject> topNodes = null;
 	private final Context context;
 	private int numAlarms = 0;
 
@@ -68,18 +69,18 @@ public class ActivityListAdapter extends BaseAdapter
 	 * 
 	 * @param objList
 	 */
-	public void setTopNodes(ArrayList<GenericObject> objList)
+	public void setTopNodes(ArrayList<AbstractObject> objList)
 	{
-		topNodes = new SparseArray<GenericObject>();
+		topNodes = new SparseArray<AbstractObject>();
 		for (int i = 0; i < objList.size(); i++)
 		{
 			if (objList.get(i) != null)
 				switch (objList.get(i).getObjectClass())
 				{
-					case GenericObject.OBJECT_DASHBOARDROOT:
+					case AbstractObject.OBJECT_DASHBOARDROOT:
 						topNodes.put(HomeScreen.ACTIVITY_DASHBOARDS, objList.get(i));
 						break;
-					case GenericObject.OBJECT_SERVICEROOT:
+					case AbstractObject.OBJECT_SERVICEROOT:
 						topNodes.put(HomeScreen.ACTIVITY_NODES, objList.get(i));
 						break;
 				}
@@ -159,22 +160,22 @@ public class ActivityListAdapter extends BaseAdapter
 				case HomeScreen.ACTIVITY_DASHBOARDS:
 					if (topNodes != null)
 					{
-						GenericObject obj = topNodes.get(activityId[position]);
+						AbstractObject obj = topNodes.get(activityId[position]);
 						if (obj != null)
 						{
 							switch (obj.getStatus())
 							{
-								case GenericObject.STATUS_WARNING:
-								case GenericObject.STATUS_MINOR:
-								case GenericObject.STATUS_MAJOR:
-								case GenericObject.STATUS_CRITICAL:
+								case Severity.WARNING:
+								case Severity.MINOR:
+								case Severity.MAJOR:
+								case Severity.CRITICAL:
 									infoLayer = parent.getResources().getDrawable(statusImageId[obj.getStatus()]);
 									break;
-								case GenericObject.STATUS_NORMAL:
-								case GenericObject.STATUS_UNKNOWN:
-								case GenericObject.STATUS_UNMANAGED:
-								case GenericObject.STATUS_DISABLED:
-								case GenericObject.STATUS_TESTING:
+								case Severity.NORMAL:
+								case Severity.UNKNOWN:
+								case Severity.UNMANAGED:
+								case Severity.DISABLED:
+								case Severity.TESTING:
 								default:
 									break;
 							}

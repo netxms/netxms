@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.netxms.base.GeoLocation;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.constants.Severity;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.android.R;
@@ -50,7 +51,7 @@ public class OverviewAdapter extends BaseAdapter
 	 * 
 	 * @param object from which to extract overview data
 	 */
-	public void setValues(GenericObject obj)
+	public void setValues(AbstractObject obj)
 	{
 		labels.clear();
 		values.clear();
@@ -63,7 +64,7 @@ public class OverviewAdapter extends BaseAdapter
 			addPair(r.getString(R.string.overview_primary_ip), obj.getPrimaryIP().getHostAddress().toString());
 			switch (obj.getObjectClass())
 			{
-				case GenericObject.OBJECT_NODE:
+				case AbstractObject.OBJECT_NODE:
 					addPair(r.getString(R.string.overview_zone_id), Long.toString(((Node)obj).getZoneId()));
 					addPair(r.getString(R.string.overview_primary_hostname), ((Node)obj).getPrimaryName());
 					if (((Node)obj).hasAgent())
@@ -76,7 +77,7 @@ public class OverviewAdapter extends BaseAdapter
 						addPair(r.getString(R.string.overview_bridge_base_address), ((Node)obj).getBridgeBaseAddress().toString());
 					addPair(r.getString(R.string.overview_driver), ((Node)obj).getDriverName(), false);
 					break;
-				case GenericObject.OBJECT_MOBILEDEVICE:
+				case AbstractObject.OBJECT_MOBILEDEVICE:
 					addPair(r.getString(R.string.overview_last_report), DateFormat.getDateTimeInstance().format(((MobileDevice)obj).getLastReportTime()));
 					addPair(r.getString(R.string.overview_device_id), ((MobileDevice)obj).getDeviceId());
 					addPair(r.getString(R.string.overview_vendor), ((MobileDevice)obj).getVendor());
@@ -252,23 +253,23 @@ public class OverviewAdapter extends BaseAdapter
 	{
 		switch (status)
 		{
-			case GenericObject.STATUS_NORMAL:
+			case Severity.NORMAL:
 				return r.getString(R.string.status_normal);
-			case GenericObject.STATUS_WARNING:
+			case Severity.WARNING:
 				return r.getString(R.string.status_warning);
-			case GenericObject.STATUS_MINOR:
+			case Severity.MINOR:
 				return r.getString(R.string.status_minor);
-			case GenericObject.STATUS_MAJOR:
+			case Severity.MAJOR:
 				return r.getString(R.string.status_major);
-			case GenericObject.STATUS_CRITICAL:
+			case Severity.CRITICAL:
 				return r.getString(R.string.status_critical);
-			case GenericObject.STATUS_UNKNOWN:
+			case Severity.UNKNOWN:
 				return r.getString(R.string.status_unknown);
-			case GenericObject.STATUS_UNMANAGED:
+			case Severity.UNMANAGED:
 				return r.getString(R.string.status_unmanaged);
-			case GenericObject.STATUS_DISABLED:
+			case Severity.DISABLED:
 				return r.getString(R.string.status_disabled);
-			case GenericObject.STATUS_TESTING:
+			case Severity.TESTING:
 				return r.getString(R.string.status_testing);
 		}
 		return r.getString(R.string.status_unknown);

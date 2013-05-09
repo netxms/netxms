@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.android.R;
 
@@ -175,21 +175,21 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 	{
 		switch (status)
 		{
-			case GenericObject.STATUS_NORMAL:
+			case Severity.NORMAL:
 				return R.drawable.status_normal;
-			case GenericObject.STATUS_WARNING:
+			case Severity.WARNING:
 				return R.drawable.status_warning;
-			case GenericObject.STATUS_MINOR:
+			case Severity.MINOR:
 				return R.drawable.status_minor;
-			case GenericObject.STATUS_MAJOR:
+			case Severity.MAJOR:
 				return R.drawable.status_major;
-			case GenericObject.STATUS_CRITICAL:
+			case Severity.CRITICAL:
 				return R.drawable.status_critical;
-			case GenericObject.STATUS_UNKNOWN:
+			case Severity.UNKNOWN:
 				return R.drawable.status_unknown;
-			case GenericObject.STATUS_UNMANAGED:
+			case Severity.UNMANAGED:
 				return R.drawable.status_unmanaged;
-			case GenericObject.STATUS_DISABLED:
+			case Severity.DISABLED:
 				return R.drawable.status_disabled;
 		}
 		return R.drawable.status_unknown;

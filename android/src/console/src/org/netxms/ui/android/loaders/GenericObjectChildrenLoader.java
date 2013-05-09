@@ -3,7 +3,7 @@ package org.netxms.ui.android.loaders;
 import java.util.Set;
 
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.service.ClientConnectorService;
 
 import android.content.Context;
@@ -18,14 +18,14 @@ import android.util.Log;
  *
  */
 
-public class GenericObjectChildrenLoader extends AsyncTaskLoader<Set<GenericObject>>
+public class GenericObjectChildrenLoader extends AsyncTaskLoader<Set<AbstractObject>>
 {
 	private static final String TAG = "nxclient/GenericObjectChildrenLoader";
 
 	private ClientConnectorService service = null;
 	private long objId = 0;
-	private int classFilter = GenericObject.OBJECT_INTERFACE;
-	private Set<GenericObject> children = null;
+	private int classFilter = AbstractObject.OBJECT_INTERFACE;
+	private Set<AbstractObject> children = null;
 
 	public GenericObjectChildrenLoader(Context context)
 	{
@@ -55,7 +55,7 @@ public class GenericObjectChildrenLoader extends AsyncTaskLoader<Set<GenericObje
 	}
 
 	@Override
-	public Set<GenericObject> loadInBackground()
+	public Set<AbstractObject> loadInBackground()
 	{
 		try
 		{
@@ -63,7 +63,7 @@ public class GenericObjectChildrenLoader extends AsyncTaskLoader<Set<GenericObje
 			if (service != null && service.getSession() != null)
 			{
 				service.getSession().syncObjectSet(new long[] { objId }, false, NXCSession.OBJECT_SYNC_WAIT);
-				GenericObject go = service.getSession().findObjectById(objId, GenericObject.class);
+				AbstractObject go = service.getSession().findObjectById(objId);
 				if (go != null)
 				{
 					service.getSession().syncMissingObjects(go.getChildIdList(), false, NXCSession.OBJECT_SYNC_WAIT);
@@ -81,7 +81,7 @@ public class GenericObjectChildrenLoader extends AsyncTaskLoader<Set<GenericObje
 	}
 
 	@Override
-	public void deliverResult(Set<GenericObject> newChildren)
+	public void deliverResult(Set<AbstractObject> newChildren)
 	{
 		if (isReset())
 		{
@@ -101,7 +101,7 @@ public class GenericObjectChildrenLoader extends AsyncTaskLoader<Set<GenericObje
 		// Hold a reference to the old data so it doesn't get garbage collected.
 		// The old data may still be in use (i.e. bound to an adapter, etc.), so
 		// we must protect it until the new data has been delivered.
-		Set<GenericObject> oldChildren = children;
+		Set<AbstractObject> oldChildren = children;
 		children = newChildren;
 
 		if (isStarted())
@@ -181,7 +181,7 @@ public class GenericObjectChildrenLoader extends AsyncTaskLoader<Set<GenericObje
 	}
 
 	@Override
-	public void onCanceled(Set<GenericObject> o)
+	public void onCanceled(Set<AbstractObject> o)
 	{
 		// Attempt to cancel the current asynchronous load.
 		super.onCanceled(o);
@@ -201,7 +201,7 @@ public class GenericObjectChildrenLoader extends AsyncTaskLoader<Set<GenericObje
 	 * Helper method to take care of releasing resources associated with an
 	 * actively loaded data set.
 	 */
-	protected void onReleaseResources(Set<GenericObject> o)
+	protected void onReleaseResources(Set<AbstractObject> o)
 	{
 		// For a simple List, there is nothing to do. For something like a Cursor,
 		// we would close it in this method. All resources associated with the

@@ -3,7 +3,7 @@
  */
 package org.netxms.ui.android.main.fragments;
 
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.loaders.GenericObjectLoader;
 import org.netxms.ui.android.main.adapters.OverviewAdapter;
@@ -22,11 +22,14 @@ import android.view.ViewGroup;
  * 
  */
 
-public class OverviewFragment extends AbstractListFragment implements LoaderManager.LoaderCallbacks<GenericObject>
+public class OverviewFragment extends AbstractListFragment implements LoaderManager.LoaderCallbacks<AbstractObject>
 {
 	private OverviewAdapter adapter = null;
 	private GenericObjectLoader loader = null;
 
+	/* (non-Javadoc)
+	 * @see android.support.v4.app.ListFragment#onCreateView(android.view.LayoutInflater, android.view.ViewGroup, android.os.Bundle)
+	 */
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState)
@@ -36,6 +39,9 @@ public class OverviewFragment extends AbstractListFragment implements LoaderMana
 		return v;
 	}
 
+	/* (non-Javadoc)
+	 * @see android.support.v4.app.Fragment#onActivityCreated(android.os.Bundle)
+	 */
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState)
 	{
@@ -62,14 +68,20 @@ public class OverviewFragment extends AbstractListFragment implements LoaderMana
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see android.support.v4.app.LoaderManager.LoaderCallbacks#onCreateLoader(int, android.os.Bundle)
+	 */
 	@Override
-	public Loader<GenericObject> onCreateLoader(int arg0, Bundle arg1)
+	public Loader<AbstractObject> onCreateLoader(int arg0, Bundle arg1)
 	{
 		return new GenericObjectLoader(getActivity());
 	}
 
+	/* (non-Javadoc)
+	 * @see android.support.v4.app.LoaderManager.LoaderCallbacks#onLoadFinished(android.support.v4.content.Loader, java.lang.Object)
+	 */
 	@Override
-	public void onLoadFinished(Loader<GenericObject> arg0, GenericObject arg1)
+	public void onLoadFinished(Loader<AbstractObject> arg0, AbstractObject arg1)
 	{
 		setListShown(true, true);
 		if (adapter != null)
@@ -79,8 +91,11 @@ public class OverviewFragment extends AbstractListFragment implements LoaderMana
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see android.support.v4.app.LoaderManager.LoaderCallbacks#onLoaderReset(android.support.v4.content.Loader)
+	 */
 	@Override
-	public void onLoaderReset(Loader<GenericObject> arg0)
+	public void onLoaderReset(Loader<AbstractObject> arg0)
 	{
 	}
 }

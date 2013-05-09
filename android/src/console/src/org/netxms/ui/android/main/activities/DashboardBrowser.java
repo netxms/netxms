@@ -6,7 +6,7 @@ package org.netxms.ui.android.main.activities;
 import java.util.Stack;
 
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ObjectListAdapter;
 
@@ -34,8 +34,8 @@ public class DashboardBrowser extends AbstractClientActivity
 	private ListView listView;
 	private ObjectListAdapter adapter;
 	private final long initialParent = 7;
-	private GenericObject currentParent = null;
-	private final Stack<GenericObject> containerPath = new Stack<GenericObject>();
+	private AbstractObject currentParent = null;
+	private final Stack<AbstractObject> containerPath = new Stack<AbstractObject>();
 	private long[] savedPath = null;
 	private ProgressDialog dialog;
 
@@ -62,14 +62,14 @@ public class DashboardBrowser extends AbstractClientActivity
 			@SuppressWarnings("rawtypes")
 			public void onItemClick(AdapterView parent, View v, int position, long id)
 			{
-				GenericObject obj = (GenericObject)adapter.getItem(position);
+				AbstractObject obj = (AbstractObject)adapter.getItem(position);
 				if (obj.getChildIdList().length > 0)
 				{
 					containerPath.push(currentParent);
 					currentParent = obj;
 					refreshList();
 				}
-				else if (obj.getObjectClass() == GenericObject.OBJECT_DASHBOARD)
+				else if (obj.getObjectClass() == AbstractObject.OBJECT_DASHBOARD)
 				{
 					showDashboard(obj.getObjectId());
 				}
@@ -120,7 +120,7 @@ public class DashboardBrowser extends AbstractClientActivity
 		{
 			for (int i = 0; i < savedPath.length - 1; i++)
 			{
-				GenericObject object = service.findObjectById(savedPath[i]);
+				AbstractObject object = service.findObjectById(savedPath[i]);
 				if (object == null)
 					break;
 				containerPath.push(object);
@@ -152,7 +152,7 @@ public class DashboardBrowser extends AbstractClientActivity
 		inflater.inflate(R.menu.node_actions, menu);
 
 //		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
-//		GenericObject object = (GenericObject)adapter.getItem(info.position);
+//		AbstractObject object = (AbstractObject)adapter.getItem(info.position);
 
 		/*
 		 * if (object instanceof Node) { // add available tools to context menu
@@ -244,7 +244,7 @@ public class DashboardBrowser extends AbstractClientActivity
 	private String getFullPath()
 	{
 		StringBuilder sb = new StringBuilder();
-		for (GenericObject o : containerPath)
+		for (AbstractObject o : containerPath)
 		{
 			sb.append('/');
 			sb.append(o.getObjectName());
@@ -266,7 +266,7 @@ public class DashboardBrowser extends AbstractClientActivity
 	{
 		long[] path = new long[containerPath.size() + ((currentParent != null) ? 1 : 0)];
 		int i = 0;
-		for (GenericObject o : containerPath)
+		for (AbstractObject o : containerPath)
 			path[i++] = o.getObjectId();
 
 		if (currentParent != null)

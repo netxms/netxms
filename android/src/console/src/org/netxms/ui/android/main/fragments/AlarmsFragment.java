@@ -6,7 +6,7 @@ package org.netxms.ui.android.main.fragments;
 import java.util.ArrayList;
 
 import org.netxms.client.events.Alarm;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.loaders.AlarmLoader;
 import org.netxms.ui.android.main.adapters.AlarmListAdapter;
@@ -279,7 +279,7 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 					Alarm al = (Alarm)adapter.getItem(lastPosition);
 					if (al != null)
 					{
-						GenericObject object = service.findObjectById(al.getSourceObjectId());
+						AbstractObject object = service.findObjectById(al.getSourceObjectId());
 						if (object != null)
 						{
 							Intent newIntent = new Intent(getActivity(), NodeInfoFragment.class);

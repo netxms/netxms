@@ -1,7 +1,7 @@
 package org.netxms.ui.android.loaders;
 
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.service.ClientConnectorService;
 
 import android.content.Context;
@@ -15,14 +15,17 @@ import android.util.Log;
  *
  */
 
-public class GenericObjectLoader extends AsyncTaskLoader<GenericObject>
+public class GenericObjectLoader extends AsyncTaskLoader<AbstractObject>
 {
 	private static final String TAG = "nxclient/GenericObjectLoader";
 
 	private ClientConnectorService service = null;
 	private long nodeId = 0;
-	private GenericObject obj = null;
+	private AbstractObject obj = null;
 
+	/**
+	 * @param context
+	 */
 	public GenericObjectLoader(Context context)
 	{
 		// Loaders may be used across multiple Activitys (assuming they aren't
@@ -33,11 +36,17 @@ public class GenericObjectLoader extends AsyncTaskLoader<GenericObject>
 		super(context);
 	}
 
+	/**
+	 * @param id
+	 */
 	public void setObjId(long id)
 	{
 		this.nodeId = id;
 	}
 
+	/**
+	 * @param service
+	 */
 	public void setService(ClientConnectorService service)
 	{
 		this.service = service;
@@ -45,8 +54,11 @@ public class GenericObjectLoader extends AsyncTaskLoader<GenericObject>
 			service.registerGenericObjectLoader(this);
 	}
 
+	/* (non-Javadoc)
+	 * @see android.support.v4.content.AsyncTaskLoader#loadInBackground()
+	 */
 	@Override
-	public GenericObject loadInBackground()
+	public AbstractObject loadInBackground()
 	{
 		try
 		{
@@ -54,7 +66,7 @@ public class GenericObjectLoader extends AsyncTaskLoader<GenericObject>
 			if (service != null && service.getSession() != null)
 			{
 				service.getSession().syncObjectSet(new long[] { nodeId }, false, NXCSession.OBJECT_SYNC_WAIT);
-				obj = service.getSession().findObjectById(nodeId, GenericObject.class);
+				obj = service.getSession().findObjectById(nodeId);
 			}
 			else
 				Log.d(TAG, "loadInBackground: service or session null!");
@@ -66,8 +78,11 @@ public class GenericObjectLoader extends AsyncTaskLoader<GenericObject>
 		return obj;
 	}
 
+	/* (non-Javadoc)
+	 * @see android.support.v4.content.Loader#deliverResult(java.lang.Object)
+	 */
 	@Override
-	public void deliverResult(GenericObject newObj)
+	public void deliverResult(AbstractObject newObj)
 	{
 		if (isReset())
 		{
@@ -87,7 +102,7 @@ public class GenericObjectLoader extends AsyncTaskLoader<GenericObject>
 		// Hold a reference to the old data so it doesn't get garbage collected.
 		// The old data may still be in use (i.e. bound to an adapter, etc.), so
 		// we must protect it until the new data has been delivered.
-		GenericObject oldObj = obj;
+		AbstractObject oldObj = obj;
 		obj = newObj;
 
 		if (isStarted())
@@ -148,6 +163,9 @@ public class GenericObjectLoader extends AsyncTaskLoader<GenericObject>
 		// will know to force a new load if it is ever started again.
 	}
 
+	/* (non-Javadoc)
+	 * @see android.support.v4.content.Loader#onReset()
+	 */
 	@Override
 	protected void onReset()
 	{
@@ -166,8 +184,11 @@ public class GenericObjectLoader extends AsyncTaskLoader<GenericObject>
 			service.unregisterGenericObjectLoader(this);
 	}
 
+	/* (non-Javadoc)
+	 * @see android.support.v4.content.AsyncTaskLoader#onCanceled(java.lang.Object)
+	 */
 	@Override
-	public void onCanceled(GenericObject o)
+	public void onCanceled(AbstractObject o)
 	{
 		// Attempt to cancel the current asynchronous load.
 		super.onCanceled(o);
@@ -177,6 +198,9 @@ public class GenericObjectLoader extends AsyncTaskLoader<GenericObject>
 		onReleaseResources(o);
 	}
 
+	/* (non-Javadoc)
+	 * @see android.support.v4.content.Loader#forceLoad()
+	 */
 	@Override
 	public void forceLoad()
 	{
@@ -187,7 +211,7 @@ public class GenericObjectLoader extends AsyncTaskLoader<GenericObject>
 	 * Helper method to take care of releasing resources associated with an
 	 * actively loaded data set.
 	 */
-	protected void onReleaseResources(GenericObject o)
+	protected void onReleaseResources(AbstractObject o)
 	{
 		// For a simple List, there is nothing to do. For something like a Cursor,
 		// we would close it in this method. All resources associated with the
