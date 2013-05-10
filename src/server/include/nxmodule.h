@@ -61,6 +61,8 @@ typedef struct
 	int (* pfCalculateObjectStatus)(NetObj *object);
 	BOOL (* pfNetObjInsert)(NetObj *object);
 	BOOL (* pfNetObjDelete)(NetObj *object);
+	void (* pfPostObjectCreate)(NetObj *object);
+	void (* pfPreObjectDelete)(NetObj *object);
 	NetObj *(* pfCreateObject)(int objectClass, const TCHAR *name, NetObj *parent, CSCPMessage *msg);
 	BOOL (* pfIsValidParentClass)(int childClass, int parentClass);
 	BOOL (* pfAcceptNewNode)(DWORD ipAddr, DWORD ipNetMask, DWORD zoneId, BYTE *macAddr);

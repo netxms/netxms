@@ -468,6 +468,13 @@ void NetObj::deleteObject()
    m_bIsHidden = TRUE;
 	UnlockData();
 
+	// Notify modules about object deletion
+	for(DWORD i = 0; i < g_dwNumModules; i++)
+	{
+		if (g_pModuleList[i].pfPreObjectDelete != NULL)
+			g_pModuleList[i].pfPreObjectDelete(this);
+	}
+
    PrepareForDeletion();
 
    // Remove references to this object from parent objects

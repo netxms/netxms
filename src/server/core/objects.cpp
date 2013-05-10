@@ -427,10 +427,14 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
       }
    }
 
-	// Trigger update of network maps
+	// Notify modules about object creation
 	if (bNewObject)
 	{
-		
+		for(DWORD i = 0; i < g_dwNumModules; i++)
+		{
+			if (g_pModuleList[i].pfPostObjectCreate != NULL)
+				g_pModuleList[i].pfPostObjectCreate(pObject);
+		}
 	}
 }
 
