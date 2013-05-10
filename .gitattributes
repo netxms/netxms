@@ -447,7 +447,6 @@ src/client/nxalarm/nxalarm.vcproj -text
 src/client/nxevent/nxevent.vcproj -text
 src/client/nxlexer/nxlexer.vcproj -text
 src/client/nxpush/nxpush.vcproj -text
-src/client/nxshell/pom.xml -text
 src/client/nxsms/nxsms.vcproj -text
 src/client/scilexer/LexHTML.cpp -text
 src/client/scilexer/Makefile.am -text
@@ -2250,6 +2249,15 @@ src/java/netxms-eclipse/swtchart/src/org/swtchart/internal/series/LineSeries.jav
 src/java/netxms-eclipse/swtchart/src/org/swtchart/internal/series/Series.java -text
 src/java/netxms-eclipse/swtchart/src/org/swtchart/internal/series/SeriesLabel.java -text
 src/java/netxms-eclipse/swtchart/src/org/swtchart/internal/series/SeriesSet.java -text
+src/java/nxshell/pom.xml -text
+src/java/nxshell/samples/change_comments.py -text
+src/java/nxshell/samples/create_nodes.py -text
+src/java/nxshell/samples/create_nodes_from_hosts.py -text
+src/java/nxshell/samples/disable_snmp.py -text
+src/java/nxshell/samples/list_all_nodes.py -text
+src/java/nxshell/samples/list_free_ports.py -text
+src/java/nxshell/samples/manage_unmanage.py -text
+src/java/nxshell/src/main/java/org/netxms/Shell.java -text
 src/java/package.sh -text
 src/java/pom.xml -text
 src/java/report-generator/pom.xml -text
