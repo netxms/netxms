@@ -17,6 +17,10 @@
 #include <wctype.h>
 #endif /* !HAVE_WCTYPE_H */
 
+#if HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
 #include <ctype.h>
 #include "tre.h"
 
@@ -48,11 +52,14 @@
 
 /* Wide characters. */
 typedef wint_t tre_cint_t;
+
 /*
- * On 64-bit AIX WCHAR_MAX == UINT32_MAX, and tre cannot work with that
+ * On AIX and HP-UX WCHAR_MAX == UINT32_MAX, and tre cannot work with that
  */
 #if (WCHAR_MAX == UINT32_MAX)
 #define TRE_CHAR_MAX INT32_MAX
+#elif (WCHAR_MAX == UINT16_MAX)
+#define TRE_CHAR_MAX INT16_MAX
 #else
 #define TRE_CHAR_MAX WCHAR_MAX
 #endif
