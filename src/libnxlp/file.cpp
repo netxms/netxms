@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-*** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -16,7 +16,7 @@
 ** You should have received a copy of the GNU Lesser General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*
+**
 ** File: file.cpp
 **
 **/
@@ -71,7 +71,7 @@ inline int __call_stat(const WCHAR *f, NX_STAT_STRUCT *s)
 
 /**
  * Constants
-*/
+ */
 #define READ_BUFFER_SIZE      4096
 
 /**
