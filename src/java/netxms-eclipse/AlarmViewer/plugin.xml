@@ -79,7 +79,7 @@
             icon="icons/alarm_browser.png"
             id="org.netxms.ui.eclipse.alarmviewer.objecttabs.AlarmTab"
             name="%tab.Alarms"
-            order="10">
+            order="20">
       </tab>
    </extension>
    <extension

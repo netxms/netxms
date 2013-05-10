@@ -213,7 +213,7 @@
             icon="icons/chart_line.png"
             id="org.netxms.ui.eclipse.perfview.objecttabs.PerformanceTab"
             name="Performance"
-            order="30">
+            order="40">
       </tab>
    </extension>
    <extension

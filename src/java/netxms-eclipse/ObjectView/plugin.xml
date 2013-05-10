@@ -62,28 +62,28 @@
             icon="icons/overview_tab.gif"
             id="org.netxms.ui.eclipse.objectview.objecttabs.ObjectOverview"
             name="Overview"
-            order="0">
+            order="10">
       </tab>
       <tab
             class="org.netxms.ui.eclipse.objectview.objecttabs.ClusterTab"
             icon="icons/cluster.png"
             id="org.netxms.ui.eclipse.objectview.objecttabs.ClusterTab"
             name="Cluster"
-            order="5">
+            order="15">
       </tab>
       <tab
             class="org.netxms.ui.eclipse.objectview.objecttabs.ComponentsTab"
             icon="icons/components.png"
             id="org.netxms.ui.eclipse.objectview.objecttabs.ComponentsTab"
             name="Components"
-            order="40">
+            order="50">
       </tab>
       <tab
             class="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab"
             icon="icons/interface.png"
             id="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab"
             name="Interfaces"
-            order="50">
+            order="60">
       </tab>
    </extension>
    <extension
