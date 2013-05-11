@@ -44,7 +44,10 @@ public class Application implements IApplication
 	{
 		String lang = RWT.getRequest().getParameter("lang"); //$NON-NLS-1$
 		if (lang != null)
+		{
 			RWT.setLocale(new Locale(lang));
+			System.out.println("Locale set to " + lang);
+		}
 		
 		Display display = PlatformUI.createDisplay();
 		RWT.getUISession().getHttpSession().setMaxInactiveInterval(120);

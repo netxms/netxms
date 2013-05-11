@@ -2178,3 +2178,11 @@ FileUpload-FocusIndicator {
   padding: 0px;
   opacity: 1;
 }
+
+
+/* Wait indicator */
+
+SystemMessage-DisplayOverlay {
+  background-color: rgba( 224, 224, 224, 0.7 );
+  background-image: url( theme/resources/display/loading.gif );
+}

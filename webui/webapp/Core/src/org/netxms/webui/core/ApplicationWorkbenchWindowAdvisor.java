@@ -192,7 +192,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 				if (loginDialog.open() != Window.OK)
 					continue;
 				password = ((LoginForm)loginDialog).getPassword();
-
+				
 				success = connectToServer(properties.getProperty("server", "127.0.0.1"),  //$NON-NLS-1$ //$NON-NLS-2$ 
 				                          ((LoginForm)loginDialog).getLogin(),
 				                          password);

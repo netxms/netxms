@@ -615,6 +615,7 @@ public class WidgetHelper
 	 */
 	public static int fontPixelsToPoints(Display device, int px)
 	{
-		return (int)Math.round(px * 72.0 / device.getDPI().y);
+		return px;	// font height is measured in pixels in RAP
+		//return (int)Math.round(px * 72.0 / device.getDPI().y);
 	}
 }

@@ -2686,6 +2686,7 @@ webui/webapp/Core/theme/resources/dialog/information.png -text
 webui/webapp/Core/theme/resources/dialog/question.png -text
 webui/webapp/Core/theme/resources/dialog/warning.png -text
 webui/webapp/Core/theme/resources/display/browser_bg.png -text
+webui/webapp/Core/theme/resources/display/loading.gif -text
 webui/webapp/Core/theme/resources/expanditem/expanditem-collapse-hover.png -text
 webui/webapp/Core/theme/resources/expanditem/expanditem-collapse.png -text
 webui/webapp/Core/theme/resources/expanditem/expanditem-expand-hover.png -text

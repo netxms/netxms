@@ -310,7 +310,7 @@ public class MapLoader
 	 */
 	public TileSet getAllTiles(Point mapSize, GeoLocation basePoint, int pointLocation, int zoom, boolean cachedOnly)
 	{
-		if ((mapSize.x < 32) || (mapSize.y < 32))
+		if ((mapSize.x < 32) || (mapSize.y < 32) || (basePoint == null))
 			return null;
 		
 		Area coverage = GeoLocationCache.calculateCoverage(mapSize, basePoint, pointLocation, zoom);

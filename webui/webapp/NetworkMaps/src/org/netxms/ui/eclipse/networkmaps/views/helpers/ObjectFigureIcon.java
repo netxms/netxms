@@ -52,14 +52,16 @@ public class ObjectFigureIcon extends ObjectFigure
 		
 		setLayoutManager(new BorderLayout());
 		
+		setFont(labelProvider.getLabelFont());
 		label = new Label(object.getObjectName());
-		label.setFont(labelProvider.getLabelFont());
 		label.setLabelAlignment(PositionConstants.CENTER);
+		label.setFont(labelProvider.getLabelFont());
 		add(label, BorderLayout.BOTTOM);
 		
 		setOpaque(false);
 
 		updateSize();
+		invalidateTree();
 	}
 	
 	/**

@@ -314,7 +314,7 @@
 
    <warConfiguration webXml="/Core/WEB-INF/web.xml" launchIni="/Core/WEB-INF/launch.ini">
    <libraries>
-      <library path="org.eclipse.equinox.servletbridge_1.2.200.v20130225-1702.jar" fromTarget="true"/>
+      <library path="org.eclipse.equinox.servletbridge_1.2.300.v20130419-1721.jar" fromTarget="true"/>
    </libraries>
    </warConfiguration>
 </product>
