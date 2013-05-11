@@ -123,7 +123,6 @@
       <plugin id="org.eclipse.equinox.registry.nl_es" fragment="true"/>
       <plugin id="org.eclipse.equinox.registry.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.registry.nl_zh" fragment="true"/>
-      <plugin id="org.eclipse.equinox.servletbridge.extensionbundle" fragment="true"/>
       <plugin id="org.eclipse.help"/>
       <plugin id="org.eclipse.help.nl_cs" fragment="true"/>
       <plugin id="org.eclipse.help.nl_de" fragment="true"/>
@@ -257,7 +256,6 @@
       <plugin id="org.eclipse.equinox.http.servletbridge" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.preferences" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.registry" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.equinox.servletbridge.extensionbundle" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.help" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.jetty.continuation" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.jetty.http" autoStart="true" startLevel="0" />
