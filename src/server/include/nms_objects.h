@@ -1693,6 +1693,9 @@ public:
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	void updateContent();
+
+   int getBackgroundColor() { return m_backgroundColor; }
+   void setBackgroundColor(int color) { m_backgroundColor = color; }
 };
 
 /**
