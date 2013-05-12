@@ -19,36 +19,39 @@
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * @author Victor
- *
+ * "Filter" page for DCI summary table
  */
-public class NetworkMaps extends PropertyPage
+public class SummaryTableFilter extends PropertyPage
 {
 	private static final long serialVersionUID = 1L;
 	
-	private DataCollectionItem dci;
-	private Button checkShowOnTooltip;
-
+	private DciSummaryTable table;
+	private ScriptEditor filter;
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		dci = (DataCollectionItem)getElement().getAdapter(DataCollectionItem.class);
+		table = (DciSummaryTable)getElement().getAdapter(DciSummaryTable.class);
+		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
@@ -56,12 +59,31 @@ public class NetworkMaps extends PropertyPage
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-
-      checkShowOnTooltip = new Button(dialogArea, SWT.CHECK);
-      checkShowOnTooltip.setText("&Show last value in object tooltips");
-      checkShowOnTooltip.setSelection(dci.isShowOnObjectTooltip());
       
-		return dialogArea;
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
+      gd.widthHint = 0;
+      gd.heightHint = 0;
+      final WidgetFactory factory = new WidgetFactory() {
+			@Override
+			public Control createControl(Composite parent, int style)
+			{
+				return new ScriptEditor(parent, style,  SWT.H_SCROLL | SWT.V_SCROLL);
+			}
+      };
+      filter = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, "Filter script", gd);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
+      filter.setLayoutData(gd);
+      filter.setText(table.getNodeFilter());
+
+      return dialogArea;
 	}
 
 	/**
@@ -73,27 +95,25 @@ public class NetworkMaps extends PropertyPage
 	{
 		if (isApply)
 			setValid(false);
-		
-		dci.setShowOnObjectTooltip(checkShowOnTooltip.getSelection());
-		
-		new ConsoleJob("Updating network map configuration for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected String getErrorMessage()
-			{
-				return "Cannot update network map configuration for DCI";
-			}
 
+		table.setNodeFilter(filter.getText());
+		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		new ConsoleJob("Update DCI summary table configuration", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				dci.getOwner().modifyObject(dci);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						((TableViewer)dci.getOwner().getUserData()).update(dci, null);
-					}
-				});
+				synchronized(table)
+				{
+					int id = session.modifyDciSummaryTable(table);
+					table.setId(id);
+				}
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot update DCI summary table configuration";
 			}
 
 			/* (non-Javadoc)
@@ -108,7 +128,7 @@ public class NetworkMaps extends PropertyPage
 						@Override
 						public void run()
 						{
-							NetworkMaps.this.setValid(true);
+							SummaryTableFilter.this.setValid(true);
 						}
 					});
 				}
@@ -133,15 +153,5 @@ public class NetworkMaps extends PropertyPage
 	protected void performApply()
 	{
 		applyChanges(true);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
-	@Override
-	protected void performDefaults()
-	{
-		super.performDefaults();
-		checkShowOnTooltip.setSelection(false);
 	}
 }

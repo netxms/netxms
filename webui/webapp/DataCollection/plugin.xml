@@ -20,6 +20,15 @@
             class="org.netxms.ui.eclipse.datacollection.views.LastValues"
             id="org.netxms.ui.eclipse.datacollection.view.last_values">
       </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.datacollection.views.SummaryTableManager"
+            icon="icons/summary_table.png"
+            id="org.netxms.ui.eclipse.datacollection.views.SummaryTableManager"
+            name="DCI Summary Tables"
+            restorable="true">
+      </view>
    </extension>
    
    <extension
@@ -279,6 +288,36 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.SummaryTableGeneral"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.SummaryTableGeneral#0"
+              name="General">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DciSummaryTable">
+              </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.SummaryTableFilter"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.SummaryTableFilter#20"
+              name="Filter">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DciSummaryTable">
+              </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.SummaryTableColumns"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.SummaryTableColumns#10"
+              name="Columns">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DciSummaryTable">
+              </instanceof>
+           </enabledWhen>
+        </page>
    </extension>
 
   <extension
@@ -324,6 +363,12 @@
                class="org.eclipse.jface.commands.ToggleState"
                id="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter.state">
          </state>
+      </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open DCI Summary Tables configuration"
+            id="org.netxms.ui.eclipse.datacollection.commands.open_dcisumtbl_manager"
+            name="DCI Summary Tables">
       </command>
    </extension>
    <extension
@@ -374,6 +419,67 @@
                priorityLevel="workbench">
          </variable>
       </sourceProvider>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.datacollection.actionSet"
+            label="Data Collection Action Set"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.OpenSummaryTablesManager"
+               definitionId="org.netxms.ui.eclipse.datacollection.commands.open_dcisumtbl_manager"
+               icon="icons/summary_table.png"
+               id="org.netxms.ui.eclipse.datacollection.actions.open_dcisumtbl_manager"
+               label="DCI Summary Tables"
+               menubarPath="config/additions"
+               style="push"
+               tooltip="Open DCI Summary Table configuration">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.loginlisteners">
+      <loginlistener
+            class="org.netxms.ui.eclipse.datacollection.LoginListener">
+      </loginlistener>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="popup:org.eclipse.ui.popup.any?after=datacollection">
+         <dynamic
+               class="org.netxms.ui.eclipse.datacollection.SummaryTablesDynamicMenu"
+               id="org.netxms.ui.eclipse.datacollection.SummaryTablesDynamicMenu">
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate
+                     ifEmpty="false"
+                     operator="and">
+                  <or>
+                     <instanceof
+                           value="org.netxms.client.objects.Container">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.ServiceRoot">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Subnet">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Cluster">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Zone">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.EntireNetwork">
+                     </instanceof>
+                  </or>
+               </iterate>
+            </visibleWhen>
+         </dynamic>
+      </menuContribution>
    </extension>
 
 </plugin>
