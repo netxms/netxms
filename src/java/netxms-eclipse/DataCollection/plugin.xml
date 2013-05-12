@@ -29,6 +29,14 @@
             name="DCI Summary Tables"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.datacollection.views.SummaryTable"
+            icon="icons/summary_table.png"
+            id="org.netxms.ui.eclipse.datacollection.views.SummaryTable"
+            name="Summary Table"
+            restorable="true">
+      </view>
    </extension>
    
    <extension

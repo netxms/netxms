@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.ContributionItem;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -32,6 +31,10 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.ISources;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.IWorkbenchContribution;
 import org.eclipse.ui.services.IEvaluationService;
 import org.eclipse.ui.services.IServiceLocator;
@@ -45,8 +48,10 @@ import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
+import org.netxms.ui.eclipse.datacollection.views.SummaryTable;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Dynamic object tools menu creator
@@ -173,8 +178,24 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				Table results = session.queryDciSummaryTable(tableId, baseObjectId);
-				MessageDialog.openInformation(null, "test", results.getTitle());
+				final Table results = session.queryDciSummaryTable(tableId, baseObjectId);
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						String secondaryId = Integer.toString(tableId) + "&" + Long.toString(baseObjectId);
+						IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+						try
+						{
+							SummaryTable view =  (SummaryTable)window.getActivePage().showView(SummaryTable.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
+							view.setTable(results);
+						}
+						catch(PartInitException e)
+						{
+							MessageDialogHelper.openError(window.getShell(), "Error", String.format("Cannot open view: %s", e.getLocalizedMessage()));
+						}
+					}
+				});
 			}
 			
 			@Override
