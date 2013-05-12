@@ -254,6 +254,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('DefaultDCIRetentionTime','30',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('DefaultDCIPollingInterval','60',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('DefaultMapBackgroundColor','0xffffff',1,0);
 
 
 /*

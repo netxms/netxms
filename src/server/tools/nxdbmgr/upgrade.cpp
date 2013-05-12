@@ -310,6 +310,17 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 /**
+ * Upgrade from V276 to V277
+ */
+static BOOL H_UpgradeFromV276(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateConfigParam(_T("DefaultMapBackgroundColor"), _T("0xffffff"), 1, 0));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='277' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V275 to V276
  */
 static BOOL H_UpgradeFromV275(int currVersion, int newVersion)
@@ -6807,6 +6818,7 @@ static struct
    { 273, 274, H_UpgradeFromV273 },
    { 274, 275, H_UpgradeFromV274 },
    { 275, 276, H_UpgradeFromV275 },
+   { 276, 277, H_UpgradeFromV276 },
    { 0, 0, NULL }
 };
 

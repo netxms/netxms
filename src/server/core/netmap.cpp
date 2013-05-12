@@ -53,7 +53,7 @@ NetworkMap::NetworkMap() : NetObj()
 	m_backgroundLatitude = 0;
 	m_backgroundLongitude = 0;
 	m_backgroundZoom = 1;
-	m_backgroundColor = 0xFFFFFF;
+	m_backgroundColor = ConfigReadInt(_T("DefaultMapBackgroundColor"), 0xFFFFFF);
 	m_defaultLinkColor = -1;
    m_defaultLinkRouting = 1;  // default routing type "direct"
 	m_nextElementId = 1;
@@ -76,7 +76,7 @@ NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
 	m_backgroundLatitude = 0;
 	m_backgroundLongitude = 0;
 	m_backgroundZoom = 1;
-	m_backgroundColor = 0xFFFFFF;
+	m_backgroundColor = ConfigReadInt(_T("DefaultMapBackgroundColor"), 0xFFFFFF);
 	m_defaultLinkColor = -1;
    m_defaultLinkRouting = 1;  // default routing type "direct"
 	m_nextElementId = 1;
