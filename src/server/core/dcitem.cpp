@@ -1051,7 +1051,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
 /**
  * Put last value into CSCP message
  */
-void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
+void DCItem::fillLastValueMessage(CSCPMessage *pMsg, DWORD dwId)
 {
 	lock();
    pMsg->SetVariable(dwId++, m_dwId);
@@ -1105,7 +1105,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
    switch(nFunction)
    {
       case F_LAST:
-         pValue = (m_dwCacheSize > 0) ? new NXSL_Value((TCHAR *)m_ppValueCache[0]->getString()) : new NXSL_Value;
+         pValue = (m_dwCacheSize > 0) ? new NXSL_Value((const TCHAR *)m_ppValueCache[0]->getString()) : new NXSL_Value;
          break;
       case F_DIFF:
          if (m_dwCacheSize >= 2)
@@ -1159,11 +1159,20 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
    return pValue;
 }
 
+/**
+ * Get last value
+ */
+const TCHAR *DCItem::getLastValue()
+{
+   lock();
+   const TCHAR *v = (m_dwCacheSize > 0) ? (const TCHAR *)m_ppValueCache[0]->getString() : NULL;
+   unlock();
+   return v;
+}
 
-//
-// Clean expired data
-//
-
+/**
+ * Clean expired data
+ */
 void DCItem::deleteExpiredData()
 {
    TCHAR szQuery[256];

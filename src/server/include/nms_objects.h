@@ -250,6 +250,42 @@ public:
 };
 
 /**
+ * Column definition for DCI summary table
+ */
+class NXCORE_EXPORTABLE SummaryTableColumn
+{
+public:
+   TCHAR m_name[MAX_DB_STRING];
+   TCHAR m_dciName[MAX_PARAM_NAME];
+
+   SummaryTableColumn(TCHAR *configStr);
+};
+
+/**
+ * DCI summary table class
+ */
+class NXCORE_EXPORTABLE SummaryTable
+{
+private:
+   TCHAR m_title[MAX_DB_STRING];
+   DWORD m_flags;
+   ObjectArray<SummaryTableColumn> *m_columns;
+   NXSL_Program *m_filter;
+
+   SummaryTable(DB_RESULT hResult);
+
+public:
+   static SummaryTable *loadFromDB(LONG id, DWORD *rcc);
+   ~SummaryTable();
+
+   bool filter(DataCollectionTarget *node);
+   Table *createEmptyResultTable();
+
+   int getNumColumns() { return m_columns->size(); }
+   SummaryTableColumn *getColumn(int index) { return m_columns->get(index); }
+};
+
+/**
  * Base class for network objects
  */
 class NXCORE_EXPORTABLE NetObj
@@ -774,6 +810,7 @@ public:
    DWORD getTableLastValues(DWORD dciId, CSCPMessage *msg);
 	DWORD getThresholdSummary(CSCPMessage *msg, DWORD baseId);
 	DWORD getPerfTabDCIList(CSCPMessage *pMsg);
+   void getLastValuesSummary(SummaryTable *tableDefinition, Table *tableData);
 
    void updateDciCache();
    void cleanDCIData();

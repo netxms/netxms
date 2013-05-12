@@ -471,7 +471,7 @@ void DCTable::updateFromMessage(CSCPMessage *pMsg)
 /**
  * Get last collected value
  */
-void DCTable::getLastValue(CSCPMessage *msg)
+void DCTable::fillLastValueMessage(CSCPMessage *msg)
 {
 	if (m_lastValue != NULL)
 	{
@@ -484,7 +484,7 @@ void DCTable::getLastValue(CSCPMessage *msg)
 /**
  * Get summary of last collected value (to show along simple DCI values)
  */
-void DCTable::getLastValueSummary(CSCPMessage *pMsg, DWORD dwId)
+void DCTable::fillLastValueSummaryMessage(CSCPMessage *pMsg, DWORD dwId)
 {
 	lock();
    pMsg->SetVariable(dwId++, m_dwId);

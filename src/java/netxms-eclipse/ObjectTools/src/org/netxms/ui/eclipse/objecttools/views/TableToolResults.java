@@ -21,12 +21,16 @@ package org.netxms.ui.eclipse.objecttools.views;
 import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -35,6 +39,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
@@ -58,6 +63,8 @@ public class TableToolResults extends ViewPart
 	private long nodeId;
 	private SortableTableViewer viewer;
 	private Action actionRefresh;
+	private Action actionExportToCsv;
+	private Action actionExportAllToCsv;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -92,12 +99,13 @@ public class TableToolResults extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		viewer = new SortableTableViewer(parent, SWT.FULL_SELECTION);
+		viewer = new SortableTableViewer(parent, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new TableContentProvider());
 		viewer.setLabelProvider(new TableLabelProvider());
 
 		createActions();
 		contributeToActionBars();
+		createPopupMenu();
 	}
 
 	/**
@@ -112,6 +120,9 @@ public class TableToolResults extends ViewPart
 				refreshTable();
 			}
 		};
+
+		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
+		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
 
 	/**
@@ -132,6 +143,8 @@ public class TableToolResults extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionExportAllToCsv);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -143,7 +156,37 @@ public class TableToolResults extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionExportAllToCsv);
 		manager.add(actionRefresh);
+	}
+
+	/**
+	 * Create pop-up menu
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager.
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener() {
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu.
+		Menu menu = menuMgr.createContextMenu(viewer.getControl());
+		viewer.getControl().setMenu(menu);
+	}
+
+	/**
+	 * Fill context menu
+	 * @param mgr Menu manager
+	 */
+	protected void fillContextMenu(IMenuManager manager)
+	{
+		manager.add(actionExportToCsv);
 	}
 
 	/* (non-Javadoc)

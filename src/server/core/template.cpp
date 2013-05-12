@@ -1011,13 +1011,13 @@ DWORD Template::getLastValues(CSCPMessage *msg, bool objectTooltipOnly)
 		{
 			if (object->getType() == DCO_TYPE_ITEM)
 			{
-				((DCItem *)object)->getLastValue(msg, dwId);
+				((DCItem *)object)->fillLastValueMessage(msg, dwId);
 				dwId += 50;
 				dwCount++;
 			}
 			else if (object->getType() == DCO_TYPE_TABLE)
 			{
-				((DCTable *)object)->getLastValueSummary(msg, dwId);
+				((DCTable *)object)->fillLastValueSummaryMessage(msg, dwId);
 				dwId += 50;
 				dwCount++;
 			}

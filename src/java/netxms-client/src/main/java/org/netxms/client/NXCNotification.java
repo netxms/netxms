@@ -33,8 +33,6 @@ public class NXCNotification extends SessionNotification
 	public static final int NEW_SNMP_TRAP = 8;
 	public static final int JOB_CHANGE = 10;
 	public static final int IMAGE_LIBRARY_CHANGED = 11;
-	public static final int DCI_SUMMARY_TABLE_UPDATED = 21;
-	public static final int DCI_SUMMARY_TABLE_DELETED = 22;
 	public static final int OBJECT_DELETED = 99;
 
 	public static final int SITUATION_BASE = 100;
@@ -43,6 +41,9 @@ public class NXCNotification extends SessionNotification
 	public static final int SITUATION_UPDATED = 103;
 	public static final int SITUATION_INSTANCE_UPDATED = 104;
 	public static final int SITUATION_INSTANCE_DELETED = 105;
+	
+	public static final int IMAGE_UPDATED = 201;
+	public static final int IMAGE_DELETED = 202;
 	
 	public static final int EVENT_DB_CHANGED = 1002;
 	public static final int ALARM_DELETED = 1003;
@@ -60,8 +61,8 @@ public class NXCNotification extends SessionNotification
 	public static final int TRAP_CONFIGURATION_CREATED = 1016;
 	public static final int TRAP_CONFIGURATION_MODIFIED = 1017;
 	public static final int TRAP_CONFIGURATION_DELETED = 1018;
-	public static final int IMAGE_UPDATED = 1021;
-	public static final int IMAGE_DELETED = 1022;
+	public static final int DCI_SUMMARY_TABLE_UPDATED = 1021;
+	public static final int DCI_SUMMARY_TABLE_DELETED = 1022;
 
 	public static final int OBJECT_SYNC_COMPLETED = 2001;
 	

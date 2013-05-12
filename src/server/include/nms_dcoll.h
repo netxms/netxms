@@ -347,8 +347,9 @@ public:
 
 	virtual bool hasValue();
 
-   void getLastValue(CSCPMessage *pMsg, DWORD dwId);
+   void fillLastValueMessage(CSCPMessage *pMsg, DWORD dwId);
    NXSL_Value *getValueForNXSL(int nFunction, int nPolls);
+   const TCHAR *getLastValue();
 
    virtual void createMessage(CSCPMessage *pMsg);
    void updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);
@@ -410,11 +411,9 @@ struct TC_ID_MAP_ENTRY
 	TCHAR name[MAX_COLUMN_NAME];
 };
 
-
-//
-// Tabular data collection object
-//
-
+/**
+ * Tabular data collection object
+ */
 class NXCORE_EXPORTABLE DCTable : public DCObject
 {
 protected:
@@ -449,19 +448,17 @@ public:
 	virtual void deleteExpiredData();
 	virtual bool deleteAllData();
 
-	void getLastValue(CSCPMessage *msg);
-   void getLastValueSummary(CSCPMessage *pMsg, DWORD dwId);
+	void fillLastValueMessage(CSCPMessage *msg);
+   void fillLastValueSummaryMessage(CSCPMessage *pMsg, DWORD dwId);
 
 	LONG getInstanceColumnId();
 
 	static LONG columnIdFromName(const TCHAR *name);
 };
 
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 BOOL InitDataCollector();
 void DeleteAllItemsForNode(DWORD dwNodeId);
 void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags);

@@ -96,10 +96,217 @@ DWORD DeleteSummaryTable(LONG tableId)
 }
 
 /**
+ * Create column definition from configuration string
+ */
+SummaryTableColumn::SummaryTableColumn(TCHAR *configStr)
+{
+   TCHAR *ptr = _tcsstr(configStr, _T("^#^"));
+   if (ptr != NULL)
+   {
+      *ptr = 0;
+      ptr += 3;
+      nx_strncpy(m_dciName, ptr, MAX_PARAM_NAME);
+   }
+   else
+   {
+      nx_strncpy(m_dciName, configStr, MAX_PARAM_NAME);
+   }
+   nx_strncpy(m_name, configStr, MAX_DB_STRING);
+}
+
+/**
+ * Destructor
+ */
+SummaryTable::~SummaryTable()
+{
+   delete m_columns;
+   delete m_filter;
+}
+
+/**
+ * Create object from DB data
+ */
+SummaryTable::SummaryTable(DB_RESULT hResult)
+{
+   DBGetField(hResult, 0, 0, m_title, MAX_DB_STRING);
+   m_flags = DBGetFieldULong(hResult, 0, 1);
+
+   // Filter script
+   TCHAR *filterSource = DBGetField(hResult, 0, 2, NULL, 0);
+   if (filterSource != NULL)
+   {
+      StrStrip(filterSource);
+      if (*filterSource != 0)
+      {
+         TCHAR errorText[1024];
+         m_filter = NXSLCompile(filterSource, errorText, 1024);
+         if (m_filter == NULL)
+         {
+            DbgPrintf(4, _T("Error compiling filter script for DCI summary table: %s"), errorText);
+         }
+      }
+      else
+      {
+         m_filter = NULL;
+      }
+      free(filterSource);
+   }
+   else
+   {
+      m_filter = NULL;
+   }
+
+   // Columns
+   m_columns = new ObjectArray<SummaryTableColumn>(16, 16, true);
+   TCHAR *config = DBGetField(hResult, 0, 3, NULL, 0);
+   if ((config != NULL) && (*config != 0))
+   {
+      TCHAR *curr = config;
+      while(curr != NULL)
+      {
+         TCHAR *next = _tcsstr(curr, _T("^~^"));
+         if (next != NULL)
+         {
+            *next = 0;
+            next += 3;
+         }
+         m_columns->add(new SummaryTableColumn(curr));
+         curr = next;
+      }
+      free(config);
+   }
+}
+
+/**
+ * Load summary table object from database
+ */
+SummaryTable *SummaryTable::loadFromDB(LONG id, DWORD *rcc)
+{
+   DbgPrintf(4, _T("Loading configuration for DCI summary table %d"), id);
+   SummaryTable *table = NULL;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT title,flags,node_filter,columns FROM dci_summary_tables WHERE id=?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            table = new SummaryTable(hResult);
+            *rcc = RCC_SUCCESS;
+         }
+         else
+         {
+            *rcc = RCC_INVALID_SUMMARY_TABLE_ID;
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         *rcc = RCC_DB_FAILURE;
+      }
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      *rcc = RCC_DB_FAILURE;
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   DbgPrintf(4, _T("SummaryTable::loadFromDB(%d): object=%p, rcc=%d"), id, table, (int)*rcc);
+   return table;
+}
+
+/**
+ * Pass node through filter
+ */
+bool SummaryTable::filter(DataCollectionTarget *object)
+{
+   if (m_filter == NULL)
+      return true;   // no filtering
+
+   bool result = true;
+   NXSL_ServerEnv *env = new NXSL_ServerEnv;
+   m_filter->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
+   if (object->Type() == OBJECT_NODE)
+      m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
+   if (m_filter->run(env) == 0)
+   {
+      NXSL_Value *value = m_filter->getResult();
+      if (value != NULL)
+      {
+         result = value->getValueAsInt32() ? true : false;
+      }
+      else
+      {
+         DbgPrintf(4, _T("Error executing filter script for DCI summary table: %s"), m_filter->getErrorText());
+      }
+   }
+   return result;
+}
+
+/**
+ * Create empty result table
+ */
+Table *SummaryTable::createEmptyResultTable()
+{
+   Table *result = new Table();
+   result->setTitle(m_title);
+   result->addColumn(_T("Node"), DCI_DT_STRING);
+   for(int i = 0; i < m_columns->size(); i++)
+   {
+      result->addColumn(m_columns->get(i)->m_name, DCI_DT_STRING);
+   }
+   return result;
+}
+
+/**
  * Query summary table
  */
 Table *QuerySummaryTable(LONG tableId, DWORD baseObjectId, DWORD userId, DWORD *rcc)
 {
-   *rcc = RCC_NOT_IMPLEMENTED;
-   return NULL;
+   NetObj *object = FindObjectById(baseObjectId);
+   if (object == NULL)
+   {
+      *rcc = RCC_INVALID_OBJECT_ID;
+      return NULL;
+   }
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   {
+      *rcc = RCC_ACCESS_DENIED;
+      return NULL;
+   }
+   if ((object->Type() != OBJECT_CONTAINER) && (object->Type() != OBJECT_CLUSTER) &&
+       (object->Type() != OBJECT_SERVICEROOT) && (object->Type() != OBJECT_SUBNET) &&
+       (object->Type() != OBJECT_ZONE) && (object->Type() != OBJECT_NETWORK))
+   {
+      *rcc = RCC_INCOMPATIBLE_OPERATION;
+      return NULL;
+   }
+
+   SummaryTable *tableDefinition = SummaryTable::loadFromDB(tableId, rcc);
+   if (tableDefinition == NULL)
+      return NULL;
+
+   ObjectArray<NetObj> *childObjects = object->getFullChildList(true);
+   Table *tableData = tableDefinition->createEmptyResultTable();
+
+   for(int i = 0; i < childObjects->size(); i++)
+   {
+      if (((childObjects->get(i)->Type() != OBJECT_NODE) && (childObjects->get(i)->Type() != OBJECT_MOBILEDEVICE)) || 
+          !childObjects->get(i)->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         continue;
+
+      DataCollectionTarget *dct = (DataCollectionTarget *)childObjects->get(i);
+      if (tableDefinition->filter(dct))
+      {
+         dct->getLastValuesSummary(tableDefinition, tableData);
+      }
+   }
+
+   delete childObjects;
+   delete tableDefinition;
+
+   return tableData;
 }

@@ -224,6 +224,7 @@ public:
 
 	void setTitle(const TCHAR *title) { safe_free(m_title); m_title = (title != NULL) ? _tcsdup(title) : NULL; }
    int addColumn(const TCHAR *name, LONG format = 0);
+   void setColumnFormat(int col, int format) { if ((col >= 0) && (col < m_nNumCols)) m_colFormats[col] = format; }
    int addRow();
 
    void setAt(int nRow, int nCol, LONG nData);

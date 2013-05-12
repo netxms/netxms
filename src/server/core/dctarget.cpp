@@ -122,7 +122,7 @@ DWORD DataCollectionTarget::getTableLastValues(DWORD dciId, CSCPMessage *msg)
 		DCObject *object = m_dcObjects->get(i);
 		if ((object->getId() == dciId) && (object->getType() == DCO_TYPE_TABLE))
 		{
-			((DCTable *)object)->getLastValue(msg);
+			((DCTable *)object)->fillLastValueMessage(msg);
 			rcc = RCC_SUCCESS;
 			break;
 		}
@@ -332,7 +332,7 @@ DWORD DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, DWORD baseId)
 		{
 			if (((DCItem *)object)->hasActiveThreshold())
 			{
-				((DCItem *)object)->getLastValue(msg, varId);
+				((DCItem *)object)->fillLastValueMessage(msg, varId);
 				varId += 50;
 				count++;
 			}
@@ -480,4 +480,33 @@ DWORD DataCollectionTarget::getInternalItem(const TCHAR *szParam, DWORD dwBufSiz
    }
 
    return dwError;
+}
+
+/**
+ * Get last (current) DCI values for summary table.
+ */
+void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, Table *tableData)
+{
+   bool rowAdded = false;
+   lockDciAccess();
+   for(int i = 0; i < tableDefinition->getNumColumns(); i++)
+   {
+      SummaryTableColumn *tc = tableDefinition->getColumn(i);
+      for(int j = 0; j < m_dcObjects->size(); j++)
+	   {
+		   DCObject *object = m_dcObjects->get(j);
+         if ((object->getType() == DCO_TYPE_ITEM) && object->hasValue() && !_tcsicmp(object->getName(), tc->m_dciName))
+         {
+            if (!rowAdded)
+            {
+               tableData->addRow();
+               tableData->set(0, m_szName);
+               rowAdded = true;
+            }
+            tableData->set(i + 1, ((DCItem *)object)->getLastValue());
+            tableData->setColumnFormat(i + 1, ((DCItem *)object)->getDataType());
+         }
+      }
+   }
+   unlockDciAccess();
 }
