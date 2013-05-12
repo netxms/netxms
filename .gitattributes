@@ -2922,12 +2922,16 @@ webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypag
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/helpers/TableColumnLabelProvider.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/DataCollectionEditor.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/LastValues.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/SummaryTable.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/SummaryTableManager.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/helpers/DciComparator.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/helpers/DciFilter.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/helpers/DciLabelProvider.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/helpers/SummaryTableComparator.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/helpers/SummaryTableLabelProvider.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/helpers/TableContentProvider.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/helpers/TableItemComparator.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/views/helpers/TableLabelProvider.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/DciList.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/DciSelector.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/widgets/LastValuesWidget.java -text
