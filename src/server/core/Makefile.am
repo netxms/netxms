@@ -9,18 +9,18 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			condition.cpp config.cpp container.cpp correlate.cpp \
 			dashboard.cpp datacoll.cpp dbwrite.cpp dc_nxsl.cpp \
 			dcitem.cpp dcithreshold.cpp dcivalue.cpp dcobject.cpp \
-			dctable.cpp dctarget.cpp dctcolumn.cpp debug.cpp \
-			download_job.cpp ef.cpp email.cpp entirenet.cpp \
-			epp.cpp events.cpp evproc.cpp fdb.cpp hk.cpp id.cpp \
-			import.cpp index.cpp interface.cpp isc.cpp job.cpp \
-			jobmgr.cpp jobqueue.cpp layer2.cpp lln.cpp lldp.cpp \
-			locks.cpp logfilter.cpp loghandle.cpp logs.cpp \
-			main.cpp mdconn.cpp mdsession.cpp mobile.cpp \
-			modules.cpp mt.cpp ndd.cpp ndp.cpp netinfo.cpp \
-			netmap.cpp netobj.cpp netsrv.cpp node.cpp \
-			nodelink.cpp np.cpp nxsl_classes.cpp nxslext.cpp \
-			objects.cpp objtools.cpp package.cpp poll.cpp \
-			rack.cpp radius.cpp report.cpp report_job.cpp \
+			dcst.cpp dctable.cpp dctarget.cpp dctcolumn.cpp \
+			debug.cpp download_job.cpp ef.cpp email.cpp \
+			entirenet.cpp epp.cpp events.cpp evproc.cpp fdb.cpp \
+			hk.cpp id.cpp import.cpp index.cpp interface.cpp \
+			isc.cpp job.cpp jobmgr.cpp jobqueue.cpp layer2.cpp \
+			lln.cpp lldp.cpp locks.cpp logfilter.cpp \
+			loghandle.cpp logs.cpp main.cpp mdconn.cpp \
+			mdsession.cpp mobile.cpp modules.cpp mt.cpp ndd.cpp \
+			ndp.cpp netinfo.cpp netmap.cpp netobj.cpp netsrv.cpp \
+			node.cpp nodelink.cpp np.cpp nxsl_classes.cpp \
+			nxslext.cpp objects.cpp objtools.cpp package.cpp \
+			poll.cpp rack.cpp radius.cpp report.cpp report_job.cpp \
 			rootobj.cpp script.cpp session.cpp situation.cpp \
 			slmcheck.cpp smclp.cpp sms.cpp snmp.cpp snmptrap.cpp \
 			subnet.cpp svccontainer.cpp swpkg.cpp syncer.cpp \

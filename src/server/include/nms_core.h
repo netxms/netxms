@@ -147,6 +147,7 @@ typedef void * HSNMPSESSION;
 #define IDG_SITUATION         20
 #define IDG_DCT_COLUMN        21
 #define IDG_MAPPING_TABLE     22
+#define IDG_DCI_SUMMARY_TABLE 23
 
 /**
  * Exit codes for console commands
@@ -636,6 +637,11 @@ private:
 	void updateMappingTable(CSCPMessage *request);
 	void deleteMappingTable(CSCPMessage *request);
 	void getWirelessStations(CSCPMessage *request);
+   void getSummaryTables(DWORD rqId);
+   void getSummaryTableDetails(CSCPMessage *request);
+   void modifySummaryTable(CSCPMessage *request);
+   void deleteSummaryTable(CSCPMessage *request);
+   void querySummaryTable(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);
@@ -830,6 +836,10 @@ BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId);
 DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession *pSession);
 DWORD DeleteObjectToolFromDB(DWORD dwToolId);
 DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg);
+
+DWORD ModifySummaryTable(CSCPMessage *msg, LONG *newId);
+DWORD DeleteSummaryTable(LONG tableId);
+Table *QuerySummaryTable(LONG tableId, DWORD baseObjectId, DWORD userId, DWORD *rcc);
 
 void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();

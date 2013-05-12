@@ -509,6 +509,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dcst.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\dctable.cpp"
 				>
 			</File>

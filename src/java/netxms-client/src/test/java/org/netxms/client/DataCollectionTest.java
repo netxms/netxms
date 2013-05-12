@@ -19,9 +19,13 @@
 package org.netxms.client;
 
 import java.util.List;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DciSummaryTable;
+import org.netxms.client.datacollection.DciSummaryTableColumn;
+import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
@@ -134,5 +138,41 @@ public class DataCollectionTest extends SessionTest
 		}
 		
 		session.disconnect();		
+	}
+	
+	public void testDciSummaryTables() throws Exception
+	{
+		final NXCSession session = connect();
+		
+		DciSummaryTable t = new DciSummaryTable("test", "Test Table");
+		t.getColumns().add(new DciSummaryTableColumn("Idle", "System.CPU.Idle"));
+		t.getColumns().add(new DciSummaryTableColumn("I/O Wait", "System.CPU.IOWait"));
+		
+		int id = session.modifyDciSummaryTable(t);
+		System.out.println("Assigned ID: " + id);
+		t.setId(id);
+
+		t.getColumns().add(new DciSummaryTableColumn("System", "System.CPU.System"));
+		session.modifyDciSummaryTable(t);
+		
+		List<DciSummaryTableDescriptor> list = session.listDciSummaryTables();
+		for(DciSummaryTableDescriptor d : list)
+			System.out.println(d.getId() + ": " + d.getMenuPath() + " " + d.getTitle());
+		
+		session.getDciSummaryTable(id);
+		session.deleteDciSummaryTable(id);
+		
+		try
+		{
+			session.getDciSummaryTable(id);
+			assertTrue(false);
+		}
+		catch(NXCException e)
+		{
+			if (e.getErrorCode() != RCC.INVALID_SUMMARY_TABLE_ID)
+				throw e;
+		}
+					
+		session.disconnect();
 	}
 }

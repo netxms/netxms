@@ -315,10 +315,15 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_LIST_MAPPING_TABLES"),
 		_T("CMD_GET_NODE_SOFTWARE"),
 		_T("CMD_GET_WINPERF_OBJECTS"),
-		_T("CMD_GET_WIRELESS_STATIONS")
+		_T("CMD_GET_WIRELESS_STATIONS"),
+		_T("CMD_GET_SUMMARY_TABLES"),
+		_T("CMD_MODIFY_SUMMARY_TABLE"),
+		_T("CMD_DELETE_SUMMARY_TABLE"),
+		_T("CMD_GET_SUMMARY_TABLE_DETAILS"),
+		_T("CMD_QUERY_SUMMARY_TABLE")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_WIRELESS_STATIONS))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_QUERY_SUMMARY_TABLE))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

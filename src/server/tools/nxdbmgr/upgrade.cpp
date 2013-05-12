@@ -314,6 +314,15 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
  */
 static BOOL H_UpgradeFromV276(int currVersion, int newVersion)
 {
+	CHK_EXEC(CreateTable(_T("CREATE TABLE dci_summary_tables (")
+	                     _T("id integer not null,")
+	                     _T("menu_path varchar(255) not null,")
+	                     _T("title varchar(127) null,")
+                        _T("node_filter $SQL:TEXT null,")
+	                     _T("flags integer not null,")
+                        _T("columns $SQL:TEXT null,")
+	                     _T("PRIMARY KEY(id))")));
+
 	CHK_EXEC(CreateConfigParam(_T("DefaultMapBackgroundColor"), _T("0xffffff"), 1, 0));
 
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='277' WHERE var_name='SchemaVersion'")));

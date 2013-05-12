@@ -1318,6 +1318,21 @@ void ClientSession::processingThread()
 			case CMD_GET_WIRELESS_STATIONS:
 				getWirelessStations(pMsg);
 				break;
+         case CMD_GET_SUMMARY_TABLES:
+            getSummaryTables(pMsg->GetId());
+            break;
+         case CMD_GET_SUMMARY_TABLE_DETAILS:
+            getSummaryTableDetails(pMsg);
+            break;
+         case CMD_MODIFY_SUMMARY_TABLE:
+            modifySummaryTable(pMsg);
+            break;
+         case CMD_DELETE_SUMMARY_TABLE:
+            deleteSummaryTable(pMsg);
+            break;
+         case CMD_QUERY_SUMMARY_TABLE:
+            querySummaryTable(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -6373,11 +6388,9 @@ void ClientSession::copyUserVariable(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Change object's zone
-//
-
+/**
+ * Change object's zone
+ */
 void ClientSession::changeObjectZone(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -6538,11 +6551,9 @@ void ClientSession::getAgentConfig(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Update agent's configuration file
-//
-
+/**
+ * Update agent's configuration file
+ */
 void ClientSession::updateAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -6621,11 +6632,9 @@ void ClientSession::updateAgentConfig(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Execute action on client
-//
-
+/**
+ * Execute action on agent
+ */
 void ClientSession::executeAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -6697,11 +6706,9 @@ void ClientSession::executeAction(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send tool list to client
-//
-
+/**
+ * Send tool list to client
+ */
 void ClientSession::sendObjectTools(DWORD dwRqId)
 {
    CSCPMessage msg;
@@ -6978,11 +6985,9 @@ void ClientSession::deleteObjectTool(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Generate ID for new object tool
-//
-
+/**
+ * Generate ID for new object tool
+ */
 void ClientSession::generateObjectToolId(DWORD dwRqId)
 {
    CSCPMessage msg;
@@ -7005,11 +7010,9 @@ void ClientSession::generateObjectToolId(DWORD dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Execute table tool (either SNMP or agent table)
-//
-
+/**
+ * Execute table tool (either SNMP or agent table)
+ */
 void ClientSession::execTableTool(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -12272,6 +12275,194 @@ void ClientSession::getWirelessStations(CSCPMessage *request)
    else  // No object with given ID
    {
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Get list of configured DCI summary tables
+ */
+void ClientSession::getSummaryTables(DWORD rqId)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(rqId);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,menu_path,title,flags FROM dci_summary_tables"));
+   if (hResult != NULL)
+   {
+      TCHAR buffer[256];
+      int count = DBGetNumRows(hResult);
+      msg.SetVariable(VID_NUM_ELEMENTS, (DWORD)count);
+      DWORD varId = VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         msg.SetVariable(varId++, (DWORD)DBGetFieldLong(hResult, i, 0));
+         msg.SetVariable(varId++, DBGetField(hResult, i, 1, buffer, 256));
+         msg.SetVariable(varId++, DBGetField(hResult, i, 2, buffer, 256));
+         msg.SetVariable(varId++, (DWORD)DBGetFieldLong(hResult, i, 3));
+         varId += 6;
+      }
+      DBFreeResult(hResult);
+   }
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+   DBConnectionPoolReleaseConnection(hdb);
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Get details of DCI summary table
+ */
+void ClientSession::getSummaryTableDetails(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
+	{
+      LONG id = (LONG)request->GetVariableLong(VID_SUMMARY_TABLE_ID);
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT menu_path,title,node_filter,flags,columns FROM dci_summary_tables WHERE id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
+         {
+            if (DBGetNumRows(hResult) > 0)
+            {
+               TCHAR buffer[256];
+               msg.SetVariable(VID_SUMMARY_TABLE_ID, (DWORD)id);
+               msg.SetVariable(VID_MENU_PATH, DBGetField(hResult, 0, 0, buffer, 256));
+               msg.SetVariable(VID_TITLE, DBGetField(hResult, 0, 1, buffer, 256));
+               TCHAR *tmp = DBGetField(hResult, 0, 2, NULL, 0);
+               if (tmp != NULL)
+               {
+                  msg.SetVariable(VID_FILTER, tmp);
+                  free(tmp);
+               }
+               msg.SetVariable(VID_FLAGS, DBGetFieldULong(hResult, 0, 3));
+               tmp = DBGetField(hResult, 0, 4, NULL, 0);
+               if (tmp != NULL)
+               {
+                  msg.SetVariable(VID_COLUMNS, tmp);
+                  free(tmp);
+               }
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_INVALID_SUMMARY_TABLE_ID);
+            }
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Modify DCI summary table
+ */
+void ClientSession::modifySummaryTable(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
+	{
+		LONG id;
+		msg.SetVariable(VID_RCC, ModifySummaryTable(request, &id));
+		msg.SetVariable(VID_SUMMARY_TABLE_ID, (DWORD)id);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Delete DCI summary table
+ */
+void ClientSession::deleteSummaryTable(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
+	{
+		msg.SetVariable(VID_RCC, DeleteSummaryTable((LONG)request->GetVariableLong(VID_SUMMARY_TABLE_ID)));
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Query DCI summary table
+ */
+void ClientSession::querySummaryTable(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   DWORD rcc;
+   Table *result = QuerySummaryTable((LONG)request->GetVariableLong(VID_SUMMARY_TABLE_ID),
+                                      request->GetVariableLong(VID_OBJECT_ID), 
+                                      m_dwUserId, &rcc);
+   if (result != NULL)
+   {
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      result->fillMessage(msg, 0, -1);
+      delete result;
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, rcc);
    }
 
    // Send response

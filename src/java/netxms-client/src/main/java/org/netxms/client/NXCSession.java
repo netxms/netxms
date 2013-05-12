@@ -81,6 +81,8 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciPushData;
+import org.netxms.client.datacollection.DciSummaryTable;
+import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.PerfTabDci;
@@ -6632,5 +6634,95 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	public final int getDefaultDciPollingInterval()
 	{
 		return defaultDciPollingInterval;
+	}
+	
+	/**
+	 * Get list of all configured DCI summary tables
+	 * 
+	 * @return
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<DciSummaryTableDescriptor> listDciSummaryTables() throws IOException, NetXMSClientException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SUMMARY_TABLES);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
+		final List<DciSummaryTableDescriptor> list = new ArrayList<DciSummaryTableDescriptor>(count);
+		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			list.add(new DciSummaryTableDescriptor(response, varId));
+			varId += 10;
+		}
+		return list;
+	}
+
+	/**
+	 * Get DCI summary table configuration.
+	 * 
+	 * @param id DCI summary table ID.
+	 * @return
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public DciSummaryTable getDciSummaryTable(int id) throws IOException, NetXMSClientException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SUMMARY_TABLE_DETAILS);
+		msg.setVariableInt32(NXCPCodes.VID_SUMMARY_TABLE_ID, id);
+		sendMessage(msg);
+		return new DciSummaryTable(waitForRCC(msg.getMessageId()));
+	}
+
+	/**
+	 * Modify DCI summary table configuration. Will create new table object if id is 0.
+	 * 
+	 * @param table DCI summary table configuration
+	 * @return assigned summary table ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public int modifyDciSummaryTable(DciSummaryTable table) throws IOException, NetXMSClientException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_SUMMARY_TABLE);
+		table.fillMessage(msg);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsInteger(NXCPCodes.VID_SUMMARY_TABLE_ID);
+	}
+
+	/**
+	 * Delete DCI summary table.
+	 * 
+	 * @param id
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void deleteDciSummaryTable(int id) throws IOException, NetXMSClientException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_SUMMARY_TABLE);
+		msg.setVariableInt32(NXCPCodes.VID_SUMMARY_TABLE_ID, id);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Query DCI summary table.
+	 * 
+	 * @param tableId DCI summary table ID
+	 * @param baseObjectId base container object ID
+	 * @return table with last values data for all nodes under given base container
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public Table queryDciSummaryTable(int tableId, long baseObjectId) throws IOException, NetXMSClientException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_SUMMARY_TABLE);
+		msg.setVariableInt32(NXCPCodes.VID_SUMMARY_TABLE_ID, tableId);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)baseObjectId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return new Table(response);
 	}
 }

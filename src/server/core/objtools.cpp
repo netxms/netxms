@@ -523,11 +523,9 @@ DWORD DeleteObjectToolFromDB(DWORD dwToolId)
    return RCC_SUCCESS;
 }
 
-
-//
-// Update object tool from message
-//
-
+/**
+ * Update object tool from NXCP message
+ */
 DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
 {
    DB_RESULT hResult;

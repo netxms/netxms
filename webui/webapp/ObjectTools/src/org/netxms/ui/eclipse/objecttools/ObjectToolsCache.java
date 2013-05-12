@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +21,10 @@ package org.netxms.ui.eclipse.objecttools;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -130,18 +125,13 @@ public class ObjectToolsCache
 	 */
 	private static void onObjectToolChange(final long toolId)
 	{
-		Job job = new Job("Update object tools cache") {
+		new Thread() {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			public void run()
 			{
-				// TODO: replace full reload with sending tool data
-				//       in update message
 				reload();
-				return Status.OK_STATUS;
 			}
-		};
-		job.setUser(false);
-		job.schedule();
+		}.start();
 	}
 
 	/**

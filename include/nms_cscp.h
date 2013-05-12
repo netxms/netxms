@@ -464,6 +464,11 @@ typedef struct
 #define CMD_GET_NODE_SOFTWARE          0x0112
 #define CMD_GET_WINPERF_OBJECTS        0x0113
 #define CMD_GET_WIRELESS_STATIONS      0x0114
+#define CMD_GET_SUMMARY_TABLES         0x0115
+#define CMD_MODIFY_SUMMARY_TABLE       0x0116
+#define CMD_DELETE_SUMMARY_TABLE       0x0117
+#define CMD_GET_SUMMARY_TABLE_DETAILS  0x0118
+#define CMD_QUERY_SUMMARY_TABLE        0x0119
 
 /**
  * Variable identifiers
@@ -911,6 +916,10 @@ typedef struct
 #define VID_HEIGHT                  ((DWORD)441)
 #define VID_RADIO_COUNT             ((DWORD)442)
 #define VID_OBJECT_TOOLTIP_ONLY     ((DWORD)443)
+#define VID_SUMMARY_TABLE_ID        ((DWORD)444)
+#define VID_MENU_PATH               ((DWORD)445)
+#define VID_COLUMNS                 ((DWORD)446)
+#define VID_TITLE                   ((DWORD)447)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

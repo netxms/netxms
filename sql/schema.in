@@ -1579,3 +1579,19 @@ CREATE TABLE mapping_data
 	description SQL_TEXT4K null,
 	PRIMARY KEY(table_id,md_key)
 ) TABLE_TYPE;
+
+
+/*
+** DCI summary tables
+*/
+
+CREATE TABLE dci_summary_tables
+(
+	id integer not null,
+	menu_path varchar(255) not null,
+	title varchar(127) null,
+	node_filter SQL_TEXT null,
+	flags integer not null,
+	columns SQL_TEXT null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;

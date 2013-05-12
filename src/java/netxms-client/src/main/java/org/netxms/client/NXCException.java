@@ -130,7 +130,8 @@ public class NXCException extends NetXMSClientException
 		"Invalid alarm note ID",
 		"Encryption error",
 		"Invalid mapping table ID",
-		"No software package data"
+		"No software package data",
+		"Invalid DCI summary table ID"
 	};
 	private static final String[] extendedErrorTexts_en =
 	{
@@ -240,7 +241,8 @@ public class NXCException extends NetXMSClientException
       "ID del comentario de la alarma inválido",
       "Error de cifrado",
       "ID de tabla de asignación inválido",
-		"No software package data"	// TODO: translate
+		"No software package data",	// TODO: translate
+		"Invalid DCI summary table ID"
 	};
 	private static final String[] extendedErrorTexts_es =
 	{
