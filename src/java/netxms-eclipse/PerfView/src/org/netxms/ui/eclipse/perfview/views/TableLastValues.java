@@ -40,6 +40,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
@@ -61,8 +62,10 @@ public class TableLastValues extends ViewPart
 	private long nodeId;
 	private long dciId;
 	private SortableTableViewer viewer;
-	private Action actionRefresh;
 	private String nodeName;
+	private Action actionRefresh;
+	private Action actionExportToCsv;
+	private Action actionExportAllToCsv;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -119,6 +122,9 @@ public class TableLastValues extends ViewPart
 				refreshTable();
 			}
 		};
+
+		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
+		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
 
 	/**
@@ -139,6 +145,8 @@ public class TableLastValues extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionExportAllToCsv);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -150,6 +158,7 @@ public class TableLastValues extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionExportAllToCsv);
 		manager.add(actionRefresh);
 	}
 
@@ -183,6 +192,7 @@ public class TableLastValues extends ViewPart
 	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
+		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
