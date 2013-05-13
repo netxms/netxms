@@ -18,19 +18,15 @@
  */
 package org.netxms.ui.eclipse.datacollection.views.helpers;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.List;
-
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.objecttools.ObjectToolTableColumn;
+import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Comparator for table items
- *
  */
 public class TableItemComparator extends ViewerComparator
 {
@@ -54,7 +50,7 @@ public class TableItemComparator extends ViewerComparator
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
 		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID");
-		final int format = (column < formats.length) ? formats[column] : ObjectToolTableColumn.FORMAT_STRING;
+		final int format = (column < formats.length) ? formats[column] : DataCollectionItem.DT_STRING;
 		
 		final String value1 = ((List<String>)e1).get(column);
 		final String value2 = ((List<String>)e2).get(column);
@@ -62,53 +58,70 @@ public class TableItemComparator extends ViewerComparator
 		int result;
 		switch(format)
 		{
-			case ObjectToolTableColumn.FORMAT_STRING:
-			case ObjectToolTableColumn.FORMAT_MAC_ADDR:
-			case ObjectToolTableColumn.FORMAT_IFINDEX:
-				result = value1.compareToIgnoreCase(value2);
+			case DataCollectionItem.DT_INT:
+			case DataCollectionItem.DT_UINT:
+				result = safeParseInt(value1) - safeParseInt(value2);
 				break;
-			case ObjectToolTableColumn.FORMAT_INTEGER:
-				try
-				{
-					result = Integer.parseInt(value1) - Integer.parseInt(value2);
-				}
-				catch(NumberFormatException e)
-				{
-					result = 0;
-				}
+			case DataCollectionItem.DT_INT64:
+			case DataCollectionItem.DT_UINT64:
+				result = Long.signum(safeParseLong(value1) - safeParseLong(value2));
 				break;
-			case ObjectToolTableColumn.FORMAT_FLOAT:
-				try
-				{
-					result = (int)Math.signum(Double.parseDouble(value1) - Double.parseDouble(value2));
-				}
-				catch(NumberFormatException e)
-				{
-					result = 0;
-				}
-				break;
-			case ObjectToolTableColumn.FORMAT_IP_ADDR:
-				try
-				{
-					byte[] addr1 = InetAddress.getByName(value1).getAddress();
-					byte[] addr2 = InetAddress.getByName(value1).getAddress();
-
-					result = 0;
-					for(int i = 0; (i < addr1.length) && (result == 0); i++)
-					{
-						result = addr1[i] - addr2[i];
-					}
-				}
-				catch(UnknownHostException e)
-				{
-					result = 0;
-				}
+			case DataCollectionItem.DT_FLOAT:
+				result = (int)Math.signum(safeParseDouble(value1) - safeParseDouble(value2));
 				break;
 			default:
-				result = 0;
+				result = value1.compareToIgnoreCase(value2);
 				break;
 		}
 		
 		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+	}
+	
+	/**
+	 * @param s
+	 * @return
+	 */
+	private static int safeParseInt(String s)
+	{
+		try
+		{
+			return Integer.parseInt(s);
+		}
+		catch(NumberFormatException e)
+		{
+			return 0;
+		}
+	}
+
+	/**
+	 * @param s
+	 * @return
+	 */
+	private static long safeParseLong(String s)
+	{
+		try
+		{
+			return Long.parseLong(s);
+		}
+		catch(NumberFormatException e)
+		{
+			return 0;
+		}
+	}
+
+	/**
+	 * @param s
+	 * @return
+	 */
+	private static double safeParseDouble(String s)
+	{
+		try
+		{
+			return Double.parseDouble(s);
+		}
+		catch(NumberFormatException e)
+		{
+			return 0;
+		}
 	}
 }

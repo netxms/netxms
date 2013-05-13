@@ -68,24 +68,10 @@ public class TableItemComparator extends ViewerComparator
 				result = value1.compareToIgnoreCase(value2);
 				break;
 			case ObjectToolTableColumn.FORMAT_INTEGER:
-				try
-				{
-					result = Integer.parseInt(value1) - Integer.parseInt(value2);
-				}
-				catch(NumberFormatException e)
-				{
-					result = 0;
-				}
+				result = Long.signum(safeParseLong(value1) - safeParseLong(value2));
 				break;
 			case ObjectToolTableColumn.FORMAT_FLOAT:
-				try
-				{
-					result = (int)Math.signum(Double.parseDouble(value1) - Double.parseDouble(value2));
-				}
-				catch(NumberFormatException e)
-				{
-					result = 0;
-				}
+				result = (int)Math.signum(safeParseDouble(value1) - safeParseDouble(value2));
 				break;
 			case ObjectToolTableColumn.FORMAT_IP_ADDR:
 				try
@@ -110,5 +96,37 @@ public class TableItemComparator extends ViewerComparator
 		}
 		
 		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+	}
+
+	/**
+	 * @param s
+	 * @return
+	 */
+	private static long safeParseLong(String s)
+	{
+		try
+		{
+			return Long.parseLong(s);
+		}
+		catch(NumberFormatException e)
+		{
+			return 0;
+		}
+	}
+
+	/**
+	 * @param s
+	 * @return
+	 */
+	private static double safeParseDouble(String s)
+	{
+		try
+		{
+			return Double.parseDouble(s);
+		}
+		catch(NumberFormatException e)
+		{
+			return 0;
+		}
 	}
 }
