@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -49,10 +50,12 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.client.datacollection.DciSummaryTableColumn;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditDciSummaryTableColumnDlg;
+import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.SummaryTableColumnLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -73,28 +76,31 @@ public class SummaryTableColumns extends PropertyPage
 	private Button deleteButton;
 	private Button upButton;
 	private Button downButton;
-	
-	/* (non-Javadoc)
+	private Button importButton;
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 		table = (DciSummaryTable)getElement().getAdapter(DciSummaryTable.class);
-		
+
 		columns = new ArrayList<DciSummaryTableColumn>(table.getColumns().size());
 		for(DciSummaryTableColumn c : table.getColumns())
 			columns.add(new DciSummaryTableColumn(c));
-		
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		layout.numColumns = 2;
-      dialogArea.setLayout(layout);
-      
+		dialogArea.setLayout(layout);
+
 		new Label(dialogArea, SWT.NONE).setText("Columns");
 
 		viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -170,9 +176,30 @@ public class SummaryTableColumns extends PropertyPage
 		buttonsLayout.pack = false;
 		buttons.setLayout(buttonsLayout);
 
+		importButton = new Button(buttons, SWT.PUSH);
+		importButton.setText("Import");
+		RowData rd = new RowData();
+		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+		importButton.setLayoutData(rd);
+
+		importButton.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				importColumns();
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
+
 		addButton = new Button(buttons, SWT.PUSH);
 		addButton.setText(Messages.Thresholds_Add);
-		RowData rd = new RowData();
+		rd = new RowData();
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		addButton.setLayoutData(rd);
 		addButton.addSelectionListener(new SelectionListener() {
@@ -251,7 +278,7 @@ public class SummaryTableColumns extends PropertyPage
 			}
 		});
 
-      return dialogArea;
+		return dialogArea;
 	}
 
 	/**
@@ -276,7 +303,7 @@ public class SummaryTableColumns extends PropertyPage
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SummaryTableColumnLabelProvider());
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 
@@ -300,14 +327,16 @@ public class SummaryTableColumns extends PropertyPage
 					table.setId(id);
 				}
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
 				return "Cannot update DCI summary table configuration";
 			}
 
-			/* (non-Javadoc)
+			/*
+			 * (non-Javadoc)
+			 * 
 			 * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
 			 */
 			@Override
@@ -327,7 +356,9 @@ public class SummaryTableColumns extends PropertyPage
 		}.start();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
 	 */
 	@Override
@@ -338,7 +369,9 @@ public class SummaryTableColumns extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
 	 */
 	@Override
@@ -347,8 +380,10 @@ public class SummaryTableColumns extends PropertyPage
 		saveSettings();
 		applyChanges(true);
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.preference.PreferencePage#performCancel()
 	 */
 	@Override
@@ -450,6 +485,24 @@ public class SummaryTableColumns extends PropertyPage
 		EditDciSummaryTableColumnDlg dlg = new EditDciSummaryTableColumnDlg(getShell(), column);
 		if (dlg.open() == Window.OK)
 		{
+			columns.add(column);
+			viewer.setInput(columns.toArray());
+			viewer.setSelection(new StructuredSelection(column));
+		}
+	}
+
+	/**
+	 * Import Columns from node
+	 */
+	private void importColumns()
+	{
+		final SelectDciDialog dialog = new SelectDciDialog(getShell(), 0);
+		dialog.setAllowTemplateItems(true);
+		dialog.setEnableEmptySelection(false);
+		if (dialog.open() == Dialog.OK)
+		{
+			final DciValue selection = dialog.getSelection();
+			DciSummaryTableColumn column = new DciSummaryTableColumn(selection.getDescription(), selection.getName());
 			columns.add(column);
 			viewer.setInput(columns.toArray());
 			viewer.setSelection(new StructuredSelection(column));
