@@ -128,7 +128,9 @@ public class ObjectTooltip extends Figure
 				sb.append(rif.getIndex());
 				sb.append(" (");
 				sb.append(rif.getMacAddress().toString());
-				sb.append(") TX power: ");
+				sb.append(")\n\tChannel: ");
+				sb.append(rif.getChannel());
+				sb.append("\n\tTX power: ");
 				sb.append(rif.getPowerMW());
 				sb.append(" mW");
 			}
