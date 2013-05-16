@@ -83,13 +83,34 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 					ret_uint64(pValue, availableBlocks * blockSize);
 					break;
 				case DISK_USED_PERC:
-					ret_double(pValue, (usedBlocks * 100) / totalBlocks);
+               if (totalBlocks > 0)
+               {
+                  ret_double(pValue, (usedBlocks * 100) / totalBlocks);
+               }
+               else
+               {
+                  ret_double(pValue, 0.0);
+               }
 					break;
 				case DISK_AVAIL_PERC:
-					ret_double(pValue, (availableBlocks * 100) / totalBlocks);
+               if (totalBlocks > 0)
+               {
+                  ret_double(pValue, (availableBlocks * 100) / totalBlocks);
+               }
+               else
+               {
+                  ret_double(pValue, 0.0);
+               }
 					break;
 				case DISK_FREE_PERC:
-					ret_double(pValue, (freeBlocks * 100) / totalBlocks);
+               if (totalBlocks > 0)
+               {
+                  ret_double(pValue, (freeBlocks * 100) / totalBlocks);
+               }
+               else
+               {
+                  ret_double(pValue, 0.0);
+               }
 					break;
 				default:
 					nRet = SYSINFO_RC_ERROR;
