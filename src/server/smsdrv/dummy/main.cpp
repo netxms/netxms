@@ -35,34 +35,29 @@
 extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 {
 	DbgPrintf(1, _T("Dummy SMS Driver loaded, set debug=6 or higher to see actual messages"));
-	return true;
+	return TRUE;
 }
 
 extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	DbgPrintf(6, _T("DummySMS: phone=\"%s\", text=\"%s\""), pszPhoneNumber, pszText);
+   return TRUE;
 }
-
 
 extern "C" void EXPORT SMSDriverUnload()
 {
 }
 
-
-//
-// DLL Entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL Entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
-	{
 		DisableThreadLibraryCalls(hInstance);
-	}
 	return TRUE;
 }
 
 #endif
-
