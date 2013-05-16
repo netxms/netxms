@@ -175,7 +175,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
                table->set(3, "vxfs");
                break;
             default:
-               table->set(3, curr->vmt_gfstype);
+               table->set(3, (DWORD)curr->vmt_gfstype);
                break;
          }
 
