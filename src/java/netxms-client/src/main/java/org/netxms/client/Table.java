@@ -23,12 +23,14 @@ import java.util.List;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.datacollection.DataCollectionObject;
 
 /**
  * Generic class for holding data in tabular format. Table has named columns. All data stored as strings.
  */
 public class Table
 {
+	private int source;
 	private String title;
 	private String instanceColumn;
 	private List<String> columnNames;
@@ -42,6 +44,7 @@ public class Table
 	{
 		title = "untitled";
 		instanceColumn = null;
+		source = DataCollectionObject.AGENT;
 		columnNames = new ArrayList<String>(0);
 		columnFormats = new ArrayList<Integer>(0);
 		data = new ArrayList<List<String>>(0);
@@ -56,6 +59,7 @@ public class Table
 	{
 		title = msg.getVariableAsString(NXCPCodes.VID_TABLE_TITLE);
 		instanceColumn = msg.getVariableAsString(NXCPCodes.VID_INSTANCE_COLUMN);
+		source = msg.getVariableAsInteger(NXCPCodes.VID_DCI_SOURCE_TYPE);
 		
 		final int columnCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_COLS);
 		columnNames = new ArrayList<String>(columnCount);
@@ -329,5 +333,21 @@ public class Table
 	{
 		if ((row >= 0) && (row < data.size()) && (col >= 0) && (col < columnNames.size()))
 			data.get(row).set(col, value);
+	}
+
+	/**
+	 * @return the source
+	 */
+	public int getSource()
+	{
+		return source;
+	}
+
+	/**
+	 * @param source the source to set
+	 */
+	public void setSource(int source)
+	{
+		this.source = source;
 	}
 }

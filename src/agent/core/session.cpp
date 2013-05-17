@@ -163,11 +163,9 @@ void CommSession::disconnect()
       shutdown(m_hProxySocket, SHUT_RDWR);
 }
 
-
-//
-// Reading thread
-//
-
+/**
+ * Reading thread
+ */
 void CommSession::readThread()
 {
    CSCP_MESSAGE *pRawMsg;
@@ -331,11 +329,9 @@ void CommSession::readThread()
    DebugPrintf(m_dwIndex, 5, _T("Session with %s closed"), IpToStr(m_dwHostAddr, szBuffer));
 }
 
-
-//
-// Send prepared raw message over the network and destroy it
-//
-
+/**
+ * Send prepared raw message over the network and destroy it
+ */
 BOOL CommSession::sendRawMessage(CSCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx)
 {
    BOOL bResult = TRUE;

@@ -22,11 +22,9 @@
 
 #include "libnetxms.h"
 
-
-//
-// Table constructor
-//
-
+/**
+ * Create empty table
+ */
 Table::Table()
 {
    m_nNumRows = 0;
@@ -35,6 +33,7 @@ Table::Table()
    m_ppColNames = NULL;
 	m_colFormats = NULL;
 	m_title = NULL;
+   m_source = DS_INTERNAL;
 }
 
 /**
@@ -84,6 +83,7 @@ void Table::createFromMessage(CSCPMessage *msg)
 	m_nNumRows = msg->GetVariableLong(VID_TABLE_NUM_ROWS);
 	m_nNumCols = msg->GetVariableLong(VID_TABLE_NUM_COLS);
 	m_title = msg->GetVariableStr(VID_TABLE_TITLE);
+   m_source = (int)msg->GetVariableShort(VID_DCI_SOURCE_TYPE);
 
 	m_ppColNames = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumCols);
 	m_colFormats = (LONG *)malloc(sizeof(LONG) * m_nNumCols);
@@ -116,6 +116,7 @@ int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
 	DWORD id;
 
 	msg.SetVariable(VID_TABLE_TITLE, CHECK_NULL_EX(m_title));
+   msg.SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_source);
 
 	if (offset == 0)
 	{

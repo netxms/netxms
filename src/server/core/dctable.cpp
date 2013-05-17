@@ -262,6 +262,7 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
 	delete m_lastValue;
 	m_lastValue = (Table *)value;
 	m_lastValue->setTitle(m_szDescription);
+   m_lastValue->setSource(m_source);
 
 	// Copy required fields into local variables
 	DWORD tableId = m_dwId;
