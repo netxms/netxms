@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.charts.api;
 
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -31,12 +32,18 @@ public class ChartDciConfig
 {
 	public static final String UNSET_COLOR = "UNSET"; //$NON-NLS-1$
 	
+	public static final int ITEM = DataCollectionObject.DCO_TYPE_ITEM;
+	public static final int TABLE = DataCollectionObject.DCO_TYPE_TABLE;
+	
 	@Attribute
 	public long nodeId;
 	
 	@Attribute
 	public long dciId;
 	
+	@Element(required=false)
+	public int type;
+
 	@Element(required=false)
 	public String color;
 
@@ -52,6 +59,12 @@ public class ChartDciConfig
 	@Element(required=false)
 	public boolean showThresholds;
 
+	@Element(required=false)
+	public String instance;
+	
+	@Element(required=false)
+	public String column;
+	
 	/**
 	 * Default constructor
 	 */
@@ -59,10 +72,13 @@ public class ChartDciConfig
 	{
 		nodeId = 0;
 		dciId = 0;
+		type = ITEM;
 		color = UNSET_COLOR;
 		name = ""; //$NON-NLS-1$
 		lineWidth = 2;
 		area = false;
+		instance = "";
+		column = "";
 	}
 
 	/**
@@ -74,10 +90,13 @@ public class ChartDciConfig
 	{
 		this.nodeId = src.nodeId;
 		this.dciId = src.dciId;
+		this.type = src.type;
 		this.color = src.color;
 		this.name = src.name;
 		this.lineWidth = src.lineWidth;
 		this.area = src.area;
+		this.instance = src.instance;
+		this.column = src.column;
 	}
 
 	/**
@@ -89,10 +108,13 @@ public class ChartDciConfig
 	{
 		nodeId = dci.getNodeId();
 		dciId = dci.getId();
+		type = dci.getDcObjectType();
 		name = dci.getDescription();
 		color = UNSET_COLOR;
 		lineWidth = 2;
 		area = false;
+		instance = "";
+		column = "";
 	}
 
 	/**

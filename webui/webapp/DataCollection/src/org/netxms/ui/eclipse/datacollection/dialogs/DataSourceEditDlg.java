@@ -52,6 +52,8 @@ public class DataSourceEditDlg extends Dialog
 	private ColorSelector colorSelector;
 	private Button checkAreaChart;
 	private Button checkShowThresholds;
+	private LabeledText instance;
+	private LabeledText dataColumn;
 	
 	/**
 	 * @param parentShell
@@ -84,15 +86,18 @@ public class DataSourceEditDlg extends Dialog
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
 		dciSelector = new DciSelector(dialogArea, SWT.NONE, false);
 		dciSelector.setLabel(Messages.DataSourceEditDlg_DCI);
 		dciSelector.setDciId(dci.nodeId, dci.dciId);
+		dciSelector.setDcObjectType(dci.type);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 400;
+		gd.horizontalSpan = 2;
 		dciSelector.setLayoutData(gd);
 		
 		name = new LabeledText(dialogArea, SWT.NONE);
@@ -101,13 +106,45 @@ public class DataSourceEditDlg extends Dialog
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
 		name.setLayoutData(gd);
+		
+		if (dci.type == ChartDciConfig.TABLE)
+		{
+			Group tableGroup = new Group(dialogArea, SWT.NONE);
+			tableGroup.setText("Table Cell");
+			gd = new GridData();
+			gd.horizontalAlignment = SWT.FILL;
+			gd.grabExcessHorizontalSpace = true;
+			gd.horizontalSpan = 2;
+			tableGroup.setLayoutData(gd);
+			
+			layout = new GridLayout();
+			tableGroup.setLayout(layout);
+			
+			dataColumn = new LabeledText(tableGroup, SWT.NONE);
+			dataColumn.setLabel("Data column");
+			dataColumn.setText(dci.column);
+			gd = new GridData();
+			gd.horizontalAlignment = SWT.FILL;
+			gd.grabExcessHorizontalSpace = true;
+			dataColumn.setLayoutData(gd);
+			
+			instance = new LabeledText(tableGroup, SWT.NONE);
+			instance.setLabel("Instance");
+			instance.setText(dci.instance);
+			gd = new GridData();
+			gd.horizontalAlignment = SWT.FILL;
+			gd.grabExcessHorizontalSpace = true;
+			instance.setLayoutData(gd);
+		}
 		
 		Group colorGroup = new Group(dialogArea, SWT.NONE);
 		colorGroup.setText(Messages.DataSourceEditDlg_Color);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.verticalAlignment = SWT.FILL;
 		colorGroup.setLayoutData(gd);
 		
 		layout = new GridLayout();
@@ -168,6 +205,7 @@ public class DataSourceEditDlg extends Dialog
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.verticalAlignment = SWT.FILL;
 		optionsGroup.setLayoutData(gd);
 		
 		layout = new GridLayout();
@@ -203,6 +241,11 @@ public class DataSourceEditDlg extends Dialog
 		}
 		dci.area = checkAreaChart.getSelection();
 		dci.showThresholds = checkShowThresholds.getSelection();
+		if (dci.type == ChartDciConfig.TABLE)
+		{
+			dci.column = dataColumn.getText().trim();
+			dci.instance = instance.getText();
+		}
 		super.okPressed();
 	}
 }

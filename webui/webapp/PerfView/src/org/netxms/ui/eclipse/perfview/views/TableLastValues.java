@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.perfview.views;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -27,6 +29,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -35,6 +38,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -42,12 +46,15 @@ import org.netxms.client.Table;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
+import org.netxms.ui.eclipse.perfview.views.helpers.CellSelectionManager;
 import org.netxms.ui.eclipse.perfview.views.helpers.TableContentProvider;
 import org.netxms.ui.eclipse.perfview.views.helpers.TableItemComparator;
 import org.netxms.ui.eclipse.perfview.views.helpers.TableLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -61,11 +68,16 @@ public class TableLastValues extends ViewPart
 	private NXCSession session;
 	private long nodeId;
 	private long dciId;
+	private long uniqueId = 1;
+	private Table currentData = null;
 	private SortableTableViewer viewer;
+	private CellSelectionManager cellSelectionManager;
 	private String nodeName;
 	private Action actionRefresh;
-	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
+	private Action actionShowLineChart;
+	private Action actionShowBarChart;
+	private Action actionShowPieChart;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -99,9 +111,10 @@ public class TableLastValues extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		viewer = new SortableTableViewer(parent, SWT.FULL_SELECTION);
+		viewer = new SortableTableViewer(parent, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new TableContentProvider());
 		viewer.setLabelProvider(new TableLabelProvider());
+		cellSelectionManager = new CellSelectionManager(viewer);
 
 		createActions();
 		contributeToActionBars();
@@ -124,8 +137,37 @@ public class TableLastValues extends ViewPart
 				refreshTable();
 			}
 		};
+		
+		actionShowLineChart = new Action("&Line chart", Activator.getImageDescriptor("icons/chart_line.png")) {
+			private static final long serialVersionUID = 1L;
 
-		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
+			@Override
+			public void run()
+			{
+				showLineChart();
+			}
+		};
+
+		actionShowBarChart = new Action("&Bar chart", Activator.getImageDescriptor("icons/chart_bar.png")) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void run()
+			{
+				showDataComparisonChart(DataComparisonChart.BAR_CHART);
+			}
+		};
+
+		actionShowPieChart = new Action("&Pie chart", Activator.getImageDescriptor("icons/chart_pie.png")) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void run()
+			{
+				showDataComparisonChart(DataComparisonChart.PIE_CHART);
+			}
+		};
+
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
 
@@ -196,7 +238,9 @@ public class TableLastValues extends ViewPart
 	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(actionExportToCsv);
+		manager.add(actionShowLineChart);
+		manager.add(actionShowBarChart);
+		manager.add(actionShowPieChart);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
@@ -265,5 +309,99 @@ public class TableLastValues extends ViewPart
 			viewer.setComparator(new TableItemComparator(table.getColumnFormats()));
 		}
 		viewer.setInput(table);
+		currentData = table;
+	}
+	
+	/**
+	 * Show line chart
+	 */
+	private void showLineChart()
+	{
+		if (currentData == null)
+			return;
+		
+		ViewerCell[] cells = cellSelectionManager.getSelectedCells();
+		if (cells.length == 0)
+			return;
+		
+		int instanceColumnIndex = currentData.getColumnIndex(currentData.getInstanceColumn());
+		String id = Long.toString(uniqueId++);
+		for(int i = 0; i < cells.length; i++)
+		{
+			String columnName = currentData.getColumnName(cells[i].getColumnIndex());
+			String instance = cells[i].getViewerRow().getText(instanceColumnIndex);
+			int dataType = currentData.getColumnFormat(cells[i].getColumnIndex());
+			int source = currentData.getSource();
+			
+			id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" + 
+					Integer.toString(source) + "@" + Integer.toString(dataType) + "@" + 
+					safeEncode(currentData.getTitle()) + "@" + safeEncode(columnName + ": " + instance) + 
+					"@" + safeEncode(instance) + "@" + safeEncode(columnName);
+		}
+		
+		try
+		{
+			getSite().getPage().showView(HistoricalGraphView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+		}
+		catch(Exception e)
+		{
+			MessageDialogHelper.openError(getSite().getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
+		}
+	}
+	
+	/**
+	 * Show line chart
+	 */
+	private void showDataComparisonChart(int chartType)
+	{
+		if (currentData == null)
+			return;
+		
+		ViewerCell[] cells = cellSelectionManager.getSelectedCells();
+		if (cells.length == 0)
+			return;
+		
+		int instanceColumnIndex = currentData.getColumnIndex(currentData.getInstanceColumn());
+		String id = Long.toString(uniqueId++) + "&" + Integer.toString(chartType);
+		for(int i = 0; i < cells.length; i++)
+		{
+			String columnName = currentData.getColumnName(cells[i].getColumnIndex());
+			String instance = cells[i].getViewerRow().getText(instanceColumnIndex);
+			int dataType = currentData.getColumnFormat(cells[i].getColumnIndex());
+			int source = currentData.getSource();
+			
+			id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" + 
+					Integer.toString(source) + "@" + Integer.toString(dataType) + "@" + 
+					safeEncode(currentData.getTitle()) + "@" + safeEncode(columnName + ": " + instance) + 
+					"@" + safeEncode(instance) + "@" + safeEncode(columnName);
+		}
+		
+		try
+		{
+			getSite().getPage().showView(DataComparisonView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+		}
+		catch(Exception e)
+		{
+			MessageDialogHelper.openError(getSite().getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
+		}
+	}
+	
+	/**
+	 * @param text
+	 * @return
+	 */
+	private static String safeEncode(String text)
+	{
+		if (text == null)
+			return "";
+		
+		try
+		{
+			return URLEncoder.encode(text, "UTF-8");
+		}
+		catch(UnsupportedEncodingException e)
+		{
+			return "none";
+		}
 	}
 }
