@@ -19,10 +19,12 @@
 package org.netxms.ui.eclipse.widgets;
 
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.ViewerRow;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.Widget;
 import org.netxms.ui.eclipse.widgets.helpers.TableSortingListener;
 
 /**
@@ -133,4 +135,15 @@ public class SortableTableViewer extends TableViewer
 			columns[i].removeSelectionListener(sortingListener);
 		getTable().setSortColumn(null);
 	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.TableViewer#getViewerRowFromItem(org.eclipse.swt.widgets.Widget)
+	 */
+	@Override
+	public ViewerRow getViewerRowFromItem(Widget item)
+	{
+		return super.getViewerRowFromItem(item);
+	}
+	
+	
 }

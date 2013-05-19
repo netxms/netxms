@@ -474,12 +474,14 @@ void DCTable::updateFromMessage(CSCPMessage *pMsg)
  */
 void DCTable::fillLastValueMessage(CSCPMessage *msg)
 {
+   lock();
 	if (m_lastValue != NULL)
 	{
 		m_lastValue->fillMessage(*msg, 0, -1);
 		if (m_instanceColumn[0] != 0)
 			msg->SetVariable(VID_INSTANCE_COLUMN, m_instanceColumn);
 	}
+   unlock();
 }
 
 /**
@@ -512,4 +514,37 @@ LONG DCTable::getInstanceColumnId()
 	if (m_instanceColumn[0] != 0)
 		return columnIdFromName(m_instanceColumn);
 	return 0;	/* TODO: try to auto-detect instance column */
+}
+
+/**
+ * Get data type of given column
+ */
+int DCTable::getColumnDataType(const TCHAR *name)
+{
+   int dt = DCI_DT_STRING;
+   bool found = false;
+   
+   lock();
+
+   // look in column definition first
+	for(int i = 0; i < m_columns->size(); i++)
+	{
+		DCTableColumn *column = m_columns->get(i);
+      if (!_tcsicmp(column->getName(), name))
+      {
+         dt = column->getDataType();
+         break;
+      }
+   }
+
+   // use last values if not found in definitions
+   if (!found && (m_lastValue != NULL))
+   {
+      int index = m_lastValue->getColumnIndex(name);
+      if (index != -1)
+         dt = m_lastValue->getColumnFormat(index);
+   }
+
+   unlock();
+   return dt;
 }

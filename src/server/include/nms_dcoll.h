@@ -400,11 +400,9 @@ public:
 	SNMP_ObjectId *getSnmpOid() { return m_snmpOid; }
 };
 
-
-//
-// Table column ID hash entry
-//
-
+/**
+ * Table column ID hash entry
+ */
 struct TC_ID_MAP_ENTRY
 {
 	LONG id;
@@ -452,6 +450,7 @@ public:
    void fillLastValueSummaryMessage(CSCPMessage *pMsg, DWORD dwId);
 
 	LONG getInstanceColumnId();
+   int getColumnDataType(const TCHAR *name);
 
 	static LONG columnIdFromName(const TCHAR *name);
 };

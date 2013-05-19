@@ -148,7 +148,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 			for(int i = 1; i < fields.length; i++)
 			{
 				String[] subfields = fields[i].split("\\@");
-				if (subfields.length == 6)
+				if (subfields.length == 6)	// item
 				{
 					try
 					{
@@ -156,6 +156,28 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 						dci.nodeId = Long.parseLong(subfields[0], 10);
 						dci.dciId = Long.parseLong(subfields[1], 10);
 						dci.name = URLDecoder.decode(subfields[5], "UTF-8");
+						items.add(dci);
+					}
+					catch(NumberFormatException e)
+					{
+						e.printStackTrace();
+					}
+					catch(UnsupportedEncodingException e)
+					{
+						e.printStackTrace();
+					}
+				}
+				else if (subfields.length == 8)	// table
+				{
+					try
+					{
+						ChartDciConfig dci = new ChartDciConfig();
+						dci.type = ChartDciConfig.TABLE;
+						dci.nodeId = Long.parseLong(subfields[0], 10);
+						dci.dciId = Long.parseLong(subfields[1], 10);
+						dci.name = URLDecoder.decode(subfields[5], "UTF-8");
+						dci.instance = URLDecoder.decode(subfields[6], "UTF-8");
+						dci.column = URLDecoder.decode(subfields[7], "UTF-8");
 						items.add(dci);
 					}
 					catch(NumberFormatException e)
@@ -367,8 +389,16 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 				for(int i = 0; i < dciList.length; i++)
 				{
 					currentItem = dciList[i];
-					data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, config.getTimeFrom(), config.getTimeTo(), 0);
-					thresholds[i] = session.getThresholds(currentItem.nodeId, currentItem.dciId);
+					if (currentItem.type == ChartDciConfig.ITEM)
+					{
+						data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, config.getTimeFrom(), config.getTimeTo(), 0);
+						thresholds[i] = session.getThresholds(currentItem.nodeId, currentItem.dciId);
+					}
+					else
+					{
+						data[i] = session.getCollectedTableData(currentItem.nodeId, currentItem.dciId, currentItem.instance, currentItem.column, config.getTimeFrom(), config.getTimeTo(), 0);
+						thresholds[i] = null;
+					}
 					monitor.worked(1);
 				}
 				

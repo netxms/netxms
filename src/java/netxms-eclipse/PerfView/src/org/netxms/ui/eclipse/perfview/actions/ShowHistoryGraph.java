@@ -103,11 +103,11 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
 			}
 			catch(IllegalArgumentException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
 			}
 		}
 	}

@@ -3469,7 +3469,7 @@ static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, DWORD nodeId, DWORD maxRow
 			DbgPrintf(1, _T(">>> INTERNAL ERROR: unsupported database in PrepareIDataSelect"));
 			return NULL;	// Unsupported database
 	}
-	return NULL;
+	return DBPrepare(hdb, query);
 }
 
 /**
@@ -3534,15 +3534,16 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 
 	if (hStmt != NULL)
 	{
+		TCHAR dataColumn[MAX_COLUMN_NAME] = _T("");
+
 		int pos = 1;
 		DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, dci->getId());
 		if (dciType == DCO_TYPE_TABLE)
 		{
+			request->GetVariableStr(VID_DATA_COLUMN, dataColumn, MAX_COLUMN_NAME);
+
 			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, ((DCTable *)dci)->getInstanceColumnId());
 			DBBind(hStmt, pos++, DB_SQLTYPE_VARCHAR, request->GetVariableStr(VID_INSTANCE), DB_BIND_DYNAMIC);
-			
-			TCHAR dataColumn[MAX_COLUMN_NAME];
-			request->GetVariableStr(VID_DATA_COLUMN, dataColumn, MAX_COLUMN_NAME);
 			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, DCTable::columnIdFromName(dataColumn));
 		}
 		if (timeFrom != 0)
@@ -3573,7 +3574,7 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 					dataType = ((DCItem *)dci)->getDataType();
 					break;
 				case DCO_TYPE_TABLE:
-					dataType = DCI_DT_STRING;
+					dataType = ((DCTable *)dci)->getColumnDataType(dataColumn);
 					break;
 				default:
 					dataType = DCI_DT_STRING;
@@ -7740,11 +7741,9 @@ typedef struct
    ClientSession *pSession;
 } WALKER_ENUM_CALLBACK_ARGS;
 
-
-//
-// SNMP walker enumeration callback
-//
-
+/**
+ * SNMP walker enumeration callback
+ */
 static DWORD WalkerCallback(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    CSCPMessage *pMsg = ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->pMsg;

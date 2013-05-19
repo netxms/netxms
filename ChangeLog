@@ -4,6 +4,8 @@
 
 - Configurable DCI summary tables
 - Default background color for new network maps made configurable
+- Management console:
+	- Charts can be created from table data
 
 
 *

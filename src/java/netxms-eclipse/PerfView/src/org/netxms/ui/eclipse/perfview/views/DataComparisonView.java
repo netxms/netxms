@@ -44,6 +44,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
@@ -151,6 +152,28 @@ public class DataComparisonView extends ViewPart
 								Integer.parseInt(subfields[3], 10), // data type
 								URLDecoder.decode(subfields[4], "UTF-8"), // name
 								URLDecoder.decode(subfields[5], "UTF-8"))); // description
+					}
+					catch(NumberFormatException e)
+					{
+						e.printStackTrace();
+					}
+					catch(UnsupportedEncodingException e)
+					{
+						e.printStackTrace();
+					}
+				}
+				else if (subfields.length == 8)
+				{
+					try
+					{
+						items.add(new GraphItem(Long.parseLong(subfields[0], 10), // Node ID 
+								Long.parseLong(subfields[1], 10), // DCI ID
+								Integer.parseInt(subfields[2], 10), // source
+								Integer.parseInt(subfields[3], 10), // data type
+								URLDecoder.decode(subfields[4], "UTF-8"), // name
+								URLDecoder.decode(subfields[5], "UTF-8"),
+								URLDecoder.decode(subfields[6], "UTF-8"),
+								URLDecoder.decode(subfields[7], "UTF-8"))); // description
 					}
 					catch(NumberFormatException e)
 					{
@@ -619,7 +642,9 @@ public class DataComparisonView extends ViewPart
 				for(int i = 0; i < items.size(); i++)
 				{
 					GraphItem item = items.get(i);
-					DciData data = session.getCollectedData(item.getNodeId(), item.getDciId(), null, null, 1);
+					DciData data = (item.getType() == DataCollectionObject.DCO_TYPE_ITEM) ? 
+							session.getCollectedData(item.getNodeId(), item.getDciId(), null, null, 1) :
+							session.getCollectedTableData(item.getNodeId(), item.getDciId(), item.getInstance(), item.getDataColumn(), null, null, 1);
 					DciDataRow value = data.getLastValue();
 					values[i] = (value != null) ? value.getValueAsDouble() : 0.0;
 				}

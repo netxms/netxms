@@ -1863,6 +1863,8 @@ src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/actions/Show
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/dialogs/HistoricalDataSelectionDialog.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/HistoricalGraphView.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/TableLastValues.java -text
+src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/CellSelectionHighlighter.java -text
+src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/CellSelectionManager.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/HistoricalDataLabelProvider.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/TableContentProvider.java -text
 src/java/netxms-eclipse/PerfView/src/org/netxms/ui/eclipse/perfview/views/helpers/TableItemComparator.java -text

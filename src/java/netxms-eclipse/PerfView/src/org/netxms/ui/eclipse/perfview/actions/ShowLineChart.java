@@ -68,7 +68,7 @@ public class ShowLineChart implements DciOpenHandler
 		}
 		catch(Exception e)
 		{
-			MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+			MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
 		}
 		return true;
 	}
