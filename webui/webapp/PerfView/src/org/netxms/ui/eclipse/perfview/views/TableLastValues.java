@@ -30,6 +30,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ViewerCell;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -112,6 +113,7 @@ public class TableLastValues extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		viewer = new SortableTableViewer(parent, SWT.FULL_SELECTION | SWT.MULTI);
+		viewer.getTable().setData(RWT.MARKUP_ENABLED, Boolean.TRUE);
 		viewer.setContentProvider(new TableContentProvider());
 		viewer.setLabelProvider(new TableLabelProvider());
 		cellSelectionManager = new CellSelectionManager(viewer);

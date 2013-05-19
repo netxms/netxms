@@ -228,8 +228,13 @@ public class CellSelectionManager
 	void setFocusCell(ViewerCell focusCell, boolean clearSelection)
 	{
 		if (clearSelection)
+		{
+			for(ViewerCell cell : selectedCells)
+				cellHighlighter.unmarkCell(cell);
 			selectedCells.clear();
+		}
 		selectedCells.add(focusCell);
+		cellHighlighter.markCell(focusCell);
 		
 		ViewerCell oldCell = this.focusCell;
 
@@ -250,7 +255,7 @@ public class CellSelectionManager
 			focusCell.scrollIntoView();
 		}
 
-		this.cellHighlighter.focusCellChanged(focusCell, oldCell);
+		cellHighlighter.focusCellChanged(focusCell, oldCell);
 
 		viewer.getControl().getAccessible().setFocus(ACC.CHILDID_SELF);
 	}
