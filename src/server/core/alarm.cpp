@@ -25,7 +25,7 @@
 /**
  * Global instance of alarm manager
  */
-AlarmManager g_alarmMgr;
+AlarmManager NXCORE_EXPORTABLE g_alarmMgr;
 
 /**
  * Fill NXCP message with alarm data
@@ -717,11 +717,10 @@ NetObj *AlarmManager::getAlarmSourceObject(DWORD dwAlarmId)
  */
 int AlarmManager::getMostCriticalStatusForObject(DWORD dwObjectId)
 {
-   DWORD i;
    int iStatus = STATUS_UNKNOWN;
 
    lock();
-   for(i = 0; i < m_dwNumAlarms; i++)
+   for(DWORD i = 0; i < m_dwNumAlarms; i++)
    {
       if ((m_pAlarmList[i].dwSourceObject == dwObjectId) &&
 			 ((m_pAlarmList[i].nState & ALARM_STATE_MASK) < ALARM_STATE_RESOLVED) &&
@@ -822,11 +821,9 @@ static bool IsValidNoteId(DWORD alarmId, DWORD noteId)
 	return isValid;
 }
 
-
-//
-// Update alarm's note
-//
-
+/**
+ * Update alarm's note
+ */
 DWORD AlarmManager::updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *text, DWORD userId)
 {
    DWORD rcc = RCC_INVALID_ALARM_ID;
@@ -895,11 +892,9 @@ DWORD AlarmManager::updateAlarmNote(DWORD alarmId, DWORD noteId, const TCHAR *te
    return rcc;
 }
 
-
-//
-// Get alarm's notes
-//
-
+/**
+ * Get alarm's notes
+ */
 DWORD AlarmManager::getAlarmNotes(DWORD alarmId, CSCPMessage *msg)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -935,4 +930,30 @@ DWORD AlarmManager::getAlarmNotes(DWORD alarmId, CSCPMessage *msg)
 
 	DBConnectionPoolReleaseConnection(hdb);
 	return rcc;
+}
+
+/**
+ * Get alarms for given object. If objectId set to 0, all alarms will be returned.
+ * This method returns copies of alarm objects, so changing them will not
+ * affect alarm states. Returned array must be destroyed by the caller.
+ *
+ * @param objectId object ID or 0 to get all alarms
+ * @return array of active alarms for given object
+ */
+ObjectArray<NXC_ALARM> *AlarmManager::getAlarms(DWORD objectId)
+{
+   ObjectArray<NXC_ALARM> *result = new ObjectArray<NXC_ALARM>(16, 16, true);
+
+   lock();
+   for(DWORD i = 0; i < m_dwNumAlarms; i++)
+   {
+      if ((objectId == 0) || (m_pAlarmList[i].dwSourceObject == objectId))
+      {
+         NXC_ALARM *a = new NXC_ALARM;
+         memcpy(a, &m_pAlarmList[i], sizeof(NXC_ALARM));
+         result->add(a);
+      }
+   }
+   unlock();
+   return result;
 }

@@ -26,7 +26,7 @@
 /**
  * Alarm manager class
  */
-class AlarmManager
+class NXCORE_EXPORTABLE AlarmManager
 {
 private:
    DWORD m_dwNumAlarms;
@@ -69,21 +69,19 @@ public:
 
    NetObj *getAlarmSourceObject(DWORD dwAlarmId);
    int getMostCriticalStatusForObject(DWORD dwObjectId);
+
+   ObjectArray<NXC_ALARM> *getAlarms(DWORD objectId);
 };
 
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm);
 void DeleteAlarmNotes(DB_HANDLE hdb, DWORD alarmId);
 
-
-//
-// Global instance of alarm manager
-//
-
-extern AlarmManager g_alarmMgr;
+/**
+ * Global instance of alarm manager
+ */
+extern AlarmManager NXCORE_EXPORTABLE g_alarmMgr;
 
 #endif
