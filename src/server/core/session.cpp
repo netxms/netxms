@@ -10985,8 +10985,8 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	TCHAR name[MAX_DB_STRING] = _T("");
-	TCHAR category[MAX_DB_STRING] = _T("");
+   TCHAR name[MAX_OBJECT_NAME] = _T("");
+	TCHAR category[MAX_OBJECT_NAME] = _T("");
 	TCHAR mimetype[MAX_DB_STRING] = _T("");
 	TCHAR absFileName[MAX_PATH] = _T("");
 
@@ -11003,8 +11003,8 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	TCHAR guidText[64];
 	uuid_to_string(guid, guidText);
 
-	request->GetVariableStr(VID_NAME, name, MAX_DB_STRING);
-	request->GetVariableStr(VID_CATEGORY, category, MAX_DB_STRING);
+	request->GetVariableStr(VID_NAME, name, MAX_OBJECT_NAME);
+	request->GetVariableStr(VID_CATEGORY, category, MAX_OBJECT_NAME);
 	request->GetVariableStr(VID_IMAGE_MIMETYPE, mimetype, MAX_DB_STRING);
 
 	//DWORD imageSize = request->GetVariableBinary(VID_IMAGE_DATA, NULL, 0);
@@ -11040,7 +11040,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 					_sntprintf(query, MAX_DB_STRING, _T("UPDATE images SET name = %s, category = %s, mimetype = %s WHERE guid = '%s'"),
 							(const TCHAR *)DBPrepareString(g_hCoreDB, name),
 							(const TCHAR *)DBPrepareString(g_hCoreDB, category),
-							(const TCHAR *)DBPrepareString(g_hCoreDB, mimetype),
+							(const TCHAR *)DBPrepareString(g_hCoreDB, mimetype, 32),
 							guidText);
 				}
 				else
@@ -11055,7 +11055,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 						guidText,
 						(const TCHAR *)DBPrepareString(g_hCoreDB, name),
 						(const TCHAR *)DBPrepareString(g_hCoreDB, category),
-						(const TCHAR *)DBPrepareString(g_hCoreDB, mimetype));
+						(const TCHAR *)DBPrepareString(g_hCoreDB, mimetype, 32));
 			}
 
 			if (query[0] != 0)
