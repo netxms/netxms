@@ -587,6 +587,13 @@ void AlarmManager::sendAlarmNotification(ClientSession *pSession, void *pArg)
  */
 void AlarmManager::notifyClients(DWORD dwCode, NXC_ALARM *pAlarm)
 {
+	// Notify modules
+   for(DWORD i = 0; i < g_dwNumModules; i++)
+	{
+		if (g_pModuleList[i].pfAlarmChangeHook != NULL)
+			g_pModuleList[i].pfAlarmChangeHook(dwCode, pAlarm);
+	}
+
    m_dwNotifyCode = dwCode;
    m_pNotifyAlarmInfo = pAlarm;
    EnumerateClientSessions(sendAlarmNotification, this);

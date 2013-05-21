@@ -55,6 +55,7 @@ typedef struct
    int (* pfMobileDeviceCommandHandler)(DWORD dwCommand, CSCPMessage *pMsg, MobileDeviceSession *pSession);
    BOOL (* pfTrapHandler)(SNMP_PDU *pdu, Node *pNode);
    BOOL (* pfEventHandler)(Event *event);
+   void (* pfAlarmChangeHook)(DWORD changeCode, NXC_ALARM *alarm);
 	void (* pfStatusPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
 	void (* pfConfPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
 	void (* pfTopologyPollHook)(Node *node, ClientSession *session, DWORD rqId, int pollerId);
