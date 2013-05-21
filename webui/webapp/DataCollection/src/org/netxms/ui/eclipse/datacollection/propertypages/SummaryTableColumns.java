@@ -186,7 +186,6 @@ public class SummaryTableColumns extends PropertyPage
 		importButton.setLayoutData(rd);
 
 		importButton.addSelectionListener(new SelectionListener() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

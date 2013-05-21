@@ -44,8 +44,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class AutoBind extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private Container object;
 	private Button checkboxEnableBind;
 	private Button checkboxEnableUnbind;
@@ -79,8 +77,6 @@ public class AutoBind extends PropertyPage
       checkboxEnableBind.setText("Automatically bind nodes selected by filter to this container");
       checkboxEnableBind.setSelection(object.isAutoBindEnabled());
       checkboxEnableBind.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

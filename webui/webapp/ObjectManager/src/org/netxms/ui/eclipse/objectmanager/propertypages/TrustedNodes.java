@@ -55,8 +55,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class TrustedNodes extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	public static final int COLUMN_NAME = 0;
 	
 	private AbstractObject object = null;
@@ -119,8 +117,6 @@ public class TrustedNodes extends PropertyPage
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText("Add...");
       addButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -148,8 +144,6 @@ public class TrustedNodes extends PropertyPage
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText("Delete");
       deleteButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

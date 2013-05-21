@@ -44,8 +44,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class NodePolling extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private AbstractNode object;
 	private ObjectSelector pollerNode;
 	private Button radioDefault;

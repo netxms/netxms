@@ -42,8 +42,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class MapAppearance extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private AbstractObject object;
 	private ImageSelector image;
 	private ObjectSelector submap;

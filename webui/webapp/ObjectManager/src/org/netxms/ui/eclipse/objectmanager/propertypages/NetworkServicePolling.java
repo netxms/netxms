@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -36,6 +35,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -44,8 +44,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class NetworkServicePolling extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private NetworkService object;
 	private Combo serviceType;
 	private LabeledText port;
@@ -147,7 +145,7 @@ public class NetworkServicePolling extends PropertyPage
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid port number (1 .. 65535)");
+			MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid port number (1 .. 65535)");
 			return false;
 		}
 		

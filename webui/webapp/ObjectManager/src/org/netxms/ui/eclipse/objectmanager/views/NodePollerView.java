@@ -108,8 +108,6 @@ public class NodePollerView extends ViewPart
 	private void createActions()
 	{
 		actionRestart = new Action("&Restart poll", SharedIcons.RESTART) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -118,8 +116,6 @@ public class NodePollerView extends ViewPart
 		};
 
 		actionClearOutput = new Action("&Clear output", SharedIcons.CLEAR_LOG) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -172,8 +168,6 @@ public class NodePollerView extends ViewPart
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener()
 		{
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -286,6 +280,9 @@ public class NodePollerView extends ViewPart
 	 */
 	private void onPollComplete(final boolean success, final String errorMessage)
 	{
+		if (textArea.isDisposed())
+			return;
+		
 		new UIJob(textArea.getDisplay(), "Update poller window") {
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)

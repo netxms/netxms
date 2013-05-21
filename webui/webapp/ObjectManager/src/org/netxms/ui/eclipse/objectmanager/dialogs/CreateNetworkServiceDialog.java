@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.objectmanager.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -31,6 +30,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objects.NetworkService;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -40,8 +40,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CreateNetworkServiceDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private LabeledText nameField;
 	private Combo serviceTypeField;
 	private LabeledText portField;
@@ -158,7 +156,7 @@ public class CreateNetworkServiceDialog extends Dialog
 		name = nameField.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please provide non-empty object name");
+			MessageDialogHelper.openWarning(getShell(), "Warning", "Please provide non-empty object name");
 			return;
 		}
 		
@@ -172,7 +170,7 @@ public class CreateNetworkServiceDialog extends Dialog
 		}
 		catch(NumberFormatException e)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid port number (1 .. 65535)");
+			MessageDialogHelper.openWarning(getShell(), "Warning", "Please enter valid port number (1 .. 65535)");
 			return;
 		}
 		

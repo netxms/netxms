@@ -52,7 +52,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Forced node poll view
- *
  */
 public class NodePollerView extends ViewPart
 {

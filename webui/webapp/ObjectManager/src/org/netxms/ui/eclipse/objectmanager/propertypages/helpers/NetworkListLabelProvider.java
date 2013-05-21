@@ -29,8 +29,6 @@ import org.netxms.ui.eclipse.objectmanager.propertypages.ClusterNetworks;
  */
 public class NetworkListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */

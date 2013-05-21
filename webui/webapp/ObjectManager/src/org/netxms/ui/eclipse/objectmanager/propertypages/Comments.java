@@ -39,8 +39,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class Comments extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private AbstractObject object;
 	private Text comments;
 	private String initialComments;

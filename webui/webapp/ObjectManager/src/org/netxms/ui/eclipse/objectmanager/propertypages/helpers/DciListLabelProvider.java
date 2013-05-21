@@ -41,7 +41,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class DciListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
 	private static final String[] functions = { "last()", "average(", "deviation(", "diff()", "error(", "sum(" };
 
 	private NXCSession session;

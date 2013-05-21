@@ -20,10 +20,8 @@ package org.netxms.ui.eclipse.objectmanager.dialogs;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -46,6 +44,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -54,8 +53,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CreateNodeDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private NXCSession session;
 	
 	private LabeledText objectNameField;
@@ -152,8 +149,6 @@ public class CreateNodeDialog extends Dialog
 		gd.verticalAlignment = SWT.BOTTOM;
 		resolve.setLayoutData(gd);
 		resolve.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -239,7 +234,7 @@ public class CreateNodeDialog extends Dialog
 			hostName = objectNameField.getText().trim();
 		if (!hostName.matches("^([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+$"))
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "String \"" + hostName + "\" is not a valid host name or IP address. Please enter valid host name or IP address as primary host name");
+			MessageDialogHelper.openWarning(getShell(), "Warning", "String \"" + hostName + "\" is not a valid host name or IP address. Please enter valid host name or IP address as primary host name");
 			return;
 		}
 		

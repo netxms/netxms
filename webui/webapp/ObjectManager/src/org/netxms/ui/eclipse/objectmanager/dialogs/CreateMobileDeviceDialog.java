@@ -19,13 +19,13 @@
 package org.netxms.ui.eclipse.objectmanager.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -34,8 +34,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CreateMobileDeviceDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private LabeledText nameField;
 	private LabeledText deviceIdField;
 	
@@ -104,7 +102,7 @@ public class CreateMobileDeviceDialog extends Dialog
 		name = nameField.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please provide non-empty object name");
+			MessageDialogHelper.openWarning(getShell(), "Warning", "Please provide non-empty object name");
 			return;
 		}
 		

@@ -50,8 +50,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class StatusCalculation extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private AbstractObject object;
 	
 	private NXCObjectModificationData currentState;
@@ -310,8 +308,6 @@ public class StatusCalculation extends PropertyPage
 	private void createCalcSelectionListener(Button button, final int newMethod)
 	{
 		button.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -333,8 +329,6 @@ public class StatusCalculation extends PropertyPage
 	private void createPropSelectionListener(Button button, final int newMethod)
 	{
 		button.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

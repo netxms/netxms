@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -38,6 +37,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -46,8 +46,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class Location extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private AbstractObject object;
 	private LabeledText latitude;
 	private LabeledText longitude;
@@ -114,8 +112,6 @@ public class Location extends PropertyPage
       longitude.setEnabled(gl.getType() == GeoLocation.MANUAL);
       
       final SelectionListener listener = new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -158,7 +154,7 @@ public class Location extends PropertyPage
 			}
 			catch(GeoLocationFormatException e)
 			{
-				MessageDialog.openError(getShell(), "Error", "Geolocation format error");
+				MessageDialogHelper.openError(getShell(), "Error", "Geolocation format error");
 				return false;
 			}
 		}

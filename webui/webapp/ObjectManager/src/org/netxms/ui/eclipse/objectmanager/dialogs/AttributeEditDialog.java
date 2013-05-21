@@ -35,8 +35,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class AttributeEditDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private Text textName;
 	private Text textValue;
 	private String attrName;

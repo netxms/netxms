@@ -65,11 +65,11 @@ public class CreateContainer implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Create new container", part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_CONTAINER, dlg.getObjectName(), parentId);
 				session.createObject(cd);
 			}

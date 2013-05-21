@@ -61,8 +61,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class AccessControl extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private AbstractObject object;
 	private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(11);
@@ -132,8 +130,6 @@ public class AccessControl extends PropertyPage
       final Button addButton = new Button(buttons, SWT.PUSH);
       addButton.setText("Add...");
       addButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -158,8 +154,6 @@ public class AccessControl extends PropertyPage
       deleteButton.setText("Delete");
       deleteButton.setEnabled(false);
       deleteButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -249,8 +243,6 @@ public class AccessControl extends PropertyPage
       check.setText(name);
       check.setEnabled(false);
       check.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

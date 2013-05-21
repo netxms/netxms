@@ -22,10 +22,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -56,6 +54,7 @@ import org.netxms.ui.eclipse.objectmanager.dialogs.AttributeEditDialog;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AttrListLabelProvider;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AttrViewerComparator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -64,8 +63,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class CustomAttributes extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_VALUE = 1;
 	
@@ -105,12 +102,10 @@ public class CustomAttributes extends PropertyPage
       
       attributes = new HashMap<String, String>(object.getCustomAttributes());
       viewer.setInput(attributes.entrySet());
-
-      if (!Platform.getPreferencesService().getBoolean("org.netxms.webui.core", "SHOW_HIDDEN_ATTRIBUTES", false, null))
+      
+      if (!Platform.getPreferencesService().getBoolean("org.netxms.ui.eclipse.console", "SHOW_HIDDEN_ATTRIBUTES", false, null))
       {
 	      viewer.addFilter(new ViewerFilter() {
-				private static final long serialVersionUID = 1L;
-
 				@SuppressWarnings("unchecked")
 				@Override
 				public boolean select(Viewer viewer, Object parentElement, Object element)
@@ -145,8 +140,6 @@ public class CustomAttributes extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
       addButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -161,7 +154,7 @@ public class CustomAttributes extends PropertyPage
 				{
 					if (attributes.containsKey(dlg.getAttrName()))
 					{
-						MessageDialog.openWarning(CustomAttributes.this.getShell(), "Warning", "Attribute named " + dlg.getAttrName() + " already exists");
+						MessageDialogHelper.openWarning(CustomAttributes.this.getShell(), "Warning", "Attribute named " + dlg.getAttrName() + " already exists");
 					}
 					else
 					{
@@ -179,8 +172,6 @@ public class CustomAttributes extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
       editButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -212,8 +203,6 @@ public class CustomAttributes extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
       deleteButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,8 +38,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class General extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private Text textName;
 	private String initialName;
 	private AbstractObject object;
@@ -71,7 +69,7 @@ public class General extends PropertyPage
                                      object.getObjectClassName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		// Object name
-      initialName = new String(object.getObjectName());
+      initialName = object.getObjectName();
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Object name",
       		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
       
@@ -88,7 +86,7 @@ public class General extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		final String newName = new String(textName.getText());
+		final String newName = textName.getText();
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
 		data.setName(newName);
@@ -97,7 +95,6 @@ public class General extends PropertyPage
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(data);
-				initialName = newName;
 			}
 
 			@Override
@@ -115,6 +112,7 @@ public class General extends PropertyPage
 						@Override
 						public void run()
 						{
+							initialName = newName;
 							General.this.setValid(true);
 						}
 					});

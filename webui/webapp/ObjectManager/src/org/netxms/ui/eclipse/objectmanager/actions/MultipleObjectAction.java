@@ -78,8 +78,8 @@ public abstract class MultipleObjectAction implements IObjectActionDelegate
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
-		part = targetPart;
 		window = targetPart.getSite().getWorkbenchWindow();
+		part = targetPart;
 	}
 
 	/* (non-Javadoc)

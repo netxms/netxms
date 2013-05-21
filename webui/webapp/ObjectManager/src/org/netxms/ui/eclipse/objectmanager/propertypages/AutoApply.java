@@ -44,8 +44,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class AutoApply extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private Template object;
 	private Button checkboxEnableApply;
 	private Button checkboxEnableRemove;
@@ -79,8 +77,6 @@ public class AutoApply extends PropertyPage
       checkboxEnableApply.setText("Apply this template automatically to nodes selected by filter");
       checkboxEnableApply.setSelection(object.isAutoApplyEnabled());
       checkboxEnableApply.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
