@@ -3,7 +3,7 @@ libnxsl_la_SOURCES = lex.parser.cpp parser.tab.cpp \
                      array.cpp class.cpp compiler.cpp env.cpp functions.cpp \
                      instruction.cpp iterator.cpp lexer.cpp \
 		     library.cpp main.cpp program.cpp stack.cpp table.cpp \
-			 value.cpp variable.cpp
+			 value.cpp variable.cpp network.cpp
 libnxsl_la_CPPFLAGS=-I@top_srcdir@/include
 libnxsl_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxsl_la_LIBADD = ../libnetxms/libnetxms.la

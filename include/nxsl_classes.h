@@ -597,4 +597,17 @@ public:
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
+/**
+ * NXSL "Connector" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_ConnectorClass : public NXSL_Class
+{
+public:
+   NXSL_ConnectorClass();
+   virtual ~NXSL_ConnectorClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+	virtual void onObjectDelete(NXSL_Object *object);
+};
+
 #endif

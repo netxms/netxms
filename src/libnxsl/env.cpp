@@ -63,6 +63,8 @@ int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pr
 int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_udpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 
 /**
  * Default built-in function list
@@ -105,7 +107,9 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("upper"), F_upper, 1 },
    { _T("AddrInRange"), F_AddrInRange, 3 },
    { _T("AddrInSubnet"), F_AddrInSubnet, 3 },
-	{ _T("SecondsToUptime"), F_SecondsToUptime, 1 }
+	{ _T("SecondsToUptime"), F_SecondsToUptime, 1 },
+	{ _T("TCPConnector"), F_tcpConnector, 2 },
+	{ _T("UDPConnector"), F_udpConnector, 2 },
 };
 
 /**
