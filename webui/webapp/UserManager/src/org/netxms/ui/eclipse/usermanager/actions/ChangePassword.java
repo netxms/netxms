@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.usermanager.actions;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -29,6 +28,7 @@ import org.netxms.api.client.Session;
 import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.Messages;
 import org.netxms.ui.eclipse.usermanager.dialogs.ChangePasswordDialog;
@@ -83,7 +83,7 @@ public class ChangePassword implements IWorkbenchWindowActionDelegate
 						@Override
 						public void run()
 						{
-							MessageDialog.openInformation(window.getShell(), Messages.ChangePassword_Information, Messages.ChangePassword_SuccessMessage);
+							MessageDialogHelper.openInformation(window.getShell(), Messages.ChangePassword_Information, Messages.ChangePassword_SuccessMessage);
 						}
 					});
 				}

@@ -45,8 +45,6 @@ import org.netxms.ui.eclipse.usermanager.Activator;
  */
 public class Authentication extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private Session session;
 	private User object;
 	private Button checkDisabled;

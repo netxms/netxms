@@ -54,8 +54,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class Members extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private SortableTableViewer userList;
 	private UserManager userManager;
 	private UserGroup object;
@@ -104,8 +102,6 @@ public class Members extends PropertyPage
       final Button addButton = new Button(buttons, SWT.PUSH);
       addButton.setText("Add...");
       addButton.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -130,8 +126,6 @@ public class Members extends PropertyPage
       deleteButton.setText("Delete");
       deleteButton.setEnabled(false);
       deleteButton.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

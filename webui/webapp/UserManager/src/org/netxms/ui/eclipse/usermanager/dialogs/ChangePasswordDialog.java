@@ -37,8 +37,6 @@ import org.netxms.ui.eclipse.usermanager.Messages;
 
 public class ChangePasswordDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private boolean changeOwnPassword;
 	private Text textOldPassword;
 	private Text textPassword1;
@@ -101,8 +99,6 @@ public class ChangePasswordDialog extends Dialog
 		
 		final ModifyListener listener = new ModifyListener()
 		{
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{

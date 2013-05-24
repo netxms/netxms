@@ -19,9 +19,7 @@
 package org.netxms.ui.eclipse.usermanager.dialogs;
 
 import java.util.Iterator;
-
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -42,6 +40,7 @@ import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Messages;
 import org.netxms.ui.eclipse.usermanager.UserComparator;
@@ -53,8 +52,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class SelectUserDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private TableViewer userList;
 	private Session session;
 	private boolean showGroups;
@@ -119,8 +116,6 @@ public class SelectUserDialog extends Dialog
 			}
       });
       userList.addFilter(new ViewerFilter() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public boolean select(Viewer viewer, Object parentElement, Object element)
 			{
@@ -150,7 +145,7 @@ public class SelectUserDialog extends Dialog
 		IStructuredSelection sel = (IStructuredSelection)userList.getSelection();
 		if (sel.size() == 0)
 		{
-			MessageDialog.openWarning(getShell(), Messages.SelectUserDialog_Warning, Messages.SelectUserDialog_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.SelectUserDialog_Warning, Messages.SelectUserDialog_WarningText);
 			return;
 		}
 		selection = new AbstractUserObject[sel.size()];

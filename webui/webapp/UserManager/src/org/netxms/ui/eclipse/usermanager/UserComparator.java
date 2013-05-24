@@ -33,8 +33,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class UserComparator extends ViewerComparator
 {
-	private static final long serialVersionUID = 1L;
-
 	/**
 	 * Compare object types
 	 */

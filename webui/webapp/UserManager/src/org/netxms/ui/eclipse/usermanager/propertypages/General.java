@@ -40,8 +40,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class General extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private Text textName;
 	private Text textFullName;
 	private Text textDescription;
