@@ -31,7 +31,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -60,6 +59,7 @@ import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeContentProvider;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Navigation view for predefined graphs
@@ -140,8 +140,6 @@ public class PredefinedGraphTree extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction(this) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -150,8 +148,6 @@ public class PredefinedGraphTree extends ViewPart
 		};
 		
 		actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -160,8 +156,6 @@ public class PredefinedGraphTree extends ViewPart
 		};
 		
 		actionOpen = new Action() {
-			private static final long serialVersionUID = 1L;
-
 			@SuppressWarnings("rawtypes")
 			@Override
 			public void run()
@@ -181,8 +175,6 @@ public class PredefinedGraphTree extends ViewPart
 		actionOpen.setText("&Open");
 
 		actionProperties = new Action("Properties") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -200,8 +192,6 @@ public class PredefinedGraphTree extends ViewPart
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -320,7 +310,7 @@ public class PredefinedGraphTree extends ViewPart
 		}
 		catch(PartInitException e)
 		{
-			MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Error opening graph view: " + e.getMessage());
+			MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Error opening graph view: " + e.getMessage());
 		}
 	}
 	
@@ -367,7 +357,7 @@ public class PredefinedGraphTree extends ViewPart
 				}
 				catch(Exception e)
 				{
-					MessageDialog.openError(getSite().getShell(), "Internal Error", "Unexpected exception: " + e.getLocalizedMessage());
+					MessageDialogHelper.openError(getSite().getShell(), "Internal Error", "Unexpected exception: " + e.getLocalizedMessage());
 				}
 			}
 			settings.setName(config.getName());
@@ -379,7 +369,7 @@ public class PredefinedGraphTree extends ViewPart
 			}
 			catch(Exception e)
 			{
-				MessageDialog.openError(getSite().getShell(), "Internal Error", "Unexpected exception: " + e.getLocalizedMessage());
+				MessageDialogHelper.openError(getSite().getShell(), "Internal Error", "Unexpected exception: " + e.getLocalizedMessage());
 			}
 			viewer.update(settings, null);
 		}
@@ -395,7 +385,7 @@ public class PredefinedGraphTree extends ViewPart
 		if (selection.size() == 0)
 			return;
 		
-		if (!MessageDialog.openQuestion(getSite().getShell(), "Delete Predefined Graphs", "Selected predefined graphs will be deleted. Are you sure?"))
+		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Predefined Graphs", "Selected predefined graphs will be deleted. Are you sure?"))
 			return;
 		
 		final List<GraphSettings> list = new ArrayList<GraphSettings>((List<GraphSettings>)viewer.getInput());

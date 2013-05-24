@@ -82,11 +82,9 @@ void LinkLayerNeighbors::addConnection(LL_NEIGHBOR_INFO *info)
 	m_count++;
 }
 
-
-//
-// Gather link layer connectivity information from node
-//
-
+/**
+ * Gather link layer connectivity information from node
+ */
 LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
 {
 	LinkLayerNeighbors *nbs = new LinkLayerNeighbors();

@@ -131,8 +131,6 @@ public class TableLastValues extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction(this) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -141,8 +139,6 @@ public class TableLastValues extends ViewPart
 		};
 		
 		actionShowLineChart = new Action("&Line chart", Activator.getImageDescriptor("icons/chart_line.png")) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -151,8 +147,6 @@ public class TableLastValues extends ViewPart
 		};
 
 		actionShowBarChart = new Action("&Bar chart", Activator.getImageDescriptor("icons/chart_bar.png")) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -161,8 +155,6 @@ public class TableLastValues extends ViewPart
 		};
 
 		actionShowPieChart = new Action("&Pie chart", Activator.getImageDescriptor("icons/chart_pie.png")) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -217,8 +209,6 @@ public class TableLastValues extends ViewPart
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -300,8 +290,6 @@ public class TableLastValues extends ViewPart
 			viewer.createColumns(names, widths, 0, SWT.UP);
 			WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "TableLastValues");
 			viewer.getTable().addDisposeListener(new DisposeListener() {
-				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void widgetDisposed(DisposeEvent e)
 				{

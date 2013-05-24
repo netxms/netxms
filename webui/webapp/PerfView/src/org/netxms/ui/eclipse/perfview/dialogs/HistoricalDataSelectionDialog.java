@@ -24,8 +24,6 @@ import org.netxms.ui.eclipse.widgets.DateTimeSelector;
  */
 public class HistoricalDataSelectionDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private int maxRecords;
 	private Date timeFrom;
 	private Date timeTo;
@@ -106,8 +104,6 @@ public class HistoricalDataSelectionDialog extends Dialog
 		dtsTo.setEnabled(radioTimeFrame.getSelection());
 		
 		final SelectionListener listener = new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{

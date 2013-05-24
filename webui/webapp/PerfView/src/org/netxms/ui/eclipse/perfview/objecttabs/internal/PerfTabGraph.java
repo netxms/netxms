@@ -50,8 +50,6 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
  */
 public class PerfTabGraph extends DashboardComposite
 {
-	private static final long serialVersionUID = 1L;
-
 	private long nodeId;
 	private List<PerfTabDci> items = new ArrayList<PerfTabDci>(4);
 	private HistoricalDataChart chart;

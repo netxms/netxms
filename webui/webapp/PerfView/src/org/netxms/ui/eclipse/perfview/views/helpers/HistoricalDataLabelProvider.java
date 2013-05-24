@@ -29,8 +29,6 @@ import org.netxms.ui.eclipse.console.tools.RegionalSettings;
  */
 public class HistoricalDataLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */

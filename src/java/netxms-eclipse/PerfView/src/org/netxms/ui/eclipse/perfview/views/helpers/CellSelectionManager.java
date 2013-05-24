@@ -246,7 +246,7 @@ public class CellSelectionManager
 			focusCell.scrollIntoView();
 		}
 
-		this.cellHighlighter.focusCellChanged(focusCell, oldCell);
+		cellHighlighter.focusCellChanged(focusCell, oldCell);
 
 		viewer.getControl().getAccessible().setFocus(ACC.CHILDID_SELF);
 	}

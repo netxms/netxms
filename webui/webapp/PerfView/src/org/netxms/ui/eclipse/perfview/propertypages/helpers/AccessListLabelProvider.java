@@ -30,8 +30,6 @@ import org.netxms.client.datacollection.GraphSettings;
  */
 public class AccessListLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */

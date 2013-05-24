@@ -91,12 +91,6 @@ ColumnFilter::~ColumnFilter()
 	}
 }
 
-static String BuildFullChildList(DWORD objectId)
-{
-	String list;
-	return list;
-}
-
 /**
  * Generate SQL for column filter
  */

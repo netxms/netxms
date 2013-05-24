@@ -4,13 +4,13 @@
 package org.netxms.ui.eclipse.perfview.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -19,8 +19,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class SaveGraphDlg extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private LabeledText fieldName;
 	private String name;
 	
@@ -77,7 +75,7 @@ public class SaveGraphDlg extends Dialog
 		name = fieldName.getText().trim();
 		if (name.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Predefined graph name must not be empty!");
+			MessageDialogHelper.openWarning(getShell(), "Warning", "Predefined graph name must not be empty!");
 			return;
 		}
 		super.okPressed();

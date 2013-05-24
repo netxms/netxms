@@ -60,8 +60,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class PredefinedGraph extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private PredefinedChartConfig config;
 	private LabeledText name;
 	private SortableTableViewer userList;
@@ -138,8 +136,6 @@ public class PredefinedGraph extends PropertyPage
       final Button addButton = new Button(buttons, SWT.PUSH);
       addButton.setText("Add...");
       addButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -164,8 +160,6 @@ public class PredefinedGraph extends PropertyPage
       deleteButton.setText("Delete");
       deleteButton.setEnabled(false);
       deleteButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -242,8 +236,6 @@ public class PredefinedGraph extends PropertyPage
       check.setText(name);
       check.setEnabled(false);
       check.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

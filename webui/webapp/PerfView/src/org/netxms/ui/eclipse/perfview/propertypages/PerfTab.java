@@ -48,8 +48,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class PerfTab extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
 	private DataCollectionItem dci;
 	private PerfTabGraphSettings settings;
 	private Button checkShow;

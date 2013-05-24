@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.dashboard.propertypages;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -45,7 +44,6 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.dashboard.Messages;
@@ -302,7 +300,6 @@ public class DataSources extends PropertyPage
 	private void addItem()
 	{
 		SelectDciDialog dlg = new SelectDciDialog(getShell(), 0);
-		dlg.setDcObjectType(DataCollectionObject.DCO_TYPE_ITEM);
 		if (dlg.open() == Window.OK)
 		{
 			DciValue selection = dlg.getSelection();

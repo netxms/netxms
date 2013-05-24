@@ -334,8 +334,6 @@ public class DataComparisonView extends ViewPart
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -353,8 +351,6 @@ public class DataComparisonView extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction(this) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -363,8 +359,6 @@ public class DataComparisonView extends ViewPart
 		};
 		
 		actionAutoRefresh = new Action("Refresh &automatically") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -376,8 +370,6 @@ public class DataComparisonView extends ViewPart
 		actionAutoRefresh.setChecked(autoRefreshEnabled);
 		
 		actionUseLogScale = new Action("&Logarithmic scale") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -389,8 +381,6 @@ public class DataComparisonView extends ViewPart
 		actionUseLogScale.setChecked(useLogScale);
 		
 		actionShowIn3D = new Action("&3D view") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -403,8 +393,6 @@ public class DataComparisonView extends ViewPart
 		//actionShowIn3D.setImageDescriptor(Activator.getImageDescriptor("icons/view3d.png"));
 		
 		actionShowTranslucent = new Action("T&ranslucent") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -416,8 +404,6 @@ public class DataComparisonView extends ViewPart
 		actionShowTranslucent.setChecked(translucent);
 		
 		actionShowLegend = new Action("&Show legend") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -429,8 +415,6 @@ public class DataComparisonView extends ViewPart
 		actionShowLegend.setChecked(showLegend);
 		
 		actionLegendLeft = new Action("Place on &left", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -441,8 +425,6 @@ public class DataComparisonView extends ViewPart
 		actionLegendLeft.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
 		
 		actionLegendRight = new Action("Place on &right", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -453,8 +435,6 @@ public class DataComparisonView extends ViewPart
 		actionLegendRight.setChecked(legendPosition == GraphSettings.POSITION_RIGHT);
 		
 		actionLegendTop = new Action("Place on &top", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -465,8 +445,6 @@ public class DataComparisonView extends ViewPart
 		actionLegendTop.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
 		
 		actionLegendBottom = new Action("Place on &bottom", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -477,8 +455,6 @@ public class DataComparisonView extends ViewPart
 		actionLegendBottom.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
 		
 		actionShowBarChart = new Action("&Bar chart", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -489,8 +465,6 @@ public class DataComparisonView extends ViewPart
 		actionShowBarChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_bar.png"));
 		
 		actionShowTubeChart = new Action("&Tube chart", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -501,8 +475,6 @@ public class DataComparisonView extends ViewPart
 		actionShowTubeChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_tube.png"));
 		
 		actionShowPieChart = new Action("&Pie chart", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -513,8 +485,6 @@ public class DataComparisonView extends ViewPart
 		actionShowPieChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_pie.png"));
 
 		actionHorizontal = new Action("Show &horizontally", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -527,8 +497,6 @@ public class DataComparisonView extends ViewPart
 		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/bar_horizontal.png"));
 		
 		actionVertical = new Action("Show &vertically", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{

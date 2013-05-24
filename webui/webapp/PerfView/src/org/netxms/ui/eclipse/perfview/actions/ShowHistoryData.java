@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.perfview.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -29,6 +28,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.SimpleDciValue;
 import org.netxms.ui.eclipse.perfview.views.HistoricalDataView;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Display historical data for DCI
@@ -65,7 +65,7 @@ public class ShowHistoryData implements IObjectActionDelegate
 			}
 			catch(Exception e)
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 			}
 		}
 	}

@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.perfview.actions;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -29,6 +28,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.TableDciValue;
 import org.netxms.ui.eclipse.perfview.views.TableLastValues;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Display last values for table DCI
@@ -65,7 +65,7 @@ public class ShowTableLastValues implements IObjectActionDelegate
 			}
 			catch(Exception e)
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 			}
 		}
 	}

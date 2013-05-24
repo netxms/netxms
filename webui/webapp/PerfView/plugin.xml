@@ -53,20 +53,20 @@
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowPieChart"
                icon="icons/chart_pie.png"
-               id="org.netxms.ui.eclipse.perfview.popupActions.ShowPieChart_SimpleDciValue"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowPieChart_SimpleDciValue#30"
                label="Pie Chart"
                menubarPath="additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowBarChart"
                icon="icons/chart_bar.png"
-               id="org.netxms.ui.eclipse.perfview.popupActions.ShowBarChart_SimpleDciValue"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowBarChart_SimpleDciValue#20"
                label="Bar Chart"
                menubarPath="additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowHistoryGraph"
-               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph_SimpleDciValue"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph_SimpleDciValue#10"
                label="Line Chart"
                icon="icons/chart_line.png"
                menubarPath="additions">
@@ -74,7 +74,7 @@
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowHistoryData"
                icon="icons/data_history.gif"
-               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryData_SimpleDciValue"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryData_SimpleDciValue#40"
                label="History"
                menubarPath="additions">
          </action>
@@ -86,7 +86,7 @@
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues"
                icon="icons/table.gif"
-               id="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues_TableDciValue"
+               id="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues_TableDciValue#10"
                label="Table Last Value"
                menubarPath="additions">
          </action>

@@ -33,8 +33,6 @@ public class CellSelectionManager
 	private Set<ViewerCell> selectedCells = new HashSet<ViewerCell>();
 	private CellSelectionHighlighter cellHighlighter;
 	private DisposeListener itemDeletionListener = new DisposeListener() {
-		private static final long serialVersionUID = 1L;
-
 		public void widgetDisposed(DisposeEvent e)
 		{
 			setFocusCell(null, true);
@@ -176,8 +174,6 @@ public class CellSelectionManager
 	private void hookListener(final SortableTableViewer viewer)
 	{
 		Listener listener = new Listener() {
-			private static final long serialVersionUID = 1L;
-
 			public void handleEvent(Event event)
 			{
 				switch(event.type)

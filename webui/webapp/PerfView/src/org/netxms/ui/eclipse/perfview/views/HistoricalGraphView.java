@@ -32,7 +32,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -66,6 +65,7 @@ import org.netxms.ui.eclipse.perfview.ChartConfig;
 import org.netxms.ui.eclipse.perfview.dialogs.SaveGraphDlg;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * History graph view
@@ -354,8 +354,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -464,8 +462,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction(this) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -474,8 +470,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		};
 		
 		actionProperties = new Action("Properties") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -489,8 +483,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		};
 		
 		actionAutoRefresh = new Action("Refresh &automatically") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -502,8 +494,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionAutoRefresh.setChecked(config.isAutoRefresh());
 		
 		actionLogScale = new Action("&Logarithmic scale") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -514,7 +504,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 				}
 				catch(IllegalStateException e)
 				{
-					MessageDialog.openError(getSite().getShell(), "Error", "Cannot switch to logarithmic scale: " + e.getLocalizedMessage());
+					MessageDialogHelper.openError(getSite().getShell(), "Error", "Cannot switch to logarithmic scale: " + e.getLocalizedMessage());
 				}
 				setChecked(config.isLogScale());
 			}
@@ -522,8 +512,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionLogScale.setChecked(config.isLogScale());
 		
 		actionZoomIn = new Action("Zoom &in") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -533,8 +521,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 
 		actionZoomOut = new Action("Zoom &out") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -544,8 +530,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 
 		actionAdjustX = new Action() {
-			private static final long serialVersionUID = 1L;
-
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
 			@Override
 			public void run()
 			{
@@ -556,8 +543,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionAdjustX.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_x.png"));
 
 		actionAdjustY = new Action() {
-			private static final long serialVersionUID = 1L;
-
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
 			@Override
 			public void run()
 			{
@@ -568,8 +556,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionAdjustY.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_y.png"));
 
 		actionAdjustBoth = new Action() {
-			private static final long serialVersionUID = 1L;
-
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
 			@Override
 			public void run()
 			{
@@ -581,8 +570,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionAdjustBoth.setImageDescriptor(Activator.getImageDescriptor("icons/adjust.png"));
 
 		actionShowLegend = new Action("&Show legend") {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -594,8 +581,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionShowLegend.setChecked(config.isShowLegend());
 		
 		actionLegendLeft = new Action("Place on &left", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -606,8 +591,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionLegendLeft.setChecked(config.getLegendPosition() == GraphSettings.POSITION_LEFT);
 		
 		actionLegendRight = new Action("Place on &right", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -618,8 +601,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionLegendRight.setChecked(config.getLegendPosition() == GraphSettings.POSITION_RIGHT);
 		
 		actionLegendTop = new Action("Place on &top", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -630,8 +611,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionLegendTop.setChecked(config.getLegendPosition() == GraphSettings.POSITION_TOP);
 		
 		actionLegendBottom = new Action("Place on &bottom", Action.AS_RADIO_BUTTON) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -642,8 +621,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		actionLegendBottom.setChecked(config.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
 		
 		actionSave = new Action("&Save as predefined...", SharedIcons.SAVE) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -656,8 +633,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		{
 			final Integer presetIndex = i;
 			presetActions[i] = new Action("Last " + presetNames[i]) {
-				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void run()
 				{
@@ -846,7 +821,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(getSite().getShell(), "Internal Error", "Enexpected exception: " + e.getLocalizedMessage());
+			MessageDialogHelper.openError(getSite().getShell(), "Internal Error", "Enexpected exception: " + e.getLocalizedMessage());
 		}
 	}
 }
