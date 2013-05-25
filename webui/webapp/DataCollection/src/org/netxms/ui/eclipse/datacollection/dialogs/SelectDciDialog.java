@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -48,14 +47,13 @@ import org.netxms.ui.eclipse.datacollection.widgets.DciList;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Dialog for DCI selection
  */
 public class SelectDciDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private SashForm splitter;
 	private ObjectTree objectTree;
 	private DciList dciList;
@@ -104,8 +102,6 @@ public class SelectDciDialog extends Dialog
 		{
 			Button button = createButton(parent, 1000, Messages.SelectDciDialog_None, false);
 			button.addSelectionListener(new SelectionListener() {
-				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{
@@ -234,7 +230,7 @@ public class SelectDciDialog extends Dialog
 		selection = dciList.getSelection();
 		if (selection == null)
 		{
-			MessageDialog.openWarning(getShell(), Messages.SelectDciDialog_Warning, Messages.SelectDciDialog_WarningMessage);
+			MessageDialogHelper.openWarning(getShell(), Messages.SelectDciDialog_Warning, Messages.SelectDciDialog_WarningMessage);
 			return;
 		}
 		saveSettings();

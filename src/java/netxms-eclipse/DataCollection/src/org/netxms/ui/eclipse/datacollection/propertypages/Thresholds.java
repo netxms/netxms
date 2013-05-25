@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -53,8 +52,8 @@ import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
+import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditThresholdDialog;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -68,6 +67,7 @@ public class Thresholds extends PropertyPage
 
 	private static final String COLUMN_SETTINGS_PREFIX = "Thresholds.ThresholdList"; //$NON-NLS-1$
 
+	private DataCollectionObjectEditor editor;
 	private DataCollectionItem dci;
 	private List<Threshold> thresholds;
 	private LabeledText instance;
@@ -90,7 +90,9 @@ public class Thresholds extends PropertyPage
 		// Initiate loading of event manager plugin if it was not loaded before
 		Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 
-		dci = (DataCollectionItem)getElement().getAdapter(DataCollectionItem.class);
+		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+		dci = editor.getObjectAsItem();
+		
 		thresholds = new ArrayList<Threshold>(dci.getThresholds().size());
 		for(Threshold t : dci.getThresholds())
 			thresholds.add(new Threshold(t));
@@ -436,54 +438,11 @@ public class Thresholds extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		if (isApply)
-			setValid(false);
-
 		dci.setInstance(instance.getText());
 		dci.setProcessAllThresholds(checkAllThresholds.getSelection());
 		dci.getThresholds().clear();
 		dci.getThresholds().addAll(thresholds);
-
-		new ConsoleJob(Messages.Thresholds_JobTitle + dci.getId(), null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.Thresholds_JobError;
-			}
-
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				dci.getOwner().modifyObject(dci);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						((TableViewer)dci.getOwner().getUserData()).update(dci, null);
-					}
-				});
-			}
-
-			/*
-			 * (non-Javadoc)
-			 * 
-			 * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
-			 */
-			@Override
-			protected void jobFinalize()
-			{
-				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							Thresholds.this.setValid(true);
-						}
-					});
-				}
-			}
-		}.start();
+		editor.modify();
 	}
 
 	/*

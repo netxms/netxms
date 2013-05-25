@@ -332,8 +332,11 @@
      point="org.eclipse.core.runtime.adapters">
         <factory 
            class="org.netxms.ui.eclipse.datacollection.DataCollectionAdapterFactory" 
-           adaptableType="org.netxms.client.datacollection.DataCollectionItem">
+           adaptableType="org.netxms.client.datacollection.DataCollectionObject">
           <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
+          <adapter
+                type="org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor">
+          </adapter>
         </factory>
   </extension>
 

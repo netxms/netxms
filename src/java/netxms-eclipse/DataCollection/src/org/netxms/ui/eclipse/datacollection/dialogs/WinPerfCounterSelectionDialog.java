@@ -250,4 +250,13 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	{
 		return DataCollectionItem.DT_INT64;
 	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getInstanceColumn()
+	 */
+	@Override
+	public String getInstanceColumn()
+	{
+		return "";
+	}
 }

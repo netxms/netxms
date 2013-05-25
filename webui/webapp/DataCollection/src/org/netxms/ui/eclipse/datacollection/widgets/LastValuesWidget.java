@@ -74,9 +74,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class LastValuesWidget extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
-	public static final String JOB_FAMILY = "LastValuesViewJob";
+	public static final String JOB_FAMILY = "LastValuesViewJob"; //$NON-NLS-1$
 	
 	// Columns
 	public static final int COLUMN_ID = 0;
@@ -139,8 +137,6 @@ public class LastValuesWidget extends Composite
 		// Create filter area
 		filterText = new FilterText(this, SWT.NONE);
 		filterText.addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -148,8 +144,6 @@ public class LastValuesWidget extends Composite
 			}
 		});
 		filterText.setCloseAction(new Action() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -183,8 +177,6 @@ public class LastValuesWidget extends Composite
 		});
 		
 		dataViewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -247,8 +239,6 @@ public class LastValuesWidget extends Composite
 	private void createActions()
 	{
 		actionUseMultipliers = new Action(Messages.LastValuesWidget_UseMultipliers, Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -258,8 +248,6 @@ public class LastValuesWidget extends Composite
 		actionUseMultipliers.setChecked(areMultipliersUsed());
 
 		actionShowErrors = new Action(Messages.LastValuesWidget_ShowErrors, Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -269,8 +257,6 @@ public class LastValuesWidget extends Composite
 		actionShowErrors.setChecked(isShowErrors());
 
 		actionShowUnsupported = new Action(Messages.LastValuesWidget_ShowUnsupported, Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -291,8 +277,6 @@ public class LastValuesWidget extends Composite
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

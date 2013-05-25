@@ -43,8 +43,6 @@ import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
  */
 public class LastValuesLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private Image[] stateImages = new Image[3];
 	private boolean useMultipliers = true;
 	private boolean showErrors = true;

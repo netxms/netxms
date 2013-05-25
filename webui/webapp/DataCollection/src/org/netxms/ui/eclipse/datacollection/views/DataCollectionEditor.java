@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.datacollection.views;
 
 import java.util.Iterator;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -29,7 +28,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -53,7 +51,6 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
-import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
@@ -69,6 +66,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.tools.ExtendedPropertyDialog;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciComparator;
@@ -78,6 +76,8 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
+import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -149,8 +149,6 @@ public class DataCollectionEditor extends ViewPart
 		// Create filter area
 		filterText = new FilterText(content, SWT.NONE);
 		filterText.addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -158,8 +156,6 @@ public class DataCollectionEditor extends ViewPart
 			}
 		});
 		filterText.setCloseAction(new Action() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -177,8 +173,7 @@ public class DataCollectionEditor extends ViewPart
 		viewer.addFilter(filter);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "DataCollectionEditor"); //$NON-NLS-1$
 		
-		viewer.addSelectionChangedListener(new ISelectionChangedListener()
-		{
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@SuppressWarnings("unchecked")
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
@@ -217,8 +212,6 @@ public class DataCollectionEditor extends ViewPart
 			}
 		});
 		viewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -385,8 +378,6 @@ public class DataCollectionEditor extends ViewPart
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -395,8 +386,6 @@ public class DataCollectionEditor extends ViewPart
 		};
 
 		actionCreateItem = new Action(Messages.DataCollectionEditor_NewParam, Activator.getImageDescriptor("icons/new.png")) { //$NON-NLS-1$
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -405,8 +394,6 @@ public class DataCollectionEditor extends ViewPart
 		};
 
 		actionCreateTable = new Action(Messages.DataCollectionEditor_NewTable) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -414,14 +401,11 @@ public class DataCollectionEditor extends ViewPart
 			}
 		};
 
-		actionEdit = new PropertyDialogAction(getSite(), viewer) {
-			private static final long serialVersionUID = 1L;
-
+		actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
 			@Override
 			public void run()
 			{
-				super.run();
-				viewer.refresh();
+				editSelectedObject();
 			}
 		};
 		actionEdit.setText(Messages.DataCollectionEditor_Edit);
@@ -429,8 +413,6 @@ public class DataCollectionEditor extends ViewPart
 		actionEdit.setEnabled(false);
 
 		actionDelete = new Action(Messages.DataCollectionEditor_Delete, Activator.getImageDescriptor("icons/delete.png")) { //$NON-NLS-1$
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -440,8 +422,6 @@ public class DataCollectionEditor extends ViewPart
 		actionDelete.setEnabled(false);
 
 		actionCopy = new Action(Messages.DataCollectionEditor_Copy) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -451,8 +431,6 @@ public class DataCollectionEditor extends ViewPart
 		actionCopy.setEnabled(false);
 
 		actionMove = new Action(Messages.DataCollectionEditor_Move) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -462,8 +440,6 @@ public class DataCollectionEditor extends ViewPart
 		actionMove.setEnabled(false);
 
 		actionConvert = new Action(Messages.DataCollectionEditor_Convert) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -473,8 +449,6 @@ public class DataCollectionEditor extends ViewPart
 		actionConvert.setEnabled(false);
 
 		actionDuplicate = new Action(Messages.DataCollectionEditor_Duplicate) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -484,8 +458,6 @@ public class DataCollectionEditor extends ViewPart
 		actionDuplicate.setEnabled(false);
 
 		actionActivate = new Action(Messages.DataCollectionEditor_Activate, Activator.getImageDescriptor("icons/active.gif")) { //$NON-NLS-1$
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -495,8 +467,6 @@ public class DataCollectionEditor extends ViewPart
 		actionActivate.setEnabled(false);
 
 		actionDisable = new Action(Messages.DataCollectionEditor_Disable, Activator.getImageDescriptor("icons/disabled.gif")) { //$NON-NLS-1$
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -506,8 +476,6 @@ public class DataCollectionEditor extends ViewPart
 		actionDisable.setEnabled(false);
 
 		actionShowFilter = new Action(Messages.DataCollectionEditor_ShowFilter, Action.AS_CHECK_BOX) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -529,9 +497,8 @@ public class DataCollectionEditor extends ViewPart
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
+		menuMgr.addMenuListener(new IMenuListener()
+		{
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -633,7 +600,7 @@ public class DataCollectionEditor extends ViewPart
 		if (selection.size() <= 0)
 			return;
 		
-		if (!MessageDialog.openConfirm(getSite().getShell(), Messages.DataCollectionEditor_DeleteConfirmTitle,
+		if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.DataCollectionEditor_DeleteConfirmTitle,
 		                               Messages.DataCollectionEditor_DeleteConfirmText))
 			return;
 		
@@ -720,6 +687,20 @@ public class DataCollectionEditor extends ViewPart
 				return Messages.DataCollectionEditor_TableCreateJob_Error + object.getObjectName();
 			}
 		}.start();
+	}
+	
+	/**
+	 * 
+	 */
+	private void editSelectedObject()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		ExtendedPropertyDialog dlg = ExtendedPropertyDialog.createDialogOn(getSite().getShell(), null, selection.getFirstElement(), "");
+		dlg.createAllPages();
+		dlg.open();
 	}
 	
 	/**

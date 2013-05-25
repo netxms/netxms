@@ -610,6 +610,8 @@ DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue)
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
+               if (pValue->getInstanceColumn()[0] == 0)
+                  pValue->setInstanceColumn(m_pTableList[i].instanceColumn);
                dwErrorCode = ERR_SUCCESS;
                m_dwProcessedRequests++;
                break;

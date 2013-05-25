@@ -1247,6 +1247,8 @@ src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/OpenSummaryTablesManager.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/ShowLastValues.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/ToggleDCIFilterHandler.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/api/DataCollectionObjectEditor.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/api/DataCollectionObjectListener.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/api/DciOpenHandler.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/AbstractSelectParamDlg.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/CreateInterfaceDciDialog.java -text
@@ -2214,6 +2216,7 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/preferencepages/R
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/preferencepages/WorkbenchGeneralPrefs.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/resources/DataCollectionDisplayInfo.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/resources/StatusDisplayInfo.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/ExtendedPropertyDialog.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/IPAddressValidator.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/IPNetMaskValidator.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/tools/MacAddressValidator.java -text
@@ -2607,6 +2610,7 @@ webui/webapp/Core/src/org/netxms/ui/eclipse/console/perspectives/DefaultPerspect
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/preferencepages/RegionalSettingsPrefPage.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/resources/DataCollectionDisplayInfo.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/resources/StatusDisplayInfo.java -text
+webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/ExtendedPropertyDialog.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/IPAddressValidator.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/IPNetMaskValidator.java -text
 webui/webapp/Core/src/org/netxms/ui/eclipse/console/tools/MacAddressValidator.java -text
@@ -2894,6 +2898,8 @@ webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/Ope
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/RemoveTemplate.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/ShowLastValues.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/ToggleDCIFilterHandler.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/api/DataCollectionObjectEditor.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/api/DataCollectionObjectListener.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/api/DciOpenHandler.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/AbstractSelectParamDlg.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/CreateInterfaceDciDialog.java -text

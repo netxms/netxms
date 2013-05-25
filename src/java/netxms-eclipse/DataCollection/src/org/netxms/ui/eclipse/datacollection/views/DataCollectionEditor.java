@@ -51,7 +51,6 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
-import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
@@ -67,6 +66,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.tools.ExtendedPropertyDialog;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciComparator;
@@ -76,6 +76,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
@@ -400,12 +401,11 @@ public class DataCollectionEditor extends ViewPart
 			}
 		};
 
-		actionEdit = new PropertyDialogAction(getSite(), viewer) {
+		actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
 			@Override
 			public void run()
 			{
-				super.run();
-				viewer.refresh();
+				editSelectedObject();
 			}
 		};
 		actionEdit.setText(Messages.DataCollectionEditor_Edit);
@@ -687,6 +687,20 @@ public class DataCollectionEditor extends ViewPart
 				return Messages.DataCollectionEditor_TableCreateJob_Error + object.getObjectName();
 			}
 		}.start();
+	}
+	
+	/**
+	 * 
+	 */
+	private void editSelectedObject()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		ExtendedPropertyDialog dlg = ExtendedPropertyDialog.createDialogOn(getSite().getShell(), null, selection.getFirstElement(), "");
+		dlg.createAllPages();
+		dlg.open();
 	}
 	
 	/**

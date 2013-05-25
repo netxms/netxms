@@ -23,7 +23,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.dialogs.InputDialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -42,14 +41,13 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Dialog for selecting parameters/tables provided by NetXMS agent
  */
 public class SelectAgentParamDlg extends AbstractSelectParamDlg
 {
-	private static final long serialVersionUID = 1L;
-
 	private Button queryButton;
 	private Action actionQuery;
 	
@@ -62,8 +60,6 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 		super(parentShell, nodeId, selectTables);
 		
 		actionQuery = new Action(Messages.SelectAgentParamDlg_Query) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -89,8 +85,6 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 			gd.grabExcessHorizontalSpace = true;
 			queryButton.setLayoutData(gd);
 			queryButton.addSelectionListener(new SelectionListener() {
-				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{
@@ -196,7 +190,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 					@Override
 					public void run()
 					{
-						MessageDialog.openInformation(getShell(), Messages.SelectAgentParamDlg_CurrentValueTitle, Messages.SelectAgentParamDlg_CurrentValuePrefix + value + Messages.SelectAgentParamDlg_CurrentValueSuffix);
+						MessageDialogHelper.openInformation(getShell(), Messages.SelectAgentParamDlg_CurrentValueTitle, Messages.SelectAgentParamDlg_CurrentValuePrefix + value + Messages.SelectAgentParamDlg_CurrentValueSuffix);
 					}
 				});
 			}

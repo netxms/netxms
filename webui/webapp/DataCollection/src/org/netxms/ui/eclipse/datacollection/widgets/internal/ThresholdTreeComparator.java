@@ -34,8 +34,6 @@ import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
  */
 public class ThresholdTreeComparator extends ViewerComparator
 {
-	private static final long serialVersionUID = 1L;
-
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	
 	/* (non-Javadoc)

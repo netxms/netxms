@@ -18,9 +18,6 @@
  */
 package org.netxms.ui.eclipse.perfview.propertypages;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -33,11 +30,9 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -48,6 +43,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class PerfTab extends PropertyPage
 {
+	private DataCollectionObjectEditor editor;
 	private DataCollectionItem dci;
 	private PerfTabGraphSettings settings;
 	private Button checkShow;
@@ -65,7 +61,8 @@ public class PerfTab extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		dci = (DataCollectionItem)getElement().getAdapter(DataCollectionItem.class);
+		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+		dci = editor.getObjectAsItem();
 		try
 		{
 			settings = PerfTabGraphSettings.createFromXml(dci.getPerfTabSettings());
@@ -149,9 +146,6 @@ public class PerfTab extends PropertyPage
 	 */
 	private void applyChanges(final boolean isApply)
 	{
-		if (isApply)
-			setValid(false);
-		
 		settings.setEnabled(checkShow.getSelection());
 		settings.setTitle(title.getText());
 		settings.setName(name.getText());
@@ -171,39 +165,7 @@ public class PerfTab extends PropertyPage
 			dci.setPerfTabSettings(null);
 		}
 		
-		ConsoleJob job = new ConsoleJob("Update performance tab settings for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected String getErrorMessage()
-			{
-				return "Cannot update performance tab settings for DCI " + dci.getId();
-			}
-
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				dci.getOwner().modifyObject(dci);
-			}
-
-			/* (non-Javadoc)
-			 * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
-			 */
-			@Override
-			protected void jobFinalize()
-			{
-				if (isApply)
-				{
-					new UIJob("Update \"Performance Tab\" property page") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							PerfTab.this.setValid(true);
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-				}
-			}
-		};
-		job.start();
+		editor.modify();
 	}
 
 	/* (non-Javadoc)

@@ -47,8 +47,6 @@ import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
  */
 public class ThresholdSummaryWidget extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	public static final int COLUMN_NODE = 0;
 	public static final int COLUMN_STATUS = 1;
 	public static final int COLUMN_PARAMETER = 2;
@@ -89,8 +87,6 @@ public class ThresholdSummaryWidget extends Composite
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);

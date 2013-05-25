@@ -19,9 +19,6 @@
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import java.util.Arrays;
-
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -31,9 +28,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
-import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -46,6 +42,7 @@ public class Transformation extends PropertyPage
 	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 	private static final String[] DCI_VARIABLES = { "$dci", "$node" }; //$NON-NLS-1$
 	
+	private DataCollectionObjectEditor editor;
 	private DataCollectionItem dci;
 	private Combo deltaCalculation;
 	private ScriptEditor transformationScript;
@@ -57,7 +54,9 @@ public class Transformation extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		dci = (DataCollectionItem)getElement().getAdapter(DataCollectionItem.class);
+		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+		dci = editor.getObjectAsItem();
+		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
@@ -117,50 +116,9 @@ public class Transformation extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		if (isApply)
-			setValid(false);
-		
 		dci.setDeltaCalculation(deltaCalculation.getSelectionIndex());
 		dci.setTransformationScript(transformationScript.getText());
-		
-		new ConsoleJob(Messages.Transformation_JobTitle + dci.getId(), null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.Transformation_JobError;
-			}
-
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				dci.getOwner().modifyObject(dci);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						((TableViewer)dci.getOwner().getUserData()).update(dci, null);
-					}
-				});
-			}
-
-			/* (non-Javadoc)
-			 * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
-			 */
-			@Override
-			protected void jobFinalize()
-			{
-				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							Transformation.this.setValid(true);
-						}
-					});
-				}
-			}
-		}.start();
+		editor.modify();
 	}
 
 	/* (non-Javadoc)

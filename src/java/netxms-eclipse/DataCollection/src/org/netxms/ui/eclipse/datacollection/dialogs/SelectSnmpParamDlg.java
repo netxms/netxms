@@ -82,4 +82,13 @@ public class SelectSnmpParamDlg extends MibSelectionDialog implements IParameter
 	{
 		return getSelectedObjectId().toString();
 	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getInstanceColumn()
+	 */
+	@Override
+	public String getInstanceColumn()
+	{
+		return "";
+	}
 }

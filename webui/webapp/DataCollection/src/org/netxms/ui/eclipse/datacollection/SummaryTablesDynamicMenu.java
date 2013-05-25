@@ -58,8 +58,6 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkbenchContribution
 {
-	private static final long serialVersionUID = 1L;
-	
 	private IEvaluationService evalService;
 	
 	/**
@@ -145,8 +143,6 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 			item.setText(path[path.length - 1]);
 			item.setData(tables[i]);
 			item.addSelectionListener(new SelectionAdapter() {
-				private static final long serialVersionUID = 1L;
-				
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{

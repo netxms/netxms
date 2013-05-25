@@ -193,8 +193,6 @@ public class SummaryTableManager extends ViewPart
 	{
 		// create refresh action
 		actionRefresh = new RefreshAction(this) {
-			private static final long serialVersionUID = 1L;
-			
 			@Override
 			public void run()
 			{
@@ -204,8 +202,6 @@ public class SummaryTableManager extends ViewPart
 
 		// create add action
 		actionCreate = new Action("&Create new table...", SharedIcons.ADD_OBJECT) {
-			private static final long serialVersionUID = 1L;
-			
 			@Override
 			public void run()
 			{
@@ -215,8 +211,6 @@ public class SummaryTableManager extends ViewPart
 
 		// create edit action
 		actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
-			private static final long serialVersionUID = 1L;
-			
 			@Override
 			public void run()
 			{
@@ -227,8 +221,6 @@ public class SummaryTableManager extends ViewPart
 
 		// create delete action
 		actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
-			private static final long serialVersionUID = 1L;
-			
 			@Override
 			public void run()
 			{
@@ -281,8 +273,6 @@ public class SummaryTableManager extends ViewPart
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-			
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 					mgr.add(actionCreate);

@@ -15,8 +15,6 @@ import org.netxms.ui.eclipse.datacollection.Messages;
  */
 public class EditColumnDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private ColumnDefinition column;
 	
 	/**

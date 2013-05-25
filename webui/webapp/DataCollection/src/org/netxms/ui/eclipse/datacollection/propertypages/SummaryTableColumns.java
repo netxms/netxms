@@ -66,7 +66,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class SummaryTableColumns extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
 	private static final String COLUMN_SETTINGS_PREFIX = "SummaryTableColumns.ColumnList"; //$NON-NLS-1$
 
 	private DciSummaryTable table;
@@ -78,28 +77,30 @@ public class SummaryTableColumns extends PropertyPage
 	private Button upButton;
 	private Button downButton;
 	private Button importButton;
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 		table = (DciSummaryTable)getElement().getAdapter(DciSummaryTable.class);
-		
+
 		columns = new ArrayList<DciSummaryTableColumn>(table.getColumns().size());
 		for(DciSummaryTableColumn c : table.getColumns())
 			columns.add(new DciSummaryTableColumn(c));
-		
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		layout.numColumns = 2;
-      dialogArea.setLayout(layout);
-      
+		dialogArea.setLayout(layout);
+
 		new Label(dialogArea, SWT.NONE).setText("Columns");
 
 		viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -131,8 +132,6 @@ public class SummaryTableColumns extends PropertyPage
 		upButton.setText(Messages.Thresholds_Up);
 		upButton.setEnabled(false);
 		upButton.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-			
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -150,8 +149,6 @@ public class SummaryTableColumns extends PropertyPage
 		downButton.setText(Messages.Thresholds_Down);
 		downButton.setEnabled(false);
 		downButton.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-			
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -186,6 +183,7 @@ public class SummaryTableColumns extends PropertyPage
 		importButton.setLayoutData(rd);
 
 		importButton.addSelectionListener(new SelectionListener() {
+
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -205,8 +203,6 @@ public class SummaryTableColumns extends PropertyPage
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		addButton.setLayoutData(rd);
 		addButton.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-			
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -227,8 +223,6 @@ public class SummaryTableColumns extends PropertyPage
 		modifyButton.setLayoutData(rd);
 		modifyButton.setEnabled(false);
 		modifyButton.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-			
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -249,8 +243,6 @@ public class SummaryTableColumns extends PropertyPage
 		deleteButton.setLayoutData(rd);
 		deleteButton.setEnabled(false);
 		deleteButton.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-			
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -286,7 +278,7 @@ public class SummaryTableColumns extends PropertyPage
 			}
 		});
 
-      return dialogArea;
+		return dialogArea;
 	}
 
 	/**
@@ -311,7 +303,7 @@ public class SummaryTableColumns extends PropertyPage
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SummaryTableColumnLabelProvider());
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 
@@ -335,14 +327,16 @@ public class SummaryTableColumns extends PropertyPage
 					table.setId(id);
 				}
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
 				return "Cannot update DCI summary table configuration";
 			}
 
-			/* (non-Javadoc)
+			/*
+			 * (non-Javadoc)
+			 * 
 			 * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
 			 */
 			@Override
@@ -362,7 +356,9 @@ public class SummaryTableColumns extends PropertyPage
 		}.start();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
 	 */
 	@Override
@@ -373,7 +369,9 @@ public class SummaryTableColumns extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
 	 */
 	@Override
@@ -382,8 +380,10 @@ public class SummaryTableColumns extends PropertyPage
 		saveSettings();
 		applyChanges(true);
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.preference.PreferencePage#performCancel()
 	 */
 	@Override

@@ -37,8 +37,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class DciLabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private NXCSession session;
 	private Image statusImages[];
 	private HashMap<Integer, String> originTexts = new HashMap<Integer, String>();
@@ -63,6 +61,7 @@ public class DciLabelProvider implements ITableLabelProvider
 		originTexts.put(DataCollectionItem.INTERNAL, Messages.DciLabelProvider_SourceInternal);
 		originTexts.put(DataCollectionItem.PUSH, Messages.DciLabelProvider_SourcePush);
 		originTexts.put(DataCollectionItem.WINPERF, "Windows Performance Counters");
+		originTexts.put(DataCollectionItem.ILO, Messages.DciLabelProvider_SourceILO);
 		
 		statusTexts.put(DataCollectionItem.ACTIVE, Messages.DciLabelProvider_Active);
 		statusTexts.put(DataCollectionItem.DISABLED, Messages.DciLabelProvider_Disabled);

@@ -38,8 +38,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ThresholdTreeLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	private WorkbenchLabelProvider wbLabelProvider = new WorkbenchLabelProvider();
 	private ThresholdLabelProvider thresholdLabelProvider = new ThresholdLabelProvider();
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();

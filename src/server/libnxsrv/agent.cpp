@@ -939,11 +939,9 @@ DWORD AgentConnection::getTable(const TCHAR *pszParam, Table **table)
    return dwRetCode;
 }
 
-
-//
-// Authenticate to agent
-//
-
+/**
+ * Authenticate to agent
+ */
 DWORD AgentConnection::authenticate(BOOL bProxyData)
 {
    CSCPMessage msg(m_nProtocolVersion);

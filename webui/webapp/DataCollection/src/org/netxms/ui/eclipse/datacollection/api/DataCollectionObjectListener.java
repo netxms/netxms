@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,39 +16,30 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.datacollection.dialogs;
+package org.netxms.ui.eclipse.datacollection.api;
 
 /**
- * Generic interface for parameter selection dialogs
- *
+ * Listener for data collection object editor
  */
-public interface IParameterSelectionDialog
+public interface DataCollectionObjectListener
 {
 	/**
-	 * Get name of selected parameter
+	 * Called by editor after user choose new single value parameter using "Select" button
 	 * 
-	 * @return Name of selected parameter
+	 * @param origin
+	 * @param name
+	 * @param description
+	 * @param dataType
 	 */
-	public String getParameterName();
-	
-	/**
-	 * Get description of selected parameter
-	 * 
-	 * @return Description of selected parameter
-	 */
-	public String getParameterDescription();
-	
-	/**
-	 * Get data type for selected parameter
-	 * 
-	 * @return data type for selected parameter
-	 */
-	public int getParameterDataType();
+	public void onSelectItem(int origin, String name, String description, int dataType);
 
 	/**
-	 * Get instance column name. Relevant only for table selection.
+	 * Called by editor after user choose new table parameter using "Select" button
 	 * 
-	 * @return
+	 * @param origin
+	 * @param name
+	 * @param description
+	 * @param instanceColumn
 	 */
-	public String getInstanceColumn();
+	public void onSelectTable(int origin, String name, String description, String instanceColumn);
 }

@@ -56,8 +56,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class WinPerfCounterSelectionDialog extends Dialog implements IParameterSelectionDialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private long nodeId;
 	private TreeViewer objectTree;
 	private TableViewer instanceList;
@@ -115,8 +113,6 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 		objectTree.setContentProvider(new WinPerfObjectTreeContentProvider());
 		objectTree.setLabelProvider(new WinPerfObjectTreeLabelProvider());
 		objectTree.setComparator(new ViewerComparator() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public int compare(Viewer viewer, Object e1, Object e2)
 			{
@@ -253,5 +249,14 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	public int getParameterDataType()
 	{
 		return DataCollectionItem.DT_INT64;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getInstanceColumn()
+	 */
+	@Override
+	public String getInstanceColumn()
+	{
+		return "";
 	}
 }

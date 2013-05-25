@@ -104,8 +104,6 @@ public class SummaryTable extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction(this) {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -233,8 +231,6 @@ public class SummaryTable extends ViewPart
 			viewer.createColumns(names, widths, 0, SWT.UP);
 			WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "SummaryTable." + Integer.toString(tableId));
 			viewer.getTable().addDisposeListener(new DisposeListener() {
-				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void widgetDisposed(DisposeEvent e)
 				{

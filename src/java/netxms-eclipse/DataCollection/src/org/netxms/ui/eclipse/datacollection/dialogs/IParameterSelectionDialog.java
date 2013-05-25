@@ -44,4 +44,11 @@ public interface IParameterSelectionDialog
 	 * @return data type for selected parameter
 	 */
 	public int getParameterDataType();
+
+	/**
+	 * Get instance column name. Relevant only for table selection.
+	 * 
+	 * @return
+	 */
+	public String getInstanceColumn();
 }

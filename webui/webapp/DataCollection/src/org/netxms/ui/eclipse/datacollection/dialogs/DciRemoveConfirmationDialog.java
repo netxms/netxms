@@ -23,8 +23,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class DciRemoveConfirmationDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private boolean removeFlag;
 	private Button radioRemove; 
 	private Button radioUnbind;
@@ -68,8 +66,6 @@ public class DciRemoveConfirmationDialog extends Dialog
 		gd.verticalSpan = 3;
 		image.setLayoutData(gd);
 		image.addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

@@ -76,6 +76,7 @@ public abstract class DataCollectionObject
 	protected String perfTabSettings;
 	protected int snmpPort;
 	protected ArrayList<String> schedules;
+	protected Object userData;
 
 	/**
 	 * Create data collection object from NXCP message
@@ -464,5 +465,21 @@ public abstract class DataCollectionObject
 	public void setTransformationScript(String transformationScript)
 	{
 		this.transformationScript = transformationScript;
+	}
+
+	/**
+	 * @return the userData
+	 */
+	public Object getUserData()
+	{
+		return userData;
+	}
+
+	/**
+	 * @param userData the userData to set
+	 */
+	public void setUserData(Object userData)
+	{
+		this.userData = userData;
 	}
 }

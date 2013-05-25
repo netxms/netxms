@@ -34,6 +34,7 @@ Table::Table()
 	m_colFormats = NULL;
 	m_title = NULL;
    m_source = DS_INTERNAL;
+   m_instanceColumn[0] = 0;
 }
 
 /**
@@ -84,6 +85,10 @@ void Table::createFromMessage(CSCPMessage *msg)
 	m_nNumCols = msg->GetVariableLong(VID_TABLE_NUM_COLS);
 	m_title = msg->GetVariableStr(VID_TABLE_TITLE);
    m_source = (int)msg->GetVariableShort(VID_DCI_SOURCE_TYPE);
+   if (msg->IsVariableExist(VID_INSTANCE_COLUMN))
+      msg->GetVariableStr(VID_INSTANCE_COLUMN, m_instanceColumn, MAX_COLUMN_NAME);
+   else
+      m_instanceColumn[0] = 0;
 
 	m_ppColNames = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumCols);
 	m_colFormats = (LONG *)malloc(sizeof(LONG) * m_nNumCols);
@@ -117,6 +122,7 @@ int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
 
 	msg.SetVariable(VID_TABLE_TITLE, CHECK_NULL_EX(m_title));
    msg.SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_source);
+   msg.SetVariable(VID_INSTANCE_COLUMN, m_instanceColumn);
 
 	if (offset == 0)
 	{
@@ -362,4 +368,12 @@ void Table::merge(Table *t, const TCHAR *instanceColumn)
          }
       }
    }
+}
+
+/**
+ * Set instance column
+ */
+void Table::setInstanceColumn(const TCHAR *column)
+{
+   nx_strncpy(m_instanceColumn, CHECK_NULL_EX(column), MAX_COLUMN_NAME); 
 }

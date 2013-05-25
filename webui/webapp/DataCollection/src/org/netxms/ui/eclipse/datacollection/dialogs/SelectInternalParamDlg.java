@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,17 +28,10 @@ import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Messages;
 
 /**
- * @author victor
- *
+ * Dialog for selecting parameters with "Internal" source
  */
 public class SelectInternalParamDlg extends AbstractSelectParamDlg
 {
-	private static final long serialVersionUID = 1L;
-
-	/**
-	 * @param parentShell
-	 * @param nodeId
-	 */
 	public SelectInternalParamDlg(Shell parentShell, long nodeId)
 	{
 		super(parentShell, nodeId, false);

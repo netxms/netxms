@@ -29,8 +29,6 @@ import org.netxms.client.datacollection.WinPerfObject;
  */
 public class WinPerfObjectTreeContentProvider implements ITreeContentProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
 	 */

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -50,14 +49,13 @@ import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
-import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.WinPerfCounterSelectionDialog;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -80,6 +78,7 @@ public class General extends PropertyPage
 		Messages.General_SNMP_DT_macAddr
 	};
 	
+	private DataCollectionObjectEditor editor;
 	private DataCollectionItem dci;
 	private AbstractObject owner;
 	private Cluster cluster = null;
@@ -109,7 +108,9 @@ public class General extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{		
-		dci = (DataCollectionItem)getElement().getAdapter(DataCollectionItem.class);
+		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+		dci = editor.getObjectAsItem();
+		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		owner = session.findObjectById(dci.getNodeId());
 		
@@ -507,6 +508,7 @@ public class General extends PropertyPage
 			description.setText(pd.getParameterDescription());
 			parameter.setText(pd.getParameterName());
 			dataType.select(pd.getParameterDataType());
+			editor.fireOnSelectItemListeners(origin.getSelectionIndex(), pd.getParameterName(), pd.getParameterDescription(), pd.getParameterDataType());
 		}
 	}
 	
@@ -517,9 +519,6 @@ public class General extends PropertyPage
 	 */
 	protected boolean applyChanges(final boolean isApply)
 	{
-		if (isApply)
-			setValid(false);
-		
 		dci.setDescription(description.getText().trim());
 		dci.setName(parameter.getText().trim());
 		dci.setOrigin(origin.getSelectionIndex());
@@ -552,26 +551,7 @@ public class General extends PropertyPage
 			dci.setResourceId(clusterResourceMap.get(clusterResource.getSelectionIndex()));
 		}
 
-		new ConsoleJob(Messages.General_JobTitle + dci.getId(), null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				dci.getOwner().modifyObject(dci);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						General.this.setValid(true);
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.General_JobError;
-			}
-		}.start();
+		editor.modify();
 		return true;
 	}
 

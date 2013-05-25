@@ -241,7 +241,16 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	{
 		return selectTables ? ((AgentTable)selection).getName() : ((AgentParameter)selection).getName();
 	}
-
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getInstanceColumn()
+	 */
+	@Override
+	public String getInstanceColumn()
+	{
+		return selectTables ? ((AgentTable)selection).getInstanceColumn() : "";
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */
@@ -280,7 +289,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 		settings.put(getConfigurationPrefix() + ".cx", size.x); //$NON-NLS-1$
 		settings.put(getConfigurationPrefix() + ".cy", size.y); //$NON-NLS-1$
 	}
-	
+
 	/**
 	 * Fill list with parameters
 	 */

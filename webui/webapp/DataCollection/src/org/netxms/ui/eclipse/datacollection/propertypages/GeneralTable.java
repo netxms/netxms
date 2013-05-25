@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -50,12 +49,11 @@ import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
-import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.NumericTextFieldValidator;
@@ -67,8 +65,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class GeneralTable extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
+	private DataCollectionObjectEditor editor;
 	private DataCollectionTable dci;
 	private AbstractObject owner;
 	private Cluster cluster = null;
@@ -94,7 +91,9 @@ public class GeneralTable extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{		
-		dci = (DataCollectionTable)getElement().getAdapter(DataCollectionTable.class);
+		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+		dci = editor.getObjectAsTable();
+		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		owner = session.findObjectById(dci.getNodeId());
 		
@@ -160,8 +159,6 @@ public class GeneralTable extends PropertyPage
       selectButton = new Button(groupData, SWT.PUSH);
       selectButton.setText(Messages.GeneralTable_Select);
       selectButton.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -199,8 +196,6 @@ public class GeneralTable extends PropertyPage
       origin.add(Messages.GeneralTable_SourcePush);
       origin.select(dci.getOrigin());
       origin.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -218,8 +213,6 @@ public class GeneralTable extends PropertyPage
       checkUseCustomSnmpPort.setText(Messages.GeneralTable_UseCustomSNMPPort);
       checkUseCustomSnmpPort.setSelection(dci.getSnmpPort() != 0);
       checkUseCustomSnmpPort.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -289,8 +282,6 @@ public class GeneralTable extends PropertyPage
       schedulingMode.select(dci.isUseAdvancedSchedule() ? 1 : 0);
       schedulingMode.setEnabled(dci.getOrigin() != DataCollectionObject.PUSH);
       schedulingMode.addSelectionListener(new SelectionListener() {
-      	private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -437,6 +428,7 @@ public class GeneralTable extends PropertyPage
 			IParameterSelectionDialog pd = (IParameterSelectionDialog)dlg;
 			description.setText(pd.getParameterDescription());
 			parameter.setText(pd.getParameterName());
+			editor.fireOnSelectTableListeners(origin.getSelectionIndex(), pd.getParameterName(), pd.getParameterDescription(), pd.getInstanceColumn());
 		}
 	}
 	
@@ -451,9 +443,6 @@ public class GeneralTable extends PropertyPage
 		    !WidgetHelper.validateTextInput(pollingInterval, new NumericTextFieldValidator(1, 1000000), this) ||
 		    !WidgetHelper.validateTextInput(retentionTime, new NumericTextFieldValidator(1, 65535), this))
 			return false;
-		
-		if (isApply)
-			setValid(false);
 		
 		dci.setDescription(description.getText().trim());
 		dci.setName(parameter.getText().trim());
@@ -483,26 +472,7 @@ public class GeneralTable extends PropertyPage
 			dci.setResourceId(clusterResourceMap.get(clusterResource.getSelectionIndex()));
 		}
 
-		new ConsoleJob(Messages.GeneralTable_JobTitle + dci.getId(), null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				dci.getOwner().modifyObject(dci);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						GeneralTable.this.setValid(true);
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.GeneralTable_JobError;
-			}
-		}.start();
+		editor.modify();
 		return true;
 	}
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
@@ -54,6 +53,7 @@ import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentParameterLabelP
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentTableComparator;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentTableLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -62,8 +62,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public abstract class AbstractSelectParamDlg extends Dialog implements IParameterSelectionDialog
 {
-	private static final long serialVersionUID = 1L;
-
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_TYPE = 1;
 	public static final int COLUMN_DESCRIPTION = 2;
@@ -130,8 +128,6 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	   gd.grabExcessHorizontalSpace = true;
 	   filterText.setLayoutData(gd);
 	   filterText.addModifyListener(new ModifyListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -152,8 +148,6 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	   viewer.addFilter(filter);
 	   
 	   viewer.getTable().addMouseListener(new MouseListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{
@@ -172,8 +166,6 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	   });
 	   
 	   viewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -205,8 +197,6 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-			private static final long serialVersionUID = 1L;
-
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -251,7 +241,16 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	{
 		return selectTables ? ((AgentTable)selection).getName() : ((AgentParameter)selection).getName();
 	}
-
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getInstanceColumn()
+	 */
+	@Override
+	public String getInstanceColumn()
+	{
+		return selectTables ? ((AgentTable)selection).getInstanceColumn() : "";
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */
@@ -261,7 +260,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.isEmpty())
 		{
-			MessageDialog.openWarning(getShell(), Messages.AbstractSelectParamDlg_Warning, Messages.AbstractSelectParamDlg_WarningText);
+			MessageDialogHelper.openWarning(getShell(), Messages.AbstractSelectParamDlg_Warning, Messages.AbstractSelectParamDlg_WarningText);
 			return;
 		}
 		this.selection = selection.getFirstElement();
@@ -290,7 +289,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 		settings.put(getConfigurationPrefix() + ".cx", size.x); //$NON-NLS-1$
 		settings.put(getConfigurationPrefix() + ".cy", size.y); //$NON-NLS-1$
 	}
-	
+
 	/**
 	 * Fill list with parameters
 	 */

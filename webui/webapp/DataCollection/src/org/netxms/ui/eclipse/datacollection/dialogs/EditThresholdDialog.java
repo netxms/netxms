@@ -45,8 +45,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class EditThresholdDialog extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-
 	private Threshold threshold;
 	private Combo function;
 	private Combo operation;
@@ -157,8 +155,6 @@ public class EditThresholdDialog extends Dialog
 		repeatCustom.setText(Messages.EditThresholdDialog_Every);
 		repeatCustom.setSelection(threshold.getRepeatInterval() > 0);
 		repeatCustom.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{

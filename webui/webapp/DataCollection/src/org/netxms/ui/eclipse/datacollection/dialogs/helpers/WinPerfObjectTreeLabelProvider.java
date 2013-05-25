@@ -27,8 +27,6 @@ import org.netxms.client.datacollection.WinPerfObject;
  */
 public class WinPerfObjectTreeLabelProvider extends LabelProvider
 {
-	private static final long serialVersionUID = 1L;
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
 	 */

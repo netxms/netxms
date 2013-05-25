@@ -52,8 +52,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class DciList extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	// Columns
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_PARAMETER = 1;
@@ -95,8 +93,6 @@ public class DciList extends Composite
 		WidgetHelper.restoreTableViewerSettings(viewer, ds, configPrefix);
 		
 		addListener(SWT.Resize, new Listener() {
-			private static final long serialVersionUID = 1L;
-
 			public void handleEvent(Event e)
 			{
 				viewer.getControl().setBounds(DciList.this.getClientArea());
@@ -104,8 +100,6 @@ public class DciList extends Composite
 		});
 		
 		viewer.getTable().addDisposeListener(new DisposeListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{

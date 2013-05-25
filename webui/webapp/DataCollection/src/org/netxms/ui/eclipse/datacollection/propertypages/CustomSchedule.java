@@ -20,8 +20,6 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import java.util.HashSet;
 import java.util.Iterator;
-
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -43,10 +41,9 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditScheduleDialog;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.tools.StringComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -56,8 +53,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class CustomSchedule extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-
+	private DataCollectionObjectEditor editor;
 	private DataCollectionObject dci;
 	private HashSet<String> schedules;
 	private SortableTableViewer viewer;
@@ -71,7 +67,9 @@ public class CustomSchedule extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		dci = (DataCollectionObject)getElement().getAdapter(DataCollectionObject.class);
+		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+		dci = editor.getObject();
+		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
@@ -132,8 +130,6 @@ public class CustomSchedule extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
       addButton.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -153,8 +149,6 @@ public class CustomSchedule extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
       editButton.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -174,8 +168,6 @@ public class CustomSchedule extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
       deleteButton.addSelectionListener(new SelectionListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -256,30 +248,8 @@ public class CustomSchedule extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		if (isApply)
-			setValid(false);
-		
 		dci.setSchedules(schedules);
-		new ConsoleJob(Messages.CustomSchedule_JobTitle + dci.getId(), null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				dci.getOwner().modifyObject(dci);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						CustomSchedule.this.setValid(true);
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.CustomSchedule_JobError;
-			}
-		}.start();
+		editor.modify();
 	}
 
 	/* (non-Javadoc)

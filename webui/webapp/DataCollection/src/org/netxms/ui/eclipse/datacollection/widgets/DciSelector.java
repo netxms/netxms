@@ -36,8 +36,6 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class DciSelector extends AbstractSelector
 {
-	private static final long serialVersionUID = 1L;
-
 	private long nodeId = 0;
 	private long dciId = 0;
 	private String emptySelectionName = Messages.DciSelector_None;

@@ -30,8 +30,6 @@ import org.netxms.ui.eclipse.snmp.dialogs.MibSelectionDialog;
  */
 public class SelectSnmpParamDlg extends MibSelectionDialog implements IParameterSelectionDialog
 {
-	private static final long serialVersionUID = 1L;
-
 	/**
 	 * @param parentShell
 	 * @param currentOid
@@ -83,5 +81,14 @@ public class SelectSnmpParamDlg extends MibSelectionDialog implements IParameter
 	public String getParameterName()
 	{
 		return getSelectedObjectId().toString();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getInstanceColumn()
+	 */
+	@Override
+	public String getInstanceColumn()
+	{
+		return "";
 	}
 }

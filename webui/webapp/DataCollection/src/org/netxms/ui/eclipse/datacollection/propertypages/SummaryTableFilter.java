@@ -39,8 +39,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class SummaryTableFilter extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-	
 	private DciSummaryTable table;
 	private ScriptEditor filter;
 	

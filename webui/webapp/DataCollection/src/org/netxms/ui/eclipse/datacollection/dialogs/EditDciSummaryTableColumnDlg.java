@@ -34,8 +34,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class EditDciSummaryTableColumnDlg extends Dialog
 {
-	private static final long serialVersionUID = 1L;
-	
 	private DciSummaryTableColumn column;
 	private LabeledText name;
 	private LabeledText dciName;

@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -27,8 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
-import org.netxms.ui.eclipse.datacollection.Activator;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -37,8 +34,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class NetworkMaps extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-	
+	private DataCollectionObjectEditor editor;
 	private DataCollectionItem dci;
 	private Button checkShowOnTooltip;
 
@@ -48,7 +44,9 @@ public class NetworkMaps extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		dci = (DataCollectionItem)getElement().getAdapter(DataCollectionItem.class);
+		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+		dci = editor.getObjectAsItem();
+		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
@@ -71,49 +69,8 @@ public class NetworkMaps extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		if (isApply)
-			setValid(false);
-		
 		dci.setShowOnObjectTooltip(checkShowOnTooltip.getSelection());
-		
-		new ConsoleJob("Updating network map configuration for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected String getErrorMessage()
-			{
-				return "Cannot update network map configuration for DCI";
-			}
-
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				dci.getOwner().modifyObject(dci);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						((TableViewer)dci.getOwner().getUserData()).update(dci, null);
-					}
-				});
-			}
-
-			/* (non-Javadoc)
-			 * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
-			 */
-			@Override
-			protected void jobFinalize()
-			{
-				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							NetworkMaps.this.setValid(true);
-						}
-					});
-				}
-			}
-		}.start();
+		editor.modify();
 	}
 
 	/* (non-Javadoc)

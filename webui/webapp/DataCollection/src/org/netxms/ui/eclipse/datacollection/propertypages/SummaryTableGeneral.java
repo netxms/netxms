@@ -38,8 +38,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class SummaryTableGeneral extends PropertyPage
 {
-	private static final long serialVersionUID = 1L;
-	
 	private DciSummaryTable table;
 	private LabeledText menuPath;
 	private LabeledText title;

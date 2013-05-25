@@ -201,6 +201,7 @@ private:
 	LONG *m_colFormats;
 	TCHAR *m_title;
    int m_source;
+	TCHAR m_instanceColumn[MAX_COLUMN_NAME];
 
 	void createFromMessage(CSCPMessage *msg);
 	void destroy();
@@ -219,6 +220,7 @@ public:
    int getNumColumns() { return m_nNumCols; }
 	const TCHAR *getTitle() { return CHECK_NULL_EX(m_title); }
    int getSource() { return m_source; }
+   const TCHAR *getInstanceColumn() { return m_instanceColumn; }
 
 	const TCHAR *getColumnName(int col) { return ((col >= 0) && (col < m_nNumCols)) ? m_ppColNames[col] : NULL; }
 	LONG getColumnFormat(int col) { return ((col >= 0) && (col < m_nNumCols)) ? m_colFormats[col] : 0; }
@@ -226,6 +228,7 @@ public:
 
 	void setTitle(const TCHAR *title) { safe_free(m_title); m_title = (title != NULL) ? _tcsdup(title) : NULL; }
    void setSource(int source) { m_source = source; }
+   void setInstanceColumn(const TCHAR *column);
    int addColumn(const TCHAR *name, LONG format = 0);
    void setColumnFormat(int col, int format) { if ((col >= 0) && (col < m_nNumCols)) m_colFormats[col] = format; }
    int addRow();

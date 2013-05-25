@@ -36,6 +36,8 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -49,13 +51,18 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ColumnDefinition;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
+import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectListener;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditColumnDialog;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.TableColumnLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -66,6 +73,7 @@ public class TableColumns extends PropertyPage
 {
 	private static final String COLUMN_SETTINGS_PREFIX = "TableColumns.ColumnList"; //$NON-NLS-1$
 	
+	private DataCollectionObjectEditor editor;
 	private DataCollectionTable dci;
 	private List<ColumnDefinition> columns;
 	private LabeledText instanceColumn;
@@ -80,7 +88,9 @@ public class TableColumns extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		dci = (DataCollectionTable)getElement().getAdapter(DataCollectionTable.class);
+		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+		dci = editor.getObjectAsTable();
+
 		columns = new ArrayList<ColumnDefinition>();
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
@@ -232,6 +242,29 @@ public class TableColumns extends PropertyPage
 				editColumn();
 			}
       });
+      
+      final DataCollectionObjectListener listener = new DataCollectionObjectListener() {
+			@Override
+			public void onSelectItem(int origin, String name, String description, int dataType)
+			{
+			}
+
+			@Override
+			public void onSelectTable(int origin, String name, String description, String instanceColumn)
+			{
+				TableColumns.this.instanceColumn.setText(instanceColumn);
+				if (origin == DataCollectionObject.AGENT)
+					updateColumnsFromAgent(name);
+			}
+		};
+		dialogArea.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				editor.removeListener(listener);
+			}
+		});
+		editor.addListener(listener);
 
       return dialogArea;
 	}
@@ -343,48 +376,10 @@ public class TableColumns extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		if (isApply)
-			setValid(false);
-		
 		dci.setInstanceColumn(instanceColumn.getText());
 		dci.getColumns().clear();
 		dci.getColumns().addAll(columns);
-		
-		new ConsoleJob(Messages.TableColumns_JobTitle + dci.getId(), null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.TableColumns_JobError;
-			}
-
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				dci.getOwner().modifyObject(dci);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						((TableViewer)dci.getOwner().getUserData()).update(dci, null);
-					}
-				});
-			}
-
-			@Override
-			protected void jobFinalize()
-			{
-				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							TableColumns.this.setValid(true);
-						}
-					});
-				}
-			}
-		}.start();
+		editor.modify();
 	}
 
 	/* (non-Javadoc)
@@ -424,5 +419,51 @@ public class TableColumns extends PropertyPage
 	private void saveSettings()
 	{
 		WidgetHelper.saveColumnSettings(columnList.getTable(), Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
+	}
+	
+	/**
+	 * Update columns from real table
+	 */
+	private void updateColumnsFromAgent(final String name)
+	{
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		ConsoleJob job = new ConsoleJob("Get additional table information", null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				try
+				{
+					final org.netxms.client.Table table = session.queryAgentTable(dci.getNodeId(), name);
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
+						{
+							instanceColumn.setText(table.getInstanceColumn());
+							columns.clear();
+							for(int i = 0; i < table.getColumnCount(); i++)
+							{
+								ColumnDefinition c = new ColumnDefinition(table.getColumnName(i));
+								c.setDataType(table.getColumnFormat(i));
+								columns.add(c);
+							}
+							columnList.setInput(columns.toArray());
+						}
+					});
+				}
+				catch(Exception e)
+				{
+					// TODO: add logging
+					e.printStackTrace();
+				}
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return null;
+			}
+		};
+		job.setUser(false);
+		job.start();
 	}
 }
