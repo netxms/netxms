@@ -88,8 +88,8 @@ public class Transformation extends PropertyPage
 				return new ScriptEditor(parent, style,  SWT.H_SCROLL | SWT.V_SCROLL);
 			}
       };
-      transformationScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER,
-                                                                             factory, Messages.Transformation_Step2, gd);
+      transformationScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
+      		(editor.getObject() instanceof DataCollectionItem) ? Messages.Transformation_Step2 : "Transformation script", gd);
       transformationScript.addFunctions(Arrays.asList(DCI_FUNCTIONS));
       transformationScript.addVariables(Arrays.asList(DCI_VARIABLES));
       gd = new GridData();
