@@ -258,6 +258,9 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
       return;
    }
 
+   // Transform input value
+   transform((Table *)value);
+
    m_dwErrorCount = 0;
 	delete m_lastValue;
 	m_lastValue = (Table *)value;
@@ -304,6 +307,33 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
 }
 
 /**
+ * Transform received value
+ */
+void DCTable::transform(Table *value)
+{
+   if (m_transformationScript != NULL)
+   {
+      NXSL_Value *nxslValue;
+      NXSL_ServerEnv *pEnv;
+
+      nxslValue = new NXSL_Value(new NXSL_Object(&g_nxslStaticTableClass, value));
+      pEnv = new NXSL_ServerEnv;
+      m_transformationScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+      m_transformationScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
+	
+      if (m_transformationScript->run(pEnv, 1, &nxslValue) != 0)
+      {
+         TCHAR szBuffer[1024];
+
+			_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
+                    (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer,
+                   m_transformationScript->getErrorText(), m_dwId);
+      }
+   }
+}
+
+/**
  * Process new data collection error
  */
 void DCTable::processNewError()
@@ -322,14 +352,14 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 		hStmt = DBPrepare(hdb, _T("UPDATE dc_tables SET node_id=?,template_id=?,template_item_id=?,name=?,")
 		                       _T("instance_column=?,description=?,flags=?,source=?,snmp_port=?,polling_interval=?,")
                              _T("retention_time=?,status=?,system_tag=?,resource_id=?,proxy_node=?,")
-									  _T("perftab_settings=? WHERE item_id=?"));
+									  _T("perftab_settings=?,transformation_script=? WHERE item_id=?"));
 	}
 	else
 	{
 		hStmt = DBPrepare(hdb, _T("INSERT INTO dc_tables (node_id,template_id,template_item_id,name,")
 		                       _T("instance_column,description,flags,source,snmp_port,polling_interval,")
 		                       _T("retention_time,status,system_tag,resource_id,proxy_node,perftab_settings,")
-									  _T("item_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+									  _T("transformation_script,item_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -352,7 +382,8 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_dwResourceId);
 	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dwProxyNode);
 	DBBind(hStmt, 16, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
-	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_dwId);
+   DBBind(hStmt, 17, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
+	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_dwId);
 
 	BOOL result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);

@@ -573,52 +573,6 @@ public:
 };
 
 /**
- * Cluster class
- */
-class NXCORE_EXPORTABLE Cluster : public Template
-{
-protected:
-	DWORD m_dwClusterType;
-   DWORD m_dwNumSyncNets;
-   IP_NETWORK *m_pSyncNetList;
-	DWORD m_dwNumResources;
-	CLUSTER_RESOURCE *m_pResourceList;
-	DWORD m_dwFlags;
-	time_t m_tmLastPoll;
-	DWORD m_zoneId;
-
-public:
-	Cluster();
-   Cluster(const TCHAR *pszName, DWORD zoneId);
-	virtual ~Cluster();
-
-   virtual int Type() { return OBJECT_CLUSTER; }
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB();
-   virtual BOOL CreateFromDB(DWORD dwId);
-
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
-
-	bool isSyncAddr(DWORD dwAddr);
-	bool isVirtualAddr(DWORD dwAddr);
-	bool isResourceOnNode(DWORD dwResource, DWORD dwNode);
-   DWORD getZoneId() { return m_zoneId; }
-
-   void statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
-   void lockForStatusPoll() { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
-   bool isReadyForStatusPoll() 
-   {
-      return ((m_iStatus != STATUS_UNMANAGED) && (!m_bIsDeleted) &&
-              (!(m_dwFlags & CLF_QUEUED_FOR_STATUS_POLL)) &&
-              ((DWORD)time(NULL) - (DWORD)m_tmLastPoll > g_dwStatusPollingInterval))
-                  ? true : false;
-   }
-};
-
-/**
  * Interface class
  */
 class NXCORE_EXPORTABLE Interface : public NetObj
@@ -894,6 +848,52 @@ public:
 	void attachToNode(DWORD nodeId);
 	void updateRadioInterfaces(ObjectArray<RadioInterfaceInfo> *ri);
 	void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
+};
+
+/**
+ * Cluster class
+ */
+class NXCORE_EXPORTABLE Cluster : public DataCollectionTarget
+{
+protected:
+	DWORD m_dwClusterType;
+   DWORD m_dwNumSyncNets;
+   IP_NETWORK *m_pSyncNetList;
+	DWORD m_dwNumResources;
+	CLUSTER_RESOURCE *m_pResourceList;
+	DWORD m_dwFlags;
+	time_t m_tmLastPoll;
+	DWORD m_zoneId;
+
+public:
+	Cluster();
+   Cluster(const TCHAR *pszName, DWORD zoneId);
+	virtual ~Cluster();
+
+   virtual int Type() { return OBJECT_CLUSTER; }
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual BOOL DeleteFromDB();
+   virtual BOOL CreateFromDB(DWORD dwId);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+	bool isSyncAddr(DWORD dwAddr);
+	bool isVirtualAddr(DWORD dwAddr);
+	bool isResourceOnNode(DWORD dwResource, DWORD dwNode);
+   DWORD getZoneId() { return m_zoneId; }
+
+   void statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
+   void lockForStatusPoll() { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
+   bool isReadyForStatusPoll() 
+   {
+      return ((m_iStatus != STATUS_UNMANAGED) && (!m_bIsDeleted) &&
+              (!(m_dwFlags & CLF_QUEUED_FOR_STATUS_POLL)) &&
+              ((DWORD)time(NULL) - (DWORD)m_tmLastPoll > g_dwStatusPollingInterval))
+                  ? true : false;
+   }
 };
 
 /**

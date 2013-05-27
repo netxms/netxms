@@ -23,11 +23,9 @@
 
 #include "libnxsl.h"
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 NXSL_Stack::NXSL_Stack()
 {
    m_nStackSize = 128;
@@ -35,21 +33,17 @@ NXSL_Stack::NXSL_Stack()
    m_ppData = (void **)malloc(sizeof(void *) * m_nStackSize);
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 NXSL_Stack::~NXSL_Stack()
 {
    free(m_ppData);
 }
 
-
-//
-// Push value to stack
-//
-
+/**
+ * Push value to stack
+ */
 void NXSL_Stack::push(void *pData)
 {
    if (m_nStackPos >= m_nStackSize)
@@ -60,11 +54,9 @@ void NXSL_Stack::push(void *pData)
    m_ppData[m_nStackPos++] = pData;
 }
 
-
-//
-// Pop value from stack
-//
-
+/**
+ * Pop value from stack
+ */
 void *NXSL_Stack::pop()
 {
    if (m_nStackPos > 0)
@@ -72,14 +64,22 @@ void *NXSL_Stack::pop()
    return NULL;
 }
 
-
-//
-// Peek (get without removing) value from stack
-//
-
+/**
+ * Peek (get without removing) value from stack
+ */
 void *NXSL_Stack::peek()
 {
    if (m_nStackPos > 0)
       return m_ppData[m_nStackPos - 1];
+   return NULL;
+}
+
+/**
+ * Peek (get without removing) value from stack at given offset from top
+ */
+void *NXSL_Stack::peekAt(int offset)
+{
+   if ((offset > 0) && (m_nStackPos > offset - 1))
+      return m_ppData[m_nStackPos - offset];
    return NULL;
 }

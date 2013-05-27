@@ -67,6 +67,7 @@ public:
    void push(void *pData);
    void *pop();
    void *peek();
+   void *peekAt(int offset);
    void **peekList(int nLevel) { return &m_ppData[m_nStackPos - nLevel]; }
 
    int getSize() { return m_nStackPos; }
@@ -598,6 +599,18 @@ public:
 };
 
 /**
+ * NXSL "StaticTable" class - table that is not deleted when ref count reaches 0
+ */
+class LIBNXSL_EXPORTABLE NXSL_StaticTableClass : public NXSL_TableClass
+{
+public:
+   NXSL_StaticTableClass();
+   virtual ~NXSL_StaticTableClass();
+
+	virtual void onObjectDelete(NXSL_Object *object);
+};
+
+/**
  * NXSL "Connector" class
  */
 class LIBNXSL_EXPORTABLE NXSL_ConnectorClass : public NXSL_Class
@@ -609,5 +622,12 @@ public:
    virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
 	virtual void onObjectDelete(NXSL_Object *object);
 };
+
+/**
+ * Class definition instances
+ */
+extern NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
+extern NXSL_StaticTableClass LIBNXSL_EXPORTABLE g_nxslStaticTableClass;
+extern NXSL_ConnectorClass LIBNXSL_EXPORTABLE g_nxslConnectorClass;
 
 #endif

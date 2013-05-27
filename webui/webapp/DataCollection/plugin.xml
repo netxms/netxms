@@ -252,7 +252,7 @@
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.Transformation">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.datacollection.DataCollectionItem">
+                  value="org.netxms.client.datacollection.DataCollectionObject">
              </instanceof>
           </enabledWhen>
         </page>

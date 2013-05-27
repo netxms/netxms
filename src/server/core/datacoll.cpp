@@ -161,8 +161,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 			NetObj *object = FindObjectById(pItem->getProxyNode(), OBJECT_NODE);
 			if (object != NULL)
 			{
-				if ((object->Type() == OBJECT_NODE) &&
-					(object->isTrustedNode((target != NULL) ? target->Id() : 0)))
+				if (object->isTrustedNode((target != NULL) ? target->Id() : 0))
 				{
 					target = (Node *)object;
 					target->incRefCount();

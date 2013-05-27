@@ -43,7 +43,6 @@ public class Transformation extends PropertyPage
 	private static final String[] DCI_VARIABLES = { "$dci", "$node" }; //$NON-NLS-1$
 	
 	private DataCollectionObjectEditor editor;
-	private DataCollectionItem dci;
 	private Combo deltaCalculation;
 	private ScriptEditor transformationScript;
 	private Button testScriptButton;
@@ -55,7 +54,6 @@ public class Transformation extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
-		dci = editor.getObjectAsItem();
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
@@ -65,13 +63,16 @@ public class Transformation extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
-      deltaCalculation = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.Transformation_Step1,
-                                                         WidgetHelper.DEFAULT_LAYOUT_DATA);
-      deltaCalculation.add(Messages.Transformation_DeltaNone);
-      deltaCalculation.add(Messages.Transformation_DeltaSimple);
-      deltaCalculation.add(Messages.Transformation_DeltaAvgPerSec);
-      deltaCalculation.add(Messages.Transformation_DeltaAvgPerMin);
-      deltaCalculation.select(dci.getDeltaCalculation());
+      if (editor.getObject() instanceof DataCollectionItem)
+      {
+	      deltaCalculation = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.Transformation_Step1,
+	                                                         WidgetHelper.DEFAULT_LAYOUT_DATA);
+	      deltaCalculation.add(Messages.Transformation_DeltaNone);
+	      deltaCalculation.add(Messages.Transformation_DeltaSimple);
+	      deltaCalculation.add(Messages.Transformation_DeltaAvgPerSec);
+	      deltaCalculation.add(Messages.Transformation_DeltaAvgPerMin);
+	      deltaCalculation.select(editor.getObjectAsItem().getDeltaCalculation());
+      }
      
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -87,8 +88,8 @@ public class Transformation extends PropertyPage
 				return new ScriptEditor(parent, style,  SWT.H_SCROLL | SWT.V_SCROLL);
 			}
       };
-      transformationScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER,
-                                                                             factory, Messages.Transformation_Step2, gd);
+      transformationScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
+      		(editor.getObject() instanceof DataCollectionItem) ? Messages.Transformation_Step2 : "Transformation script", gd);
       transformationScript.addFunctions(Arrays.asList(DCI_FUNCTIONS));
       transformationScript.addVariables(Arrays.asList(DCI_VARIABLES));
       gd = new GridData();
@@ -97,7 +98,7 @@ public class Transformation extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       transformationScript.setLayoutData(gd);
-      transformationScript.setText(dci.getTransformationScript());
+      transformationScript.setText(editor.getObject().getTransformationScript());
       
       testScriptButton = new Button(transformationScript.getParent(), SWT.PUSH);
       testScriptButton.setText(Messages.Transformation_Test);   
@@ -116,8 +117,9 @@ public class Transformation extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		dci.setDeltaCalculation(deltaCalculation.getSelectionIndex());
-		dci.setTransformationScript(transformationScript.getText());
+		if (editor.getObject() instanceof DataCollectionItem)
+			editor.getObjectAsItem().setDeltaCalculation(deltaCalculation.getSelectionIndex());
+		editor.getObject().setTransformationScript(transformationScript.getText());
 		editor.modify();
 	}
 
@@ -147,7 +149,8 @@ public class Transformation extends PropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		deltaCalculation.select(DataCollectionItem.DELTA_NONE);
+		if (deltaCalculation != null)
+			deltaCalculation.select(DataCollectionItem.DELTA_NONE);
 		transformationScript.setText(""); //$NON-NLS-1$
 	}
 }

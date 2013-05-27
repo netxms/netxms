@@ -424,6 +424,8 @@ protected:
 	static int m_cacheAllocated;
 	static MUTEX m_cacheMutex;
 
+   void transform(Table *value);
+
 public:
 	DCTable();
    DCTable(const DCTable *src);

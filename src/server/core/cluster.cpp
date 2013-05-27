@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,8 +25,7 @@
 /**
  * Cluster class default constructor
  */
-Cluster::Cluster()
-        :Template()
+Cluster::Cluster() : DataCollectionTarget()
 {
 	m_dwClusterType = 0;
 	m_dwNumSyncNets = 0;
@@ -41,8 +40,7 @@ Cluster::Cluster()
 /**
  * Cluster class new object constructor
  */
-Cluster::Cluster(const TCHAR *pszName, DWORD zoneId)
-        :Template(pszName)
+Cluster::Cluster(const TCHAR *pszName, DWORD zoneId) : DataCollectionTarget(pszName)
 {
 	m_dwClusterType = 0;
 	m_dwNumSyncNets = 0;
@@ -330,7 +328,7 @@ BOOL Cluster::DeleteFromDB()
    TCHAR szQuery[256];
    BOOL bSuccess;
 
-   bSuccess = Template::DeleteFromDB();
+   bSuccess = DataCollectionTarget::DeleteFromDB();
    if (bSuccess)
    {
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM clusters WHERE id=%d"), m_dwId);
@@ -350,7 +348,7 @@ void Cluster::CreateMessage(CSCPMessage *pMsg)
 {
 	DWORD i, dwId;
 
-   Template::CreateMessage(pMsg);
+   DataCollectionTarget::CreateMessage(pMsg);
    pMsg->SetVariable(VID_CLUSTER_TYPE, m_dwClusterType);
 	pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
 	pMsg->SetVariable(VID_NUM_SYNC_SUBNETS, m_dwNumSyncNets);
@@ -435,7 +433,7 @@ DWORD Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_dwNumResources = dwCount;
 	}
 
-   return Template::ModifyFromMessage(pRequest, TRUE);
+   return DataCollectionTarget::ModifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -443,7 +441,7 @@ DWORD Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
  */
 void Cluster::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-	NetObj::calculateCompoundStatus(bForcedRecalc);
+   NetObj::calculateCompoundStatus(bForcedRecalc);
 }
 
 /**

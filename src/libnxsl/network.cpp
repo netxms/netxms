@@ -23,6 +23,10 @@
 
 #include "libnxsl.h"
 
+/**
+ * Instance of coinnector class definition
+ */
+NXSL_ConnectorClass LIBNXSL_EXPORTABLE g_nxslConnectorClass;
 
 /**
  * read() method

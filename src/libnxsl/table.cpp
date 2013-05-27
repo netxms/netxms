@@ -24,6 +24,12 @@
 #include "libnxsl.h"
 
 /**
+ * Instance of NXSL_Table class
+ */
+NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
+NXSL_StaticTableClass LIBNXSL_EXPORTABLE g_nxslStaticTableClass;
+
+/**
  * addRow() method
  */
 NXSL_METHOD_DEFINITION(addRow)
@@ -140,6 +146,10 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
       value = new NXSL_Value((LONG)table->getNumColumns());
    }
+   else if (!_tcscmp(attr, _T("instanceColumn")))
+   {
+      value = new NXSL_Value(table->getInstanceColumn());
+   }
    else if (!_tcscmp(attr, _T("rowCount")))
    {
       value = new NXSL_Value((LONG)table->getNumRows());
@@ -149,4 +159,24 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const TCHAR *attr)
       value = new NXSL_Value(table->getTitle());
    }
    return value;
+}
+/**
+ * Implementation of "StaticTable" class: constructor
+ */
+NXSL_StaticTableClass::NXSL_StaticTableClass() : NXSL_TableClass()
+{
+}
+
+/**
+ * Implementation of "StaticTable" class: destructor
+ */
+NXSL_StaticTableClass::~NXSL_StaticTableClass()
+{
+}
+
+/**
+ * Static table: object delete
+ */
+void NXSL_StaticTableClass::onObjectDelete(NXSL_Object *object)
+{
 }

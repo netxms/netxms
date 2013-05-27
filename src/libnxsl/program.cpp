@@ -981,7 +981,7 @@ void NXSL_Program::execute()
          }
          break;
       case OPCODE_CALL_METHOD:
-         pValue = (NXSL_Value *)m_pDataStack->pop();
+         pValue = (NXSL_Value *)m_pDataStack->peekAt(cp->m_nStackItems + 1);
          if (pValue != NULL)
          {
             if (pValue->getDataType() == NXSL_DT_OBJECT)
@@ -997,7 +997,7 @@ void NXSL_Program::execute()
                                                       &pResult, this);
                   if (nRet == 0)
                   {
-                     for(i = 0; i < cp->m_nStackItems; i++)
+                     for(i = 0; i < cp->m_nStackItems + 1; i++)
                         delete (NXSL_Value *)m_pDataStack->pop();
                      m_pDataStack->push(pResult);
                   }
@@ -1021,7 +1021,6 @@ void NXSL_Program::execute()
             {
                error(NXSL_ERR_NOT_OBJECT);
             }
-            delete pValue;
          }
          else
          {

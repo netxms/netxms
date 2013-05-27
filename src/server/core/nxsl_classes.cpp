@@ -470,67 +470,76 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 }
 
 /**
- * Implementation of "DCI" class
+ * Implementation of "DCI" class: constructor
  */
 NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
 {
    _tcscpy(m_szName, _T("DCI"));
 }
 
+/**
+ * Implementation of "DCI" class: get attribute
+ */
 NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
-   DCItem *dci;
+   DCObject *dci;
    NXSL_Value *value = NULL;
 
-   dci = (DCItem *)object->getData();
-   if (!_tcscmp(attr, _T("id")))
+   dci = (DCObject *)object->getData();
+   if (!_tcscmp(attr, _T("dataType")) && (dci->getType() == DCO_TYPE_ITEM))
    {
-		value = new NXSL_Value(dci->getId());
-   }
-   else if (!_tcscmp(attr, _T("name")))
-   {
-		value = new NXSL_Value(dci->getName());
+		value = new NXSL_Value((LONG)((DCItem *)dci)->getDataType());
    }
    else if (!_tcscmp(attr, _T("description")))
    {
 		value = new NXSL_Value(dci->getDescription());
    }
-   else if (!_tcscmp(attr, _T("origin")))
-   {
-		value = new NXSL_Value((LONG)dci->getDataSource());
-   }
-   else if (!_tcscmp(attr, _T("dataType")))
-   {
-		value = new NXSL_Value((LONG)dci->getDataType());
-   }
-   else if (!_tcscmp(attr, _T("status")))
-   {
-		value = new NXSL_Value((LONG)dci->getStatus());
-   }
    else if (!_tcscmp(attr, _T("errorCount")))
    {
 		value = new NXSL_Value(dci->getErrorCount());
+   }
+   else if (!_tcscmp(attr, _T("id")))
+   {
+		value = new NXSL_Value(dci->getId());
    }
    else if (!_tcscmp(attr, _T("lastPollTime")))
    {
 		value = new NXSL_Value((INT64)dci->getLastPollTime());
    }
+   else if (!_tcscmp(attr, _T("name")))
+   {
+		value = new NXSL_Value(dci->getName());
+   }
+   else if (!_tcscmp(attr, _T("origin")))
+   {
+		value = new NXSL_Value((LONG)dci->getDataSource());
+   }
+   else if (!_tcscmp(attr, _T("status")))
+   {
+		value = new NXSL_Value((LONG)dci->getStatus());
+   }
    else if (!_tcscmp(attr, _T("systemTag")))
    {
 		value = new NXSL_Value(dci->getSystemTag());
    }
+   else if (!_tcscmp(attr, _T("type")))
+   {
+		value = new NXSL_Value((LONG)dci->getType());
+   }
    return value;
 }
 
-//
-// Implementation of "SNMP_Transport" class
-//
-
+/**
+ * Implementation of "SNMP_Transport" class: constructor
+ */
 NXSL_SNMPTransportClass::NXSL_SNMPTransportClass() : NXSL_Class()
 {
 	_tcscpy(m_szName, _T("SNMP_Transport"));
 }
 
+/**
+ * Implementation of "SNMP_Transport" class: get attribute
+ */
 NXSL_Value *NXSL_SNMPTransportClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
 	NXSL_Value *value = NULL;
@@ -546,16 +555,17 @@ NXSL_Value *NXSL_SNMPTransportClass::getAttr(NXSL_Object *object, const TCHAR *a
 	return value;
 }
 
+/**
+ * Implementation of "SNMP_Transport" class: destructor
+ */
 void NXSL_SNMPTransportClass::onObjectDelete(NXSL_Object *object)
 {
 	delete (SNMP_Transport *)object->getData();
 }
 
-
-//
-// Implementation of "SNMP_VarBind" class
-//
-
+/**
+ * Implementation of "SNMP_VarBind" class
+ */
 NXSL_SNMPVarBindClass::NXSL_SNMPVarBindClass() : NXSL_Class()
 {
 	_tcscpy(m_szName, _T("SNMP_VarBind"));

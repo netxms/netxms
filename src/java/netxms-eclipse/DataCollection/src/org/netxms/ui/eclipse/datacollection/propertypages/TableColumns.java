@@ -92,6 +92,8 @@ public class TableColumns extends PropertyPage
 		dci = editor.getObjectAsTable();
 
 		columns = new ArrayList<ColumnDefinition>();
+		for(ColumnDefinition c : dci.getColumns())
+			columns.add(new ColumnDefinition(c));
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
