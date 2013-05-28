@@ -43,7 +43,7 @@
 #define SQL_TEXT4K      varchar(4000)
 #define SQL_INT64       number(20)
 #define TABLE_TYPE
-#define CRLF            x'0D'||x'0A'
+#define CRLF            char(13,10)
 #define CONCAT          ||
 
 #elif defined(DB_MYSQL)

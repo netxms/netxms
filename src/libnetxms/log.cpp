@@ -48,7 +48,7 @@ static int m_maxLogSize = 4096 * 1024;	// 4 MB
 static int m_logHistorySize = 4;		// Keep up 4 previous log files
 static TCHAR m_dailyLogSuffixTemplate[64] = _T("%Y%m%d");
 static time_t m_currentDayStart = 0;
-static void (*m_consoleWriter)(const TCHAR *, ...) = (void (*)(const TCHAR *, ...))_tprintf;
+static NxLogConsoleWriter m_consoleWriter = (NxLogConsoleWriter)_tprintf;
 
 /**
  * Format current time for output
@@ -139,7 +139,7 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLog
 /**
  * Set console writer
  */
-void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(void (*writer)(const TCHAR *, ...))
+void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(NxLogConsoleWriter writer)
 {
 	m_consoleWriter = writer;
 }

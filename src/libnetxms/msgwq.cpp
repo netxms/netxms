@@ -23,18 +23,14 @@
 
 #include "libnetxms.h"
 
-
-//
-// Constants
-//
-
+/** 
+ * Interval between checking messages TTL in milliseconds
+ */
 #define TTL_CHECK_INTERVAL    200
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 MsgWaitQueue::MsgWaitQueue()
 {
    m_dwMsgHoldTime = 30000;      // Default message TTL is 30 seconds
@@ -46,11 +42,9 @@ MsgWaitQueue::MsgWaitQueue()
    m_hHkThread = ThreadCreateEx(mwqThreadStarter, 0, this);
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 MsgWaitQueue::~MsgWaitQueue()
 {
    ConditionSet(m_condStop);
@@ -66,11 +60,9 @@ MsgWaitQueue::~MsgWaitQueue()
    ConditionDestroy(m_condNewMsg);
 }
 
-
-//
-// Clear queue
-//
-
+/**
+ * Clear queue
+ */
 void MsgWaitQueue::clear()
 {
    DWORD i;

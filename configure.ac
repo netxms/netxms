@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.7], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.8], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -75,6 +75,7 @@ LDFLAGS_PREFIX=""
 LDFLAGS_SUFFIX=""
 LTINIT_CC=""
 LTINIT_CXX=""
+SQLFLAGS=""
 
 
 #--------------------------------------------------------------------
@@ -590,7 +591,14 @@ fi
 if test "x$PLATFORM" = "xAIX"; then
 	AC_CHECK_PROG([CCC], [xlC_r], [xlC_r])
 fi
-AC_PROG_CC(aCC xlC_r gcc cc cl)
+if test "x$PLATFORM" = "xSunOS"; then
+	AC_CHECK_PROG([CCC], [CC], [CC])
+fi
+if test "x$CCC" = "xCC"; then
+	AC_PROG_CC(cc)
+else
+	AC_PROG_CC(aCC xlC_r gcc cc cl)
+fi
 AC_PROG_CPP
 AC_PROG_CXX
 if test "x$CXX" = "xg++"; then
@@ -656,6 +664,7 @@ esac
 #--------------------------------------------------------------------
 
 if test "x$CC" = "xgcc" ; then
+	SQLFLAGS="-x c -Wundef"
 
 	AC_LANG_PUSH([C++])
 
@@ -842,6 +851,39 @@ if test "x$CXX" = "xxlC_r" ; then
                                 AC_MSG_RESULT(no)
                         ])
         fi
+fi
+
+if test "x$CXX" = "xCC" ; then
+	SQLFLAGS="-Qn"
+	CPPFLAGS="$CPPFLAGS -mt"
+
+	if test "x$FORCE_32BIT_BUILD" = "xyes"; then
+		AC_MSG_CHECKING(whether C compiler accepts -m32)
+		OLD_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS -m32"
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+			[ 
+				LDFLAGS="-m32 $LDFLAGS"
+				AC_MSG_RESULT(yes) 
+			], 
+			[ 
+				CPPFLAGS="$OLD_CPPFLAGS"
+				AC_MSG_RESULT(no)
+			])
+	else
+		AC_MSG_CHECKING(whether C compiler accepts -m64)
+		OLD_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS -m64"
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+			[ 
+				LDFLAGS="-m64 $LDFLAGS"
+				AC_MSG_RESULT(yes) 
+			], 
+			[ 
+				CPPFLAGS="$OLD_CPPFLAGS"
+				AC_MSG_RESULT(no)
+			])
+	fi
 fi
 
 
@@ -2054,6 +2096,7 @@ AC_SUBST(ODBC_LIBS)
 AC_SUBST(DB2_LIBS)
 AC_SUBST(INFORMIX_LIBS)
 AC_SUBST(OBJECT_MODE)
+AC_SUBST(SQLFLAGS)
 
 #--------------------------------------------------------------------
 # Shared libs versions
@@ -2331,6 +2374,8 @@ else
 	echo "Force 32bit build       : NO"
 fi
 
+echo "C compiler              : ${CC}"
+echo "C++ compiler            : ${CXX}"
 echo "CPPFLAGS                : ${CPPFLAGS}"
 echo "CXXFLAGS                : ${CXXFLAGS}"
 echo "CFLAGS                  : ${CFLAGS}"

@@ -1101,7 +1101,9 @@ void LIBNETXMS_EXPORTABLE nxlog_close(void);
 void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...);
 BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLogSize, int historySize, const TCHAR *dailySuffix);
 BOOL LIBNETXMS_EXPORTABLE nxlog_rotate();
-void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(void (*writer)(const TCHAR *, ...));
+
+typedef void (*NxLogConsoleWriter)(const TCHAR *, ...);
+void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(NxLogConsoleWriter writer);
 
 void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text);
 void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...);
@@ -1140,8 +1142,7 @@ DWORD LIBNETXMS_EXPORTABLE XMLGetAttrDWORD(const char **attrs, const char *name,
 bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, bool defVal);
 
 #if !defined(_WIN32) && !defined(_NETWARE) && defined(NMS_THREADS_H_INCLUDED)
-void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHandler)(void *),
-                                        THREAD_RESULT (THREAD_CALL * pfMain)(void *));
+void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFunction pfMain);
 #endif
 
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),

@@ -933,6 +933,7 @@ typedef struct
 	bool trimValue[MAX_STACK_DEPTH];
 } XML_PARSER_STATE;
 
+extern "C"
 static void StartElement(void *userData, const char *name, const char **attrs)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
@@ -993,6 +994,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	}
 }
 
+extern "C"
 static void EndElement(void *userData, const char *name)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
@@ -1010,6 +1012,7 @@ static void EndElement(void *userData, const char *name)
 	}
 }
 
+extern "C"
 static void CharData(void *userData, const XML_Char *s, int len)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;

@@ -24,6 +24,14 @@
 #include "libnetxms.h"
 
 /**
+ * Standard object destructor
+ */
+static void ObjectDestructor(void *object)
+{
+	free(object);
+}
+
+/**
  * Constructors
  */
 StringMapBase::StringMapBase(bool objectOwner)
@@ -33,7 +41,7 @@ StringMapBase::StringMapBase(bool objectOwner)
 	m_values = NULL;
 	m_objectOwner = objectOwner;
    m_ignoreCase = true;
-	m_objectDestructor = free;
+	m_objectDestructor = ObjectDestructor;
 }
 
 /**

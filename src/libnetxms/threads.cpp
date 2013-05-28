@@ -30,14 +30,10 @@
 #include <sys/utsname.h>
 #endif
 
-
-//
-// Start main loop and signal handler for daemon
-//
-
-void LIBNETXMS_EXPORTABLE 
-     StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHandler)(void *),
-                   THREAD_RESULT (THREAD_CALL * pfMain)(void *))
+/**
+ * Start main loop and signal handler for daemon
+ */
+void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFunction pfMain)
 {
    THREAD hThread;
    struct utsname un;

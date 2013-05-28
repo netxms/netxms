@@ -30,14 +30,15 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			winperf.cpp zone.cpp
 libnxcore_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
-libnxcore_la_LIBADD = ../../libnetxms/libnetxms.la \
-		      ../../snmp/libnxsnmp/libnxsnmp.la \
-		      ../../libnxmap/libnxmap.la \
-		      ../../libnxlp/libnxlp.la \
-		      ../../db/libnxdb/libnxdb.la \
-		      ../libnxsrv/libnxsrv.la \
-                      ../../libnxsl/libnxsl.la \
-                      @SERVER_LIBS@
+libnxcore_la_LIBADD = \
+	../libnxsrv/libnxsrv.la \
+	../../snmp/libnxsnmp/libnxsnmp.la \
+	../../libnxmap/libnxmap.la \
+	../../libnxlp/libnxlp.la \
+	../../db/libnxdb/libnxdb.la \
+	../../libnxsl/libnxsl.la \
+	../../libnetxms/libnetxms.la \
+	@SERVER_LIBS@
 if USE_INTERNAL_LIBTRE
 libnxcore_la_LIBADD += @top_srcdir@/src/libtre/libnxtre.la
 endif

@@ -56,6 +56,8 @@ typedef unsigned int THREAD_ID;
 #else
 #define THREAD_CALL     __stdcall
 
+extern "C" typedef THREAD_RESULT (THREAD_CALL *ThreadFunction)(void *);
+
 typedef CRITICAL_SECTION *MUTEX;
 typedef HANDLE CONDITION;
 struct netxms_thread_t
@@ -67,7 +69,7 @@ typedef struct netxms_thread_t *THREAD;
 
 typedef struct
 {
-	THREAD_RESULT (THREAD_CALL *start_address)(void *);
+	ThreadFunction start_address;
 	void *args;
 } THREAD_START_DATA;
 
@@ -109,7 +111,7 @@ inline void ThreadSleepMs(DWORD dwMilliseconds)
    Sleep(dwMilliseconds);
 }
 
-inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address)(void *), int stack_size, void *args)
+inline BOOL ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
 {
    HANDLE hThread;
    THREAD_ID dwThreadId;
@@ -127,7 +129,7 @@ inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address)(void *), int
    return (hThread != NULL);
 }
 
-inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address)(void *), int stack_size, void *args)
+inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void *args)
 {
    THREAD thread;
 
@@ -272,6 +274,8 @@ typedef void *THREAD_RESULT;
 #define THREAD_OK       ((void *)0)
 #define THREAD_CALL
 
+extern "C" typedef THREAD_RESULT (THREAD_CALL *ThreadFunction)(void *);
+
 
 //
 // Inline functions
@@ -296,7 +300,7 @@ inline void ThreadSleepMs(DWORD dwMilliseconds)
 	pth_usleep(dwMilliseconds * 1000);
 }
 
-inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
+inline BOOL ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
 {
 	THREAD id;
 
@@ -311,7 +315,7 @@ inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), in
 	}
 }
 
-inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
+inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void *args)
 {
 	THREAD id;
 
@@ -579,6 +583,8 @@ typedef void *THREAD_RESULT;
 #define THREAD_OK       ((void *)0)
 #define THREAD_CALL
 
+extern "C" typedef THREAD_RESULT (THREAD_CALL *ThreadFunction)(void *);
+
 
 //
 // Inline functions
@@ -615,7 +621,7 @@ inline void ThreadSleepMs(DWORD dwMilliseconds)
 #endif
 }
 
-inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
+inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void *args)
 {
    THREAD id;
 
@@ -640,7 +646,7 @@ inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *)
 	return id;
 }
 
-inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
+inline BOOL ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
 {
 	THREAD id = ThreadCreateEx(start_address, stack_size, args);
 

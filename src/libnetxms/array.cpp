@@ -24,6 +24,14 @@
 #include "libnetxms.h"
 
 /**
+ * Default object destructor
+ */
+static void ObjectDestructor(void *object)
+{
+	free(object);
+}
+
+/**
  * Constructor
  *
  * @param initial initial array size
@@ -37,7 +45,7 @@ Array::Array(int initial, int grow, bool owner)
 	m_allocated = (initial >= 0) ? initial : 16;
 	m_data = (m_allocated > 0) ? (void **)malloc(sizeof(void *) * m_allocated) : NULL;
 	m_objectOwner = owner;
-	m_objectDestructor = free;
+	m_objectDestructor = ObjectDestructor;
 }
 
 /**

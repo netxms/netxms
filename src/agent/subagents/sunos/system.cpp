@@ -23,11 +23,9 @@
 #include "sunos_subagent.h"
 #include <sys/systeminfo.h>
 
-
-//
-// Handler for System.Uname parameter
-//
-
+/**
+ * Handler for System.Uname parameter
+ */
 LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 {
 	char szSysStr[7][64];
@@ -135,7 +133,7 @@ LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue)
 		{
 			if(kstat_read(kc, kp, 0) != -1)
 			{
-				kn = (kstat_named_t *)kstat_data_lookup(kp, szParam[(int)pArg]);
+				kn = (kstat_named_t *)kstat_data_lookup(kp, szParam[CAST_FROM_POINTER(pArg, int)]);
 				if (kn != NULL)
 				{
 					sprintf(pValue, "%.2f0000", (double)kn->value.ul / 256.0);
@@ -275,11 +273,9 @@ LONG ReadKStatValue(const char *pszModule, LONG nInstance, const char *pszName,
 	return nRet;
 }
 
-
-//
-// Handler for System.CPU.Count
-//
-
+/**
+ * Handler for System.CPU.Count
+ */
 LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
@@ -288,7 +284,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 
 	qwPageSize = sysconf(_SC_PAGESIZE);
 
-	switch((int)pArg)
+	switch(CAST_FROM_POINTER(pArg, int))
 	{
 		case MEMINFO_PHYSICAL_TOTAL:
 			ret_uint64(pValue, (QWORD)sysconf(_SC_PHYS_PAGES) * qwPageSize);

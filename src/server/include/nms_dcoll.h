@@ -355,8 +355,11 @@ public:
    ItemValue *getInternalLastValue();
 
    virtual void createMessage(CSCPMessage *pMsg);
+#ifdef __SUNPRO_CC
+   using DCObject::updateFromMessage;
+#endif
    void updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);
-	void fillMessageWithThresholds(CSCPMessage *msg);
+   void fillMessageWithThresholds(CSCPMessage *msg);
 
    virtual void changeBinding(DWORD dwNewId, Template *pNode, BOOL doMacroExpansion);
 
