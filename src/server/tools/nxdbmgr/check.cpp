@@ -656,17 +656,15 @@ static void CheckEPP()
    EndStage();
 }
 
-
-//
-// Create idata_xx table
-//
-
-static BOOL CreateIDataTable(DWORD nodeId)
+/**
+ * Create idata_xx table
+ */
+BOOL CreateIDataTable(DWORD nodeId)
 {
    TCHAR szQuery[256], szQueryTemplate[256];
    DWORD i;
 
-   ConfigReadStr(_T("IDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
+   MetaDataReadStr(_T("IDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
    _sntprintf(szQuery, 256, szQueryTemplate, nodeId);
    if (!SQLQuery(szQuery))
 		return FALSE;
@@ -674,7 +672,7 @@ static BOOL CreateIDataTable(DWORD nodeId)
    for(i = 0; i < 10; i++)
    {
       _sntprintf(szQuery, 256, _T("IDataIndexCreationCommand_%d"), i);
-      ConfigReadStr(szQuery, szQueryTemplate, 255, _T(""));
+      MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
       if (szQueryTemplate[0] != 0)
       {
          _sntprintf(szQuery, 256, szQueryTemplate, nodeId, nodeId);
@@ -686,11 +684,37 @@ static BOOL CreateIDataTable(DWORD nodeId)
 	return TRUE;
 }
 
+/**
+ * Create tdata_xx table
+ */
+BOOL CreateTDataTable(DWORD nodeId)
+{
+   TCHAR szQuery[256], szQueryTemplate[256];
+   DWORD i;
 
-//
-// Check collected data
-//
+   MetaDataReadStr(_T("TDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
+   _sntprintf(szQuery, 256, szQueryTemplate, nodeId);
+   if (!SQLQuery(szQuery))
+		return FALSE;
 
+   for(i = 0; i < 10; i++)
+   {
+      _sntprintf(szQuery, 256, _T("TDataIndexCreationCommand_%d"), i);
+      MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
+      if (szQueryTemplate[0] != 0)
+      {
+         _sntprintf(szQuery, 256, szQueryTemplate, nodeId, nodeId);
+         if (!SQLQuery(szQuery))
+				return FALSE;
+      }
+   }
+
+	return TRUE;
+}
+
+/**
+ * Check collected data
+ */
 static void CheckIData()
 {
 	int i, nodeCount;
@@ -710,7 +734,6 @@ static void CheckIData()
 		{
 			nodeId = DBGetFieldULong(hResultNodes, i, 0);
 			_sntprintf(query, 1024, _T("SELECT count(*) FROM idata_%d WHERE idata_timestamp>") TIME_T_FMT, nodeId, TIME_T_FCAST(now));
-//			hResult = DBSelect(g_hCoreDB, query);
 			hResult = SQLSelect(query);
 			if (hResult != NULL)
 			{
@@ -760,11 +783,9 @@ static void CheckIData()
 	EndStage();
 }
 
-
-//
-// Check template to node mapping
-//
-
+/**
+ * Check template to node mapping
+ */
 static void CheckTemplateNodeMapping()
 {
    DB_RESULT hResult;

@@ -545,7 +545,8 @@ public:
    bool deleteDCObject(DWORD dcObjectId, bool needLock);
    bool setItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus);
    int getItemType(DWORD dwItemId);
-   DCObject *getDCObjectById(DWORD dwItemId);
+   DCObject *getDCObjectById(DWORD itemId);
+   DCObject *getDCObjectByTemplateId(DWORD tmplItemId);
    DCObject *getDCObjectByIndex(int index);
    DCObject *getDCObjectByName(const TCHAR *pszName);
    DCObject *getDCObjectByDescription(const TCHAR *pszDescription);
@@ -894,6 +895,8 @@ public:
               ((DWORD)time(NULL) - (DWORD)m_tmLastPoll > g_dwStatusPollingInterval))
                   ? true : false;
    }
+
+   DWORD collectAggregatedData(DCItem *item, TCHAR *buffer);
 };
 
 /**
@@ -2121,6 +2124,7 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByGUID;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxClusterById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxMobileDeviceById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxAccessPointById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxConditionById;

@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Default constructor
-//
-
+/**
+ * Default constructor
+ */
 ItemValue::ItemValue()
 {
    m_szString[0] = 0;
@@ -38,11 +36,9 @@ ItemValue::ItemValue()
    m_dwTimeStamp = (DWORD)time(NULL);
 }
 
-
-//
-// Construct value object from string value
-//
-
+/**
+ * Construct value object from string value
+ */
 ItemValue::ItemValue(const TCHAR *pszValue, DWORD dwTimeStamp)
 {
    nx_strncpy(m_szString, pszValue, MAX_DB_STRING);
@@ -58,11 +54,9 @@ ItemValue::ItemValue(const TCHAR *pszValue, DWORD dwTimeStamp)
       m_dwTimeStamp = dwTimeStamp;
 }
 
-
-//
-// Construct value object from another ItemValue object
-//
-
+/**
+ * Construct value object from another ItemValue object
+ */
 ItemValue::ItemValue(const ItemValue *pValue)
 {
    _tcscpy(m_szString, pValue->m_szString);
@@ -74,20 +68,16 @@ ItemValue::ItemValue(const ItemValue *pValue)
    m_dwTimeStamp = pValue->m_dwTimeStamp;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 ItemValue::~ItemValue()
 {
 }
 
-
-//
-// Assignment operators
-//
-
+/**
+ * Assignment operators
+ */
 const ItemValue& ItemValue::operator=(const ItemValue &src)
 {
    _tcscpy(m_szString, src.m_szString);
@@ -164,13 +154,10 @@ const ItemValue& ItemValue::operator=(QWORD qwInt64)
    return *this;
 }
 
-
-//
-// Calculate difference between two values
-//
-
-void CalculateItemValueDiff(ItemValue &result, int nDataType,
-                            ItemValue &value1, ItemValue &value2)
+/**
+ * Calculate difference between two values
+ */
+void CalculateItemValueDiff(ItemValue &result, int nDataType, ItemValue &value1, ItemValue &value2)
 {
    switch(nDataType)
    {
@@ -199,11 +186,11 @@ void CalculateItemValueDiff(ItemValue &result, int nDataType,
    }
 }
 
-
-//
-// Calculate average value for set of values
-//
-
+/**
+ * Calculate average value for set of values
+ */
+void CalculateItemValueAverage(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList)
+{
 #define CALC_AVG_VALUE(vtype) \
 { \
    vtype var; \
@@ -220,9 +207,6 @@ void CalculateItemValueDiff(ItemValue &result, int nDataType,
    result = var / (vtype)nValueCount; \
 }
 
-void CalculateItemValueAverage(ItemValue &result, int nDataType,
-                               int nNumValues, ItemValue **ppValueList)
-{
    int i, nValueCount;
 
    switch(nDataType)
@@ -250,11 +234,57 @@ void CalculateItemValueAverage(ItemValue &result, int nDataType,
    }
 }
 
+/**
+ * Calculate total value for set of values
+ */
+void CalculateItemValueTotal(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList)
+{
+#define CALC_TOTAL_VALUE(vtype) \
+{ \
+   vtype var; \
+   var = 0; \
+   for(i = 0; i < nNumValues; i++) \
+   { \
+      if (ppValueList[i]->getTimeStamp() != 1) \
+      { \
+         var += (vtype)(*ppValueList[i]); \
+      } \
+   } \
+   result = var; \
+}
 
-//
-// Calculate mean absolute deviation for set of values
-//
+   int i;
 
+   switch(nDataType)
+   {
+      case DCI_DT_INT:
+         CALC_TOTAL_VALUE(LONG);
+         break;
+      case DCI_DT_UINT:
+         CALC_TOTAL_VALUE(DWORD);
+         break;
+      case DCI_DT_INT64:
+         CALC_TOTAL_VALUE(INT64);
+         break;
+      case DCI_DT_UINT64:
+         CALC_TOTAL_VALUE(QWORD);
+         break;
+      case DCI_DT_FLOAT:
+         CALC_TOTAL_VALUE(double);
+         break;
+      case DCI_DT_STRING:
+         result = _T("");
+         break;
+      default:
+         break;
+   }
+}
+
+/**
+ * Calculate mean absolute deviation for set of values
+ */
+void CalculateItemValueMD(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList)
+{
 #define CALC_MD_VALUE(vtype) \
 { \
    vtype mean, dev; \
@@ -280,9 +310,6 @@ void CalculateItemValueAverage(ItemValue &result, int nDataType,
    result = dev / (vtype)nValueCount; \
 }
 
-void CalculateItemValueMD(ItemValue &result, int nDataType,
-                          int nNumValues, ItemValue **ppValueList)
-{
    int i, nValueCount;
 
    switch(nDataType)
@@ -307,6 +334,101 @@ void CalculateItemValueMD(ItemValue &result, int nDataType,
          break;
       case DCI_DT_STRING:
          result = _T("");   // Mean deviation for string is meaningless
+         break;
+      default:
+         break;
+   }
+}
+
+/**
+ * Calculate min value for set of values
+ */
+void CalculateItemValueMin(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList)
+{
+#define CALC_MIN_VALUE(vtype) \
+{ \
+   bool first = true; \
+   vtype var = 0; \
+   for(i = 0; i < nNumValues; i++) \
+   { \
+      if (ppValueList[i]->getTimeStamp() != 1) \
+      { \
+         vtype curr = (vtype)(*ppValueList[i]); \
+         if (first || (curr < var)) { var = curr; } \
+      } \
+   } \
+   result = var; \
+}
+
+   int i;
+
+   switch(nDataType)
+   {
+      case DCI_DT_INT:
+         CALC_MIN_VALUE(LONG);
+         break;
+      case DCI_DT_UINT:
+         CALC_MIN_VALUE(DWORD);
+         break;
+      case DCI_DT_INT64:
+         CALC_MIN_VALUE(INT64);
+         break;
+      case DCI_DT_UINT64:
+         CALC_MIN_VALUE(QWORD);
+         break;
+      case DCI_DT_FLOAT:
+         CALC_MIN_VALUE(double);
+         break;
+      case DCI_DT_STRING:
+         result = _T("");   // Min value for string is meaningless
+         break;
+      default:
+         break;
+   }
+}
+
+
+/**
+ * Calculate max value for set of values
+ */
+void CalculateItemValueMax(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList)
+{
+#define CALC_MAX_VALUE(vtype) \
+{ \
+   bool first = true; \
+   vtype var = 0; \
+   for(i = 0; i < nNumValues; i++) \
+   { \
+      if (ppValueList[i]->getTimeStamp() != 1) \
+      { \
+         vtype curr = (vtype)(*ppValueList[i]); \
+         if (first || (curr > var)) { var = curr; } \
+      } \
+   } \
+   result = var; \
+}
+
+   int i;
+
+   switch(nDataType)
+   {
+      case DCI_DT_INT:
+         CALC_MAX_VALUE(LONG);
+         break;
+      case DCI_DT_UINT:
+         CALC_MAX_VALUE(DWORD);
+         break;
+      case DCI_DT_INT64:
+         CALC_MAX_VALUE(INT64);
+         break;
+      case DCI_DT_UINT64:
+         CALC_MAX_VALUE(QWORD);
+         break;
+      case DCI_DT_FLOAT:
+         CALC_MAX_VALUE(double);
+         break;
+      case DCI_DT_STRING:
+         result = _T("");   // Max value for string is meaningless
          break;
       default:
          break;

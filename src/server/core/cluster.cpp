@@ -656,3 +656,63 @@ bool Cluster::isResourceOnNode(DWORD dwResource, DWORD dwNode)
 	UnlockData();
 	return bRet;
 }
+
+/**
+ * Collect aggregated data for cluster nodes
+ */
+DWORD Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
+{
+   LockChildList(TRUE);
+   ItemValue **values = (ItemValue **)malloc(sizeof(ItemValue *) * m_dwChildCount);
+   int valueCount = 0;
+   for(DWORD i = 0; i < m_dwChildCount; i++)
+   {
+      if (m_pChildList[i]->Type() != OBJECT_NODE)
+         continue;
+
+      Node *node = (Node *)m_pChildList[i];
+      DCObject *dco = node->getDCObjectByTemplateId(item->getId());
+      if ((dco != NULL) && (dco->getType() == DCO_TYPE_ITEM))
+      {
+         ItemValue *v = ((DCItem *)dco)->getInternalLastValue();
+         if (v != NULL)
+            values[valueCount++] = v;
+      }
+   }
+   UnlockChildList();
+
+   DWORD rcc = DCE_SUCCESS;
+   if (valueCount > 0)
+   {
+      ItemValue result;
+      switch(item->getAggregationFunction())
+      {
+         case DCF_FUNCTION_AVG:
+            CalculateItemValueAverage(result, item->getDataType(), valueCount, values);
+            break;
+         case DCF_FUNCTION_MAX:
+            CalculateItemValueMax(result, item->getDataType(), valueCount, values);
+            break;
+         case DCF_FUNCTION_MIN:
+            CalculateItemValueMin(result, item->getDataType(), valueCount, values);
+            break;
+         case DCF_FUNCTION_SUM:
+            CalculateItemValueTotal(result, item->getDataType(), valueCount, values);
+            break;
+         default:
+            rcc = DCE_NOT_SUPPORTED;
+            break;
+      }
+      nx_strncpy(buffer, result.getString(), MAX_RESULT_LENGTH);
+   }
+   else
+   {
+      rcc = DCE_COMM_ERROR;
+   }
+
+   for(int i = 0; i < valueCount; i++)
+      delete values[i];
+   safe_free(values);
+
+   return rcc;
+}

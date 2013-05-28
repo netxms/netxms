@@ -715,15 +715,26 @@ enum
 /**
  * DCI flags
  */
-#define DCF_ADVANCED_SCHEDULE       0x00000001
-#define DCF_ALL_THRESHOLDS          0x00000002
-#define DCF_RAW_VALUE_OCTET_STRING  0x00000004
-#define DCF_SHOW_ON_OBJECT_TOOLTIP  0x00000008
-#define DCF_AGGREGATE_FOR_CLUSTER   0x00000010
-#define DCF_AGGREGATE_MIN           0x00000020
-#define DCF_AGGREGATE_MAX           0x00000040
-#define DCF_AGGREGATE_AVG           0x00000080
-#define DCF_AGGREGATE_SUM           0x00000100
+#define DCF_ADVANCED_SCHEDULE       ((WORD)0x0001)
+#define DCF_ALL_THRESHOLDS          ((WORD)0x0002)
+#define DCF_RAW_VALUE_OCTET_STRING  ((WORD)0x0004)
+#define DCF_SHOW_ON_OBJECT_TOOLTIP  ((WORD)0x0008)
+#define DCF_AGGREGATE_FUNCTION_MASK ((WORD)0x0070)
+#define DCF_AGGREGATE_FOR_CLUSTER   ((WORD)0x0080)
+
+/**
+ * Get cluster aggregation function from flags
+ */
+#define DCF_GET_AGGREGATION_FUNCTION(flags) (((flags) & DCF_AGGREGATE_FUNCTION_MASK) >> 4)
+#define DCF_SET_AGGREGATION_FUNCTION(flags,func) (((flags) & ~DCF_AGGREGATE_FUNCTION_MASK) | (((func) & 0x07) << 4))
+
+/**
+ * Aggregation functions
+ */
+#define DCF_FUNCTION_SUM 0
+#define DCF_FUNCTION_AVG 1
+#define DCF_FUNCTION_MIN 2
+#define DCF_FUNCTION_MAX 3
 
 /**
  * SNMP raw types

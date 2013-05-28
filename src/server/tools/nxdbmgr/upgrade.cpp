@@ -310,6 +310,47 @@ static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int f
 }
 
 /**
+ * Upgrade from V277 to V278
+ */
+static BOOL H_UpgradeFromV277(int currVersion, int newVersion)
+{
+   DB_RESULT hResult = SQLSelect(_T("SELECT id FROM clusters"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         DWORD id = DBGetFieldULong(hResult, i, 0);
+         if (!CreateIDataTable(id))
+         {
+            if (!g_bIgnoreErrors)
+            {
+               DBFreeResult(hResult);
+               return FALSE;
+            }
+         }
+         if (!CreateTDataTable(id))
+         {
+            if (!g_bIgnoreErrors)
+            {
+               DBFreeResult(hResult);
+               return FALSE;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='278' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V276 to V277
  */
 static BOOL H_UpgradeFromV276(int currVersion, int newVersion)
@@ -2317,11 +2358,9 @@ static BOOL H_UpgradeFromV210(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V209 to V210
-//
-
+/**
+ * Upgrade from V209 to V210
+ */
 static BOOL H_UpgradeFromV209(int currVersion, int newVersion)
 {
 	if (!SQLQuery(_T("DELETE FROM metadata WHERE var_name like 'IDataIndexCreationCommand_%'")))
@@ -6828,6 +6867,7 @@ static struct
    { 274, 275, H_UpgradeFromV274 },
    { 275, 276, H_UpgradeFromV275 },
    { 276, 277, H_UpgradeFromV276 },
+   { 277, 278, H_UpgradeFromV277 },
    { 0, 0, NULL }
 };
 

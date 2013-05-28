@@ -32,6 +32,14 @@ public class DataCollectionItem extends DataCollectionObject
 	public static final int DCF_ALL_THRESHOLDS = 0x0002;
 	public static final int DCF_RAW_VALUE_OCTET_STRING = 0x0004;
 	public static final int DCF_SHOW_ON_OBJECT_TOOLTIP = 0x0008;
+	public static final int DCF_AGGREGATE_FUNCTION_MASK = 0x0070;
+	public static final int DCF_AGGREGATE_FOR_CLUSTER = 0x0080;
+	
+	// Aggregation functions
+	public static final int DCF_FUNCTION_SUM = 0;
+	public static final int DCF_FUNCTION_AVG = 1;
+	public static final int DCF_FUNCTION_MIN = 2;
+	public static final int DCF_FUNCTION_MAX = 3;	
 	
 	// Delta calculation
 	public static final int DELTA_NONE = 0;
@@ -244,6 +252,41 @@ public class DataCollectionItem extends DataCollectionObject
 			flags |= DCF_SHOW_ON_OBJECT_TOOLTIP;
 		else
 			flags &= ~DCF_SHOW_ON_OBJECT_TOOLTIP;
+	}
+
+	/**
+	 * @return the processAllThresholds
+	 */
+	public boolean isAggregateOnCluster()
+	{
+		return (flags & DCF_AGGREGATE_FOR_CLUSTER) != 0;
+	}
+
+	/**
+	 * @param enable
+	 */
+	public void setAggregateOnCluster(boolean enable)
+	{
+		if (enable)
+			flags |= DCF_AGGREGATE_FOR_CLUSTER;
+		else
+			flags &= ~DCF_AGGREGATE_FOR_CLUSTER;
+	}
+
+	/**
+	 * @return aggregation function
+	 */
+	public int getAggregationFunction()
+	{
+		return (flags & DCF_AGGREGATE_FUNCTION_MASK) >> 4;
+	}
+
+	/**
+	 * @param func
+	 */
+	public void setAggregationFunction(int func)
+	{
+		flags = (flags & ~DCF_AGGREGATE_FUNCTION_MASK) | ((func & 0x07) << 4);
 	}
 
 	/**

@@ -27,6 +27,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.contexts.IContextService;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
@@ -45,7 +46,7 @@ public class LastValues extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		dataView = new LastValuesWidget(getViewPart(), parent, SWT.NONE, (Node)getObject(), "LastValuesTab"); //$NON-NLS-1$
+		dataView = new LastValuesWidget(getViewPart(), parent, SWT.NONE, getObject(), "LastValuesTab"); //$NON-NLS-1$
 		dataView.setAutoRefreshEnabled(true);
 		dataView.setFilterCloseAction(new Action() {
 			@Override
@@ -67,7 +68,7 @@ public class LastValues extends ObjectTab
 	@Override
 	public void objectChanged(AbstractObject object)
 	{
-		dataView.setNode(object);
+		dataView.setDataCollectionTarget(object);
 	}
 
 	/* (non-Javadoc)
@@ -76,7 +77,7 @@ public class LastValues extends ObjectTab
 	@Override
 	public boolean showForObject(AbstractObject object)
 	{
-		return (object instanceof Node) || (object instanceof MobileDevice);
+		return (object instanceof Node) || (object instanceof MobileDevice) || (object instanceof Cluster);
 	}
 
 	/* (non-Javadoc)

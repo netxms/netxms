@@ -54,6 +54,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -345,14 +346,14 @@ public class LastValuesWidget extends Composite
 	}
 	
 	/**
-	 * Change node object
+	 * Change data collection target object
 	 * 
-	 * @param _node new node object
+	 * @param dcTarget new data collection target object
 	 */
-	public void setNode(AbstractObject node)
+	public void setDataCollectionTarget(AbstractObject dcTarget)
 	{
-		if ((node instanceof AbstractNode) || (node instanceof MobileDevice))
-			this.dcTarget = node;
+		if ((dcTarget instanceof AbstractNode) || (dcTarget instanceof MobileDevice) || (dcTarget instanceof Cluster))
+			this.dcTarget = dcTarget;
 		else
 			this.dcTarget = null;
 		getDataFromServer();

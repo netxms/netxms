@@ -3183,7 +3183,7 @@ void ClientSession::clearDCIData(CSCPMessage *pRequest)
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
-      if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE))
+      if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE) || (pObject->Type() == OBJECT_CLUSTER))
       {
          if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
          {
@@ -3374,7 +3374,7 @@ void ClientSession::sendDCIThresholds(CSCPMessage *request)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE))
+			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE) || (object->Type() == OBJECT_CLUSTER))
 			{
 				DCObject *dci = ((Template *)object)->getDCObjectById(request->GetVariableLong(VID_DCI_ID));
 				if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
@@ -3665,7 +3665,7 @@ void ClientSession::getCollectedData(CSCPMessage *request)
    {
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
-			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE))
+			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE) || (object->Type() == OBJECT_CLUSTER))
 			{
 				if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
 				{
@@ -3713,7 +3713,7 @@ void ClientSession::getTableCollectedData(CSCPMessage *request)
    {
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
-			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE))
+			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE) || (object->Type() == OBJECT_CLUSTER))
 			{
 				if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
 				{
@@ -3803,7 +3803,7 @@ void ClientSession::getTableLastValues(CSCPMessage *pRequest)
    {
       if (pObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE))
+         if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE) || (pObject->Type() == OBJECT_CLUSTER))
          {
 				msg.SetVariable(VID_RCC, ((DataCollectionTarget *)pObject)->getTableLastValues(pRequest->GetVariableLong(VID_DCI_ID), &msg));
          }

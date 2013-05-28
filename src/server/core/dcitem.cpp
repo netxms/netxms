@@ -922,7 +922,9 @@ void DCItem::updateCacheSize(DWORD dwCondId)
 
    // Minimum cache size is 1 for nodes (so GetLastValue can work)
    // and it is always 0 for templates
-   if ((m_pNode->Type() == OBJECT_NODE) || (m_pNode->Type() == OBJECT_MOBILEDEVICE))
+   if (((m_pNode->Type() == OBJECT_NODE) || (m_pNode->Type() == OBJECT_MOBILEDEVICE) ||
+        ((m_pNode->Type() == OBJECT_CLUSTER) && (m_flags & DCF_AGGREGATE_FOR_CLUSTER))) &&
+       (m_instanceDiscoveryMethod == IDM_NONE))
    {
       dwRequiredSize = 1;
 
@@ -1166,6 +1168,17 @@ const TCHAR *DCItem::getLastValue()
 {
    lock();
    const TCHAR *v = (m_dwCacheSize > 0) ? (const TCHAR *)m_ppValueCache[0]->getString() : NULL;
+   unlock();
+   return v;
+}
+
+/**
+ * Get copy of internal last value object. Caller is responsible for destroying returned object.
+ */
+ItemValue *DCItem::getInternalLastValue()
+{
+   lock();
+   ItemValue *v = (m_dwCacheSize > 0) ? new ItemValue(m_ppValueCache[0]) : NULL;
    unlock();
    return v;
 }
@@ -1537,6 +1550,8 @@ bool DCItem::isCacheLoaded()
  */
 bool DCItem::hasValue()
 {
+   if (m_pNode->Type() == OBJECT_CLUSTER)
+      return (m_flags & DCF_AGGREGATE_FOR_CLUSTER) && (m_instanceDiscoveryMethod == IDM_NONE);
 	return m_instanceDiscoveryMethod == IDM_NONE;
 }
 

@@ -50,63 +50,77 @@ Queue *g_pItemQueue = NULL;
  */
 static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *pBuffer, DWORD *error)
 {
-   switch(pItem->getDataSource())
+   if (dcTarget->Type() == OBJECT_CLUSTER)
    {
-      case DS_INTERNAL:    // Server internal parameters (like status)
-         *error = dcTarget->getInternalItem(pItem->getName(), MAX_LINE_SIZE, pBuffer);
-         break;
-      case DS_SNMP_AGENT:
-			if (dcTarget->Type() == OBJECT_NODE)
-				*error = ((Node *)dcTarget)->getItemFromSNMP(pItem->getSnmpPort(), pItem->getName(), MAX_LINE_SIZE, 
-					pBuffer, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
-			else
-				*error = DCE_NOT_SUPPORTED;
-         break;
-      case DS_CHECKPOINT_AGENT:
-			if (dcTarget->Type() == OBJECT_NODE)
-	         *error = ((Node *)dcTarget)->getItemFromCheckPointSNMP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
-			else
-				*error = DCE_NOT_SUPPORTED;
-         break;
-      case DS_NATIVE_AGENT:
-			if (dcTarget->Type() == OBJECT_NODE)
-	         *error = ((Node *)dcTarget)->getItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
-			else
-				*error = DCE_NOT_SUPPORTED;
-         break;
-      case DS_WINPERF:
-			if (dcTarget->Type() == OBJECT_NODE)
-			{
-				TCHAR name[MAX_PARAM_NAME];
-				_sntprintf(name, MAX_PARAM_NAME, _T("PDH.CounterValue(\"%s\",%d)"), pItem->getName(), pItem->getSampleCount());
-	         *error = ((Node *)dcTarget)->getItemFromAgent(name, MAX_LINE_SIZE, pBuffer);
-			}
-			else
-			{
-				*error = DCE_NOT_SUPPORTED;
-			}
-         break;
-      case DS_ILO:
-         if (dcTarget->Type() == OBJECT_NODE)
-         {
-				TCHAR path[MAX_PARAM_NAME];
-            nx_strncpy(path, pItem->getName(), MAX_PARAM_NAME);
-            TCHAR *param = _tcsrchr(path, _T('/'));
-            if (param != NULL)
+      if (pItem->isAggregateOnCluster())
+      {
+         *error = ((Cluster *)dcTarget)->collectAggregatedData(pItem, pBuffer);
+      }
+      else
+      {
+         *error = DCE_NOT_SUPPORTED;
+      }
+   }
+   else
+   {
+      switch(pItem->getDataSource())
+      {
+         case DS_INTERNAL:    // Server internal parameters (like status)
+            *error = dcTarget->getInternalItem(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+            break;
+         case DS_SNMP_AGENT:
+			   if (dcTarget->Type() == OBJECT_NODE)
+				   *error = ((Node *)dcTarget)->getItemFromSNMP(pItem->getSnmpPort(), pItem->getName(), MAX_LINE_SIZE, 
+					   pBuffer, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
+			   else
+				   *error = DCE_NOT_SUPPORTED;
+            break;
+         case DS_CHECKPOINT_AGENT:
+			   if (dcTarget->Type() == OBJECT_NODE)
+	            *error = ((Node *)dcTarget)->getItemFromCheckPointSNMP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+			   else
+				   *error = DCE_NOT_SUPPORTED;
+            break;
+         case DS_NATIVE_AGENT:
+			   if (dcTarget->Type() == OBJECT_NODE)
+	            *error = ((Node *)dcTarget)->getItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+			   else
+				   *error = DCE_NOT_SUPPORTED;
+            break;
+         case DS_WINPERF:
+			   if (dcTarget->Type() == OBJECT_NODE)
+			   {
+				   TCHAR name[MAX_PARAM_NAME];
+				   _sntprintf(name, MAX_PARAM_NAME, _T("PDH.CounterValue(\"%s\",%d)"), pItem->getName(), pItem->getSampleCount());
+	            *error = ((Node *)dcTarget)->getItemFromAgent(name, MAX_LINE_SIZE, pBuffer);
+			   }
+			   else
+			   {
+				   *error = DCE_NOT_SUPPORTED;
+			   }
+            break;
+         case DS_ILO:
+            if (dcTarget->Type() == OBJECT_NODE)
             {
-               *param = 0;
-               param++;
+				   TCHAR path[MAX_PARAM_NAME];
+               nx_strncpy(path, pItem->getName(), MAX_PARAM_NAME);
+               TCHAR *param = _tcsrchr(path, _T('/'));
+               if (param != NULL)
+               {
+                  *param = 0;
+                  param++;
+               }
+	            *error = ((Node *)dcTarget)->getItemFromILO(path, param, MAX_LINE_SIZE, pBuffer);
             }
-	         *error = ((Node *)dcTarget)->getItemFromILO(path, param, MAX_LINE_SIZE, pBuffer);
-         }
-         else
-         {
-            *error = DCE_NOT_SUPPORTED;
-         }
-         break;
-		default:
-			*error = DCE_NOT_SUPPORTED;
-			break;
+            else
+            {
+               *error = DCE_NOT_SUPPORTED;
+            }
+            break;
+		   default:
+			   *error = DCE_NOT_SUPPORTED;
+			   break;
+      }
    }
 	return pBuffer;
 }
@@ -280,6 +294,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 
       qwStart = GetCurrentTimeMs();
 		g_idxNodeById.forEach(QueueItems, NULL);
+		g_idxClusterById.forEach(QueueItems, NULL);
 		g_idxMobileDeviceById.forEach(QueueItems, NULL);
 
       // Save last poll time

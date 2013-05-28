@@ -1235,6 +1235,7 @@ src/java/netxms-eclipse/DataCollection/plugin.xml -text
 src/java/netxms-eclipse/DataCollection/schema/org.netxms.ui.eclipse.datacollection.dciOpenHandlers.exsd -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/Activator.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/DataCollectionAdapterFactory.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/DataCollectionObjectPropertyTester.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/LoginListener.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/Messages.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/SummaryTablesCache.java -text
@@ -1268,6 +1269,7 @@ src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/messages_es.properties -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/objecttabs/LastValues.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/objecttabs/ThresholdSummary.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/ClusterOptions.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/CustomSchedule.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/General.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/GeneralTable.java -text
@@ -2884,6 +2886,7 @@ webui/webapp/DataCollection/plugin.xml -text
 webui/webapp/DataCollection/schema/org.netxms.ui.eclipse.datacollection.dciOpenHandlers.exsd -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/Activator.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/DataCollectionAdapterFactory.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/DataCollectionObjectPropertyTester.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/LoginListener.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/Messages.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/SummaryTablesCache.java -text
@@ -2921,6 +2924,7 @@ webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/messages.pr
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/messages_es.properties -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/objecttabs/LastValues.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/objecttabs/ThresholdSummary.java -text
+webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/ClusterOptions.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/CustomSchedule.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/General.java -text
 webui/webapp/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/GeneralTable.java -text

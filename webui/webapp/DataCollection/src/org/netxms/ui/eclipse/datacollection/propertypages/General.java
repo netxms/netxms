@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -42,10 +40,6 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
-import org.netxms.client.objects.AbstractNode;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
@@ -80,9 +74,6 @@ public class General extends PropertyPage
 	
 	private DataCollectionObjectEditor editor;
 	private DataCollectionItem dci;
-	private AbstractObject owner;
-	private Cluster cluster = null;
-	private Map<Integer, Long> clusterResourceMap;
 	private Text description;
 	private LabeledText parameter;
 	private Button selectButton;
@@ -97,7 +88,6 @@ public class General extends PropertyPage
 	private Spinner pollingInterval;
 	private Spinner retentionTime;
 	private Spinner sampleCount;
-	private Combo clusterResource;
 	private Button statusActive;
 	private Button statusDisabled;
 	private Button statusUnsupported;
@@ -110,25 +100,6 @@ public class General extends PropertyPage
 	{		
 		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
 		dci = editor.getObjectAsItem();
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		owner = session.findObjectById(dci.getNodeId());
-		
-		if (owner instanceof Cluster)
-		{
-			cluster = (Cluster)owner;
-		}
-		else if (owner instanceof AbstractNode)
-		{
-			for(AbstractObject o : owner.getParentsAsArray())
-			{
-				if (o instanceof Cluster)
-				{
-					cluster = (Cluster)o;
-					break;
-				}
-			}
-		}
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
@@ -378,37 +349,6 @@ public class General extends PropertyPage
       pollingInterval.setSelection(dci.getPollingInterval());
       pollingInterval.setEnabled(!dci.isUseAdvancedSchedule() && (dci.getOrigin() != DataCollectionItem.PUSH));
       
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      fd.top = new FormAttachment(schedulingMode.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      clusterResource = WidgetHelper.createLabeledCombo(groupPolling, SWT.READ_ONLY, Messages.General_ClRes, fd);
-      if (cluster != null)
-      {
-      	clusterResourceMap = new HashMap<Integer, Long>();
-      	clusterResourceMap.put(0, 0L);
-      	
-	      clusterResource.add(Messages.General_None);
-	      if (dci.getResourceId() == 0)
-	      	clusterResource.select(0);
-	      
-	      int index = 1;
-	      for (ClusterResource r : cluster.getResources())
-	      {
-	      	clusterResource.add(r.getName());
-	      	clusterResourceMap.put(index, r.getId());
-		      if (dci.getResourceId() == r.getId())
-		      	clusterResource.select(index);
-	      	index++;
-	      }
-      }
-      else
-      {
-	      clusterResource.add(Messages.General_None);
-	      clusterResource.select(0);
-	      clusterResource.setEnabled(false);
-      }
-      	
       /** status **/
       Group groupStatus = new Group(dialogArea, SWT.NONE);
       groupStatus.setText(Messages.General_Status);
@@ -546,11 +486,6 @@ public class General extends PropertyPage
 		else if (statusUnsupported.getSelection())
 			dci.setStatus(DataCollectionItem.NOT_SUPPORTED);
 		
-		if (cluster != null)
-		{
-			dci.setResourceId(clusterResourceMap.get(clusterResource.getSelectionIndex()));
-		}
-
 		editor.modify();
 		return true;
 	}

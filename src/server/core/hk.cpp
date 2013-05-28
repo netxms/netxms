@@ -172,6 +172,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
 		// Remove expired DCI data
 		g_idxNodeById.forEach(CleanDciData, NULL);
+		g_idxClusterById.forEach(CleanDciData, NULL);
 		g_idxMobileDeviceById.forEach(CleanDciData, NULL);
 
       // Run DB-specific maintenance tasks

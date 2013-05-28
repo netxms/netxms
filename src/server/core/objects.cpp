@@ -48,6 +48,7 @@ ObjectIndex g_idxInterfaceByAddr;
 ObjectIndex g_idxZoneByGUID;
 ObjectIndex g_idxNodeById;
 ObjectIndex g_idxNodeByAddr;
+ObjectIndex g_idxClusterById;
 ObjectIndex g_idxMobileDeviceById;
 ObjectIndex g_idxAccessPointById;
 ObjectIndex g_idxConditionById;
@@ -162,6 +163,11 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 		((Node *)nodes->get(i))->updateDciCache();
 	delete nodes;
 
+	ObjectArray<NetObj> *clusters = g_idxClusterById.getObjects();
+   for(int i = 0; i < clusters->size(); i++)
+		((Cluster *)clusters->get(i))->updateDciCache();
+	delete clusters;
+
 	ObjectArray<NetObj> *mbs = g_idxMobileDeviceById.getObjects();
    for(int i = 0; i < mbs->size(); i++)
 		((MobileDevice *)mbs->get(i))->updateDciCache();
@@ -271,7 +277,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 		pObject->generateGuid();
 
       // Create tables for storing data collection values
-      if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE))
+      if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE) || (pObject->Type() == OBJECT_CLUSTER))
       {
          TCHAR szQuery[256], szQueryTemplate[256];
          DWORD i;
@@ -320,7 +326,6 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_TEMPLATE:
          case OBJECT_TEMPLATEGROUP:
          case OBJECT_TEMPLATEROOT:
-			case OBJECT_CLUSTER:
 			case OBJECT_VPNCONNECTOR:
 			case OBJECT_POLICYGROUP:
 			case OBJECT_POLICYROOT:
@@ -342,6 +347,9 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 				g_idxNodeById.put(pObject->Id(), pObject);
 				if (pObject->IpAddr() != 0)
 					g_idxNodeByAddr.put(pObject->IpAddr(), pObject);
+            break;
+			case OBJECT_CLUSTER:
+            g_idxClusterById.put(pObject->Id(), pObject);
             break;
 			case OBJECT_MOBILEDEVICE:
 				g_idxMobileDeviceById.put(pObject->Id(), pObject);
@@ -456,7 +464,6 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       case OBJECT_TEMPLATE:
       case OBJECT_TEMPLATEGROUP:
       case OBJECT_TEMPLATEROOT:
-		case OBJECT_CLUSTER:
 		case OBJECT_VPNCONNECTOR:
 		case OBJECT_POLICYGROUP:
 		case OBJECT_POLICYROOT:
@@ -478,6 +485,9 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 			g_idxNodeById.remove(pObject->Id());
 			if (pObject->IpAddr() != 0)
 				g_idxNodeByAddr.remove(pObject->IpAddr());
+         break;
+		case OBJECT_CLUSTER:
+			g_idxClusterById.remove(pObject->Id());
          break;
       case OBJECT_MOBILEDEVICE:
 			g_idxMobileDeviceById.remove(pObject->Id());
@@ -1173,7 +1183,7 @@ BOOL LoadObjects()
    // Load nodes
    DbgPrintf(2, _T("Loading nodes..."));
    hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM nodes"));
-   if (hResult != 0)
+   if (hResult != NULL)
    {
       Node *pNode;
 
@@ -1193,15 +1203,12 @@ BOOL LoadObjects()
          }
       }
       DBFreeResult(hResult);
-
-      // Start cache loading thread
-      ThreadCreate(CacheLoadingThread, 0, NULL);
    }
 
    // Load access points
    DbgPrintf(2, _T("Loading access points..."));
    hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM access_points"));
-   if (hResult != 0)
+   if (hResult != NULL)
    {
 		AccessPoint *ap;
 
@@ -1322,6 +1329,10 @@ BOOL LoadObjects()
       }
       DBFreeResult(hResult);
    }
+
+   // Start cache loading thread.
+   // All data collection targets must be loaded at this point.
+   ThreadCreate(CacheLoadingThread, 0, NULL);
 
    // Load templates
    DbgPrintf(2, _T("Loading templates..."));

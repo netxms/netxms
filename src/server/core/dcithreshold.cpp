@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Default constructor
-//
-
+/**
+ * Create new threshold for given DCI
+ */
 Threshold::Threshold(DCItem *pRelatedItem)
 {
    m_id = 0;
@@ -45,11 +43,9 @@ Threshold::Threshold(DCItem *pRelatedItem)
 	m_numMatches = 0;
 }
 
-
-//
-// Constructor for NXMP parser
-//
-
+/**
+ * Constructor for NXMP parser
+ */
 Threshold::Threshold()
 {
    m_id = 0;
@@ -68,11 +64,9 @@ Threshold::Threshold()
 	m_numMatches = 0;
 }
 
-
-//
-// Create from another threshold object
-//
-
+/**
+ * Create from another threshold object
+ */
 Threshold::Threshold(Threshold *src)
 {
    m_id = src->m_id;
@@ -440,11 +434,9 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
    return iResult;
 }
 
-
-//
-// Mark last activation event
-//
-
+/**
+ * Mark last activation event
+ */
 void Threshold::markLastEvent(int severity)
 {
 	m_lastEventTimestamp = time(NULL);
@@ -458,12 +450,10 @@ void Threshold::markLastEvent(int severity)
 	QueueSQLRequest(query);
 }
 
-
-//
-// Check for collection error thresholds
-// Return same values as Check()
-//
-
+/**
+ * Check for collection error thresholds
+ * Return same values as Check()
+ */
 int Threshold::checkError(DWORD dwErrorCount)
 {
    int nResult;
@@ -512,11 +502,9 @@ void Threshold::createMessage(CSCPMessage *msg, DWORD baseId)
 	msg->SetVariable(varId++, (DWORD)m_lastEventTimestamp);
 }
 
-
-//
-// Update threshold object from DCI_THRESHOLD structure
-//
-
+/**
+ * Update threshold object from NXCP message
+ */
 void Threshold::updateFromMessage(CSCPMessage *msg, DWORD baseId)
 {
 	TCHAR buffer[MAX_DCI_STRING_VALUE];
@@ -581,11 +569,11 @@ void Threshold::calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
    }
 }
 
-
-//
-// Calculate sum value for parameter
-//
-
+/**
+ * Calculate sum value for parameter
+ */
+void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
+{
 #define CALC_SUM_VALUE(vtype) \
 { \
    vtype var; \
@@ -598,8 +586,6 @@ void Threshold::calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
    *pResult = var; \
 }
 
-void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
-{
    int i;
 
    switch(m_dataType)
@@ -691,21 +677,17 @@ void Threshold::calculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemV
 
 #undef ABS
 
-
-//
-// Calculate difference between last and previous value
-//
-
+/**
+ * Calculate difference between last and previous value
+ */
 void Threshold::calculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
 {
    CalculateItemValueDiff(*pResult, m_dataType, lastValue, *ppPrevValues[0]);
 }
 
-
-//
-// Compare to another threshold
-//
-
+/**
+ * Compare to another threshold
+ */
 BOOL Threshold::compare(Threshold *pThr)
 {
    BOOL bMatch;
@@ -745,11 +727,9 @@ BOOL Threshold::compare(Threshold *pThr)
 			 (pThr->m_repeatInterval == m_repeatInterval);
 }
 
-
-//
-// Create management pack record
-//
-
+/**
+ * Create management pack record
+ */
 void Threshold::createNXMPRecord(String &str, int index)
 {
    TCHAR szEvent1[MAX_EVENT_NAME], szEvent2[MAX_EVENT_NAME];
@@ -773,11 +753,9 @@ void Threshold::createNXMPRecord(String &str, int index)
 								  m_param1, m_param2, m_repeatInterval);
 }
 
-
-//
-// Made an association with DCI (used by management pack parser)
-//
-
+/**
+ * Make an association with DCI (used by management pack parser)
+ */
 void Threshold::associate(DCItem *pItem)
 {
    m_itemId = pItem->getId();

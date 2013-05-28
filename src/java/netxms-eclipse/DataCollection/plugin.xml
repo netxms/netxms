@@ -153,6 +153,14 @@
                label="Data Collection Configuration"
                menubarPath="datacollection">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.ShowLastValues"
+               enablesFor="1"
+               icon="icons/last_values.png"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues#Cluster"
+               label="Last values"
+               menubarPath="datacollection">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
@@ -217,7 +225,7 @@
   <extension
      point="org.eclipse.ui.propertyPages">
         <page
-           id="org.netxms.ui.eclipse.datacollection.propertypages.General#0"
+           id="org.netxms.ui.eclipse.datacollection.propertypages.General#1"
            name="General"
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.General">
           <enabledWhen>
@@ -228,7 +236,7 @@
         </page>
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.GeneralTable"
-              id="org.netxms.ui.eclipse.datacollection.propertypages.GeneralTable#0"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.GeneralTable#1"
               name="General">
            <enabledWhen>
               <instanceof
@@ -324,6 +332,22 @@
               <instanceof
                     value="org.netxms.client.datacollection.DciSummaryTable">
               </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.ClusterOptions"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.ClusterOptions#4"
+              name="Cluster">
+           <enabledWhen>
+              <and>
+                 <instanceof
+                       value="org.netxms.client.datacollection.DataCollectionObject">
+                 </instanceof>
+                 <test
+                       forcePluginActivation="true"
+                       property="org.netxms.ui.eclipse.datacollection.isClusterObject">
+                 </test>
+              </and>
            </enabledWhen>
         </page>
    </extension>
@@ -491,6 +515,16 @@
             </visibleWhen>
          </dynamic>
       </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="org.netxms.ui.eclipse.datacollection.DataCollectionObjectPropertyTester"
+            id="org.netxms.ui.eclipse.datacollection.DataCollectionObjectPropertyTester"
+            namespace="org.netxms.ui.eclipse.datacollection"
+            properties="isClusterObject"
+            type="org.netxms.client.datacollection.DataCollectionObject">
+      </propertyTester>
    </extension>
 
 </plugin>

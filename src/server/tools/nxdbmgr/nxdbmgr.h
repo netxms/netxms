@@ -78,6 +78,8 @@ DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault);
 BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
                        int iVisible, int iNeedRestart, BOOL bForceUpdate = FALSE);
 
+BOOL CreateIDataTable(DWORD nodeId);
+BOOL CreateTDataTable(DWORD nodeId);
 
 //
 // Global variables

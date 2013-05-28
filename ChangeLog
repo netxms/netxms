@@ -2,6 +2,8 @@
 * 1.2.8
 *
 
+- Aggregated DCI values on cluster objects
+- Transformation scripts for table DCIs
 - Configurable DCI summary tables
 - Default background color for new network maps made configurable
 - Management console:

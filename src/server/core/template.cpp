@@ -635,7 +635,7 @@ int Template::getItemType(DWORD dwItemId)
 /**
  * Get item by it's id
  */
-DCObject *Template::getDCObjectById(DWORD dwItemId)
+DCObject *Template::getDCObjectById(DWORD itemId)
 {
    DCObject *object = NULL;
 
@@ -644,7 +644,30 @@ DCObject *Template::getDCObjectById(DWORD dwItemId)
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *curr = m_dcObjects->get(i);
-      if (curr->getId() == dwItemId)
+      if (curr->getId() == itemId)
+		{
+			object = curr;
+         break;
+		}
+	}
+
+   unlockDciAccess();
+   return object;
+}
+
+/**
+ * Get item by template item id
+ */
+DCObject *Template::getDCObjectByTemplateId(DWORD tmplItemId)
+{
+   DCObject *object = NULL;
+
+   lockDciAccess();
+   // Check if that item exists
+   for(int i = 0; i < m_dcObjects->size(); i++)
+	{
+		DCObject *curr = m_dcObjects->get(i);
+      if (curr->getTemplateItemId() == tmplItemId)
 		{
 			object = curr;
          break;

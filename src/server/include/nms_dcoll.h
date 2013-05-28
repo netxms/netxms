@@ -246,6 +246,8 @@ public:
 	DWORD getErrorCount() { return m_dwErrorCount; }
 	WORD getSnmpPort() { return m_snmpPort; }
    bool isShowOnObjectTooltip() { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
+   bool isAggregateOnCluster() { return (m_flags & DCF_AGGREGATE_FOR_CLUSTER) ? true : false; }
+   int getAggregationFunction() { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
 
    bool isReadyForPolling(time_t currTime);
 	bool isScheduledForDeletion() { return m_scheduledForDeletion ? true : false; }
@@ -350,6 +352,7 @@ public:
    void fillLastValueMessage(CSCPMessage *pMsg, DWORD dwId);
    NXSL_Value *getValueForNXSL(int nFunction, int nPolls);
    const TCHAR *getLastValue();
+   ItemValue *getInternalLastValue();
 
    virtual void createMessage(CSCPMessage *pMsg);
    void updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);
@@ -464,18 +467,16 @@ BOOL InitDataCollector();
 void DeleteAllItemsForNode(DWORD dwNodeId);
 void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags);
 
-void CalculateItemValueDiff(ItemValue &result, int nDataType,
-                            ItemValue &value1, ItemValue &value2);
-void CalculateItemValueAverage(ItemValue &result, int nDataType,
-                               int nNumValues, ItemValue **ppValueList);
-void CalculateItemValueMD(ItemValue &result, int nDataType,
-                          int nNumValues, ItemValue **ppValueList);
+void CalculateItemValueDiff(ItemValue &result, int nDataType, ItemValue &value1, ItemValue &value2);
+void CalculateItemValueAverage(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);
+void CalculateItemValueMD(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);
+void CalculateItemValueTotal(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);
+void CalculateItemValueMin(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);
+void CalculateItemValueMax(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);
 
-
-//
-// Variables
-//
-
+/**
+ * Global variables
+ */
 extern double g_dAvgPollerQueueSize;
 extern double g_dAvgDBWriterQueueSize;
 extern double g_dAvgIDataWriterQueueSize;
