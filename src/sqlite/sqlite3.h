@@ -50,7 +50,11 @@ extern "C" {
 #endif
 
 #ifndef SQLITE_API
-# define SQLITE_API
+#ifdef _WIN32
+#define SQLITE_API __declspec(dllimport)
+#else
+#define SQLITE_API
+#endif
 #endif
 
 
