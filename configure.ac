@@ -586,19 +586,18 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$PLATFORM" = "xHP-UX"; then
+	AC_CHECK_PROG([CC], [aCC], [aCC])
 	AC_CHECK_PROG([CCC], [aCC], [aCC])
 fi
 if test "x$PLATFORM" = "xAIX"; then
+	AC_CHECK_PROG([CC], [xlc_r], [xlc_r])
 	AC_CHECK_PROG([CCC], [xlC_r], [xlC_r])
 fi
 if test "x$PLATFORM" = "xSunOS"; then
+	AC_CHECK_PROG([CC], [cc], [cc])
 	AC_CHECK_PROG([CCC], [CC], [CC])
 fi
-if test "x$CCC" = "xCC"; then
-	AC_PROG_CC(cc)
-else
-	AC_PROG_CC(aCC xlC_r gcc cc cl)
-fi
+AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX
 if test "x$CXX" = "xg++"; then
@@ -1580,7 +1579,11 @@ AC_CHECK_TYPES([wchar_t, wint_t],,,[
 #include <wchar.h>
 #endif
 ])
-AC_CHECK_SIZEOF(wchar_t)
+AC_CHECK_SIZEOF(wchar_t,,[
+#if HAVE_WCHAR_H
+#include <wchar.h>
+#endif
+])
 AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper wcserror wcserror_r])
 AC_CHECK_FUNCS([wfopen fputws putws wopen wstat waccess wgetenv wrename wunlink wremove])
 AC_CHECK_FUNCS([wchdir wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod])
