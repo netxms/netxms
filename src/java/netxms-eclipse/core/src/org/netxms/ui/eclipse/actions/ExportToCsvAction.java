@@ -30,6 +30,7 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IViewPart;
@@ -119,6 +120,14 @@ public class ExportToCsvAction extends Action
 			int numColumns = ((TableViewer)viewer).getTable().getColumnCount();
 			if (numColumns == 0)
 				numColumns = 1;
+			
+			TableColumn[] columns = ((TableViewer)viewer).getTable().getColumns();
+			String[] headerRow = new String[numColumns];
+			for (int i = 0; i < numColumns; i++)
+			{
+				headerRow[i] = columns[i].getText();
+			}
+			data.add(headerRow);
 			
 			TableItem[] selection = selectionOnly ? ((TableViewer)viewer).getTable().getSelection() : ((TableViewer)viewer).getTable().getItems();
 			for(TableItem item : selection)

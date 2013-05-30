@@ -31,6 +31,7 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IViewPart;
@@ -119,6 +120,14 @@ public class ExportToCsvAction extends Action
 			if (numColumns == 0)
 				numColumns = 1;
 			
+			TableColumn[] columns = ((TableViewer)viewer).getTable().getColumns();
+			String[] headerRow = new String[numColumns];
+			for (int i = 0; i < numColumns; i++)
+			{
+				headerRow[i] = columns[i].getText();
+			}
+			data.add(headerRow);
+			
 			TableItem[] selection = selectionOnly ? ((TableViewer)viewer).getTable().getSelection() : ((TableViewer)viewer).getTable().getItems();
 			for(TableItem item : selection)
 			{
@@ -126,7 +135,7 @@ public class ExportToCsvAction extends Action
 				for(int i = 0; i < numColumns; i++)
 					row[i] = item.getText(i);
 				if (selectionOnly)
-					data.add(0, row);  // for some reason RAP implementation returns selected table items in reverse order, so we reverse them here
+					data.add(1, row);  // for some reason RAP implementation returns selected table items in reverse order, so we reverse them here
 				else
 					data.add(row);
 			}
