@@ -117,7 +117,6 @@ void QueueIDataInsert(time_t timestamp, DWORD nodeId, DWORD dciId, const TCHAR *
 /**
  * Database "lazy" write thread
  */
-extern "C"
 static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 {
    DB_HANDLE hdb;
@@ -170,12 +169,9 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
    return THREAD_OK;
 }
 
-
-//
-// Database "lazy" write thread for idata_xxx INSERTs
-//
-
-extern "C"
+/**
+ * Database "lazy" write thread for idata_xxx INSERTs
+ */
 static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 {
    DB_HANDLE hdb;

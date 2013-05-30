@@ -203,7 +203,6 @@ CSCPMessage::CSCPMessage(CSCP_MESSAGE *pMsg, int nVersion)
 // Create CSCPMessage object from XML document
 //
 
-extern "C"
 static void StartElement(void *userData, const char *name, const char **attrs)
 {
 	if (!strcmp(name, "nxcp"))
@@ -232,7 +231,6 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		((XML_PARSER_STATE *)userData)->msg->ProcessXMLToken(userData, attrs);
 }
 
-extern "C"
 static void EndElement(void *userData, const char *name)
 {
 	if (!strcmp(name, "nxcp"))
@@ -255,7 +253,6 @@ static void EndElement(void *userData, const char *name)
 	}
 }
 
-extern "C"
 static void CharData(void *userData, const XML_Char *s, int len)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
