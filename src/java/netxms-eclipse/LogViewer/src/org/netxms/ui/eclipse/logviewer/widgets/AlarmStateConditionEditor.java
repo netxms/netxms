@@ -28,6 +28,7 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.logviewer.Activator;
+import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
 import org.netxms.ui.eclipse.widgets.ImageCombo;
 
@@ -36,7 +37,7 @@ import org.netxms.ui.eclipse.widgets.ImageCombo;
  */
 public class AlarmStateConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { "IS", "IS NOT" };
+	private static final String[] OPERATIONS = { Messages.AlarmStateConditionEditor_Is, Messages.AlarmStateConditionEditor_IsNot };
 	
 	private ImageCombo state;
 	
@@ -67,10 +68,10 @@ public class AlarmStateConditionEditor extends ConditionEditor
 	protected void createContent(Composite parent)
 	{
 		final Image[] stateImages = new Image[4];
-		stateImages[Alarm.STATE_OUTSTANDING] = Activator.getImageDescriptor("icons/outstanding.png").createImage();
-		stateImages[Alarm.STATE_ACKNOWLEDGED] = Activator.getImageDescriptor("icons/acknowledged.png").createImage();
-		stateImages[Alarm.STATE_RESOLVED] = Activator.getImageDescriptor("icons/resolved.png").createImage();
-		stateImages[Alarm.STATE_TERMINATED] = Activator.getImageDescriptor("icons/terminated.png").createImage();
+		stateImages[Alarm.STATE_OUTSTANDING] = Activator.getImageDescriptor("icons/outstanding.png").createImage(); //$NON-NLS-1$
+		stateImages[Alarm.STATE_ACKNOWLEDGED] = Activator.getImageDescriptor("icons/acknowledged.png").createImage(); //$NON-NLS-1$
+		stateImages[Alarm.STATE_RESOLVED] = Activator.getImageDescriptor("icons/resolved.png").createImage(); //$NON-NLS-1$
+		stateImages[Alarm.STATE_TERMINATED] = Activator.getImageDescriptor("icons/terminated.png").createImage(); //$NON-NLS-1$
 		
 		addDisposeListener(new DisposeListener() {
 			@Override

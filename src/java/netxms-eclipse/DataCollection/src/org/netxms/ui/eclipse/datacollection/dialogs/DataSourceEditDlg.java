@@ -110,7 +110,7 @@ public class DataSourceEditDlg extends Dialog
 		if (dci.type == ChartDciConfig.TABLE)
 		{
 			Group tableGroup = new Group(dialogArea, SWT.NONE);
-			tableGroup.setText("Table Cell");
+			tableGroup.setText(Messages.DataSourceEditDlg_TableCell);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
@@ -121,7 +121,7 @@ public class DataSourceEditDlg extends Dialog
 			tableGroup.setLayout(layout);
 			
 			dataColumn = new LabeledText(tableGroup, SWT.NONE);
-			dataColumn.setLabel("Data column");
+			dataColumn.setLabel(Messages.DataSourceEditDlg_DataColumn);
 			dataColumn.setText(dci.column);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
@@ -129,7 +129,7 @@ public class DataSourceEditDlg extends Dialog
 			dataColumn.setLayoutData(gd);
 			
 			instance = new LabeledText(tableGroup, SWT.NONE);
-			instance.setLabel("Instance");
+			instance.setLabel(Messages.DataSourceEditDlg_Instance);
 			instance.setText(dci.instance);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;

@@ -33,6 +33,7 @@ import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -62,12 +63,12 @@ public class CreateMapGroup implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), "Network Map Group");
+		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.CreateMapGroup_DialogTitle);
 		if (dlg.open() != Window.OK)
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Create network map group", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateMapGroup_JobName, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -78,7 +79,7 @@ public class CreateMapGroup implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create network map group object \"" + dlg.getObjectName() + "\"";
+				return String.format(Messages.CreateMapGroup_JobError, dlg.getObjectName());
 			}
 		}.start();
 	}

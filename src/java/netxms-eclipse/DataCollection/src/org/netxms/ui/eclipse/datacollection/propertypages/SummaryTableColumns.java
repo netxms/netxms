@@ -101,7 +101,7 @@ public class SummaryTableColumns extends PropertyPage
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 
-		new Label(dialogArea, SWT.NONE).setText("Columns");
+		new Label(dialogArea, SWT.NONE).setText(Messages.SummaryTableColumns_Columns);
 
 		viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
 		GridData gd = new GridData();
@@ -177,7 +177,7 @@ public class SummaryTableColumns extends PropertyPage
 		buttons.setLayout(buttonsLayout);
 
 		importButton = new Button(buttons, SWT.PUSH);
-		importButton.setText("Import");
+		importButton.setText(Messages.SummaryTableColumns_Import);
 		RowData rd = new RowData();
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		importButton.setLayoutData(rd);
@@ -291,11 +291,11 @@ public class SummaryTableColumns extends PropertyPage
 		table.setHeaderVisible(true);
 
 		TableColumn column = new TableColumn(table, SWT.LEFT);
-		column.setText("Name");
+		column.setText(Messages.SummaryTableColumns_Name);
 		column.setWidth(150);
 
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText("DCI Name");
+		column.setText(Messages.SummaryTableColumns_DciName);
 		column.setWidth(250);
 
 		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
@@ -315,7 +315,7 @@ public class SummaryTableColumns extends PropertyPage
 			setValid(false);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Update DCI summary table configuration", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.SummaryTableColumns_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -331,7 +331,7 @@ public class SummaryTableColumns extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update DCI summary table configuration";
+				return Messages.SummaryTableColumns_JobError;
 			}
 
 			/*
@@ -481,7 +481,7 @@ public class SummaryTableColumns extends PropertyPage
 	 */
 	private void addColumn()
 	{
-		DciSummaryTableColumn column = new DciSummaryTableColumn("", "");
+		DciSummaryTableColumn column = new DciSummaryTableColumn("", ""); //$NON-NLS-1$ //$NON-NLS-2$
 		EditDciSummaryTableColumnDlg dlg = new EditDciSummaryTableColumnDlg(getShell(), column);
 		if (dlg.open() == Window.OK)
 		{

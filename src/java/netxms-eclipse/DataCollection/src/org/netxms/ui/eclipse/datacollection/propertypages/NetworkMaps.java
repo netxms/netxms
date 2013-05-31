@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -56,7 +57,7 @@ public class NetworkMaps extends PropertyPage
       dialogArea.setLayout(layout);
 
       checkShowOnTooltip = new Button(dialogArea, SWT.CHECK);
-      checkShowOnTooltip.setText("&Show last value in object tooltips");
+      checkShowOnTooltip.setText(Messages.NetworkMaps_ShowInTooltips);
       checkShowOnTooltip.setSelection(dci.isShowOnObjectTooltip());
       
 		return dialogArea;

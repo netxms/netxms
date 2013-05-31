@@ -27,6 +27,7 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 
 /**
@@ -58,7 +59,7 @@ public class DataCollectionObjectEditor
 	 */
 	private void doObjectModification()
 	{
-		new ConsoleJob("Modify data collection object", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.DataCollectionObjectEditor_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -80,7 +81,7 @@ public class DataCollectionObjectEditor
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot modify data collection object";
+				return Messages.DataCollectionObjectEditor_JobError;
 			}
 		}.start();
 	}

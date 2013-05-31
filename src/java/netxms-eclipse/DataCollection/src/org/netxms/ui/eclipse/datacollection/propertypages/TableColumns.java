@@ -429,7 +429,7 @@ public class TableColumns extends PropertyPage
 	private void updateColumnsFromAgent(final String name)
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		ConsoleJob job = new ConsoleJob("Get additional table information", null, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.TableColumns_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

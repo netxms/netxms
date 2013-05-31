@@ -29,6 +29,7 @@ import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceRoot;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.views.ServiceComponents;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -64,7 +65,7 @@ public class ShowServiceComponents implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.ShowServiceComponents_Error, String.format(Messages.ShowServiceComponents_ErrorText, e.getLocalizedMessage()));
 			}
 		}
 	}

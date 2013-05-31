@@ -147,7 +147,7 @@ public class LoginJob implements IRunnableWithProgress
 		}
 		finally
 		{
-			monitor.setTaskName("");
+			monitor.setTaskName(""); //$NON-NLS-1$
 		}
 	}
 	

@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.views.IPNeighbors;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -62,7 +63,7 @@ public class ShowIPNeighbors implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.ShowIPNeighbors_Error, String.format(Messages.ShowIPNeighbors_ErrorText, e.getLocalizedMessage()));
 			}
 		}
 	}

@@ -40,7 +40,9 @@ import org.netxms.nebula.widgets.gallery.DefaultGalleryGroupRenderer;
 import org.netxms.nebula.widgets.gallery.DefaultGalleryItemRenderer;
 import org.netxms.nebula.widgets.gallery.Gallery;
 import org.netxms.nebula.widgets.gallery.GalleryItem;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
+import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImagePropertiesDialog;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
@@ -53,7 +55,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public class ImageLibrary extends ViewPart implements ImageUpdateListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.imagelibrary.view.imagelibrary";
+	public static final String ID = "org.netxms.ui.eclipse.imagelibrary.view.imagelibrary"; //$NON-NLS-1$
 
 	protected static final int MIN_GRID_ICON_SIZE = 48;
 	protected static final int MAX_GRID_ICON_SIZE = 256;
@@ -153,7 +155,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	private void createActions()
 	{
-		actionNew = new Action("&Upload New Image")
+		actionNew = new Action(Messages.ImageLibrary_ActionUpload)
 		{
 			@Override
 			public void run()
@@ -174,8 +176,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		};
 		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
 
-		actionEdit = new Action("&Edit")
-		{
+		actionEdit = new Action(Messages.ImageLibrary_ActionEdit) {
 			@Override
 			public void run()
 			{
@@ -195,8 +196,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		};
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 
-		actionDelete = new Action("&Delete")
-		{
+		actionDelete = new Action(Messages.ImageLibrary_ActionDelete) {
 			@Override
 			public void run()
 			{
@@ -206,8 +206,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		};
 		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 
-		actionRefresh = new Action("&Refresh")
-		{
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{
@@ -217,14 +216,13 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 				}
 				catch(Exception e)
 				{
-					Activator.logError("ImageLibrary view: Exception in refresh action", e);
+					Activator.logError("ImageLibrary view: Exception in refresh action", e); //$NON-NLS-1$
 				}
 			}
 		};
 		actionRefresh.setImageDescriptor(SharedIcons.REFRESH);
 
-		actionZoomIn = new Action("Zoom In")
-		{
+		actionZoomIn = new Action(Messages.ImageLibrary_ActionZoomIn) {
 			@Override
 			public void run()
 			{
@@ -238,7 +236,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			}
 		};
 		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
-		actionZoomOut = new Action("Zoom Out")
+		actionZoomOut = new Action(Messages.ImageLibrary_ActionZoomOut)
 		{
 			@Override
 			public void run()
@@ -265,7 +263,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	{
 		final LibraryImage image = (LibraryImage)galleryItem.getData();
 
-		new ConsoleJob("Update image", this, Activator.PLUGIN_ID, null)
+		new ConsoleJob(Messages.ImageLibrary_UpdateJob, this, Activator.PLUGIN_ID, null)
 		{
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
@@ -301,7 +299,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
-						monitor.beginTask("Update image file", (int)workTotal);
+						monitor.beginTask(Messages.ImageLibrary_UpdateImage, (int)workTotal);
 					}
 
 					@Override
@@ -322,7 +320,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update image";
+				return Messages.ImageLibrary_UpdateError;
 			}
 		}.start();
 	}
@@ -334,7 +332,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	protected void uploadNewImage(final String name, final String category, final String fileName)
 	{
-		new ConsoleJob("Upload image file", this, Activator.PLUGIN_ID, null)
+		new ConsoleJob(Messages.ImageLibrary_UploadJob, this, Activator.PLUGIN_ID, null)
 		{
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
@@ -366,7 +364,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
-						monitor.beginTask("Upload image file", (int)workTotal);
+						monitor.beginTask(Messages.ImageLibrary_UploadImage, (int)workTotal);
 					}
 
 					@Override
@@ -388,7 +386,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update image";
+				return Messages.ImageLibrary_UploadError;
 			}
 		}.start();
 	}
@@ -495,7 +493,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	private void refreshImages() throws NetXMSClientException, IOException
 	{
-		new ConsoleJob("Reload image library", this, Activator.PLUGIN_ID, null)
+		new ConsoleJob(Messages.ImageLibrary_ReloadJob, this, Activator.PLUGIN_ID, null)
 		{
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -513,7 +511,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 						}
 						catch(Exception e)
 						{
-							Activator.logError("Exception in ImageLibrary.refreshImages()", e);
+							Activator.logError("Exception in ImageLibrary.refreshImages()", e); //$NON-NLS-1$
 						}
 					}
 				}
@@ -529,7 +527,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot load image library";
+				return Messages.ImageLibrary_LoadError;
 			}
 
 		}.start();
@@ -572,7 +570,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					}
 					catch(SWTException e)
 					{
-						Activator.logError("Exception in ImageLibrary.refreshUI()", e);
+						Activator.logError("Exception in ImageLibrary.refreshUI()", e); //$NON-NLS-1$
 						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show
 																												// as
 																												// "missing"
@@ -600,11 +598,11 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		}
 		catch(NetXMSClientException e)
 		{
-			Activator.logError("Exception in ImageLibrary.imageUpdated()", e);
+			Activator.logError("Exception in ImageLibrary.imageUpdated()", e); //$NON-NLS-1$
 		}
 		catch(IOException e)
 		{
-			Activator.logError("Exception in ImageLibrary.imageUpdated()", e);
+			Activator.logError("Exception in ImageLibrary.imageUpdated()", e); //$NON-NLS-1$
 		}
 	}
 }

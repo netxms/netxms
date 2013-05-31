@@ -40,7 +40,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class Transformation extends PropertyPage
 {
 	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-	private static final String[] DCI_VARIABLES = { "$dci", "$node" }; //$NON-NLS-1$
+	private static final String[] DCI_VARIABLES = { "$dci", "$node" }; //$NON-NLS-1$ //$NON-NLS-2$
 	
 	private DataCollectionObjectEditor editor;
 	private Combo deltaCalculation;
@@ -89,7 +89,7 @@ public class Transformation extends PropertyPage
 			}
       };
       transformationScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
-      		(editor.getObject() instanceof DataCollectionItem) ? Messages.Transformation_Step2 : "Transformation script", gd);
+      		(editor.getObject() instanceof DataCollectionItem) ? Messages.Transformation_Step2 : Messages.Transformation_Script, gd);
       transformationScript.addFunctions(Arrays.asList(DCI_FUNCTIONS));
       transformationScript.addVariables(Arrays.asList(DCI_VARIABLES));
       gd = new GridData();

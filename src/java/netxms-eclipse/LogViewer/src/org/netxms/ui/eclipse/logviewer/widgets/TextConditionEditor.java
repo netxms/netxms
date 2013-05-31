@@ -24,13 +24,14 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.log.ColumnFilter;
+import org.netxms.ui.eclipse.logviewer.Messages;
 
 /**
  * Condition editor for text columns
  */
 public class TextConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { "LIKE", "NOT LIKE" };
+	private static final String[] OPERATIONS = { Messages.TextConditionEditor_Like, Messages.TextConditionEditor_NotLike };
 	
 	private Text value;
 	
@@ -60,7 +61,7 @@ public class TextConditionEditor extends ConditionEditor
 	@Override
 	protected void createContent(Composite parent)
 	{
-		value = toolkit.createText(this, "%");
+		value = toolkit.createText(this, "%"); //$NON-NLS-1$
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

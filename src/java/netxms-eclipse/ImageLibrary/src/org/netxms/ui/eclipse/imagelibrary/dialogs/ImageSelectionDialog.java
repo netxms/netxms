@@ -43,8 +43,8 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 	 */
 	public static final int ALLOW_DEFAULT = 1;
 
-	private static final String SELECT_IMAGE_CY = "SelectImage.cy";
-	private static final String SELECT_IMAGE_CX = "SelectImage.cx";
+	private static final String SELECT_IMAGE_CY = "SelectImage.cy"; //$NON-NLS-1$
+	private static final String SELECT_IMAGE_CX = "SelectImage.cx"; //$NON-NLS-1$
 	private static final int DEFAULT_ID = IDialogConstants.CLIENT_ID + 1;
 
 	private Gallery gallery;
@@ -79,11 +79,14 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		this.flags = flags;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+	 */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.getString("ImageSelectionDialog.title"));
+		newShell.setText(Messages.ImageSelectionDialog_Title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -95,6 +98,9 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#close()
+	 */
 	@Override
 	public boolean close()
 	{
@@ -185,7 +191,7 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 	{
 		if ((flags & ALLOW_DEFAULT) == ALLOW_DEFAULT)
 		{
-			createButton(parent, DEFAULT_ID, "Default", false);
+			createButton(parent, DEFAULT_ID, Messages.ImageSelectionDialog_Default, false);
 		}
 		super.createButtonsForButtonBar(parent);
 		getButton(IDialogConstants.OK_ID).setEnabled(false);

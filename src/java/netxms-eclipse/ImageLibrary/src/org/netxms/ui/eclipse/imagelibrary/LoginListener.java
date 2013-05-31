@@ -43,7 +43,7 @@ public class LoginListener implements ConsoleLoginListener
 	public void afterLogin(final NXCSession session, final Display display)
 	{
 		ImageProvider.createInstance(display, session);
-		Job job = new Job("Initialize image library") {
+		Job job = new Job(Messages.LoginListener_JobName) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{

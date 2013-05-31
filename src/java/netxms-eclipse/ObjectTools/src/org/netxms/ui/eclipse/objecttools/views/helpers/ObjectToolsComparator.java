@@ -39,7 +39,7 @@ public class ObjectToolsComparator extends ViewerComparator
 	{
 		ObjectTool tool1 = (ObjectTool)e1;
 		ObjectTool tool2 = (ObjectTool)e2;
-		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID");
+		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 
 		int result;
 		switch(column)

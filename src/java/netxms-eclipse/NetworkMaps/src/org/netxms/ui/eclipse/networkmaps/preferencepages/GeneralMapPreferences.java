@@ -23,6 +23,7 @@ import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 
 /**
  * General preferences page for network maps
@@ -45,8 +46,8 @@ public class GeneralMapPreferences extends FieldEditorPreferencePage implements 
 	@Override
 	protected void createFieldEditors()
 	{
-		addField(new BooleanFieldEditor("NetMap.ShowStatusIcon", "Show status icon on objects", getFieldEditorParent()));
-		addField(new BooleanFieldEditor("NetMap.ShowStatusFrame", "Show status frame around objects", getFieldEditorParent()));
-		addField(new BooleanFieldEditor("NetMap.ShowStatusBackground", "Show status background under objects", getFieldEditorParent()));
+		addField(new BooleanFieldEditor("NetMap.ShowStatusIcon", Messages.GeneralMapPreferences_ShowIcon, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new BooleanFieldEditor("NetMap.ShowStatusFrame", Messages.GeneralMapPreferences_ShowFrame, getFieldEditorParent())); //$NON-NLS-1$
+		addField(new BooleanFieldEditor("NetMap.ShowStatusBackground", Messages.GeneralMapPreferences_ShowBkgnd, getFieldEditorParent())); //$NON-NLS-1$
 	}
 }

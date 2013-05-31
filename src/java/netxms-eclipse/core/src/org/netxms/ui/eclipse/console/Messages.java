@@ -2,9 +2,10 @@ package org.netxms.ui.eclipse.console;
 
 import org.eclipse.osgi.util.NLS;
 
-public class Messages
+public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.console.messages"; //$NON-NLS-1$
+	public static String AbstractSelector_ClearSelection;
 	public static String AbstractSelector_CopyToClipboard;
 	public static String AbstractSelector_Select;
 	public static String AbstractTraceView_Clear;
@@ -12,6 +13,10 @@ public class Messages
 	public static String AbstractTraceView_Pause;
 	public static String AbstractTraceView_ShowFilter;
 	public static String ConsoleJob_ErrorDialogTitle;
+	public static String ExportToCsvAction_ExportToCsv;
+	public static String ExportToCsvAction_ExportAllToCsv;
+	public static String ExportToCsvAction_SaveError;
+	public static String ExportToCsvAction_SaveTo;
 	public static String FilterText_CloseFilter;
 	public static String FilterText_Filter;
 	public static String FilterText_FilterIsEmpty;
@@ -64,6 +69,9 @@ public class Messages
 	public static String LoginJob_sync_users;
 	public static String MacAddressValidator_ErrorPrefix;
 	public static String MacAddressValidator_ErrorSuffix;
+	public static String NXMCActionBarAdvisor_About;
+	public static String NXMCActionBarAdvisor_AboutTitle;
+	public static String NXMCActionBarAdvisor_AboutText;
 	public static String NXMCActionBarAdvisor_ConfirmRestart;
 	public static String NXMCActionBarAdvisor_FullScreen;
 	public static String NXMCActionBarAdvisor_LangChinese;
@@ -72,7 +80,6 @@ public class Messages
 	public static String NXMCActionBarAdvisor_LangSpanish;
 	public static String NXMCActionBarAdvisor_Language;
 	public static String NXMCActionBarAdvisor_menu_configuration;
-	public static String NXMCActionBarAdvisor_menu_console;
 	public static String NXMCActionBarAdvisor_menu_file;
 	public static String NXMCActionBarAdvisor_menu_help;
 	public static String NXMCActionBarAdvisor_menu_monitor;
@@ -89,7 +96,7 @@ public class Messages
 	public static String NXMCWorkbenchAdvisor_OKToCloseMessage;
 	public static String NXMCWorkbenchAdvisor_ServerShutdownMessage;
 	public static String NXMCWorkbenchWindowAdvisor_cannot_change_passwd;
-	public static String NXMCWorkbenchWindowAdvisor_connected;
+	public static String NXMCWorkbenchWindowAdvisor_ChangingPassword;
 	public static String NXMCWorkbenchWindowAdvisor_connectionError;
 	public static String NXMCWorkbenchWindowAdvisor_exception;
 	public static String NXMCWorkbenchWindowAdvisor_passwd_changed;
@@ -140,7 +147,7 @@ public class Messages
 	public static String WorkbenchGeneralPrefs_HideWhenMinimized;
 	public static String WorkbenchGeneralPrefs_show_heap;
 	public static String WorkbenchGeneralPrefs_show_tray_icon;
-	
+	public static String WorkbenchGeneralPrefs_ShowHiddenAttrs;	public static String SplashHandler_Version;
 	static
 	{
 		// initialize resource bundle

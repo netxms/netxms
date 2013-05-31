@@ -283,7 +283,7 @@ public class AbstractSelector extends Composite
 	 */
 	protected String getClearingButtonToolTip()
 	{
-		return "Clear selection";
+		return Messages.AbstractSelector_ClearSelection;
 	}
 
 	/**

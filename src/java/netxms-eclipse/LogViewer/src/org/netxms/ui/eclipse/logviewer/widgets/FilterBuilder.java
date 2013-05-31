@@ -59,6 +59,7 @@ import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.log.LogFilter;
 import org.netxms.client.log.OrderingColumn;
+import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.widgets.helpers.ColumnSelectionHandler;
 import org.netxms.ui.eclipse.logviewer.widgets.helpers.OrderingColumnEditingSupport;
 import org.netxms.ui.eclipse.logviewer.widgets.helpers.OrderingListLabelProvider;
@@ -93,8 +94,8 @@ public class FilterBuilder extends Composite
 		
 		toolkit = new FormToolkit(getDisplay());
 		form = toolkit.createScrolledForm(this);
-		form.setText("Filter");
-		form.getToolBarManager().add(new Action("&Execute", SharedIcons.EXECUTE) {
+		form.setText(Messages.FilterBuilder_Filter);
+		form.getToolBarManager().add(new Action(Messages.FilterBuilder_Execute, SharedIcons.EXECUTE) {
 			@Override
 			public void run()
 			{
@@ -102,14 +103,14 @@ public class FilterBuilder extends Composite
 					actionExecute.run();
 			} 
 		});
-		form.getToolBarManager().add(new Action("&Clear filter", SharedIcons.CLEAR_LOG) {
+		form.getToolBarManager().add(new Action(Messages.FilterBuilder_ClearFilter, SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
 			{
 				clearFilter();
 			} 
 		});
-		form.getToolBarManager().add(new Action("Close", SharedIcons.CLOSE) {
+		form.getToolBarManager().add(new Action(Messages.FilterBuilder_Close, SharedIcons.CLOSE) {
 			@Override
 			public void run()
 			{
@@ -154,7 +155,7 @@ public class FilterBuilder extends Composite
 	private void createConditionSection()
 	{
 		condition = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		condition.setText("Condition");
+		condition.setText(Messages.FilterBuilder_Condition);
 		TableWrapData twd = new TableWrapData();
 		twd.grabHorizontal = true;
 		twd.align = TableWrapData.FILL;
@@ -166,7 +167,7 @@ public class FilterBuilder extends Composite
 		condition.setClient(clientArea);
 		
 		final ImageHyperlink addColumnLink = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		addColumnLink.setText("Add column");
+		addColumnLink.setText(Messages.FilterBuilder_AddColumn);
 		addColumnLink.setImage(SharedIcons.IMG_ADD_OBJECT);
 		addColumnLink.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
@@ -183,7 +184,7 @@ public class FilterBuilder extends Composite
 	private void createOrderingSection()
 	{
 		ordering = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-		ordering.setText("Ordering");
+		ordering.setText(Messages.FilterBuilder_Ordering);
 		TableWrapData twd = new TableWrapData();
 		twd.grabHorizontal = false;
 		twd.align = TableWrapData.FILL;
@@ -199,11 +200,11 @@ public class FilterBuilder extends Composite
 		toolkit.adapt(orderingList.getTable());
 		
 		TableViewerColumn column = new TableViewerColumn(orderingList, SWT.LEFT);
-		column.getColumn().setText("Column");
+		column.getColumn().setText(Messages.FilterBuilder_Column);
 		column.getColumn().setWidth(200);
 
 		column = new TableViewerColumn(orderingList, SWT.LEFT);
-		column.getColumn().setText("Descending");
+		column.getColumn().setText(Messages.FilterBuilder_Descending);
 		column.getColumn().setWidth(60);
 		column.setEditingSupport(new OrderingColumnEditingSupport(orderingList));
 
@@ -221,7 +222,7 @@ public class FilterBuilder extends Composite
 		orderingList.getControl().setLayoutData(gd);
 		
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkAdd.setText("Add");
+		linkAdd.setText(Messages.FilterBuilder_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
 		linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
@@ -235,7 +236,7 @@ public class FilterBuilder extends Composite
 		linkAdd.setLayoutData(gd);
 		
 		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
-		linkRemove.setText("Remove");
+		linkRemove.setText(Messages.FilterBuilder_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
@@ -331,7 +332,7 @@ public class FilterBuilder extends Composite
 	public void setLogHandle(Log logHandle)
 	{
 		this.logHandle = logHandle;
-		form.setText("Filter: " + logHandle.getName());
+		form.setText(String.format(Messages.FilterBuilder_FormTitle, logHandle.getName()));
 	}
 	
 	/**

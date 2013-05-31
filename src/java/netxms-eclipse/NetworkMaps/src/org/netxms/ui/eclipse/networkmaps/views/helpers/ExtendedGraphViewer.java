@@ -58,6 +58,7 @@ import org.netxms.base.GeoLocation;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
 import org.netxms.ui.eclipse.osm.tools.Tile;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
@@ -131,7 +132,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		getZoomManager().setZoomLevels(zoomLevels);
 		
 		for(Object f : rootLayer.getChildren())
-			if (f.getClass().getName().equals("org.eclipse.zest.core.widgets.internal.ZestRootLayer"))
+			if (f.getClass().getName().equals("org.eclipse.zest.core.widgets.internal.ZestRootLayer")) //$NON-NLS-1$
 				zestRootLayer = (IFigure)f;
 
 		final Runnable timer = new Runnable() {
@@ -428,7 +429,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		final Rectangle controlSize = graph.getClientArea();
 		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
 		final Point mapSize = new Point(Math.min(controlSize.width, rootLayerSize.width), Math.max(controlSize.height, rootLayerSize.height)); 
-		ConsoleJob job = new ConsoleJob("Download map tiles", null, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.ExtendedGraphViewer_DownloadTilesJob, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -450,7 +451,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot download map tiles";
+				return Messages.ExtendedGraphViewer_DownloadTilesError;
 			}
 		};
 		job.setUser(false);

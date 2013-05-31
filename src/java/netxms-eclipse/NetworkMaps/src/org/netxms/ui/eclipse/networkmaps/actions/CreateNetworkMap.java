@@ -33,6 +33,7 @@ import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.dialogs.CreateNetworkMapDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -67,7 +68,7 @@ public class CreateNetworkMap implements IObjectActionDelegate
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Create new network map", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.CreateNetworkMap_JobName, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -80,7 +81,7 @@ public class CreateNetworkMap implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create network map object \"" + dlg.getName() + "\"";
+				return String.format(Messages.CreateNetworkMap_JobError, dlg.getName());
 			}
 		}.start();
 	}

@@ -89,6 +89,6 @@ public class SelectSnmpParamDlg extends MibSelectionDialog implements IParameter
 	@Override
 	public String getInstanceColumn()
 	{
-		return "";
+		return ""; //$NON-NLS-1$
 	}
 }

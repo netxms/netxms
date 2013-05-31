@@ -42,6 +42,7 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.WinPerfCounter;
 import org.netxms.client.datacollection.WinPerfObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.WinPerfObjectTreeContentProvider;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.WinPerfObjectTreeLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -79,7 +80,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select Windows Performance Counter");
+		newShell.setText(Messages.WinPerfCounterSelectionDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -98,8 +99,8 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 		dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText("Objects and counters");
-		new Label(dialogArea, SWT.NONE).setText("Instances");
+		new Label(dialogArea, SWT.NONE).setText(Messages.WinPerfCounterSelectionDialog_ObjectsAndCounters);
+		new Label(dialogArea, SWT.NONE).setText(Messages.WinPerfCounterSelectionDialog_Instances);
 		
 		objectTree = new TreeViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION);
 		GridData gd = new GridData();
@@ -151,7 +152,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	private void fillData()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Get list of available Windows performance counters", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.WinPerfCounterSelectionDialog_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -168,7 +169,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get list of available Windows performance counters";
+				return Messages.WinPerfCounterSelectionDialog_JobError;
 			}
 		}.start();
 	}
@@ -199,7 +200,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	{
 		if (selectedCounter == null)
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Please select counter and instance and then press OK");
+			MessageDialogHelper.openWarning(getShell(), Messages.WinPerfCounterSelectionDialog_Warning, Messages.WinPerfCounterSelectionDialog_PleaseSelectCounter);
 			return;
 		}
 		
@@ -208,7 +209,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 			IStructuredSelection selection = (IStructuredSelection)instanceList.getSelection();
 			if (selection.size() != 1)
 			{
-				MessageDialogHelper.openWarning(getShell(), "Warning", "Please select counter and instance and then press OK");
+				MessageDialogHelper.openWarning(getShell(), Messages.WinPerfCounterSelectionDialog_Warning, Messages.WinPerfCounterSelectionDialog_PleaseSelectCounter);
 				return;
 			}
 			selectedInstance = (String)selection.getFirstElement();
@@ -227,8 +228,8 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	public String getParameterName()
 	{
 		if (selectedInstance == null)
-			return "\\" + selectedCounter.getObject().getName() + "\\" + selectedCounter.getName();
-		return "\\" + selectedCounter.getObject().getName() + "(" + selectedInstance + ")\\" + selectedCounter.getName();
+			return "\\" + selectedCounter.getObject().getName() + "\\" + selectedCounter.getName(); //$NON-NLS-1$ //$NON-NLS-2$
+		return "\\" + selectedCounter.getObject().getName() + "(" + selectedInstance + ")\\" + selectedCounter.getName(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	/* (non-Javadoc)
@@ -238,8 +239,8 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	public String getParameterDescription()
 	{
 		if (selectedInstance == null)
-			return selectedCounter.getObject().getName() + ": " + selectedCounter.getName();
-		return selectedCounter.getObject().getName() + ": " + selectedCounter.getName() + " for " + selectedInstance;
+			return selectedCounter.getObject().getName() + ": " + selectedCounter.getName(); //$NON-NLS-1$
+		return selectedCounter.getObject().getName() + ": " + selectedCounter.getName() + Messages.WinPerfCounterSelectionDialog_for + selectedInstance; //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -257,6 +258,6 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	@Override
 	public String getInstanceColumn()
 	{
-		return "";
+		return ""; //$NON-NLS-1$
 	}
 }

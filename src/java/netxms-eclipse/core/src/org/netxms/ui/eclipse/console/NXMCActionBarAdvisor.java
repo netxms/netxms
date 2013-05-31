@@ -109,7 +109,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		actionAbout = ActionFactory.ABOUT.create(window);
 		register(actionAbout);
 		
-		actionAboutCustom = new Action("&About") {
+		actionAboutCustom = new Action(Messages.NXMCActionBarAdvisor_About) {
 			@Override
 			public void run()
 			{
@@ -120,7 +120,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 				}
 				else
 				{	
-					MessageDialogHelper.openInformation(window.getShell(), "About", String.format("NetXMS Management Console\nVersion %s\nCopyright (c) 2003-2013 Raden Solutions", NXCommon.VERSION));
+					MessageDialogHelper.openInformation(window.getShell(), Messages.NXMCActionBarAdvisor_AboutTitle, String.format(Messages.NXMCActionBarAdvisor_AboutText, NXCommon.VERSION));
 				}
 			}
 		};
@@ -254,7 +254,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 
 		// Add a group marker indicating where action set menus will appear.
 		menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		if (!Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WINDOW_MENU"))
+		if (!Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WINDOW_MENU")) //$NON-NLS-1$
 			menuBar.add(windowMenu);
 		menuBar.add(helpMenu);
 		

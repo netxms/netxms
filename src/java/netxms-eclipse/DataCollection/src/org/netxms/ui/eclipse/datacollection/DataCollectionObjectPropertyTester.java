@@ -39,7 +39,7 @@ public class DataCollectionObjectPropertyTester extends PropertyTester
 	{
 		if (!(receiver instanceof DataCollectionObject))
 			return false;
-		if (property.equals("isClusterObject"))
+		if (property.equals("isClusterObject")) //$NON-NLS-1$
 		{
 			NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			AbstractObject owner = session.findObjectById(((DataCollectionObject)receiver).getNodeId());		

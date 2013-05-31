@@ -378,7 +378,7 @@ public class LogViewer extends ViewPart
 			}
 		};
 
-		actionGetMoreData = new Action(Messages.LogViewer_ActionGetMoreData, Activator.getImageDescriptor("icons/get_more_data.png")) { //$NON-NLS-2$
+		actionGetMoreData = new Action(Messages.LogViewer_ActionGetMoreData, Activator.getImageDescriptor("icons/get_more_data.png")) { //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-1$
 			@Override
 			public void run()
 			{

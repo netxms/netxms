@@ -69,7 +69,7 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 		cbHideWhenMinimized.setEnabled(cbShowTrayIcon.getSelection());
 
 		cbShowHiddenAttributes = new Button(dialogArea, SWT.CHECK);
-		cbShowHiddenAttributes.setText("Show hidden object custom attributes");
+		cbShowHiddenAttributes.setText(Messages.WorkbenchGeneralPrefs_ShowHiddenAttrs);
 		cbShowHiddenAttributes.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_HIDDEN_ATTRIBUTES")); //$NON-NLS-1$
 		
 		cbShowTrayIcon.addSelectionListener(new SelectionListener() {

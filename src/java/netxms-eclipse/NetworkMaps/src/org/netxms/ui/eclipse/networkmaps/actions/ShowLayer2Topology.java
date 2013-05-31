@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.views.Layer2Topology;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -62,7 +63,7 @@ public class ShowLayer2Topology implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.ShowLayer2Topology_Error, String.format(Messages.ShowLayer2Topology_ErrorText, e.getLocalizedMessage()));
 			}
 		}
 	}

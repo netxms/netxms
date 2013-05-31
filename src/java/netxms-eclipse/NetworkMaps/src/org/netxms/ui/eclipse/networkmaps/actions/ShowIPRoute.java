@@ -30,6 +30,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.views.IPRouteMap;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -67,7 +68,7 @@ public class ShowIPRoute implements IObjectActionDelegate
 			AbstractObject[] selection = dlg.getSelectedObjects(Node.class);
 			if (selection.length == 0)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Invalid target selection");
+				MessageDialogHelper.openError(window.getShell(), Messages.ShowIPRoute_Error, Messages.ShowIPRoute_InvalidTarget);
 				return;
 			}
 			targetNode = (Node)selection[0];
@@ -77,11 +78,11 @@ public class ShowIPRoute implements IObjectActionDelegate
 		{
 			try
 			{
-				window.getActivePage().showView(IPRouteMap.ID, Long.toString(sourceNode.getObjectId()) + "&" + Long.toString(targetNode.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+				window.getActivePage().showView(IPRouteMap.ID, Long.toString(sourceNode.getObjectId()) + "&" + Long.toString(targetNode.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.ShowIPRoute_Error, String.format(Messages.ShowIPRoute_ErrorOpenView, e.getLocalizedMessage()));
 			}
 		}
 	}

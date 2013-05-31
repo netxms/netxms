@@ -34,6 +34,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
+import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -42,8 +43,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class EventConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { "IS", "IS NOT" };
-	private static final String EMPTY_SELECTION_TEXT = "<none>";
+	private static final String[] OPERATIONS = { Messages.EventConditionEditor_Is, Messages.EventConditionEditor_IsNot };
+	private static final String EMPTY_SELECTION_TEXT = Messages.EventConditionEditor_None;
 	
 	private WorkbenchLabelProvider labelProvider;
 	private long eventCode = 0;

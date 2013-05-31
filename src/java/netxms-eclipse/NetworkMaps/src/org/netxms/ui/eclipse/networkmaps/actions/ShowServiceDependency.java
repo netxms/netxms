@@ -30,6 +30,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.views.ServiceDependency;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -65,7 +66,7 @@ public class ShowServiceDependency implements IObjectActionDelegate
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.ShowServiceDependency_Error, String.format(Messages.ShowServiceDependency_ErrorText, e.getLocalizedMessage()));
 			}
 		}
 	}

@@ -28,6 +28,7 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 
 /**
  * IP neighbors for given node
@@ -35,7 +36,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
  */
 public class IPNeighbors extends AbstractNetworkMapView
 {
-	public static final String ID = "org.netxms.ui.eclipse.networkmaps.view.ip_neighbors";
+	public static final String ID = "org.netxms.ui.eclipse.networkmaps.view.ip_neighbors"; //$NON-NLS-1$
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -44,7 +45,7 @@ public class IPNeighbors extends AbstractNetworkMapView
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		setPartName("IP Neighbors - " + rootObject.getObjectName());
+		setPartName(Messages.IPNeighbors_PartName + rootObject.getObjectName());
 	}
 
 	/**

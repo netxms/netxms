@@ -1,24 +1,47 @@
 package org.netxms.ui.eclipse.imagelibrary;
 
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
+import org.eclipse.osgi.util.NLS;
 
-public class Messages
+public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.imagelibrary.messages"; //$NON-NLS-1$
-
-	private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME);
-
-	public static String getString(String key)
+	public static String ImageLibrary_ActionDelete;
+	public static String ImageLibrary_ActionEdit;
+	public static String ImageLibrary_ActionUpload;
+	public static String ImageLibrary_ActionZoomIn;
+	public static String ImageLibrary_ActionZoomOut;
+	public static String ImageLibrary_LoadError;
+	public static String ImageLibrary_ReloadJob;
+	public static String ImageLibrary_UpdateError;
+	public static String ImageLibrary_UpdateImage;
+	public static String ImageLibrary_UpdateJob;
+	public static String ImageLibrary_UploadError;
+	public static String ImageLibrary_UploadImage;
+	public static String ImageLibrary_UploadJob;
+	public static String ImagePropertiesDialog_AllFiles;
+	public static String ImagePropertiesDialog_Category;
+	public static String ImagePropertiesDialog_ImageFile;
+	public static String ImagePropertiesDialog_ImageFiles;
+	public static String ImagePropertiesDialog_ImageName;
+	public static String ImagePropertiesDialog_Title;
+	public static String ImagePropertiesDialog_Upload;
+	public static String ImageProvider_DecodeError;
+	public static String ImageProvider_JobName;
+	public static String ImageProvider_ReadError;
+	public static String ImageSelectionDialog_Default;
+	public static String ImageSelectionDialog_Title;
+	public static String ImageSelector_Default;
+	public static String ImageSelector_SelectImage;
+	public static String LoginListener_JobName;
+	public static String OpenLibraryManager_Error;
+	public static String OpenLibraryManager_ErrorText;
+	static
 	{
-		try
-		{
-			return RESOURCE_BUNDLE.getString(key);
-		}
-		catch(MissingResourceException e)
-		{
-			return '!' + key + '!';
-		}
+		// initialize resource bundle
+		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
 	}
 
+	private Messages()
+	{
+	}
 }

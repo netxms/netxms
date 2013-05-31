@@ -180,9 +180,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 						{
 							try
 							{
-								monitor.setTaskName("Changing password...");
+								monitor.setTaskName(Messages.NXMCWorkbenchWindowAdvisor_ChangingPassword);
 								((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
-								monitor.setTaskName("");
+								monitor.setTaskName(""); //$NON-NLS-1$
 							}
 							catch(Exception e)
 							{

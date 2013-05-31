@@ -20,6 +20,7 @@ import org.netxms.api.client.images.LibraryImage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
+import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 
 public class ImageProvider
@@ -56,7 +57,7 @@ public class ImageProvider
 	{
 		this.display = display;
 		this.session = session;
-		final ImageDescriptor imageDescriptor = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/missing.png");
+		final ImageDescriptor imageDescriptor = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/missing.png"); //$NON-NLS-1$
 		missingImage = imageDescriptor.createImage(display);
 		updateListeners = new HashSet<ImageUpdateListener>();
 	}
@@ -121,7 +122,7 @@ public class ImageProvider
 			cache.put(guid, image);
 			if (libraryIndex.containsKey(guid))
 			{
-				new ConsoleJob("Load Image", null, Activator.PLUGIN_ID, null) {
+				new ConsoleJob(Messages.ImageProvider_JobName, null, Activator.PLUGIN_ID, null) {
 					
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -156,13 +157,13 @@ public class ImageProvider
 			}
 			catch(SWTException e)
 			{
-				Activator.logError("Cannot decode image", e);
+				Activator.logError(Messages.ImageProvider_DecodeError, e);
 				cache.put(guid, missingImage);
 			}
 		}
 		catch(Exception e)
 		{
-			Activator.logError("Cannot retrive image from server", e);
+			Activator.logError(Messages.ImageProvider_ReadError, e);
 		}
 	}
 
